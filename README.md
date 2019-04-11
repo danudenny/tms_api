@@ -1,4 +1,4 @@
-# NestJS Starter
+# SiCepat TMS Api
 
 ## How We Write Codes
 
@@ -24,11 +24,10 @@ The `tslint.json` are helping our development code style to be the same
 ## Visual Studio Code Required Plugins
 1. https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode/items?itemName=ms-vscode.vscode-typescript-tslint-plugin
 2. https://marketplace.visualstudio.com/items?itemName=rbbit.typescript-hero
-3. https://marketplace.visualstudio.com/items?itemName=vsmobile.vscode-react-native
-4. https://marketplace.visualstudio.com/items?itemName=vscode-icons-team.vscode-icons
-5. https://marketplace.visualstudio.com/items?itemName=CoenraadS.bracket-pair-colorizer
-6. https://marketplace.visualstudio.com/items?itemName=stringham.move-ts
-7. https://marketplace.visualstudio.com/items?itemName=wayou.vscode-todo-highlight
+3. https://marketplace.visualstudio.com/items?itemName=vscode-icons-team.vscode-icons
+4. https://marketplace.visualstudio.com/items?itemName=CoenraadS.bracket-pair-colorizer
+5. https://marketplace.visualstudio.com/items?itemName=stringham.move-ts
+6. https://marketplace.visualstudio.com/items?itemName=wayou.vscode-todo-highlight
 
 ## How To Start Develop
 
@@ -42,7 +41,7 @@ npm run start
 ### Build Project
 
 #### Staging/Development
-Verify .env.staging file, make sure the configurations match the exact requirements for staging mode (e.g: endpoint url, etc), and then start build the APK:
+Verify your config files, make sure the configurations match the exact requirements for staging mode (e.g: endpoint url, etc), and then start build the APK:
 ```bash
 npm run build
 ```
@@ -50,7 +49,7 @@ npm run build
 The build files will be ready inside `dist`
 
 #### Production
-Verify .env.production file, make sure the configurations match the exact requirements for production mode (e.g: endpoint url, etc), and then start build the APK:
+Verify your config files, make sure the configurations match the exact requirements for production mode (e.g: endpoint url, etc), and then start build the APK:
 ```bash
 npm run build
 ```
