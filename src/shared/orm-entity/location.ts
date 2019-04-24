@@ -1,8 +1,8 @@
-import { BaseEntity, Column, Entity } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('location', { schema: 'public' })
 export class Location extends BaseEntity {
-  @Column('character varying', {
+  @PrimaryColumn('character varying', {
     nullable: false,
     length: 255,
     name: 'code',
