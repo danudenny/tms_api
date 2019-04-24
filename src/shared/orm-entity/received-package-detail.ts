@@ -1,26 +1,25 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('payment_method', { schema: 'public' })
-export class PaymentMethod extends BaseEntity {
+@Entity('received_package_detail', { schema: 'public' })
+export class ReceivedPackageDetail extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'payment_method_id',
+    name: 'received_package_detail_id',
   })
-  paymentMethodId: string;
+  receivedPackageDetailId: string;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'received_package_id',
+  })
+  receivedPackageId: string;
 
   @Column('character varying', {
-    nullable: true,
-    length: 255,
-    name: 'payment_method_code',
+    nullable: false,
+    length: 100,
+    name: 'awb_number',
   })
-  paymentMethodCode: string | null;
-
-  @Column('character varying', {
-    nullable: true,
-    length: 255,
-    name: 'payment_method_name',
-  })
-  paymentMethodName: string | null;
+  awbNumber: string;
 
   @Column('bigint', {
     nullable: false,

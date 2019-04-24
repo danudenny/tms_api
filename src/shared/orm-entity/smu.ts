@@ -2,7 +2,7 @@ import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne
 
 
 @Entity("smu",{schema:"public" } )
-export class Smu {
+export class Smu extends BaseEntity {
 
     @PrimaryGeneratedColumn({
         type:"bigint", 

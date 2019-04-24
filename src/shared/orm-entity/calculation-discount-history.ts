@@ -1,74 +1,63 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+@Entity('calculation_discount_history', { schema: 'public' })
+export class CalculationDiscountHistory extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
+    name: 'calculation_discount_history_id',
+  })
+  calculationDiscountHistoryId: string;
 
-@Entity("calculation_discount_history",{schema:"public" } )
-export class CalculationDiscountHistory {
+  @Column('bigint', {
+    nullable: true,
+    name: 'calculation_discount_id',
+  })
+  calculationDiscountId: string | null;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"calculation_discount_history_id"
-        })
-    calculationDiscountHistoryId:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'awb_number',
+  })
+  awbNumber: string | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"calculation_discount_id"
-        })
-    calculationDiscountId:string | null;
-        
+  @Column('numeric', {
+    nullable: true,
+    default: () => '0',
+    precision: 20,
+    scale: 5,
+    name: 'price',
+  })
+  price: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"awb_number"
-        })
-    awbNumber:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_created',
+  })
+  userIdCreated: string;
 
-    @Column("numeric",{ 
-        nullable:true,
-        default: () => "0",
-        precision:20,
-        scale:5,
-        name:"price"
-        })
-    price:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'created_time',
+  })
+  createdTime: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_updated',
+  })
+  userIdUpdated: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'updated_time',
+  })
+  updatedTime: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
-
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
-
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_deleted',
+  })
+  isDeleted: boolean;
 }

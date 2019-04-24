@@ -1,57 +1,48 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+@Entity('social_media', { schema: 'public' })
+export class SocialMedia extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
+    name: 'social_media_id',
+  })
+  socialMediaId: string;
 
-@Entity("social_media",{schema:"public" } )
-export class SocialMedia {
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'social_media_name',
+  })
+  socialMediaName: string | null;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"social_media_id"
-        })
-    socialMediaId:string;
-        
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_created',
+  })
+  userIdCreated: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"social_media_name"
-        })
-    socialMediaName:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'created_time',
+  })
+  createdTime: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_updated',
+  })
+  userIdUpdated: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'updated_time',
+  })
+  updatedTime: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
-
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
-
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_deleted',
+  })
+  isDeleted: boolean;
 }

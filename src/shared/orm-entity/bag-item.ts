@@ -1,89 +1,76 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
+@Entity('bag_item', { schema: 'public' })
+@Index('bag_item_bag_id_idx', ['bagId'])
+@Index('bag_item_bag_seq_idx', ['bagSeq'])
+@Index('bag_item_is_deleted_idx', ['isDeleted'])
+export class BagItem extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
+    name: 'bag_item_id',
+  })
+  bagItemId: string;
 
-@Entity("bag_item",{schema:"public" } )
-@Index("bag_item_bag_id_idx",["bagId",])
-@Index("bag_item_bag_seq_idx",["bagSeq",])
-@Index("bag_item_is_deleted_idx",["isDeleted",])
-export class BagItem {
+  @Column('bigint', {
+    nullable: false,
+    name: 'bag_id',
+  })
+  bagId: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"bag_item_id"
-        })
-    bagItemId:string;
-        
+  @Column('numeric', {
+    nullable: true,
+    precision: 10,
+    scale: 5,
+    name: 'weight',
+  })
+  weight: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"bag_id"
-        })
-    bagId:string;
-        
+  @Column('integer', {
+    nullable: false,
+    name: 'bag_seq',
+  })
+  bagSeq: number;
 
-    @Column("numeric",{ 
-        nullable:true,
-        precision:10,
-        scale:5,
-        name:"weight"
-        })
-    weight:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_created',
+  })
+  userIdCreated: string;
 
-    @Column("integer",{ 
-        nullable:false,
-        name:"bag_seq"
-        })
-    bagSeq:number;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'created_time',
+  })
+  createdTime: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_updated',
+  })
+  userIdUpdated: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'updated_time',
+  })
+  updatedTime: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_deleted',
+  })
+  isDeleted: boolean;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'bag_item_history_id',
+  })
+  bagItemHistoryId: string | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
-
-    @Column("bigint",{ 
-        nullable:true,
-        name:"bag_item_history_id"
-        })
-    bagItemHistoryId:string | null;
-        
-
-    @Column("bigint",{ 
-        nullable:true,
-        name:"bagging_id_last"
-        })
-    baggingIdLast:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'bagging_id_last',
+  })
+  baggingIdLast: string | null;
 }

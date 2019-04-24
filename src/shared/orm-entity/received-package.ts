@@ -1,53 +1,50 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('reason', { schema: 'public' })
-export class Reason extends BaseEntity {
+@Entity('received_package', { schema: 'public' })
+export class ReceivedPackage extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'reason_id',
+    name: 'received_package_id',
   })
-  reasonId: string;
+  receivedPackageId: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'apps_code',
+    name: 'received_package_code',
   })
-  appsCode: string;
+  receivedPackageCode: string;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'employee_id_consignee',
+  })
+  employeeIdConsignee: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'reason_category',
+    name: 'sender_name',
   })
-  reasonCategory: string;
+  senderName: string;
 
-  @Column('character varying', {
+  @Column('timestamp without time zone', {
     nullable: false,
-    length: 255,
-    name: 'reason_type',
+    name: 'received_package_date',
   })
-  reasonType: string;
+  receivedPackageDate: Date;
 
-  @Column('character varying', {
+  @Column('bigint', {
     nullable: false,
-    length: 255,
-    name: 'reason_code',
+    name: 'user_id',
   })
-  reasonCode: string;
+  userId: string;
 
-  @Column('character varying', {
-    nullable: true,
-    length: 500,
-    name: 'reason_name',
+  @Column('bigint', {
+    nullable: false,
+    name: 'branch_id',
   })
-  reasonName: string | null;
-
-  @Column('text', {
-    nullable: true,
-    name: 'reason_description',
-  })
-  reasonDescription: string | null;
+  branchId: string;
 
   @Column('bigint', {
     nullable: false,
@@ -80,17 +77,23 @@ export class Reason extends BaseEntity {
   })
   isDeleted: boolean;
 
-  @Column('boolean', {
+  @Column('integer', {
     nullable: true,
-    default: () => 'true',
-    name: 'is_reschedule_pickup',
+    name: 'total_seq',
   })
-  isReschedulePickup: boolean | null;
+  totalSeq: number | null;
 
-  @Column('boolean', {
+  @Column('character varying', {
     nullable: true,
-    default: () => 'true',
-    name: 'is_reschedule',
+    length: 255,
+    name: 'merchant_name',
   })
-  isReschedule: boolean | null;
+  merchantName: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'phone',
+  })
+  phone: string | null;
 }
