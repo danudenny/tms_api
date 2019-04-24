@@ -1,18 +1,18 @@
 export function nameof<T extends Object>(
-  nameFunction: (obj: T) => any | { new (...params: any[]): T },
+  nameFunction: (obj: T) => any | (new (...params: any[]) => T),
 ): string {
   try {
     const nameFunctionResult = nameFunction({} as any);
     if (typeof nameFunctionResult === 'string') {
       return nameFunctionResult;
     }
-  } catch(e) {
+  } catch (e) {
     // skip
   }
-  let fnStr: string = nameFunction.toString();
+  const fnStr: string = nameFunction.toString();
 
   // Property accessor function.
-  let dotIndex: number = fnStr.indexOf('.');
+  const dotIndex: number = fnStr.indexOf('.');
   if (dotIndex > -1) {
     // ES5
     // "function(x) { return x.prop; }"
@@ -21,34 +21,31 @@ export function nameof<T extends Object>(
     // or
     // "function(x) {return x.prop}"
     if (fnStr.indexOf('{') > -1) {
-      let endsWithSemicolon: number = fnStr.lastIndexOf(';');
+      const endsWithSemicolon: number = fnStr.lastIndexOf(';');
       if (endsWithSemicolon > -1) {
         return fnStr.substring(dotIndex + 1, endsWithSemicolon);
       }
 
-      let endsWithSpace: number = fnStr.lastIndexOf(' }');
+      const endsWithSpace: number = fnStr.lastIndexOf(' }');
       if (endsWithSpace > -1) {
         return fnStr.substring(dotIndex + 1, endsWithSpace);
       }
 
-      let endsWithBrace: number = fnStr.lastIndexOf('}');
+      const endsWithBrace: number = fnStr.lastIndexOf('}');
       if (endsWithBrace > -1) {
         return fnStr.substring(dotIndex + 1, endsWithBrace);
       }
-    }
-    // ES6
-    // "(x) => x.prop"
-    else {
+    } else {
       return fnStr.substr(dotIndex + 1);
     }
   }
 
   // Class name (es5).
   // function MyClass(...) { ... }
-  let functionString: string = 'function ';
-  let functionIndex: number = fnStr.indexOf(functionString);
+  const functionString: string = 'function ';
+  const functionIndex: number = fnStr.indexOf(functionString);
   if (functionIndex === 0) {
-    let parenIndex: number = fnStr.indexOf('(');
+    const parenIndex: number = fnStr.indexOf('(');
     if (parenIndex > -1) {
       return fnStr.substring(functionString.length, parenIndex);
     }
@@ -56,15 +53,15 @@ export function nameof<T extends Object>(
 
   // Class name (es6).
   // class MyClass { ... }
-  let classString: string = 'class ';
-  let classIndex: number = fnStr.indexOf(classString);
+  const classString: string = 'class ';
+  const classIndex: number = fnStr.indexOf(classString);
   if (classIndex === 0) {
-    let notMinified: number = fnStr.indexOf(' {');
+    const notMinified: number = fnStr.indexOf(' {');
     if (notMinified > -1) {
       return fnStr.substring(classString.length, notMinified);
     }
 
-    let minified: number = fnStr.indexOf('{');
+    const minified: number = fnStr.indexOf('{');
     if (minified > -1) {
       return fnStr.substring(classString.length, minified);
     }
@@ -80,7 +77,7 @@ export function nameofFn(fn: Function): string[] {
     if (typeof nameFunctionResult === 'string') {
       return [nameFunctionResult];
     }
-  } catch(e) {
+  } catch (e) {
     // skip
   }
 

@@ -6,5 +6,5 @@ export enum QueryWhereType {
     /**
      * A comparison involving a joined entity.
      */
-    Joined = 1
+    Joined = 1,
 }

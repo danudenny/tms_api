@@ -1,89 +1,103 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('pickup_request_invalid', { schema: 'public' })
-@Index('pickup_request_invalid_created_time', ['createdTime'])
-@Index('pickup_request_invalid_ref_awb_number', ['refAwbNumber'])
+@Index('pickup_request_invalid_created_time', ['created_time'])
+@Index('pickup_request_invalid_ref_awb_number', ['ref_awb_number'])
 export class PickupRequestInvalid extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'pickup_request_invalid_id',
+
   })
-  pickupRequestInvalidId: string;
+  pickup_request_invalid_id: string;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'pickup_request_date_time',
+
   })
-  pickupRequestDateTime: Date | null;
+  pickup_request_date_time: Date | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'ref_awb_number',
+
   })
-  refAwbNumber: string | null;
+  ref_awb_number: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name: 'message_error',
+
   })
-  messageError: string | null;
+  message_error: string | null;
 
   @Column('json', {
     nullable: true,
-    name: 'request',
+
   })
   request: Object | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'partner_id',
+
   })
-  partnerId: string | null;
+  partner_id: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'user_created',
+
   })
-  userCreated: string | null;
+  user_created: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'user_updated',
+
   })
-  userUpdated: string | null;
+  user_updated: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

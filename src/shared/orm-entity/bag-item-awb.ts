@@ -1,85 +1,85 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('bag_item_awb', { schema: 'public' })
-@Index('bag_item_awb_awb_item_idx', ['awbItemId'])
-@Index('bag_item_awb_awb_number_idx', ['awbNumber'])
-@Index('bag_item_awb_bag_item_id_idx', ['bagItemId'])
-@Index('bag_item_awb_is_deleted_idx', ['isDeleted'])
+@Index('bag_item_awb_awb_item_idx', ['awb_item_id'])
+@Index('bag_item_awb_awb_number_idx', ['awb_number'])
+@Index('bag_item_awb_bag_item_id_idx', ['bag_item_id'])
+@Index('bag_item_awb_is_deleted_idx', ['is_deleted'])
 export class BagItemAwb extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'bag_item_awb_id',
+
   })
-  bagItemAwbId: string;
+  bag_item_awb_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'bag_item_id',
+
   })
-  bagItemId: string;
+  bag_item_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'awb_number',
+
   })
-  awbNumber: string | null;
+  awb_number: string | null;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 10,
     scale: 5,
-    name: 'weight',
+
   })
   weight: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'awb_item_id',
+
   })
-  awbItemId: string | null;
+  awb_item_id: string | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'send_tracking_note',
+
   })
-  sendTrackingNote: number | null;
+  send_tracking_note: number | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'send_tracking_note_out',
+
   })
-  sendTrackingNoteOut: number | null;
+  send_tracking_note_out: number | null;
 }

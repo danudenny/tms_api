@@ -4,207 +4,207 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class CustomerAccountPostHistory extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'customer_account_post_history_id',
+
   })
-  customerAccountPostHistoryId: string;
+  customer_account_post_history_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'awb_history_id',
+
   })
-  awbHistoryId: string;
+  awb_history_id: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'awb_id',
+
   })
-  awbId: string | null;
+  awb_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'awb_detail_id',
+
   })
-  awbDetailId: string | null;
+  awb_detail_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'user_id',
+
   })
-  userId: string | null;
+  user_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'branch_id',
+
   })
-  branchId: string | null;
+  branch_id: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'history_date',
+
   })
-  historyDate: Date;
+  history_date: Date;
 
   @Column('bigint', {
     nullable: true,
-    name: 'awb_status_id',
+
   })
-  awbStatusId: string | null;
+  awb_status_id: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'awb_note',
+
   })
-  awbNote: string | null;
+  awb_note: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'customer_account_id',
+
   })
-  customerAccountId: string | null;
+  customer_account_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'ref_id_tracking_note',
+
   })
-  refIdTrackingNote: string | null;
+  ref_id_tracking_note: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'ref_id_tracking_site',
+
   })
-  refIdTrackingSite: string | null;
+  ref_id_tracking_site: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_id_cust_package',
+
   })
-  refIdCustPackage: string | null;
+  ref_id_cust_package: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 50,
-    name: 'ref_awb_number',
+
   })
-  refAwbNumber: string | null;
+  ref_awb_number: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_tracking_site_code',
+
   })
-  refTrackingSiteCode: string | null;
+  ref_tracking_site_code: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_tracking_site_name',
+
   })
-  refTrackingSiteName: string | null;
+  ref_tracking_site_name: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_partner_name',
+
   })
-  refPartnerName: string | null;
+  ref_partner_name: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_recipient_name',
+
   })
-  refRecipientName: string | null;
+  ref_recipient_name: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'ref_id_courier',
+
   })
-  refIdCourier: string | null;
+  ref_id_courier: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_courier_name',
+
   })
-  refCourierName: string | null;
+  ref_courier_name: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_tracking_type',
+
   })
-  refTrackingType: string | null;
+  ref_tracking_type: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_user_created',
+
   })
-  refUserCreated: string | null;
+  ref_user_created: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_user_updated',
+
   })
-  refUserUpdated: string | null;
+  ref_user_updated: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'request_body',
+
   })
-  requestBody: string | null;
+  request_body: string | null;
 
   @Column('integer', {
     nullable: true,
     default: () => '0',
-    name: 'status_post',
+
   })
-  statusPost: number | null;
+  status_post: number | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('text', {
     nullable: true,
-    name: 'response_body',
+
   })
-  responseBody: string | null;
+  response_body: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
     default: () => 'NULL::character varying',
-    name: 'post_history_code',
+
   })
-  postHistoryCode: string | null;
+  post_history_code: string | null;
 }

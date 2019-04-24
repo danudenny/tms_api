@@ -1,161 +1,175 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('partner', { schema: 'public' })
 export class Partner extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'partner_id',
+
   })
-  partnerId: string;
+  partner_id: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'partner_name',
+
   })
-  partnerName: string | null;
+  partner_name: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name: 'partner_email',
+
   })
-  partnerEmail: string | null;
+  partner_email: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name: 'api_key',
+
   })
-  apiKey: string | null;
+  api_key: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'customer_account_id',
+
   })
-  customerAccountId: string | null;
+  customer_account_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'awb_number_start',
+
   })
-  awbNumberStart: string | null;
+  awb_number_start: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'awb_number_end',
+
   })
-  awbNumberEnd: string | null;
+  awb_number_end: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'current_awb_number',
+
   })
-  currentAwbNumber: string | null;
+  current_awb_number: string | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'sla_hour_pickup',
+
   })
-  slaHourPickup: number | null;
+  sla_hour_pickup: number | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_active',
+
   })
-  isActive: boolean;
+  is_active: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_email_log',
+
   })
-  isEmailLog: boolean;
+  is_email_log: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_assign_to_branch',
+
   })
-  isAssignToBranch: boolean;
+  is_assign_to_branch: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_assign_to_courier',
+
   })
-  isAssignToCourier: boolean;
+  is_assign_to_courier: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_pick_unpick',
+
   })
-  isPickUnpick: boolean;
+  is_pick_unpick: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_reschedule',
+
   })
-  isReschedule: boolean;
+  is_reschedule: boolean;
 
   @Column('character varying', {
     nullable: true,
     length: 20,
-    name: 'sm_code',
+
   })
-  smCode: string | null;
+  sm_code: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'user_created',
+
   })
-  userCreated: string | null;
+  user_created: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'user_updated',
+
   })
-  userUpdated: string | null;
+  user_updated: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('json', {
     nullable: true,
-    name: 'validation',
+
   })
   validation: Object | null;
 }

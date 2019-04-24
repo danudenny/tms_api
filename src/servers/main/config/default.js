@@ -5,6 +5,6 @@ module.exports = {
     enabled: true,
     title: "SiCepat TMS Auth",
     description: "SiCepat TMS auth server api",
-    path: "docs"
+    path: "docs",
   },
 };

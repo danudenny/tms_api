@@ -4,62 +4,62 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class SmuItem extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'smu_item_id',
+
   })
-  smuItemId: string;
+  smu_item_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'smu_id',
+
   })
-  smuId: string;
+  smu_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'bagging_id',
+
   })
-  baggingId: string;
+  bagging_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-    name: 'do_smu_id_delivery',
+
   })
-  doSmuIdDelivery: string | null;
+  do_smu_id_delivery: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'do_smu_id_pickup',
+
   })
-  doSmuIdPickup: string | null;
+  do_smu_id_pickup: string | null;
 }

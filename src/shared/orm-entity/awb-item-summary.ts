@@ -1,93 +1,79 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('awb_item_summary', { schema: 'public' })
-@Index('awb_item_summary_awb_item_idx', ['awbItemId'])
-@Index('awb_item_summary_is_deleted_idx', ['isDeleted'])
-@Index('awb_item_summary_summary_date_idx', ['summaryDate'])
+@Index('awb_item_summary_awb_item_idx', ['awb_item_id'])
+@Index('awb_item_summary_is_deleted_idx', ['is_deleted'])
+@Index('awb_item_summary_summary_date_idx', ['summary_date'])
 export class AwbItemSummary extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'awb_item_summary_id',
   })
-  awbItemSummaryId: string;
+  awb_item_summary_id: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'awb_item_id',
   })
-  awbItemId: string | null;
+  awb_item_id: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'summary_date',
   })
-  summaryDate: Date | null;
+  summary_date: Date | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'awb_history_id_last',
   })
-  awbHistoryIdLast: string | null;
+  awb_history_id_last: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'awb_status_id_last',
   })
-  awbStatusIdLast: string | null;
+  awb_status_id_last: string | null;
 
   @Column('bigint', {
     nullable: false,
     default: () => '2000',
-    name: 'awb_status_id_last_public',
   })
-  awbStatusIdLastPublic: string;
+  awb_status_id_last_public: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'user_id_last',
   })
-  userIdLast: string | null;
+  user_id_last: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'branch_id_last',
   })
-  branchIdLast: string | null;
+  branch_id_last: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'history_date_last',
   })
-  historyDateLast: Date | null;
+  history_date_last: Date | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

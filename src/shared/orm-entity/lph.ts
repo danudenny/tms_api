@@ -1,55 +1,69 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('lph', { schema: 'public' })
-@Index('lph_awb_date_idx', ['awbDate'])
+@Index('lph_awb_date_idx', ['awb_date'])
 export class Lph extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'lph_id',
+
   })
-  lphId: string;
+  lph_id: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'awb_date',
+
   })
-  awbDate: Date;
+  awb_date: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_jne',
+
   })
-  isJne: boolean;
+  is_jne: boolean;
 }

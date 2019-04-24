@@ -184,9 +184,9 @@ import { District } from './district';
 export class PackagePriceSpecial extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'package_price_special_id',
+
   })
-  packagePriceSpecialId: string;
+  package_price_special_id: string;
 
   @ManyToOne(
     type => PackageType,
@@ -199,21 +199,21 @@ export class PackagePriceSpecial extends BaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'no_period',
+
   })
-  noPeriod: boolean;
+  no_period: boolean;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'start_date',
+
   })
-  startDate: Date | null;
+  start_date: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'end_date',
+
   })
-  endDate: Date | null;
+  end_date: Date | null;
 
   @ManyToOne(
     type => CustomerAccount,
@@ -225,9 +225,9 @@ export class PackagePriceSpecial extends BaseEntity {
 
   @Column('bigint', {
     nullable: true,
-    name: 'branch_id_from',
+
   })
-  branchIdFrom: string | null;
+  branch_id_from: string | null;
 
   @ManyToOne(type => Country, country => country.packagePriceSpecials, {})
   @JoinColumn({ name: 'country_id_from' })
@@ -247,9 +247,9 @@ export class PackagePriceSpecial extends BaseEntity {
 
   @Column('bigint', {
     nullable: true,
-    name: 'branch_id_to',
+
   })
-  branchIdTo: string | null;
+  branch_id_to: string | null;
 
   @ManyToOne(type => Country, country => country.packagePriceSpecials2, {})
   @JoinColumn({ name: 'country_id_to' })
@@ -270,7 +270,7 @@ export class PackagePriceSpecial extends BaseEntity {
   @Column('integer', {
     nullable: false,
     default: () => '1',
-    name: 'priority',
+
   })
   priority: number;
 
@@ -278,118 +278,118 @@ export class PackagePriceSpecial extends BaseEntity {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'min_weight',
+
   })
-  minWeight: string | null;
+  min_weight: string | null;
 
   @Column('numeric', {
     nullable: false,
     precision: 20,
     scale: 5,
-    name: 'basic_fare',
+
   })
-  basicFare: string;
+  basic_fare: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 20,
     scale: 5,
-    name: 'next_price',
+
   })
-  nextPrice: string;
+  next_price: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-    name: 'disc_price_percent',
+
   })
-  discPricePercent: string;
+  disc_price_percent: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-    name: 'disc_price_value',
+
   })
-  discPriceValue: string;
+  disc_price_value: string;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'divider_volume',
+
   })
-  dividerVolume: string | null;
+  divider_volume: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'lead_time_min_days',
+
   })
-  leadTimeMinDays: string | null;
+  lead_time_min_days: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'lead_time_max_days',
+
   })
-  leadTimeMaxDays: string | null;
+  lead_time_max_days: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('integer', {
     nullable: true,
-    name: 'from_type',
+
   })
-  fromType: number | null;
+  from_type: number | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'to_type',
+
   })
-  toType: number | null;
+  to_type: number | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'from_id',
+
   })
-  fromId: string | null;
+  from_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'to_id',
+
   })
-  toId: string | null;
+  to_id: string | null;
 }

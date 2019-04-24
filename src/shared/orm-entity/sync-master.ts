@@ -1,85 +1,99 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('sync_master', { schema: 'public' })
 export class SyncMaster extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'sync_master_id',
+
   })
-  syncMasterId: string;
+  sync_master_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'module',
+
   })
   module: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'session_id',
+
   })
-  sessionId: string;
+  session_id: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'sync_last_updated',
+
   })
-  syncLastUpdated: Date;
+  sync_last_updated: Date;
 
   @Column('integer', {
     nullable: false,
-    name: 'limit_data',
+
   })
-  limitData: number;
+  limit_data: number;
 
   @Column('integer', {
     nullable: false,
-    name: 'total_pages',
+
   })
-  totalPages: number;
+  total_pages: number;
 
   @Column('integer', {
     nullable: false,
-    name: 'total_data',
+
   })
-  totalData: number;
+  total_data: number;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'sync_start_updated',
+
   })
-  syncStartUpdated: Date | null;
+  sync_start_updated: Date | null;
 }

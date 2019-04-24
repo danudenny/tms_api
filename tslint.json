@@ -4,6 +4,16 @@
   "jsRules": {
     "no-unused-expression": true
   },
+  "linterOptions": {
+    "exclude": [
+      "src/shared/external",
+      "src/**/*.json",
+      "src/**.json",
+      "src/**/*.js",
+      "src/**.js",
+      "src/ormconfig.js"
+    ]
+  },
   "rules": {
     "quotemark": [true, "single"],
     "member-access": [false],
@@ -13,7 +23,7 @@
     "interface-name": [false],
     "arrow-parens": false,
     "object-literal-sort-keys": false,
-    "variable-name": [true, "allow-leading-underscore", "allow-pascal-case"],
+    "variable-name": [true, "allow-leading-underscore", "allow-pascal-case", "allow-snake-case"],
     "ban-types": [true],
     "forin": false,
     "only-arrow-functions": false,

@@ -4,50 +4,42 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class AwbTrack extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'awb_track_id',
   })
-  awbTrackId: string;
+  awb_track_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'awb_id',
   })
-  awbId: string;
+  awb_id: string;
 
   @Column('json', {
     nullable: false,
-    name: 'track_json',
   })
-  trackJson: Object;
+  track_json: Object;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

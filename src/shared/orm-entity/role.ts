@@ -1,84 +1,98 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('role', { schema: 'public' })
 export class Role extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'role_id',
+
   })
-  roleId: string;
+  role_id: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'role_id_parent',
+
   })
-  roleIdParent: string | null;
+  role_id_parent: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'branch_id',
+
   })
-  branchId: string | null;
+  branch_id: string | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'lft',
+
   })
   lft: number | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'rgt',
+
   })
   rgt: number | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'depth',
+
   })
   depth: number | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'priority',
+
   })
   priority: number | null;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'role_name',
+
   })
-  roleName: string;
+  role_name: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

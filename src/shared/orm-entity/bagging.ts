@@ -1,121 +1,121 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('bagging', { schema: 'public' })
-@Index('bagging_representative_id_to_idx', ['representativeIdTo'])
-@Index('bagging_smu_id_last_idx', ['smuIdLast'])
+@Index('bagging_representative_id_to_idx', ['representative_id_to'])
+@Index('bagging_smu_id_last_idx', ['smu_id_last'])
 export class Bagging extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'bagging_id',
+
   })
-  baggingId: string;
+  bagging_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'bagging_code',
+
   })
-  baggingCode: string;
+  bagging_code: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'branch_id',
+
   })
-  branchId: string;
+  branch_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id',
+
   })
-  userId: string;
+  user_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'representative_id_to',
+
   })
-  representativeIdTo: string;
+  representative_id_to: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'product_code',
+
   })
-  productCode: string | null;
+  product_code: string | null;
 
   @Column('date', {
     nullable: false,
-    name: 'bagging_date',
+
   })
-  baggingDate: string;
+  bagging_date: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'bagging_date_real',
+
   })
-  baggingDateReal: Date;
+  bagging_date_real: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-    name: 'smu_id_last',
+
   })
-  smuIdLast: string | null;
+  smu_id_last: string | null;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-    name: 'bagging_seq',
+
   })
-  baggingSeq: number;
+  bagging_seq: number;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-    name: 'total_item',
+
   })
-  totalItem: number;
+  total_item: number;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'total_weight',
+
   })
-  totalWeight: string | null;
+  total_weight: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'smu_item_id_last',
+
   })
-  smuItemIdLast: string | null;
+  smu_item_id_last: string | null;
 }

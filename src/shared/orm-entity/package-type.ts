@@ -20,124 +20,124 @@ import { PackagePriceSpecial } from './package-price-special';
 export class PackageType extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'package_type_id',
+
   })
-  packageTypeId: string;
+  package_type_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'package_type_code',
+
   })
-  packageTypeCode: string;
+  package_type_code: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'package_type_name',
+
   })
-  packageTypeName: string;
+  package_type_name: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-    name: 'min_weight',
+
   })
-  minWeight: string;
+  min_weight: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-    name: 'weight_rounding_const',
+
   })
-  weightRoundingConst: string;
+  weight_rounding_const: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-    name: 'weight_rounding_up_global',
+
   })
-  weightRoundingUpGlobal: string;
+  weight_rounding_up_global: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-    name: 'weight_rounding_up_detail',
+
   })
-  weightRoundingUpDetail: string;
+  weight_rounding_up_detail: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-    name: 'divider_volume',
+
   })
-  dividerVolume: string;
+  divider_volume: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-    name: 'lead_time_min_days',
+
   })
-  leadTimeMinDays: string;
+  lead_time_min_days: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-    name: 'lead_time_max_days',
+
   })
-  leadTimeMaxDays: string;
+  lead_time_max_days: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-    name: 'weight_rounding_up_global_bool',
+
   })
-  weightRoundingUpGlobalBool: boolean | null;
+  weight_rounding_up_global_bool: boolean | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-    name: 'weight_rounding_up_detail_bool',
+
   })
-  weightRoundingUpDetailBool: boolean | null;
+  weight_rounding_up_detail_bool: boolean | null;
 
   @OneToMany(type => PackagePrice, package_price => package_price.packageType)
   packagePrices: PackagePrice[];

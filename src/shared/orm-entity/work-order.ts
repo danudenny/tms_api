@@ -1,328 +1,342 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('work_order', { schema: 'public' })
-@Index('work_order_branch_id_assigned_idx', ['branchIdAssigned'])
-@Index('work_order_customer_account_id_idx', ['customerAccountId'])
-@Index('work_order_is_deleted_idx', ['isDeleted'])
+@Index('work_order_branch_id_assigned_idx', ['branch_id_assigned'])
+@Index('work_order_customer_account_id_idx', ['customer_account_id'])
+@Index('work_order_is_deleted_idx', ['is_deleted'])
 export class WorkOrder extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'work_order_id',
+
   })
-  workOrderId: string;
+  work_order_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'work_order_code',
+
   })
-  workOrderCode: string;
+  work_order_code: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'work_order_date',
+
   })
-  workOrderDate: Date;
+  work_order_date: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id',
+
   })
-  userId: string;
+  user_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'branch_id',
+
   })
-  branchId: string;
+  branch_id: string;
 
   @Column('boolean', {
     nullable: false,
-    name: 'is_member',
+
   })
-  isMember: boolean;
+  is_member: boolean;
 
   @Column('bigint', {
     nullable: true,
-    name: 'customer_account_id',
+
   })
-  customerAccountId: string | null;
+  customer_account_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'customer_account_id_child',
+
   })
-  customerAccountIdChild: string | null;
+  customer_account_id_child: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'guest_name',
+
   })
-  guestName: string | null;
+  guest_name: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'pickup_schedule_date_time',
+
   })
-  pickupScheduleDateTime: Date;
+  pickup_schedule_date_time: Date;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'pickup_phone',
+
   })
-  pickupPhone: string | null;
+  pickup_phone: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'pickup_email',
+
   })
-  pickupEmail: string | null;
+  pickup_email: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'pickup_address',
+
   })
-  pickupAddress: string | null;
+  pickup_address: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'pickup_notes',
+
   })
-  pickupNotes: string | null;
+  pickup_notes: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'branch_id_assigned',
+
   })
-  branchIdAssigned: string | null;
+  branch_id_assigned: string | null;
 
   @Column('integer', {
     nullable: true,
     default: () => '0',
-    name: 'total_assigned',
+
   })
-  totalAssigned: number | null;
+  total_assigned: number | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-    name: 'is_assigned',
+
   })
-  isAssigned: boolean | null;
+  is_assigned: boolean | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'employee_id_driver',
+
   })
-  employeeIdDriver: string | null;
+  employee_id_driver: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'latitude_last',
+
   })
-  latitudeLast: string | null;
+  latitude_last: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'longitude_last',
+
   })
-  longitudeLast: string | null;
+  longitude_last: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'consignee_name',
+
   })
-  consigneeName: string | null;
+  consignee_name: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'received_date_time',
+
   })
-  receivedDateTime: Date | null;
+  received_date_time: Date | null;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-    name: 'total_item',
+
   })
-  totalItem: number;
+  total_item: number;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-    name: 'total_pickup_item',
+
   })
-  totalPickupItem: number;
+  total_pickup_item: number;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'total_weight',
+
   })
-  totalWeight: string;
+  total_weight: string;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'history_date_time_last',
+
   })
-  historyDateTimeLast: Date | null;
+  history_date_time_last: Date | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'work_order_status_id_last',
+
   })
-  workOrderStatusIdLast: string | null;
+  work_order_status_id_last: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'work_order_history_id_last',
+
   })
-  workOrderHistoryIdLast: string | null;
+  work_order_history_id_last: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'do_pickup_detail_id_last',
+
   })
-  doPickupDetailIdLast: string | null;
+  do_pickup_detail_id_last: string | null;
 
   @Column('character varying', {
     nullable: false,
     length: 50,
-    name: 'work_order_type',
+
   })
-  workOrderType: string;
+  work_order_type: string;
 
   @Column('text', {
     nullable: true,
-    name: 'work_order_group',
+
   })
-  workOrderGroup: string | null;
+  work_order_group: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'encrypt_address100',
+
   })
-  encryptAddress100: string | null;
+  encrypt_address100: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'encrypt_address255',
+
   })
-  encryptAddress255: string | null;
+  encrypt_address255: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'do_pickup_id_last',
+
   })
-  doPickupIdLast: string | null;
+  do_pickup_id_last: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'pickup_date_time',
+
   })
-  pickupDateTime: Date | null;
+  pickup_date_time: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'check_in_date_time',
+
   })
-  checkInDateTime: Date | null;
+  check_in_date_time: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'check_out_date_time',
+
   })
-  checkOutDateTime: Date | null;
+  check_out_date_time: Date | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'work_order_uid',
+
   })
-  workOrderUid: string | null;
+  work_order_uid: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'reason_id',
+
   })
-  reasonId: string | null;
+  reason_id: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'reason_note',
+
   })
-  reasonNote: string | null;
+  reason_note: string | null;
 
   @Column('integer', {
     nullable: true,
     default: () => '0',
-    name: 'total_awb_qty',
+
   })
-  totalAwbQty: number | null;
+  total_awb_qty: number | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'work_order_status_id_pick',
+
   })
-  workOrderStatusIdPick: string | null;
+  work_order_status_id_pick: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'sigesit_notes',
+
   })
-  sigesitNotes: string | null;
+  sigesit_notes: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'drop_date_time',
+
   })
-  dropDateTime: Date | null;
+  drop_date_time: Date | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-    name: 'is_final',
+
   })
-  isFinal: boolean | null;
+  is_final: boolean | null;
 }

@@ -1,54 +1,54 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('do_pickup_detail', { schema: 'public' })
-@Index('do_pickup_detail_work_order_id_idx', ['workOrderId'])
+@Index('do_pickup_detail_work_order_id_idx', ['work_order_id'])
 export class DoPickupDetail extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'do_pickup_detail_id',
+
   })
-  doPickupDetailId: string;
+  do_pickup_detail_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'do_pickup_id',
+
   })
-  doPickupId: string;
+  do_pickup_id: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'work_order_id',
+
   })
-  workOrderId: string | null;
+  work_order_id: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

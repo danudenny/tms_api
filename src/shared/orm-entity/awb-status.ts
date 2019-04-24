@@ -1,109 +1,81 @@
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-  RelationId,
-} from 'typeorm';
+import { BaseEntity, Column, Entity } from 'typeorm';
 
 @Entity('awb_status', { schema: 'public' })
 export class AwbStatus extends BaseEntity {
   @Column('integer', {
     nullable: false,
     primary: true,
-    name: 'awb_status_id',
   })
-  awbStatusId: number;
+  awb_status_id: number;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'awb_status_name',
   })
-  awbStatusName: string;
+  awb_status_name: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'awb_status_title',
   })
-  awbStatusTitle: string;
+  awb_status_title: string;
 
   @Column('integer', {
     nullable: false,
-    name: 'awb_visibility',
   })
-  awbVisibility: number;
+  awb_visibility: number;
 
   @Column('integer', {
     nullable: false,
-    name: 'awb_level',
   })
-  awbLevel: number;
+  awb_level: number;
 
   @Column('text', {
     nullable: true,
-    name: 'awb_desc',
   })
-  awbDesc: string | null;
+  awb_desc: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-    name: 'is_final_status',
   })
-  isFinalStatus: boolean | null;
+  is_final_status: boolean | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-    name: 'is_attempted',
   })
-  isAttempted: boolean | null;
+  is_attempted: boolean | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-    name: 'is_problem',
   })
-  isProblem: boolean | null;
+  is_problem: boolean | null;
 }

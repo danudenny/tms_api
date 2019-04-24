@@ -8,57 +8,57 @@ import { Place } from './place';
 export class District extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'district_id',
+
   })
-  districtId: string;
+  district_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'country_id',
+
   })
-  countryId: string;
+  country_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'province_id',
+
   })
-  provinceId: string;
+  province_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'city_id',
+
   })
-  cityId: string;
+  city_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'district_code',
+
   })
-  districtCode: string;
+  district_code: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'district_name',
+
   })
-  districtName: string;
+  district_name: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'zone_id',
+
   })
-  zoneId: string;
+  zone_id: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'district_id_ref_price',
+
   })
-  districtIdRefPrice: string | null;
+  district_id_ref_price: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'notes',
+
   })
   notes: string | null;
 
@@ -66,52 +66,52 @@ export class District extends BaseEntity {
     nullable: false,
     length: 20,
     default: () => '0',
-    name: 'zip_code',
+
   })
-  zipCode: string;
+  zip_code: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-    name: 'branch_id_delivery',
+
   })
-  branchIdDelivery: string | null;
+  branch_id_delivery: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'branch_id_pickup',
+
   })
-  branchIdPickup: string | null;
+  branch_id_pickup: string | null;
 
   @OneToMany(
     type => PackagePrice,

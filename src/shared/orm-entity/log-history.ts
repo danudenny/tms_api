@@ -1,73 +1,87 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('log_history', { schema: 'public' })
 export class LogHistory extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'log_history_id',
+
   })
-  logHistoryId: string;
+  log_history_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'table_name',
+
   })
-  tableName: string;
+  table_name: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'reference_id',
+
   })
-  referenceId: string;
+  reference_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'field_name',
+
   })
-  fieldName: string;
+  field_name: string;
 
   @Column('text', {
     nullable: true,
-    name: 'value_before',
+
   })
-  valueBefore: string | null;
+  value_before: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'value_after',
+
   })
-  valueAfter: string | null;
+  value_after: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

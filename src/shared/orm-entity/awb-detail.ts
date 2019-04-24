@@ -4,27 +4,23 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class AwbDetail extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'awb_detail_id',
   })
-  awbDetailId: string;
+  awb_detail_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'awb_id',
   })
-  awbId: string;
+  awb_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'attachment_id',
   })
-  attachmentId: string;
+  attachment_id: string;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'width',
   })
   width: string | null;
 
@@ -32,7 +28,6 @@ export class AwbDetail extends BaseEntity {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'length',
   })
   length: string | null;
 
@@ -40,7 +35,6 @@ export class AwbDetail extends BaseEntity {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'height',
   })
   height: string | null;
 
@@ -48,7 +42,6 @@ export class AwbDetail extends BaseEntity {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'volume',
   })
   volume: string | null;
 
@@ -56,31 +49,27 @@ export class AwbDetail extends BaseEntity {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'divider_volume',
   })
-  dividerVolume: string | null;
+  divider_volume: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
-    name: 'weight_volume',
   })
-  weightVolume: string | null;
+  weight_volume: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
-    name: 'weight_volume_rounded',
   })
-  weightVolumeRounded: string | null;
+  weight_volume_rounded: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
-    name: 'weight',
   })
   weight: string | null;
 
@@ -88,68 +77,58 @@ export class AwbDetail extends BaseEntity {
     nullable: true,
     precision: 20,
     scale: 5,
-    name: 'weight_rounded',
   })
-  weightRounded: string | null;
+  weight_rounded: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
-    name: 'weight_final',
   })
-  weightFinal: string | null;
+  weight_final: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'item_price',
   })
-  itemPrice: string | null;
+  item_price: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'insurance',
   })
   insurance: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'users_id_created',
   })
-  usersIdCreated: string;
+  users_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'users_id_updated',
   })
-  usersIdUpdated: string;
+  users_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'updated_time',
   })
-  updatedTime: Date | null;
+  updated_time: Date | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-    name: 'bag_item_id_latest',
   })
-  bagItemIdLatest: string | null;
+  bag_item_id_latest: string | null;
 }

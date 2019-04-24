@@ -18,7 +18,6 @@
       "type": "node",
       "request": "launch",
       "name": "Debug Test",
-      "preLaunchTask": "npm: test:prepare",
       "runtimeArgs": ["--inspect-brk", "-r", "tsconfig-paths/register", "-r", "ts-node/register"],
       "args": ["--runInBand"],
       "sourceMaps": true,

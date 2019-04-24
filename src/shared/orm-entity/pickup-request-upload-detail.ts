@@ -1,303 +1,317 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('pickup_request_upload_detail', { schema: 'public' })
 export class PickupRequestUploadDetail extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'pickup_request_upload_detail_id',
+
   })
-  pickupRequestUploadDetailId: string;
+  pickup_request_upload_detail_id: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'pickup_request_upload_id',
+
   })
-  pickupRequestUploadId: string | null;
+  pickup_request_upload_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'awb_item_id',
+
   })
-  awbItemId: string | null;
+  awb_item_id: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'ref_awb_number',
+
   })
-  refAwbNumber: string | null;
+  ref_awb_number: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'cust_package_id',
+
   })
-  custPackageId: string | null;
+  cust_package_id: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'delivery_type',
+
   })
-  deliveryType: string | null;
+  delivery_type: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'destination_code',
+
   })
-  destinationCode: string | null;
+  destination_code: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'notes',
+
   })
   notes: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'origin_code',
+
   })
-  originCode: string | null;
+  origin_code: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'parcel_category',
+
   })
-  parcelCategory: string | null;
+  parcel_category: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'parcel_content',
+
   })
-  parcelContent: string | null;
+  parcel_content: string | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'parcel_height',
+
   })
-  parcelHeight: number | null;
+  parcel_height: number | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'parcel_length',
+
   })
-  parcelLength: number | null;
+  parcel_length: number | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'parcel_width',
+
   })
-  parcelWidth: number | null;
+  parcel_width: number | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 2,
-    name: 'parcel_qty',
+
   })
-  parcelQty: string | null;
+  parcel_qty: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 2,
-    name: 'parcel_disc_value',
+
   })
-  parcelDiscValue: string | null;
+  parcel_disc_value: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 2,
-    name: 'parcel_value',
+
   })
-  parcelValue: string | null;
+  parcel_value: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 20,
-    name: 'parcel_uom',
+
   })
-  parcelUom: string | null;
+  parcel_uom: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 2,
-    name: 'cod_value',
+
   })
-  codValue: string | null;
+  cod_value: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 2,
-    name: 'est_shipping_fee',
+
   })
-  estShippingFee: string | null;
+  est_shipping_fee: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'recipient_address',
+
   })
-  recipientAddress: string | null;
+  recipient_address: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'recipient_city',
+
   })
-  recipientCity: string | null;
+  recipient_city: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'recipient_district',
+
   })
-  recipientDistrict: string | null;
+  recipient_district: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'recipient_name',
+
   })
-  recipientName: string | null;
+  recipient_name: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'recipient_phone',
+
   })
-  recipientPhone: string | null;
+  recipient_phone: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'recipient_province',
+
   })
-  recipientProvince: string | null;
+  recipient_province: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'recipient_title',
+
   })
-  recipientTitle: string | null;
+  recipient_title: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 20,
-    name: 'recipient_zip',
+
   })
-  recipientZip: string | null;
+  recipient_zip: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'shipper_address',
+
   })
-  shipperAddress: string | null;
+  shipper_address: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'shipper_city',
+
   })
-  shipperCity: string | null;
+  shipper_city: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'shipper_district',
+
   })
-  shipperDistrict: string | null;
+  shipper_district: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'shipper_name',
+
   })
-  shipperName: string | null;
+  shipper_name: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'shipper_phone',
+
   })
-  shipperPhone: string | null;
+  shipper_phone: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'shipper_province',
+
   })
-  shipperProvince: string | null;
+  shipper_province: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 20,
-    name: 'shipper_zip',
+
   })
-  shipperZip: string | null;
+  shipper_zip: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 2,
-    name: 'total_weight',
+
   })
-  totalWeight: string | null;
+  total_weight: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'work_order_id_last',
+
   })
-  workOrderIdLast: string | null;
+  work_order_id_last: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'user_created',
+
   })
-  userCreated: string | null;
+  user_created: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'user_updated',
+
   })
-  userUpdated: string | null;
+  user_updated: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

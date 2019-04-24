@@ -4,162 +4,162 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class DoPickup extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'do_pickup_id',
+
   })
-  doPickupId: string;
+  do_pickup_id: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'do_pickup_date',
+
   })
-  doPickupDate: Date;
+  do_pickup_date: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id',
+
   })
-  userId: string;
+  user_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'branch_id',
+
   })
-  branchId: string;
+  branch_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'employee_id',
+
   })
-  employeeId: string;
+  employee_id: string;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name: 'work_order_group',
+
   })
-  workOrderGroup: string | null;
+  work_order_group: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name: 'work_order_group_encrypt',
+
   })
-  workOrderGroupEncrypt: string | null;
+  work_order_group_encrypt: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'latitude_check_in',
+
   })
-  latitudeCheckIn: string | null;
+  latitude_check_in: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'latitude_check_out',
+
   })
-  latitudeCheckOut: string | null;
+  latitude_check_out: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'longitude_check_in',
+
   })
-  longitudeCheckIn: string | null;
+  longitude_check_in: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'longitude_check_out',
+
   })
-  longitudeCheckOut: string | null;
+  longitude_check_out: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'check_in_date_time',
+
   })
-  checkInDateTime: Date | null;
+  check_in_date_time: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'check_out_date_time',
+
   })
-  checkOutDateTime: Date | null;
+  check_out_date_time: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'cancel_check_in_date_time',
+
   })
-  cancelCheckInDateTime: Date | null;
+  cancel_check_in_date_time: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'cancel_check_out_date_time',
+
   })
-  cancelCheckOutDateTime: Date | null;
+  cancel_check_out_date_time: Date | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-    name: 'is_active',
+
   })
-  isActive: boolean | null;
+  is_active: boolean | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-    name: 'customer_account_id',
+
   })
-  customerAccountId: string | null;
+  customer_account_id: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'merchant_name',
+
   })
-  merchantName: string | null;
+  merchant_name: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'pickup_image',
+
   })
-  pickupImage: string | null;
+  pickup_image: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'pickup_signature',
+
   })
-  pickupSignature: string | null;
+  pickup_signature: string | null;
 }

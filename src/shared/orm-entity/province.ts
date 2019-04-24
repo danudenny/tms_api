@@ -20,60 +20,60 @@ import { PackagePriceSpecial } from './package-price-special';
 export class Province extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'province_id',
+
   })
-  provinceId: string;
+  province_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'country_id',
+
   })
-  countryId: string;
+  country_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'province_code',
+
   })
-  provinceCode: string;
+  province_code: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'province_name',
+
   })
-  provinceName: string;
+  province_name: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @OneToMany(
     type => PackagePrice,

@@ -1,82 +1,96 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('employee_education', { schema: 'public' })
 export class EmployeeEducation extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'employee_education_id',
+
   })
-  employeeEducationId: string;
+  employee_education_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'employee_id',
+
   })
-  employeeId: string;
+  employee_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'education',
+
   })
   education: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'education_name',
+
   })
-  educationName: string;
+  education_name: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'majors',
+
   })
   majors: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'education_start',
+
   })
-  educationStart: string;
+  education_start: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'education_end',
+
   })
-  educationEnd: string | null;
+  education_end: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

@@ -1,56 +1,70 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('sync_awb', { schema: 'public' })
 export class SyncAwb extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'sync_awb_id',
+
   })
-  syncAwbId: string;
+  sync_awb_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'sync_code',
+
   })
-  syncCode: string;
+  sync_code: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'request_date',
+
   })
-  requestDate: Date;
+  request_date: Date;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-    name: 'total_data',
+
   })
-  totalData: number;
+  total_data: number;
 
   @Column('text', {
     nullable: true,
-    name: 'request',
+
   })
   request: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'response',
+
   })
   response: string | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_success',
+
   })
-  isSuccess: boolean;
+  is_success: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_dead',
+
   })
-  isDead: boolean;
+  is_dead: boolean;
 }

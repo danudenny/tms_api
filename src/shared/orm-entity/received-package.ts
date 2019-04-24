@@ -1,99 +1,113 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('received_package', { schema: 'public' })
 export class ReceivedPackage extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'received_package_id',
+
   })
-  receivedPackageId: string;
+  received_package_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'received_package_code',
+
   })
-  receivedPackageCode: string;
+  received_package_code: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'employee_id_consignee',
+
   })
-  employeeIdConsignee: string;
+  employee_id_consignee: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'sender_name',
+
   })
-  senderName: string;
+  sender_name: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'received_package_date',
+
   })
-  receivedPackageDate: Date;
+  received_package_date: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id',
+
   })
-  userId: string;
+  user_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'branch_id',
+
   })
-  branchId: string;
+  branch_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('integer', {
     nullable: true,
-    name: 'total_seq',
+
   })
-  totalSeq: number | null;
+  total_seq: number | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'merchant_name',
+
   })
-  merchantName: string | null;
+  merchant_name: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'phone',
+
   })
   phone: string | null;
 }

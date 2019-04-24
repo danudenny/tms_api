@@ -7,61 +7,61 @@ import { PackagePriceSpecial } from './package-price-special';
 export class Country extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'country_id',
+
   })
-  countryId: string;
+  country_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'country_code',
+
   })
-  countryCode: string;
+  country_code: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'country_name',
+
   })
-  countryName: string;
+  country_name: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('character varying', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: string;
+  created_time: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('character varying', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: string;
+  updated_time: string;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'country_phone_code',
+
   })
-  countryPhoneCode: string | null;
+  country_phone_code: string | null;
 
   @OneToMany(type => PackagePrice, package_price => package_price.countryIdFrom)
   packagePrices: PackagePrice[];

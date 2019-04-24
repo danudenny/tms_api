@@ -4,25 +4,25 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class CustomerAddress extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'customer_address_id',
+
   })
-  customerAddressId: string;
+  customer_address_id: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'customer_account_id',
+
   })
-  customerAccountId: string | null;
+  customer_account_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'district_id',
+
   })
-  districtId: string | null;
+  district_id: string | null;
 
   @Column('text', {
     nullable: false,
-    name: 'address',
+
   })
   address: string;
 
@@ -30,59 +30,59 @@ export class CustomerAddress extends BaseEntity {
     nullable: false,
     length: 20,
     default: () => '0',
-    name: 'zip_code',
+
   })
-  zipCode: string;
+  zip_code: string;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_pickup',
+
   })
-  isPickup: boolean;
+  is_pickup: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_billing',
+
   })
-  isBilling: boolean;
+  is_billing: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_cust_address',
+
   })
-  isCustAddress: boolean;
+  is_cust_address: boolean;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

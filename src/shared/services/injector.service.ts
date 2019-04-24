@@ -13,7 +13,7 @@ export class InjectorService {
     return InjectorService.targetModuleRef.get<T>(instance, { strict: false });
   }
 
-  public static getRepository<T>(instance: ObjectType<T>):T {
+  public static getRepository<T>(instance: ObjectType<T>): T {
     return InjectorService.get<T>(getRepositoryToken(instance));
   }
 }

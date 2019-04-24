@@ -1,118 +1,132 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('notification_msg', { schema: 'public' })
 export class NotificationMsg extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'notification_msg_id',
+
   })
-  notificationMsgId: string;
+  notification_msg_id: string;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name: 'title',
+
   })
   title: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'message',
+
   })
   message: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'attachment_id',
+
   })
-  attachmentId: string | null;
+  attachment_id: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'module',
+
   })
   module: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_table',
+
   })
-  refTable: string | null;
+  ref_table: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'ref_id',
+
   })
-  refId: string | null;
+  ref_id: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'response_message',
+
   })
-  responseMessage: string | null;
+  response_message: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name: 'multicast_id',
+
   })
-  multicastId: string | null;
+  multicast_id: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'success',
+
   })
   success: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'failure',
+
   })
   failure: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name: 'canonical_ids',
+
   })
-  canonicalIds: string | null;
+  canonical_ids: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('json', {
     nullable: true,
-    name: 'options',
+
   })
   options: Object | null;
 }

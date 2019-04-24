@@ -5,106 +5,90 @@ export class Location extends BaseEntity {
   @PrimaryColumn('character varying', {
     nullable: false,
     length: 255,
-    name: 'code',
   })
   code: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'province',
   })
   province: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'city',
   })
   city: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'district',
   })
   district: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'city_code',
   })
-  cityCode: string;
+  city_code: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'zone',
   })
   zone: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'city_name',
   })
-  cityName: string;
+  city_name: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'toped_code',
   })
-  topedCode: string;
+  toped_code: string;
 
   @Column('text', {
     nullable: false,
-    name: 'notes',
   })
   notes: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'representative',
   })
   representative: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'province_id',
   })
-  provinceId: string | null;
+  province_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'zone_id',
   })
-  zoneId: string | null;
+  zone_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'city_id',
   })
-  cityId: string | null;
+  city_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'representative_id',
   })
-  representativeId: string | null;
+  representative_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'district_id',
   })
-  districtId: string | null;
+  district_id: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 50,
-    name: 'city_type',
   })
-  cityType: string | null;
+  city_type: string | null;
 }

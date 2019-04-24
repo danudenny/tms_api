@@ -5,7 +5,7 @@ export class SchemaMigrations extends BaseEntity {
   @Column('character varying', {
     nullable: false,
     primary: true,
-    name: 'version',
+
   })
   version: string;
 }

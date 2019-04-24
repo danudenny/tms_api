@@ -5,7 +5,7 @@ const ormConfigTest = [
     port: 5432,
     username: 'postgres',
     password: '123456',
-    database: 'sicepat-tms-api-test',
+    database: 'sicepattmsstaging2',
     schema: 'public',
     entities: ['src/shared/orm-entity/*.ts'],
     migrations: ['src/shared/orm-migration/*.ts'],
@@ -17,7 +17,7 @@ const ormConfigTest = [
     },
     migrationsRun: false,
     logging: false,
-    synchronize: true,
+    synchronize: false,
   },
 ];
 

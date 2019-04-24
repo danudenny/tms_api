@@ -1,91 +1,105 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('employee_experience', { schema: 'public' })
 export class EmployeeExperience extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'employee_experience_id',
+
   })
-  employeeExperienceId: string;
+  employee_experience_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'employee_id',
+
   })
-  employeeId: string;
+  employee_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'company',
+
   })
   company: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'company_description',
+
   })
-  companyDescription: string;
+  company_description: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'position',
+
   })
   position: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'experience_start',
+
   })
-  experienceStart: string | null;
+  experience_start: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'experience_end',
+
   })
-  experienceEnd: string | null;
+  experience_end: string | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 10,
     scale: 2,
-    name: 'last_salary',
+
   })
-  lastSalary: string | null;
+  last_salary: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

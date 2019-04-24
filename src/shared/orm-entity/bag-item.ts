@@ -1,76 +1,76 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('bag_item', { schema: 'public' })
-@Index('bag_item_bag_id_idx', ['bagId'])
-@Index('bag_item_bag_seq_idx', ['bagSeq'])
-@Index('bag_item_is_deleted_idx', ['isDeleted'])
+@Index('bag_item_bag_id_idx', ['bag_id'])
+@Index('bag_item_bag_seq_idx', ['bag_seq'])
+@Index('bag_item_is_deleted_idx', ['is_deleted'])
 export class BagItem extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'bag_item_id',
+
   })
-  bagItemId: string;
+  bag_item_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'bag_id',
+
   })
-  bagId: string;
+  bag_id: string;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
-    name: 'weight',
+
   })
   weight: string | null;
 
   @Column('integer', {
     nullable: false,
-    name: 'bag_seq',
+
   })
-  bagSeq: number;
+  bag_seq: number;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-    name: 'bag_item_history_id',
+
   })
-  bagItemHistoryId: string | null;
+  bag_item_history_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'bagging_id_last',
+
   })
-  baggingIdLast: string | null;
+  bagging_id_last: string | null;
 }

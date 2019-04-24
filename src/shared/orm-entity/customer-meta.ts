@@ -1,68 +1,68 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('customer_meta', { schema: 'public' })
-@Index('index_meta_key', ['metaKey'])
+@Index('index_meta_key', ['meta_key'])
 export class CustomerMeta extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'customer_meta_id',
+
   })
-  customerMetaId: string;
+  customer_meta_id: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'customer_account_id',
+
   })
-  customerAccountId: string | null;
+  customer_account_id: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'meta_key',
+
   })
-  metaKey: string | null;
+  meta_key: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'meta_value',
+
   })
-  metaValue: string | null;
+  meta_value: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'meta_type',
+
   })
-  metaType: string | null;
+  meta_type: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

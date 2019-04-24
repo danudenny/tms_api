@@ -1,114 +1,87 @@
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-  RelationId,
-} from 'typeorm';
+import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('awb_price', { schema: 'public' })
-@Index('awb_price_awb_date_idx', ['awbDate'])
-@Index('awb_price_awb_number_idx', ['awbNumber'])
-@Index('awb_price_customer_account_id_idx', ['customerAccountId'])
-@Index('awb_price_from_to_id_idx', ['fromId', 'toId'])
-@Index('awb_price_updated_time_idx', ['updatedTime'])
+@Index('awb_price_awb_date_idx', ['awb_date'])
+@Index('awb_price_awb_number_idx', ['awb_number'])
+@Index('awb_price_customer_account_id_idx', ['customer_account_id'])
+@Index('awb_price_from_to_id_idx', ['from_id', 'to_id'])
+@Index('awb_price_updated_time_idx', ['updated_time'])
 export class AwbPrice extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'awb_price_id',
   })
-  awbPriceId: string;
+  awb_price_id: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'awb_number',
   })
-  awbNumber: string;
+  awb_number: string;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'awb_date',
   })
-  awbDate: Date | null;
+  awb_date: Date | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'customer_account_id',
   })
-  customerAccountId: string | null;
+  customer_account_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'package_type_id',
   })
-  packageTypeId: string | null;
+  package_type_id: string | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'from_type',
   })
-  fromType: number | null;
+  from_type: number | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'from_id',
   })
-  fromId: string | null;
+  from_id: string | null;
 
   @Column('integer', {
     nullable: true,
-    name: 'to_type',
   })
-  toType: number | null;
+  to_type: number | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'to_id',
   })
-  toId: string | null;
+  to_id: string | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'disc_percent',
   })
-  discPercent: string | null;
+  disc_percent: string | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'disc_value',
   })
-  discValue: string | null;
+  disc_value: string | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'fix_price_disc',
   })
-  fixPriceDisc: string | null;
+  fix_price_disc: string | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'amount',
   })
   amount: string | null;
 
@@ -117,43 +90,38 @@ export class AwbPrice extends BaseEntity {
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'final_amount',
   })
-  finalAmount: string | null;
+  final_amount: string | null;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'total_weight_real',
   })
-  totalWeightReal: string;
+  total_weight_real: string;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'total_weight_final_rounded',
   })
-  totalWeightFinalRounded: string;
+  total_weight_final_rounded: string;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'grand_total_sell_price',
   })
-  grandTotalSellPrice: string;
+  grand_total_sell_price: string;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'insurance',
   })
   insurance: string;
 
@@ -162,193 +130,164 @@ export class AwbPrice extends BaseEntity {
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'insurance_admin',
   })
-  insuranceAdmin: string;
+  insurance_admin: string;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'total_insurance',
   })
-  totalInsurance: string;
+  total_insurance: string;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
-    name: 'cod_value',
   })
-  codValue: string;
+  cod_value: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_table',
   })
-  refTable: string | null;
+  ref_table: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'ref_id',
   })
-  refId: string | null;
+  ref_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'branch_id',
   })
-  branchId: string | null;
+  branch_id: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'employee_id_sales',
   })
-  employeeIdSales: string | null;
+  employee_id_sales: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'employee_id_cro',
   })
-  employeeIdCro: string | null;
+  employee_id_cro: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'employee_id_finance',
   })
-  employeeIdFinance: string | null;
+  employee_id_finance: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name: 'consignee_title',
   })
-  consigneeTitle: string | null;
+  consignee_title: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name: 'consignee_name',
   })
-  consigneeName: string | null;
+  consignee_name: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'consignee_address',
   })
-  consigneeAddress: string | null;
+  consignee_address: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'consignee_phone',
   })
-  consigneePhone: string | null;
+  consignee_phone: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'consignee_zip',
   })
-  consigneeZip: string | null;
+  consignee_zip: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'consignee_district',
   })
-  consigneeDistrict: string | null;
+  consignee_district: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'district_id_consignee',
   })
-  districtIdConsignee: string | null;
+  district_id_consignee: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'calculate_date',
   })
-  calculateDate: Date | null;
+  calculate_date: Date | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'awb_booking_id',
   })
-  awbBookingId: string;
+  awb_booking_id: string;
 
   @Column('bigint', {
     nullable: true,
-    name: 'invoice_id',
   })
-  invoiceId: string | null;
+  invoice_id: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_awb_number_jne',
   })
-  refAwbNumberJne: string | null;
+  ref_awb_number_jne: string | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-    name: 'is_jne',
   })
-  isJne: boolean | null;
+  is_jne: boolean | null;
 
   @Column('character varying', {
     nullable: true,
     length: 3,
-    name: 'ref_representative_code',
   })
-  refRepresentativeCode: string | null;
+  ref_representative_code: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'pickup_merchant',
   })
-  pickupMerchant: string | null;
+  pickup_merchant: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'email_merchant',
   })
-  emailMerchant: string | null;
+  email_merchant: string | null;
 }

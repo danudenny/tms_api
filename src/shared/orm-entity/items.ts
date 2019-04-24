@@ -1,5 +1,18 @@
-import { BaseEntity, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 import { Todos } from './todos';
 
 @Entity('items', { schema: 'public' })
@@ -7,19 +20,19 @@ import { Todos } from './todos';
 export class Items extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'id',
+
   })
   id: string;
 
   @Column('character varying', {
     nullable: true,
-    name: 'name',
+
   })
   name: string | null;
 
   @Column('boolean', {
     nullable: true,
-    name: 'done',
+
   })
   done: boolean | null;
 
@@ -29,13 +42,13 @@ export class Items extends BaseEntity {
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_at',
+
   })
-  createdAt: Date;
+  created_at: Date;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_at',
+
   })
-  updatedAt: Date;
+  updated_at: Date;
 }

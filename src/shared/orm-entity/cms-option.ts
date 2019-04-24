@@ -4,51 +4,51 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class CmsOption extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'cms_option_id',
+
   })
-  cmsOptionId: string;
+  cms_option_id: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'cms_option_name',
+
   })
-  cmsOptionName: string | null;
+  cms_option_name: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'cms_option_value',
+
   })
-  cmsOptionValue: string | null;
+  cms_option_value: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

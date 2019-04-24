@@ -1,97 +1,111 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
 @Entity('email_log_history', { schema: 'public' })
 export class EmailLogHistory extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'email_log_history_id',
+
   })
-  emailLogHistoryId: string;
+  email_log_history_id: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'email_log_id',
+
   })
-  emailLogId: string;
+  email_log_id: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name: 'ref_table',
+
   })
-  refTable: string | null;
+  ref_table: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name: 'ref_id',
+
   })
-  refId: string | null;
+  ref_id: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'email_subject',
+
   })
-  emailSubject: string | null;
+  email_subject: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'email_to',
+
   })
-  emailTo: string | null;
+  email_to: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'email_cc',
+
   })
-  emailCc: string | null;
+  email_cc: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'email_bcc',
+
   })
-  emailBcc: string | null;
+  email_bcc: string | null;
 
   @Column('text', {
     nullable: true,
-    name: 'html_body',
+
   })
-  htmlBody: string | null;
+  html_body: string | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'email_sent',
+
   })
-  emailSent: boolean;
+  email_sent: boolean;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

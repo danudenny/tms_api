@@ -5,59 +5,59 @@ export class BagItemStatus extends BaseEntity {
   @Column('integer', {
     nullable: false,
     primary: true,
-    name: 'bag_item_status_id',
+
   })
-  bagItemStatusId: number;
+  bag_item_status_id: number;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'bag_item_status_name',
+
   })
-  bagItemStatusName: string;
+  bag_item_status_name: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'bag_item_status_title',
+
   })
-  bagItemStatusTitle: string;
+  bag_item_status_title: string;
 
   @Column('character varying', {
     nullable: false,
     length: 500,
-    name: 'bag_item_status_desc',
+
   })
-  bagItemStatusDesc: string;
+  bag_item_status_desc: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_created',
+
   })
-  userIdCreated: string;
+  user_id_created: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'created_time',
+
   })
-  createdTime: Date;
+  created_time: Date;
 
   @Column('bigint', {
     nullable: false,
-    name: 'user_id_updated',
+
   })
-  userIdUpdated: string;
+  user_id_updated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'updated_time',
+
   })
-  updatedTime: Date;
+  updated_time: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_deleted',
+
   })
-  isDeleted: boolean;
+  is_deleted: boolean;
 }
