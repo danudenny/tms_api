@@ -1,4 +1,6 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
+import { UserRole } from './user-role';
+import { Employee } from './employee';
 
 @Entity('users', { schema: 'public' })
 export class Users extends BaseEntity {
@@ -94,4 +96,11 @@ export class Users extends BaseEntity {
     length: 500,
   })
   otp_reset: string | null;
+
+  @OneToMany(type => UserRole, user_role => user_role.userId)
+  userRoles: UserRole[];
+
+  @OneToOne(type => Employee)
+  @JoinColumn({ name: 'employee_id' })
+  employee: Employee;
 }

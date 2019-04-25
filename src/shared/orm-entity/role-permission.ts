@@ -13,6 +13,7 @@ import {
   PrimaryGeneratedColumn,
   RelationId,
 } from 'typeorm';
+import { Role } from './role';
 
 @Entity('role_permission', { schema: 'public' })
 export class RolePermission extends BaseEntity {
@@ -72,4 +73,8 @@ export class RolePermission extends BaseEntity {
 
   })
   is_deleted: boolean;
+
+  @ManyToOne(type => Role, role => role.rolePermission, {})
+  @JoinColumn({ name: 'role_id' })
+  roleId: Role | null;
 }

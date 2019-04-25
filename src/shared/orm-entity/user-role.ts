@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 
 import { Users } from './users';
+import { Role } from './role';
 
 @Entity('user_role', { schema: 'public' })
 export class UserRole extends BaseEntity {
@@ -64,4 +65,12 @@ export class UserRole extends BaseEntity {
     type: 'bigint',
   })
   user_role_id: string;
+
+  @ManyToOne(type => Users, user => user.userRoles, {})
+  @JoinColumn({ name: 'user_id' })
+  userId: Users | null;
+
+  @ManyToOne(type => Role, role => role.userRoles, {})
+  @JoinColumn({ name: 'role_id' })
+  roleId: Role | null;
 }

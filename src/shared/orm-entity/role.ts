@@ -13,6 +13,9 @@ import {
   PrimaryGeneratedColumn,
   RelationId,
 } from 'typeorm';
+import { UserRole } from './user-role';
+import { Branch } from './branch';
+import { RolePermission } from './role-permission';
 
 @Entity('role', { schema: 'public' })
 export class Role extends BaseEntity {
@@ -95,4 +98,14 @@ export class Role extends BaseEntity {
 
   })
   is_deleted: boolean;
+
+  @OneToMany(type => UserRole, user_role => user_role.roleId)
+  userRoles: UserRole[];
+
+  @OneToMany(type => RolePermission, role_permission => role_permission.roleId)
+  rolePermission: RolePermission[];
+
+  @OneToOne(type => Branch)
+  @JoinColumn()
+  branch: Branch;
 }
