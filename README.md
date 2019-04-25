@@ -29,6 +29,7 @@ The `tslint.json` are helping our development code style to be the same
 5. https://marketplace.visualstudio.com/items?itemName=CoenraadS.bracket-pair-colorizer
 6. https://marketplace.visualstudio.com/items?itemName=stringham.move-ts
 7. https://marketplace.visualstudio.com/items?itemName=wayou.vscode-todo-highlight
+8. https://marketplace.visualstudio.com/items?itemName=develiteio.api-blueprint-viewer
 
 ## How To Start Develop
 
@@ -37,6 +38,39 @@ The `tslint.json` are helping our development code style to be the same
 Start an Android emulator or connect your phone by turning on Android Debugging feature, and then start the project
 ```bash
 npm run start
+```
+
+
+### Run API Blueprint Mock Server
+
+Install drakov (https://www.npmjs.com/package/drakov)
+```bash
+npm install -g drakov
+```
+or
+
+```bash
+yarn global add drakov
+```
+
+With only a glob expression
+
+```bash
+drakov -f "contracts/*.apib"
+```
+
+With glob expression and specified server port
+```bash
+drakov -f "contracts/*.apib" -p 4007
+```
+When running drakov and binding to a public IP
+```bash
+drakov -f "contracts/*.apib" --public
+```
+
+You can tell Drakov to watch for changes in the spec files that are loaded. When changes are detected, Drakov will reload.
+```bash
+drakov -f "contracts/*.apib" --watch
 ```
 
 ### Build Project

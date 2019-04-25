@@ -9,16 +9,14 @@ HOST: http://tmsapi-staging2.sicepat.com
 
 ### Login URL [POST]
 
-+ Request
-    + Header
-
-            Content-Type: application/json
++ Request Login (application/json)
 
     + Attributes (object)
-        + clientId: `Bdsf33523tewfdfs0q0rfewfw`, (string)
-        + email: `ade@sicepat.com`, (string)
-        + username: `adefast`, (string)
-        + password: `1234`, (string)
+        + clientId: `mobile`, (string, required) - Client id
+        + email: `ade@sicepat.com`, (string) - User Email
+        + username: `adefast`, (string) - Username User
+        + password: `1234`, (string) - Password User
+        + grant: `asdasgsdafwerrer345`, (string) - Refresh Token
 
 + Response 200 (application/json; charset=utf-8)
     + Body
