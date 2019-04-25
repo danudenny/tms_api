@@ -1,0 +1,49 @@
+FORMAT: 1A
+HOST: http://tmsapi-staging2.sicepat.com
+
+# API Auth for Mobile
+
+# Group Auth
+
+## Login Access [/api/auth/login]
+
+### Login URL [POST]
+
++ Request
+    + Header
+
+            Content-Type: application/json
+
+    + Attributes (object)
+        + clientId: `Bdsf33523tewfdfs0q0rfewfw`, (string)
+        + email: `ade@sicepat.com`, (string)
+        + username: `adefast`, (string)
+        + password: `1234`, (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "userId": 11,
+                "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
+                "refreshToken": "8asfgasgwetw4tewtggg",
+                "email": "ade@sicepat.com",
+                "username": "adefast",
+                "displayName": "Ade",
+                "roles": [
+                    "driver"
+                ],
+                "rolesAccessPermissions": [
+                    "all"
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
