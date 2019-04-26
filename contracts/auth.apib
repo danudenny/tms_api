@@ -29,11 +29,182 @@ HOST: http://tmsapi-staging2.sicepat.com
                 "username": "adefast",
                 "displayName": "Ade",
                 "roles": [
-                    "driver"
-                ],
-                "rolesAccessPermissions": [
-                    "all"
+                    {
+                        "role_id" : "1",
+                        "branch_id": "1",
+                        "branch_name": "Kantor Pusat",
+                        "branch_code": "100000",
+                        "role_name": "Sales"
+                    },
+                    {
+                        "role_id" : "10",
+                        "branch_id": "2",
+                        "branch_name": "Pluit",
+                        "branch_code": "100100",
+                        "role_name": "Sigesit"
+                    },
+                    {
+                        "role_id" : "10",
+                        "branch_id": "3",
+                        "branch_name": "Daan Mogot",
+                        "branch_code": "100200",
+                        "role_name": "Sigesit"
+                    },
+                    {
+                        "role_id" : "5",
+                        "branch_id": "3",
+                        "branch_name": "Daan Mogot",
+                        "branch_code": "100200",
+                        "role_name": "Kepala Kurir"
+                    }
                 ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Permission Access [/api/auth/permissionAccess] 
+    Untuk dapetkan akses permission sebenarnya hanya butuh roleId. BranchId dikirim hanya untuk indikasi dia login sebagai cabang/gerai mana, tujuannya hanya limit akses untuk boleh buka cabang lain / tidak, selain itu untuk indicator ketika scan, bisa tau dari cabang/gerai mana
+
+### Permission Access URL [POST]
+
++ Request Permission Access (application/json)
+
+    + Header
+
+            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+            
+
+    + Attributes (object)
+        + clientId: `mobile`, (string, required) - Client id
+        + roleId: `adefast`, (string) - Role Id User
+        + branchId: `1234`, (string) - Branch Id User
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "userId": 11,
+                "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
+                "refreshToken": "8asfgasgwetw4tewtggg",
+                "email": "ade@sicepat.com",
+                "username": "adefast",
+                "displayName": "Ade",
+                "branchName": "Kantor Pusat",
+                "branchCode": "0010000",
+                "roleName": "Sales",
+                "employeeId": "1",
+                "rolesAccessPermissions": [
+                    "work_order_list",
+                    "do_pickup_list",
+                    "awb_search",
+                    "awb_list",
+                    "bag_list"
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Change Permission Access [/api/auth/changePermissionAccess] 
+
+### Change Permission Access URL [POST]
+
++ Request Access Permission (application/json)
+
+    + Header
+
+            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+            
+    + Attributes (object)
+        + clientId: `mobile`, (string, required) - Client id
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "userId": 11,
+                "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
+                "refreshToken": "8asfgasgwetw4tewtggg",
+                "email": "ade@sicepat.com",
+                "username": "adefast",
+                "displayName": "Ade",
+                "roles": [
+                    {
+                        "role_id" : "1",
+                        "branch_id": "1",
+                        "branch_name": "Kantor Pusat",
+                        "branch_code": "100000",
+                        "role_name": "Sales"
+                    },
+                    {
+                        "role_id" : "10",
+                        "branch_id": "2",
+                        "branch_name": "Pluit",
+                        "branch_code": "100100",
+                        "role_name": "Sigesit"
+                    },
+                    {
+                        "role_id" : "10",
+                        "branch_id": "3",
+                        "branch_name": "Daan Mogot",
+                        "branch_code": "100200",
+                        "role_name": "Sigesit"
+                    },
+                    {
+                        "role_id" : "5",
+                        "branch_id": "3",
+                        "branch_name": "Daan Mogot",
+                        "branch_code": "100200",
+                        "role_name": "Kepala Kurir"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Logout [/api/auth/logout] 
+
+### logout URL [POST]
+
++ Request Logout (application/json)
+
+    + Header
+
+            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+            
+    + Attributes (object)
+        + clientId: `mobile`, (string, required) - Client id
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                
             }
 
 + Response 400 (application/json; charset=utf-8)
