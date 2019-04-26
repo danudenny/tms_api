@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
-
+// import { PinoLoggerService } from './services/logger.service';
 import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
 import { ErrorHandlerInterceptor } from '../../shared/interceptors/error-handler.interceptor';
 import { ResponseSerializerInterceptor } from '../../shared/interceptors/response-serializer.interceptor';
@@ -14,6 +14,7 @@ import { ConfigService } from '../../shared/services/config.service';
 import { SharedModule } from '../../shared/shared.module';
 import { MainServerControllersModule } from './controllers/main-server-controllers.module';
 import { MainServerInjectorService } from './services/main-server-injector.service';
+import { FastifyAdapter,NestFastifyApplication,} from '@nestjs/platform-fastify';
 
 @Module({
   imports: [SharedModule, MainServerControllersModule],
@@ -39,12 +40,16 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
 
   public static async bootServer() {
     const serverConfig = ConfigService.get('servers.main');
-    const app =
-      process.env.NODE_ENV === 'test'
-        ? (await Test.createTestingModule({
-            imports: [AuthServerModule],
-          }).compile()).createNestApplication()
-        : await NestFactory.create(AuthServerModule);
+    // const app =
+    //   process.env.NODE_ENV === 'test'
+    //     ? (await Test.createTestingModule({
+    //         imports: [AuthServerModule],
+    //       }).compile()).createNestApplication()
+    //     : await NestFactory.create(AuthServerModule);
+    const app = await NestFactory.create<NestFastifyApplication>(
+      AuthServerModule,
+      new FastifyAdapter({ logger: true }),
+    );
     this.app = app;
 
     app.enableCors();
