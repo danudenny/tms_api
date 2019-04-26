@@ -30,32 +30,32 @@ HOST: http://tmsapi-staging2.sicepat.com
                 "displayName": "Ade",
                 "roles": [
                     {
-                        "role_id" : "1",
-                        "branch_id": "1",
-                        "branch_name": "Kantor Pusat",
-                        "branch_code": "100000",
-                        "role_name": "Sales"
+                        "roleId" : "1",
+                        "branchId": "1",
+                        "branchName": "Kantor Pusat",
+                        "branchCode": "100000",
+                        "roleName": "Sales"
                     },
                     {
-                        "role_id" : "10",
-                        "branch_id": "2",
-                        "branch_name": "Pluit",
-                        "branch_code": "100100",
-                        "role_name": "Sigesit"
+                        "roleId" : "10",
+                        "branchId": "2",
+                        "branchName": "Pluit",
+                        "branchCode": "100100",
+                        "roleName": "Sigesit"
                     },
                     {
-                        "role_id" : "10",
-                        "branch_id": "3",
-                        "branch_name": "Daan Mogot",
-                        "branch_code": "100200",
-                        "role_name": "Sigesit"
+                        "roleId" : "10",
+                        "branchId": "3",
+                        "branchName": "Daan Mogot",
+                        "branchCode": "100200",
+                        "roleName": "Sigesit"
                     },
                     {
-                        "role_id" : "5",
-                        "branch_id": "3",
-                        "branch_name": "Daan Mogot",
-                        "branch_code": "100200",
-                        "role_name": "Kepala Kurir"
+                        "roleId" : "5",
+                        "branchId": "3",
+                        "branchName": "Daan Mogot",
+                        "branchCode": "100200",
+                        "roleName": "Kepala Kurir"
                     }
                 ]
             }
@@ -79,9 +79,8 @@ HOST: http://tmsapi-staging2.sicepat.com
 
     + Header
 
-            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+            Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
             
-
     + Attributes (object)
         + clientId: `mobile`, (string, required) - Client id
         + roleId: `adefast`, (string) - Role Id User
@@ -129,49 +128,48 @@ HOST: http://tmsapi-staging2.sicepat.com
 
     + Header
 
-            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+            Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
             
     + Attributes (object)
-        + clientId: `mobile`, (string, required) - Client id
+        + clientId: 'mobile', (string, required) - Client id
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
                 "userId": 11,
-                "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
                 "refreshToken": "8asfgasgwetw4tewtggg",
                 "email": "ade@sicepat.com",
                 "username": "adefast",
                 "displayName": "Ade",
                 "roles": [
                     {
-                        "role_id" : "1",
-                        "branch_id": "1",
-                        "branch_name": "Kantor Pusat",
-                        "branch_code": "100000",
-                        "role_name": "Sales"
+                        "roleId" : "1",
+                        "branchId": "1",
+                        "branchName": "Kantor Pusat",
+                        "branchCode": "100000",
+                        "roleName": "Sales"
                     },
                     {
-                        "role_id" : "10",
-                        "branch_id": "2",
-                        "branch_name": "Pluit",
-                        "branch_code": "100100",
-                        "role_name": "Sigesit"
+                        "roleId" : "10",
+                        "branchId": "2",
+                        "branchName": "Pluit",
+                        "branchCode": "100100",
+                        "roleName": "Sigesit"
                     },
                     {
-                        "role_id" : "10",
-                        "branch_id": "3",
-                        "branch_name": "Daan Mogot",
-                        "branch_code": "100200",
-                        "role_name": "Sigesit"
+                        "roleId" : "10",
+                        "branchId": "3",
+                        "branchName": "Daan Mogot",
+                        "branchCode": "100200",
+                        "roleName": "Sigesit"
                     },
                     {
-                        "role_id" : "5",
-                        "branch_id": "3",
-                        "branch_name": "Daan Mogot",
-                        "branch_code": "100200",
-                        "role_name": "Kepala Kurir"
+                        "roleId" : "5",
+                        "branchId": "3",
+                        "branchName": "Daan Mogot",
+                        "branchCode": "100200",
+                        "roleName": "Kepala Kurir"
                     }
                 ]
             }
@@ -195,10 +193,10 @@ HOST: http://tmsapi-staging2.sicepat.com
 
     + Header
 
-            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+            Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
             
     + Attributes (object)
-        + clientId: `mobile`, (string, required) - Client id
+        + clientId: 'mobile', (string, required) - Client id
 
 + Response 200 (application/json; charset=utf-8)
     + Body
