@@ -1,8 +1,9 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
-import { Test } from '@nestjs/testing';
+// import { Test } from '@nestjs/testing';
+// import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
 // import { PinoLoggerService } from './services/logger.service';
-import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ErrorHandlerInterceptor } from '../../shared/interceptors/error-handler.interceptor';
 import { ResponseSerializerInterceptor } from '../../shared/interceptors/response-serializer.interceptor';
 import { AuthMiddleware } from '../../shared/middlewares/auth.middleware';
@@ -14,7 +15,7 @@ import { ConfigService } from '../../shared/services/config.service';
 import { SharedModule } from '../../shared/shared.module';
 import { MainServerControllersModule } from './controllers/main-server-controllers.module';
 import { MainServerInjectorService } from './services/main-server-injector.service';
-import { FastifyAdapter,NestFastifyApplication,} from '@nestjs/platform-fastify';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 @Module({
   imports: [SharedModule, MainServerControllersModule],
@@ -46,6 +47,8 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
     //         imports: [AuthServerModule],
     //       }).compile()).createNestApplication()
     //     : await NestFactory.create(AuthServerModule);
+
+    // NOTE: adapter with fastify
     const app = await NestFactory.create<NestFastifyApplication>(
       AuthServerModule,
       new FastifyAdapter({ logger: true }),
@@ -68,15 +71,25 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
     );
 
     if (serverConfig.swagger.enabled) {
-      const swaggerModule = new SwaggerModule();
+      // NOTE: swagger doc with fastify
       const options = new DocumentBuilder()
         .setTitle(serverConfig.swagger.title)
         .setDescription(serverConfig.swagger.description)
         .setVersion('1.0')
         .addBearerAuth()
         .build();
-      const document = swaggerModule.createDocument(app, options);
-      swaggerModule.setup(serverConfig.swagger.path, app, document);
+      const document = SwaggerModule.createDocument(app, options);
+      SwaggerModule.setup(serverConfig.swagger.path, app, document);
+
+      // const swaggerModule = new SwaggerModule();
+      // const options = new DocumentBuilder()
+      //   .setTitle(serverConfig.swagger.title)
+      //   .setDescription(serverConfig.swagger.description)
+      //   .setVersion('1.0')
+      //   .addBearerAuth()
+      //   .build();
+      // const document = SwaggerModule.createDocument(app, options);
+      // SwaggerModule.setup(serverConfig.swagger.path, app, document);
     }
 
     if (process.env.NODE_ENV === 'test') {
