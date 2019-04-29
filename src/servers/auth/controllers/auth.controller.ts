@@ -25,6 +25,7 @@ export class AuthController {
       payload.email,
       payload.password,
     );
+
     // const loginMetadata = payload;
     Logger.log('#### RES :: ' + JSON.stringify(loginMetadata));
 

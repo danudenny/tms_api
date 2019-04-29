@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { TokenExpiredError } from 'jsonwebtoken';
 
@@ -44,9 +44,9 @@ export class AuthService {
         clientId,
         user,
         );
+      Logger.log('### Login Result Metadata =======================================================');
+      Logger.log(loginResultMetadata);
 
-      // tslint:disable-next-line: no-console
-      console.log(loginResultMetadata);
       return loginResultMetadata;
 
     } else {
@@ -57,6 +57,7 @@ export class AuthService {
         HttpStatus.UNAUTHORIZED,
       );
     }
+    // return null;
   }
 
   async refreshAccessToken(
@@ -90,12 +91,13 @@ export class AuthService {
 
   public populateLoginResultMetadataByUser(
     clientId: string,
-    user: any,
+    user: Users,
   ) {
     const jwtAccessTokenPayload = this.populateJwtAccessTokenPayloadFromUser(
       clientId,
       user,
     );
+
     const accessToken = this.jwtService.sign(jwtAccessTokenPayload, {
       expiresIn: ConfigService.get('jwt.accessTokenExpiration'),
     });
@@ -109,6 +111,16 @@ export class AuthService {
     });
 
     const result = new AuthLoginResultMetadata();
+    // TODO: Mapping response data
+    result.userId = user.user_id;
+    result.accessToken = accessToken;
+    result.refreshToken = refreshToken;
+    result.email = user.email;
+    // result.username = user.username;
+    // result.displayName = user.displayName;
+
+    Logger.log('### RESULT =============================================');
+    Logger.log(result);
 
     return result;
   }
