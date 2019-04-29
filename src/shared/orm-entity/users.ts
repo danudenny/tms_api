@@ -3,6 +3,7 @@ import { UserRole } from './user-role';
 import { Employee } from './employee';
 
 @Entity('users', { schema: 'public' })
+
 export class Users extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',

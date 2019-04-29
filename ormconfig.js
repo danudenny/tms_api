@@ -24,10 +24,11 @@ const ormConfigTest = [
 const ormConfigDefault = [
   {
     type: 'postgres',
-    host: 'localhost',
+    host:
+      'sicepat-tms-masterdata-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
     port: 5432,
-    username: 'postgres',
-    password: '123456',
+    username: 'sicepatstaging',
+    password: 's1c3p4T$t46Ingb05$sQu',
     database: 'sicepattmsstaging2',
     schema: 'public',
     entities: ['src/shared/orm-entity/*.ts'],
@@ -38,7 +39,7 @@ const ormConfigDefault = [
       migrationsDir: 'src/shared/orm-migration',
       subscribersDir: 'src/shared/orm-subscriber',
     },
-    migrationsRun: true,
+    migrationsRun: false,
     logging: true,
     synchronize: false,
   },
