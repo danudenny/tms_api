@@ -1,15 +1,13 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 
 import { AuthService } from '../services/auth.service';
 import { RequestContextMetadataService } from '../services/request-context-metadata.service';
 
-
 @Injectable()
 export class AuthenticatedGuard implements CanActivate {
-  // constructor(private readonly jwtService: JwtService) {}
-  constructor(@Inject(forwardRef(() => AuthenticatedGuard)) private readonly jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService) {}
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {

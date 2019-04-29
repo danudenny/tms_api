@@ -1,20 +1,15 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { InjectRepository } from '@nestjs/typeorm';
 import { identity, Observable } from 'rxjs';
 
 import { AUTH } from '../constants/auth.constant';
 import { DECORATOR } from '../constants/decorator.constant';
-// import { AccessPermissionRepository } from '../orm-repository/access-permission.repository';
 import { AuthService } from '../services/auth.service';
-import { AccessPermissionRepository } from '../orm-repository/access-permision-repository.vm';
 
 @Injectable()
 export class RoleAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    @InjectRepository(AccessPermissionRepository)
-    private readonly accessPermissionRepository: AccessPermissionRepository,
   ) {}
 
   canActivate(
@@ -98,9 +93,7 @@ export class RoleAuthGuard implements CanActivate {
     requestedAccessPermissionNames: string[],
   ) {
     const authMetadataRoles = AuthService.getAuthMetadataRoles();
-    const authMetadataAccessPermissions = await this.accessPermissionRepository.findByRoleNames(
-      authMetadataRoles,
-    );
+    const authMetadataAccessPermissions = []; // retrive from database
     const authMetadataAccessPermissionNames = authMetadataAccessPermissions.map(
       authMetadataAccessPermission => authMetadataAccessPermission.name,
     );
