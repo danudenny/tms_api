@@ -8,10 +8,17 @@ import { AuthLoginResultMetadata } from '../models/auth-login-result-metadata';
 import { ConfigService } from './config.service';
 import { ContextualErrorService } from './contextual-error.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
+import { Users } from '../orm-entity/users';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    // @InjectRepository(UserRepository)
+    // private readonly userRepository: UserRepository,
+    // @InjectRepository(LoginSessionRepository)
+    // private readonly loginSessionRepository: LoginSessionRepository,
+  ) { }
 
   async login(
     clientId: string,
@@ -23,7 +30,33 @@ export class AuthService {
 
     // TODO: Populate return value by using this.populateLoginResultMetadataByUser
 
-    return null;
+    // NOTE: Test get data and return response data
+    const user_id = 1;
+
+    const user = await Users.findOne({
+        where: {
+          user_id,
+        },
+      });
+
+    if (user) {
+      const loginResultMetadata = this.populateLoginResultMetadataByUser(
+        clientId,
+        user,
+        );
+
+      // tslint:disable-next-line: no-console
+      console.log(loginResultMetadata);
+      return loginResultMetadata;
+
+    } else {
+      ContextualErrorService.throw(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
   }
 
   async refreshAccessToken(
