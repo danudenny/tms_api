@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards, Logger } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Logger, HttpCode } from '@nestjs/common';
 
 import { ApiOkResponse, ApiUseTags } from '../../../shared/external/nestjs-swagger';
 import { Transactional } from '../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
@@ -13,6 +13,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
+  @HttpCode(200)
   @ApiOkResponse({ type: AuthLoginResponseVM })
   @Transactional()
 
@@ -24,6 +25,7 @@ export class AuthController {
       payload.clientId,
       payload.email,
       payload.password,
+      payload.username,
     );
 
     // const loginMetadata = payload;

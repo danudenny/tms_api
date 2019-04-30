@@ -9,13 +9,15 @@ import { ConfigService } from './config.service';
 import { ContextualErrorService } from './contextual-error.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
 import { Users } from '../orm-entity/users';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserRepository } from '../orm-repository/user.repository';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    // @InjectRepository(UserRepository)
-    // private readonly userRepository: UserRepository,
+    @InjectRepository(UserRepository)
+    private readonly userRepository: UserRepository,
     // @InjectRepository(LoginSessionRepository)
     // private readonly loginSessionRepository: LoginSessionRepository,
   ) { }
@@ -24,29 +26,23 @@ export class AuthService {
     clientId: string,
     email: string,
     password: string,
+    username?: string,
   ): Promise<AuthLoginResultMetadata> {
-
-    // TODO: Validate user password
 
     // TODO: Populate return value by using this.populateLoginResultMetadataByUser
 
-    // NOTE: Test get data and return response data
-    const user_id = 1;
+    // TODO: Validate user password
+    const user = await this.userRepository.findByEmailOrUsername(
+      email,
+      username,
+    );
 
-    const user = await Users.findOne({
-        where: {
-          user_id,
-        },
-      });
-
+    // check user present
     if (user) {
       const loginResultMetadata = this.populateLoginResultMetadataByUser(
         clientId,
         user,
         );
-      Logger.log('### Login Result Metadata =======================================================');
-      Logger.log(loginResultMetadata);
-
       return loginResultMetadata;
 
     } else {
@@ -118,9 +114,6 @@ export class AuthService {
     result.email = user.email;
     // result.username = user.username;
     // result.displayName = user.displayName;
-
-    Logger.log('### RESULT =============================================');
-    Logger.log(result);
 
     return result;
   }
