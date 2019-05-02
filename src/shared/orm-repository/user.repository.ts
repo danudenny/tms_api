@@ -8,6 +8,7 @@ export class UserRepository extends Repository<User> {
   findByEmailOrUsername(email: string, username) {
     if (email) {
       return this.findOne({
+        relations: ['roles'],
         where: {
           email,
         },

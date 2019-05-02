@@ -105,11 +105,15 @@ export class User extends BaseEntity {
 
   // TODO: need review
   @ManyToMany(() => Role, {
-    eager: true,
+    eager: false,
     onDelete: 'CASCADE',
     cascade: true,
   })
-  @JoinTable()
+  @JoinTable({
+    name: 'user_role',
+    joinColumns: [{ name: 'user_id'}],
+    inverseJoinColumns: [{ name: 'role_id' }],
+  })
   roles: Role[];
 
   // @ManyToMany(() => Role, {
@@ -120,9 +124,9 @@ export class User extends BaseEntity {
   // @JoinTable()
   // roles: Role[];
 
-  @OneToOne(() => Employee, employee => employee, { eager: true })
-  @JoinColumn({ name: 'employee_id' })
-  employee: Employee;
+  // @OneToOne(() => Employee, employee => employee, { eager: true })
+  // @JoinColumn({ name: 'employee_id' })
+  // employee: Employee;
 
   // additional method
   validatePassword(passwordToValidate: string) {

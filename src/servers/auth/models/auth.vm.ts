@@ -1,4 +1,5 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+import { RoleVm } from './role.vm';
 
 export class AuthLoginByEmailOrUsernamePayloadVM {
   @ApiModelProperty()
@@ -33,9 +34,9 @@ export class AuthLoginResponseVM {
   @ApiModelProperty()
   displayName: string;
 
-  @ApiModelProperty({ type: [String] })
-  roles: string[];
+  @ApiModelProperty({ type: [RoleVm] })
+  roles: RoleVm[];
 
-  @ApiModelProperty({ type: [String] })
-  rolesAccessPermissions: string[];
+  // @ApiModelProperty({ type: [String] })
+  // rolesAccessPermissions: string[];
 }

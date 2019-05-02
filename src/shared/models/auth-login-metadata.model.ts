@@ -5,6 +5,6 @@ export class AuthLoginMetadata {
   email: string;
   username: string;
   displayName: string;
-  roles: string[];
+  roles: object[];
   rolesPermissionNames: string[];
 }

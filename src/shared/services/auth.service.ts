@@ -11,6 +11,7 @@ import { RequestContextMetadataService } from './request-context-metadata.servic
 import { User } from '../orm-entity/user';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from '../orm-repository/user.repository';
+import { map, pick } from 'lodash';
 
 @Injectable()
 export class AuthService {
@@ -116,12 +117,17 @@ export class AuthService {
 
     const result = new AuthLoginResultMetadata();
     // TODO: Mapping response data
+    // this.userRepository.find({ includes: ['roles'] });
+
     result.userId = user.user_id;
     result.accessToken = accessToken;
     result.refreshToken = refreshToken;
     result.email = user.email;
     result.username = user.username;
-    result.displayName = user.employee.fullname;
+    // result.roles = user.roles;
+    // result.displayName = user.employee.fullname;
+
+    result.roles = map(user.roles, role => pick(role, ['role_id', 'role_name']));
 
     return result;
   }
@@ -163,7 +169,7 @@ export class AuthService {
   /**
    * Retrieve roles from REQUEST_CONTEXT.AUTH_METADATA (this is request context assigned by AuthMiddleware)
    */
-  public static getAuthMetadataRoles(): string[] {
+  public static getAuthMetadataRoles(): object[] {
     const { roles } = this.getAuthMetadata();
     return roles || [];
   }
