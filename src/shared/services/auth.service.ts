@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { TokenExpiredError } from 'jsonwebtoken';
 
@@ -8,22 +8,53 @@ import { AuthLoginResultMetadata } from '../models/auth-login-result-metadata';
 import { ConfigService } from './config.service';
 import { ContextualErrorService } from './contextual-error.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
+import { Users } from '../orm-entity/users';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserRepository } from '../orm-repository/user.repository';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    @InjectRepository(UserRepository)
+    private readonly userRepository: UserRepository,
+    // @InjectRepository(LoginSessionRepository)
+    // private readonly loginSessionRepository: LoginSessionRepository,
+  ) { }
 
   async login(
     clientId: string,
     email: string,
     password: string,
+    username?: string,
   ): Promise<AuthLoginResultMetadata> {
-
-    // TODO: Validate user password
 
     // TODO: Populate return value by using this.populateLoginResultMetadataByUser
 
-    return null;
+    // TODO: Validate user password
+  
+    const user = await this.userRepository.findByEmailOrUsername(
+      email,
+      username,
+    );
+
+    // check user present
+    if (user) {
+      const loginResultMetadata = this.populateLoginResultMetadataByUser(
+        clientId,
+        user,
+        );
+      return loginResultMetadata;
+
+    } else {
+      ContextualErrorService.throw(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    // return null;
   }
 
   async refreshAccessToken(
@@ -57,12 +88,13 @@ export class AuthService {
 
   public populateLoginResultMetadataByUser(
     clientId: string,
-    user: any,
+    user: Users,
   ) {
     const jwtAccessTokenPayload = this.populateJwtAccessTokenPayloadFromUser(
       clientId,
       user,
     );
+
     const accessToken = this.jwtService.sign(jwtAccessTokenPayload, {
       expiresIn: ConfigService.get('jwt.accessTokenExpiration'),
     });
@@ -76,6 +108,14 @@ export class AuthService {
     });
 
     const result = new AuthLoginResultMetadata();
+    // TODO: Mapping response data
+    result.userId = user.user_id;
+    result.accessToken = accessToken;
+    result.refreshToken = refreshToken;
+    result.email = user.email;
+    
+    // result.username = user.username;
+    // result.displayName = user.displayName;
 
     return result;
   }

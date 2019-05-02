@@ -1,45 +1,36 @@
-import { Body, Controller, Get, Post, UseGuards, forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Logger, HttpCode } from '@nestjs/common';
 
-import { ApiOkResponse, ApiUseTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiUseTags } from '../../../shared/external/nestjs-swagger';
 import { Transactional } from '../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
-import { AuthenticatedGuard } from "../../../shared/guards/authenticated.guard";
+// import { AuthenticatedAuthGuard } from '../../../shared/guards/anonymous.guard';
 import { AuthService } from '../../../shared/services/auth.service';
 import { AuthLoginByEmailOrUsernamePayloadVM, AuthLoginResponseVM } from '../models/auth.vm';
-import { RefreshAccessTokenPayload } from '../models/refresh-access-token.model';
+// import { RefreshAccessTokenPayload } from '../models/refresh-access-token.model';
 
 @ApiUseTags('Authentication')
 @Controller('api/auth')
-@Injectable()
 export class AuthController {
-  AuthService: any;
-  authService: any;
-  // constructor(private readonly authService: AuthService) {}
-  constructor(@Inject(forwardRef(() => AuthService)) private readonly a: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
+
   @Post('login')
+  @HttpCode(200)
   @ApiOkResponse({ type: AuthLoginResponseVM })
   @Transactional()
+
+  // NOTE: body params like strong parameter
   public async authLogin(@Body() payload: AuthLoginByEmailOrUsernamePayloadVM) {
-    const loginMetadata = await this.AuthService.refreshAccessToken(
-      // payload.clientId,
-      payload.employee_id,
-     
+    // Logger.log('#### REQ :: ' + JSON.stringify(payload));
+    const loginMetadata = await this.authService.login(
+      payload.clientId,
+      payload.email,
+      payload.password,
+      payload.username,
     );
+
+    // const loginMetadata = payload;
+    // Logger.log('#### RES :: ' + JSON.stringify(loginMetadata));
+
     return loginMetadata;
   }
 
-  @Post('refresh-access-token')
-  @ApiOkResponse({ type: AuthLoginResponseVM })
-  @Transactional()
-  public async refreshAccessToken(@Body() payload: RefreshAccessTokenPayload) {
-    const newLoginMetadata = await this.authService.refreshAccessToken(payload.refreshToken);
-
-    return newLoginMetadata;
-  }
-
-  @Get('validate-token')
-  @ApiOkResponse({ type: Boolean })
-  @UseGuards(AuthenticatedGuard)
-  public async authValidateToken() {
-    return true; // Just return true, the duty is on AuthMiddleware
-  }
 }

@@ -1,11 +1,8 @@
-import { ApiModelProperty, ApiModelPropertyOptional } from '@nestjs/swagger';
-import { Employee } from 'src/shared/orm-entity/employee';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 
 export class AuthLoginByEmailOrUsernamePayloadVM {
-  // @ApiModelProperty()
-  // clientId: string;
   @ApiModelProperty()
-  employee_id : string;
+  clientId: string;
 
   @ApiModelPropertyOptional()
   email: string;
@@ -19,8 +16,7 @@ export class AuthLoginByEmailOrUsernamePayloadVM {
 
 export class AuthLoginResponseVM {
   @ApiModelProperty()
-  // userId: string;
-  user_id: string;
+  userId: string;
 
   @ApiModelProperty()
   accessToken: string;
