@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '@nestjs/swagger';
+import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class RoleVm {
   @ApiModelProperty()
