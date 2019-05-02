@@ -8,7 +8,7 @@ import { AuthLoginResultMetadata } from '../models/auth-login-result-metadata';
 import { ConfigService } from './config.service';
 import { ContextualErrorService } from './contextual-error.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
-import { Users } from '../orm-entity/users';
+import { User } from '../orm-entity/user';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from '../orm-repository/user.repository';
 
@@ -29,9 +29,7 @@ export class AuthService {
     username?: string,
   ): Promise<AuthLoginResultMetadata> {
 
-    // TODO: Populate return value by using this.populateLoginResultMetadataByUser
-
-    // TODO: Validate user password
+    // find by email or username on table users
     const user = await this.userRepository.findByEmailOrUsername(
       email,
       username,
@@ -39,11 +37,22 @@ export class AuthService {
 
     // check user present
     if (user) {
-      const loginResultMetadata = this.populateLoginResultMetadataByUser(
-        clientId,
-        user,
+      Logger.log(user);
+      // validate user password hash md5
+      if (user.validatePassword(password)) {
+        // TODO: Populate return value by using this.populateLoginResultMetadataByUser
+        const loginResultMetadata = this.populateLoginResultMetadataByUser(
+          clientId,
+          user,
+          );
+        return loginResultMetadata;
+      } else {
+        ContextualErrorService.throw({
+            message: 'global.error.LOGIN_WRONG_PASSWORD',
+          },
+          HttpStatus.BAD_REQUEST,
         );
-      return loginResultMetadata;
+      }
 
     } else {
       ContextualErrorService.throw(
@@ -53,7 +62,6 @@ export class AuthService {
         HttpStatus.UNAUTHORIZED,
       );
     }
-    // return null;
   }
 
   async refreshAccessToken(
@@ -87,7 +95,7 @@ export class AuthService {
 
   public populateLoginResultMetadataByUser(
     clientId: string,
-    user: Users,
+    user: User,
   ) {
     const jwtAccessTokenPayload = this.populateJwtAccessTokenPayloadFromUser(
       clientId,
@@ -112,8 +120,8 @@ export class AuthService {
     result.accessToken = accessToken;
     result.refreshToken = refreshToken;
     result.email = user.email;
-    // result.username = user.username;
-    // result.displayName = user.displayName;
+    result.username = user.username;
+    result.displayName = user.employee.fullname;
 
     return result;
   }

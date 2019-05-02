@@ -99,8 +99,8 @@ export class Role extends BaseEntity {
   })
   is_deleted: boolean;
 
-  @OneToMany(type => UserRole, user_role => user_role.roleId)
-  userRoles: UserRole[];
+  // @OneToMany(type => UserRole, user_role => user_role.roleId)
+  // userRoles: UserRole[];
 
   @OneToMany(type => RolePermission, role_permission => role_permission.roleId)
   rolePermission: RolePermission[];

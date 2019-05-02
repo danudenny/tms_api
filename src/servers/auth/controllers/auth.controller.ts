@@ -19,17 +19,12 @@ export class AuthController {
 
   // NOTE: body params like strong parameter
   public async authLogin(@Body() payload: AuthLoginByEmailOrUsernamePayloadVM) {
-    Logger.log('#### REQ :: ' + JSON.stringify(payload));
-
     const loginMetadata = await this.authService.login(
       payload.clientId,
       payload.email,
       payload.password,
       payload.username,
     );
-
-    // const loginMetadata = payload;
-    Logger.log('#### RES :: ' + JSON.stringify(loginMetadata));
 
     return loginMetadata;
   }

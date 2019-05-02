@@ -1,9 +1,10 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
 import { UserRole } from './user-role';
 import { Employee } from './employee';
+import { Role } from './role';
 
 @Entity('users', { schema: 'public' })
-export class Users extends BaseEntity {
+export class User extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
   })
@@ -97,10 +98,37 @@ export class Users extends BaseEntity {
   })
   otp_reset: string | null;
 
-  @OneToMany(type => UserRole, user_role => user_role.userId)
-  userRoles: UserRole[];
+  // relation model
+  // @OneToMany(type => UserRole, user_role => user_role.userId)
+  // @JoinColumn({ name: 'user_id' })
+  // userRoles: UserRole[];
 
-  @OneToOne(type => Employee)
+  // TODO: need review
+  @ManyToMany(() => Role, {
+    eager: true,
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
+  @JoinTable()
+  roles: Role[];
+
+  // @ManyToMany(() => Role, {
+  //   eager: true,
+  //   onDelete: 'CASCADE',
+  //   cascade: true,
+  // })
+  // @JoinTable()
+  // roles: Role[];
+
+  @OneToOne(() => Employee, employee => employee, { eager: true })
   @JoinColumn({ name: 'employee_id' })
   employee: Employee;
+
+  // additional method
+  validatePassword(passwordToValidate: string) {
+    const crypto = require('crypto');
+    const hashPass = crypto.createHash('md5').update(passwordToValidate).digest('hex');
+    // compare md5 hash password
+    return hashPass === this.password;
+  }
 }

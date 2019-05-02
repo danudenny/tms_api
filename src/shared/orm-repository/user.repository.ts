@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { EntityRepository, Repository } from 'typeorm';
-import { Users } from '../orm-entity/users';
+import { User } from '../orm-entity/user';
 @Injectable()
-@EntityRepository(Users)
-export class UserRepository extends Repository<Users> {
+@EntityRepository(User)
+export class UserRepository extends Repository<User> {
 
   findByEmailOrUsername(email: string, username) {
     if (email) {

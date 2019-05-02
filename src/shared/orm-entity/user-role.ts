@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { Users } from './users';
+import { User } from './user';
 import { Role } from './role';
 
 @Entity('user_role', { schema: 'public' })
@@ -17,12 +17,12 @@ export class UserRole extends BaseEntity {
   })
   user_id: string;
 
-  @ManyToOne(() => Users)
+  @ManyToOne(() => User)
   @JoinColumn({
     name: 'user_id',
     referencedColumnName: 'user_id',
   })
-  users: Users[];
+  users: User[];
 
   @Column('bigint', {
     nullable: false,
@@ -66,11 +66,11 @@ export class UserRole extends BaseEntity {
   })
   user_role_id: string;
 
-  @ManyToOne(type => Users, user => user.userRoles, {})
-  @JoinColumn({ name: 'user_id' })
-  userId: Users | null;
+  // @ManyToOne(type => User, user => user.userRoles, {})
+  // @JoinColumn({ name: 'user_id' })
+  // userId: User | null;
 
-  @ManyToOne(type => Role, role => role.userRoles, {})
-  @JoinColumn({ name: 'role_id' })
-  roleId: Role | null;
+  // @ManyToOne(type => Role, role => role.userRoles, {})
+  // @JoinColumn({ name: 'role_id' })
+  // roleId: Role | null;
 }
