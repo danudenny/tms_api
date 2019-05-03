@@ -99,10 +99,6 @@ export class User extends BaseEntity {
   otp_reset: string | null;
 
   // relation model
-  // @OneToMany(type => UserRole, user_role => user_role.userId)
-  // @JoinColumn({ name: 'user_id' })
-  // userRoles: UserRole[];
-
   // TODO: need review
   @ManyToMany(() => Role, {
     eager: false,
@@ -116,17 +112,9 @@ export class User extends BaseEntity {
   })
   roles: Role[];
 
-  // @ManyToMany(() => Role, {
-  //   eager: true,
-  //   onDelete: 'CASCADE',
-  //   cascade: true,
-  // })
-  // @JoinTable()
-  // roles: Role[];
-
-  // @OneToOne(() => Employee, employee => employee, { eager: true })
-  // @JoinColumn({ name: 'employee_id' })
-  // employee: Employee;
+  @OneToOne(() => Employee, employee => employee, { eager: true })
+  @JoinColumn({ name: 'employee_id' })
+  employee: Employee;
 
   // additional method
   validatePassword(passwordToValidate: string) {

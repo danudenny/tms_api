@@ -12,6 +12,9 @@ export class AuthenticatedGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
+    Logger.log('########### canActive =======================');
+    Logger.log(AuthService.isLoggedIn);
+
     return AuthService.isLoggedIn && this.hasValidCredentials();
   }
 

@@ -28,36 +28,6 @@ HOST: http://tmsapi-staging2.sicepat.com
                 "email": "ade@sicepat.com",
                 "username": "adefast",
                 "displayName": "Ade",
-                "roles": [
-                    {
-                        "roleId" : "1",
-                        "branchId": "1",
-                        "branchName": "Kantor Pusat",
-                        "branchCode": "100000",
-                        "roleName": "Sales"
-                    },
-                    {
-                        "roleId" : "10",
-                        "branchId": "2",
-                        "branchName": "Pluit",
-                        "branchCode": "100100",
-                        "roleName": "Sigesit"
-                    },
-                    {
-                        "roleId" : "10",
-                        "branchId": "3",
-                        "branchName": "Daan Mogot",
-                        "branchCode": "100200",
-                        "roleName": "Sigesit"
-                    },
-                    {
-                        "roleId" : "5",
-                        "branchId": "3",
-                        "branchName": "Daan Mogot",
-                        "branchCode": "100200",
-                        "roleName": "Kepala Kurir"
-                    }
-                ]
             }
 
 + Response 400 (application/json; charset=utf-8)
@@ -120,9 +90,9 @@ HOST: http://tmsapi-staging2.sicepat.com
             {}
 
 
-## Get Permission Role [/api/auth/permissionRole]
+## Get Permission Roles [/api/auth/permissionRoles]
 
-### Get Permission Role URL [POST]
+### Get Permission Roles URL [POST]
 
 + Request Access Permission (application/json)
 
@@ -138,7 +108,6 @@ HOST: http://tmsapi-staging2.sicepat.com
 
             {
                 "userId": 11,
-                "refreshToken": "8asfgasgwetw4tewtggg",
                 "email": "ade@sicepat.com",
                 "username": "adefast",
                 "displayName": "Ade",

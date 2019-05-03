@@ -2,8 +2,17 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class RoleVm {
   @ApiModelProperty()
-  role_id: string;
+  roleId: string;
 
   @ApiModelProperty()
-  role_name: string;
+  roleName: string;
+
+  @ApiModelProperty()
+  branchId: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  branchCode: string;
 }

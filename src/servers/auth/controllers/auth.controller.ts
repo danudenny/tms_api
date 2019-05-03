@@ -4,7 +4,7 @@ import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../shared/extern
 import { Transactional } from '../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 // import { AuthenticatedAuthGuard } from '../../../shared/guards/anonymous.guard';
 import { AuthService } from '../../../shared/services/auth.service';
-import { AuthLoginByEmailOrUsernamePayloadVM, AuthLoginResponseVM, AuthLoginWithRolesResponseVM, PermissionRolesPayloadVM } from '../models/auth.vm';
+import { AuthLoginByEmailOrUsernamePayloadVM, AuthLoginResponseVM, AuthLoginWithRolesResponseVM, PermissionRolesPayloadVM, PermissionRolesResponseVM } from '../models/auth.vm';
 import { AuthenticatedGuard } from 'src/shared/guards/authenticated.guard';
 // import { RefreshAccessTokenPayload } from '../models/refresh-access-token.model';
 
@@ -69,12 +69,13 @@ export class AuthController {
   @HttpCode(200)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: AuthLoginResponseVM })
+  @ApiOkResponse({ type: PermissionRolesResponseVM })
   @Transactional()
 
   // NOTE: body params like strong parameter
   public async permissionRoles(@Body() payload: PermissionRolesPayloadVM) {
-    const loginMetadata = {};
+
+    const loginMetadata = await this.authService.permissionRoles();
     // await this.authService.permissionRoles(
     //   payload.clientId,
     // );

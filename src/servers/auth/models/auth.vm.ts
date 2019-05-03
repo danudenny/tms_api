@@ -1,7 +1,7 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { RoleVm } from './role.vm';
 
-// Request Section
+// #region Request Section
 export class AuthLoginByEmailOrUsernamePayloadVM {
   @ApiModelProperty()
   clientId: string;
@@ -20,8 +20,9 @@ export class PermissionRolesPayloadVM {
   @ApiModelProperty()
   clientId: string;
 }
+//#endregion
 
-// Response section
+// #region Response section
 export class AuthLoginResponseVM {
   @ApiModelProperty()
   userId: string;
@@ -64,3 +65,21 @@ export class AuthLoginWithRolesResponseVM {
   @ApiModelProperty({ type: [RoleVm] })
   roles: RoleVm[];
 }
+
+export class PermissionRolesResponseVM {
+  @ApiModelProperty()
+  userId: string;
+
+  @ApiModelProperty()
+  email: string;
+
+  @ApiModelProperty()
+  username: string;
+
+  @ApiModelProperty()
+  displayName: string;
+
+  @ApiModelProperty({ type: [RoleVm] })
+  roles: RoleVm[];
+}
+// #endregion

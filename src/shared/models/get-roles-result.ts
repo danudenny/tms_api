@@ -1,10 +1,8 @@
-export class AuthLoginMetadata {
+export class GetRolesResult {
   clientId: string;
-  accessToken: string;
   userId: string;
   email: string;
   username: string;
   displayName: string;
   roles: object[];
-  // rolesPermissionNames: string[];
 }

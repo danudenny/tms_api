@@ -16,17 +16,12 @@ export class AuthMiddleware implements NestMiddleware {
         'JWT_TOKEN',
       );
       const jwtToken = req.headers['authorization'].replace(/^Bearer\s+/, '');
-
-      Logger.log('################ JWT TOKEN =======================================');
-      Logger.log(jwtToken);
       await this.handleJwtToken(jwtToken);
     }
     next();
   }
 
   async handleJwtToken(jwtToken: string) {
-    Logger.log('##### handleJwtToken =========================================');
-
     let jwt: { payload: JwtAccessTokenPayload };
     try {
       jwt = this.jwtService.decode(jwtToken, {
@@ -46,12 +41,15 @@ export class AuthMiddleware implements NestMiddleware {
       'JWT_ACCESS_TOKEN_PAYLOAD',
       jwt.payload,
     );
-    // AuthService.setAuthMetadata({
-    //   clientId: jwt.payload.clientId,
-    //   userId: jwt.payload.userId,
-    //   accessToken: jwtToken,
-    //   roles: jwt.payload.roles,
-    //   rolesPermissionNames: jwt.payload.rolesPermissionNames,
-    // });
+
+    AuthService.setAuthMetadata({
+      clientId: jwt.payload.clientId,
+      accessToken: jwtToken,
+      userId: jwt.payload.userId,
+      username: jwt.payload.username,
+      email: jwt.payload.email,
+      displayName: jwt.payload.displayName,
+      roles: jwt.payload.roles || [],
+    });
   }
 }

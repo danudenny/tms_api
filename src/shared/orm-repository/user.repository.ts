@@ -6,20 +6,31 @@ import { User } from '../orm-entity/user';
 export class UserRepository extends Repository<User> {
 
   findByEmailOrUsername(email: string, username) {
+    // TODO: condition query get user
     if (email) {
+      // email get from UserApi??
       return this.findOne({
-        relations: ['roles'],
         where: {
           email,
         },
       });
     } else {
+      // username get from User??
       return this.findOne({
         where: {
           username,
         },
       });
     }
+  }
+
+  findByUserIdWithRoles(user_id: number) {
+    return this.findOne({
+      relations: ['roles'],
+      where: {
+        user_id,
+      },
+    });
   }
 
 }

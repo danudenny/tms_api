@@ -11,7 +11,9 @@ import { RequestContextMetadataService } from './request-context-metadata.servic
 import { User } from '../orm-entity/user';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from '../orm-repository/user.repository';
-import { map, pick } from 'lodash';
+import { map, pick, toInteger } from 'lodash';
+import { GetRolesResult } from '../models/get-roles-result';
+import { UserRole } from '../orm-entity/user-role';
 
 @Injectable()
 export class AuthService {
@@ -94,6 +96,53 @@ export class AuthService {
     return null;
   }
 
+  async permissionRoles(): Promise<GetRolesResult> {
+    const authMeta = AuthService.getAuthMetadata();
+    // const user = await this.userRepository.findByUserIdWithRoles());
+    // check user present
+    if (!!authMeta) {
+      const roles = await UserRole.find(
+        {
+          relations: ['branch', 'role'],
+          where: {
+            user_id: toInteger(authMeta.userId),
+          },
+        },
+      );
+      // Populate return value
+      const result = new GetRolesResult();
+      result.userId = authMeta.userId;
+      result.username = authMeta.username;
+      result.email = authMeta.email;
+      result.displayName = authMeta.displayName;
+      // result.roles = map(roles, role => pick(role, ['role_id', 'role.role_name', 'branch_id', 'branch.branch_name']));
+      result.roles = map(roles,
+          item => {
+            const newObj = {
+              roleId: item.role_id,
+              roleName: item.role.role_name,
+              branchId: item.branch_id,
+              branchName: item.branch.branch_name,
+              branchCode: item.branch.branch_code,
+            };
+            return newObj;
+          },
+        );
+
+      Logger.log('############## Result permissionRoles ==================================================');
+      Logger.log(result);
+
+      return result;
+    } else {
+      ContextualErrorService.throw(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
   public populateLoginResultMetadataByUser(
     clientId: string,
     user: User,
@@ -116,30 +165,32 @@ export class AuthService {
     });
 
     const result = new AuthLoginResultMetadata();
-    // TODO: Mapping response data
-    // this.userRepository.find({ includes: ['roles'] });
-
+    // Mapping response data
     result.userId = user.user_id;
     result.accessToken = accessToken;
     result.refreshToken = refreshToken;
     result.email = user.email;
     result.username = user.username;
-    // result.roles = user.roles;
-    // result.displayName = user.employee.fullname;
-
-    result.roles = map(user.roles, role => pick(role, ['role_id', 'role_name']));
+    result.displayName = user.employee.fullname;
+    // result.roles = map(user.roles, role => pick(role, ['role_id', 'role_name']));
 
     return result;
   }
 
-  public populateJwtAccessTokenPayloadFromUser(clientId: string, user: any) {
+  // Set data payload JWT Access Token
+  public populateJwtAccessTokenPayloadFromUser(clientId: string, user: User) {
     const jwtPayload: Partial<JwtAccessTokenPayload> = {
       clientId,
+      userId: user.user_id,
+      username: user.username,
+      email: user.email,
+      displayName: user.employee.fullname,
     };
 
     return jwtPayload;
   }
 
+  // Set data payload JWT Refresh Token
   public populateJwtRefreshTokenPayloadFromUser(clientId: string, user: any) {
     const jwtPayload: Partial<JwtRefreshTokenPayload> = {
       clientId,
@@ -148,10 +199,13 @@ export class AuthService {
     return jwtPayload;
   }
 
+  // validate user is logged in if get data auth metadata
+  // return boolean (true | false)
   public static get isLoggedIn() {
     return !!this.getAuthMetadata();
   }
 
+  // #region REQUEST_CONTEXT
   /**
    * Set REQUEST_CONTEXT.AUTH_METADATA value (this is request context assigned by AuthMiddleware)
    */
@@ -173,4 +227,5 @@ export class AuthService {
     const { roles } = this.getAuthMetadata();
     return roles || [];
   }
+  // #endregion
 }
