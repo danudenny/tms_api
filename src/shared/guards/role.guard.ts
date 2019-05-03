@@ -48,9 +48,9 @@ export class RoleGuard implements CanActivate {
 
   validateSuperRole() {
     const authMetadataRoles = AuthService.getAuthMetadataRoles();
-    if (authMetadataRoles.includes(AUTH.SUPER_ROLE_NAME)) {
-      return true;
-    }
+    // if (authMetadataRoles.includes(AUTH.SUPER_ROLE_NAME)) {
+    //   return true;
+    // }
 
     return false;
   }

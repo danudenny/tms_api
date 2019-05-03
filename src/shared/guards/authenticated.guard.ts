@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 
@@ -29,9 +29,17 @@ export class AuthenticatedGuard implements CanActivate {
       'JWT_ACCESS_TOKEN',
     );
     try {
+      Logger.log('########### accessToken =====================');
+      Logger.log(accessToken);
       const accessTokenJwtPayload = this.jwtService.verify(accessToken);
+
+      Logger.log('########### Payload ===================== ');
+      Logger.log(accessTokenJwtPayload);
+
       return Boolean(accessTokenJwtPayload);
     } catch (e) {
+      Logger.log(e.message);
+
       throw new UnauthorizedException(e.message);
     }
   }

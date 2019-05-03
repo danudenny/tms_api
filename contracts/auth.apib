@@ -1,7 +1,7 @@
 FORMAT: 1A
 HOST: http://tmsapi-staging2.sicepat.com
 
-# API Auth for Mobile
+# API Auth
 
 # Group Auth
 
@@ -70,7 +70,7 @@ HOST: http://tmsapi-staging2.sicepat.com
 
             {}
 
-## Permission Access [/api/auth/permissionAccess] 
+## Permission Access [/api/auth/permissionAccess]
     Untuk dapetkan akses permission sebenarnya hanya butuh roleId. BranchId dikirim hanya untuk indikasi dia login sebagai cabang/gerai mana, tujuannya hanya limit akses untuk boleh buka cabang lain / tidak, selain itu untuk indicator ketika scan, bisa tau dari cabang/gerai mana
 
 ### Permission Access URL [POST]
@@ -80,7 +80,7 @@ HOST: http://tmsapi-staging2.sicepat.com
     + Header
 
             Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
-            
+
     + Attributes (object)
         + clientId: `mobile`, (string, required) - Client id
         + roleId: `adefast`, (string) - Role Id User
@@ -120,16 +120,16 @@ HOST: http://tmsapi-staging2.sicepat.com
             {}
 
 
-## Change Permission Access [/api/auth/changePermissionAccess] 
+## Get Permission Role [/api/auth/permissionRole]
 
-### Change Permission Access URL [POST]
+### Get Permission Role URL [POST]
 
 + Request Access Permission (application/json)
 
     + Header
 
             Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
-            
+
     + Attributes (object)
         + clientId: 'mobile', (string, required) - Client id
 
@@ -185,7 +185,7 @@ HOST: http://tmsapi-staging2.sicepat.com
             {}
 
 
-## Logout [/api/auth/logout] 
+## Logout [/api/auth/logout]
 
 ### logout URL [POST]
 
@@ -194,7 +194,7 @@ HOST: http://tmsapi-staging2.sicepat.com
     + Header
 
             Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
-            
+
     + Attributes (object)
         + clientId: 'mobile', (string, required) - Client id
 
@@ -202,7 +202,7 @@ HOST: http://tmsapi-staging2.sicepat.com
     + Body
 
             {
-                
+
             }
 
 + Response 400 (application/json; charset=utf-8)
