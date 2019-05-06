@@ -1,14 +1,18 @@
-import { ApiModelProperty } from '@nestjs/swagger';
-import { BaseTimestampVm } from '../../../shared/models/base-internal-timestamp.vm';
-// import { AccessPermissionVm } from './access-permission.vm';
+import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
-export class RoleVm extends BaseTimestampVm {
+export class RoleVm {
   @ApiModelProperty()
-  id: string;
+  roleId: string;
 
   @ApiModelProperty()
-  name: string;
+  roleName: string;
 
-  // @ApiModelProperty({ type: () => [AccessPermissionVm] })
-  // accesses: AccessPermissionVm[];
+  @ApiModelProperty()
+  branchId: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  branchCode: string;
 }

@@ -6,9 +6,11 @@
 export interface JwtAccessTokenPayload {
   clientId: string;
   userId: string;
-  branchId: string;
-  roles: string[];
-  rolesPermissionNames: string[];
+  email: string;
+  username: string;
+  displayName: string;
+  branchId : string;
+  roles: object[];
 }
 
 /**

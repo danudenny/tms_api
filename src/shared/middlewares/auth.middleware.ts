@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NestMiddleware, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { JwtAccessTokenPayload } from '../interfaces/jwt-payload.interface';
@@ -27,7 +27,12 @@ export class AuthMiddleware implements NestMiddleware {
       jwt = this.jwtService.decode(jwtToken, {
         complete: true,
       }) as { payload: JwtAccessTokenPayload };
+
+      // Logger.log('### JWT ====================================================');
+      Logger.log(jwt);
+
     } catch (error) {
+      // Logger.log('UnauthorizedException ====================================');
       throw new UnauthorizedException();
     }
 
@@ -36,12 +41,16 @@ export class AuthMiddleware implements NestMiddleware {
       'JWT_ACCESS_TOKEN_PAYLOAD',
       jwt.payload,
     );
+
     AuthService.setAuthMetadata({
       clientId: jwt.payload.clientId,
-      userId: jwt.payload.userId,
       accessToken: jwtToken,
-      roles: jwt.payload.roles,
-      rolesPermissionNames: jwt.payload.rolesPermissionNames,
+      userId: jwt.payload.userId,
+      username: jwt.payload.username,
+      branchId: jwt.payload.email,
+      email: jwt.payload.email,
+      displayName: jwt.payload.displayName,
+      roles: jwt.payload.roles || [],
     });
   }
 }
