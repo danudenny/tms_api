@@ -8,9 +8,15 @@ import { AuthLoginResultMetadata } from '../models/auth-login-result-metadata';
 import { ConfigService } from './config.service';
 import { ContextualErrorService } from './contextual-error.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
-import { Users } from '../orm-entity/users';
+import { User } from '../orm-entity/user';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from '../orm-repository/user.repository';
+import { map, pick, toInteger } from 'lodash';
+import { GetRolesResult } from '../models/get-roles-result';
+import { UserRole } from '../orm-entity/user-role';
+import { RolePermission } from '../orm-entity/role-permission';
+import { GetAccessResult } from '../models/get-access-result';
+import { Branch } from '../orm-entity/branch';
 
 @Injectable()
 export class AuthService {
@@ -29,10 +35,7 @@ export class AuthService {
     username?: string,
   ): Promise<AuthLoginResultMetadata> {
 
-    // TODO: Populate return value by using this.populateLoginResultMetadataByUser
-
-    // TODO: Validate user password
-  
+    // find by email or username on table users
     const user = await this.userRepository.findByEmailOrUsername(
       email,
       username,
@@ -40,11 +43,22 @@ export class AuthService {
 
     // check user present
     if (user) {
-      const loginResultMetadata = this.populateLoginResultMetadataByUser(
-        clientId,
-        user,
+      // Logger.log(user);
+      // validate user password hash md5
+      if (user.validatePassword(password)) {
+        // TODO: Populate return value by using this.populateLoginResultMetadataByUser
+        const loginResultMetadata = this.populateLoginResultMetadataByUser(
+          clientId,
+          user,
+          );
+        return loginResultMetadata;
+      } else {
+        ContextualErrorService.throw({
+            message: 'global.error.LOGIN_WRONG_PASSWORD',
+          },
+          HttpStatus.BAD_REQUEST,
         );
-      return loginResultMetadata;
+      }
 
     } else {
       ContextualErrorService.throw(
@@ -54,7 +68,6 @@ export class AuthService {
         HttpStatus.UNAUTHORIZED,
       );
     }
-    // return null;
   }
 
   async refreshAccessToken(
@@ -86,9 +99,112 @@ export class AuthService {
     return null;
   }
 
+  async permissionRoles(): Promise<GetRolesResult> {
+    const authMeta = AuthService.getAuthMetadata();
+    // const user = await this.userRepository.findByUserIdWithRoles());
+    // check user present
+    if (!!authMeta) {
+      const roles = await UserRole.find(
+        {
+          relations: ['branch', 'role'],
+          where: {
+            user_id: toInteger(authMeta.userId),
+          },
+        },
+      );
+      // Populate return value
+      const result = new GetRolesResult();
+      result.userId = authMeta.userId;
+      result.username = authMeta.username;
+      result.email = authMeta.email;
+      result.displayName = authMeta.displayName;
+      // result.roles = map(roles, role => pick(role, ['role_id', 'role.role_name', 'branch_id', 'branch.branch_name']));
+      result.roles = map(roles,
+          item => {
+            const newObj = {
+              roleId: item.role_id,
+              roleName: item.role.role_name,
+              branchId: item.branch_id,
+              branchName: item.branch.branch_name,
+              branchCode: item.branch.branch_code,
+            };
+            return newObj;
+          },
+        );
+
+      // Logger.log('############## Result permissionRoles ==================================================');
+      // Logger.log(result);
+
+      return result;
+    } else {
+      ContextualErrorService.throw(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  async permissionAccess(
+    clientId: string,
+    roleId:number,
+    branchId:number,
+  ): Promise<GetAccessResult> {
+    const authMeta = AuthService.getAuthMetadata();
+    // const user = await this.userRepository.findByUserIdWithRoles());
+    // check user present
+    if (!!authMeta) {
+      const rolesAccess = await RolePermission.find(
+        {
+          where: {
+            role_id: roleId,
+          },
+        },
+      );
+      const branch = await Branch.findOne({
+        where: {
+          branch_id: branchId
+        }
+      })
+      console.log(rolesAccess)
+      // Logger.log('############## Result rolesAccess ==================================================');
+      // Populate return value
+      const result = new GetAccessResult();
+      result.clientId = authMeta.clientId;
+      result.username = authMeta.username;
+      result.email = authMeta.email;
+      result.displayName = authMeta.displayName;
+
+      result.branchName = branch.branch_name;
+      result.branchCode = branch.branch_code;
+      result.rolesAccessPermissions = map(rolesAccess, 'name');
+      // result.rolesAccessPermissions = map(roles,
+      //     item => {
+      //       const newObj = {
+      //         // roleId: item.role_id,
+      //         // roleName: item.role.role_name,
+      //         // branchId: item.branch_id,
+      //         // branchName: item.branch.branch_name,
+      //         // branchCode: item.branch.branch_code,
+      //       };
+      //       return newObj;
+      //     },
+        // );
+      console.log(result)
+      return result;
+    } else {
+      ContextualErrorService.throw(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
   public populateLoginResultMetadataByUser(
     clientId: string,
-    user: Users,
+    user: User,
   ) {
     const jwtAccessTokenPayload = this.populateJwtAccessTokenPayloadFromUser(
       clientId,
@@ -108,26 +224,32 @@ export class AuthService {
     });
 
     const result = new AuthLoginResultMetadata();
-    // TODO: Mapping response data
+    // Mapping response data
     result.userId = user.user_id;
     result.accessToken = accessToken;
     result.refreshToken = refreshToken;
     result.email = user.email;
-    
-    // result.username = user.username;
-    // result.displayName = user.displayName;
+    result.username = user.username;
+    result.displayName = user.employee.fullname;
+    // result.roles = map(user.roles, role => pick(role, ['role_id', 'role_name']));
 
     return result;
   }
 
-  public populateJwtAccessTokenPayloadFromUser(clientId: string, user: any) {
+  // Set data payload JWT Access Token
+  public populateJwtAccessTokenPayloadFromUser(clientId: string, user: User) {
     const jwtPayload: Partial<JwtAccessTokenPayload> = {
       clientId,
+      userId: user.user_id,
+      username: user.username,
+      email: user.email,
+      displayName: user.employee.fullname,
     };
 
     return jwtPayload;
   }
 
+  // Set data payload JWT Refresh Token
   public populateJwtRefreshTokenPayloadFromUser(clientId: string, user: any) {
     const jwtPayload: Partial<JwtRefreshTokenPayload> = {
       clientId,
@@ -136,10 +258,13 @@ export class AuthService {
     return jwtPayload;
   }
 
+  // validate user is logged in if get data auth metadata
+  // return boolean (true | false)
   public static get isLoggedIn() {
     return !!this.getAuthMetadata();
   }
 
+  // #region REQUEST_CONTEXT
   /**
    * Set REQUEST_CONTEXT.AUTH_METADATA value (this is request context assigned by AuthMiddleware)
    */
@@ -157,8 +282,9 @@ export class AuthService {
   /**
    * Retrieve roles from REQUEST_CONTEXT.AUTH_METADATA (this is request context assigned by AuthMiddleware)
    */
-  public static getAuthMetadataRoles(): string[] {
+  public static getAuthMetadataRoles(): object[] {
     const { roles } = this.getAuthMetadata();
     return roles || [];
   }
+  // #endregion
 }
