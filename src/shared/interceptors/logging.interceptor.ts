@@ -13,12 +13,11 @@ export class LoggingInterceptor implements NestInterceptor {
   intercept(
     context: ExecutionContext, next: CallHandler): Observable<any> {
     // const now = Date.now();
-    
+
     const req = context.switchToHttp().getRequest();
     const method = req.method;
     const url = req.url;
-    console.log(method,url);
-    
+
     if (req) {
       return next
       .handle()
@@ -27,7 +26,7 @@ export class LoggingInterceptor implements NestInterceptor {
           Logger.log(JSON.stringify(req.body)),
         ),
       );
-    
+
     }
   }
 }

@@ -3,7 +3,6 @@ import { ModuleRef, NestFactory } from '@nestjs/core';
 // import { Test } from '@nestjs/testing';
 // import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
 // import { PinoLoggerService } from '../../shared/common/logger.service';
-import { GraphQLModule } from '@nestjs/graphql';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import {LoggingInterceptor} from '../../shared/interceptors/logging.interceptor'
 import { ErrorHandlerInterceptor } from '../../shared/interceptors/error-handler.interceptor';
