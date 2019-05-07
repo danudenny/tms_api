@@ -27,12 +27,7 @@ export class AuthMiddleware implements NestMiddleware {
       jwt = this.jwtService.decode(jwtToken, {
         complete: true,
       }) as { payload: JwtAccessTokenPayload };
-
-      Logger.log('### JWT ====================================================');
-      Logger.log(jwt);
-
     } catch (error) {
-      Logger.log('UnauthorizedException ====================================');
       throw new UnauthorizedException();
     }
 

@@ -16,6 +16,16 @@ export class AuthLoginByEmailOrUsernamePayloadVM {
   password: string;
 }
 
+export class PermissionAccessPayloadVM {
+  @ApiModelProperty()
+  clientId: string;
+
+  @ApiModelProperty()
+  roleId: number;
+
+  @ApiModelProperty()
+  branchId: number;
+}
 export class PermissionRolesPayloadVM {
   @ApiModelProperty()
   clientId: string;
@@ -82,4 +92,38 @@ export class PermissionRolesResponseVM {
   @ApiModelProperty({ type: [RoleVm] })
   roles: RoleVm[];
 }
+
+export class PermissionAccessResponseVM {
+  @ApiModelProperty()
+  clientId: string;
+
+  @ApiModelProperty()
+  userId: string;
+
+  @ApiModelProperty()
+  email: string;
+
+  @ApiModelProperty()
+  username: string;
+
+  @ApiModelProperty()
+  displayName: string;
+
+  @ApiModelProperty()
+  employeeId: number;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  branchCode: string;
+
+  @ApiModelProperty()
+  roleName: string;
+
+  @ApiModelProperty({ type: String })
+  rolesAccessPermissions: string[];
+
+}
+
 // #endregion

@@ -7,10 +7,14 @@ import { SwaggerBaseConfig, SwaggerCustomOptions, SwaggerDocument, SwaggerDocume
 import { SwaggerScanner } from './swagger-scanner';
 
 export class SwaggerModule {
+  static createDocument(app: import("@nestjs/platform-fastify").NestFastifyApplication, options: SwaggerBaseConfig) {
+    throw new Error("Method not implemented.");
+  }
+  static setup(path: any, app: import("@nestjs/platform-fastify").NestFastifyApplication, document: any) {
+    throw new Error("Method not implemented.");
+  }
   public createDocument(
-    app: INestApplication,
-    config: SwaggerBaseConfig,
-    options: SwaggerDocumentOptions = {},
+{ app, config, options = {} }: { app: INestApplication; config: SwaggerBaseConfig; options?: SwaggerDocumentOptions; },
   ): SwaggerDocument {
     this.swaggerScanner.convertModelObjectKeysCase = options.convertModelObjectKeysCase;
 
@@ -34,13 +38,14 @@ export class SwaggerModule {
   ) {
     const validatePath = (pathToValidate): string =>
       pathToValidate.charAt(0) !== '/' ? '/' + pathToValidate : pathToValidate;
-
+ 
+    console.log(FastifyAdapter)
     const httpServer = app.getHttpServer();
     if (httpServer instanceof FastifyAdapter) {
       return this.setupFastify(path, httpServer, document);
     }
     const finalPath = validatePath(path);
-
+   
     const swaggerHtml = swaggerUi.generateHTML(document, options);
     app.use(finalPath, swaggerUi.serveFiles(document, options));
     app.use(finalPath, (_req, res) => res.send(swaggerHtml));

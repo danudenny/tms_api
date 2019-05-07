@@ -14,6 +14,9 @@ import { UserRepository } from '../orm-repository/user.repository';
 import { map, pick, toInteger } from 'lodash';
 import { GetRolesResult } from '../models/get-roles-result';
 import { UserRole } from '../orm-entity/user-role';
+import { RolePermission } from '../orm-entity/role-permission';
+import { GetAccessResult } from '../models/get-access-result';
+import { Branch } from '../orm-entity/branch';
 
 @Injectable()
 export class AuthService {
@@ -40,7 +43,7 @@ export class AuthService {
 
     // check user present
     if (user) {
-      Logger.log(user);
+      // Logger.log(user);
       // validate user password hash md5
       if (user.validatePassword(password)) {
         // TODO: Populate return value by using this.populateLoginResultMetadataByUser
@@ -129,8 +132,8 @@ export class AuthService {
           },
         );
 
-      Logger.log('############## Result permissionRoles ==================================================');
-      Logger.log(result);
+      // Logger.log('############## Result permissionRoles ==================================================');
+      // Logger.log(result);
 
       return result;
     } else {
@@ -143,6 +146,62 @@ export class AuthService {
     }
   }
 
+  async permissionAccess(
+    clientId: string,
+    roleId: number,
+    branchId: number,
+  ): Promise<GetAccessResult> {
+    const authMeta = AuthService.getAuthMetadata();
+    // const user = await this.userRepository.findByUserIdWithRoles());
+    // check user present
+    if (!!authMeta) {
+      const rolesAccess = await RolePermission.find(
+        {
+          where: {
+            role_id: roleId,
+          },
+        },
+      );
+      const branch = await Branch.findOne({
+        where: {
+          branch_id: branchId,
+        },
+      });
+      console.log(rolesAccess);
+      // Logger.log('############## Result rolesAccess ==================================================');
+      // Populate return value
+      const result = new GetAccessResult();
+      result.clientId = authMeta.clientId;
+      result.username = authMeta.username;
+      result.email = authMeta.email;
+      result.displayName = authMeta.displayName;
+
+      result.branchName = branch.branch_name;
+      result.branchCode = branch.branch_code;
+      result.rolesAccessPermissions = map(rolesAccess, 'name');
+      // result.rolesAccessPermissions = map(roles,
+      //     item => {
+      //       const newObj = {
+      //         // roleId: item.role_id,
+      //         // roleName: item.role.role_name,
+      //         // branchId: item.branch_id,
+      //         // branchName: item.branch.branch_name,
+      //         // branchCode: item.branch.branch_code,
+      //       };
+      //       return newObj;
+      //     },
+        // );
+      // console.log(result)
+      return result;
+    } else {
+      ContextualErrorService.throw(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
   public populateLoginResultMetadataByUser(
     clientId: string,
     user: User,

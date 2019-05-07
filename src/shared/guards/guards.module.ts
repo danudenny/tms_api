@@ -4,7 +4,7 @@ import { JwtModule } from '../modules/jwt.module';
 import { OrmRepositoryModule } from '../orm-repository/orm-repository.module';
 import { ServicesModule } from '../services/services.module';
 import { AuthenticatedGuard } from './authenticated.guard';
-import { RoleGuard } from './role.guard';
+import { RoleAuthGuard } from './role.guard';
 
 @Module({
   imports: [
@@ -14,11 +14,11 @@ import { RoleGuard } from './role.guard';
   ],
   providers: [
     AuthenticatedGuard,
-    RoleGuard,
+    RoleAuthGuard,
   ],
   exports: [
     AuthenticatedGuard,
-    RoleGuard,
+    RoleAuthGuard,
   ],
 })
 export class GuardsModule {}

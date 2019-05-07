@@ -8,7 +8,6 @@ import { RequestContextMetadataService } from '../services/request-context-metad
 @Injectable()
 export class AuthenticatedGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
-
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {

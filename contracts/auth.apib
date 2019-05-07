@@ -53,16 +53,14 @@ HOST: http://tmsapi-staging2.sicepat.com
 
     + Attributes (object)
         + clientId: `mobile`, (string, required) - Client id
-        + roleId: `adefast`, (string) - Role Id User
-        + branchId: `1234`, (string) - Branch Id User
+        + roleId: 123, (number) - Role Id User
+        + branchId: 12, (number) - Branch Id User
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
                 "userId": 11,
-                "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
-                "refreshToken": "8asfgasgwetw4tewtggg",
                 "email": "ade@sicepat.com",
                 "username": "adefast",
                 "displayName": "Ade",
@@ -94,7 +92,7 @@ HOST: http://tmsapi-staging2.sicepat.com
 
 ### Get Permission Roles URL [POST]
 
-+ Request Access Permission (application/json)
++ Request Get Permission Access (application/json)
 
     + Header
 
