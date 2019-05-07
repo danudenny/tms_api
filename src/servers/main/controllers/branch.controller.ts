@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 
-import { ApiOkResponse } from '../../../shared/external/nestjs-swagger';
+import { ApiOkResponse } from '@nestjs/swagger';
 import { BranchRepository } from '../../../shared/orm-repository/branch.repository';
 import { BranchVm } from '../models/branch.vm';
 
