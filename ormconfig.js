@@ -42,6 +42,14 @@ const ormConfigDefault = [
     migrationsRun: false,
     logging: true,
     synchronize: false,
+    cache: {
+      type: "redis",
+      duration: 10000,
+      options: {
+        host: "localhost",
+        port: 6379
+      }
+    }
   },
 ];
 

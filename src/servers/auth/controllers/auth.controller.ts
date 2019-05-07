@@ -55,13 +55,13 @@ export class AuthController {
 
   // NOTE: body params like strong parameter
   public async permissionAccess(@Body() payload: PermissionAccessPayloadVM) {
-    const loginMetadata = await this.authService.permissionAccess(
+    const result = await this.authService.permissionAccess(
       payload.clientId,
       payload.roleId,
       payload.branchId,
     );
 
-    return loginMetadata;
+    return result;
   }
 
   @Post('permissionRoles')
@@ -74,12 +74,12 @@ export class AuthController {
   // NOTE: body params like strong parameter
   public async permissionRoles(@Body() payload: PermissionRolesPayloadVM) {
 
-    const loginMetadata = await this.authService.permissionRoles();
+    const result = await this.authService.permissionRoles();
     // await this.authService.permissionRoles(
     //   payload.clientId,
     // );
 
-    return loginMetadata;
+    return result;
   }
 
   @Post('logout')
@@ -90,13 +90,11 @@ export class AuthController {
 
   // NOTE: body params like strong parameter
   public async authLogout(@Body() payload: AuthLoginByEmailOrUsernamePayloadVM) {
-    const loginMetadata = await this.authService.login(
-      payload.clientId,
-      payload.email,
-      payload.password,
-      payload.username,
-    );
+    const result =  {}
+    // await this.authService.login(
+    //   payload.clientId,
+    // );
 
-    return loginMetadata;
+    return result;
   }
 }
