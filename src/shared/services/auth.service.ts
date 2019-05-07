@@ -148,8 +148,8 @@ export class AuthService {
 
   async permissionAccess(
     clientId: string,
-    roleId:number,
-    branchId:number,
+    roleId: number,
+    branchId: number,
   ): Promise<GetAccessResult> {
     const authMeta = AuthService.getAuthMetadata();
     // const user = await this.userRepository.findByUserIdWithRoles());
@@ -164,10 +164,10 @@ export class AuthService {
       );
       const branch = await Branch.findOne({
         where: {
-          branch_id: branchId
-        }
-      })
-      console.log(rolesAccess)
+          branch_id: branchId,
+        },
+      });
+      console.log(rolesAccess);
       // Logger.log('############## Result rolesAccess ==================================================');
       // Populate return value
       const result = new GetAccessResult();
@@ -191,7 +191,7 @@ export class AuthService {
       //       return newObj;
       //     },
         // );
-      console.log(result)
+      // console.log(result)
       return result;
     } else {
       ContextualErrorService.throw(

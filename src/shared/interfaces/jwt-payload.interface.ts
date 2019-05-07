@@ -9,7 +9,7 @@ export interface JwtAccessTokenPayload {
   email: string;
   username: string;
   displayName: string;
-  branchId : string;
+  branchId: string;
   roles: object[];
 }
 

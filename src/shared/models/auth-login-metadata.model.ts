@@ -1,7 +1,10 @@
 export class AuthLoginMetadata {
   clientId: string;
-  userId: string;
   accessToken: string;
-  roles: string[];
-  rolesPermissionNames: string[];
+  userId: string;
+  email: string;
+  username: string;
+  displayName: string;
+  roles: object[];
+  // rolesPermissionNames: string[];
 }

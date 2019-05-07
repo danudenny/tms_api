@@ -24,7 +24,7 @@ export class PermissionAccessPayloadVM {
   roleId: number;
 
   @ApiModelProperty()
-  branchId:number;
+  branchId: number;
 }
 export class PermissionRolesPayloadVM {
   @ApiModelProperty()
@@ -55,7 +55,7 @@ export class AuthLoginResponseVM {
 
 export class AuthLoginWithRolesResponseVM {
   @ApiModelProperty()
-  userId: string;y
+  userId: string;
 
   @ApiModelProperty()
   accessToken: string;
@@ -74,9 +74,6 @@ export class AuthLoginWithRolesResponseVM {
 
   @ApiModelProperty({ type: [RoleVm] })
   roles: RoleVm[];
-
-  @ApiModelProperty({ type: [String] })
-  rolesAccessPermissions: string[];
 }
 
 export class PermissionRolesResponseVM {
@@ -95,4 +92,38 @@ export class PermissionRolesResponseVM {
   @ApiModelProperty({ type: [RoleVm] })
   roles: RoleVm[];
 }
+
+export class PermissionAccessResponseVM {
+  @ApiModelProperty()
+  clientId: string;
+
+  @ApiModelProperty()
+  userId: string;
+
+  @ApiModelProperty()
+  email: string;
+
+  @ApiModelProperty()
+  username: string;
+
+  @ApiModelProperty()
+  displayName: string;
+
+  @ApiModelProperty()
+  employeeId: number;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  branchCode: string;
+
+  @ApiModelProperty()
+  roleName: string;
+
+  @ApiModelProperty({ type: String })
+  rolesAccessPermissions: string[];
+
+}
+
 // #endregion

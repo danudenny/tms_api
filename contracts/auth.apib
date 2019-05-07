@@ -1,7 +1,7 @@
 FORMAT: 1A
 HOST: http://tmsapi-staging2.sicepat.com
 
-# API Auth for Mobile
+# API Auth
 
 # Group Auth
 
@@ -28,36 +28,6 @@ HOST: http://tmsapi-staging2.sicepat.com
                 "email": "ade@sicepat.com",
                 "username": "adefast",
                 "displayName": "Ade",
-                "roles": [
-                    {
-                        "roleId" : "1",
-                        "branchId": "1",
-                        "branchName": "Kantor Pusat",
-                        "branchCode": "100000",
-                        "roleName": "Sales"
-                    },
-                    {
-                        "roleId" : "10",
-                        "branchId": "2",
-                        "branchName": "Pluit",
-                        "branchCode": "100100",
-                        "roleName": "Sigesit"
-                    },
-                    {
-                        "roleId" : "10",
-                        "branchId": "3",
-                        "branchName": "Daan Mogot",
-                        "branchCode": "100200",
-                        "roleName": "Sigesit"
-                    },
-                    {
-                        "roleId" : "5",
-                        "branchId": "3",
-                        "branchName": "Daan Mogot",
-                        "branchCode": "100200",
-                        "roleName": "Kepala Kurir"
-                    }
-                ]
             }
 
 + Response 400 (application/json; charset=utf-8)
@@ -70,7 +40,7 @@ HOST: http://tmsapi-staging2.sicepat.com
 
             {}
 
-## Permission Access [/api/auth/permissionAccess] 
+## Permission Access [/api/auth/permissionAccess]
     Untuk dapetkan akses permission sebenarnya hanya butuh roleId. BranchId dikirim hanya untuk indikasi dia login sebagai cabang/gerai mana, tujuannya hanya limit akses untuk boleh buka cabang lain / tidak, selain itu untuk indicator ketika scan, bisa tau dari cabang/gerai mana
 
 ### Permission Access URL [POST]
@@ -80,19 +50,17 @@ HOST: http://tmsapi-staging2.sicepat.com
     + Header
 
             Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
-            
+
     + Attributes (object)
         + clientId: `mobile`, (string, required) - Client id
-        + roleId: `adefast`, (string) - Role Id User
-        + branchId: `1234`, (string) - Branch Id User
+        + roleId: 123, (number) - Role Id User
+        + branchId: 12, (number) - Branch Id User
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
                 "userId": 11,
-                "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
-                "refreshToken": "8asfgasgwetw4tewtggg",
                 "email": "ade@sicepat.com",
                 "username": "adefast",
                 "displayName": "Ade",
@@ -120,16 +88,16 @@ HOST: http://tmsapi-staging2.sicepat.com
             {}
 
 
-## Change Permission Access [/api/auth/changePermissionAccess] 
+## Get Permission Roles [/api/auth/permissionRoles]
 
-### Change Permission Access URL [POST]
+### Get Permission Roles URL [POST]
 
-+ Request Access Permission (application/json)
++ Request Get Permission Access (application/json)
 
     + Header
 
             Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
-            
+
     + Attributes (object)
         + clientId: 'mobile', (string, required) - Client id
 
@@ -138,7 +106,6 @@ HOST: http://tmsapi-staging2.sicepat.com
 
             {
                 "userId": 11,
-                "refreshToken": "8asfgasgwetw4tewtggg",
                 "email": "ade@sicepat.com",
                 "username": "adefast",
                 "displayName": "Ade",
@@ -185,7 +152,7 @@ HOST: http://tmsapi-staging2.sicepat.com
             {}
 
 
-## Logout [/api/auth/logout] 
+## Logout [/api/auth/logout]
 
 ### logout URL [POST]
 
@@ -194,7 +161,7 @@ HOST: http://tmsapi-staging2.sicepat.com
     + Header
 
             Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
-            
+
     + Attributes (object)
         + clientId: 'mobile', (string, required) - Client id
 
@@ -202,7 +169,7 @@ HOST: http://tmsapi-staging2.sicepat.com
     + Body
 
             {
-                
+
             }
 
 + Response 400 (application/json; charset=utf-8)

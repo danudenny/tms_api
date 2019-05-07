@@ -4,7 +4,7 @@ import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../shared/extern
 import { Transactional } from '../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 // import { AuthenticatedAuthGuard } from '../../../shared/guards/anonymous.guard';
 import { AuthService } from '../../../shared/services/auth.service';
-import { AuthLoginByEmailOrUsernamePayloadVM, AuthLoginResponseVM, AuthLoginWithRolesResponseVM, PermissionRolesPayloadVM, PermissionRolesResponseVM, PermissionAccessPayloadVM } from '../models/auth.vm';
+import { AuthLoginByEmailOrUsernamePayloadVM, AuthLoginResponseVM, AuthLoginWithRolesResponseVM, PermissionRolesPayloadVM, PermissionRolesResponseVM, PermissionAccessPayloadVM, PermissionAccessResponseVM } from '../models/auth.vm';
 import { AuthenticatedGuard } from 'src/shared/guards/authenticated.guard';
 // import { RefreshAccessTokenPayload } from '../models/refresh-access-token.model';
 
@@ -50,7 +50,7 @@ export class AuthController {
   @Post('permissionAccess')
   @HttpCode(200)
   @ApiBearerAuth()
-  @ApiOkResponse({ type: AuthLoginResponseVM })
+  @ApiOkResponse({ type: PermissionAccessResponseVM })
   @Transactional()
 
   // NOTE: body params like strong parameter
@@ -62,10 +62,6 @@ export class AuthController {
     );
 
     return loginMetadata;
-  }
-
-  private newMethod(payload: PermissionAccessPayloadVM): any {
-    return payload.clientId;
   }
 
   @Post('permissionRoles')
