@@ -5,7 +5,8 @@ import { Transactional } from '../../../shared/external/typeorm-transactional-cl
 // import { AuthenticatedAuthGuard } from '../../../shared/guards/anonymous.guard';
 import { AuthService } from '../../../shared/services/auth.service';
 import { AuthLoginByEmailOrUsernamePayloadVM, AuthLoginResponseVM, AuthLoginWithRolesResponseVM, PermissionRolesPayloadVM, PermissionRolesResponseVM, PermissionAccessPayloadVM, PermissionAccessResponseVM } from '../models/auth.vm';
-import { AuthenticatedGuard } from 'src/shared/guards/authenticated.guard';
+import { AuthenticatedGuard } from '../../../shared/guards/authenticated.guard';
+
 // import { RefreshAccessTokenPayload } from '../models/refresh-access-token.model';
 
 @ApiUseTags('Authentication')
@@ -50,6 +51,7 @@ export class AuthController {
   @Post('permissionAccess')
   @HttpCode(200)
   @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: PermissionAccessResponseVM })
   @Transactional()
 
@@ -90,7 +92,7 @@ export class AuthController {
 
   // NOTE: body params like strong parameter
   public async authLogout(@Body() payload: AuthLoginByEmailOrUsernamePayloadVM) {
-    const result =  {}
+    const result =  {};
     // await this.authService.login(
     //   payload.clientId,
     // );
