@@ -4,7 +4,8 @@ import { ModuleRef, NestFactory } from '@nestjs/core';
 // import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
 // import { PinoLoggerService } from '../../shared/common/logger.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import {LoggingInterceptor} from '../../shared/interceptors/logging.interceptor'
+import {LoggingInterceptor} from '../../shared/interceptors/logging.interceptor';
+import { HttpExceptionFilter} from '../../shared/interceptors/http-exception.filter';
 import { ErrorHandlerInterceptor } from '../../shared/interceptors/error-handler.interceptor';
 import { ResponseSerializerInterceptor } from '../../shared/interceptors/response-serializer.interceptor';
 import { AuthMiddleware } from '../../shared/middlewares/auth.middleware';
@@ -17,6 +18,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { AuthServerControllersModule } from './controllers/auth-server-controllers.module';
 import { AuthServerInjectorService } from './services/auth-server-injector.service';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { PinoLoggerService } from '../main/services/logger.service';
 
 @Module({
   imports: [SharedModule, AuthServerControllersModule,LoggingInterceptor],
@@ -54,7 +56,7 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
     // NOTE: adapter with fastify
     const app = await NestFactory.create<NestFastifyApplication>(
       AuthServerModule,
-      new FastifyAdapter({ logger: true }),
+      new FastifyAdapter({ logger: PinoLoggerService }),
     );
     this.app = app;
 
@@ -68,11 +70,17 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
         },
       }),
     );
+    app.useGlobalFilters(
+      new HttpExceptionFilter(),
+    )
+
     app.useGlobalInterceptors(
       new ResponseSerializerInterceptor(),
       new ErrorHandlerInterceptor(),
       new LoggingInterceptor(),
+     
     );
+    
 
     if (serverConfig.swagger.enabled) {
       // NOTE: swagger doc with fastify
