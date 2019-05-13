@@ -4,7 +4,7 @@ import { ModuleRef, NestFactory } from '@nestjs/core';
 // import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
 // import { PinoLoggerService } from '../../shared/common/logger.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import {LoggingInterceptor} from '../../shared/interceptors/logging.interceptor'
+import { LoggingInterceptor } from '../../shared/interceptors/logging.interceptor';
 import { ErrorHandlerInterceptor } from '../../shared/interceptors/error-handler.interceptor';
 import { ResponseSerializerInterceptor } from '../../shared/interceptors/response-serializer.interceptor';
 import { AuthMiddleware } from '../../shared/middlewares/auth.middleware';
@@ -19,7 +19,7 @@ import { AuthServerInjectorService } from './services/auth-server-injector.servi
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 @Module({
-  imports: [SharedModule, AuthServerControllersModule,LoggingInterceptor],
+  imports: [SharedModule, AuthServerControllersModule],
 })
 
 
