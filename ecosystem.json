@@ -1,7 +1,7 @@
 {
   "apps": [{
     "name": "tms-api",
-    "script": ".dist/main.js",
+    "script": "dist/main.js",
     "cwd": "/var/www/sicepat-tms-api/current",
     "error_file": "/var/www/sicepat-tms-api/current/log/app.err.log",
     "out_file": "/var/www/sicepat-tms-api/current/log/app.out.log",
