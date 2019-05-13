@@ -3,7 +3,7 @@ import { ApiOkResponse } from '../../../shared/external/nestjs-swagger';
 import { BranchRepository } from '../../../shared/orm-repository/branch.repository';
 import { BranchFindAllResponseVm } from '../models/branch.payload.vm';
 import { toInteger } from 'lodash';
-import { MetaService } from 'src/shared/services/meta.service';
+import { MetaService } from '../../../shared/services/meta.service';
 const logger = require('pino')();
 
 @Controller('branches')
