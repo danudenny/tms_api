@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod, UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
 // import { Test } from '@nestjs/testing';
 // import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
@@ -62,8 +62,9 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
     app.enableCors();
 
     app.useGlobalPipes(
-      new RequestValidationPipe({
+      new ValidationPipe({
         transform: true,
+        whitelist: true,
         transformOptions: {
           strategy: 'excludeAll',
         },
