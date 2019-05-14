@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOkResponse } from '../../../shared/external/nestjs-swagger';
 import { BranchRepository } from '../../../shared/orm-repository/branch.repository';
-import { BranchFindAllResponseVm } from '../models/branch.payload.vm';
+import { BranchFindAllResponseVm } from '../models/branch.response.vm';
 import { toInteger } from 'lodash';
 import { MetaService } from '../../../shared/services/meta.service';
 const logger = require('pino')();
