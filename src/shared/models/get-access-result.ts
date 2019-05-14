@@ -4,8 +4,8 @@ export class GetAccessResult {
   email: string;
   username: string;
   displayName: string;
-  branchId : number;
-  branchName : string;
-  branchCode : string;
+  branchId: number;
+  branchName: string;
+  branchCode: string;
   rolesAccessPermissions: string[];
 }

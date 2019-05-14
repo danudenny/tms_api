@@ -37,6 +37,7 @@ export class PermissionRolesPayloadVM {
   @ApiModelProperty()
   roleId: number;
 }
+
 //#endregion
 
 // #region Response section
