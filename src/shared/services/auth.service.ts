@@ -12,11 +12,12 @@ import { User } from '../orm-entity/user';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from '../orm-repository/user.repository';
 import { map, pick, toInteger } from 'lodash';
-import { GetRolesResult } from '../models/get-roles-result';
+import { GetRoleResult } from '../models/get-role-result';
 import { UserRole } from '../orm-entity/user-role';
-import { RolePermission } from '../orm-entity/role-permission';
 import { GetAccessResult } from '../models/get-access-result';
+import { RolePermission } from '../orm-entity/role-permission';
 import { Branch } from '../orm-entity/branch';
+import { getManager } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -99,21 +100,23 @@ export class AuthService {
     return null;
   }
 
-  async permissionRoles(): Promise<GetRolesResult> {
+  async permissionRoles(): Promise<GetRoleResult> {
     const authMeta = AuthService.getAuthMetadata();
     // const user = await this.userRepository.findByUserIdWithRoles());
     // check user present
     if (!!authMeta) {
       const roles = await UserRole.find(
         {
+          cache: true,
           relations: ['branch', 'role'],
           where: {
             user_id: toInteger(authMeta.userId),
           },
         },
       );
+
       // Populate return value
-      const result = new GetRolesResult();
+      const result = new GetRoleResult();
       result.userId = authMeta.userId;
       result.username = authMeta.username;
       result.email = authMeta.email;
@@ -157,18 +160,20 @@ export class AuthService {
     if (!!authMeta) {
       const rolesAccess = await RolePermission.find(
         {
+          cache: true,
           where: {
             role_id: roleId,
           },
         },
       );
+
       const branch = await Branch.findOne({
+        cache: true,
         where: {
           branch_id: branchId,
         },
       });
-      console.log(rolesAccess);
-      // Logger.log('############## Result rolesAccess ==================================================');
+
       // Populate return value
       const result = new GetAccessResult();
       result.clientId = authMeta.clientId;
@@ -179,19 +184,7 @@ export class AuthService {
       result.branchName = branch.branch_name;
       result.branchCode = branch.branch_code;
       result.rolesAccessPermissions = map(rolesAccess, 'name');
-      // result.rolesAccessPermissions = map(roles,
-      //     item => {
-      //       const newObj = {
-      //         // roleId: item.role_id,
-      //         // roleName: item.role.role_name,
-      //         // branchId: item.branch_id,
-      //         // branchName: item.branch.branch_name,
-      //         // branchCode: item.branch.branch_code,
-      //       };
-      //       return newObj;
-      //     },
-        // );
-      // console.log(result)
+
       return result;
     } else {
       ContextualErrorService.throw(
