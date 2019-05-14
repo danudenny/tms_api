@@ -1,4 +1,4 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger } from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -6,18 +6,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
-    
     const status = exception.getStatus();
     const logger = require('pino')() 
     logger.info(request.body)
-    
+    const messageStatus = HttpStatus[status];
+
     response
-      .status(status)
-      .send({
-        statusCode: status,
-        body: request.body,
-      });
+    .status(status)
+    .send({
+      statusCode: status,
+      errorMessage: messageStatus,
+      ip: request.ip,
+      // timestamp: new Date().toISOString(),
+      body: request.body,
+    });
+    }
   }
-
-
-}
