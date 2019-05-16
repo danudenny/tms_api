@@ -21,7 +21,7 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { PinoLoggerService } from './services/logger.service';
 
 @Module({
-  imports: [SharedModule, MainServerControllersModule,LoggingInterceptor],
+  imports: [SharedModule, MainServerControllersModule, LoggingInterceptor],
 })
 export class AuthServerModule extends MultiServerAppModule implements NestModule {
   constructor(private readonly moduleRef: ModuleRef) {
@@ -75,7 +75,7 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
 
     app.useGlobalFilters(
       new HttpExceptionFilter(),
-    )
+    );
 
     if (serverConfig.swagger.enabled) {
       // NOTE: swagger doc with fastify
