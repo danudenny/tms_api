@@ -5,8 +5,8 @@ HOST: http://api.tms.sicepat.com
 
 # Group Scan In
 
-## Scan In [/web/pod/scanIn/]
-    Untuk Scan In Gerai dari Web POD
+## Scan In Awb [/web/pod/scanIn/awb]
+    Untuk Scan In Gerai dari Web POD per Resi
 
 ### Scan In URL [POST]
 
@@ -43,7 +43,46 @@ HOST: http://api.tms.sicepat.com
 
             {}
 
-## Scan In List [/api/pod/scanIn/list]
+
+## Scan In Bag [/web/pod/scanIn/bag]
+    Untuk Scan In Gerai dari Web POD per Gabung Paket
+
+### Scan In URL [POST]
+
++ Request Scan In (application/json)
+
+    + Attributes (object)
+        + clientId  : `mobile`, (string, required) - Client Id
+        + bagNumber : `0001`, `0002`, (array[string], required) - Awb Number
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "total_data" : 2,
+                "data" : [
+                    "0001" : {
+                        "status"    : "ok",
+                        "message"   : "success",
+                    },
+                    "0002" : {
+                        "status"    : "error",
+                        "message"   : "Gabung Paket sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan In List [/api/pod/scanIn/awb/list]
     PENDING
 
 ### Scan In List URL [POST]
