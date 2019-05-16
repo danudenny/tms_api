@@ -4,7 +4,6 @@ import { BranchRepository } from '../../../shared/orm-repository/branch.reposito
 import { BranchFindAllResponseVm } from '../models/branch.response.vm';
 import { toInteger } from 'lodash';
 import { MetaService } from '../../../shared/services/meta.service';
-const logger = require('pino')();
 
 @ApiUseTags('Sample')
 @Controller('branches')
@@ -32,10 +31,8 @@ export class BranchController {
       },
     );
     const result = new BranchFindAllResponseVm();
-    result.payload = data;
-    result.meta = MetaService.set(page, take, total);
-
-    logger.info(`Total data :: ${total}`);
+    result.data = data;
+    result.paging = MetaService.set(page, take, total);
     return result;
   }
 }

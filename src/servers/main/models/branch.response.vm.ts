@@ -4,5 +4,5 @@ import { BranchVm } from './branch.vm';
 
 export class BranchFindAllResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [BranchVm] })
-  payload: BranchVm[];
+  data: BranchVm[];
 }
