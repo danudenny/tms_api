@@ -1,19 +1,19 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { ApiOkResponse, ApiUseTags } from '../../../shared/external/nestjs-swagger';
-import { BranchRepository } from '../../../shared/orm-repository/branch.repository';
-import { BranchFindAllResponseVm } from '../models/branch.response.vm';
+import { Controller, Get, Query, Post } from '@nestjs/common';
+import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
+import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { toInteger } from 'lodash';
-import { MetaService } from '../../../shared/services/meta.service';
+import { MetaService } from '../../../../shared/services/meta.service';
 const logger = require('pino')();
 
-@ApiUseTags('Sample')
-@Controller('branches')
-export class BranchController {
+@ApiUseTags('Mobile Delivery')
+@Controller('api/mobile/delivery')
+export class MobileDeliveryController {
   constructor(
     private readonly branchRepository: BranchRepository,
-  ) {}
+  ) { }
 
-  @Get()
+  @Post()
   @ApiOkResponse({ type: BranchFindAllResponseVm })
   async findAllBranch(
     @Query('page') page: number,
@@ -22,7 +22,7 @@ export class BranchController {
     page = toInteger(page) || 1;
     take = toInteger(take) || 10;
 
-    const skip  = (page - 1) * take;
+    const skip = (page - 1) * take;
     const [data, total] = await this.branchRepository.findAndCount(
       {
         // where: { name: Like('%' + keyword + '%') }, order: { name: "DESC" },

@@ -1,7 +1,42 @@
 FORMAT: 1A
 HOST: http://api.tms.sicepat.com
 
-# API POD for Web
+# API POD for Mobile
+
+# Group Dashboard
+
+## Dashboard [/mobile/dashboard]
+    Untuk mendapatkan summary yang akan muncul pada Halaman Utama
+
+### Dashboard List URL [POST]
+
++ Request Dashboard (application/json)
+
+    + Attributes (object)
+        + clientId  : `mobile`, (string, required) - Client id
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "today_awb_cod": 246000,
+                "today_pod_problem": 457,
+                "today_delivery": 457,
+                "today_cod_value": 1234567,
+                "today_cod_value_not_transfer": 234590,
+                "this_week_delivery": 246000,
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
 
 # Group Delivery List
 
