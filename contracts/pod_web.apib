@@ -99,8 +99,14 @@ HOST: http://api.tms.sicepat.com
     + Body
 
             {
-                "currentPage": "1",
-                "totalPage": "10",
+                "paging": {
+                    "currentPage": 1,
+                    "nextPage": 2,
+                    "prevPage": 0,
+                    "totalPage": 8,
+                    "totalData": 798,
+                    "limit": 100
+                },
                 "data": [
                     {
                         "scan_in_datetime": "2019-03-01 10:00:00",
