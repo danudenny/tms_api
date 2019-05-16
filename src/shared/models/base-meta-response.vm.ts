@@ -2,28 +2,25 @@ import { ApiModelProperty } from '../external/nestjs-swagger';
 
 export class MetaResponseVm {
   @ApiModelProperty()
-  current_page: number;
+  currentPage: number;
 
   @ApiModelProperty()
-  next_page: number;
+  nextPage: number;
 
   @ApiModelProperty()
-  prev_page: number;
+  prevPage: number;
 
   @ApiModelProperty()
-  total_pages: number;
+  totalPage: number;
 
   @ApiModelProperty()
-  total_count: number;
+  totalData: number;
 
   @ApiModelProperty()
   limit: number;
-
-  @ApiModelProperty()
-  status: string;
 }
 
 export class BaseMetaResponseVm {
   @ApiModelProperty({ type: () => MetaResponseVm })
-  meta: MetaResponseVm;
+  paging: MetaResponseVm;
 }

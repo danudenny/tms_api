@@ -63,9 +63,14 @@ HOST: http://api.tms.sicepat.com
     + Body
 
             {
-                "currentPage": "1",
-                "totalPage": "10",
-                "nextPage": "2",
+                "paging": {
+                    "currentPage": 1,
+                    "nextPage": 2,
+                    "prevPage": 0,
+                    "totalPage": 8,
+                    "totalData": 798,
+                    "limit": 100
+                },
                 "data": [
                     {
                         "awbId"                 : 1,
