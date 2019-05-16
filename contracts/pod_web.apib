@@ -1,0 +1,85 @@
+FORMAT: 1A
+HOST: http://api.tms.sicepat.com
+
+# API POD for Web
+
+# Group Scan In
+
+## Scan In [/web/pod/scanIn/]
+    Untuk Scan In Gerai dari Web POD
+
+### Scan In URL [POST]
+
++ Request Scan In (application/json)
+
+    + Attributes (object)
+        + clientId  : `mobile`, (string, required) - Client Id
+        + awbNumber : `0001`, `0002`, (array[string], required) - Awb Number
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "total_data" : 2,
+                "data" : [
+                    "0001" : {
+                        "status"    : "ok",
+                        "message"   : "success",
+                    },
+                    "0002" : {
+                        "status"    : "error",
+                        "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan In List [/api/pod/scanIn/list]
+    PENDING
+
+### Scan In List URL [POST]
+
++ Request Scan In List (application/json)
+
+    + Attributes (object)
+        + clientId  : `mobile`, (string, required) - Client id
+        + filters   : (object) 
+            + startScanInDateTime   : 2019-05-01 00:00:00 (string)
+            + endScanInDateTime     : 2019-05-01 00:00:00 (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "currentPage": "1",
+                "totalPage": "10",
+                "data": [
+                    {
+                        "scan_in_datetime": "2019-03-01 10:00:00",
+                        "awb_number": "1234",
+                        "branch_name_scan": "1234",
+                        "branch_name_from": "1234",
+                        "employee_name": "1234",
+                        "scan_in_status": "Ya",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
