@@ -1,39 +1,39 @@
-import { Inject, Injectable, LoggerService, Module } from "@nestjs/common";
-import pino from "pino";
-import { Logger, QueryRunner } from "typeorm";
-import { ConfigService } from "src/shared/services/config.service";
+import { Inject, Injectable, LoggerService, Module } from '@nestjs/common';
+import { Logger, QueryRunner } from 'typeorm';
+import { ConfigService } from 'src/shared/services/config.service';
 // import { ConfigModule, ConfigService } from './config';
+import pino = require('pino');
 
-export const create_pino = (config: ConfigService) =>
+export const create_pino = () =>
   pino({
     prettyPrint: true,
-    level:"info",
+    level: 'info',
   });
 
 @Injectable()
 export class PinoLoggerService implements LoggerService {
   public logger: pino.Logger;
 
-  constructor(@Inject() config: ConfigService) {
-    this.logger = create_pino(config);
+  constructor() {
+    this.logger = create_pino();
   }
 
-  public trace(message: string, ...args: any[]) {
+  public trace(message: any, ...args: any[]) {
     this.logger.trace(message, ...args);
   }
-  public debug(message: string, ...args: any[]) {
+  public debug(message: any, ...args: any[]) {
     this.logger.debug(message, ...args);
   }
-  public info(message: string, ...args: any[]) {
+  public info(message: any, ...args: any[]) {
     this.logger.info(message, ...args);
   }
-  public warn(message: string, ...args: any[]) {
+  public warn(message: any, ...args: any[]) {
     this.logger.warn(message, ...args);
   }
-  public error(message: string, ...args: any[]) {
+  public error(message: any, ...args: any[]) {
     this.logger.error(message, ...args);
   }
-  public log(message: string, ...args: any[]) {
+  public log(message: any, ...args: any[]) {
     this.logger.info(message, ...args);
   }
 }
@@ -51,7 +51,7 @@ export class TypeOrmLoggerService implements Logger {
     parameters?: any[],
     queryRunner?: QueryRunner,
   ): any {
-    this.logger.trace("typeorm:query " + query, parameters || []);
+    this.logger.trace('typeorm:query ' + query, parameters || []);
   }
   /**
    * Logs query that is failed.
@@ -62,7 +62,7 @@ export class TypeOrmLoggerService implements Logger {
     parameters?: any[],
     queryRunner?: QueryRunner,
   ): any {
-    this.logger.error("typeorm:query " + error, {
+    this.logger.error('typeorm:query ' + error, {
       query,
       parameters: parameters || [],
     });
@@ -85,31 +85,31 @@ export class TypeOrmLoggerService implements Logger {
    * Logs events from the schema build process.
    */
   public logSchemaBuild(message: string, queryRunner?: QueryRunner): any {
-    this.logger.info("typeorm:schema " + message);
+    this.logger.info('typeorm:schema ' + message);
   }
   /**
    * Logs events from the migrations run process.
    */
   public logMigration(message: string, queryRunner?: QueryRunner): any {
-    this.logger.info("typeorm:migration " + message);
+    this.logger.info('typeorm:migration ' + message);
   }
   /**
    * Perform logging using given logger, or by default to the console.
    * Log has its own level and message.
    */
   public log(
-    level: "log" | "info" | "warn",
+    level: 'log' | 'info' | 'warn',
     message: any,
     queryRunner?: QueryRunner,
   ): any {
     switch (level) {
-      case "log":
+      case 'log':
         this.logger.debug(message);
         break;
-      case "info":
+      case 'info':
         this.logger.info(message);
         break;
-      case "warn":
+      case 'warn':
         this.logger.warn(message);
         break;
     }
