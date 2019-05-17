@@ -9,8 +9,8 @@ import { ResponseSerializerInterceptor } from '../../shared/interceptors/respons
 import { AuthMiddleware } from '../../shared/middlewares/auth.middleware';
 import { HeaderMetadataMiddleware } from '../../shared/middlewares/header-metadata.middleware';
 import { RequestContextMiddleware } from '../../shared/middlewares/request-context.middleware';
-import { HttpExceptionFilter} from '../../shared/interceptors/http-exception.filter';
-import {LoggingInterceptor} from '../../shared/interceptors/logging.interceptor';
+import { HttpExceptionFilter } from '../../shared/interceptors/http-exception.filter';
+import { LoggingInterceptor } from '../../shared/interceptors/logging.interceptor';
 import { MultiServerAppModule } from '../../shared/models/multi-server';
 import { RequestValidationPipe } from '../../shared/pipes/request-validation-pipe.pipe';
 import { ConfigService } from '../../shared/services/config.service';
@@ -18,7 +18,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { MainServerControllersModule } from './controllers/main-server-controllers.module';
 import { MainServerInjectorService } from './services/main-server-injector.service';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { PinoLoggerService } from './services/logger.service';
+import { PinoLoggerService } from '../../shared/services/logger.service';
 
 @Module({
   imports: [SharedModule, MainServerControllersModule, LoggingInterceptor],

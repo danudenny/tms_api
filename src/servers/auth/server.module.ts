@@ -18,7 +18,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { AuthServerControllersModule } from './controllers/auth-server-controllers.module';
 import { AuthServerInjectorService } from './services/auth-server-injector.service';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { PinoLoggerService } from '../main/services/logger.service';
+import { PinoLoggerService } from '../../shared/services/logger.service';
 
 @Module({
   imports: [SharedModule, AuthServerControllersModule],
