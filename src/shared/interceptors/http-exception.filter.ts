@@ -1,5 +1,5 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
-import { error } from 'util';
+
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -17,9 +17,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
     .send({
       statusCode: status,
       error: messageStatus,
+      ip: request.ip,
       message:exception.message,
       timestamp: new Date(Date.now()).toLocaleString(),
-    });
+      });
+      }
     }
-  }
+
+
 

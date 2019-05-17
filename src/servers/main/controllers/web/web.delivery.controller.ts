@@ -32,8 +32,8 @@ export class WebDeliveryController {
       },
     );
     const result = new BranchFindAllResponseVm();
-    result.payload = data;
-    result.meta = MetaService.set(page, take, total);
+    result.data = data;
+    result.paging = MetaService.set(page, take, total);
 
     logger.info(`Total data :: ${total}`);
     return result;
