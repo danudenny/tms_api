@@ -1,41 +1,27 @@
-import { Controller, Get, Query, Post } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
-import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
+import { awbRepository } from '../../../../shared/orm-repository/MobileDelivery.repository';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { toInteger } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { WebScanInVm } from '../../models/WebScanIn.vm';
+import { WebScanInFindAllResponseVm } from '../../models/WebScanIn.response.vm';
 const logger = require('pino')();
 
-@ApiUseTags('Web Delivery')
-@Controller('api/web/delivery')
+@ApiUseTags('Scan In Awb')
+@Controller('api/web/pod/scanIn/awb')
 export class WebDeliveryController {
   constructor(
-    private readonly branchRepository: BranchRepository,
+    private readonly awbRepository: awbRepository,
   ) { }
 
   @Post()
-  @ApiOkResponse({ type: BranchFindAllResponseVm })
-  async findAllBranch(
-    @Query('page') page: number,
-    @Query('limit') take: number,
-  ) {
-    page = toInteger(page) || 1;
-    take = toInteger(take) || 10;
-
-    const skip = (page - 1) * take;
-    const [data, total] = await this.branchRepository.findAndCount(
-      {
-        // where: { name: Like('%' + keyword + '%') }, order: { name: "DESC" },
-        cache: true,
-        take,
-        skip,
-      },
+  @ApiOkResponse({ type: WebScanInFindAllResponseVm })
+  public async Web(@Body() payload: WebScanInVm) {
+    const Web = await this.awbRepository.create(
+      // payload.clientId,
     );
-    const result = new BranchFindAllResponseVm();
-    result.data = data;
-    result.paging = MetaService.set(page, take, total);
 
-    logger.info(`Total data :: ${total}`);
-    return result;
+    return Web;
   }
 }

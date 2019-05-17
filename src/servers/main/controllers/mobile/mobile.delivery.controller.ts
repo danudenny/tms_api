@@ -7,7 +7,7 @@ import { MobileDeliveryFindAllResponseVm } from '../../models/MobileDelivery.res
 import { ObjectService } from 'src/shared/services/object.service';
 const logger = require('pino')();
 
-@ApiUseTags('Mobile Delivery')
+@ApiUseTags('Delivery List')
 @Controller('api/mobile/delivery')
 export class MobileDeliveryController {
   constructor(
@@ -16,7 +16,7 @@ export class MobileDeliveryController {
 
   @Post()
   @ApiOkResponse({ type: MobileDeliveryFindAllResponseVm })
-  async findAllBranch(
+  async findAllMobileDelivery(
     @Query('page') page: number,
     @Query('limit') take: number,
   ) {
