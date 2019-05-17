@@ -7,7 +7,7 @@ import { MobileDashboardFindAllResponseVm } from '../../models/MobileDashboard.r
 import { MobiledashboardVm } from '../../models/MobileDashboard.vm';
 const logger = require('pino')();
 
-@ApiUseTags('Mobile Delivery')
+@ApiUseTags('Dashboard')
 @Controller('api/mobile/dashboard')
 export class MobileDashboardController {
   constructor(

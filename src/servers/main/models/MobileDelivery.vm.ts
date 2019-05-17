@@ -1,6 +1,5 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 import { MobileDashboardhistVm } from './MobileDashboard.vm';
-import { MobileDashboardSpecialInstructionVm } from '../models/MobileDashboardSpecialInstruction.vm';
 
 
 export class MobileDeliveryVm {
@@ -42,7 +41,7 @@ export class MobileDeliveryVm {
 
   @ApiModelProperty({ type: () => MobileDashboardhistVm, isArray: true })
   redeliveryHistory: MobileDashboardhistVm[];
-
-  @ApiModelProperty({ type: () => MobileDashboardSpecialInstructionVm, isArray: true })
-  specialInstruction: MobileDashboardSpecialInstructionVm[];
+  
+  @ApiModelProperty({ type: String })
+  specialInstruction: string[];
 }
