@@ -6,10 +6,8 @@ import { employeeRepository } from 'src/shared/orm-repository/employee.resposito
 import { Employee } from 'src/shared/orm-entity/employee';
 import { EmployeeFindAllResponseVm } from '../../models/employee.response.vm';
 
-const logger = require('pino')();
-
 @Injectable()
-export class employeeService {
+export class EmployeeService {
   constructor(
     @InjectRepository(Employee)
     private readonly employeeRepository: employeeRepository,
@@ -35,7 +33,6 @@ export class employeeService {
     result.data = data;
     result.paging = MetaService.set(page, take, total);
 
-    logger.info(`Total data :: ${total}`);
     return result;
   }
 }

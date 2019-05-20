@@ -7,10 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MetaService } from 'src/shared/services/meta.service';
 import { BranchRepository } from 'src/shared/orm-repository/branch.repository';
 
-const logger = require('pino')();
-
 @Injectable()
-export class branchService {
+export class BranchService {
   constructor(
     @InjectRepository(Branch)
     private readonly branchRepository: BranchRepository,
@@ -36,8 +34,6 @@ export class branchService {
     result.data = data;
     result.paging = MetaService.set(page, take, total);
 
-
-    logger.info(`Total data :: ${total}`);
     return result;
   }
 

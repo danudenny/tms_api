@@ -6,17 +6,18 @@ import { MobileDeliveryController } from './mobile/mobile.delivery.controller';
 import { WebDeliveryController } from './web/web.delivery.controller';
 import { MobileDashboardController } from './mobile/mobile.dashboard.controller';
 import { MainServerServicesModule } from '../services/main-server-services.module';
-import { BranchController } from '../master/branch.controller';
-import { employeeController } from '../master/employee.controller';
+import { BranchController } from './master/branch.controller';
+import { EmployeeController } from './master/employee.controller';
+
 
 @Module({
-  imports: [OrmRepositoryModule, SharedModule,MainServerServicesModule],
+  imports: [OrmRepositoryModule, SharedModule, MainServerServicesModule],
   controllers: [
     MobileDashboardController,
     MobileDeliveryController,
     WebDeliveryController,
     BranchController,
-    employeeController,
+    EmployeeController,
   ],
 })
 export class MainServerControllersModule {}
