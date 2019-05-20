@@ -8,13 +8,13 @@ import { ObjectService } from 'src/shared/services/object.service';
 const logger = require('pino')();
 
 @ApiUseTags('Delivery List')
-@Controller('api/mobile/delivery')
+@Controller('api/mobile')
 export class MobileDeliveryController {
   constructor(
     private readonly AwbRepository: awbRepository,
   ) { }
 
-  @Post()
+  @Post('delivery')
   @ApiOkResponse({ type: MobileDeliveryFindAllResponseVm })
   async findAllMobileDelivery(
     @Query('page') page: number,

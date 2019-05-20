@@ -4,7 +4,7 @@ import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeo
 @Index('awb_booking_idx', ['awb_booking_id'])
 @Index('awb_awb_date_idx', ['awb_date'])
 @Index('awb_awb_list_idx', ['awb_date', 'is_deleted'])
-@Index('awb_awb_number_idx', ['awb_number'])
+@Index('awb_awb_number_idx', ['awbNumber'])
 @Index('awb_awb_status_id_last_idx', ['awb_status_id_last'])
 @Index('awb_branch_id_last_idx', ['branch_id_last'])
 @Index('awb_customer_account_id_idx', ['customer_account_id'])
@@ -18,8 +18,9 @@ import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeo
 export class Awb extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name:'awb_id',
   })
-  awb_id: string;
+  awbId: number;
 
   @Column('integer', {
     nullable: false,
@@ -36,8 +37,9 @@ export class Awb extends BaseEntity {
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name:'awb_number',
   })
-  awb_number: string;
+  awbNumber: string;
 
   @Column('bigint', {
     nullable: false,
@@ -518,8 +520,9 @@ export class Awb extends BaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name:'ref_reseller',
   })
-  ref_reseller: string | null;
+  refReseller: string | null;
 
   @Column('character varying', {
     nullable: true,

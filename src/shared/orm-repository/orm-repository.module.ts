@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BranchRepository } from './branch.repository';
 import { UserRepository } from './user.repository';
 import { awbRepository } from './MobileDelivery.repository';
+import { Awb } from '../orm-entity/awb';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { awbRepository } from './MobileDelivery.repository';
       BranchRepository,
       UserRepository,
       awbRepository,
+      Awb,
     ]),
   ],
   exports: [

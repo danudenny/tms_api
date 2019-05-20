@@ -1,6 +1,6 @@
 import { EntityRepository, Repository } from 'typeorm';
 
-import { AwbHistory } from '../orm-entity/awb-history';
+import { Awb } from '../orm-entity/awb';
 
-@EntityRepository(AwbHistory)
-export class awbRepository extends Repository<AwbHistory> {}
+@EntityRepository(Awb)
+export class awbRepository extends Repository<Awb> {}
