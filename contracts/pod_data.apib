@@ -1,0 +1,127 @@
+FORMAT: 1A
+HOST: http://api.tms.sicepat.com
+
+# API Data POD for Web & Mobile
+
+# Group Dropdown
+
+## Branch [/dropdown/branch]
+
+### Branch URL [POST]
+
++ Request Branch (application/json)
+
+    + Attributes (object)
+        + clientId  : `mobile`, (string, required) - Client Id
+        + filters   : (object)
+            + search    : abc (string)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+            
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage": 1,
+                    "nextPage": 0,
+                    "prevPage": 0,
+                    "totalPage": 8,
+                    "totalData": 2,
+                    "limit": 100
+                },
+                "data": [
+                    {
+                        "branchId": "1",
+                        "branchCode": "10020010",
+                        "branchName": "Pluit 2",
+                    },
+                    {
+                        "branchId": "2",
+                        "branchCode": "10020013",
+                        "branchName": "Daan Mogot",
+                    },
+                    {
+                        "branchId": "3",
+                        "branchCode": "10020011",
+                        "branchName": "Pluit 1",
+                    },
+                    {
+                        "branchId": "4",
+                        "branchCode": "10020012",
+                        "branchName": "Pusat",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Employee [/dropdown/employee]
+
+### Employee URL [POST]
+
++ Request Employee (application/json)
+
+    + Attributes (object)
+        + clientId  : `mobile`, (string, required) - Client Id
+        + filters   : (object)
+            + search    : abc (string),
+            + branchId  : 1 (string)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : employeeName, (string)
+        + sortDir   : asc, (string)
+            
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage": 1,
+                    "nextPage": 0,
+                    "prevPage": 0,
+                    "totalPage": 8,
+                    "totalData": 2,
+                    "limit": 100
+                },
+                "data": [
+                    {
+                        "employeeId": "1",
+                        "nik": "10020010",
+                        "employeeName": "ABC",
+                    },
+                    {
+                        "employeeId": "2",
+                        "nik": "10020012",
+                        "employeeName": "ABCD",
+                    },
+                    {
+                        "employeeId": "3",
+                        "nik": "10020013",
+                        "employeeName": "ABCE",
+                    },
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
