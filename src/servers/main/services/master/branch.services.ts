@@ -36,7 +36,7 @@ export class branchService {
     result.data = data;
     result.paging = MetaService.set(page, take, total);
 
-    logger.log(result);
+
     logger.info(`Total data :: ${total}`);
     return result;
   }

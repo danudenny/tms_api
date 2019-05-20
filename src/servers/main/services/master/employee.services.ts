@@ -1,8 +1,5 @@
-import { Controller, Get, Query, Injectable } from '@nestjs/common';
-// import { ApiOkResponse, ApiUseTags } from '../../../shared/external/nestjs-swagger';
-import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
+import { Query, Injectable } from '@nestjs/common';
 import { toInteger } from 'lodash';
-import { Branch } from '../../../../shared/orm-entity/branch';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MetaService } from 'src/shared/services/meta.service';
 import { employeeRepository } from 'src/shared/orm-repository/employee.respository';
@@ -38,7 +35,6 @@ export class employeeService {
     result.data = data;
     result.paging = MetaService.set(page, take, total);
 
-    logger.log(result);
     logger.info(`Total data :: ${total}`);
     return result;
   }
