@@ -6,13 +6,13 @@ import { toInteger } from 'lodash';
 import { MetaService } from '../../../shared/services/meta.service';
 
 @ApiUseTags('Master Data')
-@Controller('branches')
+@Controller('dropdown')
 export class BranchController {
   constructor(
     private readonly branchRepository: BranchRepository,
   ) {}
 
-  @Post()
+  @Post('branches')
   @ApiOkResponse({ type: BranchFindAllResponseVm })
   async findAllBranch(
     @Query('page') page: number,
