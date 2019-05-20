@@ -1,4 +1,4 @@
-import { ReflectMetadata } from '@nestjs/common';
+import { SetMetadata } from '@nestjs/common';
 
 import { DECORATOR } from '../constants/decorator.constant';
 
@@ -8,4 +8,4 @@ export interface IResponseSerializerOptions {
 }
 
 export const ResponseSerializerOptions = (options: IResponseSerializerOptions) =>
-  ReflectMetadata(DECORATOR.RESPONSE_SERIALIZER_OPTIONS, options);
+  SetMetadata(DECORATOR.RESPONSE_SERIALIZER_OPTIONS, options);
