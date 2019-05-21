@@ -5,6 +5,8 @@
     "cwd": "/var/www/sicepat-tms-api/current",
     "error_file": "/var/www/sicepat-tms-api/current/log/app.err.log",
     "out_file": "/var/www/sicepat-tms-api/current/log/app.out.log",
+    "watch": true,
+    "instance_var": "INSTANCE_ID",
     "exec_mode": "fork_mode"
   }]
 }
