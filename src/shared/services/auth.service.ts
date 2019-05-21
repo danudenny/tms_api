@@ -31,9 +31,9 @@ export class AuthService {
 
   async login(
     clientId: string,
-    email: string,
+    username: string,
     password: string,
-    username?: string,
+    email?: string,
   ): Promise<AuthLoginResultMetadata> {
 
     // find by email or username on table users
