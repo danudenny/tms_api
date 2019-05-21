@@ -16,7 +16,6 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + clientId  : `mobile`, (string, required) - Client Id
         + awbNumber : `0001`, `0002`, (array[string], required) - Awb Number
 
 + Response 200 (application/json; charset=utf-8)
@@ -58,7 +57,6 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + clientId  : `mobile`, (string, required) - Client Id
         + bagNumber : `0001`, `0002`, (array[string], required) - Awb Number
 
 + Response 200 (application/json; charset=utf-8)
@@ -89,7 +87,6 @@ HOST: http://api.tms.sicepat.com
             {}
 
 ## Scan In List [/api/pod/scanIn/awb/list]
-    PENDING
 
 ### Scan In List URL [POST]
 
@@ -99,7 +96,6 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + clientId  : `mobile`, (string, required) - Client id
         + filters   : (object)
             + startScanInDateTime   : 2019-05-01 00:00:00 (string)
             + endScanInDateTime     : 2019-05-01 00:00:00 (string)
@@ -118,12 +114,20 @@ HOST: http://api.tms.sicepat.com
                 },
                 "data": [
                     {
-                        "scan_in_datetime": "2019-03-01 10:00:00",
-                        "awb_number": "1234",
-                        "branch_name_scan": "1234",
-                        "branch_name_from": "1234",
-                        "employee_name": "1234",
-                        "scan_in_status": "Ya",
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
                     }
                 ]
             }
