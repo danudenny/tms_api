@@ -27,7 +27,7 @@ HOST: http://tmsapi-staging2.sicepat.com
                 "refreshToken": "8asfgasgwetw4tewtggg",
                 "email": "ade@sicepat.com",
                 "username": "adefast",
-                "displayName": "Ade",
+                "displayName": "Ade"
             }
 
 + Response 400 (application/json; charset=utf-8)
@@ -49,12 +49,12 @@ HOST: http://tmsapi-staging2.sicepat.com
 
     + Header
 
-            Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + clientId: `mobile`, (string, required) - Client id
-        + roleId: 123, (number) - Role Id User
-        + branchId: 12, (number) - Branch Id User
+        + clientId: mobile, (string, required) - Client id
+        + roleId: 123, (string) - Role Id User
+        + branchId: 12, (string) - Branch Id User
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -69,11 +69,27 @@ HOST: http://tmsapi-staging2.sicepat.com
                 "roleName": "Sales",
                 "employeeId": "1",
                 "rolesAccessPermissions": [
-                    "work_order_list",
-                    "do_pickup_list",
-                    "awb_search",
-                    "awb_list",
-                    "bag_list"
+                    "dashboard",
+                    "calculate_price",
+                    "manual_calculate",
+                    "cek_price_discount",
+                    "report",
+                    "lph",
+                    "email_at_night",
+                    "awb_number_jne",
+                    "billing_setting",
+                    "customer_setting",
+                    "customer_setting_add",
+                    "customer_setting_list",
+                    "access_menu",
+                    "user",
+                    "user_mapping",
+                    "user_mapping_list",
+                    "roles",
+                    "roles_add",
+                    "roles_list",
+                    "user_permission",
+                    "user_permission_dashboard"
                 ]
             }
 
@@ -96,10 +112,10 @@ HOST: http://tmsapi-staging2.sicepat.com
 
     + Header
 
-            Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + clientId: 'mobile', (string, required) - Client id
+        + clientId: mobile, (string, required) - Client id
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -160,10 +176,10 @@ HOST: http://tmsapi-staging2.sicepat.com
 
     + Header
 
-            Authorization: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + clientId: 'mobile', (string, required) - Client id
+        + clientId: mobile, (string, required) - Client id
 
 + Response 200 (application/json; charset=utf-8)
     + Body
