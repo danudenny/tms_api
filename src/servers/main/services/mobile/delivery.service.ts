@@ -1,19 +1,17 @@
-import { HttpStatus, Injectable, Logger, Query } from '@nestjs/common';
+import { HttpStatus, Injectable, Query } from '@nestjs/common';
 import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
-import { AuthService } from 'src/shared/services/auth.service';
-import { GetRoleResult } from 'src/shared/models/get-role-result';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { GetRoleResult } from '../../../../shared/models/get-role-result';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { toInteger } from 'lodash';
 import { MobileDeliveryFindAllResponseVm } from '../../models/MobileDelivery.response.vm';
-import { MetaService } from 'src/shared/services/meta.service';
+import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
-import { Awb } from 'src/shared/orm-entity/awb';
+import { Awb } from '../../../../shared/orm-entity/awb';
 
 @Injectable()
 export class MobileDeliveryService {
-  constructor() // @InjectRepository(LoginSessionRepository)
-  // private readonly loginSessionRepository: LoginSessionRepository,
-  {}
+  constructor() {}
 
   async downloadWorkOrder(): Promise<any> {
     const limit = 10;
