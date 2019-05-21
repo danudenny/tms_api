@@ -3,8 +3,8 @@ module.exports = {
   port: 4001,
   swagger: {
     enabled: true,
-    title: "SiCepat TMS Auth",
-    description: "SiCepat TMS auth server api",
+    title: "SiCepat TMS Main",
+    description: "SiCepat TMS main server api",
     path: "docs",
   },
 };

@@ -5,11 +5,14 @@ HOST: http://api.tms.sicepat.com
 
 # Group Dropdown
 
-## Branch [/dropdown/branch]
+## Branch [/api/data/branch]
 
 ### Branch URL [POST]
 
 + Request Branch (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
         + clientId  : `mobile`, (string, required) - Client Id
@@ -19,7 +22,6 @@ HOST: http://api.tms.sicepat.com
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-            
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -68,11 +70,14 @@ HOST: http://api.tms.sicepat.com
             {}
 
 
-## Employee [/dropdown/employee]
+## Employee [/api/data/employee]
 
 ### Employee URL [POST]
 
 + Request Employee (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
         + clientId  : `mobile`, (string, required) - Client Id
@@ -83,7 +88,6 @@ HOST: http://api.tms.sicepat.com
         + limit     : 10, (number) - Default 10
         + sortBy    : employeeName, (string)
         + sortDir   : asc, (string)
-            
 
 + Response 200 (application/json; charset=utf-8)
     + Body

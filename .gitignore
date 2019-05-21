@@ -3,3 +3,4 @@ dist
 tempCodeRunnerFile.*
 package-lock.json
 yarn.lock
+log

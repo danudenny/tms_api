@@ -11,6 +11,9 @@ HOST: http://api.tms.sicepat.com
 ### Scan In URL [POST]
 
 + Request Scan In (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
         + clientId  : `mobile`, (string, required) - Client Id
@@ -20,7 +23,7 @@ HOST: http://api.tms.sicepat.com
     + Body
 
             {
-                "total_data" : 2,
+                "totalData" : 2,
                 "data" : [
                     "0001" : {
                         "status"    : "ok",
@@ -50,6 +53,9 @@ HOST: http://api.tms.sicepat.com
 ### Scan In URL [POST]
 
 + Request Scan In (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
         + clientId  : `mobile`, (string, required) - Client Id
@@ -88,10 +94,13 @@ HOST: http://api.tms.sicepat.com
 ### Scan In List URL [POST]
 
 + Request Scan In List (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
         + clientId  : `mobile`, (string, required) - Client id
-        + filters   : (object) 
+        + filters   : (object)
             + startScanInDateTime   : 2019-05-01 00:00:00 (string)
             + endScanInDateTime     : 2019-05-01 00:00:00 (string)
 

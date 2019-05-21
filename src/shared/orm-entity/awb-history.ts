@@ -26,8 +26,9 @@ export class AwbHistory extends BaseEntity {
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name:'history_date',
   })
-  history_date: Date;
+  historyDate: Date;
 
   @Column('bigint', {
     nullable: true,

@@ -19,9 +19,10 @@ import { MainServerControllersModule } from './controllers/main-server-controlle
 import { MainServerInjectorService } from './services/main-server-injector.service';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { PinoLoggerService } from '../../shared/services/logger.service';
+import { MainServerServicesModule } from './services/main-server-services.module';
 
 @Module({
-  imports: [SharedModule, MainServerControllersModule, LoggingInterceptor],
+  imports: [SharedModule, MainServerControllersModule, LoggingInterceptor, MainServerServicesModule],
 })
 export class AuthServerModule extends MultiServerAppModule implements NestModule {
   constructor(private readonly moduleRef: ModuleRef) {

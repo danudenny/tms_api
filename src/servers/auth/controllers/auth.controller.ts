@@ -23,9 +23,9 @@ export class AuthController {
   public async authLogin(@Body() payload: AuthLoginByEmailOrUsernamePayloadVM) {
     const loginMetadata = await this.authService.login(
       payload.clientId,
-      payload.email,
-      payload.password,
       payload.username,
+      payload.password,
+      payload.email,
     );
 
     return loginMetadata;
