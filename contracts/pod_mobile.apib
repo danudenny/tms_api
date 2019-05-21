@@ -11,6 +11,9 @@ HOST: http://api.tms.sicepat.com
 ### Dashboard List URL [POST]
 
 + Request Dashboard (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
         + clientId  : `mobile`, (string, required) - Client id
@@ -46,11 +49,14 @@ HOST: http://api.tms.sicepat.com
 ### Delivery List URL [POST]
 
 + Request Delivery In List (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
         + clientId  : `mobile`, (string, required) - Client id
         + filters   : (object)
-            + employeeId            : `1`, (string, required)  
+            + employeeId            : `1`, (string, required)
             + startDeliveryDateTime : `2019-05-01 00:00:00`, (string, required)
             + endDeliveryDateTime   : `2019-05-01 00:00:00`, (string, required)
         + page      : 1, (number) - Default 1
@@ -132,7 +138,7 @@ HOST: http://api.tms.sicepat.com
                             }
                         ],
                         "specialInstruction"    : [
-                            "Foto di Tempat", 
+                            "Foto di Tempat",
                             "DO Balik"
                         ]
                     },
@@ -196,7 +202,7 @@ HOST: http://api.tms.sicepat.com
                             }
                         ],
                         "specialInstruction"    : [
-                            "Foto di Tempat", 
+                            "Foto di Tempat",
                             "DO Balik"
                         ]
                     }
