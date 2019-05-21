@@ -1,6 +1,5 @@
 import { Inject, Injectable, LoggerService, Module } from '@nestjs/common';
 import { Logger, QueryRunner } from 'typeorm';
-import { ConfigService } from 'src/shared/services/config.service';
 // import { ConfigModule, ConfigService } from './config';
 import pino = require('pino');
 

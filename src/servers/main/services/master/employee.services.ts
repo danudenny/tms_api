@@ -1,9 +1,9 @@
 import { Query, Injectable } from '@nestjs/common';
 import { toInteger } from 'lodash';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MetaService } from 'src/shared/services/meta.service';
-import { employeeRepository } from 'src/shared/orm-repository/employee.respository';
-import { Employee } from 'src/shared/orm-entity/employee';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { employeeRepository } from '../../../../shared/orm-repository/employee.respository';
+import { Employee } from '../../../../shared/orm-entity/employee';
 import { EmployeeFindAllResponseVm } from '../../models/employee.response.vm';
 
 @Injectable()

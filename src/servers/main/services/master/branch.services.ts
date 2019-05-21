@@ -4,8 +4,8 @@ import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { toInteger } from 'lodash';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MetaService } from 'src/shared/services/meta.service';
-import { BranchRepository } from 'src/shared/orm-repository/branch.repository';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
 
 @Injectable()
 export class BranchService {
