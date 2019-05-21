@@ -22,7 +22,7 @@ import { PinoLoggerService } from '../../shared/services/logger.service';
 import { MainServerServicesModule } from './services/main-server-services.module';
 
 @Module({
-  imports: [SharedModule, MainServerControllersModule, LoggingInterceptor,MainServerServicesModule],
+  imports: [SharedModule, MainServerControllersModule, LoggingInterceptor, MainServerServicesModule],
 })
 export class AuthServerModule extends MultiServerAppModule implements NestModule {
   constructor(private readonly moduleRef: ModuleRef) {

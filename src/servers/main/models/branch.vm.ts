@@ -2,11 +2,11 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class BranchVm {
   @ApiModelProperty()
-  branch_id: string;
+  branchId: number;
 
   @ApiModelProperty()
-  branch_code: string;
+  branchCode: string;
 
   @ApiModelProperty()
-  branch_name: string;
+  branchName: string;
 }
