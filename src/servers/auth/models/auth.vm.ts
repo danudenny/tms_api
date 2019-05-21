@@ -1,6 +1,6 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { RoleVm } from './role.vm';
-import { IsNotEmpty, IsEmail } from 'class-validator';
+import { IsNotEmpty, IsEmail, IsOptional } from 'class-validator';
 
 // #region Request Section
 export class AuthLoginByEmailOrUsernamePayloadVM {
@@ -8,7 +8,8 @@ export class AuthLoginByEmailOrUsernamePayloadVM {
   clientId: string;
 
   @ApiModelPropertyOptional()
-  // @IsEmail({})
+  @IsEmail({})
+  @IsOptional({})
   email?: string;
 
   @ApiModelPropertyOptional()
@@ -33,8 +34,8 @@ export class PermissionRolesPayloadVM {
   @ApiModelProperty()
   clientId: string;
 
-  @ApiModelProperty()
-  roleId: number;
+  // @ApiModelProperty()
+  // roleId: number;
 }
 
 //#endregion
