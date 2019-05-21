@@ -83,19 +83,22 @@ export class Awb extends BaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 500,
+    name:'consignee_name',
   })
-  consignee_name: string | null;
+  consigneeName: string | null;
 
   @Column('text', {
     nullable: true,
+    name:'consignee_address',
   })
-  consignee_address: string | null;
+  consigneeAddress: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name:'consignee_phone',
   })
-  consignee_phone: string | null;
+  consigneeNumber: string | null;
 
   @Column('character varying', {
     nullable: true,
@@ -490,8 +493,9 @@ export class Awb extends BaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name:'ref_customer_account_id',
   })
-  ref_customer_account_id: string | null;
+  merchant: string | null;
 
   @Column('character varying', {
     nullable: true,
@@ -508,8 +512,9 @@ export class Awb extends BaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name:'is_cod',
   })
-  is_cod: boolean;
+  isCOD: boolean;
 
   @Column('boolean', {
     nullable: false,
@@ -520,9 +525,8 @@ export class Awb extends BaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_reseller',
   })
-  refReseller: string | null;
+  ref_reseller: string | null;
 
   @Column('character varying', {
     nullable: true,

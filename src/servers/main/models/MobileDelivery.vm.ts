@@ -9,17 +9,17 @@ export class MobileDeliveryVm {
   @ApiModelProperty()
   awbNumber: string;
 
-  // @ApiModelProperty()
-  // merchant: string;
+  @ApiModelProperty()
+  merchant: string;
 
-  // @ApiModelProperty()
-  // consigneeName: string;
+  @ApiModelProperty()
+  consigneeName: string;
 
-  // @ApiModelProperty()
-  // consigneeAddress: string;
+  @ApiModelProperty()
+  consigneeAddress: string;
 
-  // @ApiModelProperty()
-  // consigneeNumber: string;
+  @ApiModelProperty()
+  consigneeNumber: string;
 
   // @ApiModelProperty()
   // packageType: string;
@@ -30,8 +30,8 @@ export class MobileDeliveryVm {
   // @ApiModelProperty()
   // productType: string;
 
-  // @ApiModelProperty()
-  // isCOD: boolean;
+  @ApiModelProperty()
+  isCOD: boolean;
 
   // @ApiModelProperty()
   // awbStatusId: number;
@@ -41,7 +41,7 @@ export class MobileDeliveryVm {
 
   // @ApiModelProperty({ type: () => MobileDashboardhistVm, isArray: true })
   // redeliveryHistory: MobileDashboardhistVm[];
-  
+
   // @ApiModelProperty({ type: String })
   // specialInstruction: string[];
 }
