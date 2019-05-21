@@ -223,7 +223,7 @@ export class AuthService {
     result.refreshToken = refreshToken;
     result.email = user.email;
     result.username = user.username;
-    result.displayName = user.employee.fullname;
+    result.displayName = user.employee.employeeName;
     // result.roles = map(user.roles, role => pick(role, ['role_id', 'role_name']));
 
     return result;
@@ -236,7 +236,7 @@ export class AuthService {
       userId: user.user_id,
       username: user.username,
       email: user.email,
-      displayName: user.employee.fullname,
+      displayName: user.employee.employeeName,
     };
 
     return jwtPayload;
