@@ -33,7 +33,34 @@ export class MobileDashboardhistVm {
   @ApiModelProperty({ type: [DeliveryListVm] })
   List: DeliveryListVm[];
 
- 
+}
+
+export class DeliveryPayloadVm {
+  @ApiModelProperty()
+  employeeId: string;
+
+  @ApiModelProperty()
+  startDeliveryDateTime: string;
+
+  @ApiModelProperty()
+  endDeliveryDateTime: string;
+
+}
+export class DeliveryFilterPayloadVm {
+  @ApiModelProperty({ type: () => DeliveryPayloadVm })
+  filters: DeliveryPayloadVm;
+
+  @ApiModelProperty()
+  page: number;
+
+  @ApiModelProperty()
+  limit: number;
+
+  @ApiModelProperty()
+  sortBy: string;
+
+  @ApiModelProperty()
+  sortDir: string;
 }
 
 

@@ -1,7 +1,9 @@
-import { Controller, Get, Query, Post, Logger } from '@nestjs/common';
+import { Controller, Get, Query, Post, Logger, Body } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { MobileDeliveryFindAllResponseVm } from '../../models/MobileDelivery.response.vm';
 import { MobileDeliveryService } from '../../services/mobile/delivery.service';
+import { DeliveryListVm } from '../../models/DeliveryList.vm';
+import { DeliveryFilterPayloadVm } from '../../models/MobileDashboard.vm';
 
 @ApiUseTags('Delivery List')
 @Controller('api/mobile')
@@ -12,8 +14,9 @@ export class MobileDeliveryController {
 
   @Post('delivery')
   @ApiOkResponse({ type: MobileDeliveryFindAllResponseVm })
-  public async findAllMobileDelivery(@Query('page') page: number, @Query('limit') take: number,
-  ) {
-    return this.deliveryService.findAllMobileDelivery(page, take);
+  public async findAllDelivery(@Body() payload: DeliveryFilterPayloadVm) {
+
+    return this.deliveryService.findAllMobileDelivery(payload.page, payload.limit);
+    }
   }
-}
+

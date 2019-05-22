@@ -53,9 +53,9 @@ export class MobileDeliveryService {
   }
 
   async findAllMobileDelivery(
-    @Query('page') page: number,
-    @Query('limit') take: number,
-  ) {
+    page: number,
+    take: number,
+  ): Promise<MobileDeliveryFindAllResponseVm> {
     page = toInteger(page) || 1;
     take = toInteger(take) || 10;
 
