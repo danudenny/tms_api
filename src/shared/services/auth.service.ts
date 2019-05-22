@@ -128,8 +128,8 @@ export class AuthService {
               roleId: item.role_id,
               roleName: item.role.role_name,
               branchId: item.branch_id,
-              branchName: item.branch.branch_name,
-              branchCode: item.branch.branch_code,
+              branchName: item.branch.branchName,
+              branchCode: item.branch.branchCode,
             };
             return newObj;
           },
@@ -181,8 +181,8 @@ export class AuthService {
       result.email = authMeta.email;
       result.displayName = authMeta.displayName;
 
-      result.branchName = branch.branch_name;
-      result.branchCode = branch.branch_code;
+      result.branchName = branch.branchName;
+      result.branchCode = branch.branchCode;
       result.rolesAccessPermissions = map(rolesAccess, 'name');
 
       return result;
