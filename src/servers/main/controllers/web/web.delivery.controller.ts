@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Post, Body } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
-import { awbRepository } from '../../../../shared/orm-repository/MobileDelivery.repository';
+import { AwbRepository } from '../../../../shared/orm-repository/awb.repository';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { toInteger } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
@@ -15,12 +15,19 @@ const logger = require('pino')();
 @Controller('api/web/pod/scanIn')
 export class WebDeliveryController {
   constructor(
-    private readonly awbRepository: awbRepository,
+    private readonly awbRepository: AwbRepository,
   ) { }
 
   @Post('awb')
   @ApiOkResponse({ type: WebScanInFindAllResponseVm })
   public async Web(@Body() payload: WebScanInVm) {
+
+    // TODO: looping awb number
+    // find on table awb where awb_number
+    // get awb_id,
+    // find on table awb_item where awb_id
+    // get awb_id
+
     const Web = await this.awbRepository.create(
       // payload.clientId,
     );
@@ -62,10 +69,4 @@ export class WebDeliveryController {
     return Web;
   }
 }
-
-
-
-
-
-  
 
