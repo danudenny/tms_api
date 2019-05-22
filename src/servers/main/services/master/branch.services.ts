@@ -14,10 +14,10 @@ export class BranchService {
     private readonly branchRepository: BranchRepository,
   ) {}
 
-  async BranchFindAllResponseVm(
-    @Query('page') page: number,
-    @Query('limit') take: number,
-  ) {
+  async findAllBranch(
+    page: number,
+    take: number,
+  ): Promise<BranchFindAllResponseVm> {
     page = toInteger(page) || 1;
     take = toInteger(take) || 10;
 
@@ -38,4 +38,3 @@ export class BranchService {
   }
 
 }
-

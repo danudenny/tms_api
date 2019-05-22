@@ -7,20 +7,18 @@ import { BranchRepository } from '../../../../shared/orm-repository/branch.repos
 import { BranchPayloadVm } from '../../models/branch.vm';
 import { take } from 'rxjs/operators';
 
-
 @ApiUseTags('Master Data')
 @Controller('api/data')
 export class BranchController {
-  constructor(private readonly BranchService: BranchService) {}
+  constructor(private readonly branchService: BranchService) {}
 
   @Post('branch')
   @HttpCode(200)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: BranchFindAllResponseVm })
-  public async findAllBranch(@Body() payload:BranchPayloadVm) {
+  public async findAllBranch(@Body() payload: BranchPayloadVm) {
 
-      return this.BranchService.findAllBranch(payload.page, payload.limit);
+    return this.branchService.findAllBranch(payload.page, payload.limit);
     }
   }
-
