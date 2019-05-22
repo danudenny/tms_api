@@ -5,8 +5,10 @@ import { BranchRepository } from './branch.repository';
 import { UserRepository } from './user.repository';
 import { awbRepository } from './MobileDelivery.repository';
 import { Awb } from '../orm-entity/awb';
+import { PodScan } from '../orm-entity/pod-scan';
 import { Employee } from '../orm-entity/employee';
 import { employeeRepository } from './employee.respository';
+import { ReasonRepository } from './reason.respository';
 
 @Module({
   imports: [
@@ -17,6 +19,9 @@ import { employeeRepository } from './employee.respository';
       Awb,
       Employee,
       employeeRepository,
+      awbRepository,
+      ReasonRepository,
+      PodScan,
     ]),
   ],
   exports: [
