@@ -5,7 +5,7 @@ import { BranchRepository } from './branch.repository';
 import { UserRepository } from './user.repository';
 import { awbRepository } from './MobileDelivery.repository';
 import { Awb } from '../orm-entity/awb';
-import { PodScan } from '../orm-entity/pod-scan';
+import { podScan } from '../orm-entity/pod-scan';
 import { Employee } from '../orm-entity/employee';
 import { employeeRepository } from './employee.respository';
 import { ReasonRepository } from './reason.respository';
@@ -21,7 +21,7 @@ import { ReasonRepository } from './reason.respository';
       employeeRepository,
       awbRepository,
       ReasonRepository,
-      PodScan,
+      podScan,
     ]),
   ],
   exports: [

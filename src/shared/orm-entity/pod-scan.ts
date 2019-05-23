@@ -6,7 +6,7 @@ import {
 } from 'typeorm';
 
 @Entity('pod_scan', { schema: 'public' })
-export class PodScan extends BaseEntity {
+export class podScan extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name:'pod_scan_id',
