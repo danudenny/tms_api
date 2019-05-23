@@ -16,7 +16,7 @@ export class MobileDeliveryController {
   @ApiOkResponse({ type: MobileDeliveryFindAllResponseVm })
   public async findAllDelivery(@Body() payload: DeliveryFilterPayloadVm) {
 
-    return this.deliveryService.findAllMobileDelivery(payload.page, payload.limit);
+    return this.deliveryService.findalldelivery(payload);
     }
   }
 

@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Query } from '@nestjs/common';
+import { HttpStatus, Injectable, Query, Logger } from '@nestjs/common';
 import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { GetRoleResult } from '../../../../shared/models/get-role-result';
@@ -8,25 +8,40 @@ import { MobileDeliveryFindAllResponseVm } from '../../models/MobileDelivery.res
 import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
 import { Awb } from '../../../../shared/orm-entity/awb';
+import { DeliveryFilterPayloadVm } from '../../models/MobileDashboard.vm';
 
 @Injectable()
 export class MobileDeliveryService {
   constructor() {}
+  async findalldelivery(
+    payload: DeliveryFilterPayloadVm
+    ): Promise<MobileDeliveryFindAllResponseVm> {
+    const page = toInteger(payload.page) || 1;
+    const take = toInteger(payload.limit) || 10;
 
-  async downloadWorkOrder(): Promise<any> {
-    const limit = 10;
-    const yesterday = moment()
-      .subtract(1, 'days')
-      .format('YYYY-MM-DD');
+    const offset = (page - 1) * take;
+    const start = moment(payload.filters.startDeliveryDateTime).toDate();
+    const end = moment(payload.filters.endDeliveryDateTime).toDate();
 
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(
-      'select * from branch where created_time > :yesterday limit :limit',
-      { limit, yesterday },
+      'select awb_id as "awbId", awb_number as "awbNumber",ref_customer_account_id as "merchant", consignee_name as "consigneeName",consignee_address as "consigneeAddress",consignee_phone as "consigneeNumber" ,is_cod as "isCOD" from awb where awb_date >= :start AND awb_date <= :end LIMIT :take OFFSET :offset',
+      { take, start,end ,offset },
     );
 
+    const [querycount, parameterscount] = RawQueryService.escapeQueryWithParameters(
+      'select count (*) from awb where awb_date >= :start AND awb_date <= :end ',
+      { start,end  },
+    );
     // exec raw query
     const data = await RawQueryService.query(query, parameters);
-    return data;
+    const total = await RawQueryService.query(querycount, parameterscount);
+    const result = new MobileDeliveryFindAllResponseVm();
+    console.log(page)
+    console.log(take)
+    console.log(total[0].count)
+    result.data = data;
+    result.paging = MetaService.set(page, take, total[0].count);
+    return result;
   }
 
   async permissionRoles(): Promise<GetRoleResult> {
@@ -50,26 +65,5 @@ export class MobileDeliveryService {
         HttpStatus.BAD_REQUEST,
       );
     }
-  }
-
-  async findAllMobileDelivery(
-    page: number,
-    take: number,
-  ): Promise<MobileDeliveryFindAllResponseVm> {
-    page = toInteger(page) || 1;
-    take = toInteger(take) || 10;
-
-    const skip = (page - 1) * take;
-    const [data, total] = await Awb.findAndCount({
-      // where: { name: Like('%' + keyword + '%') }, order: { name: "DESC" },
-      cache: true,
-      take,
-      skip,
-    });
-    const result = new MobileDeliveryFindAllResponseVm();
-    result.data = data;
-    result.paging = MetaService.set(page, take, total);
-
-    return result;
   }
 }

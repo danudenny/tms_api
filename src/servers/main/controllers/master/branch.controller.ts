@@ -3,9 +3,8 @@ import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/ext
 import { BranchService } from '../../../../servers/main/services/master/branch.services';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
 import { BranchPayloadVm } from '../../models/branch.vm';
-import { take } from 'rxjs/operators';
+
 
 @ApiUseTags('Master Data')
 @Controller('api/data')
@@ -17,8 +16,8 @@ export class BranchController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: BranchFindAllResponseVm })
-  public async findAllBranch(@Body() payload: BranchPayloadVm) {
+  public async findBranchName(@Body() payload: BranchPayloadVm) {
 
-    return this.branchService.findAllBranch(payload.page, payload.limit);
+    return this.branchService.findBranchName(payload);
     }
   }

@@ -21,7 +21,7 @@ export class EmployeeController {
   @ApiOkResponse({ type: EmployeeFindAllResponseVm })
   public async findAllEmployee(@Body() payload:EmployeeRequestPayloadVm) {
 
-    return this.EmployeeService.findAllEmployeeVm(payload.page, payload.limit);
+    return this.EmployeeService.findAllEmployeeVm(payload);
   }
 }
 

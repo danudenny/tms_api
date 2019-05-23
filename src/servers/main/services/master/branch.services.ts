@@ -1,40 +1,38 @@
-import { Controller, Get, Query, Injectable } from '@nestjs/common';
-// import { ApiOkResponse, ApiUseTags } from '../../../shared/external/nestjs-swagger';
+import { Injectable } from '@nestjs/common';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { toInteger } from 'lodash';
-import { Branch } from '../../../../shared/orm-entity/branch';
-import { InjectRepository } from '@nestjs/typeorm';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
+import moment = require('moment');
+import { BranchPayloadVm } from '../../models/branch.vm';
+import { RawQueryService } from 'src/shared/services/raw-query.service';
 
 @Injectable()
 export class BranchService {
-  constructor(
-    @InjectRepository(Branch)
-    private readonly branchRepository: BranchRepository,
-  ) {}
 
-  async findAllBranch(
-    page: number,
-    take: number,
-  ): Promise<BranchFindAllResponseVm> {
-    page = toInteger(page) || 1;
-    take = toInteger(take) || 10;
+  constructor() {}
+  async findBranchName(
+    payload: BranchPayloadVm
+    ): Promise<BranchFindAllResponseVm> {
+    const page = toInteger(payload.page) || 1;
+    const take = toInteger(payload.limit) || 10;
+    const search = payload.filters.search
+    const offset = (page - 1) * take;
 
-    const skip = (page - 1) * take;
-    const [data, total] = await Branch.findAndCount(
-      {
-        // where: { name: Like('%' + keyword + '%') }, order: { name: "DESC" },
-        cache: true,
-        take,
-        skip,
-      },
+    const [query, parameters] = RawQueryService.escapeQueryWithParameters(
+      `select branch_id as "branchId", branch_name as "branchName",branch_code as "branchCode" from branch where branch_name LIKE '%${search}%' LIMIT :take`,
+      { take},
     );
+
+    const [querycount, parameterscount] = RawQueryService.escapeQueryWithParameters(
+      `select count (*) from branch where branch_name LIKE '%${search}%'`,
+      { },
+    );
+    // exec raw query
+    const data = await RawQueryService.query(query, parameters);
+    const total = await RawQueryService.query(querycount, parameterscount);
     const result = new BranchFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(page, take, total);
-
+    result.paging = MetaService.set(page, take, total[0].count);
     return result;
-  }
-
+    }
 }
