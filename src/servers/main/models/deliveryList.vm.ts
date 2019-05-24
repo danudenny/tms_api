@@ -13,4 +13,3 @@ export class DeliveryListVm {
   @ApiModelProperty()
   employeeName: string;
 }
-

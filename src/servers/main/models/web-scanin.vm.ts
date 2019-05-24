@@ -4,5 +4,4 @@ export class WebScanInVm  {
 
   @ApiModelProperty()
   awbNumber: string[];
-
 }
