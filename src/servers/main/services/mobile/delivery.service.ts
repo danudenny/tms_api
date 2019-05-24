@@ -4,11 +4,11 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { GetRoleResult } from '../../../../shared/models/get-role-result';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { toInteger } from 'lodash';
-import { MobileDeliveryFindAllResponseVm } from '../../models/MobileDelivery.response.vm';
+import { MobileDeliveryFindAllResponseVm } from '../../models/mobile-delivery.response.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
 import { Awb } from '../../../../shared/orm-entity/awb';
-import { DeliveryFilterPayloadVm } from '../../models/MobileDashboard.vm';
+import { DeliveryFilterPayloadVm } from '../../models/mobile-dashboard.vm';
 
 @Injectable()
 export class MobileDeliveryService {

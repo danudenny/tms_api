@@ -1,10 +1,11 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
-export class WebScanInVm  {
-  
+
+export class WebScanInListVm  {
+
   @ApiModelProperty()
   clientId: string;
 
-  @ApiModelProperty({ type: String })
-  awbNumber: string[];
+  @ApiModelProperty()
+  filters: string[];
 }

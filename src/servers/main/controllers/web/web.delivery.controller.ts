@@ -1,39 +1,57 @@
-import { Controller, Get, Query, Post, Body } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
-import { AwbRepository } from '../../../../shared/orm-repository/awb.repository';
-import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
+import { PodScanRepository } from '../../../../shared/orm-repository/pod-scan.repository';
 import { toInteger } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { WebScanInVm } from '../../models/WebScanIn.vm';
-import { WebScanInFindAllResponseVm } from '../../models/WebScanIn.response.vm';
-import { WebScanInListResponseVm } from '../../models/WebScanInList.response.vm';
-import { WebScanInBagResponseVm } from '../../models/WebScanIn.bag.response.vm';
-import { WebScanInBagVm } from '../../models/WebScanInBag.vm';
+import { WebScanInVm } from '../../models/web-scanin.vm';
+import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebScanInBagResponseVm } from '../../models/web-scanin.bag.response.vm';
+import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
+import { Transactional } from 'src/shared/external/typeorm-transactional-cls-hooked';
+import { Awb } from 'src/shared/orm-entity/awb';
+import moment = require('moment');
 const logger = require('pino')();
 
 @ApiUseTags('Mobile')
 @Controller('api/web/pod/scanIn')
 export class WebDeliveryController {
   constructor(
-    private readonly awbRepository: AwbRepository,
+    private readonly podScanRepository: PodScanRepository,
   ) { }
 
   @Post('awb')
-  @ApiOkResponse({ type: WebScanInFindAllResponseVm })
+  @Transactional()
+  @HttpCode(HttpStatus.OK)
+  // @ApiOkResponse({ type: WebScanInFindAllResponseVm })
   public async Web(@Body() payload: WebScanInVm) {
 
-    // TODO: looping awb number
-    // find on table awb where awb_number
-    // get awb_id,
-    // find on table awb_item where awb_id
-    // get awb_id
+    // TODO:
+    // find awb where awb number get awb_id
+    // find awb_item where awb_id get awb_item_id
+    let item;
+    for(item in payload.awbNumber) {
+      let awb = await Awb.find({
+        select: ["awbId", "branchId"],
+        where: { awbNumber: payload.awbNumber[item] }
+      })
 
-    const Web = await this.awbRepository.create(
-      // payload.clientId,
-    );
+    if (awb) {
+      const Web = this.podScanRepository.create();
+      Web.awbId = awb[0]['awbId'];
+      Web.awbItemId = 1;
+      Web.branchId= awb[0]['branchId'];
+      Web.doPodId= 1;
+      Web.userId= 15;
+      Web.podScaninDateTime = moment().toDate();
+      this.podScanRepository.save(Web);
+    }
 
-    return Web;
+    logger.info(awb[0]['awbId'])
+    } //end of loop
+
+    return {};
   }
+
   @Post('list')
   @ApiOkResponse({ type: WebScanInListResponseVm })
   async findAllWebDeliveryControllerList(
@@ -44,7 +62,7 @@ export class WebDeliveryController {
     take = toInteger(take) || 10;
 
     const skip = (page - 1) * take;
-    const [data, total] = await this.awbRepository.findAndCount(
+    const [data, total] = await this.podScanRepository.findAndCount(
       {
         // where: { name: Like('%' + keyword + '%') }, order: { name: "DESC" },
         cache: true,
@@ -59,10 +77,11 @@ export class WebDeliveryController {
     logger.info(`Total data :: ${total}`);
     return result;
   }
+
   @Post('bag')
   @ApiOkResponse({ type: WebScanInBagResponseVm})
   public async Webbag(@Body() payload: WebScanInBagVm) {
-    const Web = await this.awbRepository.create(
+    const Web = await this.podScanRepository.create(
       // payload.clientId,
     );
 

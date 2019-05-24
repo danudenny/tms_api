@@ -1,9 +1,8 @@
 import { Controller, Get, Query, Post, Logger, Body } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
-import { MobileDeliveryFindAllResponseVm } from '../../models/MobileDelivery.response.vm';
+import { MobileDeliveryFindAllResponseVm } from '../../models/mobile-delivery.response.vm';
 import { MobileDeliveryService } from '../../services/mobile/delivery.service';
-import { DeliveryListVm } from '../../models/DeliveryList.vm';
-import { DeliveryFilterPayloadVm } from '../../models/MobileDashboard.vm';
+import { DeliveryFilterPayloadVm } from '../../models/mobile-dashboard.vm';
 
 @ApiUseTags('Delivery List')
 @Controller('api/mobile')

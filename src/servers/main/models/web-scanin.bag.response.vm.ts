@@ -1,8 +1,8 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 
-export class WebScanInFindAllResponseVm  {
-  
+export class WebScanInBagResponseVm  {
+
   @ApiModelProperty()
   total_data: number;
 

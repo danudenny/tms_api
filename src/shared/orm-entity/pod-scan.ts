@@ -18,31 +18,31 @@ export class podScan extends BaseEntity {
     nullable: false,
     name:'do_pod_id',
   })
-  doPodid: string;
+  doPodId: number;
 
   @Column('bigint', {
     nullable: false,
     name:'awb_id',
   })
-  awbId: string;
+  awbId: number;
 
   @Column('bigint', {
     nullable: false,
     name:'awb_item_id'
   })
-  awbItemId: string;
+  awbItemId: number;
 
   @Column('bigint', {
     nullable: false,
     name:'branch_id',
   })
-  branchId: string;
+  branchId: number;
 
   @Column('bigint', {
     nullable: false,
     name:'user_id',
   })
-  userId: string;
+  userId: number;
 
   @Column('timestamp without time zone', {
     nullable: false,

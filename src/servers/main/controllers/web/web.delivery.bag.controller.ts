@@ -1,17 +1,17 @@
 import { Controller, Get, Query, Post, Body } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 
-import { awbRepository } from '../../../../shared/orm-repository/MobileDelivery.repository';
+import { AwbRepository } from '../../../../shared/orm-repository/mobile-delivery.repository';
 
-import { WebScanInBagVm } from '../../models/WebScanInBag.vm';
-import { WebScanInBagResponseVm } from '../../models/WebScanIn.bag.response.vm';
+import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
+import { WebScanInBagResponseVm } from '../../models/web-scanIn.bag.response.vm';
 const logger = require('pino')();
 
 @ApiUseTags('Scan In Bag')
 @Controller('api/web/pod/scanIn/bag')
 export class WebDeliveryControllerbag {
   constructor(
-    private readonly awbRepository: awbRepository,
+    private readonly awbRepository: AwbRepository,
   ) { }
 
   @Post()

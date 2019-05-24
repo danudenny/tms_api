@@ -124,8 +124,9 @@ export class Awb extends BaseEntity {
 
   @Column('bigint', {
     nullable: true,
+    name: 'branch_id',
   })
-  branch_id: string | null;
+  branchId: number | null;
 
   @Column('bigint', {
     nullable: true,

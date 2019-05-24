@@ -5,8 +5,3 @@ export class MobileDashboardSpecialInstructionVm {
   SpecialInstruction: string;
 
 }
-
-
-
-
-

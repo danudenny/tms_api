@@ -1,11 +1,11 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 
-export class WebScanInBagVm  {
-  
+export class WebScanInFindAllResponseVm  {
+
   @ApiModelProperty()
-  clientId: string;
+  total_data: number;
 
   @ApiModelProperty({ type: String })
-  bagNumber: string[];
+  data: string[];
 }

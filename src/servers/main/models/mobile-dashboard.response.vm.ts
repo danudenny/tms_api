@@ -1,5 +1,5 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
-import { MobiledashboardVm } from './MobileDashboard.vm';
+import { MobiledashboardVm } from './mobile-dashboard.vm';
 
 export class MobileDashboardFindAllResponseVm  {
   @ApiModelProperty({ type: () => [MobiledashboardVm] })

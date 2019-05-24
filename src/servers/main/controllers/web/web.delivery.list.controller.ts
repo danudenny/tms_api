@@ -1,17 +1,17 @@
 import { Controller, Get, Query, Post } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
-import { awbRepository } from '../../../../shared/orm-repository/MobileDelivery.repository';
+import { AwbRepository } from '../../../../shared/orm-repository/mobile-delivery.repository';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { toInteger } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { WebScanInListResponseVm } from '../../models/WebScanInList.response.vm';
+import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 const logger = require('pino')();
 
 @ApiUseTags('Scan In List')
 @Controller('api/web/pod/scanIn/list')
 export class WebDeliveryControllerList {
   constructor(
-    private readonly awbRepository: awbRepository,
+    private readonly awbRepository: AwbRepository,
   ) { }
 
   @Post()

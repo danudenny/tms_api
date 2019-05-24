@@ -6,7 +6,7 @@ import { BaseRepository } from './base.repository';
 
 @Injectable()
 @EntityRepository(Employee)
-export class employeeRepository extends BaseRepository<Employee> {
+export class EmployeeRepository extends BaseRepository<Employee> {
   findByName(name: string,alamat:string) {
     return this.findOneOrFail({
       where: {
