@@ -94,4 +94,16 @@ export class DoPodDetail extends BaseEntity {
 
   })
   scan_in_type: string | null;
+
+  @Column('bigint', {
+    nullable: false,
+    name:'employee_journey_id_in',
+  })
+  employeeJourneyIdIn: string;
+
+  @Column('bigint', {
+    nullable: false,
+    name:'employee_journey_id_out',
+  })
+  employeeJourneyIdOut: string;
 }

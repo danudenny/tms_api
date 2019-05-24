@@ -586,4 +586,10 @@ export class Awb extends BaseEntity {
     length: 3,
   })
   ref_representative_code: string | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name:'awb_trouble_id',
+  })
+  awbTroubleId: string | null;
 }

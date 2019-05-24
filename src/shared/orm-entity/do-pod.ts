@@ -175,4 +175,10 @@ export class DoPod extends BaseEntity {
 
   })
   third_party_id: number | null;
+
+  @Column('bigint', {
+    nullable: false,
+name:'partner_logistic_id',
+  })
+  partnerLogisticId: string;
 }
