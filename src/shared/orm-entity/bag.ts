@@ -1,97 +1,97 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('bag', { schema: 'public' })
-@Index('bag_bag_date_idx', ['bag_date'])
-@Index('bag_bag_number_idx', ['bag_number'])
-@Index('bag_branch_id_idx', ['branch_id'])
-@Index('bag_created_time_idx', ['created_time'])
-@Index('bag_is_deleted_idx', ['is_deleted'])
+@Index('bag_bag_date_idx', ['bagDate'])
+@Index('bag_bag_number_idx', ['bagNumber'])
+@Index('bag_branch_id_idx', ['branchId'])
+@Index('bag_created_time_idx', ['createdTime'])
+@Index('bag_is_deleted_idx', ['isDeleted'])
 export class Bag extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name:'bag_id'
   })
-  bag_id: string;
+  bagId: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name:'bag_number',
   })
-  bag_number: string;
+  bagNumber: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'representative_id_to',
   })
-  representative_id_to: string | null;
+  representativeIdTo: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'created_time'
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name:'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'user_id',
   })
-  user_id: string | null;
+  userId: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'branch_id',
   })
-  branch_id: string | null;
+  branchId: string | null;
 
   @Column('date', {
     nullable: true,
-
+    name:'bag_date',
   })
-  bag_date: string | null;
+  bagDate: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name:'bag_date_real',
   })
-  bag_date_real: Date | null;
+  bagDateReal: Date | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name:'ref_branch_code',
   })
-  ref_branch_code: string | null;
+  refBranchCode: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name:'ref_representative_code',
   })
-  ref_representative_code: string | null;
+  refRepresentativeCode: string | null;
 }

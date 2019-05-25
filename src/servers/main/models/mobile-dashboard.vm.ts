@@ -3,7 +3,8 @@ import { DeliveryListVm } from './deliveryList.vm';
 
 export class MobiledashboardVm {
   @ApiModelProperty()
-  today_awb_cod: number;
+  is_cod: string;
+
 
   @ApiModelProperty()
   today_pod_problem: number;
@@ -12,7 +13,7 @@ export class MobiledashboardVm {
   today_delivery: number;
 
   @ApiModelProperty()
-  today_cod_value: number;
+  todayawbcod: number;
 
   @ApiModelProperty()
   today_cod_value_not_transfer: number;
@@ -46,9 +47,28 @@ export class DeliveryPayloadVm {
   endDeliveryDateTime: string;
 
 }
+
+export class DeliveryListPayloadVm {
+
+  @ApiModelProperty()
+  startDeliveryDateTime: string;
+
+  @ApiModelProperty()
+  endDeliveryDateTime: string;
+
+}
+export class WebDeliveryListPayloadVm {
+
+  @ApiModelProperty()
+  startDeliveryDateTime: string;
+
+  @ApiModelProperty()
+  endDeliveryDateTime: string;
+
+}
 export class DeliveryFilterPayloadVm {
-  @ApiModelProperty({ type: () => DeliveryPayloadVm })
-  filters: DeliveryPayloadVm;
+  @ApiModelProperty({ type: () => DeliveryListPayloadVm })
+  filters: DeliveryListPayloadVm;
 
   @ApiModelProperty()
   page: number;
@@ -63,5 +83,20 @@ export class DeliveryFilterPayloadVm {
   sortDir: string;
 }
 
+export class WebDeliveryListFilterPayloadVm {
+  @ApiModelProperty({ type: () => WebDeliveryListPayloadVm })
+  filters: WebDeliveryListPayloadVm;
 
+  @ApiModelProperty()
+  page: number;
+
+  @ApiModelProperty()
+  limit: number;
+
+  @ApiModelProperty()
+  sortBy: string;
+
+  @ApiModelProperty()
+  sortDir: string;
+}
 

@@ -21,27 +21,27 @@ export class MobileDeliveryVm {
   @ApiModelProperty()
   consigneeNumber: string;
 
-  // @ApiModelProperty()
-  // packageType: string;
+  @ApiModelProperty()
+  packageType: string;
 
-  // @ApiModelProperty()
-  // packageTypeName: string;
+  @ApiModelProperty()
+  packageTypeName: string;
 
-  // @ApiModelProperty()
-  // productType: string;
+  @ApiModelProperty()
+  productType: string;
 
   @ApiModelProperty()
   isCOD: boolean;
 
-  // @ApiModelProperty()
-  // awbStatusId: number;
+  @ApiModelProperty()
+  awbStatusId: number;
 
-  // @ApiModelProperty()
-  // awbStatusName: string;
+  @ApiModelProperty()
+  awbStatusName: string;
 
-  // @ApiModelProperty({ type: () => MobileDashboardhistVm, isArray: true })
-  // redeliveryHistory: MobileDashboardhistVm[];
+  @ApiModelProperty({ type: () => MobileDashboardhistVm, isArray: true })
+  redeliveryHistory: MobileDashboardhistVm[];
 
-  // @ApiModelProperty({ type: String })
-  // specialInstruction: string[];
+  @ApiModelProperty({ type: String })
+  specialInstruction: string[];
 }

@@ -359,8 +359,9 @@ export class Awb extends BaseEntity {
     default: () => '0',
     precision: 20,
     scale: 5,
+    name:'total_cod_value',
   })
-  total_cod_value: string;
+  todayCodValue: string;
 
   @Column('bigint', {
     nullable: true,
@@ -515,7 +516,7 @@ export class Awb extends BaseEntity {
     default: () => 'false',
     name:'is_cod',
   })
-  isCOD: boolean;
+  isCod: boolean;
 
   @Column('boolean', {
     nullable: false,

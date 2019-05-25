@@ -13,6 +13,7 @@ import { AwbTrouble } from '../orm-entity/awb-trouble';
 import { AwbSolution } from '../orm-entity/awb-solution';
 import { PartnerLogistic } from '../orm-entity/partner-logistic';
 import { employeeJourney } from '../orm-entity/employee-journey';
+import { BagRepository } from './bag.repository';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { employeeJourney } from '../orm-entity/employee-journey';
       AwbSolution,
       PartnerLogistic,
       employeeJourney,
+      BagRepository
 
     ]),
   ],

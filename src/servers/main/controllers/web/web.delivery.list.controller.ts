@@ -1,42 +1,29 @@
-import { Controller, Get, Query, Post } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
-import { AwbRepository } from '../../../../shared/orm-repository/mobile-delivery.repository';
+import { PodScanRepository } from '../../../../shared/orm-repository/pod-scan.repository';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { toInteger } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebDeliveryFindAllResponseVm } from '../../models/web-delivery.response.vm';
+import { WebDeliveryListService } from '../../services/web/web-delivery-list.service';
+import { MobileDeliveryFindAllResponseVm } from '../../models/mobile-delivery.response.vm';
+import { WebDeliveryVm, WebDeliveryFilterPayloadVm } from '../../models/web-delivery.vm';
+import { getManager } from 'typeorm';
+import { Awb } from 'src/shared/orm-entity/awb';
+import { AwbItem } from 'src/shared/orm-entity/awb-item';
 const logger = require('pino')();
 
 @ApiUseTags('Scan In List')
-@Controller('api/web/pod/scanIn/list')
+@Controller('api/web/pod/scanIn/list1')
 export class WebDeliveryControllerList {
   constructor(
-    private readonly awbRepository: AwbRepository,
+    private readonly webdelivery: WebDeliveryListService,
   ) { }
 
-  @Post()
-  @ApiOkResponse({ type: WebScanInListResponseVm })
-  async findAllWebDeliveryControllerList(
-    @Query('page') page: number,
-    @Query('limit') take: number,
-  ) {
-    page = toInteger(page) || 1;
-    take = toInteger(take) || 10;
 
-    const skip = (page - 1) * take;
-    const [data, total] = await this.awbRepository.findAndCount(
-      {
-        // where: { name: Like('%' + keyword + '%') }, order: { name: "DESC" },
-        cache: true,
-        take,
-        skip,
-      },
-    );
-    const result = new WebScanInListResponseVm();
-    result.data = [];
-    result.paging = MetaService.set(page, take, total);
-
-    logger.info(`Total data :: ${total}`);
-    return result;
+  @Post('delivery')
+  @ApiOkResponse({ type: WebDeliveryFindAllResponseVm })
+  public async findAllDeliveryList(@Body() payload: WebDeliveryFilterPayloadVm) {
+    return this.webdelivery.findAllDeliveryList(payload);
+    }
   }
-}

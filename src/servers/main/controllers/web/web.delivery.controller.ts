@@ -9,8 +9,13 @@ import { WebScanInBagResponseVm } from '../../models/web-scanin.bag.response.vm'
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { Transactional } from 'src/shared/external/typeorm-transactional-cls-hooked';
 import { Awb } from 'src/shared/orm-entity/awb';
+import { WebDeliveryListService } from '../../services/web/web-delivery-list.service';
 import moment = require('moment');
-import { WebScanInAwbResponseVm } from '../../models/web-scanin-awb.response.vm';
+import { WebScanInAwbResponseVm, WebScanInBag1ResponseVm } from '../../models/web-scanin-awb.response.vm';
+import { WebDeliveryFindAllResponseVm } from '../../models/web-delivery.response.vm';
+import { DeliveryFilterPayloadVm, WebDeliveryListFilterPayloadVm } from '../../models/mobile-dashboard.vm';
+import { Bag } from 'src/shared/orm-entity/bag';
+import { BagRepository } from 'src/shared/orm-repository/bag.repository';
 const logger = require('pino')();
 
 @ApiUseTags('Mobile')
@@ -18,6 +23,8 @@ const logger = require('pino')();
 export class WebDeliveryController {
   constructor(
     private readonly podScanRepository: PodScanRepository,
+    private readonly bagRepository: BagRepository,
+    private readonly webDeliveryListService: WebDeliveryListService,
   ) { }
 
   @Post('awb')
@@ -53,11 +60,9 @@ export class WebDeliveryController {
 
         totalSuccess += 1;
         dataItem.push({
-          item: {
-            awbNumber,
+          awbNumber,
             status: 'ok',
             message: 'Success',
-          }
         });
 
       } else {
@@ -80,38 +85,56 @@ export class WebDeliveryController {
 
   @Post('list')
   @ApiOkResponse({ type: WebScanInListResponseVm })
-  async findAllWebDeliveryControllerList(
-    @Query('page') page: number,
-    @Query('limit') take: number,
-  ) {
-    page = toInteger(page) || 1;
-    take = toInteger(take) || 10;
+  public async findAllDeliveryList(@Body() payload: WebDeliveryListFilterPayloadVm) {
 
-    const skip = (page - 1) * take;
-    const [data, total] = await this.podScanRepository.findAndCount(
-      {
-        // where: { name: Like('%' + keyword + '%') }, order: { name: "DESC" },
-        cache: true,
-        take,
-        skip,
-      },
-    );
-    const result = new WebScanInListResponseVm();
-    result.data = [];
-    result.paging = MetaService.set(page, take, total);
-
-    logger.info(`Total data :: ${total}`);
-    return result;
-  }
+    return this.webDeliveryListService.findAllDeliveryList(payload);
+    }
 
   @Post('bag')
-  @ApiOkResponse({ type: WebScanInBagResponseVm})
+  @ApiOkResponse({ type: WebScanInBag1ResponseVm})
   public async Webbag(@Body() payload: WebScanInBagVm) {
-    const Web = await this.podScanRepository.create(
-      // payload.clientId,
-    );
+    const dataItem = [];
+    const result = new WebScanInBag1ResponseVm();
+    let totalSuccess = 0;
+    let totalError = 0;
 
-    return Web;
+    for (const bagNumber of payload.bagNumber) {
+      const bag = await Bag.findOne({
+        select: ['bagId', 'branchId'],
+        where: { bagNumber },
+      });
+console.log(bag)
+      if (bag) {
+        const webbag = this.bagRepository.create();
+        webbag.bagId = bag.bagId;
+        webbag.branchId = bag.branchId;
+        webbag.createdTime = moment().toDate();
+        // webbag.createdTime = bag.createdTime;
+        this.bagRepository.save(webbag);
+
+        totalSuccess += 1;
+        dataItem.push({
+          bagNumber,
+            status: 'ok',
+            message: 'Success',
+        });
+
+      } else {
+        totalError += 1;
+        dataItem.push({
+          bagNumber,
+            status : 'error',
+            message: 'Bag sudah Scan In pada Gerai X (20-05-2019 16:00:00)',
+        });
+      }
+    }
+    result.totalData = payload.bagNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
+
+    return result;
+    }
   }
-}
+
 

@@ -1,11 +1,11 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 
-export class WebScanInListVm  {
+export class WebDeliveryPayloadVm {
+  @ApiModelProperty()
+  startDeliveryDateTime: string;
 
   @ApiModelProperty()
-  clientId: string;
+  endDeliveryDateTime: string;
 
-  @ApiModelProperty()
-  filters: string[];
 }
