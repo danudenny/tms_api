@@ -32,7 +32,7 @@ export class BranchService {
     const total = await RawQueryService.query(querycount, parameterscount);
     const result = new BranchFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(page, take, total[0].count);
+    result.paging = MetaService.set(page, take, toInteger(total[0].count));
     return result;
     }
 }

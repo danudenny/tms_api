@@ -3,17 +3,16 @@ import { DeliveryListVm } from './deliveryList.vm';
 
 export class MobiledashboardVm {
   @ApiModelProperty()
-  is_cod: string;
+  today_awb_cod: number;
 
+  @ApiModelProperty()
+  is_cod: string;
 
   @ApiModelProperty()
   today_pod_problem: number;
 
   @ApiModelProperty()
   today_delivery: number;
-
-  @ApiModelProperty()
-  todayawbcod: number;
 
   @ApiModelProperty()
   today_cod_value_not_transfer: number;
