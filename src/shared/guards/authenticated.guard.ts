@@ -11,9 +11,6 @@ export class AuthenticatedGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
-    Logger.log('########### canActive =======================');
-    Logger.log(AuthService.isLoggedIn);
-
     return AuthService.isLoggedIn && this.hasValidCredentials();
   }
 
@@ -31,12 +28,11 @@ export class AuthenticatedGuard implements CanActivate {
       'JWT_ACCESS_TOKEN',
     );
     try {
-      Logger.log('########### accessToken =====================');
-      Logger.log(accessToken);
+      // Logger.log('########### accessToken =====================');
+      // Logger.log(accessToken);
       const accessTokenJwtPayload = this.jwtService.verify(accessToken);
-
-      Logger.log('########### Payload ===================== ');
-      Logger.log(accessTokenJwtPayload);
+      // Logger.log('########### Payload ===================== ');
+      // Logger.log(accessTokenJwtPayload);
 
       return Boolean(accessTokenJwtPayload);
     } catch (e) {

@@ -11,13 +11,13 @@ import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery.vm';
 import { getManager } from 'typeorm';
 import { Awb } from 'src/shared/orm-entity/awb';
 import { AwbItem } from 'src/shared/orm-entity/awb-item';
-import { WebScanInListResponseVm } from '../../models/web-scanIn-list.response.vm';
+import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 
 @Injectable()
 export class WebDeliveryListService {
   constructor() {}
   async findAllDeliveryList(
-    payload: WebDeliveryListFilterPayloadVm
+    payload: WebDeliveryListFilterPayloadVm,
     ): Promise<WebScanInListResponseVm> {
     const page = toInteger(payload.page) || 1;
     const take = toInteger(payload.limit) || 10;

@@ -6,47 +6,47 @@ import {
 } from 'typeorm';
 
 @Entity('pod_scan', { schema: 'public' })
-export class podScan extends BaseEntity {
+export class PodScan extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name:'pod_scan_id',
+    name: 'pod_scan_id',
 
   })
   podScanId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'do_pod_id',
+    name: 'do_pod_id',
   })
   doPodId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'awb_id',
+    name: 'awb_id',
   })
   awbId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'awb_item_id'
+    name: 'awb_item_id',
   })
   awbItemId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'branch_id',
+    name: 'branch_id',
   })
   branchId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id',
+    name: 'user_id',
   })
   userId: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'pod_scanin_date_time',
+    name: 'pod_scanin_date_time',
   })
   podScaninDateTime: Date | null;
 }

@@ -44,6 +44,7 @@ export class AuthMiddleware implements NestMiddleware {
       username: jwt.payload.username,
       email: jwt.payload.email,
       displayName: jwt.payload.displayName,
+      employeeId: jwt.payload.employeeId,
       roles: jwt.payload.roles || [],
     });
   }

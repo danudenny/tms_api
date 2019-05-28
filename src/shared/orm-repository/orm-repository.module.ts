@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BranchRepository } from './branch.repository';
 import { UserRepository } from './user.repository';
-import { AwbRepository } from './mobile-delivery.repository';
+import { AwbRepository } from './awb.repository';
 import { Awb } from '../orm-entity/awb';
-import { podScan } from '../orm-entity/pod-scan';
+import { PodScan } from '../orm-entity/pod-scan';
 import { Employee } from '../orm-entity/employee';
 import { EmployeeRepository } from './employee.respository';
 import { ReasonRepository } from './reason.respository';
@@ -26,13 +26,13 @@ import { BagRepository } from './bag.repository';
       EmployeeRepository,
       AwbRepository,
       ReasonRepository,
-      podScan,
+      PodScan,
       PodScanRepository,
       AwbTrouble,
       AwbSolution,
       PartnerLogistic,
       employeeJourney,
-      BagRepository
+      BagRepository,
 
     ]),
   ],

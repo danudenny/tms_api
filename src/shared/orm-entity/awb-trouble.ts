@@ -9,75 +9,75 @@ import {
 export class AwbTrouble extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name:'awb_trouble',
+    name: 'awb_trouble_id',
   })
-  awbTrouble: string;
+  awbTroubleId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'awb_status_id',
+    name: 'awb_status_id',
   })
-  awbStatusId: string;
+  awbStatusId: number;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name:'awb_number',
+    name: 'awb_number',
   })
   awbNumber: string;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name:'resolove_date_time',
+    name: 'resolve_date_time',
   })
   resolveDateTime: Date | null;
 
   @Column('bigint', {
     nullable: false,
-    name:'status_resolve_id',
+    name: 'status_resolve_id',
   })
-  statusResolveId: string;
+  statusResolveId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'employee_id',
+    name: 'employee_id',
   })
-  employeeId: string;
+  employeeId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'branch_id',
+    name: 'branch_id',
   })
-  branchId: string;
+  branchId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_created',
+    name: 'user_id_created',
   })
-  userIdCreated: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'created_time',
+    name: 'created_time',
   })
   createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_updated',
+    name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'updated_time',
+    name: 'updated_time',
   })
   updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name:'is_deleted',
+    name: 'is_deleted',
   })
-  isDeleted: boolean | null;
+  isDeleted: boolean | false;
 }

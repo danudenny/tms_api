@@ -18,9 +18,9 @@ import {
 export class Employee extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name:'employee_id',
+    name: 'employee_id',
   })
-  employeeId: string;
+  employeeId: number;
 
   @Column('bigint', {
     nullable: true,
@@ -56,7 +56,7 @@ export class Employee extends BaseEntity {
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name:'fullname',
+    name: 'fullname',
   })
   employeeName: string;
 

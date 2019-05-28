@@ -11,11 +11,11 @@ export class BranchService {
 
   constructor() {}
   async findBranchName(
-    payload: BranchPayloadVm
+    payload: BranchPayloadVm,
     ): Promise<BranchFindAllResponseVm> {
     const page = toInteger(payload.page) || 1;
     const take = toInteger(payload.limit) || 10;
-    const search = payload.filters.search
+    const search = payload.filters.search;
     const offset = (page - 1) * take;
 
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(

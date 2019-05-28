@@ -12,7 +12,7 @@ CREATE TABLE public.awb_trouble
     awb_trouble_id bigint NOT NULL DEFAULT nextval('awb_trouble_awb_trouble_id_seq'::regclass),
     awb_status_id bigint,
     awb_number varchar (255),
-    reslove_date_time timestamp without time zone NOT NULL,
+    resolve_date_time timestamp without time zone NOT NULL,
     status_resolve_id bigint,
     employee_id bigint,
     branch_id bigint,

@@ -1,6 +1,6 @@
 import { EntityRepository, Repository } from 'typeorm';
 
-import { podScan } from '../orm-entity/pod-scan';
+import { PodScan } from '../orm-entity/pod-scan';
 
-@EntityRepository(podScan)
-export class PodScanRepository extends Repository<podScan> {}
+@EntityRepository(PodScan)
+export class PodScanRepository extends Repository<PodScan> {}

@@ -224,6 +224,7 @@ export class AuthService {
     result.email = user.email;
     result.username = user.username;
     result.displayName = user.employee.employeeName;
+    result.employeeId = user.employee.employeeId;
     // result.roles = map(user.roles, role => pick(role, ['role_id', 'role_name']));
 
     return result;
@@ -237,6 +238,7 @@ export class AuthService {
       username: user.username,
       email: user.email,
       displayName: user.employee.employeeName,
+      employeeId: user.employee.employeeId,
     };
 
     return jwtPayload;
