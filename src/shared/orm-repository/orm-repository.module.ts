@@ -14,6 +14,7 @@ import { AwbSolution } from '../orm-entity/awb-solution';
 import { PartnerLogistic } from '../orm-entity/partner-logistic';
 import { employeeJourney } from '../orm-entity/employee-journey';
 import { BagRepository } from './bag.repository';
+import { DoPodRepository } from './do-pod.repository';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { BagRepository } from './bag.repository';
       PartnerLogistic,
       employeeJourney,
       BagRepository,
+      DoPodRepository
 
     ]),
   ],

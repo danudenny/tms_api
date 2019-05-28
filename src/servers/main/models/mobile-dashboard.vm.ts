@@ -28,10 +28,10 @@ export class MobiledashboardRequestVm {
 
 export class MobileDashboardhistVm {
   @ApiModelProperty()
-  historyDate: Date;
+  history_date_time: Date;
 
   @ApiModelProperty({ type: [DeliveryListVm] })
-  List: DeliveryListVm[];
+  list: DeliveryListVm[];
 
 }
 

@@ -39,8 +39,8 @@ export class MobileDeliveryVm {
   @ApiModelProperty()
   awbStatusName: string;
 
-  @ApiModelProperty({ type: () => MobileDashboardhistVm, isArray: true })
-  redeliveryHistory: MobileDashboardhistVm[];
+  // @ApiModelProperty({ type: () => MobileDashboardhistVm, isArray: true })
+  // redeliveryHistory: MobileDashboardhistVm[];
 
   @ApiModelProperty({ type: String })
   specialInstruction: string[];

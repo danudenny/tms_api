@@ -2,14 +2,14 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class DeliveryListVm {
   @ApiModelProperty()
-  historyDateTime: Date;
+  history_date_time: Date;
 
   @ApiModelProperty()
-  reasonCode: string;
+  reason_code: string;
 
   @ApiModelProperty()
-  reasonNote: string;
+  reason_id: string;
 
   @ApiModelProperty()
-  employeeName: string;
+  username: string;
 }

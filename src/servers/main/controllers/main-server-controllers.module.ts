@@ -6,8 +6,10 @@ import { MobileDeliveryController } from './mobile/mobile.delivery.controller';
 import { WebDeliveryController } from './web/web.delivery.controller';
 import { MobileDashboardController } from './mobile/mobile.dashboard.controller';
 import { MainServerServicesModule } from '../services/main-server-services.module';
+import { GabunganController } from './resi gabungan/gabungan.controller';
 import { BranchController } from './master/branch.controller';
 import { EmployeeController } from './master/employee.controller';
+
 
 
 @Module({
@@ -17,7 +19,9 @@ import { EmployeeController } from './master/employee.controller';
     MobileDeliveryController,
     WebDeliveryController,
     BranchController,
-    EmployeeController,
+    GabunganController,
+    EmployeeController
+
   ],
 })
 export class MainServerControllersModule {}
