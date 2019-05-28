@@ -14,3 +14,10 @@ ADD COLUMN employee_journey_id_in bigint,ADD COLUMN employee_journey_id_out bigi
 
 ALTER TABLE do_pod
 ADD COLUMN partner_logistic_id bigint;
+
+
+-- ALTER table : do_pod 28/05/2019
+
+ALTER TABLE pod_scan
+ADD COLUMN bag_id bigint;
+ADD COLUMN bag_item_id bigint;
