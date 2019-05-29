@@ -112,7 +112,7 @@ export class User extends BaseEntity {
   })
   roles: Role[];
 
-  @OneToOne(() => Employee, employee => employee, { eager: true })
+  @OneToOne(() => Employee, employee => employee, { eager: true , nullable: true})
   @JoinColumn({ name: 'employee_id' })
   employee: Employee;
 
