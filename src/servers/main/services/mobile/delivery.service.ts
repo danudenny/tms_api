@@ -25,7 +25,60 @@ export class MobileDeliveryService {
     const end = moment(payload.filters.endDeliveryDateTime).toDate();
 
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(
-      'select t1.do_pod_date_time,t4.awb_id as "awbId",t4.awb_date as "awbDate",t4.awb_number as "AwbNumber", t4.ref_customer_account_id as "merchant",t4.consignee_name as "consigneeName", t4.consignee_address as "consigneeAddress ",t4.consignee_phone as "consigneeNumber",t4.is_cod as "isCOD",t5.package_type_name as "packageTypeName",t6.awb_status_name as "awbStatusName",t7.reason_id,t8.reason_code, t7.employee_id_driver,t7.history_date_time from do_pod t1 inner join do_pod_detail t2 on t1.do_pod_id = t2.do_pod_id inner join awb_item t3 on t2.awb_item_id =t3.awb_item_id inner join awb t4 on t3.awb_id = t4.awb_id inner join package_type t5 on t4.package_type_id=t5.package_type_id inner join awb_status t6 on t4.awb_status_id_last=t6.awb_status_id inner join do_pod_history t7 on t1.do_pod_id = t7.do_pod_id left join reason t8 on t7.reason_id = t8.reason_id where t1.do_pod_date_time >= :start AND t1.do_pod_date_time <= :end LIMIT :take OFFSET :offset',
+     `select
+     t4.awb_id as "awbId",
+     t4.awb_date as "awbDate",
+     t4.awb_number as "AwbNumber",
+     t4.ref_customer_account_id as "merchant",
+     t4.consignee_name as "consigneeName",
+     t4.consignee_address as "consigneeAddress ",
+     t4.consignee_phone as "consigneeNumber",
+     t4.is_cod as "isCOD",
+     t5.package_type_name as "packageTypeName",
+     t6.awb_status_name as "awbStatusName",
+     array_to_json(t13."data") as "redeliveryHistory"
+   from
+     do_pod t1
+   inner join do_pod_detail t2 on t1.do_pod_id = t2.do_pod_id
+   inner join awb_item t3 on t2.awb_item_id = t3.awb_item_id
+   inner join awb t4 on t3.awb_id = t4.awb_id
+   inner join package_type t5 on t4.package_type_id = t5.package_type_id
+   inner join awb_status t6 on t4.awb_status_id_last = t6.awb_status_id
+   left join lateral (
+     select array(
+       select row_to_json(row)
+       from
+       (
+         select
+           t10.history_date_time as "historyDateTime",
+           t11.reason_code as "reasonCode",
+           t12.fullname as "employeeName"
+         from
+           do_pod_history t10
+         left join lateral (
+           select
+             t11.reason_code
+           from
+             reason t11
+           where
+             t11.reason_id = t10.reason_id
+         ) t11 on true
+         inner join lateral (
+           select
+             t12.fullname
+           from
+             employee t12
+           where
+             t12.employee_id = t10.employee_id_driver
+         ) t12 on true
+         where
+           t10.do_pod_id = t1.do_pod_id
+       ) row
+     ) "data"
+   ) t13 on true
+
+
+    where t1.do_pod_date_time >= :start AND t1.do_pod_date_time <= :end LIMIT :take OFFSET :offset`,
       {take, start,end ,offset},
     );
 
@@ -36,14 +89,13 @@ export class MobileDeliveryService {
     // exec raw query
     const data = await RawQueryService.query(query, parameters);
     const total = await RawQueryService.query(querycount, parameterscount);
-
+    console.log(data[0].redeliveryHistory)
     const result = new MobileDeliveryFindAllResponseVm();
 
     // condition data
     if (data.length > 0) {
 
       result.data = data;
-      console.log(result)
       result.paging = MetaService.set(page, take, toInteger(total[0].count));
       return result;
 

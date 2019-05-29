@@ -27,11 +27,18 @@ export class MobiledashboardRequestVm {
 }
 
 export class MobileDashboardhistVm {
-  @ApiModelProperty()
-  history_date_time: Date;
 
-  @ApiModelProperty({ type: [DeliveryListVm] })
-  list: DeliveryListVm[];
+  @ApiModelProperty()
+  historyDateTime: Date;
+
+  @ApiModelProperty()
+  reasonCode: string;
+
+  @ApiModelProperty()
+  reasonId: string;
+
+  @ApiModelProperty()
+  employeeName: string;
 
 }
 
