@@ -21,5 +21,15 @@ export interface JwtAccessTokenPayload {
  */
 export interface JwtRefreshTokenPayload {
   clientId: string;
-  userId: string;
+  userId: number;
+}
+
+/**
+ * The data object encrypt on the permission token
+ * @export
+ * @interface JwtPermissionTokenPayload
+ */
+export interface JwtPermissionTokenPayload {
+  roleId: number;
+  branchId: number;
 }

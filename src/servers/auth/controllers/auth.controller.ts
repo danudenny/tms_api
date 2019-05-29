@@ -84,19 +84,19 @@ export class AuthController {
     return result;
   }
 
-  @Post('logout')
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @ApiOkResponse({})
-  @Transactional()
+  // @Post('test')
+  // @HttpCode(200)
+  // // @ApiBearerAuth()
+  // // @ApiOkResponse({})
+  // // @Transactional()
 
-  // NOTE: body params like strong parameter
-  public async authLogout(@Body() payload: AuthLoginByEmailOrUsernamePayloadVM) {
-    const result =  {};
-    // await this.authService.login(
-    //   payload.clientId,
-    // );
-
-    return result;
-  }
+  // // NOTE: body params like strong parameter
+  // public async authLogout(@Body() payload: PermissionRolesPayloadVM) {
+  //   // const result =  {};
+  //   // await this.authService.login(
+  //   //   payload.clientId,
+  //   // );
+  //   const result = await this.authService.handlePermissionJwtToken(payload.token);
+  //   return result;
+  // }
 }

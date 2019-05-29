@@ -129,6 +129,9 @@ export class PermissionAccessResponseVM {
   @ApiModelProperty()
   roleName: string;
 
+  @ApiModelProperty()
+  permissionToken: string;
+
   @ApiModelProperty({ type: String })
   rolesAccessPermissions: string[];
 

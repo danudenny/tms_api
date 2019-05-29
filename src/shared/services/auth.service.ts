@@ -1,8 +1,8 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { TokenExpiredError } from 'jsonwebtoken';
 
-import { JwtAccessTokenPayload, JwtRefreshTokenPayload } from '../interfaces/jwt-payload.interface';
+import { JwtAccessTokenPayload, JwtRefreshTokenPayload, JwtPermissionTokenPayload } from '../interfaces/jwt-payload.interface';
 import { AuthLoginMetadata } from '../models/auth-login-metadata.model';
 import { AuthLoginResultMetadata } from '../models/auth-login-result-metadata';
 import { ConfigService } from './config.service';
@@ -17,7 +17,7 @@ import { UserRole } from '../orm-entity/user-role';
 import { GetAccessResult } from '../models/get-access-result';
 import { RolePermission } from '../orm-entity/role-permission';
 import { Branch } from '../orm-entity/branch';
-import { getManager } from 'typeorm';
+import { PermissionAccessResponseVM } from '../../servers/auth/models/auth.vm';
 
 @Injectable()
 export class AuthService {
@@ -153,7 +153,7 @@ export class AuthService {
     clientId: string,
     roleId: number,
     branchId: number,
-  ): Promise<GetAccessResult> {
+  ): Promise<PermissionAccessResponseVM> {
     const authMeta = AuthService.getAuthMetadata();
     // const user = await this.userRepository.findByUserIdWithRoles());
     // check user present
@@ -173,13 +173,20 @@ export class AuthService {
           branch_id: branchId,
         },
       });
+      // create Permission Token
+      const jwtPermissionTokenPayload = this.populateJwtPermissionTokenPayloadFromUser(
+        roleId,
+        branchId,
+      );
+      const permissionToken = this.jwtService.sign(jwtPermissionTokenPayload, {});
 
       // Populate return value
-      const result = new GetAccessResult();
+      const result = new PermissionAccessResponseVM();
       result.clientId = authMeta.clientId;
       result.username = authMeta.username;
       result.email = authMeta.email;
       result.displayName = authMeta.displayName;
+      result.permissionToken = permissionToken;
 
       result.branchName = branch.branchName;
       result.branchCode = branch.branchCode;
@@ -195,6 +202,23 @@ export class AuthService {
       );
     }
   }
+
+  // handle permission Token
+  async handlePermissionJwtToken(jwtToken: string) {
+    let jwt: { payload: JwtPermissionTokenPayload };
+    try {
+      this.validateJwtTokenPermission(jwtToken);
+      jwt = this.jwtService.decode(jwtToken, {
+        complete: true,
+      }) as { payload: JwtPermissionTokenPayload };
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+    // return data payload token permission
+    return jwt.payload;
+  }
+
+  // method populate data user login
   public populateLoginResultMetadataByUser(
     clientId: string,
     user: User,
@@ -245,9 +269,20 @@ export class AuthService {
   }
 
   // Set data payload JWT Refresh Token
-  public populateJwtRefreshTokenPayloadFromUser(clientId: string, user: any) {
+  public populateJwtRefreshTokenPayloadFromUser(clientId: string, user: User) {
     const jwtPayload: Partial<JwtRefreshTokenPayload> = {
       clientId,
+      userId: user.user_id,
+    };
+
+    return jwtPayload;
+  }
+
+  // Set data payload JWT Permission Token
+  public populateJwtPermissionTokenPayloadFromUser(roleId: number, branchId: number) {
+    const jwtPayload: Partial<JwtPermissionTokenPayload> = {
+      roleId,
+      branchId,
     };
 
     return jwtPayload;
@@ -282,4 +317,13 @@ export class AuthService {
     return roles || [];
   }
   // #endregion
+
+  private validateJwtTokenPermission(token: string): boolean {
+    try {
+      const validToken = this.jwtService.verify(token);
+      return Boolean(validToken);
+    } catch (e) {
+      throw new UnauthorizedException(e.message);
+    }
+  }
 }

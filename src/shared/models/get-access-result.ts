@@ -7,5 +7,6 @@ export class GetAccessResult {
   branchId: number;
   branchName: string;
   branchCode: string;
+  permissionToken: string;
   rolesAccessPermissions: string[];
 }
