@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { toInteger } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { EmployeeFindAllResponseVm } from '../../models/employee.response.vm';
-import { RawQueryService } from 'src/shared/services/raw-query.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { EmployeeRequestPayloadVm } from '../../models/employee.vm';
 
 @Injectable()

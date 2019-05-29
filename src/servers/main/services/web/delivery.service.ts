@@ -14,8 +14,8 @@ import { AwbTroubleRepository } from '../../../../shared/orm-repository/awb-trou
 import { PodScanRepository } from '../../../../shared/orm-repository/pod-scan.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
-import { BranchRepository } from 'src/shared/orm-repository/branch.repository';
-import { AwbItem } from 'src/shared/orm-entity/awb-item';
+import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
+import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 // #endregion
 
 @Injectable()

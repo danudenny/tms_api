@@ -4,8 +4,7 @@ import { toInteger } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
 import { BranchPayloadVm } from '../../models/branch.vm';
-import { RawQueryService } from 'src/shared/services/raw-query.service';
-
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 @Injectable()
 export class BranchService {
 
