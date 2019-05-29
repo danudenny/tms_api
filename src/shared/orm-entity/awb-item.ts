@@ -1,290 +1,331 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('awb_item', { schema: 'public' })
-@Index('awb_item_awb_id_idx', ['awb_id', 'is_deleted'])
-@Index('awb_item_is_deleted_idx', ['is_deleted'])
+@Index('awb_item_awb_id_idx', ['awbId', 'isDeleted'])
+@Index('awb_item_is_deleted_idx', ['isDeleted'])
 export class AwbItem extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'awb_item_id',
   })
-  awb_item_id: string;
+  awbItemId: number;
 
   @Column('bigint', {
     nullable: false,
+    name: 'awb_id',
   })
-  awb_id: string;
+  awbId: number;
 
   @Column('bigint', {
     nullable: true,
+    name: 'bag_item_id_last',
   })
-  bag_item_id_last: string | null;
+  bagItemIdLast: number | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'do_awb_id_delivery',
   })
-  do_awb_id_delivery: string | null;
+  doAwbIdDelivery: number | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'do_awb_id_pickup',
   })
-  do_awb_id_pickup: string | null;
+  doAwbIdPickup: number | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'attachment_tms_id',
   })
-  attachment_tms_id: string | null;
+  attachmentTmsId: number | null;
 
   @Column('integer', {
     nullable: true,
     default: () => '1',
+    name: 'awb_item_seq',
   })
-  awb_item_seq: number | null;
+  awbItemSeq: number | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
   })
-  width: string | null;
+  width: number | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
   })
-  length: string | null;
+  length: number | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
   })
-  height: string | null;
+  height: number | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
   })
-  volume: string | null;
+  volume: number | null;
+
+  @Column('numeric', {
+    nullable: true,
+    precision: 20,
+    scale: 5,
+    name: 'divider_volume',
+  })
+  dividerVolume: number | null;
+
+  @Column('numeric', {
+    nullable: true,
+    precision: 20,
+    scale: 5,
+    name: 'weight_volume',
+  })
+  weightVolume: number | null;
+
+  @Column('numeric', {
+    nullable: true,
+    precision: 20,
+    scale: 5,
+    name: 'weight_volume_rounded',
+  })
+  weightVolumeRounded: number | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
   })
-  divider_volume: string | null;
+  weight: number | null;
+
+  @Column('numeric', {
+    nullable: true,
+    precision: 20,
+    scale: 5,
+    name: 'weight_rounded',
+  })
+  weightRounded: number | null;
+
+  @Column('numeric', {
+    nullable: true,
+    precision: 20,
+    scale: 5,
+    name: 'weight_final',
+  })
+  weightFinal: number | null;
+
+  @Column('numeric', {
+    nullable: true,
+    precision: 20,
+    scale: 5,
+    name: 'awb_item_price',
+  })
+  awbItemPrice: number | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
   })
-  weight_volume: string | null;
-
-  @Column('numeric', {
-    nullable: true,
-    precision: 20,
-    scale: 5,
-  })
-  weight_volume_rounded: string | null;
-
-  @Column('numeric', {
-    nullable: true,
-    precision: 20,
-    scale: 5,
-  })
-  weight: string | null;
-
-  @Column('numeric', {
-    nullable: true,
-    precision: 20,
-    scale: 5,
-  })
-  weight_rounded: string | null;
-
-  @Column('numeric', {
-    nullable: true,
-    precision: 20,
-    scale: 5,
-  })
-  weight_final: string | null;
-
-  @Column('numeric', {
-    nullable: true,
-    precision: 20,
-    scale: 5,
-  })
-  awb_item_price: string | null;
-
-  @Column('numeric', {
-    nullable: true,
-    precision: 20,
-    scale: 5,
-  })
-  insurance: string | null;
+  insurance: number | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'packing_type_id',
   })
-  packing_type_id: string | null;
+  packingTypeId: number | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
+    name: 'packing_price',
   })
-  packing_price: string | null;
+  packingPrice: number | null;
 
   @Column('text', {
     nullable: true,
+    name: 'item_description',
   })
-  item_description: string | null;
+  itemDescription: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
+    name: 'item_qty',
   })
-  item_qty: string | null;
+  itemQty: number | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'item_unit',
   })
-  item_unit: string | null;
+  itemUnit: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
+    name: 'item_price',
   })
-  item_price: string | null;
+  itemPrice: string | null;
 
   @Column('integer', {
     nullable: true,
+    name: 'awb_status_id_last',
   })
-  awb_status_id_last: number | null;
+  awbStatusIdLast: number | null;
 
   @Column('integer', {
     nullable: false,
     default: () => '2000',
+    name: 'awb_status_id_last_public',
   })
-  awb_status_id_last_public: number;
+  awbStatusIdLastPublic: number;
 
   @Column('bigint', {
     nullable: true,
+    name: 'user_id_last',
   })
-  user_id_last: string | null;
+  userIdLast: number | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'branch_id_last',
   })
-  branch_id_last: string | null;
+  branchIdLast: number | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
+    name: 'history_date_last',
   })
-  history_date_last: Date | null;
+  historyDateLast: Date | null;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
+    name: 'try_attempt',
   })
-  try_attempt: number;
+  tryAttempt: number;
 
   @Column('timestamp without time zone', {
     nullable: true,
+    name: 'awb_date',
   })
-  awb_date: Date | null;
+  awbDate: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
+    name: 'awb_date_real',
   })
-  awb_date_real: Date | null;
+  awbDateReal: Date | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'awb_history_id_last',
   })
-  awb_history_id_last: string | null;
+  awbHistoryIdLast: number | null;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
+    name: 'lead_time_run_days',
   })
-  lead_time_run_days: number;
+  leadTimeRunDays: number;
 
   @Column('timestamp without time zone', {
     nullable: true,
+    name: 'final_status_date',
   })
-  final_status_date: Date | null;
+  finalStatusDate: Date | null;
 
   @Column('integer', {
     nullable: true,
+    name: 'awb_status_id_final',
   })
-  awb_status_id_final: number | null;
+  awbStatusIdFinal: number | null;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
+    name: 'lead_time_final_days',
   })
-  lead_time_final_days: number;
+  leadTimeFinalDays: number;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 20,
     scale: 5,
+    name: 'weight_real',
   })
-  weight_real: string | null;
+  weightReal: number | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 20,
     scale: 5,
+    name: 'weight_real_rounded',
   })
-  weight_real_rounded: string | null;
+  weightRealRounded: number | null;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: true,
+    name: 'updated_time',
   })
-  updated_time: Date | null;
+  updatedTime: Date | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
+    name: 'cod_item_price',
   })
-  cod_item_price: string;
+  codItemPrice: number;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
+    name: 'cod_value',
   })
-  cod_value: string;
+  codValue: string;
 }

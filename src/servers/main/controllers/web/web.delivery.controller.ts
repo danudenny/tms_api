@@ -23,11 +23,11 @@ export class WebDeliveryController {
   ) { }
 
   @Post('awb')
-  @Transactional()
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanInAwbResponseVm })
+  @Transactional()
   public async scanIn(@Body() payload: WebScanInVm) {
 
     // TODO:
@@ -37,11 +37,14 @@ export class WebDeliveryController {
   }
 
   @Post('list')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanInListResponseVm })
   public async findAllDeliveryList(@Body() payload: WebDeliveryListFilterPayloadVm) {
-
+    // TODO:
     return this.webDeliveryService.findAllDeliveryList(payload);
-    }
+  }
 
   @Post('bag')
   @ApiOkResponse({ type: WebScanInBag1ResponseVm})
