@@ -72,6 +72,7 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
     app.useGlobalInterceptors(
       new ResponseSerializerInterceptor(),
       new ErrorHandlerInterceptor(),
+      new LoggingInterceptor(),
     );
 
     app.useGlobalFilters(
