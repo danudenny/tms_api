@@ -2,11 +2,11 @@ import { Controller, Get, Query, Post, UseGuards, HttpCode, Body } from '@nestjs
 import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { GabunganPayloadVm } from '../../models/gabungan.vm';
+import { GabunganPayloadVm } from '../../models/gabungan-payload.vm';
 import { RedeliveryService } from '../../services/mobile/redelivery.services';
 import { GabunganFindAllResponseVm } from '../../models/gabungan.response.vm';
 import { DeliveryFilterPayloadVm } from '../../models/mobile-dashboard.vm';
-import { GabunganService } from '../../services/resi gabungan/gabunganservice';
+import { GabunganService } from '../../services/resi gabungan/gabungan.services';
 
 
 @ApiUseTags('Resi Bag')
@@ -16,9 +16,12 @@ export class GabunganController {
 
   @Post('bag')
   @HttpCode(200)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: GabunganFindAllResponseVm })
-  public async findallResiGabungan(@Body() payload: GabunganPayloadVm) {
+  public async gabunganAwb(@Body() payload: GabunganPayloadVm) {
 
-    return this.gabunganService.findallResiGabungan(payload);
+    return this.gabunganService.gabunganAwb(payload);
     }
+
   }

@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Query, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { GetRoleResult } from '../../../../shared/models/get-role-result';
@@ -6,11 +6,7 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { toInteger } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
-import { WebDeliveryFindAllResponseVm } from '../../models/web-delivery.response.vm';
 import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery.vm';
-import { getManager } from 'typeorm';
-import { Awb } from 'src/shared/orm-entity/awb';
-import { AwbItem } from 'src/shared/orm-entity/awb-item';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 
 @Injectable()

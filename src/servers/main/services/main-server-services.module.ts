@@ -8,7 +8,7 @@ import { MobileDeliveryService } from './mobile/delivery.service';
 import { WebDeliveryService } from './web/delivery.service';
 import { DashboardService } from './mobile/dashboard.service';
 import { RedeliveryService } from './mobile/redelivery.services';
-import { GabunganService } from './resi gabungan/gabunganservice';
+import { GabunganService } from './resi gabungan/gabungan.services';
 
 @Module({
   imports: [OrmRepositoryModule, SharedModule],

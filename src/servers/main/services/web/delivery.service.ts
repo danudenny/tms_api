@@ -7,15 +7,18 @@ import { toInteger } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery.vm';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInAwbResponseVm } from '../../models/web-scanin-awb.response.vm';
+import { WebScanInAwbResponseVm, WebScanInBag1ResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
+import { Bag } from '../../../../shared/orm-entity/bag';
 import { AwbRepository } from '../../../../shared/orm-repository/awb.repository';
 import { AwbTroubleRepository } from '../../../../shared/orm-repository/awb-trouble.repository';
+import { BagRepository } from '../../../../shared/orm-repository/bag.repository';
 import { PodScanRepository } from '../../../../shared/orm-repository/pod-scan.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
 import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
+import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 // #endregion
 
 @Injectable()
@@ -30,6 +33,8 @@ export class WebDeliveryService {
     private readonly podScanRepository: PodScanRepository,
     @InjectRepository(BranchRepository)
     private readonly branchRepository: BranchRepository,
+    @InjectRepository(BagRepository)
+    private readonly bagRepository: BagRepository,
   ) {}
   async findAllDeliveryList(
     payload: WebDeliveryListFilterPayloadVm,
@@ -73,7 +78,7 @@ export class WebDeliveryService {
       const result = new WebScanInAwbResponseVm();
       const timeNow = moment().toDate();
       const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
-
+      let r = Math.random().toString(36).substring(7);
       let awb;
       let checkPodScan;
       let totalSuccess = 0;
@@ -87,7 +92,7 @@ export class WebDeliveryService {
           where: { awbNumber },
         });
         if (awb) {
-          // find data pod scan
+          // find data pod scan if exists
           checkPodScan = await this.podScanRepository.findOne({
             where: { awbId: awb.awbId },
           });
@@ -186,5 +191,48 @@ export class WebDeliveryService {
         HttpStatus.BAD_REQUEST,
       );
     }
+  }
+  async findAllBag(payload: WebScanInBagVm): Promise<WebScanInBag1ResponseVm> {
+    const dataItem = [];
+      const result = new WebScanInBag1ResponseVm();
+      let totalSuccess = 0;
+      let totalError = 0;
+
+      for (const bagNumber of payload.bagNumber) {
+        const bag = await Bag.findOne({
+          select: ['bagId', 'branchId'],
+          where: { bagNumber },
+        });
+
+        if (bag) {
+          const webbag = this.bagRepository.create();
+          webbag.bagId = bag.bagId;
+          webbag.branchId = bag.branchId;
+          webbag.createdTime = moment().toDate();
+          // webbag.createdTime = bag.createdTime;
+          this.bagRepository.save(webbag);
+
+          totalSuccess += 1;
+          dataItem.push({
+            bagNumber,
+              status: 'ok',
+              message: 'Success',
+          });
+
+        } else {
+          totalError += 1;
+          dataItem.push({
+            bagNumber,
+              status : 'error',
+              message:  `No Bag ${bagNumber} Tidak di Temukan`,
+          });
+        }
+      }
+      result.totalData = payload.bagNumber.length;
+      result.totalSuccess = totalSuccess;
+      result.totalError = totalError;
+      result.data = dataItem;
+
+      return result;
   }
 }

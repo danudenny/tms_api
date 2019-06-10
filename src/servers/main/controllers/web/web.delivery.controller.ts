@@ -47,48 +47,13 @@ export class WebDeliveryController {
   }
 
   @Post('bag')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanInBag1ResponseVm})
-  public async Webbag(@Body() payload: WebScanInBagVm) {
-    const dataItem = [];
-    const result = new WebScanInBag1ResponseVm();
-    let totalSuccess = 0;
-    let totalError = 0;
+  public async findAllBag(@Body() payload: WebScanInBagVm) {
 
-    for (const bagNumber of payload.bagNumber) {
-      const bag = await Bag.findOne({
-        select: ['bagId', 'branchId'],
-        where: { bagNumber },
-      });
-
-      if (bag) {
-        const webbag = this.bagRepository.create();
-        webbag.bagId = bag.bagId;
-        webbag.branchId = bag.branchId;
-        webbag.createdTime = moment().toDate();
-        // webbag.createdTime = bag.createdTime;
-        this.bagRepository.save(webbag);
-
-        totalSuccess += 1;
-        dataItem.push({
-          bagNumber,
-            status: 'ok',
-            message: 'Success',
-        });
-
-      } else {
-        totalError += 1;
-        dataItem.push({
-          bagNumber,
-            status : 'error',
-            message: 'Bag sudah Scan In pada Gerai X (20-05-2019 16:00:00)',
-        });
-      }
+    return this.webDeliveryService.findAllBag(payload);
     }
-    result.totalData = payload.bagNumber.length;
-    result.totalSuccess = totalSuccess;
-    result.totalError = totalError;
-    result.data = dataItem;
 
-    return result;
-    }
   }

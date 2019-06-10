@@ -1,10 +1,11 @@
-import { Controller, Get, Query, Post, Body } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import { DashboardService } from '../../services/mobile/dashboard.service';
 import { AwbRepository } from '../../../../shared/orm-repository/awb.repository';
 import { MobileDashboardFindAllResponseVm } from '../../models/mobile-dashboard.response.vm';
 import { MobiledashboardVm } from '../../models/mobile-dashboard.vm';
 import { WebDeliveryFilterPayloadVm } from '../../models/web-delivery.vm';
+import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 
 @ApiUseTags('Dashboard')
 @Controller('api/mobile')
@@ -15,6 +16,7 @@ export class MobileDashboardController {
 
   @Post('dashboard')
   @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: MobileDashboardFindAllResponseVm })
   public async findalldashboard() {
     return this.dashboardService.findalldashboard();

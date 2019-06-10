@@ -5,7 +5,7 @@ import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
 import { BranchPayloadVm } from '../../models/branch.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { GabunganPayloadVm } from '../../models/gabungan.vm';
+import { GabunganPayloadVm } from '../../models/gabungan-payload.vm';
 import { GabunganFindAllResponseVm } from '../../models/gabungan.response.vm';
 import { DeliveryFilterPayloadVm } from '../../models/mobile-dashboard.vm';
 import { RedeliveryFindAllResponseVm } from '../../models/redelivery.response.vm';
