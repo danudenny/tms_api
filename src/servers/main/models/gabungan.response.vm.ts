@@ -1,10 +1,12 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
-import { GabunganSearchVm } from './gabungan.vm';
+// import { GabunganSearchVm } from './gabungan-payload.vm';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
+import { GabunganVm } from './gabungan.vm';
 
-export class GabunganFindAllResponseVm extends BaseMetaResponseVm  {
+export class GabunganFindAllResponseVm   {
 
-  @ApiModelProperty({ type: () => [GabunganSearchVm] })
-  data: GabunganSearchVm[];
+  @ApiModelProperty({ type: [GabunganVm] })
+  data: GabunganVm[];
+
 }
 
