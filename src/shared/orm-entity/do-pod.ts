@@ -18,167 +18,167 @@ import {
 export class DoPod extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name:'do_pod_id',
   })
-  do_pod_id: string;
+  doPodId: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name:'do_pod_code',
   })
-  do_pod_code: string;
+  doPodCode: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name:'ref_do_pod_code',
   })
-  ref_do_pod_code: string | null;
+  refDoPodCode: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'do_pod_date_time',
   })
-  do_pod_date_time: Date;
+  doPodDateTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id',
   })
-  user_id: string;
+  userId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'branch_id',
   })
-  branch_id: string;
+  branchId: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'branch_id_to',
   })
-  branch_id_to: string | null;
+  branchIdTo: string | null;
 
   @Column('integer', {
     nullable: true,
-
+    name:'total_assigned',
   })
-  total_assigned: number | null;
+  totalAssigned: number | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'user_id_driver',
   })
-  user_id_driver: string | null;
+  userIdDriver: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'employee_id_driver',
   })
-  employee_id_driver: string | null;
+  employeeIdDriver: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-
+    name:'latitude_last',
   })
-  latitude_last: string | null;
+  latitudeLast: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-
+    name:'longitude_last',
   })
-  longitude_last: string | null;
+  longitudeLast: string | null;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-
+    name:'total_item',
   })
-  total_item: number;
+  totalItem: number;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-
+    name:'total_pod_item',
   })
-  total_pod_item: number;
+  totalPodItem: number;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
-
+    name:'total_weight',
   })
-  total_weight: string;
+  totalWeight: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'do_pod_status_id_last',
   })
-  do_pod_status_id_last: string | null;
+  doPodStatusIdLast: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'do_pod_history_id_last',
   })
-  do_pod_history_id_last: string | null;
+  doPodHistoryIdLast: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name:'history_date_time_last',
   })
-  history_date_time_last: Date | null;
+  historyDateTimeLast: Date | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name:'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('integer', {
     nullable: true,
-
+    name:'do_pod_type',
   })
-  do_pod_type: number | null;
+  doPodType: number | null;
 
   @Column('integer', {
     nullable: true,
-
+    name:'third_party_id',
   })
-  third_party_id: number | null;
+  thirdPartyId: number | null;
 
   @Column('bigint', {
     nullable: false,
-name:'partner_logistic_id',
+    name:'partner_logistic_id',
   })
   partnerLogisticId: string;
 }

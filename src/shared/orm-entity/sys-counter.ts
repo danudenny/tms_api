@@ -19,9 +19,9 @@ import {
 export class SysCounter extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name:'sys_counter_id',
   })
-  sys_counter_id: string;
+  sysCounterId: string;
 
   @Column('character varying', {
     nullable: false,
@@ -40,20 +40,20 @@ export class SysCounter extends BaseEntity {
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name:'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

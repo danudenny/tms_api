@@ -18,59 +18,59 @@ import {
 export class DoPodStatus extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name:'do_pod_status_id',
   })
-  do_pod_status_id: string;
+  doPodStatusId: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name:'status_code',
   })
-  status_code: string | null;
+  statusCode: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name:'status_title',
   })
-  status_title: string | null;
+  statusTitle: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name:'status_name',
   })
-  status_name: string | null;
+  statusName: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name:'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

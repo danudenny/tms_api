@@ -4,176 +4,176 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class DoPodHistory extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name:'do_pod_history_id',
   })
-  do_pod_history_id: string;
+  doPodHistoryId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'do_pod_id',
   })
-  do_pod_id: string;
+  doPodId: string;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name:'do_pod_date_time',
   })
-  do_pod_date_time: Date | null;
+  doPodDateTime: Date | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id',
   })
-  user_id: string;
+  userId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'branch_id',
   })
-  branch_id: string;
+  branchId: string;
 
   @Column('boolean', {
     nullable: true,
-
+    name:'is_member',
   })
-  is_member: boolean | null;
+  isMember: boolean | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'customer_account_id',
   })
-  customer_account_id: string | null;
+  customerAccountId: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'customer_account_merchant_id',
   })
-  customer_account_merchant_id: string | null;
+  customerAccountMerchantId: string | null;
 
   @Column('integer', {
     nullable: true,
-
+    name:'total_assigned',
   })
-  total_assigned: number | null;
+  totalAssigned: number | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'employee_id_driver',
   })
-  employee_id_driver: string | null;
+  employeeName: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'user_id_driver',
   })
-  user_id_driver: string | null;
+  userIdDriver: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-
+    name:'latitude',
   })
   latitude: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-
+    name:'longitude',
   })
   longitude: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name:'consignee_name',
   })
-  consignee_name: string | null;
+  consigneeName: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name:'received_date_time',
   })
-  received_date_time: Date | null;
+  receivedDateTime: Date | null;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
-
+    name:'total_weight',
   })
-  total_weight: string;
+  totalWeight: string;
 
   @Column('text', {
     nullable: true,
-
+    name:'history_notes',
   })
-  history_notes: string | null;
+  historyNotes: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'reason_id',
   })
-  reason_id: string | null;
+  reasonId: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'do_pod_status_id',
   })
-  do_pod_status_id: string;
+  doPodStatusId: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'history_date_time',
   })
-  history_date_time: Date;
+  historyDateTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name:'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'do_pod_detail_id',
   })
-  do_pod_detail_id: string | null;
+  doPodDetailId: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'branch_id_to',
   })
-  branch_id_to: string | null;
+  branchIdTo: string | null;
 
   @Column('integer', {
     nullable: true,
-
+    name:'third_party_id',
   })
-  third_party_id: number | null;
+  thirdPartyId: number | null;
 }

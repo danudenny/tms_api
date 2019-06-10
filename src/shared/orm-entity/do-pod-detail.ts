@@ -4,96 +4,96 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class DoPodDetail extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name:'do_pod_detail_id',
   })
-  do_pod_detail_id: string;
+  doPodDetaiId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'do_pod_id',
   })
-  do_pod_id: string;
+  doPodId: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'awb_item_id',
   })
-  awb_item_id: string | null;
+  awbItemId: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'bag_item_id',
   })
-  bag_item_id: string | null;
+  bagItemId: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'do_pod_status_id_last',
   })
-  do_pod_status_id_last: string;
+  doPodStatusIdLast: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name:'do_pod_status_id_last',
   })
   do_pod_history_id_last: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name:'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('boolean', {
     nullable: true,
-
+    name:'is_scan_out',
   })
-  is_scan_out: boolean | null;
+  isScanOut: boolean | null;
 
   @Column('character varying', {
     nullable: true,
     length: 50,
-
+    name:'scan_out_type',
   })
-  scan_out_type: string | null;
+  scanOutType: string | null;
 
   @Column('boolean', {
     nullable: true,
-
+    name:'is_scan_in',
   })
-  is_scan_in: boolean | null;
+  isScanIn: boolean | null;
 
   @Column('character varying', {
     nullable: true,
     length: 50,
-
+    name:'scan_in_type',
   })
-  scan_in_type: string | null;
+  scanInType: string | null;
 
   @Column('bigint', {
     nullable: false,

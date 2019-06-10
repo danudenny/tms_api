@@ -5,77 +5,91 @@ export class AwbStatus extends BaseEntity {
   @Column('integer', {
     nullable: false,
     primary: true,
+    name:'awb_status_id',
   })
-  awb_status_id: number;
+  awbStatusId: number;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name:'awb_status_name',
   })
-  awb_status_name: string;
+  awbStatusName: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name:'awb_status_title',
   })
-  awb_status_title: string;
+  awbStatusTitle: string;
 
   @Column('integer', {
     nullable: false,
+    name:'awb_visibility',
   })
-  awb_visibility: number;
+  awbVisibility: number;
 
   @Column('integer', {
     nullable: false,
+    name:'awb_level',
   })
-  awb_level: number;
+  awbLevel: number;
 
   @Column('text', {
     nullable: true,
+    name:'awb_desc',
   })
-  awb_desc: string | null;
+  awbDesc: string | null;
 
   @Column('bigint', {
     nullable: false,
+    name:'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name:'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
+    name:'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name:'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name:'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
+    name:'is_final_status',
   })
-  is_final_status: boolean | null;
+  isFinalStatus: boolean | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
+    name:'is_attempted',
   })
-  is_attempted: boolean | null;
+  isAttempted: boolean | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
+    name:'is_problem',
   })
-  is_problem: boolean | null;
+  isProblem: boolean | null;
 }
