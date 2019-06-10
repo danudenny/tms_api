@@ -147,7 +147,7 @@ HOST: http://api.tms.sicepat.com
 
             {}
 
-## Scan Out [/web/pod/scanOut]
+## Scan Out Awb [/web/pod/scanOut/awb]
     Untuk Scan Out dari Web POD
 
 ### Scan In URL [POST]
@@ -157,7 +157,47 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + statusDO : `Criss Cross`, `Retur`, `Antar`, `Internal`, `3PL/Third Party`, `Internal(hub)`, `3PL/Third Party(hub)`, (string, required)
+        + statusDOId : `20000`, `24500`, `14000`, `25000`, `Internal`, `3PL/Third Party`, (string, required)
+        + branchCode : branchCode, (string, required) - required when statusDO != Antar
+        + employeeId : nik, (string, required)
+        + thirdPartyCode : thirdPartyCode, (string, required) - required when statusDO = 3PL/Third Party
+        + vehicleNumPlate : `B 1234 ABC`, (string)
+        + dateDeliveryPlan : 2019-05-01 00:00:00 (string)
+        + desc: `sss`, (string)
+        + totalBag: 1, (number)
+        + reasonRetur: `Bad Address`, (string, required) - required when statusDO = Retur
+        + awbNumber : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "status"    : "ok",
+                "message"   : "success",
+                "Data"      : "file/base64"
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan Out Bag [/web/pod/scanOut/Bag]
+    Untuk Scan Out dari Web POD
+
+### Scan In URL [POST]
+
++ Request Scan In (application/json)
+    + Header
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+        + statusDOId : `Internal`, `3PL/Third Party`, (string, required)
         + branchCode : branchCode, (string, required) - required when statusDO != Antar
         + employeeId : nik, (string, required)
         + thirdPartyCode : thirdPartyCode, (string, required) - required when statusDO = 3PL/Third Party
@@ -167,7 +207,6 @@ HOST: http://api.tms.sicepat.com
         + totalBag: 1, (number)
         + reasonRetur: `Bad Address`, (string, required) - required when statusDO = Retur
         + bagNumber : `0001`, `0002`, (array[string], required) - required when accesspermission = hub
-        + awbNumber : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
 
 + Response 200 (application/json; charset=utf-8)
     + Body
