@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
-import { toInteger } from 'lodash';
+import { toInteger, isEmpty } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
 import { BranchPayloadVm } from '../../models/branch.vm';
@@ -16,15 +16,23 @@ export class BranchService {
     const take = toInteger(payload.limit) || 10;
     const search = payload.filters.search;
     const offset = (page - 1) * take;
+    const sortBy = isEmpty(payload.sortBy) ? 'branch_name' : payload.sortBy;
+    const sortDir = isEmpty(payload.sortDir) ? 'ASC' : payload.sortDir;
 
+    // FIXME: change to ORM
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(
-      `select branch_id as "branchId", branch_name as "branchName",branch_code as "branchCode" from branch where branch_name LIKE '%${search}%' LIMIT :take`,
-      { take},
+      `SELECT
+        branch_id as "branchId",
+        branch_name as "branchName",
+        branch_code as "branchCode"
+      FROM branch
+      WHERE branch_name ILIKE '%${search}%' OR branch_code ILIKE '%${search}%'
+      ORDER BY ${sortBy} ${sortDir} LIMIT :take OFFSET :offset`,
+      { take, offset },
     );
 
     const [querycount, parameterscount] = RawQueryService.escapeQueryWithParameters(
-      `select count (*) from branch where branch_name LIKE '%${search}%'`,
-      { },
+      `SELECT COUNT (*) FROM branch WHERE branch_name ILIKE '%${search}%' OR branch_code ILIKE '%${search}%'`, {},
     );
     // exec raw query
     const data = await RawQueryService.query(query, parameters);

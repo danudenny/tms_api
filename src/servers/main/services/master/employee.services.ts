@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { toInteger } from 'lodash';
+import { toInteger, isEmpty } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { EmployeeFindAllResponseVm } from '../../models/employee.response.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -9,20 +9,28 @@ import { EmployeeRequestPayloadVm } from '../../models/employee.vm';
 export class EmployeeService {
   constructor() {}
     async findAllEmployeeVm(
-      payload: EmployeeRequestPayloadVm
+      payload: EmployeeRequestPayloadVm,
       ): Promise<EmployeeFindAllResponseVm> {
       const page = toInteger(payload.page) || 1;
       const take = toInteger(payload.limit) || 10;
-      const search = payload.filters.search
+      const search = payload.filters.search;
       const offset = (page - 1) * take;
+      const sortBy = isEmpty(payload.sortBy) ? 'fullname' : payload.sortBy;
+      const sortDir = isEmpty(payload.sortDir) ? 'ASC' : payload.sortDir;
 
+      // FIXME: change to ORM
       const [query, parameters] = RawQueryService.escapeQueryWithParameters(
-        `select employee_id as "employeeId", nik as "nik",fullname as "employeeName" from employee where fullname LIKE '%${search}%' LIMIT :take`,
-        { take},
+        `SELECT
+          employee_id as "employeeId", nik,
+          fullname as "employeeName"
+        FROM employee
+        WHERE fullname ILIKE '%${search}%' OR nik ILIKE '%${search}%'
+        ORDER BY ${sortBy} ${sortDir} LIMIT :take OFFSET :offset`,
+        { take, offset },
       );
 
       const [querycount, parameterscount] = RawQueryService.escapeQueryWithParameters(
-        `select count (*) from employee where fullname LIKE '%${search}%'`,
+        `SELECT count (*) FROM employee WHERE fullname ILIKE '%${search}%' OR nik ILIKE '%${search}%'`,
         { },
       );
       // exec raw query
@@ -34,4 +42,3 @@ export class EmployeeService {
       return result;
       }
 }
-
