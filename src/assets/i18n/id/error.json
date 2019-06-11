@@ -1,0 +1,7 @@
+{
+  "LOGIN_SESSION_NOT_FOUND": "Sesi login tidak ditemukan",
+  "LOGIN_WRONG_PASSWORD": "Password salah",
+  "REFRESH_TOKEN_EXPIRED": "Refresh token expired",
+  "REFRESH_TOKEN_NOT_VALID": "Refresh token tidak valid",
+  "USER_NOT_FOUND": "User tidak ditemukan"
+}

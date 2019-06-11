@@ -1,4 +1,5 @@
 import { HttpException } from '@nestjs/common';
+import { I18nService } from './i18n.service';
 
 import { ContextualError, ContextualErrorItem } from '../models/contextual-error';
 import { RequestContextMetadataService } from './request-context-metadata.service';
@@ -41,11 +42,18 @@ export class ContextualErrorService {
     throw new HttpException(targetContextualError, httpCode);
   }
 
+  public static throwObj(contextualError: Partial<ContextualErrorItem>, httpCode: number = 400) {
+    const contextualErrorInstance = ContextualErrorService.convertPartialContextualErrorItemToInstance(
+      contextualError,
+    );
+    throw new HttpException(contextualErrorInstance, httpCode);
+  }
+
   public static convertPartialContextualErrorItemToInstance(
     contextualError: Partial<ContextualErrorItem>,
   ) {
     const contextualErrorTarget = new ContextualErrorItem();
-    contextualErrorTarget.message = contextualError.message;
+    contextualErrorTarget.message = I18nService.translate(contextualError.message);
     contextualErrorTarget.code = contextualError.code;
     contextualErrorTarget.data = contextualError.data;
 

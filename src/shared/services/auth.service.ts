@@ -54,19 +54,17 @@ export class AuthService {
           );
         return loginResultMetadata;
       } else {
-        ContextualErrorService.throw({
+        ContextualErrorService.throwObj({
             message: 'global.error.LOGIN_WRONG_PASSWORD',
           },
-          HttpStatus.BAD_REQUEST,
         );
       }
 
     } else {
-      ContextualErrorService.throw(
+      ContextualErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },
-        HttpStatus.UNAUTHORIZED,
       );
     }
   }
