@@ -101,9 +101,13 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
+        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+
         + filters   : (object)
-            + startScanInDateTime   : 2019-05-01 00:00:00 (string)
-            + endScanInDateTime     : 2019-05-01 00:00:00 (string)
+            + startScanInDateTime   : `2019-05-01 00:00:00` (string)
+            + endScanInDateTime     : `2019-05-01 00:00:00` (string)
+            + branchScanId : 12 (number)
+            + branchOriginId : 10 (number)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
@@ -112,13 +116,12 @@ HOST: http://api.tms.sicepat.com
             + fields    : `scanInDateTime`, `awbNumber`, (array[string])
             + value     : 'a'
         + searchColumns: (array)
-            + item: 
+            + item:
                 + field   : awbNumber (string)
                 + value   : abc (string)
-            + item: 
+            + item:
                 + field   : scanInDateTime (string)
                 + value   : 20190801 (string)
-
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -376,7 +379,9 @@ HOST: http://api.tms.sicepat.com
 ### Scan In URL [POST]
 
 + Request Scan In (application/json)
+
     + Header
+
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
@@ -385,7 +390,7 @@ HOST: http://api.tms.sicepat.com
         + employeeId : nik, (string, required)
         + thirdPartyCode : thirdPartyCode, (string, required) - required when statusDO = 3PL/Third Party
         + vehicleNumPlate : `B 1234 ABC`, (string)
-        + dateDeliveryPlan : 2019-05-01 00:00:00 (string)
+        + dateDeliveryPlan : `2019-05-01 00:00:00` (string)
         + desc: `sss`, (string)
         + totalBag: 1, (number)
         + reasonRetur: `Bad Address`, (string, required) - required when statusDO = Retur
@@ -416,7 +421,9 @@ HOST: http://api.tms.sicepat.com
 ### Scan In URL [POST]
 
 + Request Scan In (application/json)
+
     + Header
+
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)

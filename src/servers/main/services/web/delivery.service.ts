@@ -19,6 +19,7 @@ import moment = require('moment');
 import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
+import { IsNull } from 'typeorm';
 // #endregion
 
 @Injectable()
@@ -78,7 +79,7 @@ export class WebDeliveryService {
       const result = new WebScanInAwbResponseVm();
       const timeNow = moment().toDate();
       const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
-      let r = Math.random().toString(36).substring(7);
+
       let awb;
       let checkPodScan;
       let totalSuccess = 0;
@@ -94,13 +95,14 @@ export class WebDeliveryService {
         if (awb) {
           // find data pod scan if exists
           checkPodScan = await this.podScanRepository.findOne({
-            where: { awbId: awb.awbId },
+            where: {
+              awbId: awb.awbId,
+              doPodId: IsNull(),
+            },
           });
 
           if (checkPodScan) {
             totalError += 1;
-            // TODO: branch id ??
-            // gerai name ??
             // save data to awb_trouble
             const awbTrouble = this.awbTroubleRepository.create({
               awbNumber,
@@ -125,26 +127,24 @@ export class WebDeliveryService {
             });
 
           } else {
-            // TODO: awbitemid ??
             const awbItem = await AwbItem.findOne({
               select: ['awbItemId'],
               where: { awbId: awb.awbId },
             });
-            // doPodId ??
 
             // save data to table pod_scan
             const podScan = this.podScanRepository.create();
             podScan.awbId = awb.awbId;
             podScan.branchId = permissonPayload.branchId;
             podScan.awbItemId = awbItem.awbItemId;
-            // podScan.doPodId = null;
+            // podScan.doPodId = null; fill from scan out
             podScan.userId = authMeta.userId;
             podScan.podScaninDateTime = moment().toDate();
             this.podScanRepository.save(podScan);
 
             // TODO:
             // save data to table awb_history
-            // update data history id las on awb??
+            // update data history id last on awb??
 
             totalSuccess += 1;
             dataItem.push({
@@ -192,13 +192,14 @@ export class WebDeliveryService {
       );
     }
   }
+
   async findAllBag(payload: WebScanInBagVm): Promise<WebScanInBag1ResponseVm> {
     const dataItem = [];
-      const result = new WebScanInBag1ResponseVm();
-      let totalSuccess = 0;
-      let totalError = 0;
+    const result = new WebScanInBag1ResponseVm();
+    let totalSuccess = 0;
+    let totalError = 0;
 
-      for (const bagNumber of payload.bagNumber) {
+    for (const bagNumber of payload.bagNumber) {
         const bag = await Bag.findOne({
           select: ['bagId', 'branchId'],
           where: { bagNumber },
@@ -228,11 +229,11 @@ export class WebDeliveryService {
           });
         }
       }
-      result.totalData = payload.bagNumber.length;
-      result.totalSuccess = totalSuccess;
-      result.totalError = totalError;
-      result.data = dataItem;
+    result.totalData = payload.bagNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
 
-      return result;
+    return result;
   }
 }

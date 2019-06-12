@@ -2,7 +2,6 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 import { DeliveryPayloadVm } from './mobile-dashboard.vm';
 import { WebDeliveryPayloadVm } from './web-delivery-payload.vm';
 
-
 export class WebDeliveryVm {
   @ApiModelProperty()
   scanInDateTime: string;
@@ -40,6 +39,7 @@ export class WebDeliveryFilterPayloadVm {
   @ApiModelProperty()
   sortDir: string;
 }
+
 export class WebDeliveryListFilterPayloadVm {
   @ApiModelProperty({ type: () => WebDeliveryPayloadVm })
   filters: WebDeliveryPayloadVm;

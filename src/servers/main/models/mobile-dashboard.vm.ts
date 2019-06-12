@@ -63,15 +63,6 @@ export class DeliveryListPayloadVm {
   endDeliveryDateTime: string;
 
 }
-export class WebDeliveryListPayloadVm {
-
-  @ApiModelProperty()
-  startDeliveryDateTime: string;
-
-  @ApiModelProperty()
-  endDeliveryDateTime: string;
-
-}
 export class DeliveryFilterPayloadVm {
   @ApiModelProperty({ type: () => DeliveryListPayloadVm })
   filters: DeliveryListPayloadVm;
@@ -88,21 +79,3 @@ export class DeliveryFilterPayloadVm {
   @ApiModelProperty()
   sortDir: string;
 }
-
-export class WebDeliveryListFilterPayloadVm {
-  @ApiModelProperty({ type: () => WebDeliveryListPayloadVm })
-  filters: WebDeliveryListPayloadVm;
-
-  @ApiModelProperty()
-  page: number;
-
-  @ApiModelProperty()
-  limit: number;
-
-  @ApiModelProperty()
-  sortBy: string;
-
-  @ApiModelProperty()
-  sortDir: string;
-}
-
