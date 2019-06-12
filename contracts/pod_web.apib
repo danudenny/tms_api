@@ -104,6 +104,21 @@ HOST: http://api.tms.sicepat.com
         + filters   : (object)
             + startScanInDateTime   : 2019-05-01 00:00:00 (string)
             + endScanInDateTime     : 2019-05-01 00:00:00 (string)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : (object)
+            + fields    : `scanInDateTime`, `awbNumber`, (array[string])
+            + value     : 'a'
+        + searchColumns: (array)
+            + item: 
+                + field   : awbNumber (string)
+                + value   : abc (string)
+            + item: 
+                + field   : scanInDateTime (string)
+                + value   : 20190801 (string)
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -118,6 +133,214 @@ HOST: http://api.tms.sicepat.com
                     "limit": 100
                 },
                 "data": [
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber": "1234",
+                        "branchNameScan": "1234",
+                        "branchNameFrom": "1234",
+                        "employeeName": "1234",
+                        "scanInStatus": "Ya"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber": "12345",
+                        "branchNameScan": "12346",
+                        "branchNameFrom": "12341",
+                        "employeeName": "12342",
+                        "scanInStatus": "Tidak"
+                    },
                     {
                         "scanInDateTime": "2019-03-01 10:00:00",
                         "awbNumber": "1234",
