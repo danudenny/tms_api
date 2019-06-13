@@ -15,7 +15,7 @@ import moment from 'moment';
 // #endregion
 
 @ApiUseTags('Web Delivery Out')
-@Controller('api/web/pod/scanOut')
+@Controller('web/pod/scanOut')
 
 export class WebDeliveryOutController {
   constructor(

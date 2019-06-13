@@ -11,11 +11,12 @@ import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payloa
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagRepository } from '../../../../shared/orm-repository/bag.repository';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import moment from 'moment';
 // #endregion
 
 @ApiUseTags('Web Delivery In')
-@Controller('api/web/pod/scanIn')
+@Controller('web/pod/scanIn')
 export class WebDeliveryInController {
   constructor(
     private readonly bagRepository: BagRepository,
@@ -38,6 +39,7 @@ export class WebDeliveryInController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanInListResponseVm })
+  // @ResponseSerializerOptions({ disable: true })
   public async findAllDeliveryList(@Body() payload: WebDeliveryListFilterPayloadVm) {
     // TODO:
     return this.webDeliveryService.findAllDeliveryList(payload);

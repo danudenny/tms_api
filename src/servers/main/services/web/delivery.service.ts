@@ -37,6 +37,7 @@ export class WebDeliveryService {
     @InjectRepository(BagRepository)
     private readonly bagRepository: BagRepository,
   ) {}
+
   async findAllDeliveryList(
     payload: WebDeliveryListFilterPayloadVm,
     ): Promise<WebScanInListResponseVm> {
@@ -47,10 +48,22 @@ export class WebDeliveryService {
     const start = moment(payload.filters.startDeliveryDateTime).toDate();
     const end = moment(payload.filters.endDeliveryDateTime).toDate();
 
+    // TODO: FIX QUERY and Add Additional Where Condition
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(
-      `SELECT pod_scanin_date_time as "podScaninDateTime",
-        awb_id as "awbId", branch_id as "branchId", user_id as "employeId"
-      FROM pod_scan where pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end
+      `SELECT pod_scanin_date_time as "scanInDateTime",
+        awb.awb_number as "awbNumber",
+        branch.branch_name as "branchNameScan",
+        branch_from.branch_name as "branchNameFrom",
+        employee.fullname as "employeeName",
+        'Ya' as "scanInStatus"
+      FROM pod_scan
+        JOIN branch ON pod_scan.branch_id = branch.branch_id
+        JOIN awb ON awb.awb_id = pod_scan.awb_id AND awb.is_deleted = false
+        LEFT JOIN users ON users.user_id = pod_scan.user_id AND users.is_deleted = false
+        LEFT JOIN employee ON employee.employee_id = users.employee_id AND employee.is_deleted = false
+        LEFT JOIN do_pod ON do_pod.do_pod_id = pod_scan.do_pod_id
+        LEFT JOIN branch branch_from ON do_pod.branch_id = branch_from.branch_id
+      WHERE pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end
       LIMIT :take OFFSET :offset`,
       { take, start, end , offset },
     );

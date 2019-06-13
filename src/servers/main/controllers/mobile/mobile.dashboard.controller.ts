@@ -8,7 +8,7 @@ import { WebDeliveryFilterPayloadVm } from '../../models/web-delivery.vm';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 
 @ApiUseTags('Dashboard')
-@Controller('api/mobile')
+@Controller('mobile')
 export class MobileDashboardController {
   constructor(
     private readonly dashboardService: DashboardService,

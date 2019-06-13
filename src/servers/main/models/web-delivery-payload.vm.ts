@@ -1,5 +1,5 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
-import { WebDeliverySearchVm, SearchColumnsVm } from 'src/shared/models/base-filter-search.payload.vm';
+import { WebDeliverySearchVm, SearchColumnsVm } from '../../../shared/models/base-filter-search.payload.vm';
 
 export class WebDeliveryPayloadVm {
 
