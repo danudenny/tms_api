@@ -6,6 +6,7 @@ import { DeliveryFilterPayloadVm, DeliveryListPayloadVm, MobileDashboardhistVm }
 import { RedeliveryService } from '../../services/mobile/redelivery.services';
 import { RedeliveryFindAllResponseVm } from '../../models/redelivery.response.vm';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 
 @ApiUseTags('Delivery List')
 @Controller('api/mobile')
@@ -19,6 +20,7 @@ export class MobileDeliveryController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({ disable: true })
   // @ApiOkResponse({ type: MobileDeliveryFindAllResponseVm })
   public async findAllDelivery(@Body() payload: DeliveryFilterPayloadVm) {
 
