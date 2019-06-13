@@ -28,7 +28,7 @@ export class MobileDeliveryService {
     `select
       t4.awb_id as "awbId",
       t4.awb_date as "awbDate",
-      t4.awb_number as "AwbNumber",
+      t4.awb_number as "awbNumber",
       t4.ref_customer_account_id as "merchant",
       t4.consignee_name as "consigneeName",
       t4.consignee_address as "consigneeAddress ",
