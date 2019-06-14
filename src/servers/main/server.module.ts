@@ -104,7 +104,7 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
     if (process.env.NODE_ENV === 'test') {
       await app.init();
     } else {
-      await app.listen(process.env.PORT || serverConfig.port);
+      await app.listen(process.env.PORT || serverConfig.port, serverConfig.host || '0.0.0.0');
     }
   }
 }
