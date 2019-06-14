@@ -321,13 +321,13 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + scanOutType : `20000`, `24500`, `14000`, `25000`, (string, required)
-        + scanOutMethod :  `Internal`, `3PL/Third Party`,  (string, required)
-        + branchId : branchId, (string) - required when scanOutType != Antar
-        + employeeId : employeeId, (string, required)
+        + doPodType : `20000`, `24500`, `14000`, `25000`, (string, required)
+        + doPodMethod :  `Internal`, `3PL/Third Party`,  (string, required)
+        + branchIdTo : branchIdTo, (string) - required when scanOutType != Antar
+        + employeeIdDriver : employeeId, (string, required)
         + partnerLogisticId : partnerLogisticId, (string) - required when scanOutMethod = 3PL/Third Party
-        + vehicleNumPlate : `DPS-1701001-1234-ABC`, (string)
-        + dateDeliveryPlan : `2019-05-01 00:00:00` (string)
+        + vehicleNumber : `DPS-1701001-1234-ABC`, (string)
+        + doPodDateTime : `2019-05-01 00:00:00` (string)
         + desc: `sss`, (string)
         + totalBag: 1, (number)
 
