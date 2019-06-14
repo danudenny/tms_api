@@ -309,8 +309,8 @@ HOST: http://api.tms.sicepat.com
 
             {}
 
-## Scan Out Awb [/web/pod/scanOut/awb]
-    Untuk Scan Out dari Web POD
+## Scan Out Awb [/web/pod/scanOut/create]
+    Form Surat Jalan: Untuk Scan Out dari Web POD
 
 ### Scan In URL [POST]
 
@@ -319,7 +319,6 @@ HOST: http://api.tms.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
-
     + Attributes (object)
         + statusDOId : `20000`, `24500`, `14000`, `25000`, `Internal`, `3PL/Third Party`, (string, required)
         + branchCode : branchCode, (string, required) - required when statusDO != Antar
@@ -329,8 +328,6 @@ HOST: http://api.tms.sicepat.com
         + dateDeliveryPlan : `2019-05-01 00:00:00` (string)
         + desc: `sss`, (string)
         + totalBag: 1, (number)
-        + reasonRetur: `Bad Address`, (string, required) - required when statusDO = Retur
-        + awbNumber : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -338,7 +335,52 @@ HOST: http://api.tms.sicepat.com
             {
                 "status"    : "ok",
                 "message"   : "success",
-                "Data"      : "file/base64"
+                "doPodId"   : 1
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Scan Out Awb [/web/pod/scanOut/awb]
+    Surat Jalan Resi: Untuk Scan Out dari Web POD
+
+### Scan In URL [POST]
+
++ Request Scan In (application/json)
+    + Header
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+        + "doPodId" : 1,
+        + awbNumber : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "totalData" : 2,
+                "totalSuccess" : 1,
+                "totalError" : 1,
+                "data" : [
+                    {
+                        "awbNumber" : "0001",
+                        "status"    : "ok",
+                        "message"   : "success",
+                    },
+                    {
+                        "awbNumber": "0002",
+                        "status"    : "error",
+                        "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                    }
+                ]
             }
 
 + Response 400 (application/json; charset=utf-8)
@@ -352,7 +394,7 @@ HOST: http://api.tms.sicepat.com
             {}
 
 ## Scan Out Bag [/web/pod/scanOut/Bag]
-    Untuk Scan Out dari Web POD
+    Surat Jalan Gabung Paket: Untuk Scan Out dari Web POD
 
 ### Scan In URL [POST]
 
@@ -363,24 +405,28 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + statusDOId : `Internal`, `3PL/Third Party`, (string, required)
-        + branchCode : branchCode, (string, required) - required when statusDO != Antar
-        + employeeId : nik, (string, required)
-        + thirdPartyCode : thirdPartyCode, (string, required) - required when statusDO = 3PL/Third Party
-        + vehicleNumPlate : `B 1234 ABC`, (string)
-        + dateDeliveryPlan : 2019-05-01 00:00:00 (string)
-        + desc: `sss`, (string)
-        + totalBag: 1, (number)
-        + reasonRetur: `Bad Address`, (string, required) - required when statusDO = Retur
+        + "doPodId" : 1,
         + bagNumber : `0001`, `0002`, (array[string], required) - required when accesspermission = hub
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
-                "status"    : "ok",
-                "message"   : "success",
-                "Data"      : "file/base64"
+                "totalData" : 2,
+                "totalSuccess" : 1,
+                "totalError" : 1,
+                "data" : [
+                    {
+                        "awbNumber" : "0001",
+                        "status"    : "ok",
+                        "message"   : "success",
+                    },
+                    {
+                        "awbNumber": "0002",
+                        "status"    : "error",
+                        "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                    }
+                ]
             }
 
 + Response 400 (application/json; charset=utf-8)
