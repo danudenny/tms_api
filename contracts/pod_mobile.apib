@@ -21,12 +21,14 @@ HOST: http://api.tms.sicepat.com
     + Body
 
             {
-                "today_awb_cod": 246000,
-                "today_pod_problem": 457,
-                "today_delivery": 457,
-                "today_cod_value": 1234567,
-                "today_cod_value_not_transfer": 234590,
-                "this_week_delivery": 246000,
+                "data": [
+                    "today_awb_cod": 246000,
+                    "today_pod_problem": 457,
+                    "today_delivery": 457,
+                    "today_cod_value": 1234567,
+                    "today_cod_value_not_transfer": 234590,
+                    "this_week_delivery": 246000,
+                ]
             }
 
 + Response 400 (application/json; charset=utf-8)

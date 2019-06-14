@@ -8,6 +8,7 @@ import { Transactional } from '../../../../shared/external/typeorm-transactional
 import { WebDeliveryService } from '../../services/web/delivery.service';
 import { WebScanInAwbResponseVm, WebScanInBag1ResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payload.vm';
+import { WebScanOutVm, WebScanOutAwbResponseVm } from '../../models/web-scan-out.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagRepository } from '../../../../shared/orm-repository/bag.repository';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
@@ -26,11 +27,20 @@ export class WebDeliveryOutController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanInAwbResponseVm })
+  @ApiOkResponse({ type: WebScanOutAwbResponseVm })
   @Transactional()
-  public async scanIn(@Body() payload: WebScanInVm) {
-    // TODO: ??
-    return null; // this.webDeliveryService.scanInAwb(payload);
+  public async scanOut(@Body() payload: WebScanOutVm) {
+    // NOTE: Scan Out With Awb
+    // Buat Surat Jalan (table do_pod, do_pod_detail, do_pod_history)
+    // Tipe Surat Jalan https://sketch.cloud/s/EKdwq/a/xpEAb8
+    // 1. Criss Cross
+    // 2. Transit
+    // 3. Retur (resi yang berstatus retur)
+    // 4. Antar (Sigesit)
+
+    // TODO:
+
+    return this.webDeliveryService.scanOutAwb(payload);
   }
 
   @Post('list')

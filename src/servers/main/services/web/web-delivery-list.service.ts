@@ -6,7 +6,7 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { toInteger } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
-import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery.vm';
+import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payload.vm';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 
 @Injectable()
