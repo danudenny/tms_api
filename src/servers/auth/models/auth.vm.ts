@@ -132,7 +132,7 @@ export class PermissionAccessResponseVM {
   @ApiModelProperty()
   permissionToken: string;
 
-  @ApiModelProperty({ type: String })
+  @ApiModelProperty()
   rolesAccessPermissions: string[];
 
 }
