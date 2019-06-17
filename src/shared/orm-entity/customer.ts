@@ -4,66 +4,66 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class Customer extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name:'customer_id',
   })
-  customer_id: string;
+  customerId: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name:'customer_code',
   })
-  customer_code: string;
+  customerCode: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name:'customer_name',
   })
-  customer_name: string;
+  customerName: string;
 
   @Column('character varying', {
     nullable: true,
     length: 200,
-
+    name:'email1',
   })
   email1: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 200,
-
+    name:'email2',
   })
   email2: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name:'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name:'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name:'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

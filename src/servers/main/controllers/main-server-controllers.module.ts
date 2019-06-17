@@ -10,6 +10,7 @@ import { MainServerServicesModule } from '../services/main-server-services.modul
 import { GabunganController } from './resi gabungan/gabungan.controller';
 import { BranchController } from './master/branch.controller';
 import { EmployeeController } from './master/employee.controller';
+import { CustomerController } from './master/customer.controller';
 
 @Module({
   imports: [OrmRepositoryModule, SharedModule, MainServerServicesModule],
@@ -21,6 +22,7 @@ import { EmployeeController } from './master/employee.controller';
     BranchController,
     GabunganController,
     EmployeeController,
+    CustomerController,
 
   ],
 })

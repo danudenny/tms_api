@@ -9,10 +9,11 @@ import { WebDeliveryService } from './web/delivery.service';
 import { DashboardService } from './mobile/dashboard.service';
 import { RedeliveryService } from './mobile/redelivery.services';
 import { GabunganService } from './resi gabungan/gabungan.services';
+import { CustomerService } from './master/customer.services';
 
 @Module({
   imports: [OrmRepositoryModule, SharedModule],
-  providers: [MobileDeliveryService, BranchService, EmployeeService, WebDeliveryService, DashboardService,RedeliveryService,GabunganService],
-  exports: [MobileDeliveryService, BranchService, EmployeeService, WebDeliveryService, DashboardService,RedeliveryService,GabunganService],
+  providers: [MobileDeliveryService, BranchService, EmployeeService, WebDeliveryService, DashboardService,RedeliveryService,GabunganService,CustomerService],
+  exports: [MobileDeliveryService, BranchService, EmployeeService, WebDeliveryService, DashboardService,RedeliveryService,GabunganService,CustomerService],
 })
 export class MainServerServicesModule {}

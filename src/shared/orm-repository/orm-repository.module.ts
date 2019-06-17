@@ -17,6 +17,7 @@ import { BagRepository } from './bag.repository';
 import { DoPodRepository } from './do-pod.repository';
 import { BagItemRepository } from './bagItem.repository';
 import { BagItemAwbRepository } from './bagItemAwb.repository';
+import { CustomerRepository } from './customer.repository';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { BagItemAwbRepository } from './bagItemAwb.repository';
       BagRepository,
       BagItemRepository,
       BagItemAwbRepository,
+      CustomerRepository,
     ]),
   ],
   exports: [
