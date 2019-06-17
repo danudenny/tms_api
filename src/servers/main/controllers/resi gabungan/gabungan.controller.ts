@@ -8,9 +8,8 @@ import { GabunganFindAllResponseVm } from '../../models/gabungan.response.vm';
 import { DeliveryFilterPayloadVm } from '../../models/mobile-dashboard.vm';
 import { GabunganService } from '../../services/resi gabungan/gabungan.services';
 
-
 @ApiUseTags('Resi Bag')
-@Controller('api/resi/gabungan')
+@Controller('resi/gabungan')
 export class GabunganController {
   constructor(private readonly gabunganService: GabunganService) {}
 

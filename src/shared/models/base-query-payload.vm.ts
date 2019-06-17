@@ -1,8 +1,19 @@
 import { find, forEach } from 'lodash';
 import { FindManyOptions } from 'typeorm';
 
-import { ApiModelProperty } from '../external/nestjs-swagger';
-// import { QueryConditionsHelper } from './query-condition-helper';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../external/nestjs-swagger';
+import { QueryConditionsHelper } from './query-condition-helper';
+
+export class BaseQueryPayloadFilterVm {
+  @ApiModelProperty()
+  field: string;
+
+  @ApiModelProperty()
+  operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'nin' | 'like' | 'sw' | 'ew';
+
+  @ApiModelProperty()
+  value: any;
+}
 
 export class BaseQueryPayloadSortVm {
   @ApiModelProperty()
@@ -13,7 +24,10 @@ export class BaseQueryPayloadSortVm {
 }
 
 export class BaseQueryPayloadVm<TEntity> {
-  @ApiModelProperty({ type: [BaseQueryPayloadSortVm] })
+  @ApiModelPropertyOptional({ type: [BaseQueryPayloadFilterVm] })
+  filter: BaseQueryPayloadFilterVm[][] = [];
+
+  @ApiModelPropertyOptional({ type: [BaseQueryPayloadSortVm] })
   sort: BaseQueryPayloadSortVm[] = [];
 
   @ApiModelProperty()
@@ -22,7 +36,7 @@ export class BaseQueryPayloadVm<TEntity> {
   @ApiModelProperty()
   skip: number = 0;
 
-  // conditionHelper = new QueryConditionsHelper();
+  conditionHelper = new QueryConditionsHelper();
 
   setSort(field: string, dir: 'asc' | 'desc') {
     const existingSort = find(this.sort, { field });
@@ -40,7 +54,7 @@ export class BaseQueryPayloadVm<TEntity> {
     const options = {} as FindManyOptions;
     options.take = this.take;
     options.skip = this.skip;
-    // options.where = this.conditionHelper.buildConditions();
+    options.where = this.conditionHelper.buildConditions();
 
     options.order = {};
     forEach(this.sort, sort => {

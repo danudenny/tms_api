@@ -5,9 +5,8 @@ import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BranchPayloadVm } from '../../models/branch.vm';
 
-
 @ApiUseTags('Master Data')
-@Controller('api/data')
+@Controller('data')
 export class BranchController {
   constructor(private readonly branchService: BranchService) {}
 

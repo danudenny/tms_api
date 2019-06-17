@@ -9,7 +9,7 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 
 @ApiUseTags('Delivery List')
-@Controller('api/mobile')
+@Controller('mobile')
 export class MobileDeliveryController {
   constructor(
     private readonly deliveryService: MobileDeliveryService,

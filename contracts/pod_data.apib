@@ -5,7 +5,7 @@ HOST: http://api.tms.sicepat.com
 
 # Group Dropdown
 
-## Branch [/api/data/branch]
+## Branch [/data/branch]
 
 ### Branch URL [POST]
 
@@ -69,7 +69,7 @@ HOST: http://api.tms.sicepat.com
             {}
 
 
-## Employee [/api/data/employee]
+## Employee [/data/employee]
 
 ### Employee URL [POST]
 
@@ -114,6 +114,66 @@ HOST: http://api.tms.sicepat.com
                         "employeeId": "3",
                         "nik": "10020013",
                         "employeeName": "ABCE",
+                    },
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Customer [/data/customer]
+
+### Customer URL [POST]
+
++ Request Customer (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+        + filters   : (object)
+            + search    : abc (string),
+            + customerId  : 1 (string)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : employeeName, (string)
+        + sortDir   : asc, (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage": 1,
+                    "nextPage": 0,
+                    "prevPage": 0,
+                    "totalPage": 8,
+                    "totalData": 2,
+                    "limit": 100
+                },
+                "data": [
+                    {
+                        "customerId": "1",
+                        "customerCode": "10020010",
+                        "customerName": "ABC",
+                    },
+                    {
+                        "customerId": "2",
+                        "customerCode": "10020012",
+                        "customerName": "ABCD",
+                    },
+                    {
+                        "customerId": "3",
+                        "customerCode": "10020013",
+                        "customerName": "ABCE",
                     },
                 ]
             }

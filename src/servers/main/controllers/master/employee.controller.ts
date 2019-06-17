@@ -6,7 +6,7 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { EmployeeRequestPayloadVm } from '../../models/employee.vm';
 
 @ApiUseTags('Master Data')
-@Controller('api/data')
+@Controller('data')
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
@@ -15,7 +15,7 @@ export class EmployeeController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: EmployeeFindAllResponseVm })
-  public async findAllEmployee(@Body() payload:EmployeeRequestPayloadVm) {
+  public async findAllEmployee(@Body() payload: EmployeeRequestPayloadVm) {
 
     return this.employeeService.findAllEmployeeVm(payload);
   }

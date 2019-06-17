@@ -31,7 +31,7 @@ export class MobileDeliveryService {
       t4.awb_number as "awbNumber",
       t4.ref_customer_account_id as "merchant",
       t4.consignee_name as "consigneeName",
-      t4.consignee_address as "consigneeAddress ",
+      t4.consignee_address as "consigneeAddress",
       t4.consignee_phone as "consigneeNumber",
       t4.is_cod as "isCOD",
       t5.package_type_name as "packageTypeName",

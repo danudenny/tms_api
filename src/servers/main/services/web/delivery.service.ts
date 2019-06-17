@@ -3,9 +3,9 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { toInteger } from 'lodash';
+import { toInteger, sampleSize } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery.vm';
+import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payload.vm';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInAwbResponseVm, WebScanInBag1ResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
@@ -20,6 +20,8 @@ import { BranchRepository } from '../../../../shared/orm-repository/branch.repos
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { IsNull } from 'typeorm';
+import { WebScanOutVm, WebScanOutAwbResponseVm } from '../../models/web-scan-out.vm';
+import { DoPodRepository } from '../../../../shared/orm-repository/do-pod.repository';
 // #endregion
 
 @Injectable()
@@ -32,11 +34,14 @@ export class WebDeliveryService {
     private readonly awbTroubleRepository: AwbTroubleRepository,
     @InjectRepository(PodScanRepository)
     private readonly podScanRepository: PodScanRepository,
+    @InjectRepository(DoPodRepository)
+    private readonly doPodRepository: DoPodRepository,
     @InjectRepository(BranchRepository)
     private readonly branchRepository: BranchRepository,
     @InjectRepository(BagRepository)
     private readonly bagRepository: BagRepository,
   ) {}
+
   async findAllDeliveryList(
     payload: WebDeliveryListFilterPayloadVm,
     ): Promise<WebScanInListResponseVm> {
@@ -47,10 +52,33 @@ export class WebDeliveryService {
     const start = moment(payload.filters.startDeliveryDateTime).toDate();
     const end = moment(payload.filters.endDeliveryDateTime).toDate();
 
+    // TODO: FIX QUERY and Add Additional Where Condition
+    let whereCondition = 'WHERE pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end';
+    // TODO: add additional where condition
+    //
+    // if (payload.search) {
+    //   whereCondition += ` AND (`;
+    //   for (const index in payload.search.fields) {
+    //     whereCondition += `${payload.search.fields[index]} = ${payload.search.value}`;
+    //   }
+    //   whereCondition += ` ) `;
+    // }
+
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(
-      `SELECT pod_scanin_date_time as "podScaninDateTime",
-        awb_id as "awbId", branch_id as "branchId", user_id as "employeId"
-      FROM pod_scan where pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end
+      `SELECT pod_scanin_date_time as "scanInDateTime",
+        awb.awb_number as "awbNumber",
+        branch.branch_name as "branchNameScan",
+        branch_from.branch_name as "branchNameFrom",
+        employee.fullname as "employeeName",
+        'Ya' as "scanInStatus"
+      FROM pod_scan
+        JOIN branch ON pod_scan.branch_id = branch.branch_id
+        JOIN awb ON awb.awb_id = pod_scan.awb_id AND awb.is_deleted = false
+        LEFT JOIN users ON users.user_id = pod_scan.user_id AND users.is_deleted = false
+        LEFT JOIN employee ON employee.employee_id = users.employee_id AND employee.is_deleted = false
+        LEFT JOIN do_pod ON do_pod.do_pod_id = pod_scan.do_pod_id
+        LEFT JOIN branch branch_from ON do_pod.branch_id = branch_from.branch_id
+      ${whereCondition}
       LIMIT :take OFFSET :offset`,
       { take, start, end , offset },
     );
@@ -184,7 +212,7 @@ export class WebDeliveryService {
 
       return result;
     } else {
-      ContextualErrorService.throw(
+      ContextualErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },
@@ -235,5 +263,173 @@ export class WebDeliveryService {
     result.data = dataItem;
 
     return result;
+  }
+
+  async scanOutAwb(payload: WebScanOutVm): Promise<WebScanOutAwbResponseVm> {
+    const authMeta = AuthService.getAuthMetadata();
+
+    if (!!authMeta) {
+      const dataItem = [];
+      const result = new WebScanOutAwbResponseVm();
+      const timeNow = moment().toDate();
+      const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
+
+      let awb;
+      let checkPodScan;
+      let totalSuccess = 0;
+      let totalError = 0;
+
+      // create do_pod (Surat Jalan)
+      // mapping payload to field table do_pod
+      const doPod = this.doPodRepository.create();
+      const randomCode = sampleSize('ABCDEFGHIJKLMNOPQRSTUVWXYZ012345678900123456789001234567890', 9).join('');
+
+      // NOTE: Ada 4 tipe surat jalan
+      doPod.doPodCode = randomCode ; // generate code
+
+      // gerai tujuan di gunakan selain tipe Surat Jalan Antar dan transit (3pl)
+      // FIXME: request branch id bukan branch code
+
+      // TODO:
+      // 1. tipe surat jalan criss cross
+      // 2. tipe transit(internal)
+      // 3. tipe retur
+
+      // doPod.branchIdTo = payload.branchCode (branchIdTo)
+      // doPod.userIdDriver = payload.??;
+      // doPod.employeeIdDriver = payload.??;
+      // doPod.vehicleNumPlate = payload.vehicleNumPlate
+
+      // doPod.doPodDateTime = ??
+      // doPod.description = ??
+
+      // tipe transit (3pl)
+      // doPod.partnerLogisticId = ??
+
+      // tipe antar (sigesit)
+      // resi antar/ retur
+
+      //
+      doPod.userId = authMeta.userId;
+      doPod.userIdCreated = authMeta.userId;
+      doPod.userIdUpdated = authMeta.userId;
+      doPod.createdTime = timeNow;
+      doPod.updatedTime = timeNow;
+      await this.doPodRepository.save(doPod);
+
+      // get do pod id
+      const doPodId = doPod.doPodId;
+
+      for (const awbNumber of payload.awbNumber) {
+        // NOTE:
+        // find data to awb where awbNumber and awb status not cancel
+        awb = await this.awbRepository.findOne({
+          select: ['awbId', 'branchId'],
+          where: { awbNumber },
+        });
+        if (awb) {
+          // find data pod scan if exists
+          checkPodScan = await this.podScanRepository.findOne({
+            where: {
+              awbId: awb.awbId,
+              doPodId: IsNull(),
+            },
+          });
+
+          if (checkPodScan) {
+            totalError += 1;
+            // save data to awb_trouble
+            const awbTrouble = this.awbTroubleRepository.create({
+              awbNumber,
+              resolveDateTime: timeNow,
+              employeeId: authMeta.employeeId,
+              branchId: permissonPayload.branchId,
+              userIdCreated: authMeta.userId,
+              createdTime: timeNow,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
+            await this.awbTroubleRepository.save(awbTrouble);
+
+            const branch = await this.branchRepository.findOne({
+              where: { branchId: checkPodScan.branchId },
+            });
+
+            dataItem.push({
+              awbNumber,
+              status: 'error',
+              message: `Resi sudah Scan In pada Gerai ${branch.branchName} (${moment(checkPodScan.podScaninDateTime).format('YYYY-MM-DD HH:mm:ss')})`,
+            });
+
+          } else {
+            const awbItem = await AwbItem.findOne({
+              select: ['awbItemId'],
+              where: { awbId: awb.awbId },
+            });
+
+            // save data to table pod_scan
+            const podScan = this.podScanRepository.create();
+            podScan.awbId = awb.awbId;
+            podScan.branchId = permissonPayload.branchId;
+            podScan.awbItemId = awbItem.awbItemId;
+            // podScan.doPodId = null; fill from scan out
+            podScan.userId = authMeta.userId;
+            podScan.podScaninDateTime = moment().toDate();
+            this.podScanRepository.save(podScan);
+
+            // TODO:
+            // save data to table awb_history
+            // update data history id last on awb??
+
+            totalSuccess += 1;
+            dataItem.push({
+              awbNumber,
+              status: 'ok',
+              message: 'Success',
+            });
+          }
+        } else {
+          totalError += 1;
+          // save data to awb_trouble
+          const awbTrouble = this.awbTroubleRepository.create({
+            awbNumber,
+            resolveDateTime: timeNow,
+            employeeId: authMeta.employeeId,
+            branchId: permissonPayload.branchId,
+            userIdCreated: authMeta.userId,
+            createdTime: timeNow,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          });
+          await this.awbTroubleRepository.save(awbTrouble);
+
+          dataItem.push({
+            awbNumber,
+            status: 'error',
+            message: `No Resi ${awbNumber} Tidak di Temukan`,
+          });
+        }
+      } // end of loop
+
+      // Populate return value
+      result.status = 'ok';
+      result.message = 'success';
+      result.data = 'file/base64';
+
+      return result;
+    } else {
+      ContextualErrorService.throwObj(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  // Type DO POD
+  public handleTypeDoPod(type: string) {
+
+    return null;
   }
 }

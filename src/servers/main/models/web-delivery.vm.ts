@@ -39,20 +39,3 @@ export class WebDeliveryFilterPayloadVm {
   @ApiModelProperty()
   sortDir: string;
 }
-
-export class WebDeliveryListFilterPayloadVm {
-  @ApiModelProperty({ type: () => WebDeliveryPayloadVm })
-  filters: WebDeliveryPayloadVm;
-
-  @ApiModelProperty()
-  page: number;
-
-  @ApiModelProperty()
-  limit: number;
-
-  @ApiModelProperty()
-  sortBy: string;
-
-  @ApiModelProperty()
-  sortDir: string;
-}

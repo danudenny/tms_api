@@ -10,7 +10,7 @@ import { AuthenticatedGuard } from '../../../shared/guards/authenticated.guard';
 // import { RefreshAccessTokenPayload } from '../models/refresh-access-token.model';
 
 @ApiUseTags('Authentication')
-@Controller('api/auth')
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
