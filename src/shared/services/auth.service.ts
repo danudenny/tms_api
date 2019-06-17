@@ -156,14 +156,16 @@ export class AuthService {
     // const user = await this.userRepository.findByUserIdWithRoles());
     // check user present
     if (!!authMeta) {
-      const rolesAccess = await RolePermission.find(
-        {
-          cache: true,
-          where: {
-            role_id: roleId,
-          },
-        },
-      );
+      // FIXME: update query relation user to role
+      // TODO: change after test
+      // const rolesAccess = await RolePermission.find(
+      //   {
+      //     cache: true,
+      //     where: {
+      //       role_id: roleId,
+      //     },
+      //   },
+      // );
 
       const branch = await Branch.findOne({
         cache: true,
@@ -188,11 +190,32 @@ export class AuthService {
 
       result.branchName = branch.branchName;
       result.branchCode = branch.branchCode;
-      result.rolesAccessPermissions = map(rolesAccess, 'name');
+      // NOTE: for testing only
+      result.rolesAccessPermissions = [
+        'dashboard',
+        'pod',
+        'pod_scan_in_branch',
+        'pod_scan_in_hub',
+        'do_pod',
+        'do_pod_hub',
+        'pod_sortir_hub',
+        'pod_input_awb_3pl',
+        'pod_manual',
+        'scan_in_list',
+        'do_pod_list',
+        'pod_awb_list',
+        'awb_3pl_list',
+        'pod_scan_in_problem_ct',
+        'pod_scan_in_problem_branch',
+        'pod_scan_in_problem_hub',
+        'pod_awb_problem',
+      ];
+      // TODO: change after test
+      // result.rolesAccessPermissions = map(rolesAccess, 'name');
 
       return result;
     } else {
-      ContextualErrorService.throw(
+      ContextualErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },
