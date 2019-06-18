@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { WebDeliverySearchVm, SearchColumnsVm } from '../../../shared/models/base-filter-search.payload.vm';
 
 export class WebDeliveryPayloadVm {
@@ -36,9 +36,9 @@ export class WebDeliveryListFilterPayloadVm {
   @ApiModelProperty()
   sortDir: string;
 
-  @ApiModelProperty({ type: () => WebDeliverySearchVm })
-  search: WebDeliverySearchVm;
+  @ApiModelPropertyOptional({ type: () => WebDeliverySearchVm })
+  search?: WebDeliverySearchVm;
 
-  @ApiModelProperty({ type: [SearchColumnsVm] })
-  searchColumns: SearchColumnsVm[];
+  @ApiModelPropertyOptional({ type: [SearchColumnsVm] })
+  searchColumns?: SearchColumnsVm[];
 }
