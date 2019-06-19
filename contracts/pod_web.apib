@@ -68,7 +68,9 @@ HOST: http://api.tms.sicepat.com
     + Body
 
             {
-                "total_data" : 2,
+                "totalData" : 2,
+                "totalSuccess" : 1,
+                "totalError" : 1,
                 "data" : [
                     "0001" : {
                         "status"    : "ok",
@@ -102,7 +104,6 @@ HOST: http://api.tms.sicepat.com
 
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-
         + filters   : (object)
             + startScanInDateTime   : `2019-05-01 00:00:00` (string)
             + endScanInDateTime     : `2019-05-01 00:00:00` (string)
@@ -518,7 +519,7 @@ HOST: http://api.tms.sicepat.com
             {}
 
 
-# Group List
+# Group POD List
 
 ## Resi POD List [/web/pod/podList]
     Daftar Resi POD: Untuk menampilkan daftar status resi POD
@@ -660,6 +661,9 @@ HOST: http://api.tms.sicepat.com
     + Body
 
             {}
+
+
+# Group POD Troubled List
 
 ## Resi Troubled List [/web/pod/troubledList]
     Daftar Resi Bermasalah: Untuk menampilkan daftar status resi bermasalah
