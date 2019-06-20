@@ -198,26 +198,11 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + filters   : (object)
-            + search    : abc (string),
-            + partnerLogisticId  : 1 (string)
-        + page      : 1, (number) - Default 1
-        + limit     : 10, (number) - Default 10
-        + sortBy    : partnerLogisticName, (string)
-        + sortDir   : asc, (string)
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
-                "paging": {
-                    "currentPage": 1,
-                    "nextPage": 0,
-                    "prevPage": 0,
-                    "totalPage": 8,
-                    "totalData": 2,
-                    "limit": 100
-                },
                 "data": [
                     {
                         "partnerLogisticId": "1",
@@ -257,26 +242,11 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + filters   : (object)
-            + search    : abc (string),
-            + awbStatusId  : 1 (string)
-        + page      : 1, (number) - Default 1
-        + limit     : 10, (number) - Default 10
-        + sortBy    : employeeName, (string)
-        + sortDir   : asc, (string)
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
-                "paging": {
-                    "currentPage": 1,
-                    "nextPage": 0,
-                    "prevPage": 0,
-                    "totalPage": 8,
-                    "totalData": 2,
-                    "limit": 100
-                },
                 "data": [
                     {
                         "awbStatusId": "30000",
@@ -292,6 +262,50 @@ HOST: http://api.tms.sicepat.com
                         "awbStatusId": "14000",
                         "awbStatusName": "ANT",
                         "awbStatusTitle": "ANTAR"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Reason List [/data/reason]
+
+### Reason List URL [POST]
+
++ Request Reason List (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "data": [
+                    {
+                        "reasonId": "1",
+                        "reasonName": "NTH",
+                        "reasonCode": "Not At Home"
+                    },
+                    {
+                        "reasonId": "1",
+                        "reasonName": "COPA",
+                        "reasonCode": "Alamat Tutup"
+                    },
+                    {
+                        "reasonId": "1",
+                        "reasonName": "NR",
+                        "reasonCode": "Barang Not Ready"
                     }
                 ]
             }
