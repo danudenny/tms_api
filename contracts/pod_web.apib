@@ -113,9 +113,7 @@ HOST: http://api.tms.sicepat.com
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `scanInDateTime`, `awbNumber`, (array[string])
-            + value     : 'a'
+        + search    : `query`, (string)
         + searchColumns: (array)
             + item:
                 + field   : awbNumber (string)
@@ -466,9 +464,7 @@ HOST: http://api.tms.sicepat.com
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `scanInDateTime`, `doPodDateTime`, `doPodCode`, `nickname`, `desc` (array[string]) - nickname driver
-            + value     : 'a'
+        + search    : `query`, (string)
         + searchColumns: (array)
             + item:
                 + field   : scanInDateTime (string)
@@ -476,7 +472,7 @@ HOST: http://api.tms.sicepat.com
             + item:
                 + field   : doPodDateTime (string)
                 + value   : 20190801 (string)
-          
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -543,9 +539,7 @@ HOST: http://api.tms.sicepat.com
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `doPodDateTime`, `awbNumber`, (array[string])
-            + value     : 'a'
+        + search    : `query`, (string)
         + searchColumns: (array)
             + item:
                 + field   : awbNumber (string)
@@ -553,7 +547,7 @@ HOST: http://api.tms.sicepat.com
             + item:
                 + field   : doPodDateTime (string)
                 + value   : 20190801 (string)
-          
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -607,7 +601,7 @@ HOST: http://api.tms.sicepat.com
         Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
         + doPodId : `001` (string)
-          
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -641,7 +635,7 @@ HOST: http://api.tms.sicepat.com
     + Attributes (object)
         + doPodId : `001` (string)
         + branchName : `Juanda` (string)
-          
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -651,7 +645,7 @@ HOST: http://api.tms.sicepat.com
                 "status"    : "ok",
                 "message"   : "success"
             }
-            
+
 + Response 400 (application/json; charset=utf-8)
     + Body
 
@@ -685,9 +679,7 @@ HOST: http://api.tms.sicepat.com
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `scanInDateTime`, `awbNumber`, (array[string])
-            + value     : 'a'
+        + search    : `query`, (string)
         + searchColumns: (array)
             + item:
                 + field   : awbNumber (string)
@@ -695,7 +687,7 @@ HOST: http://api.tms.sicepat.com
             + item:
                 + field   : scanInDateTime (string)
                 + value   : 20190801 (string)
-          
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -803,6 +795,7 @@ HOST: http://api.tms.sicepat.com
         + awbId : `001` (string)
 
 + Response 200 (application/json; charset=utf-8)
+
     + Body
             {
                 "totalData" : 2,
