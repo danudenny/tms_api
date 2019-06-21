@@ -22,16 +22,24 @@ export class ReasonPayloadVm {
   @ApiModelProperty({ type: () => ReasonSearchVm })
   filters: ReasonSearchVm;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 1,
+  })
   page: number;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 10,
+  })
   limit: number;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 'reason_name',
+  })
   sortBy: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 'asc',
+  })
   sortDir: string;
 }
 

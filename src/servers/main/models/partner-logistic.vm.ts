@@ -6,7 +6,7 @@ export class PartnerLogisticVm {
   partnerLogisticId: number;
 
   @ApiModelProperty()
-  partnerLogisticCode: string;
+  partnerLogisticEmail: string;
 
   @ApiModelProperty()
   partnerLogisticName: string;
@@ -22,16 +22,24 @@ export class PartnerLogisticPayloadVm {
   @ApiModelProperty({ type: () => PartnerLogisticSearchVm })
   filters: PartnerLogisticSearchVm;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 1,
+  })
   page: number;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 10,
+  })
   limit: number;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 'partner_logistic_name',
+  })
   sortBy: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 'asc',
+  })
   sortDir: string;
 }
 

@@ -1,6 +1,6 @@
-import { Controller, Get, Query, Post, UseGuards, HttpCode, Body, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Query, Post, UseGuards, HttpCode, Body, UseInterceptors, HttpStatus } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
-import { BranchService } from '../../services/master/branch.services';
+import { BranchService } from '../../services/master/branch.service';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BranchPayloadVm } from '../../models/branch.vm';
@@ -8,10 +8,12 @@ import { BranchPayloadVm } from '../../models/branch.vm';
 @ApiUseTags('Master Data')
 @Controller('master/branch')
 export class BranchController {
-  constructor(private readonly branchService: BranchService) {}
+  constructor(
+    private readonly branchService: BranchService,
+  ) {}
 
   @Post('list')
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: BranchFindAllResponseVm })

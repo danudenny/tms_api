@@ -22,15 +22,23 @@ export class BranchPayloadVm {
   @ApiModelProperty({ type: () => BranchSearchVm })
   filters: BranchSearchVm;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 1,
+  })
   page: number;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 10,
+  })
   limit: number;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 'branch_name',
+  })
   sortBy: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 'asc',
+  })
   sortDir: string;
 }

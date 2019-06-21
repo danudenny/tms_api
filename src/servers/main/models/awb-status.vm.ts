@@ -22,16 +22,24 @@ export class AwbStatusPayloadVm {
   @ApiModelProperty({ type: () => AwbStatusSearchVm })
   filters: AwbStatusSearchVm;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 1,
+  })
   page: number;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 10,
+  })
   limit: number;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 'awb_status_name',
+  })
   sortBy: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 'asc',
+  })
   sortDir: string;
 }
 

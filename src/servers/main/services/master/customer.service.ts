@@ -1,9 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { toInteger, isEmpty } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
-import { BranchPayloadVm } from '../../models/branch.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { CustomerPayloadVm } from '../../models/customer.vm';
 import { CustomerFindAllResponseVm } from '../../models/customer.response.vm';
@@ -40,7 +38,7 @@ export class CustomerService {
     const data = await RawQueryService.query(query, parameters);
     const total = await RawQueryService.query(querycount, parameterscount);
     const result = new CustomerFindAllResponseVm();
-    console.log(result)
+
     result.data = data;
     result.paging = MetaService.set(page, take, toInteger(total[0].count));
     return result;
