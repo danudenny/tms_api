@@ -11,6 +11,8 @@ import { DashboardService } from './mobile/dashboard.service';
 import { RedeliveryService } from './mobile/redelivery.services';
 import { GabunganService } from './resi gabungan/gabungan.services';
 import { CustomerService } from './master/customer.services';
+import { AwbStatusService } from './master/awb-status.services';
+import { ReasonService } from './master/reason.services';
 
 @Module({
   imports: [OrmRepositoryModule, SharedModule],
@@ -24,6 +26,8 @@ import { CustomerService } from './master/customer.services';
     RedeliveryService,
     GabunganService,
     CustomerService,
+    AwbStatusService,
+    ReasonService,
   ],
   exports: [
     MobileDeliveryService,
@@ -35,6 +39,8 @@ import { CustomerService } from './master/customer.services';
     RedeliveryService,
     GabunganService,
     CustomerService,
+    AwbStatusService,
+    ReasonService,
   ],
 })
 export class MainServerServicesModule {}

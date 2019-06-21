@@ -6,11 +6,11 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { EmployeeRequestPayloadVm } from '../../models/employee.vm';
 
 @ApiUseTags('Master Data')
-@Controller('data')
+@Controller('master/employee')
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
 
-  @Post('employee')
+  @Post('list')
   @HttpCode(200)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
@@ -20,4 +20,3 @@ export class EmployeeController {
     return this.employeeService.findAllEmployeeVm(payload);
   }
 }
-

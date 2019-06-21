@@ -8,11 +8,11 @@ import { CustomerService } from '../../services/master/customer.services';
 import { CustomerFindAllResponseVm } from '../../models/customer.response.vm';
 
 @ApiUseTags('Master Data')
-@Controller('data')
+@Controller('master/customer')
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 
-  @Post('customer')
+  @Post('list')
   @HttpCode(200)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
@@ -20,5 +20,5 @@ export class CustomerController {
   public async findCustName(@Body() payload: CustomerPayloadVm) {
 
     return this.customerService.findCustName(payload);
-    }
   }
+}

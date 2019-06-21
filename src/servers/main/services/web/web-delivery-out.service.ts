@@ -48,23 +48,23 @@ export class WebDeliveryOutService {
       // NOTE: Ada 4 tipe surat jalan
       doPod.doPodCode = await CustomCounterCode.doPod(doPodDateTime.toDateString()); // generate code
 
-      // gerai tujuan di gunakan selain tipe Surat Jalan Antar dan transit (3pl)
-
-      // TODO:
+      // TODO: doPodType
       // 1. tipe surat jalan criss cross
-      // 2. tipe transit(internal)
+      // 2.A tipe transit(internal)
       // 3. tipe retur
 
-      // doPod.branchIdTo = payload.branchCode (branchIdTo)
+      // gerai tujuan di gunakan selain tipe Surat Jalan Antar dan transit (3pl)
+      // doPod.branchIdTo = payload.branchIdTo
+
       // doPod.userIdDriver = payload.??;
-      // doPod.employeeIdDriver = payload.??;
+      // doPod.employeeIdDriver = payload.employeeIdDriver;
       // doPod.vehicleNumPlate = payload.vehicleNumPlate
 
       doPod.doPodDateTime = doPodDateTime;
       // doPod.description = ??
 
-      // tipe transit (3pl)
-      // doPod.partnerLogisticId = ??
+      // 2.B tipe transit (3pl)
+      // doPod.partnerLogisticId = partnerLogisticId
 
       // tipe antar (sigesit)
       // resi antar/ retur
@@ -106,7 +106,9 @@ export class WebDeliveryOutService {
       const totalSuccess = 0;
       const totalError = 0;
 
-      // for (const awbNumber of payload.awbNumber) {
+      for (const awbNumber of payload.awbNumber) {
+      // TODO: create data do_pod_detail
+
       //   // NOTE:
       //   // find data to awb where awbNumber and awb status not cancel
       //   awb = await this.awbRepository.findOne({
@@ -195,12 +197,18 @@ export class WebDeliveryOutService {
       //       message: `No Resi ${awbNumber} Tidak di Temukan`,
       //     });
       //   }
-      // } // end of loop
+      } // end of loop
 
       // Populate return value
       result.status = 'ok';
       result.message = 'success';
       result.data = 'file/base64';
+
+      // Populate return value
+      // result.totalData = payload.awbNumber.length;
+      // result.totalSuccess = totalSuccess;
+      // result.totalError = totalError;
+      // result.data = dataItem;
 
       return result;
     } else {
