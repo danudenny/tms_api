@@ -86,23 +86,5 @@
     "tsconfig-paths": "^3.7.0",
     "tslint": "5.12.1",
     "typescript": "^3.2.4"
-  },
-  "jest": {
-    "bail": true,
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".spec.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "setupFilesAfterEnv": [
-      "<rootDir>/test/test-setup.ts"
-    ]
   }
 }
