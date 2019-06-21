@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod, UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
-import { Test } from '@nestjs/testing';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { LoggingInterceptor } from '../../shared/interceptors/logging.interceptor';
 import { HttpExceptionFilter} from '../../shared/interceptors/http-exception.filter';
@@ -44,15 +43,18 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
   public static async bootServer() {
     const serverConfig = ConfigService.get('servers.auth');
 
-    const app =
-      process.env.NODE_ENV === 'test'
-        ? (await Test.createTestingModule({
-            imports: [AuthServerModule],
-          }).compile()).createNestApplication()
-        : await NestFactory.create<NestFastifyApplication>(
-          AuthServerModule,
-          new FastifyAdapter({ logger: PinoLoggerService }),
-        );
+    let app: any;
+    if (process.env.NODE_ENV === 'test') {
+      const { Test } = require('@nestjs/testing');
+      app = (await Test.createTestingModule({
+        imports: [AuthServerModule],
+      }).compile()).createNestApplication();
+    } else {
+      app = await NestFactory.create<NestFastifyApplication>(
+        AuthServerModule,
+        new FastifyAdapter({ logger: PinoLoggerService }),
+      );
+    }
     this.app = app;
 
     app.enableCors();
