@@ -68,9 +68,7 @@ HOST: http://api.tms.sicepat.com
     + Body
 
             {
-                "totalData" : 2,
-                "totalSuccess" : 1,
-                "totalError" : 1,
+                "total_data" : 2,
                 "data" : [
                     "0001" : {
                         "status"    : "ok",
@@ -104,6 +102,7 @@ HOST: http://api.tms.sicepat.com
 
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+
         + filters   : (object)
             + startScanInDateTime   : `2019-05-01 00:00:00` (string)
             + endScanInDateTime     : `2019-05-01 00:00:00` (string)
@@ -113,7 +112,9 @@ HOST: http://api.tms.sicepat.com
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : `query`, (string)
+        + search    : (object)
+            + fields    : `scanInDateTime`, `awbNumber`, (array[string])
+            + value     : 'anisa'
         + searchColumns: (array)
             + item:
                 + field   : awbNumber (string)
@@ -323,10 +324,10 @@ HOST: http://api.tms.sicepat.com
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
         + doPodType : `20000`, `24500`, `14000`, `25000`, (string, required)
-        + doPodMethod :  `Internal`, `3PL/Third Party`,  (string, required)
-        + branchIdTo : branchIdTo, (string) - required when scanOutType != Antar
+        + doPodMethod :  `internal`, `3pl`,  (string, required)
+        + branchIdTo : branchIdTo, (string) - required when doPodType != Antar
         + employeeIdDriver : employeeId, (string, required)
-        + partnerLogisticId : partnerLogisticId, (string) - required when scanOutMethod = 3PL/Third Party
+        + partnerLogisticId : partnerLogisticId, (string) - required when doPodMethod = 3PL/Third Party
         + vehicleNumber : `DPS-1701001-1234-ABC`, (string)
         + doPodDateTime : `2019-05-01 00:00:00` (string)
         + desc: `sss`, (string)
@@ -362,7 +363,7 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + "doPodId" : 1,
+        + doPodId : 1,
         + awbNumber : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
 
 + Response 200 (application/json; charset=utf-8)
@@ -464,7 +465,9 @@ HOST: http://api.tms.sicepat.com
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : `query`, (string)
+        + search    : (object)
+            + fields    : `scanInDateTime`, `doPodDateTime`, `doPodCode`, `nickname`, `desc` (array[string]) - nickname driver
+            + value     : 'a'
         + searchColumns: (array)
             + item:
                 + field   : scanInDateTime (string)
@@ -472,7 +475,7 @@ HOST: http://api.tms.sicepat.com
             + item:
                 + field   : doPodDateTime (string)
                 + value   : 20190801 (string)
-
+          
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -515,7 +518,7 @@ HOST: http://api.tms.sicepat.com
             {}
 
 
-# Group POD List
+# Group List
 
 ## Resi POD List [/web/pod/podList]
     Daftar Resi POD: Untuk menampilkan daftar status resi POD
@@ -539,7 +542,9 @@ HOST: http://api.tms.sicepat.com
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : `query`, (string)
+        + search    : (object)
+            + fields    : `doPodDateTime`, `awbNumber`, (array[string])
+            + value     : 'a'
         + searchColumns: (array)
             + item:
                 + field   : awbNumber (string)
@@ -547,7 +552,7 @@ HOST: http://api.tms.sicepat.com
             + item:
                 + field   : doPodDateTime (string)
                 + value   : 20190801 (string)
-
+          
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -601,15 +606,22 @@ HOST: http://api.tms.sicepat.com
         Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
         + doPodId : `001` (string)
-
+          
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
-                "awbNumber" : "000000012341",
-                "status"    : "ok",
-                "message"   : "success",
+                "totalData" : 1,
+                "totalSuccess" : 1,
+                "totalError" : null,
+                "data" : [
+                    {
+                        "awbNumber" : "000000012341",
+                        "status"    : "ok",
+                        "message"   : "success",
+                    }
+                ]
             }
 
 + Response 400 (application/json; charset=utf-8)
@@ -635,17 +647,24 @@ HOST: http://api.tms.sicepat.com
     + Attributes (object)
         + doPodId : `001` (string)
         + branchName : `Juanda` (string)
-
+          
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
-                "awbNumber" : "000000012341",
-                "status"    : "ok",
-                "message"   : "success"
+                "totalData" : 1,
+                "totalSuccess" : 1,
+                "totalError" : null,
+                "data" : [
+                    {
+                        "awbNumber" : "000000012341",
+                        "status"    : "ok",
+                        "message"   : "success",
+                    }
+                ]
             }
-
+            
 + Response 400 (application/json; charset=utf-8)
     + Body
 
@@ -655,9 +674,6 @@ HOST: http://api.tms.sicepat.com
     + Body
 
             {}
-
-
-# Group POD Troubled List
 
 ## Resi Troubled List [/web/pod/troubledList]
     Daftar Resi Bermasalah: Untuk menampilkan daftar status resi bermasalah
@@ -679,7 +695,9 @@ HOST: http://api.tms.sicepat.com
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : `query`, (string)
+        + search    : (object)
+            + fields    : `scanInDateTime`, `awbNumber`, (array[string])
+            + value     : 'a'
         + searchColumns: (array)
             + item:
                 + field   : awbNumber (string)
@@ -687,7 +705,7 @@ HOST: http://api.tms.sicepat.com
             + item:
                 + field   : scanInDateTime (string)
                 + value   : 20190801 (string)
-
+          
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -795,7 +813,6 @@ HOST: http://api.tms.sicepat.com
         + awbId : `001` (string)
 
 + Response 200 (application/json; charset=utf-8)
-
     + Body
             {
                 "totalData" : 2,

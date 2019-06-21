@@ -5,7 +5,7 @@ HOST: http://tmsapi-staging2.sicepat.com
 
 # Group Auth
 
-## Login Access [/api/auth/login]
+## Login Access [/auth/login]
 
 ### Login URL [POST]
 
@@ -40,7 +40,7 @@ HOST: http://tmsapi-staging2.sicepat.com
 
             {}
 
-## Permission Access [/api/auth/permissionAccess]
+## Permission Access [/auth/permissionAccess]
     Untuk dapetkan akses permission sebenarnya hanya butuh roleId. BranchId dikirim hanya untuk indikasi dia login sebagai cabang/gerai mana, tujuannya hanya limit akses untuk boleh buka cabang lain / tidak, selain itu untuk indicator ketika scan, bisa tau dari cabang/gerai mana
 
 ### Permission Access URL [POST]
@@ -101,7 +101,7 @@ HOST: http://tmsapi-staging2.sicepat.com
             {}
 
 
-## Get Permission Roles [/api/auth/permissionRoles]
+## Get Permission Roles [/auth/permissionRoles]
 
 ### Get Permission Roles URL [POST]
 
@@ -165,7 +165,7 @@ HOST: http://tmsapi-staging2.sicepat.com
             {}
 
 
-## Logout [/api/auth/logout]
+## Logout [/auth/logout]
 
 ### logout URL [POST]
 
