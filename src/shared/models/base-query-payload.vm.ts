@@ -51,6 +51,7 @@ export class BaseQueryPayloadVm<TEntity> {
   skip: number = 0;
 
   conditionHelper = new QueryConditionsHelper();
+  fieldResolverMap: { [key: string]: string } = {};
 
   setSort(field: string, dir: 'asc' | 'desc') {
     const existingSort = find(this.sort, { field });
@@ -79,6 +80,9 @@ export class BaseQueryPayloadVm<TEntity> {
   }
 
   buildQueryBuilder() {
-    return RequestQueryBuidlerService.buildQueryBuilderFromQueryPayload(this);
+    return RequestQueryBuidlerService.buildQueryBuilderFromQueryPayload(
+      this,
+      this.fieldResolverMap,
+    );
   }
 }
