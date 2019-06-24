@@ -2,6 +2,9 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 
 export class WebScanOutAwbVm  {
   @ApiModelProperty()
+  permissionToken: string;
+
+  @ApiModelProperty()
   doPodId: number;
 
   @ApiModelProperty({
@@ -10,18 +13,31 @@ export class WebScanOutAwbVm  {
   awbNumber: string[];
 }
 
-export class WebScanOutAwbResponseVm {
+export class ScanAwbVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
   @ApiModelProperty()
   status: string;
 
   @ApiModelProperty()
   message: string;
-
-  @ApiModelProperty()
-  data: string;
-
 }
 
+export class WebScanOutAwbResponseVm {
+
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({ type: [ScanAwbVm] })
+  data: ScanAwbVm[];
+}
 export class WebScanOutCreateVm {
   @ApiModelProperty()
   permissionToken: string;

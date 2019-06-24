@@ -12,7 +12,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import moment = require('moment');
-import { POD_TYPE } from 'src/shared/constants/pod-type.constant';
+import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
+import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
+import { AwbItem } from '../../../../shared/orm-entity/awb-item';
+import { IsNull } from 'typeorm';
 // #endregion
 
 @Injectable()
@@ -102,40 +105,90 @@ export class WebDeliveryOutService {
       const dataItem = [];
       const result = new WebScanOutAwbResponseVm();
       const timeNow = moment().toDate();
-      // const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
+      const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
 
-      const totalSuccess = 0;
-      const totalError = 0;
+      let totalSuccess = 0;
+      let totalError = 0;
+
+      let awb;
+      let awbItem;
+      let doPodDetail;
 
       for (const awbNumber of payload.awbNumber) {
-      // TODO: create data do_pod_detail
+        // TODO: create data do_pod_detail
+        // NOTE:
+        // find data to awb where awbNumber and awb status not cancel
+        awb = await this.awbRepository.findOne({
+          select: ['awbId', 'branchId'],
+          where: { awbNumber },
+        });
+        if (awb) {
+          // TODO: check data by status IN/OUT
+          // find data do pod detail if exists
+          // let checkPod = await DoPodDetail.findOne({
+          //   where: {
+          //     awbId: awb.awbId,
+          //   },
+          // });
 
-      //   // NOTE:
-      //   // find data to awb where awbNumber and awb status not cancel
-      //   awb = await this.awbRepository.findOne({
-      //     select: ['awbId', 'branchId'],
-      //     where: { awbNumber },
-      //   });
-      //   if (awb) {
-      //     // find data pod scan if exists
-      //     checkPodScan = await this.podScanRepository.findOne({
-      //       where: {
-      //         awbId: awb.awbId,
-      //         doPodId: IsNull(),
-      //       },
-      //     });
+          // Get data awb item
+          awbItem = await AwbItem.findOne({
+            select: ['awbItemId'],
+            where: { awbId: awb.awbId },
+          });
+
+          // NOTE: create data do pod detail per awb number
+          doPodDetail = DoPodDetail.create();
+          doPodDetail.doPodId = payload.doPodId;
+          doPodDetail.awbItemId = awbItem.awbItemId;
+          // "bag_item_id": null,
+          doPodDetail.doPodStatusIdLast = 1000;
+          // "do_pod_history_id_last": null,
+          doPodDetail.isScanOut = true;
+          doPodDetail.scanOutType = 'awb_item';
+          // "is_scan_in": true,
+          // "scan_in_type": "awb_item",
+
+          // "employee_journey_id_in": null,
+          // "employee_journey_id_out": null
+
+          // general
+          // doPodDetail.branchId = permissonPayload.branchId;
+          // doPodDetail.userId = authMeta.userId;
+          doPodDetail.userIdCreated = authMeta.userId;
+          doPodDetail.userIdUpdated = authMeta.userId;
+          doPodDetail.createdTime = timeNow;
+          doPodDetail.updatedTime = timeNow;
+          DoPodDetail.save(doPodDetail);
+
+          // TODO:
+          // save data to table awb_history
+          // update data history id last on awb??
+
+          totalSuccess += 1;
+          dataItem.push({
+            awbNumber,
+            status: 'ok',
+            message: 'Success',
+          });
+        } else {
+          totalError += 1;
+          // TODO: Problem awb number not found
+          // ......
+
+          dataItem.push({
+            awbNumber,
+            status: 'error',
+            message: `No Resi ${awbNumber} Tidak di Temukan`,
+          });
+        }
       } // end of loop
 
       // Populate return value
-      result.status = 'ok';
-      result.message = 'success';
-      result.data = '';
-
-      // Populate return value
-      // result.totalData = payload.awbNumber.length;
-      // result.totalSuccess = totalSuccess;
-      // result.totalError = totalError;
-      // result.data = dataItem;
+      result.totalData = payload.awbNumber.length;
+      result.totalSuccess = totalSuccess;
+      result.totalError = totalError;
+      result.data = dataItem;
 
       return result;
     } else {

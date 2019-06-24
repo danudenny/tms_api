@@ -43,8 +43,8 @@ export class WebDeliveryOutController {
 
   @Post('awb')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
   @Transactional()
   public async scanOutAwb(@Body() payload: WebScanOutAwbVm) {
@@ -58,7 +58,7 @@ export class WebDeliveryOutController {
 
     // TODO:
 
-    return null; // this.webDeliveryService.scanOutAwb(payload);
+    return this.webDeliveryOutService.scanOutAwb(payload);
   }
 
   @Post('list')
