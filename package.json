@@ -28,7 +28,7 @@
     "database:drop": "npm run typeorm schema:drop"
   },
   "dependencies": {
-    "@nestjs/common": "^6.0.0",
+    "@nestjs/common": "^6.3.1",
     "@nestjs/core": "^6.0.0",
     "@nestjs/jwt": "^6.0.0",
     "@nestjs/platform-express": "^6.0.0",
@@ -84,7 +84,7 @@
     "ts-jest": "^24.0.2",
     "ts-node": "^7.0.1",
     "tsconfig-paths": "^3.7.0",
-    "tslint": "5.12.1",
+    "tslint": "^5.12.1",
     "typescript": "^3.2.4"
   },
   "jest": {
