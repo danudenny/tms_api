@@ -5,7 +5,7 @@ import { WebScanInVm } from '../../models/web-scanin.vm';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
-import { WebDeliveryService } from '../../services/web/delivery.service';
+import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
 import { WebScanInAwbResponseVm, WebScanInBag1ResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payload.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
@@ -20,7 +20,7 @@ import moment from 'moment';
 export class WebDeliveryInController {
   constructor(
     private readonly bagRepository: BagRepository,
-    private readonly webDeliveryService: WebDeliveryService,
+    private readonly webDeliveryService: WebDeliveryInService,
   ) { }
 
   @Post('awb')

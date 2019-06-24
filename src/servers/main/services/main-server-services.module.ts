@@ -5,7 +5,7 @@ import { SharedModule } from '../../../shared/shared.module';
 import { BranchService } from './master/branch.service';
 import { EmployeeService } from './master/employee.service';
 import { MobileDeliveryService } from './mobile/delivery.service';
-import { WebDeliveryService } from './web/delivery.service';
+import { WebDeliveryInService } from './web/web-delivery-in.service';
 import { WebDeliveryOutService } from './web/web-delivery-out.service';
 import { DashboardService } from './mobile/dashboard.service';
 import { RedeliveryService } from './mobile/redelivery.services';
@@ -21,7 +21,7 @@ import { PartnerLogisticService } from './master/partner-logistic.service';
     MobileDeliveryService,
     BranchService,
     EmployeeService,
-    WebDeliveryService,
+    WebDeliveryInService,
     WebDeliveryOutService,
     DashboardService,
     RedeliveryService,
@@ -35,7 +35,7 @@ import { PartnerLogisticService } from './master/partner-logistic.service';
     MobileDeliveryService,
     BranchService,
     EmployeeService,
-    WebDeliveryService,
+    WebDeliveryInService,
     WebDeliveryOutService,
     DashboardService,
     RedeliveryService,

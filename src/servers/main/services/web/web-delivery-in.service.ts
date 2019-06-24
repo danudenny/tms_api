@@ -1,5 +1,5 @@
 // #region import
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -25,7 +25,7 @@ import { DoPodRepository } from '../../../../shared/orm-repository/do-pod.reposi
 // #endregion
 
 @Injectable()
-export class WebDeliveryService {
+export class WebDeliveryInService {
   constructor(
     private readonly authService: AuthService,
     @InjectRepository(AwbRepository)
@@ -56,13 +56,14 @@ export class WebDeliveryService {
     const whereCondition = 'WHERE pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end';
     // TODO: add additional where condition
     //
-    // if (payload.search) {
-    //   whereCondition += ` AND (`;
-    //   for (const index in payload.search.fields) {
-    //     whereCondition += `${payload.search.fields[index]} = ${payload.search.value}`;
-    //   }
-    //   whereCondition += ` ) `;
-    // }
+    if (payload.search) {
+      // whereCondition += ` AND (`;
+      for (const index in payload.search.fields) {
+        // whereCondition += `${payload.search.fields[index]} = ${payload.search.value}`;
+        Logger.log(`${payload.search.fields[index]} = ${payload.search.value}`);
+      }
+      // whereCondition += ` ) `;
+    }
 
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(
       `SELECT pod_scanin_date_time as "scanInDateTime",
@@ -120,6 +121,7 @@ export class WebDeliveryService {
           select: ['awbId', 'branchId'],
           where: { awbNumber },
         });
+
         if (awb) {
           // find data pod scan if exists
           checkPodScan = await this.podScanRepository.findOne({
