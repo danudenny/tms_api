@@ -5,9 +5,9 @@ HOST: http://api.tms.sicepat.com
 
 # Group Dropdown
 
-## Branch [/master/branch/list]
+## Branch List [/master/branch/list]
 
-### Branch URL [POST]
+### Branch List [POST]
 
 + Request Branch (application/json)
     + Header
@@ -19,7 +19,7 @@ HOST: http://api.tms.sicepat.com
             + search    : abc (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
-        + sortBy    : branchName, (string)
+        + sortBy    : branch_name, (string)
         + sortDir   : asc, (string)
 
 + Response 200 (application/json; charset=utf-8)
@@ -69,9 +69,9 @@ HOST: http://api.tms.sicepat.com
             {}
 
 
-## Employee [/master/employee/list]
+## Employee List [/master/employee/list]
 
-### Employee URL [POST]
+### Employee List [POST]
 
 + Request Employee (application/json)
     + Header
@@ -84,7 +84,7 @@ HOST: http://api.tms.sicepat.com
             + branchId  : 1 (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
-        + sortBy    : employeeName, (string)
+        + sortBy    : employee_name, (string)
         + sortDir   : asc, (string)
 
 + Response 200 (application/json; charset=utf-8)
@@ -95,8 +95,8 @@ HOST: http://api.tms.sicepat.com
                     "currentPage": 1,
                     "nextPage": 0,
                     "prevPage": 0,
-                    "totalPage": 8,
-                    "totalData": 2,
+                    "totalPage": 1,
+                    "totalData": 3,
                     "limit": 100
                 },
                 "data": [
@@ -129,9 +129,9 @@ HOST: http://api.tms.sicepat.com
             {}
 
 
-## Customer [/master/customer/list]
+## Customer List [/master/customer/list]
 
-### Customer URL [POST]
+### Customer List [POST]
 
 + Request Customer (application/json)
     + Header
@@ -140,11 +140,11 @@ HOST: http://api.tms.sicepat.com
 
     + Attributes (object)
         + filters   : (object)
-            + search    : abc (string),
-            + customerId  : 1 (string)
+            + search    : abc (string)
+
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
-        + sortBy    : customerName, (string)
+        + sortBy    : customer_name, (string)
         + sortDir   : asc, (string)
 
 + Response 200 (application/json; charset=utf-8)
@@ -155,8 +155,8 @@ HOST: http://api.tms.sicepat.com
                     "currentPage": 1,
                     "nextPage": 0,
                     "prevPage": 0,
-                    "totalPage": 8,
-                    "totalData": 2,
+                    "totalPage": 1,
+                    "totalData": 3,
                     "limit": 100
                 },
                 "data": [
@@ -188,9 +188,9 @@ HOST: http://api.tms.sicepat.com
 
             {}
 
-## Partner Logistic [/master/partnerLogistic/list]
+## Partner Logistic List [/master/partnerLogistic/list]
 
-### Partner Logistic URL [POST]
+### Partner Logistic List [POST]
 
 + Request Partner Logistic (application/json)
     + Header
@@ -198,11 +198,25 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
+        + filters   : (object)
+            + search    : abc (string)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : partner_logistic_name, (string)
+        + sortDir   : asc, (string)
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
+                "paging": {
+                    "currentPage": 1,
+                    "nextPage": 0,
+                    "prevPage": 0,
+                    "totalPage": 1,
+                    "totalData": 3,
+                    "limit": 100
+                },
                 "data": [
                     {
                         "partnerLogisticId": "1",
@@ -234,7 +248,7 @@ HOST: http://api.tms.sicepat.com
 
 ## Status Resi [/master/awbStatus/list]
 
-### Status Resi URL [POST]
+### Status Resi [POST]
 
 + Request Status Resi (application/json)
     + Header
@@ -242,11 +256,20 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
+    
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
+                "paging": {
+                    "currentPage": 1,
+                    "nextPage": 0,
+                    "prevPage": 0,
+                    "totalPage": 1,
+                    "totalData": 3,
+                    "limit": 100
+                },
                 "data": [
                     {
                         "awbStatusId": "30000",
@@ -278,7 +301,7 @@ HOST: http://api.tms.sicepat.com
 
 ## Reason List [/master/reason/list]
 
-### Reason List URL [POST]
+### Reason List [POST]
 
 + Request Reason List (application/json)
     + Header
@@ -286,11 +309,22 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
+        + filters   : (object)
+            + apps_code    : tms (string), - hardcode `tms`
+            + reason_category  : pod (string) - hardcode `pod`
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
+                "paging": {
+                    "currentPage": 1,
+                    "nextPage": 0,
+                    "prevPage": 0,
+                    "totalPage": 1,
+                    "totalData": 3,
+                    "limit": 100
+                },
                 "data": [
                     {
                         "reasonId": "1",
@@ -306,6 +340,56 @@ HOST: http://api.tms.sicepat.com
                         "reasonId": "1",
                         "reasonName": "NR",
                         "reasonCode": "Barang Not Ready"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Role List [/master/role/list]
+
+### Role List [POST]
+
++ Request Role List (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage": 1,
+                    "nextPage": 0,
+                    "prevPage": 0,
+                    "totalPage": 1,
+                    "totalData": 3,
+                    "limit": 100
+                },
+                "data": [
+                    {
+                        "roleId": "1",
+                        "roleName": "Superadmin"
+                    },
+                    {
+                        "roleId": "2",
+                        "roleName": "Admin"
+                    },
+                    {
+                        "roleId": "3",
+                        "roleName": "Sigesit"
                     }
                 ]
             }
