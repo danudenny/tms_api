@@ -28,7 +28,7 @@ switch (process.env.NODE_ENV) {
       username: 'postgres',
       password: '123456',
       database: 'sicepat-tms',
-      entities: ['src/shared/orm-entity/*.entity.ts'],
+      entities: ['src/shared/orm-entity/*.ts'],
       migrations: ['src/shared/orm-migration/*.ts'],
       subscribers: ['src/shared/orm-subscriber/*.ts'],
       cli: {
@@ -36,16 +36,16 @@ switch (process.env.NODE_ENV) {
         migrationsDir: 'src/shared/orm-migration',
         subscribersDir: 'src/shared/orm-subscriber',
       },
-      migrationsRun: true,
+      migrationsRun: false,
       logging: true,
-      synchronize: false
+      synchronize: false,
     };
     break;
   case 'development':
     module.exports = {
-    type: 'postgres',
+      type: 'postgres',
       host:
-      'sicepat-tms-masterdata-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+        'sicepat-tms-masterdata-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
       port: 5432,
       username: 'sicepatstaging',
       password: 's1c3p4T$t46Ingb05$sQu',
@@ -63,20 +63,20 @@ switch (process.env.NODE_ENV) {
       logging: true,
       synchronize: false,
       cache: {
-        type: "redis",
+        type: 'redis',
         duration: 10000,
         options: {
-          host: "localhost",
-          port: 6379
-        }
-      }
+          host: 'localhost',
+          port: 6379,
+        },
+      },
     };
     break;
   case 'production':
     module.exports = {
       type: 'postgres',
       host:
-      'sicepat-tms-masterdata-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+        'sicepat-tms-masterdata-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
       port: 5432,
       username: 'sicepatstaging',
       password: 's1c3p4T$t46Ingb05$sQu',
@@ -94,13 +94,13 @@ switch (process.env.NODE_ENV) {
       logging: true,
       synchronize: false,
       cache: {
-        type: "redis",
+        type: 'redis',
         duration: 10000,
         options: {
-          host: "localhost",
-          port: 6379
-        }
-      }
+          host: 'localhost',
+          port: 6379,
+        },
+      },
     };
     break;
 }

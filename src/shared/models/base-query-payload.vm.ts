@@ -2,6 +2,7 @@ import { find, forEach } from 'lodash';
 import { FindManyOptions } from 'typeorm';
 
 import { ApiModelProperty, ApiModelPropertyOptional } from '../external/nestjs-swagger';
+import { RequestQueryBuidlerService } from '../services/request-query-builder.service';
 import { QueryConditionsHelper } from './query-condition-helper';
 
 export class BaseQueryPayloadFilterVm {
@@ -9,10 +10,23 @@ export class BaseQueryPayloadFilterVm {
   field: string;
 
   @ApiModelProperty()
-  operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'nin' | 'like' | 'sw' | 'ew';
+  operator:
+    | 'eq'
+    | 'neq'
+    | 'gt'
+    | 'gte'
+    | 'lt'
+    | 'lte'
+    | 'in'
+    | 'nin'
+    | 'like'
+    | 'sw'
+    | 'ew'
+    | 'nnull'
+    | 'null';
 
   @ApiModelProperty()
-  value: any;
+  value?: any;
 }
 
 export class BaseQueryPayloadSortVm {
@@ -37,6 +51,7 @@ export class BaseQueryPayloadVm<TEntity> {
   skip: number = 0;
 
   conditionHelper = new QueryConditionsHelper();
+  fieldResolverMap: { [key: string]: string } = {};
 
   setSort(field: string, dir: 'asc' | 'desc') {
     const existingSort = find(this.sort, { field });
@@ -62,5 +77,12 @@ export class BaseQueryPayloadVm<TEntity> {
     });
 
     return options;
+  }
+
+  buildQueryBuilder() {
+    return RequestQueryBuidlerService.buildQueryBuilderFromQueryPayload(
+      this,
+      this.fieldResolverMap,
+    );
   }
 }

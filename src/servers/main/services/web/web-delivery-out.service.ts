@@ -12,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import moment = require('moment');
+import { POD_TYPE } from 'src/shared/constants/pod-type.constant';
 // #endregion
 
 @Injectable()
@@ -21,10 +22,6 @@ export class WebDeliveryOutService {
     private readonly authService: AuthService,
     @InjectRepository(AwbRepository)
     private readonly awbRepository: AwbRepository,
-    @InjectRepository(AwbTroubleRepository)
-    private readonly awbTroubleRepository: AwbTroubleRepository,
-    @InjectRepository(PodScanRepository)
-    private readonly podScanRepository: PodScanRepository,
     @InjectRepository(DoPodRepository)
     private readonly doPodRepository: DoPodRepository,
     @InjectRepository(BranchRepository)
@@ -48,39 +45,43 @@ export class WebDeliveryOutService {
       // NOTE: Ada 4 tipe surat jalan
       doPod.doPodCode = await CustomCounterCode.doPod(doPodDateTime.toDateString()); // generate code
 
-      // gerai tujuan di gunakan selain tipe Surat Jalan Antar dan transit (3pl)
-
-      // TODO:
+      // TODO: doPodType
       // 1. tipe surat jalan criss cross
-      // 2. tipe transit(internal)
+      // 2.A tipe transit(internal)
+      // 2.B tipe transit (3pl)
+      // doPod.partnerLogisticId = partnerLogisticId
       // 3. tipe retur
 
-      // doPod.branchIdTo = payload.branchCode (branchIdTo)
-      // doPod.userIdDriver = payload.??;
-      // doPod.employeeIdDriver = payload.??;
-      // doPod.vehicleNumPlate = payload.vehicleNumPlate
+      // gerai tujuan di gunakan selain tipe Surat Jalan Antar dan transit (3pl)
+      doPod.branchIdTo = payload.branchIdTo || null;
 
-      doPod.doPodDateTime = doPodDateTime;
-      // doPod.description = ??
+      // doPod.userIdDriver = payload.
+      doPod.employeeIdDriver = payload.employeeIdDriver || null;
+      doPod.doPodDateTime = moment(doPodDateTime).toDate();
 
-      // tipe transit (3pl)
-      // doPod.partnerLogisticId = ??
+      doPod.vehicleNumber = payload.vehicleNumber || null ;
+      doPod.description = payload.desc || null;
 
       // tipe antar (sigesit)
       // resi antar/ retur
 
-      // general purpose
+      // TODO: change if transit (3pl)
+      doPod.doPodMethod = 1000; // internal or 3PL/Third Party
+     // general
+      doPod.doPodStatusIdLast = 1000; // created
       doPod.branchId = permissonPayload.branchId;
       doPod.userId = authMeta.userId;
       doPod.userIdCreated = authMeta.userId;
       doPod.userIdUpdated = authMeta.userId;
       doPod.createdTime = timeNow;
       doPod.updatedTime = timeNow;
+
+      // await for get do pod id
       await this.doPodRepository.save(doPod);
 
+      // Populate return value
       result.status = '200';
       result.message = 'ok';
-      // get do pod id
       result.doPodId = doPod.doPodId;
 
       return result;
@@ -106,7 +107,9 @@ export class WebDeliveryOutService {
       const totalSuccess = 0;
       const totalError = 0;
 
-      // for (const awbNumber of payload.awbNumber) {
+      for (const awbNumber of payload.awbNumber) {
+      // TODO: create data do_pod_detail
+
       //   // NOTE:
       //   // find data to awb where awbNumber and awb status not cancel
       //   awb = await this.awbRepository.findOne({
@@ -121,86 +124,18 @@ export class WebDeliveryOutService {
       //         doPodId: IsNull(),
       //       },
       //     });
-
-      //     if (checkPodScan) {
-      //       totalError += 1;
-      //       // save data to awb_trouble
-      //       const awbTrouble = this.awbTroubleRepository.create({
-      //         awbNumber,
-      //         resolveDateTime: timeNow,
-      //         employeeId: authMeta.employeeId,
-      //         branchId: permissonPayload.branchId,
-      //         userIdCreated: authMeta.userId,
-      //         createdTime: timeNow,
-      //         userIdUpdated: authMeta.userId,
-      //         updatedTime: timeNow,
-      //       });
-      //       await this.awbTroubleRepository.save(awbTrouble);
-
-      //       const branch = await this.branchRepository.findOne({
-      //         where: { branchId: checkPodScan.branchId },
-      //       });
-
-      //       dataItem.push({
-      //         awbNumber,
-      //         status: 'error',
-      //         message: `Resi sudah Scan In pada Gerai ${branch.branchName} (${moment(checkPodScan.podScaninDateTime).format('YYYY-MM-DD HH:mm:ss')})`,
-      //       });
-
-      //     } else {
-      //       const awbItem = await AwbItem.findOne({
-      //         select: ['awbItemId'],
-      //         where: { awbId: awb.awbId },
-      //       });
-
-      //       // save data to table pod_scan
-      //       const podScan = this.podScanRepository.create();
-      //       podScan.awbId = awb.awbId;
-      //       podScan.branchId = permissonPayload.branchId;
-      //       podScan.awbItemId = awbItem.awbItemId;
-      //       // podScan.doPodId = null; fill from scan out
-      //       podScan.userId = authMeta.userId;
-      //       podScan.podScaninDateTime = moment().toDate();
-      //       this.podScanRepository.save(podScan);
-
-      //       // TODO:
-      //       // save data to table awb_history
-      //       // update data history id last on awb??
-
-      //       totalSuccess += 1;
-      //       dataItem.push({
-      //         awbNumber,
-      //         status: 'ok',
-      //         message: 'Success',
-      //       });
-      //     }
-      //   } else {
-      //     totalError += 1;
-      //     // save data to awb_trouble
-      //     const awbTrouble = this.awbTroubleRepository.create({
-      //       awbNumber,
-      //       resolveDateTime: timeNow,
-      //       employeeId: authMeta.employeeId,
-      //       branchId: permissonPayload.branchId,
-      //       userIdCreated: authMeta.userId,
-      //       createdTime: timeNow,
-      //       userIdUpdated: authMeta.userId,
-      //       updatedTime: timeNow,
-      //     });
-      //     await this.awbTroubleRepository.save(awbTrouble);
-
-      //     dataItem.push({
-      //       awbNumber,
-      //       status: 'error',
-      //       message: `No Resi ${awbNumber} Tidak di Temukan`,
-      //     });
-      //   }
-      // } // end of loop
+      } // end of loop
 
       // Populate return value
       result.status = 'ok';
       result.message = 'success';
-      result.data = 'file/base64';
+      result.data = '';
+
+      // Populate return value
+      // result.totalData = payload.awbNumber.length;
+      // result.totalSuccess = totalSuccess;
+      // result.totalError = totalError;
+      // result.data = dataItem;
 
       return result;
     } else {

@@ -172,4 +172,23 @@ export class DoPod extends BaseEntity {
     name: 'partner_logistic_id',
   })
   partnerLogisticId: number;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'do_pod_method',
+  })
+  doPodMethod: number | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'vehicle_number',
+  })
+  vehicleNumber: string | null;
+
+  @Column('text', {
+    nullable: true,
+  })
+  description: string | null;
+
 }

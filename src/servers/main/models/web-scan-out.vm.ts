@@ -27,9 +27,9 @@ export class WebScanOutCreateVm {
   permissionToken: string;
 
   @ApiModelProperty({
-    example: '20000, 24500, 14000, 25000',
+    example: 8000,
   })
-  doPodType: string;
+  doPodType: number;
 
   @ApiModelProperty({
     example: 'Internal, 3PL/Third Party',

@@ -5,7 +5,7 @@ HOST: http://api.tms.sicepat.com
 
 # Group Dropdown
 
-## Branch [/data/branch]
+## Branch [/master/branch/list]
 
 ### Branch URL [POST]
 
@@ -69,7 +69,7 @@ HOST: http://api.tms.sicepat.com
             {}
 
 
-## Employee [/data/employee]
+## Employee [/master/employee/list]
 
 ### Employee URL [POST]
 
@@ -129,7 +129,7 @@ HOST: http://api.tms.sicepat.com
             {}
 
 
-## Customer [/data/customer]
+## Customer [/master/customer/list]
 
 ### Customer URL [POST]
 
@@ -144,7 +144,7 @@ HOST: http://api.tms.sicepat.com
             + customerId  : 1 (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
-        + sortBy    : employeeName, (string)
+        + sortBy    : customerName, (string)
         + sortDir   : asc, (string)
 
 + Response 200 (application/json; charset=utf-8)
@@ -175,6 +175,138 @@ HOST: http://api.tms.sicepat.com
                         "customerCode": "10020013",
                         "customerName": "ABCE",
                     },
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Partner Logistic [/master/partnerLogistic/list]
+
+### Partner Logistic URL [POST]
+
++ Request Partner Logistic (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "data": [
+                    {
+                        "partnerLogisticId": "1",
+                        "partnerLogisticName": "ABCd",
+                        "partnerLogisticEmail": "ab@gmail.com"
+                    },
+                    {
+                        "partnerLogisticId": "2",
+                        "partnerLogisticName": "ABCe",
+                        "partnerLogisticEmail": "ac@gmail.com"
+                    },
+                    {
+                        "partnerLogisticId": "3",
+                        "partnerLogisticName": "ABCf",
+                        "partnerLogisticEmail": "ad@gmail.com"
+                    },
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Status Resi [/master/awbStatus/list]
+
+### Status Resi URL [POST]
+
++ Request Status Resi (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "data": [
+                    {
+                        "awbStatusId": "30000",
+                        "awbStatusName": "DLV",
+                        "awbStatusTitle": "DELIVERED"
+                    },
+                    {
+                        "awbStatusId": "20000",
+                        "awbStatusName": "CC",
+                        "awbStatusTitle": "CRISS CROSS"
+                    },
+                    {
+                        "awbStatusId": "14000",
+                        "awbStatusName": "ANT",
+                        "awbStatusTitle": "ANTAR"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Reason List [/master/reason/list]
+
+### Reason List URL [POST]
+
++ Request Reason List (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "data": [
+                    {
+                        "reasonId": "1",
+                        "reasonName": "NTH",
+                        "reasonCode": "Not At Home"
+                    },
+                    {
+                        "reasonId": "1",
+                        "reasonName": "COPA",
+                        "reasonCode": "Alamat Tutup"
+                    },
+                    {
+                        "reasonId": "1",
+                        "reasonName": "NR",
+                        "reasonCode": "Barang Not Ready"
+                    }
                 ]
             }
 

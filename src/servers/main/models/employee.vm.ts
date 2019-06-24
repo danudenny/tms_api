@@ -20,15 +20,23 @@ export class EmployeeRequestPayloadVm {
   @ApiModelProperty({ type: () => EmployeeSearchVm })
   filters: EmployeeSearchVm;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 1,
+  })
   page: number;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 10,
+  })
   limit: number;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 'fullname',
+  })
   sortBy: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({
+    example: 'asc',
+  })
   sortDir: string;
 }

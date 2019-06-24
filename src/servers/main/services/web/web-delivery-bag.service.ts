@@ -14,7 +14,7 @@ import { WebDeliveryFilterPayloadVm } from '../../models/web-delivery.vm';
 export class WebDeliveryBagService {
   constructor() {}
   async findallbagdelivery(
-    payload: WebDeliveryFilterPayloadVm
+    payload: WebDeliveryFilterPayloadVm,
     ): Promise<WebDeliveryFindAllResponseVm> {
     const page = toInteger(payload.page) || 1;
     const take = toInteger(payload.limit) || 10;
