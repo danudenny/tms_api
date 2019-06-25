@@ -36,8 +36,8 @@ export class WebDeliveryListFilterPayloadVm {
   @ApiModelProperty()
   sortDir: string;
 
-  @ApiModelPropertyOptional({ type: () => WebDeliverySearchVm })
-  search?: WebDeliverySearchVm;
+  @ApiModelPropertyOptional()
+  search?: string;
 
   @ApiModelPropertyOptional({ type: [SearchColumnsVm] })
   searchColumns?: SearchColumnsVm[];
