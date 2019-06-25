@@ -54,8 +54,7 @@ HOST: http://api.tms.sicepat.com
 
     + Attributes (object)
 
-        + employeeId        : `123456`, (string, required),
-        + branchId          : `000129`, (string, required),
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
         + dateCheckIn       : `2019-05-01 00:00:00`, (string, required),
         + longitudeCheckIn  : `106.865036` (string, required),
         + latitudeCheckIn   : `-6.175110` (string, required)
@@ -93,8 +92,7 @@ HOST: http://api.tms.sicepat.com
 
     + Attributes (object)
 
-        + employeeId        : `123456`, (string, required),
-        + branchId          : `000129`, (string, required),
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
         + dateCheckOut       : `2019-05-01 00:00:00`, (string, required),
         + longitudeCheckOut  : `106.865036` (string, required),
         + latitudeCheckOut   : `-6.175110` (string, required)
@@ -129,8 +127,8 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
         + filters           : (object)
-            + employeeId            : `1`, (string, required)
             + startDeliveryDateTime : `2019-05-01 00:00:00`, (string, required)
             + endDeliveryDateTime   : `2019-05-01 00:00:00`, (string, required)
         + page              : 1, (number) - Default 1
