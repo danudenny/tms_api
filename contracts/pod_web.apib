@@ -115,7 +115,7 @@ HOST: http://api.tms.sicepat.com
         + sortDir   : asc, (string)
         + search    : (object)
             + fields    : `scanInDateTime`, `awbNumber`, (array[string])
-            + value     : 'anisa'
+            + value     : `anisa`
         + searchColumns: (array)
             + item:
                 + field   : awbNumber (string)
@@ -142,32 +142,28 @@ HOST: http://api.tms.sicepat.com
                         "awbNumber": "123412311111",
                         "branchNameScan": "1234",
                         "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
+                        "employeeName": "1234"
                     },
                     {
                         "scanInDateTime": "2019-03-02 10:00:00",
                         "awbNumber": "12345",
                         "branchNameScan": "12346",
                         "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
+                        "employeeName": "12342"
                     },
                     {
                         "scanInDateTime": "2019-03-01 10:00:00",
                         "awbNumber": "1234",
                         "branchNameScan": "1234",
                         "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
+                        "employeeName": "1234"
                     },
                     {
                         "scanInDateTime": "2019-03-02 10:00:00",
                         "awbNumber": "12345",
                         "branchNameScan": "12346",
                         "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
+                        "employeeName": "12342"
                     }
                 ]
             }
@@ -196,8 +192,8 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + doPodType : `20000`, `24500`, `14000`, `25000`, (string, required)
-        + doPodMethod :  `internal`, `3pl`,  (string, required)
+        + doPodType : `20000`, `14000`, (string, required) - 20000 = CRISS CROSS, 14000 = ANTAR, TRANSIT (Hub, dan Gerai)
+        + doPodMethod :  `internal`, `3pl`,  (string) - required sesuai doPodType
         + branchIdTo : branchIdTo, (string) - required when doPodType != Antar
         + employeeIdDriver : employeeId, (string, required)
         + partnerLogisticId : partnerLogisticId, (string) - required when doPodMethod = 3PL/Third Party
@@ -231,7 +227,7 @@ HOST: http://api.tms.sicepat.com
 
 ### Scan Out Awb [POST]
 
-+ Request Scan In (application/json)
++ Request Scan Out (application/json)
 
     + Header
 
@@ -286,6 +282,7 @@ HOST: http://api.tms.sicepat.com
 
     + Attributes (object)
         + doPodId : 1,
+        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
         + bagNumber : `0001`, `0002`, (array[string], required) - required when accesspermission = hub
 
 + Response 200 (application/json; charset=utf-8)
@@ -297,14 +294,14 @@ HOST: http://api.tms.sicepat.com
                 "totalError" : 1,
                 "data" : [
                     {
-                        "awbNumber" : "0001",
+                        "bagNumber" : "0001",
                         "status"    : "ok",
                         "message"   : "success",
                     },
                     {
-                        "awbNumber": "0002",
+                        "bagNumber": "0002",
                         "status"    : "error",
-                        "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                        "message"   : "Gabung Paket sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
                     }
                 ]
             }
@@ -464,52 +461,12 @@ HOST: http://api.tms.sicepat.com
 
 # Group Input Resi 3PL
 
-## Scan Awb 3PL [/web/pod/awb3PL/scan]
-    Input Resi 3PL: Untuk Scan Resi 3PL
+## Save Awb 3PL [/web/pod/awb3PL/save]
+    Input Resi 3PL: Untuk save Resi 3PL
 
-### Scan Awb 3PL [POST]
+### Save Awb 3PL [POST]
 
-+ Request Scan Awb 3PL (application/json)
-
-    + Header
-
-            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
-    + Attributes (object)
-        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + awbNumber : `12412312`, `12314213`, (array, required)
-
-+ Response 200 (application/json; charset=utf-8)
-    + Body
-
-            {
-                "totalData" : 2,
-                "totalSuccess" : 1,
-                "totalError" : 1,
-                "data" : [
-                    {
-                        "awbNumber" : "12412312",
-                        "status"    : "ok",
-                        "message"   : "success",
-                    },
-                    {
-                        "awbNumber": "12314213",
-                        "status"    : "error",
-                        "message"   : "Resi tidak dikenali",
-                    }
-                ]
-            }
-
-+ Response 400 (application/json; charset=utf-8)
-    + Body
-
-            {}
-
-## Edit Awb 3PL [/web/pod/awb3PL/edit]
-    Input Resi 3PL: Untuk Edit Resi 3PL
-
-### Edit Awb 3PL [POST]
-
-+ Request Edit Awb 3PL (application/json)
++ Request Save Awb 3PL (application/json)
 
     + Header
 
@@ -622,7 +579,7 @@ HOST: http://api.tms.sicepat.com
     + Header
         Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
-        + doPodId : `001` (string)
+        + awbNumber : `001` (string)
           
 
 + Response 200 (application/json; charset=utf-8)
@@ -662,7 +619,7 @@ HOST: http://api.tms.sicepat.com
     + Header
         Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
-        + doPodId : `001` (string)
+        + awbNumber : `001` (string)
         + branchName : `Juanda` (string)
           
 
