@@ -652,7 +652,7 @@ HOST: http://api.tms.sicepat.com
         + sortBy         : scan_out_date_time, (string)
         + sortDir        : asc, (string)
         + search         : (object)
-            + fields    : `do_pod_date_time`, `awb_number`, (array, optional)
+            + fields    : `do_pod_date_time`, `awb_number`, `awb_number_3pl (array, optional)
             + value     : 'a'
         + searchColumns: (array)
             + item:
@@ -679,6 +679,7 @@ HOST: http://api.tms.sicepat.com
                     {
                         "doPodDateTime"         : "2019-03-02 10:00:00",
                         "awbNumber"             : "000000012341",
+                        "awbNumber3PL"          : "jow000012341",
                         "branchName"            : "Larangan",
                         "doPodStatus"           : "Delivered",
                         "partnerLogisticName"   : "JNE"
@@ -686,9 +687,10 @@ HOST: http://api.tms.sicepat.com
                     {
                         "doPodDateTime"         : "2019-03-02 10:00:00",
                         "awbNumber"             : "000000012342",
+                        "awbNumber3PL"          : "",
                         "branchName"            : "Juanda",
                         "doPodStatus"           : "Retur",
-                        "partnerLogisticName"   : "POS"
+                        "partnerLogisticName"   : ""
                     }
                 ]
             }
