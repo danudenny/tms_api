@@ -236,51 +236,69 @@ export class WebDeliveryOutService {
       },
     ];
 
-    // add filter
-    if (!!payload.filters) {
-      // AND condition
-      filterData.push(
-        [
-          {
-            field: 'do_pod.do_pod_code',
-            operator: 'like',
-            value: payload.filters.doPodCode,
-          },
-          {
-            field: 'employee.fullname',
-            operator: 'like',
-            value: payload.filters.name,
-          },
-        ],
-      );
-    }
+    // // add filter
+    // if (!!payload.filters) {
+    //   // AND condition
+    //   filterData.push(
+    //     [
+    //       {
+    //         field: 'do_pod.do_pod_code',
+    //         operator: 'like',
+    //         value: payload.filters.doPodCode,
+    //       },
+    //       {
+    //         field: 'employee.fullname',
+    //         operator: 'like',
+    //         value: payload.filters.name,
+    //       },
+    //     ],
+    //   );
+    // }
 
-    if (!!payload.search) {
-      // OR condition
-      filterData.push(
-        [
-          {
-            field: 'do_pod.do_pod_code',
-            operator: 'like',
-            value: payload.search,
-          },
-        ],
-      );
-      filterData.push(
-        [
-          {
-            field: 'employee.fullname',
-            operator: 'like',
-            value: payload.search,
-          },
-        ],
-      );
-
-    }
+    // if (!!payload.search) {
+    //   // OR condition
+    //   filterData.push(
+    //     [
+    //       {
+    //         field: 'do_pod.do_pod_code',
+    //         operator: 'like',
+    //         value: payload.search,
+    //       },
+    //     ],
+    //   );
+    //   filterData.push(
+    //     [
+    //       {
+    //         field: 'employee.fullname',
+    //         operator: 'like',
+    //         value: payload.search,
+    //       },
+    //     ],
+    //   );
+    // }
 
     // TODO: searchColumns
+    if (!!payload.searchColumns) {
+      // OR condition
+      for (const column of payload.searchColumns) {
+
+        console.log('===========================================');
+        console.log(column);
+        filterData.push(
+          [
+            {
+              field: column.field,
+              operator: 'like',
+              value: column.value,
+            },
+          ],
+        );
+      }
+    }
 
     if (filterData.length > 0) {
+      console.log(' Filter ==============================================');
+      console.log(filterData);
       queryPayload.filter = filterData;
     }
 
@@ -299,7 +317,7 @@ export class WebDeliveryOutService {
     const result = new WebScanOutAwbListResponseVm();
     const total = await qb.getCount();
 
-    result.data = await qb.execute();
+    result.data = await qb.getRawMany();
     result.paging = MetaService.set(page, take, total);
 
     return result;

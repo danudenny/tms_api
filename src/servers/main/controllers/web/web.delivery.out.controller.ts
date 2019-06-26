@@ -66,12 +66,22 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.scanOutAwb(payload);
   }
 
-  @Post('list')
+  @Post('awbList')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
-  public async findAllDeliveryList(@Body() payload: WebScanOutAwbListPayloadVm) {
+  public async awbList(@Body() payload: WebScanOutAwbListPayloadVm) {
+
+    return this.webDeliveryOutService.scanOutAwbList(payload);
+  }
+
+  @Post('bagList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
+  public async bagList(@Body() payload: WebScanOutAwbListPayloadVm) {
 
     return this.webDeliveryOutService.scanOutAwbList(payload);
   }
