@@ -14,6 +14,7 @@ import { CustomerController } from './master/customer.controller';
 import { AwbStatusController } from './master/awb-status.controller';
 import { PartnerLogisticController } from './master/partner-logistic.controller';
 import { ReasonController } from './master/reason.controller';
+import { RoleController } from './master/role.controller';
 
 @Module({
   imports: [OrmRepositoryModule, SharedModule, MainServerServicesModule],
@@ -29,7 +30,7 @@ import { ReasonController } from './master/reason.controller';
     AwbStatusController,
     PartnerLogisticController,
     ReasonController,
-
+    RoleController,
   ],
 })
 export class MainServerControllersModule {}

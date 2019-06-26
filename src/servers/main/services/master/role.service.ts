@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { toInteger, isEmpty } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { ReasonPayloadVm, ReasonFindAllResponseVm } from '../../models/reason.vm';
+import { RolePayloadVm, RoleFindAllResponseVm } from '../../models/role.vm';
 import { BaseQueryPayloadVm } from '../../../../shared/models/base-query-payload.vm';
 
 @Injectable()
-export class ReasonService {
+export class RoleService {
 
   constructor() {}
   async listData(
-    payload: ReasonPayloadVm,
-  ): Promise<ReasonFindAllResponseVm> {
+    payload: RolePayloadVm,
+  ): Promise<RoleFindAllResponseVm> {
     // params
     const page = toInteger(payload.page) || 1;
     const take = toInteger(payload.limit) || 10;
     const offset = (page - 1) * take;
-    const sortBy = isEmpty(payload.sortBy) ? 'reason_name' : payload.sortBy;
+    const sortBy = isEmpty(payload.sortBy) ? 'role_name' : payload.sortBy;
     const sortDir = payload.sortDir === 'asc' ? 'asc' : 'desc';
 
     // NOTE: query with ORM
@@ -35,14 +35,7 @@ export class ReasonService {
       queryPayload.filter = [
         [
           {
-            field: 'reason_name',
-            operator: 'like',
-            value: payload.filters.search,
-          },
-        ],
-        [
-          {
-            field: 'reason_code',
+            field: 'role_name',
             operator: 'like',
             value: payload.filters.search,
           },
@@ -52,15 +45,14 @@ export class ReasonService {
 
     // add select field
     const qb = queryPayload.buildQueryBuilder();
-    qb.addSelect('reason.reason_id', 'reasonId');
-    qb.addSelect('reason.reason_name', 'reasonName');
-    qb.addSelect('reason.reason_code', 'reasonCode');
-    qb.from('reason', 'reason');
+    qb.addSelect('role.role_id', 'roleId');
+    qb.addSelect('role.role_name', 'roleName');
+    qb.from('role', 'role');
 
     // exec raw query
     const data = await qb.execute();
     const total = await qb.getCount();
-    const result = new ReasonFindAllResponseVm();
+    const result = new RoleFindAllResponseVm();
     result.data = data;
     result.paging = MetaService.set(page, take, total);
     return result;
