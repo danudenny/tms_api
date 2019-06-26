@@ -4,106 +4,106 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class DoPodDetail extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name:'do_pod_detail_id',
+    name: 'do_pod_detail_id',
   })
-  doPodDetaiId: string;
+  doPodDetaiId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'do_pod_id',
+    name: 'do_pod_id',
   })
-  doPodId: string;
+  doPodId: number;
 
   @Column('bigint', {
     nullable: true,
-    name:'awb_item_id',
+    name: 'awb_item_id',
   })
-  awbItemId: string | null;
+  awbItemId: number | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'bag_item_id',
+    name: 'bag_item_id',
   })
-  bagItemId: string | null;
+  bagItemId: number | null;
 
   @Column('bigint', {
     nullable: false,
-    name:'do_pod_status_id_last',
+    name: 'do_pod_status_id_last',
   })
-  doPodStatusIdLast: string;
+  doPodStatusIdLast: number;
 
   @Column('bigint', {
     nullable: true,
-    name:'do_pod_status_id_last',
+    name: 'do_pod_history_id_last',
   })
-  do_pod_history_id_last: string | null;
+  do_pod_history_id_last: number | null;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_created',
+    name: 'user_id_created',
   })
-  userIdCreated: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'created_time',
+    name: 'created_time',
   })
   createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_updated',
+    name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'updated_time',
+    name: 'updated_time',
   })
   updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name:'is_deleted',
+    name: 'is_deleted',
   })
   isDeleted: boolean;
 
   @Column('boolean', {
     nullable: true,
-    name:'is_scan_out',
+    name: 'is_scan_out',
   })
   isScanOut: boolean | null;
 
   @Column('character varying', {
     nullable: true,
     length: 50,
-    name:'scan_out_type',
+    name: 'scan_out_type',
   })
   scanOutType: string | null;
 
   @Column('boolean', {
     nullable: true,
-    name:'is_scan_in',
+    name: 'is_scan_in',
   })
   isScanIn: boolean | null;
 
   @Column('character varying', {
     nullable: true,
     length: 50,
-    name:'scan_in_type',
+    name: 'scan_in_type',
   })
   scanInType: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name:'employee_journey_id_in',
+    name: 'employee_journey_id_in',
   })
-  employeeJourneyIdIn: string;
+  employeeJourneyIdIn: number | null;
 
   @Column('bigint', {
     nullable: false,
-    name:'employee_journey_id_out',
+    name: 'employee_journey_id_out',
   })
-  employeeJourneyIdOut: string;
+  employeeJourneyIdOut: number | null;
 }

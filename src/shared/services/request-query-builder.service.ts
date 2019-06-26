@@ -8,6 +8,7 @@ export class RequestQueryBuidlerService {
     queryBuilder: SelectQueryBuilder<any> | WhereExpression,
     filter: BaseQueryPayloadFilterVm,
     mode: 'and' | 'or' = 'and',
+    filterVarId?: string,
   ) {
     const field = filter.field;
 
@@ -77,24 +78,26 @@ export class RequestQueryBuidlerService {
         break;
     }
 
+    const filterVar = filterVarId ? `val${filterVarId}` : 'val';
+    const filterVarValue = { [filterVar]: value };
     switch (filter.operator) {
       case 'in':
       case 'nin':
         if (value && value.length) {
-          whereFn(`${field} ${operator} (:...val)`, { val: value });
+          whereFn(`${field} ${operator} (:...${filterVar})`, filterVarValue);
         }
         break;
       case 'like':
       case 'sw':
       case 'ew':
-        whereFn(`LOWER(${field}) ${operator} :val`, { val: value });
+        whereFn(`LOWER(${field}) ${operator} :${filterVar}`, filterVarValue);
         break;
       case 'null':
       case 'nnull':
         whereFn(`${field} ${operator}`);
         break;
       default:
-        whereFn(`${field} ${operator} :val`, { val: value });
+        whereFn(`${field} ${operator} :${filterVar}`, filterVarValue);
         break;
     }
   }
@@ -120,7 +123,8 @@ export class RequestQueryBuidlerService {
     }
 
     if (queryPayload.filter && queryPayload.filter.length) {
-      for (const orFilterGroup of queryPayload.filter) {
+      for (const orFilterGroupIdx in queryPayload.filter) {
+        const orFilterGroup = queryPayload.filter[orFilterGroupIdx];
         if (orFilterGroup.length) {
           qb.orWhere(
             new Brackets(qbOrWhere => {
@@ -140,6 +144,7 @@ export class RequestQueryBuidlerService {
                     field, // replace field with the one on fieldResolverMap if exists, this may help for field aliases that contains quote
                   },
                   'and',
+                  orFilterGroupIdx,
                 );
               }
             }),

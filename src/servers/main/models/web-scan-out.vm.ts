@@ -1,6 +1,11 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+import { SearchColumnsVm, WebDeliverySearchVm } from '../../../shared/models/base-filter-search.payload.vm';
 
+// Scan Out Awb
 export class WebScanOutAwbVm  {
+  @ApiModelProperty()
+  permissionToken: string;
+
   @ApiModelProperty()
   doPodId: number;
 
@@ -10,18 +15,44 @@ export class WebScanOutAwbVm  {
   awbNumber: string[];
 }
 
-export class WebScanOutAwbResponseVm {
-  @ApiModelProperty()
-  status: string;
+// Scan Out Awb List
+export class FilterScanOutAwbListVm {
 
   @ApiModelProperty()
-  message: string;
+  name: string;
 
   @ApiModelProperty()
-  data: string;
+  doPodCode: string;
 
 }
 
+export class WebScanOutAwbListPayloadVm {
+  @ApiModelProperty()
+  permissionToken: string;
+
+  @ApiModelPropertyOptional({ type: () => FilterScanOutAwbListVm })
+  filters?: FilterScanOutAwbListVm;
+
+  @ApiModelProperty()
+  page: number;
+
+  @ApiModelProperty()
+  limit: number;
+
+  @ApiModelProperty()
+  sortBy: string;
+
+  @ApiModelProperty()
+  sortDir: string;
+
+  @ApiModelPropertyOptional()
+  search?: string;
+
+  @ApiModelPropertyOptional({ type: [SearchColumnsVm] })
+  searchColumns?: SearchColumnsVm[];
+}
+
+// Create DO POD
 export class WebScanOutCreateVm {
   @ApiModelProperty()
   permissionToken: string;
@@ -66,16 +97,4 @@ export class WebScanOutCreateVm {
 
   @ApiModelProperty()
   reasonRetur: string;
-}
-
-export class WebScanOutCreateResponseVm {
-  @ApiModelProperty()
-  status: string;
-
-  @ApiModelProperty()
-  message: string;
-
-  @ApiModelProperty()
-  doPodId: number;
-
 }

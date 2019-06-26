@@ -20,7 +20,6 @@ import { BranchRepository } from '../../../../shared/orm-repository/branch.repos
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { IsNull } from 'typeorm';
-import { WebScanOutAwbResponseVm, WebScanOutCreateVm } from '../../models/web-scan-out.vm';
 import { DoPodRepository } from '../../../../shared/orm-repository/do-pod.repository';
 // #endregion
 
@@ -56,14 +55,14 @@ export class WebDeliveryInService {
     const whereCondition = 'WHERE pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end';
     // TODO: add additional where condition
     //
-    if (payload.search) {
-      // whereCondition += ` AND (`;
-      for (const index in payload.search.fields) {
-        // whereCondition += `${payload.search.fields[index]} = ${payload.search.value}`;
-        Logger.log(`${payload.search.fields[index]} = ${payload.search.value}`);
-      }
-      // whereCondition += ` ) `;
-    }
+    // if (payload.search) {
+    //   // whereCondition += ` AND (`;
+    //   for (const index in payload.search.fields) {
+    //     // whereCondition += `${payload.search.fields[index]} = ${payload.search.value}`;
+    //     Logger.log(`${payload.search.fields[index]} = ${payload.search.value}`);
+    //   }
+    //   // whereCondition += ` ) `;
+    // }
 
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(
       `SELECT pod_scanin_date_time as "scanInDateTime",

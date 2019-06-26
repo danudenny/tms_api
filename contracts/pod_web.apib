@@ -8,7 +8,7 @@ HOST: http://api.tms.sicepat.com
 ## Scan In Awb [/web/pod/scanIn/awb]
     Untuk Scan In Gerai dari Web POD per Resi
 
-### Scan In URL [POST]
+### Scan In Awb [POST]
 
 + Request Scan In (application/json)
     + Header
@@ -16,8 +16,8 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + awbNumber : `0001`, `0002`, (array[string], required) - Awb Number
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + awbNumber         : `0001`, `0002`, (array[string], required) - Awb Number
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -30,11 +30,13 @@ HOST: http://api.tms.sicepat.com
                     {
                         "awbNumber" : "0001",
                         "status"    : "ok",
+                        "trouble"   : false,
                         "message"   : "success",
                     },
                     {
                         "awbNumber": "0002",
                         "status"    : "error",
+                        "trouble"   : false,
                         "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
                     }
                 ]
@@ -54,7 +56,7 @@ HOST: http://api.tms.sicepat.com
 ## Scan In Bag [/web/pod/scanIn/bag]
     Untuk Scan In Gerai dari Web POD per Gabung Paket
 
-### Scan In URL [POST]
+### Scan In Bag [POST]
 
 + Request Scan In (application/json)
     + Header
@@ -62,7 +64,8 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + bagNumber : `0001`, `0002`, (array[string], required) - Awb Number
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + bagNumber         : `0001`, `0002`, (array[string], required) - Awb Number
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -70,12 +73,16 @@ HOST: http://api.tms.sicepat.com
             {
                 "total_data" : 2,
                 "data" : [
-                    "0001" : {
+                    {
+                        "bagNumber" : "0001",
                         "status"    : "ok",
+                        "trouble"   : false,
                         "message"   : "success",
                     },
-                    "0002" : {
+                    {
+                        "bagNumber": "0002",
                         "status"    : "error",
+                        "trouble"   : false,
                         "message"   : "Gabung Paket sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
                     }
                 ]
@@ -93,7 +100,7 @@ HOST: http://api.tms.sicepat.com
 
 ## Scan In List [/web/pod/scanIn/list]
 
-### Scan In List URL [POST]
+### Scan In List [POST]
 
 + Request Scan In List (application/json)
     + Header
@@ -102,19 +109,18 @@ HOST: http://api.tms.sicepat.com
 
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-
         + filters   : (object)
             + startScanInDateTime   : `2019-05-01 00:00:00` (string)
             + endScanInDateTime     : `2019-05-01 00:00:00` (string)
-            + branchScanId : 12 (number)
-            + branchOriginId : 10 (number)
+            + branchScanId          : 12 (number)
+            + branchOriginId        : 10 (number)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
         + search    : (object)
             + fields    : `scanInDateTime`, `awbNumber`, (array[string])
-            + value     : 'anisa'
+            + value     : `anisa`
         + searchColumns: (array)
             + item:
                 + field   : awbNumber (string)
@@ -128,173 +134,41 @@ HOST: http://api.tms.sicepat.com
 
             {
                 "paging": {
-                    "currentPage": 1,
-                    "nextPage": 2,
-                    "prevPage": 0,
-                    "totalPage": 8,
-                    "totalData": 798,
-                    "limit": 100
+                    "currentPage"   : 1,
+                    "nextPage"      : 2,
+                    "prevPage"      : 0,
+                    "totalPage"     : 8,
+                    "totalData"     : 798,
+                    "limit"         : 100
                 },
                 "data": [
                     {
                         "scanInDateTime": "2019-03-01 10:00:00",
-                        "awbNumber": "123412311111",
-                        "branchNameScan": "1234",
-                        "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
+                        "awbNumber"     : "123412311111",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "agus"
                     },
                     {
                         "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "12345",
-                        "branchNameScan": "12346",
-                        "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
+                        "awbNumber"     : "12345",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "budi"
                     },
                     {
                         "scanInDateTime": "2019-03-01 10:00:00",
-                        "awbNumber": "1234",
-                        "branchNameScan": "1234",
-                        "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
+                        "awbNumber"     : "1234",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "aman"
                     },
                     {
                         "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "12345",
-                        "branchNameScan": "12346",
-                        "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-01 10:00:00",
-                        "awbNumber": "1234",
-                        "branchNameScan": "1234",
-                        "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "12345",
-                        "branchNameScan": "12346",
-                        "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-01 10:00:00",
-                        "awbNumber": "1234",
-                        "branchNameScan": "1234",
-                        "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "12345",
-                        "branchNameScan": "12346",
-                        "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-01 10:00:00",
-                        "awbNumber": "1234",
-                        "branchNameScan": "1234",
-                        "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "12345",
-                        "branchNameScan": "12346",
-                        "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-01 10:00:00",
-                        "awbNumber": "1234",
-                        "branchNameScan": "1234",
-                        "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "12345",
-                        "branchNameScan": "12346",
-                        "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-01 10:00:00",
-                        "awbNumber": "1234",
-                        "branchNameScan": "1234",
-                        "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "12345",
-                        "branchNameScan": "12346",
-                        "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-01 10:00:00",
-                        "awbNumber": "1234",
-                        "branchNameScan": "1234",
-                        "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "12345",
-                        "branchNameScan": "12346",
-                        "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-01 10:00:00",
-                        "awbNumber": "1234",
-                        "branchNameScan": "1234",
-                        "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "12345",
-                        "branchNameScan": "12346",
-                        "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-01 10:00:00",
-                        "awbNumber": "1234",
-                        "branchNameScan": "1234",
-                        "branchNameFrom": "1234",
-                        "employeeName": "1234",
-                        "scanInStatus": "Ya"
-                    },
-                    {
-                        "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "12345",
-                        "branchNameScan": "12346",
-                        "branchNameFrom": "12341",
-                        "employeeName": "12342",
-                        "scanInStatus": "Tidak"
+                        "awbNumber"     : "12345",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "dian"
                     }
                 ]
             }
@@ -311,27 +185,27 @@ HOST: http://api.tms.sicepat.com
 
 # Group Scan Out
 
-## Scan Out [/web/pod/scanOut/create]
+## Create Scan Out [/web/pod/scanOut/create]
     Form Surat Jalan: Untuk Scan Out dari Web POD
 
-### Scan Out URL [POST]
+### Create Scan Out [POST]
 
-+ Request Scan In (application/json)
++ Request Create Scan Out (application/json)
 
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
-        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + doPodType : `20000`, `24500`, `14000`, `25000`, (string, required)
-        + doPodMethod :  `internal`, `3pl`,  (string, required)
-        + branchIdTo : branchIdTo, (string) - required when doPodType != Antar
-        + employeeIdDriver : employeeId, (string, required)
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + doPodType         : `20000`, `14000`, (string, required) - 20000 = CRISS CROSS, 14000 = ANTAR, TRANSIT (Hub, dan Gerai)
+        + doPodMethod       :  `internal`, `3pl`,  (string) - required sesuai doPodType
+        + branchIdTo        : branchIdTo, (string) - required when doPodType != Antar
+        + employeeIdDriver  : employeeId, (string, required)
         + partnerLogisticId : partnerLogisticId, (string) - required when doPodMethod = 3PL/Third Party
-        + vehicleNumber : `DPS-1701001-1234-ABC`, (string)
-        + doPodDateTime : `2019-05-01 00:00:00` (string)
-        + desc: `sss`, (string)
-        + totalBag: 1, (number)
+        + vehicleNumber     : `DPS-1701001-1234-ABC`, (string)
+        + doPodDateTime     : `2019-05-01 00:00:00` (string)
+        + desc              : `sss`, (string)
+        + totalBag          : 1, (number)
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -356,32 +230,37 @@ HOST: http://api.tms.sicepat.com
 ## Scan Out Awb [/web/pod/scanOut/awb]
     Surat Jalan Resi: Untuk Scan Out dari Web POD
 
-### Scan Out Awb URL [POST]
+### Scan Out Awb [POST]
 
-+ Request Scan In (application/json)
++ Request Scan Out (application/json)
+
     + Header
+
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + doPodId : 1,
-        + awbNumber : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
+        + doPodId           : 1,
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + awbNumber         : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
-                "totalData" : 2,
-                "totalSuccess" : 1,
-                "totalError" : 1,
+                "totalData"     : 2,
+                "totalSuccess"  : 1,
+                "totalError"    : 1,
                 "data" : [
                     {
                         "awbNumber" : "0001",
                         "status"    : "ok",
+                        "trouble"   : false,
                         "message"   : "success",
                     },
                     {
                         "awbNumber": "0002",
                         "status"    : "error",
+                        "trouble"   : false,
                         "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
                     }
                 ]
@@ -400,35 +279,38 @@ HOST: http://api.tms.sicepat.com
 ## Scan Out Bag [/web/pod/scanOut/Bag]
     Surat Jalan Gabung Paket: Untuk Scan Out dari Web POD
 
-### Scan Out Bag URL [POST]
+### Scan Out Bag [POST]
 
-+ Request Scan In (application/json)
++ Request Scan Out Bag (application/json)
 
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + "doPodId" : 1,
-        + bagNumber : `0001`, `0002`, (array[string], required) - required when accesspermission = hub
+        + doPodId           : 1,
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + bagNumber         : `0001`, `0002`, (array[string], required) - required when accesspermission = hub
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
-                "totalData" : 2,
-                "totalSuccess" : 1,
-                "totalError" : 1,
+                "totalData"     : 2,
+                "totalSuccess"  : 1,
+                "totalError"    : 1,
                 "data" : [
                     {
-                        "awbNumber" : "0001",
+                        "bagNumber" : "0001",
                         "status"    : "ok",
+                        "trouble"   : false,
                         "message"   : "success",
                     },
                     {
-                        "awbNumber": "0002",
+                        "bagNumber" : "0002",
                         "status"    : "error",
-                        "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                        "trouble"   : false,
+                        "message"   : "Gabung Paket sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
                     }
                 ]
             }
@@ -444,10 +326,10 @@ HOST: http://api.tms.sicepat.com
             {}
 
 
-## Scan Out List [/web/pod/scanOut/list]
-    Daftar Surat Jalan: Untuk menampilkan daftar Scan Out dari Web POD
+## Scan Out Resi List [/web/pod/scanOut/awbList]
+    Daftar Surat Jalan Resi: Untuk menampilkan daftar Scan Out dari Web POD
 
-### Scan Out List URL [POST]
+### Scan Out Resi List [POST]
 
 + Request Scan Out List (application/json)
 
@@ -457,21 +339,16 @@ HOST: http://api.tms.sicepat.com
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
         + filters   : (object)
-            + startDeliveryDateTime   : `2019-05-01 00:00:00` (string)
-            + endDeliveryDateTime     : `2019-05-01 00:00:00` (string)
-            + branchScanId : 12 (number)
-            + branchOriginId : 10 (number)
+            + employeeIdDriver      : `12` (string)
+            + doPodCode             : `DOP/1904/00001` (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
         + search    : (object)
-            + fields    : `scanInDateTime`, `doPodDateTime`, `doPodCode`, `nickname`, `desc` (array[string]) - nickname driver
+            + fields    : `doPodDateTime`, `doPodCode`, `fullname`, `desc` (array[string]) - fullname driver
             + value     : 'a'
         + searchColumns: (array)
-            + item:
-                + field   : scanInDateTime (string)
-                + value   : abc (string)
             + item:
                 + field   : doPodDateTime (string)
                 + value   : 20190801 (string)
@@ -482,27 +359,27 @@ HOST: http://api.tms.sicepat.com
 
             {
                 "paging": {
-                    "currentPage": 1,
-                    "nextPage": 2,
-                    "prevPage": 0,
-                    "totalPage": 8,
-                    "totalData": 798,
-                    "limit": 100
+                    "currentPage"   : 1,
+                    "nextPage"      : 0,
+                    "prevPage"      : 0,
+                    "totalPage"     : 1,
+                    "totalData"     : 2,
+                    "limit"         : 100
                 },
                 "data": [
                     {
-                        "scanInDateTime": "2019-03-01 10:00:00",
-                        "doPodDateTime": "2019-03-02 10:00:00",
-                        "doPodCode": "DOP/1904/00001",
-                        "nickname": "agus",
-                        "desc": "1234"
+                        "doPodDateTime" : "2019-03-02 10:00:00",
+                        "doPodCode"     : "DOP/1904/00001",
+                        "doPodId"       : "1",
+                        "fullname"      : "agus",
+                        "desc"          : "1234"
                     },
                     {
-                        "scanInDateTime": "2019-03-01 11:00:00",
-                        "doPodDateTime": "2019-03-02 12:00:00",
-                        "doPodCode": "DOP/1904/00002",
-                        "nickname": "agus2",
-                        "desc": "1234"
+                        "doPodDateTime" : "2019-03-02 12:00:00",
+                        "doPodCode"     : "DOP/1904/00002",
+                        "doPodId"       : "2",
+                        "fullname"      : "agus2",
+                        "desc"          : "1234"
                     }
                 ]
             }
@@ -517,38 +394,29 @@ HOST: http://api.tms.sicepat.com
 
             {}
 
+## Scan Out Bag List [/web/pod/scanOut/bagList]
+    Daftar Surat Jalan Gabung Paket: Untuk menampilkan daftar Scan Out dari Web POD
 
-# Group List
+### Scan Out Bag List [POST]
 
-## Resi POD List [/web/pod/podList]
-    Daftar Resi POD: Untuk menampilkan daftar status resi POD
-
-### Resi POD List URL [POST]
-
-+ Request Resi POD List (application/json)
++ Request Scan Out List (application/json)
 
     + Header
 
-        Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
         + filters   : (object)
-            + startScanOutDateTime   : `2019-05-01 00:00:00` (string)
-            + endScanOutDateTime     : `2019-05-01 00:00:00` (string)
-            + awbNumber : `123456789012` (string)
-            + doPodStatus : `Delivered`, `Pending` (string)
-            + partnerLogisticName : `JNE`, `POS` (string)
+            + employeeIdDriver      : `12` (string)
+            + doPodCode             : `DOP/1904/00001` (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
         + search    : (object)
-            + fields    : `doPodDateTime`, `awbNumber`, (array[string])
+            + fields    : `doPodDateTime`, `doPodCode`, `fullname`, `desc` (array[string]) - fullname driver
             + value     : 'a'
         + searchColumns: (array)
-            + item:
-                + field   : awbNumber (string)
-                + value   : abc (string)
             + item:
                 + field   : doPodDateTime (string)
                 + value   : 20190801 (string)
@@ -559,27 +427,270 @@ HOST: http://api.tms.sicepat.com
 
             {
                 "paging": {
-                    "currentPage": 1,
-                    "nextPage": 2,
-                    "prevPage": 0,
-                    "totalPage": 8,
-                    "totalData": 798,
-                    "limit": 100
+                    "currentPage"   : 1,
+                    "nextPage"      : 0,
+                    "prevPage"      : 0,
+                    "totalPage"     : 1,
+                    "totalData"     : 2,
+                    "limit"         : 100
                 },
                 "data": [
                     {
-                        "doPodDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "000000012341",
-                        "branchName": "Larangan",
-                        "doPodStatus": "Delivered",
-                        "partnerLogisticName": "JNE"
+                        "doPodDateTime" : "2019-03-02 10:00:00",
+                        "doPodCode"     : "DOP/1904/00001",
+                        "doPodId"       : "1",
+                        "fullname"      : "agus",
+                        "desc"          : "1234"
                     },
                     {
-                        "doPodDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "000000012342",
-                        "branchName": "Juanda",
-                        "doPodStatus": "Retur",
-                        "partnerLogisticName": "POS"
+                        "doPodDateTime" : "2019-03-02 12:00:00",
+                        "doPodCode"     : "DOP/1904/00002",
+                        "doPodId"       : "2",
+                        "fullname"      : "agus2",
+                        "desc"          : "1234"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan Out List per DO [/web/pod/scanOut/awbDeliveryOrder]
+    Daftar Surat Jalan Resi: Untuk menampilkan detail Delivery Order ketika di klik No.Surat Jalan
+
+### Scan Out List per DO [POST]
+
++ Request Scan Out List per DO (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+    + Attributes (object)
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + filters           : (object, optional)
+        + doPodId           : `001` (string)
+        + page              : 1, (number) - Default 1
+        + limit             : 10, (number) - Default 10
+        + sortBy            : awb_number, (string)
+        + sortDir           : asc, (string)
+        + search            : (object)
+            + fields    : `awb_number`, `weight`, `consignee_name` (array[string])
+            + value     : 'a'
+        + searchColumns     : (array)
+            + item:
+                + field   : awb_number (string)
+                + value   : abc (string)
+            + item:
+                + field   : weight (string)
+                + value   : 20190801 (string)
+          
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage"   : 1,
+                    "nextPage"      : 0,
+                    "prevPage"      : 0,
+                    "totalPage"     : 1,
+                    "totalData"     : 2,
+                    "limit"         : 100
+                },
+                "data": [
+                    {
+                        "awbNumber"     : "12314812",
+                        "weight"        : "3",
+                        "consigneeName" : "agus"
+                    },
+                    {
+                        "awbNumber"     : "12314812",
+                        "weight"        : "2",
+                        "consigneeName" : "agus2"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan Out List per DO [/web/pod/scanOut/bagDeliveryOrder]
+    Daftar Surat Jalan Gabung Paket: Untuk menampilkan detail Delivery Order ketika di klik No.Surat Jalan
+
+### Scan Out List per DO [POST]
+
++ Request Scan Out List per DO (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+    + Attributes (object)
+        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + filters   : (object, optional)
+        + doPodId   : `001` (string)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : bag_number, (string)
+        + sortDir   : asc, (string)
+        + search    : (object)
+            + fields    : `bag_number`, `weight`, `consignee_name` (array[string])
+            + value     : 'a'
+        + searchColumns: (array)
+            + item:
+                + field   : bag_number (string)
+                + value   : abc (string)
+            + item:
+                + field   : weight (string)
+                + value   : 20190801 (string)
+          
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage"   : 1,
+                    "nextPage"      : 0,
+                    "prevPage"      : 0,
+                    "totalPage"     : 1,
+                    "totalData"     : 2,
+                    "limit"         : 100
+                },
+                "data": [
+                    {
+                        "bagNumber"     : "12314812",
+                        "weight"        : "3",
+                        "consigneeName" : "agus"
+                    },
+                    {
+                        "bagNumber"     : "12314812",
+                        "weight"        : "2",
+                        "consigneeName" : "agus2"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+# Group Input Resi 3PL
+
+## Save Awb 3PL [/web/pod/awb3PL/save]
+    Input Resi 3PL: Untuk save Resi 3PL
+
+### Save Awb 3PL [POST]
+
++ Request Save Awb 3PL (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+    + Attributes (object)
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + awbNumber         : `12412312` (string, required)
+        + partnerLogisticId : `1` (string, required)
+        + awbNumberPl      : `12314JOW` (string, required)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "status"    : "ok", // error if there is a problem
+                "message"   : "success", // error message
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+# Group List
+
+## Awb POD List [/web/pod/awbList]
+    Daftar Resi POD: Untuk menampilkan daftar status resi POD
+    Daftar Resi 3PL: Untuk menampilkan daftar status resi 3PL
+
+### Awb POD List [POST]
+
++ Request Awb POD List (application/json)
+
+    + Header
+
+        Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+    + Attributes (object)
+        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + filters        : (object)
+            + startDoPodDateTime    : `2019-05-01 00:00:00` (string)
+            + endDoPodDateTime      : `2019-05-01 00:00:00` (string)
+            + awbNumber             : `123456789012` (string, optional)
+            + doPodStatus           : `Delivered` (string)
+            + partnerLogisticId     : `1` (string, optional)
+        + page           : 1, (number) - Default 1
+        + limit          : 10, (number) - Default 10
+        + sortBy         : scan_out_date_time, (string)
+        + sortDir        : asc, (string)
+        + search         : (object)
+            + fields    : `do_pod_date_time`, `awb_number`, `awb_number_pl (array, optional)
+            + value     : 'a'
+        + searchColumns: (array)
+            + item:
+                + field   : awb_number (string)
+                + value   : abc (string)
+            + item:
+                + field   : do_pod_date_time (string)
+                + value   : 20190801 (string)
+          
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage"   : 1,
+                    "nextPage"      : 0,
+                    "prevPage"      : 0,
+                    "totalPage"     : 1,
+                    "totalData"     : 2,
+                    "limit"         : 100
+                },
+                "data": [
+                    {
+                        "doPodDateTime"         : "2019-03-02 10:00:00",
+                        "awbNumber"             : "000000012341",
+                        "awbNumberPl"          : "jow000012341",
+                        "branchName"            : "Larangan",
+                        "doPodStatus"           : "Delivered",
+                        "partnerLogisticName"   : "JNE"
+                    },
+                    {
+                        "doPodDateTime"         : "2019-03-02 10:00:00",
+                        "awbNumber"             : "000000012342",
+                        "awbNumberPl"          : "",
+                        "branchName"            : "Juanda",
+                        "doPodStatus"           : "Retur",
+                        "partnerLogisticName"   : ""
                     }
                 ]
             }
@@ -598,23 +709,23 @@ HOST: http://api.tms.sicepat.com
 ## Resi POD Delete [/web/pod/podList/delete]
     Resi POD Delete: Untuk menghapus resi POD
 
-### Resi POD Delete URL [POST]
+### Resi POD Delete [POST]
 
 + Request Resi POD Delete (application/json)
 
     + Header
         Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
-        + doPodId : `001` (string)
+        + awbNumber : `001` (string)
           
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
-                "totalData" : 1,
-                "totalSuccess" : 1,
-                "totalError" : null,
+                "totalData"     : 1,
+                "totalSuccess"  : 1,
+                "totalError"    : null,
                 "data" : [
                     {
                         "awbNumber" : "000000012341",
@@ -638,24 +749,24 @@ HOST: http://api.tms.sicepat.com
 ## Resi POD Edit [/web/pod/podList/edit]
     Resi POD Delete: Untuk menghapus resi POD
 
-### Resi POD Edit URL [POST]
+### Resi POD Edit [POST]
 
 + Request Resi POD Edit (application/json)
 
     + Header
         Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
-        + doPodId : `001` (string)
-        + branchName : `Juanda` (string)
+        + awbNumber     : `001` (string)
+        + branchName    : `Juanda` (string)
           
 
 + Response 200 (application/json; charset=utf-8)
     + Body
 
             {
-                "totalData" : 1,
-                "totalSuccess" : 1,
-                "totalError" : null,
+                "totalData"     : 1,
+                "totalSuccess"  : 1,
+                "totalError"    : null,
                 "data" : [
                     {
                         "awbNumber" : "000000012341",
@@ -678,7 +789,7 @@ HOST: http://api.tms.sicepat.com
 ## Resi Troubled List [/web/pod/troubledList]
     Daftar Resi Bermasalah: Untuk menampilkan daftar status resi bermasalah
 
-### Resi Troubled List URL [POST]
+### Resi Troubled List [POST]
 
 + Request Resi Troubled List (application/json)
 
@@ -721,20 +832,20 @@ HOST: http://api.tms.sicepat.com
                 },
                 "data": [
                     {
-                        "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "000000012341",
-                        "desc": "Double Resi",
-                        "awbTroubleId": "0001",
-                        "awbTroubleName": "Resi Scan-in Digerai Lain"
-                        "statusResolveId": "Trouble"
+                        "scanInDateTime"    : "2019-03-02 10:00:00",
+                        "awbNumber"         : "000000012341",
+                        "desc"              : "Double Resi",
+                        "awbTroubleId"      : "0001",
+                        "awbTroubleName"    : "Resi Scan-in Digerai Lain",
+                        "statusResolveId"   : "Trouble"
                     },
                     {
-                        "scanInDateTime": "2019-03-02 10:00:00",
-                        "awbNumber": "000000012342",
-                        "desc": "Double Scan In",
-                        "awbTroubleId": "0002",,
-                        "awbTroubleName": ""
-                        "statusResolveId": "Done"
+                        "scanInDateTime"    : "2019-03-02 10:00:00",
+                        "awbNumber"         : "000000012342",
+                        "desc"              : "Double Scan In",
+                        "awbTroubleId"      : "0002",
+                        "awbTroubleName"    : "",
+                        "statusResolveId"   : "Done"
                     }
                 ]
             }
@@ -753,7 +864,7 @@ HOST: http://api.tms.sicepat.com
 ## Resi Troubled Detail [/web/pod/troubledList/detail]
     Detail resi bermasalah: Untuk memperbaiki resi yang bermasalah
 
-### Resi Troubled Detail URL [POST]
+### Resi Troubled Detail [POST]
 
 + Request Resi Troubled Detail (application/json)
 
@@ -761,7 +872,7 @@ HOST: http://api.tms.sicepat.com
         Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
         + permissionToken : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + awbNumber : `123456789012` (string)
+        + awbNumber       : `123456789012` (string)
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -771,18 +882,18 @@ HOST: http://api.tms.sicepat.com
                 "totalError" : null,
                 "data" : [
                     {
-                        "awbId" : "001",
-                        "awbNumber" : "000000012341",
-                        "branchName" : "Juanda",
-                        "consigneeAddress" : "jl. abc",
-                        "customerName" : "Bukalapak"
+                        "awbId"             : "001",
+                        "awbNumber"         : "000000012341",
+                        "branchName"        : "Juanda",
+                        "consigneeAddress"  : "jl. abc",
+                        "customerName"      : "Bukalapak"
                     },
                     {
-                        "awbId" : "002",
-                        "awbNumber" : "000000012341",
-                        "branchName" : "Juanda2",
-                        "consigneeAddress" : "jl. abc2",
-                        "customerName" : "Bukalapak2"
+                        "awbId"             : "002",
+                        "awbNumber"         : "000000012341",
+                        "branchName"        : "Juanda2",
+                        "consigneeAddress"  : "jl. abc2",
+                        "customerName"      : "Bukalapak2"
                     }
                 ]
             }
@@ -801,16 +912,16 @@ HOST: http://api.tms.sicepat.com
 ## Resi Troubled Fixing [/web/pod/troubledList/edit]
     Perbaiki resi bermasalah: Untuk memperbaiki resi yang bermasalah
 
-### Resi Troubled Fixing URL [POST]
+### Resi Troubled Fixing [POST]
 
 + Request Resi Troubled Fixing (application/json)
 
     + Header
         Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
-        + permissionToken : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + awbNumber : `123456789012` (string)
-        + awbId : `001` (string)
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + awbNumber         : `123456789012` (string)
+        + awbId             : `001` (string)
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -820,7 +931,7 @@ HOST: http://api.tms.sicepat.com
                 "totalError" : null,
                 "data" : [
                     {
-                        "awbNumber" : "000000012341",
+                        "awbNumber"     : "000000012341",
                         "branchName" : "Juanda",
                         "consigneeAddress" : "jl. abc",
                         "customerName" : "Bukalapak",
@@ -842,3 +953,86 @@ HOST: http://api.tms.sicepat.com
 
 
 
+# Group Role Permission
+
+## Role Permission List [/web/pod/rolePermission/list]
+    Untuk mendapatkan hak akses by RoleId
+
+### Role Permission List [POST]
+
++ Request Role Permission List (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + roleId : `1` (string, required) - RoleId
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "rolesAccessPermissions": [
+                    "dashboard",
+                    "pod",
+                    "pod_scan_in_branch",
+                    "pod_scan_in_hub",
+                    "do_pod",
+                    "do_pod_hub",
+                    "pod_sortir_hub",
+                    "pod_input_awb_3pl",
+                    "pod_manual",
+                    "scan_in_list",
+                    "do_pod_list",
+                    "pod_awb_list",
+                    "awb_3pl_list",
+                    "pod_scan_in_problem_ct",
+                    "pod_scan_in_problem_branch",
+                    "pod_scan_in_problem_hub",
+                    "pod_awb_problem"
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Edit Role Permission [/web/pod/rolePermission/edit]
+    Untuk mendapatkan hak akses by RoleId
+
+### Edit Role Permission [POST]
+
++ Request Edit Role Permission (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + roleId : `1` (string, required) - RoleId
+        + rolesAccessPermissions: `dashboard`, `pod` (array, required) - List Access Permission
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "status"    : "ok", // error - if there is a problem
+                "message"   : "success", // error message here
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}

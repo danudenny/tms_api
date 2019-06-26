@@ -1,16 +1,21 @@
 // #region import
 import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
-import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 import { WebDeliveryOutService } from '../../services/web/web-delivery-out.service';
 import { WebScanInBag1ResponseVm } from '../../models/web-scanin-awb.response.vm';
-import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payload.vm';
-import { WebScanOutAwbVm, WebScanOutAwbResponseVm, WebScanOutCreateVm, WebScanOutCreateResponseVm } from '../../models/web-scan-out.vm';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import moment = require('moment');
-import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import {
+  WebScanOutAwbVm,
+  WebScanOutCreateVm,
+  WebScanOutAwbListPayloadVm,
+} from '../../models/web-scan-out.vm';
+import {
+  WebScanOutAwbResponseVm,
+  WebScanOutCreateResponseVm,
+  WebScanOutAwbListResponseVm,
+} from '../../models/web-scan-out-response.vm';
 // #endregion
 
 @ApiUseTags('Web Delivery Out')
@@ -43,8 +48,8 @@ export class WebDeliveryOutController {
 
   @Post('awb')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
   @Transactional()
   public async scanOutAwb(@Body() payload: WebScanOutAwbVm) {
@@ -58,17 +63,27 @@ export class WebDeliveryOutController {
 
     // TODO:
 
-    return null; // this.webDeliveryService.scanOutAwb(payload);
+    return this.webDeliveryOutService.scanOutAwb(payload);
   }
 
-  @Post('list')
+  @Post('awbList')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanInListResponseVm })
-  public async findAllDeliveryList(@Body() payload: WebDeliveryListFilterPayloadVm) {
-    // TODO: ??
-    return null; // this.webDeliveryService.findAllDeliveryList(payload);
+  @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
+  public async awbList(@Body() payload: WebScanOutAwbListPayloadVm) {
+
+    return this.webDeliveryOutService.scanOutAwbList(payload);
+  }
+
+  @Post('bagList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
+  public async bagList(@Body() payload: WebScanOutAwbListPayloadVm) {
+
+    return this.webDeliveryOutService.scanOutAwbList(payload);
   }
 
   @Post('bag')

@@ -15,6 +15,17 @@ ADD COLUMN employee_journey_id_in bigint,ADD COLUMN employee_journey_id_out bigi
 ALTER TABLE do_pod
 ADD COLUMN partner_logistic_id bigint;
 
+-- ALTER table : do_pod 21/06/2019
+
+ALTER TABLE do_pod
+ADD COLUMN do_pod_method int;
+
+ALTER TABLE do_pod
+ADD COLUMN vehicle_number varchar (100);
+
+ALTER TABLE do_pod
+ADD COLUMN description text;
+
 
 -- ALTER table : do_pod 28/05/2019
 
