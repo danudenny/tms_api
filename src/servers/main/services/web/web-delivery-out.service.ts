@@ -27,6 +27,7 @@ import { IsNull } from 'typeorm';
 import { BaseQueryPayloadVm } from '../../../../shared/models/base-query-payload.vm';
 import { toInteger, isEmpty } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
 // #endregion
 
 @Injectable()
@@ -214,7 +215,7 @@ export class WebDeliveryOutService {
     }
   }
 
-  async scanOutAwbList(payload: WebScanOutAwbListPayloadVm): Promise<WebScanOutAwbListResponseVm> {
+  async scanOutList(payload: WebScanOutAwbListPayloadVm, isHub = false): Promise<WebScanOutAwbListResponseVm> {
     const page = toInteger(payload.page) || 1;
     const take = toInteger(payload.limit) || 10;
     const offset = (page - 1) * take;
@@ -235,55 +236,63 @@ export class WebDeliveryOutService {
         dir: sortDir,
       },
     ];
+    // add filter Do POD type (Transit HUB)
+    if (isHub) {
+      filterData.push(
+        [
+          {
+            field: 'do_pod.do_pod_type',
+            operator: 'eq',
+            value: POD_TYPE.TRANSIT_HUB,
+          },
+        ],
+      );
+    }
 
-    // // add filter
-    // if (!!payload.filters) {
-    //   // AND condition
-    //   filterData.push(
-    //     [
-    //       {
-    //         field: 'do_pod.do_pod_code',
-    //         operator: 'like',
-    //         value: payload.filters.doPodCode,
-    //       },
-    //       {
-    //         field: 'employee.fullname',
-    //         operator: 'like',
-    //         value: payload.filters.name,
-    //       },
-    //     ],
-    //   );
-    // }
+    // add filter
+    if (!!payload.filters) {
+      // AND condition
+      filterData.push(
+        [
+          {
+            field: 'do_pod.do_pod_code',
+            operator: 'like',
+            value: payload.filters.doPodCode,
+          },
+          {
+            field: 'employee.fullname',
+            operator: 'like',
+            value: payload.filters.name,
+          },
+        ],
+      );
+    }
 
-    // if (!!payload.search) {
-    //   // OR condition
-    //   filterData.push(
-    //     [
-    //       {
-    //         field: 'do_pod.do_pod_code',
-    //         operator: 'like',
-    //         value: payload.search,
-    //       },
-    //     ],
-    //   );
-    //   filterData.push(
-    //     [
-    //       {
-    //         field: 'employee.fullname',
-    //         operator: 'like',
-    //         value: payload.search,
-    //       },
-    //     ],
-    //   );
-    // }
+    if (!!payload.search) {
+      // OR condition
+      filterData.push(
+        [
+          {
+            field: 'do_pod.do_pod_code',
+            operator: 'like',
+            value: payload.search,
+          },
+        ],
+      );
+      filterData.push(
+        [
+          {
+            field: 'employee.fullname',
+            operator: 'like',
+            value: payload.search,
+          },
+        ],
+      );
+    }
 
-    // TODO: searchColumns
     if (!!payload.searchColumns) {
       // OR condition
       for (const column of payload.searchColumns) {
-
-        console.log('===========================================');
-        console.log(column);
         filterData.push(
           [
             {
@@ -297,8 +306,6 @@ export class WebDeliveryOutService {
     }
 
     if (filterData.length > 0) {
-      console.log(' Filter ==============================================');
-      console.log(filterData);
       queryPayload.filter = filterData;
     }
 
@@ -321,6 +328,10 @@ export class WebDeliveryOutService {
     result.paging = MetaService.set(page, take, total);
 
     return result;
+  }
+
+  async awbDetailDelivery(payload: WebDeliveryList) {
+    return null;
   }
 
   // Type DO POD

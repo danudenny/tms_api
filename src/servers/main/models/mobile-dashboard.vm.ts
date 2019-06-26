@@ -1,5 +1,4 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
-import { DeliveryListVm } from './deliveryList.vm';
 
 export class MobiledashboardVm {
   @ApiModelProperty()

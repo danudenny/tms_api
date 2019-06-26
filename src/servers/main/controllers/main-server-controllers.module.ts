@@ -9,6 +9,7 @@ import { CustomerController } from './master/customer.controller';
 import { EmployeeController } from './master/employee.controller';
 import { PartnerLogisticController } from './master/partner-logistic.controller';
 import { ReasonController } from './master/reason.controller';
+import { RoleController } from './master/role.controller';
 import { MobileDashboardController } from './mobile/mobile.dashboard.controller';
 import { MobileDeliveryController } from './mobile/mobile.delivery.controller';
 import { GabunganController } from './resi gabungan/gabungan.controller';
@@ -31,6 +32,7 @@ import { WebDeliveryOutController } from './web/web.delivery.out.controller';
     AwbStatusController,
     PartnerLogisticController,
     ReasonController,
+    RoleController,
   ],
 })
 export class MainServerControllersModule {}

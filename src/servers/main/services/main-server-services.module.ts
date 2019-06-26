@@ -14,6 +14,7 @@ import { CustomerService } from './master/customer.service';
 import { AwbStatusService } from './master/awb-status.service';
 import { ReasonService } from './master/reason.service';
 import { PartnerLogisticService } from './master/partner-logistic.service';
+import { RoleService } from './master/role.service';
 
 @Module({
   imports: [OrmRepositoryModule, SharedModule],
@@ -29,6 +30,7 @@ import { PartnerLogisticService } from './master/partner-logistic.service';
     CustomerService,
     AwbStatusService,
     ReasonService,
+    RoleService,
     PartnerLogisticService,
   ],
   exports: [
@@ -43,6 +45,7 @@ import { PartnerLogisticService } from './master/partner-logistic.service';
     CustomerService,
     AwbStatusService,
     ReasonService,
+    RoleService,
     PartnerLogisticService,
   ],
 })
