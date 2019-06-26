@@ -12,12 +12,15 @@ export const initializeTransactionalContext = () =>
 
 export const getEntityManagerOrTransactionManager = (
   connectionName: string,
-  entityManager: EntityManager | undefined,
+  entityManager?: EntityManager | undefined,
 ): EntityManager => {
   const context = getNamespace(NAMESPACE_NAME);
 
   if (context && context.active) {
-    const transactionalEntityManager = getEntityManagerForConnection(connectionName, context);
+    const transactionalEntityManager = getEntityManagerForConnection(
+      connectionName,
+      context,
+    );
 
     if (transactionalEntityManager) {
       return transactionalEntityManager;
@@ -43,6 +46,9 @@ export const getHookInContext = (context: Namespace): EventEmitter | null => {
   return context.get(TYPE_ORM_HOOK_KEY);
 };
 
-export const setHookInContext = (context: Namespace, emitter: EventEmitter | null) => {
+export const setHookInContext = (
+  context: Namespace,
+  emitter: EventEmitter | null,
+) => {
   return context.set(TYPE_ORM_HOOK_KEY, emitter);
 };
