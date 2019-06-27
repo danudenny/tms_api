@@ -1,12 +1,13 @@
 import { castArray } from 'lodash';
 import { Brackets, createQueryBuilder, SelectQueryBuilder, WhereExpression } from 'typeorm';
 
-import { BaseQueryPayloadFilterVm, BaseQueryPayloadVm } from '../models/base-query-payload.vm';
+import { BaseMetaPayloadFilterVm, BaseMetaPayloadVm } from '../models/base-meta-payload.vm';
+import { BaseQueryPayloadVm } from '../models/base-query-payload.vm';
 
 export class RequestQueryBuidlerService {
   public static applyQueryPayloadFilter(
     queryBuilder: SelectQueryBuilder<any> | WhereExpression,
-    filter: BaseQueryPayloadFilterVm,
+    filter: BaseMetaPayloadFilterVm,
     mode: 'and' | 'or' = 'and',
     filterVarId?: string,
   ) {
@@ -21,8 +22,11 @@ export class RequestQueryBuidlerService {
         operator = '!=';
         break;
       case 'like':
+      case 'ilike':
       case 'sw':
+      case 'isw':
       case 'ew':
+      case 'iew':
         operator = 'LIKE';
         break;
       case 'gt':
@@ -53,14 +57,23 @@ export class RequestQueryBuidlerService {
 
     let value = filter.value;
     switch (filter.operator) {
-      case 'sw':
+      case 'isw':
         value = `${filter.value}%`.toLowerCase();
         break;
-      case 'ew':
+      case 'iew':
         value = `%${filter.value}`.toLowerCase();
         break;
-      case 'like':
+      case 'ilike':
         value = `%${filter.value}%`.toLowerCase();
+        break;
+      case 'sw':
+        value = `${filter.value}%`;
+        break;
+      case 'ew':
+        value = `%${filter.value}`;
+        break;
+      case 'like':
+        value = `%${filter.value}%`;
         break;
       case 'in':
       case 'nin':
@@ -87,9 +100,9 @@ export class RequestQueryBuidlerService {
           whereFn(`${field} ${operator} (:...${filterVar})`, filterVarValue);
         }
         break;
-      case 'like':
-      case 'sw':
-      case 'ew':
+      case 'ilike':
+      case 'isw':
+      case 'iew':
         whereFn(`LOWER(${field}) ${operator} :${filterVar}`, filterVarValue);
         break;
       case 'null':
@@ -151,6 +164,48 @@ export class RequestQueryBuidlerService {
           );
         }
       }
+    }
+
+    return qb;
+  }
+
+  public static buildQueryBuilderFromMetaPayload(
+    metaPayload: BaseMetaPayloadVm,
+    fieldResolverMap: { [key: string]: string } = {},
+  ) {
+    const qb = createQueryBuilder();
+
+    if (metaPayload.sortBy) {
+      const sortBy = fieldResolverMap[metaPayload.sortBy] || metaPayload.sortBy;
+      const sortDir: any = `${metaPayload.sortDir || 'asc'}`.toUpperCase();
+      qb.orderBy(sortBy, sortDir);
+    }
+
+    if (metaPayload.filters && metaPayload.filters.length) {
+      qb.andWhere(
+        new Brackets(qbAndWhere => {
+          for (const andFilterIdx in metaPayload.filters) {
+            const andFilter = metaPayload.filters[andFilterIdx];
+            let field = andFilter.field;
+            if (fieldResolverMap[andFilter.field]) {
+              field = fieldResolverMap[andFilter.field];
+            } else {
+              // wrap with double quotes, name => "name", user.name => "user"."name"
+              const dotFields = andFilter.field.split('.');
+              field = dotFields.map(dotField => `"${dotField}"`).join('.');
+            }
+            this.applyQueryPayloadFilter(
+              qbAndWhere,
+              {
+                ...andFilter,
+                field, // replace field with the one on fieldResolverMap if exists, this may help for field aliases that contains quote
+              },
+              'and',
+              andFilterIdx,
+            );
+          }
+        }),
+      );
     }
 
     return qb;
