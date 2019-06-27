@@ -1,4 +1,3 @@
-import { BaseQueryPayloadVm } from '../../../shared/models/base-query-payload.vm';
-import { AwbTrouble } from '../../../shared/orm-entity/awb-trouble';
+import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
 
-export class AwbTroublePayloadVm extends BaseQueryPayloadVm<AwbTrouble> {}
+export class AwbTroublePayloadVm extends BaseMetaPayloadVm {}

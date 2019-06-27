@@ -82,30 +82,34 @@ export class BaseMetaPayloadVm {
   }
 
   buildQueryBuilder(applyPagination: boolean = false) {
-    const queryBuilder = RequestQueryBuidlerService.buildQueryBuilderFromMetaPayload(
+    return RequestQueryBuidlerService.buildQueryBuilderFromMetaPayload(
       this,
+      applyPagination,
     );
-
-    if (applyPagination) {
-      this.applyPaginationToQueryBuilder(queryBuilder);
-    }
-
-    return queryBuilder;
   }
 
   applyPaginationToQueryBuilder(queryBuilder: SelectQueryBuilder<any>) {
     RequestQueryBuidlerService.applyMetaPayloadPagination(queryBuilder, this);
+
+    return queryBuilder;
   }
 
   resolveFieldAsFieldAlias(field: string) {
     let targetField = field;
     if (this.fieldResolverMap[field]) {
       targetField = this.fieldResolverMap[field];
-    } else {
-      // wrap with double quotes, name => "name", user.name => "user"."name"
-      const dotFields = field.split('.');
-      targetField = dotFields.map(dotField => `"${dotField}"`).join('.');
     }
+
+    const dotFields = targetField.split('.');
+    targetField = dotFields
+      .map(subField => {
+        if (!/^"/.test(targetField)) {
+          return `"${subField}"`;
+        }
+        return subField;
+      })
+      .join('.');
+
     return targetField;
   }
 
@@ -118,5 +122,18 @@ export class BaseMetaPayloadVm {
       this,
       applyPagination,
     );
+
+    return orionRepositoryQuery;
+  }
+
+  applyPaginationToOrionRepositoryQuery(
+    orionRepositoryQuery: OrionRepositoryQueryService<any>,
+  ) {
+    RequestOrionRepositoryService.applyMetaPayloadPagination(
+      orionRepositoryQuery,
+      this,
+    );
+
+    return orionRepositoryQuery;
   }
 }

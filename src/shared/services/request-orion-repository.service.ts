@@ -24,9 +24,11 @@ export class RequestOrionRepositoryService {
     repositoryQuery: OrionRepositoryQueryService<any>,
     metaPayload: BaseMetaPayloadVm,
   ) {
-    const sortBy = metaPayload.resolveFieldAsFieldAlias(metaPayload.sortBy);
-    const sortDir: any = `${metaPayload.sortDir || 'asc'}`.toUpperCase();
-    repositoryQuery.orderByRaw(sortBy, sortDir);
+    if (metaPayload.sortBy) {
+      const sortBy = metaPayload.resolveFieldAsFieldAlias(metaPayload.sortBy);
+      const sortDir: any = `${metaPayload.sortDir || 'asc'}`.toUpperCase();
+      repositoryQuery.orderByRaw(sortBy, sortDir);
+    }
   }
 
   public static applyMetaPayloadFilterItem(
@@ -92,16 +94,43 @@ export class RequestOrionRepositoryService {
     repositoryQuery: OrionRepositoryQueryService<any>,
     metaPayload: BaseMetaPayloadVm,
   ) {
-    const filters = metaPayload.filters;
+    if (metaPayload.filters && metaPayload.filters.length) {
+      const filters = metaPayload.filters;
 
-    repositoryQuery.andWhereIsolated(qWhere => {
-      for (const filter of filters) {
-        const field = metaPayload.resolveFieldAsFieldAlias(filter.field);
-        qWhere.andWhere(field, qWhereItem => {
-          this.applyMetaPayloadFilterItem(qWhereItem, filter);
-        });
-      }
-    });
+      repositoryQuery.andWhereIsolated(qWhere => {
+        for (const filter of filters) {
+          const field = metaPayload.resolveFieldAsFieldAlias(filter.field);
+          qWhere.andWhere(field, qWhereItem => {
+            this.applyMetaPayloadFilterItem(qWhereItem, filter);
+          });
+        }
+      });
+    }
+  }
+
+  public static applyMetaPayloadSearch(
+    repositoryQuery: OrionRepositoryQueryService<any>,
+    metaPayload: BaseMetaPayloadVm,
+  ) {
+    if (
+      metaPayload.search &&
+      metaPayload.searchFields &&
+      metaPayload.searchFields.length
+    ) {
+      repositoryQuery.andWhereIsolated(qWhere => {
+        for (const searchFieldIdx in metaPayload.searchFields) {
+          const searchField = metaPayload.searchFields[searchFieldIdx];
+          const field = metaPayload.resolveFieldAsFieldAlias(searchField.field);
+          qWhere.andWhere(field, qWhereItem => {
+            this.applyMetaPayloadFilterItem(qWhereItem, {
+              field,
+              operator: searchField.operator || 'ilike',
+              value: metaPayload.search,
+            });
+          });
+        }
+      });
+    }
   }
 
   public static applyMetaPayload(
@@ -110,6 +139,7 @@ export class RequestOrionRepositoryService {
     applyPagination: boolean = false,
   ) {
     this.applyMetaPayloadFilter(repositoryQuery, metaPayload);
+    this.applyMetaPayloadSearch(repositoryQuery, metaPayload);
     this.applyMetaPayloadSort(repositoryQuery, metaPayload);
 
     if (applyPagination) {

@@ -200,7 +200,6 @@ export class OrionRepositoryQueryService<
       | string
       | string[],
   ) {
-    groupByExpression = this.escapeCommaSeparatedAliases(groupByExpression);
     groupByExpression = this.resolveRawExpressionFields(
       groupByExpression,
       fieldsSelector,
@@ -343,7 +342,6 @@ export class OrionRepositoryQueryService<
     direction: 'ASC' | 'DESC' = 'ASC',
     fieldSelector?: ((obj: P) => OrionRepositoryQueryPropType) | string,
   ) {
-    orderByExpression = this.escapeCommaSeparatedAliases(orderByExpression);
     orderByExpression = this.resolveRawExpressionFields(
       orderByExpression,
       fieldSelector,
@@ -621,7 +619,7 @@ export class OrionRepositoryQueryService<
     const strings = str.split(',');
     const resolvedStrings = this.stringArrayEscapeNonSelectorArgs(strings);
 
-    return resolvedStrings.join(', ');
+    return resolvedStrings.join(',');
   }
 
   private flattenProperties<TR extends OrionRepositoryQueryPropsResult>(
@@ -927,6 +925,8 @@ export class OrionRepositoryQueryService<
       }
     }
 
+    resolvedPath = this.escapeCommaSeparatedAliases(resolvedPath);
+
     return resolvedPath;
   }
 
@@ -1012,7 +1012,7 @@ export class OrionRepositoryQueryService<
     str = str
       .split('.')
       .map(s => {
-        if (!this.isExpressionContainsSelectorArgs(s)) {
+        if (!this.isExpressionContainsSelectorArgs(s) && !/^"/.test(s)) {
           return this.queryBuilder.escape(s);
         }
         return s;

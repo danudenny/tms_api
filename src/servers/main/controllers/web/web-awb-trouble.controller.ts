@@ -2,6 +2,7 @@ import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
+import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { AwbTroublePayloadVm } from '../../models/awb-trouble-payload.vm';
 import { AwbTroubleResponseVm } from '../../models/awb-trouble-response.vm';
@@ -18,23 +19,29 @@ export class WebAwbTroubleControlelr {
     const repository = new OrionRepositoryService(AwbTrouble);
     const q = repository.findAllRaw();
 
+    payload.searchFields = [
+      {
+        field: 'awbNumber',
+      },
+    ];
+    payload.setFieldResolverMapAsSnakeCase(['awbNumber']);
+
+    payload.applyToOrionRepositoryQuery(q);
+
     q.selectRaw(
-      ['[0]', 'awbTroubleId'],
-      ['[1]', 'awbNumber'],
-      ['[2]', 'statusResolveId'],
-      ['[3]', 'scanInDateTime'],
-      awbTrouble => [
-        awbTrouble.awbTroubleId,
-        awbTrouble.awbNumber,
-        awbTrouble.statusResolveId,
-        awbTrouble.createdTime,
-      ],
+      ['awb_trouble_id', 'awbTroubleId'],
+      ['awb_number', 'awbNumber'],
+      ['status_resolve_id', 'statusResolveId'],
+      ['created_time', 'scanInDateTime'],
     );
-    q.take(payload.take);
-    q.skip(payload.skip);
+
+    const total = await q.count();
+
+    payload.applyPaginationToOrionRepositoryQuery(q);
 
     const response = new AwbTroubleResponseVm();
     response.data = await q.exec();
+    response.paging = MetaService.set(payload.page, payload.limit, total);
 
     return response;
   }
