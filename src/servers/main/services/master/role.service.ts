@@ -1,26 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { toInteger, isEmpty } from 'lodash';
-import { MetaService } from '../../../../shared/services/meta.service';
-import { RolePayloadVm, RoleFindAllResponseVm } from '../../models/role.vm';
-import { BaseQueryPayloadVm } from '../../../../shared/models/base-query-payload.vm';
+
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { RoleFindAllResponseVm } from '../../models/role.vm';
 
 @Injectable()
 export class RoleService {
-
   constructor() {}
-  async listData(
-    payload: BaseMetaPayloadVm,
-  ): Promise<RoleFindAllResponseVm> {
+  async listData(payload: BaseMetaPayloadVm): Promise<RoleFindAllResponseVm> {
     // mapping search field and operator default ilike
-    payload.searchFields = [
+    payload.globalSearchFields = [
       {
         field: 'roleName',
       },
     ];
-
-    // add field for filter and transform to snake case
-    payload.setFieldResolverMapAsSnakeCase(['roleName']);
 
     // add select field
     const qb = payload.buildQueryBuilder();
@@ -28,9 +21,10 @@ export class RoleService {
     qb.addSelect('role.role_name', 'roleName');
     qb.from('role', 'role');
 
+    const total = await qb.getCount();
+
     // exec raw query
     payload.applyPaginationToQueryBuilder(qb);
-    const total = await qb.getCount();
     const data = await qb.execute();
 
     const result = new RoleFindAllResponseVm();

@@ -142,6 +142,7 @@ export class OrionRepositoryQueryConditionService<T> {
     let beginsWith: boolean = false;
     let endsWith: boolean = false;
     let quoteString: boolean = true;
+    let insensitive: boolean = false;
 
     if (optionsInternal) {
       if (typeof optionsInternal.beginsWith === 'boolean') {
@@ -154,6 +155,10 @@ export class OrionRepositoryQueryConditionService<T> {
 
       if (typeof optionsInternal.quoteString === 'boolean') {
         quoteString = optionsInternal.quoteString;
+      }
+
+      if (typeof optionsInternal.insensitive === 'boolean') {
+        insensitive = optionsInternal.insensitive;
       }
     }
 
@@ -178,7 +183,7 @@ export class OrionRepositoryQueryConditionService<T> {
     }
 
     let prop = this.prop;
-    if (optionsInternal.insensitive) {
+    if (insensitive) {
       prop = `LOWER(${this.prop})`;
       parsedValue = `${parsedValue}`.toLowerCase();
     }

@@ -114,12 +114,12 @@ export class RequestOrionRepositoryService {
   ) {
     if (
       metaPayload.search &&
-      metaPayload.searchFields &&
-      metaPayload.searchFields.length
+      metaPayload.globalSearchFields &&
+      metaPayload.globalSearchFields.length
     ) {
       repositoryQuery.andWhereIsolated(qWhere => {
-        for (const searchFieldIdx in metaPayload.searchFields) {
-          const searchField = metaPayload.searchFields[searchFieldIdx];
+        for (const searchFieldIdx in metaPayload.globalSearchFields) {
+          const searchField = metaPayload.globalSearchFields[searchFieldIdx];
           const field = metaPayload.resolveFieldAsFieldAlias(searchField.field);
           qWhere.andWhere(field, qWhereItem => {
             this.applyMetaPayloadFilterItem(qWhereItem, {

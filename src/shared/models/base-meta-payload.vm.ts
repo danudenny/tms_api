@@ -1,4 +1,4 @@
-import { snakeCase } from 'lodash';
+import { findIndex, snakeCase } from 'lodash';
 import { SelectQueryBuilder } from 'typeorm';
 
 import { ApiModelProperty, ApiModelPropertyOptional } from '../external/nestjs-swagger';
@@ -39,6 +39,11 @@ export type BaseMetaPayloadFilterVmOperator =
   | 'nnull'
   | 'null';
 
+export interface BaseMetaPayloadVmGlobalSearchField {
+  field: string;
+  operator?: BaseMetaPayloadFilterVmOperator;
+}
+
 export class BaseMetaPayloadFilterVm {
   @ApiModelProperty()
   field: string;
@@ -69,15 +74,27 @@ export class BaseMetaPayloadVm {
   @ApiModelPropertyOptional()
   search: string;
 
+  autoConvertFieldsToSnakeCase: boolean = true;
   fieldResolverMap: { [key: string]: string } = {};
-  searchFields: Array<{
-    field: string;
-    operator?: BaseMetaPayloadFilterVmOperator;
-  }> = [];
 
-  setFieldResolverMapAsSnakeCase(fields: string[]) {
-    for (const field of fields) {
-      this.fieldResolverMap[field] = snakeCase(field);
+  private _globalSearchFields: BaseMetaPayloadVmGlobalSearchField[] = [];
+  get globalSearchFields() {
+    return this._globalSearchFields;
+  }
+  set globalSearchFields(
+    newGlobalSearchFields: BaseMetaPayloadVmGlobalSearchField[],
+  ) {
+    for (const newGlobalSearchField of newGlobalSearchFields) {
+      const existingGlobalSearchFieldIdx = findIndex(this._globalSearchFields, {
+        field: newGlobalSearchField.field,
+      });
+      if (existingGlobalSearchFieldIdx > -1) {
+        this._globalSearchFields[
+          existingGlobalSearchFieldIdx
+        ] = newGlobalSearchField;
+      } else {
+        this._globalSearchFields.push(newGlobalSearchField);
+      }
     }
   }
 
@@ -98,6 +115,8 @@ export class BaseMetaPayloadVm {
     let targetField = field;
     if (this.fieldResolverMap[field]) {
       targetField = this.fieldResolverMap[field];
+    } else if (this.autoConvertFieldsToSnakeCase) {
+      targetField = snakeCase(field);
     }
 
     const dotFields = targetField.split('.');

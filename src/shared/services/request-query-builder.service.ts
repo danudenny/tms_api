@@ -37,13 +37,13 @@ export class RequestQueryBuidlerService {
   ) {
     if (
       metaPayload.search &&
-      metaPayload.searchFields &&
-      metaPayload.searchFields.length
+      metaPayload.globalSearchFields &&
+      metaPayload.globalSearchFields.length
     ) {
       queryBuilder.andWhere(
         new Brackets(qbWhere => {
-          for (const searchFieldIdx in metaPayload.searchFields) {
-            const searchField = metaPayload.searchFields[searchFieldIdx];
+          for (const searchFieldIdx in metaPayload.globalSearchFields) {
+            const searchField = metaPayload.globalSearchFields[searchFieldIdx];
             const field = metaPayload.resolveFieldAsFieldAlias(
               searchField.field,
             );

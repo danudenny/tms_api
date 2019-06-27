@@ -122,6 +122,24 @@ export class OrionRepositoryQueryService<
     return compiledQueryBuilder.getCount();
   }
 
+  public countWithoutTakeAndSkip(): Promise<number> {
+    // tslint:disable-next-line: triple-equals
+    const queryBuilderParts = this.queryBuilderParts
+      .slice()
+      .filter(
+        part =>
+          part.partAction != this.queryBuilder.take &&
+          part.partAction != this.queryBuilder.skip,
+      );
+
+    const compiledQueryBuilder = this.compileQueryParts(
+      this.queryBuilder.clone(),
+      queryBuilderParts,
+    );
+
+    return compiledQueryBuilder.getCount();
+  }
+
   public disableAutoJoinEagerRelations() {
     this._autoJoinEagerRelations = false;
 

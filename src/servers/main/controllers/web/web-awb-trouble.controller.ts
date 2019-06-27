@@ -19,14 +19,13 @@ export class WebAwbTroubleControlelr {
     const repository = new OrionRepositoryService(AwbTrouble);
     const q = repository.findAllRaw();
 
-    payload.searchFields = [
+    payload.globalSearchFields = [
       {
         field: 'awbNumber',
       },
     ];
-    payload.setFieldResolverMapAsSnakeCase(['awbNumber']);
 
-    payload.applyToOrionRepositoryQuery(q);
+    payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
       ['awb_trouble_id', 'awbTroubleId'],
@@ -35,12 +34,11 @@ export class WebAwbTroubleControlelr {
       ['created_time', 'scanInDateTime'],
     );
 
-    const total = await q.count();
-
-    payload.applyPaginationToOrionRepositoryQuery(q);
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const response = new AwbTroubleResponseVm();
-    response.data = await q.exec();
+    response.data = data;
     response.paging = MetaService.set(payload.page, payload.limit, total);
 
     return response;

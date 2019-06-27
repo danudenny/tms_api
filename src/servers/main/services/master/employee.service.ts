@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
+
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { EmployeeFindAllResponseVm } from '../../models/employee.response.vm';
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @Injectable()
 export class EmployeeService {
-
   constructor() {}
   async findAllEmployeeVm(
     payload: BaseMetaPayloadVm,
   ): Promise<EmployeeFindAllResponseVm> {
     // mapping search field and operator default ilike
-    payload.searchFields = [
+    payload.globalSearchFields = [
       {
         field: 'nik',
       },
@@ -20,9 +20,6 @@ export class EmployeeService {
       },
     ];
 
-    // add field for filter and transform to snake case
-    payload.setFieldResolverMapAsSnakeCase(['nik', 'employeeName']);
-
     // add select field
     const qb = payload.buildQueryBuilder();
     qb.addSelect('employee.employee_id', 'employeeId');
@@ -30,9 +27,10 @@ export class EmployeeService {
     qb.addSelect('employee.fullname', 'employeeName');
     qb.from('employee', 'employee');
 
+    const total = await qb.getCount();
+
     // exec raw query
     payload.applyPaginationToQueryBuilder(qb);
-    const total = await qb.getCount();
     const data = await qb.execute();
 
     const result = new EmployeeFindAllResponseVm();

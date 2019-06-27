@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { MetaService } from '../../../../shared/services/meta.service';
 import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
+
+import { MetaService } from '../../../../shared/services/meta.service';
 import { AwbStatusFindAllResponseVm } from '../../models/awb-status.vm';
 
 @Injectable()
 export class AwbStatusService {
-
   constructor() {}
 
   async listData(
     payload: BaseMetaPayloadVm,
   ): Promise<AwbStatusFindAllResponseVm> {
     // mapping search field and operator default ilike
-    payload.searchFields = [
+    payload.globalSearchFields = [
       {
         field: 'awbStatusName',
       },
@@ -21,9 +21,6 @@ export class AwbStatusService {
       },
     ];
 
-    // add field for filter and transform to snake case
-    payload.setFieldResolverMapAsSnakeCase(['awbStatusName', 'awbStatusTitle']);
-
     // add select field
     const qb = payload.buildQueryBuilder();
     qb.addSelect('awb_status.awb_status_id', 'awbStatusId');
@@ -31,9 +28,10 @@ export class AwbStatusService {
     qb.addSelect('awb_status.awb_status_title', 'awbStatusTitle');
     qb.from('awb_status', 'awb_status');
 
+    const total = await qb.getCount();
+
     // exec raw query
     payload.applyPaginationToQueryBuilder(qb);
-    const total = await qb.getCount();
     const data = await qb.execute();
 
     const result = new AwbStatusFindAllResponseVm();
