@@ -1,3 +1,4 @@
+import { snakeCase } from 'lodash';
 import { SelectQueryBuilder } from 'typeorm';
 
 import { ApiModelProperty, ApiModelPropertyOptional } from '../external/nestjs-swagger';
@@ -20,28 +21,30 @@ export class MetaPayloadPageSort {
   sortDir: string;
 }
 
+export type BaseMetaPayloadFilterVmOperator =
+  | 'eq'
+  | 'neq'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+  | 'in'
+  | 'nin'
+  | 'ilike'
+  | 'like'
+  | 'isw'
+  | 'sw'
+  | 'iew'
+  | 'ew'
+  | 'nnull'
+  | 'null';
+
 export class BaseMetaPayloadFilterVm {
   @ApiModelProperty()
   field: string;
 
   @ApiModelProperty()
-  operator:
-    | 'eq'
-    | 'neq'
-    | 'gt'
-    | 'gte'
-    | 'lt'
-    | 'lte'
-    | 'in'
-    | 'nin'
-    | 'ilike'
-    | 'like'
-    | 'isw'
-    | 'sw'
-    | 'iew'
-    | 'ew'
-    | 'nnull'
-    | 'null';
+  operator: BaseMetaPayloadFilterVmOperator;
 
   @ApiModelProperty()
   value?: any;
@@ -63,10 +66,20 @@ export class BaseMetaPayloadVm {
   @ApiModelPropertyOptional({ type: [BaseMetaPayloadFilterVm] })
   filters: BaseMetaPayloadFilterVm[] = [];
 
-  @ApiModelProperty()
+  @ApiModelPropertyOptional()
   search: string;
 
   fieldResolverMap: { [key: string]: string } = {};
+  searchFields: Array<{
+    field: string;
+    operator?: BaseMetaPayloadFilterVmOperator;
+  }> = [];
+
+  setFieldResolverMapAsSnakeCase(fields: string[]) {
+    for (const field of fields) {
+      this.fieldResolverMap[field] = snakeCase(field);
+    }
+  }
 
   buildQueryBuilder(applyPagination: boolean = false) {
     const queryBuilder = RequestQueryBuidlerService.buildQueryBuilderFromMetaPayload(
