@@ -1,5 +1,5 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-
+import { Body, Controller, UseGuards, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
@@ -13,7 +13,7 @@ export class BranchController {
   @Post('list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: BranchFindAllResponseVm })
   public async findBranchName(@Body() payload: BaseMetaPayloadVm) {
     return this.branchService.findBranchName(payload);

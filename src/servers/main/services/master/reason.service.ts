@@ -1,68 +1,44 @@
 import { Injectable } from '@nestjs/common';
-import { toInteger, isEmpty } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { ReasonPayloadVm, ReasonFindAllResponseVm } from '../../models/reason.vm';
-import { BaseQueryPayloadVm } from '../../../../shared/models/base-query-payload.vm';
+import { ReasonFindAllResponseVm } from '../../models/reason.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @Injectable()
 export class ReasonService {
 
   constructor() {}
   async listData(
-    payload: ReasonPayloadVm,
+    payload: BaseMetaPayloadVm,
   ): Promise<ReasonFindAllResponseVm> {
-    // params
-    const page = toInteger(payload.page) || 1;
-    const take = toInteger(payload.limit) || 10;
-    const offset = (page - 1) * take;
-    const sortBy = isEmpty(payload.sortBy) ? 'reason_name' : payload.sortBy;
-    const sortDir = payload.sortDir === 'asc' ? 'asc' : 'desc';
-
-    // NOTE: query with ORM
-    const queryPayload = new BaseQueryPayloadVm();
-    // add pagination
-    queryPayload.take = take;
-    queryPayload.skip = offset;
-    // add sorting data
-    queryPayload.sort = [
+    // mapping search field and operator default ilike
+    payload.searchFields = [
       {
-        field: sortBy,
-        dir: sortDir,
+        field: 'reasonCode',
+      },
+      {
+        field: 'reasonName',
       },
     ];
-    // add filter
-    if (payload.filters) {
-      queryPayload.filter = [
-        [
-          {
-            field: 'reason_name',
-            operator: 'like',
-            value: payload.filters.search,
-          },
-        ],
-        [
-          {
-            field: 'reason_code',
-            operator: 'like',
-            value: payload.filters.search,
-          },
-        ],
-      ];
-    }
+
+    // add field for filter and transform to snake case
+    payload.setFieldResolverMapAsSnakeCase(['reasonCode', 'reasonName']);
 
     // add select field
-    const qb = queryPayload.buildQueryBuilder();
+    const qb = payload.buildQueryBuilder();
     qb.addSelect('reason.reason_id', 'reasonId');
     qb.addSelect('reason.reason_name', 'reasonName');
     qb.addSelect('reason.reason_code', 'reasonCode');
     qb.from('reason', 'reason');
 
     // exec raw query
-    const data = await qb.execute();
+    payload.applyPaginationToQueryBuilder(qb);
     const total = await qb.getCount();
+    const data = await qb.execute();
+
     const result = new ReasonFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(page, take, total);
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
     return result;
   }
 }

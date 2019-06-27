@@ -3,58 +3,40 @@ import { toInteger, isEmpty } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { RolePayloadVm, RoleFindAllResponseVm } from '../../models/role.vm';
 import { BaseQueryPayloadVm } from '../../../../shared/models/base-query-payload.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @Injectable()
 export class RoleService {
 
   constructor() {}
   async listData(
-    payload: RolePayloadVm,
+    payload: BaseMetaPayloadVm,
   ): Promise<RoleFindAllResponseVm> {
-    // params
-    const page = toInteger(payload.page) || 1;
-    const take = toInteger(payload.limit) || 10;
-    const offset = (page - 1) * take;
-    const sortBy = isEmpty(payload.sortBy) ? 'role_name' : payload.sortBy;
-    const sortDir = payload.sortDir === 'asc' ? 'asc' : 'desc';
-
-    // NOTE: query with ORM
-    const queryPayload = new BaseQueryPayloadVm();
-    // add pagination
-    queryPayload.take = take;
-    queryPayload.skip = offset;
-    // add sorting data
-    queryPayload.sort = [
+    // mapping search field and operator default ilike
+    payload.searchFields = [
       {
-        field: sortBy,
-        dir: sortDir,
+        field: 'roleName',
       },
     ];
-    // add filter
-    if (payload.filters) {
-      queryPayload.filter = [
-        [
-          {
-            field: 'role_name',
-            operator: 'like',
-            value: payload.filters.search,
-          },
-        ],
-      ];
-    }
+
+    // add field for filter and transform to snake case
+    payload.setFieldResolverMapAsSnakeCase(['roleName']);
 
     // add select field
-    const qb = queryPayload.buildQueryBuilder();
+    const qb = payload.buildQueryBuilder();
     qb.addSelect('role.role_id', 'roleId');
     qb.addSelect('role.role_name', 'roleName');
     qb.from('role', 'role');
 
     // exec raw query
-    const data = await qb.execute();
+    payload.applyPaginationToQueryBuilder(qb);
     const total = await qb.getCount();
+    const data = await qb.execute();
+
     const result = new RoleFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(page, take, total);
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
     return result;
   }
 }
