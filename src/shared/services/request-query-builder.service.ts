@@ -1,11 +1,11 @@
-import { castArray } from 'lodash';
+import { castArray, toInteger } from 'lodash';
 import { Brackets, createQueryBuilder, SelectQueryBuilder, WhereExpression } from 'typeorm';
 
 import { BaseMetaPayloadFilterVm, BaseMetaPayloadVm } from '../models/base-meta-payload.vm';
 import { BaseQueryPayloadVm } from '../models/base-query-payload.vm';
 
 export class RequestQueryBuidlerService {
-  public static applyQueryPayloadFilter(
+  public static applyMetaPayloadFilter(
     queryBuilder: SelectQueryBuilder<any> | WhereExpression,
     filter: BaseMetaPayloadFilterVm,
     mode: 'and' | 'or' = 'and',
@@ -150,7 +150,7 @@ export class RequestQueryBuidlerService {
                   const dotFields = andFilterGroup.field.split('.');
                   field = dotFields.map(dotField => `"${dotField}"`).join('.');
                 }
-                this.applyQueryPayloadFilter(
+                this.applyMetaPayloadFilter(
                   qbOrWhere,
                   {
                     ...andFilterGroup,
@@ -171,12 +171,11 @@ export class RequestQueryBuidlerService {
 
   public static buildQueryBuilderFromMetaPayload(
     metaPayload: BaseMetaPayloadVm,
-    fieldResolverMap: { [key: string]: string } = {},
   ) {
     const qb = createQueryBuilder();
 
     if (metaPayload.sortBy) {
-      const sortBy = fieldResolverMap[metaPayload.sortBy] || metaPayload.sortBy;
+      const sortBy = metaPayload.resolveFieldAsFieldAlias(metaPayload.sortBy);
       const sortDir: any = `${metaPayload.sortDir || 'asc'}`.toUpperCase();
       qb.orderBy(sortBy, sortDir);
     }
@@ -186,15 +185,8 @@ export class RequestQueryBuidlerService {
         new Brackets(qbAndWhere => {
           for (const andFilterIdx in metaPayload.filters) {
             const andFilter = metaPayload.filters[andFilterIdx];
-            let field = andFilter.field;
-            if (fieldResolverMap[andFilter.field]) {
-              field = fieldResolverMap[andFilter.field];
-            } else {
-              // wrap with double quotes, name => "name", user.name => "user"."name"
-              const dotFields = andFilter.field.split('.');
-              field = dotFields.map(dotField => `"${dotField}"`).join('.');
-            }
-            this.applyQueryPayloadFilter(
+            const field = metaPayload.resolveFieldAsFieldAlias(andFilter.field);
+            this.applyMetaPayloadFilter(
               qbAndWhere,
               {
                 ...andFilter,
@@ -209,5 +201,20 @@ export class RequestQueryBuidlerService {
     }
 
     return qb;
+  }
+
+  public static applyMetaPayloadPagination(
+    queryBuilder: SelectQueryBuilder<any>,
+    metaPayload: BaseMetaPayloadVm,
+  ) {
+    const page = toInteger(metaPayload.page) || 1;
+    const take = toInteger(metaPayload.limit) || 10;
+    let skip = (page - 1) * take;
+    if (skip < 0) {
+      skip = 0;
+    }
+
+    queryBuilder.take(take);
+    queryBuilder.skip(skip);
   }
 }

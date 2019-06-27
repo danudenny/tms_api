@@ -9,7 +9,7 @@ describe('base-meta-payload-vm.spec.ts', () => {
     const qb = metaPayload.buildQueryBuilder();
     qb.from('branch', 't1');
 
-    metaPayload.applyQueryBuilderPagination(qb);
+    metaPayload.applyPaginationToQueryBuilder(qb);
 
     const sql = qb.getSql();
 
@@ -27,7 +27,7 @@ describe('base-meta-payload-vm.spec.ts', () => {
 
     const sql = qb.getSql();
 
-    expect(sql).toContain('branchName ASC');
+    expect(sql).toContain('"branchName" ASC');
   });
 
   it('Should generate valid filters', () => {

@@ -32,47 +32,29 @@ export class OrionRepositoryQueryConditionService<T> {
     }
   }
 
-  public beginsWith(
-    value: string,
-  ) {
-    return this.completeWhere(
-      ORION_REPOSITORY.SQL.OPERATOR_LIKE,
-      value,
-      {
-        beginsWith: true,
-      },
-    );
+  public beginsWith(value: string, insensitive: boolean = false) {
+    return this.completeWhere(ORION_REPOSITORY.SQL.OPERATOR_LIKE, value, {
+      beginsWith: true,
+    });
   }
 
-  public contains(value: string) {
-    return this.completeWhere(
-      ORION_REPOSITORY.SQL.OPERATOR_LIKE,
-      value,
-      {
-        beginsWith: true,
-        endsWith: true,
-      },
-    );
+  public contains(value: string, insensitive: boolean = false) {
+    return this.completeWhere(ORION_REPOSITORY.SQL.OPERATOR_LIKE, value, {
+      beginsWith: true,
+      endsWith: true,
+      insensitive,
+    });
   }
 
-  public endsWith(value: string) {
-    return this.completeWhere(
-      ORION_REPOSITORY.SQL.OPERATOR_LIKE,
-      value,
-      {
-        endsWith: true,
-      },
-    );
+  public endsWith(value: string, insensitive: boolean = false) {
+    return this.completeWhere(ORION_REPOSITORY.SQL.OPERATOR_LIKE, value, {
+      endsWith: true,
+      insensitive,
+    });
   }
 
-  public equals(
-    value: string | number | boolean | Date,
-  ) {
-    return this.completeWhere(
-      ORION_REPOSITORY.SQL.OPERATOR_EQUAL,
-      value,
-      null,
-    );
+  public equals(value: string | number | boolean | Date) {
+    return this.completeWhere(ORION_REPOSITORY.SQL.OPERATOR_EQUAL, value, null);
   }
 
   public greaterThan(value: number | Date) {
@@ -86,9 +68,7 @@ export class OrionRepositoryQueryConditionService<T> {
     );
   }
 
-  public in(
-    include: string[] | number[],
-  ) {
+  public in(include: string[] | number[]) {
     // If comparing strings, must escape them as strings in the query.
     this.escapeStringArray(castArray(include as string[]));
 
@@ -135,9 +115,7 @@ export class OrionRepositoryQueryConditionService<T> {
     return this.completeWhere(ORION_REPOSITORY.SQL.OPERATOR_LESS_EQUAL, value);
   }
 
-  public notEquals(
-    value: string | number | boolean | Date,
-  ) {
+  public notEquals(value: string | number | boolean | Date) {
     return this.completeWhere(
       ORION_REPOSITORY.SQL.OPERATOR_NOT_EQUAL,
       value,
@@ -145,9 +123,7 @@ export class OrionRepositoryQueryConditionService<T> {
     );
   }
 
-  public notIn(
-    exclude: string[] | number[],
-  ) {
+  public notIn(exclude: string[] | number[]) {
     // If comparing strings, must escape them as strings in the query.
     this.escapeStringArray(castArray(exclude as string[]));
 
@@ -184,7 +160,7 @@ export class OrionRepositoryQueryConditionService<T> {
     let parsedValue = value;
 
     if (typeof value === 'string' && quoteString) {
-      parsedValue = `${value.replace(/'/g, '\'\'')}`;
+      parsedValue = `${value.replace(/'/g, "''")}`;
     } else if (value instanceof Date) {
       parsedValue = `${value.toISOString()}`;
     }
@@ -201,10 +177,18 @@ export class OrionRepositoryQueryConditionService<T> {
       parsedValue = `'${parsedValue}'`;
     }
 
-    const whereExpression = `${this.prop} ${operator} ${parsedValue}`;
+    let prop = this.prop;
+    if (optionsInternal.insensitive) {
+      prop = `LOWER(${this.prop})`;
+      parsedValue = `${parsedValue}`.toLowerCase();
+    }
+
+    const whereExpression = `${prop} ${operator} ${parsedValue}`;
 
     this.queryBuilderParts.push(
-      new OrionRepositoryQueryBuilderPart(this.whereQueryBuilderFn, [whereExpression]),
+      new OrionRepositoryQueryBuilderPart(this.whereQueryBuilderFn, [
+        whereExpression,
+      ]),
     );
 
     return this;

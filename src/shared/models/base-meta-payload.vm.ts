@@ -1,7 +1,8 @@
-import { toInteger } from 'lodash';
 import { SelectQueryBuilder } from 'typeorm';
 
 import { ApiModelProperty, ApiModelPropertyOptional } from '../external/nestjs-swagger';
+import { OrionRepositoryQueryService } from '../services/orion-repository-query.service';
+import { RequestOrionRepositoryService } from '../services/request-orion-repository.service';
 import { RequestQueryBuidlerService } from '../services/request-query-builder.service';
 
 export class MetaPayloadPageSort {
@@ -67,22 +68,42 @@ export class BaseMetaPayloadVm {
 
   fieldResolverMap: { [key: string]: string } = {};
 
-  buildQueryBuilder() {
-    return RequestQueryBuidlerService.buildQueryBuilderFromMetaPayload(
+  buildQueryBuilder(applyPagination: boolean = false) {
+    const queryBuilder = RequestQueryBuidlerService.buildQueryBuilderFromMetaPayload(
       this,
-      this.fieldResolverMap,
     );
-  }
 
-  applyQueryBuilderPagination(queryBuilder: SelectQueryBuilder<any>) {
-    const page = toInteger(this.page) || 1;
-    const take = toInteger(this.limit) || 10;
-    let skip = (page - 1) * take;
-    if (skip < 0) {
-      skip = 0;
+    if (applyPagination) {
+      this.applyPaginationToQueryBuilder(queryBuilder);
     }
 
-    queryBuilder.take(take);
-    queryBuilder.skip(skip);
+    return queryBuilder;
+  }
+
+  applyPaginationToQueryBuilder(queryBuilder: SelectQueryBuilder<any>) {
+    RequestQueryBuidlerService.applyMetaPayloadPagination(queryBuilder, this);
+  }
+
+  resolveFieldAsFieldAlias(field: string) {
+    let targetField = field;
+    if (this.fieldResolverMap[field]) {
+      targetField = this.fieldResolverMap[field];
+    } else {
+      // wrap with double quotes, name => "name", user.name => "user"."name"
+      const dotFields = field.split('.');
+      targetField = dotFields.map(dotField => `"${dotField}"`).join('.');
+    }
+    return targetField;
+  }
+
+  applyToOrionRepositoryQuery(
+    orionRepositoryQuery: OrionRepositoryQueryService<any>,
+    applyPagination: boolean = false,
+  ) {
+    RequestOrionRepositoryService.applyMetaPayload(
+      orionRepositoryQuery,
+      this,
+      applyPagination,
+    );
   }
 }
