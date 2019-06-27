@@ -15,10 +15,10 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + search   : (string)
+        + search    : `abc` (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
-        + sortBy    : branch_name, (string)
+        + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
         + filters: (array)
             + item:
@@ -83,13 +83,16 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + filters   : (object)
-            + search    : abc (string),
-            + branchId  : 1 (string)
+        + search    : `abc` (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
-        + sortBy    : employee_name, (string)
+        + sortBy    : employeeName, (string)
         + sortDir   : asc, (string)
+        + filters: (array)
+            + item:
+                + field     : employeeId (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `001` (string)
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -143,13 +146,17 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + filters   : (object)
-            + search    : abc (string)
-
+        + search    : `abc` (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
-        + sortBy    : customer_name, (string)
+        + sortBy    : customerName, (string)
         + sortDir   : asc, (string)
+        + filters: (array)
+            + item:
+                + field     : customerId (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `001` (string)
+  
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -202,12 +209,17 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
-        + filters   : (object)
-            + search    : abc (string)
+        + search    : `abc` (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
-        + sortBy    : partner_logistic_name, (string)
+        + sortBy    : partnerLogisticName, (string)
         + sortDir   : asc, (string)
+        + filters   : (array)
+            + item:
+                + field     : partnerLogisticId (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `001` (string)
+  
 
 + Response 200 (application/json; charset=utf-8)
     + Body

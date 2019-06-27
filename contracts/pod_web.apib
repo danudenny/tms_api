@@ -113,7 +113,7 @@ HOST: http://api.tms.sicepat.com
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : `anisa` (string)
+        + search    : `aa` (string)
         + filters: (array)
             + item:
                 + field   : awbNumber (string)
@@ -415,20 +415,24 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters   : (object)
-            + employeeIdDriver      : `12` (string)
-            + doPodCode             : `DOP/1904/00001` (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `doPodDateTime`, `doPodCode`, `fullname`, `desc` (array[string]) - fullname driver
-            + value     : 'a'
-        + searchColumns: (array)
+        + search    : `aa` (string)
+        + filters: (array)
+            + item:
+                + field     : employeeIdDriver (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `112` (string)
+            + item:
+                + field   : doPodCode (string)
+                + operator: ilike (string)
+                + value   : `DOP/1904/00001` (string)
             + item:
                 + field   : doPodDateTime (string)
-                + value   : 20190801 (string)
+                + operator: ilike (string)
+                + value   : `20190801` (string)
           
 
 + Response 200 (application/json; charset=utf-8)
@@ -482,23 +486,21 @@ HOST: http://api.tms.sicepat.com
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
-        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters           : (object, optional)
-        + doPodId           : `001` (string)
-        + page              : 1, (number) - Default 1
-        + limit             : 10, (number) - Default 10
-        + sortBy            : awb_number, (string)
-        + sortDir           : asc, (string)
-        + search            : (object)
-            + fields    : `awb_number`, `weight`, `consignee_name` (array[string])
-            + value     : 'a'
-        + searchColumns     : (array)
+        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : `aa` (string)
+        + filters: (array)
             + item:
-                + field   : awb_number (string)
-                + value   : abc (string)
+                + field     : doPodId (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `112` (string)
             + item:
-                + field   : weight (string)
-                + value   : 20190801 (string)
+                + field   : awbNumber (string)
+                + operator: ilike (string)
+                + value   : `111234` (string)
           
 
 + Response 200 (application/json; charset=utf-8)
@@ -549,24 +551,21 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters   : (object, optional)
-        + doPodId   : `001` (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
-        + sortBy    : bag_number, (string)
+        + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `bag_number`, `weight`, `consignee_name` (array[string])
-            + value     : 'a'
-        + searchColumns: (array)
+        + search    : `aa` (string)
+        + filters: (array)
             + item:
-                + field   : bag_number (string)
-                + value   : abc (string)
+                + field     : doPodId (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `112` (string)
             + item:
-                + field   : weight (string)
-                + value   : 20190801 (string)
+                + field   : bagNumber (string)
+                + operator: ilike (string)
+                + value   : `111234` (string)
           
-
 + Response 200 (application/json; charset=utf-8)
     + Body
 
@@ -650,26 +649,32 @@ HOST: http://api.tms.sicepat.com
         Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters        : (object)
-            + startDoPodDateTime    : `2019-05-01 00:00:00` (string)
-            + endDoPodDateTime      : `2019-05-01 00:00:00` (string)
-            + awbNumber             : `123456789012` (string, optional)
-            + doPodStatus           : `Delivered` (string)
-            + partnerLogisticId     : `1` (string, optional)
-        + page           : 1, (number) - Default 1
-        + limit          : 10, (number) - Default 10
-        + sortBy         : scan_out_date_time, (string)
-        + sortDir        : asc, (string)
-        + search         : (object)
-            + fields    : `do_pod_date_time`, `awb_number`, `awb_number_pl (array, optional)
-            + value     : 'a'
-        + searchColumns: (array)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : `aa` (string)
+        + filters: (array)
             + item:
-                + field   : awb_number (string)
-                + value   : abc (string)
+                + field     : startDoPodDateTime (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `2019-05-01 00:00:00` (string)
             + item:
-                + field   : do_pod_date_time (string)
-                + value   : 20190801 (string)
+                + field   : endDoPodDateTime (string)
+                + operator: ilike (string)
+                + value   : `2019-05-01 00:00:00` (string)
+            + item:
+                + field   : awbNumber (string)
+                + operator: ilike (string)
+                + value   : `1234556` (string)
+            + item:
+                + field   : doPodStatus (string)
+                + operator: ilike (string)
+                + value   : `Delivered` (string)
+            + item:
+                + field   : partnerLogisticId (string)
+                + operator: ilike (string)
+                + value   : `1` (string)
           
 
 + Response 200 (application/json; charset=utf-8)
@@ -807,24 +812,25 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
         + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters   : (object)
-            + startScanInDateTime   : `2019-05-01 00:00:00` (string)
-            + endScanInDateTime     : `2019-05-01 00:00:00` (string)
-            + awbNumber : `123456789012` (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `scanInDateTime`, `awbNumber`, (array[string])
-            + value     : 'a'
-        + searchColumns: (array)
+        + search    : `aa` (string)
+        + filters: (array)
+            + item:
+                + field     : startScanInDateTime (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `2019-05-01 00:00:00` (string)
+            + item:
+                + field   : endScanInDateTime (string)
+                + operator: ilike (string)
+                + value   : `2019-05-01 00:00:00` (string)
             + item:
                 + field   : awbNumber (string)
-                + value   : abc (string)
-            + item:
-                + field   : scanInDateTime (string)
-                + value   : 20190801 (string)
+                + operator: ilike (string)
+                + value   : `1234556` (string)
+                 
           
 
 + Response 200 (application/json; charset=utf-8)

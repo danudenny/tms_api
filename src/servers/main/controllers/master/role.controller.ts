@@ -1,8 +1,9 @@
-import { Controller, Get, Query, Post, UseGuards, HttpCode, Body, UseInterceptors, HttpStatus } from '@nestjs/common';
+import { Controller, Post, UseGuards, HttpCode, Body, HttpStatus } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { RoleService } from '../../services/master/role.service';
-import { RoleFindAllResponseVm, RolePayloadVm } from '../../models/role.vm';
+import { RoleFindAllResponseVm } from '../../models/role.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('Master Data')
 @Controller('master/role')
@@ -16,7 +17,7 @@ export class RoleController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: RoleFindAllResponseVm })
-  public async listRole(@Body() payload: RolePayloadVm) {
+  public async listRole(@Body() payload: BaseMetaPayloadVm) {
 
     return this.roleService.listData(payload);
   }

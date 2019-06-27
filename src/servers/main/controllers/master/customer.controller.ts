@@ -1,9 +1,9 @@
-import { Controller, Get, Query, Post, UseGuards, HttpCode, Body, UseInterceptors, HttpStatus } from '@nestjs/common';
+import { Controller, Post, UseGuards, HttpCode, Body, HttpStatus } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { CustomerPayloadVm } from '../../models/customer.vm';
 import { CustomerService } from '../../services/master/customer.service';
 import { CustomerFindAllResponseVm } from '../../models/customer.response.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('Master Data')
 @Controller('master/customer')
@@ -17,8 +17,7 @@ export class CustomerController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: CustomerFindAllResponseVm })
-  public async findCustName(@Body() payload: CustomerPayloadVm) {
-
+  public async findCustName(@Body() payload: BaseMetaPayloadVm) {
     return this.customerService.findCustName(payload);
   }
 }
