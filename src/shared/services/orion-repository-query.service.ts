@@ -123,12 +123,13 @@ export class OrionRepositoryQueryService<
   }
 
   public countWithoutTakeAndSkip(): Promise<number> {
-    // tslint:disable-next-line: triple-equals
     const queryBuilderParts = this.queryBuilderParts
       .slice()
       .filter(
         part =>
+          // tslint:disable-next-line: triple-equals
           part.partAction != this.queryBuilder.take &&
+          // tslint:disable-next-line: triple-equals
           part.partAction != this.queryBuilder.skip,
       );
 
