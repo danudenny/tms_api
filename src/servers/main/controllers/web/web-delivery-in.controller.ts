@@ -30,7 +30,6 @@ export class WebDeliveryInController {
   @ApiOkResponse({ type: WebScanInAwbResponseVm })
   @Transactional()
   public async scanIn(@Body() payload: WebScanInVm) {
-    console.log(payload);
     return this.webDeliveryService.scanInAwb(payload);
   }
 

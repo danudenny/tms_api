@@ -173,18 +173,18 @@ export class WebDeliveryInService {
           }
         } else {
           totalError += 1;
-          // save data to awb_trouble
-          const awbTrouble = this.awbTroubleRepository.create({
-            awbNumber,
-            resolveDateTime: timeNow,
-            employeeId: authMeta.employeeId,
-            branchId: permissonPayload.branchId,
-            userIdCreated: authMeta.userId,
-            createdTime: timeNow,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
-          });
-          await this.awbTroubleRepository.save(awbTrouble);
+          // // save data to awb_trouble
+          // const awbTrouble = this.awbTroubleRepository.create({
+          //   awbNumber,
+          //   resolveDateTime: timeNow,
+          //   employeeId: authMeta.employeeId,
+          //   branchId: permissonPayload.branchId,
+          //   userIdCreated: authMeta.userId,
+          //   createdTime: timeNow,
+          //   userIdUpdated: authMeta.userId,
+          //   updatedTime: timeNow,
+          // });
+          // await this.awbTroubleRepository.save(awbTrouble);
 
           dataItem.push({
             awbNumber,
