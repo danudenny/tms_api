@@ -28,11 +28,12 @@ import { BaseQueryPayloadVm } from '../../../../shared/models/base-query-payload
 import { toInteger, isEmpty } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
+import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 // #endregion
 
 @Injectable()
 export class WebDeliveryOutService {
-
   constructor(
     private readonly authService: AuthService,
     @InjectRepository(AwbRepository)
@@ -45,7 +46,9 @@ export class WebDeliveryOutService {
     private readonly bagRepository: BagRepository,
   ) {}
 
-  async scanOutCreate(payload: WebScanOutCreateVm): Promise<WebScanOutCreateResponseVm> {
+  async scanOutCreate(
+    payload: WebScanOutCreateVm,
+  ): Promise<WebScanOutCreateResponseVm> {
     const authMeta = AuthService.getAuthMetadata();
     const result = new WebScanOutCreateResponseVm();
     const timeNow = moment().toDate();
@@ -54,11 +57,15 @@ export class WebDeliveryOutService {
       // create do_pod (Surat Jalan)
       // mapping payload to field table do_pod
       const doPod = this.doPodRepository.create();
-      const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
+      const permissonPayload = await this.authService.handlePermissionJwtToken(
+        payload.permissionToken,
+      );
       const doPodDateTime = moment(payload.doPodDateTime).toDate();
 
       // NOTE: Ada 4 tipe surat jalan
-      doPod.doPodCode = await CustomCounterCode.doPod(doPodDateTime.toDateString()); // generate code
+      doPod.doPodCode = await CustomCounterCode.doPod(
+        doPodDateTime.toDateString(),
+      ); // generate code
       // TODO: doPodType
       doPod.doPodType = payload.doPodType;
       // 1. tipe surat jalan criss cross
@@ -74,7 +81,7 @@ export class WebDeliveryOutService {
       doPod.employeeIdDriver = payload.employeeIdDriver || null;
       doPod.doPodDateTime = moment(doPodDateTime).toDate();
 
-      doPod.vehicleNumber = payload.vehicleNumber || null ;
+      doPod.vehicleNumber = payload.vehicleNumber || null;
       doPod.description = payload.desc || null;
 
       // tipe antar (sigesit)
@@ -82,7 +89,70 @@ export class WebDeliveryOutService {
 
       // TODO: change if transit (3pl)
       doPod.doPodMethod = 1000; // internal or 3PL/Third Party
-     // general
+      // general
+      doPod.doPodStatusIdLast = 1000; // created
+      doPod.branchId = permissonPayload.branchId;
+      doPod.userId = authMeta.userId;
+      doPod.userIdCreated = authMeta.userId;
+      doPod.userIdUpdated = authMeta.userId;
+      doPod.createdTime = timeNow;
+      doPod.updatedTime = timeNow;
+
+      // await for get do pod id
+      await this.doPodRepository.save(doPod);
+
+      // Populate return value
+      result.status = '200';
+      result.message = 'ok';
+      result.doPodId = doPod.doPodId;
+
+      return result;
+    } else {
+      ContextualErrorService.throwObj(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  async scanOutCreateDelivery(
+    payload: WebScanOutCreateVm,
+  ): Promise<WebScanOutCreateResponseVm> {
+    const authMeta = AuthService.getAuthMetadata();
+    const result = new WebScanOutCreateResponseVm();
+    const timeNow = moment().toDate();
+
+    if (!!authMeta) {
+      // create do_pod (Surat Jalan)
+      // mapping payload to field table do_pod
+      const doPod = this.doPodRepository.create();
+      const permissonPayload = await this.authService.handlePermissionJwtToken(
+        payload.permissionToken,
+      );
+      const doPodDateTime = moment(payload.doPodDateTime).toDate();
+
+      // NOTE: Ada 4 tipe surat jalan
+      doPod.doPodCode = await CustomCounterCode.doPod(
+        doPodDateTime.toDateString(),
+      ); // generate code
+      // TODO: doPodType (Delivery Sigesit)
+      doPod.doPodType = payload.doPodType;
+
+      // doPod.userIdDriver = payload.
+      doPod.employeeIdDriver = payload.employeeIdDriver || null;
+      doPod.doPodDateTime = moment(doPodDateTime).toDate();
+
+      doPod.vehicleNumber = payload.vehicleNumber || null;
+      doPod.description = payload.desc || null;
+
+      // tipe antar (sigesit)
+      // resi antar/ retur
+
+      // TODO: change if transit (3pl)
+      doPod.doPodMethod = 1000; // internal or 3PL/Third Party
+      // general
       doPod.doPodStatusIdLast = 1000; // created
       doPod.branchId = permissonPayload.branchId;
       doPod.userId = authMeta.userId;
@@ -117,7 +187,9 @@ export class WebDeliveryOutService {
       const dataItem = [];
       const result = new WebScanOutAwbResponseVm();
       const timeNow = moment().toDate();
-      const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
+      const permissonPayload = await this.authService.handlePermissionJwtToken(
+        payload.permissionToken,
+      );
 
       let totalSuccess = 0;
       let totalError = 0;
@@ -215,101 +287,27 @@ export class WebDeliveryOutService {
     }
   }
 
-  async scanOutList(payload: WebScanOutAwbListPayloadVm, isHub = false): Promise<WebScanOutAwbListResponseVm> {
-    const page = toInteger(payload.page) || 1;
-    const take = toInteger(payload.limit) || 10;
-    const offset = (page - 1) * take;
-
-    const sortBy = isEmpty(payload.sortBy) ? 'do_pod_code' : payload.sortBy;
-    const sortDir = payload.sortDir === 'asc' ? 'asc' : 'desc';
-    const filterData = [];
-
-    const queryPayload = new BaseQueryPayloadVm();
-    // add pagination
-    queryPayload.take = take;
-    queryPayload.skip = offset;
-
-    // // add sorting data
-    queryPayload.sort = [
+  async scanOutList(
+    payload: BaseMetaPayloadVm,
+    isHub = false,
+  ): Promise<WebScanOutAwbListResponseVm> {
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
       {
-        field: sortBy,
-        dir: sortDir,
+        field: 'doPodDateTime',
+      },
+      {
+        field: 'doPodCode',
+      },
+      {
+        field: 'desc',
+      },
+      {
+        field: 'fullname',
       },
     ];
-    // add filter Do POD type (Transit HUB)
-    if (isHub) {
-      filterData.push(
-        [
-          {
-            field: 'do_pod.do_pod_type',
-            operator: 'eq',
-            value: POD_TYPE.TRANSIT_HUB,
-          },
-        ],
-      );
-    }
 
-    // add filter
-    if (!!payload.filters) {
-      // AND condition
-      filterData.push(
-        [
-          {
-            field: 'do_pod.do_pod_code',
-            operator: 'like',
-            value: payload.filters.doPodCode,
-          },
-          {
-            field: 'employee.fullname',
-            operator: 'like',
-            value: payload.filters.name,
-          },
-        ],
-      );
-    }
-
-    if (!!payload.search) {
-      // OR condition
-      filterData.push(
-        [
-          {
-            field: 'do_pod.do_pod_code',
-            operator: 'like',
-            value: payload.search,
-          },
-        ],
-      );
-      filterData.push(
-        [
-          {
-            field: 'employee.fullname',
-            operator: 'like',
-            value: payload.search,
-          },
-        ],
-      );
-    }
-
-    if (!!payload.searchColumns) {
-      // OR condition
-      for (const column of payload.searchColumns) {
-        filterData.push(
-          [
-            {
-              field: column.field,
-              operator: 'like',
-              value: column.value,
-            },
-          ],
-        );
-      }
-    }
-
-    if (filterData.length > 0) {
-      queryPayload.filter = filterData;
-    }
-
-    const qb = queryPayload.buildQueryBuilder();
+    const qb = payload.buildQueryBuilder();
     qb.addSelect('do_pod.do_pod_id', 'doPodId');
     qb.addSelect('do_pod.do_pod_date_time', 'doPodDateTime');
     qb.addSelect('do_pod.do_pod_code', 'doPodCode');
@@ -318,25 +316,65 @@ export class WebDeliveryOutService {
 
     qb.from('do_pod', 'do_pod');
     qb.innerJoin(
-      'employee', 'employee',
+      'employee',
+      'employee',
       'employee.employee_id = do_pod.employee_id_driver AND employee.is_deleted = false',
     );
-    const result = new WebScanOutAwbListResponseVm();
+
+    if (isHub) {
+      qb.where('do_pod.do_pod_type = :doPodType', {
+        doPodType: POD_TYPE.TRANSIT_HUB,
+      });
+    }
     const total = await qb.getCount();
 
-    result.data = await qb.getRawMany();
-    result.paging = MetaService.set(page, take, total);
+    payload.applyPaginationToQueryBuilder(qb);
+    const data = await qb.execute();
+
+    const result = new WebScanOutAwbListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
 
-  async awbDetailDelivery(payload: WebDeliveryList) {
-    return null;
+  async awbDetailDelivery(
+    payload: WebDeliveryList,
+  ): Promise<WebDeliveryListResponseVm> {
+    const queryPayload = new BaseQueryPayloadVm();
+    const qb = queryPayload.buildQueryBuilder();
+
+    qb.addSelect('awb.awb_number', 'awbNumber');
+    qb.addSelect('awb.total_weight', 'weight');
+    qb.addSelect('awb.consignee_name', 'consigneeName');
+
+    qb.from('do_pod_detail', 'do_pod_detail');
+    qb.innerJoin(
+      'awb_item',
+      'awb_item',
+      'awb_item.awb_item_id = do_pod_detail.awb_item_id AND awb_item.is_deleted = false',
+    );
+    qb.innerJoin(
+      'awb',
+      'awb',
+      'awb.awb_id = awb_item.awb_id AND awb.is_deleted = false',
+    );
+    qb.where('do_pod_detail.do_pod_id = :doPodId', {
+      doPodId: payload.doPodId,
+    });
+
+    const result = new WebDeliveryListResponseVm();
+    const total = await qb.getCount();
+
+    result.data = await qb.getRawMany();
+    result.paging = MetaService.set(1, 10, total);
+
+    return result;
   }
 
   // Type DO POD
   public handleTypeDoPod(type: string) {
-
     return null;
   }
 }

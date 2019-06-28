@@ -7,6 +7,7 @@ import { EmployeeJourneyRepository } from 'src/shared/orm-repository/employee-jo
 import { InjectRepository } from '@nestjs/typeorm';
 import { ContextualErrorService } from 'src/shared/services/contextual-error.service';
 import { BranchRepository } from 'src/shared/orm-repository/branch.repository';
+import { IsNull} from 'typeorm';
 
 @Injectable()
 export class MobileCheckInService {
@@ -23,35 +24,51 @@ export class MobileCheckInService {
 
     if (!!authMeta) {
       const result = new MobileCheckInResponseVm();
-      const status = 'ok';
-      const message = 'success';
-      const checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
+      let status = 'ok';
+      let message = 'success';
+      let branchName = '';
+      let checkInDate = '';
 
       const timeNow = moment().toDate();
 
       // console.log(payload);
       const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
 
-      const employeeJourney = this.employeeJourneyRepository.create({
-        employeeId: authMeta.employeeId,
-        checkInDate: timeNow,
-        latitudeCheckIn: payload.latitudeCheckIn,
-        longitudeCheckIn: payload.longitudeCheckIn,
-        userIdCreated: authMeta.userId,
-        createdTime: timeNow,
-        userIdUpdated: authMeta.userId,
-        updatedTime: timeNow,
+      const employeeJourneyCheckOutExist = await this.employeeJourneyRepository.findOne({
+        where: {
+          employeeId: authMeta.employeeId,
+          checkOutDate: IsNull(),
+        },
+        order: {
+          checkInDate: 'DESC',
+        },
       });
-      await this.employeeJourneyRepository.save(employeeJourney);
+      if (employeeJourneyCheckOutExist) {
+        status = 'error';
+        message = 'Check In sedang aktif, Harap CheckOut terlebih dahulu';
+      } else {
+        const employeeJourney = this.employeeJourneyRepository.create({
+          employeeId: authMeta.employeeId,
+          checkInDate: timeNow,
+          latitudeCheckIn: payload.latitudeCheckIn,
+          longitudeCheckIn: payload.longitudeCheckIn,
+          userIdCreated: authMeta.userId,
+          createdTime: timeNow,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        });
+        await this.employeeJourneyRepository.save(employeeJourney);
 
-      const branch = await this.branchRepository.findOne({
-        select: ['branchName'],
-        where: { branchId: permissonPayload.branchId },
-      });
-
+        const branch = await this.branchRepository.findOne({
+          select: ['branchName'],
+          where: { branchId: permissonPayload.branchId },
+        });
+        branchName = branch.branchName;
+        checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
+      }
       result.status = status;
       result.message = message;
-      result.branchName = branch.branchName;
+      result.branchName = branchName;
       result.checkInDate = checkInDate;
       return result;
     } else {

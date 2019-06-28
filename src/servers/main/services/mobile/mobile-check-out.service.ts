@@ -8,7 +8,6 @@ import { ContextualErrorService } from 'src/shared/services/contextual-error.ser
 import { MobileCheckOutPayloadVm } from '../../models/mobile-check-out-payload.vm';
 import { MobileCheckOutResponseVm } from '../../models/mobile-check-out-response.vm';
 import { BranchRepository } from 'src/shared/orm-repository/branch.repository';
-import { isNull } from 'util';
 import { IsNull } from 'typeorm';
 
 @Injectable()
