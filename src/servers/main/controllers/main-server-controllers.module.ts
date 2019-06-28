@@ -16,6 +16,8 @@ import { GabunganController } from './resi gabungan/gabungan.controller';
 import { WebAwbTroubleControlelr } from './web/web-awb-trouble.controller';
 import { WebDeliveryInController } from './web/web.delivery.in.controller';
 import { WebDeliveryOutController } from './web/web.delivery.out.controller';
+import { MobileCheckInController } from './mobile/mobile.check-in.controller';
+import { MobileCheckOutController } from './mobile/mobile.check-out.controller';
 
 @Module({
   imports: [OrmRepositoryModule, SharedModule, MainServerServicesModule],
@@ -33,6 +35,8 @@ import { WebDeliveryOutController } from './web/web.delivery.out.controller';
     PartnerLogisticController,
     ReasonController,
     RoleController,
+    MobileCheckInController,
+    MobileCheckOutController,
   ],
 })
 export class MainServerControllersModule {}

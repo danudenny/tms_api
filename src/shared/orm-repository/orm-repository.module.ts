@@ -18,6 +18,7 @@ import { DoPodRepository } from './do-pod.repository';
 import { BagItemRepository } from './bagItem.repository';
 import { BagItemAwbRepository } from './bagItemAwb.repository';
 import { CustomerRepository } from './customer.repository';
+import { EmployeeJourneyRepository } from './employee-journey.repository';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CustomerRepository } from './customer.repository';
       Awb,
       Employee,
       EmployeeRepository,
+      EmployeeJourneyRepository,
       AwbRepository,
       ReasonRepository,
       PodScan,
