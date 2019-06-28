@@ -95,8 +95,8 @@ export class WebDeliveryOutController {
 
   @Post('awbDeliveryOrder')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebDeliveryListResponseVm })
   public async awbDeliveryOrder(@Body() payload: WebDeliveryList) {
 
