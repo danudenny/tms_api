@@ -3,20 +3,15 @@ import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm
 
 // Scan Out Awb List
 export class ItemDeliveryResponseVm {
-  @ApiModelProperty()
-  doPodId: number;
 
   @ApiModelProperty()
-  doPodDateTime: string;
+  awbNumber: string;
 
   @ApiModelProperty()
-  doPodCode: string;
+  weight: number;
 
   @ApiModelProperty()
-  desc: string;
-
-  @ApiModelProperty()
-  fullname: string;
+  consigneeName: string;
 }
 
 export class WebDeliveryListResponseVm extends BaseMetaResponseVm {

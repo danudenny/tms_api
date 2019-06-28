@@ -1,5 +1,6 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { SearchColumnsVm, WebDeliverySearchVm } from '../../../shared/models/base-filter-search.payload.vm';
+import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
 
 // Scan Out Awb
 export class WebScanOutAwbVm  {
@@ -26,30 +27,7 @@ export class FilterScanOutAwbListVm {
 
 }
 
-export class WebScanOutAwbListPayloadVm {
-  @ApiModelProperty()
-  permissionToken: string;
-
-  @ApiModelPropertyOptional({ type: () => FilterScanOutAwbListVm })
-  filters?: FilterScanOutAwbListVm;
-
-  @ApiModelProperty()
-  page: number;
-
-  @ApiModelProperty()
-  limit: number;
-
-  @ApiModelProperty()
-  sortBy: string;
-
-  @ApiModelProperty()
-  sortDir: string;
-
-  @ApiModelPropertyOptional()
-  search?: string;
-
-  @ApiModelPropertyOptional({ type: [SearchColumnsVm] })
-  searchColumns?: SearchColumnsVm[];
+export class WebScanOutAwbListPayloadVm extends BaseMetaPayloadVm {
 }
 
 // Create DO POD
