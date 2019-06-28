@@ -15,6 +15,8 @@ import { AwbStatusService } from './master/awb-status.service';
 import { ReasonService } from './master/reason.service';
 import { PartnerLogisticService } from './master/partner-logistic.service';
 import { RoleService } from './master/role.service';
+import { MobileCheckInService } from './mobile/mobile-check-in.service';
+import { MobileCheckOutService } from './mobile/mobile-check-out.service';
 
 @Module({
   imports: [OrmRepositoryModule, SharedModule],
@@ -32,6 +34,8 @@ import { RoleService } from './master/role.service';
     ReasonService,
     RoleService,
     PartnerLogisticService,
+    MobileCheckInService,
+    MobileCheckOutService,
   ],
   exports: [
     MobileDeliveryService,
@@ -47,6 +51,8 @@ import { RoleService } from './master/role.service';
     ReasonService,
     RoleService,
     PartnerLogisticService,
+    MobileCheckInService,
+    MobileCheckOutService,
   ],
 })
 export class MainServerServicesModule {}
