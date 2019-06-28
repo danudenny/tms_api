@@ -321,6 +321,91 @@ HOST: http://api.tms.sicepat.com
             {}
 
 
+## Create Scan Out Deliver [/web/pod/scanOut/createDeliver]
+    Form Surat Jalan Antar: Untuk Scan Out dari Web POD
+
+### Create Scan Out Deliver [POST]
+
++ Request Create Scan Out Deliver(application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+    + Attributes (object)
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + employeeIdDriver  : employeeId, (string, required)
+        + doPodDateTime     : `2019-05-01 00:00:00` (string)
+        + desc              : `sss`, (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "status"            : "ok",
+                "message"           : "success",
+                "doPodDeliverId"    : 1
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Scan Out Awb Deliver [/web/pod/scanOut/awbDeliver]
+    Surat Jalan Resi Antar: Untuk Scan Out dari Web POD
+
+### Scan Out Awb Deliver [POST]
+
++ Request Scan Out Awb Deliver (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+        + doPodDeliverId    : 1, (number),
+        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + awbNumber         : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "totalData"     : 2,
+                "totalSuccess"  : 1,
+                "totalError"    : 1,
+                "data" : [
+                    {
+                        "awbNumber" : "0001",
+                        "status"    : "ok",
+                        "trouble"   : false,
+                        "message"   : "success",
+                    },
+                    {
+                        "awbNumber": "0002",
+                        "status"    : "error",
+                        "trouble"   : false,
+                        "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
 ## Scan Out Resi List [/web/pod/scanOut/awbList]
     Daftar Surat Jalan Resi: Untuk menampilkan daftar Scan Out dari Web POD
 
