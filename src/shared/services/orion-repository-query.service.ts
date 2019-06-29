@@ -1031,7 +1031,7 @@ export class OrionRepositoryQueryService<
     str = str
       .split('.')
       .map(s => {
-        if (!this.isExpressionContainsSelectorArgs(s) && !/^"/.test(s)) {
+        if (!this.isExpressionContainsSelectorArgs(s) && !/^"|\(|\s/.test(s)) {
           return this.queryBuilder.escape(s);
         }
         return s;

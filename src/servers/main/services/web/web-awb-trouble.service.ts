@@ -23,6 +23,11 @@ export class WebAwbTroubleService {
       ['awb_number', 'awbNumber'],
       ['status_resolve_id', 'statusResolveId'],
       ['created_time', 'scanInDateTime'],
+      ['description', 'desc'],
+      [
+        `CASE awb_status_id WHEN 1 THEN 'A' WHEN 2 THEN 'B' ELSE '' END`,
+        'awbTroubleName',
+      ],
     );
 
     const data = await q.exec();
