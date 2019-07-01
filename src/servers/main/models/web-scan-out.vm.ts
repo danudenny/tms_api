@@ -5,9 +5,6 @@ import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
 // Scan Out Awb
 export class WebScanOutAwbVm  {
   @ApiModelProperty()
-  permissionToken: string;
-
-  @ApiModelProperty()
   doPodId: number;
 
   @ApiModelProperty({
