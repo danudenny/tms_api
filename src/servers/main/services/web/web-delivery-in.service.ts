@@ -97,7 +97,7 @@ export class WebDeliveryInService {
       const dataItem = [];
       const result = new WebScanInAwbResponseVm();
       const timeNow = moment().toDate();
-      const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
+      const permissonPayload = AuthService.getPermissionTokenPayload();
 
       let totalSuccess = 0;
       let totalError = 0;
@@ -106,7 +106,7 @@ export class WebDeliveryInService {
         // NOTE:
         // find data to awb where awbNumber and awb status not cancel
         const awb = await this.awbRepository.findOne({
-          select: ['awbId', 'branchId'],
+          select: ['awbId', 'branchId', 'awbStatusIdLast'],
           where: { awbNumber },
         });
 
@@ -173,19 +173,6 @@ export class WebDeliveryInService {
           }
         } else {
           totalError += 1;
-          // // save data to awb_trouble
-          // const awbTrouble = this.awbTroubleRepository.create({
-          //   awbNumber,
-          //   resolveDateTime: timeNow,
-          //   employeeId: authMeta.employeeId,
-          //   branchId: permissonPayload.branchId,
-          //   userIdCreated: authMeta.userId,
-          //   createdTime: timeNow,
-          //   userIdUpdated: authMeta.userId,
-          //   updatedTime: timeNow,
-          // });
-          // await this.awbTroubleRepository.save(awbTrouble);
-
           dataItem.push({
             awbNumber,
             status: 'error',

@@ -1,23 +1,25 @@
-import { HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
 import { TokenExpiredError } from 'jsonwebtoken';
+import { map, toInteger } from 'lodash';
 
-import { JwtAccessTokenPayload, JwtRefreshTokenPayload, JwtPermissionTokenPayload } from '../interfaces/jwt-payload.interface';
+import { PermissionAccessResponseVM } from '../../servers/auth/models/auth.vm';
+import {
+  JwtAccessTokenPayload,
+  JwtPermissionTokenPayload,
+  JwtRefreshTokenPayload,
+} from '../interfaces/jwt-payload.interface';
 import { AuthLoginMetadata } from '../models/auth-login-metadata.model';
 import { AuthLoginResultMetadata } from '../models/auth-login-result-metadata';
+import { GetRoleResult } from '../models/get-role-result';
+import { Branch } from '../orm-entity/branch';
+import { User } from '../orm-entity/user';
+import { UserRole } from '../orm-entity/user-role';
+import { UserRepository } from '../orm-repository/user.repository';
 import { ConfigService } from './config.service';
 import { ContextualErrorService } from './contextual-error.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
-import { User } from '../orm-entity/user';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UserRepository } from '../orm-repository/user.repository';
-import { map, pick, toInteger } from 'lodash';
-import { GetRoleResult } from '../models/get-role-result';
-import { UserRole } from '../orm-entity/user-role';
-import { GetAccessResult } from '../models/get-access-result';
-import { RolePermission } from '../orm-entity/role-permission';
-import { Branch } from '../orm-entity/branch';
-import { PermissionAccessResponseVM } from '../../servers/auth/models/auth.vm';
 
 @Injectable()
 export class AuthService {
@@ -25,9 +27,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
-    // @InjectRepository(LoginSessionRepository)
-    // private readonly loginSessionRepository: LoginSessionRepository,
-  ) { }
+  ) // @InjectRepository(LoginSessionRepository)
+  // private readonly loginSessionRepository: LoginSessionRepository,
+  {}
 
   async login(
     clientId: string,
@@ -35,7 +37,6 @@ export class AuthService {
     password: string,
     email?: string,
   ): Promise<AuthLoginResultMetadata> {
-
     // find by email or username on table users
     const user = await this.userRepository.findByEmailOrUsername(
       email,
@@ -51,28 +52,23 @@ export class AuthService {
         const loginResultMetadata = this.populateLoginResultMetadataByUser(
           clientId,
           user,
-          );
+        );
         return loginResultMetadata;
       } else {
         ContextualErrorService.throwObj({
-            message: 'global.error.LOGIN_WRONG_PASSWORD',
-          },
-        );
+          message: 'global.error.LOGIN_WRONG_PASSWORD',
+        });
       }
-
     } else {
-      ContextualErrorService.throwObj(
-        {
-          message: 'global.error.USER_NOT_FOUND',
-        },
-      );
+      ContextualErrorService.throwObj({
+        message: 'global.error.USER_NOT_FOUND',
+      });
     }
   }
 
   async refreshAccessToken(
     refreshToken: string,
   ): Promise<AuthLoginResultMetadata> {
-
     let refreshTokenPayload: JwtRefreshTokenPayload;
     try {
       refreshTokenPayload = this.jwtService.verify(refreshToken);
@@ -103,15 +99,13 @@ export class AuthService {
     // const user = await this.userRepository.findByUserIdWithRoles());
     // check user present
     if (!!authMeta) {
-      const roles = await UserRole.find(
-        {
-          cache: true,
-          relations: ['branch', 'role'],
-          where: {
-            user_id: toInteger(authMeta.userId),
-          },
+      const roles = await UserRole.find({
+        cache: true,
+        relations: ['branch', 'role'],
+        where: {
+          user_id: toInteger(authMeta.userId),
         },
-      );
+      });
 
       // Populate return value
       const result = new GetRoleResult();
@@ -120,18 +114,16 @@ export class AuthService {
       result.email = authMeta.email;
       result.displayName = authMeta.displayName;
       // result.roles = map(roles, role => pick(role, ['role_id', 'role.role_name', 'branch_id', 'branch.branch_name']));
-      result.roles = map(roles,
-          item => {
-            const newObj = {
-              roleId: item.role_id,
-              roleName: item.role.role_name,
-              branchId: item.branch_id,
-              branchName: item.branch.branchName,
-              branchCode: item.branch.branchCode,
-            };
-            return newObj;
-          },
-        );
+      result.roles = map(roles, item => {
+        const newObj = {
+          roleId: item.role_id,
+          roleName: item.role.role_name,
+          branchId: item.branch_id,
+          branchName: item.branch.branchName,
+          branchCode: item.branch.branchCode,
+        };
+        return newObj;
+      });
 
       // Logger.log('############## Result permissionRoles ==================================================');
       // Logger.log(result);
@@ -178,7 +170,10 @@ export class AuthService {
         roleId,
         branchId,
       );
-      const permissionToken = this.jwtService.sign(jwtPermissionTokenPayload, {});
+      const permissionToken = this.jwtService.sign(
+        jwtPermissionTokenPayload,
+        {},
+      );
 
       // Populate return value
       const result = new PermissionAccessResponseVM();
@@ -225,7 +220,9 @@ export class AuthService {
   }
 
   // handle permission Token
-  async handlePermissionJwtToken(jwtToken: string) {
+  async handlePermissionJwtToken(
+    jwtToken: string = AuthService.getPermissionToken(),
+  ) {
     let jwt: { payload: JwtPermissionTokenPayload };
     try {
       this.validateJwtTokenPermission(jwtToken);
@@ -240,10 +237,7 @@ export class AuthService {
   }
 
   // method populate data user login
-  public populateLoginResultMetadataByUser(
-    clientId: string,
-    user: User,
-  ) {
+  public populateLoginResultMetadataByUser(clientId: string, user: User) {
     const jwtAccessTokenPayload = this.populateJwtAccessTokenPayloadFromUser(
       clientId,
       user,
@@ -300,7 +294,10 @@ export class AuthService {
   }
 
   // Set data payload JWT Permission Token
-  public populateJwtPermissionTokenPayloadFromUser(roleId: number, branchId: number) {
+  public populateJwtPermissionTokenPayloadFromUser(
+    roleId: number,
+    branchId: number,
+  ) {
     const jwtPayload: Partial<JwtPermissionTokenPayload> = {
       roleId,
       branchId,
@@ -337,6 +334,26 @@ export class AuthService {
     const { roles } = this.getAuthMetadata();
     return roles || [];
   }
+
+  public static getPermissionToken() {
+    return RequestContextMetadataService.getMetadata('PERMISSION_TOKEN');
+  }
+
+  public static setPermissionTokenPayload(
+    permissionTokenPayload: JwtPermissionTokenPayload,
+  ) {
+    RequestContextMetadataService.setMetadata(
+      'PERMISSION_TOKEN_PAYLOAD',
+      permissionTokenPayload,
+    );
+  }
+
+  public static getPermissionTokenPayload() {
+    return RequestContextMetadataService.getMetadata<JwtPermissionTokenPayload>(
+      'PERMISSION_TOKEN_PAYLOAD',
+    );
+  }
+
   // #endregion
 
   private validateJwtTokenPermission(token: string): boolean {

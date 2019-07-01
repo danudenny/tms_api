@@ -4,6 +4,7 @@ import {
   WebScanOutCreateVm,
   WebScanOutAwbVm,
   WebScanOutAwbListPayloadVm,
+  WebScanOutCreateDeliveryVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutCreateResponseVm,
@@ -30,12 +31,16 @@ import { MetaService } from '../../../../shared/services/meta.service';
 import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
+import { DoPod } from '../../../../shared/orm-entity/do-pod';
+import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
+import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
+import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 // #endregion
 
 @Injectable()
 export class WebDeliveryOutService {
   constructor(
-    private readonly authService: AuthService,
     @InjectRepository(AwbRepository)
     private readonly awbRepository: AwbRepository,
     @InjectRepository(DoPodRepository)
@@ -46,6 +51,13 @@ export class WebDeliveryOutService {
     private readonly bagRepository: BagRepository,
   ) {}
 
+  /**
+   * Create DO POD
+   * with type: Transit (Internal/3PL) and Criss Cross
+   * @param {WebScanOutCreateVm} payload
+   * @returns {Promise<WebScanOutCreateResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
   async scanOutCreate(
     payload: WebScanOutCreateVm,
   ): Promise<WebScanOutCreateResponseVm> {
@@ -57,12 +69,10 @@ export class WebDeliveryOutService {
       // create do_pod (Surat Jalan)
       // mapping payload to field table do_pod
       const doPod = this.doPodRepository.create();
-      const permissonPayload = await this.authService.handlePermissionJwtToken(
-        payload.permissionToken,
-      );
+      const permissonPayload = AuthService.getPermissionTokenPayload();
       const doPodDateTime = moment(payload.doPodDateTime).toDate();
 
-      // NOTE: Ada 4 tipe surat jalan
+      // NOTE: Tipe surat jalan
       doPod.doPodCode = await CustomCounterCode.doPod(
         doPodDateTime.toDateString(),
       ); // generate code
@@ -71,24 +81,19 @@ export class WebDeliveryOutService {
       // 1. tipe surat jalan criss cross
       // 2.A tipe transit(internal)
       // 2.B tipe transit (3pl)
+      const method =
+        payload.doPodMethod && payload.doPodMethod === '3pl' ? 3000 : 1000;
+      doPod.doPodMethod = method; // internal or 3PL/Third Party
       doPod.partnerLogisticId = payload.partnerLogisticId || null;
-      // 3. tipe retur
-
-      // gerai tujuan di gunakan selain tipe Surat Jalan Antar dan transit (3pl)
       doPod.branchIdTo = payload.branchIdTo || null;
 
       // doPod.userIdDriver = payload.
       doPod.employeeIdDriver = payload.employeeIdDriver || null;
-      doPod.doPodDateTime = moment(doPodDateTime).toDate();
+      doPod.doPodDateTime = doPodDateTime;
 
       doPod.vehicleNumber = payload.vehicleNumber || null;
       doPod.description = payload.desc || null;
 
-      // tipe antar (sigesit)
-      // resi antar/ retur
-
-      // TODO: change if transit (3pl)
-      doPod.doPodMethod = 1000; // internal or 3PL/Third Party
       // general
       doPod.doPodStatusIdLast = 1000; // created
       doPod.branchId = permissonPayload.branchId;
@@ -104,7 +109,7 @@ export class WebDeliveryOutService {
       // Populate return value
       result.status = '200';
       result.message = 'ok';
-      result.doPodId = doPod.doPodId;
+      result.doPodId = Number(doPod.doPodId);
 
       return result;
     } else {
@@ -117,43 +122,37 @@ export class WebDeliveryOutService {
     }
   }
 
+  /**
+   * Create DO POD Deliver
+   * with type: Deliver (Sigesit)
+   * @param {WebScanOutCreateDeliveryVm} payload
+   * @returns {Promise<WebScanOutCreateResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
   async scanOutCreateDelivery(
-    payload: WebScanOutCreateVm,
+    payload: WebScanOutCreateDeliveryVm,
   ): Promise<WebScanOutCreateResponseVm> {
     const authMeta = AuthService.getAuthMetadata();
     const result = new WebScanOutCreateResponseVm();
     const timeNow = moment().toDate();
 
     if (!!authMeta) {
-      // create do_pod (Surat Jalan)
-      // mapping payload to field table do_pod
-      const doPod = this.doPodRepository.create();
-      const permissonPayload = await this.authService.handlePermissionJwtToken(
-        payload.permissionToken,
-      );
+      // create do_pod_deliver (Surat Jalan Antar sigesit)
+      const doPod = DoPodDeliver.create();
+      const permissonPayload = AuthService.getPermissionTokenPayload();
       const doPodDateTime = moment(payload.doPodDateTime).toDate();
 
-      // NOTE: Ada 4 tipe surat jalan
-      doPod.doPodCode = await CustomCounterCode.doPod(
+      // NOTE: Tipe surat (jalan Antar Sigesit)
+      doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
         doPodDateTime.toDateString(),
       ); // generate code
-      // TODO: doPodType (Delivery Sigesit)
-      doPod.doPodType = payload.doPodType;
 
       // doPod.userIdDriver = payload.
       doPod.employeeIdDriver = payload.employeeIdDriver || null;
-      doPod.doPodDateTime = moment(doPodDateTime).toDate();
-
-      doPod.vehicleNumber = payload.vehicleNumber || null;
+      doPod.doPodDeliverDateTime = moment(doPodDateTime).toDate();
       doPod.description = payload.desc || null;
 
-      // tipe antar (sigesit)
-      // resi antar/ retur
-
-      // TODO: change if transit (3pl)
-      doPod.doPodMethod = 1000; // internal or 3PL/Third Party
       // general
-      doPod.doPodStatusIdLast = 1000; // created
       doPod.branchId = permissonPayload.branchId;
       doPod.userId = authMeta.userId;
       doPod.userIdCreated = authMeta.userId;
@@ -162,12 +161,12 @@ export class WebDeliveryOutService {
       doPod.updatedTime = timeNow;
 
       // await for get do pod id
-      await this.doPodRepository.save(doPod);
+      await DoPodDeliver.save(doPod);
 
       // Populate return value
       result.status = '200';
       result.message = 'ok';
-      result.doPodId = doPod.doPodId;
+      result.doPodId = Number(doPod.doPodDeliverId);
 
       return result;
     } else {
@@ -180,6 +179,13 @@ export class WebDeliveryOutService {
     }
   }
 
+  /**
+   * Create DO POD Detail
+   * with scan awb number
+   * @param {WebScanOutAwbVm} payload
+   * @returns {Promise<WebScanOutAwbResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
   async scanOutAwb(payload: WebScanOutAwbVm): Promise<WebScanOutAwbResponseVm> {
     const authMeta = AuthService.getAuthMetadata();
 
@@ -187,88 +193,160 @@ export class WebDeliveryOutService {
       const dataItem = [];
       const result = new WebScanOutAwbResponseVm();
       const timeNow = moment().toDate();
-      const permissonPayload = await this.authService.handlePermissionJwtToken(
-        payload.permissionToken,
-      );
+      const permissonPayload = AuthService.getPermissionTokenPayload();
 
       let totalSuccess = 0;
       let totalError = 0;
 
-      let awb;
-      let awbItem;
-      let doPodDetail;
+      // TODO: need reviewed??
+      // // get data do pod by id for update data
+      // const doPod = DoPod.findOne({
+      //   where: {
+      //     doPodId: payload.doPodId,
+      //     isDeleted: false,
+      //   },
+      // });
 
       for (const awbNumber of payload.awbNumber) {
-        // TODO: create data do_pod_detail
+        const response = {
+          status: 'ok',
+          message: 'Success',
+        };
+
         // NOTE:
         // find data to awb where awbNumber and awb status not cancel
-        awb = await this.awbRepository.findOne({
-          select: ['awbId', 'branchId'],
-          where: { awbNumber },
+        const awb = await this.awbRepository.findOne({
+          select: ['awbId', 'branchId', 'awbStatusIdLast'],
+          where: { awbNumber, isDeleted: false },
         });
+
         if (awb) {
-          // TODO: check data by status IN/OUT
-          // find data do pod detail if exists
-          // let checkPod = await DoPodDetail.findOne({
-          //   where: {
-          //     awbId: awb.awbId,
-          //   },
-          // });
+          // NOTE: jika awb awbHistoryIdLast >= 1500 dan tidak sama dengan 1800 (cancel) boleh scan out
+          if (awb.awbStatusIdLast >= 1500 && awb.awbStatusIdLast !== 1800) {
 
-          // Get data awb item
-          awbItem = await AwbItem.findOne({
-            select: ['awbItemId'],
-            where: { awbId: awb.awbId },
-          });
+            // TODO: check data by status IN/OUT
+            // find data do pod detail if exists
+            // NOTE: gerai ??
+            // Get data awb item
+            const awbItem = await AwbItem.findOne({
+              select: ['awbItemId'],
+              where: { awbId: awb.awbId },
+            });
 
-          // NOTE: create data do pod detail per awb number
-          // TODO: check DoPodDetail find by awb_item_id
-          // update data or create data
-          doPodDetail = DoPodDetail.create();
-          doPodDetail.doPodId = payload.doPodId;
-          doPodDetail.awbItemId = awbItem.awbItemId;
-          // "bag_item_id": null,
-          doPodDetail.doPodStatusIdLast = 1000;
-          // "do_pod_history_id_last": null,
-          doPodDetail.isScanOut = true;
-          doPodDetail.scanOutType = 'awb_item';
-          // "is_scan_in": true,
-          // "scan_in_type": "awb_item",
+            const checkPod = await DoPodDetail.findOne({
+              where: {
+                awbItemId: awbItem.awbItemId,
+                isScanIn: true,
+                isDeleted: false,
+              },
+            });
 
-          // "employee_journey_id_in": null,
-          // "employee_journey_id_out": null
+            // NOTE: Resi belum scan in
+            if (checkPod) {
 
-          // general
-          // doPodDetail.branchId = permissonPayload.branchId;
-          // doPodDetail.userId = authMeta.userId;
-          doPodDetail.userIdCreated = authMeta.userId;
-          doPodDetail.userIdUpdated = authMeta.userId;
-          doPodDetail.createdTime = timeNow;
-          doPodDetail.updatedTime = timeNow;
-          DoPodDetail.save(doPodDetail);
+              // NOTE: create data do pod detail per awb number
+              const doPodDetail = DoPodDetail.create();
+              doPodDetail.doPodId = payload.doPodId;
+              doPodDetail.awbItemId = awbItem.awbItemId;
+              // "bag_item_id": null,
+              doPodDetail.doPodStatusIdLast = 1000;
+              // "do_pod_history_id_last": null,
+              doPodDetail.isScanOut = true;
+              doPodDetail.scanOutType = 'awb_item';
+              // "is_scan_in": true,
+              // "scan_in_type": "awb_item",
 
-          // TODO:
-          // save data to table awb_history
-          // update data history id last on awb??
+              // general
+              // doPodDetail.branchId = permissonPayload.branchId;
+              // doPodDetail.userId = authMeta.userId;
+              doPodDetail.userIdCreated = authMeta.userId;
+              doPodDetail.userIdUpdated = authMeta.userId;
+              doPodDetail.createdTime = timeNow;
+              doPodDetail.updatedTime = timeNow;
+              await DoPodDetail.save(doPodDetail);
 
-          totalSuccess += 1;
-          dataItem.push({
-            awbNumber,
-            status: 'ok',
-            message: 'Success',
-          });
+              // TODO: ===================================================================================
+              // save data to table awb_history
+              const awbHistory = AwbHistory.create({
+                awbItemId: awbItem.awbItemId,
+                userId: authMeta.userId,
+                branchId: permissonPayload.branchId,
+                historyDate: timeNow,
+                awbStatusId: 3000,
+                refAwbNumber: awbNumber,
+                userIdCreated: authMeta.userId,
+                createdTime: timeNow,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+                isScanSingle: true,
+              });
+              // await for get awbHistoryId
+              await AwbHistory.save(awbHistory);
+              const awbHistoryId = awbHistory.awbHistoryId;
+              // tslint:disable-next-line: no-console
+              console.log('################## awbHistoryId :: ', awbHistoryId);
+              // update data history id last on awb??
+              // =========================================================================================
+
+              totalSuccess += 1;
+            } else {
+              totalError += 1;
+              response.status = 'error';
+              response.message = `No Resi ${awbNumber} belum di scan Masuk di gerai tujuan`;
+              // TODO: create data awb trouble
+              // save data to awb_trouble
+              const awbTrouble = AwbTrouble.create({
+                awbNumber,
+                awbStatusId: awb.awbStatusIdLast,
+                resolveDateTime: timeNow,
+                employeeId: authMeta.employeeId,
+                branchId: permissonPayload.branchId,
+                userIdCreated: authMeta.userId,
+                createdTime: timeNow,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+                description: response.message,
+              });
+              await AwbTrouble.save(awbTrouble);
+            }
+          } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `No Resi ${awbNumber} Tidak dapat di scan Keluar`;
+            // TODO: create data awb trouble
+            // save data to awb_trouble
+            const awbTrouble = AwbTrouble.create({
+              awbNumber,
+              awbStatusId: awb.awbStatusIdLast,
+              resolveDateTime: timeNow,
+              employeeId: authMeta.employeeId,
+              branchId: permissonPayload.branchId,
+              userIdCreated: authMeta.userId,
+              createdTime: timeNow,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+              description: response.message,
+            });
+            await AwbTrouble.save(awbTrouble);
+          }
         } else {
           totalError += 1;
-          // TODO: Problem awb number not found
-          // ......
-
-          dataItem.push({
-            awbNumber,
-            status: 'error',
-            message: `No Resi ${awbNumber} Tidak di Temukan`,
-          });
+          response.status = 'error';
+          response.message = `No Resi ${awbNumber} Tidak di Temukan`;
         }
+
+        // push item
+        dataItem.push({
+          awbNumber,
+          status: response.status,
+          message: response.message,
+        });
       } // end of loop
+
+      // NOTE: Update do pod ??
+      // total_pod_item
+      // total_item
+      // total weight
 
       // Populate return value
       result.totalData = payload.awbNumber.length;
@@ -287,6 +365,193 @@ export class WebDeliveryOutService {
     }
   }
 
+  /**
+   * Create DO POD Detail Deliver
+   * with scan awb number
+   * @param {WebScanOutAwbVm} payload
+   * @returns {Promise<WebScanOutAwbResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
+  async scanOutAwbDeliver(payload: WebScanOutAwbVm): Promise<WebScanOutAwbResponseVm> {
+    const authMeta = AuthService.getAuthMetadata();
+
+    if (!!authMeta) {
+      const dataItem = [];
+      const result = new WebScanOutAwbResponseVm();
+      const timeNow = moment().toDate();
+      const permissonPayload = AuthService.getPermissionTokenPayload();
+
+      let totalSuccess = 0;
+      let totalError = 0;
+
+      // TODO: need reviewed??
+      // // get data do pod by id for update data
+      // const doPod = DoPod.findOne({
+      //   where: {
+      //     doPodId: payload.doPodId,
+      //     isDeleted: false,
+      //   },
+      // });
+
+      for (const awbNumber of payload.awbNumber) {
+        const response = {
+          status: 'ok',
+          message: 'Success',
+        };
+
+        // NOTE:
+        // find data to awb where awbNumber and awb status not cancel
+        const awb = await this.awbRepository.findOne({
+          select: ['awbId', 'branchId', 'awbStatusIdLast'],
+          where: { awbNumber, isDeleted: false },
+        });
+
+        if (awb) {
+          // NOTE: jika awb awbHistoryIdLast >= 1500 dan tidak sama dengan 1800 (cancel) boleh scan out
+          if (awb.awbStatusIdLast >= 1500 && awb.awbStatusIdLast !== 1800) {
+
+            // TODO: check data by status IN/OUT
+            // find data do pod detail if exists
+            // NOTE: gerai ??
+            // Get data awb item
+            const awbItem = await AwbItem.findOne({
+              select: ['awbItemId'],
+              where: { awbId: awb.awbId },
+            });
+
+            // TODO: check Do Pod Detail Deliver
+            const checkPod = await DoPodDetail.findOne({
+              where: {
+                awbItemId: awbItem.awbItemId,
+                isScanIn: true,
+                isDeleted: false,
+              },
+            });
+
+            // NOTE: Resi belum scan in
+            if (checkPod) {
+
+              // NOTE: create data do pod detail per awb number
+              const doPodDeliverDetail = DoPodDeliverDetail.create();
+              doPodDeliverDetail.doPodDeliverId = payload.doPodId;
+              doPodDeliverDetail.awbItemId = awbItem.awbItemId;
+              doPodDeliverDetail.doPodStatusIdLast = 1000;
+
+              // general
+              doPodDeliverDetail.userIdCreated = authMeta.userId;
+              doPodDeliverDetail.userIdUpdated = authMeta.userId;
+              doPodDeliverDetail.createdTime = timeNow;
+              doPodDeliverDetail.updatedTime = timeNow;
+              await DoPodDeliverDetail.save(doPodDeliverDetail);
+
+              // TODO: ===================================================================================
+              // save data to table awb_history
+              const awbHistory = AwbHistory.create({
+                awbItemId: awbItem.awbItemId,
+                userId: authMeta.userId,
+                branchId: permissonPayload.branchId,
+                historyDate: timeNow,
+                awbStatusId: 3000,
+                refAwbNumber: awbNumber,
+                userIdCreated: authMeta.userId,
+                createdTime: timeNow,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+                isScanSingle: true,
+              });
+              // await for get awbHistoryId
+              await AwbHistory.save(awbHistory);
+              const awbHistoryId = awbHistory.awbHistoryId;
+              // tslint:disable-next-line: no-console
+              console.log('################## awbHistoryId :: ', awbHistoryId);
+              // update data history id last on awb??
+              // =========================================================================================
+
+              totalSuccess += 1;
+            } else {
+              totalError += 1;
+              response.status = 'error';
+              response.message = `No Resi ${awbNumber} belum di scan Masuk di gerai tujuan`;
+              // TODO: create data awb trouble
+              // save data to awb_trouble
+              const awbTrouble = AwbTrouble.create({
+                awbNumber,
+                awbStatusId: awb.awbStatusIdLast,
+                resolveDateTime: timeNow,
+                employeeId: authMeta.employeeId,
+                branchId: permissonPayload.branchId,
+                userIdCreated: authMeta.userId,
+                createdTime: timeNow,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+                description: response.message,
+              });
+              await AwbTrouble.save(awbTrouble);
+            }
+          } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `No Resi ${awbNumber} Tidak dapat di scan Keluar`;
+            // TODO: create data awb trouble
+            // save data to awb_trouble
+            const awbTrouble = AwbTrouble.create({
+              awbNumber,
+              awbStatusId: awb.awbStatusIdLast,
+              resolveDateTime: timeNow,
+              employeeId: authMeta.employeeId,
+              branchId: permissonPayload.branchId,
+              userIdCreated: authMeta.userId,
+              createdTime: timeNow,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+              description: response.message,
+            });
+            await AwbTrouble.save(awbTrouble);
+          }
+        } else {
+          totalError += 1;
+          response.status = 'error';
+          response.message = `No Resi ${awbNumber} Tidak di Temukan`;
+        }
+
+        // push item
+        dataItem.push({
+          awbNumber,
+          status: response.status,
+          message: response.message,
+        });
+      } // end of loop
+
+      // NOTE: Update do pod ??
+      // total_pod_item
+      // total_item
+      // total weight
+
+      // Populate return value
+      result.totalData = payload.awbNumber.length;
+      result.totalSuccess = totalSuccess;
+      result.totalError = totalError;
+      result.data = dataItem;
+
+      return result;
+    } else {
+      ContextualErrorService.throwObj(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  /**
+   *
+   *
+   * @param {BaseMetaPayloadVm} payload
+   * @param {boolean} [isHub=false]
+   * @returns {Promise<WebScanOutAwbListResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
   async scanOutList(
     payload: BaseMetaPayloadVm,
     isHub = false,
@@ -339,6 +604,13 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  /**
+   *
+   *
+   * @param {WebDeliveryList} payload
+   * @returns {Promise<WebDeliveryListResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
   async awbDetailDelivery(
     payload: WebDeliveryList,
   ): Promise<WebDeliveryListResponseVm> {
@@ -373,8 +645,4 @@ export class WebDeliveryOutService {
     return result;
   }
 
-  // Type DO POD
-  public handleTypeDoPod(type: string) {
-    return null;
-  }
 }
