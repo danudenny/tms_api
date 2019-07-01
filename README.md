@@ -43,34 +43,9 @@ npm run start
 
 ### Run API Blueprint Mock Server
 
-Install drakov (https://www.npmjs.com/package/drakov)
+We are using API Blueprint format for contracts, and serving them with Drakov server. You can run Drakov server directly by typing:
 ```bash
-npm install -g drakov
-```
-or
-
-```bash
-yarn global add drakov
-```
-
-With only a glob expression
-
-```bash
-drakov -f "contracts/*.apib"
-```
-
-With glob expression and specified server port
-```bash
-drakov -f "contracts/*.apib" -p 4007
-```
-When running drakov and binding to a public IP
-```bash
-drakov -f "contracts/*.apib" --public
-```
-
-You can tell Drakov to watch for changes in the spec files that are loaded. When changes are detected, Drakov will reload.
-```bash
-drakov -f "contracts/*.apib" --watch
+npm run drakov:start
 ```
 
 ### Build Project
