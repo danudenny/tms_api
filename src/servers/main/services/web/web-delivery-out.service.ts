@@ -4,6 +4,7 @@ import {
   WebScanOutCreateVm,
   WebScanOutAwbVm,
   WebScanOutAwbListPayloadVm,
+  WebScanOutCreateDeliveryVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutCreateResponseVm,
@@ -46,78 +47,14 @@ export class WebDeliveryOutService {
     private readonly bagRepository: BagRepository,
   ) {}
 
+  /**
+   * Create DO POD
+   * with type: Transit (Internal/3PL) and Criss Cross
+   * @param {WebScanOutCreateVm} payload
+   * @returns {Promise<WebScanOutCreateResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
   async scanOutCreate(
-    payload: WebScanOutCreateVm,
-  ): Promise<WebScanOutCreateResponseVm> {
-    const authMeta = AuthService.getAuthMetadata();
-    const result = new WebScanOutCreateResponseVm();
-    const timeNow = moment().toDate();
-
-    if (!!authMeta) {
-      // create do_pod (Surat Jalan)
-      // mapping payload to field table do_pod
-      const doPod = this.doPodRepository.create();
-      const permissonPayload = await this.authService.handlePermissionJwtToken(
-        payload.permissionToken,
-      );
-      const doPodDateTime = moment(payload.doPodDateTime).toDate();
-
-      // NOTE: Ada 4 tipe surat jalan
-      doPod.doPodCode = await CustomCounterCode.doPod(
-        doPodDateTime.toDateString(),
-      ); // generate code
-      // TODO: doPodType
-      doPod.doPodType = payload.doPodType;
-      // 1. tipe surat jalan criss cross
-      // 2.A tipe transit(internal)
-      // 2.B tipe transit (3pl)
-      doPod.partnerLogisticId = payload.partnerLogisticId || null;
-      // 3. tipe retur
-
-      // gerai tujuan di gunakan selain tipe Surat Jalan Antar dan transit (3pl)
-      doPod.branchIdTo = payload.branchIdTo || null;
-
-      // doPod.userIdDriver = payload.
-      doPod.employeeIdDriver = payload.employeeIdDriver || null;
-      doPod.doPodDateTime = moment(doPodDateTime).toDate();
-
-      doPod.vehicleNumber = payload.vehicleNumber || null;
-      doPod.description = payload.desc || null;
-
-      // tipe antar (sigesit)
-      // resi antar/ retur
-
-      // TODO: change if transit (3pl)
-      doPod.doPodMethod = 1000; // internal or 3PL/Third Party
-      // general
-      doPod.doPodStatusIdLast = 1000; // created
-      doPod.branchId = permissonPayload.branchId;
-      doPod.userId = authMeta.userId;
-      doPod.userIdCreated = authMeta.userId;
-      doPod.userIdUpdated = authMeta.userId;
-      doPod.createdTime = timeNow;
-      doPod.updatedTime = timeNow;
-
-      // await for get do pod id
-      await this.doPodRepository.save(doPod);
-
-      // Populate return value
-      result.status = '200';
-      result.message = 'ok';
-      result.doPodId = doPod.doPodId;
-
-      return result;
-    } else {
-      ContextualErrorService.throwObj(
-        {
-          message: 'global.error.USER_NOT_FOUND',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
-
-  async scanOutCreateDelivery(
     payload: WebScanOutCreateVm,
   ): Promise<WebScanOutCreateResponseVm> {
     const authMeta = AuthService.getAuthMetadata();
@@ -131,22 +68,88 @@ export class WebDeliveryOutService {
       const permissonPayload = AuthService.getPermissionTokenPayload();
       const doPodDateTime = moment(payload.doPodDateTime).toDate();
 
-      // NOTE: Ada 4 tipe surat jalan
+      // NOTE: Tipe surat jalan
       doPod.doPodCode = await CustomCounterCode.doPod(
         doPodDateTime.toDateString(),
       ); // generate code
-      // TODO: doPodType (Delivery Sigesit)
+      // TODO: doPodType
       doPod.doPodType = payload.doPodType;
+      // 1. tipe surat jalan criss cross
+      // 2.A tipe transit(internal)
+      // 2.B tipe transit (3pl)
+      const method = payload.doPodMethod && payload.doPodMethod === '3pl' ? 3000 : 1000;
+      doPod.doPodMethod =  method; // internal or 3PL/Third Party
+      doPod.partnerLogisticId = payload.partnerLogisticId || null;
+      doPod.branchIdTo = payload.branchIdTo || null;
+
+      // doPod.userIdDriver = payload.
+      doPod.employeeIdDriver = payload.employeeIdDriver || null;
+      doPod.doPodDateTime = doPodDateTime;
+
+      doPod.vehicleNumber = payload.vehicleNumber || null;
+      doPod.description = payload.desc || null;
+
+      // general
+      doPod.doPodStatusIdLast = 1000; // created
+      doPod.branchId = permissonPayload.branchId;
+      doPod.userId = authMeta.userId;
+      doPod.userIdCreated = authMeta.userId;
+      doPod.userIdUpdated = authMeta.userId;
+      doPod.createdTime = timeNow;
+      doPod.updatedTime = timeNow;
+
+      // await for get do pod id
+      await this.doPodRepository.save(doPod);
+
+      // Populate return value
+      result.status = '200';
+      result.message = 'ok';
+      result.doPodId = Number(doPod.doPodId);
+
+      return result;
+    } else {
+      ContextualErrorService.throwObj(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  /**
+   *
+   *
+   * @param {WebScanOutCreateDeliveryVm} payload
+   * @returns {Promise<WebScanOutCreateResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
+  async scanOutCreateDelivery(
+    payload: WebScanOutCreateDeliveryVm,
+  ): Promise<WebScanOutCreateResponseVm> {
+    const authMeta = AuthService.getAuthMetadata();
+    const result = new WebScanOutCreateResponseVm();
+    const timeNow = moment().toDate();
+
+    if (!!authMeta) {
+      // create do_pod (Surat Jalan)
+      // mapping payload to field table do_pod
+      const doPod = this.doPodRepository.create();
+      const permissonPayload = AuthService.getPermissionTokenPayload();
+      const doPodDateTime = moment(payload.doPodDateTime).toDate();
+
+      // NOTE: Tipe surat jalan
+      // 1. Criss Cross
+      // 2. Transit (Internal / 3PL)
+      doPod.doPodCode = await CustomCounterCode.doPod(
+        doPodDateTime.toDateString(),
+      ); // generate code
 
       // doPod.userIdDriver = payload.
       doPod.employeeIdDriver = payload.employeeIdDriver || null;
       doPod.doPodDateTime = moment(doPodDateTime).toDate();
 
-      doPod.vehicleNumber = payload.vehicleNumber || null;
       doPod.description = payload.desc || null;
-
-      // tipe antar (sigesit)
-      // resi antar/ retur
 
       // TODO: change if transit (3pl)
       doPod.doPodMethod = 1000; // internal or 3PL/Third Party
@@ -178,6 +181,13 @@ export class WebDeliveryOutService {
     }
   }
 
+  /**
+   *
+   *
+   * @param {WebScanOutAwbVm} payload
+   * @returns {Promise<WebScanOutAwbResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
   async scanOutAwb(payload: WebScanOutAwbVm): Promise<WebScanOutAwbResponseVm> {
     const authMeta = AuthService.getAuthMetadata();
 
@@ -185,22 +195,15 @@ export class WebDeliveryOutService {
       const dataItem = [];
       const result = new WebScanOutAwbResponseVm();
       const timeNow = moment().toDate();
-      const permissonPayload = await this.authService.handlePermissionJwtToken(
-        payload.permissionToken,
-      );
+      const permissonPayload = AuthService.getPermissionTokenPayload();
 
       let totalSuccess = 0;
       let totalError = 0;
 
-      let awb;
-      let awbItem;
-      let doPodDetail;
-
       for (const awbNumber of payload.awbNumber) {
-        // TODO: create data do_pod_detail
         // NOTE:
         // find data to awb where awbNumber and awb status not cancel
-        awb = await this.awbRepository.findOne({
+        const awb = await this.awbRepository.findOne({
           select: ['awbId', 'branchId'],
           where: { awbNumber },
         });
@@ -214,7 +217,7 @@ export class WebDeliveryOutService {
           // });
 
           // Get data awb item
-          awbItem = await AwbItem.findOne({
+          const awbItem = await AwbItem.findOne({
             select: ['awbItemId'],
             where: { awbId: awb.awbId },
           });
@@ -222,7 +225,7 @@ export class WebDeliveryOutService {
           // NOTE: create data do pod detail per awb number
           // TODO: check DoPodDetail find by awb_item_id
           // update data or create data
-          doPodDetail = DoPodDetail.create();
+          const doPodDetail = DoPodDetail.create();
           doPodDetail.doPodId = payload.doPodId;
           doPodDetail.awbItemId = awbItem.awbItemId;
           // "bag_item_id": null,
@@ -285,6 +288,14 @@ export class WebDeliveryOutService {
     }
   }
 
+  /**
+   *
+   *
+   * @param {BaseMetaPayloadVm} payload
+   * @param {boolean} [isHub=false]
+   * @returns {Promise<WebScanOutAwbListResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
   async scanOutList(
     payload: BaseMetaPayloadVm,
     isHub = false,
@@ -337,6 +348,13 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  /**
+   *
+   *
+   * @param {WebDeliveryList} payload
+   * @returns {Promise<WebDeliveryListResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
   async awbDetailDelivery(
     payload: WebDeliveryList,
   ): Promise<WebDeliveryListResponseVm> {
