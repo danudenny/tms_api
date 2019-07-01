@@ -37,6 +37,7 @@ export class BaseQueryPayloadSortVm {
   dir?: 'asc' | 'desc' = 'asc';
 }
 
+// TODO: Move all dependants to BaseMetaPayloadVm and delete this file and request-query-builder-old.service.spec.ts as well
 export class BaseQueryPayloadVm<TEntity> {
   @ApiModelPropertyOptional({ type: [BaseQueryPayloadFilterVm] })
   filter: BaseQueryPayloadFilterVm[][] = [];

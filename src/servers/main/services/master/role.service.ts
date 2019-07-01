@@ -2,30 +2,24 @@ import { Injectable } from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
+import { RoleFindAllResponseVm } from '../../models/role.vm';
 
 @Injectable()
-export class BranchService {
+export class RoleService {
   constructor() {}
-  async findBranchName(
-    payload: BaseMetaPayloadVm,
-  ): Promise<BranchFindAllResponseVm> {
+  async listData(payload: BaseMetaPayloadVm): Promise<RoleFindAllResponseVm> {
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
-        field: 'branchCode',
-      },
-      {
-        field: 'branchName',
+        field: 'roleName',
       },
     ];
 
     // add select field
     const qb = payload.buildQueryBuilder();
-    qb.addSelect('branch.branch_id', 'branchId');
-    qb.addSelect('branch.branch_name', 'branchName');
-    qb.addSelect('branch.branch_code', 'branchCode');
-    qb.from('branch', 'branch');
+    qb.addSelect('role.role_id', 'roleId');
+    qb.addSelect('role.role_name', 'roleName');
+    qb.from('role', 'role');
 
     const total = await qb.getCount();
 
@@ -33,7 +27,7 @@ export class BranchService {
     payload.applyPaginationToQueryBuilder(qb);
     const data = await qb.execute();
 
-    const result = new BranchFindAllResponseVm();
+    const result = new RoleFindAllResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 

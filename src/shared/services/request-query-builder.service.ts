@@ -1,12 +1,71 @@
-import { castArray } from 'lodash';
+import { castArray, toInteger } from 'lodash';
 import { Brackets, createQueryBuilder, SelectQueryBuilder, WhereExpression } from 'typeorm';
 
-import { BaseQueryPayloadFilterVm, BaseQueryPayloadVm } from '../models/base-query-payload.vm';
+import { BaseMetaPayloadFilterVm, BaseMetaPayloadVm } from '../models/base-meta-payload.vm';
+import { BaseQueryPayloadVm } from '../models/base-query-payload.vm';
 
 export class RequestQueryBuidlerService {
-  public static applyQueryPayloadFilter(
+  public static applyMetaPayloadPagination(
+    queryBuilder: SelectQueryBuilder<any>,
+    metaPayload: BaseMetaPayloadVm,
+  ) {
+    const page = toInteger(metaPayload.page) || 1;
+    const take = toInteger(metaPayload.limit) || 10;
+    let skip = (page - 1) * take;
+    if (skip < 0) {
+      skip = 0;
+    }
+
+    queryBuilder.take(take);
+    queryBuilder.skip(skip);
+  }
+
+  public static applyMetaPayloadSort(
+    queryBuilder: SelectQueryBuilder<any>,
+    metaPayload: BaseMetaPayloadVm,
+  ) {
+    if (metaPayload.sortBy) {
+      const sortBy = metaPayload.resolveFieldAsFieldAlias(metaPayload.sortBy);
+      const sortDir: any = `${metaPayload.sortDir || 'asc'}`.toUpperCase();
+      queryBuilder.orderBy(sortBy, sortDir);
+    }
+  }
+
+  public static applyMetaPayloadSearch(
+    queryBuilder: SelectQueryBuilder<any>,
+    metaPayload: BaseMetaPayloadVm,
+  ) {
+    if (
+      metaPayload.search &&
+      metaPayload.globalSearchFields &&
+      metaPayload.globalSearchFields.length
+    ) {
+      queryBuilder.andWhere(
+        new Brackets(qbWhere => {
+          for (const searchFieldIdx in metaPayload.globalSearchFields) {
+            const searchField = metaPayload.globalSearchFields[searchFieldIdx];
+            const field = metaPayload.resolveFieldAsFieldAlias(
+              searchField.field,
+            );
+            RequestQueryBuidlerService.applyMetaPayloadFilterItem(
+              qbWhere,
+              {
+                field,
+                operator: searchField.operator || 'ilike',
+                value: metaPayload.search,
+              },
+              'or',
+              `search${searchFieldIdx}`,
+            );
+          }
+        }),
+      );
+    }
+  }
+
+  public static applyMetaPayloadFilterItem(
     queryBuilder: SelectQueryBuilder<any> | WhereExpression,
-    filter: BaseQueryPayloadFilterVm,
+    filter: BaseMetaPayloadFilterVm,
     mode: 'and' | 'or' = 'and',
     filterVarId?: string,
   ) {
@@ -21,8 +80,11 @@ export class RequestQueryBuidlerService {
         operator = '!=';
         break;
       case 'like':
+      case 'ilike':
       case 'sw':
+      case 'isw':
       case 'ew':
+      case 'iew':
         operator = 'LIKE';
         break;
       case 'gt':
@@ -53,14 +115,23 @@ export class RequestQueryBuidlerService {
 
     let value = filter.value;
     switch (filter.operator) {
-      case 'sw':
+      case 'isw':
         value = `${filter.value}%`.toLowerCase();
         break;
-      case 'ew':
+      case 'iew':
         value = `%${filter.value}`.toLowerCase();
         break;
-      case 'like':
+      case 'ilike':
         value = `%${filter.value}%`.toLowerCase();
+        break;
+      case 'sw':
+        value = `${filter.value}%`;
+        break;
+      case 'ew':
+        value = `%${filter.value}`;
+        break;
+      case 'like':
+        value = `%${filter.value}%`;
         break;
       case 'in':
       case 'nin':
@@ -87,9 +158,9 @@ export class RequestQueryBuidlerService {
           whereFn(`${field} ${operator} (:...${filterVar})`, filterVarValue);
         }
         break;
-      case 'like':
-      case 'sw':
-      case 'ew':
+      case 'ilike':
+      case 'isw':
+      case 'iew':
         whereFn(`LOWER(${field}) ${operator} :${filterVar}`, filterVarValue);
         break;
       case 'null':
@@ -100,6 +171,48 @@ export class RequestQueryBuidlerService {
         whereFn(`${field} ${operator} :${filterVar}`, filterVarValue);
         break;
     }
+  }
+
+  public static applyMetaPayloadFilters(
+    queryBuilder: SelectQueryBuilder<any>,
+    metaPayload: BaseMetaPayloadVm,
+  ) {
+    if (metaPayload.filters && metaPayload.filters.length) {
+      queryBuilder.andWhere(
+        new Brackets(qbAndWhere => {
+          for (const andFilterIdx in metaPayload.filters) {
+            const andFilter = metaPayload.filters[andFilterIdx];
+            const field = metaPayload.resolveFieldAsFieldAlias(andFilter.field);
+            this.applyMetaPayloadFilterItem(
+              qbAndWhere,
+              {
+                ...andFilter,
+                field, // replace field with the one on fieldResolverMap if exists, this may help for field aliases that contains quote
+              },
+              'and',
+              andFilterIdx,
+            );
+          }
+        }),
+      );
+    }
+  }
+
+  public static buildQueryBuilderFromMetaPayload(
+    metaPayload: BaseMetaPayloadVm,
+    applyPagination: boolean = false,
+  ) {
+    const queryBuilder = createQueryBuilder();
+
+    this.applyMetaPayloadFilters(queryBuilder, metaPayload);
+    this.applyMetaPayloadSearch(queryBuilder, metaPayload);
+    this.applyMetaPayloadSort(queryBuilder, metaPayload);
+
+    if (applyPagination) {
+      this.applyMetaPayloadPagination(queryBuilder, metaPayload);
+    }
+
+    return queryBuilder;
   }
 
   public static buildQueryBuilderFromQueryPayload(
@@ -137,7 +250,7 @@ export class RequestQueryBuidlerService {
                   const dotFields = andFilterGroup.field.split('.');
                   field = dotFields.map(dotField => `"${dotField}"`).join('.');
                 }
-                this.applyQueryPayloadFilter(
+                this.applyMetaPayloadFilterItem(
                   qbOrWhere,
                   {
                     ...andFilterGroup,

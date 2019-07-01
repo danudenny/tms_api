@@ -3,7 +3,7 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { toInteger, sampleSize } from 'lodash';
+import { toInteger } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payload.vm';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
@@ -54,15 +54,6 @@ export class WebDeliveryInService {
     // TODO: FIX QUERY and Add Additional Where Condition
     const whereCondition = 'WHERE pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end';
     // TODO: add additional where condition
-    //
-    // if (payload.search) {
-    //   // whereCondition += ` AND (`;
-    //   for (const index in payload.search.fields) {
-    //     // whereCondition += `${payload.search.fields[index]} = ${payload.search.value}`;
-    //     Logger.log(`${payload.search.fields[index]} = ${payload.search.value}`);
-    //   }
-    //   // whereCondition += ` ) `;
-    // }
 
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(
       `SELECT pod_scanin_date_time as "scanInDateTime",
@@ -108,22 +99,20 @@ export class WebDeliveryInService {
       const timeNow = moment().toDate();
       const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
 
-      let awb;
-      let checkPodScan;
       let totalSuccess = 0;
       let totalError = 0;
 
       for (const awbNumber of payload.awbNumber) {
         // NOTE:
         // find data to awb where awbNumber and awb status not cancel
-        awb = await this.awbRepository.findOne({
+        const awb = await this.awbRepository.findOne({
           select: ['awbId', 'branchId'],
           where: { awbNumber },
         });
 
         if (awb) {
           // find data pod scan if exists
-          checkPodScan = await this.podScanRepository.findOne({
+          const checkPodScan = await this.podScanRepository.findOne({
             where: {
               awbId: awb.awbId,
               doPodId: IsNull(),
@@ -184,18 +173,18 @@ export class WebDeliveryInService {
           }
         } else {
           totalError += 1;
-          // save data to awb_trouble
-          const awbTrouble = this.awbTroubleRepository.create({
-            awbNumber,
-            resolveDateTime: timeNow,
-            employeeId: authMeta.employeeId,
-            branchId: permissonPayload.branchId,
-            userIdCreated: authMeta.userId,
-            createdTime: timeNow,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
-          });
-          await this.awbTroubleRepository.save(awbTrouble);
+          // // save data to awb_trouble
+          // const awbTrouble = this.awbTroubleRepository.create({
+          //   awbNumber,
+          //   resolveDateTime: timeNow,
+          //   employeeId: authMeta.employeeId,
+          //   branchId: permissonPayload.branchId,
+          //   userIdCreated: authMeta.userId,
+          //   createdTime: timeNow,
+          //   userIdUpdated: authMeta.userId,
+          //   updatedTime: timeNow,
+          // });
+          // await this.awbTroubleRepository.save(awbTrouble);
 
           dataItem.push({
             awbNumber,

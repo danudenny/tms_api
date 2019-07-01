@@ -1,26 +1,26 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
-export class ReasonVm {
+export class RoleVm {
   @ApiModelProperty()
-  reasonId: number;
+  roleId: number;
 
   @ApiModelProperty()
-  reasonCode: string;
+  roleCode: string;
 
   @ApiModelProperty()
-  reasonName: string;
+  roleName: string;
 }
 
-export class ReasonSearchVm {
+export class RoleSearchVm {
   @ApiModelProperty()
   search: string;
 
 }
 
-export class ReasonPayloadVm {
-  @ApiModelPropertyOptional({ type: () => ReasonSearchVm })
-  filters?: ReasonSearchVm;
+export class RolePayloadVm {
+  @ApiModelPropertyOptional({ type: () => RoleSearchVm })
+  filters?: RoleSearchVm;
 
   @ApiModelProperty({
     example: 1,
@@ -33,7 +33,7 @@ export class ReasonPayloadVm {
   limit: number;
 
   @ApiModelProperty({
-    example: 'reason_name',
+    example: 'role_name',
   })
   sortBy: string;
 
@@ -44,7 +44,7 @@ export class ReasonPayloadVm {
 }
 
 // response
-export class ReasonFindAllResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [ReasonVm] })
-  data: ReasonVm[];
+export class RoleFindAllResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [RoleVm] })
+  data: RoleVm[];
 }

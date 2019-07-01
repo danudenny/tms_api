@@ -1,68 +1,42 @@
 import { Injectable } from '@nestjs/common';
-import { toInteger, isEmpty } from 'lodash';
+
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { CustomerPayloadVm } from '../../models/customer.vm';
 import { CustomerFindAllResponseVm } from '../../models/customer.response.vm';
-import { BaseQueryPayloadVm } from '../../../../shared/models/base-query-payload.vm';
 
 @Injectable()
 export class CustomerService {
-
   constructor() {}
   async findCustName(
-    payload: CustomerPayloadVm,
+    payload: BaseMetaPayloadVm,
   ): Promise<CustomerFindAllResponseVm> {
-    // params
-    const page = toInteger(payload.page) || 1;
-    const take = toInteger(payload.limit) || 10;
-    const search = payload.filters.search;
-    const offset = (page - 1) * take;
-    const sortBy = isEmpty(payload.sortBy) ? 'customer_name' : payload.sortBy;
-    const sortDir = payload.sortDir === 'asc' ? 'asc' : 'desc';
-
-    // NOTE: query with ORM
-    const queryPayload = new BaseQueryPayloadVm();
-    // add pagination
-    queryPayload.take = take;
-    queryPayload.skip = offset;
-    // add sorting data
-    queryPayload.sort = [
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
       {
-        field: sortBy,
-        dir: sortDir,
+        field: 'customerCode',
       },
-    ];
-    // add filter
-    queryPayload.filter = [
-      [
-        {
-          field: 'customer_code',
-          operator: 'like',
-          value: search,
-        },
-      ],
-      [
-        {
-          field: 'customer_name',
-          operator: 'like',
-          value: search,
-        },
-      ],
+      {
+        field: 'customerName',
+      },
     ];
 
     // add select field
-    const qb = queryPayload.buildQueryBuilder();
+    const qb = payload.buildQueryBuilder();
     qb.addSelect('customer.customer_id', 'customerId');
     qb.addSelect('customer.customer_code', 'customerCode');
     qb.addSelect('customer.customer_name', 'customerName');
     qb.from('customer', 'customer');
 
-    // exec raw query
-    const data = await qb.execute();
     const total = await qb.getCount();
+
+    // exec raw query
+    payload.applyPaginationToQueryBuilder(qb);
+    const data = await qb.execute();
+
     const result = new CustomerFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(page, take, total);
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
     return result;
   }
 }

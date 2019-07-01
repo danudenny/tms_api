@@ -16,6 +16,9 @@ import {
   WebScanOutCreateResponseVm,
   WebScanOutAwbListResponseVm,
 } from '../../models/web-scan-out-response.vm';
+import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
+import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 // #endregion
 
 @ApiUseTags('Web Delivery Out')
@@ -38,12 +41,26 @@ export class WebDeliveryOutController {
     // Tipe Surat Jalan https://sketch.cloud/s/EKdwq/a/xpEAb8
     // 1. Criss Cross
     // 2. Transit
-    // 3. Retur (resi yang berstatus retur)
-    // 4. Antar (Sigesit)
+    // 3. Antar (Sigesit)
 
     // TODO:
     return this.webDeliveryOutService.scanOutCreate(payload);
 
+  }
+
+  @Post('createDelivery')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutCreateResponseVm })
+  @Transactional()
+  public async scanOutCreateDelivery(@Body() payload: WebScanOutCreateVm) {
+    // NOTE: Scan Out With Awb
+    // Buat Surat Jalan (table do_pod, do_pod_detail, do_pod_history)
+    // Tipe Surat Jalan https://sketch.cloud/s/EKdwq/a/xpEAb8
+    // Antar (Sigesit)
+    // TODO:
+    return this.webDeliveryOutService.scanOutCreate(payload);
   }
 
   @Post('awb')
@@ -58,22 +75,28 @@ export class WebDeliveryOutController {
     // Tipe Surat Jalan https://sketch.cloud/s/EKdwq/a/xpEAb8
     // 1. Criss Cross
     // 2. Transit
-    // 3. Retur (resi yang berstatus retur)
-    // 4. Antar (Sigesit)
-
-    // TODO:
-
+    // 3. Antar (Sigesit)
     return this.webDeliveryOutService.scanOutAwb(payload);
+  }
+
+  @Post('bag')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanInBag1ResponseVm })
+  public async findAllBag(@Body() payload: WebScanInBagVm) {
+    // TODO: open bag and loop awb
+    return null; // this.webDeliveryService.findAllBag(payload);
   }
 
   @Post('awbList')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
-  public async awbList(@Body() payload: WebScanOutAwbListPayloadVm) {
+  public async awbList(@Body() payload: BaseMetaPayloadVm) {
 
-    return this.webDeliveryOutService.scanOutAwbList(payload);
+    return this.webDeliveryOutService.scanOutList(payload);
   }
 
   @Post('bagList')
@@ -82,18 +105,27 @@ export class WebDeliveryOutController {
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
   public async bagList(@Body() payload: WebScanOutAwbListPayloadVm) {
-
-    return this.webDeliveryOutService.scanOutAwbList(payload);
+    // TODO: add filter by doPodType (Transit HUB)
+    return this.webDeliveryOutService.scanOutList(payload, true);
   }
 
-  @Post('bag')
+  @Post('awbDeliveryOrder')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanInBag1ResponseVm})
-  public async findAllBag(@Body() payload: WebScanInBagVm) {
-    // TODO: ??
-    return null; // this.webDeliveryService.findAllBag(payload);
-    }
+  @ApiOkResponse({ type: WebDeliveryListResponseVm })
+  public async awbDeliveryOrder(@Body() payload: WebDeliveryList) {
+
+    return this.webDeliveryOutService.awbDetailDelivery(payload);
+  }
+
+  @Post('bagDeliveryOrder')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
+  public async bagDeliveryOrder(@Body() payload: WebScanOutAwbListPayloadVm) {
+    return this.webDeliveryOutService.scanOutList(payload, true);
+  }
 
 }

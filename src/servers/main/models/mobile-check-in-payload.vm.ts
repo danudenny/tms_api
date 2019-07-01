@@ -1,15 +1,15 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
-export class DeliveryListVm {
+export class MobileCheckInPayloadVm {
   @ApiModelProperty()
-  history_date_time: Date;
+  permissionToken: string;
 
   @ApiModelProperty()
-  reason_code: string;
+  dateCheckIn: string;
 
   @ApiModelProperty()
-  reason_id: string;
+  longitudeCheckIn: string;
 
   @ApiModelProperty()
-  username: string;
+  latitudeCheckIn: string;
 }

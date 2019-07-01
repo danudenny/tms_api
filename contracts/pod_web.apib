@@ -11,12 +11,14 @@ HOST: http://api.tms.sicepat.com
 ### Scan In Awb [POST]
 
 + Request Scan In (application/json)
+
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
 
     + Attributes (object)
-        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+
         + awbNumber         : `0001`, `0002`, (array[string], required) - Awb Number
 
 + Response 200 (application/json; charset=utf-8)
@@ -59,12 +61,14 @@ HOST: http://api.tms.sicepat.com
 ### Scan In Bag [POST]
 
 + Request Scan In (application/json)
+
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
 
     + Attributes (object)
-        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+
         + bagNumber         : `0001`, `0002`, (array[string], required) - Awb Number
 
 + Response 200 (application/json; charset=utf-8)
@@ -103,30 +107,27 @@ HOST: http://api.tms.sicepat.com
 ### Scan In List [POST]
 
 + Request Scan In List (application/json)
+
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
 
     + Attributes (object)
-        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters   : (object)
-            + startScanInDateTime   : `2019-05-01 00:00:00` (string)
-            + endScanInDateTime     : `2019-05-01 00:00:00` (string)
-            + branchScanId          : 12 (number)
-            + branchOriginId        : 10 (number)
+
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `scanInDateTime`, `awbNumber`, (array[string])
-            + value     : `anisa`
-        + searchColumns: (array)
+        + search    : `aa` (string)
+        + filters: (array)
             + item:
                 + field   : awbNumber (string)
+                + operator : ilike (string) - ilike, eq, lt, gt, in, nin
                 + value   : abc (string)
             + item:
                 + field   : scanInDateTime (string)
+                + operator: ilike (string)
                 + value   : 20190801 (string)
 
 + Response 200 (application/json; charset=utf-8)
@@ -195,8 +196,10 @@ HOST: http://api.tms.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
     + Attributes (object)
-        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+
         + doPodType         : `20000`, `14000`, (string, required) - 20000 = CRISS CROSS, 14000 = ANTAR, TRANSIT (Hub, dan Gerai)
         + doPodMethod       :  `internal`, `3pl`,  (string) - required sesuai doPodType
         + branchIdTo        : branchIdTo, (string) - required when doPodType != Antar
@@ -237,10 +240,11 @@ HOST: http://api.tms.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
 
     + Attributes (object)
-        + doPodId           : 1,
-        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+
+        + doPodId           : 1, (number),
         + awbNumber         : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
 
 + Response 200 (application/json; charset=utf-8)
@@ -276,7 +280,7 @@ HOST: http://api.tms.sicepat.com
 
             {}
 
-## Scan Out Bag [/web/pod/scanOut/Bag]
+## Scan Out Bag [/web/pod/scanOut/bag]
     Surat Jalan Gabung Paket: Untuk Scan Out dari Web POD
 
 ### Scan Out Bag [POST]
@@ -286,10 +290,10 @@ HOST: http://api.tms.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
 
     + Attributes (object)
-        + doPodId           : 1,
-        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + doPodId           : 1, (number),
         + bagNumber         : `0001`, `0002`, (array[string], required) - required when accesspermission = hub
 
 + Response 200 (application/json; charset=utf-8)
@@ -304,13 +308,13 @@ HOST: http://api.tms.sicepat.com
                         "bagNumber" : "0001",
                         "status"    : "ok",
                         "trouble"   : false,
-                        "message"   : "success",
+                        "message"   : "success"
                     },
                     {
                         "bagNumber" : "0002",
                         "status"    : "error",
                         "trouble"   : false,
-                        "message"   : "Gabung Paket sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                        "message"   : "Gabung Paket sudah Scan In pada Gerai X (20-05-2019 16:00:00)"
                     }
                 ]
             }
@@ -326,6 +330,93 @@ HOST: http://api.tms.sicepat.com
             {}
 
 
+## Create Scan Out Deliver [/web/pod/scanOut/createDeliver]
+    Form Surat Jalan Antar: Untuk Scan Out dari Web POD
+
+### Create Scan Out Deliver [POST]
+
++ Request Create Scan Out Deliver(application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
+    + Attributes (object)
+
+        + employeeIdDriver  : employeeId, (string, required)
+        + doPodDateTime     : `2019-05-01 00:00:00` (string)
+        + desc              : `sss`, (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "status"            : "ok",
+                "message"           : "success",
+                "doPodDeliverId"    : 1
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Scan Out Awb Deliver [/web/pod/scanOut/awbDeliver]
+    Surat Jalan Resi Antar: Untuk Scan Out dari Web POD
+
+### Scan Out Awb Deliver [POST]
+
++ Request Scan Out Awb Deliver (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
+    + Attributes (object)
+        + doPodDeliverId    : 1, (number),
+        + awbNumber         : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "totalData"     : 2,
+                "totalSuccess"  : 1,
+                "totalError"    : 1,
+                "data" : [
+                    {
+                        "awbNumber" : "0001",
+                        "status"    : "ok",
+                        "trouble"   : false,
+                        "message"   : "success",
+                    },
+                    {
+                        "awbNumber": "0002",
+                        "status"    : "error",
+                        "trouble"   : false,
+                        "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
 ## Scan Out Resi List [/web/pod/scanOut/awbList]
     Daftar Surat Jalan Resi: Untuk menampilkan daftar Scan Out dari Web POD
 
@@ -336,23 +427,26 @@ HOST: http://api.tms.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
     + Attributes (object)
-        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters   : (object)
-            + employeeIdDriver      : `12` (string)
-            + doPodCode             : `DOP/1904/00001` (string)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `doPodDateTime`, `doPodCode`, `fullname`, `desc` (array[string]) - fullname driver
-            + value     : 'a'
-        + searchColumns: (array)
-            + item:
-                + field   : doPodDateTime (string)
+        + search    : a, (string)
+        + filters: (array)
+            + item: (object)
+                + field   : doPodDateTime, (string)
+                + operator: ilike, (string)
                 + value   : 20190801 (string)
-          
+            + item: (object)
+                + field   : employeeIdDriver, (string)
+                + operator : ilike, (string) - ilike, eq, lt, gt, in, nin
+                + value   : 12, (string)
+            + item: (object)
+                + field   : scanInDateTime, (string)
+                + operator: ilike, (string)
+                + value   : DOP/1904/00001 (string)
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -372,14 +466,24 @@ HOST: http://api.tms.sicepat.com
                         "doPodCode"     : "DOP/1904/00001",
                         "doPodId"       : "1",
                         "fullname"      : "agus",
-                        "desc"          : "1234"
+                        "desc"          : "1234",
+                        "totalScanIn"   : "0",
+                        "totalScanOut"  : "10",
+                        "percenScanInOut" : "0%",
+                        "lastDateScanIn" : "",
+                        "lastDateScanOut" : "2019-06-28 10:00:00"
                     },
                     {
                         "doPodDateTime" : "2019-03-02 12:00:00",
                         "doPodCode"     : "DOP/1904/00002",
                         "doPodId"       : "2",
                         "fullname"      : "agus2",
-                        "desc"          : "1234"
+                        "desc"          : "1234",
+                        "totalScanIn"   : "8",
+                        "totalScanOut"  : "8",
+                        "percenScanInOut" : "100%",
+                        "lastDateScanIn" : "2019-06-28 20:00:00",
+                        "lastDateScanOut" : "2019-06-28 10:00:00"
                     }
                 ]
             }
@@ -404,22 +508,27 @@ HOST: http://api.tms.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
     + Attributes (object)
-        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters   : (object)
-            + employeeIdDriver      : `12` (string)
-            + doPodCode             : `DOP/1904/00001` (string)
+
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `doPodDateTime`, `doPodCode`, `fullname`, `desc` (array[string]) - fullname driver
-            + value     : 'a'
-        + searchColumns: (array)
+        + search    : `aa` (string)
+        + filters: (array)
+            + item:
+                + field     : employeeIdDriver (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `112` (string)
+            + item:
+                + field   : doPodCode (string)
+                + operator: ilike (string)
+                + value   : `DOP/1904/00001` (string)
             + item:
                 + field   : doPodDateTime (string)
-                + value   : 20190801 (string)
+                + operator: ilike (string)
+                + value   : `20190801` (string)
           
 
 + Response 200 (application/json; charset=utf-8)
@@ -472,24 +581,24 @@ HOST: http://api.tms.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
     + Attributes (object)
-        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters           : (object, optional)
-        + doPodId           : `001` (string)
-        + page              : 1, (number) - Default 1
-        + limit             : 10, (number) - Default 10
-        + sortBy            : awb_number, (string)
-        + sortDir           : asc, (string)
-        + search            : (object)
-            + fields    : `awb_number`, `weight`, `consignee_name` (array[string])
-            + value     : 'a'
-        + searchColumns     : (array)
+
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : `aa` (string)
+        + filters: (array)
             + item:
-                + field   : awb_number (string)
-                + value   : abc (string)
+                + field     : doPodId (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `112` (string)
             + item:
-                + field   : weight (string)
-                + value   : 20190801 (string)
+                + field   : awbNumber (string)
+                + operator: ilike (string)
+                + value   : `111234` (string)
           
 
 + Response 200 (application/json; charset=utf-8)
@@ -538,26 +647,25 @@ HOST: http://api.tms.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
     + Attributes (object)
-        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters   : (object, optional)
-        + doPodId   : `001` (string)
+
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
-        + sortBy    : bag_number, (string)
+        + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `bag_number`, `weight`, `consignee_name` (array[string])
-            + value     : 'a'
-        + searchColumns: (array)
+        + search    : `aa` (string)
+        + filters: (array)
             + item:
-                + field   : bag_number (string)
-                + value   : abc (string)
+                + field     : doPodId (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `112` (string)
             + item:
-                + field   : weight (string)
-                + value   : 20190801 (string)
+                + field   : bagNumber (string)
+                + operator: ilike (string)
+                + value   : `111234` (string)
           
-
 + Response 200 (application/json; charset=utf-8)
     + Body
 
@@ -606,8 +714,10 @@ HOST: http://api.tms.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
     + Attributes (object)
-        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+
         + awbNumber         : `12412312` (string, required)
         + partnerLogisticId : `1` (string, required)
         + awbNumberPl      : `12314JOW` (string, required)
@@ -638,29 +748,37 @@ HOST: http://api.tms.sicepat.com
 
     + Header
 
-        Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
     + Attributes (object)
-        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters        : (object)
-            + startDoPodDateTime    : `2019-05-01 00:00:00` (string)
-            + endDoPodDateTime      : `2019-05-01 00:00:00` (string)
-            + awbNumber             : `123456789012` (string, optional)
-            + doPodStatus           : `Delivered` (string)
-            + partnerLogisticId     : `1` (string, optional)
-        + page           : 1, (number) - Default 1
-        + limit          : 10, (number) - Default 10
-        + sortBy         : scan_out_date_time, (string)
-        + sortDir        : asc, (string)
-        + search         : (object)
-            + fields    : `do_pod_date_time`, `awb_number`, `awb_number_pl (array, optional)
-            + value     : 'a'
-        + searchColumns: (array)
+
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : `aa` (string)
+        + filters: (array)
             + item:
-                + field   : awb_number (string)
-                + value   : abc (string)
+                + field     : startDoPodDateTime (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `2019-05-01 00:00:00` (string)
             + item:
-                + field   : do_pod_date_time (string)
-                + value   : 20190801 (string)
+                + field   : endDoPodDateTime (string)
+                + operator: ilike (string)
+                + value   : `2019-05-01 00:00:00` (string)
+            + item:
+                + field   : awbNumber (string)
+                + operator: ilike (string)
+                + value   : `1234556` (string)
+            + item:
+                + field   : doPodStatus (string)
+                + operator: ilike (string)
+                + value   : `Delivered` (string)
+            + item:
+                + field   : partnerLogisticId (string)
+                + operator: ilike (string)
+                + value   : `1` (string)
           
 
 + Response 200 (application/json; charset=utf-8)
@@ -796,26 +914,29 @@ HOST: http://api.tms.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
     + Attributes (object)
-        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
-        + filters   : (object)
-            + startScanInDateTime   : `2019-05-01 00:00:00` (string)
-            + endScanInDateTime     : `2019-05-01 00:00:00` (string)
-            + awbNumber : `123456789012` (string)
+
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
         + sortDir   : asc, (string)
-        + search    : (object)
-            + fields    : `scanInDateTime`, `awbNumber`, (array[string])
-            + value     : 'a'
-        + searchColumns: (array)
+        + search    : `aa` (string)
+        + filters: (array)
+            + item:
+                + field     : startScanInDateTime (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `2019-05-01 00:00:00` (string)
+            + item:
+                + field   : endScanInDateTime (string)
+                + operator: ilike (string)
+                + value   : `2019-05-01 00:00:00` (string)
             + item:
                 + field   : awbNumber (string)
-                + value   : abc (string)
-            + item:
-                + field   : scanInDateTime (string)
-                + value   : 20190801 (string)
+                + operator: ilike (string)
+                + value   : `1234556` (string)
+                 
           
 
 + Response 200 (application/json; charset=utf-8)
@@ -869,9 +990,12 @@ HOST: http://api.tms.sicepat.com
 + Request Resi Troubled Detail (application/json)
 
     + Header
-        Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
     + Attributes (object)
-        + permissionToken : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+
         + awbNumber       : `123456789012` (string)
 
 + Response 200 (application/json; charset=utf-8)
@@ -917,9 +1041,12 @@ HOST: http://api.tms.sicepat.com
 + Request Resi Troubled Fixing (application/json)
 
     + Header
-        Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
     + Attributes (object)
-        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+
         + awbNumber         : `123456789012` (string)
         + awbId             : `001` (string)
 
@@ -961,12 +1088,13 @@ HOST: http://api.tms.sicepat.com
 ### Role Permission List [POST]
 
 + Request Role Permission List (application/json)
+
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
 
     + Attributes (object)
-        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
         + roleId : `1` (string, required) - RoleId
 
 + Response 200 (application/json; charset=utf-8)
@@ -1010,12 +1138,14 @@ HOST: http://api.tms.sicepat.com
 ### Edit Role Permission [POST]
 
 + Request Edit Role Permission (application/json)
+
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
 
     + Attributes (object)
-        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+
         + roleId : `1` (string, required) - RoleId
         + rolesAccessPermissions: `dashboard`, `pod` (array, required) - List Access Permission
 

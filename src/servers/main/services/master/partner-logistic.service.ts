@@ -1,60 +1,48 @@
 import { Injectable } from '@nestjs/common';
-import { toInteger, isEmpty } from 'lodash';
+
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { PartnerLogisticPayloadVm, PartnerLogisticFindAllResponseVm } from '../../models/partner-logistic.vm';
-import { BaseQueryPayloadVm } from '../../../../shared/models/base-query-payload.vm';
+import { PartnerLogisticFindAllResponseVm } from '../../models/partner-logistic.vm';
 
 @Injectable()
 export class PartnerLogisticService {
-
-  constructor() { }
+  constructor() {}
   async listData(
-    payload: PartnerLogisticPayloadVm,
+    payload: BaseMetaPayloadVm,
   ): Promise<PartnerLogisticFindAllResponseVm> {
-    // params
-    const page = toInteger(payload.page) || 1;
-    const take = toInteger(payload.limit) || 10;
-    const search = payload.filters.search;
-    const offset = (page - 1) * take;
-    const sortBy = isEmpty(payload.sortBy) ? 'partner_logistic_name' : payload.sortBy;
-    const sortDir = payload.sortDir === 'asc' ? 'asc' : 'desc';
-
-    // NOTE: query with ORM
-    const queryPayload = new BaseQueryPayloadVm();
-    // add pagination
-    queryPayload.take = take;
-    queryPayload.skip = offset;
-    // add sorting data
-    queryPayload.sort = [
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
       {
-        field: sortBy,
-        dir: sortDir,
+        field: 'partnerLogisticName',
       },
-    ];
-    // add filter
-    queryPayload.filter = [
-      [
-        {
-          field: 'partner_logistic_name',
-          operator: 'like',
-          value: search,
-        },
-      ],
+      {
+        field: 'partnerLogisticEmail',
+      },
     ];
 
     // add select field
-    const qb = queryPayload.buildQueryBuilder();
+    const qb = payload.buildQueryBuilder();
     qb.addSelect('partner_logistic.partner_logistic_id', 'partnerLogisticId');
-    qb.addSelect('partner_logistic.partner_logistic_name', 'partnerLogisticName');
-    qb.addSelect('partner_logistic.partner_logistic_email', 'partnerLogisticEmail');
+    qb.addSelect(
+      'partner_logistic.partner_logistic_name',
+      'partnerLogisticName',
+    );
+    qb.addSelect(
+      'partner_logistic.partner_logistic_email',
+      'partnerLogisticEmail',
+    );
     qb.from('partner_logistic', 'partner_logistic');
 
-    // exec raw query
-    const data = await qb.execute();
     const total = await qb.getCount();
+
+    // exec raw query
+    payload.applyPaginationToQueryBuilder(qb);
+    const data = await qb.execute();
+
     const result = new PartnerLogisticFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(page, take, toInteger(total[0].count));
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
     return result;
   }
 }
