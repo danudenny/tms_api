@@ -128,9 +128,7 @@ export class WebDeliveryOutService {
       // create do_pod (Surat Jalan)
       // mapping payload to field table do_pod
       const doPod = this.doPodRepository.create();
-      const permissonPayload = await this.authService.handlePermissionJwtToken(
-        payload.permissionToken,
-      );
+      const permissonPayload = AuthService.getPermissionTokenPayload();
       const doPodDateTime = moment(payload.doPodDateTime).toDate();
 
       // NOTE: Ada 4 tipe surat jalan

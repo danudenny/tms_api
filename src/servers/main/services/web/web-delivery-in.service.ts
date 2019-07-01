@@ -97,7 +97,7 @@ export class WebDeliveryInService {
       const dataItem = [];
       const result = new WebScanInAwbResponseVm();
       const timeNow = moment().toDate();
-      const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
+      const permissonPayload = AuthService.getPermissionTokenPayload();
 
       let totalSuccess = 0;
       let totalError = 0;
