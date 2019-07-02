@@ -2,11 +2,11 @@ import { HttpStatus, Injectable, Query, Logger } from '@nestjs/common';
 import { MobileCheckInPayloadVm } from '../../models/mobile-check-in-payload.vm';
 import { MobileCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
 import moment = require('moment');
-import { AuthService } from 'src/shared/services/auth.service';
-import { EmployeeJourneyRepository } from 'src/shared/orm-repository/employee-journey.repository';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ContextualErrorService } from 'src/shared/services/contextual-error.service';
-import { BranchRepository } from 'src/shared/orm-repository/branch.repository';
+import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
+import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
 import { IsNull} from 'typeorm';
 
 @Injectable()

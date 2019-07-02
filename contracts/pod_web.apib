@@ -549,14 +549,24 @@ HOST: http://api.tms.sicepat.com
                         "doPodCode"     : "DOP/1904/00001",
                         "doPodId"       : "1",
                         "fullname"      : "agus",
-                        "desc"          : "1234"
+                        "desc"          : "1234",
+                        "totalScanIn"   : "0",
+                        "totalScanOut"  : "10",
+                        "percenScanInOut" : "0%",
+                        "lastDateScanIn" : "",
+                        "lastDateScanOut" : "2019-06-28 10:00:00"
                     },
                     {
                         "doPodDateTime" : "2019-03-02 12:00:00",
                         "doPodCode"     : "DOP/1904/00002",
                         "doPodId"       : "2",
                         "fullname"      : "agus2",
-                        "desc"          : "1234"
+                        "desc"          : "1234",
+                        "totalScanIn"   : "8",
+                        "totalScanOut"  : "8",
+                        "percenScanInOut" : "100%",
+                        "lastDateScanIn" : "2019-06-28 20:00:00",
+                        "lastDateScanOut" : "2019-06-28 10:00:00"
                     }
                 ]
             }
@@ -1113,6 +1123,7 @@ HOST: http://api.tms.sicepat.com
                     "pod_manual",
                     "scan_in_list",
                     "do_pod_list",
+                    "do_pod_bag_list",
                     "pod_awb_list",
                     "awb_3pl_list",
                     "pod_scan_in_problem_ct",

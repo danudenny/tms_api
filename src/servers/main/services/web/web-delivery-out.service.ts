@@ -107,8 +107,8 @@ export class WebDeliveryOutService {
       await this.doPodRepository.save(doPod);
 
       // Populate return value
-      result.status = '200';
-      result.message = 'ok';
+      result.status = 'ok';
+      result.message = 'success';
       result.doPodId = Number(doPod.doPodId);
 
       return result;
@@ -164,8 +164,8 @@ export class WebDeliveryOutService {
       await DoPodDeliver.save(doPod);
 
       // Populate return value
-      result.status = '200';
-      result.message = 'ok';
+      result.status = 'ok';
+      result.message = 'success';
       result.doPodId = Number(doPod.doPodDeliverId);
 
       return result;
