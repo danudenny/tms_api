@@ -32,7 +32,7 @@ export class MobileCheckInService {
       const timeNow = moment().toDate();
 
       // console.log(payload);
-      const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
+      const permissonPayload = AuthService.getPermissionTokenPayload();
 
       const employeeJourneyCheckOutExist = await this.employeeJourneyRepository.findOne({
         where: {
