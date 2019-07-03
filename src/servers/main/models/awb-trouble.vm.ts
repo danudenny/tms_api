@@ -12,4 +12,10 @@ export class AwbTroubleVm {
 
   @ApiModelProperty({ format: 'date-time' })
   scanInDateTime: string;
+
+  @ApiModelProperty()
+  desc: string;
+
+  @ApiModelProperty()
+  awbTroubleName: string;
 }

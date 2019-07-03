@@ -21,6 +21,7 @@ import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { IsNull } from 'typeorm';
 import { DoPodRepository } from '../../../../shared/orm-repository/do-pod.repository';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 // #endregion
 
 @Injectable()
@@ -43,7 +44,7 @@ export class WebDeliveryInService {
 
   async findAllDeliveryList(
     payload: WebDeliveryListFilterPayloadVm,
-    ): Promise<WebScanInListResponseVm> {
+  ): Promise<WebScanInListResponseVm> {
     const page = toInteger(payload.page) || 1;
     const take = toInteger(payload.limit) || 10;
 
@@ -52,7 +53,8 @@ export class WebDeliveryInService {
     const end = moment(payload.filters.endDeliveryDateTime).toDate();
 
     // TODO: FIX QUERY and Add Additional Where Condition
-    const whereCondition = 'WHERE pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end';
+    const whereCondition =
+      'WHERE pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end';
     // TODO: add additional where condition
 
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(
@@ -60,8 +62,7 @@ export class WebDeliveryInService {
         awb.awb_number as "awbNumber",
         branch.branch_name as "branchNameScan",
         branch_from.branch_name as "branchNameFrom",
-        employee.fullname as "employeeName",
-        'Ya' as "scanInStatus"
+        employee.fullname as "employeeName"
       FROM pod_scan
         JOIN branch ON pod_scan.branch_id = branch.branch_id
         JOIN awb ON awb.awb_id = pod_scan.awb_id AND awb.is_deleted = false
@@ -71,12 +72,15 @@ export class WebDeliveryInService {
         LEFT JOIN branch branch_from ON do_pod.branch_id = branch_from.branch_id
       ${whereCondition}
       LIMIT :take OFFSET :offset`,
-      { take, start, end , offset },
+      { take, start, end, offset },
     );
 
-    const [querycount, parameterscount] = RawQueryService.escapeQueryWithParameters(
+    const [
+      querycount,
+      parameterscount,
+    ] = RawQueryService.escapeQueryWithParameters(
       `SELECT COUNT (*) FROM pod_scan where pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end `,
-      { start, end  },
+      { start, end },
     );
 
     // exec raw query
@@ -90,6 +94,80 @@ export class WebDeliveryInService {
     return result;
   }
 
+  async findAllAwbByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInListResponseVm> {
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'pod_scanin_date_time',
+      },
+    ];
+
+    // SELECT pod_scanin_date_time as "scanInDateTime",
+    //     awb.awb_number as "awbNumber",
+    //     branch.branch_name as "branchNameScan",
+    //     branch_from.branch_name as "branchNameFrom",
+    //     employee.fullname as "employeeName"
+    //   FROM pod_scan
+    //     JOIN branch ON pod_scan.branch_id = branch.branch_id
+    //     JOIN awb ON awb.awb_id = pod_scan.awb_id AND awb.is_deleted = false
+    //     LEFT JOIN users ON users.user_id = pod_scan.user_id AND users.is_deleted = false
+    //     LEFT JOIN employee ON employee.employee_id = users.employee_id AND employee.is_deleted = false
+    //     LEFT JOIN do_pod ON do_pod.do_pod_id = pod_scan.do_pod_id
+    //     LEFT JOIN branch branch_from ON do_pod.branch_id = branch_from.branch_id
+    const qb = payload.buildQueryBuilder();
+    qb.addSelect('pod_scan.pod_scanin_date_time', 'scanInDateTime');
+    qb.addSelect('awb.awb_number', 'awbNumber');
+    qb.addSelect('branch.branch_name', 'branchNameScan');
+    qb.addSelect('branch_from.branch_name', 'branchNameFrom');
+    qb.addSelect('employee.fullname', 'employeeName');
+
+    qb.from('pod_scan', 'pod_scan');
+    qb.innerJoin(
+      'branch',
+      'branch',
+      'pod_scan.branch_id = branch.branch_id AND branch.is_deleted = false',
+    );
+    qb.innerJoin(
+      'awb',
+      'awb',
+      'awb.awb_id = pod_scan.awb_id AND awb.is_deleted = false',
+    );
+    qb.leftJoin(
+      'users',
+      'users',
+      'users.user_id = pod_scan.user_id AND users.is_deleted = false',
+    );
+    qb.leftJoin(
+      'employee',
+      'employee',
+      'employee.employee_id = users.employee_id AND employee.is_deleted = false',
+    );
+    qb.leftJoin(
+      'do_pod',
+      'do_pod',
+      'do_pod.do_pod_id = pod_scan.do_pod_id AND do_pod.is_deleted = false',
+    );
+    qb.leftJoin(
+      'branch',
+      'branch_from',
+      'do_pod.branch_id = branch_from.branch_id AND branch_from.is_deleted = false',
+    );
+
+    const total = await qb.getCount();
+
+    payload.applyPaginationToQueryBuilder(qb);
+    const data = await qb.execute();
+
+    const result = new WebScanInListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
   async scanInAwb(payload: WebScanInVm): Promise<WebScanInAwbResponseVm> {
     const authMeta = AuthService.getAuthMetadata();
 
@@ -97,7 +175,7 @@ export class WebDeliveryInService {
       const dataItem = [];
       const result = new WebScanInAwbResponseVm();
       const timeNow = moment().toDate();
-      const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
+      const permissonPayload = AuthService.getPermissionTokenPayload();
 
       let totalSuccess = 0;
       let totalError = 0;
@@ -106,7 +184,7 @@ export class WebDeliveryInService {
         // NOTE:
         // find data to awb where awbNumber and awb status not cancel
         const awb = await this.awbRepository.findOne({
-          select: ['awbId', 'branchId'],
+          select: ['awbId', 'branchId', 'awbStatusIdLast'],
           where: { awbNumber },
         });
 
@@ -141,9 +219,12 @@ export class WebDeliveryInService {
             dataItem.push({
               awbNumber,
               status: 'error',
-              message: `Resi sudah Scan In pada Gerai ${branch.branchName} (${moment(checkPodScan.podScaninDateTime).format('YYYY-MM-DD HH:mm:ss')})`,
+              message: `Resi sudah Scan In pada Gerai ${
+                branch.branchName
+              } (${moment(checkPodScan.podScaninDateTime).format(
+                'YYYY-MM-DD HH:mm:ss',
+              )})`,
             });
-
           } else {
             const awbItem = await AwbItem.findOne({
               select: ['awbItemId'],
@@ -173,19 +254,6 @@ export class WebDeliveryInService {
           }
         } else {
           totalError += 1;
-          // save data to awb_trouble
-          const awbTrouble = this.awbTroubleRepository.create({
-            awbNumber,
-            resolveDateTime: timeNow,
-            employeeId: authMeta.employeeId,
-            branchId: permissonPayload.branchId,
-            userIdCreated: authMeta.userId,
-            createdTime: timeNow,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
-          });
-          await this.awbTroubleRepository.save(awbTrouble);
-
           dataItem.push({
             awbNumber,
             status: 'error',
@@ -218,35 +286,34 @@ export class WebDeliveryInService {
     let totalError = 0;
 
     for (const bagNumber of payload.bagNumber) {
-        const bag = await Bag.findOne({
-          select: ['bagId', 'branchId'],
-          where: { bagNumber },
+      const bag = await Bag.findOne({
+        select: ['bagId', 'branchId'],
+        where: { bagNumber },
+      });
+
+      if (bag) {
+        const webbag = this.bagRepository.create();
+        webbag.bagId = bag.bagId;
+        webbag.branchId = bag.branchId;
+        webbag.createdTime = moment().toDate();
+        // webbag.createdTime = bag.createdTime;
+        this.bagRepository.save(webbag);
+
+        totalSuccess += 1;
+        dataItem.push({
+          bagNumber,
+          status: 'ok',
+          message: 'Success',
         });
-
-        if (bag) {
-          const webbag = this.bagRepository.create();
-          webbag.bagId = bag.bagId;
-          webbag.branchId = bag.branchId;
-          webbag.createdTime = moment().toDate();
-          // webbag.createdTime = bag.createdTime;
-          this.bagRepository.save(webbag);
-
-          totalSuccess += 1;
-          dataItem.push({
-            bagNumber,
-              status: 'ok',
-              message: 'Success',
-          });
-
-        } else {
-          totalError += 1;
-          dataItem.push({
-            bagNumber,
-              status : 'error',
-              message:  `No Bag ${bagNumber} Tidak di Temukan`,
-          });
-        }
+      } else {
+        totalError += 1;
+        dataItem.push({
+          bagNumber,
+          status: 'error',
+          message: `No Bag ${bagNumber} Tidak di Temukan`,
+        });
       }
+    }
     result.totalData = payload.bagNumber.length;
     result.totalSuccess = totalSuccess;
     result.totalError = totalError;
@@ -254,5 +321,4 @@ export class WebDeliveryInService {
 
     return result;
   }
-
 }

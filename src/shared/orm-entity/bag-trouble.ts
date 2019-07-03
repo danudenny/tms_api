@@ -5,32 +5,50 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity('awb_solution', { schema: 'public' })
-export class AwbSolution extends BaseEntity {
+@Entity('bag_trouble', { schema: 'public' })
+export class BagTrouble extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'awb_solution_id',
+    name: 'bag_trouble_id',
   })
-  awbSolutionId: number;
+  bagTroubleId: number;
 
   @Column('bigint', {
     nullable: false,
-    name: 'awb_history_id',
+    name: 'bag_status_id',
   })
-  awbHistoryId: number;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'awb_trouble_id',
-  })
-  awbTroubleId: number;
+  bagStatusId: number;
 
   @Column('character varying', {
-    nullable: true,
+    nullable: false,
     length: 255,
-    name: 'awb_solution_desc',
+    name: 'bag_number',
   })
-  awbSolutionDesc: Date | null;
+  bagNumber: string;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'resolve_date_time',
+  })
+  resolveDateTime: Date | null;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'status_resolve_id',
+  })
+  statusResolveId: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'employee_id',
+  })
+  employeeId: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'branch_id',
+  })
+  branchId: number;
 
   @Column('bigint', {
     nullable: false,
@@ -61,5 +79,10 @@ export class AwbSolution extends BaseEntity {
     default: () => 'false',
     name: 'is_deleted',
   })
-  isDeleted: boolean | null;
+  isDeleted: boolean | false;
+
+  @Column('text', {
+    nullable: true,
+  })
+  description: string | null;
 }

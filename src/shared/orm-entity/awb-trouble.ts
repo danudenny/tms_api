@@ -80,4 +80,9 @@ export class AwbTrouble extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean | false;
+
+  @Column('text', {
+    nullable: true,
+  })
+  description: string | null;
 }

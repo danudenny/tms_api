@@ -16,6 +16,7 @@ CREATE TABLE public.awb_trouble
     status_resolve_id bigint,
     employee_id bigint,
     branch_id bigint,
+    description text,
     user_id_created bigint,
     created_time timestamp without time zone NOT NULL,
     user_id_updated bigint,

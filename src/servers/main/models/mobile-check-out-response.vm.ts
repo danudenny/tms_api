@@ -1,4 +1,4 @@
-import { ApiModelProperty } from 'src/shared/external/nestjs-swagger';
+import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class MobileCheckOutResponseVm {
 
