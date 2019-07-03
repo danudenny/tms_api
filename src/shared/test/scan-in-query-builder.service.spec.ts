@@ -186,22 +186,25 @@ describe('Test Query Builder Scan In', () => {
   });
 
   it('Test Bag', async () => {
+    const bagRepository = new OrionRepositoryService(Bag);
+    const q1 = bagRepository.findAll();
+    q1.innerJoinAndSelect(e => e.bagItems);
+    q1.andWhere(e => e.bagNumber, w => w.equals('9992222'));
+    const bag1 = await q1.exec();
 
-    const bag = await Bag.findOne({
-      relations: ['bagItems'],
-      where: {
-        bagNumber: '9992222',
+    const q2 = bagRepository.findOne();
+    q2.select({
+      bagId: true,
+      bagNumber: true,
+      bagItems: {
+        bagId: true,
       },
     });
+    q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
+    q2.andWhere(e => e.bagNumber, w => w.equals('9992222'));
+    const bag2 = await q2.exec();
 
-    const bagRepository = new OrionRepositoryService(Bag);
-    const q = bagRepository.findAll();
-    q.innerJoinAndSelect((e) => e.bagItems);
-    q.andWhere(e => e.bagNumber, w => w.equals('9992222'));
-    q.where(e => e.bagItems.bagId, w => w.equals('421862'));
-    const bag2 = await q.exec();
-
-    expect(bag).toBeDefined();
+    expect(bag1).toBeDefined();
     expect(bag2).toBeDefined();
   });
 });

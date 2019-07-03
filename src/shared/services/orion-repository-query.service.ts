@@ -1,6 +1,8 @@
 import { castArray, find, findIndex, forEach, isArray, isBoolean, isFunction, isString, toNumber, transform } from 'lodash';
 import { from } from 'rxjs';
 import { Brackets, EntityMetadata, ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
+import { EmbeddedMetadata } from 'typeorm/metadata/EmbeddedMetadata';
 import { RelationMetadata } from 'typeorm/metadata/RelationMetadata';
 
 import {
@@ -44,6 +46,7 @@ export class OrionRepositoryQueryService<
       properties: string[];
       targetAlias: string;
     }> = [],
+    private readonly propsMetadata: { [key: string]: RelationMetadata | ColumnMetadata | EmbeddedMetadata } = {},
   ) {
     this.relationHistory.push(
       ...this.queryBuilder.expressionMap.joinAttributes.map(joinAttribute => ({
@@ -154,7 +157,7 @@ export class OrionRepositoryQueryService<
   }
 
   public escape(str: string) {
-    return this.stringEscapeNonSelectorArgs(str);
+    return this.escapeCommaSeparatedAliases(str);
   }
 
   public exec(): Promise<R> {
@@ -222,6 +225,7 @@ export class OrionRepositoryQueryService<
     groupByExpression = this.resolveRawExpressionFields(
       groupByExpression,
       fieldsSelector,
+      true,
     );
 
     const queryBuilderAction = !this.isGroupByPartExists()
@@ -364,6 +368,7 @@ export class OrionRepositoryQueryService<
     orderByExpression = this.resolveRawExpressionFields(
       orderByExpression,
       fieldSelector,
+      true,
     );
 
     const queryBuilderAction = !this.isOrderByPartExists()
@@ -443,18 +448,16 @@ export class OrionRepositoryQueryService<
       targetAlias: this.targetAlias,
     });
 
-    if (!this.isSelectPartExists()) {
-      this.queryBuilderParts.unshift(
-        new OrionRepositoryQueryBuilderPart(this.queryBuilder.select, [
-          targetSelectProperties,
-        ]),
-      );
-    } else {
-      this.queryBuilderParts.push(
-        new OrionRepositoryQueryBuilderPart(this.queryBuilder.addSelect, [
-          targetSelectProperties,
-        ]),
-      );
+    for (const targetSelectProperty of targetSelectProperties) {
+      if (!this.isSelectPartExists()) {
+        this.queryBuilderParts.unshift(
+          new OrionRepositoryQueryBuilderPart(this.queryBuilder.select, [targetSelectProperty]),
+        );
+      } else {
+        this.queryBuilderParts.push(
+          new OrionRepositoryQueryBuilderPart(this.queryBuilder.addSelect, [targetSelectProperty]),
+        );
+      }
     }
 
     return this;
@@ -603,6 +606,7 @@ export class OrionRepositoryQueryService<
       OrionRepositoryQueryMode.SubQuery,
       this.relationHistory,
       this.selectHistory,
+      this.propsMetadata,
     );
 
     return query;
@@ -653,14 +657,13 @@ export class OrionRepositoryQueryService<
 
   private flattenPropertiesAndResolveKeys<
     TR extends OrionRepositoryQueryPropsResult
-  >(properties: OrionRepositoryQueryProps<T>) {
+  >(properties: OrionRepositoryQueryProps<T>, escapeAlias: boolean = false) {
     const flattenProperties = this.flattenProperties(properties);
 
     const resolvedProperties = transform(
       flattenProperties as any,
       (result, value, key) => {
-        let resolvedProperty = this.resolvePropertyAndAutoJoin(key as any);
-        resolvedProperty = this.escapeCommaSeparatedAliases(resolvedProperty);
+        const resolvedProperty = this.resolvePropertyAndAutoJoin(key as any, undefined, escapeAlias);
         result[resolvedProperty] = value;
       },
       {},
@@ -783,6 +786,7 @@ export class OrionRepositoryQueryService<
         OrionRepositoryQueryMode.Join,
         this.relationHistory,
         this.selectHistory,
+        this.propsMetadata,
       );
 
       joinFn(linqRepositoryQuery);
@@ -910,12 +914,14 @@ export class OrionRepositoryQueryService<
     property: string,
     joinQueryBuilderFn: (...params: any[]) => SelectQueryBuilder<T> = this
       .queryBuilder.innerJoin,
+    escapeAlias: boolean = false,
   ): string {
     const properties: string[] = property.split('.');
     let currentEntityMetadata: EntityMetadata = this.entityMetadata;
 
     let currentAlias = this.targetAlias;
     let resolvedPath: string = this.targetAlias;
+    let propMetadata;
 
     for (const prop of properties) {
       const relation = currentEntityMetadata.findRelationWithPropertyPath(prop);
@@ -931,6 +937,7 @@ export class OrionRepositoryQueryService<
         );
 
         resolvedPath = joinResult.relationAlias;
+        propMetadata = relation;
 
         currentAlias = joinResult.relationAlias;
       } else {
@@ -941,11 +948,20 @@ export class OrionRepositoryQueryService<
         if (embedded) {
           currentEntityMetadata = relation.inverseEntityMetadata;
           resolvedPath = `${resolvedPath}.${prop}`;
+          propMetadata = embedded;
         } else {
-          const propColumn = currentEntityMetadata.findColumnWithPropertyPath(prop);
-          resolvedPath = `${resolvedPath}.${propColumn.databaseNameWithoutPrefixes}`;
+          const columnMetadata = currentEntityMetadata.findColumnWithPropertyPath(prop);
+          resolvedPath = `${resolvedPath}.${columnMetadata.propertyPath}`;
+          propMetadata = columnMetadata;
         }
       }
+
+      this.propsMetadata[resolvedPath] = propMetadata;
+    }
+
+    if (escapeAlias) {
+      resolvedPath = this.escapeCommaSeparatedAliases(resolvedPath);
+      this.propsMetadata[resolvedPath] = propMetadata;
     }
 
     return resolvedPath;
@@ -979,17 +995,15 @@ export class OrionRepositoryQueryService<
         ) => OrionRepositoryQueryPropType | OrionRepositoryQueryPropType[])
       | string
       | string[],
+    escapeAlias: boolean = false,
   ) {
     const resolvedPropertyNames = [];
 
     if (propertySelector) {
       const propertyNames = this.resolvePropertySelector(propertySelector);
       for (let propertyName of propertyNames) {
-        propertyName = this.resolvePropertyAndAutoJoin(propertyName);
-        propertyName = this.escapeCommaSeparatedAliases(propertyName);
-        resolvedPropertyNames.push(
-          this.resolvePropertyAndAutoJoin(propertyName),
-        );
+        propertyName = this.resolvePropertyAndAutoJoin(propertyName, undefined, escapeAlias);
+        resolvedPropertyNames.push(propertyName);
       }
     }
 
@@ -1004,10 +1018,12 @@ export class OrionRepositoryQueryService<
         ) => OrionRepositoryQueryPropType | OrionRepositoryQueryPropType[])
       | string
       | string[],
+    escapeAlias: boolean = false,
   ) {
     if (fieldsSelector) {
       const resolvedPropertyNames = this.resolvePropertySelectorAndAutoJoin(
         fieldsSelector,
+        escapeAlias,
       );
 
       return this.replaceRawExpressionArrayArgs(
@@ -1053,8 +1069,7 @@ export class OrionRepositoryQueryService<
     const [whereProperties] = this.resolvePropertySelector(propertySelector);
 
     // If accessing multiple properties, join relationships using an INNER JOIN.
-    let targetProperty = this.resolvePropertyAndAutoJoin(whereProperties);
-    targetProperty = this.escapeCommaSeparatedAliases(targetProperty);
+    const targetProperty = this.resolvePropertyAndAutoJoin(whereProperties, this.queryBuilder.innerJoin);
 
     const linqRepositoryQueryCondition = new OrionRepositoryQueryConditionService(
       targetProperty,
@@ -1083,6 +1098,7 @@ export class OrionRepositoryQueryService<
     whereExpression = this.resolveRawExpressionFields(
       whereExpression,
       fieldsSelector,
+      true,
     );
 
     this.queryBuilderParts.push(
