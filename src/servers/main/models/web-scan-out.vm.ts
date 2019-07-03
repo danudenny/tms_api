@@ -5,15 +5,23 @@ import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
 // Scan Out Awb
 export class WebScanOutAwbVm  {
   @ApiModelProperty()
-  permissionToken: string;
-
-  @ApiModelProperty()
   doPodId: number;
 
   @ApiModelProperty({
     example: ['00020001', '00020002'],
   })
   awbNumber: string[];
+}
+
+// Scan Out Bag
+export class WebScanOutBagVm {
+  @ApiModelProperty()
+  doPodId: number;
+
+  @ApiModelProperty({
+    example: ['00020001', '00020002'],
+  })
+  bagNumber: string[];
 }
 
 // Scan Out Awb List
@@ -32,47 +40,60 @@ export class WebScanOutAwbListPayloadVm extends BaseMetaPayloadVm {
 
 // Create DO POD
 export class WebScanOutCreateVm {
-  @ApiModelProperty()
-  permissionToken: string;
-
   @ApiModelProperty({
     example: 8000,
   })
   doPodType: number;
 
-  @ApiModelProperty({
-    example: 'Internal, 3PL/Third Party',
+  @ApiModelPropertyOptional({
+    example: 'internal, 3pl',
   })
-  doPodMethod: string;
+  doPodMethod?: string;
 
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     description: 'required when statusDO != Antar',
-    example: '123',
+    example: 123,
   })
-  branchIdTo: number;
+  branchIdTo?: number;
 
   @ApiModelProperty()
   employeeIdDriver: number;
 
-  @ApiModelProperty()
-  partnerLogisticId: number;
+  @ApiModelPropertyOptional()
+  partnerLogisticId?: number;
 
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: 'DPS-1701001-1234-ABC',
   })
-  vehicleNumber: string;
+  vehicleNumber?: string;
 
   @ApiModelProperty({
     example: '2019-05-01 00:00:00',
   })
   doPodDateTime: string;
 
-  @ApiModelProperty()
-  desc: string;
+  @ApiModelPropertyOptional()
+  desc?: string;
 
-  @ApiModelProperty()
-  totalBag: number;
+  @ApiModelPropertyOptional()
+  totalBag?: number;
 
-  @ApiModelProperty()
-  reasonRetur: string;
+}
+
+// Create DO POD Delivery
+export class WebScanOutCreateDeliveryVm {
+  @ApiModelProperty({
+    example: 123,
+  })
+  employeeIdDriver: number;
+
+  @ApiModelProperty({
+    example: '2019-05-01 00:00:00',
+  })
+  doPodDateTime: string;
+
+  @ApiModelPropertyOptional({
+    example: 'keterangan',
+  })
+  desc?: string;
 }

@@ -6,228 +6,228 @@ import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeo
 export class AwbHistory extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name:'awb_history_id',
+    name: 'awb_history_id',
   })
-  awbHistoryId: string;
+  awbHistoryId: number;
 
   @Column('bigint', {
     nullable: true,
-    name:'awb_item_id',
+    name: 'awb_item_id',
   })
-  awbItemId: string | null;
+  awbItemId: number | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'user_id',
+    name: 'user_id',
   })
-  userId: string | null;
+  userId: number | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'branch_id',
+    name: 'branch_id',
   })
-  branchId: string | null;
+  branchId: number | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'history_date',
+    name: 'history_date',
   })
   historyDate: Date;
 
   @Column('bigint', {
     nullable: true,
-    name:'awb_status_id',
+    name: 'awb_status_id',
   })
-  awbStatusId: string | null;
+  awbStatusId: number | null;
 
   @Column('text', {
     nullable: true,
-    name:'awb_note',
+    name: 'awb_note',
   })
   awbNote: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'customer_account_id',
+    name: 'customer_account_id',
   })
-  customerAccountId: string | null;
+  customerAccountId: number | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'ref_id_tracking_note',
+    name: 'ref_id_tracking_note',
   })
-  refIdTrackingNote: string | null;
+  refIdTrackingNote: number | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'ref_id_tracking_site',
+    name: 'ref_id_tracking_site',
   })
-  refIdTrackingSite: string | null;
+  refIdTrackingSite: number | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_id_cust_package',
+    name: 'ref_id_cust_package',
   })
   refIdCustPackage: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 50,
-    name:'ref_awb_number',
+    name: 'ref_awb_number',
   })
   refAwbNumber: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_tracking_site_code',
+    name: 'ref_tracking_site_code',
   })
   refTrackingSiteCode: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_tracking_site_name',
+    name: 'ref_tracking_site_name',
   })
   refTrackingSiteName: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_partner_name',
+    name: 'ref_partner_name',
   })
   refPartnerName: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_recipient_name',
+    name: 'ref_recipient_name',
   })
   refRecipientName: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'ref_id_courier',
+    name: 'ref_id_courier',
   })
-  refIdCourier: string | null;
+  refIdCourier: number | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_courier_name',
+    name: 'ref_courier_name',
   })
   refCourierName: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_tracking_type',
+    name: 'ref_tracking_type',
   })
   refTrackingType: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_user_created',
+    name: 'ref_user_created',
   })
   refUserCreated: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_user_updated',
+    name: 'ref_user_updated',
   })
   refUserUpdated: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_created',
+    name: 'user_id_created',
   })
-  userIdCreated: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'created_time',
+    name: 'created_time',
   })
   createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_updated',
+    name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'updated_time',
+    name: 'updated_time',
   })
   updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name:'is_deleted',
+    name: 'is_deleted',
   })
   isDeleted: boolean;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_table',
+    name: 'ref_table',
   })
   refTable: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'ref_id',
+    name: 'ref_id',
   })
-  refId: string | null;
+  refId: number | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_module',
+    name: 'ref_module',
   })
   refModule: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'employee_id_driver',
+    name: 'employee_id_driver',
   })
-  employeeIdDriver: string | null;
+  employeeIdDriver: number | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'true',
-    name:'is_scan_single',
+    name: 'is_scan_single',
   })
   isScanSingle: boolean | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-    name:'is_direction_back',
+    name: 'is_direction_back',
   })
   isDirectionBack: boolean | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name:'latitude',
+    name: 'latitude',
   })
   latitude: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name:'longitude',
+    name: 'longitude',
   })
   longitude: string | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'awb_history_id_prev',
+    name: 'awb_history_id_prev',
   })
-  awbHistoryIdPrev: string | null;
+  awbHistoryIdPrev: number | null;
 }

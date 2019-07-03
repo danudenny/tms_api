@@ -8,51 +8,51 @@ import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeo
 export class BagItemAwb extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name:'bag_item_awb_id',
+    name: 'bag_item_awb_id',
   })
-  bagItemAwbId: string;
+  bagItemAwbId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'bag_item_id',
+    name: 'bag_item_id',
   })
-  bagItemId: string;
+  bagItemId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_created',
+    name: 'user_id_created',
   })
-  userIdCreated: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'created_time',
+    name: 'created_time',
   })
   createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_updated',
+    name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'updated_time',
+    name: 'updated_time',
   })
   updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name:'is_deleted',
+    name: 'is_deleted',
   })
   isDeleted: boolean;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'awb_number',
+    name: 'awb_number',
   })
   awbNumber: string;
 
@@ -61,25 +61,25 @@ export class BagItemAwb extends BaseEntity {
     default: () => '0',
     precision: 10,
     scale: 5,
-    name:'weight',
+    name: 'weight',
   })
-  weight: string;
+  weight: number;
 
   @Column('bigint', {
     nullable: true,
-    name:'awb_item_id',
+    name: 'awb_item_id',
   })
-  awbItemId: string | null;
+  awbItemId: number | null;
 
   @Column('integer', {
     nullable: true,
-    name:'send_tracking_note',
+    name: 'send_tracking_note',
   })
   sendTrackingNote: number | null;
 
   @Column('integer', {
     nullable: true,
-    name:'send_tracking_note_out',
+    name: 'send_tracking_note_out',
   })
   sendTrackingNoteOut: number | null;
 }

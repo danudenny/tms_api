@@ -6,7 +6,7 @@ import { GabunganPayloadVm } from '../../models/gabungan-payload.vm';
 import { RedeliveryService } from '../../services/mobile/redelivery.services';
 import { GabunganFindAllResponseVm } from '../../models/gabungan.response.vm';
 import { DeliveryFilterPayloadVm } from '../../models/mobile-dashboard.vm';
-import { GabunganService } from '../../services/resi gabungan/gabungan.services';
+import { GabunganService } from '../../services/combine-package/gabungan.services';
 
 @ApiUseTags('Resi Bag')
 @Controller('resi/gabungan')

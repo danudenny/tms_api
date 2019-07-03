@@ -1,13 +1,13 @@
 
 import { HttpStatus, Injectable, Query, Logger } from '@nestjs/common';
 import moment = require('moment');
-import { AuthService } from 'src/shared/services/auth.service';
-import { EmployeeJourneyRepository } from 'src/shared/orm-repository/employee-journey.repository';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ContextualErrorService } from 'src/shared/services/contextual-error.service';
+import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
 import { MobileCheckOutPayloadVm } from '../../models/mobile-check-out-payload.vm';
 import { MobileCheckOutResponseVm } from '../../models/mobile-check-out-response.vm';
-import { BranchRepository } from 'src/shared/orm-repository/branch.repository';
+import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
 import { IsNull } from 'typeorm';
 
 @Injectable()
@@ -33,7 +33,7 @@ export class MobileCheckOutService {
       const timeNow = moment().toDate();
 
       // console.log(payload);
-      const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
+      const permissonPayload = AuthService.getPermissionTokenPayload();
 
       const employeeJourney = await this.employeeJourneyRepository.findOne({
         where: {

@@ -15,6 +15,13 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
+  // TODO: validasi code
+  public static async doPodDeliver(dateTime: string, digit: number = 5) {
+    const prefix = `DOPD/${moment(dateTime).format('YYMM')}/`;
+    const last_number = await this.getLastNumber(prefix);
+    return prefix + last_number.toString().padStart(digit, '0');
+  }
+
   private static async getLastNumber(prefix: string) {
     const timeNow = moment().toDate();
     let nextCounter = 1;

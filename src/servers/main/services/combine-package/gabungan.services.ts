@@ -6,7 +6,7 @@ import { GabunganFindAllResponseVm } from '../../models/gabungan.response.vm';
 import { GabunganPayloadVm } from '../../models/gabungan-payload.vm';
 import { AwbRepository } from '../../../../shared/orm-repository/awb.repository';
 import { BagRepository } from '../../../../shared/orm-repository/bag.repository';
-import { BagItemRepository } from '../../../..//shared/orm-repository/bagItem.repository';
+import { BagItemRepository } from '../../../../shared/orm-repository/bagItem.repository';
 import { BagItemAwbRepository } from '../../../../shared/orm-repository/bagItemAwb.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
@@ -25,7 +25,7 @@ export class GabunganService {
     @InjectRepository(AwbRepository)
     private readonly awbRepository: AwbRepository,
   ) {}
-  async gabunganAwb(payload: GabunganPayloadVm,): Promise<GabunganFindAllResponseVm> {
+  async gabunganAwb(payload: GabunganPayloadVm): Promise<GabunganFindAllResponseVm> {
     // const authMeta = AuthService.getAuthMetadata();
 
     // if (!!authMeta) {
@@ -35,7 +35,7 @@ export class GabunganService {
 
       // console.log( moment().format('DD'))
       // console.log( moment().format('MM'))
-      let random = sampleSize('ABCDEFGHIJKLMNOPQRSTUVWXYZ012345678900123456789001234567890', 7).join('')
+      const random = sampleSize('ABCDEFGHIJKLMNOPQRSTUVWXYZ012345678900123456789001234567890', 7).join('');
 
       let awb;
       let data;
@@ -43,27 +43,27 @@ export class GabunganService {
       let bagNumber;
       let totalSuccess = 0;
       let totalError = 0;
-    //insert to bag
+    // insert to bag
 
       const bag = this.bagRepository.create({
 
         bagNumber: random,
-        representativeIdTo: "12",
-        userIdCreated: "14",
+        representativeIdTo: 12,
+        userIdCreated: 14,
         createdTime: timeNow,
-        userIdUpdated:"14",
+        userIdUpdated: 14,
         updatedTime: timeNow,
-        branchId:"12",
+        branchId: 12,
       });
       await this.bagRepository.save(bag);
-      bagNumber = random
-//insert to bag item
+      bagNumber = random;
+// insert to bag item
       const bagItem = this.bagItemRepository.create({
         bagId: bag.bagId,
         bagSeq: 1,
-        userIdCreated: "14",
+        userIdCreated: 14,
         createdTime: timeNow,
-        userIdUpdated:"14",
+        userIdUpdated: 14,
         updatedTime: timeNow,
       });
       await this.bagItemRepository.save(bagItem);
@@ -81,13 +81,13 @@ export class GabunganService {
         if (bagItem) {
             // save data to table bagAwbItem
           const bagAwbItem = this.bagItemAwbRepository.create();
-            bagAwbItem.bagItemId = bagItem.bagItemId;
-            bagAwbItem.awbNumber = awbNumbers;
-            bagAwbItem.userIdCreated = bagItem.userIdCreated;
-            bagAwbItem.userIdUpdated = bagItem.userIdUpdated;
-            bagAwbItem.updatedTime = bagItem.updatedTime;
-            bagAwbItem.createdTime = moment().toDate();
-            await this.bagItemAwbRepository.save(bagAwbItem);
+          bagAwbItem.bagItemId = bagItem.bagItemId;
+          bagAwbItem.awbNumber = awbNumbers;
+          bagAwbItem.userIdCreated = bagItem.userIdCreated;
+          bagAwbItem.userIdUpdated = bagItem.userIdUpdated;
+          bagAwbItem.updatedTime = bagItem.updatedTime;
+          bagAwbItem.createdTime = moment().toDate();
+          await this.bagItemAwbRepository.save(bagAwbItem);
 
           totalSuccess += 1;
           dataItem.push({
@@ -104,11 +104,10 @@ export class GabunganService {
             });
           }
 
-
         const result = new GabunganFindAllResponseVm();
-        data = bag.bagNumber
-        result.data  = dataItem
-        console.log(dataItem)
+        data = bag.bagNumber;
+        result.data  = dataItem;
+        console.log(dataItem);
         return result ;
 
         }

@@ -10,7 +10,6 @@ import moment = require('moment');
 import { Awb } from '../../../../shared/orm-entity/awb';
 import { DeliveryFilterPayloadVm } from '../../models/mobile-dashboard.vm';
 
-
 @Injectable()
 export class MobileDeliveryService {
   constructor() {}
