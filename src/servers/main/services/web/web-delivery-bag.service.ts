@@ -25,12 +25,12 @@ export class WebDeliveryBagService {
 
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(
       'select awb_id as "awbId", awb_number as "awbNumber",ref_customer_account_id as "merchant", consignee_name as "consigneeName",consignee_address as "consigneeAddress",consignee_phone as "consigneeNumber" ,is_cod as "isCOD" from awb where awb_date >= :start AND awb_date <= :end LIMIT :take OFFSET :offset',
-      { take, start,end ,offset },
+      { take, start, end , offset },
     );
 
     const [querycount, parameterscount] = RawQueryService.escapeQueryWithParameters(
       'select count (*) from awb where awb_date >= :start AND awb_date <= :end ',
-      { start,end  },
+      { start, end  },
     );
     // exec raw query
     const data = await RawQueryService.query(query, parameters);
@@ -56,7 +56,7 @@ export class WebDeliveryBagService {
 
       return result;
     } else {
-      ContextualErrorService.throw(
+      ContextualErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },

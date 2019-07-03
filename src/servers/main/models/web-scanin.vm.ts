@@ -2,8 +2,5 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 
 export class WebScanInVm  {
   @ApiModelProperty()
-  permissionToken: string;
-
-  @ApiModelProperty()
   awbNumber: string[];
 }
