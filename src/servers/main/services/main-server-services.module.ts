@@ -9,7 +9,7 @@ import { WebDeliveryInService } from './web/web-delivery-in.service';
 import { WebDeliveryOutService } from './web/web-delivery-out.service';
 import { DashboardService } from './mobile/dashboard.service';
 import { RedeliveryService } from './mobile/redelivery.services';
-import { GabunganService } from './resi gabungan/gabungan.services';
+import { GabunganService } from './combine-package/gabungan.services';
 import { CustomerService } from './master/customer.service';
 import { AwbStatusService } from './master/awb-status.service';
 import { ReasonService } from './master/reason.service';

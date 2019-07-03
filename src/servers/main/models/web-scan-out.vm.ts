@@ -13,6 +13,17 @@ export class WebScanOutAwbVm  {
   awbNumber: string[];
 }
 
+// Scan Out Bag
+export class WebScanOutBagVm {
+  @ApiModelProperty()
+  doPodId: number;
+
+  @ApiModelProperty({
+    example: ['00020001', '00020002'],
+  })
+  bagNumber: string[];
+}
+
 // Scan Out Awb List
 export class FilterScanOutAwbListVm {
 

@@ -6,6 +6,7 @@ import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { MobileCheckInPayloadVm } from '../../models/mobile-check-in-payload.vm';
 import { MobileCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
+import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('Mobile Check In')
 @Controller('mobile')
@@ -17,7 +18,7 @@ export class MobileCheckInController {
   @Post('checkIn')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileCheckInResponseVm })
   @Transactional()
   public async checkIn(@Body() payload: MobileCheckInPayloadVm) {

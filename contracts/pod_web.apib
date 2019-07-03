@@ -428,6 +428,7 @@ HOST: http://api.tms.sicepat.com
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
             x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+            
     + Attributes (object)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
@@ -444,9 +445,21 @@ HOST: http://api.tms.sicepat.com
                 + operator : ilike, (string) - ilike, eq, lt, gt, in, nin
                 + value   : 12, (string)
             + item: (object)
-                + field   : scanInDateTime, (string)
-                + operator: ilike, (string)
-                + value   : DOP/1904/00001 (string)
+                + field   : startScanInDate, (string)
+                + operator: gt, (string)
+                + value   : '2019-07-03' (string)
+            + item: (object)
+                + field   : endScanInDate, (string)
+                + operator: lt, (string)
+                + value   : '2019-07-04' (string)
+            + item: (object)
+                + field   : startScanOutDate, (string)
+                + operator: gt, (string)
+                + value   : '2019-07-03' (string)
+            + item: (object)
+                + field   : endScanOutDate, (string)
+                + operator: lt, (string)
+                + value   : '2019-07-03' (string)
 
 + Response 200 (application/json; charset=utf-8)
     + Body

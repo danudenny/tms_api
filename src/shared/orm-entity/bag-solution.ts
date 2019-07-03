@@ -5,32 +5,31 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity('awb_solution', { schema: 'public' })
-export class AwbSolution extends BaseEntity {
+@Entity('bag_solution', { schema: 'public' })
+export class BagSolution extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'awb_solution_id',
+    name: 'bag_solution_id',
   })
-  awbSolutionId: number;
+  bagSolutionId: number;
 
   @Column('bigint', {
     nullable: false,
-    name: 'awb_history_id',
+    name: 'bag_item_history_id',
   })
-  awbHistoryId: number;
+  bagItemHistoryId: number;
 
   @Column('bigint', {
     nullable: false,
-    name: 'awb_trouble_id',
+    name: 'bag_trouble_id',
   })
-  awbTroubleId: number;
+  bagTroubleId: number;
 
-  @Column('character varying', {
+  @Column('text', {
     nullable: true,
-    length: 255,
-    name: 'awb_solution_desc',
+    name: 'bag_solution_desc',
   })
-  awbSolutionDesc: Date | null;
+  bagSolutionDesc: string | null;
 
   @Column('bigint', {
     nullable: false,
@@ -48,7 +47,7 @@ export class AwbSolution extends BaseEntity {
     nullable: false,
     name: 'user_id_updated',
   })
-  userIdUpdated: number;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,

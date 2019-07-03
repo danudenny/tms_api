@@ -1,4 +1,5 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Bag } from './bag';
 
 @Entity('bag_item', { schema: 'public' })
 @Index('bag_item_bag_id_idx', ['bagId'])
@@ -7,70 +8,78 @@ import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeo
 export class BagItem extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name:'bag_item_id',
+    name: 'bag_item_id',
   })
-  bagItemId: string;
+  bagItemId: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'bag_id',
+    name: 'bag_id',
   })
-  bagId: string;
+  bagId: number;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
-
   })
-  weight: string | null;
+  weight: number | null;
 
   @Column('integer', {
     nullable: false,
-    name:'bag_seq',
+    name: 'bag_seq',
   })
   bagSeq: number;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_created',
+    name: 'user_id_created',
   })
-  userIdCreated: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'created_time',
+    name: 'created_time',
   })
   createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_updated',
+    name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'updated_time',
+    name: 'updated_time',
   })
   updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name:'is_deleted',
+    name: 'is_deleted',
   })
   isDeleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-    name:'bag_item_history_id',
+    name: 'bag_item_history_id',
   })
-  bagItemHistoryId: string | null;
+  bagItemHistoryId: number | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'bagging_id_last',
+    name: 'bagging_id_last',
   })
-  baggingIdLast: string | null;
+  baggingIdLast: number | null;
+
+  // relation model
+  @ManyToOne(() => Bag, bag => bag.bagItems, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'bag_id',
+  })
+  bag: Bag;
 }

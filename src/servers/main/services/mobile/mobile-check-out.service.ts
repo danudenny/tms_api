@@ -33,7 +33,7 @@ export class MobileCheckOutService {
       const timeNow = moment().toDate();
 
       // console.log(payload);
-      const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
+      const permissonPayload = AuthService.getPermissionTokenPayload();
 
       const employeeJourney = await this.employeeJourneyRepository.findOne({
         where: {

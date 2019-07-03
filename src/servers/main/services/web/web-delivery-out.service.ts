@@ -3,13 +3,14 @@ import { Injectable, HttpStatus } from '@nestjs/common';
 import {
   WebScanOutCreateVm,
   WebScanOutAwbVm,
-  WebScanOutAwbListPayloadVm,
   WebScanOutCreateDeliveryVm,
+  WebScanOutBagVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutCreateResponseVm,
   WebScanOutAwbResponseVm,
   WebScanOutAwbListResponseVm,
+  WebScanOutBagResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbRepository } from '../../../../shared/orm-repository/awb.repository';
@@ -24,7 +25,7 @@ import moment = require('moment');
 import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
 import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
-import { IsNull } from 'typeorm';
+import { IsNull, createQueryBuilder } from 'typeorm';
 import { BaseQueryPayloadVm } from '../../../../shared/models/base-query-payload.vm';
 import { toInteger, isEmpty } from 'lodash';
 import { MetaService } from '../../../../shared/services/meta.service';
@@ -36,6 +37,8 @@ import { DoPod } from '../../../../shared/orm-entity/do-pod';
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
+import { Bag } from '../../../../shared/orm-entity/bag';
+import { BagItem } from '../../../../shared/orm-entity/bag-item';
 // #endregion
 
 @Injectable()
@@ -223,7 +226,6 @@ export class WebDeliveryOutService {
         if (awb) {
           // NOTE: jika awb awbHistoryIdLast >= 1500 dan tidak sama dengan 1800 (cancel) boleh scan out
           if (awb.awbStatusIdLast >= 1500 && awb.awbStatusIdLast !== 1800) {
-
             // TODO: check data by status IN/OUT
             // find data do pod detail if exists
             // NOTE: gerai ??
@@ -243,7 +245,6 @@ export class WebDeliveryOutService {
 
             // NOTE: Resi belum scan in
             if (checkPod) {
-
               // NOTE: create data do pod detail per awb number
               const doPodDetail = DoPodDetail.create();
               doPodDetail.doPodId = payload.doPodId;
@@ -372,7 +373,9 @@ export class WebDeliveryOutService {
    * @returns {Promise<WebScanOutAwbResponseVm>}
    * @memberof WebDeliveryOutService
    */
-  async scanOutAwbDeliver(payload: WebScanOutAwbVm): Promise<WebScanOutAwbResponseVm> {
+  async scanOutAwbDeliver(
+    payload: WebScanOutAwbVm,
+  ): Promise<WebScanOutAwbResponseVm> {
     const authMeta = AuthService.getAuthMetadata();
 
     if (!!authMeta) {
@@ -409,7 +412,6 @@ export class WebDeliveryOutService {
         if (awb) {
           // NOTE: jika awb awbHistoryIdLast >= 1500 dan tidak sama dengan 1800 (cancel) boleh scan out
           if (awb.awbStatusIdLast >= 1500 && awb.awbStatusIdLast !== 1800) {
-
             // TODO: check data by status IN/OUT
             // find data do pod detail if exists
             // NOTE: gerai ??
@@ -430,7 +432,6 @@ export class WebDeliveryOutService {
 
             // NOTE: Resi belum scan in
             if (checkPod) {
-
               // NOTE: create data do pod detail per awb number
               const doPodDeliverDetail = DoPodDeliverDetail.create();
               doPodDeliverDetail.doPodDeliverId = payload.doPodId;
@@ -529,6 +530,106 @@ export class WebDeliveryOutService {
 
       // Populate return value
       result.totalData = payload.awbNumber.length;
+      result.totalSuccess = totalSuccess;
+      result.totalError = totalError;
+      result.data = dataItem;
+
+      return result;
+    } else {
+      ContextualErrorService.throwObj(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  /**
+   * Create DO POD Detail
+   * with scan bag number
+   * @param {WebScanOutBagVm} payload
+   * @returns {Promise<WebScanOutBagResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
+  async scanOutBag(payload: WebScanOutBagVm): Promise<WebScanOutBagResponseVm> {
+    const authMeta = AuthService.getAuthMetadata();
+
+    if (!!authMeta) {
+      const dataItem = [];
+      const result = new WebScanOutBagResponseVm();
+      const timeNow = moment().toDate();
+      const permissonPayload = AuthService.getPermissionTokenPayload();
+
+      const totalSuccess = 0;
+      let totalError = 0;
+
+      // TODO: need reviewed??
+      // // get data do pod by id for update data
+      // const doPod = DoPod.findOne({
+      //   where: {
+      //     doPodId: payload.doPodId,
+      //     isDeleted: false,
+      //   },
+      // });
+
+      for (const bagNumber of payload.bagNumber) {
+        const response = {
+          status: 'ok',
+          message: 'Success',
+        };
+
+        // NOTE:
+        // find data to awb where bagNumber and awb status not cancel
+        const bag = await Bag.findOne({
+          
+          relations: ['items', 'items.bag_item_awb', 'items.awb.'],
+          select: ['bagId', 'branchId'],
+          where: { bagNumber, isDeleted: false },
+        });
+
+        if (bag) {
+          // NOTE: get data bag item where bag id
+          const bagItems = await BagItem.find({
+            where: { bagId: bag.bagId, isDeleted: false },
+          });
+
+          for (const bagItem of bagItems) {
+            // NOTE: jika awb awbHistoryIdLast >= 1500 dan tidak sama dengan 1800 (cancel) boleh scan out
+
+            // TODO: create data do pod detail (scan out hub)
+            // bagItem.bagItemId;
+
+            // TODO:
+            // get data bag item awb where bag item id
+
+            // looping data bag item awb
+            // get data awb item id
+            // create awb history ??
+            // update last status
+          }
+
+        } else {
+          totalError += 1;
+          response.status = 'error';
+          response.message = `No Bag ${bagNumber} Tidak di Temukan`;
+        }
+
+        // push item
+        dataItem.push({
+          bagNumber,
+          status: response.status,
+          message: response.message,
+        });
+      } // end of loop
+
+      // NOTE: Update do pod ??
+      // total_pod_item
+      // total_item
+      // total weight
+
+      // Populate return value
+      result.totalData = payload.bagNumber.length;
       result.totalSuccess = totalSuccess;
       result.totalError = totalError;
       result.data = dataItem;
@@ -644,5 +745,4 @@ export class WebDeliveryOutService {
 
     return result;
   }
-
 }

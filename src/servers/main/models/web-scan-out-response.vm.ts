@@ -46,6 +46,9 @@ export class ScanAwbVm {
   status: string;
 
   @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
   message: string;
 }
 
@@ -62,4 +65,35 @@ export class WebScanOutAwbResponseVm {
 
   @ApiModelProperty({ type: [ScanAwbVm] })
   data: ScanAwbVm[];
+}
+
+// Scan Out Bag
+// Scan Out Awb
+export class ScanBagVm {
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class WebScanOutBagResponseVm {
+
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({ type: [ScanBagVm] })
+  data: ScanBagVm[];
 }
