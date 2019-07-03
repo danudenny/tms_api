@@ -24,12 +24,12 @@ export class WebDeliveryListService {
 
     const [query, parameters] = RawQueryService.escapeQueryWithParameters(
       'select pod_scanin_date_time as "podScaninDateTime", awb_id as "awbId",branch_id as "branchId", user_id as "employeId" from pod_scan where pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end LIMIT :take OFFSET :offset',
-      { take, start,end ,offset },
+      { take, start, end , offset },
     );
 
     const [querycount, parameterscount] = RawQueryService.escapeQueryWithParameters(
       'select count (*) from pod_scan where pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end ',
-      { start,end  },
+      { start, end },
     );
     // exec raw query
     const data = await RawQueryService.query(query, parameters);
@@ -56,7 +56,7 @@ export class WebDeliveryListService {
 
       return result;
     } else {
-      ContextualErrorService.throw(
+      ContextualErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },

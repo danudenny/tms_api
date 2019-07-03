@@ -96,7 +96,7 @@ export class MobileDeliveryService {
       return result;
 
     } else {
-      ContextualErrorService.throw(
+      ContextualErrorService.throwObj(
         {
           message: 'DATA_NOT_FOUND',
         },
@@ -119,7 +119,7 @@ export class MobileDeliveryService {
 
       return result;
     } else {
-      ContextualErrorService.throw(
+      ContextualErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },

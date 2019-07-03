@@ -27,9 +27,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
-  ) // @InjectRepository(LoginSessionRepository)
-  // private readonly loginSessionRepository: LoginSessionRepository,
-  {}
+  ) {}
 
   async login(
     clientId: string,
@@ -74,14 +72,14 @@ export class AuthService {
       refreshTokenPayload = this.jwtService.verify(refreshToken);
     } catch (e) {
       if (e instanceof TokenExpiredError) {
-        ContextualErrorService.throw(
+        ContextualErrorService.throwObj(
           {
             message: '', // TODO: Give message
           },
           HttpStatus.FORBIDDEN,
         );
       } else {
-        ContextualErrorService.throw({
+        ContextualErrorService.throwObj({
           message: '', // TODO: Give message
         });
       }
@@ -130,7 +128,7 @@ export class AuthService {
 
       return result;
     } else {
-      ContextualErrorService.throw(
+      ContextualErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },
