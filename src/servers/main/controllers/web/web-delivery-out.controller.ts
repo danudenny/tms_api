@@ -12,11 +12,13 @@ import {
   WebScanOutCreateVm,
   WebScanOutAwbListPayloadVm,
   WebScanOutCreateDeliveryVm,
+  WebScanOutBagVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutAwbResponseVm,
   WebScanOutCreateResponseVm,
   WebScanOutAwbListResponseVm,
+  WebScanOutBagResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
@@ -88,10 +90,10 @@ export class WebDeliveryOutController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebScanInBag1ResponseVm })
-  public async findAllBag(@Body() payload: WebScanInBagVm) {
-    // TODO: open bag and loop awb
-    return null; // this.webDeliveryService.findAllBag(payload);
+  @ApiOkResponse({ type: WebScanOutBagResponseVm })
+  public async findAllBag(@Body() payload: WebScanOutBagVm) {
+    // TODO: open bag and loop awb for update awb history
+    return this.webDeliveryOutService.scanOutBag(payload);
   }
 
   @Post('awbList')

@@ -1,4 +1,5 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { BagItem } from './bag-item';
 
 @Entity('bag', { schema: 'public' })
 @Index('bag_bag_date_idx', ['bagDate'])
@@ -9,89 +10,93 @@ import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeo
 export class Bag extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name:'bag_id'
+    name: 'bag_id',
   })
-  bagId: string;
+  bagId: number;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name:'bag_number',
+    name: 'bag_number',
   })
   bagNumber: string;
 
   @Column('bigint', {
     nullable: true,
-    name:'representative_id_to',
+    name: 'representative_id_to',
   })
-  representativeIdTo: string | null;
+  representativeIdTo: number | null;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_created',
+    name: 'user_id_created',
   })
-  userIdCreated: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'created_time'
+    name: 'created_time',
   })
   createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_updated',
+    name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'updated_time',
+    name: 'updated_time',
   })
   updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name:'is_deleted',
+    name: 'is_deleted',
   })
   isDeleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-    name:'user_id',
+    name: 'user_id',
   })
-  userId: string | null;
+  userId: number | null;
 
   @Column('bigint', {
     nullable: true,
-    name:'branch_id',
+    name: 'branch_id',
   })
-  branchId: string | null;
+  branchId: number | null;
 
   @Column('date', {
     nullable: true,
-    name:'bag_date',
+    name: 'bag_date',
   })
-  bagDate: string | null;
+  bagDate: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name:'bag_date_real',
+    name: 'bag_date_real',
   })
   bagDateReal: Date | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_branch_code',
+    name: 'ref_branch_code',
   })
   refBranchCode: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-    name:'ref_representative_code',
+    name: 'ref_representative_code',
   })
   refRepresentativeCode: string | null;
+
+  // relation model
+  @OneToMany(() => BagItem, bagItem => bagItem.bag)
+  bagItems: BagItem[];
 }
