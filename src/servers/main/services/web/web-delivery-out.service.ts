@@ -39,6 +39,7 @@ import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
+import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
 // #endregion
 
 @Injectable()
@@ -582,20 +583,25 @@ export class WebDeliveryOutService {
         // NOTE:
         // find data to awb where bagNumber and awb status not cancel
         const bag = await Bag.findOne({
-          
-          relations: ['items', 'items.bag_item_awb', 'items.awb.'],
+          relations: ['bagItems'],
           select: ['bagId', 'branchId'],
           where: { bagNumber, isDeleted: false },
         });
 
         if (bag) {
-          // NOTE: get data bag item where bag id
-          const bagItems = await BagItem.find({
-            where: { bagId: bag.bagId, isDeleted: false },
-          });
 
-          for (const bagItem of bagItems) {
+          for (const bagItem of bag.bagItems) {
             // NOTE: jika awb awbHistoryIdLast >= 1500 dan tidak sama dengan 1800 (cancel) boleh scan out
+            const checkPod = await DoPodDetail.findOne({
+              where: {
+                bagItemId: bagItem.bagItemId,
+                isScanIn: true,
+                isDeleted: false,
+              },
+            });
+
+            // NOTE: Bag Number belum scan in
+            if (checkPod) {
 
             // TODO: create data do pod detail (scan out hub)
             // bagItem.bagItemId;
@@ -607,6 +613,26 @@ export class WebDeliveryOutService {
             // get data awb item id
             // create awb history ??
             // update last status
+
+            } else {
+              totalError += 1;
+              response.status = 'error';
+              response.message = `No Bag ${bagNumber} belum di scan Masuk di gerai tujuan`;
+              // TODO: create data bag trouble
+              // save data to bag_trouble
+              const bagTrouble = BagTrouble.create({
+                bagNumber,
+                resolveDateTime: timeNow,
+                employeeId: authMeta.employeeId,
+                branchId: permissonPayload.branchId,
+                userIdCreated: authMeta.userId,
+                createdTime: timeNow,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+                description: response.message,
+              });
+              await BagTrouble.save(bagTrouble);
+            }
           }
 
         } else {
@@ -673,12 +699,24 @@ export class WebDeliveryOutService {
       },
     ];
 
+    // mapping field
+    payload.fieldResolverMap['startScanOutDate'] = 'do_pod.do_pod_date_time';
+    payload.fieldResolverMap['endScanOutDate'] = 'do_pod.do_pod_date_time';
+    payload.fieldResolverMap['desc'] = 'do_pod.description';
+    payload.fieldResolverMap['fullname'] = 'employee.fullname';
+
+    // "totalScanIn"   : "0",
+    // "totalScanOut"  : "10",
+    // "percenScanInOut" : "0%",
+    // "lastDateScanIn" : "",
+    // "lastDateScanOut" : "2019-06-28 10:00:00"
+
     const qb = payload.buildQueryBuilder();
     qb.addSelect('do_pod.do_pod_id', 'doPodId');
-    qb.addSelect('do_pod.do_pod_date_time', 'doPodDateTime');
     qb.addSelect('do_pod.do_pod_code', 'doPodCode');
-    qb.addSelect(`COALESCE(do_pod.description, '')`, 'desc');
+    qb.addSelect('do_pod.do_pod_date_time', 'doPodDateTime');
     qb.addSelect('employee.fullname', 'fullname');
+    qb.addSelect(`COALESCE(do_pod.description, '')`, 'desc');
 
     qb.from('do_pod', 'do_pod');
     qb.innerJoin(
