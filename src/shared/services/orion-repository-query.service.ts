@@ -659,7 +659,8 @@ export class OrionRepositoryQueryService<
     const resolvedProperties = transform(
       flattenProperties as any,
       (result, value, key) => {
-        const resolvedProperty = this.resolvePropertyAndAutoJoin(key as any);
+        let resolvedProperty = this.resolvePropertyAndAutoJoin(key as any);
+        resolvedProperty = this.escapeCommaSeparatedAliases(resolvedProperty);
         result[resolvedProperty] = value;
       },
       {},
@@ -767,7 +768,9 @@ export class OrionRepositoryQueryService<
       propertyName,
       joinQueryBuilderFn,
     );
-    const { relationMetadata } = find(this.relationHistory, { relationAlias });
+
+    const relationHistory = find(this.relationHistory, { relationAlias });
+    const relationMetadata = relationHistory.relationMetadata;
 
     if (joinFn) {
       const queryBuilder = relationMetadata.inverseEntityMetadata.connection.createQueryBuilder();
@@ -939,12 +942,11 @@ export class OrionRepositoryQueryService<
           currentEntityMetadata = relation.inverseEntityMetadata;
           resolvedPath = `${resolvedPath}.${prop}`;
         } else {
-          resolvedPath = `${resolvedPath}.${prop}`;
+          const propColumn = currentEntityMetadata.findColumnWithPropertyPath(prop);
+          resolvedPath = `${resolvedPath}.${propColumn.databaseNameWithoutPrefixes}`;
         }
       }
     }
-
-    resolvedPath = this.escapeCommaSeparatedAliases(resolvedPath);
 
     return resolvedPath;
   }
@@ -982,7 +984,9 @@ export class OrionRepositoryQueryService<
 
     if (propertySelector) {
       const propertyNames = this.resolvePropertySelector(propertySelector);
-      for (const propertyName of propertyNames) {
+      for (let propertyName of propertyNames) {
+        propertyName = this.resolvePropertyAndAutoJoin(propertyName);
+        propertyName = this.escapeCommaSeparatedAliases(propertyName);
         resolvedPropertyNames.push(
           this.resolvePropertyAndAutoJoin(propertyName),
         );
@@ -1049,7 +1053,8 @@ export class OrionRepositoryQueryService<
     const [whereProperties] = this.resolvePropertySelector(propertySelector);
 
     // If accessing multiple properties, join relationships using an INNER JOIN.
-    const targetProperty = this.resolvePropertyAndAutoJoin(whereProperties);
+    let targetProperty = this.resolvePropertyAndAutoJoin(whereProperties);
+    targetProperty = this.escapeCommaSeparatedAliases(targetProperty);
 
     const linqRepositoryQueryCondition = new OrionRepositoryQueryConditionService(
       targetProperty,
