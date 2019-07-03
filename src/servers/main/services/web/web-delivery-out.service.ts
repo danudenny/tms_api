@@ -236,16 +236,16 @@ export class WebDeliveryOutService {
               where: { awbId: awb.awbId },
             });
 
+            // NOTE: Resi belum scan in
             const checkPod = await DoPodDetail.findOne({
               where: {
                 awbItemId: awbItem.awbItemId,
-                isScanIn: true,
+                isScanIn: false,
                 isDeleted: false,
               },
             });
 
-            // NOTE: Resi belum scan in
-            if (checkPod) {
+            if (!checkPod) {
               // NOTE: create data do pod detail per awb number
               const doPodDetail = DoPodDetail.create();
               doPodDetail.doPodId = payload.doPodId;
