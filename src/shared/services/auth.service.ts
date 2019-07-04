@@ -152,7 +152,7 @@ export class AuthService {
       //   {
       //     cache: true,
       //     where: {
-      //       role_id: roleId,
+      //       roleId,
       //     },
       //   },
       // );
@@ -160,7 +160,7 @@ export class AuthService {
       const branch = await Branch.findOne({
         cache: true,
         where: {
-          branch_id: branchId,
+          branchId,
         },
       });
       // create Permission Token
