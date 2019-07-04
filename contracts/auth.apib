@@ -1,5 +1,5 @@
 FORMAT: 1A
-HOST: http://tmsapi-staging2.sicepat.com
+HOST: http://auth-staging.sicepat.com
 
 # API Auth
 
@@ -25,6 +25,38 @@ HOST: http://tmsapi-staging2.sicepat.com
                 "userId": 11,
                 "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
                 "refreshToken": "8asfgasgwetw4tewtggg",
+                "email": "ade@sicepat.com",
+                "username": "adefast",
+                "displayName": "Ade"
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Refresh Token Access [/auth/refreshToken]
+
+### Login URL [POST]
+
++ Request Login (application/json)
+
+    + Attributes (object)
+        + clientId: `mobile`, (string, required) - Client id
+        + refreshToken: `8asfgasgwetw4tewtggg`, (string) - refreshToken
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "userId": 11,
+                "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
+                "refreshToken": "8asfgasgwetw4tewtgggasdasdasfasga8gdsgdfghfdhdfh",
                 "email": "ade@sicepat.com",
                 "username": "adefast",
                 "displayName": "Ade"
