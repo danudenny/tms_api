@@ -1,5 +1,6 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Bag } from './bag';
+import { BagItemAwb } from './bag-item-awb';
 
 @Entity('bag_item', { schema: 'public' })
 @Index('bag_item_bag_id_idx', ['bagId'])
@@ -82,4 +83,7 @@ export class BagItem extends BaseEntity {
     name: 'bag_id',
   })
   bag: Bag;
+
+  @OneToMany(() => BagItemAwb, bagItemAwb => bagItemAwb.bagItem)
+  bagItemAwbs: BagItemAwb[];
 }
