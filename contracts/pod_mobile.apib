@@ -1,5 +1,5 @@
 FORMAT: 1A
-HOST: http://api.tms.sicepat.com
+HOST: http://podapi-staging.sicepat.com
 
 # API POD for Mobile
 
@@ -29,6 +29,191 @@ HOST: http://api.tms.sicepat.com
                     "today_cod_value_not_transfer"  : 234590,
                     "this_week_delivery"            : 246000,
                 ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+# Group Init Data
+
+## Initial Data [/mobile/initData]
+    Initial Data for Mobile
+
+### Dashboard List URL [POST]
+
++ Request InitData (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "data": {
+                    "reason": [
+                        {
+                            "reasonId": 1,
+                            "reasonName": "NTH",
+                            "reasonCode": "Not At Home",
+                            "reasonCategory": "pod",
+                            "reasonType": "problem"
+                        },
+                        {
+                            "reasonId": 2,
+                            "reasonName": "COPA",
+                            "reasonCode": "Alamat Tutup",
+                            "reasonCategory": "cod",
+                            "reasonType": "problem"
+                        },
+                        {
+                            "reasonId": 3,
+                            "reasonName": "DTM",
+                            "reasonCode": "Diterima",
+                            "reasonCategory": "pod",
+                            "reasonType": "accepted"
+                        }
+                    ]
+                    "delivery": [
+                        {
+                            "awbId"                 : 1,
+                            "awbNumber"             : "0001",
+                            "merchant"              : "Tokopedia",
+                            "consigneeName"         : "Andy Suryono",
+                            "consigneeAddress"      : "Jl. Tanjung Duren",
+                            "consigneeNumber"       : "+628123456789",
+                            "packageType"           : "best",
+                            "packageTypeName"       : "Best",
+                            "productType"           : "doc",
+                            "isCOD"                 : true,
+                            "awbStatusId"           : 21500,
+                            "awbStatusName"         : "Antar Ulang",
+                            "redeliveryHistory"     : [
+                                {
+                                    "historyDate"   : "2019-05-16",
+                                    "list"          : [
+                                        {
+                                            "historyDateTime"   : "2019-05-16 16:00:00",
+                                            "reasonCode"        : "NTH",
+                                            "reasonNote"        : "Gagal DO Not At Home",
+                                            "employeeName"      : "Anto",
+                                        },
+                                        {
+                                            "historyDateTime"   : "2019-05-16 12:00:00",
+                                            "reasonCode"        : "NTH",
+                                            "reasonNote"        : "Gagal DO Not At Home",
+                                            "employeeName"      : "Anto",
+                                        },
+                                        {
+                                            "historyDateTime"   : "2019-05-16 10:00:00",
+                                            "reasonCode"        : "NTH",
+                                            "reasonNote"        : "Gagal DO Not At Home",
+                                            "employeeName"      : "Anto",
+                                        },
+                                    ],
+                                },
+                                {
+                                    "historyDate"   : "2019-05-15",
+                                    "list"          : [
+                                        {
+                                            "historyDateTime"   : "2019-05-15 16:00:00",
+                                            "reasonCode"        : "NTH",
+                                            "reasonNote"        : "Gagal DO Not At Home",
+                                            "employeeName"      : "Budi",
+                                        },
+                                    ],
+                                },
+                                {
+                                    "historyDate"   : "2019-05-14",
+                                    "list"          : [
+                                        {
+                                            "historyDateTime"   : "2019-05-14 00:00:00",
+                                            "reasonDescription" : "Gagal DO Not At Home",
+                                            "employeeName"      : "Anto",
+                                        },
+                                    ]
+                                }
+                            ],
+                            "specialInstruction"    : [
+                                "Foto di Tempat",
+                                "DO Balik"
+                            ]
+                        },
+                        {
+                            "awbId"                 : 1,
+                            "awbNumber"             : "0002",
+                            "merchant"              : "Tokopedia",
+                            "consigneeName"         : "Andy Suryono",
+                            "consigneeAddress"      : "Jl. Tanjung Duren",
+                            "consigneeNumber"       : "+628123456789",
+                            "packageType"           : "best",
+                            "packageTypeName"       : "Best",
+                            "productType"           : "doc",
+                            "isCOD"                 : true,
+                            "awbStatusId"           : 21500,
+                            "awbStatusName"         : "Antar Ulang",
+                            "redeliveryHistory"     : [
+                                {
+                                    "historyDate"   : "2019-05-16",
+                                    "list"          : [
+                                        {
+                                            "historyDateTime"   : "2019-05-16 16:00:00",
+                                            "reasonCode"        : "NTH",
+                                            "reasonNote"        : "Gagal DO Not At Home",
+                                            "employeeName"      : "Anto",
+                                        },
+                                        {
+                                            "historyDateTime"   : "2019-05-16 12:00:00",
+                                            "reasonCode"        : "NTH",
+                                            "reasonNote"        : "Gagal DO Not At Home",
+                                            "employeeName"      : "Anto",
+                                        },
+                                        {
+                                            "historyDateTime"   : "2019-05-16 10:00:00",
+                                            "reasonCode"        : "NTH",
+                                            "reasonNote"        : "Gagal DO Not At Home",
+                                            "employeeName"      : "Anto",
+                                        },
+                                    ],
+                                },
+                                {
+                                    "historyDate"   : "2019-05-15",
+                                    "list"          : [
+                                        {
+                                            "historyDateTime"   : "2019-05-15 16:00:00",
+                                            "reasonCode"        : "NTH",
+                                            "reasonNote"        : "Gagal DO Not At Home",
+                                            "employeeName"      : "Budi",
+                                        },
+                                    ],
+                                },
+                                {
+                                    "historyDate"   : "2019-05-14",
+                                    "list"          : [
+                                        {
+                                            "historyDateTime"   : "2019-05-14 00:00:00",
+                                            "reasonDescription" : "Gagal DO Not At Home",
+                                            "employeeName"      : "Anto",
+                                        },
+                                    ]
+                                }
+                            ],
+                            "specialInstruction"    : [
+                                "Foto di Tempat",
+                                "DO Balik"
+                            ]
+                        }
+                    ]
+                }
             }
 
 + Response 400 (application/json; charset=utf-8)
@@ -300,9 +485,10 @@ HOST: http://api.tms.sicepat.com
 ### Dashboard List URL [POST]
 
 + Request Dashboard (application/json)
+
     + Header
 
-        Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
 
     + Attributes (object)
 
