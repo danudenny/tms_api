@@ -191,4 +191,34 @@ export class DoPod extends BaseEntity {
   })
   description: string | null;
 
+  @Column('integer', {
+    nullable: true,
+    name: 'total_scan_in',
+  })
+  totalScanIn: number | 0;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'total_scan_out',
+  })
+  totalScanOut: number | 0;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'percen_scan_in_out',
+  })
+  percenScanInOut: number | 0;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'last_date_scan_in',
+  })
+  lastDateScanIn: Date;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'last_date_scan_out',
+  })
+  lastDateScanOut: Date;
+
 }

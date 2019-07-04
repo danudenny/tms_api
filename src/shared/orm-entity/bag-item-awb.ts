@@ -1,4 +1,6 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Bag } from './bag';
+import { BagItem } from './bag-item';
 
 @Entity('bag_item_awb', { schema: 'public' })
 @Index('bag_item_awb_awb_item_idx', ['awbItemId'])
@@ -82,4 +84,13 @@ export class BagItemAwb extends BaseEntity {
     name: 'send_tracking_note_out',
   })
   sendTrackingNoteOut: number | null;
+
+  // relation model
+  @ManyToOne(() => BagItem, bagItem => bagItem.bagItemAwbs, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'bag_item_id',
+  })
+  bagItem: BagItem;
 }
