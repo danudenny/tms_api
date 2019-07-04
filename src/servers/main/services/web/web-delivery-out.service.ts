@@ -40,6 +40,7 @@ import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 // #endregion
 
 @Injectable()
@@ -562,7 +563,7 @@ export class WebDeliveryOutService {
       const timeNow = moment().toDate();
       const permissonPayload = AuthService.getPermissionTokenPayload();
 
-      const totalSuccess = 0;
+      let totalSuccess = 0;
       let totalError = 0;
 
       // TODO: need reviewed??
@@ -582,38 +583,67 @@ export class WebDeliveryOutService {
 
         // NOTE:
         // find data to awb where bagNumber and awb status not cancel
-        const bag = await Bag.findOne({
-          relations: ['bagItems'],
-          select: ['bagId', 'branchId'],
-          where: { bagNumber, isDeleted: false },
+        const bagRepository = new OrionRepositoryService(Bag);
+        const qBag = bagRepository.findOne();
+        // Manage relation (default inner join)
+        qBag.innerJoin(e => e.bagItems);
+        qBag.leftJoin(e => e.bagItems.bagItemAwbs);
+
+        qBag.select({
+          bagId: true,
+          bagNumber: true,
+          bagItems: {
+            bagItemAwbs: {
+              bagItemAwbId: true,
+            },
+          },
         });
+        // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
+        qBag.where(e => e.bagNumber, w => w.equals(bagNumber));
+        qBag.andWhere(e => e.isDeleted, w => w.equals(false));
+        const bagData = await qBag.exec();
 
-        if (bag) {
+        // const bag = await Bag.findOne({
+        //   relations: ['bagItems'],
+        //   select: ['bagId', 'branchId'],
+        //   where: { bagNumber, isDeleted: false },
+        // });
 
-          for (const bagItem of bag.bagItems) {
+        if (bagData) {
+          for (const bagItem of bagData.bagItems) {
             // NOTE: jika awb awbHistoryIdLast >= 1500 dan tidak sama dengan 1800 (cancel) boleh scan out
             const checkPod = await DoPodDetail.findOne({
               where: {
                 bagItemId: bagItem.bagItemId,
-                isScanIn: true,
+                isScanIn: false,
                 isDeleted: false,
               },
             });
 
             // NOTE: Bag Number belum scan in
-            if (checkPod) {
+            if (!checkPod) {
+              // TODO: create data do pod detail (scan out hub)
+              // bagItem.bagItemId;
+              // NOTE: create data do pod detail per bagItemId
+              const doPodDetail = DoPodDetail.create();
+              doPodDetail.doPodId = payload.doPodId;
+              doPodDetail.bagItemId = bagItem.bagItemId;
+              doPodDetail.doPodStatusIdLast = 1000;
 
-            // TODO: create data do pod detail (scan out hub)
-            // bagItem.bagItemId;
+              // general
+              doPodDetail.userIdCreated = authMeta.userId;
+              doPodDetail.userIdUpdated = authMeta.userId;
+              doPodDetail.createdTime = timeNow;
+              doPodDetail.updatedTime = timeNow;
+              await DoPodDetail.save(doPodDetail);
 
-            // TODO:
-            // get data bag item awb where bag item id
-
-            // looping data bag item awb
-            // get data awb item id
-            // create awb history ??
-            // update last status
-
+              // TODO:
+              // get data bag item awb where bag item id
+              // looping data bag item awb
+              // get data awb item id
+              // create awb history ??
+              // update last status
+              totalSuccess += 1;
             } else {
               totalError += 1;
               response.status = 'error';
@@ -634,7 +664,6 @@ export class WebDeliveryOutService {
               await BagTrouble.save(bagTrouble);
             }
           }
-
         } else {
           totalError += 1;
           response.status = 'error';
