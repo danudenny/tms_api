@@ -18,93 +18,93 @@ import {
 export class Reason extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name:'reason_id',
+    name: 'reason_id',
   })
-  reasonId: string;
+  reasonId: number;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name:'apps_code',
+    name: 'apps_code',
   })
   appsCode: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name:'reason_category',
+    name: 'reason_category',
   })
   reasonCategory: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name:'reason_type',
+    name: 'reason_type',
   })
   reasonType: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name:'reason_code',
+    name: 'reason_code',
   })
   reasonCode: string;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name:'reason_name',
+    name: 'reason_name',
   })
   reasonName: string | null;
 
   @Column('text', {
     nullable: true,
-    name:'reason_description',
+    name: 'reason_description',
   })
   reasonDescription: string | null;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_created',
+    name: 'user_id_created',
   })
-  userIdCreated: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'created_time',
+    name: 'created_time',
   })
   createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-    name:'user_id_updated',
+    name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name:'updated_time',
+    name: 'updated_time',
   })
   updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name:'is_deleted',
+    name: 'is_deleted',
   })
   isDeleted: boolean;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'true',
-    name:'is_reschedule_pickup',
+    name: 'is_reschedule_pickup',
   })
   isReschedulePickup: boolean | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'true',
-    name:'is_reschedule',
+    name: 'is_reschedule',
   })
   isReschedule: boolean | null;
 }

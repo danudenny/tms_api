@@ -52,6 +52,7 @@ HOST: http://podapi-staging.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
 
     + Attributes (object)
 
@@ -59,161 +60,159 @@ HOST: http://podapi-staging.sicepat.com
     + Body
 
             {
-                "data": {
-                    "reason": [
-                        {
-                            "reasonId": 1,
-                            "reasonName": "NTH",
-                            "reasonCode": "Not At Home",
-                            "reasonCategory": "pod",
-                            "reasonType": "problem"
-                        },
-                        {
-                            "reasonId": 2,
-                            "reasonName": "COPA",
-                            "reasonCode": "Alamat Tutup",
-                            "reasonCategory": "cod",
-                            "reasonType": "problem"
-                        },
-                        {
-                            "reasonId": 3,
-                            "reasonName": "DTM",
-                            "reasonCode": "Diterima",
-                            "reasonCategory": "pod",
-                            "reasonType": "accepted"
-                        }
-                    ]
-                    "delivery": [
-                        {
-                            "awbId"                 : 1,
-                            "awbNumber"             : "0001",
-                            "merchant"              : "Tokopedia",
-                            "consigneeName"         : "Andy Suryono",
-                            "consigneeAddress"      : "Jl. Tanjung Duren",
-                            "consigneeNumber"       : "+628123456789",
-                            "packageType"           : "best",
-                            "packageTypeName"       : "Best",
-                            "productType"           : "doc",
-                            "isCOD"                 : true,
-                            "awbStatusId"           : 21500,
-                            "awbStatusName"         : "Antar Ulang",
-                            "redeliveryHistory"     : [
-                                {
-                                    "historyDate"   : "2019-05-16",
-                                    "list"          : [
-                                        {
-                                            "historyDateTime"   : "2019-05-16 16:00:00",
-                                            "reasonCode"        : "NTH",
-                                            "reasonNote"        : "Gagal DO Not At Home",
-                                            "employeeName"      : "Anto",
-                                        },
-                                        {
-                                            "historyDateTime"   : "2019-05-16 12:00:00",
-                                            "reasonCode"        : "NTH",
-                                            "reasonNote"        : "Gagal DO Not At Home",
-                                            "employeeName"      : "Anto",
-                                        },
-                                        {
-                                            "historyDateTime"   : "2019-05-16 10:00:00",
-                                            "reasonCode"        : "NTH",
-                                            "reasonNote"        : "Gagal DO Not At Home",
-                                            "employeeName"      : "Anto",
-                                        },
-                                    ],
-                                },
-                                {
-                                    "historyDate"   : "2019-05-15",
-                                    "list"          : [
-                                        {
-                                            "historyDateTime"   : "2019-05-15 16:00:00",
-                                            "reasonCode"        : "NTH",
-                                            "reasonNote"        : "Gagal DO Not At Home",
-                                            "employeeName"      : "Budi",
-                                        },
-                                    ],
-                                },
-                                {
-                                    "historyDate"   : "2019-05-14",
-                                    "list"          : [
-                                        {
-                                            "historyDateTime"   : "2019-05-14 00:00:00",
-                                            "reasonDescription" : "Gagal DO Not At Home",
-                                            "employeeName"      : "Anto",
-                                        },
-                                    ]
-                                }
-                            ],
-                            "specialInstruction"    : [
-                                "Foto di Tempat",
-                                "DO Balik"
-                            ]
-                        },
-                        {
-                            "awbId"                 : 1,
-                            "awbNumber"             : "0002",
-                            "merchant"              : "Tokopedia",
-                            "consigneeName"         : "Andy Suryono",
-                            "consigneeAddress"      : "Jl. Tanjung Duren",
-                            "consigneeNumber"       : "+628123456789",
-                            "packageType"           : "best",
-                            "packageTypeName"       : "Best",
-                            "productType"           : "doc",
-                            "isCOD"                 : true,
-                            "awbStatusId"           : 21500,
-                            "awbStatusName"         : "Antar Ulang",
-                            "redeliveryHistory"     : [
-                                {
-                                    "historyDate"   : "2019-05-16",
-                                    "list"          : [
-                                        {
-                                            "historyDateTime"   : "2019-05-16 16:00:00",
-                                            "reasonCode"        : "NTH",
-                                            "reasonNote"        : "Gagal DO Not At Home",
-                                            "employeeName"      : "Anto",
-                                        },
-                                        {
-                                            "historyDateTime"   : "2019-05-16 12:00:00",
-                                            "reasonCode"        : "NTH",
-                                            "reasonNote"        : "Gagal DO Not At Home",
-                                            "employeeName"      : "Anto",
-                                        },
-                                        {
-                                            "historyDateTime"   : "2019-05-16 10:00:00",
-                                            "reasonCode"        : "NTH",
-                                            "reasonNote"        : "Gagal DO Not At Home",
-                                            "employeeName"      : "Anto",
-                                        },
-                                    ],
-                                },
-                                {
-                                    "historyDate"   : "2019-05-15",
-                                    "list"          : [
-                                        {
-                                            "historyDateTime"   : "2019-05-15 16:00:00",
-                                            "reasonCode"        : "NTH",
-                                            "reasonNote"        : "Gagal DO Not At Home",
-                                            "employeeName"      : "Budi",
-                                        },
-                                    ],
-                                },
-                                {
-                                    "historyDate"   : "2019-05-14",
-                                    "list"          : [
-                                        {
-                                            "historyDateTime"   : "2019-05-14 00:00:00",
-                                            "reasonDescription" : "Gagal DO Not At Home",
-                                            "employeeName"      : "Anto",
-                                        },
-                                    ]
-                                }
-                            ],
-                            "specialInstruction"    : [
-                                "Foto di Tempat",
-                                "DO Balik"
-                            ]
-                        }
-                    ]
-                }
+                "reason": [
+                    {
+                        "reasonId": 1,
+                        "reasonName": "NTH",
+                        "reasonCode": "Not At Home",
+                        "reasonCategory": "pod",
+                        "reasonType": "problem"
+                    },
+                    {
+                        "reasonId": 2,
+                        "reasonName": "COPA",
+                        "reasonCode": "Alamat Tutup",
+                        "reasonCategory": "cod",
+                        "reasonType": "problem"
+                    },
+                    {
+                        "reasonId": 3,
+                        "reasonName": "DTM",
+                        "reasonCode": "Diterima",
+                        "reasonCategory": "pod",
+                        "reasonType": "accepted"
+                    }
+                ]
+                "delivery": [
+                    {
+                        "awbId"                 : 1,
+                        "awbNumber"             : "0001",
+                        "merchant"              : "Tokopedia",
+                        "consigneeName"         : "Andy Suryono",
+                        "consigneeAddress"      : "Jl. Tanjung Duren",
+                        "consigneeNumber"       : "+628123456789",
+                        "packageType"           : "best",
+                        "packageTypeName"       : "Best",
+                        "productType"           : "doc",
+                        "isCOD"                 : true,
+                        "awbStatusId"           : 21500,
+                        "awbStatusName"         : "Antar Ulang",
+                        "redeliveryHistory"     : [
+                            {
+                                "historyDate"   : "2019-05-16",
+                                "list"          : [
+                                    {
+                                        "historyDateTime"   : "2019-05-16 16:00:00",
+                                        "reasonCode"        : "NTH",
+                                        "reasonNote"        : "Gagal DO Not At Home",
+                                        "employeeName"      : "Anto",
+                                    },
+                                    {
+                                        "historyDateTime"   : "2019-05-16 12:00:00",
+                                        "reasonCode"        : "NTH",
+                                        "reasonNote"        : "Gagal DO Not At Home",
+                                        "employeeName"      : "Anto",
+                                    },
+                                    {
+                                        "historyDateTime"   : "2019-05-16 10:00:00",
+                                        "reasonCode"        : "NTH",
+                                        "reasonNote"        : "Gagal DO Not At Home",
+                                        "employeeName"      : "Anto",
+                                    },
+                                ],
+                            },
+                            {
+                                "historyDate"   : "2019-05-15",
+                                "list"          : [
+                                    {
+                                        "historyDateTime"   : "2019-05-15 16:00:00",
+                                        "reasonCode"        : "NTH",
+                                        "reasonNote"        : "Gagal DO Not At Home",
+                                        "employeeName"      : "Budi",
+                                    },
+                                ],
+                            },
+                            {
+                                "historyDate"   : "2019-05-14",
+                                "list"          : [
+                                    {
+                                        "historyDateTime"   : "2019-05-14 00:00:00",
+                                        "reasonDescription" : "Gagal DO Not At Home",
+                                        "employeeName"      : "Anto",
+                                    },
+                                ]
+                            }
+                        ],
+                        "specialInstruction"    : [
+                            "Foto di Tempat",
+                            "DO Balik"
+                        ]
+                    },
+                    {
+                        "awbId"                 : 1,
+                        "awbNumber"             : "0002",
+                        "merchant"              : "Tokopedia",
+                        "consigneeName"         : "Andy Suryono",
+                        "consigneeAddress"      : "Jl. Tanjung Duren",
+                        "consigneeNumber"       : "+628123456789",
+                        "packageType"           : "best",
+                        "packageTypeName"       : "Best",
+                        "productType"           : "doc",
+                        "isCOD"                 : true,
+                        "awbStatusId"           : 21500,
+                        "awbStatusName"         : "Antar Ulang",
+                        "redeliveryHistory"     : [
+                            {
+                                "historyDate"   : "2019-05-16",
+                                "list"          : [
+                                    {
+                                        "historyDateTime"   : "2019-05-16 16:00:00",
+                                        "reasonCode"        : "NTH",
+                                        "reasonNote"        : "Gagal DO Not At Home",
+                                        "employeeName"      : "Anto",
+                                    },
+                                    {
+                                        "historyDateTime"   : "2019-05-16 12:00:00",
+                                        "reasonCode"        : "NTH",
+                                        "reasonNote"        : "Gagal DO Not At Home",
+                                        "employeeName"      : "Anto",
+                                    },
+                                    {
+                                        "historyDateTime"   : "2019-05-16 10:00:00",
+                                        "reasonCode"        : "NTH",
+                                        "reasonNote"        : "Gagal DO Not At Home",
+                                        "employeeName"      : "Anto",
+                                    },
+                                ],
+                            },
+                            {
+                                "historyDate"   : "2019-05-15",
+                                "list"          : [
+                                    {
+                                        "historyDateTime"   : "2019-05-15 16:00:00",
+                                        "reasonCode"        : "NTH",
+                                        "reasonNote"        : "Gagal DO Not At Home",
+                                        "employeeName"      : "Budi",
+                                    },
+                                ],
+                            },
+                            {
+                                "historyDate"   : "2019-05-14",
+                                "list"          : [
+                                    {
+                                        "historyDateTime"   : "2019-05-14 00:00:00",
+                                        "reasonDescription" : "Gagal DO Not At Home",
+                                        "employeeName"      : "Anto",
+                                    },
+                                ]
+                            }
+                        ],
+                        "specialInstruction"    : [
+                            "Foto di Tempat",
+                            "DO Balik"
+                        ]
+                    }
+                ]
             }
 
 + Response 400 (application/json; charset=utf-8)
@@ -310,9 +309,9 @@ HOST: http://podapi-staging.sicepat.com
     + Header
 
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
 
     + Attributes (object)
-        + permissionToken   : `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
         + filters           : (object)
             + startDeliveryDateTime : `2019-05-01 00:00:00`, (string, required)
             + endDeliveryDateTime   : `2019-05-01 00:00:00`, (string, required)
