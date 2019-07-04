@@ -22,6 +22,8 @@ import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { IsNull } from 'typeorm';
 import { DoPodRepository } from '../../../../shared/orm-repository/do-pod.repository';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { PodScan } from '../../../../shared/orm-entity/pod-scan';
 // #endregion
 
 @Injectable()
@@ -320,5 +322,53 @@ export class WebDeliveryInService {
     result.data = dataItem;
 
     return result;
+  }
+
+  public static async findAllByRequest(payload: BaseMetaPayloadVm) {
+    const repository = new OrionRepositoryService(PodScan);
+    const q = repository.findAllRaw();
+
+    payload.globalSearchFields = [
+      {
+        field: 'pod_scanin_date_time',
+      },
+    ];
+
+    q.selectRaw(
+      ['pod_scanin_date_time', 'scanInDateTime'],
+      ['awb.awb_number', 'awbNumber'],
+      ['branch.branch_name', 'branchNameScan'],
+      ['branch_from.branch_name', 'branchNameFrom'],
+      ['employee.fullname', 'employeeName'],
+    );
+
+    q.innerJoin(
+      'branch ON branch_id = branch.branch_id AND branch.is_deleted = false',
+    );
+    q.innerJoin(
+      'awb ON awb.awb_id = awb_id AND awb.is_deleted = false',
+    );
+    q.leftJoin(
+      'users ON users.user_id = user_id AND users.is_deleted = false',
+    );
+    q.leftJoin(
+      'employee ON employee.employee_id = users.employee_id AND employee.is_deleted = false',
+    );
+    q.leftJoin(
+      'do_pod ON do_pod.do_pod_id = do_pod_id AND do_pod.is_deleted = false',
+    );
+    q.leftJoin(
+      'branch branch_from ON do_pod.branch_id = branch_from.branch_id AND branch_from.is_deleted = false',
+    );
+
+    const data = await q.exec();
+    payload.applyToOrionRepositoryQuery(q, true);
+    const total = await q.countWithoutTakeAndSkip();
+
+    const response = new WebScanInListResponseVm();
+    response.data = data;
+    response.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return response;
   }
 }

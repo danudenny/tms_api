@@ -11,6 +11,7 @@ import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
+import { WebScanInListPayloadVm } from '../../models/web-scanin-list-payload.vm';
 
 // #region import
 // #endregion
@@ -40,10 +41,10 @@ export class WebDeliveryInController {
   @ApiOkResponse({ type: WebScanInListResponseVm })
   // @ResponseSerializerOptions({ disable: true })
   public async findAllDeliveryList(
-    @Body() payload: WebDeliveryListFilterPayloadVm,
+    @Body() payload: WebScanInListPayloadVm,
   ) {
     // TODO:
-    return this.webDeliveryService.findAllDeliveryList(payload);
+    return WebDeliveryInService.findAllByRequest(payload);
   }
 
   @Post('bag')
