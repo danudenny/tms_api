@@ -309,8 +309,7 @@ export class WebDeliveryOutService {
       // push item
       dataItem.push({
         awbNumber,
-        status: response.status,
-        message: response.message,
+        ...response,
       });
     } // end of loop
 
@@ -478,8 +477,7 @@ export class WebDeliveryOutService {
       // push item
       dataItem.push({
         awbNumber,
-        status: response.status,
-        message: response.message,
+        ...response,
       });
     } // end of loop
 
@@ -579,7 +577,8 @@ export class WebDeliveryOutService {
             doPodDetail.doPodId = payload.doPodId;
             doPodDetail.bagItemId = bagItem.bagItemId;
             doPodDetail.doPodStatusIdLast = 1000;
-
+            doPodDetail.isScanOut = true;
+            doPodDetail.scanOutType = 'bag_item';
             // general
             doPodDetail.userIdCreated = authMeta.userId;
             doPodDetail.userIdUpdated = authMeta.userId;
@@ -624,8 +623,7 @@ export class WebDeliveryOutService {
       // push item
       dataItem.push({
         bagNumber,
-        status: response.status,
-        message: response.message,
+        ...response,
       });
     } // end of loop
 
@@ -683,7 +681,7 @@ export class WebDeliveryOutService {
     // "lastDateScanIn" : "",
     // "lastDateScanOut" : "2019-06-28 10:00:00"
 
-    const qb = payload.buildQueryBuilder();
+    const qb = payload.buildQueryBuilder(true);
     qb.addSelect('do_pod.do_pod_id', 'doPodId');
     qb.addSelect('do_pod.do_pod_code', 'doPodCode');
     qb.addSelect('do_pod.do_pod_date_time', 'doPodDateTime');
