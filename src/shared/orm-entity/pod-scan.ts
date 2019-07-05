@@ -3,7 +3,15 @@ import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
+  OneToMany,
+  ManyToOne,
 } from 'typeorm';
+import { Branch } from './branch';
+import { Awb } from './awb';
+import { User } from './user';
+import { DoPod } from './do-pod';
 
 @Entity('pod_scan', { schema: 'public' })
 export class PodScan extends BaseEntity {
@@ -49,4 +57,20 @@ export class PodScan extends BaseEntity {
     name: 'pod_scanin_date_time',
   })
   podScaninDateTime: Date | null;
+
+  // @OneToOne(() => Branch)
+  // @JoinColumn({ name: 'branch_id', referencedColumnName: 'branch_id' })
+  // branch: Branch;
+
+  // @ManyToOne(() => Awb)
+  // @JoinColumn({ name: 'awb_id', referencedColumnName: 'awb_id' })
+  // awb: Awb;
+
+  // @OneToOne(() => User)
+  // @JoinColumn({ name: 'user_id', referencedColumnName: 'user_id' })
+  // user: User;
+
+  // @ManyToOne(() => DoPod)
+  // @JoinColumn({ name: 'do_pod_id', referencedColumnName: 'do_pod_id' })
+  // do_pod: DoPod;
 }

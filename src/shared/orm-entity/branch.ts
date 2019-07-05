@@ -1,4 +1,6 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { PodScan } from './pod-scan';
+import { DoPod } from './do-pod';
 
 @Entity('branch', { schema: 'public' })
 export class Branch extends BaseEntity {
@@ -156,4 +158,12 @@ export class Branch extends BaseEntity {
     nullable: true,
   })
   branch_type_id: string | null;
+
+  // @OneToOne(() => PodScan)
+  // @JoinColumn({ name: 'branch_id', referencedColumnName: 'branch_id' })
+  // pod_scan: PodScan;
+
+  // @OneToOne(() => DoPod)
+  // @JoinColumn({ name: 'branch_id', referencedColumnName: 'branch_id' })
+  // do_pod: DoPod;
 }

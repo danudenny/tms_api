@@ -754,6 +754,9 @@ export class WebDeliveryOutService {
       'employee.employee_id = do_pod.employee_id_driver AND employee.is_deleted = false',
     );
 
+    // tslint:disable-next-line: no-console
+    console.log(qb);
+
     if (isHub) {
       qb.where('do_pod.do_pod_type = :doPodType', {
         doPodType: POD_TYPE.TRANSIT_HUB,

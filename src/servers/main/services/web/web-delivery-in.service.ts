@@ -334,6 +334,8 @@ export class WebDeliveryInService {
       },
     ];
 
+    payload.applyToOrionRepositoryQuery(q, true);
+
     q.selectRaw(
       ['pod_scanin_date_time', 'scanInDateTime'],
       ['awb.awb_number', 'awbNumber'],
@@ -341,6 +343,14 @@ export class WebDeliveryInService {
       ['branch_from.branch_name', 'branchNameFrom'],
       ['employee.fullname', 'employeeName'],
     );
+
+    // TODO: Masih belum jalan
+    // q.innerJoin(e => e.branch);
+    // q.innerJoin(e => e.awb);
+    // q.leftJoin(e => e.user);
+    // q.leftJoin(e => e.user.employee);
+    // q.leftJoin(e => e.do_pod);
+    // q.leftJoin(e => e.branch.do_pod);
 
     q.innerJoin(
       'branch ON branch_id = branch.branch_id AND branch.is_deleted = false',
@@ -362,7 +372,6 @@ export class WebDeliveryInService {
     );
 
     const data = await q.exec();
-    payload.applyToOrionRepositoryQuery(q, true);
     const total = await q.countWithoutTakeAndSkip();
 
     const response = new WebScanInListResponseVm();

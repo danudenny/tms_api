@@ -2,6 +2,7 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToMany, OneToOne
 import { UserRole } from './user-role';
 import { Employee } from './employee';
 import { Role } from './role';
+import { PodScan } from './pod-scan';
 
 @Entity('users', { schema: 'public' })
 export class User extends BaseEntity {
@@ -115,6 +116,10 @@ export class User extends BaseEntity {
   @OneToOne(() => Employee, employee => employee, { eager: true , nullable: true})
   @JoinColumn({ name: 'employee_id' })
   employee: Employee;
+
+  // @OneToOne(() => PodScan)
+  // @JoinColumn({ name: 'user_id', referencedColumnName: 'user_id' })
+  // pod_scan: PodScan;
 
   // additional method
   validatePassword(passwordToValidate: string) {

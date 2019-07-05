@@ -3,7 +3,12 @@ import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
+  OneToMany,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
+import { PodScan } from './pod-scan';
+import { Branch } from './branch';
 
 @Entity('do_pod', { schema: 'public' })
 export class DoPod extends BaseEntity {
@@ -221,4 +226,10 @@ export class DoPod extends BaseEntity {
   })
   lastDateScanOut: Date;
 
+  // @OneToMany(() => PodScan, pod_scan => pod_scan.do_pod)
+  // pod_scan: PodScan[];
+
+  // @OneToOne(() => Branch)
+  // @JoinColumn({ name: 'branch_id', referencedColumnName: 'branch_id' })
+  // branch: Branch;
 }

@@ -1,4 +1,5 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { PodScan } from './pod-scan';
 
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
@@ -674,4 +675,7 @@ export class Awb extends BaseEntity {
     name: 'awb_trouble_id',
   })
   awbTroubleId: number | null;
+
+  // @OneToMany(() => PodScan, pod_scan => pod_scan.awb)
+  // pod_scan: PodScan[];
 }
