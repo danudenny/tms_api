@@ -10,6 +10,13 @@ export class ReasonVm {
 
   @ApiModelProperty()
   reasonName: string;
+
+  @ApiModelProperty()
+  reasonCategory: string;
+
+  @ApiModelProperty()
+  reasonType: string;
+
 }
 
 export class ReasonSearchVm {
