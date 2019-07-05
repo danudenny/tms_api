@@ -324,60 +324,60 @@ export class WebDeliveryInService {
     return result;
   }
 
-  public static async findAllByRequest(payload: BaseMetaPayloadVm) {
-    const repository = new OrionRepositoryService(PodScan);
-    const q = repository.findAllRaw();
+  // public static async findAllByRequest(payload: BaseMetaPayloadVm) {
+  //   const repository = new OrionRepositoryService(PodScan);
+  //   const q = repository.findAllRaw();
 
-    payload.globalSearchFields = [
-      {
-        field: 'pod_scanin_date_time',
-      },
-    ];
+  //   payload.globalSearchFields = [
+  //     {
+  //       field: 'pod_scanin_date_time',
+  //     },
+  //   ];
 
-    payload.applyToOrionRepositoryQuery(q, true);
+  //   payload.applyToOrionRepositoryQuery(q, true);
 
-    q.selectRaw(
-      ['pod_scanin_date_time', 'scanInDateTime'],
-      ['awb.awb_number', 'awbNumber'],
-      ['branch.branch_name', 'branchNameScan'],
-      ['branch_from.branch_name', 'branchNameFrom'],
-      ['employee.fullname', 'employeeName'],
-    );
+  //   q.selectRaw(
+  //     ['pod_scanin_date_time', 'scanInDateTime'],
+  //     ['awb.awb_number', 'awbNumber'],
+  //     ['branch.branch_name', 'branchNameScan'],
+  //     ['branch_from.branch_name', 'branchNameFrom'],
+  //     ['employee.fullname', 'employeeName'],
+  //   );
 
-    // TODO: Masih belum jalan
-    // q.innerJoin(e => e.branch);
-    // q.innerJoin(e => e.awb);
-    // q.leftJoin(e => e.user);
-    // q.leftJoin(e => e.user.employee);
-    // q.leftJoin(e => e.do_pod);
-    // q.leftJoin(e => e.branch.do_pod);
+  //   // TODO: Masih belum jalan
+  //   q.innerJoin(e => e.branch);
+  //   q.innerJoin(e => e.awb);
+  //   q.leftJoin(e => e.user);
+  //   q.leftJoin(e => e.user.employee);
+  //   q.leftJoin(e => e.do_pod);
+  //   q.leftJoin(e => e.branch.do_pod);
 
-    q.innerJoin(
-      'branch ON branch_id = branch.branch_id AND branch.is_deleted = false',
-    );
-    q.innerJoin(
-      'awb ON awb.awb_id = awb_id AND awb.is_deleted = false',
-    );
-    q.leftJoin(
-      'users ON users.user_id = user_id AND users.is_deleted = false',
-    );
-    q.leftJoin(
-      'employee ON employee.employee_id = users.employee_id AND employee.is_deleted = false',
-    );
-    q.leftJoin(
-      'do_pod ON do_pod.do_pod_id = do_pod_id AND do_pod.is_deleted = false',
-    );
-    q.leftJoin(
-      'branch branch_from ON do_pod.branch_id = branch_from.branch_id AND branch_from.is_deleted = false',
-    );
+  //   q.innerJoin(
+  //     'branch ON branch_id = branch.branch_id AND branch.is_deleted = false',
+  //   );
+  //   q.innerJoin(
+  //     'awb ON awb.awb_id = awb_id AND awb.is_deleted = false',
+  //   );
+  //   q.leftJoin(
+  //     'users ON users.user_id = user_id AND users.is_deleted = false',
+  //   );
+  //   q.leftJoin(
+  //     'employee ON employee.employee_id = users.employee_id AND employee.is_deleted = false',
+  //   );
+  //   q.leftJoin(
+  //     'do_pod ON do_pod.do_pod_id = do_pod_id AND do_pod.is_deleted = false',
+  //   );
+  //   q.leftJoin(
+  //     'branch branch_from ON do_pod.branch_id = branch_from.branch_id AND branch_from.is_deleted = false',
+  //   );
 
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+  //   const data = await q.exec();
+  //   const total = await q.countWithoutTakeAndSkip();
 
-    const response = new WebScanInListResponseVm();
-    response.data = data;
-    response.paging = MetaService.set(payload.page, payload.limit, total);
+  //   const response = new WebScanInListResponseVm();
+  //   response.data = data;
+  //   response.paging = MetaService.set(payload.page, payload.limit, total);
 
-    return response;
-  }
+  //   return response;
+  // }
 }
