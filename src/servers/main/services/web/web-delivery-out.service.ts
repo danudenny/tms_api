@@ -740,7 +740,7 @@ export class WebDeliveryOutService {
     // "lastDateScanIn" : "",
     // "lastDateScanOut" : "2019-06-28 10:00:00"
 
-    const qb = payload.buildQueryBuilder();
+    const qb = payload.buildQueryBuilder(true);
     qb.addSelect('do_pod.do_pod_id', 'doPodId');
     qb.addSelect('do_pod.do_pod_code', 'doPodCode');
     qb.addSelect('do_pod.do_pod_date_time', 'doPodDateTime');

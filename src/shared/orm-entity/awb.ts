@@ -676,6 +676,7 @@ export class Awb extends BaseEntity {
   })
   awbTroubleId: number | null;
 
+  // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.awb)
   // pod_scan: PodScan[];
 }

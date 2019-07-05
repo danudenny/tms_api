@@ -117,6 +117,7 @@ export class User extends BaseEntity {
   @JoinColumn({ name: 'employee_id' })
   employee: Employee;
 
+  // TODO: mapping for join on scaninlist
   // @OneToOne(() => PodScan)
   // @JoinColumn({ name: 'user_id', referencedColumnName: 'user_id' })
   // pod_scan: PodScan;

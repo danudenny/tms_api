@@ -159,6 +159,7 @@ export class Branch extends BaseEntity {
   })
   branch_type_id: string | null;
 
+  // TODO: mapping for join on scaninlist
   // @OneToOne(() => PodScan)
   // @JoinColumn({ name: 'branch_id', referencedColumnName: 'branch_id' })
   // pod_scan: PodScan;

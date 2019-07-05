@@ -18,7 +18,6 @@ export class PodScan extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'pod_scan_id',
-
   })
   podScanId: number;
 
@@ -33,6 +32,12 @@ export class PodScan extends BaseEntity {
     name: 'awb_id',
   })
   awbId: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'bag_item_id',
+  })
+  bagItemId: number;
 
   @Column('bigint', {
     nullable: false,
@@ -58,6 +63,7 @@ export class PodScan extends BaseEntity {
   })
   podScaninDateTime: Date | null;
 
+  // TODO: mapping for join on scaninlist
   // @OneToOne(() => Branch)
   // @JoinColumn({ name: 'branch_id', referencedColumnName: 'branch_id' })
   // branch: Branch;

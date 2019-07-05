@@ -226,6 +226,7 @@ export class DoPod extends BaseEntity {
   })
   lastDateScanOut: Date;
 
+  // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.do_pod)
   // pod_scan: PodScan[];
 

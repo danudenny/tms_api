@@ -6,15 +6,12 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { BagRepository } from '../../../../shared/orm-repository/bag.repository';
 import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payload.vm';
-import { WebScanInAwbResponseVm, WebScanInBag1ResponseVm } from '../../models/web-scanin-awb.response.vm';
+import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
-import { WebScanInListPayloadVm } from '../../models/web-scanin-list-payload.vm';
-
-// #region import
-// #endregion
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('Web Delivery In')
 @Controller('web/pod/scanIn')
@@ -40,19 +37,17 @@ export class WebDeliveryInController {
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanInListResponseVm })
   // @ResponseSerializerOptions({ disable: true })
-  public async findAllDeliveryList(
-    @Body() payload: WebScanInListPayloadVm,
-  ) {
+  public async findAllDeliveryList(@Body() payload: BaseMetaPayloadVm) {
     // TODO:
-    return WebDeliveryInService.findAllByRequest(payload);
+    return this.webDeliveryService.findAllAwbByRequest(payload);
   }
 
   @Post('bag')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanInBag1ResponseVm })
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanInBagResponseVm })
   public async findAllBag(@Body() payload: WebScanInBagVm) {
-    return this.webDeliveryService.findAllBag(payload);
+    return this.webDeliveryService.scanInBag(payload);
   }
 }

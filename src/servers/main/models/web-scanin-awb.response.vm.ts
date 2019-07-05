@@ -8,6 +8,9 @@ export class ScanAwbVm {
   status: string;
 
   @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
   message: string;
 }
 
@@ -34,9 +37,12 @@ export class ScanBagVm {
   status: string;
 
   @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
   message: string;
 }
-export class WebScanInBag1ResponseVm  {
+export class WebScanInBagResponseVm  {
 
   @ApiModelProperty()
   totalData: number;
