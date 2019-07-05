@@ -333,6 +333,22 @@ export class AuthService {
     return roles || [];
   }
 
+  public static getAuthData(): AuthLoginMetadata {
+    const authMeta = RequestContextMetadataService.getMetadata(
+      'AUTH_METADATA',
+    );
+    if (!!authMeta) {
+      return authMeta;
+    } else {
+      ContextualErrorService.throwObj(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
   public static getPermissionToken() {
     return RequestContextMetadataService.getMetadata('PERMISSION_TOKEN');
   }
