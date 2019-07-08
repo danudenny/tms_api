@@ -64,19 +64,19 @@ export class PodScan extends BaseEntity {
   podScaninDateTime: Date | null;
 
   // TODO: mapping for join on scaninlist
-  // @OneToOne(() => Branch)
-  // @JoinColumn({ name: 'branch_id', referencedColumnName: 'branch_id' })
-  // branch: Branch;
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 
-  // @ManyToOne(() => Awb)
-  // @JoinColumn({ name: 'awb_id', referencedColumnName: 'awb_id' })
-  // awb: Awb;
+  @ManyToOne(() => Awb)
+  @JoinColumn({ name: 'awb_id' })
+  awb: Awb;
 
-  // @OneToOne(() => User)
-  // @JoinColumn({ name: 'user_id', referencedColumnName: 'user_id' })
-  // user: User;
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
-  // @ManyToOne(() => DoPod)
-  // @JoinColumn({ name: 'do_pod_id', referencedColumnName: 'do_pod_id' })
-  // do_pod: DoPod;
+  @ManyToOne(() => DoPod)
+  @JoinColumn({ name: 'do_pod_id' })
+  do_pod: DoPod;
 }

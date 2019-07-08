@@ -39,6 +39,7 @@ export class OrionRepositoryQueryService<
     public targetAlias: string,
     private readonly queryMode: OrionRepositoryQueryMode = OrionRepositoryQueryMode.Master,
     private readonly relationHistory: Array<{
+      systemAlias: string;
       relationAlias: string;
       relationMetadata: RelationMetadata;
     }> = [],
@@ -46,10 +47,13 @@ export class OrionRepositoryQueryService<
       properties: string[];
       targetAlias: string;
     }> = [],
-    private readonly propsMetadata: { [key: string]: RelationMetadata | ColumnMetadata | EmbeddedMetadata } = {},
+    private readonly propsMetadata: {
+      [key: string]: RelationMetadata | ColumnMetadata | EmbeddedMetadata;
+    } = {},
   ) {
     this.relationHistory.push(
       ...this.queryBuilder.expressionMap.joinAttributes.map(joinAttribute => ({
+        systemAlias: joinAttribute.alias.name, // FIXME: Should get system default alias, e.g: do_pod_branch
         relationAlias: joinAttribute.alias.name,
         relationMetadata: joinAttribute.relation,
       })),
@@ -126,15 +130,13 @@ export class OrionRepositoryQueryService<
   }
 
   public countWithoutTakeAndSkip(): Promise<number> {
-    const queryBuilderParts = this.queryBuilderParts
-      .slice()
-      .filter(
-        part =>
-          // tslint:disable-next-line: triple-equals
-          part.partAction != this.queryBuilder.take &&
-          // tslint:disable-next-line: triple-equals
-          part.partAction != this.queryBuilder.skip,
-      );
+    const queryBuilderParts = this.queryBuilderParts.slice().filter(
+      part =>
+        // tslint:disable-next-line: triple-equals
+        part.partAction != this.queryBuilder.take &&
+        // tslint:disable-next-line: triple-equals
+        part.partAction != this.queryBuilder.skip,
+    );
 
     const compiledQueryBuilder = this.compileQueryParts(
       this.queryBuilder.clone(),
@@ -242,9 +244,15 @@ export class OrionRepositoryQueryService<
 
   public innerJoin<JR extends Object>(
     propertySelector: ((obj: P) => JR) | string,
+    joinAlias?: string,
     joinFn?: (q: OrionRepositoryQueryService<JR>) => void,
   ): OrionRepositoryQueryService<T, R, P> {
-    return this.joinBase(propertySelector, this.queryBuilder.innerJoin, joinFn);
+    return this.joinBase(
+      propertySelector,
+      this.queryBuilder.innerJoin,
+      joinAlias,
+      joinFn,
+    );
   }
 
   public innerJoinRaw(
@@ -264,11 +272,13 @@ export class OrionRepositoryQueryService<
 
   public innerJoinAndSelect<JR extends Object>(
     propertySelector: ((obj: P) => JR) | string,
+    joinAlias?: string,
     joinFn?: (q: OrionRepositoryQueryService<JR>) => void,
   ): OrionRepositoryQueryService<T, R, P> {
     return this.joinBase(
       propertySelector,
       this.queryBuilder.innerJoinAndSelect,
+      joinAlias,
       joinFn,
     );
   }
@@ -290,9 +300,15 @@ export class OrionRepositoryQueryService<
 
   public leftJoin<JR extends Object>(
     propertySelector: ((obj: P) => JR) | string,
+    joinAlias?: string,
     joinFn?: (q: OrionRepositoryQueryService<JR>) => void,
   ): OrionRepositoryQueryService<T, R, P> {
-    return this.joinBase(propertySelector, this.queryBuilder.leftJoin, joinFn);
+    return this.joinBase(
+      propertySelector,
+      this.queryBuilder.leftJoin,
+      joinAlias,
+      joinFn,
+    );
   }
 
   public leftJoinRaw(
@@ -312,11 +328,13 @@ export class OrionRepositoryQueryService<
 
   public leftJoinAndSelect<JR extends Object>(
     propertySelector: ((obj: P) => JR) | string,
+    joinAlias?: string,
     joinFn?: (q: OrionRepositoryQueryService<JR>) => void,
   ): OrionRepositoryQueryService<T, R, P> {
     return this.joinBase(
       propertySelector,
       this.queryBuilder.leftJoinAndSelect,
+      joinAlias,
       joinFn,
     );
   }
@@ -448,17 +466,27 @@ export class OrionRepositoryQueryService<
       targetAlias: this.targetAlias,
     });
 
-    for (const targetSelectProperty of targetSelectProperties) {
+    forEach(selectProperties, (selectProperty, selectPropertyAlias) => {
+      const partParams: string[] = [selectProperty];
+      if (isString(selectPropertyAlias)) {
+        partParams.push(selectPropertyAlias);
+      }
       if (!this.isSelectPartExists()) {
         this.queryBuilderParts.unshift(
-          new OrionRepositoryQueryBuilderPart(this.queryBuilder.select, [targetSelectProperty]),
+          new OrionRepositoryQueryBuilderPart(
+            this.queryBuilder.select,
+            partParams,
+          ),
         );
       } else {
         this.queryBuilderParts.push(
-          new OrionRepositoryQueryBuilderPart(this.queryBuilder.addSelect, [targetSelectProperty]),
+          new OrionRepositoryQueryBuilderPart(
+            this.queryBuilder.addSelect,
+            partParams,
+          ),
         );
       }
-    }
+    });
 
     return this;
   }
@@ -470,7 +498,6 @@ export class OrionRepositoryQueryService<
       | ((
           obj: P,
         ) => OrionRepositoryQueryPropType | OrionRepositoryQueryPropType[])
-      // tslint:disable-next-line: trailing-comma
     >
   ) {
     const expressionArgs = args.filter(
@@ -483,7 +510,7 @@ export class OrionRepositoryQueryService<
     const fnArgs = args.filter(isFunction);
     if (fnArgs.length && fnArgs.length > 1) {
       throw new Error(
-        `Fields selector cannot be more than inside selectRaw method`,
+        `Fields selector cannot be more than one inside selectRaw method`,
       );
     }
 
@@ -663,7 +690,11 @@ export class OrionRepositoryQueryService<
     const resolvedProperties = transform(
       flattenProperties as any,
       (result, value, key) => {
-        const resolvedProperty = this.resolvePropertyAndAutoJoin(key as any, undefined, escapeAlias);
+        const resolvedProperty = this.resolvePropertyAndAutoJoin(
+          key as any,
+          undefined,
+          escapeAlias,
+        );
         result[resolvedProperty] = value;
       },
       {},
@@ -744,6 +775,10 @@ export class OrionRepositoryQueryService<
     return findIndex(this.relationHistory, { relationAlias: alias }) > -1;
   }
 
+  private isRelationSystemAliasExists(alias: string) {
+    return findIndex(this.relationHistory, { systemAlias: alias }) > -1;
+  }
+
   private isSelectOnAliasPerformed(targetAlias: string) {
     return findIndex(this.selectHistory, { targetAlias }) > -1;
   }
@@ -764,12 +799,16 @@ export class OrionRepositoryQueryService<
   private joinBase<JR extends Object>(
     propertySelector: ((obj: P) => JR) | string,
     joinQueryBuilderFn: (...params: any[]) => SelectQueryBuilder<T>,
+    joinAlias?: string,
     joinFn?: (q: OrionRepositoryQueryService<JR>) => void,
   ): OrionRepositoryQueryService<T, R, P> {
     const [propertyName] = this.resolvePropertySelector(propertySelector);
+
     const relationAlias = this.resolvePropertyAndAutoJoin(
       propertyName,
       joinQueryBuilderFn,
+      false,
+      joinAlias,
     );
 
     const relationHistory = find(this.relationHistory, { relationAlias });
@@ -808,7 +847,7 @@ export class OrionRepositoryQueryService<
       const relationAlias =
         alias + '_' + relation.propertyPath.replace('.', '_');
 
-      if (!this.isRelationAliasExists(relationAlias)) {
+      if (!this.isRelationSystemAliasExists(relationAlias)) {
         if (this.isSelectOnAliasPerformed(relationAlias)) {
           queryBuilder.innerJoin(
             alias + '.' + relation.propertyPath,
@@ -835,16 +874,24 @@ export class OrionRepositoryQueryService<
     entityMetadata: EntityMetadata = this.entityMetadata,
     fromAlias: string,
     queryAction: (...params: any[]) => SelectQueryBuilder<T>,
+    relationAlias?: string,
   ) {
-    const relationAlias: string = `${fromAlias}_${propertyName}`;
+    const systemAlias = `${fromAlias}_${propertyName}`;
+    if (!relationAlias) {
+      relationAlias = systemAlias;
+    }
     const relationMetadata = entityMetadata.findRelationWithPropertyPath(
       propertyName,
     );
 
     // If just passing through a chain of possibly already executed includes for semantics, don't execute the include again.
     // Only execute the include if it has not been previously executed.
-    if (!this.isRelationAliasExists(relationAlias)) {
-      this.relationHistory.push({ relationAlias, relationMetadata });
+    if (!this.isRelationAliasExists(relationAlias) && !this.isRelationSystemAliasExists(systemAlias)) {
+      this.relationHistory.push({
+        systemAlias,
+        relationAlias,
+        relationMetadata,
+      });
 
       if (
         // tslint:disable-next-line: triple-equals
@@ -862,6 +909,8 @@ export class OrionRepositoryQueryService<
           relationAlias,
         ]),
       );
+    } else if (this.isRelationSystemAliasExists(systemAlias)) {
+      relationAlias = this.resolveRelationAlias(systemAlias);
     }
 
     return {
@@ -915,6 +964,7 @@ export class OrionRepositoryQueryService<
     joinQueryBuilderFn: (...params: any[]) => SelectQueryBuilder<T> = this
       .queryBuilder.innerJoin,
     escapeAlias: boolean = false,
+    lastJoinAlias?: string,
   ): string {
     const properties: string[] = property.split('.');
     let currentEntityMetadata: EntityMetadata = this.entityMetadata;
@@ -923,7 +973,9 @@ export class OrionRepositoryQueryService<
     let resolvedPath: string = this.targetAlias;
     let propMetadata;
 
-    for (const prop of properties) {
+    for (const propIdx in properties) {
+      const prop = properties[propIdx];
+      const isLastProp = +propIdx === properties.length - 1;
       const relation = currentEntityMetadata.findRelationWithPropertyPath(prop);
 
       if (relation) {
@@ -934,6 +986,7 @@ export class OrionRepositoryQueryService<
           relation.entityMetadata,
           currentAlias,
           joinQueryBuilderFn,
+          isLastProp ? lastJoinAlias : undefined,
         );
 
         resolvedPath = joinResult.relationAlias;
@@ -950,7 +1003,9 @@ export class OrionRepositoryQueryService<
           resolvedPath = `${resolvedPath}.${prop}`;
           propMetadata = embedded;
         } else {
-          const columnMetadata = currentEntityMetadata.findColumnWithPropertyPath(prop);
+          const columnMetadata = currentEntityMetadata.findColumnWithPropertyPath(
+            prop,
+          );
           resolvedPath = `${resolvedPath}.${columnMetadata.propertyPath}`;
           propMetadata = columnMetadata;
         }
@@ -1002,7 +1057,11 @@ export class OrionRepositoryQueryService<
     if (propertySelector) {
       const propertyNames = this.resolvePropertySelector(propertySelector);
       for (let propertyName of propertyNames) {
-        propertyName = this.resolvePropertyAndAutoJoin(propertyName, undefined, escapeAlias);
+        propertyName = this.resolvePropertyAndAutoJoin(
+          propertyName,
+          undefined,
+          escapeAlias,
+        );
         resolvedPropertyNames.push(propertyName);
       }
     }
@@ -1033,6 +1092,15 @@ export class OrionRepositoryQueryService<
     }
 
     return rawExpression;
+  }
+
+  private resolveRelationAlias(alias: string) {
+    const relationHistoryBySystemAlias = find(this.relationHistory, { systemAlias: alias });
+    if (relationHistoryBySystemAlias && relationHistoryBySystemAlias.relationAlias) {
+      return relationHistoryBySystemAlias.relationAlias;
+    }
+
+    return alias;
   }
 
   private stringArrayEscapeNonSelectorArgs(strings: string[]) {
@@ -1069,7 +1137,10 @@ export class OrionRepositoryQueryService<
     const [whereProperties] = this.resolvePropertySelector(propertySelector);
 
     // If accessing multiple properties, join relationships using an INNER JOIN.
-    const targetProperty = this.resolvePropertyAndAutoJoin(whereProperties, this.queryBuilder.innerJoin);
+    const targetProperty = this.resolvePropertyAndAutoJoin(
+      whereProperties,
+      this.queryBuilder.innerJoin,
+    );
 
     const linqRepositoryQueryCondition = new OrionRepositoryQueryConditionService(
       targetProperty,

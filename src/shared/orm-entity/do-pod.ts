@@ -230,7 +230,7 @@ export class DoPod extends BaseEntity {
   // @OneToMany(() => PodScan, pod_scan => pod_scan.do_pod)
   // pod_scan: PodScan[];
 
-  // @OneToOne(() => Branch)
-  // @JoinColumn({ name: 'branch_id', referencedColumnName: 'branch_id' })
-  // branch: Branch;
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 }
