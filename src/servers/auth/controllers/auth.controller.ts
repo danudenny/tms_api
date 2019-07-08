@@ -1,13 +1,20 @@
-import { Body, Controller, Get, Post, UseGuards, Logger, HttpCode } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Logger, HttpCode, HttpStatus } from '@nestjs/common';
 
 import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../shared/external/nestjs-swagger';
 import { Transactional } from '../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 // import { AuthenticatedAuthGuard } from '../../../shared/guards/anonymous.guard';
 import { AuthService } from '../../../shared/services/auth.service';
-import { AuthLoginByEmailOrUsernamePayloadVM, AuthLoginResponseVM, AuthLoginWithRolesResponseVM, PermissionRolesPayloadVM, PermissionRolesResponseVM, PermissionAccessPayloadVM, PermissionAccessResponseVM } from '../models/auth.vm';
+import {
+  AuthLoginByEmailOrUsernamePayloadVM,
+  AuthLoginResponseVM,
+  AuthLoginWithRolesResponseVM,
+  PermissionRolesPayloadVM,
+  PermissionRolesResponseVM,
+  PermissionAccessPayloadVM,
+  PermissionAccessResponseVM,
+} from '../models/auth.vm';
 import { AuthenticatedGuard } from '../../../shared/guards/authenticated.guard';
-
-// import { RefreshAccessTokenPayload } from '../models/refresh-access-token.model';
+import { RefreshAccessTokenPayload } from '../models/refresh-access-token.model';
 
 @ApiUseTags('Authentication')
 @Controller('auth')
@@ -15,7 +22,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: AuthLoginResponseVM })
   @Transactional()
 
@@ -32,12 +39,14 @@ export class AuthController {
   }
 
   @Post('loginWithRoles')
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: AuthLoginWithRolesResponseVM })
   @Transactional()
 
   // NOTE: body params like strong parameter
-  public async authLoginWithRoles(@Body() payload: AuthLoginByEmailOrUsernamePayloadVM) {
+  public async authLoginWithRoles(
+    @Body() payload: AuthLoginByEmailOrUsernamePayloadVM,
+  ) {
     const loginMetadata = await this.authService.login(
       payload.clientId,
       payload.email,
@@ -49,7 +58,7 @@ export class AuthController {
   }
 
   @Post('permissionAccess')
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: PermissionAccessResponseVM })
@@ -67,7 +76,7 @@ export class AuthController {
   }
 
   @Post('permissionRoles')
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: PermissionRolesResponseVM })
@@ -75,7 +84,6 @@ export class AuthController {
 
   // NOTE: body params like strong parameter
   public async permissionRoles(@Body() payload: PermissionRolesPayloadVM) {
-
     const result = await this.authService.permissionRoles();
     // await this.authService.permissionRoles(
     //   payload.clientId,
@@ -84,19 +92,15 @@ export class AuthController {
     return result;
   }
 
-  // @Post('test')
-  // @HttpCode(200)
-  // // @ApiBearerAuth()
-  // // @ApiOkResponse({})
-  // // @Transactional()
+  @Post('refreshToken')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: AuthLoginResponseVM })
+  @Transactional()
+  public async refreshAccessToken(@Body() payload: RefreshAccessTokenPayload) {
+    const newLoginMetadata = await this.authService.refreshAccessToken(
+      payload.refreshToken,
+    );
 
-  // // NOTE: body params like strong parameter
-  // public async authLogout(@Body() payload: PermissionRolesPayloadVM) {
-  //   // const result =  {};
-  //   // await this.authService.login(
-  //   //   payload.clientId,
-  //   // );
-  //   const result = await this.authService.handlePermissionJwtToken(payload.token);
-  //   return result;
-  // }
+    return newLoginMetadata;
+  }
 }
