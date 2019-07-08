@@ -554,16 +554,17 @@ export class WebDeliveryOutService {
       if (bagData) {
         for (const bagItem of bagData.bagItems) {
           // NOTE: jika awb awbHistoryIdLast >= 1500 dan tidak sama dengan 1800 (cancel) boleh scan out
-          const checkPod = await DoPodDetail.findOne({
-            where: {
-              bagItemId: bagItem.bagItemId,
-              isScanIn: false,
-              isDeleted: false,
-            },
-          });
+          // const checkPod = await DoPodDetail.findOne({
+          //   where: {
+          //     bagItemId: bagItem.bagItemId,
+          //     isScanIn: false,
+          //     isDeleted: false,
+          //   },
+          // });
 
           // NOTE: Bag Number belum scan in
-          if (!checkPod) {
+          // if (!checkPod) {
+
             // TODO: create data do pod detail (scan out hub)
             // ========================================================
             // Check bag_item_awb ??
@@ -594,26 +595,26 @@ export class WebDeliveryOutService {
             // update last status
 
             totalSuccess += 1;
-          } else {
-            totalError += 1;
-            response.status = 'error';
-            response.message = `No Bag ${bagNumber} belum di scan Masuk di gerai tujuan`;
-            // TODO: create data bag trouble
-            // save data to bag_trouble
-            const bagTrouble = BagTrouble.create({
-              bagNumber,
-              resolveDateTime: timeNow,
-              employeeId: authMeta.employeeId,
-              branchId: permissonPayload.branchId,
-              userIdCreated: authMeta.userId,
-              createdTime: timeNow,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-              description: response.message,
-            });
-            await BagTrouble.save(bagTrouble);
-          }
-        }
+        //   } else {
+        //     totalError += 1;
+        //     response.status = 'error';
+        //     response.message = `No Bag ${bagNumber} belum di scan Masuk di gerai tujuan`;
+        //     // TODO: create data bag trouble
+        //     // save data to bag_trouble
+        //     const bagTrouble = BagTrouble.create({
+        //       bagNumber,
+        //       resolveDateTime: timeNow,
+        //       employeeId: authMeta.employeeId,
+        //       branchId: permissonPayload.branchId,
+        //       userIdCreated: authMeta.userId,
+        //       createdTime: timeNow,
+        //       userIdUpdated: authMeta.userId,
+        //       updatedTime: timeNow,
+        //       description: response.message,
+        //     });
+        //     await BagTrouble.save(bagTrouble);
+        //   }
+        } // end of loop
       } else {
         totalError += 1;
         response.status = 'error';
