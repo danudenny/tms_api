@@ -3,13 +3,15 @@ import { BaseMetaPayloadVm } from '../models/base-meta-payload.vm';
 import { BaseQueryPayloadVm } from '../models/base-query-payload.vm';
 import { Bag } from '../orm-entity/bag';
 import { OrionRepositoryService } from '../services/orion-repository.service';
+import { Branch } from '../orm-entity/branch';
 
 describe('Test Query Builder Scan In', () => {
   it('Should generate valid list data', async () => {
     const queryPayload = new BaseQueryPayloadVm();
     // add pagination
-    queryPayload.take = 10;
-    queryPayload.skip = 0;
+    // queryPayload.take = 10;
+    // queryPayload.skip = 0;
+
     // // add sorting data
     // queryPayload.sort = [
     //   {
@@ -54,12 +56,13 @@ describe('Test Query Builder Scan In', () => {
       'employee.employee_id = users.employee_id AND employee.is_deleted = false',
     );
 
-    const results = await qb.getRawMany();
+    const results = await qb.execute();
+    const sql = await qb.getSql();
     // tslint:disable-next-line: no-console
     console.log(results);
 
     // expect(sql).toContain('OFFSET 0');
-    // expect(sql).toContain('LIMIT 10');
+    expect(sql).toContain('LIMIT 10');
     expect(results).toBeDefined();
   });
 
@@ -113,22 +116,35 @@ describe('Test Query Builder Scan In', () => {
       'employee.employee_id = do_pod.employee_id_driver AND employee.is_deleted = false',
     );
     const results = await qb.getRawMany();
+    const sql = await qb.getSql();
     // tslint:disable-next-line: no-console
     console.log(results);
 
     // expect(sql).toContain('OFFSET 0');
-    // expect(sql).toContain('LIMIT 10');
+    expect(sql).toContain('LIMIT 10');
     expect(results).toBeDefined();
   });
 
   it('Test Service WebDeliveryInService', async () => {
     const payload = new BaseMetaPayloadVm();
+
+    payload.page = 1;
+    payload.limit = 10;
+
         // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
-        field: 'pod_scanin_date_time',
+        field: 'scanInDateTime',
       },
     ];
+
+    // mapping field
+    payload.fieldResolverMap['scanInDateTime'] =
+      'pod_scan.pod_scanin_date_time';
+    payload.fieldResolverMap['awbNumber'] = 'awb.awb_number';
+    payload.fieldResolverMap['branchNameScan'] = 'branch.branch_name';
+    payload.fieldResolverMap['branchNameFrom'] = 'branch_from.branch_name';
+    payload.fieldResolverMap['employeeName'] = 'employee.fullname';
 
     const qb = payload.buildQueryBuilder();
     qb.addSelect('pod_scan.pod_scanin_date_time', 'scanInDateTime');
@@ -172,17 +188,18 @@ describe('Test Query Builder Scan In', () => {
     const total = await qb.getCount();
 
     payload.applyPaginationToQueryBuilder(qb);
-    const data = await qb.execute();
-
-    const result = new WebScanInListResponseVm();
+    const sql = await qb.getSql();
+    const data = await qb.getRawMany();
 
     // tslint:disable-next-line: no-console
-    console.log(data);
+    console.log(total);
+    // tslint:disable-next-line: no-console
+    console.log(sql);
 
-    result.data = data;
+    // result.data = data;
     // result.paging = MetaService.set(payload.page, payload.limit, total);
-
-    expect(result).toBeDefined();
+    expect(sql).toContain('LIMIT 10');
+    expect(data).toBeDefined();
   });
 
   it('Test Bag', async () => {
@@ -193,32 +210,80 @@ describe('Test Query Builder Scan In', () => {
     const bag1 = await q1.exec();
 
     const q2 = bagRepository.findOne();
+
+    q2.leftJoin(e => e.bagItems.bagItemAwbs);
     q2.select({
       bagId: true,
       bagNumber: true,
       bagItems: {
-        bagId: true,
+        bagItemId: true,
+        bagItemAwbs: {
+          bagItemAwbId: true,
+        },
       },
     });
-    q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
-    q2.andWhere(e => e.bagNumber, w => w.equals('9992222'));
+    // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
+    q2.where(e => e.bagNumber, w => w.equals('2224446'));
     const bag2 = await q2.exec();
 
+    console.log(bag2);
     expect(bag1).toBeDefined();
     expect(bag2).toBeDefined();
   });
-});
 
-// SELECT pod_scanin_date_time as "scanInDateTime",
-//   awb.awreturn result;b_number as "awbNumber",
-//   branch.branch_name as "branchNameScan",
-//   branch_from.branch_name as "branchNameFrom",
-//   employee.fullname as "employeeName",
-//   'Ya' as "scanInStatus"
-// FROM pod_scan
-// JOIN branch ON pod_scan.branch_id = branch.branch_id
-// JOIN awb ON awb.awb_id = pod_scan.awb_id AND awb.is_deleted = false
-// LEFT JOIN users ON users.user_id = pod_scan.user_id AND users.is_deleted = false
-// LEFT JOIN employee ON employee.employee_id = users.employee_id AND employee.is_deleted = false
-// LEFT JOIN do_pod ON do_pod.do_pod_id = pod_scan.do_pod_id
-// LEFT JOIN branch branch_from ON do_pod.branch_id = branch_from.branch_id
+  it('Test Branch with Orion Repo', async () => {
+    const repository = new OrionRepositoryService(Branch);
+    const q = repository.findAllRaw();
+    const payload = new BaseMetaPayloadVm();
+
+    payload.page = 2;
+    payload.limit = 10;
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['branch_code', 'branchCode'],
+      ['branch_name', 'branchName'],
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    expect(data).toBeDefined();
+    console.log('DATA ========= ', data);
+    console.log('Total ========= ', total);
+
+  });
+
+  it('Test Branch with Query Builder', async () => {
+    const payload = new BaseMetaPayloadVm();
+    // mapping search field and operator default ilike
+    // payload.globalSearchFields = [
+    //   {
+    //     field: 'pod_scanin_date_time',
+    //   },
+    // ];
+
+    payload.page = 1;
+    payload.limit = 10;
+
+    const qb = payload.buildQueryBuilder();
+    qb.addSelect('branch.branch_code', 'branch_code');
+    qb.addSelect('branch.branch_name', 'branch_name');
+
+    qb.from('branch', 'branch');
+    const total = await qb.getCount();
+
+    payload.applyPaginationToQueryBuilder(qb);
+    const data = await qb.execute();
+
+    // const result = new WebScanInListResponseVm();
+
+    // tslint:disable-next-line: no-console
+    console.log(total);
+    // console.log(payload);
+    // tslint:disable-next-line: no-console
+    console.log(data);
+
+  });
+});
