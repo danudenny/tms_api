@@ -33,6 +33,7 @@ import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import moment = require('moment');
+import { DoPod } from '../../../../shared/orm-entity/do-pod';
 // #endregion
 
 @Injectable()
@@ -705,6 +706,62 @@ export class WebDeliveryOutService {
 
     payload.applyPaginationToQueryBuilder(qb);
     const data = await qb.execute();
+
+    const result = new WebScanOutAwbListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllScanOutList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanOutAwbListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['startDoPodDate'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['endDoPodDate'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
+    payload.fieldResolverMap['desc'] = 't1.description';
+    payload.fieldResolverMap['fullname'] = 't2.fullname';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDateTime',
+      },
+      {
+        field: 'doPodCode',
+      },
+      {
+        field: 'desc',
+      },
+      {
+        field: 'fullname',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPod, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_id', 'doPodId'],
+      ['t1.do_pod_code', 'doPodCode'],
+      ['t1.do_pod_date_time', 'doPodDateTime'],
+      ['t1.description', 'desc'],
+      ['t1.percen_scan_in_out', 'percenScanInOut'],
+      ['t1.last_date_scan_in', 'lastDateScanIn'],
+      ['t1.last_date_scan_out', 'lastDateScanOut'],
+      ['t2.fullname', 'fullname'],
+    );
+
+    q.innerJoin(e => e.employee, 't2', j => j.andWhere(e => e.is_deleted, w => w.isFalse()));
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanOutAwbListResponseVm();
 

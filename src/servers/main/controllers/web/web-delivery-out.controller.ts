@@ -101,7 +101,7 @@ export class WebDeliveryOutController {
   // @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
   public async awbList(@Body() payload: BaseMetaPayloadVm) {
-    return this.webDeliveryOutService.scanOutList(payload);
+    return this.webDeliveryOutService.findAllScanOutList(payload);
   }
 
   @Post('awbDeliverList')
