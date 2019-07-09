@@ -21,10 +21,8 @@ export type OrionRepositoryQueryPropsResult<V = any> = Dictionary<V>;
 
 export type OrionRepositoryQuerySelectableProps<
   T extends Object
-> = OrionRepositoryQueryProps<ExtractObjectType<T>, true>;
-export type OrionRepositoryQuerySelectablePropsResult = OrionRepositoryQueryPropsResult<
-  true
->;
+> = OrionRepositoryQueryProps<ExtractObjectType<T>, string | boolean>;
+export type OrionRepositoryQuerySelectablePropsResult = OrionRepositoryQueryPropsResult<string | boolean>;
 
 export type OrionRepositoryQueryOrderableProps<
   T extends Object

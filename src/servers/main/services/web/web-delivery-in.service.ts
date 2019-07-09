@@ -1,29 +1,26 @@
 // #region import
 import { Injectable } from '@nestjs/common';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { toInteger } from 'lodash';
-import { MetaService } from '../../../../shared/services/meta.service';
-import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payload.vm';
-import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
-import {
-  WebScanInAwbResponseVm,
-  WebScanInBagResponseVm,
-} from '../../models/web-scanin-awb.response.vm';
-import { WebScanInVm } from '../../models/web-scanin.vm';
-import { Bag } from '../../../../shared/orm-entity/bag';
-import { AwbItem } from '../../../../shared/orm-entity/awb-item';
-import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
-import { IsNull } from 'typeorm';
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { PodScan } from '../../../../shared/orm-entity/pod-scan';
-import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
-import { Awb } from '../../../../shared/orm-entity/awb';
-import { Branch } from '../../../../shared/orm-entity/branch';
-import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
 import moment = require('moment');
+
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { Awb } from '../../../../shared/orm-entity/awb';
+import { AwbItem } from '../../../../shared/orm-entity/awb-item';
+import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
+import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
+import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
+import { PodScan } from '../../../../shared/orm-entity/pod-scan';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payload.vm';
+import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
+import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
+import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebScanInVm } from '../../models/web-scanin.vm';
+
 // #endregion
 
 @Injectable()
@@ -85,6 +82,13 @@ export class WebDeliveryInService {
   async findAllAwbByRequest(
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanInListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['scanInDateTime'] = 't1.pod_scanin_date_time';
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
+    payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
+    payload.fieldResolverMap['employeeName'] = 't5.fullname';
+
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
@@ -92,57 +96,26 @@ export class WebDeliveryInService {
       },
     ];
 
-    // mapping field
-    payload.fieldResolverMap['scanInDateTime'] =
-      'pod_scan.pod_scanin_date_time';
-    payload.fieldResolverMap['awbNumber'] = 'awb.awb_number';
-    payload.fieldResolverMap['branchNameScan'] = 'branch.branch_name';
-    payload.fieldResolverMap['branchNameFrom'] = 'branch_from.branch_name';
-    payload.fieldResolverMap['employeeName'] = 'employee.fullname';
+    const repo = new OrionRepositoryService(PodScan, 't1');
+    const q = repo.findAllRaw();
 
-    const qb = payload.buildQueryBuilder(true);
-    qb.addSelect('pod_scan.pod_scanin_date_time', 'scanInDateTime');
-    qb.addSelect('awb.awb_number', 'awbNumber');
-    qb.addSelect('branch.branch_name', 'branchNameScan');
-    qb.addSelect('branch_from.branch_name', 'branchNameFrom');
-    qb.addSelect('employee.fullname', 'employeeName');
+    payload.applyToOrionRepositoryQuery(q, true);
 
-    qb.from('pod_scan', 'pod_scan');
-    qb.innerJoin(
-      'branch',
-      'branch',
-      'pod_scan.branch_id = branch.branch_id AND branch.is_deleted = false',
-    );
-    qb.innerJoin(
-      'awb',
-      'awb',
-      'awb.awb_id = pod_scan.awb_id AND awb.is_deleted = false',
-    );
-    qb.leftJoin(
-      'users',
-      'users',
-      'users.user_id = pod_scan.user_id AND users.is_deleted = false',
-    );
-    qb.leftJoin(
-      'employee',
-      'employee',
-      'employee.employee_id = users.employee_id AND employee.is_deleted = false',
-    );
-    qb.leftJoin(
-      'do_pod',
-      'do_pod',
-      'do_pod.do_pod_id = pod_scan.do_pod_id AND do_pod.is_deleted = false',
-    );
-    qb.leftJoin(
-      'branch',
-      'branch_from',
-      'do_pod.branch_id = branch_from.branch_id AND branch_from.is_deleted = false',
+    q.selectRaw(
+      ['t1.pod_scanin_date_time', 'scanInDateTime'],
+      ['t2.awb_number', 'awbNumber'],
+      ['t3.branch_name', 'branchNameScan'],
+      ['t4.branch_name', 'branchNameFrom'],
+      ['t5.fullname', 'employeeName'],
     );
 
-    const total = await qb.getCount();
+    q.innerJoin(e => e.awb, 't2', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
+    q.innerJoin(e => e.branch, 't3', j => j.andWhere(e => e.is_deleted, w => w.isFalse()));
+    q.leftJoin(e => e.do_pod.branch, 't4', j => j.andWhere(e => e.is_deleted, w => w.isFalse()));
+    q.leftJoin(e => e.user.employee, 't5', j => j.andWhere(e => e.is_deleted, w => w.isFalse()));
 
-    payload.applyPaginationToQueryBuilder(qb);
-    const data = await qb.execute();
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanInListResponseVm();
 

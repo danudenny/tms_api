@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TokenExpiredError } from 'jsonwebtoken';
@@ -20,6 +20,8 @@ import { UserRepository } from '../orm-repository/user.repository';
 import { ConfigService } from './config.service';
 import { ContextualErrorService } from './contextual-error.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
+import { RedisService } from './redis.service';
+import ms = require('ms');
 
 @Injectable()
 export class AuthService {
@@ -67,6 +69,18 @@ export class AuthService {
   async refreshAccessToken(
     refreshToken: string,
   ): Promise<AuthLoginResultMetadata> {
+    // TODO: find user on table or redis??
+    const loginSession = await RedisService.get(`session:${refreshToken}`);
+    Logger.log(loginSession);
+    if (!loginSession) {
+      ContextualErrorService.throwObj(
+        {
+          message: 'global.error.LOGIN_SESSION_NOT_FOUND',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
     let refreshTokenPayload: JwtRefreshTokenPayload;
     try {
       refreshTokenPayload = this.jwtService.verify(refreshToken);
@@ -74,22 +88,30 @@ export class AuthService {
       if (e instanceof TokenExpiredError) {
         ContextualErrorService.throwObj(
           {
-            message: '', // TODO: Give message
+            message: 'global.error.REFRESH_TOKEN_EXPIRED',
           },
           HttpStatus.FORBIDDEN,
         );
       } else {
-        ContextualErrorService.throwObj({
-          message: '', // TODO: Give message
-        });
+        ContextualErrorService.throwObj(
+          {
+            message: 'global.error.REFRESH_TOKEN_NOT_VALID',
+          },
+          HttpStatus.FORBIDDEN,
+        );
       }
     }
 
-    // TODO: Call this.populateJwtAccessTokenPayloadFromUser to get new access token
-
     // TODO: Populate AuthLoginResultMetadata and assign accessToken to the newly generated access token
-
-    return null;
+    const newLoginMetadata = this.populateLoginResultMetadataByUser(
+      refreshTokenPayload.clientId,
+      JSON.parse(loginSession),
+    );
+    if (newLoginMetadata) {
+      // remove data on redis with refresh token
+      await RedisService.del(`session:${refreshToken}`);
+    }
+    return newLoginMetadata;
   }
 
   async permissionRoles(): Promise<GetRoleResult> {
@@ -235,7 +257,7 @@ export class AuthService {
   }
 
   // method populate data user login
-  public populateLoginResultMetadataByUser(clientId: string, user: User) {
+  public async populateLoginResultMetadataByUser(clientId: string, user: User) {
     const jwtAccessTokenPayload = this.populateJwtAccessTokenPayloadFromUser(
       clientId,
       user,
@@ -252,6 +274,11 @@ export class AuthService {
     const refreshToken = this.jwtService.sign(jwtRefreshTokenPayload, {
       expiresIn: ConfigService.get('jwt.refreshTokenExpiration'),
     });
+
+    // NOTE: set data user on redis
+    // Set key to hold the string value and set key to timeout after a given number of seconds
+    const expireInSeconds = Math.floor(ms(ConfigService.get('jwt.refreshTokenExpiration')) / 1000);
+    await RedisService.setex(`session:${refreshToken}`, JSON.stringify(user), expireInSeconds);
 
     const result = new AuthLoginResultMetadata();
     // Mapping response data

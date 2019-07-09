@@ -99,10 +99,16 @@ export class RequestOrionRepositoryService {
 
       repositoryQuery.andWhereIsolated(qWhere => {
         for (const filter of filters) {
+          filter.operator = filter.operator || 'eq';
+
           const field = metaPayload.resolveFieldAsFieldAlias(filter.field);
-          qWhere.andWhere(field, qWhereItem => {
-            this.applyMetaPayloadFilterItem(qWhereItem, filter);
-          });
+          qWhere.andWhere(
+            field,
+            qWhereItem => {
+              this.applyMetaPayloadFilterItem(qWhereItem, filter);
+            },
+            false,
+          );
         }
       });
     }
