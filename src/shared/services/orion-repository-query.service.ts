@@ -1,6 +1,6 @@
 import { castArray, find, findIndex, forEach, isArray, isBoolean, isFunction, isString, toNumber, transform } from 'lodash';
 import { from } from 'rxjs';
-import { Brackets, EntityMetadata, ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+import { Brackets, EntityManager, EntityMetadata, ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import { EmbeddedMetadata } from 'typeorm/metadata/EmbeddedMetadata';
 import { RelationMetadata } from 'typeorm/metadata/RelationMetadata';
@@ -32,7 +32,22 @@ export class OrionRepositoryQueryService<
 
   private _autoJoinEagerRelations: boolean = true;
 
+  private get isRawQuery() {
+    if (
+      !this.execAction ||
+      // tslint:disable-next-line: triple-equals
+      this.execAction == (this.queryBuilder.getRawMany as any) ||
+      // tslint:disable-next-line: triple-equals
+      this.execAction == this.queryBuilder.getRawOne
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
   public constructor(
+    public readonly entityManager: EntityManager,
     public readonly entityMetadata: EntityMetadata,
     public queryBuilder: SelectQueryBuilder<T>,
     public execAction: () => Promise<R>,
@@ -59,13 +74,7 @@ export class OrionRepositoryQueryService<
       })),
     );
 
-    if (
-      !this.execAction ||
-      // tslint:disable-next-line: triple-equals
-      this.execAction == (this.queryBuilder.getRawMany as any) ||
-      // tslint:disable-next-line: triple-equals
-      this.execAction == this.queryBuilder.getRawOne
-    ) {
+    if (this.isRawQuery) {
       this._autoJoinEagerRelations = false;
     }
   }
@@ -73,11 +82,13 @@ export class OrionRepositoryQueryService<
   public andWhere(
     propertySelector: ((obj: P) => OrionRepositoryQueryComparableProp) | string,
     whereFn: (queryCondition: OrionRepositoryQueryConditionService<T>) => void,
+    resolvePropertyAndAutoJoin?: boolean,
   ) {
     return this.whereBase(
       propertySelector,
       whereFn,
       this.queryBuilder.andWhere,
+      resolvePropertyAndAutoJoin,
     );
   }
 
@@ -126,7 +137,11 @@ export class OrionRepositoryQueryService<
   public count(): Promise<number> {
     const compiledQueryBuilder = this.compileQueryParts();
 
-    return compiledQueryBuilder.getCount();
+    if (this.isRawQuery) {
+      return this.getCountRawQuery(compiledQueryBuilder);
+    } else {
+      return compiledQueryBuilder.getCount();
+    }
   }
 
   public countWithoutTakeAndSkip(): Promise<number> {
@@ -135,7 +150,11 @@ export class OrionRepositoryQueryService<
         // tslint:disable-next-line: triple-equals
         part.partAction != this.queryBuilder.take &&
         // tslint:disable-next-line: triple-equals
-        part.partAction != this.queryBuilder.skip,
+        part.partAction != this.queryBuilder.skip &&
+        // tslint:disable-next-line: triple-equals
+        part.partAction != this.queryBuilder.offset &&
+        // tslint:disable-next-line: triple-equals
+        part.partAction != this.queryBuilder.limit,
     );
 
     const compiledQueryBuilder = this.compileQueryParts(
@@ -143,7 +162,11 @@ export class OrionRepositoryQueryService<
       queryBuilderParts,
     );
 
-    return compiledQueryBuilder.getCount();
+    if (this.isRawQuery) {
+      return this.getCountRawQuery(compiledQueryBuilder);
+    } else {
+      return compiledQueryBuilder.getCount();
+    }
   }
 
   public disableAutoJoinEagerRelations() {
@@ -406,8 +429,14 @@ export class OrionRepositoryQueryService<
   public orWhere(
     propertySelector: ((obj: P) => OrionRepositoryQueryComparableProp) | string,
     whereFn: (queryCondition: OrionRepositoryQueryConditionService<T>) => void,
+    resolvePropertyAndAutoJoin?: boolean,
   ) {
-    return this.whereBase(propertySelector, whereFn, this.queryBuilder.orWhere);
+    return this.whereBase(
+      propertySelector,
+      whereFn,
+      this.queryBuilder.orWhere,
+      resolvePropertyAndAutoJoin,
+    );
   }
 
   public orWhereInIds(ids: any | any[]) {
@@ -553,7 +582,7 @@ export class OrionRepositoryQueryService<
   public skip(skip: number) {
     if (skip > 0) {
       this.queryBuilderParts.push(
-        new OrionRepositoryQueryBuilderPart(this.queryBuilder.skip, [skip]),
+        new OrionRepositoryQueryBuilderPart(this.queryBuilder.offset, [skip]),
       );
     }
 
@@ -563,7 +592,7 @@ export class OrionRepositoryQueryService<
   public take(limit: number) {
     if (limit > 0) {
       this.queryBuilderParts.push(
-        new OrionRepositoryQueryBuilderPart(this.queryBuilder.take, [limit]),
+        new OrionRepositoryQueryBuilderPart(this.queryBuilder.limit, [limit]),
       );
     }
 
@@ -583,8 +612,14 @@ export class OrionRepositoryQueryService<
   public where(
     propertySelector: ((obj: P) => OrionRepositoryQueryComparableProp) | string,
     whereFn: (queryCondition: OrionRepositoryQueryConditionService<T>) => void,
+    resolvePropertyAndAutoJoin?: boolean,
   ) {
-    return this.whereBase(propertySelector, whereFn, this.queryBuilder.where);
+    return this.whereBase(
+      propertySelector,
+      whereFn,
+      this.queryBuilder.where,
+      resolvePropertyAndAutoJoin,
+    );
   }
 
   public whereInIds(ids: any | any[]) {
@@ -626,6 +661,7 @@ export class OrionRepositoryQueryService<
       .from(this.entityMetadata.target, this.targetAlias);
 
     const query = new OrionRepositoryQueryService<T, T>(
+      this.entityManager,
       this.entityMetadata,
       queryBuilder,
       null,
@@ -701,6 +737,17 @@ export class OrionRepositoryQueryService<
     );
 
     return resolvedProperties as TR;
+  }
+
+  private async getCountRawQuery(queryBuilder: SelectQueryBuilder<any>) {
+    let rawQuery: string = queryBuilder.getQuery();
+    rawQuery = `SELECT COUNT(*) as cnt FROM (${rawQuery}) t`;
+    return this.entityManager.query(rawQuery).then(results => {
+      if (results && results.length) {
+        return +results[0].cnt;
+      }
+      return 0;
+    });
   }
 
   private isExpressionContainsSelectorArgs(expression: string) {
@@ -815,10 +862,13 @@ export class OrionRepositoryQueryService<
     const relationMetadata = relationHistory.relationMetadata;
 
     if (joinFn) {
-      const queryBuilder = relationMetadata.inverseEntityMetadata.connection.createQueryBuilder();
+      const targetEntityMetadata = relationMetadata.inverseEntityMetadata;
+      const queryBuilder = targetEntityMetadata.connection.createQueryBuilder();
+      queryBuilder.from(targetEntityMetadata.target, relationAlias);
 
       const linqRepositoryQuery = new OrionRepositoryQueryService<JR>(
-        relationMetadata.inverseEntityMetadata,
+        this.entityManager,
+        targetEntityMetadata,
         queryBuilder,
         null,
         relationAlias,
@@ -886,7 +936,10 @@ export class OrionRepositoryQueryService<
 
     // If just passing through a chain of possibly already executed includes for semantics, don't execute the include again.
     // Only execute the include if it has not been previously executed.
-    if (!this.isRelationAliasExists(relationAlias) && !this.isRelationSystemAliasExists(systemAlias)) {
+    if (
+      !this.isRelationAliasExists(relationAlias) &&
+      !this.isRelationSystemAliasExists(systemAlias)
+    ) {
       this.relationHistory.push({
         systemAlias,
         relationAlias,
@@ -1095,8 +1148,13 @@ export class OrionRepositoryQueryService<
   }
 
   private resolveRelationAlias(alias: string) {
-    const relationHistoryBySystemAlias = find(this.relationHistory, { systemAlias: alias });
-    if (relationHistoryBySystemAlias && relationHistoryBySystemAlias.relationAlias) {
+    const relationHistoryBySystemAlias = find(this.relationHistory, {
+      systemAlias: alias,
+    });
+    if (
+      relationHistoryBySystemAlias &&
+      relationHistoryBySystemAlias.relationAlias
+    ) {
       return relationHistoryBySystemAlias.relationAlias;
     }
 
@@ -1132,15 +1190,21 @@ export class OrionRepositoryQueryService<
   private whereBase(
     propertySelector: ((obj: P) => OrionRepositoryQueryComparableProp) | string,
     whereFn: (queryCondition: OrionRepositoryQueryConditionService<T>) => void,
-    whereQueryBuilderFn?: (...params: any[]) => SelectQueryBuilder<T>,
+    whereQueryBuilderFn: (...params: any[]) => SelectQueryBuilder<T>,
+    resolvePropertyAndAutoJoin: boolean = true,
   ) {
     const [whereProperties] = this.resolvePropertySelector(propertySelector);
 
-    // If accessing multiple properties, join relationships using an INNER JOIN.
-    const targetProperty = this.resolvePropertyAndAutoJoin(
-      whereProperties,
-      this.queryBuilder.innerJoin,
-    );
+    let targetProperty: string;
+    if (resolvePropertyAndAutoJoin) {
+      // If accessing multiple properties, join relationships using an INNER JOIN.
+      targetProperty = this.resolvePropertyAndAutoJoin(
+        whereProperties,
+        this.queryBuilder.innerJoin,
+      );
+    } else {
+      targetProperty = whereProperties;
+    }
 
     const linqRepositoryQueryCondition = new OrionRepositoryQueryConditionService(
       targetProperty,

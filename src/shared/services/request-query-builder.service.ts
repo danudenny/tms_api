@@ -243,6 +243,7 @@ export class RequestQueryBuidlerService {
             new Brackets(qbOrWhere => {
               for (const andFilterGroup of orFilterGroup) {
                 let field = andFilterGroup.field;
+                const operator = andFilterGroup.operator || 'eq';
                 if (fieldResolverMap[andFilterGroup.field]) {
                   field = fieldResolverMap[andFilterGroup.field];
                 } else {
@@ -254,6 +255,7 @@ export class RequestQueryBuidlerService {
                   qbOrWhere,
                   {
                     ...andFilterGroup,
+                    operator,
                     field, // replace field with the one on fieldResolverMap if exists, this may help for field aliases that contains quote
                   },
                   'and',

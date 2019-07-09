@@ -1,4 +1,4 @@
-import { camelCase } from 'lodash';
+import { snakeCase } from 'lodash';
 import { DeepPartial, EntityManager, EntityMetadata, ObjectID, SaveOptions, SelectQueryBuilder } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
@@ -9,8 +9,8 @@ import { OrionRepositoryQueryService } from './orion-repository-query.service';
 export class OrionRepositoryService<T> {
   private readonly connectionName: string;
 
-  public get entityAlias(): string {
-    return camelCase(this.entityMetadata.name);
+  public get defaultEntityAlias(): string {
+    return snakeCase(this.entityMetadata.name);
   }
 
   public get entityMetadata(): EntityMetadata {
@@ -23,6 +23,7 @@ export class OrionRepositoryService<T> {
 
   public constructor(
     public readonly entityType: Constructor<T>,
+    public readonly entityAlias?: string,
     private readonly options: OrionRepositoryOptions = {} as any,
   ) {
     let connectionName: string = 'default';
@@ -31,6 +32,7 @@ export class OrionRepositoryService<T> {
       connectionName = this.options.connectionName;
     }
 
+    this.entityAlias = entityAlias || this.defaultEntityAlias;
     this.connectionName = connectionName;
   }
 
@@ -54,6 +56,7 @@ export class OrionRepositoryService<T> {
     const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
 
     const query = new OrionRepositoryQueryService<T, T[]>(
+      this.manager,
       this.entityMetadata,
       queryBuilder,
       queryBuilder.getMany,
@@ -67,6 +70,7 @@ export class OrionRepositoryService<T> {
     const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
 
     const query = new OrionRepositoryQueryService<T, any>(
+      this.manager,
       this.entityMetadata,
       queryBuilder,
       queryBuilder.getRawMany,
@@ -80,6 +84,7 @@ export class OrionRepositoryService<T> {
     const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
 
     const query = new OrionRepositoryQueryService<T, T>(
+      this.manager,
       this.entityMetadata,
       queryBuilder,
       queryBuilder.getOne,
@@ -93,6 +98,7 @@ export class OrionRepositoryService<T> {
     const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
 
     const query = new OrionRepositoryQueryService<T, any>(
+      this.manager,
       this.entityMetadata,
       queryBuilder,
       queryBuilder.getRawOne,
@@ -106,6 +112,7 @@ export class OrionRepositoryService<T> {
     const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
 
     const query = new OrionRepositoryQueryService<T, T>(
+      this.manager,
       this.entityMetadata,
       queryBuilder,
       queryBuilder.getOne,
@@ -121,6 +128,7 @@ export class OrionRepositoryService<T> {
     const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
 
     const query = new OrionRepositoryQueryService<T, T[]>(
+      this.manager,
       this.entityMetadata,
       queryBuilder,
       queryBuilder.getMany,
@@ -146,6 +154,7 @@ export class OrionRepositoryService<T> {
       .from(this.entityType, this.entityAlias);
 
     const query = new OrionRepositoryQueryService<T, T>(
+      this.manager,
       this.entityMetadata,
       queryBuilder,
       null,
