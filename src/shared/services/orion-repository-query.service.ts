@@ -495,7 +495,7 @@ export class OrionRepositoryQueryService<
       targetAlias: this.targetAlias,
     });
 
-    forEach(selectProperties, (selectProperty, selectPropertyAlias) => {
+    forEach(selectProperties, (selectPropertyAlias, selectProperty) => {
       const partParams: string[] = [selectProperty];
       if (isString(selectPropertyAlias)) {
         partParams.push(selectPropertyAlias);
