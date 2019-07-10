@@ -128,6 +128,55 @@ export class WebDeliveryInService {
     return result;
   }
 
+  async findAllBagByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['scanInDateTime'] = 't1.pod_scanin_date_time';
+    payload.fieldResolverMap['deliveryDateTime'] = 't1.pod_scanin_date_time';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['branchScan'] = 't3.branch_id';
+    payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
+    payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
+    payload.fieldResolverMap['branchOriginFrom'] = 't4.branch_id';
+    payload.fieldResolverMap['employeeName'] = 't5.fullname';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'scanInDateTime',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(PodScan, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.pod_scanin_date_time', 'scanInDateTime'],
+      ['t2.bag_number', 'bagNumber'],
+      ['t3.branch_name', 'branchNameScan'],
+      ['t4.branch_name', 'branchNameFrom'],
+      ['t5.fullname', 'employeeName'],
+    );
+
+    q.innerJoin(e => e.bag, 't2', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
+    q.innerJoin(e => e.branch, 't3', j => j.andWhere(e => e.is_deleted, w => w.isFalse()));
+    q.leftJoin(e => e.do_pod.branch, 't4', j => j.andWhere(e => e.is_deleted, w => w.isFalse()));
+    q.leftJoin(e => e.user.employee, 't5', j => j.andWhere(e => e.is_deleted, w => w.isFalse()));
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
   async scanInBag(payload: WebScanInBagVm): Promise<WebScanInBagResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();

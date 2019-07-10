@@ -12,6 +12,7 @@ import { Branch } from './branch';
 import { Awb } from './awb';
 import { User } from './user';
 import { DoPod } from './do-pod';
+import { Bag } from './bag';
 
 @Entity('pod_scan', { schema: 'public' })
 export class PodScan extends BaseEntity {
@@ -71,6 +72,10 @@ export class PodScan extends BaseEntity {
   @ManyToOne(() => Awb)
   @JoinColumn({ name: 'awb_id' })
   awb: Awb;
+
+  @ManyToOne(() => Bag)
+  @JoinColumn({ name: 'bag_id' })
+  bag: Bag;
 
   @OneToOne(() => User)
   @JoinColumn({ name: 'user_id' })
