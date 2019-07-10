@@ -37,6 +37,7 @@
     "@nestjs/platform-fastify": "^6.1.1",
     "@nestjs/swagger": "^3.0.2",
     "@nestjs/typeorm": "^6.0.0",
+    "@sentry/node": "^5.5.0",
     "axios": "^0.18.0",
     "bcrypt": "^3.0.5",
     "bull": "^3.7.0",

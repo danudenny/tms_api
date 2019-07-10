@@ -2,16 +2,22 @@ import { CallHandler, ExecutionContext, HttpException, HttpStatus, Injectable, N
 import { Observable, ObservableInput, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
+import { SentryService } from '../services/sentry.service';
+
 @Injectable()
 export class ErrorHandlerInterceptor implements NestInterceptor {
   public intercept(
-    _context: ExecutionContext,
+    context: ExecutionContext,
     next: CallHandler,
   ): Observable<any> {
-    return next.handle().pipe(catchError(error => this.handleError(error)));
+    return next
+      .handle()
+      .pipe(catchError(error => this.handleError(context, error)));
   }
 
-  private handleError(error): ObservableInput<any> {
+  private handleError(context: ExecutionContext, error): ObservableInput<any> {
+    SentryService.trackFromExceptionAndNestHostOrContext(error, context);
+
     if (!(error instanceof HttpException)) {
       return throwError(
         new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR),
