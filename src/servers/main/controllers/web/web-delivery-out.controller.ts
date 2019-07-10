@@ -120,7 +120,7 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
   public async bagList(@Body() payload: WebScanOutAwbListPayloadVm) {
     // TODO: add filter by doPodType (Transit HUB)
-    return this.webDeliveryOutService.scanOutList(payload, true);
+    return this.webDeliveryOutService.findAllScanOutList(payload, true);
   }
 
   @Post('awbDeliveryOrder')

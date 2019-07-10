@@ -717,6 +717,7 @@ export class WebDeliveryOutService {
 
   async findAllScanOutList(
     payload: BaseMetaPayloadVm,
+    isHub = false,
   ): Promise<WebScanOutAwbListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
@@ -757,6 +758,9 @@ export class WebDeliveryOutService {
     );
 
     q.innerJoin(e => e.employee, 't2', j => j.andWhere(e => e.is_deleted, w => w.isFalse()));
+    if (isHub) {
+      q.where(e => e.doPodType, w => w.equals(POD_TYPE.TRANSIT_HUB));
+    }
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
