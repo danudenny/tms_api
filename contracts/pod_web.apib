@@ -145,7 +145,7 @@ HOST: http://api.tms.sicepat.com
             x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
 
     + Attributes (object)
-    
+
         + bagNumber         : `0001`, `0002`, (array[string], required) - Awb Number
 
 + Response 200 (application/json; charset=utf-8)
@@ -190,7 +190,7 @@ HOST: http://api.tms.sicepat.com
             x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
 
     + Attributes (object)
-        
+
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
         + sortBy    : branchName, (string)
@@ -274,7 +274,7 @@ HOST: http://api.tms.sicepat.com
             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
             x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
     + Attributes (object)
-        
+
         + doPodType         : `20000`, `14000`, (string, required) - 20000 = CRISS CROSS, 14000 = ANTAR, TRANSIT (Hub, dan Gerai)
         + doPodMethod       :  `internal`, `3pl`,  (string) - required sesuai doPodType
         + branchIdTo        : branchIdTo, (string) - required when doPodType != Antar
@@ -500,7 +500,7 @@ HOST: http://api.tms.sicepat.com
 
              Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
             x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
-            
+
     + Attributes (object)
         + page      : 1, (number) - Default 1
         + limit     : 10, (number) - Default 10
@@ -592,7 +592,7 @@ HOST: http://api.tms.sicepat.com
 
     + Header
 
-           Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
             x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
     + Attributes (object)
         + page      : 1, (number) - Default 1
@@ -613,7 +613,7 @@ HOST: http://api.tms.sicepat.com
                 + field   : doPodDateTime (string)
                 + operator: ilike (string)
                 + value   : `20190801` (string)
-          
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -691,7 +691,7 @@ HOST: http://api.tms.sicepat.com
                 + field   : awbNumber (string)
                 + operator: ilike (string)
                 + value   : `111234` (string)
-          
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -755,7 +755,7 @@ HOST: http://api.tms.sicepat.com
                 + field   : bagNumber (string)
                 + operator: ilike (string)
                 + value   : `111234` (string)
-          
+
 + Response 200 (application/json; charset=utf-8)
     + Body
 
@@ -865,7 +865,7 @@ HOST: http://api.tms.sicepat.com
                 + field   : partnerLogisticId (string)
                 + operator: ilike (string)
                 + value   : `1` (string)
-          
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -921,7 +921,7 @@ HOST: http://api.tms.sicepat.com
         Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
     + Attributes (object)
         + awbNumber : `001` (string)
-          
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -962,7 +962,7 @@ HOST: http://api.tms.sicepat.com
     + Attributes (object)
         + awbNumber     : `001` (string)
         + branchName    : `Juanda` (string)
-          
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body
@@ -979,7 +979,7 @@ HOST: http://api.tms.sicepat.com
                     }
                 ]
             }
-            
+
 + Response 400 (application/json; charset=utf-8)
     + Body
 
@@ -1020,8 +1020,8 @@ HOST: http://api.tms.sicepat.com
                 + field   : awbNumber (string)
                 + operator: ilike (string)
                 + value   : `1234556` (string)
-                 
-          
+
+
 
 + Response 200 (application/json; charset=utf-8)
     + Body

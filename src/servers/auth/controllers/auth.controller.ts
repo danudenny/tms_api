@@ -94,6 +94,8 @@ export class AuthController {
 
   @Post('refreshToken')
   @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: AuthLoginResponseVM })
   @Transactional()
   public async refreshAccessToken(@Body() payload: RefreshAccessTokenPayload) {
@@ -102,5 +104,16 @@ export class AuthController {
     );
 
     return newLoginMetadata;
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
+  @Transactional()
+  public async authLogout(@Body() payload: RefreshAccessTokenPayload) {
+    const response = await this.authService.removeToken(payload.refreshToken);
+
+    return response;
   }
 }

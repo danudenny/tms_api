@@ -39,6 +39,32 @@ HOST: http://auth-staging.sicepat.com
     + Body
 
             {}
+## Logout Access [/auth/logout]
+
+### Logout URL [POST]
+
++ Request Logout (application/json)
+
+    + Attributes (object)
+        + refreshToken: `8asfgasgwetw4tewtggg`, (string, required) - refreshToken
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "status": 200,
+                "message": 'ok',
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
 
 ## Refresh Token Access [/auth/refreshToken]
 
@@ -47,8 +73,7 @@ HOST: http://auth-staging.sicepat.com
 + Request Login (application/json)
 
     + Attributes (object)
-        + clientId: `mobile`, (string, required) - Client id
-        + refreshToken: `8asfgasgwetw4tewtggg`, (string) - refreshToken
+        + refreshToken: `8asfgasgwetw4tewtggg`, (string, required) - refreshToken
 
 + Response 200 (application/json; charset=utf-8)
     + Body

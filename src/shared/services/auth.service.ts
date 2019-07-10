@@ -114,6 +114,14 @@ export class AuthService {
     return newLoginMetadata;
   }
 
+  async removeToken(refreshToken: string) {
+    if (refreshToken) {
+      // remove data on redis with refresh token
+      await RedisService.del(`session:${refreshToken}`);
+    }
+    return { status: 200, message: 'ok' };
+  }
+
   async permissionRoles(): Promise<GetRoleResult> {
     const authMeta = AuthService.getAuthMetadata();
     // const user = await this.userRepository.findByUserIdWithRoles());
