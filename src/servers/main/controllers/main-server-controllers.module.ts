@@ -15,6 +15,7 @@ import { MobileCheckInController } from './mobile/mobile.check-in.controller';
 import { MobileCheckOutController } from './mobile/mobile.check-out.controller';
 import { MobileDashboardController } from './mobile/mobile.dashboard.controller';
 import { MobileDeliveryController } from './mobile/mobile.delivery.controller';
+import { PrintController } from './print.controller';
 import { WebAwbTroubleControlelr } from './web/web-awb-trouble.controller';
 import { WebBagTroubleControlelr } from './web/web-bag-trouble.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
@@ -35,6 +36,7 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
     CustomerController,
     AwbStatusController,
     PartnerLogisticController,
+    PrintController,
     ReasonController,
     RoleController,
     MobileCheckInController,
