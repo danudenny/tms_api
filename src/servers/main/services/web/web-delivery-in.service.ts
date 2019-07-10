@@ -84,8 +84,7 @@ export class WebDeliveryInService {
   ): Promise<WebScanInListResponseVm> {
     // mapping field
     payload.fieldResolverMap['scanInDateTime'] = 't1.pod_scanin_date_time';
-    payload.fieldResolverMap['startDeliveryDateTime'] = 't1.pod_scanin_date_time';
-    payload.fieldResolverMap['endDeliveryDateTime'] = 't1.pod_scanin_date_time';
+    payload.fieldResolverMap['deliveryDateTime'] = 't1.pod_scanin_date_time';
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     payload.fieldResolverMap['branchScan'] = 't3.branch_id';
     payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';

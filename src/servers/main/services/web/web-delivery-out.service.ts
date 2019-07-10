@@ -720,8 +720,6 @@ export class WebDeliveryOutService {
   ): Promise<WebScanOutAwbListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
-    payload.fieldResolverMap['startDoPodDate'] = 't1.do_pod_date_time';
-    payload.fieldResolverMap['endDoPodDate'] = 't1.do_pod_date_time';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
     payload.fieldResolverMap['desc'] = 't1.description';
     payload.fieldResolverMap['fullname'] = 't2.fullname';

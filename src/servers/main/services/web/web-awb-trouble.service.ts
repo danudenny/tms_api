@@ -6,14 +6,18 @@ import { AwbTroubleResponseVm } from '../../models/awb-trouble-response.vm';
 
 export class WebAwbTroubleService {
   public static async findAllByRequest(payload: BaseMetaPayloadVm) {
-    const repository = new OrionRepositoryService(AwbTrouble);
-    const q = repository.findAllRaw();
+    payload.fieldResolverMap['startScanInDateTime'] = 'created_time';
+    payload.fieldResolverMap['endScanInDateTime'] = 'created_time';
+    payload.fieldResolverMap['awbNumber'] = 'awb_number';
 
     payload.globalSearchFields = [
       {
         field: 'awbNumber',
       },
     ];
+
+    const repository = new OrionRepositoryService(AwbTrouble);
+    const q = repository.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
 
