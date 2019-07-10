@@ -224,6 +224,7 @@ export class AuthService {
         'pod_scan_in_problem_branch',
         'pod_scan_in_problem_hub',
         'pod_awb_problem',
+        'do_pod_bag_list',
       ];
       // TODO: change after test
       // result.rolesAccessPermissions = map(rolesAccess, 'name');
