@@ -87,10 +87,10 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['startDeliveryDateTime'] = 't1.pod_scanin_date_time';
     payload.fieldResolverMap['endDeliveryDateTime'] = 't1.pod_scanin_date_time';
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
-    payload.fieldResolverMap['branchScan'] = 't3.branch_name';
+    payload.fieldResolverMap['branchScan'] = 't3.branch_id';
     payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
     payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
-    payload.fieldResolverMap['branchOriginFrom'] = 't4.branch_name';
+    payload.fieldResolverMap['branchOriginFrom'] = 't4.branch_id';
     payload.fieldResolverMap['employeeName'] = 't5.fullname';
 
     // mapping search field and operator default ilike
