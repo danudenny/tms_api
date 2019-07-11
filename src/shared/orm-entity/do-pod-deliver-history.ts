@@ -3,87 +3,65 @@ import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 
-@Entity('do_pod_deliver_detail', { schema: 'public' })
+@Entity('do_pod_deliver_history', { schema: 'public' })
 export class DoPodDeliverDetail extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'do_pod_deliver_history_id',
+  })
+  doPodDeliverHistoryId: number;
+
+  @Column('bigint', {
     name: 'do_pod_deliver_detail_id',
   })
   doPodDeliverDetailId: number;
 
   @Column('bigint', {
-    name: 'do_pod_deliver_id',
+    nullable: false,
+    name: 'awb_status_id',
   })
-  doPodDeliverId: number;
+  awbStatusId: number;
 
   @Column('bigint', {
     nullable: false,
-    name: 'employee_journey_id_out',
+    name: 'reason_id',
   })
-  employeeJourneyIdOut: number;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'employee_journey_id_in',
-  })
-  employeeJourneyIdIn: number;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'do_pod_status_id_last',
-  })
-  doPodStatusIdLast: number;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'awb_item_id',
-  })
-  awbItemId: number;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'awb_status_id_last',
-  })
-  awbStatusIdLast: number;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'reason_id_last',
-  })
-  reasonIdLast: number;
+  reasonId: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'awb_status_date_time_last',
+    name: 'awb_status_date_time',
   })
-  awbStatusDateTimeLast: Date;
+  awbStatusDateTime: Date;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'sync_date_time_last',
+    name: 'sync_date_time',
   })
-  syncDateTimeLast: Date;
+  syncDateTime: Date;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'longitude_delivery_last',
+    name: 'longitude_delivery',
   })
-  longitudeDeliveryLast: string | null;
+  longitudeDelivery: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'latitude_delivery_last',
+    name: 'latitude_delivery',
   })
-  latitudeDeliveryLast: string | null;
+  latitudeDelivery: string | null;
 
   @Column('text', {
     nullable: true,
   })
-  description_last: string | null;
+  description: string | null;
 
   @Column('bigint', {
     nullable: false,
@@ -115,4 +93,8 @@ export class DoPodDeliverDetail extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @ManyToOne(() => DoPodDeliverDetail)
+  @JoinColumn({ name: 'do_pod_deliver_detail_id' })
+  do_pod_deliver_detail_id: DoPodDeliverDetail;
 }

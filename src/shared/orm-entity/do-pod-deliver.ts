@@ -33,6 +33,12 @@ export class DoPodDeliver extends BaseEntity {
   })
   doPodDeliverDateTime: Date;
 
+  @Column('integer', {
+    nullable: false,
+    name: 'total_awb',
+  })
+  totalAwb: number | null;
+
   @Column('bigint', {
     nullable: false,
     name: 'user_id',
@@ -45,54 +51,25 @@ export class DoPodDeliver extends BaseEntity {
   })
   branchId: number;
 
-  @Column('integer', {
-    nullable: true,
-    name: 'total_assigned',
-  })
-  totalAssigned: number | null;
-
   @Column('bigint', {
     nullable: true,
     name: 'employee_id_driver',
   })
   employeeIdDriver: number | null;
 
-  // @Column('character varying', {
-  //   nullable: true,
-  //   length: 100,
-  //   name: 'latitude_last',
-  // })
-  // latitudeLast: string | null;
-
-  // @Column('character varying', {
-  //   nullable: true,
-  //   length: 100,
-  //   name: 'longitude_last',
-  // })
-  // longitudeLast: string | null;
+  @Column('integer', {
+    nullable: false,
+    default: () => '0',
+    name: 'total_delivered',
+  })
+  totalDelivered: number;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-    name: 'total_item',
+    name: 'total_problem',
   })
-  totalItem: number;
-
-  @Column('integer', {
-    nullable: false,
-    default: () => '0',
-    name: 'total_pod_item',
-  })
-  totalPodItem: number;
-
-  @Column('numeric', {
-    nullable: false,
-    default: () => '0',
-    precision: 20,
-    scale: 5,
-    name: 'total_weight',
-  })
-  totalWeight: number;
+  totalProblem: number;
 
   @Column('bigint', {
     nullable: false,
