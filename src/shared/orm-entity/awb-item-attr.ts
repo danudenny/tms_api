@@ -4,13 +4,15 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class AwbItemAttr extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'awb_item_attr_id',
   })
-  awb_item_attr_id: string;
+  awbItemAttrId: string;
 
   @Column('bigint', {
     nullable: false,
+    name: 'awb_attr_id',
   })
-  awb_attr_id: number;
+  awbAttrId: number;
 
   @Column('character varying', {
     nullable: false,
@@ -100,14 +102,16 @@ export class AwbItemAttr extends BaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'try_attempt',
   })
-  try_attempt: string | null;
+  tryAttempt: string | null;
 
   @Column('bigint', {
     nullable: true,

@@ -37,7 +37,7 @@ export class DoPodDetail extends BaseEntity {
     nullable: true,
     name: 'do_pod_history_id_last',
   })
-  do_pod_history_id_last: number | null;
+  doPodHistoryIdLast: number | null;
 
   @Column('bigint', {
     nullable: false,
@@ -111,17 +111,19 @@ export class DoPodDetail extends BaseEntity {
     nullable: true,
     precision: 20,
     scale: 5,
+    name: 'weight_final',
   })
-  weight_final: string | null;
+  weightFinal: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
+    name: 'weight_final_rounded',
   })
-  weight_final_rounded: string | null;
+  weightFinalRounded: string | null;
 
   @OneToOne(() => PodScanIn)
   @JoinColumn({ name: 'pod_scan_in_id' })
-  pod_scan_in: PodScanIn;
+  podScanIn: PodScanIn;
 }

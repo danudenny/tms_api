@@ -24,8 +24,9 @@ export class DoAwb extends BaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'do_awb_code',
   })
-  do_awb_code: string | null;
+  doAwbCode: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -75,16 +76,16 @@ export class DoAwb extends BaseEntity {
   @Column('character varying', {
     nullable: false,
     length: 500,
-
+    name: 'scan_vehicle',
   })
-  scan_vehicle: string;
+  scanVehicle: string;
 
   @Column('character varying', {
     nullable: false,
     length: 500,
-
+    name: 'scan_driver',
   })
-  scan_driver: string;
+  scanDriver: string;
 
   @Column('integer', {
     nullable: false,
@@ -110,5 +111,5 @@ export class DoAwb extends BaseEntity {
 
   @OneToOne(() => DoAwbDetail)
   @JoinColumn({ name: 'do_awb_id' })
-  do_awb_detail: DoAwbDetail;
+  doAwbDetail: DoAwbDetail;
 }

@@ -97,5 +97,5 @@ export class DoPodDeliverHistory extends BaseEntity {
 
   @ManyToOne(() => DoPodDeliverDetail)
   @JoinColumn({ name: 'do_pod_deliver_detail_id' })
-  do_pod_deliver_detail_id: DoPodDeliverDetail;
+  doPodDeliverDetail: DoPodDeliverDetail;
 }

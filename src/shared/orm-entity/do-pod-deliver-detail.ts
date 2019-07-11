@@ -67,8 +67,9 @@ export class DoPodDeliverDetail extends BaseEntity {
 
   @Column('text', {
     nullable: true,
+    name: 'description_last',
   })
-  description_last: string | null;
+  descriptionLast: string | null;
 
   @Column('bigint', {
     nullable: false,

@@ -5,8 +5,9 @@ import { AwbItemAttr } from './awb-item-attr';
 export class AwbAttr extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'awb_attr_id',
   })
-  awb_attr_id: string;
+  awbAttrId: string;
 
   @Column('bigint', {
     nullable: false,
@@ -102,14 +103,16 @@ export class AwbAttr extends BaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'try_attempt',
   })
-  try_attempt: string | null;
+  tryAttempt: string | null;
 
   @Column('bigint', {
     nullable: true,
@@ -119,5 +122,5 @@ export class AwbAttr extends BaseEntity {
 
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'awb_attr_id' })
-  awb_item_attr: AwbItemAttr;
+  awbItemAttr: AwbItemAttr;
 }
