@@ -3,7 +3,10 @@ import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { DoPodDeliver } from './do-pod-deliver';
 
 @Entity('do_pod_deliver_detail', { schema: 'public' })
 export class DoPodDeliverDetail extends BaseEntity {
@@ -17,24 +20,6 @@ export class DoPodDeliverDetail extends BaseEntity {
     name: 'do_pod_deliver_id',
   })
   doPodDeliverId: number;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'employee_journey_id_out',
-  })
-  employeeJourneyIdOut: number;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'employee_journey_id_in',
-  })
-  employeeJourneyIdIn: number;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'do_pod_status_id_last',
-  })
-  doPodStatusIdLast: number;
 
   @Column('bigint', {
     nullable: false,
@@ -115,4 +100,8 @@ export class DoPodDeliverDetail extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @ManyToOne(() => DoPodDeliver)
+  @JoinColumn({ name: 'do_pod_deliver_id' })
+  do_pod_deliver: DoPodDeliver;
 }
