@@ -101,6 +101,13 @@ export class DoPodDeliverDetail extends BaseEntity {
   })
   isDeleted: boolean;
 
+  // TODO: dari ER di hapus tapi klo ini di hapus jadi error
+  @Column('bigint', {
+    nullable: false,
+    name: 'do_pod_status_id_last',
+  })
+  doPodStatusIdLast: number;
+
   @ManyToOne(() => DoPodDeliver)
   @JoinColumn({ name: 'do_pod_deliver_id' })
   do_pod_deliver: DoPodDeliver;
