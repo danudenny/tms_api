@@ -64,11 +64,11 @@ export class DoPod extends BaseEntity {
   })
   totalAssigned: number | null;
 
-  @Column('bigint', {
-    nullable: true,
-    name: 'user_id_driver',
-  })
-  userIdDriver: number | null;
+  // @Column('bigint', {
+  //   nullable: true,
+  //   name: 'user_id_driver',
+  // })
+  // userIdDriver: number | null;
 
   @Column('bigint', {
     nullable: true,
@@ -79,51 +79,15 @@ export class DoPod extends BaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'latitude_last',
+    name: 'vehicle_number',
   })
-  latitudeLast: string | null;
-
-  @Column('character varying', {
-    nullable: true,
-    length: 100,
-    name: 'longitude_last',
-  })
-  longitudeLast: string | null;
-
-  @Column('integer', {
-    nullable: false,
-    default: () => '0',
-    name: 'total_item',
-  })
-  totalItem: number;
-
-  @Column('integer', {
-    nullable: false,
-    default: () => '0',
-    name: 'total_pod_item',
-  })
-  totalPodItem: number;
-
-  @Column('numeric', {
-    nullable: false,
-    default: () => '0',
-    precision: 20,
-    scale: 5,
-    name: 'total_weight',
-  })
-  totalWeight: number;
+  vehicleNumber: string | null;
 
   @Column('bigint', {
     nullable: true,
     name: 'do_pod_status_id_last',
   })
   doPodStatusIdLast: number | null;
-
-  @Column('bigint', {
-    nullable: true,
-    name: 'do_pod_history_id_last',
-  })
-  doPodHistoryIdLast: number | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
@@ -170,28 +134,15 @@ export class DoPod extends BaseEntity {
 
   @Column('integer', {
     nullable: true,
-    name: 'third_party_id',
+    name: 'do_pod_method',
   })
-  thirdPartyId: number | null;
+  doPodMethod: number | null;
 
   @Column('bigint', {
     nullable: false,
     name: 'partner_logistic_id',
   })
   partnerLogisticId: number;
-
-  @Column('integer', {
-    nullable: true,
-    name: 'do_pod_method',
-  })
-  doPodMethod: number | null;
-
-  @Column('character varying', {
-    nullable: true,
-    length: 100,
-    name: 'vehicle_number',
-  })
-  vehicleNumber: string | null;
 
   @Column('text', {
     nullable: true,
@@ -210,11 +161,11 @@ export class DoPod extends BaseEntity {
   })
   totalScanOut: number | 0;
 
-  @Column('integer', {
-    nullable: true,
-    name: 'percen_scan_in_out',
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'first_date_scan_in',
   })
-  percenScanInOut: number | 0;
+  firstDateScanIn: Date;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -224,9 +175,88 @@ export class DoPod extends BaseEntity {
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'first_date_scan_out',
+  })
+  firstDateScanOut: Date;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
     name: 'last_date_scan_out',
   })
   lastDateScanOut: Date;
+
+  @Column('numeric', {
+    nullable: false,
+    default: () => '0',
+    precision: 20,
+    scale: 5,
+    name: 'total_weight_final_rounded',
+  })
+  totalWeightFinalRounded: number;
+
+  @Column('numeric', {
+    nullable: false,
+    default: () => '0',
+    precision: 20,
+    scale: 5,
+    name: 'total_weight_final',
+  })
+  totalWeightFinal: number;
+
+  // @Column('character varying', {
+  //   nullable: true,
+  //   length: 100,
+  //   name: 'latitude_last',
+  // })
+  // latitudeLast: string | null;
+
+  // @Column('character varying', {
+  //   nullable: true,
+  //   length: 100,
+  //   name: 'longitude_last',
+  // })
+  // longitudeLast: string | null;
+
+  // @Column('integer', {
+  //   nullable: false,
+  //   default: () => '0',
+  //   name: 'total_item',
+  // })
+  // totalItem: number;
+
+  // @Column('integer', {
+  //   nullable: false,
+  //   default: () => '0',
+  //   name: 'total_pod_item',
+  // })
+  // totalPodItem: number;
+
+  // @Column('numeric', {
+  //   nullable: false,
+  //   default: () => '0',
+  //   precision: 20,
+  //   scale: 5,
+  //   name: 'total_weight',
+  // })
+  // totalWeight: number;
+
+  // @Column('bigint', {
+  //   nullable: true,
+  //   name: 'do_pod_history_id_last',
+  // })
+  // doPodHistoryIdLast: number | null;
+
+  // @Column('integer', {
+  //   nullable: true,
+  //   name: 'third_party_id',
+  // })
+  // thirdPartyId: number | null;
+
+  // @Column('integer', {
+  //   nullable: true,
+  //   name: 'percen_scan_in_out',
+  // })
+  // percenScanInOut: number | 0;
 
   // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.do_pod)

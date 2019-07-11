@@ -1,7 +1,7 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('awb_item_attr', { schema: 'public' })
-export class AwbDetail extends BaseEntity {
+export class AwbItemAttr extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
   })

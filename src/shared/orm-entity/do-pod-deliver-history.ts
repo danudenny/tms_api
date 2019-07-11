@@ -6,9 +6,10 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 
 @Entity('do_pod_deliver_history', { schema: 'public' })
-export class DoPodDeliverDetail extends BaseEntity {
+export class DoPodDeliverHistory extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'do_pod_deliver_history_id',

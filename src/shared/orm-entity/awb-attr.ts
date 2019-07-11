@@ -1,7 +1,8 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { AwbItemAttr } from './awb-item-attr';
 
 @Entity('awb_attr', { schema: 'public' })
-export class AwbDetail extends BaseEntity {
+export class AwbAttr extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
   })
@@ -115,4 +116,8 @@ export class AwbDetail extends BaseEntity {
     name: 'branch_id_next',
   })
   branchIdNext: number | null;
+
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_attr_id' })
+  awb_item_attr: AwbItemAttr;
 }

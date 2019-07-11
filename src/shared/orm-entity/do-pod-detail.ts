@@ -1,4 +1,5 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { PodScanIn } from './pod-scan-in';
 
 @Entity('do_pod_detail', { schema: 'public' })
 export class DoPodDetail extends BaseEntity {
@@ -88,22 +89,46 @@ export class DoPodDetail extends BaseEntity {
   })
   isScanIn: boolean | null;
 
-  @Column('character varying', {
+  // @Column('character varying', {
+  //   nullable: true,
+  //   length: 50,
+  //   name: 'scan_in_type',
+  // })
+  // scanInType: string | null;
+
+  // @Column('bigint', {
+  //   nullable: false,
+  //   name: 'employee_journey_id_in',
+  // })
+  // employeeJourneyIdIn: number | null;
+
+  // @Column('bigint', {
+  //   nullable: false,
+  //   name: 'employee_journey_id_out',
+  // })
+  // employeeJourneyIdOut: number | null;
+
+  @Column('boolean', {
     nullable: true,
-    length: 50,
-    name: 'scan_in_type',
+    name: 'is_posted',
   })
-  scanInType: string | null;
+  isPosted: boolean | null;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'employee_journey_id_in',
+  @Column('numeric', {
+    nullable: true,
+    precision: 20,
+    scale: 5,
   })
-  employeeJourneyIdIn: number | null;
+  weight_final: string | null;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'employee_journey_id_out',
+  @Column('numeric', {
+    nullable: true,
+    precision: 20,
+    scale: 5,
   })
-  employeeJourneyIdOut: number | null;
+  weight_final_rounded: string | null;
+
+  @OneToOne(() => PodScanIn)
+  @JoinColumn({ name: 'pod_scan_in_id' })
+  pod_scan_in: PodScanIn;
 }
