@@ -396,7 +396,6 @@ export class WebDeliveryOutService {
             const doPodDeliverDetail = DoPodDeliverDetail.create();
             doPodDeliverDetail.doPodDeliverId = payload.doPodId;
             doPodDeliverDetail.awbItemId = awbItem.awbItemId;
-            doPodDeliverDetail.doPodStatusIdLast = 1000;
 
             // general
             doPodDeliverDetail.userIdCreated = authMeta.userId;

@@ -89,14 +89,6 @@ export class DoPodDetail extends BaseEntity {
   })
   isScanIn: boolean | null;
 
-  // TODO: dari ER di hapus tapi klo ini di hapus jadi error
-  @Column('character varying', {
-    nullable: true,
-    length: 50,
-    name: 'scan_in_type',
-  })
-  scanInType: string | null;
-
   // @Column('bigint', {
   //   nullable: false,
   //   name: 'employee_journey_id_in',

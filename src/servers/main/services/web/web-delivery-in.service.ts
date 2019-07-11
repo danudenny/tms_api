@@ -262,7 +262,6 @@ export class WebDeliveryInService {
 
             // NOTE:
             // Update Data doPodDetail
-            doPodDetail.scanInType = 'bag_item';
             doPodDetail.isScanIn = true;
             doPodDetail.updatedTime = timeNow;
             doPodDetail.userIdUpdated = authMeta.userId;
@@ -412,7 +411,6 @@ export class WebDeliveryInService {
 
           // NOTE:
           // Update Data doPodDetail
-          doPodDetail.scanInType = 'awb_item';
           doPodDetail.isScanIn = true;
           doPodDetail.updatedTime = timeNow;
           doPodDetail.userIdUpdated = authMeta.userId;
