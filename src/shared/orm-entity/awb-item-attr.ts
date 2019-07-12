@@ -6,13 +6,13 @@ export class AwbItemAttr extends BaseEntity {
     type: 'bigint',
     name: 'awb_item_attr_id',
   })
-  awbItemAttrId: string;
+  awbItemAttrId: number;
 
   @Column('bigint', {
-    nullable: false,
+    nullable: true,
     name: 'awb_attr_id',
   })
-  awbAttrId: number;
+  awbAttrId: number | null;
 
   @Column('character varying', {
     nullable: false,
@@ -21,12 +21,12 @@ export class AwbItemAttr extends BaseEntity {
   })
   awbNumber: string;
 
-  @Column('character varying', {
-    nullable: false,
-    length: 255,
-    name: 'awb_number_pl',
-  })
-  awbNumberPl: string;
+  // @Column('character varying', {
+  //   nullable: false,
+  //   length: 255,
+  //   name: 'awb_number_pl',
+  // })
+  // awbNumberPl: string;
 
   @Column('bigint', {
     nullable: true,
@@ -41,10 +41,10 @@ export class AwbItemAttr extends BaseEntity {
   awbStatusIdLast: number | null;
 
   @Column('bigint', {
-    nullable: true,
+    nullable: false,
     name: 'awb_status_id_last_public',
   })
-  awbStatusIdLastPublic: number | null;
+  awbStatusIdLastPublic: number;
 
   @Column('bigint', {
     nullable: true,
@@ -58,29 +58,29 @@ export class AwbItemAttr extends BaseEntity {
   })
   branchIdLast: number | null;
 
-  @Column('bigint', {
-    nullable: true,
-    name: 'lead_time_run_days',
-  })
-  leadTimeRunDays: number | null;
-
   @Column('timestamp without time zone', {
-    nullable: false,
+    nullable: true,
     name: 'history_date_last',
     })
-  historyDateLast: Date;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'final_status_date',
-    })
-  finalStatusDate: Date;
+  historyDateLast: Date | null;
 
   @Column('bigint', {
-    nullable: true,
-    name: 'lead_time_final_days',
+    nullable: false,
+    name: 'lead_time_run_days',
   })
-  leadTimeFinalDays: number | null;
+  leadTimeRunDays: number;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'final_status_date',
+    })
+  finalStatusDate: Date | null;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'try_attempt',
+  })
+  tryAttempt: number;
 
   @Column('bigint', {
     nullable: true,
@@ -90,8 +90,20 @@ export class AwbItemAttr extends BaseEntity {
 
   @Column('bigint', {
     nullable: false,
+    name: 'lead_time_final_days',
   })
-  uuid: number | null;
+  leadTimeFinalDays: number;
+
+  @Column('character varying', {
+    nullable: true,
+  })
+  uuid: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    name: 'awb_third_party',
+  })
+  awbThirdParty: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -106,16 +118,9 @@ export class AwbItemAttr extends BaseEntity {
   })
   isDeleted: boolean;
 
-  @Column('character varying', {
-    nullable: true,
-    length: 255,
-    name: 'try_attempt',
-  })
-  tryAttempt: string | null;
-
-  @Column('bigint', {
-    nullable: true,
-    name: 'branch_id_next',
-  })
-  branchIdNext: number | null;
+  // @Column('bigint', {
+  //   nullable: true,
+  //   name: 'branch_id_next',
+  // })
+  // branchIdNext: number | null;
 }

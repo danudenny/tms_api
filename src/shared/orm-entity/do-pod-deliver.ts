@@ -40,29 +40,34 @@ export class DoPodDeliver extends BaseEntity {
   totalAwb: number | null;
 
   @Column('bigint', {
-    nullable: false,
-    name: 'user_id',
-  })
-  userId: number;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'branch_id',
-  })
-  branchId: number;
-
-  @Column('bigint', {
     nullable: true,
     name: 'employee_id_driver',
   })
   employeeIdDriver: number | null;
 
+  @Column('text', {
+    nullable: true,
+  })
+  description: string | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'user_id',
+  })
+  userId: number | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id',
+  })
+  branchId: number | null;
+
   @Column('integer', {
     nullable: false,
     default: () => '0',
-    name: 'total_delivered',
+    name: 'total_delivery',
   })
-  totalDelivered: number;
+  totalDelivery: number;
 
   @Column('integer', {
     nullable: false,
@@ -72,10 +77,10 @@ export class DoPodDeliver extends BaseEntity {
   totalProblem: number;
 
   @Column('bigint', {
-    nullable: false,
+    nullable: true,
     name: 'user_id_created',
   })
-  userIdCreated: number;
+  userIdCreated: number | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -84,10 +89,10 @@ export class DoPodDeliver extends BaseEntity {
   createdTime: Date;
 
   @Column('bigint', {
-    nullable: false,
+    nullable: true,
     name: 'user_id_updated',
   })
-  userIdUpdated: number;
+  userIdUpdated: number | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -101,10 +106,4 @@ export class DoPodDeliver extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
-
-  @Column('text', {
-    nullable: true,
-  })
-  description: string | null;
-
 }

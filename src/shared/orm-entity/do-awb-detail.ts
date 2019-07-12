@@ -1,6 +1,7 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('do_awb_detail', { schema: 'public' })
+// NOTED: Belom ada di DB tabelnya
 export class DoAwbDetail extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',

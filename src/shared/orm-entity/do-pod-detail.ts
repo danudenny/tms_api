@@ -89,17 +89,24 @@ export class DoPodDetail extends BaseEntity {
   })
   isScanIn: boolean | null;
 
-  // @Column('bigint', {
-  //   nullable: false,
-  //   name: 'employee_journey_id_in',
-  // })
-  // employeeJourneyIdIn: number | null;
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+    name: 'scan_in_type',
+  })
+  scanInType: string | null;
 
-  // @Column('bigint', {
-  //   nullable: false,
-  //   name: 'employee_journey_id_out',
-  // })
-  // employeeJourneyIdOut: number | null;
+  @Column('bigint', {
+    nullable: true,
+    name: 'employee_journey_id_in',
+  })
+  employeeJourneyIdIn: number | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'employee_journey_id_out',
+  })
+  employeeJourneyIdOut: number | null;
 
   @Column('boolean', {
     nullable: true,
@@ -108,20 +115,20 @@ export class DoPodDetail extends BaseEntity {
   isPosted: boolean | null;
 
   @Column('numeric', {
-    nullable: true,
+    nullable: false,
     precision: 20,
     scale: 5,
-    name: 'weight_final',
+    name: 'total_weight_final',
   })
-  weightFinal: string | null;
+  totalWeightFinal: string;
 
   @Column('numeric', {
-    nullable: true,
+    nullable: false,
     precision: 20,
     scale: 5,
-    name: 'weight_final_rounded',
+    name: 'total_weight_final_rounded',
   })
-  weightFinalRounded: string | null;
+  totalWeightFinalRounded: string;
 
   @OneToOne(() => PodScanIn)
   @JoinColumn({ name: 'pod_scan_in_id' })

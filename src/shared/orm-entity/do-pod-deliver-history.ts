@@ -17,6 +17,7 @@ export class DoPodDeliverHistory extends BaseEntity {
   doPodDeliverHistoryId: number;
 
   @Column('bigint', {
+    nullable: false,
     name: 'do_pod_deliver_detail_id',
   })
   doPodDeliverDetailId: number;
@@ -28,22 +29,22 @@ export class DoPodDeliverHistory extends BaseEntity {
   awbStatusId: number;
 
   @Column('bigint', {
-    nullable: false,
+    nullable: true,
     name: 'reason_id',
   })
-  reasonId: number;
+  reasonId: number | null;
 
   @Column('timestamp without time zone', {
-    nullable: false,
+    nullable: true,
     name: 'awb_status_date_time',
   })
-  awbStatusDateTime: Date;
+  awbStatusDateTime: Date | null;
 
   @Column('timestamp without time zone', {
-    nullable: false,
+    nullable: true,
     name: 'sync_date_time',
   })
-  syncDateTime: Date;
+  syncDateTime: Date | null;
 
   @Column('character varying', {
     nullable: true,

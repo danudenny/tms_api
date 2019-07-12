@@ -2,6 +2,7 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColum
 import { DoAwbDetail } from './do-awb-detail';
 
 @Entity('do_awb', { schema: 'public' })
+// NOTED: Belom ada di DB tabelnya
 export class DoAwb extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',

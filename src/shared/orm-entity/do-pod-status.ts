@@ -59,7 +59,7 @@ export class DoPodStatus extends BaseEntity {
     nullable: false,
     name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
