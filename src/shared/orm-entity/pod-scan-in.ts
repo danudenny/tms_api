@@ -30,15 +30,21 @@ export class PodScanIn extends BaseEntity {
 
   @Column('bigint', {
     nullable: false,
-    name: 'bag_item_id',
-  })
-  bagItemId: number;
-
-  @Column('bigint', {
-    nullable: false,
     name: 'awb_item_id',
   })
   awbItemId: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'bag_id',
+  })
+  bagId: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'bag_item_id',
+  })
+  bagItemId: number;
 
   @Column('bigint', {
     nullable: false,
@@ -64,6 +70,13 @@ export class PodScanIn extends BaseEntity {
     name: 'pod_scanin_date_time',
   })
   podScaninDateTime: Date | null;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_deleted',
+  })
+  isDeleted: boolean;
 
   // TODO: mapping for join on scaninlist
   @OneToOne(() => Branch)

@@ -1,4 +1,5 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { AwbStatusGroup } from './awb-status-group';
 
 @Entity('awb_status_group_item', { schema: 'public' })
 export class AwbStatusGroupItem extends BaseEntity {
@@ -50,4 +51,17 @@ export class AwbStatusGroupItem extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  // relation model
+  @ManyToOne(
+    () => AwbStatusGroup,
+      x => x.awbStatusGroupItems,
+    {
+      onDelete: 'CASCADE',
+    },
+  )
+  @JoinColumn({
+    name: 'awb_status_group_id',
+  })
+  awbStatusGroup: AwbStatusGroup;
 }

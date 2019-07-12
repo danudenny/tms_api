@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { AwbStatusGroupItem } from './awb-status-group-item';
 
 @Entity('awb_status_group', { schema: 'public' })
@@ -57,7 +57,7 @@ export class AwbStatusGroup extends BaseEntity {
   })
   isDeleted: boolean;
 
-  @OneToOne(() => AwbStatusGroupItem)
-  @JoinColumn({ name: 'awb_status_group_id' })
-  awbStatusGroupItem: AwbStatusGroupItem;
+  // relation model
+  @OneToMany(() => AwbStatusGroupItem, x => x.awbStatusGroup)
+  awbStatusGroupItems: AwbStatusGroupItem[];
 }

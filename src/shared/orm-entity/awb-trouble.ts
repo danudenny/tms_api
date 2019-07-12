@@ -13,6 +13,19 @@ export class AwbTrouble extends BaseEntity {
   })
   awbTroubleId: number;
 
+  @Column('character varying', {
+    nullable: false,
+    length: 50,
+    name: 'awb_trouble_code',
+  })
+  awbTroubleCode: string;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'awb_trouble_status_id',
+  })
+  awbTroubleStatusId: number;
+
   @Column('bigint', {
     nullable: false,
     name: 'awb_status_id',
@@ -21,7 +34,7 @@ export class AwbTrouble extends BaseEntity {
 
   @Column('character varying', {
     nullable: false,
-    length: 255,
+    length: 50,
     name: 'awb_number',
   })
   awbNumber: string;
@@ -49,6 +62,30 @@ export class AwbTrouble extends BaseEntity {
     name: 'branch_id',
   })
   branchId: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_pic',
+  })
+  userIdPic: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'employee_id_pic',
+  })
+  employeeIdPic: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'branch_id_pic',
+  })
+  branchIdPic: number;
+
+  @Column('text', {
+    nullable: true,
+    name: 'description_solution',
+  })
+  descriptionSolution: string | null;
 
   @Column('bigint', {
     nullable: false,
@@ -80,9 +117,4 @@ export class AwbTrouble extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean | false;
-
-  @Column('text', {
-    nullable: true,
-  })
-  description: string | null;
 }

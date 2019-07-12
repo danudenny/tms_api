@@ -1,3 +1,4 @@
+console.log("################################# process.env.NODE_ENV ", process.env.NODE_ENV)
 switch (process.env.NODE_ENV) {
   case undefined:
     module.exports = {
@@ -23,11 +24,12 @@ switch (process.env.NODE_ENV) {
   case 'test':
     module.exports = {
       type: 'postgres',
-      host: 'localhost',
+      host: 'sicepat-tms-masterdata-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
       port: 5432,
-      username: 'postgres',
-      password: '123456',
-      database: 'sicepat-tms',
+      username: 'sicepatstaging',
+      password: 's1c3p4T$t46Ingb05$sQu',
+      database: 'sicepattmsstaging2',
+      schema: 'public',
       entities: ['src/shared/orm-entity/*.ts'],
       migrations: ['src/shared/orm-migration/*.ts'],
       subscribers: ['src/shared/orm-subscriber/*.ts'],

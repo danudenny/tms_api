@@ -228,11 +228,11 @@ export class DoPod extends BaseEntity {
   })
   lastDateScanOut: Date | null;
 
-  // @Column('timestamp without time zone', {
-  //   nullable: true,
-  //   name: 'first_date_scan_in',
-  // })
-  // firstDateScanIn: Date;
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'first_date_scan_in',
+  })
+  firstDateScanIn: Date;
 
   // @Column('timestamp without time zone', {
   //   nullable: true,

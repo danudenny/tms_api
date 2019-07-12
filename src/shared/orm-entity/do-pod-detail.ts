@@ -10,6 +10,12 @@ export class DoPodDetail extends BaseEntity {
   doPodDetaiId: number;
 
   @Column('bigint', {
+    nullable: true,
+    name: 'pod_scan_in_id',
+  })
+  podScanInId: number | null;
+
+  @Column('bigint', {
     nullable: false,
     name: 'do_pod_id',
   })

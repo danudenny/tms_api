@@ -1,4 +1,5 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Branch } from './branch';
 
 @Entity('awb_item_attr', { schema: 'public' })
 export class AwbItemAttr extends BaseEntity {
@@ -13,6 +14,12 @@ export class AwbItemAttr extends BaseEntity {
     name: 'awb_attr_id',
   })
   awbAttrId: number | null;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'awb_item_id',
+  })
+  awbItemId: number;
 
   @Column('character varying', {
     nullable: false,
@@ -108,7 +115,7 @@ export class AwbItemAttr extends BaseEntity {
   @Column('timestamp without time zone', {
     nullable: false,
     name: 'update_time',
-    })
+  })
   updateTime: Date;
 
   @Column('boolean', {
@@ -123,4 +130,12 @@ export class AwbItemAttr extends BaseEntity {
   //   name: 'branch_id_next',
   // })
   // branchIdNext: number | null;
+
+  // relation model
+  @OneToOne(() => Branch, branch => branch, {
+    eager: false,
+    nullable: true,
+  })
+  @JoinColumn({ name: 'branch_id_next' })
+  branchLast: Branch;
 }
