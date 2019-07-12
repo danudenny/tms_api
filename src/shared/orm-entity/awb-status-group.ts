@@ -59,5 +59,5 @@ export class AwbStatusGroup extends BaseEntity {
 
   @OneToOne(() => AwbStatusGroupItem)
   @JoinColumn({ name: 'awb_status_group_id' })
-  awb_status_group_item: AwbStatusGroupItem;
+  awbStatusGroupItem: AwbStatusGroupItem;
 }

@@ -10,5 +10,8 @@ export class MobileInitDataResponseVm {
   reason: ReasonVm[];
 
   @ApiModelProperty()
+  awbStatus: any;
+
+  @ApiModelProperty()
   delivery: any;
 }

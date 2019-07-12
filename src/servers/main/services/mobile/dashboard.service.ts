@@ -9,6 +9,7 @@ import { MobileInitDataResponseVm } from '../../models/mobile-init-response.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { Reason } from '../../../../shared/orm-entity/reason';
 import { BaseQueryPayloadVm } from '../../../../shared/models/base-query-payload.vm';
+import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 
 @Injectable()
 export class DashboardService {
@@ -53,19 +54,8 @@ export class DashboardService {
       // Populate return value
       const result = new MobileInitDataResponseVm();
 
-      const repository = new OrionRepositoryService(Reason);
-      const q = repository.findAllRaw();
-      q.selectRaw(
-        ['reason_id', 'reasonId'],
-        ['reason_name', 'reasonName'],
-        ['reason_code', 'reasonCode'],
-        ['reason_category', 'reasonCategory'],
-        ['reason_type', 'reasonType'],
-      );
-      q.where(e => e.isDeleted, w => w.isFalse());
-      q.andWhere(e => e.reasonCategory, w => w.equals('pod'));
-
-      result.reason = await q.exec();
+      result.reason = await this.getReason();
+      result.awbStatus = await this.getAwbStatus();
       result.delivery = await this.getDelivery();
 
       return result;
@@ -77,6 +67,34 @@ export class DashboardService {
         HttpStatus.BAD_REQUEST,
       );
     }
+  }
+
+  public async getReason() {
+    const repository = new OrionRepositoryService(Reason);
+    const q = repository.findAllRaw();
+    q.selectRaw(
+      ['reason_id', 'reasonId'],
+      ['reason_name', 'reasonName'],
+      ['reason_code', 'reasonCode'],
+      ['reason_category', 'reasonCategory'],
+      ['reason_type', 'reasonType'],
+    );
+    q.where(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.reasonCategory, w => w.equals('pod'));
+
+    return await q.exec();
+  }
+
+  public async getAwbStatus() {
+    const repository = new OrionRepositoryService(AwbStatus);
+    const q = repository.findAllRaw();
+    q.selectRaw(
+      ['awb_status_id', 'awbStatusId'],
+      ['awb_status_name', 'awbStatusCode'],
+      ['awb_status_title', 'awbStatusName'],
+    );
+
+    return await q.exec();
   }
 
   public async getDelivery() {
