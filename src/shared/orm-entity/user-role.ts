@@ -1,16 +1,8 @@
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  OneToOne,
-} from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-import { User } from './user';
-import { Role } from './role';
 import { Branch } from './branch';
+import { Role } from './role';
+import { User } from './user';
 
 @Entity('user_role', { schema: 'public' })
 export class UserRole extends BaseEntity {
@@ -29,12 +21,12 @@ export class UserRole extends BaseEntity {
   @Column('bigint', {
     nullable: false,
   })
-  role_id: string;
+  role_id: number;
 
   @Column('bigint', {
     nullable: false,
   })
-  user_id_created: string;
+  user_id_created: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -44,7 +36,7 @@ export class UserRole extends BaseEntity {
   @Column('bigint', {
     nullable: false,
   })
-  user_id_updated: string;
+  user_id_updated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -61,23 +53,23 @@ export class UserRole extends BaseEntity {
     nullable: false,
     default: () => '1',
   })
-  branch_id: string;
+  branch_id: number;
 
   @PrimaryGeneratedColumn({
     type: 'bigint',
   })
-  user_role_id: string;
+  user_role_id: number;
 
   // relation model
-  @OneToOne(() => Branch, branch => branch, { eager: false })
+  @OneToOne(() => Branch, branch => branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
 
-  // @ManyToOne(type => User, user => user.userRoles, {})
-  // @JoinColumn({ name: 'user_id' })
-  // userId: User | null;
+  @ManyToOne(() => User, e => e.userRoles)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
-  @OneToOne(() => Role, role => role, { eager: false })
+  @ManyToOne(() => Role)
   @JoinColumn({ name: 'role_id' })
   role: Role;
 }

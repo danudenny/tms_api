@@ -1,6 +1,4 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
-import { PodScan } from './pod-scan';
-import { DoPod } from './do-pod';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('branch', { schema: 'public' })
 export class Branch extends BaseEntity {
@@ -86,12 +84,12 @@ export class Branch extends BaseEntity {
   @Column('bigint', {
     nullable: true,
   })
-  district_id: string | null;
+  district_id: number | null;
 
   @Column('bigint', {
     nullable: false,
   })
-  user_id_created: string;
+  user_id_created: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -101,7 +99,7 @@ export class Branch extends BaseEntity {
   @Column('bigint', {
     nullable: false,
   })
-  user_id_updated: string;
+  user_id_updated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -157,7 +155,7 @@ export class Branch extends BaseEntity {
   @Column('bigint', {
     nullable: true,
   })
-  branch_type_id: string | null;
+  branch_type_id: number | null;
 
   // TODO: mapping for join on scaninlist
   // @OneToOne(() => PodScan)

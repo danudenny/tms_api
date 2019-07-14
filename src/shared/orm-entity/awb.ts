@@ -1,5 +1,6 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { PodScan } from './pod-scan';
+import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+
+import { AwbItem } from './awb-item';
 
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
@@ -407,7 +408,7 @@ export class Awb extends BaseEntity {
     scale: 5,
     name: 'total_cod_value',
   })
-  todayCodValue: number;
+  totalCodValue: number;
 
   @Column('bigint', {
     nullable: true,
@@ -675,6 +676,9 @@ export class Awb extends BaseEntity {
     name: 'awb_trouble_id',
   })
   awbTroubleId: number | null;
+
+  @OneToMany(() => AwbItem, e => e.awbs, { cascade: ['insert'] })
+  awbItems: AwbItem[];
 
   // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.awb)

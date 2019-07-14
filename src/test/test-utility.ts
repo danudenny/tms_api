@@ -10,6 +10,7 @@ export class TestUtility {
 
     return axios;
   }
+
   public static getAuthenticatedAuthServerAxios(
     loginType: 'superuser' = 'superuser',
   ) {
@@ -34,6 +35,11 @@ export class TestUtility {
       axios.defaults.headers.common['Authorization'] = `Bearer ${loginToken}`;
     }
 
+    const permissionToken = this.getPermissionToken(loginType);
+    if (permissionToken) {
+      axios.defaults.headers.common['x-permission-token'] = permissionToken;
+    }
+
     return axios;
   }
 
@@ -42,7 +48,16 @@ export class TestUtility {
   ): string {
     switch (loginType) {
       case 'superuser':
-        return TEST_GLOBAL_VARIABLE.superuserLoginToken;
+        return TEST_GLOBAL_VARIABLE.superUserLoginToken;
+    }
+  }
+
+  private static getPermissionToken(
+    loginType: 'superuser' = 'superuser',
+  ): string {
+    switch (loginType) {
+      case 'superuser':
+        return TEST_GLOBAL_VARIABLE.superUserPermissionToken;
     }
   }
 }

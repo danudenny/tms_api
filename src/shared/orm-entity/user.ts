@@ -1,8 +1,18 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
-import { UserRole } from './user-role';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+
 import { Employee } from './employee';
 import { Role } from './role';
-import { PodScan } from './pod-scan';
+import { UserRole } from './user-role';
 
 @Entity('users', { schema: 'public' })
 export class User extends BaseEntity {
@@ -58,7 +68,7 @@ export class User extends BaseEntity {
   @Column('bigint', {
     nullable: false,
   })
-  user_id_created: string;
+  user_id_created: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -68,7 +78,7 @@ export class User extends BaseEntity {
   @Column('bigint', {
     nullable: false,
   })
-  user_id_updated: string;
+  user_id_updated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -98,6 +108,11 @@ export class User extends BaseEntity {
     length: 500,
   })
   otp_reset: string | null;
+
+  @OneToMany(() => UserRole, e => e.user, {
+    cascade: ['insert'],
+  })
+  userRoles: UserRole[];
 
   // relation model
   // TODO: need review

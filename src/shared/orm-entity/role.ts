@@ -1,41 +1,23 @@
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-  RelationId,
-} from 'typeorm';
-import { UserRole } from './user-role';
-import { Branch } from './branch';
-import { RolePermission } from './role-permission';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('role', { schema: 'public' })
 export class Role extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
   })
-  role_id: string;
+  role_id: number;
 
   @Column('bigint', {
     nullable: true,
 
   })
-  role_id_parent: string | null;
+  role_id_parent: number | null;
 
   @Column('bigint', {
     nullable: true,
 
   })
-  branch_id: string | null;
+  branch_id: number | null;
 
   @Column('integer', {
     nullable: true,
@@ -72,7 +54,7 @@ export class Role extends BaseEntity {
     nullable: false,
 
   })
-  user_id_created: string;
+  user_id_created: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -84,7 +66,7 @@ export class Role extends BaseEntity {
     nullable: false,
 
   })
-  user_id_updated: string;
+  user_id_updated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
