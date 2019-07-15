@@ -8,11 +8,25 @@ import { UserRole } from '../orm-entity/user-role';
 import { OrionRepositoryService } from './orion-repository.service';
 
 export class RepositoryService {
-  static awb = new OrionRepositoryService(Awb);
-  static awbItem = new OrionRepositoryService(AwbItem);
-  static branch = new OrionRepositoryService(Branch);
-  static role = new OrionRepositoryService(Role);
-  static rolePermission = new OrionRepositoryService(RolePermission);
-  static user = new OrionRepositoryService(User);
-  static userRole = new OrionRepositoryService(UserRole);
+  static get awb() {
+    return new OrionRepositoryService(Awb);
+  }
+  static get awbItem() {
+    return new OrionRepositoryService(AwbItem);
+  }
+  static get branch() {
+    return new OrionRepositoryService(Branch);
+  }
+  static get role() {
+    return new OrionRepositoryService(Role);
+  }
+  static get rolePermission() {
+    return new OrionRepositoryService(RolePermission);
+  }
+  static get user() {
+    return new OrionRepositoryService(User);
+  }
+  static get userRole() {
+    return new OrionRepositoryService(UserRole);
+  }
 }
