@@ -36,11 +36,6 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebScanOutCreateResponseVm })
   @Transactional()
   public async scanOutCreate(@Body() payload: WebScanOutCreateVm) {
-    // NOTE: Scan Out With Awb
-    // Buat Surat Jalan (table do_pod, do_pod_detail, do_pod_history)
-    // Tipe Surat Jalan https://sketch.cloud/s/EKdwq/a/xpEAb8
-    // 1. Criss Cross
-    // 2. Transit (Internal / 3PL)
     return this.webDeliveryOutService.scanOutCreate(payload);
   }
 
@@ -53,10 +48,6 @@ export class WebDeliveryOutController {
   public async scanOutCreateDelivery(
     @Body() payload: WebScanOutCreateDeliveryVm,
   ) {
-    // NOTE: Scan Out With Awb
-    // Buat Surat Jalan (table do_pod, do_pod_detail, do_pod_history)
-    // Tipe Surat Jalan https://sketch.cloud/s/EKdwq/a/xpEAb8
-    // Antar (Sigesit)
     return this.webDeliveryOutService.scanOutCreateDelivery(payload);
   }
 

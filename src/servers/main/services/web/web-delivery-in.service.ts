@@ -28,6 +28,7 @@ import { CustomCounterCode } from '../../../../shared/services/custom-counter-co
 import { RedisService } from '../../../../shared/services/redis.service';
 import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
+import { DeliveryService } from '../../../../shared/services/delivery.service';
 // #endregion
 
 @Injectable()
@@ -357,9 +358,11 @@ export class WebDeliveryInService {
         message: 'Success',
       };
 
-      const awb = await this.validAwbNumber(awbNumber);
+      const awb = await DeliveryService.validAwbNumber(awbNumber);
       if (awb) {
-        const statusCode = await this.awbStatusGroup(awb.awbStatusIdLast);
+        const statusCode = await DeliveryService.awbStatusGroup(
+          awb.awbStatusIdLast,
+        );
         switch (statusCode) {
           case 'IN':
             // check condition
@@ -382,6 +385,8 @@ export class WebDeliveryInService {
                 createdTime: timeNow,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
+                userIdPic: authMeta.userId,
+                branchIdPic: permissonPayload.branchId,
               });
               await AwbTrouble.save(awbTrouble);
 
@@ -437,12 +442,12 @@ export class WebDeliveryInService {
               // awbItemAttr.historyDateLast;
               // await AwbItemAttr.save(awbItemAttr);
 
-              // Update awb_attr  semua field dengan suffix _last
-              const awbAttr = await AwbAttr.findOne({
-                where: {
-                  awbAttrId: awb.awbAttrId,
-                },
-              });
+              // // Update awb_attr  semua field dengan suffix _last
+              // const awbAttr = await AwbAttr.findOne({
+              //   where: {
+              //     awbAttrId: awb.awbAttrId,
+              //   },
+              // });
               // TODO: how to update data??
               // awbAttr.awbHistoryIdLast;
               // awbAttr.awbStatusIdLastPublic;
@@ -501,6 +506,7 @@ export class WebDeliveryInService {
               totalSuccess += 1;
 
               // remove key holdRedis
+              RedisService.del(`hold:scanin:${awb.awbItemId}`);
             } else {
               totalError += 1;
               response.status = 'error';
@@ -542,52 +548,4 @@ export class WebDeliveryInService {
     // #endregion process_scan_in
   }
 
-  private async validAwbNumber(awbNumber: string): Promise<AwbItemAttr> {
-    // NOTE: raw query
-    // SELECT ai.awb_status_id_last, ai.awb_item_id, br.branch_code, br.branch_name
-    // FROM awb_item_attr ai
-    // INNER JOIN branch br ON ai.branch_id_last = br.branch_id
-    // WHERE ai.awb_number = :awb_number
-
-    // find data to awb where awbNumber and awb status not cancel
-    const awbRepository = new OrionRepositoryService(AwbItemAttr);
-    const q = awbRepository.findOne();
-    // Manage relation (default inner join)
-    q.innerJoin(e => e.branchLast);
-
-    q.select({
-      awbItemAttrId: true,
-      awbStatusIdLast: true,
-      awbItemId: true,
-      awbNumber: true,
-      branchIdLast: true,
-      branchLast: {
-        branchId: true,
-        branchCode: true,
-        branchName: true,
-      },
-    });
-    // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
-    q.where(e => e.awbNumber, w => w.equals(awbNumber));
-    return await q.exec();
-  }
-
-  private async awbStatusGroup(awbStatusId: number) {
-    const awbRepository = new OrionRepositoryService(AwbStatusGroupItem);
-    const q = awbRepository.findOne();
-    // Manage relation (default inner join)
-    q.innerJoin(e => e.awbStatusGroup);
-
-    q.select({
-      awbStatusGroupItemId: true,
-      awbStatusGroup: {
-        awbStatusGroupId: true,
-        code: true,
-      },
-    });
-
-    q.where(e => e.awbStatusId, w => w.equals(awbStatusId));
-    const result = await q.exec();
-    return result.awbStatusGroup.code;
-  }
 }

@@ -45,11 +45,11 @@ export class AwbTrouble extends BaseEntity {
   })
   resolveDateTime: Date | null;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'status_resolve_id',
-  })
-  statusResolveId: number;
+  // @Column('bigint', {
+  //   nullable: false,
+  //   name: 'status_resolve_id',
+  // })
+  // statusResolveId: number;
 
   @Column('bigint', {
     nullable: false,

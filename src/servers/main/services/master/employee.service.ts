@@ -19,7 +19,8 @@ export class EmployeeService {
         field: 'employeeName',
       },
     ];
-
+   // mapping field
+    payload.fieldResolverMap['employeeName'] = 'employee.fullname';
     // add select field
     const qb = payload.buildQueryBuilder();
     qb.addSelect('employee.employee_id', 'employeeId');
