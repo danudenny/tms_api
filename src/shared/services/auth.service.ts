@@ -1,8 +1,9 @@
-import { HttpStatus, Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TokenExpiredError } from 'jsonwebtoken';
 import { map, toInteger } from 'lodash';
+import ms = require('ms');
 
 import { PermissionAccessResponseVM } from '../../servers/auth/models/auth.vm';
 import {
@@ -19,9 +20,9 @@ import { UserRole } from '../orm-entity/user-role';
 import { UserRepository } from '../orm-repository/user.repository';
 import { ConfigService } from './config.service';
 import { ContextualErrorService } from './contextual-error.service';
-import { RequestContextMetadataService } from './request-context-metadata.service';
 import { RedisService } from './redis.service';
-import ms = require('ms');
+import { RepositoryService } from './repository.service';
+import { RequestContextMetadataService } from './request-context-metadata.service';
 
 @Injectable()
 export class AuthService {
@@ -173,19 +174,22 @@ export class AuthService {
     branchId: number,
   ): Promise<PermissionAccessResponseVM> {
     const authMeta = AuthService.getAuthMetadata();
-    // const user = await this.userRepository.findByUserIdWithRoles());
-    // check user present
-    if (!!authMeta) {
-      // FIXME: update query relation user to role
-      // TODO: change after test
-      // const rolesAccess = await RolePermission.find(
-      //   {
-      //     cache: true,
-      //     where: {
-      //       roleId,
-      //     },
-      //   },
-      // );
+    if (authMeta) {
+      const user = await RepositoryService.user
+        .loadById(authMeta.userId)
+        .innerJoinAndSelect(e => e.userRoles.role.rolePermissions)
+        .andWhere(e => e.userRoles.role_id, w => w.equals(roleId))
+        .andWhere(e => e.userRoles.branch_id, w => w.equals(branchId))
+        .exec();
+
+      if (!user) {
+        ContextualErrorService.throwObj(
+          {
+            message: `Hak akses user untuk role dan branch ini tidak ditemukan`,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
 
       const branch = await Branch.findOne({
         cache: true,
@@ -193,6 +197,7 @@ export class AuthService {
           branchId,
         },
       });
+
       // create Permission Token
       const jwtPermissionTokenPayload = this.populateJwtPermissionTokenPayloadFromUser(
         roleId,
@@ -205,15 +210,18 @@ export class AuthService {
 
       // Populate return value
       const result = new PermissionAccessResponseVM();
+      result.userId = authMeta.userId;
       result.clientId = authMeta.clientId;
       result.username = authMeta.username;
       result.email = authMeta.email;
       result.displayName = authMeta.displayName;
       result.permissionToken = permissionToken;
+      result.roleName = user.userRoles[0].role.role_name;
 
       result.branchName = branch.branchName;
       result.branchCode = branch.branchCode;
-      // NOTE: for testing only
+
+      // FIXME: populate rolesAccessPermissions from user.userRoles[0].role.role_permissions
       result.rolesAccessPermissions = [
         'dashboard',
         'pod',
@@ -234,8 +242,6 @@ export class AuthService {
         'pod_awb_problem',
         'do_pod_bag_list',
       ];
-      // TODO: change after test
-      // result.rolesAccessPermissions = map(rolesAccess, 'name');
 
       return result;
     } else {
@@ -286,8 +292,14 @@ export class AuthService {
 
     // NOTE: set data user on redis
     // Set key to hold the string value and set key to timeout after a given number of seconds
-    const expireInSeconds = Math.floor(ms(ConfigService.get('jwt.refreshTokenExpiration')) / 1000);
-    await RedisService.setex(`session:${refreshToken}`, JSON.stringify(user), expireInSeconds);
+    const expireInSeconds = Math.floor(
+      ms(ConfigService.get('jwt.refreshTokenExpiration')) / 1000,
+    );
+    await RedisService.setex(
+      `session:${refreshToken}`,
+      JSON.stringify(user),
+      expireInSeconds,
+    );
 
     const result = new AuthLoginResultMetadata();
     // Mapping response data
@@ -370,9 +382,7 @@ export class AuthService {
   }
 
   public static getAuthData(): AuthLoginMetadata {
-    const authMeta = RequestContextMetadataService.getMetadata(
-      'AUTH_METADATA',
-    );
+    const authMeta = RequestContextMetadataService.getMetadata('AUTH_METADATA');
     if (!!authMeta) {
       return authMeta;
     } else {

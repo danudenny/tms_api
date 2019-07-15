@@ -1,4 +1,6 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+
+import { RolePermission } from './role-permission';
 
 @Entity('role', { schema: 'public' })
 export class Role extends BaseEntity {
@@ -81,11 +83,11 @@ export class Role extends BaseEntity {
   })
   is_deleted: boolean;
 
+  @OneToMany(() => RolePermission, e => e.role)
+  rolePermissions: RolePermission[];
+
   // @OneToMany(type => UserRole, user_role => user_role.roleId)
   // userRoles: UserRole[];
-
-  // @OneToMany(type => RolePermission, role_permission => role_permission.roleId)
-  // rolePermission: RolePermission[];
 
   // @OneToOne(type => Branch)
   // @JoinColumn()

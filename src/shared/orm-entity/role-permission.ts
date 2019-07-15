@@ -1,18 +1,5 @@
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-  RelationId,
-} from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+
 import { Role } from './role';
 
 @Entity('role_permission', { schema: 'public' })
@@ -74,7 +61,7 @@ export class RolePermission extends BaseEntity {
   })
   is_deleted: boolean;
 
-  // @ManyToOne(type => Role, role => role.rolePermission, {})
-  // @JoinColumn({ name: 'role_id' })
-  // roleId: Role | null;
+  @ManyToOne(() => Role, e => e.rolePermissions)
+  @JoinColumn({ name: 'role_id' })
+  role: Role;
 }

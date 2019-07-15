@@ -1,6 +1,7 @@
+import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
+
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { RoleVm } from './role.vm';
-import { IsNotEmpty, IsEmail, IsOptional } from 'class-validator';
 
 // #region Request Section
 export class AuthLoginByEmailOrUsernamePayloadVM {
@@ -106,7 +107,7 @@ export class PermissionAccessResponseVM {
   clientId: string;
 
   @ApiModelProperty()
-  userId: string;
+  userId: number;
 
   @ApiModelProperty()
   email: string;

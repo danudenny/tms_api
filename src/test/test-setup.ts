@@ -7,7 +7,7 @@ import path = require('path');
 import { createConnection, getManager } from 'typeorm';
 
 import { boot } from '../main-setup';
-import { AuthLoginResponseVM } from '../servers/auth/models/auth.vm';
+import { AuthLoginResponseVM, PermissionAccessResponseVM } from '../servers/auth/models/auth.vm';
 import { AwbBlueprint } from './blueprint/awb';
 import { AwbItemBlueprint } from './blueprint/awb-item';
 import { BranchBlueprint } from './blueprint/branch';
@@ -66,17 +66,76 @@ beforeAll(async () => {
       password: 'qwerty',
     })
     .then(response => {
-      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.status).toEqual(HttpStatus.OK);
 
       const result = response.data as AuthLoginResponseVM;
+      expect(result.userId).toEqual('15');
       expect(result.accessToken).toBeDefined();
       expect(result.refreshToken).toBeDefined();
-      expect(result.username).toBe('adry');
+      expect(result.username).toEqual('adry');
 
-      TEST_GLOBAL_VARIABLE.superUserLogin = result;
+      TEST_GLOBAL_VARIABLE.webUserLogin = result;
     });
 
-  // TODO: Retrieve and assign TEST_GLOBAL_VARIABLE.superUserPermissionToken for later use for e2e tests
+  await TestUtility.getUnauthenticatedAuthServerAxios()
+    .post('/auth/login', {
+      clientId: 'mobile',
+      username: 'adry',
+      password: 'qwerty',
+    })
+    .then(response => {
+      expect(response.status).toEqual(HttpStatus.OK);
+
+      const result = response.data as AuthLoginResponseVM;
+      expect(result.userId).toEqual('15');
+      expect(result.accessToken).toBeDefined();
+      expect(result.refreshToken).toBeDefined();
+      expect(result.username).toEqual('adry');
+
+      TEST_GLOBAL_VARIABLE.mobileUserLogin = result;
+    });
+
+  await TestUtility.getAuthenticatedAuthServerAxios('web')
+    .post('/auth/permissionAccess', {
+      clientId: 'web',
+      roleId: 11,
+      branchId: 121,
+    })
+    .then(response => {
+      expect(response.status).toEqual(HttpStatus.OK);
+
+      const result = response.data as PermissionAccessResponseVM;
+      expect(result.branchCode).toEqual('3601001');
+      expect(result.branchName).toEqual('Kantor Pusat');
+      expect(result.userId).toEqual('15');
+      expect(result.clientId).toEqual('web');
+      expect(result.username).toEqual('adry');
+      expect(result.permissionToken).toBeDefined();
+      expect(result.roleName).toEqual('Root IT');
+
+      TEST_GLOBAL_VARIABLE.webUserPermissionToken = result.permissionToken;
+    });
+
+  await TestUtility.getAuthenticatedAuthServerAxios('mobile')
+    .post('/auth/permissionAccess', {
+      clientId: 'mobile',
+      roleId: 11,
+      branchId: 121,
+    })
+    .then(response => {
+      expect(response.status).toEqual(HttpStatus.OK);
+
+      const result = response.data as PermissionAccessResponseVM;
+      expect(result.branchCode).toEqual('3601001');
+      expect(result.branchName).toEqual('Kantor Pusat');
+      expect(result.userId).toEqual('15');
+      expect(result.clientId).toEqual('mobile');
+      expect(result.username).toEqual('adry');
+      expect(result.permissionToken).toBeDefined();
+      expect(result.roleName).toEqual('Root IT');
+
+      TEST_GLOBAL_VARIABLE.mobileUserPermissionToken = result.permissionToken;
+    });
 });
 
 afterAll(async () => {

@@ -6,7 +6,9 @@ const TEST_GLOBAL_VARIABLE: Partial<{
   entityFactory: EntityFactory,
   storage: { [key: string]: any };
   serverModules: { [key: string]: any };
-  superUserLogin: AuthLoginResponseVM;
-  superUserPermissionToken: string;
+  webUserLogin: AuthLoginResponseVM;
+  mobileUserLogin: AuthLoginResponseVM;
+  webUserPermissionToken: string;
+  mobileUserPermissionToken: string;
 }> = {};
 export default TEST_GLOBAL_VARIABLE;
