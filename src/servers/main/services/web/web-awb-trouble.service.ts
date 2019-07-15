@@ -24,9 +24,9 @@ export class WebAwbTroubleService {
     q.selectRaw(
       ['awb_trouble_id', 'awbTroubleId'],
       ['awb_number', 'awbNumber'],
-      ['status_resolve_id', 'statusResolveId'],
+      ['awb_trouble_status_id', 'awbTroubleStatusId'],
       ['created_time', 'scanInDateTime'],
-      ['description', 'desc'],
+      ['description_solution', 'descriptionSolution'],
       [
         `CASE awb_status_id WHEN 1 THEN 'A' WHEN 2 THEN 'B' ELSE '' END`,
         'awbTroubleName',

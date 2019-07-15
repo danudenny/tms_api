@@ -90,8 +90,7 @@ export class WebDeliveryInService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanInListResponseVm> {
     // mapping field
-    payload.fieldResolverMap['scanInDateTime'] = 't1.pod_scanin_date_time';
-    payload.fieldResolverMap['deliveryDateTime'] = 't1.pod_scanin_date_time';
+    payload.fieldResolverMap['podScanInDateTime'] = 't1.pod_scanin_date_time';
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     payload.fieldResolverMap['branchScan'] = 't3.branch_id';
     payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
@@ -112,7 +111,7 @@ export class WebDeliveryInService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.pod_scanin_date_time', 'scanInDateTime'],
+      ['t1.pod_scanin_date_time', 'podScanInDateTime'],
       ['t2.awb_number', 'awbNumber'],
       ['t3.branch_name', 'branchNameScan'],
       ['t4.branch_name', 'branchNameFrom'],
