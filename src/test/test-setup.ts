@@ -54,26 +54,26 @@ beforeAll(async () => {
 
   await TestSeed.seed();
 
-  // close connection due to servers will initiate their own typeorm connections
-  await connection.close();
+  (connection.options as any).logging = true;
 
   const serverModules = await boot();
   TEST_GLOBAL_VARIABLE.serverModules = serverModules;
 
   await TestUtility.getUnauthenticatedAuthServerAxios()
-    .post('/api/auth/login', {
+    .post('/auth/login', {
       clientId: 'web',
       username: 'adry',
-      password: 'qerty',
+      password: 'qwerty',
     })
     .then(response => {
-      expect(response.status).toBe(HttpStatus.CREATED);
+      expect(response.status).toBe(HttpStatus.OK);
 
       const result = response.data as AuthLoginResponseVM;
       expect(result.accessToken).toBeDefined();
       expect(result.refreshToken).toBeDefined();
       expect(result.username).toBe('adry');
-      TEST_GLOBAL_VARIABLE.superUserLoginToken = response.data;
+
+      TEST_GLOBAL_VARIABLE.superUserLogin = result;
     });
 
   // TODO: Retrieve and assign TEST_GLOBAL_VARIABLE.superUserPermissionToken for later use for e2e tests

@@ -48,7 +48,7 @@ export class TestUtility {
   ): string {
     switch (loginType) {
       case 'superuser':
-        return TEST_GLOBAL_VARIABLE.superUserLoginToken;
+        return TEST_GLOBAL_VARIABLE.superUserLogin.accessToken;
     }
   }
 
