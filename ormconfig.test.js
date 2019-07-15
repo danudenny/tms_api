@@ -4,7 +4,7 @@ module.exports = {
   port: 5432,
   username: 'postgres',
   password: '123456',
-  database: 'sicepat-tms-api',
+  database: 'sicepat-tms-api-test',
   entities: ['src/shared/orm-entity/*.ts'],
   migrations: ['src/shared/orm-migration/*.ts'],
   subscribers: ['src/shared/orm-subscriber/*.ts'],
