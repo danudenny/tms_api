@@ -19,10 +19,17 @@ export class TestUtility {
     const axios = axiosist(
       TEST_GLOBAL_VARIABLE.serverModules.auth.app.getHttpServer(),
     );
+
     const loginToken = this.getAccessToken(loginType);
     if (loginToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${loginToken}`;
     }
+
+    const permissionToken = this.getPermissionToken(loginType);
+    if (permissionToken) {
+      axios.defaults.headers.common['x-permission-token'] = permissionToken;
+    }
+
     return axios;
   }
 
@@ -32,6 +39,7 @@ export class TestUtility {
     const axios = axiosist(
       TEST_GLOBAL_VARIABLE.serverModules.main.app.getHttpServer(),
     );
+
     const loginToken = this.getAccessToken(loginType);
     if (loginToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${loginToken}`;
