@@ -1,55 +1,64 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('awb_booking', { schema: 'public' })
-@Index('awb_number_uniq', ['awb_number'], { unique: true })
-@Index('awb_number_idx', ['awb_number'], { unique: true })
+@Index('awb_number_uniq', ['awbNumber'], { unique: true })
+@Index('awb_number_idx', ['awbNumber'], { unique: true })
 export class AwbBooking extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'awb_booking_id',
   })
-  awb_booking_id: string;
+  awbBookingId: string;
 
   @Column('bigint', {
     nullable: false,
+    name: 'customer_account_id',
   })
-  customer_account_id: string;
+  customerAccountId: string;
 
   @Column('character varying', {
     nullable: false,
     unique: true,
     length: 255,
+    name: 'awb_number',
   })
-  awb_number: string;
+  awbNumber: string;
 
   @Column('bigint', {
     nullable: false,
     default: () => '1',
+    name: 'awb_booking_status_id',
   })
-  awb_booking_status_id: string;
+  awbBookingStatusId: string;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

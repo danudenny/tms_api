@@ -123,10 +123,10 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't3', j =>
-      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.do_pod.branch, 't4', j =>
-      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.user.employee, 't5', j =>
       j.andWhere(e => e.is_deleted, w => w.isFalse()),
@@ -180,10 +180,10 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't3', j =>
-      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.do_pod.branch, 't4', j =>
-      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.user.employee, 't5', j =>
       j.andWhere(e => e.is_deleted, w => w.isFalse()),

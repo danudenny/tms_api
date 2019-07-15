@@ -4,78 +4,92 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class AwbRequest extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'awb_request_id',
   })
-  awb_request_id: string;
+  awbRequestId: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'awb_request_code',
   })
-  awb_request_code: string | null;
+  awbRequestCode: string | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'customer_account_id',
   })
-  customer_account_id: string | null;
+  customerAccountId: string | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'partner_id',
   })
-  partner_id: string | null;
+  partnerId: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'awb_number_start',
   })
-  awb_number_start: string | null;
+  awbNumberStart: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'awb_number_end',
   })
-  awb_number_end: string | null;
+  awbNumberEnd: string | null;
 
   @Column('bigint', {
     nullable: false,
     default: () => '0',
+    name: 'total_awb_request',
   })
-  total_awb_request: string;
+  totalAwbRequest: string;
 
   @Column('bigint', {
     nullable: false,
     default: () => '0',
+    name: 'total_awb_created',
   })
-  total_awb_created: string;
+  totalAwbCreated: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'awb_request_status',
   })
-  awb_request_status: string | null;
+  awbRequestStatus: string | null;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

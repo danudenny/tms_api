@@ -4,50 +4,50 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class BaggingItem extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'bagging_item_id',
   })
-  bagging_item_id: string;
+  baggingItemId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'bagging_id',
   })
-  bagging_id: string;
+  baggingId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'bag_item_id',
   })
-  bag_item_id: string;
+  bagItemId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

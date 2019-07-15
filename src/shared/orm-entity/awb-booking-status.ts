@@ -5,38 +5,45 @@ export class AwbBookingStatus extends BaseEntity {
   @Column('integer', {
     nullable: false,
     primary: true,
+    name: 'awb_booking_status_id',
   })
-  awb_booking_status_id: number;
+  awbBookingStatusId: number;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name: 'awb_booking_status_name',
   })
-  awb_booking_status_name: string;
+  awbBookingStatusName: string;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

@@ -4,18 +4,21 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class AwbDetail extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'awb_detail_id',
   })
-  awb_detail_id: string;
+  awbDetailId: string;
 
   @Column('bigint', {
     nullable: false,
+    name: 'awb_id',
   })
-  awb_id: string;
+  awbId: string;
 
   @Column('bigint', {
     nullable: false,
+    name: 'attachment_id',
   })
-  attachment_id: string;
+  attachmentId: string;
 
   @Column('numeric', {
     nullable: true,
@@ -49,22 +52,25 @@ export class AwbDetail extends BaseEntity {
     nullable: true,
     precision: 10,
     scale: 5,
+    name: 'divider_volume',
   })
-  divider_volume: string | null;
+  dividerVolume: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
+    name: 'weight_volume',
   })
-  weight_volume: string | null;
+  weightVolume: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
+    name: 'weight_volume_rounded',
   })
-  weight_volume_rounded: string | null;
+  weightVolumeRounded: string | null;
 
   @Column('numeric', {
     nullable: true,
@@ -77,22 +83,25 @@ export class AwbDetail extends BaseEntity {
     nullable: true,
     precision: 20,
     scale: 5,
+    name: 'weight_rounded',
   })
-  weight_rounded: string | null;
+  weightRounded: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
+    name: 'weight_final',
   })
-  weight_final: string | null;
+  weightFinal: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
+    name: 'item_price',
   })
-  item_price: string | null;
+  itemPrice: string | null;
 
   @Column('numeric', {
     nullable: true,
@@ -103,32 +112,38 @@ export class AwbDetail extends BaseEntity {
 
   @Column('bigint', {
     nullable: false,
+    name: 'users_id_created',
   })
-  users_id_created: string;
+  usersIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
+    name: 'users_id_updated',
   })
-  users_id_updated: string;
+  usersIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: true,
+    name: 'updated_time',
   })
-  updated_time: Date | null;
+  updatedTime: Date | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('bigint', {
     nullable: true,
+    name: 'bag_item_id_latest',
   })
-  bag_item_id_latest: string | null;
+  bagItemIdLatest: string | null;
 }

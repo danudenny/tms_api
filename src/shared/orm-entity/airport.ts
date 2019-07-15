@@ -4,55 +4,65 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class Airport extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'airport_id',
   })
-  airport_id: string;
+  airportId: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'airport_code',
   })
-  airport_code: string | null;
+  airportCode: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'airport_name',
   })
-  airport_name: string | null;
+  airportName: string | null;
 
   @Column('bigint', {
     nullable: false,
+    name: 'city_id',
   })
-  city_id: string;
+  cityId: string;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('bigint', {
     nullable: false,
     default: () => '0',
+    name: 'representative_id',
   })
-  representative_id: string;
+  representativeId: string;
 }
