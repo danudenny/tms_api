@@ -23,7 +23,7 @@ export class WebBagTroubleService {
       ['bag_number', 'bagNumber'],
       ['status_resolve_id', 'statusResolveId'],
       ['created_time', 'scanInDateTime'],
-      ['description', 'desc'],
+      ['description', 'descriptionSolution'],
       [
         `CASE bag_status_id WHEN 1 THEN 'A' WHEN 2 THEN 'B' ELSE '' END`,
         'bagTroubleName',
