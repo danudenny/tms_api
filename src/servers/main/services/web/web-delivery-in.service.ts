@@ -90,12 +90,13 @@ export class WebDeliveryInService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanInListResponseVm> {
     // mapping field
+    payload.fieldResolverMap['scanInDateTime'] = 't1.pod_scanin_date_time';
     payload.fieldResolverMap['podScanInDateTime'] = 't1.pod_scanin_date_time';
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
-    payload.fieldResolverMap['branchScan'] = 't3.branch_id';
+    payload.fieldResolverMap['branchIdScan'] = 't3.branch_id';
     payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
     payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
-    payload.fieldResolverMap['branchOriginFrom'] = 't4.branch_id';
+    payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
     payload.fieldResolverMap['employeeName'] = 't5.fullname';
 
     // mapping search field and operator default ilike
@@ -147,12 +148,12 @@ export class WebDeliveryInService {
   ): Promise<WebScanInListResponseVm> {
     // mapping field
     payload.fieldResolverMap['scanInDateTime'] = 't1.pod_scanin_date_time';
-    payload.fieldResolverMap['deliveryDateTime'] = 't1.pod_scanin_date_time';
+    payload.fieldResolverMap['podScanInDateTime'] = 't1.pod_scanin_date_time';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
-    payload.fieldResolverMap['branchScan'] = 't3.branch_id';
+    payload.fieldResolverMap['branchIdScan'] = 't3.branch_id';
     payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
     payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
-    payload.fieldResolverMap['branchOriginFrom'] = 't4.branch_id';
+    payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
     payload.fieldResolverMap['employeeName'] = 't5.fullname';
 
     // mapping search field and operator default ilike

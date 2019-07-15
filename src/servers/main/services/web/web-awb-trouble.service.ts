@@ -6,8 +6,7 @@ import { AwbTroubleResponseVm } from '../../models/awb-trouble-response.vm';
 
 export class WebAwbTroubleService {
   public static async findAllByRequest(payload: BaseMetaPayloadVm) {
-    payload.fieldResolverMap['startScanInDateTime'] = 'created_time';
-    payload.fieldResolverMap['endScanInDateTime'] = 'created_time';
+    payload.fieldResolverMap['podScanInDateTime'] = 'created_time';
     payload.fieldResolverMap['awbNumber'] = 'awb_number';
 
     payload.globalSearchFields = [
