@@ -10,6 +10,7 @@ import { CustomerController } from './master/customer.controller';
 import { EmployeeController } from './master/employee.controller';
 import { PartnerLogisticController } from './master/partner-logistic.controller';
 import { ReasonController } from './master/reason.controller';
+import { RolePermissionController } from './master/role-permission.controller';
 import { RoleController } from './master/role.controller';
 import { MobileCheckInController } from './mobile/mobile.check-in.controller';
 import { MobileCheckOutController } from './mobile/mobile.check-out.controller';
@@ -39,6 +40,7 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
     PrintController,
     ReasonController,
     RoleController,
+    RolePermissionController,
     MobileCheckInController,
     MobileCheckOutController,
   ],
