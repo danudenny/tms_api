@@ -4,8 +4,9 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class Attachment extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'attachment_id',
   })
-  attachment_id: string;
+  attachmentId: string;
 
   @Column('character varying', {
     nullable: true,
@@ -16,14 +17,16 @@ export class Attachment extends BaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'attachment_path',
   })
-  attachment_path: string | null;
+  attachmentPath: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'attachment_name',
   })
-  attachment_name: string | null;
+  attachmentName: string | null;
 
   @Column('character varying', {
     nullable: true,
@@ -34,32 +37,38 @@ export class Attachment extends BaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_used',
   })
-  is_used: boolean;
+  isUsed: boolean;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

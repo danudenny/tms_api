@@ -4,35 +4,41 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class AwbInvalid extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'awb_invalid_id',
   })
-  awb_invalid_id: string;
+  awbInvalidId: string;
 
   @Column('timestamp without time zone', {
     nullable: true,
+    name: 'awb_date_time',
   })
-  awb_date_time: Date | null;
+  awbDateTime: Date | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
+    name: 'ref_awb_number',
   })
-  ref_awb_number: string | null;
+  refAwbNumber: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
+    name: 'message_error',
   })
-  message_error: string | null;
+  messageError: string | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'booking_customer_account_id',
   })
-  booking_customer_account_id: string | null;
+  bookingCustomerAccountId: string | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'current_customer_account_id',
   })
-  current_customer_account_id: string | null;
+  currentCustomerAccountId: string | null;
 
   @Column('json', {
     nullable: true,
@@ -42,6 +48,7 @@ export class AwbInvalid extends BaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

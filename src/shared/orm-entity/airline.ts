@@ -4,49 +4,58 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class Airline extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'airline_id',
   })
-  airline_id: string;
+  airlineId: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'airline_code',
   })
-  airline_code: string | null;
+  airlineCode: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'airline_name',
   })
-  airline_name: string | null;
+  airlineName: string | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'attachment_id',
   })
-  attachment_id: string | null;
+  attachmentId: string | null;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

@@ -1,35 +1,31 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {BaseEntity, Column, Entity, Index, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, RelationId} from 'typeorm';
 
-
-@Entity("ar_internal_metadata",{schema:"public" } )
+@Entity('ar_internal_metadata', {schema: 'public' } )
 export class ArInternalMetadata {
 
-    @Column("character varying",{ 
-        nullable:false,
-        primary:true,
-        name:"key"
+    @Column('character varying', {
+        nullable: false,
+        primary: true,
+        name: 'key',
         })
-    key:string;
-        
+    key: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        name:"value"
+    @Column('character varying', {
+        nullable: true,
+        name: 'value',
         })
-    value:string | null;
-        
+    value: string | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_at"
+    @Column('timestamp without time zone', {
+        nullable: false,
+        name: 'created_at',
         })
-    createdAt:Date;
-        
+    createdAt: Date;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_at"
+    @Column('timestamp without time zone', {
+        nullable: false,
+        name: 'updated_at',
         })
-    updatedAt:Date;
-        
+    updatedAt: Date;
+
 }

@@ -4,52 +4,52 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class Bank extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'bank_id',
   })
-  bank_id: string;
+  bankId: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'bank_code',
   })
-  bank_code: string | null;
+  bankCode: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'bank_name',
   })
-  bank_name: string | null;
+  bankName: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

@@ -705,7 +705,7 @@ export class WebDeliveryOutService {
         field: 'doPodCode',
       },
       {
-        field: 'desc',
+        field: 'description',
       },
       {
         field: 'fullname',
@@ -729,7 +729,7 @@ export class WebDeliveryOutService {
     qb.addSelect('do_pod.do_pod_code', 'doPodCode');
     qb.addSelect('do_pod.do_pod_date_time', 'doPodDateTime');
     qb.addSelect('employee.fullname', 'fullname');
-    qb.addSelect(`COALESCE(do_pod.description, '')`, 'desc');
+    qb.addSelect(`COALESCE(do_pod.description, '')`, 'description');
 
     qb.from('do_pod', 'do_pod');
     qb.innerJoin(
@@ -775,7 +775,7 @@ export class WebDeliveryOutService {
         field: 'doPodCode',
       },
       {
-        field: 'desc',
+        field: 'description',
       },
       {
         field: 'fullname',
@@ -791,7 +791,7 @@ export class WebDeliveryOutService {
       ['t1.do_pod_id', 'doPodId'],
       ['t1.do_pod_code', 'doPodCode'],
       ['t1.do_pod_date_time', 'doPodDateTime'],
-      ['t1.description', 'desc'],
+      ['t1.description', 'description'],
       ['t1.percen_scan_in_out', 'percenScanInOut'],
       ['t1.last_date_scan_in', 'lastDateScanIn'],
       ['t1.last_date_scan_out', 'lastDateScanOut'],

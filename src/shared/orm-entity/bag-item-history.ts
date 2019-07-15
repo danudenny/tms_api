@@ -4,94 +4,93 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class BagItemHistory extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'bag_item_history_id',
   })
-  bag_item_history_id: string;
+  bagItemHistoryId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'bag_item_id',
   })
-  bag_item_id: string;
+  bagItemId: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'user_id',
   })
-  user_id: string | null;
+  userId: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'branch_id',
   })
-  branch_id: string | null;
+  branchId: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'bag_item_status_id',
   })
-  bag_item_status_id: string;
+  bagItemStatusId: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'history_date',
   })
-  history_date: Date;
+  historyDate: Date;
 
   @Column('text', {
     nullable: true,
-
   })
   note: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'ref_table',
   })
-  ref_table: string | null;
+  refTable: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'ref_id',
   })
-  ref_id: string | null;
+  refId: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'ref_module',
   })
-  ref_module: string | null;
+  refModule: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

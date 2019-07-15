@@ -10,8 +10,9 @@ export class Branch extends BaseEntity {
 
   @Column('bigint', {
     nullable: true,
+    name: 'branch_id_parent',
   })
-  branch_id_parent: string | null;
+  branchIdParent: string | null;
 
   @Column('integer', {
     nullable: false,
@@ -83,57 +84,67 @@ export class Branch extends BaseEntity {
 
   @Column('bigint', {
     nullable: true,
+    name: 'district_id',
   })
-  district_id: number | null;
+  districtId: number | null;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_created',
   })
-  user_id_created: number;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_updated',
   })
-  user_id_updated: number;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
+    name: 'is_head_office',
   })
-  is_head_office: boolean | null;
+  isHeadOffice: boolean | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'representative_id',
   })
-  representative_id: string | null;
+  representativeId: string | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
+    name: 'is_delivery',
   })
-  is_delivery: boolean | null;
+  isDelivery: boolean | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
+    name: 'is_pickup',
   })
-  is_pickup: boolean | null;
+  isPickup: boolean | null;
 
   @Column('character varying', {
     nullable: true,
@@ -149,13 +160,15 @@ export class Branch extends BaseEntity {
 
   @Column('jsonb', {
     nullable: true,
+    name: 'code_rds',
   })
-  code_rds: Object | null;
+  codeRds: Object | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'branch_type_id',
   })
-  branch_type_id: number | null;
+  branchTypeId: number | null;
 
   // TODO: mapping for join on scaninlist
   // @OneToOne(() => PodScan)
