@@ -1,5 +1,6 @@
 import { createClient } from 'redis';
 import { ConfigService } from './config.service';
+import { sleep } from 'sleep-ts';
 
 export class RedisService {
 
@@ -116,5 +117,22 @@ export class RedisService {
         }
       });
     });
+  }
+
+  public static async locking(key: string, value: string) {
+    let countRetry = 1;
+    let locking = {};
+    do {
+      locking = await this.setnx(key, value);
+      if (!!locking || countRetry === 3) {
+        // set default expire key on redis
+        await this.expire(key, 5);
+        break;
+      }
+      await sleep(500); // delay 0.5 seconds
+      countRetry += 1;
+    } while (countRetry < 4);
+
+    return !!locking;
   }
 }

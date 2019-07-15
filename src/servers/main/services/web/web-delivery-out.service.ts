@@ -277,7 +277,6 @@ export class WebDeliveryOutService {
               createdTime: timeNow,
               userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
-              description: response.message,
             });
             await AwbTrouble.save(awbTrouble);
           }
@@ -297,7 +296,6 @@ export class WebDeliveryOutService {
             createdTime: timeNow,
             userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
-            description: response.message,
           });
           await AwbTrouble.save(awbTrouble);
         }
@@ -444,7 +442,6 @@ export class WebDeliveryOutService {
               createdTime: timeNow,
               userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
-              description: response.message,
             });
             await AwbTrouble.save(awbTrouble);
           }
@@ -464,7 +461,6 @@ export class WebDeliveryOutService {
             createdTime: timeNow,
             userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
-            description: response.message,
           });
           await AwbTrouble.save(awbTrouble);
         }

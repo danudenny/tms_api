@@ -1,7 +1,12 @@
 import moment = require('moment');
 import { SysCounter } from '../orm-entity/sys-counter';
+import { sampleSize } from 'lodash';
 
 export class CustomCounterCode {
+
+  static randomCode(digit: number = 8) {
+    return sampleSize('1234567890', digit);
+  }
 
   public static async pickupRequestPartner(dateTime: string, digit: number = 5) {
     const prefix = `SPKA/${moment(dateTime).format('YYMM')}/`;
@@ -9,19 +14,30 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
-  public static async doPod(dateTime: string, digit: number = 5) {
+  public static async doPod(dateTime: string, digit: number = 7) {
     const prefix = `DOP/${moment(dateTime).format('YYMM')}/`;
     const last_number = await this.getLastNumber(prefix);
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
-  // TODO: validasi code
-  public static async doPodDeliver(dateTime: string, digit: number = 5) {
+  public static async doPodDeliver(dateTime: string, digit: number = 7) {
     const prefix = `DOPD/${moment(dateTime).format('YYMM')}/`;
-    const last_number = await this.getLastNumber(prefix);
+    // const last_number = await this.getLastNumber(prefix);
+    const last_number = sampleSize('1234567890', 7).join('');
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
+  public static async awbTrouble(dateTime: string, digit: number = 8) {
+    // Format Code: ATR/1907/13/XYZA1234
+    const prefix = `ATR/${moment(dateTime).format('YYMM')}/${moment(
+                    dateTime,
+                  ).format('DD')}/`;
+    // const last_number = await this.getLastNumber(prefix);
+    const randomCode = this.randomCode(digit).join('');
+    return prefix + randomCode.toString();
+  }
+
+  // get data on DB
   private static async getLastNumber(prefix: string) {
     const timeNow = moment().toDate();
     let nextCounter = 1;
