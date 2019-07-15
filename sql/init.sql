@@ -5775,7 +5775,7 @@ SELECT setval('"public"."bagging_bagging_id_seq"', 12710, true);
 SELECT setval('"public"."bagging_item_bagging_item_id_seq"', 37550, true);
 SELECT setval('"public"."bank_bank_id_seq"', 17, true);
 SELECT setval('"public"."bank_branch_bank_branch_id_seq"', 7, true);
-SELECT setval('"public"."branch_branch_id_seq"', 759, true);
+SELECT setval('"public"."branch_branch_id_seq"', 799, true);
 ALTER SEQUENCE "public"."branch_region_branch_region_id_seq"
 OWNED BY "public"."branch_region"."branch_region_id";
 SELECT setval('"public"."branch_region_branch_region_id_seq"', 3, true);

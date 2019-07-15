@@ -11,7 +11,7 @@ export class BranchBlueprint extends TypeormBlueprint<Branch> {
 
     this.define(async ({ faker, factory }) => ({
       branchCode: GeneratorService.alphanumeric(5),
-      branchName: faker.random.word(),
+      branchName: `Branch ${faker.random.word()}`,
       lft: 0,
       rgt: 0,
       depth: 0,
