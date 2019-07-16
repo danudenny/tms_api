@@ -88,7 +88,7 @@ describe('master-customer-list', () => {
       });
   });
 
-  it('Verify all filters for 200', async () => {
+  it('Verify all filters', async () => {
     const payload = new BaseMetaPayloadVm();
     payload.page = 1;
     payload.limit = 10;
@@ -107,6 +107,31 @@ describe('master-customer-list', () => {
         value: customerToCheck.customerName,
       },
     ];
+
+    await TestUtility.getAuthenticatedMainServerAxios()
+      .post('master/customer/list', payload)
+      .then(response => {
+        expect(response.status).toEqual(HttpStatus.OK);
+
+        const result = response.data as CustomerFindAllResponseVm;
+        expect(result.data.length).toEqual(1);
+        expect(result.paging.totalData).toEqual(1);
+
+        const resultCustomer = result.data[0];
+        expect(resultCustomer.customerId).toEqual(customerToCheck.customerId);
+        expect(resultCustomer.customerCode).toEqual(customerToCheck.customerCode);
+        expect(resultCustomer.customerName).toEqual(customerToCheck.customerName);
+      });
+  });
+
+  it('Verify global search', async () => {
+    const payload = new BaseMetaPayloadVm();
+    payload.page = 1;
+    payload.limit = 10;
+
+    const customerToCheck = customers[0];
+
+    payload.search = customerToCheck.customerCode;
 
     await TestUtility.getAuthenticatedMainServerAxios()
       .post('master/customer/list', payload)

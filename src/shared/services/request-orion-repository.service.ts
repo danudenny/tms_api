@@ -127,13 +127,17 @@ export class RequestOrionRepositoryService {
         for (const searchFieldIdx in metaPayload.globalSearchFields) {
           const searchField = metaPayload.globalSearchFields[searchFieldIdx];
           const field = metaPayload.resolveFieldAsFieldAlias(searchField.field);
-          qWhere.andWhere(field, qWhereItem => {
-            this.applyMetaPayloadFilterItem(qWhereItem, {
-              field,
-              operator: searchField.operator || 'ilike',
-              value: metaPayload.search,
-            });
-          });
+          qWhere.orWhere(
+            field,
+            qWhereItem => {
+              this.applyMetaPayloadFilterItem(qWhereItem, {
+                field,
+                operator: searchField.operator || 'ilike',
+                value: metaPayload.search,
+              });
+            },
+            false,
+          );
         }
       });
     }

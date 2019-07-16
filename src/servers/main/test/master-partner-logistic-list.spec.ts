@@ -88,7 +88,7 @@ describe('master-partner-logistic-list', () => {
       });
   });
 
-  it('Verify all filters for 200', async () => {
+  it('Verify all filters', async () => {
     const payload = new BaseMetaPayloadVm();
     payload.page = 1;
     payload.limit = 10;
@@ -97,9 +97,9 @@ describe('master-partner-logistic-list', () => {
 
     payload.filters = [
       {
-        field: 'partnerLogisticEmail',
+        field: 'partnerLogisticName',
         operator: 'eq',
-        value: partnerLogisticToCheck.partnerLogisticEmail,
+        value: partnerLogisticToCheck.partnerLogisticName,
       },
       {
         field: 'partnerLogisticEmail',
@@ -107,6 +107,31 @@ describe('master-partner-logistic-list', () => {
         value: partnerLogisticToCheck.partnerLogisticEmail,
       },
     ];
+
+    await TestUtility.getAuthenticatedMainServerAxios()
+      .post('master/partnerLogistic/list', payload)
+      .then(response => {
+        expect(response.status).toEqual(HttpStatus.OK);
+
+        const result = response.data as PartnerLogisticFindAllResponseVm;
+        expect(result.data.length).toEqual(1);
+        expect(result.paging.totalData).toEqual(1);
+
+        const resultPartnerLogistic = result.data[0];
+        expect(resultPartnerLogistic.partnerLogisticId).toEqual(partnerLogisticToCheck.partnerLogisticId);
+        expect(resultPartnerLogistic.partnerLogisticName).toEqual(partnerLogisticToCheck.partnerLogisticName);
+        expect(resultPartnerLogistic.partnerLogisticEmail).toEqual(partnerLogisticToCheck.partnerLogisticEmail);
+      });
+  });
+
+  it('Verify global search', async () => {
+    const payload = new BaseMetaPayloadVm();
+    payload.page = 1;
+    payload.limit = 10;
+
+    const partnerLogisticToCheck = partnerLogistics[0];
+
+    payload.search = partnerLogisticToCheck.partnerLogisticEmail;
 
     await TestUtility.getAuthenticatedMainServerAxios()
       .post('master/partnerLogistic/list', payload)
