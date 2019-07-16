@@ -7,6 +7,7 @@ export class TestSeed {
     await this.seedBranch();
     await this.seedRole();
     await this.seedUser();
+    await this.seedPartnerLogistic();
   }
 
   public static async seedBranch() {
@@ -43,5 +44,19 @@ export class TestSeed {
       'utf8',
     );
     await getManager().connection.query(sql2);
+
+    const sql3 = fs.readFileSync(
+      path.resolve(__dirname, '../../sql/seed-employee.sql'),
+      'utf8',
+    );
+    await getManager().connection.query(sql3);
+  }
+
+  public static async seedPartnerLogistic() {
+    const sql = fs.readFileSync(
+      path.resolve(__dirname, '../../sql/seed-partner-logistic.sql'),
+      'utf8',
+    );
+    await getManager().connection.query(sql);
   }
 }

@@ -3,6 +3,7 @@ import { AwbItem } from '../orm-entity/awb-item';
 import { Branch } from '../orm-entity/branch';
 import { Customer } from '../orm-entity/customer';
 import { Employee } from '../orm-entity/employee';
+import { PartnerLogistic } from '../orm-entity/partner-logistic';
 import { Role } from '../orm-entity/role';
 import { RolePermission } from '../orm-entity/role-permission';
 import { User } from '../orm-entity/user';
@@ -28,6 +29,9 @@ export class RepositoryService {
   }
   static get employee() {
     return new OrionRepositoryService(Employee);
+  }
+  static get partnerLogistic() {
+    return new OrionRepositoryService(PartnerLogistic);
   }
   static get role() {
     return new OrionRepositoryService(Role);

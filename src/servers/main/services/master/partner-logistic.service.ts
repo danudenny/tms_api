@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { MetaService } from '../../../../shared/services/meta.service';
+import { RepositoryService } from '../../../../shared/services/repository.service';
 import { PartnerLogisticFindAllResponseVm } from '../../models/partner-logistic.vm';
 
 @Injectable()
 export class PartnerLogisticService {
-  constructor() {}
-  async listData(
+  async findAllByRequest(
     payload: BaseMetaPayloadVm,
   ): Promise<PartnerLogisticFindAllResponseVm> {
     // mapping search field and operator default ilike
@@ -20,28 +19,21 @@ export class PartnerLogisticService {
       },
     ];
 
-    // add select field
-    const qb = payload.buildQueryBuilder();
-    qb.addSelect('partner_logistic.partner_logistic_id', 'partnerLogisticId');
-    qb.addSelect(
-      'partner_logistic.partner_logistic_name',
-      'partnerLogisticName',
-    );
-    qb.addSelect(
-      'partner_logistic.partner_logistic_email',
-      'partnerLogisticEmail',
-    );
-    qb.from('partner_logistic', 'partner_logistic');
+    const q = RepositoryService.partnerLogistic.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
 
-    const total = await qb.getCount();
+    q.selectRaw(
+      ['partner_logistic.partner_logistic_id', 'partnerLogisticId'],
+      ['partner_logistic.partner_logistic_name', 'partnerLogisticName'],
+      ['partner_logistic.partner_logistic_email', 'partnerLogisticEmail'],
+    );
 
-    // exec raw query
-    payload.applyPaginationToQueryBuilder(qb);
-    const data = await qb.execute();
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const result = new PartnerLogisticFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
+    result.buildPaging(payload.page, payload.limit, total);
 
     return result;
   }

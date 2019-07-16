@@ -13,6 +13,7 @@ import { AwbItemBlueprint } from './blueprint/awb-item';
 import { BranchBlueprint } from './blueprint/branch';
 import { CustomerBlueprint } from './blueprint/customer';
 import { EmployeeBlueprint } from './blueprint/employee';
+import { PartnerLogisticBlueprint } from './blueprint/partner-logistic';
 import { RoleBlueprint } from './blueprint/role';
 import { UserBlueprint } from './blueprint/user';
 import { UserRoleBlueprint } from './blueprint/user-role';
@@ -50,6 +51,7 @@ beforeAll(async () => {
       BranchBlueprint,
       CustomerBlueprint,
       EmployeeBlueprint,
+      PartnerLogisticBlueprint,
       RoleBlueprint,
       UserBlueprint,
       UserRoleBlueprint,
