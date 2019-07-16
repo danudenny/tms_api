@@ -5872,7 +5872,7 @@ SELECT setval('"public"."pod_scan_in_pod_scan_in_id_seq"', 2, false);
 SELECT setval('"public"."pod_scan_pod_scan_id_seq"', 83, true);
 SELECT setval('"public"."price_list_price_list_id_seq"', 37, true);
 SELECT setval('"public"."province_province_id_seq"', 35, true);
-SELECT setval('"public"."reason_reason_id_seq"', 3, true);
+SELECT setval('"public"."reason_reason_id_seq"', 38, true);
 SELECT setval('"public"."received_package_detail_received_package_detail_id_seq"', 66, true);
 SELECT setval('"public"."received_package_received_package_id_seq"', 31, true);
 SELECT setval('"public"."representative_representative_id_seq"', 98, true);
