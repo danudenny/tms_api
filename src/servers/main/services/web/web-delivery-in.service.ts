@@ -1,19 +1,15 @@
 // #region import
 import { Injectable } from '@nestjs/common';
-import { toInteger } from 'lodash';
 import moment = require('moment');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
-import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
 import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
 import { PodScan } from '../../../../shared/orm-entity/pod-scan';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payload.vm';
 import {
   WebScanInAwbResponseVm,
   WebScanInBagResponseVm,
@@ -21,71 +17,18 @@ import {
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
-import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { PodScanIn } from '../../../../shared/orm-entity/pod-scan-in';
-import { AwbStatusGroupItem } from '../../../../shared/orm-entity/awb-status-group-item';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { RedisService } from '../../../../shared/services/redis.service';
-import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
 import { DeliveryService } from '../../../../shared/services/delivery.service';
+import { BagItem } from '../../../../shared/orm-entity/bag-item';
+import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 // #endregion
 
 @Injectable()
 export class WebDeliveryInService {
   constructor() {}
-
-  async findAllDeliveryList(
-    payload: WebDeliveryListFilterPayloadVm,
-  ): Promise<WebScanInListResponseVm> {
-    const page = toInteger(payload.page) || 1;
-    const take = toInteger(payload.limit) || 10;
-
-    const offset = (page - 1) * take;
-    const start = moment(payload.filters.startDeliveryDateTime).toDate();
-    const end = moment(payload.filters.endDeliveryDateTime).toDate();
-
-    // TODO: FIX QUERY and Add Additional Where Condition
-    const whereCondition =
-      'WHERE pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end';
-    // TODO: add additional where condition
-
-    const [query, parameters] = RawQueryService.escapeQueryWithParameters(
-      `SELECT pod_scanin_date_time as "scanInDateTime",
-        awb.awb_number as "awbNumber",
-        branch.branch_name as "branchNameScan",
-        branch_from.branch_name as "branchNameFrom",
-        employee.fullname as "employeeName"
-      FROM pod_scan
-        JOIN branch ON pod_scan.branch_id = branch.branch_id
-        JOIN awb ON awb.awb_id = pod_scan.awb_id AND awb.is_deleted = false
-        LEFT JOIN users ON users.user_id = pod_scan.user_id AND users.is_deleted = false
-        LEFT JOIN employee ON employee.employee_id = users.employee_id AND employee.is_deleted = false
-        LEFT JOIN do_pod ON do_pod.do_pod_id = pod_scan.do_pod_id
-        LEFT JOIN branch branch_from ON do_pod.branch_id = branch_from.branch_id
-      ${whereCondition}
-      LIMIT :take OFFSET :offset`,
-      { take, start, end, offset },
-    );
-
-    const [
-      querycount,
-      parameterscount,
-    ] = RawQueryService.escapeQueryWithParameters(
-      `SELECT COUNT (*) FROM pod_scan where pod_scanin_date_time >= :start AND pod_scanin_date_time <= :end `,
-      { start, end },
-    );
-
-    // exec raw query
-    const data = await RawQueryService.query(query, parameters);
-    const total = await RawQueryService.query(querycount, parameterscount);
-    const result = new WebScanInListResponseVm();
-
-    result.data = data;
-    result.paging = MetaService.set(page, take, Number(total[0].count));
-
-    return result;
-  }
 
   async findAllAwbByRequest(
     payload: BaseMetaPayloadVm,
@@ -201,6 +144,13 @@ export class WebDeliveryInService {
     return result;
   }
 
+  /**
+   * Scan in Bag Number (Hub) - NewFlow
+   * Flow Data : https://docs.google.com/document/d/1wnrYqlCmZruMMwgI9d-ko54JGQDWE9sn2yjSYhiAIrg/edit
+   * @param {WebScanInBagVm} payload
+   * @returns {Promise<WebScanInBagResponseVm>}
+   * @memberof WebDeliveryInService
+   */
   async scanInBag(payload: WebScanInBagVm): Promise<WebScanInBagResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -218,105 +168,143 @@ export class WebDeliveryInService {
         trouble: false,
         message: 'Success',
       };
-      const bagRepository = new OrionRepositoryService(Bag);
-      const qBag = bagRepository.findOne();
-      // Manage relation (default inner join)
-      qBag.innerJoin(e => e.bagItems);
-      qBag.leftJoin(e => e.bagItems.bagItemAwbs);
 
-      qBag.select({
-        bagId: true,
-        bagNumber: true,
-        bagItems: {
-          bagItemId: true,
-          bagItemAwbs: {
-            bagItemAwbId: true,
-            awbItemId: true,
-          },
-        },
-      });
-      // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
-      qBag.where(e => e.bagNumber, w => w.equals(bagNumber));
-      qBag.andWhere(e => e.isDeleted, w => w.equals(false));
-      const bagData = await qBag.exec();
+      const bagData = await DeliveryService.validBagNumber(bagNumber);
 
       if (bagData) {
-        for (const bagItem of bagData.bagItems) {
-          // find do pod detail where awb item id and scan in false
-          const doPodDetail = await DoPodDetail.findOne({
-            where: {
-              bagItemId: bagItem.bagItemId,
-              scanOutType: 'bag_item',
-              isScanIn: false,
-              isDeleted: false,
-            },
-          });
+        if (bagData.bagItemStatusIdLast === 1000) {
+          const holdRedis = await RedisService.locking(
+            `hold:bagscanin:${bagData.bagItemId}`,
+            'locking',
+          );
+          if (holdRedis) {
+            // save data to table pod_scan_id
+            // TODO: to be review
+            const podScanIn = PodScanIn.create();
+            // podScanIn.awbId = ??;
+            // podScanIn.doPodId = ??;
+            podScanIn.bagItemId = bagData.bagItemId;
+            podScanIn.branchId = permissonPayload.branchId;
+            podScanIn.userId = authMeta.userId;
+            podScanIn.podScaninDateTime = timeNow;
+            await PodScanIn.save(podScanIn);
 
-          // NOTE: Bag Number belum scan in
-          if (doPodDetail) {
-            // #region check pod scan
-            // // NOTE: jika awb awbHistoryIdLast >= 1500 dan tidak sama dengan 1800 (cancel) boleh scan out
-            // const checkPodScan = await PodScan.findOne({
-            //   where: {
-            //     bagItemId: bagItem.bagItemId,
-            //   },
-            // });
-            // // do_pod_id is null
-            // if (checkPodScan) {
-            //   totalError += 1;
-            // } else {
-            //   totalSuccess += 1;
-            // }
-            // #endregion
+            // AFTER Scan IN ===============================================
+            // #region after scanin
+            const bagItem = await BagItem.findOne({
+              where: {
+                bagItemId: bagData.bagItemId,
+              },
+            });
+            bagItem.bagItemStatusIdLast = 2000;
+            bagItem.updatedTime = timeNow;
+            bagItem.userIdUpdated = authMeta.userId;
+            BagItem.save(bagItem);
 
-            // save data to table pod_scan
-            const podScan = PodScan.create();
-            podScan.bagItemId = bagItem.bagItemId;
-            podScan.branchId = permissonPayload.branchId;
-            podScan.doPodId = doPodDetail.doPodId;
-            podScan.userId = authMeta.userId;
-            podScan.podScaninDateTime = timeNow;
-            await PodScan.save(podScan);
-
-            // TODO:
-            // save data to table awb_history
-            // update data history id last on awb??
-            // ...
-            // ...
-
-            // NOTE:
+            const doPodDetail = await DoPodDetail.findOne({
+              where: {
+                bagItemId: bagData.bagItemId,
+                isScanIn: false,
+                isDeleted: false,
+              },
+            });
             // Update Data doPodDetail
+            doPodDetail.podScanInId = podScanIn.podScanInId;
             doPodDetail.isScanIn = true;
             doPodDetail.updatedTime = timeNow;
             doPodDetail.userIdUpdated = authMeta.userId;
             await DoPodDetail.save(doPodDetail);
 
+            const doPod = await DoPod.findOne({
+              where: {
+                doPodId: doPodDetail.doPodId,
+                isDeleted: false,
+              },
+            });
+
+            // counter total scan in
+            doPod.totalScanIn = doPod.totalScanIn + 1;
+
+            if (doPod.totalScanIn === 1) {
+              doPod.firstDateScanIn = timeNow;
+              doPod.lastDateScanIn = timeNow;
+            } else {
+              doPod.lastDateScanIn = timeNow;
+            }
+            await DoPod.save(doPod);
+            // TODO: Loop data bag_item_awb
+            // SELECT *
+            // FROM bag_item_awb
+            // WHERE bag_item_id = <bag_item_id> AND is_deleted = false
+            const bagItemsAwb = await BagItemAwb.find({
+              where: {
+                bagItem: bagData.bagItemId,
+                isDeleted: false,
+              },
+            });
+            if (bagItemsAwb && bagItemsAwb.length > 0) {
+              for (const itemAwb of bagItemsAwb) {
+                if (itemAwb.awbItemId) {
+                  await DeliveryService.updateAwbAttr(
+                    itemAwb.awbItemId,
+                    3500,
+                  );
+                  // TODO:
+                  // Insert awb_history  (Note bg process + scheduler)
+                  // Update awb_item_summary  (Note bg process + scheduler)
+                  // ...
+                  // ...
+                }
+              }
+            }
+            // #endregion after scanin
+
             totalSuccess += 1;
+            // remove key holdRedis
+            RedisService.del(`hold:bagscanin:${bagData.bagItemId}`);
           } else {
-            // save data to bag_trouble
+            totalError += 1;
+            response.status = 'error';
+            response.message = 'Server Busy';
+          }
+        } else {
+          if (bagData.branchIdLast === permissonPayload.branchId) {
+            totalSuccess += 1;
+            response.message = `No Bag ${bagNumber} sudah di Scan Masuk dari gerai ini`;
+          } else {
+            // NOTE: create data bag trouble
+            // bag_trouble_code = automatic BTR/1907/13/XYZA1234
+            // Bag_number
+            // Bag_trouble_status = 100 (Read Bag TROUBLE STATUS below)
+            // Bag_status_id = <sesuai dengan bag_status_id ketika scan dilakukan>
+            // Employee_id = <sesuai login>
+            // Branch_id = <sesuai login>
+            const bagTroubleCode = await CustomCounterCode.bagTrouble(
+              timeNow.toString(),
+            );
             const bagTrouble = BagTrouble.create({
               bagNumber,
-              resolveDateTime: timeNow,
+              bagTroubleCode,
+              bagTroubleStatus: 100,
+              bagStatusId: 2000,
               employeeId: authMeta.employeeId,
               branchId: permissonPayload.branchId,
               userIdCreated: authMeta.userId,
               createdTime: timeNow,
               userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
-              description: response.message,
             });
             await BagTrouble.save(bagTrouble);
 
             totalError += 1;
             response.status = 'error';
-            response.trouble = true;
-            response.message = `Bag Number belum Scan Out pada Gerai Asal`;
+            response.message = `Gabung Paket belum masuk pada Gerai. Harap Scan Masuk jika Gabung Paket sudah masuk`;
           }
-        } // end of loop
+        }
       } else {
         totalError += 1;
         response.status = 'error';
-        response.message = `Bag ${bagNumber} Tidak di Temukan`;
+        response.message = `No Bag ${bagNumber} Tidak di Temukan`;
       }
       // push item
       dataItem.push({
@@ -335,7 +323,7 @@ export class WebDeliveryInService {
 
   /**
    * Scan in Awb Number (Branch) - NewFlow
-   * Flow Data : https://slack-files.com/TEL84PB2L-FLAF2QSHL-9c0532c4a6
+   * Flow Data : https://docs.google.com/document/d/1wnrYqlCmZruMMwgI9d-ko54JGQDWE9sn2yjSYhiAIrg/edit
    * @param {WebScanInVm} payload
    * @returns {Promise<WebScanInAwbResponseVm>}
    * @memberof WebDeliveryInService
@@ -512,9 +500,4 @@ export class WebDeliveryInService {
   }
 
   // private method
-  private async processScanInAwb() {
-    // #region process_scan_in
-    // #endregion process_scan_in
-  }
-
 }
