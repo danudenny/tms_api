@@ -1,4 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
+import { sortBy } from 'lodash';
 
 import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
 import { Branch } from '../../../shared/orm-entity/branch';
@@ -40,36 +41,86 @@ describe('master-branch-list', () => {
       });
   });
 
-  it('Verify created branch pt. 1', async () => {
+  it('Verify created branchs & sort', async () => {
     const payload = new BaseMetaPayloadVm();
     payload.page = 1;
     payload.limit = 10;
 
     const createdBranchIds = branchs.map(e => e.branchId);
-    payload.filters = [{
-      field: 'branchId',
-      operator: 'in',
-      value: createdBranchIds,
-    }];
+    payload.filters = [
+      {
+        field: 'branchId',
+        operator: 'in',
+        value: createdBranchIds,
+      },
+    ];
+
+    payload.sortBy = 'branchName';
+    payload.sortDir = 'asc';
 
     await TestUtility.getAuthenticatedMainServerAxios()
       .post('master/branch/list', payload)
-      .then(async response => {
+      .then(response => {
         expect(response.status).toEqual(HttpStatus.OK);
 
         const result = response.data as BranchFindAllResponseVm;
         expect(result.data.length).toEqual(5);
         expect(result.paging.totalData).toEqual(5);
-        expect(result.data.filter(e => createdBranchIds.includes(e.branchId)).length).toEqual(5);
+        expect(
+          result.data.filter(e => createdBranchIds.includes(e.branchId)).length,
+        ).toEqual(5);
 
-        const resultBranch = branchs[0];
+        const sortedBranchsByBranchName = sortBy(branchs, e => e.branchName);
+        expect(result.data[0].branchId).toEqual(
+          sortedBranchsByBranchName[0].branchId,
+        );
+
+        const resultBranch = result.data[0];
         expect(resultBranch.branchId).toBeDefined();
         expect(resultBranch.branchCode).toBeDefined();
         expect(resultBranch.branchName).toBeDefined();
 
-        const payloadBranch = branchs.find(e => e.branchId === resultBranch.branchId);
+        const payloadBranch = branchs.find(
+          e => e.branchId === resultBranch.branchId,
+        );
         expect(payloadBranch.branchCode).toEqual(resultBranch.branchCode);
         expect(payloadBranch.branchName).toEqual(resultBranch.branchName);
+      });
+  });
+
+  it('Verify all filters for 200', async () => {
+    const payload = new BaseMetaPayloadVm();
+    payload.page = 1;
+    payload.limit = 10;
+
+    const branchToCheck = branchs[0];
+
+    payload.filters = [
+      {
+        field: 'branchCode',
+        operator: 'eq',
+        value: branchToCheck.branchCode,
+      },
+      {
+        field: 'branchName',
+        operator: 'eq',
+        value: branchToCheck.branchName,
+      },
+    ];
+
+    await TestUtility.getAuthenticatedMainServerAxios()
+      .post('master/branch/list', payload)
+      .then(response => {
+        expect(response.status).toEqual(HttpStatus.OK);
+
+        const result = response.data as BranchFindAllResponseVm;
+        expect(result.data.length).toEqual(1);
+        expect(result.paging.totalData).toEqual(1);
+
+        const resultBranch = result.data[0];
+        expect(resultBranch.branchId).toEqual(branchToCheck.branchId);
+        expect(resultBranch.branchCode).toEqual(branchToCheck.branchCode);
+        expect(resultBranch.branchName).toEqual(branchToCheck.branchName);
       });
   });
 });

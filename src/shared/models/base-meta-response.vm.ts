@@ -1,6 +1,7 @@
 import { ApiModelProperty } from '../external/nestjs-swagger';
+import { MetaService } from '../services/meta.service';
 
-export class MetaResponseVm {
+export class BaseMetaResponsePaginationVm {
   @ApiModelProperty()
   currentPage: number;
 
@@ -21,6 +22,20 @@ export class MetaResponseVm {
 }
 
 export class BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => MetaResponseVm })
-  paging: MetaResponseVm;
+  @ApiModelProperty({ type: () => BaseMetaResponsePaginationVm })
+  paging: BaseMetaResponsePaginationVm = new BaseMetaResponsePaginationVm();
+
+  buildPaging(page: number, limit: number, total: number) {
+    const { currentPage, nextPage, prevPage, totalPage } = MetaService.set(
+      page,
+      limit,
+      total,
+    );
+    this.paging.currentPage = currentPage;
+    this.paging.nextPage = nextPage;
+    this.paging.prevPage = prevPage;
+    this.paging.totalPage = totalPage;
+    this.paging.totalData = total;
+    this.paging.limit = limit;
+  }
 }

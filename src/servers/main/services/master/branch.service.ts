@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { MetaService } from '../../../../shared/services/meta.service';
+import { RepositoryService } from '../../../../shared/services/repository.service';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 
 @Injectable()
 export class BranchService {
-  constructor() {}
-  async findBranchName(
+  async findAllByRequest(
     payload: BaseMetaPayloadVm,
   ): Promise<BranchFindAllResponseVm> {
     // mapping search field and operator default ilike
@@ -20,22 +19,22 @@ export class BranchService {
       },
     ];
 
-    // add select field
-    const qb = payload.buildQueryBuilder();
-    qb.addSelect('branch.branch_id', 'branchId');
-    qb.addSelect('branch.branch_name', 'branchName');
-    qb.addSelect('branch.branch_code', 'branchCode');
-    qb.from('branch', 'branch');
+    const q = RepositoryService.branch.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
 
-    const total = await qb.getCount();
+    q.selectRaw(
+      ['branch.branch_id', 'branchId'],
+      ['branch.branch_name', 'branchName'],
+      ['branch.branch_code', 'branchCode'],
+    );
 
-    // exec raw query
-    payload.applyPaginationToQueryBuilder(qb);
-    const data = await qb.execute();
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const result = new BranchFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    result.buildPaging(payload.page, payload.limit, total);
 
     return result;
   }

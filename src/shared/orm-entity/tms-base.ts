@@ -1,7 +1,5 @@
 import { BaseEntity, BeforeInsert, BeforeUpdate, Column } from 'typeorm';
 
-import { AuthService } from '../services/auth.service';
-
 export class TmsBaseEntity extends BaseEntity {
   @Column('bigint', {
     nullable: false,
@@ -39,6 +37,7 @@ export class TmsBaseEntity extends BaseEntity {
     this.createdTime = new Date();
     this.updatedTime = new Date();
 
+    const { AuthService } = require('../services/auth.service');
     const authMeta = AuthService.getAuthMetadata();
     if (authMeta && authMeta.userId) {
       this.userIdCreated = authMeta.userId;
@@ -50,6 +49,7 @@ export class TmsBaseEntity extends BaseEntity {
   assignUpdatedTimeAndUserIdUpdated() {
     this.updatedTime = new Date();
 
+    const { AuthService } = require('../services/auth.service');
     const authMeta = AuthService.getAuthMetadata();
     if (authMeta && authMeta.userId) {
       this.userIdUpdated = authMeta.userId;

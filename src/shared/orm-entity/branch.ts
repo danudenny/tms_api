@@ -1,7 +1,9 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('branch', { schema: 'public' })
-export class Branch extends BaseEntity {
+export class Branch extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'branch_id',
@@ -87,30 +89,6 @@ export class Branch extends BaseEntity {
     name: 'district_id',
   })
   districtId: number | null;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_created',
-  })
-  userIdCreated: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'created_time',
-  })
-  createdTime: Date;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_updated',
-  })
-  userIdUpdated: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'updated_time',
-  })
-  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
