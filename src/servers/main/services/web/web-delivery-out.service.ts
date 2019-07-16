@@ -19,7 +19,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
 import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
-import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 import { BaseQueryPayloadVm } from '../../../../shared/models/base-query-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
@@ -27,17 +26,13 @@ import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-respon
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
-import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 import { Bag } from '../../../../shared/orm-entity/bag';
-import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import moment = require('moment');
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
 import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { RedisService } from '../../../../shared/services/redis.service';
-import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
-import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 // #endregion
 
 @Injectable()
@@ -251,7 +246,8 @@ export class WebDeliveryOutService {
 
               // AFTER Scan OUT ===============================================
               // #region after scanout
-              // TODO:
+              await DeliveryService.updateAwbAttr(awb.awbItemId, 3000);
+
               // Update do_pod
               const doPod = await DoPod.findOne({
                 where: {
@@ -392,7 +388,7 @@ export class WebDeliveryOutService {
           case 'IN':
             // Add Locking setnx redis
             const holdRedis = await RedisService.locking(
-              `hold:scanoutdlv:${awb.awbItemId}`,
+              `hold:scanoutant:${awb.awbItemId}`,
               'locking',
             );
             if (holdRedis) {
@@ -412,24 +408,7 @@ export class WebDeliveryOutService {
 
               // AFTER Scan OUT ===============================================
               // #region after scanout
-              // TODO:
-              // Update do_pod
-              const doPodDeliver = await DoPodDeliver.findOne({
-                where: {
-                  doPodDeliverId: payload.doPodId,
-                  isDeleted: false,
-                },
-              });
-
-              // counter total scan in
-              // doPod.totalScanOut = doPod.totalScanOut + 1;
-              // if (doPod.totalScanOut === 1) {
-              //   doPod.firstDateScanOut = timeNow;
-              //   doPod.lastDateScanOut = timeNow;
-              // } else {
-              //   doPod.lastDateScanOut = timeNow;
-              // }
-              await DoPodDeliver.save(doPodDeliver);
+              await DeliveryService.updateAwbAttr(awb.awbItemId, 3000);
 
               // TODO:
               // Insert awb_history  (Note bg process + scheduler)
@@ -440,7 +419,7 @@ export class WebDeliveryOutService {
 
               totalSuccess += 1;
               // remove key holdRedis
-              RedisService.del(`hold:scanoutdlv:${awb.awbItemId}`);
+              RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
             } else {
               totalError += 1;
               response.status = 'error';
