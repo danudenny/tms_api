@@ -270,37 +270,6 @@ export class WebDeliveryOutService {
               }
               await DoPod.save(doPod);
 
-              // TODO: table awb attr and awb item attr
-              // // TODO: fix status out ??
-              // // Update awb_item_attr  semua field dengan suffix _last
-
-              // const awbItemAttr = await AwbItemAttr.findOne({
-              //   where: {
-              //     awbItemAttrId: awb.awbItemAttrId,
-              //   },
-              // });
-              // // TODO: how to update data??
-              // // awbItemAttr.awbHistoryIdLast;
-              // // awbItemAttr.awbStatusIdLastPublic;
-              // awbItemAttr.awbStatusIdLast = 3000; // Status OUT Manifest??
-
-              // awbItemAttr.userIdLast = authMeta.userId;
-              // awbItemAttr.branchIdLast = permissonPayload.branchId;
-              // awbItemAttr.historyDateLast = timeNow;
-              // await AwbItemAttr.save(awbItemAttr);
-
-              // // Update awb_attr  semua field dengan suffix _last
-              // const awbAttr = await AwbAttr.findOne({
-              //   where: {
-              //     awbAttrId: awb.awbAttrId,
-              //   },
-              // });
-              // // TODO: how to update data??
-              // // awbAttr.awbHistoryIdLast;
-              // // awbAttr.awbStatusIdLastPublic;
-              // awbAttr.awbStatusIdLast = 3000; // Status OUT Manifest??
-
-              // await AwbAttr.save(awbAttr);
               // TODO:
               // Insert awb_history  (Note bg process + scheduler)
               // Update awb_item_summary  (Note bg process + scheduler)
@@ -462,36 +431,6 @@ export class WebDeliveryOutService {
               // }
               await DoPodDeliver.save(doPodDeliver);
 
-              // TODO: fix status out ??
-              // Update awb_item_attr  semua field dengan suffix _last
-
-              // const awbItemAttr = await AwbItemAttr.findOne({
-              //   where: {
-              //     awbItemAttrId: awb.awbItemAttrId,
-              //   },
-              // });
-              // // TODO: how to update data??
-              // // awbItemAttr.awbHistoryIdLast;
-              // // awbItemAttr.awbStatusIdLastPublic;
-              // awbItemAttr.awbStatusIdLast = 3000; // Status OUT Manifest??
-
-              // awbItemAttr.userIdLast = authMeta.userId;
-              // awbItemAttr.branchIdLast = permissonPayload.branchId;
-              // awbItemAttr.historyDateLast = timeNow;
-              // await AwbItemAttr.save(awbItemAttr);
-
-              // // Update awb_attr  semua field dengan suffix _last
-              // const awbAttr = await AwbAttr.findOne({
-              //   where: {
-              //     awbAttrId: awb.awbAttrId,
-              //   },
-              // });
-              // // TODO: how to update data??
-              // // awbAttr.awbHistoryIdLast;
-              // // awbAttr.awbStatusIdLastPublic;
-              // awbAttr.awbStatusIdLast = 3000; // Status OUT Manifest??
-
-              // await AwbAttr.save(awbAttr);
               // TODO:
               // Insert awb_history  (Note bg process + scheduler)
               // Update awb_item_summary  (Note bg process + scheduler)
@@ -798,7 +737,7 @@ export class WebDeliveryOutService {
       ['t2.fullname', 'fullname'],
     );
 
-    q.innerJoin(e => e.employee, 't2', j => j.andWhere(e => e.is_deleted, w => w.isFalse()));
+    q.innerJoin(e => e.employee, 't2', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
     if (isHub) {
       q.where(e => e.doPodType, w => w.equals(POD_TYPE.TRANSIT_HUB));
     }

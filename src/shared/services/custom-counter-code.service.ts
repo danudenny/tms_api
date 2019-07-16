@@ -15,20 +15,20 @@ export class CustomCounterCode {
   }
 
   public static async doPod(dateTime: string, digit: number = 8) {
-    const prefix = `DOP/${moment(dateTime).format('YYMMDD')}/`;
+    const prefix = `DOP/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit).join('');
     return prefix + randomCode.toString();
   }
 
   public static async doPodDeliver(dateTime: string, digit: number = 8) {
-    const prefix = `DOPD/${moment(dateTime).format('YYMMDD')}/`;
+    const prefix = `DOPD/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit).join('');
     return prefix + randomCode.toString();
   }
 
   public static async awbTrouble(dateTime: string, digit: number = 8) {
     // Format Code: ATR/1907/13/XYZA1234
-    const prefix = `ATR/${moment(dateTime).format('YYMMDD')}/`;
+    const prefix = `ATR/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit).join('');
     return prefix + randomCode.toString();
   }
