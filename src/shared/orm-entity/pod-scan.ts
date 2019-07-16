@@ -62,7 +62,7 @@ export class PodScan extends BaseEntity {
     nullable: false,
     name: 'pod_scanin_date_time',
   })
-  podScaninDateTime: Date | null;
+  podScaninDateTime: Date;
 
   // TODO: mapping for join on scaninlist
   @OneToOne(() => Branch)

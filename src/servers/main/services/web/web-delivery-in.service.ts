@@ -91,8 +91,7 @@ export class WebDeliveryInService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanInListResponseVm> {
     // mapping field
-    payload.fieldResolverMap['scanInDateTime'] = 't1.pod_scanin_date_time';
-    payload.fieldResolverMap['podScanInDateTime'] = 't1.pod_scanin_date_time';
+    payload.fieldResolverMap['podScaninDateTime'] = 't1.pod_scanin_date_time';
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     payload.fieldResolverMap['branchIdScan'] = 't3.branch_id';
     payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
@@ -103,17 +102,17 @@ export class WebDeliveryInService {
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
-        field: 'scanInDateTime',
+        field: 'podScaninDateTime',
       },
     ];
 
-    const repo = new OrionRepositoryService(PodScan, 't1');
+    const repo = new OrionRepositoryService(PodScanIn, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.pod_scanin_date_time', 'podScanInDateTime'],
+      ['t1.pod_scanin_date_time', 'podScaninDateTime'],
       ['t2.awb_number', 'awbNumber'],
       ['t3.branch_name', 'branchNameScan'],
       ['t4.branch_name', 'branchNameFrom'],
@@ -148,8 +147,7 @@ export class WebDeliveryInService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanInListResponseVm> {
     // mapping field
-    payload.fieldResolverMap['scanInDateTime'] = 't1.pod_scanin_date_time';
-    payload.fieldResolverMap['podScanInDateTime'] = 't1.pod_scanin_date_time';
+    payload.fieldResolverMap['podScaninDateTime'] = 't1.pod_scanin_date_time';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
     payload.fieldResolverMap['branchIdScan'] = 't3.branch_id';
     payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
@@ -160,17 +158,17 @@ export class WebDeliveryInService {
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
-        field: 'scanInDateTime',
+        field: 'podScaninDateTime',
       },
     ];
 
-    const repo = new OrionRepositoryService(PodScan, 't1');
+    const repo = new OrionRepositoryService(PodScanIn, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.pod_scanin_date_time', 'scanInDateTime'],
+      ['t1.pod_scanin_date_time', 'podScaninDateTime'],
       ['t2.bag_number', 'bagNumber'],
       ['t3.branch_name', 'branchNameScan'],
       ['t4.branch_name', 'branchNameFrom'],
@@ -270,13 +268,13 @@ export class WebDeliveryInService {
             // #endregion
 
             // save data to table pod_scan
-            const podScan = PodScan.create();
-            podScan.bagItemId = bagItem.bagItemId;
-            podScan.branchId = permissonPayload.branchId;
-            podScan.doPodId = doPodDetail.doPodId;
-            podScan.userId = authMeta.userId;
-            podScan.podScaninDateTime = timeNow;
-            await PodScan.save(podScan);
+            const podScanIn = PodScanIn.create();
+            podScanIn.bagItemId = bagItem.bagItemId;
+            podScanIn.branchId = permissonPayload.branchId;
+            // podScanIn.doPodId = doPodDetail.doPodId;
+            podScanIn.userId = authMeta.userId;
+            podScanIn.podScaninDateTime = timeNow;
+            await PodScanIn.save(podScanIn);
 
             // TODO:
             // save data to table awb_history
