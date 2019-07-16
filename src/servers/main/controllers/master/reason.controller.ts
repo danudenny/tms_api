@@ -1,9 +1,10 @@
-import { Controller, Post, UseGuards, HttpCode, Body, HttpStatus } from '@nestjs/common';
-import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+
+import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { ReasonService } from '../../services/master/reason.service';
-import { ReasonFindAllResponseVm } from '../../models/reason.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { ReasonFindAllResponseVm } from '../../models/reason.vm';
+import { ReasonService } from '../../services/master/reason.service';
 
 @ApiUseTags('Master Data')
 @Controller('master/reason')
@@ -18,7 +19,6 @@ export class ReasonController {
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: ReasonFindAllResponseVm })
   public async listReason(@Body() payload: BaseMetaPayloadVm) {
-
-    return this.reasonService.listData(payload);
+    return this.reasonService.findAllByRequest(payload);
   }
 }

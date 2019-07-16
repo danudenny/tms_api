@@ -4,6 +4,7 @@ import { Branch } from '../orm-entity/branch';
 import { Customer } from '../orm-entity/customer';
 import { Employee } from '../orm-entity/employee';
 import { PartnerLogistic } from '../orm-entity/partner-logistic';
+import { Reason } from '../orm-entity/reason';
 import { Role } from '../orm-entity/role';
 import { RolePermission } from '../orm-entity/role-permission';
 import { User } from '../orm-entity/user';
@@ -32,6 +33,9 @@ export class RepositoryService {
   }
   static get partnerLogistic() {
     return new OrionRepositoryService(PartnerLogistic);
+  }
+  static get reason() {
+    return new OrionRepositoryService(Reason);
   }
   static get role() {
     return new OrionRepositoryService(Role);

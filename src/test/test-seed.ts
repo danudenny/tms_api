@@ -8,6 +8,7 @@ export class TestSeed {
     await this.seedRole();
     await this.seedUser();
     await this.seedPartnerLogistic();
+    await this.seedReason();
   }
 
   public static async seedBranch() {
@@ -55,6 +56,14 @@ export class TestSeed {
   public static async seedPartnerLogistic() {
     const sql = fs.readFileSync(
       path.resolve(__dirname, '../../sql/seed-partner-logistic.sql'),
+      'utf8',
+    );
+    await getManager().connection.query(sql);
+  }
+
+  public static async seedReason() {
+    const sql = fs.readFileSync(
+      path.resolve(__dirname, '../../sql/seed-reason.sql'),
       'utf8',
     );
     await getManager().connection.query(sql);
