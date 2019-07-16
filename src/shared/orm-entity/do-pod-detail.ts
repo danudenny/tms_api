@@ -1,5 +1,6 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 import { PodScanIn } from './pod-scan-in';
+import { DoPod } from './do-pod';
 
 @Entity('do_pod_detail', { schema: 'public' })
 export class DoPodDetail extends BaseEntity {
@@ -139,4 +140,8 @@ export class DoPodDetail extends BaseEntity {
   @OneToOne(() => PodScanIn)
   @JoinColumn({ name: 'pod_scan_in_id' })
   podScanIn: PodScanIn;
+
+  @OneToOne(() => DoPod)
+  @JoinColumn({ name: 'do_pod_id' })
+  do_pod: DoPod;
 }

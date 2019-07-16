@@ -21,9 +21,12 @@ import {
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { PodScanIn } from '../../../../shared/orm-entity/pod-scan-in';
+import { AwbStatusGroupItem } from '../../../../shared/orm-entity/awb-status-group-item';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { RedisService } from '../../../../shared/services/redis.service';
+import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
 import { DeliveryService } from '../../../../shared/services/delivery.service';
 // #endregion
@@ -112,20 +115,22 @@ export class WebDeliveryInService {
       ['t1.pod_scanin_date_time', 'podScaninDateTime'],
       ['t2.awb_number', 'awbNumber'],
       ['t3.branch_name', 'branchNameScan'],
+      ['t3.branch_code', 'branchCodeScan'],
       ['t4.branch_name', 'branchNameFrom'],
-      ['t5.fullname', 'employeeName'],
+      ['t4.branch_code', 'branchCodeFrom'],
+      ['t5.nickname', 'employeeName'],
     );
 
-    q.innerJoin(e => e.awb, 't2', j =>
+    q.innerJoin(e => e.awb_item_attr, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.do_pod.branch, 't4', j =>
+    q.innerJoin(e => e.do_pod_detail.do_pod.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.user.employee, 't5', j =>
+    q.innerJoin(e => e.employee, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -159,7 +164,7 @@ export class WebDeliveryInService {
       },
     ];
 
-    const repo = new OrionRepositoryService(PodScanIn, 't1');
+    const repo = new OrionRepositoryService(PodScan, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -265,13 +270,13 @@ export class WebDeliveryInService {
             // #endregion
 
             // save data to table pod_scan
-            const podScanIn = PodScanIn.create();
-            podScanIn.bagItemId = bagItem.bagItemId;
-            podScanIn.branchId = permissonPayload.branchId;
-            // podScanIn.doPodId = doPodDetail.doPodId;
-            podScanIn.userId = authMeta.userId;
-            podScanIn.podScaninDateTime = timeNow;
-            await PodScanIn.save(podScanIn);
+            const podScan = PodScan.create();
+            podScan.bagItemId = bagItem.bagItemId;
+            podScan.branchId = permissonPayload.branchId;
+            podScan.doPodId = doPodDetail.doPodId;
+            podScan.userId = authMeta.userId;
+            podScan.podScaninDateTime = timeNow;
+            await PodScan.save(podScan);
 
             // TODO:
             // save data to table awb_history
@@ -418,17 +423,47 @@ export class WebDeliveryInService {
               podScanIn.podScaninDateTime = timeNow;
               await PodScanIn.save(podScanIn);
 
+              // Update awb_item_attr  semua field dengan suffix _last
+              const awbItemAttr = await AwbItemAttr.findOne({
+                where: {
+                  awbItemAttrId: awb.awbItemAttrId,
+                },
+              });
+
               // AFTER Scan IN ===============================================
               // #region after scanin
-              await DeliveryService.updateAwbAttr(awb.awbItemId, 3500);
+              // TODO: how to update data??
+              // awbItemAttr.awbHistoryIdLast;
+              // awbItemAttr.awbStatusIdLastPublic;
+              // awbItemAttr.awbStatusIdLast;
+
+              // awbItemAttr.userIdLast;
+              // awbItemAttr.branchIdLast;
+              // awbItemAttr.historyDateLast;
+              // await AwbItemAttr.save(awbItemAttr);
+
+              // // Update awb_attr  semua field dengan suffix _last
+              // const awbAttr = await AwbAttr.findOne({
+              //   where: {
+              //     awbAttrId: awb.awbAttrId,
+              //   },
+              // });
+              // TODO: how to update data??
+              // awbAttr.awbHistoryIdLast;
+              // awbAttr.awbStatusIdLastPublic;
+              // awbAttr.awbStatusIdLast;
+              // await AwbAttr.save(awbAttr);
+
               // Update do_pod_detail ,
               // do_pod set pod_scan_in_id ,
               // is_scan = true, total_scan_in  += 1
               // where is_scan = false and awb_item_id = <awb_item_id>
+
               // find do pod detail where awb item id and scan in false
               const doPodDetail = await DoPodDetail.findOne({
                 where: {
                   awbItemId: awb.awbItemId,
+                  scanOutType: 'awb_item',
                   isScanIn: false,
                   isDeleted: false,
                 },
@@ -459,6 +494,7 @@ export class WebDeliveryInService {
               } else {
                 doPod.lastDateScanIn = timeNow;
               }
+
               await DoPod.save(doPod);
 
               // TODO:

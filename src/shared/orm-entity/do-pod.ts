@@ -11,6 +11,7 @@ import {
 import { PodScan } from './pod-scan';
 import { Branch } from './branch';
 import { Employee } from './employee';
+import { DoPodDetail } from './do-pod-detail';
 
 @Entity('do_pod', { schema: 'public' })
 export class DoPod extends BaseEntity {
@@ -265,6 +266,10 @@ export class DoPod extends BaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
+
+  @OneToOne(() => DoPodDetail)
+  @JoinColumn({ name: 'do_pod_id ' })
+  do_pod_detail: DoPodDetail;
 
   @ManyToOne(() => Employee)
   @JoinColumn({ name: 'employee_id_driver' })

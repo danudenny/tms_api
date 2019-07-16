@@ -13,6 +13,10 @@ import { Awb } from './awb';
 import { User } from './user';
 import { DoPod } from './do-pod';
 import { Bag } from './bag';
+import { DoPodDetail } from './do-pod-detail';
+import { AwbItem } from './awb-item';
+import { Employee } from './employee';
+import { AwbItemAttr } from './awb-item-attr';
 
 @Entity('pod_scan_in', { schema: 'public' })
 export class PodScanIn extends BaseEntity {
@@ -34,11 +38,11 @@ export class PodScanIn extends BaseEntity {
   })
   awbItemId: number;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'bag_id',
-  })
-  bagId: number;
+  // @Column('bigint', {
+  //   nullable: false,
+  //   name: 'bag_id',
+  // })
+  // bagId: number;
 
   @Column('bigint', {
     nullable: false,
@@ -48,18 +52,24 @@ export class PodScanIn extends BaseEntity {
 
   @Column('bigint', {
     nullable: false,
-    name: 'branch_id',
-  })
-  branchId: number;
-
-  @Column('bigint', {
-    nullable: false,
     name: 'user_id',
   })
   userId: number;
 
-  @Column('character varying', {
+  @Column('bigint', {
+    nullable: false,
+    name: 'employee_id',
+  })
+  employeeId: number;
+
+  @Column('bigint', {
     nullable: true,
+    name: 'branch_id',
+  })
+  branchId: number | null;
+
+  @Column('character varying', {
+    nullable: false,
     length: 50,
     name: 'scan_in_type',
   })
@@ -69,7 +79,31 @@ export class PodScanIn extends BaseEntity {
     nullable: false,
     name: 'pod_scanin_date_time',
   })
-  podScaninDateTime: Date | null;
+  podScaninDateTime: Date;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_created',
+  })
+  userIdCreated: number;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'created_time',
+  })
+  createdTime: Date;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_updated',
+  })
+  userIdUpdated: number;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'updated_time',
+  })
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
@@ -79,13 +113,17 @@ export class PodScanIn extends BaseEntity {
   isDeleted: boolean;
 
   // TODO: mapping for join on scaninlist
-  @OneToOne(() => Branch)
-  @JoinColumn({ name: 'branch_id' })
-  branch: Branch;
-
   @ManyToOne(() => Awb)
   @JoinColumn({ name: 'awb_id' })
   awb: Awb;
+
+  @ManyToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_item_id' })
+  awb_item_attr: AwbItemAttr;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 
   @ManyToOne(() => Bag)
   @JoinColumn({ name: 'bag_id' })
@@ -95,7 +133,11 @@ export class PodScanIn extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => DoPod)
-  @JoinColumn({ name: 'do_pod_id' })
-  do_pod: DoPod;
+  @OneToOne(() => Employee, employee => employee, { eager: true , nullable: true})
+  @JoinColumn({ name: 'employee_id' })
+  employee: Employee;
+
+  @ManyToOne(() => DoPodDetail)
+  @JoinColumn({ name: 'pod_scan_in_id' })
+  do_pod_detail: DoPodDetail;
 }
