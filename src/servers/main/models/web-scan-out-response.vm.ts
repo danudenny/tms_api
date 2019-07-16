@@ -25,7 +25,7 @@ export class WebScanInResponseVm {
   lastDateScanOut: string;
 
   @ApiModelProperty()
-  fullname: string;
+  nickname: string;
 }
 
 export class WebScanOutAwbListResponseVm extends BaseMetaResponseVm {

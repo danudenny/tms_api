@@ -704,7 +704,7 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
     payload.fieldResolverMap['description'] = 't1.description';
-    payload.fieldResolverMap['fullname'] = 't2.fullname';
+    payload.fieldResolverMap['nickname'] = 't2.nickname';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -718,7 +718,7 @@ export class WebDeliveryOutService {
         field: 'description',
       },
       {
-        field: 'fullname',
+        field: 'nickname',
       },
     ];
 
@@ -735,7 +735,7 @@ export class WebDeliveryOutService {
       ['t1.percen_scan_in_out', 'percenScanInOut'],
       ['t1.last_date_scan_in', 'lastDateScanIn'],
       ['t1.last_date_scan_out', 'lastDateScanOut'],
-      ['t2.fullname', 'fullname'],
+      ['t2.nickname', 'nickname'],
     );
 
     q.innerJoin(e => e.employee, 't2', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
