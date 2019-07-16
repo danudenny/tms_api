@@ -13,7 +13,16 @@ export class WebScanInResponseVm {
   doPodCode: string;
 
   @ApiModelProperty()
-  desc: string;
+  description: string;
+
+  @ApiModelProperty()
+  percenScanInOut: number;
+
+  @ApiModelProperty()
+  lastDateScanIn: string;
+
+  @ApiModelProperty()
+  lastDateScanOut: string;
 
   @ApiModelProperty()
   fullname: string;

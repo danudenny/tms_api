@@ -703,7 +703,7 @@ export class WebDeliveryOutService {
     // mapping field
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
-    payload.fieldResolverMap['desc'] = 't1.description';
+    payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['fullname'] = 't2.fullname';
 
     // mapping search field and operator default ilike

@@ -2,7 +2,7 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class WebScanInResponseVm {
   @ApiModelProperty()
-  scanInDateTime: string;
+  podScanInDateTime: string;
 
   @ApiModelProperty()
   awbNumber: string;
