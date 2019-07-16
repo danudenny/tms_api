@@ -1,6 +1,7 @@
 import { Awb } from '../orm-entity/awb';
 import { AwbItem } from '../orm-entity/awb-item';
 import { Branch } from '../orm-entity/branch';
+import { Customer } from '../orm-entity/customer';
 import { Employee } from '../orm-entity/employee';
 import { Role } from '../orm-entity/role';
 import { RolePermission } from '../orm-entity/role-permission';
@@ -21,6 +22,9 @@ export class RepositoryService {
   }
   static get branch() {
     return new OrionRepositoryService(Branch);
+  }
+  static get customer() {
+    return new OrionRepositoryService(Customer);
   }
   static get employee() {
     return new OrionRepositoryService(Employee);

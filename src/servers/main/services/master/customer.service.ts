@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { MetaService } from '../../../../shared/services/meta.service';
+import { RepositoryService } from '../../../../shared/services/repository.service';
 import { CustomerFindAllResponseVm } from '../../models/customer.response.vm';
 
 @Injectable()
 export class CustomerService {
-  constructor() {}
-  async findCustName(
+  async findAllByRequest(
     payload: BaseMetaPayloadVm,
   ): Promise<CustomerFindAllResponseVm> {
     // mapping search field and operator default ilike
@@ -20,22 +19,21 @@ export class CustomerService {
       },
     ];
 
-    // add select field
-    const qb = payload.buildQueryBuilder();
-    qb.addSelect('customer.customer_id', 'customerId');
-    qb.addSelect('customer.customer_code', 'customerCode');
-    qb.addSelect('customer.customer_name', 'customerName');
-    qb.from('customer', 'customer');
+    const q = RepositoryService.customer.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
 
-    const total = await qb.getCount();
+    q.selectRaw(
+      ['customer.customer_id', 'customerId'],
+      ['customer.customer_code', 'customerCode'],
+      ['customer.customer_name', 'customerName'],
+    );
 
-    // exec raw query
-    payload.applyPaginationToQueryBuilder(qb);
-    const data = await qb.execute();
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const result = new CustomerFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
+    result.buildPaging(payload.page, payload.limit, total);
 
     return result;
   }
