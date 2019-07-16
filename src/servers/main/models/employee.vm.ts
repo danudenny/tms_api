@@ -2,7 +2,7 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class EmployeeVm {
   @ApiModelProperty()
-  employeeId: string;
+  employeeId: number;
 
   @ApiModelProperty()
   nik: string;

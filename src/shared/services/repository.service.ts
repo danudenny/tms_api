@@ -1,12 +1,17 @@
 import { Awb } from '../orm-entity/awb';
 import { AwbItem } from '../orm-entity/awb-item';
 import { Branch } from '../orm-entity/branch';
+import { Employee } from '../orm-entity/employee';
 import { Role } from '../orm-entity/role';
 import { RolePermission } from '../orm-entity/role-permission';
 import { User } from '../orm-entity/user';
 import { UserRole } from '../orm-entity/user-role';
 import { OrionRepositoryService } from './orion-repository.service';
 
+/**
+ * For now, we are using getter methods due to repositories would always be defined once imported
+ * even TypeORM has not been ready yet
+ */
 export class RepositoryService {
   static get awb() {
     return new OrionRepositoryService(Awb);
@@ -16,6 +21,9 @@ export class RepositoryService {
   }
   static get branch() {
     return new OrionRepositoryService(Branch);
+  }
+  static get employee() {
+    return new OrionRepositoryService(Employee);
   }
   static get role() {
     return new OrionRepositoryService(Role);

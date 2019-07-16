@@ -11,6 +11,7 @@ import { AuthLoginResponseVM, PermissionAccessResponseVM } from '../servers/auth
 import { AwbBlueprint } from './blueprint/awb';
 import { AwbItemBlueprint } from './blueprint/awb-item';
 import { BranchBlueprint } from './blueprint/branch';
+import { EmployeeBlueprint } from './blueprint/employee';
 import { RoleBlueprint } from './blueprint/role';
 import { UserBlueprint } from './blueprint/user';
 import { UserRoleBlueprint } from './blueprint/user-role';
@@ -46,6 +47,7 @@ beforeAll(async () => {
       AwbBlueprint,
       AwbItemBlueprint,
       BranchBlueprint,
+      EmployeeBlueprint,
       RoleBlueprint,
       UserBlueprint,
       UserRoleBlueprint,

@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { MetaService } from '../../../../shared/services/meta.service';
+import { RepositoryService } from '../../../../shared/services/repository.service';
 import { EmployeeFindAllResponseVm } from '../../models/employee.response.vm';
 
 @Injectable()
 export class EmployeeService {
-  constructor() {}
-  async findAllEmployeeVm(
+  async findAllEmployeeByRequest(
     payload: BaseMetaPayloadVm,
   ): Promise<EmployeeFindAllResponseVm> {
     // mapping search field and operator default ilike
@@ -19,24 +18,25 @@ export class EmployeeService {
         field: 'employeeName',
       },
     ];
-   // mapping field
+
+    // mapping field
     payload.fieldResolverMap['employeeName'] = 'employee.fullname';
-    // add select field
-    const qb = payload.buildQueryBuilder();
-    qb.addSelect('employee.employee_id', 'employeeId');
-    qb.addSelect('employee.nik', 'nik');
-    qb.addSelect('employee.fullname', 'employeeName');
-    qb.from('employee', 'employee');
 
-    const total = await qb.getCount();
+    const q = RepositoryService.employee.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
 
-    // exec raw query
-    payload.applyPaginationToQueryBuilder(qb);
-    const data = await qb.execute();
+    q.selectRaw(
+      ['employee.employee_id', 'employeeId'],
+      ['employee.nik', 'nik'],
+      ['employee.fullname', 'employeeName'],
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const result = new EmployeeFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
+    result.buildPaging(payload.page, payload.limit, total);
 
     return result;
   }

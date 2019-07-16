@@ -18,7 +18,7 @@ describe('master-branch-list', () => {
   it('Valid list', async () => {
     const payload = new BaseMetaPayloadVm();
     payload.page = 1;
-    payload.limit = 10;
+    payload.limit = 2;
 
     await TestUtility.getAuthenticatedMainServerAxios()
       .post('master/branch/list', payload)
