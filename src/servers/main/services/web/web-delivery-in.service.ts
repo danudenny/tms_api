@@ -21,12 +21,9 @@ import {
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
-import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { PodScanIn } from '../../../../shared/orm-entity/pod-scan-in';
-import { AwbStatusGroupItem } from '../../../../shared/orm-entity/awb-status-group-item';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { RedisService } from '../../../../shared/services/redis.service';
-import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
 import { DeliveryService } from '../../../../shared/services/delivery.service';
 // #endregion
@@ -421,47 +418,17 @@ export class WebDeliveryInService {
               podScanIn.podScaninDateTime = timeNow;
               await PodScanIn.save(podScanIn);
 
-              // Update awb_item_attr  semua field dengan suffix _last
-              const awbItemAttr = await AwbItemAttr.findOne({
-                where: {
-                  awbItemAttrId: awb.awbItemAttrId,
-                },
-              });
-
               // AFTER Scan IN ===============================================
               // #region after scanin
-              // TODO: how to update data??
-              // awbItemAttr.awbHistoryIdLast;
-              // awbItemAttr.awbStatusIdLastPublic;
-              // awbItemAttr.awbStatusIdLast;
-
-              // awbItemAttr.userIdLast;
-              // awbItemAttr.branchIdLast;
-              // awbItemAttr.historyDateLast;
-              // await AwbItemAttr.save(awbItemAttr);
-
-              // // Update awb_attr  semua field dengan suffix _last
-              // const awbAttr = await AwbAttr.findOne({
-              //   where: {
-              //     awbAttrId: awb.awbAttrId,
-              //   },
-              // });
-              // TODO: how to update data??
-              // awbAttr.awbHistoryIdLast;
-              // awbAttr.awbStatusIdLastPublic;
-              // awbAttr.awbStatusIdLast;
-              // await AwbAttr.save(awbAttr);
-
+              await DeliveryService.updateAwbAttr(awb.awbItemId, 3500);
               // Update do_pod_detail ,
               // do_pod set pod_scan_in_id ,
               // is_scan = true, total_scan_in  += 1
               // where is_scan = false and awb_item_id = <awb_item_id>
-
               // find do pod detail where awb item id and scan in false
               const doPodDetail = await DoPodDetail.findOne({
                 where: {
                   awbItemId: awb.awbItemId,
-                  scanOutType: 'awb_item',
                   isScanIn: false,
                   isDeleted: false,
                 },
@@ -492,7 +459,6 @@ export class WebDeliveryInService {
               } else {
                 doPod.lastDateScanIn = timeNow;
               }
-
               await DoPod.save(doPod);
 
               // TODO:
