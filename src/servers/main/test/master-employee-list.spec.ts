@@ -88,7 +88,7 @@ describe('master-employee-list', () => {
       });
   });
 
-  it('Verify all filters for 200', async () => {
+  it('Verify all filters', async () => {
     const payload = new BaseMetaPayloadVm();
     payload.page = 1;
     payload.limit = 10;
@@ -107,6 +107,31 @@ describe('master-employee-list', () => {
         value: employeeToCheck.employeeName,
       },
     ];
+
+    await TestUtility.getAuthenticatedMainServerAxios()
+      .post('master/employee/list', payload)
+      .then(response => {
+        expect(response.status).toEqual(HttpStatus.OK);
+
+        const result = response.data as EmployeeFindAllResponseVm;
+        expect(result.data.length).toEqual(1);
+        expect(result.paging.totalData).toEqual(1);
+
+        const resultEmployee = result.data[0];
+        expect(resultEmployee.employeeId).toEqual(employeeToCheck.employeeId);
+        expect(resultEmployee.nik).toEqual(employeeToCheck.nik);
+        expect(resultEmployee.employeeName).toEqual(employeeToCheck.employeeName);
+      });
+  });
+
+  it('Verify global search', async () => {
+    const payload = new BaseMetaPayloadVm();
+    payload.page = 1;
+    payload.limit = 10;
+
+    const employeeToCheck = employees[0];
+
+    payload.search = employeeToCheck.nik;
 
     await TestUtility.getAuthenticatedMainServerAxios()
       .post('master/employee/list', payload)

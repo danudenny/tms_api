@@ -88,7 +88,7 @@ describe('master-branch-list', () => {
       });
   });
 
-  it('Verify all filters for 200', async () => {
+  it('Verify all filters', async () => {
     const payload = new BaseMetaPayloadVm();
     payload.page = 1;
     payload.limit = 10;
@@ -107,6 +107,31 @@ describe('master-branch-list', () => {
         value: branchToCheck.branchName,
       },
     ];
+
+    await TestUtility.getAuthenticatedMainServerAxios()
+      .post('master/branch/list', payload)
+      .then(response => {
+        expect(response.status).toEqual(HttpStatus.OK);
+
+        const result = response.data as BranchFindAllResponseVm;
+        expect(result.data.length).toEqual(1);
+        expect(result.paging.totalData).toEqual(1);
+
+        const resultBranch = result.data[0];
+        expect(resultBranch.branchId).toEqual(branchToCheck.branchId);
+        expect(resultBranch.branchCode).toEqual(branchToCheck.branchCode);
+        expect(resultBranch.branchName).toEqual(branchToCheck.branchName);
+      });
+  });
+
+  it('Verify global search', async () => {
+    const payload = new BaseMetaPayloadVm();
+    payload.page = 1;
+    payload.limit = 10;
+
+    const branchToCheck = branchs[0];
+
+    payload.search = branchToCheck.branchCode;
 
     await TestUtility.getAuthenticatedMainServerAxios()
       .post('master/branch/list', payload)

@@ -5828,7 +5828,7 @@ SELECT setval('"public"."email_at_night_email_at_night_id_seq"', 42, true);
 SELECT setval('"public"."email_log_email_log_id_seq"', 8, true);
 SELECT setval('"public"."email_log_history_email_log_history_id_seq"', 22, true);
 SELECT setval('"public"."employee_education_employee_education_id_seq"', 2, false);
-SELECT setval('"public"."employee_employee_id_seq"', 3925, true);
+SELECT setval('"public"."employee_employee_id_seq"', 4565, true);
 SELECT setval('"public"."employee_experience_employee_experience_id_seq"', 2, false);
 SELECT setval('"public"."employee_family_employee_family_id_seq"', 2, false);
 SELECT setval('"public"."employee_journal_employee_journal_id_seq"', 2, false);

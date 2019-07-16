@@ -12,7 +12,7 @@ export class PartnerLogisticBlueprint extends TypeormBlueprint<
     this.type(PartnerLogistic);
 
     this.define(async ({ faker, factory }) => ({
-      partnerLogisticCode: GeneratorService.alphanumeric(5),
+      partnerLogisticName: GeneratorService.alphanumeric(5),
       partnerLogisticEmail: faker.internet.email(),
       partnerLogisticNoTelp: faker.phone.phoneNumber(),
     }));

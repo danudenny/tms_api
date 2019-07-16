@@ -88,7 +88,7 @@ describe('master-reason-list', () => {
       });
   });
 
-  it('Verify all filters for 200', async () => {
+  it('Verify all filters', async () => {
     const payload = new BaseMetaPayloadVm();
     payload.page = 1;
     payload.limit = 10;
@@ -107,6 +107,31 @@ describe('master-reason-list', () => {
         value: reasonToCheck.reasonName,
       },
     ];
+
+    await TestUtility.getAuthenticatedMainServerAxios()
+      .post('master/reason/list', payload)
+      .then(response => {
+        expect(response.status).toEqual(HttpStatus.OK);
+
+        const result = response.data as ReasonFindAllResponseVm;
+        expect(result.data.length).toEqual(1);
+        expect(result.paging.totalData).toEqual(1);
+
+        const resultReason = result.data[0];
+        expect(resultReason.reasonId).toEqual(reasonToCheck.reasonId);
+        expect(resultReason.reasonCode).toEqual(reasonToCheck.reasonCode);
+        expect(resultReason.reasonName).toEqual(reasonToCheck.reasonName);
+      });
+  });
+
+  it('Verify global search', async () => {
+    const payload = new BaseMetaPayloadVm();
+    payload.page = 1;
+    payload.limit = 10;
+
+    const reasonToCheck = reasons[0];
+
+    payload.search = reasonToCheck.reasonCode;
 
     await TestUtility.getAuthenticatedMainServerAxios()
       .post('master/reason/list', payload)
