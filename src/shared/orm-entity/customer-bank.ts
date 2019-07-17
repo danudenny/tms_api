@@ -4,64 +4,64 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class CustomerBank extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'customer_bank_id',
   })
-  customer_bank_id: string;
+  customerBankId: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'customer_account_id',
   })
-  customer_account_id: string | null;
+  customerAccountId: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'bank_branch_id',
   })
-  bank_branch_id: string | null;
+  bankBranchId: string | null;
 
   @Column('character varying', {
     nullable: false,
     length: 200,
-
+    name: 'account_number',
   })
-  account_number: string;
+  accountNumber: string;
 
   @Column('character varying', {
     nullable: false,
     length: 200,
-
+    name: 'account_name',
   })
-  account_name: string;
+  accountName: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

@@ -3,71 +3,71 @@ import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeo
 @Entity('customer_account_merchant', { schema: 'public' })
 @Index(
   'customer_account_merchant_customer_account_merchant_code_key',
-  ['customer_account_merchant_code'],
+  ['customerAccountMerchantCode'],
   { unique: true },
 )
 export class CustomerAccountMerchant extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'customer_account_merchant_id',
   })
-  customer_account_merchant_id: string;
+  customerAccountMerchantId: string;
 
   @Column('character varying', {
     nullable: true,
     unique: true,
     length: 255,
-
+    name: 'customer_account_merchant_code',
   })
-  customer_account_merchant_code: string | null;
+  customerAccountMerchantCode: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'customer_account_id_parent',
   })
-  customer_account_id_parent: string;
+  customerAccountIdParent: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'customer_account_id_child',
   })
-  customer_account_id_child: string;
+  customerAccountIdChild: string;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_cashless',
   })
-  is_cashless: boolean;
+  isCashless: boolean;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

@@ -4,208 +4,207 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class CustomerAccountChange extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'customer_account_change_id',
   })
-  customer_account_change_id: string;
+  customerAccountChangeId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'customer_account_id',
   })
-  customer_account_id: string;
+  customerAccountId: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'customer_account_change_id_ref',
   })
-  customer_account_change_id_ref: string | null;
+  customerAccountChangeIdRef: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'effective_date',
   })
-  effective_date: Date;
+  effectiveDate: Date;
 
   @Column('integer', {
     nullable: false,
-
+    name: 'term_of_payment_day',
   })
-  term_of_payment_day: number;
+  termOfPaymentDay: number;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-
+    name: 'disc_percent',
   })
-  disc_percent: string;
+  discPercent: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 20,
     scale: 5,
-
+    name: 'disc_value',
   })
-  disc_value: string;
+  discValue: string;
 
   @Column('integer', {
     nullable: false,
     default: () => '1',
-
+    name: 'status_customer_account',
   })
-  status_customer_account: number;
+  statusCustomerAccount: number;
 
   @Column('integer', {
     nullable: false,
     default: () => '10',
-
+    name: 'status_customer_account_change',
   })
-  status_customer_account_change: number;
+  statusCustomerAccountChange: number;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-
+    name: 'status_confirm_finance',
   })
-  status_confirm_finance: number;
+  statusConfirmFinance: number;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'user_id_confirm_finance',
   })
-  user_id_confirm_finance: string | null;
+  userIdConfirmFinance: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'confirm_time_finance',
   })
-  confirm_time_finance: Date | null;
+  confirmTimeFinance: Date | null;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-
+    name: 'status_confirm_ops',
   })
-  status_confirm_ops: number;
+  statusConfirmOps: number;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'user_id_confirm_ops',
   })
-  user_id_confirm_ops: string | null;
+  userIdConfirmOps: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'confirm_time_ops',
   })
-  confirm_time_ops: Date | null;
+  confirmTimeOps: Date | null;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-
+    name: 'status_confirm_sales',
   })
-  status_confirm_sales: number;
+  statusConfirmSales: number;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'user_id_confirm_sales',
   })
-  user_id_confirm_sales: string | null;
+  userIdConfirmSales: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'confirm_time_sales',
   })
-  confirm_time_sales: Date | null;
+  confirmTimeSales: Date | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'employee_id_cro',
   })
-  employee_id_cro: string | null;
+  employeeIdCro: string | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_cod',
   })
-  is_cod: boolean;
+  isCod: boolean;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 20,
     scale: 5,
-
+    name: 'fee_per_receipt',
   })
-  fee_per_receipt: string | null;
+  feePerReceipt: string | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'percent_cod_value',
   })
-  percent_cod_value: string | null;
+  percentCodValue: string | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_land_cargo',
   })
-  is_land_cargo: boolean;
+  isLandCargo: boolean;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'percent_land_cargo_discount',
   })
-  percent_land_cargo_discount: string | null;
+  percentLandCargoDiscount: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'customer_category_id',
   })
-  customer_category_id: string | null;
+  customerCategoryId: string | null;
 
   @Column('text', {
     nullable: true,
-
   })
   note: string | null;
 
@@ -213,7 +212,7 @@ export class CustomerAccountChange extends BaseEntity {
     nullable: true,
     precision: 10,
     scale: 5,
-
+    name: 'disc_jne_percent',
   })
-  disc_jne_percent: string | null;
+  discJnePercent: string | null;
 }

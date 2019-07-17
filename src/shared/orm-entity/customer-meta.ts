@@ -5,64 +5,64 @@ import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeo
 export class CustomerMeta extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'customer_meta_id',
   })
-  customer_meta_id: string;
+  customerMetaId: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'customer_account_id',
   })
-  customer_account_id: string | null;
+  customerAccountId: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'meta_key',
   })
-  meta_key: string | null;
+  metaKey: string | null;
 
   @Column('text', {
     nullable: true,
-
+    name: 'meta_value',
   })
-  meta_value: string | null;
+  metaValue: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'meta_type',
   })
-  meta_type: string | null;
+  metaType: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

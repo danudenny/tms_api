@@ -3,457 +3,448 @@ import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } 
 import { PackagePriceSpecial } from './package-price-special';
 
 @Entity('customer_account', { schema: 'public' })
-@Index('code_rds_idx', ['code_rds'])
+@Index('code_rds_idx', ['codeRds'])
 @Index(
   'customer_account_customer_account_code_key',
-  ['customer_account_code'],
+  ['customerAccountCode'],
   { unique: true },
 )
-@Index('customer_account_is_email_at_night_idx', ['is_email_at_night'])
+@Index('customer_account_is_email_at_night_idx', ['isEmailAtNight'])
 export class CustomerAccount extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'customer_account_id',
   })
-  customer_account_id: string;
+  customerAccountId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'customer_id',
   })
-  customer_id: string;
+  customerId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'customer_category_id',
   })
-  customer_category_id: string;
+  customerCategoryId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'customer_grade_id',
   })
-  customer_grade_id: string;
+  customerGradeId: string;
 
   @Column('character varying', {
     nullable: false,
     unique: true,
     length: 255,
-
+    name: 'customer_account_code',
   })
-  customer_account_code: string;
+  customerAccountCode: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name: 'customer_account_name',
   })
-  customer_account_name: string;
+  customerAccountName: string;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-
   })
   phone1: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-
   })
   phone2: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-
   })
   mobile1: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-
   })
   mobile2: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 200,
-
   })
   email1: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 200,
-
   })
   email2: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'npwp_number',
   })
-  npwp_number: string | null;
+  npwpNumber: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'pic_customer',
   })
-  pic_customer: string | null;
+  picCustomer: string | null;
 
   @Column('text', {
     nullable: true,
-
   })
   note: string | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'join_date',
   })
-  join_date: Date;
+  joinDate: Date;
 
   @Column('integer', {
     nullable: false,
-
+    name: 'term_of_payment_day',
   })
-  term_of_payment_day: number;
+  termOfPaymentDay: number;
 
   @Column('character varying', {
     nullable: true,
     length: 20,
-
+    name: 'term_of_payment_based_on',
   })
-  term_of_payment_based_on: string | null;
+  termOfPaymentBasedOn: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 20,
-
+    name: 'pickup_time_method',
   })
-  pickup_time_method: string | null;
+  pickupTimeMethod: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
-
+    name: 'disc_percent',
   })
-  disc_percent: string | null;
+  discPercent: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 20,
     scale: 5,
-
+    name: 'disc_value',
   })
-  disc_value: string | null;
+  discValue: string | null;
 
   @Column('integer', {
     nullable: false,
     default: () => '1',
-
+    name: 'status_customer_account',
   })
-  status_customer_account: number;
+  statusCustomerAccount: number;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'weight_rounding_const',
   })
-  weight_rounding_const: string | null;
+  weightRoundingConst: string | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'weight_rounding_up_global',
   })
-  weight_rounding_up_global: string | null;
+  weightRoundingUpGlobal: string | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'weight_rounding_up_detail',
   })
-  weight_rounding_up_detail: string | null;
+  weightRoundingUpDetail: string | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'pickup_lead_time_min_days',
   })
-  pickup_lead_time_min_days: string | null;
+  pickupLeadTimeMinDays: string | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'pickup_lead_time_max_days',
   })
-  pickup_lead_time_max_days: string | null;
+  pickupLeadTimeMaxDays: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'employee_id_sales',
   })
-  employee_id_sales: string | null;
+  employeeIdSales: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'employee_id_cro',
   })
-  employee_id_cro: string | null;
+  employeeIdCro: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'employee_id_finance',
   })
-  employee_id_finance: string | null;
+  employeeIdFinance: string | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_sms',
   })
-  is_sms: boolean;
+  isSms: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_email_at_night',
   })
-  is_email_at_night: boolean;
+  isEmailAtNight: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_confirmation_volume',
   })
-  is_confirmation_volume: boolean;
+  isConfirmationVolume: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_resi_back',
   })
-  is_resi_back: boolean;
+  isResiBack: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_do_back',
   })
-  is_do_back: boolean;
+  isDoBack: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_photo_recipient',
   })
-  is_photo_recipient: boolean;
+  isPhotoRecipient: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_photo_ktp',
   })
-  is_photo_ktp: boolean;
+  isPhotoKtp: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_sharia',
   })
-  is_sharia: boolean;
+  isSharia: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_self_billing',
   })
-  is_self_billing: boolean;
+  isSelfBilling: boolean;
 
   @Column('bigint', {
     nullable: false,
     default: () => '0',
-
+    name: 'customer_account_id_billing',
   })
-  customer_account_id_billing: string;
+  customerAccountIdBilling: string;
 
   @Column('integer', {
     nullable: false,
     default: () => '0',
-
+    name: 'billing_reminder',
   })
-  billing_reminder: number;
+  billingReminder: number;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_cod',
   })
-  is_cod: boolean;
+  isCod: boolean;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 20,
     scale: 5,
-
+    name: 'fee_per_receipt',
   })
-  fee_per_receipt: string | null;
+  feePerReceipt: string | null;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'percent_cod_value',
   })
-  percent_cod_value: string | null;
+  percentCodValue: string | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_land_cargo',
   })
-  is_land_cargo: boolean;
+  isLandCargo: boolean;
 
   @Column('numeric', {
     nullable: true,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'percent_land_cargo_discount',
   })
-  percent_land_cargo_discount: string | null;
+  percentLandCargoDiscount: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'weight_rounding_up_global_bool',
   })
-  weight_rounding_up_global_bool: boolean;
+  weightRoundingUpGlobalBool: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'weight_rounding_up_detail_bool',
   })
-  weight_rounding_up_detail_bool: boolean;
+  weightRoundingUpDetailBool: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_force_weight_rounding',
   })
-  is_force_weight_rounding: boolean;
+  isForceWeightRounding: boolean;
 
   @Column('jsonb', {
     nullable: true,
-
+    name: 'code_rds',
   })
-  code_rds: Object | null;
+  codeRds: Object | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
   })
   username: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-
   })
   password: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'npwp_attachment_id',
   })
-  npwp_attachment_id: string | null;
+  npwpAttachmentId: string | null;
 
   @Column('numeric', {
     nullable: true,
     precision: 10,
     scale: 5,
-
+    name: 'disc_jne_percent',
   })
-  disc_jne_percent: string | null;
+  discJnePercent: string | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_email_lph',
   })
-  is_email_lph: boolean;
+  isEmailLph: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_input_order_id',
   })
-  is_input_order_id: boolean;
+  isInputOrderId: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_load_data_from_internet',
   })
-  is_load_data_from_internet: boolean;
+  isLoadDataFromInternet: boolean;
 
   @Column('boolean', {
     nullable: true,
-
+    name: 'is_promo_3kg',
   })
-  is_promo_3kg: boolean | null;
+  isPromo_3kg: boolean | null;
 
   @OneToMany(
     type => PackagePriceSpecial,
