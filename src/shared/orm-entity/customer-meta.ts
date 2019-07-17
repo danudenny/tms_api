@@ -1,7 +1,7 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('customer_meta', { schema: 'public' })
-@Index('index_meta_key', ['meta_key'])
+@Index('index_meta_key', ['metaKey'])
 export class CustomerMeta extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
