@@ -73,9 +73,9 @@ export class PodScan extends BaseEntity {
   @JoinColumn({ name: 'awb_id' })
   awb: Awb;
 
-  @ManyToOne(() => Bag)
-  @JoinColumn({ name: 'bag_id' })
-  bag: Bag;
+  // @ManyToOne(() => Bag)
+  // @JoinColumn({ name: 'bag_id' })
+  // bag: Bag;
 
   @OneToOne(() => User)
   @JoinColumn({ name: 'user_id' })

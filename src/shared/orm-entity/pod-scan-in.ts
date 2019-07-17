@@ -18,20 +18,21 @@ import { AwbItem } from './awb-item';
 import { Employee } from './employee';
 import { AwbItemAttr } from './awb-item-attr';
 import { BagItem } from './bag-item';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('pod_scan_in', { schema: 'public' })
-export class PodScanIn extends BaseEntity {
+export class PodScanIn extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'pod_scan_in_id',
   })
   podScanInId: number;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'awb_id',
-  })
-  awbId: number;
+  // @Column('bigint', {
+  //   nullable: false,
+  //   name: 'awb_id',
+  // })
+  // awbId: number;
 
   @Column('bigint', {
     nullable: false,
@@ -40,13 +41,13 @@ export class PodScanIn extends BaseEntity {
   awbItemId: number;
 
   // @Column('bigint', {
-  //   nullable: false,
+  //   nullable: true,
   //   name: 'bag_id',
   // })
   // bagId: number;
 
   @Column('bigint', {
-    nullable: false,
+    nullable: true,
     name: 'bag_item_id',
   })
   bagItemId: number;
@@ -114,9 +115,9 @@ export class PodScanIn extends BaseEntity {
   isDeleted: boolean;
 
   // TODO: mapping for join on scaninlist
-  @ManyToOne(() => Awb)
-  @JoinColumn({ name: 'awb_id' })
-  awb: Awb;
+  // @ManyToOne(() => Awb)
+  // @JoinColumn({ name: 'awb_id' })
+  // awb: Awb;
 
   @ManyToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'awb_item_id' })
@@ -126,9 +127,9 @@ export class PodScanIn extends BaseEntity {
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
 
-  @ManyToOne(() => Bag)
-  @JoinColumn({ name: 'bag_id' })
-  bag: Bag;
+  // @ManyToOne(() => Bag)
+  // @JoinColumn({ name: 'bag_id' })
+  // bag: Bag;
 
   @OneToOne(() => User)
   @JoinColumn({ name: 'user_id' })

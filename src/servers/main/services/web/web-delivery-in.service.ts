@@ -183,6 +183,8 @@ export class WebDeliveryInService {
             const podScanIn = PodScanIn.create();
             // podScanIn.awbId = ??;
             // podScanIn.doPodId = ??;
+            podScanIn.scanInType = 'bag';
+            podScanIn.employeeId = authMeta.employeeId;
             podScanIn.bagItemId = bagData.bagItemId;
             podScanIn.branchId = permissonPayload.branchId;
             podScanIn.userId = authMeta.userId;
@@ -208,58 +210,64 @@ export class WebDeliveryInService {
                 isDeleted: false,
               },
             });
-            // Update Data doPodDetail
-            doPodDetail.podScanInId = podScanIn.podScanInId;
-            doPodDetail.isScanIn = true;
-            doPodDetail.updatedTime = timeNow;
-            doPodDetail.userIdUpdated = authMeta.userId;
-            await DoPodDetail.save(doPodDetail);
+            if (doPodDetail) {
+              // Update Data doPodDetail
+              doPodDetail.podScanInId = podScanIn.podScanInId;
+              doPodDetail.isScanIn = true;
+              doPodDetail.updatedTime = timeNow;
+              doPodDetail.userIdUpdated = authMeta.userId;
+              await DoPodDetail.save(doPodDetail);
 
-            const doPod = await DoPod.findOne({
-              where: {
-                doPodId: doPodDetail.doPodId,
-                isDeleted: false,
-              },
-            });
+              const doPod = await DoPod.findOne({
+                where: {
+                  doPodId: doPodDetail.doPodId,
+                  isDeleted: false,
+                },
+              });
 
-            // counter total scan in
-            doPod.totalScanIn = doPod.totalScanIn + 1;
+              // counter total scan in
+              doPod.totalScanIn = doPod.totalScanIn + 1;
 
-            if (doPod.totalScanIn === 1) {
-              doPod.firstDateScanIn = timeNow;
-              doPod.lastDateScanIn = timeNow;
-            } else {
-              doPod.lastDateScanIn = timeNow;
-            }
-            await DoPod.save(doPod);
-            // TODO: Loop data bag_item_awb
-            // SELECT *
-            // FROM bag_item_awb
-            // WHERE bag_item_id = <bag_item_id> AND is_deleted = false
-            const bagItemsAwb = await BagItemAwb.find({
-              where: {
-                bagItem: bagData.bagItemId,
-                isDeleted: false,
-              },
-            });
-            if (bagItemsAwb && bagItemsAwb.length > 0) {
-              for (const itemAwb of bagItemsAwb) {
-                if (itemAwb.awbItemId) {
-                  await DeliveryService.updateAwbAttr(
-                    itemAwb.awbItemId,
-                    3500,
-                  );
-                  // TODO:
-                  // Insert awb_history  (Note bg process + scheduler)
-                  // Update awb_item_summary  (Note bg process + scheduler)
-                  // ...
-                  // ...
+              if (doPod.totalScanIn === 1) {
+                doPod.firstDateScanIn = timeNow;
+                doPod.lastDateScanIn = timeNow;
+              } else {
+                doPod.lastDateScanIn = timeNow;
+              }
+              await DoPod.save(doPod);
+              // TODO: Loop data bag_item_awb
+              // SELECT *
+              // FROM bag_item_awb
+              // WHERE bag_item_id = <bag_item_id> AND is_deleted = false
+              const bagItemsAwb = await BagItemAwb.find({
+                where: {
+                  bagItem: bagData.bagItemId,
+                  isDeleted: false,
+                },
+              });
+              if (bagItemsAwb && bagItemsAwb.length > 0) {
+                for (const itemAwb of bagItemsAwb) {
+                  if (itemAwb.awbItemId) {
+                    await DeliveryService.updateAwbAttr(
+                      itemAwb.awbItemId,
+                      3500,
+                    );
+                    // TODO:
+                    // Insert awb_history  (Note bg process + scheduler)
+                    // Update awb_item_summary  (Note bg process + scheduler)
+                    // ...
+                    // ...
+                  }
                 }
               }
+              totalSuccess += 1;
+            } else {
+              totalError += 1;
+              response.status = 'error';
+              response.message = `No Bag ${bagNumber} belum di Scan Keluar`;
             }
             // #endregion after scanin
 
-            totalSuccess += 1;
             // remove key holdRedis
             RedisService.del(`hold:bagscanin:${bagData.bagItemId}`);
           } else {
@@ -405,6 +413,8 @@ export class WebDeliveryInService {
               const podScanIn = PodScanIn.create();
               // podScanIn.awbId = ??;
               // podScanIn.doPodId = ??;
+              podScanIn.scanInType = 'awb';
+              podScanIn.employeeId = authMeta.employeeId;
               podScanIn.awbItemId = awb.awbItemId;
               podScanIn.branchId = permissonPayload.branchId;
               podScanIn.userId = authMeta.userId;
@@ -426,41 +436,47 @@ export class WebDeliveryInService {
                   isDeleted: false,
                 },
               });
-              // Update Data doPodDetail
-              doPodDetail.podScanInId = podScanIn.podScanInId;
-              doPodDetail.isScanIn = true;
-              doPodDetail.updatedTime = timeNow;
-              doPodDetail.userIdUpdated = authMeta.userId;
-              await DoPodDetail.save(doPodDetail);
+              if (doPodDetail) {
+                // Update Data doPodDetail
+                doPodDetail.podScanInId = podScanIn.podScanInId;
+                doPodDetail.isScanIn = true;
+                doPodDetail.updatedTime = timeNow;
+                doPodDetail.userIdUpdated = authMeta.userId;
+                await DoPodDetail.save(doPodDetail);
 
-              // Update do_pod dengan field
-              // Jika total_scan_in = 1 (resi pertama masuk), maka update first_date_scan_in dan last_date_scan_in
-              // Jika total_scan_in > 1 maka update last_date_scan_in
-              const doPod = await DoPod.findOne({
-                where: {
-                  doPodId: doPodDetail.doPodId,
-                  isDeleted: false,
-                },
-              });
+                // Update do_pod dengan field
+                // Jika total_scan_in = 1 (resi pertama masuk), maka update first_date_scan_in dan last_date_scan_in
+                // Jika total_scan_in > 1 maka update last_date_scan_in
+                const doPod = await DoPod.findOne({
+                  where: {
+                    doPodId: doPodDetail.doPodId,
+                    isDeleted: false,
+                  },
+                });
 
-              // counter total scan in
-              doPod.totalScanIn = doPod.totalScanIn + 1;
+                // counter total scan in
+                doPod.totalScanIn = doPod.totalScanIn + 1;
 
-              if (doPod.totalScanIn === 1) {
-                doPod.firstDateScanIn = timeNow;
-                doPod.lastDateScanIn = timeNow;
+                if (doPod.totalScanIn === 1) {
+                  doPod.firstDateScanIn = timeNow;
+                  doPod.lastDateScanIn = timeNow;
+                } else {
+                  doPod.lastDateScanIn = timeNow;
+                }
+                await DoPod.save(doPod);
+
+                // TODO:
+                // Insert awb_history  (Note bg process + scheduler)
+                // Update awb_item_summary  (Note bg process + scheduler)
+                // ...
+                // ...
+                totalSuccess += 1;
               } else {
-                doPod.lastDateScanIn = timeNow;
+                totalError += 1;
+                response.status = 'error';
+                response.message = `Resi ${awbNumber} belum di Scan Keluar`;
               }
-              await DoPod.save(doPod);
-
-              // TODO:
-              // Insert awb_history  (Note bg process + scheduler)
-              // Update awb_item_summary  (Note bg process + scheduler)
-              // ...
-              // ...
               // #endregion after scanin
-              totalSuccess += 1;
 
               // remove key holdRedis
               RedisService.del(`hold:scanin:${awb.awbItemId}`);
