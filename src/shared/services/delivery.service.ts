@@ -101,8 +101,8 @@ export class DeliveryService {
       // awbAttr.awbHistoryIdLast;
       // awbAttr.awbStatusIdLastPublic;
       awbAttr.awbStatusIdLast = status;
-      awbItemAttr.branchIdLast = permissonPayload.branchId;
-      awbItemAttr.historyDateLast = timeNow;
+      awbAttr.branchIdLast = permissonPayload.branchId;
+      awbAttr.historyDateLast = timeNow;
       awbAttr.updatedTime = timeNow;
       await AwbAttr.save(awbAttr);
     }
