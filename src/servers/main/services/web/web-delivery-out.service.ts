@@ -411,6 +411,19 @@ export class WebDeliveryOutService {
               // #region after scanout
               await DeliveryService.updateAwbAttr(awb.awbItemId, 3000);
 
+              // Update do_pod
+              const doPodDeliver = await DoPodDeliver.findOne({
+                select: ['doPodDeliverId', 'totalAwb'],
+                where: {
+                  doPodDeliverId: payload.doPodId,
+                  isDeleted: false,
+                },
+              });
+
+              // counter total scan out
+              doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
+              await DoPodDeliver.save(doPodDeliver);
+
               // TODO:
               // Insert awb_history  (Note bg process + scheduler)
               // Update awb_item_summary  (Note bg process + scheduler)
