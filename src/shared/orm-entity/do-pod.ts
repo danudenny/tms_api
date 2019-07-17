@@ -267,9 +267,9 @@ export class DoPod extends BaseEntity {
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
 
-  @OneToOne(() => DoPodDetail)
-  @JoinColumn({ name: 'do_pod_id ' })
-  do_pod_detail: DoPodDetail;
+  // @OneToOne(() => DoPodDetail)
+  // @JoinColumn({ name: 'do_pod_id ' })
+  // do_pod_detail: DoPodDetail;
 
   @ManyToOne(() => Employee)
   @JoinColumn({ name: 'employee_id_driver' })
