@@ -34,15 +34,19 @@ beforeAll(async () => {
     logging: false,
   });
 
-  // drop database tables
-  await getManager().connection.dropDatabase();
+  if (process.env.RESET_DB) {
+    // drop database tables
+    await getManager().connection.dropDatabase();
 
-  // reinitialize database structures
-  const sql = fs.readFileSync(
-    path.resolve(__dirname, '../../sql/init.sql'),
-    'utf8',
-  );
-  await getManager().connection.query(sql);
+    // reinitialize database structures
+    const sql = fs.readFileSync(
+      path.resolve(__dirname, '../../sql/init.sql'),
+      'utf8',
+    );
+    await getManager().connection.query(sql);
+
+    await TestSeed.seed();
+  }
 
   TEST_GLOBAL_VARIABLE.entityFactory = new EntityFactory({
     adapter: new TypeormAdapter(ormConfig),
@@ -59,8 +63,6 @@ beforeAll(async () => {
       UserRoleBlueprint,
     ],
   });
-
-  await TestSeed.seed();
 
   (connection.options as any).logging = true;
 
