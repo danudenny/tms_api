@@ -125,11 +125,11 @@ export class AwbItemAttr extends BaseEntity {
   })
   isDeleted: boolean;
 
-  // @Column('bigint', {
-  //   nullable: true,
-  //   name: 'branch_id_next',
-  // })
-  // branchIdNext: number | null;
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id_next',
+  })
+  branchIdNext: number | null;
 
   // relation model
   @OneToOne(() => Branch, branch => branch, {

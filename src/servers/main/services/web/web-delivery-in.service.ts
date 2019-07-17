@@ -249,7 +249,7 @@ export class WebDeliveryInService {
                 for (const itemAwb of bagItemsAwb) {
                   if (itemAwb.awbItemId) {
                     await DeliveryService.updateAwbAttr(
-                      itemAwb.awbItemId,
+                      itemAwb.awbItemId, doPod.branchIdTo,
                       3500,
                     );
                     // TODO:
@@ -423,7 +423,7 @@ export class WebDeliveryInService {
 
               // AFTER Scan IN ===============================================
               // #region after scanin
-              await DeliveryService.updateAwbAttr(awb.awbItemId, 3500);
+
               // Update do_pod_detail ,
               // do_pod set pod_scan_in_id ,
               // is_scan = true, total_scan_in  += 1
@@ -464,6 +464,7 @@ export class WebDeliveryInService {
                   doPod.lastDateScanIn = timeNow;
                 }
                 await DoPod.save(doPod);
+                await DeliveryService.updateAwbAttr(awb.awbItemId, doPod.branchIdTo, 3500);
 
                 // TODO:
                 // Insert awb_history  (Note bg process + scheduler)

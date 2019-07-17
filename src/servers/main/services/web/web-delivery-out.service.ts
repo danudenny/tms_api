@@ -247,7 +247,6 @@ export class WebDeliveryOutService {
 
               // AFTER Scan OUT ===============================================
               // #region after scanout
-              await DeliveryService.updateAwbAttr(awb.awbItemId, 3000);
 
               // Update do_pod
               const doPod = await DoPod.findOne({
@@ -266,6 +265,11 @@ export class WebDeliveryOutService {
                 doPod.lastDateScanOut = timeNow;
               }
               await DoPod.save(doPod);
+              await DeliveryService.updateAwbAttr(
+                awb.awbItemId,
+                doPod.branchIdTo,
+                3000,
+              );
 
               // TODO:
               // Insert awb_history  (Note bg process + scheduler)
@@ -409,7 +413,6 @@ export class WebDeliveryOutService {
 
               // AFTER Scan OUT ===============================================
               // #region after scanout
-              await DeliveryService.updateAwbAttr(awb.awbItemId, 3000);
 
               // Update do_pod
               const doPodDeliver = await DoPodDeliver.findOne({
@@ -423,6 +426,7 @@ export class WebDeliveryOutService {
               // counter total scan out
               doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
               await DoPodDeliver.save(doPodDeliver);
+              await DeliveryService.updateAwbAttr( awb.awbItemId, null, 3000);
 
               // TODO:
               // Insert awb_history  (Note bg process + scheduler)
@@ -561,6 +565,7 @@ export class WebDeliveryOutService {
                 if (itemAwb.awbItemId) {
                   await DeliveryService.updateAwbAttr(
                     itemAwb.awbItemId,
+                    doPod.branchIdTo,
                     3000,
                   );
                   // TODO:
