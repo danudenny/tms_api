@@ -89,9 +89,9 @@ export class AwbAttr extends BaseEntity {
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'update_time',
+    name: 'updated_time',
     })
-  updateTime: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,

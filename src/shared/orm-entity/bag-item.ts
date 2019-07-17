@@ -1,6 +1,7 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Bag } from './bag';
 import { BagItemAwb } from './bag-item-awb';
+import { BagItemStatus } from './bag-item-status';
 
 @Entity('bag_item', { schema: 'public' })
 @Index('bag_item_bag_id_idx', ['bagId'])
@@ -31,6 +32,18 @@ export class BagItem extends BaseEntity {
     name: 'bag_seq',
   })
   bagSeq: number;
+
+  @Column('integer', {
+    nullable: false,
+    name: 'bag_item_status_id_last',
+  })
+  bagItemStatusIdLast: number;
+
+  @Column('integer', {
+    nullable: false,
+    name: 'branch_id_last',
+  })
+  branchIdLast: number;
 
   @Column('bigint', {
     nullable: false,

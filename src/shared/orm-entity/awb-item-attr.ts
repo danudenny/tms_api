@@ -9,11 +9,11 @@ export class AwbItemAttr extends BaseEntity {
   })
   awbItemAttrId: number;
 
-  @Column('bigint', {
-    nullable: true,
-    name: 'awb_attr_id',
-  })
-  awbAttrId: number | null;
+  // @Column('bigint', {
+  //   nullable: true,
+  //   name: 'awb_attr_id',
+  // })
+  // awbAttrId: number | null;
 
   @Column('bigint', {
     nullable: false,
@@ -114,9 +114,9 @@ export class AwbItemAttr extends BaseEntity {
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'update_time',
+    name: 'updated_time',
   })
-  updateTime: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
@@ -125,11 +125,11 @@ export class AwbItemAttr extends BaseEntity {
   })
   isDeleted: boolean;
 
-  @Column('bigint', {
-    nullable: true,
-    name: 'branch_id_next',
-  })
-  branchIdNext: number | null;
+  // @Column('bigint', {
+  //   nullable: true,
+  //   name: 'branch_id_next',
+  // })
+  // branchIdNext: number | null;
 
   // relation model
   @OneToOne(() => Branch, branch => branch, {

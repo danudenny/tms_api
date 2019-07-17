@@ -26,6 +26,19 @@ export class BagTrouble extends BaseEntity {
   })
   bagNumber: string;
 
+  @Column('character varying', {
+    nullable: false,
+    length: 50,
+    name: 'bag_trouble_code',
+  })
+  bagTroubleCode: string;
+
+  @Column('integer', {
+    nullable: false,
+    name: 'bag_trouble_status',
+  })
+  bagTroubleStatus: number;
+
   @Column('timestamp without time zone', {
     nullable: true,
     name: 'resolve_date_time',

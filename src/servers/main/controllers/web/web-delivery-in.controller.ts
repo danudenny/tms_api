@@ -8,7 +8,7 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { BagRepository } from '../../../../shared/orm-repository/bag.repository';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
-import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebScanInListResponseVm, WebScanInBagListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
 
@@ -45,7 +45,7 @@ export class WebDeliveryInController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanInListResponseVm })
+  @ApiOkResponse({ type: WebScanInBagListResponseVm })
   // @ResponseSerializerOptions({ disable: true })
   public async findAllBagList(@Body() payload: BaseMetaPayloadVm) {
     // TODO:

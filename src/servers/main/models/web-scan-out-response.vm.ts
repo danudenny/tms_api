@@ -13,10 +13,19 @@ export class WebScanInResponseVm {
   doPodCode: string;
 
   @ApiModelProperty()
-  desc: string;
+  description: string;
 
   @ApiModelProperty()
-  fullname: string;
+  percenScanInOut: number;
+
+  @ApiModelProperty()
+  lastDateScanIn: string;
+
+  @ApiModelProperty()
+  lastDateScanOut: string;
+
+  @ApiModelProperty()
+  nickname: string;
 }
 
 export class WebScanOutAwbListResponseVm extends BaseMetaResponseVm {

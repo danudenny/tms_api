@@ -33,6 +33,12 @@ export class CustomCounterCode {
     return prefix + randomCode.toString();
   }
 
+  public static async bagTrouble(dateTime: string, digit: number = 8) {
+    const prefix = `BTR/${moment(dateTime).format('YYMM/DD')}/`;
+    const randomCode = this.randomCode(digit).join('');
+    return prefix + randomCode.toString();
+  }
+
   // get data on DB
   private static async getLastNumber(prefix: string) {
     const timeNow = moment().toDate();

@@ -4,6 +4,7 @@ import { AwbStatusGroupItem } from '../orm-entity/awb-status-group-item';
 import { AuthService } from './auth.service';
 import { AwbAttr } from '../orm-entity/awb-attr';
 import { AwbItem } from '../orm-entity/awb-item';
+import { BagItem } from '../orm-entity/bag-item';
 import moment = require('moment');
 
 export class DeliveryService {
@@ -78,7 +79,7 @@ export class DeliveryService {
       awbItemAttr.userIdLast = authMeta.userId;
       awbItemAttr.branchIdLast = permissonPayload.branchId;
       awbItemAttr.historyDateLast = timeNow;
-      awbItemAttr.updateTime = timeNow;
+      awbItemAttr.updatedTime = timeNow;
       await AwbItemAttr.save(awbItemAttr);
     }
 
@@ -102,8 +103,37 @@ export class DeliveryService {
       awbAttr.awbStatusIdLast = status;
       awbItemAttr.branchIdLast = permissonPayload.branchId;
       awbItemAttr.historyDateLast = timeNow;
-      awbAttr.updateTime = timeNow;
+      awbAttr.updatedTime = timeNow;
       await AwbAttr.save(awbAttr);
     }
+  }
+
+  public static async validBagNumber(bagNumberSeq: string): Promise<BagItem> {
+    const bagNumber: string = bagNumberSeq.substring(0, 7);
+    const seqNumber: number = Number(bagNumberSeq.substring(7, 10));
+    // NOTE: raw query
+    // SELECT bag_item_status_id, bag_item_id, branch_id_last
+    // FROM bag_item bia
+    // INNER JOIN bag b ON b.bag_id = bia.bag_id AND b.is_deleted = false
+    // WHERE b.bag_number = [bag_number] AND bia.bag_seq = [bag_seq] AND bia.is_deleted = false
+
+    const bagRepository = new OrionRepositoryService(BagItem);
+    const q = bagRepository.findOne();
+    // Manage relation (default inner join)
+    q.innerJoin(e => e.bag);
+
+    q.select({
+      bagItemId: true,
+      bagItemStatusIdLast: true,
+      branchIdLast: true,
+      bagSeq: true,
+      bag: {
+        bagId: true,
+        bagNumber: true,
+      },
+    });
+    q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
+    q.andWhere(e => e.bagSeq, w => w.equals(seqNumber));
+    return await q.exec();
   }
 }
