@@ -20,3 +20,24 @@ export class WebScanInResponseVm {
   scanInStatus: string;
 
 }
+
+export class WebScanInBagResponseVm {
+  @ApiModelProperty()
+  podScanInDateTime: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  branchNameScan: string;
+
+  @ApiModelProperty()
+  branchNameFrom: string;
+
+  @ApiModelProperty()
+  employeeName: string;
+
+  @ApiModelProperty()
+  scanInStatus: string;
+
+}

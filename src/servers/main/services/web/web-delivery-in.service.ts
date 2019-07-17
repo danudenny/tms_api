@@ -15,7 +15,7 @@ import {
   WebScanInBagResponseVm,
 } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
-import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebScanInListResponseVm, WebScanInBagListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
 import { PodScanIn } from '../../../../shared/orm-entity/pod-scan-in';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -90,7 +90,7 @@ export class WebDeliveryInService {
 
   async findAllBagByRequest(
     payload: BaseMetaPayloadVm,
-  ): Promise<WebScanInListResponseVm> {
+  ): Promise<WebScanInBagListResponseVm> {
     // mapping field
     payload.fieldResolverMap['podScaninDateTime'] = 't1.pod_scanin_date_time';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
@@ -136,7 +136,7 @@ export class WebDeliveryInService {
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
-    const result = new WebScanInListResponseVm();
+    const result = new WebScanInBagListResponseVm();
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
