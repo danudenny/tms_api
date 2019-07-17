@@ -17,6 +17,7 @@ import { DoPodDetail } from './do-pod-detail';
 import { AwbItem } from './awb-item';
 import { Employee } from './employee';
 import { AwbItemAttr } from './awb-item-attr';
+import { BagItem } from './bag-item';
 
 @Entity('pod_scan_in', { schema: 'public' })
 export class PodScanIn extends BaseEntity {
@@ -140,4 +141,8 @@ export class PodScanIn extends BaseEntity {
   @ManyToOne(() => DoPodDetail)
   @JoinColumn({ name: 'pod_scan_in_id' })
   do_pod_detail: DoPodDetail;
+
+  @ManyToOne(() => BagItem)
+  @JoinColumn({ name: 'bag_item_id' })
+  bag_item: BagItem;
 }

@@ -107,7 +107,7 @@ export class WebDeliveryInService {
       },
     ];
 
-    const repo = new OrionRepositoryService(PodScan, 't1');
+    const repo = new OrionRepositoryService(PodScanIn, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -120,16 +120,16 @@ export class WebDeliveryInService {
       ['t5.fullname', 'employeeName'],
     );
 
-    q.innerJoin(e => e.bag, 't2', j =>
+    q.innerJoin(e => e.bag_item.bag, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.do_pod.branch, 't4', j =>
+    q.innerJoin(e => e.do_pod_detail.do_pod.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.user.employee, 't5', j =>
+    q.innerJoin(e => e.user.employee, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
