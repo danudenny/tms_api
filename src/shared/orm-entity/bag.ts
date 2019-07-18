@@ -97,6 +97,6 @@ export class Bag extends BaseEntity {
   refRepresentativeCode: string | null;
 
   // relation model
-  @OneToMany(() => BagItem, e => e.bags, { cascade: ['insert'] })
+  @OneToMany(() => BagItem, e => e.bag, { cascade: ['insert'] })
   bagItems: BagItem[];
 }

@@ -333,5 +333,5 @@ export class AwbItem extends BaseEntity {
 
   @ManyToOne(() => Awb, e => e.awbItems)
   @JoinColumn({ name: 'awb_id', referencedColumnName: 'awbId' })
-  awbs: Awb[];
+  awb: Awb;
 }
