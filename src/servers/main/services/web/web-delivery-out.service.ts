@@ -556,7 +556,7 @@ export class WebDeliveryOutService {
             // WHERE bag_item_id = <bag_item_id> AND is_deleted = false
             const bagItemsAwb = await BagItemAwb.find({
               where: {
-                bagItem: bagData.bagItemId,
+                bagItemId: bagData.bagItemId,
                 isDeleted: false,
               },
             });
