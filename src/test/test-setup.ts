@@ -21,6 +21,8 @@ import { UserRoleBlueprint } from './blueprint/user-role';
 import TEST_GLOBAL_VARIABLE from './test-global-variable';
 import { TestSeed } from './test-seed';
 import { TestUtility } from './test-utility';
+import { BagBlueprint } from './blueprint/bag';
+import { BagItemBlueprint } from './blueprint/bag-item';
 
 process.env.NODE_ENV = 'test';
 
@@ -52,7 +54,9 @@ beforeAll(async () => {
     adapter: new TypeormAdapter(ormConfig),
     blueprints: [
       AwbBlueprint,
+      BagBlueprint,
       AwbItemBlueprint,
+      BagItemBlueprint,
       BranchBlueprint,
       CustomerBlueprint,
       EmployeeBlueprint,
