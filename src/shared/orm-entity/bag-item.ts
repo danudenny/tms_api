@@ -93,7 +93,7 @@ export class BagItem extends BaseEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'bag_id', referencedColumnName: 'bagId' })
-  bags: Bag[];
+  bag: Bag;
 
   @OneToMany(() => BagItemAwb, bagItemAwb => bagItemAwb.bagItem)
   bagItemAwbs: BagItemAwb[];

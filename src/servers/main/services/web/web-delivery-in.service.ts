@@ -120,7 +120,7 @@ export class WebDeliveryInService {
       ['t5.fullname', 'employeeName'],
     );
 
-    q.innerJoin(e => e.bag_item.bags, 't2', j =>
+    q.innerJoin(e => e.bag_item.bag, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't3', j =>

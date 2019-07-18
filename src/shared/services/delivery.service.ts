@@ -122,19 +122,19 @@ export class DeliveryService {
     const bagRepository = new OrionRepositoryService(BagItem);
     const q = bagRepository.findOne();
     // Manage relation (default inner join)
-    q.innerJoin(e => e.bags);
+    q.innerJoin(e => e.bag);
 
     q.select({
       bagItemId: true,
       bagItemStatusIdLast: true,
       branchIdLast: true,
       bagSeq: true,
-      bags: {
+      bag: {
         bagId: true,
         bagNumber: true,
       },
     });
-    q.where(e => e.bags.bagNumber, w => w.equals(bagNumber));
+    q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
     q.andWhere(e => e.bagSeq, w => w.equals(seqNumber));
     return await q.exec();
   }
