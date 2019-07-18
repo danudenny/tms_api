@@ -23,6 +23,8 @@ import { TestSeed } from './test-seed';
 import { TestUtility } from './test-utility';
 import { BagBlueprint } from './blueprint/bag';
 import { BagItemBlueprint } from './blueprint/bag-item';
+import { AwbAttrBlueprint } from './blueprint/awb-attr';
+import { AwbItemAttrBlueprint } from './blueprint/awb-item-attr';
 
 process.env.NODE_ENV = 'test';
 
@@ -53,8 +55,10 @@ beforeAll(async () => {
   TEST_GLOBAL_VARIABLE.entityFactory = new EntityFactory({
     adapter: new TypeormAdapter(ormConfig),
     blueprints: [
+      AwbAttrBlueprint,
       AwbBlueprint,
       BagBlueprint,
+      AwbItemAttrBlueprint,
       AwbItemBlueprint,
       BagItemBlueprint,
       BranchBlueprint,

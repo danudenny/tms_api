@@ -288,7 +288,7 @@ export class WebDeliveryInService {
             // Employee_id = <sesuai login>
             // Branch_id = <sesuai login>
             const bagTroubleCode = await CustomCounterCode.bagTrouble(
-              timeNow.toString(),
+              timeNow,
             );
             const bagTrouble = BagTrouble.create({
               bagNumber,
@@ -368,7 +368,7 @@ export class WebDeliveryInService {
             } else {
               // save data to awb_trouble
               const awbTroubleCode = await CustomCounterCode.awbTrouble(
-                timeNow.toString(),
+                timeNow,
               );
               const awbTrouble = AwbTrouble.create({
                 awbNumber,

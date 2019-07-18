@@ -65,7 +65,7 @@ export class WebDeliveryOutService {
     const doPodDateTime = moment(payload.doPodDateTime).toDate();
 
     doPod.doPodCode = await CustomCounterCode.doPod(
-      doPodDateTime.toDateString(),
+      doPodDateTime,
     );
     // TODO: doPodType
     doPod.doPodType = payload.doPodType;
@@ -127,12 +127,12 @@ export class WebDeliveryOutService {
 
     // NOTE: Tipe surat (jalan Antar Sigesit)
     doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
-      doPodDateTime.toDateString(),
+      doPodDateTime,
     ); // generate code
 
     // doPod.userIdDriver = payload.
     doPod.employeeIdDriver = payload.employeeIdDriver || null;
-    doPod.doPodDeliverDateTime = moment(doPodDateTime).toDate();
+    doPod.doPodDeliverDateTime = doPodDateTime;
     doPod.description = payload.desc || null;
 
     // general
@@ -190,7 +190,7 @@ export class WebDeliveryOutService {
             } else {
               // save data to awb_trouble
               const awbTroubleCode = await CustomCounterCode.awbTrouble(
-                timeNow.toString(),
+                timeNow,
               );
               const awbTrouble = AwbTrouble.create({
                 awbNumber,
@@ -356,7 +356,7 @@ export class WebDeliveryOutService {
             } else {
               // save data to awb_trouble
               const awbTroubleCode = await CustomCounterCode.awbTrouble(
-                timeNow.toString(),
+                timeNow,
               );
               const awbTrouble = AwbTrouble.create({
                 awbNumber,
@@ -599,7 +599,7 @@ export class WebDeliveryOutService {
             // Employee_id = <sesuai login>
             // Branch_id = <sesuai login>
             const bagTroubleCode = await CustomCounterCode.bagTrouble(
-              timeNow.toString(),
+              timeNow,
             );
             const bagTrouble = BagTrouble.create({
               bagNumber,
