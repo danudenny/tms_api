@@ -143,7 +143,7 @@ export class PodScanIn extends TmsBaseEntity {
   @JoinColumn({ name: 'pod_scan_in_id', referencedColumnName: 'podScanInId' })
   do_pod_detail: DoPodDetail;
 
-  @ManyToOne(() => BagItem)
+  @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id' })
   bag_item: BagItem;
 }
