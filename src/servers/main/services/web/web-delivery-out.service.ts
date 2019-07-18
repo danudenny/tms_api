@@ -758,7 +758,7 @@ export class WebDeliveryOutService {
 
     q.innerJoin(e => e.employee, 't2', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
     if (isHub) {
-      q.where(e => e.doPodType, w => w.equals(POD_TYPE.TRANSIT_HUB));
+      q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.TRANSIT_HUB));
     }
 
     const data = await q.exec();
