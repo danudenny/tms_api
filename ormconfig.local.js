@@ -15,5 +15,7 @@ module.exports = {
   },
   migrationsRun: true,
   logging: true,
+  logger: 'advanced-console',
+  maxQueryExecutionTime: 1000,
   synchronize: false,
 };

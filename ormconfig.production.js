@@ -17,6 +17,8 @@ module.exports = {
   },
   migrationsRun: false,
   logging: true,
+  logger: 'advanced-console',
+  maxQueryExecutionTime: 1000,
   synchronize: false,
   cache: {
     type: 'redis',

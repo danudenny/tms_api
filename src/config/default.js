@@ -26,4 +26,7 @@ module.exports = {
   },
   sentry: { dsn: 'http://69d535e3c29a42de850aafd6e04b6e44@sicepat-sentry.eastus.cloudapp.azure.com:9000/3' },
   servers: getAllServerConfigurations("default.js"),
+  printerHelper: {
+    url: 'http://localhost/tms-printer.php',
+  },
 };
