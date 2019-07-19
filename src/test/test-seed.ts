@@ -3,12 +3,36 @@ import path = require('path');
 import { getManager } from 'typeorm';
 
 export class TestSeed {
+
+  /**
+   * Initial Seed Data
+   * @static
+   * @memberof TestSeed
+   */
   public static async seed() {
+    await this.seedAwbStatusGroup();
+    await this.seedAwbStatusGroupItem();
     await this.seedBranch();
     await this.seedRole();
     await this.seedUser();
     await this.seedPartnerLogistic();
     await this.seedReason();
+  }
+
+  public static async seedAwbStatusGroup() {
+    const sql = fs.readFileSync(
+      path.resolve(__dirname, '../../sql/seed-awb-status-group.sql'),
+      'utf8',
+    );
+    await getManager().connection.query(sql);
+  }
+
+  public static async seedAwbStatusGroupItem() {
+    const sql = fs.readFileSync(
+      path.resolve(__dirname, '../../sql/seed-awb-status-group-item.sql'),
+      'utf8',
+    );
+    await getManager().connection.query(sql);
   }
 
   public static async seedBranch() {
