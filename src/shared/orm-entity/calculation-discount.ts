@@ -4,69 +4,69 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class CalculationDiscount extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'calculation_discount_id',
   })
-  calculation_discount_id: string;
+  calculationDiscountId: string;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'awb_date',
   })
-  awb_date: Date | null;
+  awbDate: Date | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'awb_price_id',
   })
-  awb_price_id: string | null;
+  awbPriceId: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'awb_number',
   })
-  awb_number: string | null;
+  awbNumber: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'customer_account_id',
   })
-  customer_account_id: string | null;
+  customerAccountId: string | null;
 
   @Column('integer', {
     nullable: true,
-
+    name: 'status_calculation',
   })
-  status_calculation: number | null;
+  statusCalculation: number | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

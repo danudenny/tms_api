@@ -14,26 +14,26 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
-  public static async doPod(dateTime: string, digit: number = 8) {
+  public static async doPod(dateTime: Date, digit: number = 8) {
     const prefix = `DOP/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit).join('');
     return prefix + randomCode.toString();
   }
 
-  public static async doPodDeliver(dateTime: string, digit: number = 8) {
+  public static async doPodDeliver(dateTime: Date, digit: number = 8) {
     const prefix = `DOPD/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit).join('');
     return prefix + randomCode.toString();
   }
 
-  public static async awbTrouble(dateTime: string, digit: number = 8) {
+  public static async awbTrouble(dateTime: Date, digit: number = 8) {
     // Format Code: ATR/1907/13/XYZA1234
     const prefix = `ATR/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit).join('');
     return prefix + randomCode.toString();
   }
 
-  public static async bagTrouble(dateTime: string, digit: number = 8) {
+  public static async bagTrouble(dateTime: Date, digit: number = 8) {
     const prefix = `BTR/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit).join('');
     return prefix + randomCode.toString();

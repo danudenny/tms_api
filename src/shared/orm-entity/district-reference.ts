@@ -4,58 +4,58 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class DistrictReference extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'district_reference_id',
   })
-  district_reference_id: string;
+  districtReferenceId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'district_id',
   })
-  district_id: string;
+  districtId: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name: 'ref_owner',
   })
-  ref_owner: string;
+  refOwner: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name: 'ref_code',
   })
-  ref_code: string;
+  refCode: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

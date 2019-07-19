@@ -92,9 +92,7 @@ export class BagItem extends BaseEntity {
   @ManyToOne(() => Bag, bag => bag.bagItems, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({
-    name: 'bag_id',
-  })
+  @JoinColumn({ name: 'bag_id', referencedColumnName: 'bagId' })
   bag: Bag;
 
   @OneToMany(() => BagItemAwb, bagItemAwb => bagItemAwb.bagItem)

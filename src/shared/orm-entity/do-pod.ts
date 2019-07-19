@@ -169,12 +169,6 @@ export class DoPod extends BaseEntity {
   })
   doPodType: number | null;
 
-  @Column('integer', {
-    nullable: true,
-    name: 'third_party_id',
-  })
-  thirdPartyId: number | null;
-
   @Column('bigint', {
     nullable: true,
     name: 'partner_logistic_id',

@@ -2231,6 +2231,7 @@ CREATE TABLE "public"."awb_item_attr" (
   "awb_status_id_last_public" int4 NOT NULL DEFAULT 2000,
   "user_id_last" int8,
   "branch_id_last" int8,
+  "branch_id_next" int8,
   "history_date_last" timestamp(6),
   "lead_time_run_days" int4 NOT NULL DEFAULT 0,
   "final_status_date" timestamp(6),

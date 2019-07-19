@@ -7,93 +7,93 @@ import { PackagePriceSpecial } from './package-price-special';
 export class City extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'city_id',
   })
-  city_id: string;
+  cityId: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name: 'city_type',
   })
-  city_type: string;
+  cityType: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name: 'city_code',
   })
-  city_code: string;
+  cityCode: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name: 'city_name',
   })
-  city_name: string;
+  cityName: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'country_id',
   })
-  country_id: string;
+  countryId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'province_id',
   })
-  province_id: string;
+  provinceId: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'city_id_ref_price',
   })
-  city_id_ref_price: string | null;
+  cityIdRefPrice: string | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-
+    name: 'city_root',
   })
-  city_root: boolean | null;
+  cityRoot: boolean | null;
 
   @Column('character varying', {
     nullable: true,
     length: 50,
-
+    name: 'city_code_backup',
   })
-  city_code_backup: string | null;
+  cityCodeBackup: string | null;
 
   @OneToMany(type => PackagePrice, package_price => package_price.cityIdFrom)
   packagePrices: PackagePrice[];

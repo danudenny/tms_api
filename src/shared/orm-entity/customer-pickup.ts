@@ -4,56 +4,55 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class CustomerPickup extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'customer_pickup_id',
   })
-  customer_pickup_id: string;
+  customerPickupId: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'customer_id',
   })
-  customer_id: string | null;
+  customerId: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'district_id',
   })
-  district_id: string | null;
+  districtId: string | null;
 
   @Column('text', {
     nullable: false,
-
   })
   address: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

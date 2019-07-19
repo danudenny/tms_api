@@ -4,72 +4,72 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class CustomerGrade extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'customer_grade_id',
   })
-  customer_grade_id: string;
+  customerGradeId: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name: 'grade_name',
   })
-  grade_name: string;
+  gradeName: string;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
-
+    name: 'revenue_from',
   })
-  revenue_from: string;
+  revenueFrom: string;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 20,
     scale: 5,
-
+    name: 'revenue_to',
   })
-  revenue_to: string;
+  revenueTo: string;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'disc_percent',
   })
-  disc_percent: string;
+  discPercent: string;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

@@ -1,70 +1,70 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('detail_lph', { schema: 'public' })
-@Index('detail_lph_customer_account_id_idx', ['customer_account_id'])
-@Index('detail_lph_lph_id_idx', ['lph_id'])
-@Index('detail_lph_status_email_idx', ['status_email'])
+@Index('detail_lph_customer_account_id_idx', ['customerAccountId'])
+@Index('detail_lph_lph_id_idx', ['lphId'])
+@Index('detail_lph_status_email_idx', ['statusEmail'])
 export class DetailLph extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'detail_lph_id',
   })
-  detail_lph_id: string;
+  detailLphId: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'lph_id',
   })
-  lph_id: string | null;
+  lphId: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'customer_account_id',
   })
-  customer_account_id: string | null;
+  customerAccountId: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-
+    name: 'pdf_url',
   })
-  pdf_url: string | null;
+  pdfUrl: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 1,
-
+    name: 'status_email',
   })
-  status_email: string | null;
+  statusEmail: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

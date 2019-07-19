@@ -4,64 +4,64 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class CustomerMetaChange extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'customer_meta_change_id',
   })
-  customer_meta_change_id: string;
+  customerMetaChangeId: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'customer_account_change_id',
   })
-  customer_account_change_id: string | null;
+  customerAccountChangeId: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'meta_key',
   })
-  meta_key: string | null;
+  metaKey: string | null;
 
   @Column('text', {
     nullable: true,
-
+    name: 'meta_value',
   })
-  meta_value: string | null;
+  metaValue: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'meta_type',
   })
-  meta_type: string | null;
+  metaType: string | null;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_created',
   })
-  user_id_created: string;
+  userIdCreated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'user_id_updated',
   })
-  user_id_updated: string;
+  userIdUpdated: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 }

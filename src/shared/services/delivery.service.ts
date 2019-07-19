@@ -58,7 +58,7 @@ export class DeliveryService {
     return result.awbStatusGroup.code;
   }
 
-  public static async updateAwbAttr(awbItemId: number, status: number) {
+  public static async updateAwbAttr(awbItemId: number, branchIdNext: number, status: number) {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timeNow = moment().toDate();
@@ -78,6 +78,7 @@ export class DeliveryService {
       awbItemAttr.awbStatusIdLast = status;
       awbItemAttr.userIdLast = authMeta.userId;
       awbItemAttr.branchIdLast = permissonPayload.branchId;
+      awbItemAttr.branchIdNext = branchIdNext;
       awbItemAttr.historyDateLast = timeNow;
       awbItemAttr.updatedTime = timeNow;
       await AwbItemAttr.save(awbItemAttr);
@@ -101,8 +102,9 @@ export class DeliveryService {
       // awbAttr.awbHistoryIdLast;
       // awbAttr.awbStatusIdLastPublic;
       awbAttr.awbStatusIdLast = status;
-      awbItemAttr.branchIdLast = permissonPayload.branchId;
-      awbItemAttr.historyDateLast = timeNow;
+      awbAttr.branchIdLast = permissonPayload.branchId;
+      awbAttr.branchIdNext = branchIdNext;
+      awbAttr.historyDateLast = timeNow;
       awbAttr.updatedTime = timeNow;
       await AwbAttr.save(awbAttr);
     }

@@ -677,7 +677,7 @@ export class Awb extends BaseEntity {
   })
   awbTroubleId: number | null;
 
-  @OneToMany(() => AwbItem, e => e.awbs, { cascade: ['insert'] })
+  @OneToMany(() => AwbItem, e => e.awb, { cascade: ['insert'] })
   awbItems: AwbItem[];
 
   // TODO: mapping for join on scaninlist

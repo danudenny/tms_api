@@ -65,7 +65,7 @@ export class WebDeliveryOutService {
     const doPodDateTime = moment(payload.doPodDateTime).toDate();
 
     doPod.doPodCode = await CustomCounterCode.doPod(
-      doPodDateTime.toDateString(),
+      doPodDateTime,
     );
     // TODO: doPodType
     doPod.doPodType = payload.doPodType;
@@ -127,12 +127,12 @@ export class WebDeliveryOutService {
 
     // NOTE: Tipe surat (jalan Antar Sigesit)
     doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
-      doPodDateTime.toDateString(),
+      doPodDateTime,
     ); // generate code
 
     // doPod.userIdDriver = payload.
     doPod.employeeIdDriver = payload.employeeIdDriver || null;
-    doPod.doPodDeliverDateTime = moment(doPodDateTime).toDate();
+    doPod.doPodDeliverDateTime = doPodDateTime;
     doPod.description = payload.desc || null;
 
     // general
@@ -190,7 +190,7 @@ export class WebDeliveryOutService {
             } else {
               // save data to awb_trouble
               const awbTroubleCode = await CustomCounterCode.awbTrouble(
-                timeNow.toString(),
+                timeNow,
               );
               const awbTrouble = AwbTrouble.create({
                 awbNumber,
@@ -247,7 +247,6 @@ export class WebDeliveryOutService {
 
               // AFTER Scan OUT ===============================================
               // #region after scanout
-              await DeliveryService.updateAwbAttr(awb.awbItemId, 3000);
 
               // Update do_pod
               const doPod = await DoPod.findOne({
@@ -266,6 +265,11 @@ export class WebDeliveryOutService {
                 doPod.lastDateScanOut = timeNow;
               }
               await DoPod.save(doPod);
+              await DeliveryService.updateAwbAttr(
+                awb.awbItemId,
+                doPod.branchIdTo,
+                3000,
+              );
 
               // TODO:
               // Insert awb_history  (Note bg process + scheduler)
@@ -352,7 +356,7 @@ export class WebDeliveryOutService {
             } else {
               // save data to awb_trouble
               const awbTroubleCode = await CustomCounterCode.awbTrouble(
-                timeNow.toString(),
+                timeNow,
               );
               const awbTrouble = AwbTrouble.create({
                 awbNumber,
@@ -409,7 +413,20 @@ export class WebDeliveryOutService {
 
               // AFTER Scan OUT ===============================================
               // #region after scanout
-              await DeliveryService.updateAwbAttr(awb.awbItemId, 3000);
+
+              // Update do_pod
+              const doPodDeliver = await DoPodDeliver.findOne({
+                select: ['doPodDeliverId', 'totalAwb'],
+                where: {
+                  doPodDeliverId: payload.doPodId,
+                  isDeleted: false,
+                },
+              });
+
+              // counter total scan out
+              doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
+              await DoPodDeliver.save(doPodDeliver);
+              await DeliveryService.updateAwbAttr( awb.awbItemId, null, 3000);
 
               // TODO:
               // Insert awb_history  (Note bg process + scheduler)
@@ -539,7 +556,7 @@ export class WebDeliveryOutService {
             // WHERE bag_item_id = <bag_item_id> AND is_deleted = false
             const bagItemsAwb = await BagItemAwb.find({
               where: {
-                bagItem: bagData.bagItemId,
+                bagItemId: bagData.bagItemId,
                 isDeleted: false,
               },
             });
@@ -548,6 +565,7 @@ export class WebDeliveryOutService {
                 if (itemAwb.awbItemId) {
                   await DeliveryService.updateAwbAttr(
                     itemAwb.awbItemId,
+                    doPod.branchIdTo,
                     3000,
                   );
                   // TODO:
@@ -581,7 +599,7 @@ export class WebDeliveryOutService {
             // Employee_id = <sesuai login>
             // Branch_id = <sesuai login>
             const bagTroubleCode = await CustomCounterCode.bagTrouble(
-              timeNow.toString(),
+              timeNow,
             );
             const bagTrouble = BagTrouble.create({
               bagNumber,
@@ -740,7 +758,7 @@ export class WebDeliveryOutService {
 
     q.innerJoin(e => e.employee, 't2', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
     if (isHub) {
-      q.where(e => e.doPodType, w => w.equals(POD_TYPE.TRANSIT_HUB));
+      q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.TRANSIT_HUB));
     }
 
     const data = await q.exec();

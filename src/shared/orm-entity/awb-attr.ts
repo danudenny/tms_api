@@ -35,10 +35,10 @@ export class AwbAttr extends BaseEntity {
   awbStatusIdLast: number | null;
 
   @Column('bigint', {
-    nullable: false,
+    nullable: true,
     name: 'awb_status_id_last_public',
   })
-  awbStatusIdLastPublic: number;
+  awbStatusIdLastPublic: number | null;
 
   @Column('bigint', {
     nullable: true,

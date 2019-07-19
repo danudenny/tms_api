@@ -103,7 +103,7 @@ export class DashboardService {
     // =============================================================
     const queryPayload = new BaseQueryPayloadVm();
     queryPayload.skip = 0;
-    queryPayload.take = 10;
+    queryPayload.take = 100;
     queryPayload.filter = [
       [
         {
