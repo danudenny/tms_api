@@ -694,7 +694,6 @@ export class OrionRepositoryQueryService<
       this.joinEagerRelations(
         queryBuilder,
         queryBuilder.alias,
-        this.entityMetadata,
       );
     }
 
@@ -763,28 +762,23 @@ export class OrionRepositoryQueryService<
     conditions(query);
 
     // Do not include joins in bracketed condition; perform those in the outer query.
-    const conditionParts: Array<
-      OrionRepositoryQueryBuilderPart<T>
-    > = query.queryBuilderParts.filter(
-      qp =>
-        // tslint:disable-next-line: triple-equals
-        qp.partAction == query.queryBuilder.where ||
-        // tslint:disable-next-line: triple-equals
-        qp.partAction == query.queryBuilder.andWhere ||
-        // tslint:disable-next-line: triple-equals
-        qp.partAction == query.queryBuilder.orWhere,
+    const whereConditionParts = this.queryBuilderPartsExtractWhereConditions(
+      query.queryBuilderParts,
+      query.queryBuilder,
     );
 
     // Perform joins in the outer query.
     const joinParts: Array<
       OrionRepositoryQueryBuilderPart<T>
-    > = query.queryBuilderParts.filter(qp => conditionParts.indexOf(qp) < 0);
+    > = query.queryBuilderParts.filter(
+      qp => whereConditionParts.indexOf(qp) < 0,
+    );
     this.queryBuilderParts.push(...joinParts);
 
     this.queryBuilderParts.push(
       new OrionRepositoryQueryBuilderPart(conditionAction, [
         new Brackets(qb => {
-          this.compileQueryParts(qb as any, conditionParts, false);
+          this.compileQueryParts(qb as any, whereConditionParts, false);
         }),
       ]),
     );
@@ -856,34 +850,35 @@ export class OrionRepositoryQueryService<
       joinQueryBuilderFn,
       false,
       joinAlias,
+      joinFn as any,
     );
 
-    const relationHistory = find(this.relationHistory, { relationAlias });
-    const relationMetadata = relationHistory.relationMetadata;
+    // const relationHistory = find(this.relationHistory, { relationAlias });
+    // const relationMetadata = relationHistory.relationMetadata;
 
-    if (joinFn) {
-      const targetEntityMetadata = relationMetadata.inverseEntityMetadata;
-      const queryBuilder = targetEntityMetadata.connection.createQueryBuilder();
-      queryBuilder.from(targetEntityMetadata.target, relationAlias);
+    // if (joinFn) {
+    //   const targetEntityMetadata = relationMetadata.inverseEntityMetadata;
+    //   const queryBuilder = targetEntityMetadata.connection.createQueryBuilder();
+    //   queryBuilder.from(targetEntityMetadata.target, relationAlias);
 
-      const linqRepositoryQuery = new OrionRepositoryQueryService<JR>(
-        this.entityManager,
-        targetEntityMetadata,
-        queryBuilder,
-        null,
-        relationAlias,
-        OrionRepositoryQueryMode.Join,
-        this.relationHistory,
-        this.selectHistory,
-        this.propsMetadata,
-      );
+    //   const linqRepositoryQuery = new OrionRepositoryQueryService<JR>(
+    //     this.entityManager,
+    //     targetEntityMetadata,
+    //     queryBuilder,
+    //     null,
+    //     relationAlias,
+    //     OrionRepositoryQueryMode.Join,
+    //     this.relationHistory,
+    //     this.selectHistory,
+    //     this.propsMetadata,
+    //   );
 
-      joinFn(linqRepositoryQuery);
+    //   joinFn(linqRepositoryQuery);
 
-      this.queryBuilderParts.push(
-        ...(linqRepositoryQuery.queryBuilderParts as any),
-      );
-    }
+    //   this.queryBuilderParts.push(
+    //     ...(linqRepositoryQuery.queryBuilderParts as any),
+    //   );
+    // }
 
     return this;
   }
@@ -891,8 +886,11 @@ export class OrionRepositoryQueryService<
   private joinEagerRelations(
     queryBuilder: SelectQueryBuilder<any>,
     alias: string = this.targetAlias,
-    entityMetadata: EntityMetadata = this.entityMetadata,
+    entityMetadata?: EntityMetadata,
   ) {
+    if (!entityMetadata) {
+      entityMetadata = queryBuilder.expressionMap.mainAlias.metadata;
+    }
     entityMetadata.eagerRelations.forEach(relation => {
       const relationAlias =
         alias + '_' + relation.propertyPath.replace('.', '_');
@@ -925,6 +923,7 @@ export class OrionRepositoryQueryService<
     fromAlias: string,
     queryAction: (...params: any[]) => SelectQueryBuilder<T>,
     relationAlias?: string,
+    relationFn?: (q: OrionRepositoryQueryService<any>) => void,
   ) {
     const systemAlias = `${fromAlias}_${propertyName}`;
     if (!relationAlias) {
@@ -946,21 +945,63 @@ export class OrionRepositoryQueryService<
         relationMetadata,
       });
 
-      if (
-        // tslint:disable-next-line: triple-equals
-        (queryAction == this.queryBuilder.leftJoinAndSelect ||
-          // tslint:disable-next-line: triple-equals
-          queryAction == this.queryBuilder.innerJoinAndSelect) &&
-        this.isSelectOnAliasPerformed(relationAlias)
-      ) {
-        // TODO: add select for relationAlias if previously joinned by not selected
-      }
-      const queryProperty: string = `${fromAlias}.${propertyName}`;
-      this.queryBuilderParts.push(
-        new OrionRepositoryQueryBuilderPart(queryAction, [
-          queryProperty,
+      const queryPartProperty: string = `${fromAlias}.${propertyName}`;
+      const queryPartParams: any = [queryPartProperty, relationAlias];
+
+      if (relationFn) {
+        const targetEntityMetadata = relationMetadata.inverseEntityMetadata;
+        const queryBuilder = targetEntityMetadata.connection.createQueryBuilder();
+        queryBuilder.from(targetEntityMetadata.target, relationAlias);
+
+        const orionRepositoryQuery = new OrionRepositoryQueryService<any>(
+          this.entityManager,
+          targetEntityMetadata,
+          queryBuilder,
+          null,
           relationAlias,
-        ]),
+          OrionRepositoryQueryMode.Join,
+          this.relationHistory,
+          this.selectHistory,
+          this.propsMetadata,
+        );
+
+        relationFn(orionRepositoryQuery);
+
+        const relationQueryBuilderParts = orionRepositoryQuery.queryBuilderParts;
+        if (
+          this.queryBuilderPartsHasOnlyWhere(
+            relationQueryBuilderParts,
+            queryBuilder,
+          )
+        ) {
+          const compiledQueryBuilder = this.compileQueryParts(
+            queryBuilder,
+            relationQueryBuilderParts,
+          );
+
+          // 2019-07-19 15:11:47 Labib *** current whereString result is enough for now, i don't know if it is already resolve parameters or not
+          // 2019-07-19 15:12:00 Labib *** orion repository is currently not giving parameters, it is always passed directly
+          const whereString = (compiledQueryBuilder as any).createWhereExpressionString();
+
+          // compiledQueryBuilder.setParameters(
+          //   compiledQueryBuilder.getParameters(),
+          // );
+          // const finalWhereString = this.entityManager.connection.driver.escapeQueryWithParameters(
+          //   whereString,
+          //   compiledQueryBuilder.getParameters(),
+          //   compiledQueryBuilder.expressionMap.nativeParameters,
+          // );
+          // 2019-07-19 15:11:42 Labib *** the result of finalWhereString is resolved where string but returned as array, inspection needed
+
+          queryPartParams.push(whereString);
+        } else {
+          // 2019-07-19 15:13:23 Labib *** select, limit, etc other than where expression is not supported yet
+          // TODO: replace relationQueryBuilderParts[0] with query builder
+        }
+      }
+
+      this.queryBuilderParts.push(
+        new OrionRepositoryQueryBuilderPart(queryAction, queryPartParams),
       );
     } else if (this.isRelationSystemAliasExists(systemAlias)) {
       relationAlias = this.resolveRelationAlias(systemAlias);
@@ -999,6 +1040,39 @@ export class OrionRepositoryQueryService<
     return this;
   }
 
+  private queryBuilderPartsExtractWhereConditions(
+    queryBuilderParts = this.queryBuilderParts,
+    queryBuilder: SelectQueryBuilder<any> = this.queryBuilder,
+  ) {
+    const conditionParts: Array<
+      OrionRepositoryQueryBuilderPart<T>
+    > = queryBuilderParts.filter(
+      qp =>
+        // tslint:disable-next-line: triple-equals
+        qp.partAction == queryBuilder.where ||
+        // tslint:disable-next-line: triple-equals
+        qp.partAction == queryBuilder.andWhere ||
+        // tslint:disable-next-line: triple-equals
+        qp.partAction == queryBuilder.orWhere,
+    );
+
+    return conditionParts;
+  }
+
+  private queryBuilderPartsHasOnlyWhere(
+    queryBuilderParts = this.queryBuilderParts,
+    queryBuilder: SelectQueryBuilder<any> = this.queryBuilder,
+  ) {
+    const whereConditions = this.queryBuilderPartsExtractWhereConditions(
+      queryBuilderParts,
+      queryBuilder,
+    );
+    return (
+      queryBuilderParts.filter(qp => whereConditions.indexOf(qp) < 0).length ===
+      0
+    );
+  }
+
   private replaceRawExpressionArrayArgs(rawExpression: string, args: any[]) {
     const rawExpressionFieldsMatches = rawExpression.match(/\[\d+\]/gm);
 
@@ -1018,6 +1092,7 @@ export class OrionRepositoryQueryService<
       .queryBuilder.innerJoin,
     escapeAlias: boolean = false,
     lastJoinAlias?: string,
+    lastJoinFn?: (q: OrionRepositoryQueryService<any>) => void,
   ): string {
     const properties: string[] = property.split('.');
     let currentEntityMetadata: EntityMetadata = this.entityMetadata;
@@ -1040,6 +1115,7 @@ export class OrionRepositoryQueryService<
           currentAlias,
           joinQueryBuilderFn,
           isLastProp ? lastJoinAlias : undefined,
+          isLastProp ? lastJoinFn : undefined,
         );
 
         resolvedPath = joinResult.relationAlias;
