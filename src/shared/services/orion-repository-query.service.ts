@@ -845,40 +845,13 @@ export class OrionRepositoryQueryService<
   ): OrionRepositoryQueryService<T, R, P> {
     const [propertyName] = this.resolvePropertySelector(propertySelector);
 
-    const relationAlias = this.resolvePropertyAndAutoJoin(
+    this.resolvePropertyAndAutoJoin(
       propertyName,
       joinQueryBuilderFn,
       false,
       joinAlias,
       joinFn as any,
     );
-
-    // const relationHistory = find(this.relationHistory, { relationAlias });
-    // const relationMetadata = relationHistory.relationMetadata;
-
-    // if (joinFn) {
-    //   const targetEntityMetadata = relationMetadata.inverseEntityMetadata;
-    //   const queryBuilder = targetEntityMetadata.connection.createQueryBuilder();
-    //   queryBuilder.from(targetEntityMetadata.target, relationAlias);
-
-    //   const linqRepositoryQuery = new OrionRepositoryQueryService<JR>(
-    //     this.entityManager,
-    //     targetEntityMetadata,
-    //     queryBuilder,
-    //     null,
-    //     relationAlias,
-    //     OrionRepositoryQueryMode.Join,
-    //     this.relationHistory,
-    //     this.selectHistory,
-    //     this.propsMetadata,
-    //   );
-
-    //   joinFn(linqRepositoryQuery);
-
-    //   this.queryBuilderParts.push(
-    //     ...(linqRepositoryQuery.queryBuilderParts as any),
-    //   );
-    // }
 
     return this;
   }
