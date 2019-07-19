@@ -780,35 +780,71 @@ export class WebDeliveryOutService {
    * @memberof WebDeliveryOutService
    */
   async awbDetailDelivery(
-    payload: WebDeliveryList,
+    payload: BaseMetaPayloadVm,
   ): Promise <WebDeliveryListResponseVm> {
-    const queryPayload = new BaseQueryPayloadVm();
-    const qb = queryPayload.buildQueryBuilder();
+    // mapping field
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
 
-    qb.addSelect('awb.awb_number', 'awbNumber');
-    qb.addSelect('awb.total_weight', 'weight');
-    qb.addSelect('awb.consignee_name', 'consigneeName');
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodId',
+      },
+    ];
 
-    qb.from('do_pod_detail', 'do_pod_detail');
-    qb.innerJoin(
-      'awb_item',
-      'awb_item',
-      'awb_item.awb_item_id = do_pod_detail.awb_item_id AND awb_item.is_deleted = false',
+    const repo = new OrionRepositoryService(DoPodDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t2.awb_number', 'awbNumber'],
+      ['t2.total_weight', 'weight'],
+      ['t2.consignee_name', 'consigneeName'],
     );
-    qb.innerJoin(
-      'awb',
-      'awb',
-      'awb.awb_id = awb_item.awb_id AND awb.is_deleted = false',
+
+    q.innerJoin(e => e.awbItem.awb, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    qb.where('do_pod_detail.do_pod_id = :doPodId', {
-      doPodId: payload.doPodId,
-    });
+
+    // q.andWhere('do_pod_detail.do_pod_id = :doPodId', {
+    //   doPodId: payload.doPodId,
+    // });
+
+    // qb.addSelect('awb.awb_number', 'awbNumber');
+    // qb.addSelect('awb.total_weight', 'weight');
+    // qb.addSelect('awb.consignee_name', 'consigneeName');
+
+    // qb.from('do_pod_detail', 'do_pod_detail');
+    // qb.innerJoin(
+    //   'awb_item',
+    //   'awb_item',
+    //   'awb_item.awb_item_id = do_pod_detail.awb_item_id AND awb_item.is_deleted = false',
+    // );
+    // qb.innerJoin(
+    //   'awb',
+    //   'awb',
+    //   'awb.awb_id = awb_item.awb_id AND awb.is_deleted = false',
+    // );
+    // qb.where('do_pod_detail.do_pod_id = :doPodId', {
+    //   doPodId: payload.doPodId,
+    // });
+
+    // const result = new WebDeliveryListResponseVm();
+    // const total = await qb.getCount();
+
+    // result.data = await qb.getRawMany();
+    // result.paging = MetaService.set(1, 10, total);
+
+    // return result;
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebDeliveryListResponseVm();
-    const total = await qb.getCount();
 
-    result.data = await qb.getRawMany();
-    result.paging = MetaService.set(1, 10, total);
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }

@@ -119,7 +119,7 @@ export class WebDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebDeliveryListResponseVm })
-  public async awbDeliveryOrder(@Body() payload: WebDeliveryList) {
+  public async awbDeliveryOrder(@Body() payload: BaseMetaPayloadVm) {
     return this.webDeliveryOutService.awbDetailDelivery(payload);
   }
 
