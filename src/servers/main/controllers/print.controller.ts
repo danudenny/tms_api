@@ -18,7 +18,7 @@ export class PrintController {
     @Response() serverResponse: { res: express.Response },
   ) {
     // PrinterService.responseForRawCommands(serverResponse.res, 'ABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCDEF\nABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCDEF');
-    PrinterService.responseForJsReport(serverResponse.res, 'test');
+    PrinterService.responseForJsReport(serverResponse.res, 'surat-jalan');
 //     WebClientPrintService.sendPrinterCommands(
 //       serverResponse.res,
 // `SURAT JALAN
