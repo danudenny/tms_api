@@ -24,9 +24,15 @@ module.exports = {
     cloudAccessKeyId: 'AKIAJHHTEMTLK42N7TQA',
     cloudSecretAccessKey: '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',
   },
-  sentry: { dsn: 'http://69d535e3c29a42de850aafd6e04b6e44@sicepat-sentry.eastus.cloudapp.azure.com:9000/3' },
-  servers: getAllServerConfigurations("default.js"),
   printerHelper: {
     url: 'http://sicepat-tms-printer.azurewebsites.net',
   },
+  queue: {
+    doPodDetailPostMeta: {
+      retryDelayMs: 2 * 60 * 1000, // 2 minutes
+      keepRetryInHours: 24, // keep retrying in 1 day
+    }
+  },
+  sentry: { dsn: 'http://69d535e3c29a42de850aafd6e04b6e44@sicepat-sentry.eastus.cloudapp.azure.com:9000/3' },
+  servers: getAllServerConfigurations("default.js"),
 };

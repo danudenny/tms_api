@@ -15,17 +15,17 @@ import { RequestValidationPipe } from '../../shared/pipes/request-validation-pip
 import { ConfigService } from '../../shared/services/config.service';
 import { PinoLoggerService } from '../../shared/services/logger.service';
 import { SharedModule } from '../../shared/shared.module';
-import { MainServerControllersModule } from './controllers/main-server-controllers.module';
-import { MainServerInjectorService } from './services/main-server-injector.service';
-import { MainServerServicesModule } from './services/main-server-services.module';
+import { DoPodDetailPostMetaQueueService } from './services/do-pod-detail-post-meta-queue.service';
+import { QueueServerInjectorService } from './services/queue-server-injector.service';
+import { QueueServerServicesModule } from './services/queue-server-services.module';
 
 @Module({
-  imports: [SharedModule, MainServerControllersModule, LoggingInterceptor, MainServerServicesModule],
+  imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
 })
-export class MainServerModule extends MultiServerAppModule implements NestModule {
+export class QueueServerModule extends MultiServerAppModule implements NestModule {
   constructor(private readonly moduleRef: ModuleRef) {
     super();
-    MainServerInjectorService.setModuleRef(this.moduleRef);
+    QueueServerInjectorService.setModuleRef(this.moduleRef);
   }
 
   configure(consumer: MiddlewareConsumer) {
@@ -42,17 +42,17 @@ export class MainServerModule extends MultiServerAppModule implements NestModule
   }
 
   public static async bootServer() {
-    const serverConfig = ConfigService.get('servers.main');
+    const serverConfig = ConfigService.get('servers.queue');
 
     let app: any;
     if (process.env.NODE_ENV === 'test') {
       const { Test } = require('@nestjs/testing');
       app = (await Test.createTestingModule({
-        imports: [MainServerModule],
+        imports: [QueueServerModule],
       }).compile()).createNestApplication();
     } else {
       app = await NestFactory.create<NestFastifyApplication>(
-        MainServerModule,
+        QueueServerModule,
         new FastifyAdapter({ logger: PinoLoggerService }),
       );
     }
@@ -88,16 +88,6 @@ export class MainServerModule extends MultiServerAppModule implements NestModule
         .build();
       const document = SwaggerModule.createDocument(app, options);
       SwaggerModule.setup(serverConfig.swagger.path, app, document);
-
-      // const swaggerModule = new SwaggerModule();
-      // const options = new DocumentBuilder()
-      //   .setTitle(serverConfig.swagger.title)
-      //   .setDescription(serverConfig.swagger.description)
-      //   .setVersion('1.0')
-      //   .addBearerAuth()
-      //   .build();
-      // const document = SwaggerModule.createDocument(app, options);
-      // SwaggerModule.setup(serverConfig.swagger.path, app, document);
     }
 
     if (process.env.NODE_ENV === 'test') {
@@ -105,5 +95,7 @@ export class MainServerModule extends MultiServerAppModule implements NestModule
     } else {
       await app.listen(process.env.PORT || serverConfig.port, serverConfig.host || '0.0.0.0');
     }
+
+    DoPodDetailPostMetaQueueService.boot();
   }
 }
