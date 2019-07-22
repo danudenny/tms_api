@@ -117,4 +117,17 @@ export class AwbTrouble extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean | false;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 10,
+    name: 'trouble_category',
+  })
+  troubleCategory: string;
+
+  @Column('text', {
+    nullable: true,
+    name: 'trouble_desc',
+  })
+  troubleDesc: string | null;
 }
