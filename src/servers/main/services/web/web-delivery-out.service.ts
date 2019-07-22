@@ -374,57 +374,74 @@ export class WebDeliveryOutService {
             break;
 
           case 'IN':
-            // Add Locking setnx redis
-            const holdRedis = await RedisService.locking(
-              `hold:scanoutant:${awb.awbItemId}`,
-              'locking',
-            );
-            if (holdRedis) {
-              // TODO:
-              // save table do_pod_detail
-              // NOTE: create data do pod detail per awb number
-              const doPodDeliverDetail = DoPodDeliverDetail.create();
-              doPodDeliverDetail.doPodDeliverId = payload.doPodId;
-              doPodDeliverDetail.awbItemId = awb.awbItemId;
+            if (awb.branchIdLast === permissonPayload.branchId) {
+              // Add Locking setnx redis
+              const holdRedis = await RedisService.locking(
+                `hold:scanoutant:${awb.awbItemId}`,
+                'locking',
+              );
+              if (holdRedis) {
+                // save table do_pod_detail
+                // NOTE: create data do pod detail per awb number
+                const doPodDeliverDetail = DoPodDeliverDetail.create();
+                doPodDeliverDetail.doPodDeliverId = payload.doPodId;
+                doPodDeliverDetail.awbItemId = awb.awbItemId;
 
-              // general
-              doPodDeliverDetail.userIdCreated = authMeta.userId;
-              doPodDeliverDetail.userIdUpdated = authMeta.userId;
-              doPodDeliverDetail.createdTime = timeNow;
-              doPodDeliverDetail.updatedTime = timeNow;
-              await DoPodDeliverDetail.save(doPodDeliverDetail);
+                // general
+                doPodDeliverDetail.userIdCreated = authMeta.userId;
+                doPodDeliverDetail.userIdUpdated = authMeta.userId;
+                doPodDeliverDetail.createdTime = timeNow;
+                doPodDeliverDetail.updatedTime = timeNow;
+                await DoPodDeliverDetail.save(doPodDeliverDetail);
 
-              // AFTER Scan OUT ===============================================
-              // #region after scanout
+                // AFTER Scan OUT ===============================================
+                // #region after scanout
 
-              // Update do_pod
-              const doPodDeliver = await DoPodDeliver.findOne({
-                select: ['doPodDeliverId', 'totalAwb'],
-                where: {
-                  doPodDeliverId: payload.doPodId,
-                  isDeleted: false,
-                },
-              });
+                // Update do_pod
+                const doPodDeliver = await DoPodDeliver.findOne({
+                  select: ['doPodDeliverId', 'totalAwb'],
+                  where: {
+                    doPodDeliverId: payload.doPodId,
+                    isDeleted: false,
+                  },
+                });
 
-              // counter total scan out
-              doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
-              await DoPodDeliver.save(doPodDeliver);
-              await DeliveryService.updateAwbAttr(awb.awbItemId, null, 3000);
+                // counter total scan out
+                doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
+                await DoPodDeliver.save(doPodDeliver);
+                // TODO: status 3000, OR ANT (14000)
+                await DeliveryService.updateAwbAttr(awb.awbItemId, null, 14000);
 
-              // TODO:
-              // Insert awb_history  (Note bg process + scheduler)
-              // Update awb_item_summary  (Note bg process + scheduler)
-              // ...
-              // ...
-              // #endregion after scanout
+                // TODO:
+                // Insert awb_history  (Note bg process + scheduler)
+                // Update awb_item_summary  (Note bg process + scheduler)
+                // ...
+                // ...
+                // #endregion after scanout
 
-              totalSuccess += 1;
-              // remove key holdRedis
-              RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
+                totalSuccess += 1;
+                // remove key holdRedis
+                RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
+              } else {
+                totalError += 1;
+                response.status = 'error';
+                response.message = 'Server Busy';
+              }
             } else {
+              // save data to awb_trouble
+              await this.createAwbTrouble(
+                awbNumber,
+                awb.branchLast.branchName,
+                awb.awbStatusIdLast,
+              );
+
               totalError += 1;
               response.status = 'error';
-              response.message = 'Server Busy';
+              response.message = `Resi Bermasalah pada gerai ${
+                awb.branchLast.branchCode
+              } - ${
+                awb.branchLast.branchName
+              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
