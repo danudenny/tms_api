@@ -2,7 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import moment = require('moment');
 import { MobileDashboardFindAllResponseVm } from '../../models/mobile-dashboard.response.vm';
 import _ from 'lodash';
 import { MobileInitDataResponseVm } from '../../models/mobile-init-response.vm';
@@ -14,10 +13,9 @@ import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 @Injectable()
 export class DashboardService {
   constructor() {}
-  async findalldashboard(): // payload: DeliveryFilterPayloadVm
-  Promise<MobileDashboardFindAllResponseVm> {
+  async findalldashboard(): Promise<MobileDashboardFindAllResponseVm> {
+    // TODO: Fix Query !!!
     const starttoday = '2019-02-02 00:00:00';
-
     const endtoday = '2019-02-03 00:00:00';
     const [
       querytodaycod,
@@ -93,13 +91,15 @@ export class DashboardService {
       ['awb_status_name', 'awbStatusCode'],
       ['awb_status_title', 'awbStatusName'],
     );
+    q.where(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isProblem, w => w.isTrue());
 
     return await q.exec();
   }
 
   public async getDelivery() {
-    // TODO: Fix Query get data to do_pod_deliver
-    // add filter with employee id driver
+    // TODO: Fix Query
+    // add filter with employee id driver and awb_status_id [ANT]
     // =============================================================
     const queryPayload = new BaseQueryPayloadVm();
     queryPayload.skip = 0;
@@ -127,8 +127,12 @@ export class DashboardService {
     qb.addSelect('t5.package_type_name', 'packageTypeName');
     qb.addSelect('t6.awb_status_name', 'awbStatusName');
     qb.addSelect('array_to_json(t13.data)', 'redeliveryHistory');
-    qb.from('do_pod', 't1');
-    qb.innerJoin('do_pod_detail', 't2', 't2.do_pod_id = t1.do_pod_id');
+    qb.from('do_pod_deliver', 't1');
+    qb.innerJoin(
+      'do_pod_deliver_detail',
+      't2',
+      't2.do_pod_deliver_id = t1.do_pod_deliver_id',
+    );
     qb.innerJoin('awb_item', 't3', 't3.awb_item_id = t2.awb_item_id');
     qb.innerJoin('awb', 't4', 't4.awb_id = t3.awb_id');
     qb.innerJoin(
@@ -146,11 +150,16 @@ export class DashboardService {
         qbJoin
           .select('array_agg(row_to_json(t13))', 'data')
           .from(qbJoinFrom => {
-            qbJoinFrom.addSelect('t10.history_date_time', 'historyDateTime');
+            qbJoinFrom.addSelect(
+              't10.history_date_time',
+              'historyDateTime',
+            );
             qbJoinFrom.addSelect('t11.reason_code', 'reasonCode');
             qbJoinFrom.addSelect('t12.fullname', 'employeeName');
-            qbJoinFrom.from('do_pod_history', 't10');
-            qbJoinFrom.where('t10.do_pod_id = t1.do_pod_id');
+            qbJoinFrom.from('do_pod_deliver_history', 't10');
+            qbJoinFrom.where(
+              't10.do_pod_deliver_detail_id = t2.do_pod_deliver_detail_id',
+            );
             qbJoinFrom.leftJoin(
               qbJoinFromJoin => {
                 qbJoinFromJoin.addSelect('t11.reason_code');
