@@ -8,6 +8,9 @@ export class ItemDeliveryResponseVm {
   awbNumber: string;
 
   @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
   weight: number;
 
   @ApiModelProperty()

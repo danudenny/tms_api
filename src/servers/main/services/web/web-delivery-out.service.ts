@@ -775,7 +775,7 @@ export class WebDeliveryOutService {
   /**
    *
    *
-   * @param {WebDeliveryList} payload
+   * @param {BaseMetaPayloadVm} payload
    * @returns {Promise<WebDeliveryListResponseVm>}
    * @memberof WebDeliveryOutService
    */
@@ -837,6 +837,54 @@ export class WebDeliveryOutService {
     // result.paging = MetaService.set(1, 10, total);
 
     // return result;
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebDeliveryListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  /**
+   *
+   *
+   * @param {BaseMetaPayloadVm} payload
+   * @returns {Promise<WebDeliveryListResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
+  async bagDetailDelivery(
+    payload: BaseMetaPayloadVm,
+  ): Promise <WebDeliveryListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPodDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t3.bag_number', 'bagNumber'],
+      ['t2.weight', 'weight'],
+    );
+
+    q.innerJoin(e => e.bagItem, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.bagItem.bag, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

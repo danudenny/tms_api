@@ -2,6 +2,7 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColum
 import { PodScanIn } from './pod-scan-in';
 import { DoPod } from './do-pod';
 import { AwbItem } from './awb-item';
+import { BagItem } from './bag-item';
 
 @Entity('do_pod_detail', { schema: 'public' })
 export class DoPodDetail extends BaseEntity {
@@ -149,4 +150,8 @@ export class DoPodDetail extends BaseEntity {
   @OneToOne(() => AwbItem)
   @JoinColumn({ name: 'awb_item_id' })
   awbItem: AwbItem;
+
+  @OneToOne(() => BagItem)
+  @JoinColumn({ name: 'bag_item_id' })
+  bagItem: BagItem;
 }

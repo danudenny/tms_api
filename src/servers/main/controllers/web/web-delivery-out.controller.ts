@@ -127,8 +127,8 @@ export class WebDeliveryOutController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
-  public async bagDeliveryOrder(@Body() payload: WebScanOutAwbListPayloadVm) {
-    return this.webDeliveryOutService.scanOutList(payload, true);
+  @ApiOkResponse({ type: WebDeliveryListResponseVm })
+  public async bagDeliveryOrder(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryOutService.bagDetailDelivery(payload);
   }
 }
