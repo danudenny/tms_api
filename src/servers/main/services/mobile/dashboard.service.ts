@@ -79,7 +79,7 @@ export class DashboardService {
     );
     q.where(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.reasonCategory, w => w.equals('pod'));
-
+    q.orWhere(e => e.reasonCategory, w => w.equals('pod_cod'));
     return await q.exec();
   }
 
