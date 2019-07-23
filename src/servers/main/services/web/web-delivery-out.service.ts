@@ -875,7 +875,10 @@ export class WebDeliveryOutService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t3.bag_number', 'bagNumber'],
+      [
+        'CONCAT (t3.bag_number,t2.bag_seq)',
+        'bagNumber',
+      ],
       ['t2.weight', 'weight'],
     );
 
