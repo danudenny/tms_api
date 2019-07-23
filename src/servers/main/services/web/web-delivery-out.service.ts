@@ -11,6 +11,7 @@ import {
   WebScanOutAwbResponseVm,
   WebScanOutAwbListResponseVm,
   WebScanOutBagResponseVm,
+  WebScanOutDeliverListResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { DoPodRepository } from '../../../../shared/orm-repository/do-pod.repository';
@@ -768,7 +769,7 @@ export class WebDeliveryOutService {
   async findAllScanOutDeliverList(
     payload: BaseMetaPayloadVm,
     isHub = false,
-  ): Promise<WebScanOutAwbListResponseVm> {
+  ): Promise<WebScanOutDeliverListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_deliver_date_time';
     payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_code';
@@ -818,7 +819,7 @@ export class WebDeliveryOutService {
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
-    const result = new WebScanOutAwbListResponseVm();
+    const result = new WebScanOutDeliverListResponseVm();
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
@@ -891,6 +892,52 @@ export class WebDeliveryOutService {
     // result.paging = MetaService.set(1, 10, total);
 
     // return result;
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebDeliveryListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  /**
+   *
+   *
+   * @param {BaseMetaPayloadVm} payload
+   * @returns {Promise<WebDeliveryListResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
+  async detailDelivery(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebDeliveryListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodDeliverId'] = 't1.do_pod_deliver_id';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDeliverId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPodDeliverDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t2.awb_number', 'awbNumber'],
+      ['t2.total_weight', 'weight'],
+      ['t2.consignee_name', 'consigneeName'],
+    );
+
+    q.innerJoin(e => e.awbItem.awb, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
