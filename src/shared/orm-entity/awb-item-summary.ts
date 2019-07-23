@@ -1,21 +1,22 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('awb_item_summary', { schema: 'public' })
 @Index('awb_item_summary_awb_item_idx', ['awbItemId'])
 @Index('awb_item_summary_is_deleted_idx', ['isDeleted'])
 @Index('awb_item_summary_summary_date_idx', ['summaryDate'])
-export class AwbItemSummary extends BaseEntity {
+export class AwbItemSummary extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'awb_item_summary_id',
   })
-  awbItemSummaryId: string;
+  awbItemSummaryId: number;
 
   @Column('bigint', {
     nullable: true,
     name: 'awb_item_id',
   })
-  awbItemId: string | null;
+  awbItemId: number | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
@@ -27,32 +28,32 @@ export class AwbItemSummary extends BaseEntity {
     nullable: true,
     name: 'awb_history_id_last',
   })
-  awbHistoryIdLast: string | null;
+  awbHistoryIdLast: number | null;
 
   @Column('bigint', {
     nullable: true,
     name: 'awb_status_id_last',
   })
-  awbStatusIdLast: string | null;
+  awbStatusIdLast: number | null;
 
   @Column('bigint', {
     nullable: false,
     default: () => '2000',
     name: 'awb_status_id_last_public',
   })
-  awbStatusIdLastPublic: string;
+  awbStatusIdLastPublic: number;
 
   @Column('bigint', {
     nullable: true,
     name: 'user_id_last',
   })
-  userIdLast: string | null;
+  userIdLast: number | null;
 
   @Column('bigint', {
     nullable: true,
     name: 'branch_id_last',
   })
-  branchIdLast: string | null;
+  branchIdLast: number | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
@@ -64,7 +65,7 @@ export class AwbItemSummary extends BaseEntity {
     nullable: false,
     name: 'user_id_created',
   })
-  userIdCreated: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -76,7 +77,7 @@ export class AwbItemSummary extends BaseEntity {
     nullable: false,
     name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,

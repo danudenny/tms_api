@@ -1,9 +1,10 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('awb_history', { schema: 'public' })
 @Index('awb_history_item_idx', ['awbItemId'])
 @Index('awb_history_status_idx', ['awbStatusId'])
-export class AwbHistory extends BaseEntity {
+export class AwbHistory extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'awb_history_id',

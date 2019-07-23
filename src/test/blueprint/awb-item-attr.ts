@@ -10,7 +10,7 @@ export class AwbItemAttrBlueprint extends TypeormBlueprint<AwbItemAttr> {
     this.type(AwbItemAttr);
 
     this.define(async ({ faker, factory }) => ({
-      awbItemId: null,
+      awbItemId: GeneratorService.integer(),
       awbHistoryIdLast: null,
       awbStatusIdLast: null,
       awbStatusIdLastPublic: 1,
