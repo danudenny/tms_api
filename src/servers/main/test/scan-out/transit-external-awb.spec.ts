@@ -21,6 +21,7 @@ describe('transit-external-awb', () => {
     }).create(5);
     awbItemAttr = await TEST_GLOBAL_VARIABLE.entityFactory.for(AwbItemAttr).with({
         awbStatusIdLast: 2500,
+        branchIdLast: 121,
       }).create(5);
   });
   // Transit External
