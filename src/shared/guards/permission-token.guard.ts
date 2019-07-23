@@ -16,7 +16,7 @@ export class PermissionTokenGuard implements CanActivate {
       AuthService.setPermissionTokenPayload(permissionTokenPayload);
     }
 
-    // Always return true, the handlePermissionJwtToken will throw the error itself if not valid
+    // TODO: Throw error if permissionToken is undefined / empty / not being passed from request
     return true;
   }
 }

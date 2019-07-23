@@ -1,9 +1,8 @@
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+
+import { Branch } from './branch';
+import { DoPodDeliverDetail } from './do-pod-deliver-detail';
+import { Employee } from './employee';
 
 @Entity('do_pod_deliver', { schema: 'public' })
 export class DoPodDeliver extends BaseEntity {
@@ -106,4 +105,15 @@ export class DoPodDeliver extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
+
+  @OneToMany(() => DoPodDeliverDetail, e => e.doPodDeliver)
+  doPodDeliverDetails: DoPodDeliverDetail[];
+
+  @ManyToOne(() => Employee)
+  @JoinColumn({ name: 'employee_id_driver' })
+  employee: Employee;
 }

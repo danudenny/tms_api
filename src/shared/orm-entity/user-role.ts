@@ -14,7 +14,7 @@ export class UserRole extends BaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'user_id',
+    referencedColumnName: 'userId',
   })
   users: User[];
 

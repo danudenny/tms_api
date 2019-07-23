@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { EntityRepository, Repository } from 'typeorm';
+
 import { User } from '../orm-entity/user';
+
 @Injectable()
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -28,7 +30,7 @@ export class UserRepository extends Repository<User> {
     return this.findOne({
       relations: ['roles'],
       where: {
-        user_id,
+        userId: user_id,
       },
     });
   }

@@ -1,29 +1,26 @@
-// #region import
 import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
-import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
-import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
-import { PodScan } from '../../../../shared/orm-entity/pod-scan';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { MetaService } from '../../../../shared/services/meta.service';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import {
-  WebScanInAwbResponseVm,
-  WebScanInBagResponseVm,
-} from '../../models/web-scanin-awb.response.vm';
-import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
-import { WebScanInListResponseVm, WebScanInBagListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm } from '../../models/web-scanin.vm';
-import { PodScanIn } from '../../../../shared/orm-entity/pod-scan-in';
-import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
-import { RedisService } from '../../../../shared/services/redis.service';
-import { DoPod } from '../../../../shared/orm-entity/do-pod';
-import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
+import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
+import { DoPod } from '../../../../shared/orm-entity/do-pod';
+import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
+import { PodScanIn } from '../../../../shared/orm-entity/pod-scan-in';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { DeliveryService } from '../../../../shared/services/delivery.service';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { RedisService } from '../../../../shared/services/redis.service';
+import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
+import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
+import { WebScanInBagListResponseVm, WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebScanInVm } from '../../models/web-scanin.vm';
+
+// #region import
 // #endregion
 
 @Injectable()
@@ -70,7 +67,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.do_pod_detail.do_pod.branch, 't4', j =>
+    q.innerJoin(e => e.do_pod_detail.doPod.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.employee, 't5', j =>
@@ -126,7 +123,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.do_pod_detail.do_pod.branch, 't4', j =>
+    q.innerJoin(e => e.do_pod_detail.doPod.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.user.employee, 't5', j =>

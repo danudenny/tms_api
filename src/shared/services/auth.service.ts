@@ -303,7 +303,7 @@ export class AuthService {
 
     const result = new AuthLoginResultMetadata();
     // Mapping response data
-    result.userId = user.user_id;
+    result.userId = user.userId;
     result.accessToken = accessToken;
     result.refreshToken = refreshToken;
     result.email = user.email;
@@ -319,7 +319,7 @@ export class AuthService {
   public populateJwtAccessTokenPayloadFromUser(clientId: string, user: User) {
     const jwtPayload: Partial<JwtAccessTokenPayload> = {
       clientId,
-      userId: user.user_id,
+      userId: user.userId,
       username: user.username,
       email: user.email,
       displayName: user.employee ? user.employee.employeeName : '',
@@ -333,7 +333,7 @@ export class AuthService {
   public populateJwtRefreshTokenPayloadFromUser(clientId: string, user: User) {
     const jwtPayload: Partial<JwtRefreshTokenPayload> = {
       clientId,
-      userId: user.user_id,
+      userId: user.userId,
     };
 
     return jwtPayload;

@@ -1,11 +1,7 @@
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+
+import { AwbItem } from './awb-item';
+import { AwbItemAttr } from './awb-item-attr';
 import { DoPodDeliver } from './do-pod-deliver';
 
 @Entity('do_pod_deliver_detail', { schema: 'public' })
@@ -105,5 +101,13 @@ export class DoPodDeliverDetail extends BaseEntity {
 
   @ManyToOne(() => DoPodDeliver)
   @JoinColumn({ name: 'do_pod_deliver_id' })
-  do_pod_deliver: DoPodDeliver;
+  doPodDeliver: DoPodDeliver;
+
+  @OneToOne(() => AwbItem)
+  @JoinColumn({ name: 'awb_item_id' })
+  awbItem: AwbItem;
+
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  awbItemAttr: AwbItemAttr;
 }

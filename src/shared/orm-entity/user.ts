@@ -18,8 +18,9 @@ import { UserRole } from './user-role';
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'user_id',
   })
-  user_id: number;
+  userId: number;
 
   @Column('bigint', {
     nullable: true,

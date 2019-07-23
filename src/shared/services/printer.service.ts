@@ -12,7 +12,7 @@ export class PrinterService {
     const reqTmsPrinter = request.post({
       url: ConfigService.get('printerHelper.url'),
       method: 'POST',
-      formData: {
+      json: {
         type: 'raw',
         rawCommands,
       },
@@ -25,17 +25,17 @@ export class PrinterService {
     jsreportTemplateName: string,
     jsreportTemplateData?: any,
   ) {
-    const formData: any = {};
-    formData.type = 'jsreport';
-    formData.jsreportTemplateName = jsreportTemplateName;
+    const payload: any = {};
+    payload.type = 'jsreport';
+    payload.jsreportTemplateName = jsreportTemplateName;
     if (jsreportTemplateData && size(jsreportTemplateData)) {
-      formData.jsreportTemplateData = jsreportTemplateData;
+      payload.jsreportTemplateData = jsreportTemplateData;
     }
 
     const reqTmsPrinter = request.post({
       url: ConfigService.get('printerHelper.url'),
       method: 'POST',
-      formData,
+      json: payload,
     });
     reqTmsPrinter.pipe(res);
   }

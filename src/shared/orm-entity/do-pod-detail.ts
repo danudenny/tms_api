@@ -1,8 +1,10 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
-import { PodScanIn } from './pod-scan-in';
-import { DoPod } from './do-pod';
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+
 import { AwbItem } from './awb-item';
+import { AwbItemAttr } from './awb-item-attr';
 import { BagItem } from './bag-item';
+import { DoPod } from './do-pod';
+import { PodScanIn } from './pod-scan-in';
 
 @Entity('do_pod_detail', { schema: 'public' })
 export class DoPodDetail extends BaseEntity {
@@ -143,9 +145,9 @@ export class DoPodDetail extends BaseEntity {
   @JoinColumn({ name: 'pod_scan_in_id' })
   podScanIn: PodScanIn;
 
-  @OneToOne(() => DoPod)
+  @ManyToOne(() => DoPod)
   @JoinColumn({ name: 'do_pod_id' })
-  do_pod: DoPod;
+  doPod: DoPod;
 
   @OneToOne(() => AwbItem)
   @JoinColumn({ name: 'awb_item_id' })
@@ -154,4 +156,8 @@ export class DoPodDetail extends BaseEntity {
   @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id' })
   bagItem: BagItem;
+
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  awbItemAttr: AwbItemAttr;
 }
