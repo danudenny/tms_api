@@ -111,12 +111,18 @@ export class WebDeliveryInService {
 
     q.selectRaw(
       ['t1.pod_scanin_date_time', 'podScaninDateTime'],
-      ['t2.bag_number', 'bagNumber'],
+      [
+        'CONCAT (t2.bag_number,t6.bag_seq)',
+        'bagNumber',
+      ],
       ['t3.branch_name', 'branchNameScan'],
       ['t4.branch_name', 'branchNameFrom'],
       ['t5.fullname', 'employeeName'],
     );
 
+    q.innerJoin(e => e.bag_item, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.innerJoin(e => e.bag_item.bag, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
