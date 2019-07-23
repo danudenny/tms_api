@@ -1,23 +1,27 @@
-import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 import { RolePermission } from './role-permission';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('role', { schema: 'public' })
-export class Role extends BaseEntity {
+export class Role extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'role_id',
   })
-  role_id: number;
+  roleId: number;
 
   @Column('bigint', {
     nullable: true,
+    name: 'role_id_parent',
   })
-  role_id_parent: number | null;
+  roleIdParent: number | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'branch_id',
   })
-  branch_id: number | null;
+  branchId: number | null;
 
   @Column('integer', {
     nullable: true,
@@ -42,34 +46,9 @@ export class Role extends BaseEntity {
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name: 'role_name',
   })
-  role_name: string;
-
-  @Column('bigint', {
-    nullable: false,
-  })
-  user_id_created: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-  })
-  created_time: Date;
-
-  @Column('bigint', {
-    nullable: false,
-  })
-  user_id_updated: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-  })
-  updated_time: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-  })
-  is_deleted: boolean;
+  roleName: string;
 
   @OneToMany(() => RolePermission, e => e.role, {
     cascade: ['insert', 'update'],

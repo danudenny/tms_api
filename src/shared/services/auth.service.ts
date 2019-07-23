@@ -146,7 +146,7 @@ export class AuthService {
       result.roles = map(roles, item => {
         const newObj = {
           roleId: item.role_id,
-          roleName: item.role.role_name,
+          roleName: item.role.roleName,
           branchId: item.branch_id,
           branchName: item.branch.branchName,
           branchCode: item.branch.branchCode,
@@ -216,7 +216,7 @@ export class AuthService {
       result.email = authMeta.email;
       result.displayName = authMeta.displayName;
       result.permissionToken = permissionToken;
-      result.roleName = user.userRoles[0].role.role_name;
+      result.roleName = user.userRoles[0].role.roleName;
 
       result.branchName = branch.branchName;
       result.branchCode = branch.branchCode;
