@@ -28,10 +28,42 @@ export class WebScanInResponseVm {
   nickname: string;
 }
 
+export class WebScanInDeliverResponseVm {
+  @ApiModelProperty()
+  doPodDeliverId: number;
+
+  @ApiModelProperty()
+  doPodDeliverCode: string;
+
+  @ApiModelProperty()
+  doPodDeliverDateTime: string;
+
+  @ApiModelProperty()
+  description: string;
+
+  @ApiModelProperty()
+  totalDelivery: number;
+
+  @ApiModelProperty()
+  totalProblem: number;
+
+  @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
+  nickname: string;
+}
+
 export class WebScanOutAwbListResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty({ type: () => [WebScanInResponseVm] })
   data: WebScanInResponseVm[];
+}
+
+export class WebScanOutDeliverListResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [WebScanInDeliverResponseVm] })
+  data: WebScanInDeliverResponseVm[];
 }
 
 // Create DO POD

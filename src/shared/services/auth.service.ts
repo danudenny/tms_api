@@ -241,6 +241,7 @@ export class AuthService {
         'pod_scan_in_problem_hub',
         'pod_awb_problem',
         'do_pod_bag_list',
+        'do_pod_deliver_list',
       ];
 
       return result;

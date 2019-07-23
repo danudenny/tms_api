@@ -772,6 +772,67 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  async findAllScanOutDeliverList(
+    payload: BaseMetaPayloadVm,
+    isHub = false,
+  ): Promise<WebScanOutAwbListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_deliver_date_time';
+    payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_code';
+    payload.fieldResolverMap['description'] = 't1.description';
+    payload.fieldResolverMap['nickname'] = 't2.nickname';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDeliverDateTime',
+      },
+      {
+        field: 'doPodDeliverCode',
+      },
+      {
+        field: 'description',
+      },
+      {
+        field: 'nickname',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPodDeliver, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_deliver_id', 'doPodDeliverId'],
+      ['t1.do_pod_deliver_code', 'doPodDeliverCode'],
+      ['t1.do_pod_deliver_date_time', 'doPodDeliverDateTime'],
+      ['t1.description', 'description'],
+      ['t1.total_delivery', 'totalDelivery'],
+      ['t1.total_problem', 'totalProblem'],
+      ['COUNT (t3.*)', 'totalAwb'],
+      ['t2.nickname', 'nickname'],
+    );
+
+    q.innerJoin(e => e.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodDeliverDetails.awbItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw('t1.do_pod_deliver_id, t2.nickname');
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanOutAwbListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
   /**
    *
    *
