@@ -10,6 +10,7 @@ import { CustomerController } from './master/customer.controller';
 import { EmployeeController } from './master/employee.controller';
 import { PartnerLogisticController } from './master/partner-logistic.controller';
 import { ReasonController } from './master/reason.controller';
+import { RepresentativeController } from './master/representative.controller';
 import { RolePermissionController } from './master/role-permission.controller';
 import { RoleController } from './master/role.controller';
 import { MobileCheckInController } from './mobile/mobile.check-in.controller';
@@ -25,24 +26,25 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
 @Module({
   imports: [OrmRepositoryModule, SharedModule, MainServerServicesModule],
   controllers: [
+    AwbStatusController,
+    BranchController,
+    CustomerController,
+    EmployeeController,
+    GabunganController,
+    MobileCheckInController,
+    MobileCheckOutController,
     MobileDashboardController,
     MobileDeliveryController,
+    PartnerLogisticController,
+    PrintController,
+    ReasonController,
+    RepresentativeController,
+    RoleController,
+    RolePermissionController,
     WebAwbTroubleControlelr,
     WebBagTroubleControlelr,
     WebDeliveryInController,
     WebDeliveryOutController,
-    BranchController,
-    GabunganController,
-    EmployeeController,
-    CustomerController,
-    AwbStatusController,
-    PartnerLogisticController,
-    PrintController,
-    ReasonController,
-    RoleController,
-    RolePermissionController,
-    MobileCheckInController,
-    MobileCheckOutController,
   ],
 })
 export class MainServerControllersModule {}

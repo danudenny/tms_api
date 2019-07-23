@@ -9,22 +9,23 @@ import { createConnection, getManager } from 'typeorm';
 import { boot } from '../main-setup';
 import { AuthLoginResponseVM, PermissionAccessResponseVM } from '../servers/auth/models/auth.vm';
 import { AwbBlueprint } from './blueprint/awb';
+import { AwbAttrBlueprint } from './blueprint/awb-attr';
 import { AwbItemBlueprint } from './blueprint/awb-item';
+import { AwbItemAttrBlueprint } from './blueprint/awb-item-attr';
+import { BagBlueprint } from './blueprint/bag';
+import { BagItemBlueprint } from './blueprint/bag-item';
 import { BranchBlueprint } from './blueprint/branch';
 import { CustomerBlueprint } from './blueprint/customer';
 import { EmployeeBlueprint } from './blueprint/employee';
 import { PartnerLogisticBlueprint } from './blueprint/partner-logistic';
 import { ReasonBlueprint } from './blueprint/reason';
+import { RepresentativeBlueprint } from './blueprint/representative';
 import { RoleBlueprint } from './blueprint/role';
 import { UserBlueprint } from './blueprint/user';
 import { UserRoleBlueprint } from './blueprint/user-role';
 import TEST_GLOBAL_VARIABLE from './test-global-variable';
 import { TestSeed } from './test-seed';
 import { TestUtility } from './test-utility';
-import { BagBlueprint } from './blueprint/bag';
-import { BagItemBlueprint } from './blueprint/bag-item';
-import { AwbAttrBlueprint } from './blueprint/awb-attr';
-import { AwbItemAttrBlueprint } from './blueprint/awb-item-attr';
 
 process.env.NODE_ENV = 'test';
 
@@ -66,6 +67,7 @@ beforeAll(async () => {
       EmployeeBlueprint,
       PartnerLogisticBlueprint,
       ReasonBlueprint,
+      RepresentativeBlueprint,
       RoleBlueprint,
       UserBlueprint,
       UserRoleBlueprint,
