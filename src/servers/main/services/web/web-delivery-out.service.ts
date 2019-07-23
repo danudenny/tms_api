@@ -33,6 +33,7 @@ import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
 import { Branch } from '../../../../shared/orm-entity/branch';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 // #endregion
 
 @Injectable()
@@ -181,7 +182,7 @@ export class WebDeliveryOutService {
         switch (statusCode) {
           case 'OUT':
             // check condition
-            if (awb.branchIdLast === permissonPayload.branchId) {
+            if (awb.branchIdLast == permissonPayload.branchId) {
               totalSuccess += 1;
               response.message = `Resi ${awbNumber} sudah di Scan OUT di gerai ini`;
             } else {
@@ -205,7 +206,7 @@ export class WebDeliveryOutService {
             break;
 
           case 'IN':
-            if (awb.branchIdLast === permissonPayload.branchId) {
+            if (awb.branchIdLast == permissonPayload.branchId) {
               // Add Locking setnx redis
               const holdRedis = await RedisService.locking(
                 `hold:scanout:${awb.awbItemId}`,
@@ -221,12 +222,6 @@ export class WebDeliveryOutService {
                 doPodDetail.doPodStatusIdLast = 1000;
                 doPodDetail.isScanOut = true;
                 doPodDetail.scanOutType = 'awb';
-
-                // general
-                doPodDetail.userIdCreated = authMeta.userId;
-                doPodDetail.userIdUpdated = authMeta.userId;
-                doPodDetail.createdTime = timeNow;
-                doPodDetail.updatedTime = timeNow;
                 await DoPodDetail.save(doPodDetail);
 
                 // AFTER Scan OUT ===============================================
@@ -255,12 +250,10 @@ export class WebDeliveryOutService {
                   3000,
                 );
 
-                // TODO:
-                // Insert awb_history  (Note bg process + scheduler)
-                // Update awb_item_summary  (Note bg process + scheduler)
-                // ...
-                // ...
-                // #endregion after scanout
+                // TODO: queue by Bull
+                DoPodDetailPostMetaQueueService.createJobByDoPodDetailId(
+                  doPodDetail.doPodDetaiId,
+                );
 
                 totalSuccess += 1;
                 // remove key holdRedis
