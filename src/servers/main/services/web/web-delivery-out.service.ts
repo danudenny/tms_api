@@ -743,6 +743,8 @@ export class WebDeliveryOutService {
     );
     if (isHub) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.TRANSIT_HUB));
+    } else {
+      q.andWhere(e => e.doPodType, w => w.notEquals(POD_TYPE.TRANSIT_HUB));
     }
 
     const data = await q.exec();
