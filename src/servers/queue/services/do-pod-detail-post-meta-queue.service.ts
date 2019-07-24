@@ -7,6 +7,7 @@ import { DoPodDetail } from '../../../shared/orm-entity/do-pod-detail';
 import { OrionRepositoryService } from '../../../shared/services/orion-repository.service';
 import moment = require('moment');
 import { getManager } from 'typeorm';
+import { DoPodDeliverDetail } from '../../../shared/orm-entity/do-pod-deliver-detail';
 
 export class DoPodDetailPostMetaQueueService {
   public static queue = new Bull('awb-history-post-meta', {
@@ -83,7 +84,7 @@ export class DoPodDetailPostMetaQueueService {
     q.innerJoin(e => e.doPod);
 
     q.select({
-      doPodDetaiId: true,
+      doPodDetailId: true,
       awbItemId: true,
       userIdCreated: true,
       userIdUpdated: true,
@@ -93,7 +94,7 @@ export class DoPodDetailPostMetaQueueService {
         userId: true,
       },
     });
-    q.where(e => e.doPodDetaiId, w => w.equals(doPodDetailId));
+    q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
     const doPodDetail = await q.exec();
     let awbHistoryIdPrev = null;
 
@@ -128,5 +129,232 @@ export class DoPodDetailPostMetaQueueService {
       return DoPodDetailPostMetaQueueService.queue.add(obj);
     }
 
+  }
+
+  public static async createJobByDoPodDeliverDetailId(doPodDeliverDetailId: number) {
+
+    const doPodDetailRepository = new OrionRepositoryService(
+      DoPodDeliverDetail,
+    );
+    const q = doPodDetailRepository.findOne();
+    // Manage relation (default inner join)
+    q.innerJoin(e => e.doPodDeliver);
+
+    q.select({
+      doPodDeliverDetailId: true,
+      awbItemId: true,
+      userIdCreated: true,
+      userIdUpdated: true,
+      doPodDeliver: {
+        doPodDeliverId: true,
+        employeeIdDriver: true,
+        branchId: true,
+        userId: true,
+      },
+    });
+    q.where(e => e.doPodDeliverDetailId, w => w.equals(doPodDeliverDetailId));
+    const doPodDetailDeliver = await q.exec();
+
+    let awbHistoryIdPrev = null;
+
+    if (doPodDetailDeliver) {
+      // find last data awb history
+      const awbHistoryLast = await AwbHistory.find({
+        select: ['awbHistoryId'],
+        where: {
+          awbItemId: doPodDetailDeliver.awbItemId,
+        },
+        order: { awbHistoryId: 'DESC' },
+        take: 1,
+      });
+
+      if (awbHistoryLast && awbHistoryLast.length) {
+        awbHistoryIdPrev = awbHistoryLast[0].awbHistoryId;
+      }
+      // TODO: find awbStatusIdLastPublic on awb_status
+      // provide data
+      const obj = {
+        awbItemId: doPodDetailDeliver.awbItem,
+        userId: doPodDetailDeliver.doPodDeliver.userId,
+        branchId: doPodDetailDeliver.doPodDeliver.branchId,
+        awbStatusId: 14000,
+        awbStatusIdLastPublic: 2000,
+        awbHistoryIdPrev,
+        userIdCreated: doPodDetailDeliver.userIdCreated,
+        userIdUpdated: doPodDetailDeliver.userIdUpdated,
+        employeeIdDriver: doPodDetailDeliver.doPodDeliver.employeeIdDriver,
+      };
+
+      return DoPodDetailPostMetaQueueService.queue.add(obj);
+    }
+
+  }
+
+  public static async createJobByScanOutBag(doPodDetailId: number, awbItemId: number) {
+    // TODO: ???
+    const doPodDetailRepository = new OrionRepositoryService(DoPodDetail);
+    const q = doPodDetailRepository.findOne();
+    // Manage relation (default inner join)
+    q.innerJoin(e => e.doPod);
+
+    q.select({
+      doPodDetailId: true,
+      bagItemId: true,
+      userIdCreated: true,
+      userIdUpdated: true,
+      doPod: {
+        doPodId: true,
+        branchId: true,
+        userId: true,
+      },
+    });
+    q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
+    const doPodDetail = await q.exec();
+    let awbHistoryIdPrev = null;
+
+    if (doPodDetail) {
+      // find last data awb history
+      const awbHistoryLast = await AwbHistory.find({
+        select: ['awbHistoryId'],
+        where: {
+          awbItemId,
+        },
+        order: { awbHistoryId: 'DESC' },
+        take: 1,
+      });
+
+      if (awbHistoryLast && awbHistoryLast.length) {
+        awbHistoryIdPrev = awbHistoryLast[0].awbHistoryId;
+      }
+      // TODO: find awbStatusIdLastPublic on awb_status
+      // provide data
+      const obj = {
+        awbItemId,
+        userId: doPodDetail.doPod.userId,
+        branchId: doPodDetail.doPod.branchId,
+        awbStatusId: 3000,
+        awbStatusIdLastPublic: 2000,
+        awbHistoryIdPrev,
+        userIdCreated: doPodDetail.userIdCreated,
+        userIdUpdated: doPodDetail.userIdUpdated,
+        employeeIdDriver: null,
+      };
+
+      return DoPodDetailPostMetaQueueService.queue.add(obj);
+    }
+  }
+
+  public static async createJobByScanInAwb(doPodDetailId: number) {
+    // TODO: ???
+    const doPodDetailRepository = new OrionRepositoryService(
+      DoPodDetail,
+    );
+    const q = doPodDetailRepository.findOne();
+    // Manage relation (default inner join)
+    q.innerJoin(e => e.podScanIn);
+
+    q.select({
+      doPodDetailId: true,
+      awbItemId: true,
+      userIdCreated: true,
+      userIdUpdated: true,
+      podScanIn: {
+        podScanInId: true,
+        branchId: true,
+        userId: true,
+        employeeId: true,
+      },
+    });
+    q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
+    const doPodDetail = await q.exec();
+    let awbHistoryIdPrev = null;
+
+    if (doPodDetail) {
+      // find last data awb history
+      const awbHistoryLast = await AwbHistory.find({
+        select: ['awbHistoryId'],
+        where: {
+          awbItemId: doPodDetail.awbItemId,
+        },
+        order: { awbHistoryId: 'DESC' },
+        take: 1,
+      });
+
+      if (awbHistoryLast && awbHistoryLast.length) {
+        awbHistoryIdPrev = awbHistoryLast[0].awbHistoryId;
+      }
+      // TODO: find awbStatusIdLastPublic on awb_status
+      // provide data
+      const obj = {
+        awbItemId: doPodDetail.awbItem,
+        userId: doPodDetail.doPod.userId,
+        branchId: doPodDetail.doPod.branchId,
+        awbStatusId: 3500,
+        awbStatusIdLastPublic: 2000,
+        awbHistoryIdPrev,
+        userIdCreated: doPodDetail.userIdCreated,
+        userIdUpdated: doPodDetail.userIdUpdated,
+        employeeIdDriver: null,
+      };
+
+      return DoPodDetailPostMetaQueueService.queue.add(obj);
+    }
+  }
+
+  public static async createJobByScanInBag(doPodDetailId: number, awbItemId: number) {
+    // TODO: ???
+    const doPodDetailRepository = new OrionRepositoryService(
+      DoPodDetail,
+    );
+    const q = doPodDetailRepository.findOne();
+    // Manage relation (default inner join)
+    q.innerJoin(e => e.podScanIn);
+
+    q.select({
+      doPodDetailId: true,
+      bagItemId: true,
+      userIdCreated: true,
+      userIdUpdated: true,
+      podScanIn: {
+        podScanInId: true,
+        branchId: true,
+        userId: true,
+        employeeId: true,
+      },
+    });
+    q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
+    const doPodDetail = await q.exec();
+    let awbHistoryIdPrev = null;
+
+    if (doPodDetail) {
+      // find last data awb history
+      const awbHistoryLast = await AwbHistory.find({
+        select: ['awbHistoryId'],
+        where: {
+          awbItemId,
+        },
+        order: { awbHistoryId: 'DESC' },
+        take: 1,
+      });
+
+      if (awbHistoryLast && awbHistoryLast.length) {
+        awbHistoryIdPrev = awbHistoryLast[0].awbHistoryId;
+      }
+      // TODO: find awbStatusIdLastPublic on awb_status
+      // provide data
+      const obj = {
+        awbItemId,
+        userId: doPodDetail.doPod.userId,
+        branchId: doPodDetail.doPod.branchId,
+        awbStatusId: 3500,
+        awbStatusIdLastPublic: 2000,
+        awbHistoryIdPrev,
+        userIdCreated: doPodDetail.userIdCreated,
+        userIdUpdated: doPodDetail.userIdUpdated,
+        employeeIdDriver: null,
+      };
+
+      return DoPodDetailPostMetaQueueService.queue.add(obj);
+    }
   }
 }

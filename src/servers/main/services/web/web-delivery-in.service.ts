@@ -1,3 +1,4 @@
+// #region import
 import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 
@@ -19,8 +20,7 @@ import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInBagListResponseVm, WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
-
-// #region import
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 // #endregion
 
 @Injectable()
@@ -279,7 +279,7 @@ export class WebDeliveryInService {
             response.message = 'Server Busy';
           }
         } else {
-          if (bagData.branchIdLast === permissonPayload.branchId) {
+          if (bagData.branchIdLast == permissonPayload.branchId) {
             totalSuccess += 1;
             response.message = `No Bag ${bagNumber} sudah di Scan Masuk dari gerai ini`;
           } else {
@@ -365,7 +365,7 @@ export class WebDeliveryInService {
         switch (statusCode) {
           case 'IN':
             // check condition
-            if (awb.branchIdLast === permissonPayload.branchId) {
+            if (awb.branchIdLast == permissonPayload.branchId) {
               totalSuccess += 1;
               response.message = `Resi ${awbNumber} sudah di Scan IN di gerai ini`;
             } else {
@@ -469,11 +469,10 @@ export class WebDeliveryInService {
                 await DoPod.save(doPod);
                 await DeliveryService.updateAwbAttr(awb.awbItemId, doPod.branchIdTo, 3500);
 
-                // TODO:
-                // Insert awb_history  (Note bg process + scheduler)
-                // Update awb_item_summary  (Note bg process + scheduler)
-                // ...
-                // ...
+                // TODO: queue by Bull
+                DoPodDetailPostMetaQueueService.createJobByScanInAwb(
+                  doPodDetail.doPodDetailId,
+                );
                 totalSuccess += 1;
               } else {
                 totalError += 1;
