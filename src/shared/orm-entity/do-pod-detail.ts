@@ -13,7 +13,7 @@ export class DoPodDetail extends TmsBaseEntity {
     type: 'bigint',
     name: 'do_pod_detail_id',
   })
-  doPodDetaiId: number;
+  doPodDetailId: number;
 
   @Column('bigint', {
     nullable: true,

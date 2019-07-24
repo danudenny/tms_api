@@ -253,7 +253,7 @@ export class WebDeliveryOutService {
 
                 // TODO: queue by Bull
                 DoPodDetailPostMetaQueueService.createJobByDoPodDetailId(
-                  doPodDetail.doPodDetaiId,
+                  doPodDetail.doPodDetailId,
                 );
 
                 totalSuccess += 1;
@@ -344,7 +344,7 @@ export class WebDeliveryOutService {
         switch (statusCode) {
           case 'OUT':
             // check condition
-            if (awb.branchIdLast === permissonPayload.branchId) {
+            if (awb.branchIdLast == permissonPayload.branchId) {
               totalSuccess += 1;
               response.message = `Resi ${awbNumber} sudah di Scan OUT di gerai ini`;
             } else {
@@ -368,7 +368,7 @@ export class WebDeliveryOutService {
             break;
 
           case 'IN':
-            if (awb.branchIdLast === permissonPayload.branchId) {
+            if (awb.branchIdLast == permissonPayload.branchId) {
               // Add Locking setnx redis
               const holdRedis = await RedisService.locking(
                 `hold:scanoutant:${awb.awbItemId}`,
@@ -381,11 +381,6 @@ export class WebDeliveryOutService {
                 doPodDeliverDetail.doPodDeliverId = payload.doPodId;
                 doPodDeliverDetail.awbItemId = awb.awbItemId;
 
-                // general
-                doPodDeliverDetail.userIdCreated = authMeta.userId;
-                doPodDeliverDetail.userIdUpdated = authMeta.userId;
-                doPodDeliverDetail.createdTime = timeNow;
-                doPodDeliverDetail.updatedTime = timeNow;
                 await DoPodDeliverDetail.save(doPodDeliverDetail);
 
                 // AFTER Scan OUT ===============================================
@@ -406,11 +401,10 @@ export class WebDeliveryOutService {
                 // TODO: status 3000, OR ANT (14000)
                 await DeliveryService.updateAwbAttr(awb.awbItemId, null, 14000);
 
-                // TODO:
-                // Insert awb_history  (Note bg process + scheduler)
-                // Update awb_item_summary  (Note bg process + scheduler)
-                // ...
-                // ...
+                // TODO: queue by Bull
+                DoPodDetailPostMetaQueueService.createJobByDoPodDeliverDetailId(
+                  doPodDeliverDetail.doPodDeliverDetailId,
+                );
                 // #endregion after scanout
 
                 totalSuccess += 1;
@@ -507,11 +501,7 @@ export class WebDeliveryOutService {
             doPodDetail.doPodStatusIdLast = 1000;
             doPodDetail.isScanOut = true;
             doPodDetail.scanOutType = 'bag';
-            // general
-            doPodDetail.userIdCreated = authMeta.userId;
-            doPodDetail.userIdUpdated = authMeta.userId;
-            doPodDetail.createdTime = timeNow;
-            doPodDetail.updatedTime = timeNow;
+
             await DoPodDetail.save(doPodDetail);
 
             // AFTER Scan OUT ===============================================
@@ -554,7 +544,7 @@ export class WebDeliveryOutService {
                 isDeleted: false,
               },
             });
-            if (bagItemsAwb && bagItemsAwb.length > 0) {
+            if (bagItemsAwb && bagItemsAwb.length) {
               for (const itemAwb of bagItemsAwb) {
                 if (itemAwb.awbItemId) {
                   await DeliveryService.updateAwbAttr(
@@ -562,11 +552,11 @@ export class WebDeliveryOutService {
                     doPod.branchIdTo,
                     3000,
                   );
-                  // TODO:
-                  // Insert awb_history  (Note bg process + scheduler)
-                  // Update awb_item_summary  (Note bg process + scheduler)
-                  // ...
-                  // ...
+                  // TODO: queue by Bull
+                  DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+                    doPodDetail.doPodDetailId,
+                    itemAwb.awbItemId,
+                  );
                 }
               }
             }
@@ -581,7 +571,7 @@ export class WebDeliveryOutService {
             response.message = 'Server Busy';
           }
         } else {
-          if (bagData.branchIdLast === permissonPayload.branchId) {
+          if (bagData.branchIdLast == permissonPayload.branchId) {
             totalSuccess += 1;
             response.message = `No Bag ${bagNumber} sudah di Scan OUT di gerai ini`;
           } else {
@@ -1040,6 +1030,7 @@ export class WebDeliveryOutService {
       updatedTime: timeNow,
       userIdPic: authMeta.userId,
       branchIdPic: permissonPayload.branchId,
+      employeeIdPic: authMeta.employeeId,
       troubleCategory: 'scan_out',
       troubleDesc,
     });

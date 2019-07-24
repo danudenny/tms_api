@@ -30,7 +30,8 @@
     "max-classes-per-file": false,
     "indent": [true, "spaces", 2],
     "no-empty": false,
-    "no-string-literal": false
+    "no-string-literal": false,
+    "triple-equals": false
   },
   "rulesDirectory": []
 }
