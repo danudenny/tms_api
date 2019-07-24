@@ -255,11 +255,11 @@ export class WebDeliveryInService {
                       itemAwb.awbItemId, doPod.branchIdTo,
                       3500,
                     );
-                    // TODO:
-                    // Insert awb_history  (Note bg process + scheduler)
-                    // Update awb_item_summary  (Note bg process + scheduler)
-                    // ...
-                    // ...
+                    // TODO: queue by Bull
+                    DoPodDetailPostMetaQueueService.createJobByScanInBag(
+                      doPodDetail.doPodDetailId,
+                      itemAwb.awbItemId,
+                    );
                   }
                 }
               }
