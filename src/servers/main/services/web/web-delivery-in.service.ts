@@ -392,11 +392,7 @@ export class WebDeliveryInService {
               totalError += 1;
               response.status = 'error';
               response.trouble = true;
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 

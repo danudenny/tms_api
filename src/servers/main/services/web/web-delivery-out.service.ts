@@ -192,11 +192,7 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -274,11 +270,7 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -353,11 +345,7 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -425,11 +413,7 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
