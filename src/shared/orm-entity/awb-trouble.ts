@@ -1,12 +1,12 @@
 import {
-  BaseEntity,
   Column,
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('awb_trouble', { schema: 'public' })
-export class AwbTrouble extends BaseEntity {
+export class AwbTrouble extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'awb_trouble_id',

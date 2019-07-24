@@ -5,7 +5,6 @@ import moment = require('moment');
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
-import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
 import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
@@ -23,6 +22,7 @@ import { WebScanInVm } from '../../models/web-scanin.vm';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 // #endregion
 
 @Injectable()
@@ -292,31 +292,32 @@ export class WebDeliveryInService {
                 doPod.lastDateScanIn = timeNow;
               }
               await DoPod.save(doPod);
-              // TODO: Loop data bag_item_awb
+              // NOTE: Disable update awb status per item awb
               // SELECT *
               // FROM bag_item_awb
               // WHERE bag_item_id = <bag_item_id> AND is_deleted = false
-              const bagItemsAwb = await BagItemAwb.find({
-                where: {
-                  bagItem: bagData.bagItemId,
-                  isDeleted: false,
-                },
-              });
-              if (bagItemsAwb && bagItemsAwb.length > 0) {
-                for (const itemAwb of bagItemsAwb) {
-                  if (itemAwb.awbItemId) {
-                    await DeliveryService.updateAwbAttr(
-                      itemAwb.awbItemId, doPod.branchIdTo,
-                      3500,
-                    );
-                    // TODO: queue by Bull
-                    DoPodDetailPostMetaQueueService.createJobByScanInBag(
-                      doPodDetail.doPodDetailId,
-                      itemAwb.awbItemId,
-                    );
-                  }
-                }
-              }
+              // const bagItemsAwb = await BagItemAwb.find({
+              //   where: {
+              //     bagItem: bagData.bagItemId,
+              //     isDeleted: false,
+              //   },
+              // });
+              // if (bagItemsAwb && bagItemsAwb.length > 0) {
+              //   for (const itemAwb of bagItemsAwb) {
+              //     if (itemAwb.awbItemId) {
+              //       await DeliveryService.updateAwbAttr(
+              //         itemAwb.awbItemId, doPod.branchIdTo,
+              //         AWB_STATUS.IN_BRANCH,
+              //       );
+              //       // TODO: queue by Bull
+              //       DoPodDetailPostMetaQueueService.createJobByScanInBag(
+              //         doPodDetail.doPodDetailId,
+              //         itemAwb.awbItemId,
+              //       );
+              //     }
+              //   }
+              // }
+
               totalSuccess += 1;
             } else {
               totalError += 1;
@@ -517,7 +518,7 @@ export class WebDeliveryInService {
                   doPod.lastDateScanIn = timeNow;
                 }
                 await DoPod.save(doPod);
-                await DeliveryService.updateAwbAttr(awb.awbItemId, doPod.branchIdTo, 3500);
+                await DeliveryService.updateAwbAttr(awb.awbItemId, doPod.branchIdTo, AWB_STATUS.IN_BRANCH);
 
                 // TODO: queue by Bull
                 DoPodDetailPostMetaQueueService.createJobByScanInAwb(
