@@ -183,7 +183,7 @@ export class WebDeliveryOutService {
         switch (statusCode) {
           case 'OUT':
             // check condition
-            if (awb.branchIdLast == permissonPayload.branchId) {
+            if (awb.branchIdLast === permissonPayload.branchId) {
               totalSuccess += 1;
               response.message = `Resi ${awbNumber} sudah di Scan OUT di gerai ini`;
             } else {
@@ -207,7 +207,7 @@ export class WebDeliveryOutService {
             break;
 
           case 'IN':
-            if (awb.branchIdLast == permissonPayload.branchId) {
+            if (awb.branchIdLast === permissonPayload.branchId) {
               // Add Locking setnx redis
               const holdRedis = await RedisService.locking(
                 `hold:scanout:${awb.awbItemId}`,
@@ -772,7 +772,7 @@ export class WebDeliveryOutService {
   ): Promise<WebScanOutDeliverListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_deliver_date_time';
-    payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_code';
+    payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
 
