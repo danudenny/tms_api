@@ -60,10 +60,7 @@ export class DoPodDetailPostMetaQueueService {
           awbItemSummary = AwbItemSummary.create();
           awbItemSummary.userIdCreated = data.userIdCreated;
         }
-        // FIXME: ??
-        const currentTime = new Date();
-        const convertTime = moment(currentTime).format('YYYY-MM-DD 00:00:00');
-        const convertTimeObject = new Date(convertTime);
+        const convertTimeObject = moment().startOf('day').toDate();
 
         // Update data
         awbItemSummary.summaryDate = convertTimeObject;

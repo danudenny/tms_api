@@ -175,7 +175,7 @@ export class WebDeliveryInService {
       const bagData = await DeliveryService.validBagNumber(bagNumber);
 
       if (bagData) {
-        if (bagData.bagItemStatusIdLast === 1000) {
+        if (bagData.bagItemStatusIdLast == 1000) {
           const holdRedis = await RedisService.locking(
             `hold:bagscanin:${bagData.bagItemId}`,
             'locking',
@@ -231,7 +231,7 @@ export class WebDeliveryInService {
               // counter total scan in
               doPod.totalScanIn = doPod.totalScanIn + 1;
 
-              if (doPod.totalScanIn === 1) {
+              if (doPod.totalScanIn == 1) {
                 doPod.firstDateScanIn = timeNow;
                 doPod.lastDateScanIn = timeNow;
               } else {
@@ -456,7 +456,7 @@ export class WebDeliveryInService {
                 // counter total scan in
                 doPod.totalScanIn = doPod.totalScanIn + 1;
 
-                if (doPod.totalScanIn === 1) {
+                if (doPod.totalScanIn == 1) {
                   doPod.firstDateScanIn = timeNow;
                   doPod.lastDateScanIn = timeNow;
                 } else {
