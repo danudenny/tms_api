@@ -70,7 +70,7 @@ export class WebDeliveryOutService {
     // 2.A tipe transit(internal)
     // 2.B tipe transit (3pl)
     const method =
-      payload.doPodMethod && payload.doPodMethod === '3pl' ? 3000 : 1000;
+      payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
     doPod.doPodMethod = method; // internal or 3PL/Third Party
     doPod.partnerLogisticId = payload.partnerLogisticId || null;
     doPod.branchIdTo = payload.branchIdTo || null;
@@ -183,7 +183,7 @@ export class WebDeliveryOutService {
         switch (statusCode) {
           case 'OUT':
             // check condition
-            if (awb.branchIdLast === permissonPayload.branchId) {
+            if (awb.branchIdLast == permissonPayload.branchId) {
               totalSuccess += 1;
               response.message = `Resi ${awbNumber} sudah di Scan OUT di gerai ini`;
             } else {
@@ -192,11 +192,7 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -207,7 +203,7 @@ export class WebDeliveryOutService {
             break;
 
           case 'IN':
-            if (awb.branchIdLast === permissonPayload.branchId) {
+            if (awb.branchIdLast == permissonPayload.branchId) {
               // Add Locking setnx redis
               const holdRedis = await RedisService.locking(
                 `hold:scanout:${awb.awbItemId}`,
@@ -238,7 +234,7 @@ export class WebDeliveryOutService {
 
                 // counter total scan in
                 doPod.totalScanOut = doPod.totalScanOut + 1;
-                if (doPod.totalScanOut === 1) {
+                if (doPod.totalScanOut == 1) {
                   doPod.firstDateScanOut = timeNow;
                   doPod.lastDateScanOut = timeNow;
                 } else {
@@ -274,11 +270,7 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -353,11 +345,7 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -425,11 +413,7 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -487,8 +471,8 @@ export class WebDeliveryOutService {
       const bagData = await DeliveryService.validBagNumber(bagNumber);
       if (bagData) {
         if (
-          bagData.bagItemStatusIdLast === 2000 ||
-          bagData.bagItemStatusIdLast === 500
+          bagData.bagItemStatusIdLast == 2000 ||
+          bagData.bagItemStatusIdLast == 500
         ) {
           const holdRedis = await RedisService.locking(
             `hold:bagscanout:${bagData.bagItemId}`,
@@ -526,7 +510,7 @@ export class WebDeliveryOutService {
 
             // counter total scan in
             doPod.totalScanOut = doPod.totalScanOut + 1;
-            if (doPod.totalScanOut === 1) {
+            if (doPod.totalScanOut == 1) {
               doPod.firstDateScanOut = timeNow;
               doPod.lastDateScanOut = timeNow;
             } else {

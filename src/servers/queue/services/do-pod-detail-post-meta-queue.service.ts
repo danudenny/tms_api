@@ -60,8 +60,10 @@ export class DoPodDetailPostMetaQueueService {
           awbItemSummary = AwbItemSummary.create();
           awbItemSummary.userIdCreated = data.userIdCreated;
         }
+        const convertTimeObject = moment().startOf('day').toDate();
+
         // Update data
-        awbItemSummary.summaryDate = awbHistory.historyDate;
+        awbItemSummary.summaryDate = convertTimeObject;
         awbItemSummary.awbItemId = awbHistory.awbItemId;
         awbItemSummary.awbHistoryIdLast = awbHistory.awbHistoryId;
         awbItemSummary.awbStatusIdLast = awbHistory.awbStatusId;
@@ -115,7 +117,7 @@ export class DoPodDetailPostMetaQueueService {
       // TODO: find awbStatusIdLastPublic on awb_status
       // provide data
       const obj = {
-        awbItemId: doPodDetail.awbItem,
+        awbItemId: doPodDetail.awbItemId,
         userId: doPodDetail.doPod.userId,
         branchId: doPodDetail.doPod.branchId,
         awbStatusId: 3000,
@@ -174,7 +176,7 @@ export class DoPodDetailPostMetaQueueService {
       // TODO: find awbStatusIdLastPublic on awb_status
       // provide data
       const obj = {
-        awbItemId: doPodDetailDeliver.awbItem,
+        awbItemId: doPodDetailDeliver.awbItemId,
         userId: doPodDetailDeliver.doPodDeliver.userId,
         branchId: doPodDetailDeliver.doPodDeliver.branchId,
         awbStatusId: 14000,
@@ -286,9 +288,9 @@ export class DoPodDetailPostMetaQueueService {
       // TODO: find awbStatusIdLastPublic on awb_status
       // provide data
       const obj = {
-        awbItemId: doPodDetail.awbItem,
-        userId: doPodDetail.doPod.userId,
-        branchId: doPodDetail.doPod.branchId,
+        awbItemId: doPodDetail.awbItemId,
+        userId: doPodDetail.podScanIn.userId,
+        branchId: doPodDetail.podScanIn.branchId,
         awbStatusId: 3500,
         awbStatusIdLastPublic: 2000,
         awbHistoryIdPrev,

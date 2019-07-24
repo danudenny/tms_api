@@ -4906,19 +4906,18 @@ ALTER TABLE "public"."pod_scan" OWNER TO "postgres";
 DROP TABLE IF EXISTS "public"."pod_scan_in";
 CREATE TABLE "public"."pod_scan_in" (
   "pod_scan_in_id" int8 NOT NULL DEFAULT nextval('pod_scan_in_pod_scan_in_id_seq'::regclass),
-  "awb_id" int8 NOT NULL,
-  "awb_item_id" int8 NOT NULL,
-  "bag_item_id" int8 NOT NULL,
-  "user_id" int8 NOT NULL,
-  "employee_id" int8 NOT NULL,
-  "branch_id" int8,
-  "scan_in_type" varchar(10) COLLATE "pg_catalog"."default" NOT NULL,
-  "pod_scanin_date_time" timestamp(6) NOT NULL,
-  "user_id_created" int8 NOT NULL,
-  "created_time" timestamp(6) NOT NULL,
-  "user_id_updated" int8 NOT NULL,
-  "updated_time" timestamp(6) NOT NULL,
-  "is_deleted" bool NOT NULL DEFAULT false
+  "awb_item_id" bigint,
+  "bag_item_id" bigint,
+  "user_id" bigint NOT NULL,
+  "employee_id" bigint NOT NULL,
+  "branch_id" bigint,
+  "scan_in_type" character varying(10) NOT NULL,
+  "pod_scanin_date_time" timestamp without time zone NOT NULL,
+  "user_id_created" bigint NOT NULL,
+  "created_time" timestamp without time zone NOT NULL,
+  "user_id_updated" bigint NOT NULL,
+  "updated_time" timestamp without time zone NOT NULL,
+  "is_deleted" boolean DEFAULT false NOT NULL
 )
 ;
 ALTER TABLE "public"."pod_scan_in" OWNER TO "postgres";
