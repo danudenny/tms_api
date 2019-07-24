@@ -21,6 +21,8 @@ import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInBagListResponseVm, WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
+import { Bag } from '../../../../shared/orm-entity/bag';
 // #endregion
 
 @Injectable()
@@ -95,7 +97,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
     payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
-    payload.fieldResolverMap['employeeName'] = 't5.fullname';
+    payload.fieldResolverMap['employeeName'] = 't5.nickname';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -111,16 +113,22 @@ export class WebDeliveryInService {
 
     q.selectRaw(
       ['t1.pod_scanin_date_time', 'podScaninDateTime'],
+      ['t6.bag_seq', 'bagSeq'],
+      ['t2.bag_number', 'bagNumber'],
       [
         'CONCAT (t2.bag_number,t6.bag_seq)',
-        'bagNumber',
+        'bagNumberCode',
       ],
       ['t3.branch_name', 'branchNameScan'],
       ['t4.branch_name', 'branchNameFrom'],
-      ['t5.fullname', 'employeeName'],
+      ['t5.nickname', 'employeeName'],
+      ['COUNT (t7.*)', 'totalAwb'],
     );
 
     q.innerJoin(e => e.bag_item, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bag_item.bagItemAwbs, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.bag_item.bag, 't2', j =>
@@ -135,11 +143,57 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.user.employee, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.groupByRaw('t1.pod_scanin_date_time, t2.bag_number, t3.branch_name, t4.branch_name, t5.nickname, t6.bag_seq');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanInBagListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllBagDetailByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebDeliveryListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'bagNumber',
+      },
+      {
+        field: 'bagSeq',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(Bag, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t2.awb_number', 'awbNumber'],
+      ['t2.weight', 'weight'],
+    );
+
+    q.innerJoin(e => e.bagItems, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItems.bagItemAwbs, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebDeliveryListResponseVm();
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);

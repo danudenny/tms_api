@@ -11,6 +11,7 @@ import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInListResponseVm, WebScanInBagListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
+import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 
 @ApiUseTags('Web Delivery In')
 @Controller('web/pod/scanIn')
@@ -50,6 +51,17 @@ export class WebDeliveryInController {
   public async findAllBagList(@Body() payload: BaseMetaPayloadVm) {
     // TODO:
     return this.webDeliveryService.findAllBagByRequest(payload);
+  }
+
+  @Post('bagListDetail')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebDeliveryListResponseVm })
+  // @ResponseSerializerOptions({ disable: true })
+  public async findAllBagListDetail(@Body() payload: BaseMetaPayloadVm) {
+    // TODO:
+    return this.webDeliveryService.findAllBagDetailByRequest(payload);
   }
 
   @Post('bag')

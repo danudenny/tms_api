@@ -29,6 +29,15 @@ export class WebScanInBagResponseVm {
   bagNumber: string;
 
   @ApiModelProperty()
+  bagSeq: string;
+
+  @ApiModelProperty()
+  bagNumberCode: string;
+
+  @ApiModelProperty()
+  totalAwb: string;
+
+  @ApiModelProperty()
   branchNameScan: string;
 
   @ApiModelProperty()
