@@ -146,7 +146,7 @@ export class AuthService {
       result.roles = map(roles, item => {
         const newObj = {
           roleId: item.role_id,
-          roleName: item.role.role_name,
+          roleName: item.role.roleName,
           branchId: item.branch_id,
           branchName: item.branch.branchName,
           branchCode: item.branch.branchCode,
@@ -216,7 +216,7 @@ export class AuthService {
       result.email = authMeta.email;
       result.displayName = authMeta.displayName;
       result.permissionToken = permissionToken;
-      result.roleName = user.userRoles[0].role.role_name;
+      result.roleName = user.userRoles[0].role.roleName;
 
       result.branchName = branch.branchName;
       result.branchCode = branch.branchCode;
@@ -233,14 +233,17 @@ export class AuthService {
         'pod_input_awb_3pl',
         'pod_manual',
         'scan_in_list',
+        'scan_in_list_hub',
         'do_pod_list',
         'pod_awb_list',
         'awb_3pl_list',
+        'pod_scan_in_problem',
         'pod_scan_in_problem_ct',
         'pod_scan_in_problem_branch',
         'pod_scan_in_problem_hub',
         'pod_awb_problem',
         'do_pod_bag_list',
+        'do_pod_deliver_list',
       ];
 
       return result;

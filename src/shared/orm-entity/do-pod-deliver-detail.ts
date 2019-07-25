@@ -1,11 +1,12 @@
-import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { AwbItem } from './awb-item';
 import { AwbItemAttr } from './awb-item-attr';
 import { DoPodDeliver } from './do-pod-deliver';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('do_pod_deliver_detail', { schema: 'public' })
-export class DoPodDeliverDetail extends BaseEntity {
+export class DoPodDeliverDetail extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'do_pod_deliver_detail_id',

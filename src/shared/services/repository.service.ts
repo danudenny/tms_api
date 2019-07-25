@@ -7,6 +7,7 @@ import { DoPodDeliver } from '../orm-entity/do-pod-deliver';
 import { Employee } from '../orm-entity/employee';
 import { PartnerLogistic } from '../orm-entity/partner-logistic';
 import { Reason } from '../orm-entity/reason';
+import { Representative } from '../orm-entity/representative';
 import { Role } from '../orm-entity/role';
 import { RolePermission } from '../orm-entity/role-permission';
 import { User } from '../orm-entity/user';
@@ -44,6 +45,9 @@ export class RepositoryService {
   }
   static get reason() {
     return new OrionRepositoryService(Reason);
+  }
+  static get representative() {
+    return new OrionRepositoryService(Representative);
   }
   static get role() {
     return new OrionRepositoryService(Role);

@@ -21,6 +21,7 @@ describe('criss-cross-awb', () => {
     }).create(5);
     awbItemAttr = await TEST_GLOBAL_VARIABLE.entityFactory.for(AwbItemAttr).with({
         awbStatusIdLast: 2500,
+        branchIdLast: 121,
       }).create(5);
   });
   // Criss Cross
@@ -35,7 +36,7 @@ describe('criss-cross-awb', () => {
       '2019-01-01',
       '2019-08-01',
       ).toDateString(); // '2019-07-15 10:10:00';
-    payload.desc = 'test';
+    payload.desc = 'test Surat Jalan Criss Cross';
 
     await TestUtility.getAuthenticatedMainServerAxios()
       .post('/web/pod/scanOut/create', payload)
@@ -74,7 +75,8 @@ describe('criss-cross-awb', () => {
       .then(async response => {
 
         const result = response.data as WebScanOutAwbResponseVm;
-        // console.log(result);
+        // tslint:disable-next-line: no-console
+        console.log(result);
         expect(result).toBeDefined();
       });
 

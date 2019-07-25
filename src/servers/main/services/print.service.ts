@@ -25,7 +25,7 @@ export class PrintService {
           branchName: true,
         },
         doPodDetails: {
-          doPodDetaiId: true, // needs to be selected due to do_pod_detail relations are being included
+          doPodDetailId: true, // needs to be selected due to do_pod_detail relations are being included
           awbItem: {
             awbItemId: true, // needs to be selected due to awb_item relations are being included
             awb: {

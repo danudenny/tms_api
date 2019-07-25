@@ -17,6 +17,7 @@ import {
   WebScanOutAwbResponseVm,
   WebScanOutCreateResponseVm,
   WebScanOutAwbListResponseVm,
+  WebScanOutDeliverListResponseVm,
   WebScanOutBagResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
@@ -95,6 +96,15 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllScanOutList(payload);
   }
 
+  @Post('deliverList')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutDeliverListResponseVm })
+  public async deliverList(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryOutService.findAllScanOutDeliverList(payload);
+  }
+
   @Post('awbDeliverList')
   @HttpCode(HttpStatus.OK)
   // @ApiBearerAuth()
@@ -121,6 +131,15 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebDeliveryListResponseVm })
   public async awbDeliveryOrder(@Body() payload: BaseMetaPayloadVm) {
     return this.webDeliveryOutService.awbDetailDelivery(payload);
+  }
+
+  @Post('deliveryOrderDetail')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebDeliveryListResponseVm })
+  public async deliveryOrderDetail(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryOutService.detailDelivery(payload);
   }
 
   @Post('bagDeliveryOrder')

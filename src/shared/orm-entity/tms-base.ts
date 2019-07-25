@@ -34,25 +34,41 @@ export class TmsBaseEntity extends BaseEntity {
 
   @BeforeInsert()
   assignCreatedTimeAndUserIdCreated() {
-    this.createdTime = new Date();
-    this.updatedTime = new Date();
+    if (!this.createdTime) {
+      this.createdTime = new Date();
+    }
 
-    const { AuthService } = require('../services/auth.service');
-    const authMeta = AuthService.getAuthMetadata();
-    if (authMeta && authMeta.userId) {
-      this.userIdCreated = authMeta.userId;
-      this.userIdUpdated = authMeta.userId;
+    if (!this.updatedTime) {
+      this.updatedTime = new Date();
+    }
+
+    if (!this.userIdCreated || !this.userIdUpdated) {
+      const { AuthService } = require('../services/auth.service');
+      const authMeta = AuthService.getAuthMetadata();
+      if (authMeta && authMeta.userId) {
+        if (!this.userIdCreated) {
+          this.userIdCreated = authMeta.userId;
+        }
+
+        if (!this.userIdUpdated) {
+          this.userIdUpdated = authMeta.userId;
+        }
+      }
     }
   }
 
   @BeforeUpdate()
   assignUpdatedTimeAndUserIdUpdated() {
-    this.updatedTime = new Date();
+    if (!this.updatedTime) {
+      this.updatedTime = new Date();
+    }
 
-    const { AuthService } = require('../services/auth.service');
-    const authMeta = AuthService.getAuthMetadata();
-    if (authMeta && authMeta.userId) {
-      this.userIdUpdated = authMeta.userId;
+    if (!this.userIdUpdated) {
+      const { AuthService } = require('../services/auth.service');
+      const authMeta = AuthService.getAuthMetadata();
+      if (authMeta && authMeta.userId) {
+        this.userIdUpdated = authMeta.userId;
+      }
     }
   }
 }

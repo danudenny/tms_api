@@ -20,25 +20,26 @@ describe('web-scanin-awb', () => {
   beforeAll(async () => {
     awbAttr = await TEST_GLOBAL_VARIABLE.entityFactory.for(AwbAttr).with({
       awbStatusIdLast: 1500,
+      branchIdLast: 121,
     }).create(2);
     awbItemAttr = await TEST_GLOBAL_VARIABLE.entityFactory.for(AwbItemAttr).with({
       awbStatusIdLast: 2500,
+      branchIdLast: 121,
     }).create(2);
   });
-  // Doing Transit External
-  it('Surat Jalan Transit External', async () => {
+  // Doing Transit Internal
+  it('Surat Jalan Transit Internal', async () => {
     const payload = new WebScanOutCreateVm();
-    payload.doPodType = 3005; // Transit External
+    payload.doPodType = 3005; // Transit Internal
     payload.branchIdTo = 123;
-    payload.doPodMethod = 'external';
+    payload.doPodMethod = 'internal';
     payload.partnerLogisticId = 1;
     payload.employeeIdDriver = 15;
     payload.vehicleNumber = 'DPS-17010675-523423-BC';
-    payload.doPodDateTime = faker.date.between(
-      '2019-01-01',
-      '2019-08-01',
-      ).toDateString(); // '2019-07-15 10:10:00';
-    payload.desc = 'test Transit External';
+    payload.doPodDateTime = faker.date
+      .between('2019-01-01', '2019-08-01')
+      .toDateString(); // '2019-07-15 10:10:00';
+    payload.desc = 'test Transit Internal';
 
     await TestUtility.getAuthenticatedMainServerAxios()
       .post('/web/pod/scanOut/create', payload)
@@ -71,7 +72,7 @@ describe('web-scanin-awb', () => {
     payload.awbNumber = arrAwbNumber;
 
     // tslint:disable-next-line: no-console
-    console.log('##############====================================', payload);
+    console.log('############## SCAN OUT AWB ====================================', payload);
 
     await TestUtility.getAuthenticatedMainServerAxios()
       .post('/web/pod/scanOut/awb', payload)
@@ -93,7 +94,7 @@ describe('web-scanin-awb', () => {
     payload.awbNumber = arrAwbNumber;
 
     // tslint:disable-next-line: no-console
-    console.log('##############====================================', payload);
+    console.log('############## SCAN IN AWB ====================================', payload);
 
     await TestUtility.getAuthenticatedMainServerAxios()
       .post('/web/pod/scanIn/awb', payload)

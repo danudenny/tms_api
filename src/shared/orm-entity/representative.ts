@@ -1,106 +1,63 @@
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  Index,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-  RelationId,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('representative', { schema: 'public' })
-export class Representative extends BaseEntity {
+export class Representative extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'representative_id',
   })
-  representative_id: string;
+  representativeId: number;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name: 'representative_code',
   })
-  representative_code: string;
+  representativeCode: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name: 'representative_name',
   })
-  representative_name: string;
+  representativeName: string;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-
+    name: 'email',
   })
   email: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'branch_id',
   })
-  branch_id: string | null;
+  branchId: string | null;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'min_weight',
   })
-  min_weight: string;
+  minWeight: string;
 
   @Column('numeric', {
     nullable: false,
     default: () => '0',
     precision: 10,
     scale: 5,
-
+    name: 'price_per_kg',
   })
-  price_per_kg: string;
-
-  @Column('bigint', {
-    nullable: false,
-
-  })
-  user_id_created: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-
-  })
-  created_time: Date;
-
-  @Column('bigint', {
-    nullable: false,
-
-  })
-  user_id_updated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-
-  })
-  updated_time: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-
-  })
-  is_deleted: boolean;
+  pricePerKg: string;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'representative_id_parent',
   })
-  representative_id_parent: string | null;
+  representativeIdParent: string | null;
 }

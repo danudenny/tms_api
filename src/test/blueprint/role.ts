@@ -9,11 +9,11 @@ export class RoleBlueprint extends TypeormBlueprint<Role> {
     this.type(Role);
 
     this.define(async ({ faker, factory }) => ({
-      role_name: faker.random.word(),
-      user_id_created: 1,
-      user_id_updated: 1,
-      created_time: new Date(),
-      updated_time: new Date(),
+      roleName: faker.random.word(),
+      userIdCreated: 1,
+      userIdUpdated: 1,
+      createdTime: new Date(),
+      updatedTime: new Date(),
     }));
   }
 }
