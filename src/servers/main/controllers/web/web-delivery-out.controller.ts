@@ -105,14 +105,15 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllScanOutDeliverList(payload);
   }
 
-  @Post('awbDeliverList')
-  @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
-  public async awbDeliverList(@Body() payload: BaseMetaPayloadVm) {
-    return this.webDeliveryOutService.scanOutList(payload);
-  }
+  // TODO: End Point ini sepertinya sudah tidak terpakai
+  // @Post('awbDeliverList')
+  // @HttpCode(HttpStatus.OK)
+  // // @ApiBearerAuth()
+  // // @UseGuards(AuthenticatedGuard)
+  // @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
+  // public async awbDeliverList(@Body() payload: BaseMetaPayloadVm) {
+  //   return this.webDeliveryOutService.scanOutList(payload);
+  // }
 
   @Post('bagList')
   @HttpCode(HttpStatus.OK)
