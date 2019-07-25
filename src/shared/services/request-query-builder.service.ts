@@ -182,6 +182,10 @@ export class RequestQueryBuidlerService {
         new Brackets(qbAndWhere => {
           for (const andFilterIdx in metaPayload.filters) {
             const andFilter = metaPayload.filters[andFilterIdx];
+            if (!andFilter.value) {
+              continue;
+            }
+
             const field = metaPayload.resolveFieldAsFieldAlias(andFilter.field);
             this.applyMetaPayloadFilterItem(
               qbAndWhere,

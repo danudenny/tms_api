@@ -1,5 +1,5 @@
 // #region import
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   WebScanOutCreateVm,
   WebScanOutAwbVm,
@@ -314,11 +314,18 @@ export class WebDeliveryOutService {
         status: 'ok',
         message: 'Success',
       };
-
+      Logger.debug(
+        awbNumber,
+        `###################### SCAN OUT ANT::AWB::`,
+      );
       const awb = await DeliveryService.validAwbNumber(awbNumber);
       if (awb) {
         const statusCode = await DeliveryService.awbStatusGroup(
           awb.awbStatusIdLast,
+        );
+        Logger.debug(
+          statusCode,
+          `###################### SCAN OUT ANT::STATUS`,
         );
         switch (statusCode) {
           case 'OUT':
@@ -355,8 +362,10 @@ export class WebDeliveryOutService {
                 const doPodDeliverDetail = DoPodDeliverDetail.create();
                 doPodDeliverDetail.doPodDeliverId = payload.doPodId;
                 doPodDeliverDetail.awbItemId = awb.awbItemId;
-
                 await DoPodDeliverDetail.save(doPodDeliverDetail);
+                Logger.debug(
+                  doPodDeliverDetail, `###################### SCAN OUT ANT::OBJT DETAIL`,
+                );
 
                 // AFTER Scan OUT ===============================================
                 // #region after scanout
@@ -429,6 +438,7 @@ export class WebDeliveryOutService {
     result.totalError = totalError;
     result.data = dataItem;
 
+    Logger.debug(result, `########## RESPONSE DATA SCAN OUT AWB DELIVER`);
     return result;
   }
 
@@ -584,6 +594,7 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  // TODO: End Point ini sepertinya sudah tidak terpakai
   /**
    *
    *
@@ -592,69 +603,70 @@ export class WebDeliveryOutService {
    * @returns {Promise<WebScanOutAwbListResponseVm>}
    * @memberof WebDeliveryOutService
    */
-  async scanOutList(
-    payload: BaseMetaPayloadVm,
-    isHub = false,
-  ): Promise<WebScanOutAwbListResponseVm> {
-    // mapping search field and operator default ilike
-    payload.globalSearchFields = [
-      {
-        field: 'doPodDateTime',
-      },
-      {
-        field: 'doPodCode',
-      },
-      {
-        field: 'description',
-      },
-      {
-        field: 'fullname',
-      },
-    ];
+  // async scanOutList(
+  //   payload: BaseMetaPayloadVm,
+  //   isHub = false,
+  // ): Promise<WebScanOutAwbListResponseVm> {
+  //   // mapping search field and operator default ilike
+  //   payload.globalSearchFields = [
+  //     {
+  //       field: 'doPodDateTime',
+  //     },
+  //     {
+  //       field: 'doPodCode',
+  //     },
+  //     {
+  //       field: 'description',
+  //     },
+  //     {
+  //       field: 'fullname',
+  //     },
+  //   ];
 
-    // mapping field
-    payload.fieldResolverMap['startScanOutDate'] = 'do_pod.do_pod_date_time';
-    payload.fieldResolverMap['endScanOutDate'] = 'do_pod.do_pod_date_time';
-    payload.fieldResolverMap['desc'] = 'do_pod.description';
-    payload.fieldResolverMap['fullname'] = 'employee.fullname';
+  //   // mapping field
+  //   payload.fieldResolverMap['startScanOutDate'] = 'do_pod.do_pod_date_time';
+  //   payload.fieldResolverMap['endScanOutDate'] = 'do_pod.do_pod_date_time';
+  //   payload.fieldResolverMap['desc'] = 'do_pod.description';
+  //   payload.fieldResolverMap['fullname'] = 'employee.fullname';
 
-    // "totalScanIn"   : "0",
-    // "totalScanOut"  : "10",
-    // "percenScanInOut" : "0%",
-    // "lastDateScanIn" : "",
-    // "lastDateScanOut" : "2019-06-28 10:00:00"
+  //   // "totalScanIn"   : "0",
+  //   // "totalScanOut"  : "10",
+  //   // "percenScanInOut" : "0%",
+  //   // "lastDateScanIn" : "",
+  //   // "lastDateScanOut" : "2019-06-28 10:00:00"
 
-    const qb = payload.buildQueryBuilder(true);
-    qb.addSelect('do_pod.do_pod_id', 'doPodId');
-    qb.addSelect('do_pod.do_pod_code', 'doPodCode');
-    qb.addSelect('do_pod.do_pod_date_time', 'doPodDateTime');
-    qb.addSelect('employee.fullname', 'fullname');
-    qb.addSelect(`COALESCE(do_pod.description, '')`, 'description');
+  //   const qb = payload.buildQueryBuilder(true);
+  //   qb.addSelect('do_pod.do_pod_id', 'doPodId');
+  //   qb.addSelect('do_pod.do_pod_code', 'doPodCode');
+  //   qb.addSelect('do_pod.do_pod_date_time', 'doPodDateTime');
+  //   qb.addSelect('employee.fullname', 'fullname');
+  //   qb.addSelect(`COALESCE(do_pod.description, '')`, 'description');
 
-    qb.from('do_pod', 'do_pod');
-    qb.innerJoin(
-      'employee',
-      'employee',
-      'employee.employee_id = do_pod.employee_id_driver AND employee.is_deleted = false',
-    );
+  //   qb.from('do_pod', 'do_pod');
+  //   qb.innerJoin(
+  //     'employee',
+  //     'employee',
+  //     'employee.employee_id = do_pod.employee_id_driver AND employee.is_deleted = false',
+  //   );
 
-    if (isHub) {
-      qb.where('do_pod.do_pod_type = :doPodType', {
-        doPodType: POD_TYPE.TRANSIT_HUB,
-      });
-    }
-    const total = await qb.getCount();
+  //   if (isHub) {
+  //     qb.where('do_pod.do_pod_type = :doPodType', {
+  //       doPodType: POD_TYPE.TRANSIT_HUB,
+  //     });
+  //   }
+  //   const total = await qb.getCount();
 
-    payload.applyPaginationToQueryBuilder(qb);
-    const data = await qb.execute();
+  //   payload.applyPaginationToQueryBuilder(qb);
+  //   const data = await qb.execute();
 
-    const result = new WebScanOutAwbListResponseVm();
+  //   const result = new WebScanOutAwbListResponseVm();
 
-    result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
+  //   result.data = data;
+  //   result.paging = MetaService.set(payload.page, payload.limit, total);
 
-    return result;
-  }
+  //   return result;
+  // }
+  // TODO: End Point diatas ini sepertinya sudah tidak terpakai
 
   async findAllScanOutList(
     payload: BaseMetaPayloadVm,
@@ -929,7 +941,13 @@ export class WebDeliveryOutService {
 
     q.selectRaw(
       [
-        'CONCAT (t3.bag_number,t2.bag_seq)',
+        `CASE LENGTH (CAST(t2.bag_seq AS varchar(10)))
+          WHEN 1 THEN
+            CONCAT (t3.bag_number,'00',t2.bag_seq)
+          WHEN 2 THEN
+            CONCAT (t3.bag_number,'0',t2.bag_seq)
+          ELSE
+            CONCAT (t3.bag_number,t2.bag_seq) END`,
         'bagNumber',
       ],
       ['t2.weight', 'weight'],

@@ -116,7 +116,13 @@ export class WebDeliveryInService {
       ['t6.bag_seq', 'bagSeq'],
       ['t2.bag_number', 'bagNumber'],
       [
-        'CONCAT (t2.bag_number,t6.bag_seq)',
+        `CASE LENGTH (CAST(t6.bag_seq AS varchar(10)))
+          WHEN 1 THEN
+            CONCAT (t2.bag_number,'00',t6.bag_seq)
+          WHEN 2 THEN
+            CONCAT (t2.bag_number,'0',t6.bag_seq)
+          ELSE
+            CONCAT (t2.bag_number,t6.bag_seq) END`,
         'bagNumberCode',
       ],
       ['t3.branch_name', 'branchNameScan'],
