@@ -1,5 +1,6 @@
 import { Awb } from '../orm-entity/awb';
 import { AwbItem } from '../orm-entity/awb-item';
+import { AwbItemAttr } from '../orm-entity/awb-item-attr';
 import { Branch } from '../orm-entity/branch';
 import { Customer } from '../orm-entity/customer';
 import { DoPod } from '../orm-entity/do-pod';
@@ -24,6 +25,9 @@ export class RepositoryService {
   }
   static get awbItem() {
     return new OrionRepositoryService(AwbItem);
+  }
+  static get awbItemAttr() {
+    return new OrionRepositoryService(AwbItemAttr);
   }
   static get branch() {
     return new OrionRepositoryService(Branch);
