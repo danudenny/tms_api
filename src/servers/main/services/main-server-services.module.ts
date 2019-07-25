@@ -17,6 +17,7 @@ import { PartnerLogisticService } from './master/partner-logistic.service';
 import { RoleService } from './master/role.service';
 import { MobileCheckInService } from './mobile/mobile-check-in.service';
 import { MobileCheckOutService } from './mobile/mobile-check-out.service';
+import { WebAwbFilterService } from './web/web-awb-filter.service';
 
 @Module({
   imports: [OrmRepositoryModule, SharedModule],
@@ -36,6 +37,7 @@ import { MobileCheckOutService } from './mobile/mobile-check-out.service';
     PartnerLogisticService,
     MobileCheckInService,
     MobileCheckOutService,
+    WebAwbFilterService,
   ],
   exports: [
     MobileDeliveryService,
@@ -53,6 +55,7 @@ import { MobileCheckOutService } from './mobile/mobile-check-out.service';
     PartnerLogisticService,
     MobileCheckInService,
     MobileCheckOutService,
+    WebAwbFilterService,
   ],
 })
 export class MainServerServicesModule {}

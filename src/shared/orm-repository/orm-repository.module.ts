@@ -19,6 +19,7 @@ import { BagItemRepository } from './bagItem.repository';
 import { BagItemAwbRepository } from './bagItemAwb.repository';
 import { CustomerRepository } from './customer.repository';
 import { EmployeeJourneyRepository } from './employee-journey.repository';
+import { DistrictRepository } from './district.repository';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { EmployeeJourneyRepository } from './employee-journey.repository';
       BagItemRepository,
       BagItemAwbRepository,
       CustomerRepository,
+      DistrictRepository,
     ]),
   ],
   exports: [

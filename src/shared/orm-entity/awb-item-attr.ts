@@ -1,5 +1,6 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 import { Branch } from './branch';
+import { BagItem } from './bag-item';
 
 @Entity('awb_item_attr', { schema: 'public' })
 export class AwbItemAttr extends BaseEntity {
@@ -138,4 +139,18 @@ export class AwbItemAttr extends BaseEntity {
   })
   @JoinColumn({ name: 'branch_id_last' })
   branchLast: Branch;
+
+  @OneToOne(() => BagItem, bagItem => bagItem, {
+    eager: false,
+    nullable: true,
+  })
+  @JoinColumn({ name: 'bag_item_id_last'})
+  bagItemIdLast: BagItem;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_filtered',
+  })
+  isFiltered: boolean;
 }

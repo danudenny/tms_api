@@ -21,6 +21,7 @@ import { WebAwbTroubleControlelr } from './web/web-awb-trouble.controller';
 import { WebBagTroubleControlelr } from './web/web-bag-trouble.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
 import { WebDeliveryOutController } from './web/web-delivery-out.controller';
+import { WebAwbFilterController } from './web/web-awb-filter.controller';
 
 @Module({
   imports: [OrmRepositoryModule, SharedModule, MainServerServicesModule],
@@ -43,6 +44,7 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
     RolePermissionController,
     MobileCheckInController,
     MobileCheckOutController,
+    WebAwbFilterController,
   ],
 })
 export class MainServerControllersModule {}
