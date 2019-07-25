@@ -1,13 +1,14 @@
 import * as Bull from 'bull';
 
+import moment = require('moment');
 import { ConfigService } from '../../../shared/services/config.service';
 import { AwbHistory } from '../../../shared/orm-entity/awb-history';
 import { AwbItemSummary } from '../../../shared/orm-entity/awb-item-summary';
 import { DoPodDetail } from '../../../shared/orm-entity/do-pod-detail';
 import { OrionRepositoryService } from '../../../shared/services/orion-repository.service';
-import moment = require('moment');
 import { getManager } from 'typeorm';
 import { DoPodDeliverDetail } from '../../../shared/orm-entity/do-pod-deliver-detail';
+import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
 
 export class DoPodDetailPostMetaQueueService {
   public static queue = new Bull('awb-history-post-meta', {
@@ -120,8 +121,8 @@ export class DoPodDetailPostMetaQueueService {
         awbItemId: doPodDetail.awbItemId,
         userId: doPodDetail.doPod.userId,
         branchId: doPodDetail.doPod.branchId,
-        awbStatusId: 3000,
-        awbStatusIdLastPublic: 2000,
+        awbStatusId: AWB_STATUS.OUT_BRANCH,
+        awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
         awbHistoryIdPrev,
         userIdCreated: doPodDetail.userIdCreated,
         userIdUpdated: doPodDetail.userIdUpdated,
@@ -179,8 +180,8 @@ export class DoPodDetailPostMetaQueueService {
         awbItemId: doPodDetailDeliver.awbItemId,
         userId: doPodDetailDeliver.doPodDeliver.userId,
         branchId: doPodDetailDeliver.doPodDeliver.branchId,
-        awbStatusId: 14000,
-        awbStatusIdLastPublic: 2000,
+        awbStatusId: AWB_STATUS.ANT,
+        awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
         awbHistoryIdPrev,
         userIdCreated: doPodDetailDeliver.userIdCreated,
         userIdUpdated: doPodDetailDeliver.userIdUpdated,
@@ -234,8 +235,8 @@ export class DoPodDetailPostMetaQueueService {
         awbItemId,
         userId: doPodDetail.doPod.userId,
         branchId: doPodDetail.doPod.branchId,
-        awbStatusId: 3000,
-        awbStatusIdLastPublic: 2000,
+        awbStatusId: AWB_STATUS.OUT_HUB,
+        awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
         awbHistoryIdPrev,
         userIdCreated: doPodDetail.userIdCreated,
         userIdUpdated: doPodDetail.userIdUpdated,
@@ -291,8 +292,8 @@ export class DoPodDetailPostMetaQueueService {
         awbItemId: doPodDetail.awbItemId,
         userId: doPodDetail.podScanIn.userId,
         branchId: doPodDetail.podScanIn.branchId,
-        awbStatusId: 3500,
-        awbStatusIdLastPublic: 2000,
+        awbStatusId: AWB_STATUS.IN_BRANCH,
+        awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
         awbHistoryIdPrev,
         userIdCreated: doPodDetail.userIdCreated,
         userIdUpdated: doPodDetail.userIdUpdated,
@@ -348,8 +349,8 @@ export class DoPodDetailPostMetaQueueService {
         awbItemId,
         userId: doPodDetail.doPod.userId,
         branchId: doPodDetail.doPod.branchId,
-        awbStatusId: 3500,
-        awbStatusIdLastPublic: 2000,
+        awbStatusId: AWB_STATUS.IN_BRANCH,
+        awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
         awbHistoryIdPrev,
         userIdCreated: doPodDetail.userIdCreated,
         userIdUpdated: doPodDetail.userIdUpdated,

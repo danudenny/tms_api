@@ -35,6 +35,7 @@ import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 // #endregion
 
 @Injectable()
@@ -56,7 +57,6 @@ export class WebDeliveryOutService {
   ): Promise<WebScanOutCreateResponseVm> {
     const authMeta = AuthService.getAuthData();
     const result = new WebScanOutCreateResponseVm();
-    const timeNow = moment().toDate();
 
     // create do_pod (Surat Jalan)
     const doPod = this.doPodRepository.create();
@@ -82,15 +82,10 @@ export class WebDeliveryOutService {
     doPod.vehicleNumber = payload.vehicleNumber || null;
     doPod.description = payload.desc || null;
 
-    // general
     // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
     doPod.doPodStatusIdLast = 1000; // created
     doPod.branchId = permissonPayload.branchId;
     doPod.userId = authMeta.userId;
-    doPod.userIdCreated = authMeta.userId;
-    doPod.userIdUpdated = authMeta.userId;
-    doPod.createdTime = timeNow;
-    doPod.updatedTime = timeNow;
 
     // await for get do pod id
     await this.doPodRepository.save(doPod);
@@ -115,7 +110,6 @@ export class WebDeliveryOutService {
   ): Promise<WebScanOutCreateResponseVm> {
     const authMeta = AuthService.getAuthData();
     const result = new WebScanOutCreateResponseVm();
-    const timeNow = moment().toDate();
 
     // create do_pod_deliver (Surat Jalan Antar sigesit)
     const doPod = DoPodDeliver.create();
@@ -132,13 +126,8 @@ export class WebDeliveryOutService {
     doPod.doPodDeliverDateTime = doPodDateTime;
     doPod.description = payload.desc || null;
 
-    // general
     doPod.branchId = permissonPayload.branchId;
     doPod.userId = authMeta.userId;
-    doPod.userIdCreated = authMeta.userId;
-    doPod.userIdUpdated = authMeta.userId;
-    doPod.createdTime = timeNow;
-    doPod.updatedTime = timeNow;
 
     // await for get do pod id
     await DoPodDeliver.save(doPod);
@@ -159,7 +148,6 @@ export class WebDeliveryOutService {
    * @memberof WebDeliveryOutService
    */
   async scanOutAwb(payload: WebScanOutAwbVm): Promise<WebScanOutAwbResponseVm> {
-    const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const dataItem = [];
@@ -244,7 +232,7 @@ export class WebDeliveryOutService {
                 await DeliveryService.updateAwbAttr(
                   awb.awbItemId,
                   doPod.branchIdTo,
-                  3000,
+                  AWB_STATUS.OUT_BRANCH,
                 );
 
                 // TODO: queue by Bull
@@ -316,7 +304,6 @@ export class WebDeliveryOutService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const dataItem = [];
-    const timeNow = moment().toDate();
     const result = new WebScanOutAwbResponseVm();
 
     let totalSuccess = 0;
@@ -387,7 +374,7 @@ export class WebDeliveryOutService {
                 doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
                 await DoPodDeliver.save(doPodDeliver);
                 // TODO: status 3000, OR ANT (14000)
-                await DeliveryService.updateAwbAttr(awb.awbItemId, null, 14000);
+                await DeliveryService.updateAwbAttr(awb.awbItemId, null, AWB_STATUS.ANT);
 
                 // TODO: queue by Bull
                 DoPodDetailPostMetaQueueService.createJobByDoPodDeliverDetailId(
@@ -470,121 +457,110 @@ export class WebDeliveryOutService {
       };
       const bagData = await DeliveryService.validBagNumber(bagNumber);
       if (bagData) {
-        if (
-          bagData.bagItemStatusIdLast == 2000 ||
-          bagData.bagItemStatusIdLast == 500
-        ) {
-          const holdRedis = await RedisService.locking(
-            `hold:bagscanout:${bagData.bagItemId}`,
-            'locking',
-          );
-          if (holdRedis) {
-            const doPodDetail = DoPodDetail.create();
-            doPodDetail.doPodId = payload.doPodId;
-            doPodDetail.bagItemId = bagData.bagItemId;
-            doPodDetail.doPodStatusIdLast = 1000;
-            doPodDetail.isScanOut = true;
-            doPodDetail.scanOutType = 'bag';
+        if (bagData.branchIdLast == permissonPayload.branchId) {
+          if (
+            bagData.bagItemStatusIdLast == 2000 ||
+            bagData.bagItemStatusIdLast == 500
+          ) {
+            const holdRedis = await RedisService.locking(
+              `hold:bagscanout:${bagData.bagItemId}`,
+              'locking',
+            );
+            if (holdRedis) {
+              const doPodDetail = DoPodDetail.create();
+              doPodDetail.doPodId = payload.doPodId;
+              doPodDetail.bagItemId = bagData.bagItemId;
+              doPodDetail.doPodStatusIdLast = 1000;
+              doPodDetail.isScanOut = true;
+              doPodDetail.scanOutType = 'bag';
 
-            await DoPodDetail.save(doPodDetail);
+              await DoPodDetail.save(doPodDetail);
 
-            // AFTER Scan OUT ===============================================
-            // #region after scanout
-            // Update bag_item set bag_item_status_id = 1000
-            const bagItem = await BagItem.findOne({
-              where: {
-                bagItemId: bagData.bagItemId,
-              },
-            });
-            bagItem.bagItemStatusIdLast = 1000;
-            bagItem.updatedTime = timeNow;
-            bagItem.userIdUpdated = authMeta.userId;
-            BagItem.save(bagItem);
-            // Update do_pod
-            const doPod = await DoPod.findOne({
-              where: {
-                doPodId: payload.doPodId,
-                isDeleted: false,
-              },
-            });
+              // AFTER Scan OUT ===============================================
+              // #region after scanout
+              // Update bag_item set bag_item_status_id = 1000
+              const bagItem = await BagItem.findOne({
+                where: {
+                  bagItemId: bagData.bagItemId,
+                },
+              });
+              bagItem.bagItemStatusIdLast = 1000;
+              bagItem.updatedTime = timeNow;
+              bagItem.userIdUpdated = authMeta.userId;
+              BagItem.save(bagItem);
+              // Update do_pod
+              const doPod = await DoPod.findOne({
+                where: {
+                  doPodId: payload.doPodId,
+                  isDeleted: false,
+                },
+              });
 
-            // counter total scan in
-            doPod.totalScanOut = doPod.totalScanOut + 1;
-            if (doPod.totalScanOut == 1) {
-              doPod.firstDateScanOut = timeNow;
-              doPod.lastDateScanOut = timeNow;
-            } else {
-              doPod.lastDateScanOut = timeNow;
-            }
-            await DoPod.save(doPod);
+              // counter total scan in
+              doPod.totalScanOut = doPod.totalScanOut + 1;
+              if (doPod.totalScanOut == 1) {
+                doPod.firstDateScanOut = timeNow;
+                doPod.lastDateScanOut = timeNow;
+              } else {
+                doPod.lastDateScanOut = timeNow;
+              }
+              await DoPod.save(doPod);
 
-            // TODO: Loop data bag_item_awb
-            // SELECT *
-            // FROM bag_item_awb
-            // WHERE bag_item_id = <bag_item_id> AND is_deleted = false
-            const bagItemsAwb = await BagItemAwb.find({
-              where: {
-                bagItemId: bagData.bagItemId,
-                isDeleted: false,
-              },
-            });
-            if (bagItemsAwb && bagItemsAwb.length) {
-              for (const itemAwb of bagItemsAwb) {
-                if (itemAwb.awbItemId) {
-                  await DeliveryService.updateAwbAttr(
-                    itemAwb.awbItemId,
-                    doPod.branchIdTo,
-                    3000,
-                  );
-                  // TODO: queue by Bull
-                  DoPodDetailPostMetaQueueService.createJobByScanOutBag(
-                    doPodDetail.doPodDetailId,
-                    itemAwb.awbItemId,
-                  );
+              // NOTE: Loop data bag_item_awb for update status awb
+              const bagItemsAwb = await BagItemAwb.find({
+                where: {
+                  bagItemId: bagData.bagItemId,
+                  isDeleted: false,
+                },
+              });
+              if (bagItemsAwb && bagItemsAwb.length) {
+                for (const itemAwb of bagItemsAwb) {
+                  if (itemAwb.awbItemId) {
+                    await DeliveryService.updateAwbAttr(
+                      itemAwb.awbItemId,
+                      doPod.branchIdTo,
+                      AWB_STATUS.OUT_HUB,
+                    );
+                    // TODO: queue by Bull
+                    DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+                      doPodDetail.doPodDetailId,
+                      itemAwb.awbItemId,
+                    );
+                  }
                 }
               }
-            }
-            // #endregion after scanout
+              // #endregion after scanout
 
-            totalSuccess += 1;
-            // remove key holdRedis
-            RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
+              totalSuccess += 1;
+              // remove key holdRedis
+              RedisService.del(
+                `hold:bagscanout:${bagData.bagItemId}`,
+              );
+            } else {
+              totalError += 1;
+              response.status = 'error';
+              response.message = 'Server Busy';
+            }
           } else {
-            totalError += 1;
-            response.status = 'error';
-            response.message = 'Server Busy';
-          }
-        } else {
-          if (bagData.branchIdLast == permissonPayload.branchId) {
             totalSuccess += 1;
             response.message = `No Bag ${bagNumber} sudah di Scan OUT di gerai ini`;
-          } else {
-            // NOTE: create data bag trouble
-            // bag_trouble_code = automatic BTR/1907/13/XYZA1234
-            // Bag_number
-            // Bag_trouble_status = 100 (Read Bag TROUBLE STATUS below)
-            // Bag_status_id = <sesuai dengan bag_status_id ketika scan dilakukan>
-            // Employee_id = <sesuai login>
-            // Branch_id = <sesuai login>
-            const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
-            const bagTrouble = BagTrouble.create({
-              bagNumber,
-              bagTroubleCode,
-              bagTroubleStatus: 100,
-              bagStatusId: 1000,
-              employeeId: authMeta.employeeId,
-              branchId: permissonPayload.branchId,
-              userIdCreated: authMeta.userId,
-              createdTime: timeNow,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-            });
-            await BagTrouble.save(bagTrouble);
-
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Gabung Paket belum masuk pada Gerai. Harap Scan Masuk jika Gabung Paket sudah masuk`;
           }
+        } else {
+          // NOTE: create data bag trouble
+          const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
+          const bagTrouble = BagTrouble.create({
+            bagNumber,
+            bagTroubleCode,
+            bagTroubleStatus: 100,
+            bagStatusId: 1000,
+            employeeId: authMeta.employeeId,
+            branchId: permissonPayload.branchId,
+          });
+          await BagTrouble.save(bagTrouble);
+
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Gabung Paket belum masuk pada Gerai. Harap Scan Masuk jika Gabung Paket sudah masuk`;
         }
       } else {
         totalError += 1;
@@ -1012,13 +988,6 @@ export class WebDeliveryOutService {
       awbStatusId: awbStatusIdLast,
       employeeId: authMeta.employeeId,
       branchId: permissonPayload.branchId,
-      userIdCreated: authMeta.userId,
-      createdTime: timeNow,
-      userIdUpdated: authMeta.userId,
-      updatedTime: timeNow,
-      userIdPic: authMeta.userId,
-      branchIdPic: permissonPayload.branchId,
-      employeeIdPic: authMeta.employeeId,
       troubleCategory: 'scan_out',
       troubleDesc,
     });

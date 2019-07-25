@@ -1,11 +1,12 @@
-import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { Branch } from './branch';
 import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 import { Employee } from './employee';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('do_pod_deliver', { schema: 'public' })
-export class DoPodDeliver extends BaseEntity {
+export class DoPodDeliver extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'do_pod_deliver_id',
