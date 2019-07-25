@@ -1,5 +1,5 @@
 // #region import
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   WebScanOutCreateVm,
   WebScanOutAwbVm,
@@ -314,11 +314,18 @@ export class WebDeliveryOutService {
         status: 'ok',
         message: 'Success',
       };
-
+      Logger.debug(
+        awbNumber,
+        `###################### SCAN OUT ANT::AWB::`,
+      );
       const awb = await DeliveryService.validAwbNumber(awbNumber);
       if (awb) {
         const statusCode = await DeliveryService.awbStatusGroup(
           awb.awbStatusIdLast,
+        );
+        Logger.debug(
+          statusCode,
+          `###################### SCAN OUT ANT::STATUS`,
         );
         switch (statusCode) {
           case 'OUT':
@@ -355,8 +362,10 @@ export class WebDeliveryOutService {
                 const doPodDeliverDetail = DoPodDeliverDetail.create();
                 doPodDeliverDetail.doPodDeliverId = payload.doPodId;
                 doPodDeliverDetail.awbItemId = awb.awbItemId;
-
                 await DoPodDeliverDetail.save(doPodDeliverDetail);
+                Logger.debug(
+                  doPodDeliverDetail, `###################### SCAN OUT ANT::OBJT DETAIL`,
+                );
 
                 // AFTER Scan OUT ===============================================
                 // #region after scanout
@@ -429,6 +438,7 @@ export class WebDeliveryOutService {
     result.totalError = totalError;
     result.data = dataItem;
 
+    Logger.debug(result, `########## RESPONSE DATA SCAN OUT AWB DELIVER`);
     return result;
   }
 
