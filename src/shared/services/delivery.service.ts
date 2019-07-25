@@ -122,7 +122,7 @@ export class DeliveryService {
     const bagRepository = new OrionRepositoryService(BagItem);
     const q = bagRepository.findOne();
     // Manage relation (default inner join)
-    q.innerJoin(e => e.bag);
+    q.innerJoin(e => e.bag, null, join => join.andWhere(e => e.isDeleted, w => w.isFalse()));
 
     q.select({
       bagItemId: true,
@@ -130,12 +130,14 @@ export class DeliveryService {
       branchIdLast: true,
       bagSeq: true,
       bag: {
+        refRepresentativeCode: true,
         bagId: true,
         bagNumber: true,
       },
     });
     q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
     q.andWhere(e => e.bagSeq, w => w.equals(seqNumber));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     return await q.exec();
   }
 }

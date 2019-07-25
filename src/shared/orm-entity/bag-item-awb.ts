@@ -1,6 +1,7 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Bag } from './bag';
 import { BagItem } from './bag-item';
+import { AwbItem } from './awb-item';
 
 @Entity('bag_item_awb', { schema: 'public' })
 @Index('bag_item_awb_awb_item_idx', ['awbItemId'])
@@ -93,4 +94,11 @@ export class BagItemAwb extends BaseEntity {
     name: 'bag_item_id',
   })
   bagItem: BagItem;
+
+  // relation model
+  @ManyToOne(() => AwbItem, awbItem => awbItem.awbItemId, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'awb_item_id' })
+  awbItem: AwbItem;
 }

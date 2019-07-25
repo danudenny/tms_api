@@ -18,6 +18,7 @@ import { MobileCheckOutController } from './mobile/mobile.check-out.controller';
 import { MobileDashboardController } from './mobile/mobile.dashboard.controller';
 import { MobileDeliveryController } from './mobile/mobile.delivery.controller';
 import { PrintController } from './print.controller';
+import { WebAwbFilterController } from './web/web-awb-filter.controller';
 import { WebAwbTroubleControlelr } from './web/web-awb-trouble.controller';
 import { WebBagTroubleControlelr } from './web/web-bag-trouble.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
@@ -32,6 +33,8 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
     EmployeeController,
     GabunganController,
     MobileCheckInController,
+    MobileCheckInController,
+    MobileCheckOutController,
     MobileCheckOutController,
     MobileDashboardController,
     MobileDeliveryController,
@@ -41,6 +44,7 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
     RepresentativeController,
     RoleController,
     RolePermissionController,
+    WebAwbFilterController,
     WebAwbTroubleControlelr,
     WebBagTroubleControlelr,
     WebDeliveryInController,
