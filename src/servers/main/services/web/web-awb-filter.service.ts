@@ -19,6 +19,7 @@ import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import moment = require('moment');
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
+import { RepositoryService } from '../../../../shared/services/repository.service';
 
 export class WebAwbFilterService {
 
@@ -82,14 +83,20 @@ export class WebAwbFilterService {
     for (const awbNumber of payload.awbNumber) {
 
       // find each awb_number
-      const awbItemAttr = await AwbItemAttr.findOne({
-        select: ['awbItemAttrId', 'isFiltered'],
-        where: {
-          awbNumber,
-          isDeleted: false,
-        },
-        relations: ['AwbItem', 'Awb'],
-      });
+      const awbItemAttr = await RepositoryService.awbItemAttr
+        .findOne()
+        .where(e => e.awbNumber, w => w.equals(awbNumber))
+        .where(e => e.isDeleted, w => w.isFalse())
+        .select({
+          awbItemAttrId: true,
+          isFiltered: true,
+          awbItem: {
+            awbItemId: true, // needs to be selected due to awbItem relations are being selected
+            awb: {
+              toId: true,
+            },
+          },
+        });
       const res = new ScanAwbVm();
       res.awbNumber = awbNumber;
 
