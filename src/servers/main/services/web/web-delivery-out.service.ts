@@ -931,7 +931,13 @@ export class WebDeliveryOutService {
 
     q.selectRaw(
       [
-        'CONCAT (t3.bag_number,t2.bag_seq)',
+        `CASE LENGTH (CAST(t2.bag_seq AS varchar(10)))
+          WHEN 1 THEN
+            CONCAT (t3.bag_number,'00',t2.bag_seq)
+          WHEN 2 THEN
+            CONCAT (t3.bag_number,'0',t2.bag_seq)
+          ELSE
+            CONCAT (t3.bag_number,t2.bag_seq) END`,
         'bagNumber',
       ],
       ['t2.weight', 'weight'],
