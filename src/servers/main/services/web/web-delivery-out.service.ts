@@ -23,7 +23,6 @@ import { MetaService } from '../../../../shared/services/meta.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
-import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import moment = require('moment');
@@ -33,7 +32,6 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
-import { Branch } from '../../../../shared/orm-entity/branch';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { AwbTroubleService } from '../../../../shared/services/awb-trouble.service';
@@ -167,7 +165,7 @@ export class WebDeliveryOutService {
         );
         switch (statusCode) {
           case 'OUT':
-            // check condition
+            // check condition, not scan in yet
             if (awb.branchIdLast == permissonPayload.branchId) {
               totalSuccess += 1;
               response.message = `Resi ${awbNumber} sudah di Scan OUT di gerai ini`;
@@ -206,8 +204,6 @@ export class WebDeliveryOutService {
 
                 // AFTER Scan OUT ===============================================
                 // #region after scanout
-
-                // Update do_pod
                 const doPod = await DoPod.findOne({
                   where: {
                     doPodId: payload.doPodId,
@@ -234,7 +230,7 @@ export class WebDeliveryOutService {
                 DoPodDetailPostMetaQueueService.createJobByDoPodDetailId(
                   doPodDetail.doPodDetailId,
                 );
-
+                // #endregion after scanout
                 totalSuccess += 1;
                 // remove key holdRedis
                 RedisService.del(`hold:scanout:${awb.awbItemId}`);
@@ -245,6 +241,9 @@ export class WebDeliveryOutService {
               }
             } else {
               // save data to awb_trouble
+              // find scanin before -> (awb_item_attr) unclear
+              // trigger current user
+              // from do_pod before in ??
               await AwbTroubleService.fromScanOut(
                 awbNumber,
                 awb.branchLast.branchName,
@@ -646,7 +645,6 @@ export class WebDeliveryOutService {
 
   async findAllScanOutDeliverList(
     payload: BaseMetaPayloadVm,
-    isHub = false,
   ): Promise<WebScanOutDeliverListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_deliver_date_time';

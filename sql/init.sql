@@ -2236,6 +2236,8 @@ CREATE TABLE "public"."awb_item_attr" (
   "lead_time_run_days" int4 NOT NULL DEFAULT 0,
   "final_status_date" timestamp(6),
   "try_attempt" int4 NOT NULL DEFAULT 0,
+  "bag_item_id_last" int8,
+  "is_district_filtered" bool NOT NULL DEFAULT false,
   "awb_status_id_final" int4,
   "lead_time_final_days" int4 NOT NULL DEFAULT 0,
   "uuid" varchar(50) COLLATE "pg_catalog"."default",

@@ -21,6 +21,7 @@ export class DeliveryService {
       awbItemId: true,
       awbNumber: true,
       branchIdLast: true,
+      branchIdNext: true,
       branchLast: {
         branchId: true,
         branchCode: true,
