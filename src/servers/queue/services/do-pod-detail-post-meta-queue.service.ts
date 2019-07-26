@@ -33,6 +33,8 @@ export class DoPodDetailPostMetaQueueService {
     this.queue.process(async job => {
       const data = job.data;
       await getManager().transaction(async transactionalEntityManager => {
+
+        // TODO: get awb_ite_attr and update awb_history_id
         // NOTE: Insert Data awb history
         const awbHistory = AwbHistory.create({
           awbItemId: data.awbItemId,

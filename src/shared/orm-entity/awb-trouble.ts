@@ -53,15 +53,15 @@ export class AwbTrouble extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: false,
-    name: 'employee_id',
+    name: 'employee_id_trigger',
   })
-  employeeId: number;
+  employeeIdTrigger: number;
 
   @Column('bigint', {
     nullable: false,
-    name: 'branch_id',
+    name: 'branch_id_trigger',
   })
-  branchId: number;
+  branchIdTrigger: number;
 
   @Column('bigint', {
     nullable: false,

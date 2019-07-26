@@ -36,6 +36,7 @@ import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { AwbTroubleService } from '../../../../shared/services/awb-trouble.service';
 // #endregion
 
 @Injectable()
@@ -64,11 +65,7 @@ export class WebDeliveryOutService {
     const doPodDateTime = moment(payload.doPodDateTime).toDate();
 
     doPod.doPodCode = await CustomCounterCode.doPod(doPodDateTime);
-    // TODO: doPodType
     doPod.doPodType = payload.doPodType;
-    // 1. tipe surat jalan criss cross
-    // 2.A tipe transit(internal)
-    // 2.B tipe transit (3pl)
     const method =
       payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
     doPod.doPodMethod = method; // internal or 3PL/Third Party
@@ -176,7 +173,7 @@ export class WebDeliveryOutService {
               response.message = `Resi ${awbNumber} sudah di Scan OUT di gerai ini`;
             } else {
               // save data to awb_trouble
-              await this.createAwbTrouble(awbNumber, awb.branchLast.branchName, awb.awbStatusIdLast);
+              await AwbTroubleService.fromScanOut(awbNumber, awb.branchLast.branchName, awb.awbStatusIdLast);
 
               totalError += 1;
               response.status = 'error';
@@ -198,8 +195,6 @@ export class WebDeliveryOutService {
                 'locking',
               );
               if (holdRedis) {
-                // TODO:
-                // save table do_pod_detail
                 // NOTE: create data do pod detail per awb number
                 const doPodDetail = DoPodDetail.create();
                 doPodDetail.doPodId = payload.doPodId;
@@ -235,7 +230,7 @@ export class WebDeliveryOutService {
                   AWB_STATUS.OUT_BRANCH,
                 );
 
-                // TODO: queue by Bull
+                // NOTE: queue by Bull
                 DoPodDetailPostMetaQueueService.createJobByDoPodDetailId(
                   doPodDetail.doPodDetailId,
                 );
@@ -250,7 +245,7 @@ export class WebDeliveryOutService {
               }
             } else {
               // save data to awb_trouble
-              await this.createAwbTrouble(
+              await AwbTroubleService.fromScanOut(
                 awbNumber,
                 awb.branchLast.branchName,
                 awb.awbStatusIdLast,
@@ -300,7 +295,6 @@ export class WebDeliveryOutService {
   async scanOutAwbDeliver(
     payload: WebScanOutAwbVm,
   ): Promise<WebScanOutAwbResponseVm> {
-    const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const dataItem = [];
@@ -314,19 +308,13 @@ export class WebDeliveryOutService {
         status: 'ok',
         message: 'Success',
       };
-      Logger.debug(
-        awbNumber,
-        `###################### SCAN OUT ANT::AWB::`,
-      );
+
       const awb = await DeliveryService.validAwbNumber(awbNumber);
       if (awb) {
         const statusCode = await DeliveryService.awbStatusGroup(
           awb.awbStatusIdLast,
         );
-        Logger.debug(
-          statusCode,
-          `###################### SCAN OUT ANT::STATUS`,
-        );
+
         switch (statusCode) {
           case 'OUT':
             // check condition
@@ -335,7 +323,11 @@ export class WebDeliveryOutService {
               response.message = `Resi ${awbNumber} sudah di Scan OUT di gerai ini`;
             } else {
               // save data to awb_trouble
-              await this.createAwbTrouble(awbNumber, awb.branchLast.branchName, awb.awbStatusIdLast);
+              await AwbTroubleService.fromScanOut(
+                awbNumber,
+                awb.branchLast.branchName,
+                awb.awbStatusIdLast,
+              );
 
               totalError += 1;
               response.status = 'error';
@@ -363,9 +355,6 @@ export class WebDeliveryOutService {
                 doPodDeliverDetail.doPodDeliverId = payload.doPodId;
                 doPodDeliverDetail.awbItemId = awb.awbItemId;
                 await DoPodDeliverDetail.save(doPodDeliverDetail);
-                Logger.debug(
-                  doPodDeliverDetail, `###################### SCAN OUT ANT::OBJT DETAIL`,
-                );
 
                 // AFTER Scan OUT ===============================================
                 // #region after scanout
@@ -382,10 +371,9 @@ export class WebDeliveryOutService {
                 // counter total scan out
                 doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
                 await DoPodDeliver.save(doPodDeliver);
-                // TODO: status 3000, OR ANT (14000)
                 await DeliveryService.updateAwbAttr(awb.awbItemId, null, AWB_STATUS.ANT);
 
-                // TODO: queue by Bull
+                // NOTE: queue by Bull
                 DoPodDetailPostMetaQueueService.createJobByDoPodDeliverDetailId(
                   doPodDeliverDetail.doPodDeliverDetailId,
                 );
@@ -401,7 +389,7 @@ export class WebDeliveryOutService {
               }
             } else {
               // save data to awb_trouble
-              await this.createAwbTrouble(
+              await AwbTroubleService.fromScanOut(
                 awbNumber,
                 awb.branchLast.branchName,
                 awb.awbStatusIdLast,
@@ -531,7 +519,7 @@ export class WebDeliveryOutService {
                       doPod.branchIdTo,
                       AWB_STATUS.OUT_HUB,
                     );
-                    // TODO: queue by Bull
+                    // NOTE: queue by Bull
                     DoPodDetailPostMetaQueueService.createJobByScanOutBag(
                       doPodDetail.doPodDetailId,
                       itemAwb.awbItemId,
@@ -593,80 +581,6 @@ export class WebDeliveryOutService {
 
     return result;
   }
-
-  // TODO: End Point ini sepertinya sudah tidak terpakai
-  /**
-   *
-   *
-   * @param {BaseMetaPayloadVm} payload
-   * @param {boolean} [isHub=false]
-   * @returns {Promise<WebScanOutAwbListResponseVm>}
-   * @memberof WebDeliveryOutService
-   */
-  // async scanOutList(
-  //   payload: BaseMetaPayloadVm,
-  //   isHub = false,
-  // ): Promise<WebScanOutAwbListResponseVm> {
-  //   // mapping search field and operator default ilike
-  //   payload.globalSearchFields = [
-  //     {
-  //       field: 'doPodDateTime',
-  //     },
-  //     {
-  //       field: 'doPodCode',
-  //     },
-  //     {
-  //       field: 'description',
-  //     },
-  //     {
-  //       field: 'fullname',
-  //     },
-  //   ];
-
-  //   // mapping field
-  //   payload.fieldResolverMap['startScanOutDate'] = 'do_pod.do_pod_date_time';
-  //   payload.fieldResolverMap['endScanOutDate'] = 'do_pod.do_pod_date_time';
-  //   payload.fieldResolverMap['desc'] = 'do_pod.description';
-  //   payload.fieldResolverMap['fullname'] = 'employee.fullname';
-
-  //   // "totalScanIn"   : "0",
-  //   // "totalScanOut"  : "10",
-  //   // "percenScanInOut" : "0%",
-  //   // "lastDateScanIn" : "",
-  //   // "lastDateScanOut" : "2019-06-28 10:00:00"
-
-  //   const qb = payload.buildQueryBuilder(true);
-  //   qb.addSelect('do_pod.do_pod_id', 'doPodId');
-  //   qb.addSelect('do_pod.do_pod_code', 'doPodCode');
-  //   qb.addSelect('do_pod.do_pod_date_time', 'doPodDateTime');
-  //   qb.addSelect('employee.fullname', 'fullname');
-  //   qb.addSelect(`COALESCE(do_pod.description, '')`, 'description');
-
-  //   qb.from('do_pod', 'do_pod');
-  //   qb.innerJoin(
-  //     'employee',
-  //     'employee',
-  //     'employee.employee_id = do_pod.employee_id_driver AND employee.is_deleted = false',
-  //   );
-
-  //   if (isHub) {
-  //     qb.where('do_pod.do_pod_type = :doPodType', {
-  //       doPodType: POD_TYPE.TRANSIT_HUB,
-  //     });
-  //   }
-  //   const total = await qb.getCount();
-
-  //   payload.applyPaginationToQueryBuilder(qb);
-  //   const data = await qb.execute();
-
-  //   const result = new WebScanOutAwbListResponseVm();
-
-  //   result.data = data;
-  //   result.paging = MetaService.set(payload.page, payload.limit, total);
-
-  //   return result;
-  // }
-  // TODO: End Point diatas ini sepertinya sudah tidak terpakai
 
   async findAllScanOutList(
     payload: BaseMetaPayloadVm,
@@ -971,42 +885,4 @@ export class WebDeliveryOutService {
     return result;
   }
 
-  // private method
-  private async createAwbTrouble(
-    awbNumber: string,
-    branchNameLast: string,
-    awbStatusIdLast: number,
-  ) {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    const timeNow = moment().toDate();
-
-    // get branch name
-    const branchLogin = await Branch.findOne({
-      select: ['branchName'],
-      cache: true,
-      where: {
-        branchId: permissonPayload.branchId,
-      },
-    });
-
-    // save data to awb_trouble
-    const awbTroubleCode = await CustomCounterCode.awbTrouble(timeNow);
-    const troubleDesc = `
-      Scan In Resi ${awbNumber} pada Gerai ${branchLogin.branchName}
-      Bermasalah karena Resi belum di scan out / salah scan in pada ${branchNameLast}
-    `;
-
-    const awbTrouble = AwbTrouble.create({
-      awbNumber,
-      awbTroubleCode,
-      awbTroubleStatusId: 100,
-      awbStatusId: awbStatusIdLast,
-      employeeId: authMeta.employeeId,
-      branchId: permissonPayload.branchId,
-      troubleCategory: 'scan_out',
-      troubleDesc,
-    });
-    return await AwbTrouble.save(awbTrouble);
-  }
 }
