@@ -19,8 +19,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     };
     logger.info(data);
     // FIXME: ???
-    response
-    .status(status)
-    .send(data);
+    response.code(status).send(data);
   }
 }

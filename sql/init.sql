@@ -2473,25 +2473,38 @@ ALTER TABLE "public"."awb_track" OWNER TO "postgres";
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."awb_trouble";
 CREATE TABLE "public"."awb_trouble" (
-  "awb_trouble_id" int8 NOT NULL DEFAULT nextval('awb_trouble_awb_trouble_id_seq'::regclass),
-  "awb_trouble_code" varchar(50) COLLATE "pg_catalog"."default" NOT NULL,
-  "awb_status_id" int4 NOT NULL,
-  "awb_trouble_status_id" int4 NOT NULL,
-  "awb_number" varchar(50) COLLATE "pg_catalog"."default" NOT NULL,
-  "employee_id" int8 NOT NULL,
-  "branch_id" int8 NOT NULL,
-  "user_id_pic" int8 NOT NULL,
-  "branch_id_pic" int8 NOT NULL,
-  "employee_id_pic" int8,
-  "resolve_date_time" timestamp(6),
-  "description_solution" text COLLATE "pg_catalog"."default",
-  "trouble_desc" text COLLATE "pg_catalog"."default",
-  "trouble_category" character varying(10),
-  "user_id_created" int8 NOT NULL,
-  "created_time" timestamp(6) NOT NULL,
-  "user_id_updated" int8 NOT NULL,
-  "updated_time" timestamp(6) NOT NULL,
-  "is_deleted" bool NOT NULL DEFAULT false
+    "awb_trouble_id" bigint DEFAULT nextval('public.awb_trouble_awb_trouble_id_seq'::regclass) NOT NULL,
+    "awb_trouble_code" character varying(50) NOT NULL,
+    "awb_status_id" integer NOT NULL,
+    "awb_trouble_status_id" integer NOT NULL,
+    "awb_number" character varying(50) NOT NULL,
+    "trouble_desc" text,
+    "trouble_category" character varying(20),
+
+    "user_id_trigger" bigint,
+    "employee_id_trigger" bigint,
+    "branch_id_trigger" bigint,
+
+    "user_id_unclear" bigint,
+    "employee_id_unclear" bigint,
+    "branch_id_unclear" bigint,
+
+    "branch_id_from" bigint,
+    "branch_id_wrong" bigint,
+    "branch_id_correct" bigint,
+
+    "user_id_pic" bigint,
+    "branch_id_pic" bigint,
+    "employee_id_pic" bigint,
+
+    "resolve_date_time" timestamp without time zone,
+    "description_solution" text,
+
+    "user_id_created" bigint NOT NULL,
+    "created_time" timestamp without time zone NOT NULL,
+    "user_id_updated" bigint NOT NULL,
+    "updated_time" timestamp without time zone NOT NULL,
+    "is_deleted" boolean DEFAULT false NOT NULL
 )
 ;
 ALTER TABLE "public"."awb_trouble" OWNER TO "postgres";
