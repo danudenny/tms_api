@@ -44,7 +44,7 @@ export class CustomCounterCode {
   public static async podFilter(dateTime: Date, digit: number = 8) {
     // Format Code: FLT/1907/13/XYZA1234
     const prefix = `FLT/${moment(dateTime).format('YYMM/DD')}/`;
-    const randomCode = this.randomCode(digit).join('');
+    const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
   }
 

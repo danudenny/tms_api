@@ -3,6 +3,9 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 export class WebAwbFilterFinishScanResponseVm {
 
   @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
   message: string;
 }
 
@@ -53,6 +56,9 @@ export class WebAwbFilterScanBagResponseVm {
 
   @ApiModelProperty()
   representativeCode: string;
+
+  @ApiModelProperty()
+  podFilterId: number;
 
   @ApiModelProperty()
   podFilterDetailId: number;

@@ -128,6 +128,7 @@ export class WebAwbFilterService {
     response.totalData = 0;
     response.bagItemId = bagData.bagItemId;
     response.podFilterCode = podFilter.podFilterCode;
+    response.podFilterId = podFilterDetail.podFilterId;
     response.podFilterDetailId = podFilterDetail.podFilterDetailId;
     response.representativeCode = representative.representativeCode;
     response.data = data;
@@ -181,11 +182,13 @@ export class WebAwbFilterService {
           // this awb is already filtered
           res.status = 'error';
           res.trouble = false;
-          res.message = `Resi ${awbNumber} sudah wiem tersortir`;
+          res.message = `Resi ${awbNumber} sudah tersortir`;
           results.push(res);
         } else {
+          // do process filtering awb
 
           // process filter each awb
+          // TODO:: update awb_item_attr last to IN
           await AwbItemAttr.update(awbItemAttr.awbItemAttrId, {
             isDistrictFiltered: true,
           });
@@ -201,6 +204,7 @@ export class WebAwbFilterService {
             await this.createPodFilterDetailItem(authMeta, payload, awbItemAttr);
 
           } else {
+            // response error, but still process sortir, just announce for CT this awb have a trouble package combine
             const podFilterDetail = await RepositoryService.podFilterDetail
               .findOne()
               .andWhere(e => e.podFilterDetailId, w => w.equals(payload.podFilterDetailId))
@@ -210,26 +214,31 @@ export class WebAwbFilterService {
                   bagId: true,
                   bagSeq: true,
                   bag: {
+                    branchId: true,
+                    userId: true,
                     bagNumber: true,
                   },
                 },
               })
             ;
+
             const bagNumberSeq = `${podFilterDetail.bagItem.bagSeq}${podFilterDetail.bagItem.bag.bagNumber}`;
-            // response error, but still process sortir, just announce for CT this awb have a trouble package combine
             res.status = 'success';
             res.trouble = true;
-            res.message = `Resi ${awbNumber} berhasil tersortir, tidak ada pada Gabung Paket ${bagNumberSeq}`;
+            res.message = `Resi ${awbNumber} berhasil tersortir, tetapi tidak ada pada Gabung Paket ${bagNumberSeq}`;
             results.push(res);
 
             // announce for CT using table awb_trouble and the category of trouble is awb_filter
             // save data to awb_trouble
-            const awbTrouble = await this.awbTrouble(authMeta, permissonPayload , awbNumber);
+            const awbTrouble = await this.createAwbTrouble(authMeta, permissonPayload , awbNumber, res.message, podFilterDetail);
 
             // save to pod_filter_detail_item
             await this.createPodFilterDetailItem(authMeta, payload, awbItemAttr, awbTrouble);
-
           }
+
+          // after scan filter done at all. do posting status last awb
+
+          // TODO: posting to awb_history, awb_item_summary
         }
       } else {
         // Unknown Awb, GO TO HELL
@@ -256,6 +265,7 @@ export class WebAwbFilterService {
     });
 
     const response = new WebAwbFilterFinishScanResponseVm();
+    response.status = 'ok';
     response.message = 'Berhasil menutup Perwakilan ini';
     return response;
   }
@@ -303,7 +313,7 @@ export class WebAwbFilterService {
       .andWhere(e => e.isDeleted, w => w.isFalse())
     ;
     // if already scan, skip insert into pod_filter_detail
-    // this section, to handle when they scan bag_nmber  twice
+    // this section, to handle when they scan bag_nmber twice
     if (!podFilterDetail) {
 
       // save to pod_filter_detail for the first time scan
@@ -316,11 +326,18 @@ export class WebAwbFilterService {
       podFilterDetail.updatedTime = moment().toDate();
       podFilterDetail.userIdUpdated = authMeta.userId;
       await this.podFilterDetailRepository.save(podFilterDetail);
+
+      // update total_bag_item on pod_filter
+      await PodFilter.update(podFilter.podFilterId, {
+        endDateTime: moment().toDate(),
+        updatedTime: moment().toDate(),
+        userIdUpdated: authMeta.userId,
+      });
     }
     return podFilterDetail;
   }
 
-  async awbTrouble(authMeta, permissonPayload, awbNumber) {
+  async createAwbTrouble(authMeta, permissonPayload, awbNumber, troubleDesc, podFilterDetail) {
     const awbTroubleCode = await CustomCounterCode.awbTrouble(
       moment().toDate(),
     );
@@ -328,11 +345,16 @@ export class WebAwbFilterService {
       awbNumber,
       awbTroubleCode,
       troubleCategory: 'awb_filtered',
+      troubleDesc,
       awbTroubleStatusId: 100,
       awbStatusId: 12800,
-      employeeId: authMeta.employeeId,
-      branchId: permissonPayload.branchId,
+      employeeIdTrigger: authMeta.employeeId,
+      branchIdTrigger: permissonPayload.branchId,
+      userIdTrigger: authMeta.userId,
       userIdCreated: authMeta.userId,
+      branchIdUnclear: podFilterDetail.bagItem.bag.branchId,
+      userIdUnclear: null, // TODO: current now, because user on rds is different with tms, UPDATE after SO replace RDS
+      employeeIdUnclear: null, // TODO: current now, because employee on rds is different with tms, UPDATE after SO replace RDS
       createdTime: moment().toDate(),
       userIdUpdated: authMeta.userId,
       updatedTime: moment().toDate(),
