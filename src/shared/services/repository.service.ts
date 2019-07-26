@@ -14,6 +14,10 @@ import { RolePermission } from '../orm-entity/role-permission';
 import { User } from '../orm-entity/user';
 import { UserRole } from '../orm-entity/user-role';
 import { OrionRepositoryService } from './orion-repository.service';
+import { BagItem } from '../orm-entity/bag-item';
+import { PodFilter } from '../orm-entity/pod-filter';
+import { PodFilterDetailItem } from '../orm-entity/pod-filter-detail-item';
+import { PodFilterDetail } from '../orm-entity/pod-filter-detail';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -28,6 +32,9 @@ export class RepositoryService {
   }
   static get awbItemAttr() {
     return new OrionRepositoryService(AwbItemAttr);
+  }
+  static get bagItem() {
+    return new OrionRepositoryService(BagItem);
   }
   static get branch() {
     return new OrionRepositoryService(Branch);
@@ -46,6 +53,15 @@ export class RepositoryService {
   }
   static get partnerLogistic() {
     return new OrionRepositoryService(PartnerLogistic);
+  }
+  static get podFilter() {
+    return new OrionRepositoryService(PodFilter);
+  }
+  static get podFilterDetail() {
+    return new OrionRepositoryService(PodFilterDetail);
+  }
+  static get podFilterDetailItem() {
+    return new OrionRepositoryService(PodFilterDetailItem);
   }
   static get reason() {
     return new OrionRepositoryService(Reason);

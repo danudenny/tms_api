@@ -5,8 +5,8 @@ import { Transactional } from '../../../../shared/external/typeorm-transactional
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { WebAwbFilterService } from '../../services/web/web-awb-filter.service';
-import { WebAwbFilterScanBagVm, WebAwbFilterScanAwbVm } from '../../models/web-awb-filter.vm';
-import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm } from '../../models/web-awb-filter-response.vm';
+import { WebAwbFilterScanBagVm, WebAwbFilterScanAwbVm, WebAwbFilterFinishScanVm } from '../../models/web-awb-filter.vm';
+import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFilterFinishScanResponseVm } from '../../models/web-awb-filter-response.vm';
 
 @ApiUseTags('Web Delivery In')
 @Controller('web/pod/awb/filter')
@@ -34,5 +34,15 @@ export class WebAwbFilterController {
   @Transactional()
   public async scanAwb(@Body() payload: WebAwbFilterScanAwbVm) {
     return this.webAwbFilterService.scanAwb(payload);
+  }
+
+  @Post('finishScan')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebAwbFilterFinishScanResponseVm })
+  @Transactional()
+  public async finishScan(@Body() payload: WebAwbFilterFinishScanVm) {
+    return this.webAwbFilterService.finishScan(payload);
   }
 }

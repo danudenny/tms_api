@@ -39,6 +39,13 @@ export class CustomCounterCode {
     return prefix + randomCode.toString();
   }
 
+  public static async podFilter(dateTime: Date, digit: number = 8) {
+    // Format Code: FLT/1907/13/XYZA1234
+    const prefix = `FLT/${moment(dateTime).format('YYMM/DD')}/`;
+    const randomCode = this.randomCode(digit).join('');
+    return prefix + randomCode.toString();
+  }
+
   // get data on DB
   private static async getLastNumber(prefix: string) {
     const timeNow = moment().toDate();

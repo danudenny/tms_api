@@ -20,6 +20,10 @@ import { BagItemAwbRepository } from './bagItemAwb.repository';
 import { CustomerRepository } from './customer.repository';
 import { EmployeeJourneyRepository } from './employee-journey.repository';
 import { DistrictRepository } from './district.repository';
+import { PodFilterRepository } from './pod-filter.repository';
+import { RepresentativeRepository } from './representative.repository';
+import { PodFilterDetailRepository } from './pod-filter-detail.repository';
+import { PodFilterDetailItemRepository } from './pod-filter-detail-item.repository';
 
 @Module({
   imports: [
@@ -46,6 +50,11 @@ import { DistrictRepository } from './district.repository';
       BagItemAwbRepository,
       CustomerRepository,
       DistrictRepository,
+      PodFilterRepository,
+      RepresentativeRepository,
+      PodFilterRepository,
+      PodFilterDetailRepository,
+      PodFilterDetailItemRepository,
     ]),
   ],
   exports: [

@@ -1,5 +1,11 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 
+export class WebAwbFilterFinishScanResponseVm {
+
+  @ApiModelProperty()
+  message: string;
+}
+
 export class ScanAwbVm {
   @ApiModelProperty()
   awbNumber: string;
@@ -47,6 +53,12 @@ export class WebAwbFilterScanBagResponseVm {
 
   @ApiModelProperty()
   representativeCode: string;
+
+  @ApiModelProperty()
+  podFilterDetailId: number;
+
+  @ApiModelProperty()
+  podFilterCode: string;
 
   @ApiModelProperty()
   bagItemId: number;

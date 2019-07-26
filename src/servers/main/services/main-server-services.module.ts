@@ -17,7 +17,6 @@ import { MobileCheckInService } from './mobile/mobile-check-in.service';
 import { MobileCheckOutService } from './mobile/mobile-check-out.service';
 import { WebAwbFilterService } from './web/web-awb-filter.service';
 import { RedeliveryService } from './mobile/redelivery.services';
-import { WebAwbFilterService } from './web/web-awb-filter.service';
 import { WebDeliveryInService } from './web/web-delivery-in.service';
 import { WebDeliveryOutService } from './web/web-delivery-out.service';
 
@@ -33,8 +32,6 @@ import { WebDeliveryOutService } from './web/web-delivery-out.service';
     MobileCheckInService,
     MobileCheckOutService,
     WebAwbFilterService,
-  ],
-  exports: [
     MobileDeliveryService,
     PartnerLogisticService,
     ReasonService,

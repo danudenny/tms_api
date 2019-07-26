@@ -130,6 +130,7 @@ export class DeliveryService {
       branchIdLast: true,
       bagSeq: true,
       bag: {
+        representativeIdTo: true,
         refRepresentativeCode: true,
         bagId: true,
         bagNumber: true,

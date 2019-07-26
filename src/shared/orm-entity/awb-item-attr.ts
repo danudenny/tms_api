@@ -145,9 +145,9 @@ export class AwbItemAttr extends BaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name: 'is_filtered',
+    name: 'is_district_filtered',
   })
-  isFiltered: boolean;
+  isDistrictFiltered: boolean;
 
   @Column('bigint', {
     nullable: true,

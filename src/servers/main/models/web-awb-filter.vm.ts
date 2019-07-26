@@ -8,6 +8,17 @@ export class WebAwbFilterScanBagVm {
 }
 
 export class WebAwbFilterScanAwbVm  {
+
+  @ApiModelProperty()
+  podFilterDetailId: number;
+
   @ApiModelProperty()
   awbNumber: string[];
+}
+
+export class WebAwbFilterFinishScanVm  {
+
+  @ApiModelProperty()
+  podFilterId: number;
+
 }
