@@ -16,6 +16,7 @@ export class ErrorHandlerInterceptor implements NestInterceptor {
   }
 
   private handleError(context: ExecutionContext, error): ObservableInput<any> {
+    console.error(error); // TODO: Replace with pino logger service
     SentryService.trackFromExceptionAndNestHostOrContext(error, context);
 
     if (!(error instanceof HttpException)) {
