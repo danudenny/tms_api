@@ -10,13 +10,6 @@ import moment = require('moment');
 export class DeliveryService {
 
   public static async validAwbNumber(awbNumber: string): Promise<AwbItemAttr> {
-    // NOTE: raw query
-    // SELECT ai.awb_status_id_last, ai.awb_item_id, br.branch_code, br.branch_name
-    // FROM awb_item_attr ai
-    // INNER JOIN branch br ON ai.branch_id_last = br.branch_id
-    // WHERE ai.awb_number = :awb_number
-
-    // find data to awb where awbNumber and awb status not cancel
     const awbRepository = new OrionRepositoryService(AwbItemAttr);
     const q = awbRepository.findOne();
     // Manage relation (default inner join)
@@ -113,11 +106,6 @@ export class DeliveryService {
   public static async validBagNumber(bagNumberSeq: string): Promise<BagItem> {
     const bagNumber: string = bagNumberSeq.substring(0, 7);
     const seqNumber: number = Number(bagNumberSeq.substring(7, 10));
-    // NOTE: raw query
-    // SELECT bag_item_status_id, bag_item_id, branch_id_last
-    // FROM bag_item bia
-    // INNER JOIN bag b ON b.bag_id = bia.bag_id AND b.is_deleted = false
-    // WHERE b.bag_number = [bag_number] AND bia.bag_seq = [bag_seq] AND bia.is_deleted = false
 
     const bagRepository = new OrionRepositoryService(BagItem);
     const q = bagRepository.findOne();

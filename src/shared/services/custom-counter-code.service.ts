@@ -5,7 +5,10 @@ import { sampleSize } from 'lodash';
 export class CustomCounterCode {
 
   static randomCode(digit: number = 8) {
-    return sampleSize('ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890', digit);
+    const size = Math.round(digit / 2);
+    const randAlfa = sampleSize('ABCDEFGHIJKLMNOPQRSTUVWXYZ', size).join('');
+    const randNumber = sampleSize('1234567890', size).join('');
+    return randAlfa + randNumber;
   }
 
   public static async pickupRequestPartner(dateTime: string, digit: number = 5) {
@@ -15,28 +18,27 @@ export class CustomCounterCode {
   }
 
   public static async doPod(dateTime: Date, digit: number = 8) {
-    const prefix = `DOP/${moment(dateTime).format('YYMM/DD')}/`;
-    const randomCode = this.randomCode(digit).join('');
-    return prefix + randomCode.toString();
+    const prefix = `DOP/${moment(dateTime).format('YYMM/DD/')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode;
   }
 
   public static async doPodDeliver(dateTime: Date, digit: number = 8) {
-    const prefix = `DOPD/${moment(dateTime).format('YYMM/DD')}/`;
-    const randomCode = this.randomCode(digit).join('');
-    return prefix + randomCode.toString();
+    const prefix = `DOPD/${moment(dateTime).format('YYMM/DD/')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode;
   }
 
   public static async awbTrouble(dateTime: Date, digit: number = 8) {
-    // Format Code: ATR/1907/13/XYZA1234
-    const prefix = `ATR/${moment(dateTime).format('YYMM/DD')}/`;
-    const randomCode = this.randomCode(digit).join('');
-    return prefix + randomCode.toString();
+    const prefix = `ATR/${moment(dateTime).format('YYMM/DD/')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode;
   }
 
   public static async bagTrouble(dateTime: Date, digit: number = 8) {
-    const prefix = `BTR/${moment(dateTime).format('YYMM/DD')}/`;
-    const randomCode = this.randomCode(digit).join('');
-    return prefix + randomCode.toString();
+    const prefix = `BTR/${moment(dateTime).format('YYMM/DD/')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode;
   }
 
   public static async podFilter(dateTime: Date, digit: number = 8) {
