@@ -13,8 +13,13 @@ export class AwbBlueprint extends TypeormBlueprint<Awb> {
     this.define(async ({ faker, factory }) => ({
       awbNumber: GeneratorService.number(12),
       awbVersion: 1,
+      awbDate: new Date(),
       awbCode: GeneratorService.alphanumeric(5),
       awbBookingId: GeneratorService.integer(),
+      consigneeName: faker.name.findName(),
+      consigneeAddress: faker.address.streetAddress(),
+      notes: faker.random.words(10),
+      consigneeNumber: faker.phone.phoneNumber(),
       totalWeight: GeneratorService.integer(),
       totalWeightReal: GeneratorService.integer(),
       totalWeightRealRounded: GeneratorService.integer(),
@@ -54,7 +59,7 @@ export class AwbBlueprint extends TypeormBlueprint<Awb> {
     }));
 
     this.state('awb-items', async ({ faker, factory }) => ({
-      awbItems: await factory.for(AwbItem).make(2),
+      awbItems: [await factory.for(AwbItem).make(1)],
     }));
   }
 }

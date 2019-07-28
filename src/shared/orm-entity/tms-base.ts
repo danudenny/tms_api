@@ -1,6 +1,8 @@
-import { BaseEntity, BeforeInsert, BeforeUpdate, Column } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column } from 'typeorm';
 
-export class TmsBaseEntity extends BaseEntity {
+import { BaseActionEntity } from './base-action';
+
+export class TmsBaseEntity extends BaseActionEntity {
   @Column('bigint', {
     nullable: false,
     name: 'user_id_created',

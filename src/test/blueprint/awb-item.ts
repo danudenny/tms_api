@@ -10,6 +10,7 @@ export class AwbItemBlueprint extends TypeormBlueprint<AwbItem> {
     this.type(AwbItem);
 
     this.define(async ({ faker, factory }) => ({
+      awbStatusIdLast: GeneratorService.integer(),
       awbStatusIdLastPublic: GeneratorService.integer(),
       tryAttempt: 0,
       leadTimeRunDays: 1,

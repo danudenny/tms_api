@@ -1,10 +1,7 @@
 import { EntityFactory } from '@entity-factory/core';
 import { TypeormAdapter } from '@entity-factory/typeorm';
 import { HttpStatus } from '@nestjs/common';
-import fs = require('fs');
 import { forEach } from 'lodash';
-import path = require('path');
-import { createConnection, getManager } from 'typeorm';
 
 import { boot } from '../main-setup';
 import { AuthLoginResponseVM, PermissionAccessResponseVM } from '../servers/auth/models/auth.vm';
@@ -24,7 +21,7 @@ import { RoleBlueprint } from './blueprint/role';
 import { UserBlueprint } from './blueprint/user';
 import { UserRoleBlueprint } from './blueprint/user-role';
 import TEST_GLOBAL_VARIABLE from './test-global-variable';
-import { TestSeed } from './test-seed';
+import { testInitDb } from './test-init-db';
 import { TestUtility } from './test-utility';
 
 process.env.NODE_ENV = 'test';
@@ -32,35 +29,19 @@ process.env.NODE_ENV = 'test';
 jest.setTimeout(5 * 60 * 1000);
 
 beforeAll(async () => {
-  // initiate typeorm for test setup only
-  const ormConfig = require('../../ormconfig.test');
-  const connection = await createConnection({
-    ...ormConfig,
-    logging: false,
-  });
-
   if (process.env.RESET_DB) {
-    // drop database tables
-    await getManager().connection.dropDatabase();
-
-    // reinitialize database structures
-    const sql = fs.readFileSync(
-      path.resolve(__dirname, '../../sql/init.sql'),
-      'utf8',
-    );
-    await getManager().connection.query(sql);
-
-    await TestSeed.seed();
+    await testInitDb();
   }
 
+  const ormConfig = require('../../ormconfig.test');
   TEST_GLOBAL_VARIABLE.entityFactory = new EntityFactory({
     adapter: new TypeormAdapter(ormConfig),
     blueprints: [
       AwbAttrBlueprint,
       AwbBlueprint,
-      BagBlueprint,
       AwbItemAttrBlueprint,
       AwbItemBlueprint,
+      BagBlueprint,
       BagItemBlueprint,
       BranchBlueprint,
       CustomerBlueprint,
@@ -73,8 +54,6 @@ beforeAll(async () => {
       UserRoleBlueprint,
     ],
   });
-
-  (connection.options as any).logging = true;
 
   const serverModules = await boot();
   TEST_GLOBAL_VARIABLE.serverModules = serverModules;

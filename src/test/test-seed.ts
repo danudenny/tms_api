@@ -10,8 +10,7 @@ export class TestSeed {
    * @memberof TestSeed
    */
   public static async seed() {
-    await this.seedAwbStatusGroup();
-    await this.seedAwbStatusGroupItem();
+    await this.seedAwbStatus();
     await this.seedBranch();
     await this.seedRole();
     await this.seedUser();
@@ -19,20 +18,24 @@ export class TestSeed {
     await this.seedReason();
   }
 
-  public static async seedAwbStatusGroup() {
-    const sql = fs.readFileSync(
+  public static async seedAwbStatus() {
+    const sql1 = fs.readFileSync(
+      path.resolve(__dirname, '../../sql/seed-awb-status.sql'),
+      'utf8',
+    );
+    await getManager().connection.query(sql1);
+
+    const sql2 = fs.readFileSync(
       path.resolve(__dirname, '../../sql/seed-awb-status-group.sql'),
       'utf8',
     );
-    await getManager().connection.query(sql);
-  }
+    await getManager().connection.query(sql2);
 
-  public static async seedAwbStatusGroupItem() {
-    const sql = fs.readFileSync(
+    const sql3 = fs.readFileSync(
       path.resolve(__dirname, '../../sql/seed-awb-status-group-item.sql'),
       'utf8',
     );
-    await getManager().connection.query(sql);
+    await getManager().connection.query(sql3);
   }
 
   public static async seedBranch() {
