@@ -20,7 +20,6 @@ export class WebScanOutAwbVm  {
   })
   // TODO: validation if array length = 0
   @IsDefined({message: 'Nomor resi harus diisi'})
-  @ValidateNested({ each: false })
   @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   awbNumber: string[];
@@ -41,7 +40,6 @@ export class WebScanOutBagVm {
   })
   // TODO: validation if array length = 0
   @IsDefined({message: 'No gabung paket harus diisi'})
-  @ValidateNested({ each: false })
   @IsBagNumber({ message: 'No gabung paket tidak sesuai' })
   @Type(() => String)
   bagNumber: string[];

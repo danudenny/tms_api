@@ -11,7 +11,6 @@ export class WebScanInBagVm  {
   })
   // TODO: validation if array length = 0
   @IsDefined({message: 'No gabung paket harus diisi'})
-  @ValidateNested({ each: false })
   @IsBagNumber({ message: 'No gabung paket tidak sesuai' })
   @Type(() => String)
   bagNumber: string[];

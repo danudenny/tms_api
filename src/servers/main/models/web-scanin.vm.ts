@@ -9,7 +9,6 @@ export class WebScanInVm  {
     skipValidation: true,
   })
   @IsDefined({message: 'No Resi harus diisi'})
-  @ValidateNested({ each: false })
   @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   awbNumber: string[];
