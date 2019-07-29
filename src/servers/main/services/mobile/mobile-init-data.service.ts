@@ -170,24 +170,28 @@ export class MobileInitDataService {
       'true',
     );
 
-    const authMeta = AuthService.getAuthMetadata();
-    qb.andWhere('do_pod_deliver.employee_id_driver = :currentUserId', {
-      currentUserId: authMeta.userId,
-    });
+    qb.take(0);
+    qb.skip(200);
 
-    const permissionTokenPayload = AuthService.getPermissionTokenPayload();
-    qb.andWhere('do_pod_deliver.branch_id = :currentBranchId', {
-      currentBranchId: permissionTokenPayload.branchId,
-    });
+    // COMMENTED FOR TEST PURPOSE
+    // const authMeta = AuthService.getAuthMetadata();
+    // qb.andWhere('do_pod_deliver.employee_id_driver = :currentUserId', {
+    //   currentUserId: authMeta.userId,
+    // });
 
-    const currentMoment = moment();
-    qb.andWhere(
-      'do_pod_deliver.do_pod_deliver_date_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
-      {
-        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
-        currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
-      },
-    );
+    // const permissionTokenPayload = AuthService.getPermissionTokenPayload();
+    // qb.andWhere('do_pod_deliver.branch_id = :currentBranchId', {
+    //   currentBranchId: permissionTokenPayload.branchId,
+    // });
+
+    // const currentMoment = moment();
+    // qb.andWhere(
+    //   'do_pod_deliver.do_pod_deliver_date_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+    //   {
+    //     currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
+    //     currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
+    //   },
+    // );
     return await qb.getRawMany();
   }
 }
