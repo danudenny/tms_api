@@ -4,6 +4,7 @@ import moment = require('moment');
 import { AuthService } from '../../../shared/services/auth.service';
 import { PrinterService } from '../../../shared/services/printer.service';
 import { RepositoryService } from '../../../shared/services/repository.service';
+import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
 
@@ -65,6 +66,7 @@ export class PrintService {
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
+        totalItems: doPod.doPodDetails.length,
       },
     };
 
@@ -126,12 +128,82 @@ export class PrintService {
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
+        totalItems: doPodDeliver.doPodDeliverDetails.length,
       },
     };
 
     PrinterService.responseForJsReport(
       res,
       'surat-jalan-antar',
+      jsreportParams,
+    );
+  }
+
+  public static async printBagItemByRequest(
+    res: express.Response,
+    queryParams: PrintBagItemPayloadQueryVm,
+  ) {
+    const bagItem = await RepositoryService.bagItem
+      .findOne()
+      .select({
+        bagItemId: queryParams.id, // needs to be selected due to do_pod_deliver relations are being included
+        bagSeq: true,
+        employee: {
+          nickname: true,
+          nik: true,
+        },
+        branchNext: {
+          branchName: true,
+        },
+        bagItemAwbs: {
+          bagItemAwbId: true,
+          awbItem: {
+            awbItemId: true,
+            awb: {
+              awbNumber: true,
+              consigneeName: true,
+            },
+          },
+        },
+      })
+      .where(e => e.bagItemId, w => w.equals(queryParams.id));
+
+    // TODO: Handle if bagItem undefined / not found
+    // TODO: Handle if bagItem.bagItemAwbs undefined / empty
+
+    const currentUserMeta = AuthService.getAuthData();
+    const currentUserPermissionTokenPayload = AuthService.getPermissionTokenPayload();
+    const currentUser = await RepositoryService.user
+      .loadById(currentUserMeta.userId)
+      .select({
+        userId: true, // needs to be selected due to users relations are being included
+        employee: {
+          nickname: true,
+        },
+      })
+      .exec();
+
+    const currentBranch = await RepositoryService.branch
+      .loadById(currentUserPermissionTokenPayload.branchId)
+      .select({
+        branchName: true,
+      });
+
+    const m = moment();
+    const jsreportParams = {
+      data: bagItem,
+      meta: {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        totalItems: bagItem.bagItemAwbs.length,
+      },
+    };
+
+    PrinterService.responseForJsReport(
+      res,
+      'surat-jalan-bag-item',
       jsreportParams,
     );
   }
