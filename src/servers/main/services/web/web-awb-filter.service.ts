@@ -18,6 +18,8 @@ import { PodFilterDetailRepository } from '../../../../shared/orm-repository/pod
 import { PodFilterDetailItem } from '../../../../shared/orm-entity/pod-filter-detail-item';
 import { PodFilterDetailItemRepository } from '../../../../shared/orm-repository/pod-filter-detail-item.repository';
 import moment = require('moment');
+import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
+import { reduce } from 'rxjs/operators';
 
 export class WebAwbFilterService {
 
@@ -47,6 +49,8 @@ export class WebAwbFilterService {
         message: `No Gabung Paket ${payload.bagNumber} tidak ditemukan`,
       }, 500);
     }
+
+    // TODO: if this bag is filtering in another branch and user, block other user and branch to scan the same bag
 
     // find Last Filter for current user and branch scan
     let podFilter = await RepositoryService.podFilter
@@ -106,7 +110,7 @@ export class WebAwbFilterService {
         where: {
           districtId: res.to_id,
         },
-        select: ['districtCode', 'districtName'],
+        select: ['districtId', 'districtCode', 'districtName'],
       });
       data.push({
         districtId: district.districtId,
@@ -142,13 +146,13 @@ export class WebAwbFilterService {
     const results: ScanAwbVm[] = [];
 
     // check payload.podFilterDetailId is valid or not
-    const podFilterDetailItemExists = await PodFilterDetailItem.findOne({
+    const podFilterDetailExists = await PodFilterDetail.findOne({
       where: {
         podFilterDetailId: payload.podFilterDetailId,
         isDeleted: false,
       },
     });
-    if (!podFilterDetailItemExists) {
+    if (!podFilterDetailExists) {
       ContextualErrorService.throwObj({
         message: `Invalid podFilterDetailId`,
       }, 500);
@@ -170,6 +174,7 @@ export class WebAwbFilterService {
           awbItem: {
             awbItemId: true, // needs to be selected due to awbItem relations are being selected
             awb: {
+              toType: true,
               toId: true,
             },
           },
@@ -183,6 +188,7 @@ export class WebAwbFilterService {
           res.status = 'error';
           res.trouble = false;
           res.message = `Resi ${awbNumber} sudah tersortir`;
+          res.districtId = awbItemAttr.awbItem.awb.toId;
           results.push(res);
         } else {
           // do process filtering awb
@@ -198,6 +204,7 @@ export class WebAwbFilterService {
             res.status = 'success';
             res.trouble = false;
             res.message = `Resi ${awbNumber} berhasil tersortir`;
+            res.districtId = awbItemAttr.awbItem.awb.toId;
             results.push(res);
 
             // save to pod_filter_detail_item
@@ -225,6 +232,7 @@ export class WebAwbFilterService {
             const bagNumberSeq = `${podFilterDetail.bagItem.bagSeq}${podFilterDetail.bagItem.bag.bagNumber}`;
             res.status = 'success';
             res.trouble = true;
+            res.districtId = awbItemAttr.awbItem.awb.toId;
             res.message = `Resi ${awbNumber} berhasil tersortir, tetapi tidak ada pada Gabung Paket ${bagNumberSeq}`;
             results.push(res);
 
@@ -245,6 +253,7 @@ export class WebAwbFilterService {
         res.status = 'error';
         res.trouble = false;
         res.message = `Resi ${awbNumber} tidak dikenali`;
+        res.districtId = null;
         results.push(res);
       }
     }
@@ -257,7 +266,6 @@ export class WebAwbFilterService {
   }
 
   async finishScan(payload: WebAwbFilterFinishScanVm): Promise<WebAwbFilterFinishScanResponseVm> {
-
     await PodFilter.update(payload.podFilterId, {
       isActive: false,
       endDateTime: moment().toDate(),
@@ -291,6 +299,8 @@ export class WebAwbFilterService {
     podFilterDetailItem.podFilterDetailId = payload.podFilterDetailId;
     podFilterDetailItem.scanDateTime = moment().toDate();
     podFilterDetailItem.awbItemId = awbItemAttr.awbItemId;
+    podFilterDetailItem.toType = awbItemAttr.awbItem.awb.toType;
+    podFilterDetailItem.toId = awbItemAttr.awbItem.awb.toId;
     if (awbTrouble != null) {
       podFilterDetailItem.isTroubled = true;
       podFilterDetailItem.awbTroubleId = awbTrouble.awbTroubleId;
