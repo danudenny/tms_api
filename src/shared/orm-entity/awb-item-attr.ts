@@ -1,8 +1,9 @@
-import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
 import { AwbItem } from './awb-item';
 import { BagItem } from './bag-item';
 import { Branch } from './branch';
+import { BagItemAwb } from './bag-item-awb';
 
 @Entity('awb_item_attr', { schema: 'public' })
 export class AwbItemAttr extends BaseEntity {
