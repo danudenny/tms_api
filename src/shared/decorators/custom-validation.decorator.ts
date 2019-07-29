@@ -10,14 +10,15 @@ export function IsAwbNumber(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate(value: any, args: ValidationArguments) {
-          let flag = 0;
+          let check = 0;
           for (const awbNumber of value) {
             if (awbNumber.length !== 12) {
-              flag = 1;
+              check = 1;
+              break;
             }
           }
 
-          if (flag === 1) {
+          if (check === 1) {
             return false;
           }
 
@@ -38,14 +39,15 @@ export function IsBagNumber(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate(value: any, args: ValidationArguments) {
-          let flag = 0;
+          let check = 0;
           for (const awbNumber of value) {
             if (awbNumber.length !== 10) {
-              flag = 1;
+              check = 1;
+              break;
             }
           }
 
-          if (flag === 1) {
+          if (check === 1) {
             return false;
           }
 
