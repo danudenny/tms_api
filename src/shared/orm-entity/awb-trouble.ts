@@ -53,30 +53,54 @@ export class AwbTrouble extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: false,
-    name: 'employee_id',
+    name: 'user_id_trigger',
   })
-  employeeId: number;
+  userIdTrigger: number;
 
   @Column('bigint', {
     nullable: false,
-    name: 'branch_id',
+    name: 'employee_id_trigger',
   })
-  branchId: number;
+  employeeIdTrigger: number;
 
   @Column('bigint', {
     nullable: false,
+    name: 'branch_id_trigger',
+  })
+  branchIdTrigger: number;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'user_id_unclear',
+  })
+  userIdUnclear: number;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'employee_id_unclear',
+  })
+  employeeIdUnclear: number;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id_unclear',
+  })
+  branchIdUnclear: number;
+
+  @Column('bigint', {
+    nullable: true,
     name: 'user_id_pic',
   })
   userIdPic: number;
 
   @Column('bigint', {
-    nullable: false,
+    nullable: true,
     name: 'employee_id_pic',
   })
   employeeIdPic: number;
 
   @Column('bigint', {
-    nullable: false,
+    nullable: true,
     name: 'branch_id_pic',
   })
   branchIdPic: number;

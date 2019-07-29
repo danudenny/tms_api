@@ -182,7 +182,8 @@ export class RequestQueryBuidlerService {
         new Brackets(qbAndWhere => {
           for (const andFilterIdx in metaPayload.filters) {
             const andFilter = metaPayload.filters[andFilterIdx];
-            if (!andFilter.value) {
+            andFilter.operator = andFilter.operator || 'eq';
+            if (!['null', 'nnull'].includes(andFilter.operator) && !andFilter.value) {
               continue;
             }
 

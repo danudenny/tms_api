@@ -12,7 +12,7 @@
  Target Server Version : 100006
  File Encoding         : 65001
 
- Date: 14/07/2019 12:05:21
+ Date: 27/07/2019 19:36:53
 */
 
 
@@ -893,6 +893,78 @@ CACHE 1;
 ALTER SEQUENCE "public"."do_pod_status_do_pod_status_id_seq" OWNER TO "postgres";
 
 -- ----------------------------
+-- Sequence structure for do_smd_detail_do_smd_detail_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."do_smd_detail_do_smd_detail_id_seq";
+CREATE SEQUENCE "public"."do_smd_detail_do_smd_detail_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+ALTER SEQUENCE "public"."do_smd_detail_do_smd_detail_id_seq" OWNER TO "postgres";
+
+-- ----------------------------
+-- Sequence structure for do_smd_detail_item_do_smd_detail_item_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."do_smd_detail_item_do_smd_detail_item_id_seq";
+CREATE SEQUENCE "public"."do_smd_detail_item_do_smd_detail_item_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+ALTER SEQUENCE "public"."do_smd_detail_item_do_smd_detail_item_id_seq" OWNER TO "postgres";
+
+-- ----------------------------
+-- Sequence structure for do_smd_do_smd_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."do_smd_do_smd_id_seq";
+CREATE SEQUENCE "public"."do_smd_do_smd_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+ALTER SEQUENCE "public"."do_smd_do_smd_id_seq" OWNER TO "postgres";
+
+-- ----------------------------
+-- Sequence structure for do_smd_history_do_smd_history_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."do_smd_history_do_smd_history_id_seq";
+CREATE SEQUENCE "public"."do_smd_history_do_smd_history_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+ALTER SEQUENCE "public"."do_smd_history_do_smd_history_id_seq" OWNER TO "postgres";
+
+-- ----------------------------
+-- Sequence structure for do_smd_status_do_smd_status_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."do_smd_status_do_smd_status_id_seq";
+CREATE SEQUENCE "public"."do_smd_status_do_smd_status_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+ALTER SEQUENCE "public"."do_smd_status_do_smd_status_id_seq" OWNER TO "postgres";
+
+-- ----------------------------
+-- Sequence structure for do_smd_vehicle_do_smd_vehicle_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."do_smd_vehicle_do_smd_vehicle_id_seq";
+CREATE SEQUENCE "public"."do_smd_vehicle_do_smd_vehicle_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+ALTER SEQUENCE "public"."do_smd_vehicle_do_smd_vehicle_id_seq" OWNER TO "postgres";
+
+-- ----------------------------
 -- Sequence structure for do_smu_detail_do_smu_detail_id_seq
 -- ----------------------------
 DROP SEQUENCE IF EXISTS "public"."do_smu_detail_do_smu_detail_id_seq";
@@ -1419,6 +1491,42 @@ MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
 ALTER SEQUENCE "public"."place_type_place_type_id_seq" OWNER TO "postgres";
+
+-- ----------------------------
+-- Sequence structure for pod_filter_detail_item_pod_filter_detail_item_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."pod_filter_detail_item_pod_filter_detail_item_id_seq";
+CREATE SEQUENCE "public"."pod_filter_detail_item_pod_filter_detail_item_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+ALTER SEQUENCE "public"."pod_filter_detail_item_pod_filter_detail_item_id_seq" OWNER TO "postgres";
+
+-- ----------------------------
+-- Sequence structure for pod_filter_detail_pod_filter_detail_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."pod_filter_detail_pod_filter_detail_id_seq";
+CREATE SEQUENCE "public"."pod_filter_detail_pod_filter_detail_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+ALTER SEQUENCE "public"."pod_filter_detail_pod_filter_detail_id_seq" OWNER TO "postgres";
+
+-- ----------------------------
+-- Sequence structure for pod_filter_pod_filter_id_seq
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."pod_filter_pod_filter_id_seq";
+CREATE SEQUENCE "public"."pod_filter_pod_filter_id_seq" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+ALTER SEQUENCE "public"."pod_filter_pod_filter_id_seq" OWNER TO "postgres";
 
 -- ----------------------------
 -- Sequence structure for pod_scan_in_pod_scan_in_id_seq
@@ -2030,7 +2138,8 @@ CREATE TABLE "public"."awb_attr" (
   "is_deleted" bool NOT NULL DEFAULT false,
   "try_attempt" int4 NOT NULL DEFAULT 0,
   "branch_id_next" int8,
-  "awb_number" varchar(255) COLLATE "pg_catalog"."default"
+  "awb_number" varchar(255) COLLATE "pg_catalog"."default",
+  "is_district_filtered" bool DEFAULT false
 )
 ;
 ALTER TABLE "public"."awb_attr" OWNER TO "postgres";
@@ -2225,6 +2334,7 @@ DROP TABLE IF EXISTS "public"."awb_item_attr";
 CREATE TABLE "public"."awb_item_attr" (
   "awb_item_attr_id" int8 NOT NULL DEFAULT nextval('awb_attr_awb_attr_id_seq'::regclass),
   "awb_item_id" int8,
+  "awb_attr_id" int8,
   "awb_number" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "awb_history_id_last" int8,
   "awb_status_id_last" int4,
@@ -2241,7 +2351,9 @@ CREATE TABLE "public"."awb_item_attr" (
   "uuid" varchar(50) COLLATE "pg_catalog"."default",
   "awb_third_party" varchar(100) COLLATE "pg_catalog"."default",
   "updated_time" timestamp(6) NOT NULL,
-  "is_deleted" bool NOT NULL DEFAULT false
+  "is_deleted" bool NOT NULL DEFAULT false,
+  "bag_item_id_last" int8,
+  "is_district_filtered" bool DEFAULT false
 )
 ;
 ALTER TABLE "public"."awb_item_attr" OWNER TO "postgres";
@@ -2478,15 +2590,21 @@ CREATE TABLE "public"."awb_trouble" (
   "awb_status_id" int4 NOT NULL,
   "awb_trouble_status_id" int4 NOT NULL,
   "awb_number" varchar(50) COLLATE "pg_catalog"."default" NOT NULL,
-  "employee_id" int8 NOT NULL,
-  "branch_id" int8 NOT NULL,
-  "user_id_pic" int8 NOT NULL,
-  "branch_id_pic" int8 NOT NULL,
+  "trouble_desc" varchar COLLATE "pg_catalog"."default",
+  "trouble_category" varchar(20) COLLATE "pg_catalog"."default",
+  "user_id_trigger" int8,
+  "employee_id_trigger" int8,
+  "branch_id_trigger" int8,
+  "user_id_unclear" int8,
+  "employee_id_unclear" int8,
+  "branch_id_unclear" int8,
+  "branch_id_wrong" int8,
+  "branch_id_correct" int8,
+  "user_id_pic" int8,
+  "branch_id_pic" int8,
   "employee_id_pic" int8,
   "resolve_date_time" timestamp(6),
   "description_solution" text COLLATE "pg_catalog"."default",
-  "trouble_desc" text COLLATE "pg_catalog"."default",
-  "trouble_category" character varying(10),
   "user_id_created" int8 NOT NULL,
   "created_time" timestamp(6) NOT NULL,
   "user_id_updated" int8 NOT NULL,
@@ -2551,7 +2669,11 @@ CREATE TABLE "public"."bag_item" (
   "updated_time" timestamp(6) NOT NULL,
   "is_deleted" bool NOT NULL DEFAULT false,
   "bag_item_history_id" int8,
-  "bagging_id_last" int8
+  "bagging_id_last" int8,
+  "bag_item_status_id_last" int4 NOT NULL DEFAULT 500,
+  "branch_id_last" int8,
+  "user_id_last" int8,
+  "employee_id_last" int8
 )
 ;
 ALTER TABLE "public"."bag_item" OWNER TO "postgres";
@@ -2645,7 +2767,7 @@ CREATE TABLE "public"."bag_trouble" (
   "bag_trouble_id" int8 NOT NULL DEFAULT nextval('bag_trouble_bag_trouble_id_seq'::regclass),
   "bag_status_id" int8,
   "bag_number" varchar(255) COLLATE "pg_catalog"."default",
-  "resolve_date_time" timestamp(6) NOT NULL,
+  "resolve_date_time" timestamp(6),
   "status_resolve_id" int8,
   "employee_id" int8,
   "branch_id" int8,
@@ -2654,7 +2776,11 @@ CREATE TABLE "public"."bag_trouble" (
   "user_id_updated" int8,
   "updated_time" timestamp(6) NOT NULL,
   "is_deleted" bool NOT NULL DEFAULT false,
-  "description" text COLLATE "pg_catalog"."default"
+  "description" text COLLATE "pg_catalog"."default",
+  "bag_trouble_status" int4,
+  "bag_trouble_code" varchar(50) COLLATE "pg_catalog"."default",
+  "trouble_desc" varchar(255) COLLATE "pg_catalog"."default",
+  "trouble_category" varchar(255) COLLATE "pg_catalog"."default"
 )
 ;
 ALTER TABLE "public"."bag_trouble" OWNER TO "postgres";
@@ -3538,7 +3664,6 @@ CREATE TABLE "public"."do_pod" (
   "updated_time" timestamp(6) NOT NULL,
   "is_deleted" bool NOT NULL DEFAULT false,
   "do_pod_type" int4,
-  "third_party_id" int4,
   "partner_logistic_id" int8,
   "do_pod_method" int8,
   "vehicle_number" varchar(100) COLLATE "pg_catalog"."default",
@@ -3551,7 +3676,8 @@ CREATE TABLE "public"."do_pod" (
   "first_date_scan_out" timestamp(6),
   "first_date_scan_in" timestamp(6),
   "total_weight_final" numeric(20,5) NOT NULL DEFAULT 0,
-  "total_weight_final_rounded" numeric(20,5) NOT NULL DEFAULT 0
+  "total_weight_final_rounded" numeric(20,5) NOT NULL DEFAULT 0,
+  "third_party_id" int8
 )
 ;
 ALTER TABLE "public"."do_pod" OWNER TO "postgres";
@@ -3595,7 +3721,7 @@ CREATE TABLE "public"."do_pod_deliver_detail" (
   "sync_date_time_last" timestamp(6),
   "longitude_delivery_last" varchar(255) COLLATE "pg_catalog"."default",
   "latitude_delivery_last" varchar(255) COLLATE "pg_catalog"."default",
-  "description" text COLLATE "pg_catalog"."default",
+  "desc_last" text COLLATE "pg_catalog"."default",
   "user_id_created" int8 NOT NULL,
   "created_time" timestamp(6) NOT NULL,
   "user_id_updated" int8 NOT NULL,
@@ -3618,12 +3744,14 @@ CREATE TABLE "public"."do_pod_deliver_history" (
   "sync_date_time" timestamp(6),
   "longitude_delivery" varchar(255) COLLATE "pg_catalog"."default",
   "latitude_delivery" varchar(255) COLLATE "pg_catalog"."default",
-  "description" text COLLATE "pg_catalog"."default",
+  "desc" text COLLATE "pg_catalog"."default",
   "user_id_created" int8 NOT NULL,
   "created_time" timestamp(6) NOT NULL,
   "user_id_updated" int8 NOT NULL,
   "updated_time" timestamp(6) NOT NULL,
-  "is_deleted" bool NOT NULL DEFAULT false
+  "is_deleted" bool NOT NULL DEFAULT false,
+  "employee_id_driver" int8,
+  "history_date_time" timestamp(6)
 )
 ;
 ALTER TABLE "public"."do_pod_deliver_history" OWNER TO "postgres";
@@ -3635,7 +3763,6 @@ DROP TABLE IF EXISTS "public"."do_pod_detail";
 CREATE TABLE "public"."do_pod_detail" (
   "do_pod_detail_id" int8 NOT NULL DEFAULT nextval('do_pod_detail_do_pod_detail_id_seq'::regclass),
   "do_pod_id" int8 NOT NULL,
-  "pod_scan_in_id" int8,
   "awb_item_id" int8,
   "bag_item_id" int8,
   "do_pod_status_id_last" int8 NOT NULL,
@@ -3653,7 +3780,8 @@ CREATE TABLE "public"."do_pod_detail" (
   "employee_journey_id_out" int8,
   "is_posted" int4,
   "total_weight_final" numeric(20,5) NOT NULL DEFAULT 0,
-  "total_weight_final_rounded" numeric(20,5) NOT NULL DEFAULT 0
+  "total_weight_final_rounded" numeric(20,5) NOT NULL DEFAULT 0,
+  "pod_scan_in_id" int8
 )
 ;
 ALTER TABLE "public"."do_pod_detail" OWNER TO "postgres";
@@ -3712,6 +3840,157 @@ CREATE TABLE "public"."do_pod_status" (
 )
 ;
 ALTER TABLE "public"."do_pod_status" OWNER TO "postgres";
+
+-- ----------------------------
+-- Table structure for do_smd
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."do_smd";
+CREATE TABLE "public"."do_smd" (
+  "do_smd_id" int8 NOT NULL DEFAULT nextval('do_smd_do_smd_id_seq'::regclass),
+  "do_smd_code" varchar(255) COLLATE "pg_catalog"."default",
+  "do_smd_time" timestamp(6) NOT NULL,
+  "user_id" int8 NOT NULL,
+  "branch_id" int8 NOT NULL,
+  "do_smd_detail_id_last" int8,
+  "total_detail" int4 NOT NULL DEFAULT 0,
+  "total_item" int4 NOT NULL DEFAULT 0,
+  "total_left_item" int4 NOT NULL DEFAULT 0,
+  "total_vehicle" int4 NOT NULL DEFAULT 0,
+  "vehicle_id_last" int8,
+  "user_id_created" int8 NOT NULL,
+  "created_time" timestamp(6) NOT NULL,
+  "user_id_updated" int8 NOT NULL,
+  "updated_time" timestamp(6) NOT NULL,
+  "is_deleted" bool NOT NULL DEFAULT false,
+  "do_smd_status_id_last" int8 NOT NULL DEFAULT 1000
+)
+;
+ALTER TABLE "public"."do_smd" OWNER TO "postgres";
+
+-- ----------------------------
+-- Table structure for do_smd_detail
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."do_smd_detail";
+CREATE TABLE "public"."do_smd_detail" (
+  "do_smd_detail_id" int8 NOT NULL DEFAULT nextval('do_smd_detail_do_smd_detail_id_seq'::regclass),
+  "do_smd_id" int8 NOT NULL,
+  "stop_seq" int4,
+  "stop_seq_actual" int4,
+  "user_id" int8 NOT NULL,
+  "branch_id" int8 NOT NULL,
+  "do_smd_vehicle_id" int8,
+  "branch_id_from" int8,
+  "branch_id_to" int8,
+  "representative_code_list" text COLLATE "pg_catalog"."default",
+  "seal_number" varchar(255) COLLATE "pg_catalog"."default",
+  "departure_schedule_date_time" timestamp(6),
+  "departure_time" timestamp(6),
+  "arrival_time" timestamp(6),
+  "do_smd_status_id_last" int8 NOT NULL DEFAULT 1000,
+  "total_item" int4 NOT NULL DEFAULT 0,
+  "total_item_new" int4 NOT NULL DEFAULT 0,
+  "current_item" int4 NOT NULL DEFAULT 0,
+  "latitude_departure" varchar(500) COLLATE "pg_catalog"."default",
+  "longitude_departure" varchar(500) COLLATE "pg_catalog"."default",
+  "latitude_arrival" varchar(500) COLLATE "pg_catalog"."default",
+  "longitude_arrival" varchar(500) COLLATE "pg_catalog"."default",
+  "user_id_created" int8 NOT NULL,
+  "created_time" timestamp(6) NOT NULL,
+  "user_id_updated" int8 NOT NULL,
+  "updated_time" timestamp(6) NOT NULL,
+  "is_deleted" bool NOT NULL DEFAULT false,
+  "received_time" timestamp(6)
+)
+;
+ALTER TABLE "public"."do_smd_detail" OWNER TO "postgres";
+
+-- ----------------------------
+-- Table structure for do_smd_detail_item
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."do_smd_detail_item";
+CREATE TABLE "public"."do_smd_detail_item" (
+  "do_smd_detail_item_id" int8 NOT NULL DEFAULT nextval('do_smd_detail_item_do_smd_detail_item_id_seq'::regclass),
+  "do_smd_detail_id" int8 NOT NULL,
+  "user_id_scan" int8 NOT NULL,
+  "branch_id_scan" int8 NOT NULL,
+  "bag_item_id" int8,
+  "user_id_created" int8 NOT NULL,
+  "created_time" timestamp(6) NOT NULL,
+  "user_id_updated" int8 NOT NULL,
+  "updated_time" timestamp(6) NOT NULL,
+  "is_deleted" bool NOT NULL DEFAULT false
+)
+;
+ALTER TABLE "public"."do_smd_detail_item" OWNER TO "postgres";
+
+-- ----------------------------
+-- Table structure for do_smd_history
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."do_smd_history";
+CREATE TABLE "public"."do_smd_history" (
+  "do_smd_history_id" int8 NOT NULL DEFAULT nextval('do_smd_history_do_smd_history_id_seq'::regclass),
+  "do_smd_id" int8 NOT NULL,
+  "do_smd_detail_id" int8,
+  "do_smd_time" timestamp(6) NOT NULL,
+  "user_id" int8 NOT NULL,
+  "branch_id" int8 NOT NULL,
+  "employee_id_driver" int8,
+  "latitude" varchar(500) COLLATE "pg_catalog"."default",
+  "longitude" varchar(500) COLLATE "pg_catalog"."default",
+  "do_smd_status_id" int4 NOT NULL DEFAULT 1000,
+  "user_id_created" int8 NOT NULL,
+  "created_time" timestamp(6) NOT NULL,
+  "user_id_updated" int8 NOT NULL,
+  "updated_time" timestamp(6) NOT NULL,
+  "is_deleted" bool NOT NULL DEFAULT false,
+  "do_smd_vehicle_id" int8,
+  "seal_number" varchar(255) COLLATE "pg_catalog"."default",
+  "departure_schedule_date_time" timestamp(6),
+  "reason_id" int8
+)
+;
+ALTER TABLE "public"."do_smd_history" OWNER TO "postgres";
+
+-- ----------------------------
+-- Table structure for do_smd_status
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."do_smd_status";
+CREATE TABLE "public"."do_smd_status" (
+  "do_smd_status_id" int4 NOT NULL,
+  "do_smd_status_name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "do_smd_status_title" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "do_smd_status_desc" varchar(500) COLLATE "pg_catalog"."default" NOT NULL,
+  "user_id_created" int8 NOT NULL,
+  "created_time" timestamp(6) NOT NULL,
+  "user_id_updated" int8 NOT NULL,
+  "updated_time" timestamp(6) NOT NULL,
+  "is_deleted" bool NOT NULL DEFAULT false
+)
+;
+ALTER TABLE "public"."do_smd_status" OWNER TO "postgres";
+
+-- ----------------------------
+-- Table structure for do_smd_vehicle
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."do_smd_vehicle";
+CREATE TABLE "public"."do_smd_vehicle" (
+  "do_smd_vehicle_id" int8 NOT NULL DEFAULT nextval('do_smd_vehicle_do_smd_vehicle_id_seq'::regclass),
+  "do_smd_id" int8 NOT NULL,
+  "vehicle_number" varchar(255) COLLATE "pg_catalog"."default",
+  "employee_id_driver" int8,
+  "is_active" bool NOT NULL DEFAULT true,
+  "reason_id" int8,
+  "branch_id_start" int8,
+  "branch_id_end" int8,
+  "total_item" int4 NOT NULL DEFAULT 0,
+  "user_id_created" int8 NOT NULL,
+  "created_time" timestamp(6) NOT NULL,
+  "user_id_updated" int8 NOT NULL,
+  "updated_time" timestamp(6) NOT NULL,
+  "is_deleted" bool NOT NULL DEFAULT false
+)
+;
+ALTER TABLE "public"."do_smd_vehicle" OWNER TO "postgres";
 
 -- ----------------------------
 -- Table structure for do_smu
@@ -4035,7 +4314,7 @@ DROP TABLE IF EXISTS "public"."employee_journey";
 CREATE TABLE "public"."employee_journey" (
   "employee_journey_id" int8 NOT NULL DEFAULT nextval('employee_journey_employee_journey_id_seq'::regclass),
   "employee_id" int8,
-  "check_in_date" timestamp(6) NOT NULL,
+  "check_in_date" timestamp(6),
   "check_out_date" timestamp(6),
   "longitude_check_in" varchar(100) COLLATE "pg_catalog"."default",
   "latitude_check_in" varchar(100) COLLATE "pg_catalog"."default",
@@ -4045,7 +4324,10 @@ CREATE TABLE "public"."employee_journey" (
   "created_time" timestamp(6) NOT NULL,
   "user_id_updated" int8,
   "updated_time" timestamp(6) NOT NULL,
-  "is_deleted" bool NOT NULL DEFAULT false
+  "is_deleted" bool NOT NULL DEFAULT false,
+  "branch_id_check_in" int8,
+  "branch_id_check_out" int8,
+  "category" varchar(255) COLLATE "pg_catalog"."default" NOT NULL DEFAULT 'pod'::character varying
 )
 ;
 ALTER TABLE "public"."employee_journey" OWNER TO "postgres";
@@ -4673,7 +4955,8 @@ CREATE TABLE "public"."pickup_request_detail" (
   "is_return" bool NOT NULL DEFAULT false,
   "recipient_longitude" varchar(100) COLLATE "pg_catalog"."default",
   "recipient_latitude" varchar(100) COLLATE "pg_catalog"."default",
-  "is_engaged" bool
+  "is_engaged" bool,
+  "insurance_value" numeric(20,2)
 )
 ;
 ALTER TABLE "public"."pickup_request_detail" OWNER TO "postgres";
@@ -4882,6 +5165,72 @@ CREATE TABLE "public"."place_type" (
 ALTER TABLE "public"."place_type" OWNER TO "postgres";
 
 -- ----------------------------
+-- Table structure for pod_filter
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."pod_filter";
+CREATE TABLE "public"."pod_filter" (
+  "pod_filter_id" int8 NOT NULL DEFAULT nextval('pod_filter_pod_filter_id_seq'::regclass),
+  "pod_filter_code" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "start_date_time" timestamp(6) NOT NULL,
+  "end_date_time" timestamp(6),
+  "is_active" bool NOT NULL DEFAULT false,
+  "user_id_scan" int8 NOT NULL,
+  "branch_id_scan" int8 NOT NULL,
+  "total_bag_item" int4 NOT NULL DEFAULT 0,
+  "user_id_created" int8 NOT NULL,
+  "created_time" timestamp(6) NOT NULL,
+  "user_id_updated" int8 NOT NULL,
+  "updated_time" timestamp(6) NOT NULL,
+  "is_deleted" bool NOT NULL DEFAULT false,
+  "representative_id_filter" int8 NOT NULL
+)
+;
+ALTER TABLE "public"."pod_filter" OWNER TO "postgres";
+COMMENT ON COLUMN "public"."pod_filter"."start_date_time" IS 'first scan';
+COMMENT ON COLUMN "public"."pod_filter"."end_date_time" IS 'last scan';
+COMMENT ON COLUMN "public"."pod_filter"."is_active" IS 'indicate they finish scan / not';
+
+-- ----------------------------
+-- Table structure for pod_filter_detail
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."pod_filter_detail";
+CREATE TABLE "public"."pod_filter_detail" (
+  "pod_filter_detail_id" int8 NOT NULL DEFAULT nextval('pod_filter_detail_pod_filter_detail_id_seq'::regclass),
+  "pod_filter_id" int8 NOT NULL,
+  "scan_date_time" timestamp(6) NOT NULL,
+  "is_active" bool NOT NULL DEFAULT false,
+  "bag_item_id" int8 NOT NULL,
+  "user_id_created" int8 NOT NULL,
+  "created_time" timestamp(6) NOT NULL,
+  "user_id_updated" int8 NOT NULL,
+  "updated_time" timestamp(6) NOT NULL,
+  "is_deleted" bool NOT NULL DEFAULT false,
+  "total_awb_item" int4 NOT NULL DEFAULT 0
+)
+;
+ALTER TABLE "public"."pod_filter_detail" OWNER TO "postgres";
+
+-- ----------------------------
+-- Table structure for pod_filter_detail_item
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."pod_filter_detail_item";
+CREATE TABLE "public"."pod_filter_detail_item" (
+  "pod_filter_detail_item_id" int8 NOT NULL DEFAULT nextval('pod_filter_detail_item_pod_filter_detail_item_id_seq'::regclass),
+  "pod_filter_detail_id" int8 NOT NULL,
+  "scan_date_time" timestamp(6) NOT NULL,
+  "awb_item_id" int8 NOT NULL,
+  "user_id_created" int8 NOT NULL,
+  "created_time" timestamp(6) NOT NULL,
+  "user_id_updated" int8 NOT NULL,
+  "updated_time" timestamp(6) NOT NULL,
+  "is_deleted" bool NOT NULL DEFAULT false,
+  "is_troubled" bool NOT NULL DEFAULT false,
+  "awb_trouble_id" int8
+)
+;
+ALTER TABLE "public"."pod_filter_detail_item" OWNER TO "postgres";
+
+-- ----------------------------
 -- Table structure for pod_scan
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."pod_scan";
@@ -4906,18 +5255,18 @@ ALTER TABLE "public"."pod_scan" OWNER TO "postgres";
 DROP TABLE IF EXISTS "public"."pod_scan_in";
 CREATE TABLE "public"."pod_scan_in" (
   "pod_scan_in_id" int8 NOT NULL DEFAULT nextval('pod_scan_in_pod_scan_in_id_seq'::regclass),
-  "awb_item_id" bigint,
-  "bag_item_id" bigint,
-  "user_id" bigint NOT NULL,
-  "employee_id" bigint NOT NULL,
-  "branch_id" bigint,
-  "scan_in_type" character varying(10) NOT NULL,
-  "pod_scanin_date_time" timestamp without time zone NOT NULL,
-  "user_id_created" bigint NOT NULL,
-  "created_time" timestamp without time zone NOT NULL,
-  "user_id_updated" bigint NOT NULL,
-  "updated_time" timestamp without time zone NOT NULL,
-  "is_deleted" boolean DEFAULT false NOT NULL
+  "awb_item_id" int8,
+  "bag_item_id" int8,
+  "user_id" int8 NOT NULL,
+  "employee_id" int8 NOT NULL,
+  "branch_id" int8,
+  "scan_in_type" varchar(10) COLLATE "pg_catalog"."default" NOT NULL,
+  "pod_scanin_date_time" timestamp(6) NOT NULL,
+  "user_id_created" int8 NOT NULL,
+  "created_time" timestamp(6) NOT NULL,
+  "user_id_updated" int8 NOT NULL,
+  "updated_time" timestamp(6) NOT NULL,
+  "is_deleted" bool NOT NULL DEFAULT false
 )
 ;
 ALTER TABLE "public"."pod_scan_in" OWNER TO "postgres";
@@ -5747,17 +6096,17 @@ ALTER FUNCTION "public"."uuid_ns_x500"() OWNER TO "postgres";
 SELECT setval('"public"."airline_airline_id_seq"', 8, true);
 SELECT setval('"public"."airport_airport_id_seq"', 54, true);
 SELECT setval('"public"."attachment_attachment_id_seq"', 38, true);
-SELECT setval('"public"."attachment_tms_attachment_tms_id_seq"', 156, true);
-SELECT setval('"public"."awb_attr_awb_attr_id_seq"', 23881630, true);
-SELECT setval('"public"."awb_awb_id_seq"', 11942954, true);
-SELECT setval('"public"."awb_booking_awb_booking_id_seq"', 11936111, true);
+SELECT setval('"public"."attachment_tms_attachment_tms_id_seq"', 158, true);
+SELECT setval('"public"."awb_attr_awb_attr_id_seq"', 23881658, true);
+SELECT setval('"public"."awb_awb_id_seq"', 11942984, true);
+SELECT setval('"public"."awb_booking_awb_booking_id_seq"', 11936132, true);
 SELECT setval('"public"."awb_booking_status_awb_booking_status_id_seq"', 5, true);
 SELECT setval('"public"."awb_detail_awb_detail_id_seq"', 2, false);
-SELECT setval('"public"."awb_history_awb_history_id_seq"', 20793818, true);
+SELECT setval('"public"."awb_history_awb_history_id_seq"', 20793860, true);
 SELECT setval('"public"."awb_invalid_awb_invalid_id_seq"', 3659, true);
 SELECT setval('"public"."awb_item_attr_awb_item_attr_id_seq"', 2, false);
-SELECT setval('"public"."awb_item_awb_item_id_seq"', 11942019, true);
-SELECT setval('"public"."awb_item_summary_awb_item_summary_id_seq"', 13635679, true);
+SELECT setval('"public"."awb_item_awb_item_id_seq"', 11942040, true);
+SELECT setval('"public"."awb_item_summary_awb_item_summary_id_seq"', 13635715, true);
 SELECT setval('"public"."awb_price_awb_price_id_seq"', 4308446, true);
 SELECT setval('"public"."awb_price_item_awb_price_item_id_seq"', 4304438, true);
 SELECT setval('"public"."awb_request_awb_request_id_seq"', 44, true);
@@ -5766,16 +6115,16 @@ SELECT setval('"public"."awb_status_awb_status_id_seq"', 12, true);
 SELECT setval('"public"."awb_status_group_awb_status_group_id_seq"', 3, true);
 SELECT setval('"public"."awb_status_group_item_awb_status_group_item_id"', 9, true);
 SELECT setval('"public"."awb_track_awb_track_id_seq"', 2, false);
-SELECT setval('"public"."awb_trouble_awb_trouble_id_seq"', 2, false);
-SELECT setval('"public"."bag_bag_id_seq"', 421893, true);
-SELECT setval('"public"."bag_item_awb_bag_item_awb_id_seq"', 20073434, true);
-SELECT setval('"public"."bag_item_bag_item_id_seq"', 859418, true);
-SELECT setval('"public"."bag_item_history_bag_item_history_id_seq"', 389395, true);
+SELECT setval('"public"."awb_trouble_awb_trouble_id_seq"', 35, true);
+SELECT setval('"public"."bag_bag_id_seq"', 421899, true);
+SELECT setval('"public"."bag_item_awb_bag_item_awb_id_seq"', 11940824, true);
+SELECT setval('"public"."bag_item_bag_item_id_seq"', 859423, true);
+SELECT setval('"public"."bag_item_history_bag_item_history_id_seq"', 389400, true);
 SELECT setval('"public"."bag_item_status_bag_item_status_id_seq"', 2, false);
 SELECT setval('"public"."bag_solution_bag_solution_id_seq"', 2, false);
-SELECT setval('"public"."bag_trouble_bag_trouble_id_seq"', 17, true);
-SELECT setval('"public"."bagging_bagging_id_seq"', 12710, true);
-SELECT setval('"public"."bagging_item_bagging_item_id_seq"', 37550, true);
+SELECT setval('"public"."bag_trouble_bag_trouble_id_seq"', 44, true);
+SELECT setval('"public"."bagging_bagging_id_seq"', 12714, true);
+SELECT setval('"public"."bagging_item_bagging_item_id_seq"', 37555, true);
 SELECT setval('"public"."bank_bank_id_seq"', 17, true);
 SELECT setval('"public"."bank_branch_bank_branch_id_seq"', 7, true);
 SELECT setval('"public"."branch_branch_id_seq"', 799, true);
@@ -5812,18 +6161,24 @@ SELECT setval('"public"."district_district_id_seq"', 7505, true);
 SELECT setval('"public"."district_reference_district_reference_id_seq"', 2, false);
 SELECT setval('"public"."division_department_id_seq"', 298, true);
 SELECT setval('"public"."division_division_id_seq"', 10, true);
-SELECT setval('"public"."do_pickup_detail_do_pickup_detail_id_seq"', 16947, true);
-SELECT setval('"public"."do_pickup_do_pickup_id_seq"', 1081, true);
-SELECT setval('"public"."do_pod_deliver_detail_do_pod_deliver_detail_id_seq"', 2, false);
-SELECT setval('"public"."do_pod_deliver_do_pod_deliver_id_seq"', 2, false);
+SELECT setval('"public"."do_pickup_detail_do_pickup_detail_id_seq"', 17016, true);
+SELECT setval('"public"."do_pickup_do_pickup_id_seq"', 1092, true);
+SELECT setval('"public"."do_pod_deliver_detail_do_pod_deliver_detail_id_seq"', 17, true);
+SELECT setval('"public"."do_pod_deliver_do_pod_deliver_id_seq"', 42, true);
 SELECT setval('"public"."do_pod_deliver_history_do_pod_deliver_history_id_seq"', 2, false);
-SELECT setval('"public"."do_pod_detail_do_pod_detail_id_seq"', 39, true);
-SELECT setval('"public"."do_pod_do_pod_id_seq"', 91, true);
+SELECT setval('"public"."do_pod_detail_do_pod_detail_id_seq"', 95, true);
+SELECT setval('"public"."do_pod_do_pod_id_seq"', 187, true);
 SELECT setval('"public"."do_pod_history_do_pod_history_id_seq"', 4, true);
 SELECT setval('"public"."do_pod_status_do_pod_status_id_seq"', 2, false);
-SELECT setval('"public"."do_smu_detail_do_smu_detail_id_seq"', 24058, true);
-SELECT setval('"public"."do_smu_do_smu_id_seq"', 1010, true);
-SELECT setval('"public"."do_smu_history_do_smu_history_id_seq"', 15087, true);
+SELECT setval('"public"."do_smd_detail_do_smd_detail_id_seq"', 91, true);
+SELECT setval('"public"."do_smd_detail_item_do_smd_detail_item_id_seq"', 190, true);
+SELECT setval('"public"."do_smd_do_smd_id_seq"', 61, true);
+SELECT setval('"public"."do_smd_history_do_smd_history_id_seq"', 127, true);
+SELECT setval('"public"."do_smd_status_do_smd_status_id_seq"', 2, false);
+SELECT setval('"public"."do_smd_vehicle_do_smd_vehicle_id_seq"', 82, true);
+SELECT setval('"public"."do_smu_detail_do_smu_detail_id_seq"', 24059, true);
+SELECT setval('"public"."do_smu_do_smu_id_seq"', 1013, true);
+SELECT setval('"public"."do_smu_history_do_smu_history_id_seq"', 15105, true);
 SELECT setval('"public"."do_smu_status_do_smu_status_id_seq"', 2, false);
 SELECT setval('"public"."do_work_order_detail_do_work_order_detail_id_seq"', 32, true);
 SELECT setval('"public"."do_work_order_do_work_order_id_seq"', 7, true);
@@ -5835,7 +6190,7 @@ SELECT setval('"public"."employee_employee_id_seq"', 4565, true);
 SELECT setval('"public"."employee_experience_employee_experience_id_seq"', 2, false);
 SELECT setval('"public"."employee_family_employee_family_id_seq"', 2, false);
 SELECT setval('"public"."employee_journal_employee_journal_id_seq"', 2, false);
-SELECT setval('"public"."employee_journey_employee_journey_id_seq"', 27, true);
+SELECT setval('"public"."employee_journey_employee_journey_id_seq"', 39, true);
 SELECT setval('"public"."employee_role_employee_role_id_seq"', 364, true);
 SELECT setval('"public"."employee_source_employee_source_id_seq"', 3, true);
 SELECT setval('"public"."employee_type_employee_type_id_seq"', 6, true);
@@ -5846,8 +6201,8 @@ ALTER SEQUENCE "public"."items_id_seq"
 OWNED BY "public"."items"."id";
 SELECT setval('"public"."items_id_seq"', 2, false);
 SELECT setval('"public"."log_history_log_history_id_seq"', 2, false);
-SELECT setval('"public"."log_login_fail_log_login_fail_id_seq"', 1111, true);
-SELECT setval('"public"."log_login_log_login_id_seq"', 4112, true);
+SELECT setval('"public"."log_login_fail_log_login_fail_id_seq"', 1121, true);
+SELECT setval('"public"."log_login_log_login_id_seq"', 4274, true);
 SELECT setval('"public"."lph_lph_id_seq"', 41, true);
 ALTER SEQUENCE "public"."menu_menu_id_seq"
 OWNED BY "public"."menu"."menu_id";
@@ -5855,48 +6210,51 @@ SELECT setval('"public"."menu_menu_id_seq"', 2, false);
 ALTER SEQUENCE "public"."migrations_id_seq"
 OWNED BY "public"."migrations"."id";
 SELECT setval('"public"."migrations_id_seq"', 2, false);
-SELECT setval('"public"."notification_msg_notification_msg_id_seq"', 2495, true);
-SELECT setval('"public"."notification_token_notification_token_id_seq"', 415, true);
+SELECT setval('"public"."notification_msg_notification_msg_id_seq"', 2496, true);
+SELECT setval('"public"."notification_token_notification_token_id_seq"', 420, true);
 SELECT setval('"public"."package_price_package_price_id_seq"', 515303, true);
 SELECT setval('"public"."package_price_special_package_price_special_id_seq"', 2, true);
 SELECT setval('"public"."package_type_package_type_id_seq"', 6, true);
 SELECT setval('"public"."partner_logistic_partner_logistic_id_seq"', 6, true);
 SELECT setval('"public"."partner_partner_id_seq"', 2, false);
 SELECT setval('"public"."payment_method_payment_method_id_seq"', 5, true);
-SELECT setval('"public"."pickup_request_detail_pickup_request_detail_id_seq"', 1734899, true);
-SELECT setval('"public"."pickup_request_invalid_pickup_request_invalid_id_seq"', 3177565, true);
-SELECT setval('"public"."pickup_request_log_pickup_request_log_id_seq"', 13, true);
-SELECT setval('"public"."pickup_request_pickup_request_id_seq"', 1779021, true);
+SELECT setval('"public"."pickup_request_detail_pickup_request_detail_id_seq"', 1734920, true);
+SELECT setval('"public"."pickup_request_invalid_pickup_request_invalid_id_seq"', 3177585, true);
+SELECT setval('"public"."pickup_request_log_pickup_request_log_id_seq"', 32, true);
+SELECT setval('"public"."pickup_request_pickup_request_id_seq"', 1779042, true);
 SELECT setval('"public"."pickup_request_upload_detail_pickup_request_upload_detail_id_se"', 4571, true);
 SELECT setval('"public"."pickup_request_upload_pickup_request_upload_id_seq"', 4575, true);
 SELECT setval('"public"."place_place_id_seq"', 898, true);
 SELECT setval('"public"."place_type_place_type_id_seq"', 2, false);
-SELECT setval('"public"."pod_scan_in_pod_scan_in_id_seq"', 2, false);
+SELECT setval('"public"."pod_filter_detail_item_pod_filter_detail_item_id_seq"', 9, true);
+SELECT setval('"public"."pod_filter_detail_pod_filter_detail_id_seq"', 9, true);
+SELECT setval('"public"."pod_filter_pod_filter_id_seq"', 12, true);
+SELECT setval('"public"."pod_scan_in_pod_scan_in_id_seq"', 56, true);
 SELECT setval('"public"."pod_scan_pod_scan_id_seq"', 83, true);
 SELECT setval('"public"."price_list_price_list_id_seq"', 37, true);
 SELECT setval('"public"."province_province_id_seq"', 35, true);
 SELECT setval('"public"."reason_reason_id_seq"', 38, true);
-SELECT setval('"public"."received_package_detail_received_package_detail_id_seq"', 66, true);
-SELECT setval('"public"."received_package_received_package_id_seq"', 31, true);
+SELECT setval('"public"."received_package_detail_received_package_detail_id_seq"', 67, true);
+SELECT setval('"public"."received_package_received_package_id_seq"', 32, true);
 SELECT setval('"public"."representative_representative_id_seq"', 98, true);
 SELECT setval('"public"."reseller_reseller_id_seq"', 2, false);
 SELECT setval('"public"."role_permission_access_role_permission_access_id"', 5, true);
 SELECT setval('"public"."role_permission_dashboard_role_permission_dashboard_id_seq"', 21, true);
 ALTER SEQUENCE "public"."role_permission_role_permission_id_seq"
 OWNED BY "public"."role_permission"."role_permission_id";
-SELECT setval('"public"."role_permission_role_permission_id_seq"', 6675, true);
+SELECT setval('"public"."role_permission_role_permission_id_seq"', 7675, true);
 ALTER SEQUENCE "public"."role_role_id_seq"
 OWNED BY "public"."role"."role_id";
 SELECT setval('"public"."role_role_id_seq"', 56, true);
-SELECT setval('"public"."smu_item_smu_item_id_seq"', 12982, true);
+SELECT setval('"public"."smu_item_smu_item_id_seq"', 12984, true);
 SELECT setval('"public"."smu_load_smu_load_id_seq"', 6, true);
-SELECT setval('"public"."smu_smu_id_seq"', 2096, true);
+SELECT setval('"public"."smu_smu_id_seq"', 2098, true);
 SELECT setval('"public"."social_media_social_media_id_seq"', 3, true);
 SELECT setval('"public"."sync_awb_file_sync_awb_file_id_seq"', 248294, true);
 SELECT setval('"public"."sync_awb_sync_awb_id_seq"', 13274, true);
-SELECT setval('"public"."sync_master_history_sync_master_history_id_seq"', 3519, true);
-SELECT setval('"public"."sync_master_sync_master_id_seq"', 378719, true);
-SELECT setval('"public"."sys_counter_sys_counter_id_seq"', 79, true);
+SELECT setval('"public"."sync_master_history_sync_master_history_id_seq"', 3529, true);
+SELECT setval('"public"."sync_master_sync_master_id_seq"', 406835, true);
+SELECT setval('"public"."sys_counter_sys_counter_id_seq"', 82, true);
 ALTER SEQUENCE "public"."todos_id_seq"
 OWNED BY "public"."todos"."id";
 SELECT setval('"public"."todos_id_seq"', 2, false);
@@ -5904,15 +6262,15 @@ ALTER SEQUENCE "public"."user_api_id_seq"
 OWNED BY "public"."user_api"."id";
 SELECT setval('"public"."user_api_id_seq"', 2, true);
 SELECT setval('"public"."user_notification_msg_user_notification_msg_id_seq"', 3308, true);
-SELECT setval('"public"."user_role_user_role_id_seq"', 3119, true);
+SELECT setval('"public"."user_role_user_role_id_seq"', 3122, true);
 ALTER SEQUENCE "public"."user_user_id_seq"
 OWNED BY "public"."users"."user_id";
 SELECT setval('"public"."user_user_id_seq"', 184, true);
-SELECT setval('"public"."work_order_detail_work_order_detail_id_seq"', 20476, true);
-SELECT setval('"public"."work_order_history_work_order_history_id_seq"', 97308, true);
-SELECT setval('"public"."work_order_schedule_work_order_schedule_id_seq"', 8, true);
+SELECT setval('"public"."work_order_detail_work_order_detail_id_seq"', 20573, true);
+SELECT setval('"public"."work_order_history_work_order_history_id_seq"', 97877, true);
+SELECT setval('"public"."work_order_schedule_work_order_schedule_id_seq"', 9, true);
 SELECT setval('"public"."work_order_status_work_order_status_id_seq"', 2, false);
-SELECT setval('"public"."work_order_work_order_id_seq"', 21509, true);
+SELECT setval('"public"."work_order_work_order_id_seq"', 21617, true);
 SELECT setval('"public"."zone_zone_id_seq"', 5, true);
 
 -- ----------------------------
@@ -5994,6 +6352,13 @@ CREATE INDEX "awb_updated_time_idx" ON "public"."awb" USING brin (
 ALTER TABLE "public"."awb" ADD CONSTRAINT "awb_pkey" PRIMARY KEY ("awb_id");
 
 -- ----------------------------
+-- Indexes structure for table awb_attr
+-- ----------------------------
+CREATE INDEX "awb_attr_awb_id" ON "public"."awb_attr" USING btree (
+  "awb_id" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+
+-- ----------------------------
 -- Primary Key structure for table awb_attr
 -- ----------------------------
 ALTER TABLE "public"."awb_attr" ADD CONSTRAINT "awb_attr_pkey" PRIMARY KEY ("awb_attr_id");
@@ -6060,6 +6425,19 @@ CREATE INDEX "awb_item_is_deleted_idx" ON "public"."awb_item" USING btree (
 -- Primary Key structure for table awb_item
 -- ----------------------------
 ALTER TABLE "public"."awb_item" ADD CONSTRAINT "awb_item_pkey" PRIMARY KEY ("awb_item_id");
+
+-- ----------------------------
+-- Indexes structure for table awb_item_attr
+-- ----------------------------
+CREATE INDEX "awb_item_attr_awb_attr_id_idx" ON "public"."awb_item_attr" USING btree (
+  "awb_attr_id" "pg_catalog"."int8_ops" ASC NULLS LAST
+);
+CREATE INDEX "awb_item_attr_awb_item_id_idx" ON "public"."awb_item_attr" USING btree (
+  "awb_item_id" "pg_catalog"."int8_ops" ASC NULLS LAST
+);
+CREATE INDEX "awb_item_attr_awb_number_idx" ON "public"."awb_item_attr" USING btree (
+  "awb_number" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
+);
 
 -- ----------------------------
 -- Primary Key structure for table awb_item_attr
@@ -6158,11 +6536,6 @@ ALTER TABLE "public"."awb_status_group_item" ADD CONSTRAINT "awb_status_group_it
 ALTER TABLE "public"."awb_track" ADD CONSTRAINT "awb_track_pkey" PRIMARY KEY ("awb_track_id");
 
 -- ----------------------------
--- Primary Key structure for table awb_trouble
--- ----------------------------
-ALTER TABLE "public"."awb_trouble" ADD CONSTRAINT "awb_trouble_pkey" PRIMARY KEY ("awb_trouble_id");
-
--- ----------------------------
 -- Primary Key structure for table awb_trouble_status
 -- ----------------------------
 ALTER TABLE "public"."awb_trouble_status" ADD CONSTRAINT "awb_trouble_status_pkey" PRIMARY KEY ("awb_trouble_status_id");
@@ -6196,6 +6569,9 @@ ALTER TABLE "public"."bag" ADD CONSTRAINT "bag_pkey" PRIMARY KEY ("bag_id");
 -- ----------------------------
 CREATE INDEX "bag_item_bag_id_idx" ON "public"."bag_item" USING btree (
   "bag_id" "pg_catalog"."int8_ops" ASC NULLS LAST
+);
+CREATE INDEX "bag_item_bag_item_id_idx" ON "public"."bag_item" USING btree (
+  "bag_item_id" "pg_catalog"."int8_ops" ASC NULLS LAST
 );
 CREATE INDEX "bag_item_bag_seq_idx" ON "public"."bag_item" USING btree (
   "bag_seq" "pg_catalog"."int4_ops" ASC NULLS LAST
@@ -6330,6 +6706,9 @@ ALTER TABLE "public"."customer" ADD CONSTRAINT "customer_pkey" PRIMARY KEY ("cus
 -- ----------------------------
 CREATE INDEX "code_rds_idx" ON "public"."customer_account" USING btree (
   "code_rds" "pg_catalog"."jsonb_ops" ASC NULLS LAST
+);
+CREATE INDEX "customer_account_customer_account_id_idx" ON "public"."customer_account" USING btree (
+  "customer_account_id" "pg_catalog"."int8_ops" ASC NULLS LAST
 );
 CREATE INDEX "customer_account_is_email_at_night_idx" ON "public"."customer_account" USING btree (
   "is_email_at_night" "pg_catalog"."bool_ops" DESC NULLS LAST
@@ -6491,9 +6870,29 @@ CREATE INDEX "do_pickup_detail_work_order_id_idx" ON "public"."do_pickup_detail"
 ALTER TABLE "public"."do_pickup_detail" ADD CONSTRAINT "do_pickup_detail_pkey" PRIMARY KEY ("do_pickup_detail_id");
 
 -- ----------------------------
+-- Indexes structure for table do_pod
+-- ----------------------------
+CREATE INDEX "do_pod_branch_id_to_idx" ON "public"."do_pod" USING btree (
+  "branch_id_to" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+CREATE INDEX "do_pod_employee_id_driver_idx" ON "public"."do_pod" USING btree (
+  "employee_id_driver" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+CREATE INDEX "do_pod_partner_logistic_id_idx" ON "public"."do_pod" USING btree (
+  "partner_logistic_id" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+
+-- ----------------------------
 -- Primary Key structure for table do_pod
 -- ----------------------------
 ALTER TABLE "public"."do_pod" ADD CONSTRAINT "do_pod_pkey" PRIMARY KEY ("do_pod_id");
+
+-- ----------------------------
+-- Indexes structure for table do_pod_deliver
+-- ----------------------------
+CREATE INDEX "do_pod_deliver_employee_id_driver_idx" ON "public"."do_pod_deliver" USING btree (
+  "employee_id_driver" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
 
 -- ----------------------------
 -- Primary Key structure for table do_pod_deliver
@@ -6501,14 +6900,56 @@ ALTER TABLE "public"."do_pod" ADD CONSTRAINT "do_pod_pkey" PRIMARY KEY ("do_pod_
 ALTER TABLE "public"."do_pod_deliver" ADD CONSTRAINT "do_pod_deliver_pkey" PRIMARY KEY ("do_pod_deliver_id");
 
 -- ----------------------------
+-- Indexes structure for table do_pod_deliver_detail
+-- ----------------------------
+CREATE INDEX "do_pod_deliver_detail_awb_item_id_idx" ON "public"."do_pod_deliver_detail" USING btree (
+  "awb_item_id" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+CREATE INDEX "do_pod_deliver_detail_awb_status_id_last_idx" ON "public"."do_pod_deliver_detail" USING btree (
+  "awb_status_id_last" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+CREATE INDEX "do_pod_deliver_detail_reason_id_idx" ON "public"."do_pod_deliver_detail" USING btree (
+  "reason_id_last" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+
+-- ----------------------------
 -- Primary Key structure for table do_pod_deliver_detail
 -- ----------------------------
 ALTER TABLE "public"."do_pod_deliver_detail" ADD CONSTRAINT "do_pod_deliver_detail_pkey" PRIMARY KEY ("do_pod_deliver_detail_id");
 
 -- ----------------------------
+-- Indexes structure for table do_pod_deliver_history
+-- ----------------------------
+CREATE INDEX "do_pod_deliver_history_awb_status_id_idx" ON "public"."do_pod_deliver_history" USING btree (
+  "awb_status_id" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+CREATE INDEX "do_pod_deliver_history_reason_id_idx" ON "public"."do_pod_deliver_history" USING btree (
+  "reason_id" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+
+-- ----------------------------
 -- Primary Key structure for table do_pod_deliver_history
 -- ----------------------------
 ALTER TABLE "public"."do_pod_deliver_history" ADD CONSTRAINT "do_pod_deliver_history_pkey" PRIMARY KEY ("do_pod_deliver_history_id");
+
+-- ----------------------------
+-- Indexes structure for table do_pod_detail
+-- ----------------------------
+CREATE INDEX "do_pod_detail_awb_item_id_idx" ON "public"."do_pod_detail" USING btree (
+  "awb_item_id" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+CREATE INDEX "do_pod_detail_bag_item_id_idx" ON "public"."do_pod_detail" USING btree (
+  "bag_item_id" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+CREATE INDEX "do_pod_detail_do_pod_status_id_last_idx" ON "public"."do_pod_detail" USING btree (
+  "do_pod_status_id_last" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+CREATE INDEX "do_pod_detail_employee_journey_id_in_idx" ON "public"."do_pod_detail" USING btree (
+  "employee_journey_id_in" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
+CREATE INDEX "do_pod_detail_employee_journey_id_out_idx" ON "public"."do_pod_detail" USING btree (
+  "employee_journey_id_out" "pg_catalog"."int8_ops" DESC NULLS LAST
+);
 
 -- ----------------------------
 -- Primary Key structure for table do_pod_detail
@@ -6524,6 +6965,36 @@ ALTER TABLE "public"."do_pod_history" ADD CONSTRAINT "do_pod_history_pkey" PRIMA
 -- Primary Key structure for table do_pod_status
 -- ----------------------------
 ALTER TABLE "public"."do_pod_status" ADD CONSTRAINT "do_pod_status_pkey" PRIMARY KEY ("do_pod_status_id");
+
+-- ----------------------------
+-- Primary Key structure for table do_smd
+-- ----------------------------
+ALTER TABLE "public"."do_smd" ADD CONSTRAINT "do_smd_pkey" PRIMARY KEY ("do_smd_id");
+
+-- ----------------------------
+-- Primary Key structure for table do_smd_detail
+-- ----------------------------
+ALTER TABLE "public"."do_smd_detail" ADD CONSTRAINT "do_smd_detail_pkey" PRIMARY KEY ("do_smd_detail_id");
+
+-- ----------------------------
+-- Primary Key structure for table do_smd_detail_item
+-- ----------------------------
+ALTER TABLE "public"."do_smd_detail_item" ADD CONSTRAINT "do_smd_detail_item_pkey" PRIMARY KEY ("do_smd_detail_item_id");
+
+-- ----------------------------
+-- Primary Key structure for table do_smd_history
+-- ----------------------------
+ALTER TABLE "public"."do_smd_history" ADD CONSTRAINT "do_smd_history_pkey" PRIMARY KEY ("do_smd_history_id");
+
+-- ----------------------------
+-- Primary Key structure for table do_smd_status
+-- ----------------------------
+ALTER TABLE "public"."do_smd_status" ADD CONSTRAINT "do_smd_status_pkey" PRIMARY KEY ("do_smd_status_id");
+
+-- ----------------------------
+-- Primary Key structure for table do_smd_vehicle
+-- ----------------------------
+ALTER TABLE "public"."do_smd_vehicle" ADD CONSTRAINT "do_smd_vehicle_pkey" PRIMARY KEY ("do_smd_vehicle_id");
 
 -- ----------------------------
 -- Primary Key structure for table do_smu
@@ -6783,6 +7254,13 @@ ALTER TABLE "public"."package_price_special" ADD CONSTRAINT "package_price_speci
 ALTER TABLE "public"."package_price_special" ADD CONSTRAINT "package_price_special_pkey" PRIMARY KEY ("package_price_special_id");
 
 -- ----------------------------
+-- Indexes structure for table package_type
+-- ----------------------------
+CREATE INDEX "package_type_package_type_id_idx" ON "public"."package_type" USING btree (
+  "package_type_id" "pg_catalog"."int8_ops" ASC NULLS LAST
+);
+
+-- ----------------------------
 -- Primary Key structure for table package_type
 -- ----------------------------
 ALTER TABLE "public"."package_type" ADD CONSTRAINT "package_type_pkey" PRIMARY KEY ("package_type_id");
@@ -6911,6 +7389,21 @@ ALTER TABLE "public"."place" ADD CONSTRAINT "place_pkey" PRIMARY KEY ("place_id"
 -- Primary Key structure for table place_type
 -- ----------------------------
 ALTER TABLE "public"."place_type" ADD CONSTRAINT "place_type_pkey" PRIMARY KEY ("place_type_id");
+
+-- ----------------------------
+-- Primary Key structure for table pod_filter
+-- ----------------------------
+ALTER TABLE "public"."pod_filter" ADD CONSTRAINT "pod_filter_pkey" PRIMARY KEY ("pod_filter_id");
+
+-- ----------------------------
+-- Primary Key structure for table pod_filter_detail
+-- ----------------------------
+ALTER TABLE "public"."pod_filter_detail" ADD CONSTRAINT "pod_filter_detail_pkey" PRIMARY KEY ("pod_filter_detail_id");
+
+-- ----------------------------
+-- Primary Key structure for table pod_filter_detail_item
+-- ----------------------------
+ALTER TABLE "public"."pod_filter_detail_item" ADD CONSTRAINT "pod_filter_detail_item_pkey" PRIMARY KEY ("pod_filter_detail_item_id");
 
 -- ----------------------------
 -- Primary Key structure for table pod_scan

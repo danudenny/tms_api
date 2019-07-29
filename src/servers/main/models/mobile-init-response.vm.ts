@@ -1,9 +1,6 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { MobileDeliveryVm } from './mobile-delivery.vm';
 import { ReasonVm } from './reason.vm';
-import { RedeliveryVm } from './redelivery.vm';
-
-export class InitDataVm {
-}
 
 export class MobileInitDataResponseVm {
   @ApiModelProperty({ type: () => [ReasonVm] })
@@ -12,6 +9,9 @@ export class MobileInitDataResponseVm {
   @ApiModelProperty()
   awbStatus: any;
 
-  @ApiModelProperty()
-  delivery: any;
+  @ApiModelProperty({ type: [MobileDeliveryVm] })
+  delivery: MobileDeliveryVm[];
+
+  @ApiModelProperty({ format: 'date-time' })
+  serverDateTime: string;
 }

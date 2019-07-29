@@ -51,6 +51,7 @@
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
     "ms": "^2.1.2",
+    "on-change": "^1.6.2",
     "patch-package": "^6.1.2",
     "path-to-regexp": "^3.0.0",
     "pg": "^7.9.0",

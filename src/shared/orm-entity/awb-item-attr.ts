@@ -1,4 +1,7 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+
+import { AwbItem } from './awb-item';
+import { BagItem } from './bag-item';
 import { Branch } from './branch';
 
 @Entity('awb_item_attr', { schema: 'public' })
@@ -138,4 +141,25 @@ export class AwbItemAttr extends BaseEntity {
   })
   @JoinColumn({ name: 'branch_id_last' })
   branchLast: Branch;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_district_filtered',
+  })
+  isDistrictFiltered: boolean;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'bag_item_id_last',
+  })
+  bagItemIdLast: boolean;
+
+  @OneToOne(() => BagItem)
+  @JoinColumn({ name: 'bag_item_id_last'})
+  bagItemLast: BagItem;
+
+  @OneToOne(() => AwbItem)
+  @JoinColumn({ name: 'awb_item_id'})
+  awbItem: AwbItem;
 }

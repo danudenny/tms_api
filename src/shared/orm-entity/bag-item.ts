@@ -45,6 +45,12 @@ export class BagItem extends BaseEntity {
   })
   branchIdLast: number;
 
+  @Column('integer', {
+    nullable: false,
+    name: 'branch_id_next',
+  })
+  branchIdNext: number;
+
   @Column('bigint', {
     nullable: false,
     name: 'user_id_created',

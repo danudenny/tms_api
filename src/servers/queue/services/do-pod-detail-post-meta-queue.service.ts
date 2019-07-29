@@ -9,6 +9,7 @@ import { OrionRepositoryService } from '../../../shared/services/orion-repositor
 import { getManager } from 'typeorm';
 import { DoPodDeliverDetail } from '../../../shared/orm-entity/do-pod-deliver-detail';
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
+import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 
 export class DoPodDetailPostMetaQueueService {
   public static queue = new Bull('awb-history-post-meta', {
@@ -33,47 +34,63 @@ export class DoPodDetailPostMetaQueueService {
     this.queue.process(async job => {
       const data = job.data;
       await getManager().transaction(async transactionalEntityManager => {
-        // NOTE: Insert Data awb history
-        const awbHistory = AwbHistory.create({
-          awbItemId: data.awbItemId,
-          userId: data.userId,
-          branchId: data.branchId,
-          employeeIdDriver: data.employeeIdDriver,
-          historyDate: moment().toDate(),
-          awbStatusId: data.awbStatusId,
-          awbHistoryIdPrev: data.awbHistoryIdPrev,
-          userIdCreated: data.userIdCreated,
-          userIdUpdated: data.userIdUpdated,
-        });
-        await transactionalEntityManager.save(awbHistory);
 
-        // NOTE: update if exists or insert awbItemSummary
-        let awbItemSummary = await AwbItemSummary.findOne({
+        // NOTE: get awb_ite_attr and update awb_history_id
+        const awbItemAttr = await AwbItemAttr.findOne({
           where: {
             awbItemId: data.awbItemId,
-            summaryDate: moment().format('YYYY-MM-DD'),
-            isDeleted: false,
           },
         });
 
-        if (!awbItemSummary) {
-          // create data
-          awbItemSummary = AwbItemSummary.create();
-          awbItemSummary.userIdCreated = data.userIdCreated;
-        }
-        const convertTimeObject = moment().startOf('day').toDate();
+        if (awbItemAttr) {
+          // NOTE: Insert Data awb history
+          const awbHistory = AwbHistory.create({
+            awbItemId: data.awbItemId,
+            userId: data.userId,
+            branchId: data.branchId,
+            employeeIdDriver: data.employeeIdDriver,
+            historyDate: moment().toDate(),
+            awbStatusId: data.awbStatusId,
+            awbHistoryIdPrev: awbItemAttr.awbHistoryIdLast,
+            userIdCreated: data.userIdCreated,
+            userIdUpdated: data.userIdUpdated,
+          });
 
-        // Update data
-        awbItemSummary.summaryDate = convertTimeObject;
-        awbItemSummary.awbItemId = awbHistory.awbItemId;
-        awbItemSummary.awbHistoryIdLast = awbHistory.awbHistoryId;
-        awbItemSummary.awbStatusIdLast = awbHistory.awbStatusId;
-        awbItemSummary.awbStatusIdLastPublic = data.awbStatusIdLastPublic;
-        awbItemSummary.userIdLast = awbHistory.userId;
-        awbItemSummary.branchIdLast = awbHistory.branchId;
-        awbItemSummary.historyDateLast = awbHistory.historyDate;
-        awbItemSummary.userIdUpdated = data.userIdUpdated;
-        await transactionalEntityManager.save(awbItemSummary);
+          await transactionalEntityManager.save(awbHistory);
+
+          // NOTE: update if exists or insert awbItemSummary
+          let awbItemSummary = await AwbItemSummary.findOne({
+            where: {
+              awbItemId: data.awbItemId,
+              summaryDate: moment().format('YYYY-MM-DD'),
+              isDeleted: false,
+            },
+          });
+
+          if (!awbItemSummary) {
+            // create data
+            awbItemSummary = AwbItemSummary.create();
+            awbItemSummary.userIdCreated = data.userIdCreated;
+          }
+          const convertTimeObject = moment().startOf('day').toDate();
+
+          // Update data
+          awbItemSummary.summaryDate = convertTimeObject;
+          awbItemSummary.awbItemId = awbHistory.awbItemId;
+          awbItemSummary.awbHistoryIdLast = awbHistory.awbHistoryId;
+          awbItemSummary.awbStatusIdLast = awbHistory.awbStatusId;
+          awbItemSummary.awbStatusIdLastPublic = data.awbStatusIdLastPublic;
+          awbItemSummary.userIdLast = awbHistory.userId;
+          awbItemSummary.branchIdLast = awbHistory.branchId;
+          awbItemSummary.historyDateLast = awbHistory.historyDate;
+          awbItemSummary.userIdUpdated = data.userIdUpdated;
+          await transactionalEntityManager.save(awbItemSummary);
+
+          // update data awb_item_attr
+          awbItemAttr.awbHistoryIdLast = awbHistory.awbHistoryId;
+          awbItemAttr.updatedTime = moment().toDate();
+          await transactionalEntityManager.save(awbItemAttr);
+        }
       }); // end transaction
 
     });
@@ -99,22 +116,9 @@ export class DoPodDetailPostMetaQueueService {
     });
     q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
     const doPodDetail = await q.exec();
-    let awbHistoryIdPrev = null;
 
     if (doPodDetail) {
-      // find last data awb history
-      const awbHistoryLast = await AwbHistory.find({
-        select: ['awbHistoryId'],
-        where: {
-          awbItemId:  doPodDetail.awbItemId,
-        },
-        order: { awbHistoryId: 'DESC'},
-        take: 1,
-      });
 
-      if (awbHistoryLast && awbHistoryLast.length) {
-        awbHistoryIdPrev = awbHistoryLast[0].awbHistoryId;
-      }
       // TODO: find awbStatusIdLastPublic on awb_status
       // provide data
       const obj = {
@@ -123,7 +127,6 @@ export class DoPodDetailPostMetaQueueService {
         branchId: doPodDetail.doPod.branchId,
         awbStatusId: AWB_STATUS.OUT_BRANCH,
         awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-        awbHistoryIdPrev,
         userIdCreated: doPodDetail.userIdCreated,
         userIdUpdated: doPodDetail.userIdUpdated,
         employeeIdDriver: null,
@@ -158,22 +161,7 @@ export class DoPodDetailPostMetaQueueService {
     q.where(e => e.doPodDeliverDetailId, w => w.equals(doPodDeliverDetailId));
     const doPodDetailDeliver = await q.exec();
 
-    let awbHistoryIdPrev = null;
-
     if (doPodDetailDeliver) {
-      // find last data awb history
-      const awbHistoryLast = await AwbHistory.find({
-        select: ['awbHistoryId'],
-        where: {
-          awbItemId: doPodDetailDeliver.awbItemId,
-        },
-        order: { awbHistoryId: 'DESC' },
-        take: 1,
-      });
-
-      if (awbHistoryLast && awbHistoryLast.length) {
-        awbHistoryIdPrev = awbHistoryLast[0].awbHistoryId;
-      }
       // TODO: find awbStatusIdLastPublic on awb_status
       // provide data
       const obj = {
@@ -182,7 +170,6 @@ export class DoPodDetailPostMetaQueueService {
         branchId: doPodDetailDeliver.doPodDeliver.branchId,
         awbStatusId: AWB_STATUS.ANT,
         awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-        awbHistoryIdPrev,
         userIdCreated: doPodDetailDeliver.userIdCreated,
         userIdUpdated: doPodDetailDeliver.userIdUpdated,
         employeeIdDriver: doPodDetailDeliver.doPodDeliver.employeeIdDriver,
@@ -213,22 +200,8 @@ export class DoPodDetailPostMetaQueueService {
     });
     q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
     const doPodDetail = await q.exec();
-    let awbHistoryIdPrev = null;
 
     if (doPodDetail) {
-      // find last data awb history
-      const awbHistoryLast = await AwbHistory.find({
-        select: ['awbHistoryId'],
-        where: {
-          awbItemId,
-        },
-        order: { awbHistoryId: 'DESC' },
-        take: 1,
-      });
-
-      if (awbHistoryLast && awbHistoryLast.length) {
-        awbHistoryIdPrev = awbHistoryLast[0].awbHistoryId;
-      }
       // TODO: find awbStatusIdLastPublic on awb_status
       // provide data
       const obj = {
@@ -237,7 +210,6 @@ export class DoPodDetailPostMetaQueueService {
         branchId: doPodDetail.doPod.branchId,
         awbStatusId: AWB_STATUS.OUT_HUB,
         awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-        awbHistoryIdPrev,
         userIdCreated: doPodDetail.userIdCreated,
         userIdUpdated: doPodDetail.userIdUpdated,
         employeeIdDriver: null,
@@ -270,22 +242,8 @@ export class DoPodDetailPostMetaQueueService {
     });
     q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
     const doPodDetail = await q.exec();
-    let awbHistoryIdPrev = null;
 
     if (doPodDetail) {
-      // find last data awb history
-      const awbHistoryLast = await AwbHistory.find({
-        select: ['awbHistoryId'],
-        where: {
-          awbItemId: doPodDetail.awbItemId,
-        },
-        order: { awbHistoryId: 'DESC' },
-        take: 1,
-      });
-
-      if (awbHistoryLast && awbHistoryLast.length) {
-        awbHistoryIdPrev = awbHistoryLast[0].awbHistoryId;
-      }
       // TODO: find awbStatusIdLastPublic on awb_status
       // provide data
       const obj = {
@@ -294,7 +252,6 @@ export class DoPodDetailPostMetaQueueService {
         branchId: doPodDetail.podScanIn.branchId,
         awbStatusId: AWB_STATUS.IN_BRANCH,
         awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-        awbHistoryIdPrev,
         userIdCreated: doPodDetail.userIdCreated,
         userIdUpdated: doPodDetail.userIdUpdated,
         employeeIdDriver: null,
@@ -327,22 +284,8 @@ export class DoPodDetailPostMetaQueueService {
     });
     q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
     const doPodDetail = await q.exec();
-    let awbHistoryIdPrev = null;
 
     if (doPodDetail) {
-      // find last data awb history
-      const awbHistoryLast = await AwbHistory.find({
-        select: ['awbHistoryId'],
-        where: {
-          awbItemId,
-        },
-        order: { awbHistoryId: 'DESC' },
-        take: 1,
-      });
-
-      if (awbHistoryLast && awbHistoryLast.length) {
-        awbHistoryIdPrev = awbHistoryLast[0].awbHistoryId;
-      }
       // TODO: find awbStatusIdLastPublic on awb_status
       // provide data
       const obj = {
@@ -351,7 +294,6 @@ export class DoPodDetailPostMetaQueueService {
         branchId: doPodDetail.doPod.branchId,
         awbStatusId: AWB_STATUS.IN_BRANCH,
         awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-        awbHistoryIdPrev,
         userIdCreated: doPodDetail.userIdCreated,
         userIdUpdated: doPodDetail.userIdUpdated,
         employeeIdDriver: null,
