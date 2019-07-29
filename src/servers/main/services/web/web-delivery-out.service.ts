@@ -478,16 +478,6 @@ export class WebDeliveryOutService {
 
               // AFTER Scan OUT ===============================================
               // #region after scanout
-              // Update bag_item set bag_item_status_id = 1000
-              const bagItem = await BagItem.findOne({
-                where: {
-                  bagItemId: bagData.bagItemId,
-                },
-              });
-              bagItem.bagItemStatusIdLast = 1000;
-              bagItem.updatedTime = timeNow;
-              bagItem.userIdUpdated = authMeta.userId;
-              BagItem.save(bagItem);
               // Update do_pod
               const doPod = await DoPod.findOne({
                 where: {
@@ -495,6 +485,18 @@ export class WebDeliveryOutService {
                   isDeleted: false,
                 },
               });
+              // Update bag_item set bag_item_status_id = 1000
+              const bagItem = await BagItem.findOne({
+                where: {
+                  bagItemId: bagData.bagItemId,
+                },
+              });
+              bagItem.bagItemStatusIdLast = 1000;
+              bagItem.branchIdLast = doPod.branchId;
+              bagItem.branchIdNext = doPod.branchIdTo;
+              bagItem.updatedTime = timeNow;
+              bagItem.userIdUpdated = authMeta.userId;
+              BagItem.save(bagItem);
 
               // counter total scan in
               doPod.totalScanOut = doPod.totalScanOut + 1;
