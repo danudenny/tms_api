@@ -229,7 +229,7 @@ export class WebDeliveryOutService {
                 );
 
                 // NOTE: queue by Bull
-                DoPodDetailPostMetaQueueService.createJobByDoPodDetailId(
+                DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
                   doPodDetail.doPodDetailId,
                 );
                 // #endregion after scanout
@@ -376,7 +376,7 @@ export class WebDeliveryOutService {
                 await DeliveryService.updateAwbAttr(awb.awbItemId, null, AWB_STATUS.ANT);
 
                 // NOTE: queue by Bull
-                DoPodDetailPostMetaQueueService.createJobByDoPodDeliverDetailId(
+                DoPodDetailPostMetaQueueService.createJobByScanOutAwbDeliver(
                   doPodDeliverDetail.doPodDeliverDetailId,
                 );
                 // #endregion after scanout
