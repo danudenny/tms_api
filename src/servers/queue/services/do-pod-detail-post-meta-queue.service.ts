@@ -10,6 +10,7 @@ import { getManager } from 'typeorm';
 import { DoPodDeliverDetail } from '../../../shared/orm-entity/do-pod-deliver-detail';
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
+import { AwbStatus } from '../../../shared/orm-entity/awb-status';
 
 export class DoPodDetailPostMetaQueueService {
   public static queue = new Bull('awb-history-post-meta', {
@@ -96,7 +97,7 @@ export class DoPodDetailPostMetaQueueService {
     });
   }
 
-  public static async createJobByDoPodDetailId(doPodDetailId: number) {
+  public static async createJobByScanOutAwb(doPodDetailId: number) {
 
     const doPodDetailRepository = new OrionRepositoryService(DoPodDetail);
     const q = doPodDetailRepository.findOne();
@@ -137,7 +138,7 @@ export class DoPodDetailPostMetaQueueService {
 
   }
 
-  public static async createJobByDoPodDeliverDetailId(doPodDeliverDetailId: number) {
+  public static async createJobByScanOutAwbDeliver(doPodDeliverDetailId: number) {
 
     const doPodDetailRepository = new OrionRepositoryService(
       DoPodDeliverDetail,
@@ -301,5 +302,61 @@ export class DoPodDetailPostMetaQueueService {
 
       return DoPodDetailPostMetaQueueService.queue.add(obj);
     }
+  }
+
+  public static async createJobByMobileSyncAwb(doPodDeliverDetailId: number, awbStatusId: number) {
+
+    const doPodDetailRepository = new OrionRepositoryService(
+      DoPodDeliverDetail,
+    );
+    const q = doPodDetailRepository.findOne();
+    // Manage relation (default inner join)
+    q.innerJoin(e => e.doPodDeliver);
+
+    q.select({
+      doPodDeliverDetailId: true,
+      awbItemId: true,
+      userIdCreated: true,
+      userIdUpdated: true,
+      doPodDeliver: {
+        doPodDeliverId: true,
+        employeeIdDriver: true,
+        branchId: true,
+        userId: true,
+      },
+    });
+    q.where(e => e.doPodDeliverDetailId, w => w.equals(doPodDeliverDetailId));
+    const doPodDetailDeliver = await q.exec();
+
+    if (doPodDetailDeliver) {
+      // TODO: find awbStatusIdLastPublic on awb_status
+      // need to be reviewed ??
+      let awbStatusIdLastPublic = AWB_STATUS.ON_PROGRESS;
+      // const awbStatus = await AwbStatus.findOne({
+      //   select: ['awbStatusId', 'awbVisibility'],
+      //   where: {
+      //     awbStatusId,
+      //   },
+      // });
+      // if (awbStatus.awbVisibility == 20) {
+      //   awbStatusIdLastPublic = awbStatusId;
+      // }
+
+      // provide data
+      const obj = {
+        awbStatusId,
+        awbStatusIdLastPublic,
+        awbItemId: doPodDetailDeliver.awbItemId,
+        userId: doPodDetailDeliver.doPodDeliver.userId,
+        branchId: doPodDetailDeliver.doPodDeliver.branchId,
+        userIdCreated: doPodDetailDeliver.userIdCreated,
+        userIdUpdated: doPodDetailDeliver.userIdUpdated,
+        employeeIdDriver:
+          doPodDetailDeliver.doPodDeliver.employeeIdDriver,
+      };
+
+      return DoPodDetailPostMetaQueueService.queue.add(obj);
+    }
+
   }
 }

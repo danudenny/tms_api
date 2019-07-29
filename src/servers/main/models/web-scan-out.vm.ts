@@ -1,7 +1,9 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { SearchColumnsVm, WebDeliverySearchVm } from '../../../shared/models/base-filter-search.payload.vm';
 import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
-import { IsDefined } from 'class-validator';
+import { IsDefined, ValidateNested } from 'class-validator';
+import { IsBagNumber, IsAwbNumber } from '../../../shared/decorators/custom-validation.decorator';
+import { Type } from 'class-transformer';
 
 // Scan Out Awb
 export class WebScanOutAwbVm  {
@@ -18,6 +20,8 @@ export class WebScanOutAwbVm  {
   })
   // TODO: validation if array length = 0
   @IsDefined({message: 'Nomor resi harus diisi'})
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
   awbNumber: string[];
 }
 
@@ -36,6 +40,8 @@ export class WebScanOutBagVm {
   })
   // TODO: validation if array length = 0
   @IsDefined({message: 'No gabung paket harus diisi'})
+  @IsBagNumber({ message: 'No gabung paket tidak sesuai' })
+  @Type(() => String)
   bagNumber: string[];
 }
 

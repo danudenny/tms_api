@@ -17,6 +17,9 @@ export class ScanAwbVm {
   status: string;
 
   @ApiModelProperty()
+  districtId: number;
+
+  @ApiModelProperty()
   trouble: boolean;
 
   @ApiModelProperty()

@@ -7,6 +7,7 @@ import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { MobileDeliveryVm } from '../../models/mobile-delivery.vm';
 import { MobileSyncPayloadVm } from '../../models/mobile-sync-payload.vm';
 import { MobileInitDataService } from './mobile-init-data.service';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 
 export class MobileSyncService {
   public static async syncByRequest(payload: MobileSyncPayloadVm) {
@@ -16,8 +17,13 @@ export class MobileSyncService {
       }
     });
 
-    // TODO: Post each payload.deliveries.doPodDeliverDetailId to awb_history and awb_item_summary
-
+    // NOTE: queue by Bull
+    for (const deliverDetail of payload.deliveries) {
+      DoPodDetailPostMetaQueueService.createJobByMobileSyncAwb(
+        deliverDetail.doPodDeliverDetailId,
+        deliverDetail.awbStatusId,
+      );
+    }
     return MobileInitDataService.getInitDataByRequest(payload.lastSyncDateTime);
   }
 

@@ -1,5 +1,7 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
-import { IsDefined } from 'class-validator';
+import { IsDefined, ValidateNested } from 'class-validator';
+import { IsBagNumber } from '../../../shared/decorators/custom-validation.decorator';
+import { Type } from 'class-transformer';
 
 export class WebScanInBagVm  {
 
@@ -9,5 +11,7 @@ export class WebScanInBagVm  {
   })
   // TODO: validation if array length = 0
   @IsDefined({message: 'No gabung paket harus diisi'})
+  @IsBagNumber({ message: 'No gabung paket tidak sesuai' })
+  @Type(() => String)
   bagNumber: string[];
 }

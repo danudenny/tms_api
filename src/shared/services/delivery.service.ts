@@ -117,6 +117,7 @@ export class DeliveryService {
       bagItemId: true,
       bagItemStatusIdLast: true,
       branchIdLast: true,
+      branchIdNext: true,
       bagSeq: true,
       bag: {
         representativeIdTo: true,

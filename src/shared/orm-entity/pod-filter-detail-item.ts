@@ -46,6 +46,18 @@ export class PodFilterDetailItem extends TmsBaseEntity {
   })
   awbTroubleId: number;
 
+  @Column('int', {
+    nullable: false,
+    name: 'to_type',
+  })
+  toType: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'to_id',
+  })
+  toId: number;
+
   @Column('bigint', {
     nullable: false,
     name: 'user_id_created',
