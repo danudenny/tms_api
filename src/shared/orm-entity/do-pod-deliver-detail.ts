@@ -67,7 +67,7 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
     nullable: true,
     name: 'desc_last',
   })
-  desc_last: string | null;
+  descLast: string | null;
 
   @Column('bigint', {
     nullable: false,

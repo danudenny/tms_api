@@ -16,6 +16,7 @@ import { RoleController } from './master/role.controller';
 import { MobileCheckInController } from './mobile/mobile-check-in.controller';
 import { MobileCheckOutController } from './mobile/mobile-check-out.controller';
 import { MobileDashboardController } from './mobile/mobile-dashboard.controller';
+import { MobileSyncController } from './mobile/mobile-sync.controller';
 import { PrintController } from './print.controller';
 import { WebAwbFilterController } from './web/web-awb-filter.controller';
 import { WebAwbTroubleControlelr } from './web/web-awb-trouble.controller';
@@ -44,6 +45,7 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
     RolePermissionController,
     MobileCheckInController,
     MobileCheckOutController,
+    MobileSyncController,
     WebAwbFilterController,
     WebAwbTroubleControlelr,
     WebBagTroubleControlelr,

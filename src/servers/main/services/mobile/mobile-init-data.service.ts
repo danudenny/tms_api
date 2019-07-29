@@ -2,7 +2,6 @@ import { HttpStatus } from '@nestjs/common';
 import moment = require('moment');
 import { createQueryBuilder } from 'typeorm';
 
-import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { Reason } from '../../../../shared/orm-entity/reason';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -74,6 +73,7 @@ export class MobileInitDataService {
     );
     qb.addSelect('do_pod_deliver.do_pod_deliver_id', 'doPodDeliverId');
     qb.addSelect('awb.awb_id', 'awbId');
+    qb.addSelect('awb_item_attr.awb_item_id', 'awbItemId');
     qb.addSelect('awb.awb_date', 'awbDate');
     qb.addSelect('awb.awb_number', 'awbNumber');
     qb.addSelect('awb_status.awb_status_id', 'awbStatusId');
@@ -102,7 +102,7 @@ export class MobileInitDataService {
       'awb_item_attr',
       'awb_item_attr.awb_item_id = do_pod_deliver_detail.awb_item_id',
     );
-    qb.innerJoin('awb', 'awb', 'awb.awb_id = awb.awb_id');
+    qb.innerJoin('awb', 'awb', 'awb.awb_id = awb_item.awb_id');
     qb.leftJoin(
       'package_type',
       'package_type',
@@ -117,18 +117,28 @@ export class MobileInitDataService {
       qbJoin => {
         qbJoin.select('array_agg(row_to_json(t))', 'data').from(qbJoinFrom => {
           qbJoinFrom.addSelect(
+            'do_pod_deliver_history.do_pod_deliver_history_id',
+            'doPodDeliverHistoryId',
+          );
+          qbJoinFrom.addSelect(
             'do_pod_deliver_history.history_date_time',
             'historyDateTime',
           );
+          qbJoinFrom.addSelect('reason.reason_id', 'reasonId');
           qbJoinFrom.addSelect('reason.reason_code', 'reasonCode');
+          qbJoinFrom.addSelect('do_pod_deliver_history.desc', 'reasonNotes');
           qbJoinFrom.addSelect('employee.employee_id', 'employeeId');
           qbJoinFrom.addSelect('employee.fullname', 'employeeName');
+          qbJoinFrom.addSelect('do_pod_deliver_history.awb_status_id', 'awbStatusId');
+          qbJoinFrom.addSelect('do_pod_deliver_history.latitude_delivery', 'latitudeDelivery');
+          qbJoinFrom.addSelect('do_pod_deliver_history.longitude_delivery', 'longitudeDelivery');
           qbJoinFrom.from('do_pod_deliver_history', 'do_pod_deliver_history');
           qbJoinFrom.where(
             'do_pod_deliver_history.do_pod_deliver_detail_id = do_pod_deliver_detail.do_pod_deliver_detail_id',
           );
           qbJoinFrom.leftJoin(
             qbJoinFromJoin => {
+              qbJoinFromJoin.addSelect('reason.reason_id');
               qbJoinFromJoin.addSelect('reason.reason_code');
               qbJoinFromJoin.from('reason', 'reason');
               qbJoinFromJoin.where(
@@ -159,10 +169,6 @@ export class MobileInitDataService {
       't',
       'true',
     );
-
-    qb.andWhere('awb_item_attr.awb_status_id_last = :awbStatusId', {
-      awbStatusId: POD_TYPE.DELIVERY,
-    });
 
     const authMeta = AuthService.getAuthMetadata();
     qb.andWhere('do_pod_deliver.employee_id_driver = :currentUserId', {

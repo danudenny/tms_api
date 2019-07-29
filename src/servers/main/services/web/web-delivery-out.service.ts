@@ -1,40 +1,42 @@
-// #region import
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  WebScanOutCreateVm,
-  WebScanOutAwbVm,
-  WebScanOutCreateDeliveryVm,
-  WebScanOutBagVm,
-} from '../../models/web-scan-out.vm';
-import {
-  WebScanOutCreateResponseVm,
-  WebScanOutAwbResponseVm,
-  WebScanOutAwbListResponseVm,
-  WebScanOutBagResponseVm,
-  WebScanOutDeliverListResponseVm,
-} from '../../models/web-scan-out-response.vm';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { DoPodRepository } from '../../../../shared/orm-repository/do-pod.repository';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
-import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
-import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
-import { MetaService } from '../../../../shared/services/meta.service';
-import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
-import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import moment = require('moment');
-import { DoPod } from '../../../../shared/orm-entity/do-pod';
-import { DeliveryService } from '../../../../shared/services/delivery.service';
-import { RedisService } from '../../../../shared/services/redis.service';
+
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
-import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
-import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { DoPod } from '../../../../shared/orm-entity/do-pod';
+import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
+import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
+import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
+import { DoPodRepository } from '../../../../shared/orm-repository/do-pod.repository';
+import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbTroubleService } from '../../../../shared/services/awb-trouble.service';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { DeliveryService } from '../../../../shared/services/delivery.service';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { RedisService } from '../../../../shared/services/redis.service';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
+import {
+  WebScanOutAwbListResponseVm,
+  WebScanOutAwbResponseVm,
+  WebScanOutBagResponseVm,
+  WebScanOutCreateResponseVm,
+  WebScanOutDeliverListResponseVm,
+} from '../../models/web-scan-out-response.vm';
+import {
+  WebScanOutAwbVm,
+  WebScanOutBagVm,
+  WebScanOutCreateDeliveryVm,
+  WebScanOutCreateVm,
+} from '../../models/web-scan-out.vm';
+
+// #region import
 // #endregion
 
 @Injectable()
@@ -353,6 +355,7 @@ export class WebDeliveryOutService {
                 const doPodDeliverDetail = DoPodDeliverDetail.create();
                 doPodDeliverDetail.doPodDeliverId = payload.doPodId;
                 doPodDeliverDetail.awbItemId = awb.awbItemId;
+                doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
                 await DoPodDeliverDetail.save(doPodDeliverDetail);
 
                 // AFTER Scan OUT ===============================================

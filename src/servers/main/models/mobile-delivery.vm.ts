@@ -14,6 +14,9 @@ export class MobileDeliveryVm {
   @ApiModelProperty()
   awbId: number;
 
+  @ApiModelProperty()
+  awbItemId: number;
+
   @ApiModelProperty({ format: 'date-time' })
   awbDate: string;
 

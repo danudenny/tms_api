@@ -4,14 +4,14 @@ export class MobileDeliveryHistoryVm {
   @ApiModelProperty()
   doPodDeliverHistoryId: number;
 
-  @ApiModelProperty()
-  historyDateTime: Date;
-
-  @ApiModelProperty()
-  reasonCode: string;
+  @ApiModelProperty({ format: 'date-time' })
+  historyDateTime: string;
 
   @ApiModelProperty()
   reasonId: number;
+
+  @ApiModelProperty()
+  reasonCode: string;
 
   @ApiModelProperty()
   reasonNotes: string;

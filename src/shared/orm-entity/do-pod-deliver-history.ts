@@ -1,9 +1,10 @@
-import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { DoPodDeliverDetail } from './do-pod-deliver-detail';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('do_pod_deliver_history', { schema: 'public' })
-export class DoPodDeliverHistory extends BaseEntity {
+export class DoPodDeliverHistory extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'do_pod_deliver_history_id',
@@ -70,37 +71,6 @@ export class DoPodDeliverHistory extends BaseEntity {
     nullable: true,
   })
   desc: string | null;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_created',
-  })
-  userIdCreated: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'created_time',
-  })
-  createdTime: Date;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_updated',
-  })
-  userIdUpdated: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'updated_time',
-  })
-  updatedTime: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
 
   @ManyToOne(() => DoPodDeliverDetail)
   @JoinColumn({ name: 'do_pod_deliver_detail_id' })

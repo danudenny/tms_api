@@ -1,11 +1,16 @@
 import { HttpStatus } from '@nestjs/common';
+import moment = require('moment');
 
 import { Awb } from '../../../shared/orm-entity/awb';
 import { AwbAttr } from '../../../shared/orm-entity/awb-attr';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 import TEST_GLOBAL_VARIABLE from '../../../test/test-global-variable';
 import { TestUtility } from '../../../test/test-utility';
+import { MobileDeliveryHistoryVm } from '../models/mobile-delivery-history.vm';
+import { MobileDeliveryVm } from '../models/mobile-delivery.vm';
 import { MobileInitDataResponseVm } from '../models/mobile-init-response.vm';
+import { MobileSyncPayloadVm } from '../models/mobile-sync-payload.vm';
+import { MobileSyncResponseVm } from '../models/mobile-sync-response.vm';
 import { WebScanOutAwbResponseVm, WebScanOutCreateResponseVm } from '../models/web-scan-out-response.vm';
 import { WebScanOutAwbVm, WebScanOutCreateVm } from '../models/web-scan-out.vm';
 
@@ -14,6 +19,8 @@ describe('mobile-sync-spec', () => {
   let awbAttr: AwbAttr;
   const awbItemAttrs: AwbItemAttr[] = [];
   let doPodId = 0;
+  let initData: MobileInitDataResponseVm;
+  let awbDelivery: MobileDeliveryVm;
 
   beforeAll(async () => {
     awb = await TEST_GLOBAL_VARIABLE.entityFactory
@@ -43,7 +50,7 @@ describe('mobile-sync-spec', () => {
     }
   });
 
-  it('Surat Jalan Deliver', async () => {
+  it('Surat jalan antar', async () => {
     const payload = new WebScanOutCreateVm();
     payload.doPodType = 14000; // Deliver
     payload.branchIdTo = 123;
@@ -65,7 +72,7 @@ describe('mobile-sync-spec', () => {
       });
   });
 
-  it('Deliver Scan Awb', async () => {
+  it('Scan awb', async () => {
     const payload = new WebScanOutAwbVm();
     payload.doPodId = doPodId;
     payload.awbNumber = [awb.awbNumber];
@@ -79,15 +86,60 @@ describe('mobile-sync-spec', () => {
   });
 
   it('Correct mobile init data', async () => {
-    return TestUtility.getAuthenticatedMainServerAxios('web')
+    return TestUtility.getAuthenticatedMainServerAxios('mobile')
       .post('mobile/initData')
       .then(response => {
         expect(response.status).toEqual(HttpStatus.OK);
         expect(response).toBeDefined();
 
         const result = response.data as MobileInitDataResponseVm;
-        const awbNumbers = result.delivery.map(e => e.awbNumber);
-        expect(awbNumbers).toContain(awb.awbNumber);
+
+        initData = result;
+
+        awbDelivery = result.delivery.find(e => e.awbNumber === awb.awbNumber);
+        expect(awbDelivery).toBeDefined();
+      });
+  });
+
+  it('Sync correctly', async () => {
+    const payload = new MobileSyncPayloadVm();
+    payload.lastSyncDateTime = new Date().toISOString();
+
+    const deliveryHistory = new MobileDeliveryHistoryVm();
+    deliveryHistory.awbStatusId = 22000;
+    deliveryHistory.reasonId = 16;
+    deliveryHistory.reasonNotes = 'Lahan kosong paboss';
+    deliveryHistory.historyDateTime = '2019-01-01 00:00:00';
+    deliveryHistory.employeeId = 2981;
+    deliveryHistory.latitudeDelivery = '123';
+    deliveryHistory.longitudeDelivery = '456';
+
+    const delivery = Object.assign({}, awbDelivery);
+    delivery.awbStatusId = 22000;
+    delivery.deliveryHistory = [deliveryHistory];
+
+    payload.deliveries = [delivery];
+
+    return TestUtility.getAuthenticatedMainServerAxios('mobile')
+      .post('mobile/sync', payload)
+      .then(response => {
+        expect(response.status).toEqual(HttpStatus.OK);
+
+        const result = response.data as MobileSyncResponseVm;
+        const updatedDelivery = result.delivery.find(e => e.awbNumber === delivery.awbNumber);
+
+        expect(updatedDelivery).toBeDefined();
+        expect(updatedDelivery.deliveryHistory.length).toEqual(1);
+        expect(updatedDelivery.awbStatusId).toEqual(deliveryHistory.awbStatusId);
+
+        const updatedDeliveryHistory = updatedDelivery.deliveryHistory[0];
+        expect(updatedDeliveryHistory.awbStatusId).toEqual(deliveryHistory.awbStatusId);
+        expect(updatedDeliveryHistory.reasonId).toEqual(deliveryHistory.reasonId);
+        expect(updatedDeliveryHistory.reasonNotes).toEqual(deliveryHistory.reasonNotes);
+        expect(moment(updatedDeliveryHistory.historyDateTime).format('YYYY-MM-DD HH:mm:ss')).toEqual(deliveryHistory.historyDateTime);
+        expect(updatedDeliveryHistory.employeeId).toEqual(deliveryHistory.employeeId);
+        expect(updatedDeliveryHistory.latitudeDelivery).toEqual(deliveryHistory.latitudeDelivery);
+        expect(updatedDeliveryHistory.longitudeDelivery).toEqual(deliveryHistory.longitudeDelivery);
       });
   });
 });
