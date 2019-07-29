@@ -262,8 +262,8 @@ export class DoPodDetailPostMetaQueueService {
     }
   }
 
-  public static async createJobByScanInBag(doPodDetailId: number, awbItemId: number) {
-    // TODO: ???
+  public static async createJobByAwbFilter(doPodDetailId: number, awbItemId: number) {
+    // TODO: need to be reviewed ??
     const doPodDetailRepository = new OrionRepositoryService(
       DoPodDetail,
     );
@@ -331,7 +331,7 @@ export class DoPodDetailPostMetaQueueService {
     if (doPodDetailDeliver) {
       // TODO: find awbStatusIdLastPublic on awb_status
       // need to be reviewed ??
-      let awbStatusIdLastPublic = AWB_STATUS.ON_PROGRESS;
+      const awbStatusIdLastPublic = AWB_STATUS.ON_PROGRESS;
       // const awbStatus = await AwbStatus.findOne({
       //   select: ['awbStatusId', 'awbVisibility'],
       //   where: {
