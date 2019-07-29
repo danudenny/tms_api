@@ -19,6 +19,12 @@ export class WebScanInResponseVm {
   percenScanInOut: number;
 
   @ApiModelProperty()
+  totalScanIn: number;
+
+  @ApiModelProperty()
+  totalScanOut: number;
+
+  @ApiModelProperty()
   lastDateScanIn: string;
 
   @ApiModelProperty()
@@ -26,6 +32,9 @@ export class WebScanInResponseVm {
 
   @ApiModelProperty()
   nickname: string;
+
+  @ApiModelProperty()
+  branchTo: string;
 }
 
 export class WebScanInDeliverResponseVm {

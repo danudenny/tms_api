@@ -590,6 +590,8 @@ export class WebDeliveryOutService {
   ): Promise<WebScanOutAwbListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['branchTo'] = 't1.branch_id_to';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
@@ -621,18 +623,26 @@ export class WebDeliveryOutService {
       ['t1.do_pod_date_time', 'doPodDateTime'],
       ['t1.description', 'description'],
       ['t1.percen_scan_in_out', 'percenScanInOut'],
+      ['t1.total_scan_in', 'totalScanIn'],
+      ['t1.total_scan_out', 'totalScanOut'],
       ['t1.last_date_scan_in', 'lastDateScanIn'],
       ['t1.last_date_scan_out', 'lastDateScanOut'],
       ['t2.nickname', 'nickname'],
+      ['t3.branch_name', 'branchTo'],
     );
 
     q.innerJoin(e => e.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.branchTo, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     if (isHub) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.TRANSIT_HUB));
+      q.andWhere(e => e.totalScanOut, w => w.greaterThan(0));
     } else {
       q.andWhere(e => e.doPodType, w => w.notEquals(POD_TYPE.TRANSIT_HUB));
+      q.andWhere(e => e.totalScanOut, w => w.greaterThan(0));
     }
 
     const data = await q.exec();
@@ -733,44 +743,13 @@ export class WebDeliveryOutService {
 
     q.selectRaw(
       ['t2.awb_number', 'awbNumber'],
-      ['t2.total_weight', 'weight'],
+      [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t2.consignee_name', 'consigneeName'],
     );
 
     q.innerJoin(e => e.awbItem.awb, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
-    // q.andWhere('do_pod_detail.do_pod_id = :doPodId', {
-    //   doPodId: payload.doPodId,
-    // });
-
-    // qb.addSelect('awb.awb_number', 'awbNumber');
-    // qb.addSelect('awb.total_weight', 'weight');
-    // qb.addSelect('awb.consignee_name', 'consigneeName');
-
-    // qb.from('do_pod_detail', 'do_pod_detail');
-    // qb.innerJoin(
-    //   'awb_item',
-    //   'awb_item',
-    //   'awb_item.awb_item_id = do_pod_detail.awb_item_id AND awb_item.is_deleted = false',
-    // );
-    // qb.innerJoin(
-    //   'awb',
-    //   'awb',
-    //   'awb.awb_id = awb_item.awb_id AND awb.is_deleted = false',
-    // );
-    // qb.where('do_pod_detail.do_pod_id = :doPodId', {
-    //   doPodId: payload.doPodId,
-    // });
-
-    // const result = new WebDeliveryListResponseVm();
-    // const total = await qb.getCount();
-
-    // result.data = await qb.getRawMany();
-    // result.paging = MetaService.set(1, 10, total);
-
-    // return result;
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -810,7 +789,7 @@ export class WebDeliveryOutService {
 
     q.selectRaw(
       ['t2.awb_number', 'awbNumber'],
-      ['t2.total_weight', 'weight'],
+      [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t2.consignee_name', 'consigneeName'],
     );
 

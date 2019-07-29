@@ -150,6 +150,7 @@ export class AuthService {
           branchId: item.branch_id,
           branchName: item.branch.branchName,
           branchCode: item.branch.branchCode,
+          isHeadOffice: item.branch.isHeadOffice,
         };
         return newObj;
       });
@@ -220,6 +221,7 @@ export class AuthService {
 
       result.branchName = branch.branchName;
       result.branchCode = branch.branchCode;
+      result.isHeadOffice = branch.isHeadOffice;
 
       // FIXME: populate rolesAccessPermissions from user.userRoles[0].role.role_permissions
       result.rolesAccessPermissions = [

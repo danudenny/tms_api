@@ -27,7 +27,7 @@ export class DoPod extends TmsBaseEntity {
   })
   refDoPodCode: string | null;
 
-  @Column('timestamp without time zone', {
+  @Column('timestamp', {
     nullable: false,
     name: 'do_pod_date_time',
   })
@@ -130,7 +130,7 @@ export class DoPod extends TmsBaseEntity {
   })
   userIdCreated: number;
 
-  @Column('timestamp without time zone', {
+  @Column('timestamp', {
     nullable: false,
     name: 'created_time',
   })
@@ -203,13 +203,13 @@ export class DoPod extends TmsBaseEntity {
   })
   percenScanInOut: number | 0;
 
-  @Column('timestamp without time zone', {
+  @Column('timestamp', {
     nullable: true,
     name: 'last_date_scan_in',
   })
   lastDateScanIn: Date | null;
 
-  @Column('timestamp without time zone', {
+  @Column('timestamp', {
     nullable: true,
     name: 'last_date_scan_out',
   })
