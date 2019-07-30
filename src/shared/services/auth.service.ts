@@ -155,9 +155,6 @@ export class AuthService {
         return newObj;
       });
 
-      // Logger.log('############## Result permissionRoles ==================================================');
-      // Logger.log(result);
-
       return result;
     } else {
       ContextualErrorService.throwObj(
@@ -246,6 +243,7 @@ export class AuthService {
         'pod_awb_problem',
         'do_pod_bag_list',
         'do_pod_deliver_list',
+        'pod_filter_list',
       ];
 
       return result;

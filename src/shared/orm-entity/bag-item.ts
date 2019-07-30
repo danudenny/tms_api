@@ -1,13 +1,16 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+
 import { Bag } from './bag';
 import { BagItemAwb } from './bag-item-awb';
-import { BagItemStatus } from './bag-item-status';
+import { Branch } from './branch';
+import { Employee } from './employee';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('bag_item', { schema: 'public' })
 @Index('bag_item_bag_id_idx', ['bagId'])
 @Index('bag_item_bag_seq_idx', ['bagSeq'])
 @Index('bag_item_is_deleted_idx', ['isDeleted'])
-export class BagItem extends BaseEntity {
+export class BagItem extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'bag_item_id',
@@ -52,37 +55,6 @@ export class BagItem extends BaseEntity {
   branchIdNext: number;
 
   @Column('bigint', {
-    nullable: false,
-    name: 'user_id_created',
-  })
-  userIdCreated: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'created_time',
-  })
-  createdTime: Date;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_updated',
-  })
-  userIdUpdated: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'updated_time',
-  })
-  updatedTime: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
-
-  @Column('bigint', {
     nullable: true,
     name: 'bag_item_history_id',
   })
@@ -94,7 +66,20 @@ export class BagItem extends BaseEntity {
   })
   baggingIdLast: number | null;
 
-  // relation model
+  @Column('integer', {
+    nullable: true,
+    name: 'employee_id_last',
+  })
+  employeeIdLast: number;
+
+  @ManyToOne(() => Employee)
+  @JoinColumn({ name: 'employee_id_last' })
+  employee: Employee;
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_next' })
+  branchNext: Branch;
+
   @ManyToOne(() => Bag, bag => bag.bagItems, {
     onDelete: 'CASCADE',
   })
