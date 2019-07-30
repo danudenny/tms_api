@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import { findIndex, snakeCase } from 'lodash';
 import { SelectQueryBuilder } from 'typeorm';
 
@@ -5,7 +6,6 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../external/nestjs-s
 import { OrionRepositoryQueryService } from '../services/orion-repository-query.service';
 import { RequestOrionRepositoryService } from '../services/request-orion-repository.service';
 import { RequestQueryBuidlerService } from '../services/request-query-builder.service';
-import { Transform } from 'class-transformer';
 
 export class MetaPayloadPageSort {
   // TODO: Delete this and all dependants
@@ -109,7 +109,13 @@ export class BaseMetaPayloadVm {
   }
 
   applyPaginationToQueryBuilder(queryBuilder: SelectQueryBuilder<any>) {
-    RequestQueryBuidlerService.applyMetaPayloadPagination(queryBuilder, this);
+    RequestQueryBuidlerService.applyMetaPayloadPagination(queryBuilder, this, false);
+
+    return queryBuilder;
+  }
+
+  applyRawPaginationToQueryBuilder(queryBuilder: SelectQueryBuilder<any>) {
+    RequestQueryBuidlerService.applyMetaPayloadPagination(queryBuilder, this, true);
 
     return queryBuilder;
   }

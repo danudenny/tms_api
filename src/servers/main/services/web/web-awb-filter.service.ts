@@ -25,6 +25,7 @@ import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.res
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
 
 export class WebAwbFilterService {
 
@@ -345,10 +346,10 @@ export class WebAwbFilterService {
     const q = payload.buildQueryBuilder();
 
     q.select('d.*')
-      .addSelect('pfd.total_awb_filtered')
-      .addSelect('(pfd.total_awb_filtered - total_awb) as diff')
-      .addSelect('pfd.total_awb_not_in_bag')
-      .addSelect('pfd.total_awb_item')
+      .addSelect('pfd.total_awb_filtered', 'totalFiltered')
+      .addSelect('(pfd.total_awb_filtered - total_awb)', 'diffFiltered')
+      .addSelect('pfd.total_awb_not_in_bag', 'totalAwb')
+      .addSelect('pfd.total_awb_item', 'totalItem')
       .from(
         subQuery =>
           subQuery
@@ -366,8 +367,8 @@ export class WebAwbFilterService {
         'pfd.bag_item_id = d.bag_item_id AND pfd.is_deleted = false',
       );
 
-    const total = await q.getCount();
-    payload.applyPaginationToQueryBuilder(q);
+    const total = await QueryBuilderService.count(q, 'bag_item_id', true);
+    payload.applyRawPaginationToQueryBuilder(q);
     const data = await q.getRawMany();
 
     const result = new WebAwbFilterListResponseVm();

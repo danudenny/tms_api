@@ -8,6 +8,7 @@ export class RequestQueryBuidlerService {
   public static applyMetaPayloadPagination(
     queryBuilder: SelectQueryBuilder<any>,
     metaPayload: BaseMetaPayloadVm,
+    isRawQuery: boolean = true,
   ) {
     const page = toInteger(metaPayload.page) || 1;
     const take = toInteger(metaPayload.limit) || 10;
@@ -16,8 +17,14 @@ export class RequestQueryBuidlerService {
       skip = 0;
     }
 
-    queryBuilder.take(take);
-    queryBuilder.skip(skip);
+    if (isRawQuery) {
+      // for raw queries, it is best to use limit & offset
+      queryBuilder.limit(take);
+      queryBuilder.offset(skip);
+    } else {
+      queryBuilder.take(take);
+      queryBuilder.skip(skip);
+    }
   }
 
   public static applyMetaPayloadSort(

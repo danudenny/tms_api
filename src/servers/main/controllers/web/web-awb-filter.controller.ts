@@ -8,6 +8,7 @@ import { WebAwbFilterService } from '../../services/web/web-awb-filter.service';
 import { WebAwbFilterScanBagVm, WebAwbFilterScanAwbVm, WebAwbFilterFinishScanVm } from '../../models/web-awb-filter.vm';
 import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFilterFinishScanResponseVm } from '../../models/web-awb-filter-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
 
 @ApiUseTags('Web Delivery In')
 @Controller('web/pod/awb/filter')
@@ -51,7 +52,7 @@ export class WebAwbFilterController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebAwbFilterFinishScanResponseVm })
+  @ApiOkResponse({ type: WebAwbFilterListResponseVm })
   public async findAllAwbFilterList(@Body() payload: BaseMetaPayloadVm) {
     return this.webAwbFilterService.findAllAwbFilterList(payload);
   }
