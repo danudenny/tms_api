@@ -1,7 +1,7 @@
-import { castArray, toInteger } from 'lodash';
+import { camelCase, castArray, toInteger } from 'lodash';
 import { Brackets, createQueryBuilder, SelectQueryBuilder, WhereExpression } from 'typeorm';
 
-import { BaseMetaPayloadFilterVm, BaseMetaPayloadVm } from '../models/base-meta-payload.vm';
+import { BaseMetaPayloadFilterVm, BaseMetaPayloadFilterVmOperator, BaseMetaPayloadVm } from '../models/base-meta-payload.vm';
 import { BaseQueryPayloadVm } from '../models/base-query-payload.vm';
 
 export class RequestQueryBuidlerService {
@@ -54,13 +54,15 @@ export class RequestQueryBuidlerService {
             const field = metaPayload.resolveFieldAsFieldAlias(
               searchField.field,
             );
+
+            const searchFieldFilter = new BaseMetaPayloadFilterVm();
+            searchFieldFilter.field = field;
+            searchFieldFilter.operator = searchFieldFilter.operator || 'ilike';
+            searchFieldFilter.value = metaPayload.search;
+
             RequestQueryBuidlerService.applyMetaPayloadFilterItem(
               qbWhere,
-              {
-                field,
-                operator: searchField.operator || 'ilike',
-                value: metaPayload.search,
-              },
+              searchFieldFilter,
               'or',
               `search${searchFieldIdx}`,
             );
@@ -77,48 +79,7 @@ export class RequestQueryBuidlerService {
     filterVarId?: string,
   ) {
     const field = filter.field;
-
-    let operator = '=';
-    switch (filter.operator) {
-      case 'eq':
-        operator = '=';
-        break;
-      case 'neq':
-        operator = '!=';
-        break;
-      case 'like':
-      case 'ilike':
-      case 'sw':
-      case 'isw':
-      case 'ew':
-      case 'iew':
-        operator = 'LIKE';
-        break;
-      case 'gt':
-        operator = '>';
-        break;
-      case 'gte':
-        operator = '>=';
-        break;
-      case 'lt':
-        operator = '<';
-        break;
-      case 'lte':
-        operator = '<=';
-        break;
-      case 'in':
-        operator = 'IN';
-        break;
-      case 'nin':
-        operator = 'NOT IN';
-        break;
-      case 'null':
-        operator = 'IS NULL';
-        break;
-      case 'nnull':
-        operator = 'IS NOT NULL';
-        break;
-    }
+    const operator = this.convertFilterOperatorToSqlOperator(filter.operator);
 
     let value = filter.value;
     switch (filter.operator) {
@@ -156,7 +117,8 @@ export class RequestQueryBuidlerService {
         break;
     }
 
-    const filterVar = filterVarId ? `val${filterVarId}` : 'val';
+    // filterVar = branchName0, branchName1, depend on looping of applyMetaPayloadFilters
+    const filterVar = `${camelCase(filter.field)}${filterVarId !== null && filterVarId !== undefined ? filterVarId : ''}`;
     const filterVarValue = { [filterVar]: value };
     switch (filter.operator) {
       case 'in':
@@ -194,12 +156,14 @@ export class RequestQueryBuidlerService {
             }
 
             const field = metaPayload.resolveFieldAsFieldAlias(andFilter.field);
+            const clonedFilter = new BaseMetaPayloadFilterVm();
+            clonedFilter.field = field;
+            clonedFilter.operator = andFilter.operator;
+            clonedFilter.value = andFilter.value;
+
             this.applyMetaPayloadFilterItem(
               qbAndWhere,
-              {
-                ...andFilter,
-                field, // replace field with the one on fieldResolverMap if exists, this may help for field aliases that contains quote
-              },
+              clonedFilter,
               'and',
               andFilterIdx,
             );
@@ -262,13 +226,15 @@ export class RequestQueryBuidlerService {
                   const dotFields = andFilterGroup.field.split('.');
                   field = dotFields.map(dotField => `"${dotField}"`).join('.');
                 }
+
+                const clonedFilter = new BaseMetaPayloadFilterVm();
+                clonedFilter.field = field;
+                clonedFilter.operator = operator;
+                clonedFilter.value = andFilterGroup.value;
+
                 this.applyMetaPayloadFilterItem(
                   qbOrWhere,
-                  {
-                    ...andFilterGroup,
-                    operator,
-                    field, // replace field with the one on fieldResolverMap if exists, this may help for field aliases that contains quote
-                  },
+                  clonedFilter,
                   'and',
                   orFilterGroupIdx,
                 );
@@ -280,5 +246,51 @@ export class RequestQueryBuidlerService {
     }
 
     return qb;
+  }
+
+  public static convertFilterOperatorToSqlOperator(filterOperator: BaseMetaPayloadFilterVmOperator) {
+    let operator = '=';
+    switch (filterOperator) {
+      case 'eq':
+        operator = '=';
+        break;
+      case 'neq':
+        operator = '!=';
+        break;
+      case 'like':
+      case 'ilike':
+      case 'sw':
+      case 'isw':
+      case 'ew':
+      case 'iew':
+        operator = 'LIKE';
+        break;
+      case 'gt':
+        operator = '>';
+        break;
+      case 'gte':
+        operator = '>=';
+        break;
+      case 'lt':
+        operator = '<';
+        break;
+      case 'lte':
+        operator = '<=';
+        break;
+      case 'in':
+        operator = 'IN';
+        break;
+      case 'nin':
+        operator = 'NOT IN';
+        break;
+      case 'null':
+        operator = 'IS NULL';
+        break;
+      case 'nnull':
+        operator = 'IS NOT NULL';
+        break;
+    }
+
+    return operator;
   }
 }

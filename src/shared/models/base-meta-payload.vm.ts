@@ -54,6 +54,10 @@ export class BaseMetaPayloadFilterVm {
 
   @ApiModelProperty()
   value?: any;
+
+  get sqlOperator() {
+    return RequestQueryBuidlerService.convertFilterOperatorToSqlOperator(this.operator);
+  }
 }
 
 export class BaseMetaPayloadVm {
@@ -118,6 +122,17 @@ export class BaseMetaPayloadVm {
     RequestQueryBuidlerService.applyMetaPayloadPagination(queryBuilder, this, true);
 
     return queryBuilder;
+  }
+
+  ejectFilter(filterCritera: Partial<BaseMetaPayloadFilterVm>) {
+    const filterIdx = findIndex(this.filters, filterCritera);
+    if (filterIdx > -1) {
+      const filter = this.filters[filterIdx];
+      this.filters.splice(filterIdx, 1);
+      return filter;
+    }
+
+    return false;
   }
 
   resolveFieldAsFieldAlias(field: string) {
