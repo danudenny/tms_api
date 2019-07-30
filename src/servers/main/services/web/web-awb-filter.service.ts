@@ -20,6 +20,11 @@ import { PodFilterDetailItemRepository } from '../../../../shared/orm-repository
 import moment = require('moment');
 import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
 import { reduce } from 'rxjs/operators';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { RedisService } from '../../../../shared/services/redis.service';
+import { MetaService } from '../../../../shared/services/meta.service';
 
 export class WebAwbFilterService {
 
@@ -151,6 +156,7 @@ export class WebAwbFilterService {
         podFilterDetailId: payload.podFilterDetailId,
         isDeleted: false,
       },
+      select: ['podFilterDetailId'],
     });
     if (!podFilterDetailExists) {
       ContextualErrorService.throwObj({
@@ -244,8 +250,38 @@ export class WebAwbFilterService {
             await this.createPodFilterDetailItem(authMeta, payload, awbItemAttr, awbTrouble);
           }
 
-          // after scan filter done at all. do posting status last awb
+          // Update total_awb_filtered, total_awb_item, total_awb_not_in_bag
+          const keyRedis = `hold:awbfiltered:${podFilterDetailExists.podFilterDetailId}`;
+          const holdRedis = await RedisService.locking(
+            keyRedis,
+            'locking',
+          );
+          if (holdRedis) {
+            const podFilterDetail = await PodFilterDetail.findOne({
+              where: {
+                podFilterDetailId: podFilterDetailExists.podFilterDetailId,
+                isDeleted: false,
+              },
+            });
+            podFilterDetail.totalAwbItem = podFilterDetail.totalAwbItem + 1;
+            if (awbItemAttr.bagItemIdLast) {
+              podFilterDetail.totalAwbFiltered = podFilterDetail.totalAwbFiltered + 1;
+            } else {
+              podFilterDetail.totalAwbNotInBag = podFilterDetail.totalAwbNotInBag + 1;
 
+            }
+            podFilterDetail.endDateTime = moment().toDate();
+            podFilterDetail.updatedTime = moment().toDate();
+            podFilterDetail.userIdUpdated = authMeta.userId;
+            await podFilterDetail.save();
+
+            // remove key holdRedis
+            RedisService.del(keyRedis);
+          } else {
+
+          }
+
+          // after scan filter done at all. do posting status last awb
           // TODO: posting to awb_history, awb_item_summary
         }
       } else {
@@ -276,6 +312,69 @@ export class WebAwbFilterService {
     response.status = 'ok';
     response.message = 'Berhasil menutup Perwakilan ini';
     return response;
+  }
+
+  async findAllAwbFilterList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbFilterListResponseVm> {
+    // mapping field
+    // payload.fieldResolverMap['podScaninDateTime'] = 't1.pod_scanin_date_time';
+    // payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    // payload.fieldResolverMap['branchIdScan'] = 't3.branch_id';
+    // payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
+    // payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
+    // payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
+    // payload.fieldResolverMap['employeeName'] = 't5.nickname';
+
+    // SELECT d.*, pfd.total_awb_filtered, (pfd.total_awb_filtered - total_awb) as diff,
+    //   pfd.total_awb_not_in_bag, pfd.total_awb_item
+    // FROM (
+    //   SELECT bia.bag_item_id, COUNT(1) as total_awb
+    //   FROM bag_item_awb bia
+    //   WHERE bia.is_deleted = false AND bia.bag_item_id = 2174092
+    //   GROUP BY bia.bag_item_id
+    // ) as d
+    // INNER JOIN pod_filter_detail pfd ON pfd.bag_item_id = d.bag_item_id AND pfd.is_deleted = false
+
+    // mapping search field and operator default ilike
+    // payload.globalSearchFields = [
+    //   {
+    //     field: 'podScaninDateTime',
+    //   },
+    // ];
+    const q = payload.buildQueryBuilder();
+
+    q.select('d.*')
+      .addSelect('pfd.total_awb_filtered')
+      .addSelect('(pfd.total_awb_filtered - total_awb) as diff')
+      .addSelect('pfd.total_awb_not_in_bag')
+      .addSelect('pfd.total_awb_item')
+      .from(
+        subQuery =>
+          subQuery
+            .select('bia.bag_item_id')
+            .addSelect('COUNT(1) as total_awb')
+            .from('bag_item_awb', 'bia')
+            .where('bia.is_deleted = false')
+            .andWhere('bia.bag_item_id = :bagItemId', { bagItemId: 2174092 })
+            .groupBy('bia.bag_item_id'),
+        'd',
+      )
+      .innerJoin(
+        'pod_filter_detail',
+        'pfd',
+        'pfd.bag_item_id = d.bag_item_id AND pfd.is_deleted = false',
+      );
+
+    const total = await q.getCount();
+    payload.applyPaginationToQueryBuilder(q);
+    const data = await q.getRawMany();
+
+    const result = new WebAwbFilterListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 
   async createPodFilter(authMeta, permissonPayload, bagData) {
@@ -331,6 +430,8 @@ export class WebAwbFilterService {
       podFilterDetail.bagItemId = bagData.bagItemId;
       podFilterDetail.scanDateTime = moment().toDate();
       podFilterDetail.podFilterId = podFilter.podFilterId;
+      podFilterDetail.startDateTime = moment().toDate();
+      podFilterDetail.endDateTime = moment().toDate();
       podFilterDetail.createdTime = moment().toDate();
       podFilterDetail.userIdCreated = authMeta.userId;
       podFilterDetail.updatedTime = moment().toDate();

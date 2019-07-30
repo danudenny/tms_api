@@ -26,6 +26,18 @@ export class PodFilterDetail extends TmsBaseEntity {
   })
   scanDateTime: Date;
 
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'start_date_time',
+  })
+  startDateTime: Date;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'end_date_time',
+  })
+  endDateTime: Date;
+
   @Column('bigint', {
     nullable: false,
     name: 'bag_item_id',
@@ -38,6 +50,20 @@ export class PodFilterDetail extends TmsBaseEntity {
     name: 'total_awb_item',
   })
   totalAwbItem: number | null;
+
+  @Column('integer', {
+    nullable: false,
+    default: () => 0,
+    name: 'total_awb_filtered',
+  })
+  totalAwbFiltered: number | null;
+
+  @Column('integer', {
+    nullable: false,
+    default: () => 0,
+    name: 'total_awb_not_in_bag',
+  })
+  totalAwbNotInBag: number | null;
 
   @Column('boolean', {
     nullable: false,
