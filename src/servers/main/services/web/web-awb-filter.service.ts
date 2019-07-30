@@ -320,6 +320,7 @@ export class WebAwbFilterService {
   ): Promise<WebAwbFilterListResponseVm> {
     // mapping field
     payload.fieldResolverMap['filteredDateTime'] = 'pfd.scan_date_time';
+    payload.fieldFilterManualMap['filteredDateTime'] = true;
     // payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
     // payload.fieldResolverMap['branchIdScan'] = 't3.branch_id';
     // payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
@@ -352,7 +353,7 @@ export class WebAwbFilterService {
       .addSelect('d.total_awb_item', 'totalItem')
       .addSelect('CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, \'0\'))', 'bagNumberSeq')
       .from(
-        subQuery =>
+        subQuery => {
           subQuery
             .select('pfd.pod_filter_detail_id')
             .addSelect('pfd.bag_item_id')
@@ -362,11 +363,15 @@ export class WebAwbFilterService {
             .addSelect('pfd.total_awb_item')
             .from('pod_filter_detail', 'pfd')
             .innerJoin('bag_item_awb', 'bia', 'bia.bag_item_id = pfd.bag_item_id AND bia.is_deleted = false')
-            .where('pfd.scan_date_time >= ?')
-            .andWhere('pfd.scan_date_time < ?')
-            .andWhere('pfd.is_deleted = false')
+
+          payload.applyFiltersToQueryBuilder(subQuery, ['filteredDateTime']);
+
+          subQuery.andWhere('pfd.is_deleted = false')
             .groupBy('pfd.pod_filter_detail_id')
-            .addGroupBy('pfd.bag_item_id'),
+            .addGroupBy('pfd.bag_item_id');
+
+          return subQuery;
+        },
         'd',
       )
       .innerJoin(
