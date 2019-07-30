@@ -663,6 +663,7 @@ export class WebDeliveryOutService {
   ): Promise<WebScanOutDeliverListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_deliver_date_time';
+    payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
@@ -846,7 +847,9 @@ export class WebDeliveryOutService {
             CONCAT (t3.bag_number,t2.bag_seq) END`,
         'bagNumber',
       ],
-      ['t2.weight', 'weight'],
+      ['COUNT (t4.*)', 'totalAwb'],
+      ['t3.representative_id_to', 'representativeIdTo'],
+      [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
 
     q.innerJoin(e => e.bagItem, 't2', j =>
@@ -855,6 +858,10 @@ export class WebDeliveryOutService {
     q.leftJoin(e => e.bagItem.bag, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoin(e => e.bagItem.bagItemAwbs, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw('t3.bag_number, t2.bag_seq, t2.weight, t3.representative_id_to');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
