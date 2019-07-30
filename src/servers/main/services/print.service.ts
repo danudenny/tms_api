@@ -13,8 +13,10 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodPayloadQueryVm,
   ) {
-    const doPod = await RepositoryService.doPod
-      .findOne()
+    const q = RepositoryService.doPod.findOne();
+    q.leftJoin(e => e.doPodDetails);
+
+    const doPod = await q
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
         doPodCode: true,
@@ -77,8 +79,10 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodDeliverPayloadQueryVm,
   ) {
-    const doPodDeliver = await RepositoryService.doPodDeliver
-      .findOne()
+    const q = RepositoryService.doPodDeliver.findOne();
+    q.leftJoin(e => e.doPodDeliverDetails);
+
+    const doPodDeliver = await q
       .select({
         doPodDeliverId: true, // needs to be selected due to do_pod_deliver relations are being included
         doPodDeliverCode: true,
@@ -143,8 +147,10 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintBagItemPayloadQueryVm,
   ) {
-    const bagItem = await RepositoryService.bagItem
-      .findOne()
+    const q = RepositoryService.bagItem.findOne();
+    q.leftJoin(e => e.bagItemAwbs);
+
+    const bagItem = await q
       .select({
         bagItemId: queryParams.id, // needs to be selected due to do_pod_deliver relations are being included
         bagSeq: true,
