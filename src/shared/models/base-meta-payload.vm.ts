@@ -56,7 +56,9 @@ export class BaseMetaPayloadFilterVm {
   value?: any;
 
   get sqlOperator() {
-    return RequestQueryBuidlerService.convertFilterOperatorToSqlOperator(this.operator);
+    return RequestQueryBuidlerService.convertFilterOperatorToSqlOperator(
+      this.operator,
+    );
   }
 }
 
@@ -83,6 +85,7 @@ export class BaseMetaPayloadVm {
 
   autoConvertFieldsToSnakeCase: boolean = true;
   fieldResolverMap: { [key: string]: string } = {};
+  fieldFilterManualMap: { [key: string]: boolean } = {};
 
   private _globalSearchFields: BaseMetaPayloadVmGlobalSearchField[] = [];
   get globalSearchFields() {
@@ -112,14 +115,32 @@ export class BaseMetaPayloadVm {
     );
   }
 
+  applyFiltersToQueryBuilder(
+    queryBuilder: SelectQueryBuilder<any>,
+    fieldNamesToFilter?: string | string[],
+    fieldNamesToIgnore?: string | string[],
+  ) {
+    RequestQueryBuidlerService.applyMetaPayloadFilters(queryBuilder, this, fieldNamesToFilter, fieldNamesToIgnore);
+
+    return queryBuilder;
+  }
+
   applyPaginationToQueryBuilder(queryBuilder: SelectQueryBuilder<any>) {
-    RequestQueryBuidlerService.applyMetaPayloadPagination(queryBuilder, this, false);
+    RequestQueryBuidlerService.applyMetaPayloadPagination(
+      queryBuilder,
+      this,
+      false,
+    );
 
     return queryBuilder;
   }
 
   applyRawPaginationToQueryBuilder(queryBuilder: SelectQueryBuilder<any>) {
-    RequestQueryBuidlerService.applyMetaPayloadPagination(queryBuilder, this, true);
+    RequestQueryBuidlerService.applyMetaPayloadPagination(
+      queryBuilder,
+      this,
+      true,
+    );
 
     return queryBuilder;
   }

@@ -145,12 +145,25 @@ export class RequestQueryBuidlerService {
   public static applyMetaPayloadFilters(
     queryBuilder: SelectQueryBuilder<any>,
     metaPayload: BaseMetaPayloadVm,
+    fieldNamesToFilter?: string | string[],
+    fieldNamesToIgnore?: string | string[],
   ) {
     if (metaPayload.filters && metaPayload.filters.length) {
+      let targetFilters: BaseMetaPayloadFilterVm[] = metaPayload.filters;
+      if (fieldNamesToFilter) {
+        fieldNamesToFilter = castArray(fieldNamesToFilter);
+        targetFilters = metaPayload.filters.filter(f => fieldNamesToFilter.includes(f.field));
+      }
+
+      if (fieldNamesToIgnore) {
+        fieldNamesToIgnore = castArray(fieldNamesToIgnore);
+        targetFilters = metaPayload.filters.filter(f => !fieldNamesToIgnore.includes(f.field));
+      }
+
       queryBuilder.andWhere(
         new Brackets(qbAndWhere => {
-          for (const andFilterIdx in metaPayload.filters) {
-            const andFilter = metaPayload.filters[andFilterIdx];
+          for (const andFilterIdx in targetFilters) {
+            const andFilter = targetFilters[andFilterIdx];
             if (!andFilter.value) {
               continue;
             }
@@ -179,7 +192,7 @@ export class RequestQueryBuidlerService {
   ) {
     const queryBuilder = createQueryBuilder();
 
-    this.applyMetaPayloadFilters(queryBuilder, metaPayload);
+    this.applyMetaPayloadFilters(queryBuilder, metaPayload, null, Object.keys(metaPayload.fieldFilterManualMap));
     this.applyMetaPayloadSearch(queryBuilder, metaPayload);
     this.applyMetaPayloadSort(queryBuilder, metaPayload);
 
