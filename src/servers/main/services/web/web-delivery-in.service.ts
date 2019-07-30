@@ -263,6 +263,7 @@ export class WebDeliveryInService {
                 },
               });
               bagItem.bagItemStatusIdLast = 2000;
+              bagItem.branchIdLast = permissonPayload.branchId;
               bagItem.updatedTime = timeNow;
               bagItem.userIdUpdated = authMeta.userId;
               BagItem.save(bagItem);
