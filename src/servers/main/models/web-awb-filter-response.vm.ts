@@ -79,6 +79,9 @@ export class WebAwbFilterScanBagResponseVm {
 
 export class WebAwbFilterResponseVm {
   @ApiModelProperty()
+  bagItemId: number;
+
+  @ApiModelProperty()
   bagNumberSeq: string;
 
   @ApiModelProperty()

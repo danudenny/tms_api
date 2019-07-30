@@ -319,7 +319,7 @@ export class WebAwbFilterService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbFilterListResponseVm> {
     // mapping field
-    // payload.fieldResolverMap['podScaninDateTime'] = 't1.pod_scanin_date_time';
+    payload.fieldResolverMap['filteredDateTime'] = 'pfd.scan_date_time';
     // payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
     // payload.fieldResolverMap['branchIdScan'] = 't3.branch_id';
     // payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
@@ -345,29 +345,42 @@ export class WebAwbFilterService {
     // ];
     const q = payload.buildQueryBuilder();
 
-    q.select('d.*')
-      .addSelect('pfd.total_awb_filtered', 'totalFiltered')
-      .addSelect('(pfd.total_awb_filtered - total_awb)', 'diffFiltered')
-      .addSelect('pfd.total_awb_not_in_bag', 'totalAwb')
-      .addSelect('pfd.total_awb_item', 'totalItem')
+    q.select('d.bag_item_id', 'bagItemId')
+      .addSelect('d.total_awb_filtered', 'totalFiltered')
+      .addSelect('(d.total_awb_filtered - total_awb)', 'diffFiltered')
+      .addSelect('d.total_awb_not_in_bag', 'totalAwb')
+      .addSelect('d.total_awb_item', 'totalItem')
+      .addSelect('CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, \'0\'))', 'bagNumberSeq')
       .from(
         subQuery =>
           subQuery
-            .select('bia.bag_item_id')
+            .select('pfd.pod_filter_detail_id')
+            .addSelect('pfd.bag_item_id')
             .addSelect('COUNT(1) as total_awb')
-            .from('bag_item_awb', 'bia')
-            .where('bia.is_deleted = false')
-            .andWhere('bia.bag_item_id = :bagItemId', { bagItemId: 2174092 })
-            .groupBy('bia.bag_item_id'),
+            .addSelect('pfd.total_awb_filtered')
+            .addSelect('pfd.total_awb_not_in_bag')
+            .addSelect('pfd.total_awb_item')
+            .from('pod_filter_detail', 'pfd')
+            .innerJoin('bag_item_awb', 'bia', 'bia.bag_item_id = pfd.bag_item_id AND bia.is_deleted = false')
+            .where('pfd.scan_date_time >= ?')
+            .andWhere('pfd.scan_date_time < ?')
+            .andWhere('pfd.is_deleted = false')
+            .groupBy('pfd.pod_filter_detail_id')
+            .addGroupBy('pfd.bag_item_id'),
         'd',
       )
       .innerJoin(
-        'pod_filter_detail',
-        'pfd',
-        'pfd.bag_item_id = d.bag_item_id AND pfd.is_deleted = false',
+        'bag_item',
+        'bi',
+        'bi.bag_item_id = d.bag_item_id AND bi.is_deleted = false',
+      )
+      .innerJoin(
+        'bag',
+        'b',
+        'b.bag_id = bi.bag_id AND bi.is_deleted = false',
       );
 
-    const total = await QueryBuilderService.count(q, 'bag_item_id', true);
+    const total = await QueryBuilderService.count(q, '1');
     payload.applyRawPaginationToQueryBuilder(q);
     const data = await q.getRawMany();
 
