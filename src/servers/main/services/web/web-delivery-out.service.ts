@@ -710,7 +710,7 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.doPodDeliverDetails.awbItem.awb, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('t1.do_pod_deliver_id, t2.nickname, t4.total_cod_value');
+    q.groupByRaw('t1.do_pod_deliver_id, t2.nickname');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
