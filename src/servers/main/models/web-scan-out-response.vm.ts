@@ -60,6 +60,9 @@ export class WebScanInDeliverResponseVm {
   totalAwb: number;
 
   @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
   nickname: string;
 }
 
