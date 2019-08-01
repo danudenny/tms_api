@@ -53,6 +53,7 @@ export class DeliveryService {
   }
 
   public static async updateAwbAttr(awbItemId: number, branchIdNext: number, status: number) {
+    // TODO: fix data user id last (from session login or params mobile sync)
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timeNow = moment().toDate();
