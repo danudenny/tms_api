@@ -12,6 +12,7 @@ import {
   WebScanOutAwbListPayloadVm,
   WebScanOutCreateDeliveryVm,
   WebScanOutBagVm,
+  WebScanOutAwbValidateVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutAwbResponseVm,
@@ -19,6 +20,7 @@ import {
   WebScanOutAwbListResponseVm,
   WebScanOutDeliverListResponseVm,
   WebScanOutBagResponseVm,
+  ScanAwbVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
@@ -105,15 +107,14 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllScanOutDeliverList(payload);
   }
 
-  // TODO: End Point ini sepertinya sudah tidak terpakai
-  // @Post('awbDeliverList')
-  // @HttpCode(HttpStatus.OK)
-  // // @ApiBearerAuth()
-  // // @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
-  // public async awbDeliverList(@Body() payload: BaseMetaPayloadVm) {
-  //   return this.webDeliveryOutService.scanOutList(payload);
-  // }
+  @Post('awbValidate')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: ScanAwbVm })
+  public async awbDeliverList(@Body() payload: WebScanOutAwbValidateVm) {
+    return this.webDeliveryOutService.scanOutAwbValidate(payload);
+  }
 
   @Post('bagList')
   @HttpCode(HttpStatus.OK)
