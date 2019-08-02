@@ -1,7 +1,6 @@
 // #region import
 import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
-import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 import { WebDeliveryOutService } from '../../services/web/web-delivery-out.service';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';

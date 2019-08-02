@@ -1,4 +1,5 @@
 export const AWB_STATUS = {
+  DO_HUB: 12600,
   ON_PROGRESS: 2000,
   OUT_BRANCH: 3005,
   OUT_HUB: 3010,
