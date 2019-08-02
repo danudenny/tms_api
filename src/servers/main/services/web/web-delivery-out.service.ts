@@ -597,6 +597,9 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'doPodDateTime';
+    }
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -667,6 +670,9 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'doPodDeliverDateTime';
+    }
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [

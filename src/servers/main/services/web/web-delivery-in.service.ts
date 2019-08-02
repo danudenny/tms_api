@@ -40,6 +40,9 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
     payload.fieldResolverMap['employeeName'] = 't5.fullname';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'podScaninDateTime';
+    }
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -98,6 +101,9 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
     payload.fieldResolverMap['employeeName'] = 't5.nickname';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'podScaninDateTime';
+    }
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
