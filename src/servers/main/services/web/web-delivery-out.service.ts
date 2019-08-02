@@ -38,6 +38,7 @@ import {
   WebScanOutCreateVm,
   WebScanOutAwbValidateVm,
   WebScanOutEditVm,
+  WebScanOutEditHubVm,
 } from '../../models/web-scan-out.vm';
 // #endregion
 
@@ -98,7 +99,7 @@ export class WebDeliveryOutService {
   }
 
   /**
-   * Edit DO POD
+   * Edit DO POD AWB
    * with type: Transit (Internal/3PL) and Criss Cross
    * @param {WebScanOutCreateVm} payload
    * @returns {Promise<WebScanOutCreateResponseVm>}
@@ -111,10 +112,11 @@ export class WebDeliveryOutService {
     const result = new WebScanOutCreateResponseVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    // create do_pod (Surat Jalan)
+    // edit do_pod (Surat Jalan)
     const doPod = await DoPod.findOne({
       where: {
         doPodId: payload.doPodId,
+        totalScanIn: 0,
         isDeleted: false,
       },
     });
@@ -167,6 +169,105 @@ export class WebDeliveryOutService {
           where: {
             doPodId: payload.doPodId,
             awbItemId: awb.awbItemId,
+            isDeleted: false,
+          },
+        });
+
+        if (doPodDetail) {
+          doPodDetail.isDeleted = true;
+          DoPodDetail.update(doPodDetail.doPodDetailId, doPodDetail);
+          // TODO:
+          // awb_item_attr and awb_history ??
+        }
+      }
+
+      // count data do_pod_detail ??
+      // updatea total on do_pod
+      // await for get do pod id
+      await DoPod.save(doPod);
+
+      result.status = 'ok';
+      result.message = 'success';
+    } else {
+      result.status = 'error';
+      result.message = 'Surat Jalan tidak valid';
+    }
+    result.doPodId = payload.doPodId;
+    return result;
+  }
+
+  /**
+   * Edit DO POD BAG
+   * with type: Transit (Internal/3PL) and Criss Cross
+   * @param {WebScanOutCreateVm} payload
+   * @returns {Promise<WebScanOutCreateResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
+  async scanOutEditHub(
+    payload: WebScanOutEditHubVm,
+  ): Promise<WebScanOutCreateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const result = new WebScanOutCreateResponseVm();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    // edit do_pod (Surat Jalan)
+    const doPod = await DoPod.findOne({
+      where: {
+        doPodId: payload.doPodId,
+        totalScanIn: 0,
+        isDeleted: false,
+      },
+    });
+    if (doPod) {
+      const method =
+        payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
+      doPod.doPodType = payload.doPodType;
+      doPod.doPodMethod = method; // internal or 3PL/Third Party
+      doPod.partnerLogisticId = payload.partnerLogisticId || null;
+      doPod.branchIdTo = payload.branchIdTo || null;
+      doPod.employeeIdDriver = payload.employeeIdDriver || null;
+      // doPod.userIdDriver = payload.
+      doPod.vehicleNumber = payload.vehicleNumber || null;
+      doPod.description = payload.desc || null;
+      // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
+      doPod.doPodStatusIdLast = 1100; // updated
+      doPod.branchId = permissonPayload.branchId;
+      doPod.userId = authMeta.userId;
+
+      // TODO: get data list add awb, and list data delete awb
+      // looping data
+      for (const addBag of payload.addBagNumber) {
+        // find bag
+        const bag = await DeliveryService.validBagNumber(addBag);
+        // add data do_pod_detail
+        const doPodDetail = DoPodDetail.create();
+        doPodDetail.doPodId = payload.doPodId;
+        doPodDetail.bagItemId = bag.bagItemId;
+        doPodDetail.doPodStatusIdLast = 1000;
+        doPodDetail.isScanOut = true;
+        doPodDetail.scanOutType = 'bag';
+        await DoPodDetail.save(doPodDetail);
+
+        // TODO: ??
+        // awb_item_attr and awb_history ??
+        // await DeliveryService.updateAwbAttr(
+        //   awb.awbItemId,
+        //   doPod.branchIdTo,
+        //   AWB_STATUS.OUT_BRANCH,
+        // );
+
+        // // NOTE: queue by Bull
+        // DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
+        //   doPodDetail.doPodDetailId,
+        // );
+      }
+
+      for (const removeBag of payload.removeBagNumber) {
+        const bag = await DeliveryService.validBagNumber(removeBag);
+        const doPodDetail = await DoPodDetail.findOne({
+          where: {
+            doPodId: payload.doPodId,
+            bagItemId: bag.bagItemId,
             isDeleted: false,
           },
         });

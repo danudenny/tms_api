@@ -12,6 +12,8 @@ import {
   WebScanOutCreateDeliveryVm,
   WebScanOutBagVm,
   WebScanOutAwbValidateVm,
+  WebScanOutEditVm,
+  WebScanOutEditHubVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutAwbResponseVm,
@@ -39,6 +41,26 @@ export class WebDeliveryOutController {
   @Transactional()
   public async scanOutCreate(@Body() payload: WebScanOutCreateVm) {
     return this.webDeliveryOutService.scanOutCreate(payload);
+  }
+
+  @Post('edit')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutCreateResponseVm })
+  @Transactional()
+  public async scanOutEdit(@Body() payload: WebScanOutEditVm) {
+    return this.webDeliveryOutService.scanOutEdit(payload);
+  }
+
+  @Post('editHub')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutCreateResponseVm })
+  @Transactional()
+  public async scanOutEditBag(@Body() payload: WebScanOutEditHubVm) {
+    return this.webDeliveryOutService.scanOutEditHub(payload);
   }
 
   @Post('createDeliver')

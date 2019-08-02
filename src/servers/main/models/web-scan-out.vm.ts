@@ -118,7 +118,7 @@ export class WebScanOutCreateVm {
   totalBag?: number;
 }
 
-// Edit DO POD
+// Edit DO POD AWB
 export class WebScanOutEditVm extends WebScanOutCreateVm {
 
   @ApiModelProperty({
@@ -147,6 +147,34 @@ export class WebScanOutEditVm extends WebScanOutCreateVm {
   removeAwbNumber: string[];
 }
 
+// Edit DO POD BAG
+export class WebScanOutEditHubVm extends WebScanOutCreateVm {
+
+  @ApiModelProperty({
+    example: 203,
+    skipValidation: true,
+  })
+  @IsDefined({message: 'POD ID harus diisi'})
+  doPodId: number;
+
+  @ApiModelProperty({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+  @IsDefined({message: 'Nomor resi harus diisi'})
+  @IsBagNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  addBagNumber: string[];
+
+  @ApiModelProperty({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+  @IsDefined({message: 'Nomor resi harus diisi'})
+  @IsBagNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  removeBagNumber: string[];
+}
 // Create DO POD Delivery
 export class WebScanOutCreateDeliveryVm {
   @ApiModelProperty({
