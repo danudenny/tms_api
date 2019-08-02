@@ -11,11 +11,12 @@ import { PodFilterDetailRepository } from '../../../../shared/orm-repository/pod
 import { PodFilterRepository } from '../../../../shared/orm-repository/pod-filter.repository';
 import { RepresentativeRepository } from '../../../../shared/orm-repository/representative.repository';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
   ScanAwbVm,
   WebAwbFilterFinishScanResponseVm,
@@ -249,7 +250,12 @@ export class WebAwbFilterService {
 
           // after scan filter done at all. do posting status last awb
 
-          // TODO: posting to awb_history, awb_item_summary
+          // NOTE: posting to awb_history, awb_item_summary
+          DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+            awbItemAttr.awbItemId,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
         }
       } else {
         // Unknown Awb, GO TO HELL
@@ -259,7 +265,7 @@ export class WebAwbFilterService {
         res.districtId = null;
         results.push(res);
       }
-    }
+    } // end loop
 
     const response = new WebAwbFilterScanAwbResponseVm();
     response.totalData = 0;

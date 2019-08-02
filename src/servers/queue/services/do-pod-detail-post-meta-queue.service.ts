@@ -97,6 +97,7 @@ export class DoPodDetailPostMetaQueueService {
     });
   }
 
+  // TODO: simplify get data
   public static async createJobByScanOutAwb(doPodDetailId: number) {
 
     const doPodDetailRepository = new OrionRepositoryService(DoPodDetail);
@@ -262,46 +263,46 @@ export class DoPodDetailPostMetaQueueService {
     }
   }
 
-  public static async createJobByAwbFilter(doPodDetailId: number, awbItemId: number) {
+  public static async createJobByScanInBag(
+    awbItemId: number,
+    branchId: number,
+    userId: number,
+  ) {
     // TODO: need to be reviewed ??
-    const doPodDetailRepository = new OrionRepositoryService(
-      DoPodDetail,
-    );
-    const q = doPodDetailRepository.findOne();
-    // Manage relation (default inner join)
-    q.innerJoin(e => e.podScanIn);
+    // find awbStatusIdLastPublic on awb_status
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId: AWB_STATUS.DO_HUB,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver: null,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
 
-    q.select({
-      doPodDetailId: true,
-      bagItemId: true,
-      userIdCreated: true,
-      userIdUpdated: true,
-      podScanIn: {
-        podScanInId: true,
-        branchId: true,
-        userId: true,
-        employeeId: true,
-      },
-    });
-    q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
-    const doPodDetail = await q.exec();
-
-    if (doPodDetail) {
-      // TODO: find awbStatusIdLastPublic on awb_status
-      // provide data
-      const obj = {
-        awbItemId,
-        userId: doPodDetail.doPod.userId,
-        branchId: doPodDetail.doPod.branchId,
-        awbStatusId: AWB_STATUS.IN_BRANCH,
-        awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-        userIdCreated: doPodDetail.userIdCreated,
-        userIdUpdated: doPodDetail.userIdUpdated,
-        employeeIdDriver: null,
-      };
-
-      return DoPodDetailPostMetaQueueService.queue.add(obj);
-    }
+  public static async createJobByAwbFilter(
+    awbItemId: number,
+    branchId: number,
+    userId: number,
+  ) {
+    // TODO: need to be reviewed ??
+    // find awbStatusIdLastPublic on awb_status
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId: AWB_STATUS.IN_BRANCH,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver: null,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
   public static async createJobByMobileSyncAwb(doPodDeliverDetailId: number, awbStatusId: number) {
