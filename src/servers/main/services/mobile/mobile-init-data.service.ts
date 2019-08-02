@@ -1,11 +1,10 @@
 import { HttpStatus } from '@nestjs/common';
-import moment = require('moment');
 import { createQueryBuilder } from 'typeorm';
 
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { Reason } from '../../../../shared/orm-entity/reason';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MobileInitDataResponseVm } from '../../models/mobile-init-response.vm';
 
@@ -26,7 +25,7 @@ export class MobileInitDataService {
 
       return result;
     } else {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },

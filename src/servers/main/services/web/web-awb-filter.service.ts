@@ -1,25 +1,28 @@
-import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
-import { WebAwbFilterScanBagVm, WebAwbFilterScanAwbVm, WebAwbFilterFinishScanVm } from '../../models/web-awb-filter.vm';
-import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFilterFinishScanResponseVm } from '../../models/web-awb-filter-response.vm';
-import { DeliveryService } from '../../../../shared/services/delivery.service';
-import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
-import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { DistrictRepository } from '../../../../shared/orm-repository/district.repository';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ScanAwbVm } from '../../models/web-awb-filter-response.vm';
+import moment = require('moment');
+
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
-import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { RepositoryService } from '../../../../shared/services/repository.service';
+import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { PodFilter } from '../../../../shared/orm-entity/pod-filter';
+import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
+import { DistrictRepository } from '../../../../shared/orm-repository/district.repository';
+import { PodFilterDetailItemRepository } from '../../../../shared/orm-repository/pod-filter-detail-item.repository';
+import { PodFilterDetailRepository } from '../../../../shared/orm-repository/pod-filter-detail.repository';
 import { PodFilterRepository } from '../../../../shared/orm-repository/pod-filter.repository';
 import { RepresentativeRepository } from '../../../../shared/orm-repository/representative.repository';
-import { PodFilterDetailRepository } from '../../../../shared/orm-repository/pod-filter-detail.repository';
-import { PodFilterDetailItem } from '../../../../shared/orm-entity/pod-filter-detail-item';
-import { PodFilterDetailItemRepository } from '../../../../shared/orm-repository/pod-filter-detail-item.repository';
-import moment = require('moment');
-import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
-import { reduce } from 'rxjs/operators';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { DeliveryService } from '../../../../shared/services/delivery.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { RepositoryService } from '../../../../shared/services/repository.service';
+import {
+  ScanAwbVm,
+  WebAwbFilterFinishScanResponseVm,
+  WebAwbFilterScanAwbResponseVm,
+  WebAwbFilterScanBagResponseVm,
+} from '../../models/web-awb-filter-response.vm';
+import { WebAwbFilterFinishScanVm, WebAwbFilterScanAwbVm, WebAwbFilterScanBagVm } from '../../models/web-awb-filter.vm';
 
 export class WebAwbFilterService {
 
@@ -45,7 +48,7 @@ export class WebAwbFilterService {
 
     // bagNumber not found, then throw error
     if (!bagData) {
-      ContextualErrorService.throwObj({
+      RequestErrorService.throwObj({
         message: `No Gabung Paket ${payload.bagNumber} tidak ditemukan`,
       }, 500);
     }
@@ -73,7 +76,7 @@ export class WebAwbFilterService {
 
       // check previous representative, should be same with current bag, before they finish/clear this podFilter
       if (podFilter.representativeIdFilter != bagData.bag.representativeIdTo) {
-        ContextualErrorService.throwObj({
+        RequestErrorService.throwObj({
           message: `Perwakilan berbeda. Harap selesaikan dahulu Perwakilan ${podFilter.representative.representativeCode}`,
         }, 500);
       }
@@ -153,7 +156,7 @@ export class WebAwbFilterService {
       },
     });
     if (!podFilterDetailExists) {
-      ContextualErrorService.throwObj({
+      RequestErrorService.throwObj({
         message: `Invalid podFilterDetailId`,
       }, 500);
     }

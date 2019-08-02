@@ -1,8 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 
 import { AuthService } from '../services/auth.service';
+import { PinoLoggerService } from '../services/pino-logger.service';
 import { RequestContextMetadataService } from '../services/request-context-metadata.service';
 
 @Injectable()
@@ -28,15 +29,15 @@ export class AuthenticatedGuard implements CanActivate {
       'JWT_ACCESS_TOKEN',
     );
     try {
-      // Logger.log('########### accessToken =====================');
-      // Logger.log(accessToken);
+      // PinoLoggerService.log('########### accessToken =====================');
+      // PinoLoggerService.log(accessToken);
       const accessTokenJwtPayload = this.jwtService.verify(accessToken);
-      // Logger.log('########### Payload ===================== ');
-      // Logger.log(accessTokenJwtPayload);
+      // PinoLoggerService.log('########### Payload ===================== ');
+      // PinoLoggerService.log(accessTokenJwtPayload);
 
       return Boolean(accessTokenJwtPayload);
     } catch (e) {
-      Logger.log(e.message);
+      PinoLoggerService.log(e.message);
 
       throw new UnauthorizedException(e.message);
     }

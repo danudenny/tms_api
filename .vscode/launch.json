@@ -8,11 +8,19 @@
       "type": "node",
       "request": "launch",
       "name": "Debug",
-      "runtimeArgs": ["--nolazy", "-r", "ts-node/register", "-r", "tsconfig-paths/register"],
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register"
+      ],
       "args": ["${workspaceFolder}/src/main.ts"],
       "sourceMaps": true,
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",
+      "console": "internalConsole",
+      "outputCapture": "std",
       "env": {
         "TS_NODE_FILES": "true"
       }
@@ -29,6 +37,8 @@
         "ts-node/register"
       ],
       "args": ["--runInBand"],
+      "console": "internalConsole",
+      "outputCapture": "std",
       "sourceMaps": true,
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",

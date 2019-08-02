@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TokenExpiredError } from 'jsonwebtoken';
@@ -19,7 +19,8 @@ import { User } from '../orm-entity/user';
 import { UserRole } from '../orm-entity/user-role';
 import { UserRepository } from '../orm-repository/user.repository';
 import { ConfigService } from './config.service';
-import { ContextualErrorService } from './contextual-error.service';
+import { RequestErrorService } from './request-error.service';
+import { PinoLoggerService } from './pino-logger.service';
 import { RedisService } from './redis.service';
 import { RepositoryService } from './repository.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
@@ -46,7 +47,7 @@ export class AuthService {
 
     // check user present
     if (user) {
-      // Logger.log(user);
+      // PinoLoggerService.log(user);
       // validate user password hash md5
       if (user.validatePassword(password)) {
         // TODO: Populate return value by using this.populateLoginResultMetadataByUser
@@ -56,12 +57,12 @@ export class AuthService {
         );
         return loginResultMetadata;
       } else {
-        ContextualErrorService.throwObj({
+        RequestErrorService.throwObj({
           message: 'global.error.LOGIN_WRONG_PASSWORD',
         });
       }
     } else {
-      ContextualErrorService.throwObj({
+      RequestErrorService.throwObj({
         message: 'global.error.USER_NOT_FOUND',
       });
     }
@@ -72,9 +73,9 @@ export class AuthService {
   ): Promise<AuthLoginResultMetadata> {
     // TODO: find user on table or redis??
     const loginSession = await RedisService.get(`session:${refreshToken}`);
-    Logger.log(loginSession);
+    PinoLoggerService.log(loginSession);
     if (!loginSession) {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.LOGIN_SESSION_NOT_FOUND',
         },
@@ -87,14 +88,14 @@ export class AuthService {
       refreshTokenPayload = this.jwtService.verify(refreshToken);
     } catch (e) {
       if (e instanceof TokenExpiredError) {
-        ContextualErrorService.throwObj(
+        RequestErrorService.throwObj(
           {
             message: 'global.error.REFRESH_TOKEN_EXPIRED',
           },
           HttpStatus.FORBIDDEN,
         );
       } else {
-        ContextualErrorService.throwObj(
+        RequestErrorService.throwObj(
           {
             message: 'global.error.REFRESH_TOKEN_NOT_VALID',
           },
@@ -157,7 +158,7 @@ export class AuthService {
 
       return result;
     } else {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },
@@ -181,7 +182,7 @@ export class AuthService {
         .exec();
 
       if (!user) {
-        ContextualErrorService.throwObj(
+        RequestErrorService.throwObj(
           {
             message: `Hak akses user untuk role dan branch ini tidak ditemukan`,
           },
@@ -248,7 +249,7 @@ export class AuthService {
 
       return result;
     } else {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },
@@ -389,7 +390,7 @@ export class AuthService {
     if (!!authMeta) {
       return authMeta;
     } else {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },

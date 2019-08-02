@@ -2,7 +2,7 @@ import { HttpStatus } from '@nestjs/common';
 import { getConnection } from 'typeorm';
 
 import { RolePermission } from '../../../../shared/orm-entity/role-permission';
-import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { RolePermissionListPayloadVm } from '../../models/role-permission-list-payload.vm';
 import { RolePermissionListResponseVm } from '../../models/role-permission-list-response.vm';
@@ -38,7 +38,7 @@ export class RolePermissionService {
   }: RolePermissionUpdatePayloadVm): Promise<RolePermissionUpdateResponseVm> {
     const role = await RepositoryService.role.loadById(roleId);
     if (!role) {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: `Role with id ${roleId} cannot be found`,
         },

@@ -1,5 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 
+import { ErrorParserService } from '../services/error-parser.service';
+
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
@@ -10,6 +12,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const request = ctx.getRequest();
       const status = exception.getStatus();
       const messageStatus = HttpStatus[status];
+
+      const requestError = ErrorParserService.parseRequestErrorFromExceptionAndArgumentsHost(exception, host);
 
       const logger = require('pino')();
       const data = {

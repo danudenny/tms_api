@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 
-import { OrmRepositoryModule } from '../../../shared/orm-repository/orm-repository.module';
 import { SharedModule } from '../../../shared/shared.module';
 import { GabunganService } from './combine-package/gabungan.services';
 import { AwbStatusService } from './master/awb-status.service';
@@ -18,7 +17,7 @@ import { WebDeliveryInService } from './web/web-delivery-in.service';
 import { WebDeliveryOutService } from './web/web-delivery-out.service';
 
 @Module({
-  imports: [OrmRepositoryModule, SharedModule],
+  imports: [SharedModule],
   providers: [
     AwbStatusService,
     BranchService,

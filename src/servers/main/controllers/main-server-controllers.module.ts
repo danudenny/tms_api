@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 
-import { OrmRepositoryModule } from '../../../shared/orm-repository/orm-repository.module';
 import { SharedModule } from '../../../shared/shared.module';
 import { MainServerServicesModule } from '../services/main-server-services.module';
 import { GabunganController } from './combine-package/combine-package.controller';
@@ -25,7 +24,7 @@ import { WebDeliveryInController } from './web/web-delivery-in.controller';
 import { WebDeliveryOutController } from './web/web-delivery-out.controller';
 
 @Module({
-  imports: [OrmRepositoryModule, SharedModule, MainServerServicesModule],
+  imports: [SharedModule, MainServerServicesModule],
   controllers: [
     AwbStatusController,
     BranchController,

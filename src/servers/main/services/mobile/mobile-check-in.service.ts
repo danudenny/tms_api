@@ -1,13 +1,14 @@
-import { HttpStatus, Injectable, Query, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import moment = require('moment');
+import { IsNull } from 'typeorm';
+
+import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
+import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { MobileCheckInPayloadVm } from '../../models/mobile-check-in-payload.vm';
 import { MobileCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
-import moment = require('moment');
-import { AuthService } from '../../../../shared/services/auth.service';
-import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
-import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
-import { IsNull} from 'typeorm';
 
 @Injectable()
 export class MobileCheckInService {
@@ -72,7 +73,7 @@ export class MobileCheckInService {
       result.checkInDate = checkInDate;
       return result;
     } else {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },
