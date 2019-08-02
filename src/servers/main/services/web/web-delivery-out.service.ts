@@ -1,3 +1,4 @@
+// #region import
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
@@ -28,15 +29,16 @@ import {
   WebScanOutBagResponseVm,
   WebScanOutCreateResponseVm,
   WebScanOutDeliverListResponseVm,
+  ScanAwbVm,
 } from '../../models/web-scan-out-response.vm';
 import {
   WebScanOutAwbVm,
   WebScanOutBagVm,
   WebScanOutCreateDeliveryVm,
   WebScanOutCreateVm,
+  WebScanOutAwbValidateVm,
+  WebScanOutEditVm,
 } from '../../models/web-scan-out.vm';
-
-// #region import
 // #endregion
 
 @Injectable()
@@ -92,6 +94,102 @@ export class WebDeliveryOutService {
     result.message = 'success';
     result.doPodId = Number(doPod.doPodId);
 
+    return result;
+  }
+
+  /**
+   * Edit DO POD
+   * with type: Transit (Internal/3PL) and Criss Cross
+   * @param {WebScanOutCreateVm} payload
+   * @returns {Promise<WebScanOutCreateResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
+  async scanOutEdit(
+    payload: WebScanOutEditVm,
+  ): Promise<WebScanOutCreateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const result = new WebScanOutCreateResponseVm();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    // create do_pod (Surat Jalan)
+    const doPod = await DoPod.findOne({
+      where: {
+        doPodId: payload.doPodId,
+        isDeleted: false,
+      },
+    });
+    if (doPod) {
+      const method =
+        payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
+      doPod.doPodType = payload.doPodType;
+      doPod.doPodMethod = method; // internal or 3PL/Third Party
+      doPod.partnerLogisticId = payload.partnerLogisticId || null;
+      doPod.branchIdTo = payload.branchIdTo || null;
+      doPod.employeeIdDriver = payload.employeeIdDriver || null;
+      // doPod.userIdDriver = payload.
+      doPod.vehicleNumber = payload.vehicleNumber || null;
+      doPod.description = payload.desc || null;
+      // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
+      doPod.doPodStatusIdLast = 1100; // updated
+      doPod.branchId = permissonPayload.branchId;
+      doPod.userId = authMeta.userId;
+
+      // TODO: get data list add awb, and list data delete awb
+      // looping data
+      for (const addAwb of payload.addAwbNumber) {
+        // find awb_item_attr
+        const awb = await DeliveryService.validAwbNumber(addAwb);
+        // add data do_pod_detail
+        const doPodDetail = DoPodDetail.create();
+        doPodDetail.doPodId = payload.doPodId;
+        doPodDetail.awbItemId = awb.awbItemId;
+        doPodDetail.doPodStatusIdLast = 1000;
+        doPodDetail.isScanOut = true;
+        doPodDetail.scanOutType = 'awb';
+        await DoPodDetail.save(doPodDetail);
+
+        // awb_item_attr and awb_history ??
+        await DeliveryService.updateAwbAttr(
+          awb.awbItemId,
+          doPod.branchIdTo,
+          AWB_STATUS.OUT_BRANCH,
+        );
+
+        // NOTE: queue by Bull
+        DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
+          doPodDetail.doPodDetailId,
+        );
+      }
+
+      for (const addAwb of payload.removeAwbNumber) {
+        const awb = await DeliveryService.validAwbNumber(addAwb);
+        const doPodDetail = await DoPodDetail.findOne({
+          where: {
+            doPodId: payload.doPodId,
+            awbItemId: awb.awbItemId,
+            isDeleted: false,
+          },
+        });
+
+        if (doPodDetail) {
+          doPodDetail.isDeleted = true;
+          DoPodDetail.update(doPodDetail.doPodDetailId, doPodDetail);
+          // TODO:
+          // awb_item_attr and awb_history ??
+        }
+      }
+      // count data do_pod_detail ??
+      // updatea total on do_pod
+      // await for get do pod id
+      await DoPod.save(doPod);
+
+      result.status = 'ok';
+      result.message = 'success';
+    } else {
+      result.status = 'error';
+      result.message = 'Surat Jalan tidak valid';
+    }
+    result.doPodId = payload.doPodId;
     return result;
   }
 
@@ -173,11 +271,19 @@ export class WebDeliveryOutService {
               response.message = `Resi ${awbNumber} sudah di Scan OUT di gerai ini`;
             } else {
               // save data to awb_trouble
-              await AwbTroubleService.fromScanOut(awbNumber, awb.branchLast.branchName, awb.awbStatusIdLast);
+              await AwbTroubleService.fromScanOut(
+                awbNumber,
+                awb.branchLast.branchName,
+                awb.awbStatusIdLast,
+              );
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${
+                awb.branchLast.branchCode
+              } - ${
+                awb.branchLast.branchName
+              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -254,7 +360,11 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${
+                awb.branchLast.branchCode
+              } - ${
+                awb.branchLast.branchName
+              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -332,7 +442,11 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${
+                awb.branchLast.branchCode
+              } - ${
+                awb.branchLast.branchName
+              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -373,7 +487,11 @@ export class WebDeliveryOutService {
                 // counter total scan out
                 doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
                 await DoPodDeliver.save(doPodDeliver);
-                await DeliveryService.updateAwbAttr(awb.awbItemId, null, AWB_STATUS.ANT);
+                await DeliveryService.updateAwbAttr(
+                  awb.awbItemId,
+                  null,
+                  AWB_STATUS.ANT,
+                );
 
                 // NOTE: queue by Bull
                 DoPodDetailPostMetaQueueService.createJobByScanOutAwbDeliver(
@@ -399,7 +517,11 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ${
+                awb.branchLast.branchCode
+              } - ${
+                awb.branchLast.branchName
+              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -535,9 +657,7 @@ export class WebDeliveryOutService {
 
               totalSuccess += 1;
               // remove key holdRedis
-              RedisService.del(
-                `hold:bagscanout:${bagData.bagItemId}`,
-              );
+              RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
             } else {
               totalError += 1;
               response.status = 'error';
@@ -665,7 +785,8 @@ export class WebDeliveryOutService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanOutDeliverListResponseVm> {
     // mapping field
-    payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_deliver_date_time';
+    payload.fieldResolverMap['doPodDeliverDateTime'] =
+      't1.do_pod_deliver_date_time';
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
     payload.fieldResolverMap['description'] = 't1.description';
@@ -704,7 +825,10 @@ export class WebDeliveryOutService {
       ['t1.total_problem', 'totalProblem'],
       ['COUNT (t3.*)', 'totalAwb'],
       ['t2.nickname', 'nickname'],
-      [`CONCAT(CAST(SUM(t4.total_cod_value) AS NUMERIC(20,2)))`, 'totalCodValue'],
+      [
+        `CONCAT(CAST(SUM(t4.total_cod_value) AS NUMERIC(20,2)))`,
+        'totalCodValue',
+      ],
     );
 
     q.innerJoin(e => e.employee, 't2', j =>
@@ -830,7 +954,7 @@ export class WebDeliveryOutService {
    */
   async bagDetailDelivery(
     payload: BaseMetaPayloadVm,
-  ): Promise <WebDeliveryListResponseVm> {
+  ): Promise<WebDeliveryListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
 
@@ -871,7 +995,9 @@ export class WebDeliveryOutService {
     q.leftJoin(e => e.bagItem.bagItemAwbs, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('t3.bag_number, t2.bag_seq, t2.weight, t3.representative_id_to');
+    q.groupByRaw(
+      't3.bag_number, t2.bag_seq, t2.weight, t3.representative_id_to',
+    );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -884,4 +1010,31 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  async scanOutAwbValidate(
+    payload: WebScanOutAwbValidateVm,
+  ): Promise<ScanAwbVm> {
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const awbNumber = payload.awbNumber;
+    let result = new ScanAwbVm();
+    const response = {
+      status: 'error',
+      trouble: false,
+      message: 'Resi Bermasalah',
+    };
+
+    const awb = await DeliveryService.validAwbNumber(awbNumber);
+    if (awb) {
+      const statusCode = await DeliveryService.awbStatusGroup(
+        awb.awbStatusIdLast,
+      );
+
+      if (statusCode == 'IN' && awb.branchIdLast == permissonPayload.branchId) {
+        response.status = 'ok';
+        response.trouble = false;
+        response.message = 'success';
+      }
+    }
+    result = { awbNumber, ...response };
+    return result;
+  }
 }

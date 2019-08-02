@@ -18,11 +18,19 @@ export class WebScanOutAwbVm  {
     example: ['00020001', '00020002'],
     skipValidation: true,
   })
-  // TODO: validation if array length = 0
+
   @IsDefined({message: 'Nomor resi harus diisi'})
   @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   awbNumber: string[];
+}
+
+export class WebScanOutAwbValidateVm {
+  @ApiModelProperty({
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'Nomor resi harus diisi' })
+  awbNumber: string;
 }
 
 // Scan Out Bag
@@ -108,7 +116,35 @@ export class WebScanOutCreateVm {
 
   @ApiModelPropertyOptional()
   totalBag?: number;
+}
 
+// Edit DO POD
+export class WebScanOutEditVm extends WebScanOutCreateVm {
+
+  @ApiModelProperty({
+    example: 203,
+    skipValidation: true,
+  })
+  @IsDefined({message: 'POD ID harus diisi'})
+  doPodId: number;
+
+  @ApiModelProperty({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+  @IsDefined({message: 'Nomor resi harus diisi'})
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  addAwbNumber: string[];
+
+  @ApiModelProperty({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+  @IsDefined({message: 'Nomor resi harus diisi'})
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  removeAwbNumber: string[];
 }
 
 // Create DO POD Delivery

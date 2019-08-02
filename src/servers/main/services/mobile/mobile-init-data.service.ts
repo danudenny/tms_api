@@ -84,6 +84,7 @@ export class MobileInitDataService {
     qb.addSelect('awb.notes', 'consigneeNote');
     qb.addSelect('awb.consignee_phone', 'consigneeNumber');
     qb.addSelect('package_type.package_type_name', 'packageTypeName');
+    qb.addSelect('awb.total_cod_value', 'totalCodValue');
     qb.addSelect('awb.is_cod', 'isCOD');
     qb.addSelect('array_to_json(t.data)', 'deliveryHistory');
     qb.from('do_pod_deliver_detail', 'do_pod_deliver_detail');

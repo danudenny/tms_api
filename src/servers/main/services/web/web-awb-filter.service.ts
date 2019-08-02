@@ -20,6 +20,7 @@ import { PodFilterDetailItemRepository } from '../../../../shared/orm-repository
 import moment = require('moment');
 import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
 import { reduce } from 'rxjs/operators';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 
 export class WebAwbFilterService {
 
@@ -246,7 +247,12 @@ export class WebAwbFilterService {
 
           // after scan filter done at all. do posting status last awb
 
-          // TODO: posting to awb_history, awb_item_summary
+          // NOTE: posting to awb_history, awb_item_summary
+          DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+            awbItemAttr.awbItemId,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
         }
       } else {
         // Unknown Awb, GO TO HELL
@@ -256,7 +262,7 @@ export class WebAwbFilterService {
         res.districtId = null;
         results.push(res);
       }
-    }
+    } // end loop
 
     const response = new WebAwbFilterScanAwbResponseVm();
     response.totalData = 0;

@@ -1,5 +1,5 @@
 // #region import
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import moment = require('moment');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -23,6 +23,7 @@ import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-respon
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { AwbTroubleService } from '../../../../shared/services/awb-trouble.service';
+import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 // #endregion
 
 @Injectable()
@@ -306,31 +307,33 @@ export class WebDeliveryInService {
                   doPod.lastDateScanIn = timeNow;
                 }
                 await DoPod.save(doPod);
-                // NOTE: Disable update awb status per item awb
-                // SELECT *
-                // FROM bag_item_awb
-                // WHERE bag_item_id = <bag_item_id> AND is_deleted = false
-                // const bagItemsAwb = await BagItemAwb.find({
-                //   where: {
-                //     bagItem: bagData.bagItemId,
-                //     isDeleted: false,
-                //   },
-                // });
-                // if (bagItemsAwb && bagItemsAwb.length > 0) {
-                //   for (const itemAwb of bagItemsAwb) {
-                //     if (itemAwb.awbItemId) {
-                //       await DeliveryService.updateAwbAttr(
-                //         itemAwb.awbItemId, doPod.branchIdTo,
-                //         AWB_STATUS.IN_BRANCH,
-                //       );
-                //       // TODO: queue by Bull
-                //       DoPodDetailPostMetaQueueService.createJobByScanInBag(
-                //         doPodDetail.doPodDetailId,
-                //         itemAwb.awbItemId,
-                //       );
-                //     }
-                //   }
-                // }
+
+                // NOTE: status DO_HUB (12600: drop off hub)
+                const bagItemsAwb = await BagItemAwb.find({
+                  where: {
+                    bagItem: bagData.bagItemId,
+                    isDeleted: false,
+                  },
+                });
+                if (bagItemsAwb && bagItemsAwb.length > 0) {
+                  for (const itemAwb of bagItemsAwb) {
+                    if (itemAwb.awbItemId) {
+                      await DeliveryService.updateAwbAttr(
+                        itemAwb.awbItemId,
+                        doPod.branchIdTo,
+                        AWB_STATUS.DO_HUB,
+                      );
+                      // TODO: queue by Bull
+                      DoPodDetailPostMetaQueueService.createJobByScanInBag(
+                        itemAwb.awbItemId,
+                        permissonPayload.branchId,
+                        authMeta.userId,
+                      );
+                    }
+                  }
+                } else {
+                  Logger.log('### Data Bag Item Awb :: Not Found!!');
+                }
 
                 totalSuccess += 1;
               } else {
