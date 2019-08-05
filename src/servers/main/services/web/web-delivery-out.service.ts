@@ -30,6 +30,7 @@ import {
   WebScanOutCreateResponseVm,
   WebScanOutDeliverListResponseVm,
   ScanAwbVm,
+  ScanBagVm,
 } from '../../models/web-scan-out-response.vm';
 import {
   WebScanOutAwbVm,
@@ -39,6 +40,7 @@ import {
   WebScanOutAwbValidateVm,
   WebScanOutEditVm,
   WebScanOutEditHubVm,
+  WebScanOutBagValidateVm,
 } from '../../models/web-scan-out.vm';
 // #endregion
 
@@ -123,7 +125,8 @@ export class WebDeliveryOutService {
     if (doPod) {
       // update data
       const updateDoPod = {
-        doPodMethod: payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
+        doPodMethod:
+          payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
         partnerLogisticId: payload.partnerLogisticId,
         branchIdTo: payload.branchIdTo,
         employeeIdDriver: payload.employeeIdDriver,
@@ -138,7 +141,6 @@ export class WebDeliveryOutService {
 
       // looping data list add awb number
       if (payload.addAwbNumber && payload.addAwbNumber.length) {
-
         for (const addAwb of payload.addAwbNumber) {
           // find awb_item_attr
           const awb = await DeliveryService.validAwbNumber(addAwb);
@@ -242,7 +244,6 @@ export class WebDeliveryOutService {
 
       // looping data list add bag number
       if (payload.addBagNumber && payload.addBagNumber.length) {
-
         for (const addBag of payload.addBagNumber) {
           // find bag
           const bag = await DeliveryService.validBagNumber(addBag);
@@ -283,7 +284,6 @@ export class WebDeliveryOutService {
       }
       // looping data list remove bag number
       if (payload.removeBagNumber && payload.removeBagNumber.length) {
-
         for (const removeBag of payload.removeBagNumber) {
           const bag = await DeliveryService.validBagNumber(removeBag);
           const doPodDetail = await DoPodDetail.findOne({
@@ -1187,4 +1187,29 @@ export class WebDeliveryOutService {
     result = { awbNumber, ...response };
     return result;
   }
+
+  async scanOutBagValidate(
+    payload: WebScanOutBagValidateVm,
+  ): Promise<ScanBagVm> {
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const bagNumber = payload.bagNumber;
+    let result = new ScanBagVm();
+    const response = {
+      status: 'error',
+      trouble: false,
+      message: 'Bag Bermasalah',
+    };
+
+    const bag = await DeliveryService.validBagNumber(bagNumber);
+    if (bag) {
+      if (bag.branchIdLast == permissonPayload.branchId) {
+        response.status = 'ok';
+        response.trouble = false;
+        response.message = 'success';
+      }
+    }
+    result = { bagNumber, ...response };
+    return result;
+  }
+
 }

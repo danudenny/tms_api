@@ -33,6 +33,14 @@ export class WebScanOutAwbValidateVm {
   awbNumber: string;
 }
 
+export class WebScanOutBagValidateVm {
+  @ApiModelProperty({
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'Nomor bag harus diisi' })
+  bagNumber: string;
+}
+
 // Scan Out Bag
 export class WebScanOutBagVm {
   @ApiModelProperty({
