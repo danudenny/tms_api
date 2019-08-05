@@ -89,6 +89,32 @@ export class PodFilterDetailItem extends TmsBaseEntity {
   })
   isDeleted: boolean;
 
+  // added by mohammad satria, 31 jul 2019
+  @Column('bigint', {
+    nullable: true,
+    name: 'to_id',
+  })
+  toId: number;
+
+  // added by mohammad satria, 5 aug 2019
+  @Column('integer', {
+    nullable: true,
+    name: 'to_type',
+  })
+  toType: number;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'bag_item_id',
+  })
+  bagItemId: number;
+
+  @Column('boolean', {
+    nullable: true,
+    name: 'is_package_combine',
+  })
+  isPackageCombine: boolean;
+
   @ManyToOne(() => PodFilterDetail)
   @JoinColumn({ name: 'pod_filter_detail_id' })
   podFilterDetail: PodFilterDetail;

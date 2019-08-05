@@ -2,12 +2,12 @@ import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { GabunganPayloadVm } from '../../models/gabungan-payload.vm';
-import { GabunganFindAllResponseVm } from '../../models/gabungan.response.vm';
+import { GabunganPayloadVm, PackagePayloadVm } from '../../models/gabungan-payload.vm';
+import { GabunganFindAllResponseVm, PackageAwbResponseVm } from '../../models/gabungan.response.vm';
 import { GabunganService } from '../../services/combine-package/gabungan.services';
 
 @ApiUseTags('Resi Bag')
-@Controller('resi/gabungan')
+@Controller('combine')
 export class GabunganController {
   constructor(private readonly gabunganService: GabunganService) {}
 
@@ -19,6 +19,16 @@ export class GabunganController {
   public async gabunganAwb(@Body() payload: GabunganPayloadVm) {
 
     return this.gabunganService.gabunganAwb(payload);
-    }
-
   }
+
+  @Post('packages')
+  @HttpCode(200)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
+  // @ApiOkResponse({ type: PackageAwbResponseVm })
+  public async packageAwb(@Body() payload: PackagePayloadVm) {
+
+    return this.gabunganService.awbPackage(payload);
+  }
+
+}

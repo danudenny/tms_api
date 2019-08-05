@@ -10,7 +10,7 @@ export class District extends BaseEntity {
     type: 'bigint',
     name: 'district_id',
   })
-  districtId: string;
+  districtId: number;
 
   @Column('bigint', {
     nullable: false,

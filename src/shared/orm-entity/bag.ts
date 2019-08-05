@@ -1,5 +1,6 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { BagItem } from './bag-item';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('bag', { schema: 'public' })
 @Index('bag_bag_date_idx', ['bagDate'])
@@ -7,7 +8,7 @@ import { BagItem } from './bag-item';
 @Index('bag_branch_id_idx', ['branchId'])
 @Index('bag_created_time_idx', ['createdTime'])
 @Index('bag_is_deleted_idx', ['isDeleted'])
-export class Bag extends BaseEntity {
+export class Bag extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'bag_id',
@@ -95,6 +96,20 @@ export class Bag extends BaseEntity {
     name: 'ref_representative_code',
   })
   refRepresentativeCode: string | null;
+
+// added by mohammad satria, 31 jul 2019
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'bag_type',
+  })
+  bagType: string | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'district_id_to',
+  })
+  districtIdTo: number;
 
   // relation model
   @OneToMany(() => BagItem, e => e.bag, { cascade: ['insert'] })
