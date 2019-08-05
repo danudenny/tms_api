@@ -133,21 +133,21 @@ export class WebScanOutEditVm extends WebScanOutVm {
   @IsDefined({message: 'POD ID harus diisi'})
   doPodId: number;
 
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: ['00020001', '00020002'],
     skipValidation: true,
   })
-  @IsDefined({message: 'Nomor resi harus diisi'})
+  // @IsDefined({message: 'Nomor resi harus diisi'})
   // @ValidateNested({ each: true })
   // @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   addAwbNumber: string[];
 
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: ['00020001', '00020002'],
     skipValidation: true,
   })
-  @IsDefined({message: 'Nomor resi harus diisi'})
+  // @IsDefined({message: 'Nomor resi harus diisi'})
   // @ValidateNested({ each: true })
   // @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
@@ -155,7 +155,7 @@ export class WebScanOutEditVm extends WebScanOutVm {
 }
 
 // Edit DO POD BAG
-export class WebScanOutEditHubVm extends WebScanOutCreateVm {
+export class WebScanOutEditHubVm extends WebScanOutVm {
 
   @ApiModelProperty({
     example: 203,
@@ -164,24 +164,25 @@ export class WebScanOutEditHubVm extends WebScanOutCreateVm {
   @IsDefined({message: 'POD ID harus diisi'})
   doPodId: number;
 
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: ['00020001', '00020002'],
     skipValidation: true,
   })
-  @IsDefined({message: 'Nomor resi harus diisi'})
-  @IsBagNumber({ message: 'No Resi tidak sesuai' })
+  // @IsDefined({message: 'Nomor resi harus diisi'})
+  // @IsBagNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   addBagNumber: string[];
 
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: ['00020001', '00020002'],
     skipValidation: true,
   })
-  @IsDefined({message: 'Nomor resi harus diisi'})
-  @IsBagNumber({ message: 'No Resi tidak sesuai' })
+  // @IsDefined({message: 'Nomor resi harus diisi'})
+  // @IsBagNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   removeBagNumber: string[];
 }
+
 // Create DO POD Delivery
 export class WebScanOutCreateDeliveryVm {
   @ApiModelProperty({

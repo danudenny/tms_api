@@ -1,9 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
-import { Branch } from './branch';
-import { User } from './user';
-import { BagItem } from './bag-item';
 import { PodFilterDetail } from './pod-filter-detail';
 import { AwbItem } from './awb-item';
 
@@ -88,20 +85,6 @@ export class PodFilterDetailItem extends TmsBaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
-
-  // added by mohammad satria, 31 jul 2019
-  @Column('bigint', {
-    nullable: true,
-    name: 'to_id',
-  })
-  toId: number;
-
-  // added by mohammad satria, 5 aug 2019
-  @Column('integer', {
-    nullable: true,
-    name: 'to_type',
-  })
-  toType: number;
 
   @Column('bigint', {
     nullable: true,
