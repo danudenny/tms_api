@@ -1,9 +1,9 @@
 import express = require('express');
 import moment = require('moment');
 
-import { AuthService } from '../../../shared/services/auth.service';
 import { PrinterService } from '../../../shared/services/printer.service';
 import { RepositoryService } from '../../../shared/services/repository.service';
+import { RequestErrorService } from '../../../shared/services/request-error.service';
 import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
@@ -40,13 +40,14 @@ export class PrintService {
       })
       .where(e => e.doPodId, w => w.equals(queryParams.id));
 
-    // TODO: Handle if doPod undefined / not found
-    // TODO: Handle if doPod.doPodDetails undefined / empty
+    if (!doPod) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
 
-    const currentUserMeta = AuthService.getAuthData();
-    const currentUserPermissionTokenPayload = AuthService.getPermissionTokenPayload();
     const currentUser = await RepositoryService.user
-      .loadById(currentUserMeta.userId)
+      .loadById(queryParams.userId)
       .select({
         userId: true, // needs to be selected due to users relations are being included
         employee: {
@@ -54,11 +55,23 @@ export class PrintService {
         },
       });
 
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
     const currentBranch = await RepositoryService.branch
-      .loadById(currentUserPermissionTokenPayload.branchId)
+      .loadById(queryParams.branchId)
       .select({
         branchName: true,
       });
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
 
     const m = moment();
     const jsreportParams = {
@@ -103,13 +116,14 @@ export class PrintService {
       })
       .where(e => e.doPodDeliverId, w => w.equals(queryParams.id));
 
-    // TODO: Handle if doPodDeliver undefined / not found
-    // TODO: Handle if doPodDeliver.doPodDeliverDetails undefined / empty
+    if (!doPodDeliver) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
 
-    const currentUserMeta = AuthService.getAuthData();
-    const currentUserPermissionTokenPayload = AuthService.getPermissionTokenPayload();
     const currentUser = await RepositoryService.user
-      .loadById(currentUserMeta.userId)
+      .loadById(queryParams.userId)
       .select({
         userId: true, // needs to be selected due to users relations are being included
         employee: {
@@ -118,11 +132,23 @@ export class PrintService {
       })
       .exec();
 
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
     const currentBranch = await RepositoryService.branch
-      .loadById(currentUserPermissionTokenPayload.branchId)
+      .loadById(queryParams.branchId)
       .select({
         branchName: true,
       });
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
 
     const m = moment();
     const jsreportParams = {
@@ -174,13 +200,14 @@ export class PrintService {
       })
       .where(e => e.bagItemId, w => w.equals(queryParams.id));
 
-    // TODO: Handle if bagItem undefined / not found
-    // TODO: Handle if bagItem.bagItemAwbs undefined / empty
+    if (!bagItem) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
 
-    const currentUserMeta = AuthService.getAuthData();
-    const currentUserPermissionTokenPayload = AuthService.getPermissionTokenPayload();
     const currentUser = await RepositoryService.user
-      .loadById(currentUserMeta.userId)
+      .loadById(queryParams.userId)
       .select({
         userId: true, // needs to be selected due to users relations are being included
         employee: {
@@ -189,11 +216,23 @@ export class PrintService {
       })
       .exec();
 
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
     const currentBranch = await RepositoryService.branch
-      .loadById(currentUserPermissionTokenPayload.branchId)
+      .loadById(queryParams.branchId)
       .select({
         branchName: true,
       });
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
 
     const m = moment();
     const jsreportParams = {
