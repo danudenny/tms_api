@@ -67,14 +67,7 @@ export class FilterScanOutAwbListVm {
 export class WebScanOutAwbListPayloadVm extends BaseMetaPayloadVm {
 }
 
-// Create DO POD
-export class WebScanOutCreateVm {
-  @ApiModelProperty({
-    example: 8000,
-    skipValidation: true,
-  })
-  @IsDefined({message: 'Tipe POD harus diisi'})
-  doPodType: number;
+export class WebScanOutVm {
 
   @ApiModelPropertyOptional({
     example: 'internal, 3pl',
@@ -104,13 +97,6 @@ export class WebScanOutCreateVm {
   @IsDefined({message: 'Nomor mobil harus diisi'})
   vehicleNumber: string;
 
-  @ApiModelProperty({
-    example: '2019-05-01 00:00:00',
-    skipValidation: true,
-  })
-  @IsDefined({message: 'Tanggal pengiriman harus diisi'})
-  doPodDateTime: string;
-
   @ApiModelPropertyOptional()
   desc?: string;
 
@@ -118,8 +104,27 @@ export class WebScanOutCreateVm {
   totalBag?: number;
 }
 
+// Create DO POD
+export class WebScanOutCreateVm extends WebScanOutVm {
+
+  @ApiModelProperty({
+    example: 8000,
+    skipValidation: true,
+  })
+  @IsDefined({message: 'Tipe POD harus diisi'})
+  doPodType: number;
+
+  @ApiModelProperty({
+    example: '2019-05-01 00:00:00',
+    skipValidation: true,
+  })
+  @IsDefined({message: 'Tanggal pengiriman harus diisi'})
+  doPodDateTime: string;
+
+}
+
 // Edit DO POD AWB
-export class WebScanOutEditVm extends WebScanOutCreateVm {
+export class WebScanOutEditVm extends WebScanOutVm {
 
   @ApiModelProperty({
     example: 203,
@@ -133,7 +138,8 @@ export class WebScanOutEditVm extends WebScanOutCreateVm {
     skipValidation: true,
   })
   @IsDefined({message: 'Nomor resi harus diisi'})
-  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  // @ValidateNested({ each: true })
+  // @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   addAwbNumber: string[];
 
@@ -142,7 +148,8 @@ export class WebScanOutEditVm extends WebScanOutCreateVm {
     skipValidation: true,
   })
   @IsDefined({message: 'Nomor resi harus diisi'})
-  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  // @ValidateNested({ each: true })
+  // @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   removeAwbNumber: string[];
 }

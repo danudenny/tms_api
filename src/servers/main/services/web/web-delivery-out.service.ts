@@ -121,10 +121,8 @@ export class WebDeliveryOutService {
       },
     });
     if (doPod) {
-      const method =
-        payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
-      doPod.doPodType = payload.doPodType;
-      doPod.doPodMethod = method; // internal or 3PL/Third Party
+      // internal or 3PL/Third Party
+      doPod.doPodMethod = payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
       doPod.partnerLogisticId = payload.partnerLogisticId || null;
       doPod.branchIdTo = payload.branchIdTo || null;
       doPod.employeeIdDriver = payload.employeeIdDriver || null;
@@ -136,48 +134,53 @@ export class WebDeliveryOutService {
       doPod.branchId = permissonPayload.branchId;
       doPod.userId = authMeta.userId;
 
-      // TODO: get data list add awb, and list data delete awb
-      // looping data
-      for (const addAwb of payload.addAwbNumber) {
-        // find awb_item_attr
-        const awb = await DeliveryService.validAwbNumber(addAwb);
-        // add data do_pod_detail
-        const doPodDetail = DoPodDetail.create();
-        doPodDetail.doPodId = payload.doPodId;
-        doPodDetail.awbItemId = awb.awbItemId;
-        doPodDetail.doPodStatusIdLast = 1000;
-        doPodDetail.isScanOut = true;
-        doPodDetail.scanOutType = 'awb';
-        await DoPodDetail.save(doPodDetail);
+      // looping data list add awb number
+      if (payload.addAwbNumber && payload.addAwbNumber.length) {
 
-        // awb_item_attr and awb_history ??
-        await DeliveryService.updateAwbAttr(
-          awb.awbItemId,
-          doPod.branchIdTo,
-          AWB_STATUS.OUT_BRANCH,
-        );
+        for (const addAwb of payload.addAwbNumber) {
+          // find awb_item_attr
+          const awb = await DeliveryService.validAwbNumber(addAwb);
+          // add data do_pod_detail
+          const doPodDetail = DoPodDetail.create();
+          doPodDetail.doPodId = payload.doPodId;
+          doPodDetail.awbItemId = awb.awbItemId;
+          doPodDetail.doPodStatusIdLast = 1000;
+          doPodDetail.isScanOut = true;
+          doPodDetail.scanOutType = 'awb';
+          await DoPodDetail.save(doPodDetail);
 
-        // NOTE: queue by Bull
-        DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
-          doPodDetail.doPodDetailId,
-        );
+          // awb_item_attr and awb_history ??
+          await DeliveryService.updateAwbAttr(
+            awb.awbItemId,
+            doPod.branchIdTo,
+            AWB_STATUS.OUT_BRANCH,
+          );
+
+          // NOTE: queue by Bull
+          DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
+            doPodDetail.doPodDetailId,
+          );
+        }
       }
 
-      for (const addAwb of payload.removeAwbNumber) {
-        const awb = await DeliveryService.validAwbNumber(addAwb);
-        const doPodDetail = await DoPodDetail.findOne({
-          where: {
-            doPodId: payload.doPodId,
-            awbItemId: awb.awbItemId,
-            isDeleted: false,
-          },
-        });
+      // looping data list remove awb number
+      if (payload.removeAwbNumber && payload.removeAwbNumber.length) {
+        for (const addAwb of payload.removeAwbNumber) {
+          const awb = await DeliveryService.validAwbNumber(addAwb);
+          const doPodDetail = await DoPodDetail.findOne({
+            where: {
+              doPodId: payload.doPodId,
+              awbItemId: awb.awbItemId,
+              isDeleted: false,
+            },
+          });
 
-        if (doPodDetail) {
-          doPodDetail.isDeleted = true;
-          DoPodDetail.update(doPodDetail.doPodDetailId, doPodDetail);
-          // TODO:
-          // awb_item_attr and awb_history ??
+          if (doPodDetail) {
+            doPodDetail.isDeleted = true;
+            DoPodDetail.update(doPodDetail.doPodDetailId, doPodDetail);
+            // TODO:
+            // awb_item_attr and awb_history ??
+          }
         }
       }
 
@@ -221,7 +224,7 @@ export class WebDeliveryOutService {
     if (doPod) {
       const method =
         payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
-      doPod.doPodType = payload.doPodType;
+      doPod.doPodType = payload.doPodType; // 3010
       doPod.doPodMethod = method; // internal or 3PL/Third Party
       doPod.partnerLogisticId = payload.partnerLogisticId || null;
       doPod.branchIdTo = payload.branchIdTo || null;
@@ -234,51 +237,93 @@ export class WebDeliveryOutService {
       doPod.branchId = permissonPayload.branchId;
       doPod.userId = authMeta.userId;
 
-      // TODO: get data list add awb, and list data delete awb
-      // looping data
-      for (const addBag of payload.addBagNumber) {
-        // find bag
-        const bag = await DeliveryService.validBagNumber(addBag);
-        // add data do_pod_detail
-        const doPodDetail = DoPodDetail.create();
-        doPodDetail.doPodId = payload.doPodId;
-        doPodDetail.bagItemId = bag.bagItemId;
-        doPodDetail.doPodStatusIdLast = 1000;
-        doPodDetail.isScanOut = true;
-        doPodDetail.scanOutType = 'bag';
-        await DoPodDetail.save(doPodDetail);
+      // looping data list add bag number
+      if (payload.addBagNumber && payload.addBagNumber.length) {
 
-        // TODO: ??
-        // awb_item_attr and awb_history ??
-        // await DeliveryService.updateAwbAttr(
-        //   awb.awbItemId,
-        //   doPod.branchIdTo,
-        //   AWB_STATUS.OUT_BRANCH,
-        // );
+        for (const addBag of payload.addBagNumber) {
+          // find bag
+          const bag = await DeliveryService.validBagNumber(addBag);
+          // add data do_pod_detail
+          const doPodDetail = DoPodDetail.create();
+          doPodDetail.doPodId = payload.doPodId;
+          doPodDetail.bagItemId = bag.bagItemId;
+          doPodDetail.doPodStatusIdLast = 1000;
+          doPodDetail.isScanOut = true;
+          doPodDetail.scanOutType = 'bag';
+          await DoPodDetail.save(doPodDetail);
 
-        // // NOTE: queue by Bull
-        // DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
-        //   doPodDetail.doPodDetailId,
-        // );
-      }
+          // NOTE: Loop data bag_item_awb for update status awb
+          const bagItemsAwb = await BagItemAwb.find({
+            where: {
+              bagItemId: bag.bagItemId,
+              isDeleted: false,
+            },
+          });
 
-      for (const removeBag of payload.removeBagNumber) {
-        const bag = await DeliveryService.validBagNumber(removeBag);
-        const doPodDetail = await DoPodDetail.findOne({
-          where: {
-            doPodId: payload.doPodId,
-            bagItemId: bag.bagItemId,
-            isDeleted: false,
-          },
-        });
-
-        if (doPodDetail) {
-          doPodDetail.isDeleted = true;
-          DoPodDetail.update(doPodDetail.doPodDetailId, doPodDetail);
-          // TODO:
-          // awb_item_attr and awb_history ??
+          if (bagItemsAwb && bagItemsAwb.length) {
+            for (const itemAwb of bagItemsAwb) {
+              if (itemAwb.awbItemId) {
+                await DeliveryService.updateAwbAttr(
+                  itemAwb.awbItemId,
+                  doPod.branchIdTo,
+                  AWB_STATUS.OUT_HUB,
+                );
+                // NOTE: queue by Bull
+                DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+                  doPodDetail.doPodDetailId,
+                  itemAwb.awbItemId,
+                );
+              }
+            }
+          }
         }
       }
+      // looping data list remove bag number
+      if (payload.removeBagNumber && payload.removeBagNumber.length) {
+
+        for (const removeBag of payload.removeBagNumber) {
+          const bag = await DeliveryService.validBagNumber(removeBag);
+          const doPodDetail = await DoPodDetail.findOne({
+            where: {
+              doPodId: payload.doPodId,
+              bagItemId: bag.bagItemId,
+              isDeleted: false,
+            },
+          });
+
+          if (doPodDetail) {
+            doPodDetail.isDeleted = true;
+            DoPodDetail.update(doPodDetail.doPodDetailId, doPodDetail);
+
+            // NOTE: Loop data bag_item_awb for update status awb
+            const bagItemsAwb = await BagItemAwb.find({
+              where: {
+                bagItemId: bag.bagItemId,
+                isDeleted: false,
+              },
+            });
+            if (bagItemsAwb && bagItemsAwb.length) {
+              for (const itemAwb of bagItemsAwb) {
+                if (itemAwb.awbItemId) {
+                  // TODO:
+                  // awb_item_attr and awb_history ??
+                  // await DeliveryService.updateAwbAttr(
+                  //   itemAwb.awbItemId,
+                  //   doPod.branchIdTo,
+                  //   AWB_STATUS.OUT_HUB,
+                  // );
+                  // // NOTE: queue by Bull
+                  // DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+                  //   doPodDetail.doPodDetailId,
+                  //   itemAwb.awbItemId,
+                  // );
+                }
+              }
+            }
+          }
+        }
+      }
+
       // count data do_pod_detail ??
       // updatea total on do_pod
       // await for get do pod id
