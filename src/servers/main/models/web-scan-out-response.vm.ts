@@ -35,6 +35,21 @@ export class WebScanInResponseVm {
 
   @ApiModelProperty()
   branchTo: string;
+
+  @ApiModelProperty()
+  employeeIdDriver: string;
+
+  @ApiModelProperty()
+  partnerLogisticId: string;
+
+  @ApiModelProperty()
+  doPodMethod: string;
+
+  @ApiModelProperty()
+  vehicleNumber: string;
+
+  @ApiModelProperty()
+  branchIdTo: string;
 }
 
 export class WebScanInDeliverResponseVm {

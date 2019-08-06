@@ -902,6 +902,11 @@ export class WebDeliveryOutService {
       ['t1.total_scan_out', 'totalScanOut'],
       ['t1.last_date_scan_in', 'lastDateScanIn'],
       ['t1.last_date_scan_out', 'lastDateScanOut'],
+      ['t1.employee_id_driver', 'employeeIdDriver'],
+      ['t1.partner_logistic_id', 'partnerLogisticId'],
+      ['t1.do_pod_method', 'doPodMethod'],
+      ['t1.vehicle_number', 'vehicleNumber'],
+      ['t1.branch_id_to', 'branchIdTo'],
       ['t2.nickname', 'nickname'],
       ['t3.branch_name', 'branchTo'],
     );
