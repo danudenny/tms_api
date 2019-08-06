@@ -61,7 +61,7 @@ export class MobileSyncService {
         doPodDeliverHistories[doPodDeliverHistories.length - 1];
       await transactionEntitymanager.update(
         DoPodDeliverDetail,
-        delivery.doPodDeliverId,
+        delivery.doPodDeliverDetailId,
         {
           awbStatusIdLast: lastDoPodDeliverHistory.awbStatusId,
           latitudeDeliveryLast: lastDoPodDeliverHistory.latitudeDelivery,
