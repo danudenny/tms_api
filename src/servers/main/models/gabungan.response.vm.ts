@@ -39,4 +39,7 @@ export class PackageAwbResponseVm   {
 
   @ApiModelPropertyOptional()
   bagNumber: string;
+
+  @ApiModelPropertyOptional()
+  bagItemId: number;
 }
