@@ -30,6 +30,7 @@ import {
   WebScanOutCreateResponseVm,
   WebScanOutDeliverListResponseVm,
   ScanAwbVm,
+  ScanBagVm,
 } from '../../models/web-scan-out-response.vm';
 import {
   WebScanOutAwbVm,
@@ -39,6 +40,7 @@ import {
   WebScanOutAwbValidateVm,
   WebScanOutEditVm,
   WebScanOutEditHubVm,
+  WebScanOutBagValidateVm,
 } from '../../models/web-scan-out.vm';
 // #endregion
 
@@ -116,27 +118,29 @@ export class WebDeliveryOutService {
     const doPod = await DoPod.findOne({
       where: {
         doPodId: payload.doPodId,
-        totalScanIn: 0,
+        totalScanIn: null,
         isDeleted: false,
       },
     });
     if (doPod) {
-      // internal or 3PL/Third Party
-      doPod.doPodMethod = payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
-      doPod.partnerLogisticId = payload.partnerLogisticId || null;
-      doPod.branchIdTo = payload.branchIdTo || null;
-      doPod.employeeIdDriver = payload.employeeIdDriver || null;
-      // doPod.userIdDriver = payload.
-      doPod.vehicleNumber = payload.vehicleNumber || null;
-      doPod.description = payload.desc || null;
+      // update data
+      const updateDoPod = {
+        doPodMethod:
+          payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
+        partnerLogisticId: payload.partnerLogisticId,
+        branchIdTo: payload.branchIdTo,
+        employeeIdDriver: payload.employeeIdDriver,
+        vehicleNumber: payload.vehicleNumber,
+        description: payload.desc,
+        doPodStatusIdLast: 1100,
+        branchId: permissonPayload.branchId,
+        userId: authMeta.userId,
+      };
       // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
-      doPod.doPodStatusIdLast = 1100; // updated
-      doPod.branchId = permissonPayload.branchId;
-      doPod.userId = authMeta.userId;
+      // doPod.userIdDriver = payload.
 
       // looping data list add awb number
       if (payload.addAwbNumber && payload.addAwbNumber.length) {
-
         for (const addAwb of payload.addAwbNumber) {
           // find awb_item_attr
           const awb = await DeliveryService.validAwbNumber(addAwb);
@@ -176,8 +180,9 @@ export class WebDeliveryOutService {
           });
 
           if (doPodDetail) {
-            doPodDetail.isDeleted = true;
-            DoPodDetail.update(doPodDetail.doPodDetailId, doPodDetail);
+            DoPodDetail.update(doPodDetail.doPodDetailId, {
+              isDeleted: true,
+            });
             // TODO:
             // awb_item_attr and awb_history ??
           }
@@ -186,8 +191,9 @@ export class WebDeliveryOutService {
 
       // count data do_pod_detail ??
       // updatea total on do_pod
-      // await for get do pod id
-      await DoPod.save(doPod);
+      // await for update data doPod
+      await DoPod.update(doPod.doPodId, updateDoPod);
+      // await DoPod.save(doPod);
 
       result.status = 'ok';
       result.message = 'success';
@@ -217,14 +223,13 @@ export class WebDeliveryOutService {
     const doPod = await DoPod.findOne({
       where: {
         doPodId: payload.doPodId,
-        totalScanIn: 0,
+        totalScanIn: null,
         isDeleted: false,
       },
     });
     if (doPod) {
       const method =
         payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
-      doPod.doPodType = payload.doPodType; // 3010
       doPod.doPodMethod = method; // internal or 3PL/Third Party
       doPod.partnerLogisticId = payload.partnerLogisticId || null;
       doPod.branchIdTo = payload.branchIdTo || null;
@@ -239,7 +244,6 @@ export class WebDeliveryOutService {
 
       // looping data list add bag number
       if (payload.addBagNumber && payload.addBagNumber.length) {
-
         for (const addBag of payload.addBagNumber) {
           // find bag
           const bag = await DeliveryService.validBagNumber(addBag);
@@ -280,7 +284,6 @@ export class WebDeliveryOutService {
       }
       // looping data list remove bag number
       if (payload.removeBagNumber && payload.removeBagNumber.length) {
-
         for (const removeBag of payload.removeBagNumber) {
           const bag = await DeliveryService.validBagNumber(removeBag);
           const doPodDetail = await DoPodDetail.findOne({
@@ -292,8 +295,9 @@ export class WebDeliveryOutService {
           });
 
           if (doPodDetail) {
-            doPodDetail.isDeleted = true;
-            DoPodDetail.update(doPodDetail.doPodDetailId, doPodDetail);
+            DoPodDetail.update(doPodDetail.doPodDetailId, {
+              isDeleted: true,
+            });
 
             // NOTE: Loop data bag_item_awb for update status awb
             const bagItemsAwb = await BagItemAwb.find({
@@ -1183,4 +1187,29 @@ export class WebDeliveryOutService {
     result = { awbNumber, ...response };
     return result;
   }
+
+  async scanOutBagValidate(
+    payload: WebScanOutBagValidateVm,
+  ): Promise<ScanBagVm> {
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const bagNumber = payload.bagNumber;
+    let result = new ScanBagVm();
+    const response = {
+      status: 'error',
+      trouble: false,
+      message: 'Bag Bermasalah',
+    };
+
+    const bag = await DeliveryService.validBagNumber(bagNumber);
+    if (bag) {
+      if (bag.branchIdLast == permissonPayload.branchId) {
+        response.status = 'ok';
+        response.trouble = false;
+        response.message = 'success';
+      }
+    }
+    result = { bagNumber, ...response };
+    return result;
+  }
+
 }

@@ -6,13 +6,13 @@ export class DistrictReference extends BaseEntity {
     type: 'bigint',
     name: 'district_reference_id',
   })
-  districtReferenceId: string;
+  districtReferenceId: number;
 
   @Column('bigint', {
     nullable: false,
     name: 'district_id',
   })
-  districtId: string;
+  districtId: number;
 
   @Column('character varying', {
     nullable: false,

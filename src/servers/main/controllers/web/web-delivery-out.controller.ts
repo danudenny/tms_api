@@ -14,6 +14,7 @@ import {
   WebScanOutAwbValidateVm,
   WebScanOutEditVm,
   WebScanOutEditHubVm,
+  WebScanOutBagValidateVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutAwbResponseVm,
@@ -22,6 +23,7 @@ import {
   WebScanOutDeliverListResponseVm,
   WebScanOutBagResponseVm,
   ScanAwbVm,
+  ScanBagVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
@@ -133,8 +135,17 @@ export class WebDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: ScanAwbVm })
-  public async awbDeliverList(@Body() payload: WebScanOutAwbValidateVm) {
+  public async awbValidate(@Body() payload: WebScanOutAwbValidateVm) {
     return this.webDeliveryOutService.scanOutAwbValidate(payload);
+  }
+
+  @Post('bagValidate')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: ScanBagVm })
+  public async bagValidate(@Body() payload: WebScanOutBagValidateVm) {
+    return this.webDeliveryOutService.scanOutBagValidate(payload);
   }
 
   @Post('bagList')
