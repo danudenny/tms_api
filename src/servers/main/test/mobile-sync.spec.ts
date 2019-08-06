@@ -8,7 +8,7 @@ import TEST_GLOBAL_VARIABLE from '../../../test/test-global-variable';
 import { TestUtility } from '../../../test/test-utility';
 import { MobileDeliveryHistoryVm } from '../models/mobile-delivery-history.vm';
 import { MobileDeliveryVm } from '../models/mobile-delivery.vm';
-import { MobileInitDataResponseVm } from '../models/mobile-init-response.vm';
+import { MobileInitDataResponseVm } from '../models/mobile-init-data-response.vm';
 import { MobileSyncPayloadVm } from '../models/mobile-sync-payload.vm';
 import { MobileSyncResponseVm } from '../models/mobile-sync-response.vm';
 import { WebScanOutAwbResponseVm, WebScanOutCreateResponseVm } from '../models/web-scan-out-response.vm';

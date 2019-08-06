@@ -6,6 +6,9 @@ export class AwbStatusVm {
   awbStatusId: number;
 
   @ApiModelProperty()
+  awbStatusCode: string;
+
+  @ApiModelProperty()
   awbStatusTitle: string;
 
   @ApiModelProperty()

@@ -1,4 +1,5 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { AwbStatusVm } from './awb-status.vm';
 import { MobileDeliveryVm } from './mobile-delivery.vm';
 import { ReasonVm } from './reason.vm';
 
@@ -7,7 +8,7 @@ export class MobileInitDataResponseVm {
   reason: ReasonVm[];
 
   @ApiModelProperty()
-  awbStatus: any;
+  awbStatus: AwbStatusVm;
 
   @ApiModelProperty({ type: [MobileDeliveryVm] })
   delivery: MobileDeliveryVm[];

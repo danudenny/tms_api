@@ -7,7 +7,7 @@ import { ConfigService } from './config.service';
 
 @Injectable()
 export class PinoLoggerService implements LoggerService {
-  private static lastTimestamp?: number;
+  private static lastTimestamp?: number = Date.now();
   private static instance?: LoggerService = PinoLoggerService;
 
   private static logger: pino.Logger = pino({
