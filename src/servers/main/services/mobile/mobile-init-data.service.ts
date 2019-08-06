@@ -1,12 +1,13 @@
 import { HttpStatus } from '@nestjs/common';
+import moment = require('moment');
 import { createQueryBuilder } from 'typeorm';
 
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { Reason } from '../../../../shared/orm-entity/reason';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { MobileInitDataResponseVm } from '../../models/mobile-init-response.vm';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { MobileInitDataResponseVm } from '../../models/mobile-init-data-response.vm';
 
 export class MobileInitDataService {
   public static async getInitDataByRequest(
@@ -18,9 +19,9 @@ export class MobileInitDataService {
       // TODO: query reason, awbStatus, and delivery based on fromDate (updated_time)
       const result = new MobileInitDataResponseVm();
 
-      result.reason = await this.getReason();
-      result.awbStatus = await this.getAwbStatus();
-      result.delivery = await this.getDelivery();
+      result.reason = await this.getReason(fromDate);
+      result.awbStatus = await this.getAwbStatus(fromDate);
+      result.delivery = await this.getDelivery(fromDate);
       result.serverDateTime = new Date().toISOString();
 
       return result;
@@ -34,7 +35,7 @@ export class MobileInitDataService {
     }
   }
 
-  private static async getReason() {
+  private static async getReason(fromDate?: string) {
     const repository = new OrionRepositoryService(Reason);
     const q = repository.findAllRaw();
     q.selectRaw(
@@ -47,10 +48,16 @@ export class MobileInitDataService {
     q.where(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.reasonCategory, w => w.equals('pod'));
     q.orWhere(e => e.reasonCategory, w => w.equals('pod_cod'));
+    if (fromDate) {
+      q.andWhere(
+        e => e.updatedTime,
+        w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+      );
+    }
     return await q.exec();
   }
 
-  private static async getAwbStatus() {
+  private static async getAwbStatus(fromDate?: string) {
     const repository = new OrionRepositoryService(AwbStatus);
     const q = repository.findAllRaw();
     q.selectRaw(
@@ -60,11 +67,17 @@ export class MobileInitDataService {
     );
     q.where(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.isProblem, w => w.isTrue());
+    if (fromDate) {
+      q.andWhere(
+        e => e.updatedTime,
+        w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+      );
+    }
 
     return await q.exec();
   }
 
-  private static async getDelivery() {
+  private static async getDelivery(fromDate?: string) {
     const qb = createQueryBuilder();
     qb.addSelect(
       'do_pod_deliver_detail.do_pod_deliver_detail_id',
@@ -129,12 +142,24 @@ export class MobileInitDataService {
           qbJoinFrom.addSelect('do_pod_deliver_history.desc', 'reasonNotes');
           qbJoinFrom.addSelect('employee.employee_id', 'employeeId');
           qbJoinFrom.addSelect('employee.fullname', 'employeeName');
-          qbJoinFrom.addSelect('do_pod_deliver_history.awb_status_id', 'awbStatusId');
-          qbJoinFrom.addSelect('do_pod_deliver_history.latitude_delivery', 'latitudeDelivery');
-          qbJoinFrom.addSelect('do_pod_deliver_history.longitude_delivery', 'longitudeDelivery');
+          qbJoinFrom.addSelect(
+            'do_pod_deliver_history.awb_status_id',
+            'awbStatusId',
+          );
+          qbJoinFrom.addSelect(
+            'do_pod_deliver_history.latitude_delivery',
+            'latitudeDelivery',
+          );
+          qbJoinFrom.addSelect(
+            'do_pod_deliver_history.longitude_delivery',
+            'longitudeDelivery',
+          );
           qbJoinFrom.from('do_pod_deliver_history', 'do_pod_deliver_history');
           qbJoinFrom.where(
             'do_pod_deliver_history.do_pod_deliver_detail_id = do_pod_deliver_detail.do_pod_deliver_detail_id',
+          );
+          qbJoinFrom.where(
+            'do_pod_deliver_history.is_deleted = false',
           );
           qbJoinFrom.leftJoin(
             qbJoinFromJoin => {
@@ -192,6 +217,12 @@ export class MobileInitDataService {
     //     currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
     //   },
     // );
+
+    qb.andWhere('do_pod_deliver_detail.is_deleted = false');
+
+    if (fromDate) {
+      qb.andWhere('do_pod_deliver_detail.updated_time >= :fromDate', { fromDate: moment(fromDate).toDate() });
+    }
     return await qb.getRawMany();
   }
 }

@@ -1,11 +1,12 @@
-import { Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { MobileDashboardFindAllResponseVm } from '../../models/mobile-dashboard.response.vm';
-import { MobileInitDataResponseVm } from '../../models/mobile-init-response.vm';
+import { MobileInitDataPayloadVm } from '../../models/mobile-init-data-payload.vm';
+import { MobileInitDataResponseVm } from '../../models/mobile-init-data-response.vm';
 import { MobileDashboardService } from '../../services/mobile/mobile-dashboard.service';
 import { MobileInitDataService } from '../../services/mobile/mobile-init-data.service';
 
@@ -27,7 +28,7 @@ export class MobileDashboardController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
   @ApiOkResponse({ type: MobileInitDataResponseVm })
-  public async initData() {
-    return MobileInitDataService.getInitDataByRequest();
+  public async initData(@Body() payload: MobileInitDataPayloadVm) {
+    return MobileInitDataService.getInitDataByRequest(payload.lastSyncDateTime);
   }
 }
