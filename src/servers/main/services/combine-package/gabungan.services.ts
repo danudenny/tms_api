@@ -202,6 +202,7 @@ export class GabunganService {
         qb.addSelect('e.pickup_merchant', 'pickupMerchant');
         qb.addSelect('g.district_id', 'districtId');
         qb.addSelect('g.district_name', 'districtName');
+        qb.addSelect('b.bag_item_id', 'bagItemId');
         qb.from('bag', 'a');
         qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
         qb.innerJoin('bag_item_awb', 'c', 'b.bag_item_id = c.bag_item_id');
@@ -215,13 +216,14 @@ export class GabunganService {
 
         const detailData = await qb.getRawMany();
         if (detailData && detailData.length === Number(value)) {
-            // TODO: PRINT CUK
-             RequestErrorService.throwObj(
-              {
-                message: 'HARUSNYA DISINI NGEPRINT',
-              },
-              HttpStatus.BAD_REQUEST,
-            );
+            result.bagItemId = detailData[0].bagItemId;
+            // // TODO: PRINT CUK
+            //  RequestErrorService.throwObj(
+            //   {
+            //     message: 'HARUSNYA DISINI NGEPRINT',
+            //   },
+            //   HttpStatus.BAD_REQUEST,
+            // );
         } else {
            RequestErrorService.throwObj(
             {
@@ -323,10 +325,10 @@ export class GabunganService {
           updateBagItem.weight = totalWeight;
           await BagItem.save(updateBagItem);
 
-          // TODO: print
+          result.bagItemId = bagItem.bagItemId;
 
         } else {
-             RequestErrorService.throwObj(
+            RequestErrorService.throwObj(
               {
                 message: 'Total data tidak sesuai',
               },
