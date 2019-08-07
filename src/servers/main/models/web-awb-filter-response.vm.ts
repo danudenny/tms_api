@@ -2,7 +2,6 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 export class WebAwbFilterFinishScanResponseVm {
-
   @ApiModelProperty()
   status: string;
 
@@ -99,4 +98,10 @@ export class WebAwbFilterResponseVm {
   @ApiModelProperty()
   totalItem: number;
 
+}
+
+export class WebAwbFilterGetLatestResponseVm {
+
+  @ApiModelProperty({ type: [DistrictVm] })
+  data: WebAwbFilterScanBagResponseVm[];
 }
