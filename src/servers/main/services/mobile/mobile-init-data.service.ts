@@ -199,24 +199,24 @@ export class MobileInitDataService {
     qb.skip(200);
 
     // COMMENTED FOR TEST PURPOSE
-    // const authMeta = AuthService.getAuthMetadata();
-    // qb.andWhere('do_pod_deliver.employee_id_driver = :currentUserId', {
-    //   currentUserId: authMeta.userId,
-    // });
+    const authMeta = AuthService.getAuthMetadata();
+    qb.andWhere('do_pod_deliver.employee_id_driver = :employeeIdDriver', {
+      employeeIdDriver: authMeta.employeeId,
+    });
 
     // const permissionTokenPayload = AuthService.getPermissionTokenPayload();
     // qb.andWhere('do_pod_deliver.branch_id = :currentBranchId', {
     //   currentBranchId: permissionTokenPayload.branchId,
     // });
 
-    // const currentMoment = moment();
-    // qb.andWhere(
-    //   'do_pod_deliver.do_pod_deliver_date_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
-    //   {
-    //     currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
-    //     currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
-    //   },
-    // );
+    const currentMoment = moment();
+    qb.andWhere(
+      'do_pod_deliver.do_pod_deliver_date_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      {
+        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
+        currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
+      },
+    );
 
     qb.andWhere('do_pod_deliver_detail.is_deleted = false');
 
