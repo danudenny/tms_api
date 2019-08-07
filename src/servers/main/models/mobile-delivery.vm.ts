@@ -51,6 +51,9 @@ export class MobileDeliveryVm {
   productType: string;
 
   @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
   isCOD: boolean;
 
   @ApiModelProperty({ type: [MobileDeliveryHistoryVm] })
