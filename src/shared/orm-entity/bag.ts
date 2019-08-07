@@ -1,6 +1,7 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
 import { BagItem } from './bag-item';
 import { TmsBaseEntity } from './tms-base';
+import { Representative } from './representative';
 
 @Entity('bag', { schema: 'public' })
 @Index('bag_bag_date_idx', ['bagDate'])
@@ -114,4 +115,8 @@ export class Bag extends TmsBaseEntity {
   // relation model
   @OneToMany(() => BagItem, e => e.bag, { cascade: ['insert'] })
   bagItems: BagItem[];
+
+  @OneToOne(() => Representative)
+  @JoinColumn({ name: 'representative_id_to' })
+  representative: Representative;
 }

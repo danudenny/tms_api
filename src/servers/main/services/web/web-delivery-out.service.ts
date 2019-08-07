@@ -199,7 +199,7 @@ export class WebDeliveryOutService {
       result.message = 'success';
     } else {
       result.status = 'error';
-      result.message = 'Surat Jalan tidak valid';
+      result.message = 'Surat Jalan tidak valid/Sudah pernah Scan In';
     }
     result.doPodId = payload.doPodId;
     return result;
@@ -1042,6 +1042,7 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.awbItem.awb, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -1137,7 +1138,7 @@ export class WebDeliveryOutService {
         'bagNumber',
       ],
       ['COUNT (t4.*)', 'totalAwb'],
-      ['t3.representative_id_to', 'representativeIdTo'],
+      ['t5.representative_name', 'representativeIdTo'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
 
@@ -1150,8 +1151,12 @@ export class WebDeliveryOutService {
     q.leftJoin(e => e.bagItem.bagItemAwbs, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoin(e => e.bagItem.bag.representative, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.groupByRaw(
-      't3.bag_number, t2.bag_seq, t2.weight, t3.representative_id_to',
+      't3.bag_number, t2.bag_seq, t2.weight, t5.representative_name',
     );
 
     const data = await q.exec();
