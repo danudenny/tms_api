@@ -1,4 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
+import express = require('express');
+import fclone from 'fclone';
 
 import { ErrorParserService } from '../services/error-parser.service';
 import { PinoLoggerService } from '../services/pino-logger.service';
@@ -10,7 +12,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     PinoLoggerService.error(exception);
 
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
+    const response = ctx.getResponse<express.Response>();
     const request = ctx.getRequest();
 
     SentryService.trackFromExceptionAndNestHostOrContext(exception, host);
@@ -25,8 +27,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
 
       const requestErrorResponse = ErrorParserService.parseRequestErrorFromExceptionAndArgumentsHost(exception, host);
-
-      response.status(status).json(requestErrorResponse);
+      const finalRequestErrorResponse = fclone(requestErrorResponse);
+      response.status(status).json(finalRequestErrorResponse);
     }
   }
 }
