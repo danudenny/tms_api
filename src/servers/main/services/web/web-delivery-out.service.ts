@@ -42,6 +42,7 @@ import {
   WebScanOutEditHubVm,
   WebScanOutBagValidateVm,
 } from '../../models/web-scan-out.vm';
+import { createQueryBuilder } from 'typeorm';
 // #endregion
 
 @Injectable()
@@ -192,6 +193,7 @@ export class WebDeliveryOutService {
       // count data do_pod_detail ??
       // updatea total on do_pod
       // await for update data doPod
+      // updateDoPod['totalItem'] = this.getTotalDetailById(doPod.doPodId);
       await DoPod.update(doPod.doPodId, updateDoPod);
       // await DoPod.save(doPod);
 
@@ -1222,4 +1224,12 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  private async getTotalDetailById(doPodId: number) {
+    const qb = createQueryBuilder();
+    qb.from('do_pod_detail', 'do_pod_detail');
+    qb.where('do_pod_detail.do_pod_id = :doPodId', {
+      doPodId,
+    });
+    return await qb.getCount();
+  }
 }

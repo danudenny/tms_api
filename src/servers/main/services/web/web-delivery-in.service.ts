@@ -275,6 +275,7 @@ export class WebDeliveryInService {
               bagItem.userIdUpdated = authMeta.userId;
               BagItem.save(bagItem);
 
+              // TODO: check doPodDetail
               const doPodDetail = await DoPodDetail.findOne({
                 where: {
                   bagItemId: bagData.bagItemId,
