@@ -1,7 +1,7 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 export class WebAwbFilterFinishScanResponseVm {
-
   @ApiModelProperty()
   status: string;
 
@@ -55,6 +55,12 @@ export class DistrictVm {
 export class WebAwbFilterScanBagResponseVm {
 
   @ApiModelProperty()
+  bagNumberSeq: string;
+
+  @ApiModelProperty()
+  isActive: boolean;
+
+  @ApiModelProperty()
   totalData: number;
 
   @ApiModelProperty()
@@ -74,4 +80,34 @@ export class WebAwbFilterScanBagResponseVm {
 
   @ApiModelProperty({ type: [DistrictVm] })
   data: DistrictVm[];
+}
+
+export class WebAwbFilterResponseVm {
+  @ApiModelProperty()
+  bagItemId: number;
+
+  @ApiModelProperty()
+  bagNumberSeq: string;
+
+  @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
+  totalFiltered: number;
+
+  @ApiModelProperty()
+  diffFiltered: number;
+
+  @ApiModelProperty()
+  moreFiltered: number;
+
+  @ApiModelProperty()
+  totalItem: number;
+
+}
+
+export class WebAwbFilterGetLatestResponseVm {
+
+  @ApiModelProperty({ type: [WebAwbFilterScanBagResponseVm] })
+  data: WebAwbFilterScanBagResponseVm[];
 }

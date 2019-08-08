@@ -130,14 +130,16 @@ export class RequestOrionRepositoryService {
         for (const searchFieldIdx in metaPayload.globalSearchFields) {
           const searchField = metaPayload.globalSearchFields[searchFieldIdx];
           const field = metaPayload.resolveFieldAsFieldAlias(searchField.field);
+
+          const targetFilter = new BaseMetaPayloadFilterVm();
+          targetFilter.field = field;
+          targetFilter.operator = searchField.operator || 'ilike';
+          targetFilter.value = metaPayload.search;
+
           qWhere.orWhere(
             field,
             qWhereItem => {
-              this.applyMetaPayloadFilterItem(qWhereItem, {
-                field,
-                operator: searchField.operator || 'ilike',
-                value: metaPayload.search,
-              });
+              this.applyMetaPayloadFilterItem(qWhereItem, targetFilter);
             },
             false,
           );

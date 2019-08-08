@@ -6,7 +6,9 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { WebAwbFilterService } from '../../services/web/web-awb-filter.service';
 import { WebAwbFilterScanBagVm, WebAwbFilterScanAwbVm, WebAwbFilterFinishScanVm } from '../../models/web-awb-filter.vm';
-import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFilterFinishScanResponseVm } from '../../models/web-awb-filter-response.vm';
+import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFilterFinishScanResponseVm, WebAwbFilterGetLatestResponseVm } from '../../models/web-awb-filter-response.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
 
 @ApiUseTags('Web Delivery In')
 @Controller('web/pod/awb/filter')
@@ -21,7 +23,6 @@ export class WebAwbFilterController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebAwbFilterScanBagResponseVm })
-  @Transactional()
   public async scanBag(@Body() payload: WebAwbFilterScanBagVm) {
     return this.webAwbFilterService.scanBag(payload);
   }
@@ -44,5 +45,23 @@ export class WebAwbFilterController {
   @Transactional()
   public async finishScan(@Body() payload: WebAwbFilterFinishScanVm) {
     return this.webAwbFilterService.finishScan(payload);
+  }
+
+  @Post('list')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebAwbFilterListResponseVm })
+  public async findAllAwbFilterList(@Body() payload: BaseMetaPayloadVm) {
+    return this.webAwbFilterService.findAllAwbFilterList(payload);
+  }
+
+  @Post('loadScanFiltered')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebAwbFilterGetLatestResponseVm })
+  public async loadScanFiltered() {
+    return this.webAwbFilterService.loadScanFiltered();
   }
 }
