@@ -193,7 +193,7 @@ export class WebDeliveryInService {
 
     q.selectRaw(
       ['t2.awb_number', 'awbNumber'],
-      ['t2.weight', 'weight'],
+      [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
 
     q.innerJoin(e => e.bagItems, 't3', j =>
