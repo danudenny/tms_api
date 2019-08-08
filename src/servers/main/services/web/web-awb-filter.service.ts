@@ -26,13 +26,13 @@ import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-
 import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
 import {
   DistrictVm,
+  ScanAwbVm,
   WebAwbFilterFinishScanResponseVm,
   WebAwbFilterGetLatestResponseVm,
   WebAwbFilterScanAwbResponseVm,
   WebAwbFilterScanBagResponseVm,
 } from '../../models/web-awb-filter-response.vm';
 import { WebAwbFilterFinishScanVm, WebAwbFilterScanAwbVm, WebAwbFilterScanBagVm } from '../../models/web-awb-filter.vm';
-import { ScanAwbVm } from '../../models/web-scanin-awb.response.vm';
 
 export class WebAwbFilterService {
 
