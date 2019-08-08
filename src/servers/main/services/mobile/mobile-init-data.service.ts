@@ -163,7 +163,7 @@ export class MobileInitDataService {
           qbJoinFrom.where(
             'do_pod_deliver_history.do_pod_deliver_detail_id = do_pod_deliver_detail.do_pod_deliver_detail_id',
           );
-          qbJoinFrom.where(
+          qbJoinFrom.andWhere(
             'do_pod_deliver_history.is_deleted = false',
           );
           qbJoinFrom.innerJoin(
