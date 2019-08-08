@@ -1,6 +1,6 @@
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { WebAwbFilterScanBagVm, WebAwbFilterScanAwbVm, WebAwbFilterFinishScanVm } from '../../models/web-awb-filter.vm';
-import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFilterFinishScanResponseVm, WebAwbFilterGetLatestResponseVm } from '../../models/web-awb-filter-response.vm';
+import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFilterFinishScanResponseVm, WebAwbFilterGetLatestResponseVm, DistrictVm } from '../../models/web-awb-filter-response.vm';
 import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -55,6 +55,7 @@ export class WebAwbFilterService {
         podFilterId: true,
         representativeIdFilter: true,
         totalBagItem: true,
+        podFilterCode: true,
         representative: {
           representativeCode: true,
         },
@@ -66,10 +67,18 @@ export class WebAwbFilterService {
     if (podFilter) {
       const podFilterDetail = await RepositoryService.podFilterDetail.findAll()
         .where(e => e.podFilterId, w => w.equals(podFilter.podFilterId))
+        .orderBy({ podFilterDetailId: 'ASC'})
         .select({
           podFilterDetailId: true,
           podFilterId: true,
           bagItemId: true,
+          isActive: true,
+          bagItem: {
+            bagSeq: true,
+            bag: {
+              bagNumber: true,
+            },
+          },
         })
         .exec();
 
@@ -88,19 +97,21 @@ export class WebAwbFilterService {
           ) as ab
           INNER JOIN district d ON d.district_id = ab.to_id
         `;
-        const result = await RawQueryService.query(raw_query);
-        const data = [];
-        for (const res of result) {
-          data.push({
-            districtId: res.district_id,
-            districtCode: res.district_code,
-            districtName: res.district_name,
-            totalAwb: res.count,
-            totalFiltered: res.filtered,
-          });
+        const results = await RawQueryService.query(raw_query);
+        const data: DistrictVm[] = [];
+        for (const result of results) {
+          const districtVm = new DistrictVm();
+          districtVm.districtId = result.district_id;
+          districtVm.districtCode = result.district_code;
+          districtVm.districtName = result.district_name;
+          districtVm.totalAwb = result.count;
+          districtVm.totalFiltered = result.filtered;
+          data.push(districtVm);
         }
 
         const awbFilterScanBag = new WebAwbFilterScanBagResponseVm();
+        awbFilterScanBag.bagNumberSeq = res.bagItem.bag.bagNumber + res.bagItem.bagSeq.toString().padStart(3, '0');
+        awbFilterScanBag.isActive = res.isActive;
         awbFilterScanBag.totalData = data.length;
         awbFilterScanBag.podFilterCode = podFilter.podFilterCode;
         awbFilterScanBag.podFilterDetailId = res.podFilterDetailId;
@@ -112,7 +123,6 @@ export class WebAwbFilterService {
       }
     }
     response.data = responseData;
-    console.log(response);
     return response;
   }
 
@@ -142,8 +152,6 @@ export class WebAwbFilterService {
       }, 500);
     }
 
-    // TODO: if this bag is filtering in another branch and user, block other user and branch to scan the same bag
-
     // find Last Filter for current user and branch scan
     let podFilter = await RepositoryService.podFilter
       .findOne()
@@ -155,6 +163,13 @@ export class WebAwbFilterService {
         podFilterId: true,
         representativeIdFilter: true,
         totalBagItem: true,
+        userIdScan: true,
+        user: {
+          username: true,
+        },
+        branch: {
+          branchName: true,
+        },
         representative: {
           representativeCode: true,
         },
@@ -180,6 +195,18 @@ export class WebAwbFilterService {
     } else {
       // if not exists, create new one
       podFilter = await this.createPodFilter(authMeta, permissonPayload, bagData);
+    }
+
+    // update latest scan to is_active false
+    const podFilterDetailActive = await RepositoryService.podFilterDetail
+      .findOne()
+      .andWhere(e => e.podFilterId, w => w.equals(podFilter.podFilterId))
+      .andWhere(e => e.isActive, w => w.isTrue())
+      .andWhere(e => e.isDeleted, w => w.isFalse())
+    ;
+    if (podFilterDetailActive) {
+      podFilterDetailActive.isActive = false;
+      await podFilterDetailActive.save();
     }
 
     // check this bag already scan or not
@@ -224,6 +251,8 @@ export class WebAwbFilterService {
 
     const response = new WebAwbFilterScanBagResponseVm();
     response.totalData = data.length;
+    response.bagNumberSeq = payload.bagNumber;
+    response.isActive = true;
     response.bagItemId = bagData.bagItemId;
     response.podFilterCode = podFilter.podFilterCode;
     response.podFilterId = podFilterDetail.podFilterId;
@@ -518,17 +547,20 @@ export class WebAwbFilterService {
     // check this bag already scan or not
     let podFilterDetail = await RepositoryService.podFilterDetail
       .findOne()
-      .andWhere(e => e.podFilterId, w => w.equals(podFilter.podFilterId))
       .andWhere(e => e.bagItemId, w => w.equals(bagData.bagItemId))
       .andWhere(e => e.isDeleted, w => w.isFalse())
+      .select({
+        podFilterId: true,
+      })
     ;
+
     // if already scan, skip insert into pod_filter_detail
     // this section, to handle when they scan bag_nmber twice
     if (!podFilterDetail) {
-
       // save to pod_filter_detail for the first time scan
       podFilterDetail = await this.podFilterDetailRepository.create();
       podFilterDetail.bagItemId = bagData.bagItemId;
+      podFilterDetail.isActive = true;
       podFilterDetail.scanDateTime = moment().toDate();
       podFilterDetail.podFilterId = podFilter.podFilterId;
       podFilterDetail.startDateTime = moment().toDate();
@@ -550,6 +582,17 @@ export class WebAwbFilterService {
       //   updatedTime: moment().toDate(),
       //   userIdUpdated: authMeta.userId,
       // });
+    } else {
+      // if this bag is filtering in another branch and user, block other user and branch to scan the same bag
+      if (podFilterDetail.podFilterId === podFilter.podFilterId) {
+        podFilterDetail.isActive = true;
+        await podFilterDetail.save();
+      } else {
+        ContextualErrorService.throwObj({
+          message: `Gabung Paket sudah disortir oleh ${podFilter.user.username} Gerai ${podFilter.branch.branchName}`,
+        }, 500);
+      }
+
     }
     return podFilterDetail;
   }

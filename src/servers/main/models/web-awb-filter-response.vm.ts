@@ -55,6 +55,12 @@ export class DistrictVm {
 export class WebAwbFilterScanBagResponseVm {
 
   @ApiModelProperty()
+  bagNumberSeq: string;
+
+  @ApiModelProperty()
+  isActive: boolean;
+
+  @ApiModelProperty()
   totalData: number;
 
   @ApiModelProperty()
@@ -102,6 +108,6 @@ export class WebAwbFilterResponseVm {
 
 export class WebAwbFilterGetLatestResponseVm {
 
-  @ApiModelProperty({ type: [DistrictVm] })
+  @ApiModelProperty({ type: [WebAwbFilterScanBagResponseVm] })
   data: WebAwbFilterScanBagResponseVm[];
 }
