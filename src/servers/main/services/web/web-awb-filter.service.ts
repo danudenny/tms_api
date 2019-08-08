@@ -22,8 +22,17 @@ import {
   WebAwbFilterFinishScanResponseVm,
   WebAwbFilterScanAwbResponseVm,
   WebAwbFilterScanBagResponseVm,
+  DistrictVm,
+  WebAwbFilterGetLatestResponseVm,
 } from '../../models/web-awb-filter-response.vm';
 import { WebAwbFilterFinishScanVm, WebAwbFilterScanAwbVm, WebAwbFilterScanBagVm } from '../../models/web-awb-filter.vm';
+import { RedisService } from '../../../../shared/services/redis.service';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
+import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { User } from '../../../../shared/orm-entity/user';
+import { Branch } from '../../../../shared/orm-entity/branch';
 
 export class WebAwbFilterService {
 
@@ -137,7 +146,7 @@ export class WebAwbFilterService {
       'locking',
     );
     if (!holdRedis) {
-      ContextualErrorService.throwObj({
+      RequestErrorService.throwObj({
         message: `No Gabung Paket ${payload.bagNumber} sedang di Sortir`,
       }, 500);
     }
@@ -594,8 +603,18 @@ export class WebAwbFilterService {
         podFilterDetail.isActive = true;
         await podFilterDetail.save();
       } else {
-        ContextualErrorService.throwObj({
-          message: `Gabung Paket sudah disortir oleh ${podFilter.user.username} Gerai ${podFilter.branch.branchName}`,
+        const user = await User.findOne({
+          where: {
+            userId: podFilter.userIdScan,
+          },
+        });
+        const branch = await Branch.findOne({
+          where: {
+            branchId: podFilter.branchIdScan,
+          },
+        });
+        RequestErrorService.throwObj({
+          message: `Gabung Paket sudah disortir oleh ${user.username} Gerai ${branch.branchName}`,
         }, 500);
       }
 
