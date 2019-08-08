@@ -249,33 +249,10 @@ export class WebDeliveryInService {
               'locking',
             );
             if (holdRedis) {
-              // save data to table pod_scan_id
-              // TODO: to be review
-              const podScanIn = PodScanIn.create();
-              // podScanIn.awbId = ??;
-              // podScanIn.doPodId = ??;
-              podScanIn.scanInType = 'bag';
-              podScanIn.employeeId = authMeta.employeeId;
-              podScanIn.bagItemId = bagData.bagItemId;
-              podScanIn.branchId = permissonPayload.branchId;
-              podScanIn.userId = authMeta.userId;
-              podScanIn.podScaninDateTime = timeNow;
-              await PodScanIn.save(podScanIn);
 
               // AFTER Scan IN ===============================================
               // #region after scanin
-              const bagItem = await BagItem.findOne({
-                where: {
-                  bagItemId: bagData.bagItemId,
-                },
-              });
-              bagItem.bagItemStatusIdLast = 2000;
-              bagItem.branchIdLast = permissonPayload.branchId;
-              bagItem.updatedTime = timeNow;
-              bagItem.userIdUpdated = authMeta.userId;
-              BagItem.save(bagItem);
-
-              // TODO: check doPodDetail
+              // NOTE: check doPodDetail
               const doPodDetail = await DoPodDetail.findOne({
                 where: {
                   bagItemId: bagData.bagItemId,
@@ -284,6 +261,28 @@ export class WebDeliveryInService {
                 },
               });
               if (doPodDetail) {
+                // save data to table pod_scan_id
+                // TODO: to be review
+                const podScanIn = PodScanIn.create();
+                podScanIn.scanInType = 'bag';
+                podScanIn.employeeId = authMeta.employeeId;
+                podScanIn.bagItemId = bagData.bagItemId;
+                podScanIn.branchId = permissonPayload.branchId;
+                podScanIn.userId = authMeta.userId;
+                podScanIn.podScaninDateTime = timeNow;
+                await PodScanIn.save(podScanIn);
+                // update bagItem
+                const bagItem = await BagItem.findOne({
+                  where: {
+                    bagItemId: bagData.bagItemId,
+                  },
+                });
+                bagItem.bagItemStatusIdLast = 2000;
+                bagItem.branchIdLast = permissonPayload.branchId;
+                bagItem.updatedTime = timeNow;
+                bagItem.userIdUpdated = authMeta.userId;
+                BagItem.save(bagItem);
+
                 // Update Data doPodDetail
                 doPodDetail.podScanInId = podScanIn.podScanInId;
                 doPodDetail.isScanIn = true;
@@ -324,7 +323,7 @@ export class WebDeliveryInService {
                         doPod.branchIdTo,
                         AWB_STATUS.DO_HUB,
                       );
-                      // TODO: queue by Bull
+                      // NOTE: queue by Bull
                       DoPodDetailPostMetaQueueService.createJobByScanInBag(
                         itemAwb.awbItemId,
                         permissonPayload.branchId,
@@ -340,7 +339,7 @@ export class WebDeliveryInService {
               } else {
                 totalError += 1;
                 response.status = 'error';
-                response.message = `No Bag ${bagNumber} belum di Scan Keluar`;
+                response.message = `Gabung paket ${bagNumber} belum scan out di gerai sebelumnya`;
               }
               // #endregion after scanin
 
@@ -353,7 +352,7 @@ export class WebDeliveryInService {
             }
           } else {
             totalSuccess += 1;
-            response.message = `No Bag ${bagNumber} sudah di Scan Masuk dari gerai ini`;
+            response.message = `Gabung paket ${bagNumber} sudah pernah scan in`;
           }
         } else {
           // NOTE: create data bag trouble
@@ -372,12 +371,12 @@ export class WebDeliveryInService {
 
           totalError += 1;
           response.status = 'error';
-          response.message = `Gabung Paket belum masuk pada Gerai. Harap Scan Masuk jika Gabung Paket sudah masuk`;
+          response.message = `Gabung paket ${bagNumber} bukan milik gerai ini`;
         }
       } else {
         totalError += 1;
         response.status = 'error';
-        response.message = `No Bag ${bagNumber} Tidak di Temukan`;
+        response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
       }
       // push item
       dataItem.push({
@@ -429,7 +428,7 @@ export class WebDeliveryInService {
             if (awb.branchIdLast == permissonPayload.branchId) {
               // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
               totalSuccess += 1;
-              response.message = `Resi ${awbNumber} sudah di Scan IN di gerai ini`;
+              response.message = `Resi ${awbNumber} sudah pernah scan ini`;
             } else {
               // TODO: construct data Awb Problem
               // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
@@ -443,9 +442,9 @@ export class WebDeliveryInService {
               totalError += 1;
               response.status = 'error';
               response.trouble = true;
-              response.message = `Resi Bermasalah pada gerai ` +
-                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.` +
-                `Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message =
+                `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
+                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
             }
             break;
 
@@ -518,7 +517,7 @@ export class WebDeliveryInService {
                     AWB_STATUS.IN_BRANCH,
                   );
 
-                  // TODO: queue by Bull
+                  // NOTE: queue by Bull
                   DoPodDetailPostMetaQueueService.createJobByScanInAwb(
                     doPodDetail.doPodDetailId,
                   );
@@ -526,7 +525,7 @@ export class WebDeliveryInService {
                 } else {
                   totalError += 1;
                   response.status = 'error';
-                  response.message = `Resi ${awbNumber} belum di Scan Keluar`;
+                  response.message = `Resi ${awbNumber} belum di scan out`;
                 }
                 // #endregion after scanin
 
@@ -538,16 +537,16 @@ export class WebDeliveryInService {
                 response.message = 'Server Busy';
               }
             } else {
-              // TODO:
               // save data to awb_trouble
               await AwbTroubleService.fromScanIn(awbNumber, awb.awbStatusIdLast);
-
               totalError += 1;
               response.status = 'error';
               response.trouble = true;
-              response.message = `Resi Bermasalah pada gerai ` +
-                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.` +
-                `Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message =
+                `Resi ${awbNumber} bukan milik gerai ini ` +
+                `${awb.branchLast.branchCode} - ${
+                  awb.branchLast.branchName
+                }.`;
             }
             break;
 
@@ -579,5 +578,4 @@ export class WebDeliveryInService {
     return result;
   }
 
-  // private method
 }
