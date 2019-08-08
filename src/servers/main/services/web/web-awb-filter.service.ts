@@ -1,29 +1,38 @@
-import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
-import { WebAwbFilterScanBagVm, WebAwbFilterScanAwbVm, WebAwbFilterFinishScanVm } from '../../models/web-awb-filter.vm';
-import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFilterFinishScanResponseVm, WebAwbFilterGetLatestResponseVm, DistrictVm } from '../../models/web-awb-filter-response.vm';
-import { DeliveryService } from '../../../../shared/services/delivery.service';
-import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
-import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { DistrictRepository } from '../../../../shared/orm-repository/district.repository';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ScanAwbVm } from '../../models/web-awb-filter-response.vm';
+import moment = require('moment');
+
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
-import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { RepositoryService } from '../../../../shared/services/repository.service';
+import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
+import { Branch } from '../../../../shared/orm-entity/branch';
 import { PodFilter } from '../../../../shared/orm-entity/pod-filter';
+import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
+import { User } from '../../../../shared/orm-entity/user';
+import { DistrictRepository } from '../../../../shared/orm-repository/district.repository';
+import { PodFilterDetailItemRepository } from '../../../../shared/orm-repository/pod-filter-detail-item.repository';
+import { PodFilterDetailRepository } from '../../../../shared/orm-repository/pod-filter-detail.repository';
 import { PodFilterRepository } from '../../../../shared/orm-repository/pod-filter.repository';
 import { RepresentativeRepository } from '../../../../shared/orm-repository/representative.repository';
-import { PodFilterDetailRepository } from '../../../../shared/orm-repository/pod-filter-detail.repository';
-import { PodFilterDetailItemRepository } from '../../../../shared/orm-repository/pod-filter-detail-item.repository';
-import moment = require('moment');
-import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { RedisService } from '../../../../shared/services/redis.service';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { RedisService } from '../../../../shared/services/redis.service';
+import { RepositoryService } from '../../../../shared/services/repository.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
+import {
+  DistrictVm,
+  ScanAwbVm,
+  WebAwbFilterFinishScanResponseVm,
+  WebAwbFilterGetLatestResponseVm,
+  WebAwbFilterScanAwbResponseVm,
+  WebAwbFilterScanBagResponseVm,
+} from '../../models/web-awb-filter-response.vm';
+import { WebAwbFilterFinishScanVm, WebAwbFilterScanAwbVm, WebAwbFilterScanBagVm } from '../../models/web-awb-filter.vm';
 
 export class WebAwbFilterService {
 
@@ -137,7 +146,7 @@ export class WebAwbFilterService {
       'locking',
     );
     if (!holdRedis) {
-      ContextualErrorService.throwObj({
+      RequestErrorService.throwObj({
         message: `No Gabung Paket ${payload.bagNumber} sedang di Sortir`,
       }, 500);
     }
@@ -147,7 +156,7 @@ export class WebAwbFilterService {
 
     // bagNumber not found, then throw error
     if (!bagData) {
-      ContextualErrorService.throwObj({
+      RequestErrorService.throwObj({
         message: `No Gabung Paket ${payload.bagNumber} tidak ditemukan`,
       }, 500);
     }
@@ -180,7 +189,7 @@ export class WebAwbFilterService {
       // if exists
       // check previous representative, should be same with current bag, before they finish/clear this podFilter
       if (podFilter.representativeIdFilter != bagData.bag.representativeIdTo) {
-        ContextualErrorService.throwObj({
+        RequestErrorService.throwObj({
           message: `Perwakilan berbeda. Harap selesaikan dahulu Perwakilan ${podFilter.representative.representativeCode}`,
         }, 500);
       }
@@ -280,7 +289,7 @@ export class WebAwbFilterService {
       select: ['podFilterDetailId'],
     });
     if (!podFilterDetailExists) {
-      ContextualErrorService.throwObj({
+      RequestErrorService.throwObj({
         message: `Invalid podFilterDetailId`,
       }, 500);
     }
@@ -404,6 +413,12 @@ export class WebAwbFilterService {
 
           // after scan filter done at all. do posting status last awb
           // TODO: posting to awb_history, awb_item_summary
+          // NOTE: posting to awb_history, awb_item_summary
+          DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+            awbItemAttr.awbItemId,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
         }
       } else {
         // Unknown Awb, GO TO HELL
@@ -413,7 +428,7 @@ export class WebAwbFilterService {
         res.districtId = null;
         results.push(res);
       }
-    }
+    } // end loop
 
     const response = new WebAwbFilterScanAwbResponseVm();
     response.totalData = 0;
@@ -588,8 +603,18 @@ export class WebAwbFilterService {
         podFilterDetail.isActive = true;
         await podFilterDetail.save();
       } else {
-        ContextualErrorService.throwObj({
-          message: `Gabung Paket sudah disortir oleh ${podFilter.user.username} Gerai ${podFilter.branch.branchName}`,
+        const user = await User.findOne({
+          where: {
+            userId: podFilter.userIdScan,
+          },
+        });
+        const branch = await Branch.findOne({
+          where: {
+            branchId: podFilter.branchIdScan,
+          },
+        });
+        RequestErrorService.throwObj({
+          message: `Gabung Paket sudah disortir oleh ${user.username} Gerai ${branch.branchName}`,
         }, 500);
       }
 

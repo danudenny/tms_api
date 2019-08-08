@@ -40,4 +40,45 @@ export class EmployeeService {
 
     return result;
   }
+
+  async findAllEmployeeByRequestBranch(
+    payload: BaseMetaPayloadVm,
+    branchId: string,
+  ): Promise<EmployeeFindAllResponseVm> {
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'nik',
+      },
+      {
+        field: 'employeeName',
+      },
+    ];
+
+    // mapping field
+    payload.fieldResolverMap['employeeName'] = 'employee.fullname';
+
+    const q = RepositoryService.employee.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['employee.employee_id', 'employeeId'],
+      ['employee.nik', 'nik'],
+      ['employee.fullname', 'employeeName'],
+    );
+
+    q.innerJoin(e => e.branch, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.branch.branchId, w => w.equals(branchId));
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new EmployeeFindAllResponseVm();
+    result.data = data;
+    result.buildPaging(payload.page, payload.limit, total);
+
+    return result;
+  }
 }

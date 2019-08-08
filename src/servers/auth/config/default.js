@@ -1,6 +1,6 @@
 module.exports = {
   enabled: true,
-  port: 8000,
+  port: 4000,
   swagger: {
     enabled: true,
     title: "SiCepat TMS Auth",

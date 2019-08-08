@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Param } from '@nestjs/common';
 
 import { EmployeeService } from '../../../../servers/main/services/master/employee.service';
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
@@ -10,6 +10,15 @@ import { EmployeeFindAllResponseVm } from '../../models/employee.response.vm';
 @Controller('master/employee')
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) {}
+
+  @Post('list/:branchId')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: EmployeeFindAllResponseVm })
+  public async findAllEmployeeBranch(@Param('branchId') branchId: string, @Body() payload: BaseMetaPayloadVm) {
+    return this.employeeService.findAllEmployeeByRequestBranch(payload, branchId);
+  }
 
   @Post('list')
   @HttpCode(HttpStatus.OK)

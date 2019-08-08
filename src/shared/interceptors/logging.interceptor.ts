@@ -1,31 +1,27 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  NotFoundException,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+
+import { PinoLoggerService } from '../services/pino-logger.service';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-  intercept(
-    context: ExecutionContext, next: CallHandler): Observable<any> {
-    const logger = require('pino')()
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const req = context.switchToHttp().getRequest();
+
     const method = req.method;
     const url = req.url;
-    const body = req.body
-    if (req) {
-      return next
-      .handle()
-      .pipe(
-        tap(() =>
-          // logger.info(JSON.stringify(body)),
-          logger.info(body),
-        ),
-      );
-    }
+    const body = req.body;
+    const params = req.params;
+    const query = req.query;
+
+    PinoLoggerService.withContext('LoggingInterceptor').debug({
+      url,
+      method,
+      body,
+      params,
+      query,
+    });
+
+    return next.handle();
   }
 }

@@ -1,7 +1,7 @@
 import { TypeormBlueprint } from '@entity-factory/typeorm';
 
-import { GeneratorService } from '../../shared/services/generator.service';
 import { AwbAttr } from '../../shared/orm-entity/awb-attr';
+import { GeneratorService } from '../../shared/services/generator.service';
 
 export class AwbAttrBlueprint extends TypeormBlueprint<AwbAttr> {
   constructor() {
@@ -28,9 +28,5 @@ export class AwbAttrBlueprint extends TypeormBlueprint<AwbAttr> {
       createdTime: new Date(),
       updatedTime: new Date(),
     }));
-
-    // this.state('awb-items', async ({ faker, factory }) => ({
-    //   awbItems: await factory.for(AwbItem).make(2),
-    // }));
   }
 }

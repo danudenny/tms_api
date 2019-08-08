@@ -128,6 +128,9 @@ export class PermissionAccessResponseVM {
   branchCode: string;
 
   @ApiModelProperty()
+  isHeadOffice: boolean;
+
+  @ApiModelProperty()
   roleName: string;
 
   @ApiModelProperty()

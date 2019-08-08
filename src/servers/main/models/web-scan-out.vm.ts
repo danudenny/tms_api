@@ -1,7 +1,9 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { SearchColumnsVm, WebDeliverySearchVm } from '../../../shared/models/base-filter-search.payload.vm';
 import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
-import { IsDefined } from 'class-validator';
+import { IsDefined, ValidateNested } from 'class-validator';
+import { IsBagNumber, IsAwbNumber } from '../../../shared/decorators/custom-validation.decorator';
+import { Type } from 'class-transformer';
 
 // Scan Out Awb
 export class WebScanOutAwbVm  {
@@ -16,9 +18,27 @@ export class WebScanOutAwbVm  {
     example: ['00020001', '00020002'],
     skipValidation: true,
   })
-  // TODO: validation if array length = 0
+
   @IsDefined({message: 'Nomor resi harus diisi'})
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
   awbNumber: string[];
+}
+
+export class WebScanOutAwbValidateVm {
+  @ApiModelProperty({
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'Nomor resi harus diisi' })
+  awbNumber: string;
+}
+
+export class WebScanOutBagValidateVm {
+  @ApiModelProperty({
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'Nomor bag harus diisi' })
+  bagNumber: string;
 }
 
 // Scan Out Bag
@@ -36,6 +56,8 @@ export class WebScanOutBagVm {
   })
   // TODO: validation if array length = 0
   @IsDefined({message: 'No gabung paket harus diisi'})
+  @IsBagNumber({ message: 'No gabung paket tidak sesuai' })
+  @Type(() => String)
   bagNumber: string[];
 }
 
@@ -53,14 +75,7 @@ export class FilterScanOutAwbListVm {
 export class WebScanOutAwbListPayloadVm extends BaseMetaPayloadVm {
 }
 
-// Create DO POD
-export class WebScanOutCreateVm {
-  @ApiModelProperty({
-    example: 8000,
-    skipValidation: true,
-  })
-  @IsDefined({message: 'Tipe POD harus diisi'})
-  doPodType: number;
+export class WebScanOutVm {
 
   @ApiModelPropertyOptional({
     example: 'internal, 3pl',
@@ -90,6 +105,23 @@ export class WebScanOutCreateVm {
   @IsDefined({message: 'Nomor mobil harus diisi'})
   vehicleNumber: string;
 
+  @ApiModelPropertyOptional()
+  desc?: string;
+
+  @ApiModelPropertyOptional()
+  totalBag?: number;
+}
+
+// Create DO POD
+export class WebScanOutCreateVm extends WebScanOutVm {
+
+  @ApiModelProperty({
+    example: 8000,
+    skipValidation: true,
+  })
+  @IsDefined({message: 'Tipe POD harus diisi'})
+  doPodType: number;
+
   @ApiModelProperty({
     example: '2019-05-01 00:00:00',
     skipValidation: true,
@@ -97,12 +129,66 @@ export class WebScanOutCreateVm {
   @IsDefined({message: 'Tanggal pengiriman harus diisi'})
   doPodDateTime: string;
 
-  @ApiModelPropertyOptional()
-  desc?: string;
+}
 
-  @ApiModelPropertyOptional()
-  totalBag?: number;
+// Edit DO POD AWB
+export class WebScanOutEditVm extends WebScanOutVm {
 
+  @ApiModelProperty({
+    example: 203,
+    skipValidation: true,
+  })
+  @IsDefined({message: 'POD ID harus diisi'})
+  doPodId: number;
+
+  @ApiModelPropertyOptional({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+  // @IsDefined({message: 'Nomor resi harus diisi'})
+  // @ValidateNested({ each: true })
+  // @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  addAwbNumber: string[];
+
+  @ApiModelPropertyOptional({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+  // @IsDefined({message: 'Nomor resi harus diisi'})
+  // @ValidateNested({ each: true })
+  // @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  removeAwbNumber: string[];
+}
+
+// Edit DO POD BAG
+export class WebScanOutEditHubVm extends WebScanOutVm {
+
+  @ApiModelProperty({
+    example: 203,
+    skipValidation: true,
+  })
+  @IsDefined({message: 'POD ID harus diisi'})
+  doPodId: number;
+
+  @ApiModelPropertyOptional({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+  // @IsDefined({message: 'Nomor resi harus diisi'})
+  // @IsBagNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  addBagNumber: string[];
+
+  @ApiModelPropertyOptional({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+  // @IsDefined({message: 'Nomor resi harus diisi'})
+  // @IsBagNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  removeBagNumber: string[];
 }
 
 // Create DO POD Delivery

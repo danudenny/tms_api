@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TokenExpiredError } from 'jsonwebtoken';
@@ -19,7 +19,8 @@ import { User } from '../orm-entity/user';
 import { UserRole } from '../orm-entity/user-role';
 import { UserRepository } from '../orm-repository/user.repository';
 import { ConfigService } from './config.service';
-import { ContextualErrorService } from './contextual-error.service';
+import { RequestErrorService } from './request-error.service';
+import { PinoLoggerService } from './pino-logger.service';
 import { RedisService } from './redis.service';
 import { RepositoryService } from './repository.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
@@ -46,7 +47,7 @@ export class AuthService {
 
     // check user present
     if (user) {
-      // Logger.log(user);
+      // PinoLoggerService.log(user);
       // validate user password hash md5
       if (user.validatePassword(password)) {
         // TODO: Populate return value by using this.populateLoginResultMetadataByUser
@@ -56,12 +57,12 @@ export class AuthService {
         );
         return loginResultMetadata;
       } else {
-        ContextualErrorService.throwObj({
+        RequestErrorService.throwObj({
           message: 'global.error.LOGIN_WRONG_PASSWORD',
         });
       }
     } else {
-      ContextualErrorService.throwObj({
+      RequestErrorService.throwObj({
         message: 'global.error.USER_NOT_FOUND',
       });
     }
@@ -72,9 +73,9 @@ export class AuthService {
   ): Promise<AuthLoginResultMetadata> {
     // TODO: find user on table or redis??
     const loginSession = await RedisService.get(`session:${refreshToken}`);
-    Logger.log(loginSession);
+    PinoLoggerService.log(loginSession);
     if (!loginSession) {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.LOGIN_SESSION_NOT_FOUND',
         },
@@ -87,14 +88,14 @@ export class AuthService {
       refreshTokenPayload = this.jwtService.verify(refreshToken);
     } catch (e) {
       if (e instanceof TokenExpiredError) {
-        ContextualErrorService.throwObj(
+        RequestErrorService.throwObj(
           {
             message: 'global.error.REFRESH_TOKEN_EXPIRED',
           },
           HttpStatus.FORBIDDEN,
         );
       } else {
-        ContextualErrorService.throwObj(
+        RequestErrorService.throwObj(
           {
             message: 'global.error.REFRESH_TOKEN_NOT_VALID',
           },
@@ -150,16 +151,14 @@ export class AuthService {
           branchId: item.branch_id,
           branchName: item.branch.branchName,
           branchCode: item.branch.branchCode,
+          isHeadOffice: item.branch.isHeadOffice,
         };
         return newObj;
       });
 
-      // Logger.log('############## Result permissionRoles ==================================================');
-      // Logger.log(result);
-
       return result;
     } else {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },
@@ -183,7 +182,7 @@ export class AuthService {
         .exec();
 
       if (!user) {
-        ContextualErrorService.throwObj(
+        RequestErrorService.throwObj(
           {
             message: `Hak akses user untuk role dan branch ini tidak ditemukan`,
           },
@@ -220,35 +219,42 @@ export class AuthService {
 
       result.branchName = branch.branchName;
       result.branchCode = branch.branchCode;
+      result.isHeadOffice = branch.isHeadOffice;
 
       // FIXME: populate rolesAccessPermissions from user.userRoles[0].role.role_permissions
-      result.rolesAccessPermissions = [
-        'dashboard',
-        'pod',
-        'pod_scan_in_branch',
-        'pod_scan_in_hub',
-        'do_pod',
-        'do_pod_hub',
-        'pod_sortir_hub',
-        'pod_input_awb_3pl',
-        'pod_manual',
-        'scan_in_list',
-        'scan_in_list_hub',
-        'do_pod_list',
-        'pod_awb_list',
-        'awb_3pl_list',
-        'pod_scan_in_problem',
-        'pod_scan_in_problem_ct',
-        'pod_scan_in_problem_branch',
-        'pod_scan_in_problem_hub',
-        'pod_awb_problem',
-        'do_pod_bag_list',
-        'do_pod_deliver_list',
-      ];
+      result.rolesAccessPermissions = map(
+        user.userRoles[0].role.rolePermissions,
+        item => item.name,
+      );
+      // NOTE: data for testing only
+      // [
+      //   'dashboard',
+      //   'pod',
+      //   'pod_scan_in_branch',
+      //   'pod_scan_in_hub',
+      //   'do_pod',
+      //   'do_pod_hub',
+      //   'pod_sortir_hub',
+      //   'pod_input_awb_3pl',
+      //   'pod_manual',
+      //   'scan_in_list',
+      //   'scan_in_list_hub',
+      //   'do_pod_list',
+      //   'pod_awb_list',
+      //   'awb_3pl_list',
+      //   'pod_scan_in_problem',
+      //   'pod_scan_in_problem_ct',
+      //   'pod_scan_in_problem_branch',
+      //   'pod_scan_in_problem_hub',
+      //   'pod_awb_problem',
+      //   'do_pod_bag_list',
+      //   'do_pod_deliver_list',
+      //   'pod_filter_list',
+      // ];
 
       return result;
     } else {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },
@@ -389,7 +395,7 @@ export class AuthService {
     if (!!authMeta) {
       return authMeta;
     } else {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },

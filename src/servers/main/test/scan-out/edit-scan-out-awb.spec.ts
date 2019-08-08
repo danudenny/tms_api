@@ -1,0 +1,131 @@
+import { HttpStatus } from '@nestjs/common';
+import { map } from 'lodash';
+import faker = require('faker');
+
+import TEST_GLOBAL_VARIABLE from '../../../../test/test-global-variable';
+import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import {
+  WebScanOutCreateVm,
+  WebScanOutAwbVm,
+  WebScanOutEditVm,
+} from '../../models/web-scan-out.vm';
+import { TestUtility } from '../../../../test/test-utility';
+import {
+  WebScanOutCreateResponseVm,
+  WebScanOutAwbResponseVm,
+} from '../../models/web-scan-out-response.vm';
+
+describe('EditScanOutAwb', () => {
+  let awbAttr: AwbAttr[];
+  let awbItemAttr: AwbItemAttr[];
+
+  let doPodId = 0;
+
+  beforeAll(async () => {
+    awbAttr = await TEST_GLOBAL_VARIABLE.entityFactory
+      .for(AwbAttr)
+      .with({
+        awbStatusIdLast: 1500,
+      })
+      .create(5);
+    awbItemAttr = await TEST_GLOBAL_VARIABLE.entityFactory
+      .for(AwbItemAttr)
+      .with({
+        awbStatusIdLast: 2500,
+        branchIdLast: 121,
+      })
+      .create(3);
+  });
+  // Criss Cross
+  it('EditScanOutAwb :: Surat Jalan Criss Cross', async () => {
+    const payload = new WebScanOutCreateVm();
+    payload.doPodType = 20000; // Criss Cross
+    payload.branchIdTo = 123;
+    payload.doPodMethod = 'internal';
+    payload.employeeIdDriver = 15;
+    payload.vehicleNumber = 'DPS-17010675-523423-BC';
+    payload.doPodDateTime = faker.date
+      .between('2019-01-01', '2019-08-01')
+      .toDateString(); // '2019-07-15 10:10:00';
+    payload.desc = 'test Surat Jalan Criss Cross';
+
+    await TestUtility.getAuthenticatedMainServerAxios()
+      .post('/web/pod/scanOut/create', payload)
+      .then(async response => {
+        const result = response.data as WebScanOutCreateResponseVm;
+
+        // const doPod = new OrionRepositoryService(DoPod);
+        // doPod.findOne();
+
+        doPodId = result.doPodId;
+
+        expect(response.status).toEqual(HttpStatus.OK);
+        expect(response).toBeDefined();
+        // expect(result.data.length).toEqual(payload.limit);
+        // expect(result.paging.currentPage).toEqual(1);
+        // expect(result.paging.nextPage).toEqual(2);
+        // expect(result.paging.limit).toEqual(payload.limit);
+
+        // const totalData = await qBranch.countWithoutTakeAndSkip();
+        // expect(result.paging.totalData).toEqual(totalData);
+      });
+  });
+
+  it('EditScanOutAwb :: Criss Cross Scan Awb', async () => {
+    const arrAwbNumber = map(awbItemAttr, item => item.awbNumber);
+
+    const payload = new WebScanOutAwbVm();
+    payload.doPodId = doPodId;
+    payload.awbNumber = arrAwbNumber;
+
+    // tslint:disable-next-line: no-console
+    console.log('##############====================================', doPodId);
+
+    await TestUtility.getAuthenticatedMainServerAxios()
+      .post('/web/pod/scanOut/awb', payload)
+      .then(async response => {
+        const result = response.data as WebScanOutAwbResponseVm;
+        // tslint:disable-next-line: no-console
+        console.log(result);
+        expect(result).toBeDefined();
+      });
+  });
+
+  it('EditScanOutAwb :: Edit Surat Jalan', async () => {
+    const addAwbItemAttr = await TEST_GLOBAL_VARIABLE.entityFactory
+      .for(AwbItemAttr)
+      .with({
+        awbStatusIdLast: 2500,
+        branchIdLast: 121,
+      })
+      .create(2);
+
+    const arrAwbNumber = map(addAwbItemAttr, item => item.awbNumber);
+
+    const payload = new WebScanOutEditVm();
+    // Update Field Surat Jalan
+    payload.doPodId = doPodId;
+    payload.branchIdTo = 125;
+    payload.doPodMethod = 'internal';
+    payload.employeeIdDriver = 25;
+    payload.vehicleNumber = 'DPS-17010675-523423-AC';
+    payload.desc = 'test edit Surat Jalan Criss Cross';
+
+    // additional arr awb number
+    payload.addAwbNumber = arrAwbNumber;
+    // payload.removeAwbNumber = arrAwbNumber;
+
+    // tslint:disable-next-line: no-console
+    console.log('##############====================================', doPodId);
+
+    await TestUtility.getAuthenticatedMainServerAxios()
+      .post('/web/pod/scanOut/edit', payload)
+      .then(async response => {
+        const result = response.data; // as WebScanOutCreateResponseVm;
+        // tslint:disable-next-line: no-console
+        console.log(result);
+        expect(result).toBeDefined();
+      });
+  });
+});

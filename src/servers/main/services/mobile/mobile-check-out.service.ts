@@ -1,14 +1,15 @@
-
-import { HttpStatus, Injectable, Query, Logger } from '@nestjs/common';
-import moment = require('moment');
-import { AuthService } from '../../../../shared/services/auth.service';
-import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
+import moment = require('moment');
+import { IsNull } from 'typeorm';
+
+import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
+import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { MobileCheckOutPayloadVm } from '../../models/mobile-check-out-payload.vm';
 import { MobileCheckOutResponseVm } from '../../models/mobile-check-out-response.vm';
-import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
-import { IsNull } from 'typeorm';
+
 
 @Injectable()
 export class MobileCheckOutService {
@@ -71,7 +72,7 @@ export class MobileCheckOutService {
       result.checkOutDate = checkOutDate;
       return result;
     } else {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },

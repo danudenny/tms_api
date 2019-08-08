@@ -1,11 +1,12 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { GetRoleResult } from '../../../../shared/models/get-role-result';
-import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { toInteger } from 'lodash';
-import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
+
+import { GetRoleResult } from '../../../../shared/models/get-role-result';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { WebDeliveryListFilterPayloadVm } from '../../models/web-delivery-payload.vm';
 import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 
@@ -56,7 +57,7 @@ export class WebDeliveryListService {
 
       return result;
     } else {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },

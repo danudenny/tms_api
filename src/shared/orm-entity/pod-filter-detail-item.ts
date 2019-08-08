@@ -1,9 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
-import { Branch } from './branch';
-import { User } from './user';
-import { BagItem } from './bag-item';
 import { PodFilterDetail } from './pod-filter-detail';
 import { AwbItem } from './awb-item';
 
@@ -88,6 +85,18 @@ export class PodFilterDetailItem extends TmsBaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'bag_item_id',
+  })
+  bagItemId: number;
+
+  @Column('boolean', {
+    nullable: true,
+    name: 'is_package_combine',
+  })
+  isPackageCombine: boolean;
 
   @ManyToOne(() => PodFilterDetail)
   @JoinColumn({ name: 'pod_filter_detail_id' })

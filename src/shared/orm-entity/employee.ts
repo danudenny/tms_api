@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { Branch } from './branch';
 
 @Entity('employee', { schema: 'public' })
 export class Employee extends TmsBaseEntity {
@@ -292,4 +293,8 @@ export class Employee extends TmsBaseEntity {
 
   })
   division_id: string | null;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 }

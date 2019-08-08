@@ -11,6 +11,12 @@ export class ItemDeliveryResponseVm {
   bagNumber: string;
 
   @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
+  representativeIdTo: number;
+
+  @ApiModelProperty()
   weight: number;
 
   @ApiModelProperty()

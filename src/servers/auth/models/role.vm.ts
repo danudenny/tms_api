@@ -15,4 +15,7 @@ export class RoleVm {
 
   @ApiModelProperty()
   branchCode: string;
+
+  @ApiModelProperty()
+  isHeadOffice: boolean;
 }
