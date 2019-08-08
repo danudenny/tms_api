@@ -46,8 +46,11 @@ export class MobileInitDataService {
       ['reason_type', 'reasonType'],
     );
     q.where(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.reasonCategory, w => w.equals('pod'));
-    q.orWhere(e => e.reasonCategory, w => w.equals('pod_cod'));
+    q.andWhereIsolated(qw => {
+      qw.where(p => p.reasonCategory, w => w.equals('pod'));
+      qw.orWhere(p => p.reasonCategory, w => w.equals('pod_cod'));
+    });
+
     if (fromDate) {
       q.andWhere(
         e => e.updatedTime,
@@ -79,6 +82,8 @@ export class MobileInitDataService {
 
   private static async getDelivery(fromDate?: string) {
     const qb = createQueryBuilder();
+    const authMeta = AuthService.getAuthMetadata();
+
     qb.addSelect(
       'do_pod_deliver_detail.do_pod_deliver_detail_id',
       'doPodDeliverDetailId',
@@ -158,10 +163,10 @@ export class MobileInitDataService {
           qbJoinFrom.where(
             'do_pod_deliver_history.do_pod_deliver_detail_id = do_pod_deliver_detail.do_pod_deliver_detail_id',
           );
-          qbJoinFrom.where(
+          qbJoinFrom.andWhere(
             'do_pod_deliver_history.is_deleted = false',
           );
-          qbJoinFrom.leftJoin(
+          qbJoinFrom.innerJoin(
             qbJoinFromJoin => {
               qbJoinFromJoin.addSelect('reason.reason_id');
               qbJoinFromJoin.addSelect('reason.reason_code');
@@ -174,7 +179,7 @@ export class MobileInitDataService {
             'reason',
             'true',
           );
-          qbJoinFrom.leftJoin(
+          qbJoinFrom.innerJoin(
             qbJoinFromJoin => {
               qbJoinFromJoin.addSelect('employee.employee_id');
               qbJoinFromJoin.addSelect('employee.fullname');
@@ -198,12 +203,11 @@ export class MobileInitDataService {
     qb.take(0);
     qb.skip(200);
 
-    // COMMENTED FOR TEST PURPOSE
-    const authMeta = AuthService.getAuthMetadata();
     qb.andWhere('do_pod_deliver.employee_id_driver = :employeeIdDriver', {
       employeeIdDriver: authMeta.employeeId,
     });
 
+    // COMMENTED FOR TEST PURPOSE
     // const permissionTokenPayload = AuthService.getPermissionTokenPayload();
     // qb.andWhere('do_pod_deliver.branch_id = :currentBranchId', {
     //   currentBranchId: permissionTokenPayload.branchId,

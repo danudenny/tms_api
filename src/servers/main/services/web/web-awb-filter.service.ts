@@ -1,10 +1,13 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
 
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
+import { Branch } from '../../../../shared/orm-entity/branch';
 import { PodFilter } from '../../../../shared/orm-entity/pod-filter';
 import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
+import { User } from '../../../../shared/orm-entity/user';
 import { DistrictRepository } from '../../../../shared/orm-repository/district.repository';
 import { PodFilterDetailItemRepository } from '../../../../shared/orm-repository/pod-filter-detail-item.repository';
 import { PodFilterDetailRepository } from '../../../../shared/orm-repository/pod-filter-detail.repository';
@@ -13,26 +16,23 @@ import { RepresentativeRepository } from '../../../../shared/orm-repository/repr
 import { AuthService } from '../../../../shared/services/auth.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { DeliveryService } from '../../../../shared/services/delivery.service';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { RedisService } from '../../../../shared/services/redis.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
 import {
-  ScanAwbVm,
+  DistrictVm,
   WebAwbFilterFinishScanResponseVm,
+  WebAwbFilterGetLatestResponseVm,
   WebAwbFilterScanAwbResponseVm,
   WebAwbFilterScanBagResponseVm,
-  DistrictVm,
-  WebAwbFilterGetLatestResponseVm,
 } from '../../models/web-awb-filter-response.vm';
 import { WebAwbFilterFinishScanVm, WebAwbFilterScanAwbVm, WebAwbFilterScanBagVm } from '../../models/web-awb-filter.vm';
-import { RedisService } from '../../../../shared/services/redis.service';
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
-import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
-import { MetaService } from '../../../../shared/services/meta.service';
-import { User } from '../../../../shared/orm-entity/user';
-import { Branch } from '../../../../shared/orm-entity/branch';
+import { ScanAwbVm } from '../../models/web-scanin-awb.response.vm';
 
 export class WebAwbFilterService {
 

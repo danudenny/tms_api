@@ -1,6 +1,7 @@
 // #region import
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createQueryBuilder, IsNull } from 'typeorm';
 import moment = require('moment');
 
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
@@ -42,7 +43,6 @@ import {
   WebScanOutEditHubVm,
   WebScanOutBagValidateVm,
 } from '../../models/web-scan-out.vm';
-import { createQueryBuilder } from 'typeorm';
 // #endregion
 
 @Injectable()
@@ -119,27 +119,11 @@ export class WebDeliveryOutService {
     const doPod = await DoPod.findOne({
       where: {
         doPodId: payload.doPodId,
-        totalScanIn: null,
+        totalScanIn: IsNull(),
         isDeleted: false,
       },
     });
     if (doPod) {
-      // update data
-      const updateDoPod = {
-        doPodMethod:
-          payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
-        partnerLogisticId: payload.partnerLogisticId,
-        branchIdTo: payload.branchIdTo,
-        employeeIdDriver: payload.employeeIdDriver,
-        vehicleNumber: payload.vehicleNumber,
-        description: payload.desc,
-        doPodStatusIdLast: 1100,
-        branchId: permissonPayload.branchId,
-        userId: authMeta.userId,
-      };
-      // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
-      // doPod.userIdDriver = payload.
-
       // looping data list add awb number
       if (payload.addAwbNumber && payload.addAwbNumber.length) {
         for (const addAwb of payload.addAwbNumber) {
@@ -190,12 +174,23 @@ export class WebDeliveryOutService {
         }
       }
 
-      // count data do_pod_detail ??
-      // updatea total on do_pod
-      // await for update data doPod
-      // updateDoPod['totalItem'] = this.getTotalDetailById(doPod.doPodId);
+      const totalItem = await this.getTotalDetailById(doPod.doPodId);
+      // update data
+      // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
+      const updateDoPod = {
+        doPodMethod:
+          payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
+        partnerLogisticId: payload.partnerLogisticId,
+        branchIdTo: payload.branchIdTo,
+        employeeIdDriver: payload.employeeIdDriver,
+        vehicleNumber: payload.vehicleNumber,
+        description: payload.desc,
+        doPodStatusIdLast: 1100,
+        branchId: permissonPayload.branchId,
+        userId: authMeta.userId,
+        totalItem,
+      };
       await DoPod.update(doPod.doPodId, updateDoPod);
-      // await DoPod.save(doPod);
 
       result.status = 'ok';
       result.message = 'success';
@@ -225,25 +220,11 @@ export class WebDeliveryOutService {
     const doPod = await DoPod.findOne({
       where: {
         doPodId: payload.doPodId,
-        totalScanIn: null,
+        totalScanIn: IsNull(),
         isDeleted: false,
       },
     });
     if (doPod) {
-      const method =
-        payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
-      doPod.doPodMethod = method; // internal or 3PL/Third Party
-      doPod.partnerLogisticId = payload.partnerLogisticId || null;
-      doPod.branchIdTo = payload.branchIdTo || null;
-      doPod.employeeIdDriver = payload.employeeIdDriver || null;
-      // doPod.userIdDriver = payload.
-      doPod.vehicleNumber = payload.vehicleNumber || null;
-      doPod.description = payload.desc || null;
-      // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
-      doPod.doPodStatusIdLast = 1100; // updated
-      doPod.branchId = permissonPayload.branchId;
-      doPod.userId = authMeta.userId;
-
       // looping data list add bag number
       if (payload.addBagNumber && payload.addBagNumber.length) {
         for (const addBag of payload.addBagNumber) {
@@ -330,10 +311,24 @@ export class WebDeliveryOutService {
         }
       }
 
-      // count data do_pod_detail ??
-      // updatea total on do_pod
-      // await for get do pod id
-      await DoPod.save(doPod);
+      const totalItem = await this.getTotalDetailById(doPod.doPodId);
+      // update data
+      // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
+      const updateDoPod = {
+        doPodMethod:
+          payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
+        partnerLogisticId: payload.partnerLogisticId,
+        branchIdTo: payload.branchIdTo,
+        employeeIdDriver: payload.employeeIdDriver,
+        vehicleNumber: payload.vehicleNumber,
+        description: payload.desc,
+        doPodStatusIdLast: 1100,
+        branchId: permissonPayload.branchId,
+        userId: authMeta.userId,
+        totalItem,
+      };
+      await DoPod.update(doPod.doPodId, updateDoPod);
+      // await DoPod.save(doPod);
 
       result.status = 'ok';
       result.message = 'success';

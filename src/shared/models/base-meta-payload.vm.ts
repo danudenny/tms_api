@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import { findIndex, snakeCase } from 'lodash';
 import { SelectQueryBuilder } from 'typeorm';
 
@@ -5,22 +6,6 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../external/nestjs-s
 import { OrionRepositoryQueryService } from '../services/orion-repository-query.service';
 import { RequestOrionRepositoryService } from '../services/request-orion-repository.service';
 import { RequestQueryBuidlerService } from '../services/request-query-builder.service';
-import { Transform } from 'class-transformer';
-
-export class MetaPayloadPageSort {
-  // TODO: Delete this and all dependants
-  @ApiModelProperty()
-  page: number;
-
-  @ApiModelProperty()
-  limit: number;
-
-  @ApiModelProperty()
-  sortBy: string;
-
-  @ApiModelProperty()
-  sortDir: string;
-}
 
 export type BaseMetaPayloadFilterVmOperator =
   | 'eq'
@@ -54,15 +39,21 @@ export class BaseMetaPayloadFilterVm {
 
   @ApiModelProperty()
   value?: any;
+
+  get sqlOperator() {
+    return RequestQueryBuidlerService.convertFilterOperatorToSqlOperator(
+      this.operator,
+    );
+  }
 }
 
 export class BaseMetaPayloadVm {
   @ApiModelProperty()
-  @Transform(value => value || 1)
+  @Transform(value => value || 1) // Transform imprted from 'class-transformer', set to 1 if value is undefined
   page: number;
 
   @ApiModelProperty()
-  @Transform(value => value || 10)
+  @Transform(value => value || 10) // Transform imprted from 'class-transformer', set to 10 if value is undefined
   limit: number;
 
   @ApiModelPropertyOptional()
@@ -79,6 +70,7 @@ export class BaseMetaPayloadVm {
 
   autoConvertFieldsToSnakeCase: boolean = true;
   fieldResolverMap: { [key: string]: string } = {};
+  fieldFilterManualMap: { [key: string]: boolean } = {};
 
   private _globalSearchFields: BaseMetaPayloadVmGlobalSearchField[] = [];
   get globalSearchFields() {
@@ -108,10 +100,45 @@ export class BaseMetaPayloadVm {
     );
   }
 
-  applyPaginationToQueryBuilder(queryBuilder: SelectQueryBuilder<any>) {
-    RequestQueryBuidlerService.applyMetaPayloadPagination(queryBuilder, this);
+  applyFiltersToQueryBuilder(
+    queryBuilder: SelectQueryBuilder<any>,
+    fieldNamesToFilter?: string | string[],
+    fieldNamesToIgnore?: string | string[],
+  ) {
+    RequestQueryBuidlerService.applyMetaPayloadFilters(queryBuilder, this, fieldNamesToFilter, fieldNamesToIgnore);
 
     return queryBuilder;
+  }
+
+  applyPaginationToQueryBuilder(queryBuilder: SelectQueryBuilder<any>) {
+    RequestQueryBuidlerService.applyMetaPayloadPagination(
+      queryBuilder,
+      this,
+      false,
+    );
+
+    return queryBuilder;
+  }
+
+  applyRawPaginationToQueryBuilder(queryBuilder: SelectQueryBuilder<any>) {
+    RequestQueryBuidlerService.applyMetaPayloadPagination(
+      queryBuilder,
+      this,
+      true,
+    );
+
+    return queryBuilder;
+  }
+
+  ejectFilter(filterCritera: Partial<BaseMetaPayloadFilterVm>) {
+    const filterIdx = findIndex(this.filters, filterCritera);
+    if (filterIdx > -1) {
+      const filter = this.filters[filterIdx];
+      this.filters.splice(filterIdx, 1);
+      return filter;
+    }
+
+    return false;
   }
 
   resolveFieldAsFieldAlias(field: string) {
