@@ -12,7 +12,6 @@ export class AwbTroubleService {
     awbStatusIdLast: number,
   ) {
     const authMeta = AuthService.getAuthData();
-
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timeNow = moment().toDate();
 
@@ -37,6 +36,7 @@ export class AwbTroubleService {
       awbTroubleCode,
       awbTroubleStatusId: 100,
       awbStatusId: awbStatusIdLast,
+      userIdTrigger: authMeta.userId,
       employeeIdTrigger: authMeta.employeeId,
       branchIdTrigger: permissonPayload.branchId,
       troubleCategory: 'scan_out',
@@ -45,8 +45,29 @@ export class AwbTroubleService {
     return await AwbTrouble.save(awbTrouble);
   }
 
-  public static async fromScanIn() {
-    // TODO:
+  public static async fromScanIn(
+    awbNumber: string,
+    awbStatusIdLast: number,
+  ) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timeNow = moment().toDate();
+
+    const awbTroubleCode = await CustomCounterCode.awbTrouble(timeNow);
+    const troubleDesc = `Resi Bermasalah pada gerai. Harap hubungi CT (Control Tower) Kantor Pusat`;
+
+    const awbTrouble = AwbTrouble.create({
+      awbNumber,
+      awbTroubleCode,
+      awbTroubleStatusId: 100,
+      awbStatusId: awbStatusIdLast,
+      userIdTrigger: authMeta.userId,
+      employeeIdTrigger: authMeta.employeeId,
+      branchIdTrigger: permissonPayload.branchId,
+      troubleCategory: 'scan_in',
+      troubleDesc,
+    });
+    await AwbTrouble.save(awbTrouble);
   }
 
 }

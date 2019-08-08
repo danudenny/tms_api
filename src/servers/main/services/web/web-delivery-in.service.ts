@@ -1,9 +1,8 @@
 // #region import
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import moment = require('moment');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
@@ -23,6 +22,8 @@ import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { AwbTroubleService } from '../../../../shared/services/awb-trouble.service';
+import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 // #endregion
 
 @Injectable()
@@ -40,6 +41,9 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
     payload.fieldResolverMap['employeeName'] = 't5.fullname';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'podScaninDateTime';
+    }
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -98,6 +102,9 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
     payload.fieldResolverMap['employeeName'] = 't5.nickname';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'podScaninDateTime';
+    }
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -186,7 +193,7 @@ export class WebDeliveryInService {
 
     q.selectRaw(
       ['t2.awb_number', 'awbNumber'],
-      ['t2.weight', 'weight'],
+      [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
 
     q.innerJoin(e => e.bagItems, 't3', j =>
@@ -235,143 +242,137 @@ export class WebDeliveryInService {
       const bagData = await DeliveryService.validBagNumber(bagNumber);
 
       if (bagData) {
-        if (bagData.bagItemStatusIdLast == 1000) {
-          const holdRedis = await RedisService.locking(
-            `hold:bagscanin:${bagData.bagItemId}`,
-            'locking',
-          );
-          if (holdRedis) {
-            // save data to table pod_scan_id
-            // TODO: to be review
-            const podScanIn = PodScanIn.create();
-            // podScanIn.awbId = ??;
-            // podScanIn.doPodId = ??;
-            podScanIn.scanInType = 'bag';
-            podScanIn.employeeId = authMeta.employeeId;
-            podScanIn.bagItemId = bagData.bagItemId;
-            podScanIn.branchId = permissonPayload.branchId;
-            podScanIn.userId = authMeta.userId;
-            podScanIn.podScaninDateTime = timeNow;
-            await PodScanIn.save(podScanIn);
+        if (bagData.branchIdNext == permissonPayload.branchId) {
+          if (bagData.bagItemStatusIdLast == 1000) {
+            const holdRedis = await RedisService.locking(
+              `hold:bagscanin:${bagData.bagItemId}`,
+              'locking',
+            );
+            if (holdRedis) {
+              // save data to table pod_scan_id
+              // TODO: to be review
+              const podScanIn = PodScanIn.create();
+              // podScanIn.awbId = ??;
+              // podScanIn.doPodId = ??;
+              podScanIn.scanInType = 'bag';
+              podScanIn.employeeId = authMeta.employeeId;
+              podScanIn.bagItemId = bagData.bagItemId;
+              podScanIn.branchId = permissonPayload.branchId;
+              podScanIn.userId = authMeta.userId;
+              podScanIn.podScaninDateTime = timeNow;
+              await PodScanIn.save(podScanIn);
 
-            // AFTER Scan IN ===============================================
-            // #region after scanin
-            const bagItem = await BagItem.findOne({
-              where: {
-                bagItemId: bagData.bagItemId,
-              },
-            });
-            bagItem.bagItemStatusIdLast = 2000;
-            bagItem.updatedTime = timeNow;
-            bagItem.userIdUpdated = authMeta.userId;
-            BagItem.save(bagItem);
-
-            const doPodDetail = await DoPodDetail.findOne({
-              where: {
-                bagItemId: bagData.bagItemId,
-                isScanIn: false,
-                isDeleted: false,
-              },
-            });
-            if (doPodDetail) {
-              // Update Data doPodDetail
-              doPodDetail.podScanInId = podScanIn.podScanInId;
-              doPodDetail.isScanIn = true;
-              doPodDetail.updatedTime = timeNow;
-              doPodDetail.userIdUpdated = authMeta.userId;
-              await DoPodDetail.save(doPodDetail);
-
-              const doPod = await DoPod.findOne({
+              // AFTER Scan IN ===============================================
+              // #region after scanin
+              const bagItem = await BagItem.findOne({
                 where: {
-                  doPodId: doPodDetail.doPodId,
+                  bagItemId: bagData.bagItemId,
+                },
+              });
+              bagItem.bagItemStatusIdLast = 2000;
+              bagItem.branchIdLast = permissonPayload.branchId;
+              bagItem.updatedTime = timeNow;
+              bagItem.userIdUpdated = authMeta.userId;
+              BagItem.save(bagItem);
+
+              // TODO: check doPodDetail
+              const doPodDetail = await DoPodDetail.findOne({
+                where: {
+                  bagItemId: bagData.bagItemId,
+                  isScanIn: false,
                   isDeleted: false,
                 },
               });
+              if (doPodDetail) {
+                // Update Data doPodDetail
+                doPodDetail.podScanInId = podScanIn.podScanInId;
+                doPodDetail.isScanIn = true;
+                doPodDetail.updatedTime = timeNow;
+                doPodDetail.userIdUpdated = authMeta.userId;
+                await DoPodDetail.save(doPodDetail);
 
-              // counter total scan in
-              doPod.totalScanIn = doPod.totalScanIn + 1;
+                const doPod = await DoPod.findOne({
+                  where: {
+                    doPodId: doPodDetail.doPodId,
+                    isDeleted: false,
+                  },
+                });
 
-              if (doPod.totalScanIn == 1) {
-                doPod.firstDateScanIn = timeNow;
-                doPod.lastDateScanIn = timeNow;
+                // counter total scan in
+                doPod.totalScanIn = doPod.totalScanIn + 1;
+
+                if (doPod.totalScanIn == 1) {
+                  doPod.firstDateScanIn = timeNow;
+                  doPod.lastDateScanIn = timeNow;
+                } else {
+                  doPod.lastDateScanIn = timeNow;
+                }
+                await DoPod.save(doPod);
+
+                // NOTE: status DO_HUB (12600: drop off hub)
+                const bagItemsAwb = await BagItemAwb.find({
+                  where: {
+                    bagItem: bagData.bagItemId,
+                    isDeleted: false,
+                  },
+                });
+                if (bagItemsAwb && bagItemsAwb.length > 0) {
+                  for (const itemAwb of bagItemsAwb) {
+                    if (itemAwb.awbItemId) {
+                      await DeliveryService.updateAwbAttr(
+                        itemAwb.awbItemId,
+                        doPod.branchIdTo,
+                        AWB_STATUS.DO_HUB,
+                      );
+                      // TODO: queue by Bull
+                      DoPodDetailPostMetaQueueService.createJobByScanInBag(
+                        itemAwb.awbItemId,
+                        permissonPayload.branchId,
+                        authMeta.userId,
+                      );
+                    }
+                  }
+                } else {
+                  Logger.log('### Data Bag Item Awb :: Not Found!!');
+                }
+
+                totalSuccess += 1;
               } else {
-                doPod.lastDateScanIn = timeNow;
+                totalError += 1;
+                response.status = 'error';
+                response.message = `No Bag ${bagNumber} belum di Scan Keluar`;
               }
-              await DoPod.save(doPod);
-              // NOTE: Disable update awb status per item awb
-              // SELECT *
-              // FROM bag_item_awb
-              // WHERE bag_item_id = <bag_item_id> AND is_deleted = false
-              // const bagItemsAwb = await BagItemAwb.find({
-              //   where: {
-              //     bagItem: bagData.bagItemId,
-              //     isDeleted: false,
-              //   },
-              // });
-              // if (bagItemsAwb && bagItemsAwb.length > 0) {
-              //   for (const itemAwb of bagItemsAwb) {
-              //     if (itemAwb.awbItemId) {
-              //       await DeliveryService.updateAwbAttr(
-              //         itemAwb.awbItemId, doPod.branchIdTo,
-              //         AWB_STATUS.IN_BRANCH,
-              //       );
-              //       // TODO: queue by Bull
-              //       DoPodDetailPostMetaQueueService.createJobByScanInBag(
-              //         doPodDetail.doPodDetailId,
-              //         itemAwb.awbItemId,
-              //       );
-              //     }
-              //   }
-              // }
+              // #endregion after scanin
 
-              totalSuccess += 1;
+              // remove key holdRedis
+              RedisService.del(`hold:bagscanin:${bagData.bagItemId}`);
             } else {
               totalError += 1;
               response.status = 'error';
-              response.message = `No Bag ${bagNumber} belum di Scan Keluar`;
+              response.message = 'Server Busy';
             }
-            // #endregion after scanin
-
-            // remove key holdRedis
-            RedisService.del(`hold:bagscanin:${bagData.bagItemId}`);
           } else {
-            totalError += 1;
-            response.status = 'error';
-            response.message = 'Server Busy';
-          }
-        } else {
-          if (bagData.branchIdLast == permissonPayload.branchId) {
             totalSuccess += 1;
             response.message = `No Bag ${bagNumber} sudah di Scan Masuk dari gerai ini`;
-          } else {
-            // NOTE: create data bag trouble
-            // bag_trouble_code = automatic BTR/1907/13/XYZA1234
-            // Bag_number
-            // Bag_trouble_status = 100 (Read Bag TROUBLE STATUS below)
-            // Bag_status_id = <sesuai dengan bag_status_id ketika scan dilakukan>
-            // Employee_id = <sesuai login>
-            // Branch_id = <sesuai login>
-            const bagTroubleCode = await CustomCounterCode.bagTrouble(
-              timeNow,
-            );
-            const bagTrouble = BagTrouble.create({
-              bagNumber,
-              bagTroubleCode,
-              bagTroubleStatus: 100,
-              bagStatusId: 2000,
-              employeeId: authMeta.employeeId,
-              branchId: permissonPayload.branchId,
-              userIdCreated: authMeta.userId,
-              createdTime: timeNow,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-            });
-            await BagTrouble.save(bagTrouble);
-
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Gabung Paket belum masuk pada Gerai. Harap Scan Masuk jika Gabung Paket sudah masuk`;
           }
+        } else {
+          // NOTE: create data bag trouble
+          const bagTroubleCode = await CustomCounterCode.bagTrouble(
+            timeNow,
+          );
+          const bagTrouble = BagTrouble.create({
+            bagNumber,
+            bagTroubleCode,
+            bagTroubleStatus: 100,
+            bagStatusId: 2000,
+            employeeId: authMeta.employeeId,
+            branchId: permissonPayload.branchId,
+          });
+          await BagTrouble.save(bagTrouble);
+
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Gabung Paket belum masuk pada Gerai. Harap Scan Masuk jika Gabung Paket sudah masuk`;
         }
       } else {
         totalError += 1;
@@ -425,35 +426,26 @@ export class WebDeliveryInService {
         );
         switch (statusCode) {
           case 'IN':
-            // check condition
             if (awb.branchIdLast == permissonPayload.branchId) {
+              // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
               totalSuccess += 1;
               response.message = `Resi ${awbNumber} sudah di Scan IN di gerai ini`;
             } else {
+              // TODO: construct data Awb Problem
+              // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
+              // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
               // save data to awb_trouble
-              const awbTroubleCode = await CustomCounterCode.awbTrouble(
-                timeNow,
-              );
-              const awbTrouble = AwbTrouble.create({
+              await AwbTroubleService.fromScanIn(
                 awbNumber,
-                awbTroubleCode,
-                awbTroubleStatusId: 100,
-                awbStatusId: awb.awbStatusIdLast,
-                employeeIdTrigger: authMeta.employeeId,
-                branchIdTrigger: permissonPayload.branchId,
-                userIdCreated: authMeta.userId,
-                createdTime: timeNow,
-                userIdUpdated: authMeta.userId,
-                updatedTime: timeNow,
-                userIdPic: authMeta.userId,
-                branchIdPic: permissonPayload.branchId,
-              });
-              await AwbTrouble.save(awbTrouble);
+                awb.awbStatusIdLast,
+              );
 
               totalError += 1;
               response.status = 'error';
               response.trouble = true;
-              response.message = `Resi Bermasalah pada gerai ${awb.branchLast.branchCode} - ${awb.branchLast.branchName}. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi Bermasalah pada gerai ` +
+                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.` +
+                `Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 
@@ -464,86 +456,98 @@ export class WebDeliveryInService {
             break;
 
           case 'OUT':
-            // TODO: Scan IN resi put on this.processScanInAwb()
-            // Add Locking setnx redis
-            const holdRedis = await RedisService.locking(`hold:scanin:${awb.awbItemId}`, 'locking');
-            if (holdRedis) {
-              // save data to table pod_scan_id
-              // TODO: to be review
-              const podScanIn = PodScanIn.create();
-              // podScanIn.awbId = ??;
-              // podScanIn.doPodId = ??;
-              podScanIn.scanInType = 'awb';
-              podScanIn.employeeId = authMeta.employeeId;
-              podScanIn.awbItemId = awb.awbItemId;
-              podScanIn.branchId = permissonPayload.branchId;
-              podScanIn.userId = authMeta.userId;
-              podScanIn.podScaninDateTime = timeNow;
-              await PodScanIn.save(podScanIn);
+            // check condition
+            if (awb.branchIdNext == permissonPayload.branchId) {
+              // Add Locking setnx redis
+              const holdRedis = await RedisService.locking(
+                `hold:scanin:${awb.awbItemId}`,
+                'locking',
+              );
+              if (holdRedis) {
+                // save data to table pod_scan_id
+                // TODO: to be review
+                const podScanIn = PodScanIn.create();
+                // podScanIn.awbId = ??;
+                // podScanIn.doPodId = ??;
+                podScanIn.scanInType = 'awb';
+                podScanIn.employeeId = authMeta.employeeId;
+                podScanIn.awbItemId = awb.awbItemId;
+                podScanIn.branchId = permissonPayload.branchId;
+                podScanIn.userId = authMeta.userId;
+                podScanIn.podScaninDateTime = timeNow;
+                await PodScanIn.save(podScanIn);
 
-              // AFTER Scan IN ===============================================
-              // #region after scanin
-
-              // Update do_pod_detail ,
-              // do_pod set pod_scan_in_id ,
-              // is_scan = true, total_scan_in  += 1
-              // where is_scan = false and awb_item_id = <awb_item_id>
-              // find do pod detail where awb item id and scan in false
-              const doPodDetail = await DoPodDetail.findOne({
-                where: {
-                  awbItemId: awb.awbItemId,
-                  isScanIn: false,
-                  isDeleted: false,
-                },
-              });
-              if (doPodDetail) {
-                // Update Data doPodDetail
-                doPodDetail.podScanInId = podScanIn.podScanInId;
-                doPodDetail.isScanIn = true;
-                doPodDetail.updatedTime = timeNow;
-                doPodDetail.userIdUpdated = authMeta.userId;
-                await DoPodDetail.save(doPodDetail);
-
-                // Update do_pod dengan field
-                // Jika total_scan_in = 1 (resi pertama masuk), maka update first_date_scan_in dan last_date_scan_in
-                // Jika total_scan_in > 1 maka update last_date_scan_in
-                const doPod = await DoPod.findOne({
+                // AFTER Scan IN ===============================================
+                // #region after scanin
+                const doPodDetail = await DoPodDetail.findOne({
                   where: {
-                    doPodId: doPodDetail.doPodId,
+                    awbItemId: awb.awbItemId,
+                    isScanIn: false,
                     isDeleted: false,
                   },
                 });
+                if (doPodDetail) {
+                  // Update Data doPodDetail
+                  doPodDetail.podScanInId = podScanIn.podScanInId;
+                  doPodDetail.isScanIn = true;
+                  doPodDetail.updatedTime = timeNow;
+                  doPodDetail.userIdUpdated = authMeta.userId;
+                  await DoPodDetail.save(doPodDetail);
 
-                // counter total scan in
-                doPod.totalScanIn = doPod.totalScanIn + 1;
+                  // Update do_pod dengan field
+                  const doPod = await DoPod.findOne({
+                    where: {
+                      doPodId: doPodDetail.doPodId,
+                      isDeleted: false,
+                    },
+                  });
 
-                if (doPod.totalScanIn == 1) {
-                  doPod.firstDateScanIn = timeNow;
-                  doPod.lastDateScanIn = timeNow;
+                  // counter total scan in
+                  doPod.totalScanIn = doPod.totalScanIn + 1;
+
+                  if (doPod.totalScanIn == 1) {
+                    doPod.firstDateScanIn = timeNow;
+                    doPod.lastDateScanIn = timeNow;
+                  } else {
+                    doPod.lastDateScanIn = timeNow;
+                  }
+                  await DoPod.save(doPod);
+                  await DeliveryService.updateAwbAttr(
+                    awb.awbItemId,
+                    doPod.branchIdTo,
+                    AWB_STATUS.IN_BRANCH,
+                  );
+
+                  // TODO: queue by Bull
+                  DoPodDetailPostMetaQueueService.createJobByScanInAwb(
+                    doPodDetail.doPodDetailId,
+                  );
+                  totalSuccess += 1;
                 } else {
-                  doPod.lastDateScanIn = timeNow;
+                  totalError += 1;
+                  response.status = 'error';
+                  response.message = `Resi ${awbNumber} belum di Scan Keluar`;
                 }
-                await DoPod.save(doPod);
-                await DeliveryService.updateAwbAttr(awb.awbItemId, doPod.branchIdTo, AWB_STATUS.IN_BRANCH);
+                // #endregion after scanin
 
-                // TODO: queue by Bull
-                DoPodDetailPostMetaQueueService.createJobByScanInAwb(
-                  doPodDetail.doPodDetailId,
-                );
-                totalSuccess += 1;
+                // remove key holdRedis
+                RedisService.del(`hold:scanin:${awb.awbItemId}`);
               } else {
                 totalError += 1;
                 response.status = 'error';
-                response.message = `Resi ${awbNumber} belum di Scan Keluar`;
+                response.message = 'Server Busy';
               }
-              // #endregion after scanin
-
-              // remove key holdRedis
-              RedisService.del(`hold:scanin:${awb.awbItemId}`);
             } else {
+              // TODO:
+              // save data to awb_trouble
+              await AwbTroubleService.fromScanIn(awbNumber, awb.awbStatusIdLast);
+
               totalError += 1;
               response.status = 'error';
-              response.message = 'Server Busy';
+              response.trouble = true;
+              response.message = `Resi Bermasalah pada gerai ` +
+                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.` +
+                `Harap hubungi CT (Control Tower) Kantor Pusat`;
             }
             break;
 

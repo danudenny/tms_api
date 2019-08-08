@@ -1,10 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-import { ErrorHandlerInterceptor } from '../../shared/interceptors/error-handler.interceptor';
-import { HttpExceptionFilter } from '../../shared/interceptors/http-exception.filter';
+import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
+import { AllExceptionsFilter } from '../../shared/filters/all-exceptions.filter';
 import { LoggingInterceptor } from '../../shared/interceptors/logging.interceptor';
 import { ResponseSerializerInterceptor } from '../../shared/interceptors/response-serializer.interceptor';
 import { AuthMiddleware } from '../../shared/middlewares/auth.middleware';
@@ -13,7 +11,7 @@ import { RequestContextMiddleware } from '../../shared/middlewares/request-conte
 import { MultiServerAppModule } from '../../shared/models/multi-server';
 import { RequestValidationPipe } from '../../shared/pipes/request-validation-pipe.pipe';
 import { ConfigService } from '../../shared/services/config.service';
-import { PinoLoggerService } from '../../shared/services/logger.service';
+import { PinoLoggerService } from '../../shared/services/pino-logger.service';
 import { SharedModule } from '../../shared/shared.module';
 import { DoPodDetailPostMetaQueueService } from './services/do-pod-detail-post-meta-queue.service';
 import { QueueServerInjectorService } from './services/queue-server-injector.service';
@@ -51,9 +49,11 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
         imports: [QueueServerModule],
       }).compile()).createNestApplication();
     } else {
-      app = await NestFactory.create<NestFastifyApplication>(
+      app = await NestFactory.create(
         QueueServerModule,
-        new FastifyAdapter({ logger: PinoLoggerService }),
+        {
+          logger: new PinoLoggerService(),
+        },
       );
     }
     this.app = app;
@@ -70,24 +70,28 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     );
     app.useGlobalInterceptors(
       new ResponseSerializerInterceptor(),
-      new ErrorHandlerInterceptor(),
       new LoggingInterceptor(),
     );
-
     app.useGlobalFilters(
-      new HttpExceptionFilter(),
+      new AllExceptionsFilter(),
     );
 
     if (serverConfig.swagger.enabled) {
-      // NOTE: swagger doc with fastify
+      const swaggerModule = new SwaggerModule();
       const options = new DocumentBuilder()
         .setTitle(serverConfig.swagger.title)
-        .setDescription(serverConfig.swagger.description)
+        .setDescription(
+          serverConfig.swagger.description,
+        )
         .setVersion('1.0')
         .addBearerAuth()
         .build();
-      const document = SwaggerModule.createDocument(app, options);
-      SwaggerModule.setup(serverConfig.swagger.path, app, document);
+      const document = swaggerModule.createDocument(app, options);
+      swaggerModule.setup(
+        serverConfig.swagger.path,
+        app,
+        document,
+      );
     }
 
     if (process.env.NODE_ENV === 'test') {

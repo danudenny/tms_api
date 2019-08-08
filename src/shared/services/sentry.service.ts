@@ -29,16 +29,20 @@ export class SentryService {
       const ctx = context.switchToHttp();
       const request = ctx.getRequest();
 
-      const hub = Sentry.getCurrentHub();
-      hub.withScope(scope => {
-        scope.setExtra('request-path', request.path);
-        scope.setExtra('request-method', request.method);
-        scope.setExtra('request-headers', request.headers);
-        scope.setExtra('request-query', request.query);
-        scope.setExtra('request-params', request.params);
-        scope.setExtra('request-body', request.body);
-        hub.captureException(exception);
-      });
+      if (request) {
+        const hub = Sentry.getCurrentHub();
+        hub.withScope(scope => {
+          scope.setExtra('request-path', request.path);
+          scope.setExtra('request-method', request.method);
+          scope.setExtra('request-headers', request.headers);
+          scope.setExtra('request-query', request.query);
+          scope.setExtra('request-params', request.params);
+          scope.setExtra('request-body', request.body);
+          hub.captureException(exception);
+        });
+      } else {
+        Sentry.captureException(exception);
+      }
     }
   }
 }

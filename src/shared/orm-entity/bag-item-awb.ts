@@ -1,7 +1,8 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Bag } from './bag';
-import { BagItem } from './bag-item';
+import { BaseEntity, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+
 import { AwbItem } from './awb-item';
+import { AwbItemAttr } from './awb-item-attr';
+import { BagItem } from './bag-item';
 
 @Entity('bag_item_awb', { schema: 'public' })
 @Index('bag_item_awb_awb_item_idx', ['awbItemId'])
@@ -101,4 +102,8 @@ export class BagItemAwb extends BaseEntity {
   })
   @JoinColumn({ name: 'awb_item_id' })
   awbItem: AwbItem;
+
+  @ManyToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  awbItemAttr: AwbItemAttr;
 }

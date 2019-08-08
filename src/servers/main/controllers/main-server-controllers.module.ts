@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 
-import { OrmRepositoryModule } from '../../../shared/orm-repository/orm-repository.module';
 import { SharedModule } from '../../../shared/shared.module';
 import { MainServerServicesModule } from '../services/main-server-services.module';
 import { GabunganController } from './combine-package/combine-package.controller';
@@ -13,10 +12,10 @@ import { ReasonController } from './master/reason.controller';
 import { RepresentativeController } from './master/representative.controller';
 import { RolePermissionController } from './master/role-permission.controller';
 import { RoleController } from './master/role.controller';
-import { MobileCheckInController } from './mobile/mobile.check-in.controller';
-import { MobileCheckOutController } from './mobile/mobile.check-out.controller';
-import { MobileDashboardController } from './mobile/mobile.dashboard.controller';
-import { MobileDeliveryController } from './mobile/mobile.delivery.controller';
+import { MobileCheckInController } from './mobile/mobile-check-in.controller';
+import { MobileCheckOutController } from './mobile/mobile-check-out.controller';
+import { MobileDashboardController } from './mobile/mobile-dashboard.controller';
+import { MobileSyncController } from './mobile/mobile-sync.controller';
 import { PrintController } from './print.controller';
 import { WebAwbFilterController } from './web/web-awb-filter.controller';
 import { WebAwbTroubleControlelr } from './web/web-awb-trouble.controller';
@@ -25,7 +24,7 @@ import { WebDeliveryInController } from './web/web-delivery-in.controller';
 import { WebDeliveryOutController } from './web/web-delivery-out.controller';
 
 @Module({
-  imports: [OrmRepositoryModule, SharedModule, MainServerServicesModule],
+  imports: [SharedModule, MainServerServicesModule],
   controllers: [
     AwbStatusController,
     BranchController,
@@ -37,7 +36,6 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
     MobileCheckOutController,
     MobileCheckOutController,
     MobileDashboardController,
-    MobileDeliveryController,
     PartnerLogisticController,
     PrintController,
     ReasonController,
@@ -46,6 +44,7 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
     RolePermissionController,
     MobileCheckInController,
     MobileCheckOutController,
+    MobileSyncController,
     WebAwbFilterController,
     WebAwbTroubleControlelr,
     WebBagTroubleControlelr,

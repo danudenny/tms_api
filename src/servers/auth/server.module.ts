@@ -1,21 +1,21 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod, UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import formData = require('express-form-data');
+import os = require('os');
+
+import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
+import { AllExceptionsFilter } from '../../shared/filters/all-exceptions.filter';
 import { LoggingInterceptor } from '../../shared/interceptors/logging.interceptor';
-import { HttpExceptionFilter} from '../../shared/interceptors/http-exception.filter';
-import { ErrorHandlerInterceptor } from '../../shared/interceptors/error-handler.interceptor';
 import { ResponseSerializerInterceptor } from '../../shared/interceptors/response-serializer.interceptor';
 import { AuthMiddleware } from '../../shared/middlewares/auth.middleware';
 import { HeaderMetadataMiddleware } from '../../shared/middlewares/header-metadata.middleware';
 import { RequestContextMiddleware } from '../../shared/middlewares/request-context.middleware';
 import { MultiServerAppModule } from '../../shared/models/multi-server';
-import { RequestValidationPipe } from '../../shared/pipes/request-validation-pipe.pipe';
 import { ConfigService } from '../../shared/services/config.service';
+import { PinoLoggerService } from '../../shared/services/pino-logger.service';
 import { SharedModule } from '../../shared/shared.module';
 import { AuthServerControllersModule } from './controllers/auth-server-controllers.module';
 import { AuthServerInjectorService } from './services/auth-server-injector.service';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { PinoLoggerService } from '../../shared/services/logger.service';
 
 @Module({
   imports: [SharedModule, AuthServerControllersModule],
@@ -50,11 +50,19 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
         imports: [AuthServerModule],
       }).compile()).createNestApplication();
     } else {
-      app = await NestFactory.create<NestFastifyApplication>(
+      app = await NestFactory.create(
         AuthServerModule,
-        new FastifyAdapter({ logger: PinoLoggerService }),
+        {
+          logger: new PinoLoggerService(),
+        },
       );
     }
+
+    app.use(formData.parse({
+      uploadDir: os.tmpdir(),
+      autoClean: true,
+    }));
+
     this.app = app;
 
     app.enableCors();
@@ -68,37 +76,30 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
         },
       }),
     );
-    app.useGlobalFilters(
-      new HttpExceptionFilter(),
-    );
-
     app.useGlobalInterceptors(
       new ResponseSerializerInterceptor(),
-      new ErrorHandlerInterceptor(),
       new LoggingInterceptor(),
-
+    );
+    app.useGlobalFilters(
+      new AllExceptionsFilter(),
     );
 
     if (serverConfig.swagger.enabled) {
-      // NOTE: swagger doc with fastify
+      const swaggerModule = new SwaggerModule();
       const options = new DocumentBuilder()
         .setTitle(serverConfig.swagger.title)
-        .setDescription(serverConfig.swagger.description)
+        .setDescription(
+          serverConfig.swagger.description,
+        )
         .setVersion('1.0')
         .addBearerAuth()
         .build();
-      const document = SwaggerModule.createDocument(app, options);
-      SwaggerModule.setup(serverConfig.swagger.path, app, document);
-
-      // const swaggerModule = new SwaggerModule();
-      // const options = new DocumentBuilder()
-      //   .setTitle(serverConfig.swagger.title)
-      //   .setDescription(serverConfig.swagger.description)
-      //   .setVersion('1.0')
-      //   .addBearerAuth()
-      //   .build();
-      // const document = SwaggerModule.createDocument(app, options);
-      // SwaggerModule.setup(serverConfig.swagger.path, app, document);
+      const document = swaggerModule.createDocument(app, options);
+      swaggerModule.setup(
+        serverConfig.swagger.path,
+        app,
+        document,
+      );
     }
 
     if (process.env.NODE_ENV === 'test') {

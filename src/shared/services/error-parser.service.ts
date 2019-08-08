@@ -1,35 +1,54 @@
-import { forEach } from 'lodash';
-import { isArray } from 'util';
+import { ArgumentsHost } from '@nestjs/common';
+import { ValidationError } from 'class-validator';
+import { forEach, isArray } from 'lodash';
 
-import { ContextualError, ContextualErrorItem } from '../models/contextual-error';
+import { RequestError } from '../models/request-error';
 
 export class ErrorParserService {
-  public static parseToContextualError(error: any) {
-    const contextualError = new ContextualError();
+  public static parseRequestErrorFromExceptionAndArgumentsHost(
+    exception: any,
+    host: ArgumentsHost,
+  ): RequestError {
+    const requestError = new RequestError();
+    requestError.detail = exception;
+    requestError.messageList = this.populateErrorMessages(exception);
+    requestError.buildMessage();
 
-    if (isArray(error)) {
-      forEach(error, errorItem => {
-        const contextualErrorItem = ErrorParserService.convertErrorToContextualErrorItem(
-          errorItem,
-        );
-        contextualError.addError(...contextualErrorItem);
-      });
-    } else {
-      const contextualErrorItem = ErrorParserService.convertErrorToContextualErrorItem(
-        error,
-      );
-      contextualError.addError(...contextualErrorItem);
-    }
-
-    return contextualError;
+    return requestError;
   }
 
-  public static convertErrorToContextualErrorItem(error: any): ContextualErrorItem[] {
-    if (error instanceof ContextualError) {
-      return (error as ContextualError).errors;
-    } else {
-      const contextualErrorItem = new ContextualErrorItem();
-      return [contextualErrorItem];
+  private static populateErrorMessages(
+    errorContent,
+    errorMessages: string[] = [],
+  ) {
+    if (
+      errorContent &&
+      (errorContent instanceof Error || errorContent.message) &&
+      errorContent.message
+    ) {
+      this.populateErrorMessages(
+        errorContent.message,
+        errorMessages,
+      );
     }
+
+    if (isArray(errorContent)) {
+      for (const errorItem of errorContent) {
+        this.populateErrorMessages(errorItem, errorMessages);
+      }
+    } else {
+      switch (true) {
+        case typeof errorContent !== 'function' && typeof errorContent !== 'object':
+          errorMessages.push(errorContent);
+          break;
+        case errorContent instanceof ValidationError:
+          forEach(errorContent.constraints, errorConstraint => {
+            errorMessages.push(errorConstraint);
+          });
+          break;
+      }
+    }
+
+    return errorMessages;
   }
 }

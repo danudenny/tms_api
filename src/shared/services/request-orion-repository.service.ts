@@ -99,11 +99,10 @@ export class RequestOrionRepositoryService {
 
       repositoryQuery.andWhereIsolated(qWhere => {
         for (const filter of filters) {
-          if (!filter.value) {
+          filter.operator = filter.operator || 'eq';
+          if (!['null', 'nnull'].includes(filter.operator) && !filter.value) {
             continue;
           }
-
-          filter.operator = filter.operator || 'eq';
 
           const field = metaPayload.resolveFieldAsFieldAlias(filter.field);
           qWhere.andWhere(

@@ -1,12 +1,12 @@
-import { HttpStatus, Injectable, Query, Logger } from '@nestjs/common';
-import { ContextualErrorService } from '../../../../shared/services/contextual-error.service';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { GetRoleResult } from '../../../../shared/models/get-role-result';
-import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { toInteger } from 'lodash';
-import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
-import { Awb } from '../../../../shared/orm-entity/awb';
+
+import { GetRoleResult } from '../../../../shared/models/get-role-result';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { WebDeliveryFindAllResponseVm } from '../../models/web-delivery.response.vm';
 import { WebDeliveryFilterPayloadVm } from '../../models/web-delivery.vm';
 
@@ -56,7 +56,7 @@ export class WebDeliveryBagService {
 
       return result;
     } else {
-      ContextualErrorService.throwObj(
+      RequestErrorService.throwObj(
         {
           message: 'global.error.USER_NOT_FOUND',
         },

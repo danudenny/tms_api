@@ -6,6 +6,7 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../external/nestjs-s
 import { OrionRepositoryQueryService } from '../services/orion-repository-query.service';
 import { RequestOrionRepositoryService } from '../services/request-orion-repository.service';
 import { RequestQueryBuidlerService } from '../services/request-query-builder.service';
+import { Transform } from 'class-transformer';
 
 export class MetaPayloadPageSort {
   // TODO: Delete this and all dependants
@@ -64,11 +65,19 @@ export class BaseMetaPayloadFilterVm {
 
 export class BaseMetaPayloadVm {
   @ApiModelProperty()
+<<<<<<< HEAD
   @Transform(value => value || 1) // Transform imprted from 'class-transformer', set to 1 if value is undefined
   page: number;
 
   @ApiModelProperty()
   @Transform(value => value || 10) // Transform imprted from 'class-transformer', set to 10 if value is undefined
+=======
+  @Transform(value => value || 1)
+  page: number;
+
+  @ApiModelProperty()
+  @Transform(value => value || 10)
+>>>>>>> origin/development
   limit: number;
 
   @ApiModelPropertyOptional()

@@ -1,13 +1,33 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
-import { MobileDashboardhistVm } from './mobile-dashboard.vm';
-
+import { MobileDeliveryHistoryVm } from './mobile-delivery-history.vm';
 
 export class MobileDeliveryVm {
+  @ApiModelProperty()
+  doPodDeliverDetailId: number;
+
+  @ApiModelProperty()
+  doPodDeliverId: number;
+
+  @ApiModelProperty({ format: 'date-time' })
+  doPodDateTime: string;
+
   @ApiModelProperty()
   awbId: number;
 
   @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty({ format: 'date-time' })
+  awbDate: string;
+
+  @ApiModelProperty()
   awbNumber: string;
+
+  @ApiModelProperty()
+  awbStatusId: number;
+
+  @ApiModelProperty()
+  awbStatusName: string;
 
   @ApiModelProperty()
   merchant: string;
@@ -19,10 +39,10 @@ export class MobileDeliveryVm {
   consigneeAddress: string;
 
   @ApiModelProperty()
-  consigneeNumber: string;
+  consigneeNote: string;
 
   @ApiModelProperty()
-  packageType: string;
+  consigneeNumber: string;
 
   @ApiModelProperty()
   packageTypeName: string;
@@ -31,18 +51,11 @@ export class MobileDeliveryVm {
   productType: string;
 
   @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
   isCOD: boolean;
 
-  @ApiModelProperty()
-  awbStatusId: number;
-
-  @ApiModelProperty()
-  awbStatusName: string;
-
-  // @ApiModelProperty({ type: () => MobileDashboardhistVm, isArray: true })
-  @ApiModelProperty({ type: [MobileDashboardhistVm] })
-  redeliveryHistory: MobileDashboardhistVm[];
-
-  @ApiModelProperty({ type: String })
-  specialInstruction: string[];
+  @ApiModelProperty({ type: [MobileDeliveryHistoryVm] })
+  deliveryHistory: MobileDeliveryHistoryVm[];
 }

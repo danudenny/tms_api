@@ -19,6 +19,12 @@ export class WebScanInResponseVm {
   percenScanInOut: number;
 
   @ApiModelProperty()
+  totalScanIn: number;
+
+  @ApiModelProperty()
+  totalScanOut: number;
+
+  @ApiModelProperty()
   lastDateScanIn: string;
 
   @ApiModelProperty()
@@ -26,6 +32,24 @@ export class WebScanInResponseVm {
 
   @ApiModelProperty()
   nickname: string;
+
+  @ApiModelProperty()
+  branchTo: string;
+
+  @ApiModelProperty()
+  employeeIdDriver: string;
+
+  @ApiModelProperty()
+  partnerLogisticId: string;
+
+  @ApiModelProperty()
+  doPodMethod: string;
+
+  @ApiModelProperty()
+  vehicleNumber: string;
+
+  @ApiModelProperty()
+  branchIdTo: string;
 }
 
 export class WebScanInDeliverResponseVm {
@@ -49,6 +73,9 @@ export class WebScanInDeliverResponseVm {
 
   @ApiModelProperty()
   totalAwb: number;
+
+  @ApiModelProperty()
+  totalCodValue: number;
 
   @ApiModelProperty()
   nickname: string;
