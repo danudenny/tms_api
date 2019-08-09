@@ -352,7 +352,10 @@ export class WebDeliveryInService {
             }
           } else {
             totalSuccess += 1;
-            response.message = `Gabung paket ${bagNumber} sudah pernah scan in`;
+            response.message = `Gabung paket ${bagNumber} belum scan out di gerai sebelumnya`;
+            if (bagData.bagItemStatusIdLast == 2000) {
+              response.message = `Gabung paket ${bagNumber} sudah pernah scan in`;
+            }
           }
         } else {
           // NOTE: create data bag trouble

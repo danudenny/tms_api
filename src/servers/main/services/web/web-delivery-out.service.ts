@@ -415,7 +415,7 @@ export class WebDeliveryOutService {
             // check condition, not scan in yet
             if (awb.branchIdLast == permissonPayload.branchId) {
               totalSuccess += 1;
-              response.message = `Resi ${awbNumber} sudah di Scan OUT di gerai ini`;
+              response.message = `Resi ${awbNumber} sudah pernah scan out`;
             } else {
               // save data to awb_trouble
               await AwbTroubleService.fromScanOut(
@@ -426,11 +426,9 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi ${awbNumber} belum scan in, mohon untuk` +
+              `melakukan scan in terlebih dahulu di gerai` +
+              ` - ${awb.branchLast.branchName}`;
             }
             break;
 
@@ -507,11 +505,8 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi ${awbNumber} bukan milik gerai ini, ` +
+              `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
             }
             break;
 
@@ -578,7 +573,7 @@ export class WebDeliveryOutService {
             // check condition
             if (awb.branchIdLast == permissonPayload.branchId) {
               totalSuccess += 1;
-              response.message = `Resi ${awbNumber} sudah di Scan OUT di gerai ini`;
+              response.message = `Resi ${awbNumber} sudah pernah scan out`;
             } else {
               // save data to awb_trouble
               await AwbTroubleService.fromScanOut(
@@ -589,11 +584,9 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi ${awbNumber} belum scan in, mohon untuk` +
+              `melakukan scan in terlebih dahulu di gerai` +
+              ` - ${awb.branchLast.branchName}`;
             }
             break;
 
@@ -664,11 +657,8 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi Bermasalah pada gerai ${
-                awb.branchLast.branchCode
-              } - ${
-                awb.branchLast.branchName
-              }. Harap hubungi CT (Control Tower) Kantor Pusat`;
+              response.message = `Resi ${awbNumber} bukan milik gerai ini, ` +
+              `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
             }
             break;
 
@@ -697,7 +687,6 @@ export class WebDeliveryOutService {
     result.totalError = totalError;
     result.data = dataItem;
 
-    Logger.debug(result, `########## RESPONSE DATA SCAN OUT AWB DELIVER`);
     return result;
   }
 
@@ -812,7 +801,10 @@ export class WebDeliveryOutService {
             }
           } else {
             totalSuccess += 1;
-            response.message = `No Bag ${bagNumber} sudah di Scan OUT di gerai ini`;
+            response.message = `Gabung paket ${bagNumber} sudah pernah scan out`;
+            if (bagData.bagItemStatusIdLast == 1000) {
+              response.message = `Gabung paket belum scan in, mohon untuk melakukan scan in terlebih dahulu`;
+            }
           }
         } else {
           // NOTE: create data bag trouble
@@ -829,12 +821,12 @@ export class WebDeliveryOutService {
 
           totalError += 1;
           response.status = 'error';
-          response.message = `Gabung Paket belum masuk pada Gerai. Harap Scan Masuk jika Gabung Paket sudah masuk`;
+          response.message = `Gabung paket ${bagNumber} bukan milik gerai ini`;
         }
       } else {
         totalError += 1;
         response.status = 'error';
-        response.message = `No Bag ${bagNumber} Tidak di Temukan`;
+        response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
       }
 
       // push item
