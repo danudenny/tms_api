@@ -112,4 +112,7 @@ export class WebAwbFilterGetLatestResponseVm {
 
   @ApiModelProperty({ type: [WebAwbFilterScanBagResponseVm] })
   data: WebAwbFilterScanBagResponseVm[];
+
+  @ApiModelProperty({ type: [ScanAwbVm] })
+  awbProblems: ScanAwbVm[];
 }

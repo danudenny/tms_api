@@ -33,6 +33,7 @@ import {
   WebAwbFilterScanBagResponseVm,
 } from '../../models/web-awb-filter-response.vm';
 import { WebAwbFilterFinishScanVm, WebAwbFilterScanAwbVm, WebAwbFilterScanBagVm } from '../../models/web-awb-filter.vm';
+import { AWB_STATUS } from 'src/shared/constants/awb-status.constant';
 
 export class WebAwbFilterService {
 
@@ -73,6 +74,7 @@ export class WebAwbFilterService {
 
     const response = new WebAwbFilterGetLatestResponseVm();
     const responseData: WebAwbFilterScanBagResponseVm[] = [];
+    const awbProblems = [];
     if (podFilter) {
       const podFilterDetail = await RepositoryService.podFilterDetail.findAll()
         .where(e => e.podFilterId, w => w.equals(podFilter.podFilterId))
@@ -130,7 +132,38 @@ export class WebAwbFilterService {
         awbFilterScanBag.data = data;
         responseData.push(awbFilterScanBag);
       }
+
+      const raw_query = `
+        SELECT pfi.is_troubled, aa.awb_number, awb.to_id, aa.bag_item_id_last,
+          bi.bag_seq, bag.bag_number
+        FROM pod_filter_detail pfd
+        INNER JOIN pod_filter_detail_item pfi ON pfi.pod_filter_detail_id = pfd.pod_filter_detail_id
+          AND pfi.is_troubled = true
+          AND pfi.is_deleted = false
+        INNER JOIN awb_item_attr aa ON aa.awb_item_id = pfi.awb_item_id
+        INNER JOIN awb_item ai ON ai.awb_item_id = aa.awb_item_id
+        INNER JOIN awb ON awb.awb_id = ai.awb_id
+        INNER JOIN bag_item bi ON bi.bag_item_id = pfd.bag_item_id
+        INNER JOIN bag ON bag.bag_id = bi.bag_id
+        WHERE pfd.pod_filter_id = '${podFilter.podFilterId}' AND pfd.is_deleted = false
+      `;
+      const results = await RawQueryService.query(raw_query);
+      for (const result of results) {
+        let message = '';
+        if (result.bag_item_id_last == null) {
+          const bagNumberSeq = `${result.bag_number}${result.bag_seq.toString().padEnd(3, '0')}`;
+          message = `Resi ${result.awb_number} berhasil tersortir, tetapi tidak ada pada Gabung Paket ${bagNumberSeq}`;
+        }
+        awbProblems.push({
+          awbNumber: result.awb_number,
+          districtId: result.to_id,
+          trouble:  true,
+          message,
+          status: 'success',
+        });
+      }
     }
+    response.awbProblems = awbProblems;
     response.data = responseData;
     return response;
   }
@@ -302,6 +335,7 @@ export class WebAwbFilterService {
           awbItemAttrId: true,
           isDistrictFiltered: true,
           bagItemIdLast: true,
+          branchIdNext: true,
           awbItem: {
             awbItemId: true, // needs to be selected due to awbItem relations are being selected
             awb: {
@@ -329,11 +363,11 @@ export class WebAwbFilterService {
           await AwbItemAttr.update(awbItemAttr.awbItemAttrId, {
             isDistrictFiltered: true,
           });
-          // await DeliveryService.updateAwbAttr(
-          //   awb.awbItemId,
-          //   doPod.branchIdTo,
-          //   AWB_STATUS.IN_BRANCH,
-          // );
+          await DeliveryService.updateAwbAttr(
+            awbItemAttr.awbItemId,
+            awbItemAttr.branchIdNext,
+            AWB_STATUS.IN_BRANCH,
+          );
 
           if (awbItemAttr.bagItemIdLast) {
             // no error, this awb is fine
