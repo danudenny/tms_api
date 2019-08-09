@@ -162,8 +162,8 @@ export class RequestQueryBuidlerService {
 
       queryBuilder.andWhere(
         new Brackets(qbAndWhere => {
-          for (const andFilterIdx in metaPayload.filters) {
-            const andFilter = metaPayload.filters[andFilterIdx];
+          for (const andFilterIdx in targetFilters) {
+            const andFilter = targetFilters[andFilterIdx];
             andFilter.operator = andFilter.operator || 'eq';
             if (!['null', 'nnull'].includes(andFilter.operator) && !andFilter.value) {
               continue;
