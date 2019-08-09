@@ -478,7 +478,7 @@ export class WebAwbFilterService {
       .addSelect('d.total_awb_not_in_bag', 'moreFiltered')
       .addSelect('d.total_awb_item', 'totalItem')
       .addSelect('CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, \'0\'))', 'bagNumberSeq')
-      .addSelect('d.is_active as isActive')
+      .addSelect('d.is_active', 'isActive')
       .from(
         subQuery => {
           subQuery
