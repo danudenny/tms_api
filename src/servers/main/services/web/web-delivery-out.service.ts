@@ -32,6 +32,7 @@ import {
   WebScanOutDeliverListResponseVm,
   ScanAwbVm,
   ScanBagVm,
+  WebScanOutResponseForEditVm,
 } from '../../models/web-scan-out-response.vm';
 import {
   WebScanOutAwbVm,
@@ -42,6 +43,7 @@ import {
   WebScanOutEditVm,
   WebScanOutEditHubVm,
   WebScanOutBagValidateVm,
+  WebScanOutAwbLoadForEditVm,
 } from '../../models/web-scan-out.vm';
 // #endregion
 
@@ -75,7 +77,8 @@ export class WebDeliveryOutService {
     const method =
       payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
     doPod.doPodMethod = method; // internal or 3PL/Third Party
-    doPod.partnerLogisticId = payload.partnerLogisticId || null;
+    payload.doPodMethod && payload.doPodMethod == '3pl' ? doPod.partnerLogisticId = payload.partnerLogisticId || 1 : doPod.partnerLogisticId = null;
+    // doPod.partnerLogisticId = payload.partnerLogisticId || null;
     doPod.branchIdTo = payload.branchIdTo || null;
 
     // doPod.userIdDriver = payload.
@@ -1226,5 +1229,88 @@ export class WebDeliveryOutService {
       doPodId,
     });
     return await qb.getCount();
+  }
+
+  async scanOutAwbLoadForEdit(
+    payload: WebScanOutAwbLoadForEditVm,
+  ): Promise<WebScanOutResponseForEditVm> {
+    const doPodId = payload.doPodId;
+    const doPodMethod = payload.doPodMethod;
+
+    const repo = new OrionRepositoryService(DoPod, 't1');
+    const q = repo.findAllRaw();
+
+    if (doPodMethod === '3000') {
+      q.selectRaw(
+        ['t1.do_pod_id', 'doPodId'],
+        ['t1.employee_id_driver', 'employeeIdDriver'],
+        ['t1.partner_logistic_id', 'partnerLogisticId'],
+        ['t4.partner_logistic_name', 'partnerLogisticName'],
+        ['t1.do_pod_method', 'doPodMethod'],
+        ['t1.vehicle_number', 'vehicleNumber'],
+        ['t1.branch_id_to', 'branchIdTo'],
+        ['t2.fullname', 'employeeName'],
+        ['t2.nik', 'nik'],
+        ['t3.branch_name', 'branchTo'],
+        ['t3.branch_code', 'branchCode'],
+      );
+
+      q.innerJoin(e => e.employee, 't2', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.innerJoin(e => e.branchTo, 't3', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.innerJoin(e => e.partner_logistic, 't4', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.andWhere(e => e.doPodId, w => w.equals(doPodId));
+    } else {
+      q.selectRaw(
+        ['t1.do_pod_id', 'doPodId'],
+        ['t1.employee_id_driver', 'employeeIdDriver'],
+        ['t1.do_pod_method', 'doPodMethod'],
+        ['t1.vehicle_number', 'vehicleNumber'],
+        ['t1.branch_id_to', 'branchIdTo'],
+        ['t2.fullname', 'employeeName'],
+        ['t2.nik', 'nik'],
+        ['t3.branch_name', 'branchTo'],
+        ['t3.branch_code', 'branchCode'],
+      );
+
+      q.innerJoin(e => e.employee, 't2', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.innerJoin(e => e.branchTo, 't3', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.andWhere(e => e.doPodId, w => w.equals(doPodId));
+    }
+
+    const data = await q.exec();
+
+    const repo2 = new OrionRepositoryService(DoPodDetail, 'tb1');
+    const q2 = repo2.findAllRaw();
+
+    q2.selectRaw(
+      ['tb2.awb_number', 'awbNumber'],
+      [`CONCAT(CAST(tb2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      ['tb2.consignee_name', 'consigneeName'],
+    );
+
+    q2.innerJoin(e => e.awbItem.awb, 'tb2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q2.andWhere(e => e.doPodId, w => w.equals(doPodId));
+    q2.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data2 = await q2.exec();
+
+    const result = new WebScanOutResponseForEditVm();
+
+    result.data1 = data;
+    result.data2 = data2;
+
+    return result;
   }
 }

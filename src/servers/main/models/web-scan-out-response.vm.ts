@@ -1,5 +1,6 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
+import { ItemDeliveryResponseVm } from './web-delivery-list-response.vm';
 
 // Scan Out Awb List
 export class WebScanInResponseVm {
@@ -164,4 +165,47 @@ export class WebScanOutBagResponseVm {
 
   @ApiModelProperty({ type: [ScanBagVm] })
   data: ScanBagVm[];
+}
+
+export class EditDataAwbVm {
+  @ApiModelProperty()
+  doPodId: number;
+
+  @ApiModelProperty()
+  nik: string;
+
+  @ApiModelProperty()
+  branchCode: string;
+
+  @ApiModelProperty()
+  branchTo: string;
+
+  @ApiModelProperty()
+  employeeIdDriver: string;
+
+  @ApiModelProperty()
+  employeeName: string;
+
+  @ApiModelProperty()
+  partnerLogisticId: string;
+
+  @ApiModelProperty()
+  partnerLogisticName: string;
+
+  @ApiModelProperty()
+  doPodMethod: string;
+
+  @ApiModelProperty()
+  vehicleNumber: string;
+
+  @ApiModelProperty()
+  branchIdTo: string;
+}
+
+export class WebScanOutResponseForEditVm {
+  @ApiModelProperty({ type: () => EditDataAwbVm })
+  data1: EditDataAwbVm;
+
+  @ApiModelProperty({ type: () => [ItemDeliveryResponseVm] })
+  data2: ItemDeliveryResponseVm[];
 }

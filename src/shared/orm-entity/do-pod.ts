@@ -4,6 +4,7 @@ import { Branch } from './branch';
 import { DoPodDetail } from './do-pod-detail';
 import { Employee } from './employee';
 import { TmsBaseEntity } from './tms-base';
+import { PartnerLogistic } from './partner-logistic';
 
 @Entity('do_pod', { schema: 'public' })
 export class DoPod extends TmsBaseEntity {
@@ -256,6 +257,10 @@ export class DoPod extends TmsBaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_to' })
   branchTo: Branch;
+
+  @OneToOne(() => PartnerLogistic)
+  @JoinColumn({ name: 'partner_logistic_id' })
+  partner_logistic: PartnerLogistic;
 
   @OneToMany(() => DoPodDetail, e => e.doPod)
   doPodDetails: DoPodDetail[];
