@@ -104,10 +104,15 @@ export class WebAwbFilterResponseVm {
   @ApiModelProperty()
   totalItem: number;
 
+  @ApiModelProperty()
+  isActive: boolean;
 }
 
 export class WebAwbFilterGetLatestResponseVm {
 
   @ApiModelProperty({ type: [WebAwbFilterScanBagResponseVm] })
   data: WebAwbFilterScanBagResponseVm[];
+
+  @ApiModelProperty({ type: [ScanAwbVm] })
+  awbProblems: ScanAwbVm[];
 }
