@@ -173,12 +173,7 @@ export class WebAwbFilterService {
         representativeIdFilter: true,
         totalBagItem: true,
         userIdScan: true,
-        user: {
-          username: true,
-        },
-        branch: {
-          branchName: true,
-        },
+        branchIdScan: true,
         representative: {
           representativeCode: true,
         },
@@ -365,7 +360,7 @@ export class WebAwbFilterService {
               })
             ;
 
-            const bagNumberSeq = `${podFilterDetail.bagItem.bagSeq}${podFilterDetail.bagItem.bag.bagNumber}`;
+            const bagNumberSeq = `${podFilterDetail.bagItem.bag.bagNumber}${podFilterDetail.bagItem.bagSeq.toString().padEnd(3, '0')}`;
             res.status = 'success';
             res.trouble = true;
             res.districtId = awbItemAttr.awbItem.awb.toId;
@@ -607,11 +602,13 @@ export class WebAwbFilterService {
           where: {
             userId: podFilter.userIdScan,
           },
+          select: ['username', 'userId'],
         });
         const branch = await Branch.findOne({
           where: {
             branchId: podFilter.branchIdScan,
           },
+          select: ['branchName'],
         });
         RequestErrorService.throwObj({
           message: `Gabung Paket sudah disortir oleh ${user.username} Gerai ${branch.branchName}`,
