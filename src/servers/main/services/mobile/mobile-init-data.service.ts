@@ -89,6 +89,7 @@ export class MobileInitDataService {
       'doPodDeliverDetailId',
     );
     qb.addSelect('do_pod_deliver.do_pod_deliver_id', 'doPodDeliverId');
+    qb.addSelect('do_pod_deliver.do_pod_deliver_date_time', 'doPodDeliverDateTime');
     qb.addSelect('awb.awb_id', 'awbId');
     qb.addSelect('awb_item_attr.awb_item_id', 'awbItemId');
     qb.addSelect('awb.awb_date', 'awbDate');
