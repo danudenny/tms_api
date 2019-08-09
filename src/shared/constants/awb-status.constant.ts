@@ -4,5 +4,6 @@ export const AWB_STATUS = {
   OUT_BRANCH: 3005,
   OUT_HUB: 3010,
   IN_BRANCH: 3500,
+  IN_FILTER: 12800,
   ANT: 14000,
 };

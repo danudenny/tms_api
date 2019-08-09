@@ -7,21 +7,6 @@ import { OrionRepositoryQueryService } from '../services/orion-repository-query.
 import { RequestOrionRepositoryService } from '../services/request-orion-repository.service';
 import { RequestQueryBuidlerService } from '../services/request-query-builder.service';
 
-export class MetaPayloadPageSort {
-  // TODO: Delete this and all dependants
-  @ApiModelProperty()
-  page: number;
-
-  @ApiModelProperty()
-  limit: number;
-
-  @ApiModelProperty()
-  sortBy: string;
-
-  @ApiModelProperty()
-  sortDir: string;
-}
-
 export type BaseMetaPayloadFilterVmOperator =
   | 'eq'
   | 'neq'

@@ -1,4 +1,4 @@
-import { Controller, Post, HttpCode, UseGuards, Body, HttpStatus } from '@nestjs/common';
+import { Controller, Post, HttpCode, UseGuards, Body, HttpStatus, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
@@ -20,6 +20,20 @@ export class MobileCheckOutController {
   @ApiOkResponse({ type: MobileCheckOutResponseVm })
   @Transactional()
   public async checkIn(@Body() payload: MobileCheckOutPayloadVm) {
+    return this.mobileCheckOutService.checkOut(payload);
+  }
+
+  @Post('checkOutForm')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: MobileCheckOutResponseVm })
+  @Transactional()
+  public async checkInForm(
+    @Req() request,
+    @Body() payload: MobileCheckOutPayloadVm,
+  ) {
+    // TODO: upload image and update data
     return this.mobileCheckOutService.checkOut(payload);
   }
 }

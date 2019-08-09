@@ -9,7 +9,7 @@ export class MobileDeliveryVm {
   doPodDeliverId: number;
 
   @ApiModelProperty({ format: 'date-time' })
-  doPodDateTime: string;
+  doPodDeliverDateTime: string;
 
   @ApiModelProperty()
   awbId: number;
