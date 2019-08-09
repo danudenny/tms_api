@@ -329,6 +329,11 @@ export class WebAwbFilterService {
           await AwbItemAttr.update(awbItemAttr.awbItemAttrId, {
             isDistrictFiltered: true,
           });
+          // await DeliveryService.updateAwbAttr(
+          //   awb.awbItemId,
+          //   doPod.branchIdTo,
+          //   AWB_STATUS.IN_BRANCH,
+          // );
 
           if (awbItemAttr.bagItemIdLast) {
             // no error, this awb is fine
@@ -473,6 +478,7 @@ export class WebAwbFilterService {
       .addSelect('d.total_awb_not_in_bag', 'moreFiltered')
       .addSelect('d.total_awb_item', 'totalItem')
       .addSelect('CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, \'0\'))', 'bagNumberSeq')
+      .addSelect('d.is_active as isActive')
       .from(
         subQuery => {
           subQuery
@@ -482,7 +488,9 @@ export class WebAwbFilterService {
             .addSelect('pfd.total_awb_filtered')
             .addSelect('pfd.total_awb_not_in_bag')
             .addSelect('pfd.total_awb_item')
+            .addSelect('BOOL_AND(pf.is_active) as is_active')
             .from('pod_filter_detail', 'pfd')
+            .innerJoin('pod_filter', 'pf', 'pf.pod_filter_id = pfd.pod_filter_id AND pf.is_deleted = false')
             .innerJoin('bag_item_awb', 'bia', 'bia.bag_item_id = pfd.bag_item_id AND bia.is_deleted = false');
 
           payload.applyFiltersToQueryBuilder(subQuery, ['filteredDateTime']);

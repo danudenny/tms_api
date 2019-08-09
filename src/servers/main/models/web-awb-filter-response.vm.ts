@@ -104,6 +104,8 @@ export class WebAwbFilterResponseVm {
   @ApiModelProperty()
   totalItem: number;
 
+  @ApiModelProperty()
+  isActive: boolean;
 }
 
 export class WebAwbFilterGetLatestResponseVm {
