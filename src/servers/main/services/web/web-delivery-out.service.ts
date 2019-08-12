@@ -33,6 +33,7 @@ import {
   ScanAwbVm,
   ScanBagVm,
   WebScanOutResponseForEditVm,
+  WebScanOutResponseForPrintVm,
 } from '../../models/web-scan-out-response.vm';
 import {
   WebScanOutAwbVm,
@@ -44,6 +45,7 @@ import {
   WebScanOutEditHubVm,
   WebScanOutBagValidateVm,
   WebScanOutLoadForEditVm,
+  WebScanOutBagForPrintVm,
 } from '../../models/web-scan-out.vm';
 // #endregion
 
@@ -1348,6 +1350,33 @@ export class WebDeliveryOutService {
 
     result.data = data;
     result.data_detail = data2;
+
+    return result;
+  }
+
+  async getBagItemId(
+    payload: WebScanOutBagForPrintVm,
+  ): Promise<WebScanOutResponseForPrintVm> {
+    const doPodId = payload.doPodId;
+
+    const repo = new OrionRepositoryService(DoPod, 't1');
+    const q = repo.findAllRaw();
+
+    q.selectRaw(
+      ['t2.bag_item_id', 'bagItemId'],
+    );
+
+    q.innerJoin(e => e.doPodDetails, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.doPodId, w => w.equals(doPodId));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+
+    const result = new WebScanOutResponseForPrintVm();
+
+    result.bagItemId = data[0].bagItemId;
 
     return result;
   }

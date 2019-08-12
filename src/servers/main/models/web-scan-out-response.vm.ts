@@ -209,3 +209,8 @@ export class WebScanOutResponseForEditVm {
   @ApiModelProperty({ type: () => [ItemDeliveryResponseVm] })
   data_detail: ItemDeliveryResponseVm[];
 }
+
+export class WebScanOutResponseForPrintVm {
+  @ApiModelProperty()
+  bagItemId: number;
+}

@@ -16,6 +16,7 @@ import {
   WebScanOutEditHubVm,
   WebScanOutBagValidateVm,
   WebScanOutLoadForEditVm,
+  WebScanOutBagForPrintVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutAwbResponseVm,
@@ -26,6 +27,7 @@ import {
   ScanAwbVm,
   ScanBagVm,
   WebScanOutResponseForEditVm,
+  WebScanOutResponseForPrintVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
@@ -203,5 +205,14 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebScanOutResponseForEditVm })
   public async scanOutBagLoadForEdit(@Body() payload: WebScanOutLoadForEditVm) {
     return this.webDeliveryOutService.scanOutLoadForEdit(payload, true);
+  }
+
+  @Post('bagItemForPrint')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutResponseForPrintVm })
+  public async scanOutBagItemForPrint(@Body() payload: WebScanOutBagForPrintVm) {
+    return this.webDeliveryOutService.getBagItemId(payload);
   }
 }
