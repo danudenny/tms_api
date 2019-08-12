@@ -6,12 +6,12 @@ import {
 } from 'typeorm';
 
 @Entity('employee_journey', { schema: 'public' })
-export class employeeJourney extends BaseEntity {
+export class EmployeeJourney extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'employee_journey_id',
   })
-  employeeJourneyId: string;
+  employeeJourneyId: number;
 
   @Column('bigint', {
     nullable: false,
@@ -85,4 +85,34 @@ export class employeeJourney extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @Column('character varying', {
+    nullable: true,
+    name: 'category',
+  })
+  category: string | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id_check_in',
+  })
+  branchIdCheckIn: number;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id_check_out',
+  })
+  branchIdCheckOut: number;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'attachment_id_check_in',
+  })
+  attachmentIdCheckIn: number;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'attachment_id_check_out',
+  })
+  attachmentIdCheckOut: number;
 }
