@@ -58,7 +58,7 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
 
     this.app = app;
 
-    app.enableCors({ origin: true });
+    app.enableCors();
 
     app.useGlobalPipes(
       new ValidationPipe({

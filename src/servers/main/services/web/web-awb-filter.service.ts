@@ -33,7 +33,7 @@ import {
   WebAwbFilterScanBagResponseVm,
 } from '../../models/web-awb-filter-response.vm';
 import { WebAwbFilterFinishScanVm, WebAwbFilterScanAwbVm, WebAwbFilterScanBagVm } from '../../models/web-awb-filter.vm';
-import { AWB_STATUS } from 'src/shared/constants/awb-status.constant';
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 
 export class WebAwbFilterService {
 
