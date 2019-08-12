@@ -43,7 +43,7 @@ import {
   WebScanOutEditVm,
   WebScanOutEditHubVm,
   WebScanOutBagValidateVm,
-  WebScanOutAwbLoadForEditVm,
+  WebScanOutLoadForEditVm,
 } from '../../models/web-scan-out.vm';
 // #endregion
 
@@ -1223,16 +1223,19 @@ export class WebDeliveryOutService {
     return await qb.getCount();
   }
 
-  async scanOutAwbLoadForEdit(
-    payload: WebScanOutAwbLoadForEditVm,
+  async scanOutLoadForEdit(
+    payload: WebScanOutLoadForEditVm,
+    isHub = false,
   ): Promise<WebScanOutResponseForEditVm> {
     const doPodId = payload.doPodId;
     const doPodMethod = payload.doPodMethod;
 
+    // Get Data from do_pod scanout start
     const repo = new OrionRepositoryService(DoPod, 't1');
     const q = repo.findAllRaw();
 
     if (doPodMethod === '3000') {
+      // Get Data for 3pl Method
       q.selectRaw(
         ['t1.do_pod_id', 'doPodId'],
         ['t1.employee_id_driver', 'employeeIdDriver'],
@@ -1258,6 +1261,7 @@ export class WebDeliveryOutService {
       );
       q.andWhere(e => e.doPodId, w => w.equals(doPodId));
     } else {
+      // Get Data for internal Method
       q.selectRaw(
         ['t1.do_pod_id', 'doPodId'],
         ['t1.employee_id_driver', 'employeeIdDriver'],
@@ -1280,28 +1284,70 @@ export class WebDeliveryOutService {
     }
 
     const data = await q.exec();
+    // Get Data from do_pod scanout end
 
+    // Get Data for scanout detail start
     const repo2 = new OrionRepositoryService(DoPodDetail, 'tb1');
     const q2 = repo2.findAllRaw();
 
-    q2.selectRaw(
-      ['tb2.awb_number', 'awbNumber'],
-      [`CONCAT(CAST(tb2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
-      ['tb2.consignee_name', 'consigneeName'],
-    );
+    if (isHub) {
+      // Get Data for scanout for bag detail
+      q2.selectRaw(
+        [
+          `CASE LENGTH (CAST(t2.bag_seq AS varchar(10)))
+            WHEN 1 THEN
+              CONCAT (t3.bag_number,'00',t2.bag_seq)
+            WHEN 2 THEN
+              CONCAT (t3.bag_number,'0',t2.bag_seq)
+            ELSE
+              CONCAT (t3.bag_number,t2.bag_seq) END`,
+          'bagNumber',
+        ],
+        ['COUNT (t4.*)', 'totalAwb'],
+        ['t5.representative_name', 'representativeIdTo'],
+        [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      );
 
-    q2.innerJoin(e => e.awbItem.awb, 'tb2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q2.andWhere(e => e.doPodId, w => w.equals(doPodId));
-    q2.andWhere(e => e.isDeleted, w => w.isFalse());
+      q2.innerJoin(e => e.bagItem, 't2', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q2.leftJoin(e => e.bagItem.bag, 't3', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q2.leftJoin(e => e.bagItem.bagItemAwbs, 't4', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q2.leftJoin(e => e.bagItem.bag.representative, 't5', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q2.andWhere(e => e.isDeleted, w => w.isFalse());
+      q2.groupByRaw(
+        't3.bag_number, t2.bag_seq, t2.weight, t5.representative_name',
+      );
+      q2.andWhere(e => e.doPodId, w => w.equals(doPodId));
+      q2.andWhere(e => e.isDeleted, w => w.isFalse());
+    } else {
+      // Get Data for scanout for awb detail
+      q2.selectRaw(
+        ['tb2.awb_number', 'awbNumber'],
+        [`CONCAT(CAST(tb2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+        ['tb2.consignee_name', 'consigneeName'],
+      );
+
+      q2.innerJoin(e => e.awbItem.awb, 'tb2', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q2.andWhere(e => e.doPodId, w => w.equals(doPodId));
+      q2.andWhere(e => e.isDeleted, w => w.isFalse());
+    }
 
     const data2 = await q2.exec();
+    // Get Data for scanout detail end
 
     const result = new WebScanOutResponseForEditVm();
 
-    result.data1 = data;
-    result.data2 = data2;
+    result.data = data;
+    result.data_detail = data2;
 
     return result;
   }

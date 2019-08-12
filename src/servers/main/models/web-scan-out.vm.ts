@@ -41,7 +41,7 @@ export class WebScanOutBagValidateVm {
   bagNumber: string;
 }
 
-export class WebScanOutAwbLoadForEditVm {
+export class WebScanOutLoadForEditVm {
   @ApiModelProperty({
     skipValidation: true,
   })
