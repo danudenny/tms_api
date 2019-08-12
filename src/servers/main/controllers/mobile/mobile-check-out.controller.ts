@@ -1,8 +1,10 @@
-import { Controller, Post, HttpCode, UseGuards, Body, HttpStatus, Req } from '@nestjs/common';
+import { Controller, Post, HttpCode, UseGuards, Body, HttpStatus, Req, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
-import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
+
 import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
+import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { MobileCheckOutPayloadVm } from '../../models/mobile-check-out-payload.vm';
 import { MobileCheckOutResponseVm } from '../../models/mobile-check-out-response.vm';
 import { MobileCheckOutService } from '../../services/mobile/mobile-check-out.service';
@@ -25,15 +27,14 @@ export class MobileCheckOutController {
 
   @Post('checkOutForm')
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileCheckOutResponseVm })
-  @Transactional()
   public async checkInForm(
-    @Req() request,
     @Body() payload: MobileCheckOutPayloadVm,
+    @UploadedFile() file,
   ) {
-    // TODO: upload image and update data
-    return this.mobileCheckOutService.checkOut(payload);
+    return await this.mobileCheckOutService.checkOutForm(payload, file);
   }
 }

@@ -13,4 +13,7 @@ export class MobileCheckInResponseVm {
 
   @ApiModelProperty()
   checkInDate: string;
+
+  @ApiModelProperty()
+  attachmentId: number;
 }

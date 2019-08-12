@@ -41,7 +41,7 @@ export class WebScanOutBagValidateVm {
   bagNumber: string;
 }
 
-export class WebScanOutAwbLoadForEditVm {
+export class WebScanOutLoadForEditVm {
   @ApiModelProperty({
     skipValidation: true,
   })
@@ -53,6 +53,14 @@ export class WebScanOutAwbLoadForEditVm {
   })
   @IsDefined({ message: 'Do Pod Method harus diisi' })
   doPodMethod: string;
+}
+
+export class WebScanOutBagForPrintVm {
+  @ApiModelProperty({
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'Do Pod Id harus diisi' })
+  doPodId: string;
 }
 
 // Scan Out Bag

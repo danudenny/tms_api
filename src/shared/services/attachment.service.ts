@@ -21,6 +21,7 @@ export class AttachmentService {
     const uploadResponse = await AwsS3Service.uploadFileBuffer(
       fileBuffer,
       fileOriginalName,
+      fileMime,
       pathId,
       bucketName,
     );
@@ -57,6 +58,14 @@ export class AttachmentService {
           attachment.fileMime,
         );
     }
+  }
+
+  public static async findById(attachmentId: number) {
+    const attachment = await AttachmentTms.findOne(attachmentId);
+    if (!attachment) {
+      throw new HttpException('Cannot get attachment, file not found', 404);
+    }
+    return attachment;
   }
 
   public static async deleteAttachment(attachmentId: number) {

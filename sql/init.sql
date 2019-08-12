@@ -4330,7 +4330,9 @@ CREATE TABLE "public"."employee_journey" (
   "is_deleted" bool NOT NULL DEFAULT false,
   "branch_id_check_in" int8,
   "branch_id_check_out" int8,
-  "category" varchar(255) COLLATE "pg_catalog"."default" NOT NULL DEFAULT 'pod'::character varying
+  "category" varchar(255) COLLATE "pg_catalog"."default" NOT NULL DEFAULT 'pod'::character varying,
+  "attachment_id_check_in" bigint,
+  "attachment_id_check_out" bigint
 )
 ;
 ALTER TABLE "public"."employee_journey" OWNER TO "postgres";

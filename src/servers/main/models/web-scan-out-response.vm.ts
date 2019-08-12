@@ -204,8 +204,13 @@ export class EditDataAwbVm {
 
 export class WebScanOutResponseForEditVm {
   @ApiModelProperty({ type: () => EditDataAwbVm })
-  data1: EditDataAwbVm;
+  data: EditDataAwbVm;
 
   @ApiModelProperty({ type: () => [ItemDeliveryResponseVm] })
-  data2: ItemDeliveryResponseVm[];
+  data_detail: ItemDeliveryResponseVm[];
+}
+
+export class WebScanOutResponseForPrintVm {
+  @ApiModelProperty()
+  bagItemId: number;
 }

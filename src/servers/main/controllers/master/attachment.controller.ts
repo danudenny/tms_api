@@ -26,6 +26,19 @@ export class AttachmentController {
     );
   }
 
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({
+    disable: true,
+  })
+  public async getAttachment(
+    @Param('id') attachmentId: number,
+  ) {
+    return AttachmentService.findById(attachmentId);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

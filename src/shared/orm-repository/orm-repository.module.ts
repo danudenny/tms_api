@@ -12,7 +12,7 @@ import { PodScanRepository } from './pod-scan.repository';
 import { AwbTrouble } from '../orm-entity/awb-trouble';
 import { AwbSolution } from '../orm-entity/awb-solution';
 import { PartnerLogistic } from '../orm-entity/partner-logistic';
-import { employeeJourney } from '../orm-entity/employee-journey';
+import { EmployeeJourney } from '../orm-entity/employee-journey';
 import { BagRepository } from './bag.repository';
 import { DoPodRepository } from './do-pod.repository';
 import { BagItemRepository } from './bagItem.repository';
@@ -42,7 +42,7 @@ import { PodFilterDetailItemRepository } from './pod-filter-detail-item.reposito
       AwbTrouble,
       AwbSolution,
       PartnerLogistic,
-      employeeJourney,
+      EmployeeJourney,
       BagRepository,
       DoPodRepository,
       BagRepository,
