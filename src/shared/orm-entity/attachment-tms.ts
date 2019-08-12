@@ -8,7 +8,7 @@ export class AttachmentTms extends TmsBaseEntity {
     type: 'bigint',
     name: 'attachment_tms_id',
   })
-  attachmentTmsId: string;
+  attachmentTmsId: number;
 
   @Column('character varying', {
     nullable: true,
