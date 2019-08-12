@@ -11,7 +11,10 @@ export class GabunganFindAllResponseVm   {
 }
 export class AwbPackageDetail {
   @ApiModelProperty()
-  awbNumber: string;
+  awbNumber: number;
+
+  @ApiModelProperty()
+  awbItemId: number;
 
   @ApiModelProperty()
   weight: number;
@@ -28,7 +31,10 @@ export class PackageAwbResponseVm   {
   @ApiModelPropertyOptional({ type: () => AwbPackageDetail })
   data: AwbPackageDetail;
 
-  // @ApiModelProperty()
+  @ApiModelPropertyOptional({ type: () => [AwbPackageDetail] })
+  dataBag: AwbPackageDetail[];
+
+  // @ApiModelPropertyOptional()
   // total: number;
 
   @ApiModelProperty()

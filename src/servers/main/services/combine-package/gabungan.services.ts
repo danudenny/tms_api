@@ -11,7 +11,7 @@ import { BagItemAwbRepository } from '../../../../shared/orm-repository/bagItemA
 import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
 import { District } from '../../../../shared/orm-entity/district';
-import { createQueryBuilder, MoreThan } from 'typeorm';
+import { createQueryBuilder, MoreThan, In } from 'typeorm';
 import { PodFilterDetailItem } from '../../../../shared/orm-entity/pod-filter-detail-item';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
@@ -137,6 +137,7 @@ export class GabunganService {
 
       const qb  = createQueryBuilder();
       qb.addSelect('e.awb_number', 'awbNumber');
+      qb.addSelect('c.awb_item_id', 'awbItemId');
       qb.addSelect('d.weight_real_rounded', 'weight');
       qb.addSelect('e.consignee_name', 'consigneeName');
       qb.addSelect('e.ref_reseller', 'shipperName');
@@ -164,8 +165,7 @@ export class GabunganService {
           HttpStatus.NOT_FOUND,
         );
       }
-      // result.data       = resultData;
-      // result.total      = resultData.length;
+      result.dataBag = resultData;
       result.districtId = resultData[0].districtId;
       result.bagNumber  = getNumberValue;
       result.districtName = resultData[0].districtName.trim();
@@ -174,7 +174,7 @@ export class GabunganService {
       if (!payload.districtId) {
          RequestErrorService.throwObj(
           {
-            message: 'ID kecamatan harus diisi',
+            message: 'Masukan kode kecamatan terlebih dahulu',
           },
           HttpStatus.BAD_REQUEST,
         );
@@ -216,13 +216,6 @@ export class GabunganService {
         const detailData = await qb.getRawMany();
         if (detailData && detailData.length === Number(value)) {
             result.bagItemId = detailData[0].bagItemId;
-            // // TODO: PRINT CUK
-            //  RequestErrorService.throwObj(
-            //   {
-            //     message: 'HARUSNYA DISINI NGEPRINT',
-            //   },
-            //   HttpStatus.BAD_REQUEST,
-            // );
         } else {
            RequestErrorService.throwObj(
             {
@@ -232,8 +225,23 @@ export class GabunganService {
           );
         }
       } else {
+        if (!payload.awbItemId || payload.awbItemId.length < 1 ) {
+          RequestErrorService.throwObj(
+            {
+              message: 'Tidak ada nomor resi',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        }
         const districtId       = payload.districtId;
-        const filterDetailItem = await PodFilterDetailItem.find({ where: { toId:  districtId, isPackageCombine: false, isDeleted: false} });
+        const filterDetailItem = await PodFilterDetailItem.find({
+          where: {
+              awbItemId       : In(payload.awbItemId),
+              toId            : districtId,
+              isPackageCombine: false,
+              isDeleted       : false,
+            },
+        });
         if (filterDetailItem && filterDetailItem.length === Number(value)) {
           const qb = createQueryBuilder();
           qb.addSelect('a.bag_id', 'bagId');
@@ -283,6 +291,7 @@ export class GabunganService {
           q.innerJoin('awb_item', 'b', 'a.awb_item_id = b.awb_item_id');
           q.innerJoin('awb', 'c', 'c.awb_id = b.awb_id');
           q.where('a.to_id = :districtId', { districtId });
+          q.andWhere('a.awb_item_id IN (:...awbItemId)', { awbItemId: payload.awbItemId });
           q.andWhere('a.is_deleted = false');
 
           const awbDetail = await q.getRawMany();
@@ -341,7 +350,7 @@ export class GabunganService {
       if (!payload.districtId && !payload.bagNumber) {
          RequestErrorService.throwObj(
           {
-            message: 'ID kecamatan harus diisi',
+            message: 'Masukan kode kecamatan terlebih dahulu',
           },
           HttpStatus.BAD_REQUEST,
         );
@@ -367,6 +376,7 @@ export class GabunganService {
         qb.innerJoin('awb', 'c', 'c.awb_id = b.awb_id');
         qb.where('a.to_id = :districtId', { districtId });
         qb.where('c.awb_number = :awbNumber', { awbNumber: value });
+        qb.andWhere('a.is_package_combine = false');
         qb.andWhere('a.is_deleted = false');
 
         const resultData = await qb.getRawOne();
@@ -409,6 +419,7 @@ export class GabunganService {
 
         qb = createQueryBuilder();
         qb.addSelect('e.awb_number', 'awbNumber');
+        qb.addSelect('d.awb_item_id', 'awbItemId');
         qb.addSelect('d.weight_real_rounded', 'weight');
         qb.addSelect('e.consignee_name', 'consigneeName');
         qb.addSelect('e.ref_reseller', 'shipperName');
@@ -429,7 +440,7 @@ export class GabunganService {
 
         const detailData = await qb.getRawMany();
 
-        result.data         = detailData;
+        result.dataBag      = detailData;
         result.districtName = detailData[0].districtName;
         result.districtId   = detailData[0].districtId;
 
@@ -450,6 +461,7 @@ export class GabunganService {
         qb.innerJoin('awb', 'c', 'c.awb_id = b.awb_id');
         qb.where('a.to_id = :districtId', { districtId });
         qb.andWhere('c.awb_number = :awbNumber', { awbNumber: value } );
+        qb.andWhere('a.is_package_combine = false');
         qb.andWhere('a.is_deleted = false');
 
         const resultData = await qb.getRawOne();

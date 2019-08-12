@@ -37,6 +37,11 @@ export class PackagePayloadVm {
   districtId?: number;
 
   @ApiModelPropertyOptional({
+    example: [1203483, 2390493, 9203920932],
+  })
+  awbItemId?: [];
+
+  @ApiModelPropertyOptional({
     example: 'GS002939403001',
   })
   bagNumber?: string;
