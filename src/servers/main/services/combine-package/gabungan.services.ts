@@ -125,8 +125,7 @@ export class GabunganService {
     const valueLength = value.length;
     const result      = new PackageAwbResponseVm();
 
-    result.data         = [];
-    result.total        = 0;
+    // result.total        = 0;
     result.districtId   = 0;
     result.districtName = null;
 
@@ -165,8 +164,8 @@ export class GabunganService {
           HttpStatus.NOT_FOUND,
         );
       }
-      result.data       = resultData;
-      result.total      = resultData.length;
+      // result.data       = resultData;
+      // result.total      = resultData.length;
       result.districtId = resultData[0].districtId;
       result.bagNumber  = getNumberValue;
       result.districtName = resultData[0].districtName.trim();
@@ -431,7 +430,6 @@ export class GabunganService {
         const detailData = await qb.getRawMany();
 
         result.data         = detailData;
-        result.total        = detailData.length;
         result.districtName = detailData[0].districtName;
         result.districtId   = detailData[0].districtId;
 
@@ -451,12 +449,13 @@ export class GabunganService {
         qb.innerJoin('awb_item', 'b', 'a.awb_item_id = b.awb_item_id');
         qb.innerJoin('awb', 'c', 'c.awb_id = b.awb_id');
         qb.where('a.to_id = :districtId', { districtId });
+        qb.andWhere('c.awb_number = :awbNumber', { awbNumber: value } );
         qb.andWhere('a.is_deleted = false');
 
-        const resultData = await qb.getRawMany();
-        const detailData  = find(resultData, ['awbNumber', value ]);
+        const resultData = await qb.getRawOne();
+        // const detailData  = find(resultData, ['awbNumber', value ]);
 
-        if (detailData === undefined) {
+        if (!resultData) {
            RequestErrorService.throwObj(
             {
               message: 'No resi tidak ditemukan',
@@ -465,13 +464,11 @@ export class GabunganService {
           );
         }
 
-        result.data  = resultData;
-        result.total = resultData.length;
+        result.data = resultData;
         result.districtId = districtDetail.districtId;
         result.districtName = districtDetail.districtName;
       }
     } else {
-      // check district and get all data on pod_filter_detail_item if exists
       const district = await District.findOne({
         where: { districtCode: value },
       });
@@ -506,8 +503,6 @@ export class GabunganService {
 
       const resultData = await qb.getRawMany();
 
-      result.data  = resultData;
-      result.total = resultData.length;
     }
 
     return result;

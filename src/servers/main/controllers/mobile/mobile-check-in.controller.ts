@@ -1,14 +1,15 @@
-import { Controller, Post, HttpCode, UseGuards, Body, HttpStatus, Req } from '@nestjs/common';
-import { MobileCheckInService } from '../../services/mobile/mobile-check-in.service';
+import { Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
-import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
+
 import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
+import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
+import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { MobileCheckInPayloadVm } from '../../models/mobile-check-in-payload.vm';
 import { MobileCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
-import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
-import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { ImageUploadService } from '../../../../shared/services/image-upload.service';
-import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
+import { MobileCheckInService } from '../../services/mobile/mobile-check-in.service';
 
 @ApiUseTags('Mobile Check In')
 @Controller('mobile')
@@ -27,17 +28,15 @@ export class MobileCheckInController {
 
   @Post('checkInForm')
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
   // @ApiBearerAuth()
   // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileCheckInResponseVm })
   public async checkInForm(
-    @Req() request,
+    @Body() body: MobileCheckInPayloadVm,
+    @UploadedFile() file,
   ) {
-    // @Body() payload: MobileCheckInPayloadVm,
-    // payload: MobileCheckInPayloadVm;
-    // TODO: file upload image
-    const objImage = await ImageUploadService.fileUpload(request);
-    PinoLoggerService.debug(objImage, '############# HELLOOOOO');
+    const attachment = await AttachmentService.uploadFileBufferToS3(file.buffer, file.originalname, file.mimetype, 'tms-check-in');
 
     return { status: 200 };
   }

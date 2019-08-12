@@ -1,12 +1,17 @@
+import { AttachmentTms } from '../orm-entity/attachment-tms';
 import { Awb } from '../orm-entity/awb';
 import { AwbItem } from '../orm-entity/awb-item';
 import { AwbItemAttr } from '../orm-entity/awb-item-attr';
+import { BagItem } from '../orm-entity/bag-item';
 import { Branch } from '../orm-entity/branch';
 import { Customer } from '../orm-entity/customer';
 import { DoPod } from '../orm-entity/do-pod';
 import { DoPodDeliver } from '../orm-entity/do-pod-deliver';
 import { Employee } from '../orm-entity/employee';
 import { PartnerLogistic } from '../orm-entity/partner-logistic';
+import { PodFilter } from '../orm-entity/pod-filter';
+import { PodFilterDetail } from '../orm-entity/pod-filter-detail';
+import { PodFilterDetailItem } from '../orm-entity/pod-filter-detail-item';
 import { Reason } from '../orm-entity/reason';
 import { Representative } from '../orm-entity/representative';
 import { Role } from '../orm-entity/role';
@@ -14,16 +19,15 @@ import { RolePermission } from '../orm-entity/role-permission';
 import { User } from '../orm-entity/user';
 import { UserRole } from '../orm-entity/user-role';
 import { OrionRepositoryService } from './orion-repository.service';
-import { BagItem } from '../orm-entity/bag-item';
-import { PodFilter } from '../orm-entity/pod-filter';
-import { PodFilterDetailItem } from '../orm-entity/pod-filter-detail-item';
-import { PodFilterDetail } from '../orm-entity/pod-filter-detail';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
  * even TypeORM has not been ready yet
  */
 export class RepositoryService {
+  static get attachmentTms() {
+    return new OrionRepositoryService(AttachmentTms);
+  }
   static get awb() {
     return new OrionRepositoryService(Awb);
   }
