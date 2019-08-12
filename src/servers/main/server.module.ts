@@ -1,7 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
-import formData = require('express-form-data');
-import os = require('os');
 
 import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
 import { AllExceptionsFilter } from '../../shared/filters/all-exceptions.filter';
@@ -58,11 +56,6 @@ export class MainServerModule extends MultiServerAppModule implements NestModule
         },
       );
     }
-
-    app.use(formData.parse({
-      uploadDir: os.tmpdir(),
-      autoClean: true,
-    }));
 
     this.app = app;
 

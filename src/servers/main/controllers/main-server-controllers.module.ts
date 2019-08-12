@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { SharedModule } from '../../../shared/shared.module';
 import { MainServerServicesModule } from '../services/main-server-services.module';
 import { GabunganController } from './combine-package/combine-package.controller';
+import { AttachmentController } from './master/attachment.controller';
 import { AwbStatusController } from './master/awb-status.controller';
 import { BranchController } from './master/branch.controller';
 import { CustomerController } from './master/customer.controller';
@@ -27,6 +28,7 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
   imports: [SharedModule, MainServerServicesModule],
   controllers: [
     AwbStatusController,
+    AttachmentController,
     BranchController,
     CustomerController,
     EmployeeController,
