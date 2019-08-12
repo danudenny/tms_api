@@ -25,11 +25,11 @@ export class AwbPackageDetail {
 
 export class PackageAwbResponseVm   {
 
-  @ApiModelProperty({ type: [AwbPackageDetail] })
-  data: AwbPackageDetail[];
+  @ApiModelPropertyOptional({ type: () => AwbPackageDetail })
+  data: AwbPackageDetail;
 
-  @ApiModelProperty()
-  total: number;
+  // @ApiModelProperty()
+  // total: number;
 
   @ApiModelProperty()
   districtName: string;
