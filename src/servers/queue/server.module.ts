@@ -58,7 +58,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     }
     this.app = app;
 
-    app.enableCors();
+    app.enableCors({ origin: true });
 
     app.useGlobalPipes(
       new RequestValidationPipe({
