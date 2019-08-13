@@ -23,6 +23,7 @@ import { WebAwbTroubleControlelr } from './web/web-awb-trouble.controller';
 import { WebBagTroubleControlelr } from './web/web-bag-trouble.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
 import { WebDeliveryOutController } from './web/web-delivery-out.controller';
+import { WebMonitoringController } from './web/web-monitoring.controller';
 
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -52,6 +53,7 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
     WebBagTroubleControlelr,
     WebDeliveryInController,
     WebDeliveryOutController,
+    WebMonitoringController,
   ],
 })
 export class MainServerControllersModule {}

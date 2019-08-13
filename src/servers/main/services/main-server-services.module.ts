@@ -15,6 +15,7 @@ import { MobileCheckOutService } from './mobile/mobile-check-out.service';
 import { WebAwbFilterService } from './web/web-awb-filter.service';
 import { WebDeliveryInService } from './web/web-delivery-in.service';
 import { WebDeliveryOutService } from './web/web-delivery-out.service';
+import { WebMonitoringService } from './web/web-monitoring.service';
 
 @Module({
   imports: [SharedModule],
@@ -34,6 +35,7 @@ import { WebDeliveryOutService } from './web/web-delivery-out.service';
     WebAwbFilterService,
     WebDeliveryInService,
     WebDeliveryOutService,
+    WebMonitoringService,
   ],
   exports: [
     AwbStatusService,
@@ -51,6 +53,7 @@ import { WebDeliveryOutService } from './web/web-delivery-out.service';
     WebAwbFilterService,
     WebDeliveryInService,
     WebDeliveryOutService,
+    WebMonitoringService,
   ],
 })
 export class MainServerServicesModule {}
