@@ -257,6 +257,7 @@ export class GabunganService {
           const bagData = await qb.getRawOne();
           let bagId;
           let sequence;
+          const permissonPayload = AuthService.getPermissionTokenPayload();
 
           if (!bagData) {
             // generate bag number
@@ -265,6 +266,7 @@ export class GabunganService {
               bagNumber    : randomBagNumber,
               bagType      : 'district',
               districtIdTo : districtId,
+              branchId     : permissonPayload.branchId,
               userIdCreated: 1,
               bagDate      : moment().format('YYYY-MM-DD'),
               bagDateReal  : moment().toDate(),
@@ -299,6 +301,7 @@ export class GabunganService {
           const bagItemDetail = BagItem.create({
               bagId,
               bagSeq       : sequence,
+              branchIdLast : permissonPayload.branchId,
               userIdCreated: 1,
               createdTime  : moment().toDate(),
               updatedTime  : moment().toDate(),

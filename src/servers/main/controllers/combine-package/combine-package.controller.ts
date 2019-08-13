@@ -5,6 +5,7 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { GabunganPayloadVm, PackagePayloadVm } from '../../models/gabungan-payload.vm';
 import { GabunganFindAllResponseVm, PackageAwbResponseVm } from '../../models/gabungan.response.vm';
 import { GabunganService } from '../../services/combine-package/gabungan.services';
+import { PermissionTokenGuard } from 'src/shared/guards/permission-token.guard';
 
 @ApiUseTags('Resi Bag')
 @Controller('combine')
@@ -23,9 +24,9 @@ export class GabunganController {
 
   @Post('packages')
   @HttpCode(200)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: PackageAwbResponseVm })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: PackageAwbResponseVm })
   public async packageAwb(@Body() payload: PackagePayloadVm) {
 
     return this.gabunganService.awbPackage(payload);

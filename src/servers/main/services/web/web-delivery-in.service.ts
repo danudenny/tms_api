@@ -311,7 +311,7 @@ export class WebDeliveryInService {
                 // NOTE: status DO_HUB (12600: drop off hub)
                 const bagItemsAwb = await BagItemAwb.find({
                   where: {
-                    bagItem: bagData.bagItemId,
+                    bagItemId: bagData.bagItemId,
                     isDeleted: false,
                   },
                 });
