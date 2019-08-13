@@ -119,7 +119,8 @@ export class WebDeliveryOutService {
     const authMeta = AuthService.getAuthData();
     const result = new WebScanOutCreateResponseVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-
+    let totalAdd = 0;
+    let totalRemove = 0;
     // edit do_pod (Surat Jalan)
     const doPod = await DoPod.findOne({
       where: {
@@ -155,6 +156,7 @@ export class WebDeliveryOutService {
             doPodDetail.doPodDetailId,
           );
         }
+        totalAdd = payload.addAwbNumber.length;
       }
 
       // looping data list remove awb number
@@ -173,13 +175,23 @@ export class WebDeliveryOutService {
             DoPodDetail.update(doPodDetail.doPodDetailId, {
               isDeleted: true,
             });
-            // TODO:
-            // awb_item_attr and awb_history ??
+            // NOTE: update awb_item_attr and awb_history
+            await DeliveryService.updateAwbAttr(
+              awb.awbItemId,
+              doPod.branchIdTo,
+              AWB_STATUS.IN_BRANCH,
+            );
+            // NOTE: queue by Bull
+            DoPodDetailPostMetaQueueService.createJobByScanInAwb(
+              doPodDetail.doPodDetailId,
+            );
           }
         }
+        totalRemove = payload.removeAwbNumber.length;
       }
 
       const totalItem = await this.getTotalDetailById(doPod.doPodId);
+      const totalScanOut = doPod.totalScanOut + totalAdd - totalRemove;
       // update data
       // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
       const updateDoPod = {
@@ -194,6 +206,7 @@ export class WebDeliveryOutService {
         branchId: permissonPayload.branchId,
         userId: authMeta.userId,
         totalItem,
+        totalScanOut,
       };
       await DoPod.update(doPod.doPodId, updateDoPod);
 
@@ -220,6 +233,8 @@ export class WebDeliveryOutService {
     const authMeta = AuthService.getAuthData();
     const result = new WebScanOutCreateResponseVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    let totalAdd = 0;
+    let totalRemove = 0;
 
     // edit do_pod (Surat Jalan)
     const doPod = await DoPod.findOne({
@@ -269,6 +284,7 @@ export class WebDeliveryOutService {
             }
           }
         }
+        totalAdd = payload.addBagNumber.length;
       }
       // looping data list remove bag number
       if (payload.removeBagNumber && payload.removeBagNumber.length) {
@@ -297,26 +313,28 @@ export class WebDeliveryOutService {
             if (bagItemsAwb && bagItemsAwb.length) {
               for (const itemAwb of bagItemsAwb) {
                 if (itemAwb.awbItemId) {
-                  // TODO:
-                  // awb_item_attr and awb_history ??
+                  // TODO: update awb_item_attr and awb_history ??
                   // await DeliveryService.updateAwbAttr(
                   //   itemAwb.awbItemId,
                   //   doPod.branchIdTo,
-                  //   AWB_STATUS.OUT_HUB,
+                  //   AWB_STATUS.DO_HUB,
                   // );
                   // // NOTE: queue by Bull
-                  // DoPodDetailPostMetaQueueService.createJobByScanOutBag(
-                  //   doPodDetail.doPodDetailId,
+                  // DoPodDetailPostMetaQueueService.createJobByScanInBag(
                   //   itemAwb.awbItemId,
+                  //   permissonPayload.branchId,
+                  //   authMeta.userId,
                   // );
                 }
               }
             }
           }
         }
+        totalRemove = payload.removeBagNumber.length;
       }
 
       const totalItem = await this.getTotalDetailById(doPod.doPodId);
+      const totalScanOut = doPod.totalScanOut + totalAdd - totalRemove;
       // update data
       // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
       const updateDoPod = {
@@ -331,6 +349,7 @@ export class WebDeliveryOutService {
         branchId: permissonPayload.branchId,
         userId: authMeta.userId,
         totalItem,
+        totalScanOut,
       };
       await DoPod.update(doPod.doPodId, updateDoPod);
       // await DoPod.save(doPod);
