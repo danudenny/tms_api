@@ -49,7 +49,7 @@ export class DeliveryService {
 
     q.where(e => e.awbStatusId, w => w.equals(awbStatusId));
     const result = await q.exec();
-    return result.awbStatusGroup.code;
+    return result ? result.awbStatusGroup.code : 'NoGroup';
   }
 
   public static async updateAwbAttr(awbItemId: number, branchIdNext: number, status: number) {
