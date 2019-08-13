@@ -55,6 +55,9 @@ export class MobileInitDataService {
       q.andWhere(
         e => e.updatedTime,
         w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+      ).orWhere(
+        e => e.createdTime,
+        w => w.greaterThanOrEqual(moment(fromDate).toDate()),
       );
     }
     return await q.exec();
@@ -74,6 +77,9 @@ export class MobileInitDataService {
       q.andWhere(
         e => e.updatedTime,
         w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+      ).orWhere(
+        e => e.createdTime,
+        w => w.greaterThanOrEqual(moment(fromDate).toDate()),
       );
     }
 
@@ -89,7 +95,10 @@ export class MobileInitDataService {
       'doPodDeliverDetailId',
     );
     qb.addSelect('do_pod_deliver.do_pod_deliver_id', 'doPodDeliverId');
-    qb.addSelect('do_pod_deliver.do_pod_deliver_date_time', 'doPodDeliverDateTime');
+    qb.addSelect(
+      'do_pod_deliver.do_pod_deliver_date_time',
+      'doPodDeliverDateTime',
+    );
     qb.addSelect('awb.awb_id', 'awbId');
     qb.addSelect('awb_item_attr.awb_item_id', 'awbItemId');
     qb.addSelect('awb.awb_date', 'awbDate');
@@ -164,9 +173,7 @@ export class MobileInitDataService {
           qbJoinFrom.where(
             'do_pod_deliver_history.do_pod_deliver_detail_id = do_pod_deliver_detail.do_pod_deliver_detail_id',
           );
-          qbJoinFrom.andWhere(
-            'do_pod_deliver_history.is_deleted = false',
-          );
+          qbJoinFrom.andWhere('do_pod_deliver_history.is_deleted = false');
           qbJoinFrom.innerJoin(
             qbJoinFromJoin => {
               qbJoinFromJoin.addSelect('reason.reason_id');
@@ -226,7 +233,11 @@ export class MobileInitDataService {
     qb.andWhere('do_pod_deliver_detail.is_deleted = false');
 
     if (fromDate) {
-      qb.andWhere('do_pod_deliver_detail.updated_time >= :fromDate', { fromDate: moment(fromDate).toDate() });
+      qb.andWhere('do_pod_deliver_detail.updated_time >= :fromDate', {
+        fromDate: moment(fromDate).toDate(),
+      }).orWhere('do_pod_deliver_detail.created_time >= :fromDate', {
+        fromDate: moment(fromDate).toDate(),
+      });
     }
     return await qb.getRawMany();
   }
