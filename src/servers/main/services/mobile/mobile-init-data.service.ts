@@ -52,13 +52,16 @@ export class MobileInitDataService {
     });
 
     if (fromDate) {
-      q.andWhere(
-        e => e.updatedTime,
-        w => w.greaterThanOrEqual(moment(fromDate).toDate()),
-      ).orWhere(
-        e => e.createdTime,
-        w => w.greaterThanOrEqual(moment(fromDate).toDate()),
-      );
+      q.andWhereIsolated(qw => {
+        qw.where(
+          e => e.updatedTime,
+          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+        );
+        qw.orWhere(
+          e => e.createdTime,
+          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+        );
+      });
     }
     return await q.exec();
   }
@@ -74,13 +77,16 @@ export class MobileInitDataService {
     q.where(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.isProblem, w => w.isTrue());
     if (fromDate) {
-      q.andWhere(
-        e => e.updatedTime,
-        w => w.greaterThanOrEqual(moment(fromDate).toDate()),
-      ).orWhere(
-        e => e.createdTime,
-        w => w.greaterThanOrEqual(moment(fromDate).toDate()),
-      );
+      q.andWhereIsolated(qw => {
+        qw.where(
+          e => e.updatedTime,
+          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+        );
+        qw.orWhere(
+          e => e.createdTime,
+          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+        );
+      });
     }
 
     return await q.exec();
@@ -233,11 +239,13 @@ export class MobileInitDataService {
     qb.andWhere('do_pod_deliver_detail.is_deleted = false');
 
     if (fromDate) {
-      qb.andWhere('do_pod_deliver_detail.updated_time >= :fromDate', {
-        fromDate: moment(fromDate).toDate(),
-      }).orWhere('do_pod_deliver_detail.created_time >= :fromDate', {
-        fromDate: moment(fromDate).toDate(),
-      });
+      // TODO: andWhereIsolated condition
+      qb.andWhere(
+        '(do_pod_deliver_detail.updated_time >= :fromDate OR do_pod_deliver_detail.created_time >= :fromDate)',
+        {
+          fromDate: moment(fromDate).toDate(),
+        },
+      );
     }
     return await qb.getRawMany();
   }
