@@ -1,11 +1,10 @@
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { DoPod } from 'src/shared/orm-entity/do-pod';
-import { POD_TYPE } from 'src/shared/constants/pod-type.constant';
-import { AuthService } from 'src/shared/services/auth.service';
-import { WebScanOutAwbListResponseVm } from '../../models/web-scan-out-response.vm';
 import { BagMonitoringResponseVm } from '../../models/bag-monitoring-response.vm';
+import { DoPod } from '../../../../shared/orm-entity/do-pod';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
 
 export class WebMonitoringService {
   public static async findAllByRequest(

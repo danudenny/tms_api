@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
 
 import { MetaService } from '../../../../shared/services/meta.service';
 import { AwbStatusFindAllResponseVm } from '../../models/awb-status.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @Injectable()
 export class AwbStatusService {

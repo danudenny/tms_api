@@ -5,7 +5,7 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { BagMonitoringPayloadVm } from '../../models/bag-monitoring-payload.vm';
 import { BagMonitoringResponseVm } from '../../models/bag-monitoring-response.vm';
 import { WebMonitoringService } from '../../services/web/web-monitoring.service';
-import { PermissionTokenGuard } from 'src/shared/guards/permission-token.guard';
+import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('Web Monitoring')
 @Controller('web/monitoring')
