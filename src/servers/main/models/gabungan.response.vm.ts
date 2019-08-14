@@ -34,9 +34,6 @@ export class PackageAwbResponseVm   {
   @ApiModelPropertyOptional({ type: () => [AwbPackageDetail] })
   dataBag: AwbPackageDetail[];
 
-  // @ApiModelPropertyOptional()
-  // total: number;
-
   @ApiModelProperty()
   districtName: string;
 
