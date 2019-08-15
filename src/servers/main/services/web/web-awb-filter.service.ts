@@ -369,6 +369,7 @@ export class WebAwbFilterService {
             AWB_STATUS.IN_BRANCH,
           );
 
+          // NOTE: why check bagItemIdLast ???
           if (awbItemAttr.bagItemIdLast) {
             // no error, this awb is fine
             res.status = 'success';
@@ -399,7 +400,7 @@ export class WebAwbFilterService {
               })
             ;
 
-            const bagNumberSeq = `${podFilterDetail.bagItem.bag.bagNumber}${podFilterDetail.bagItem.bagSeq.toString().padEnd(3, '0')}`;
+            const bagNumberSeq = `${podFilterDetail.bagItem.bag.bagNumber}${podFilterDetail.bagItem.bagSeq.toString().padStart(3, '0')}`;
             res.status = 'success';
             res.trouble = true;
             res.districtId = awbItemAttr.awbItem.awb.toId;
@@ -602,6 +603,7 @@ export class WebAwbFilterService {
       .andWhere(e => e.bagItemId, w => w.equals(bagData.bagItemId))
       .andWhere(e => e.isDeleted, w => w.isFalse())
       .select({
+        podFilterDetailId: true,
         podFilterId: true,
       })
     ;
@@ -637,8 +639,9 @@ export class WebAwbFilterService {
     } else {
       // if this bag is filtering in another branch and user, block other user and branch to scan the same bag
       if (podFilterDetail.podFilterId === podFilter.podFilterId) {
-        podFilterDetail.isActive = true;
-        await podFilterDetail.save();
+        await this.podFilterDetailRepository.update(podFilterDetail.podFilterId, {
+          isActive: true,
+        });
       } else {
         const user = await User.findOne({
           where: {
