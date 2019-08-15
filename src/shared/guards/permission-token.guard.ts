@@ -1,7 +1,8 @@
-import { CanActivate, Injectable } from '@nestjs/common';
+import { CanActivate, HttpStatus, Injectable } from '@nestjs/common';
 
 import { AuthService } from '../services/auth.service';
 import { RequestContextMetadataService } from '../services/request-context-metadata.service';
+import { RequestErrorService } from '../services/request-error.service';
 
 @Injectable()
 export class PermissionTokenGuard implements CanActivate {
@@ -14,9 +15,17 @@ export class PermissionTokenGuard implements CanActivate {
     if (permissionToken) {
       const permissionTokenPayload = await this.authService.handlePermissionJwtToken();
       AuthService.setPermissionTokenPayload(permissionTokenPayload);
-    }
 
-    // TODO: Throw error if permissionToken is undefined / empty / not being passed from request
-    return true;
+      return true;
+    } else {
+      RequestErrorService.throwObj(
+        {
+          message: 'Permission token is required',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+
+      return false;
+    }
   }
 }
