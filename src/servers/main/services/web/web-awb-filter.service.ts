@@ -1,3 +1,5 @@
+// #region import
+import { HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
 
@@ -34,7 +36,8 @@ import {
 } from '../../models/web-awb-filter-response.vm';
 import { WebAwbFilterFinishScanVm, WebAwbFilterScanAwbVm, WebAwbFilterScanBagVm } from '../../models/web-awb-filter.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-
+import { createQueryBuilder } from 'typeorm';
+// #endregion
 export class WebAwbFilterService {
 
   constructor(
@@ -181,7 +184,7 @@ export class WebAwbFilterService {
     if (!holdRedis) {
       RequestErrorService.throwObj({
         message: `No Gabung Paket ${payload.bagNumber} sedang di Sortir`,
-      }, 500);
+      }, HttpStatus.BAD_REQUEST);
     }
 
     // check bagNumber is valid or not
@@ -191,7 +194,7 @@ export class WebAwbFilterService {
     if (!bagData) {
       RequestErrorService.throwObj({
         message: `No Gabung Paket ${payload.bagNumber} tidak ditemukan`,
-      }, 500);
+      }, HttpStatus.BAD_REQUEST);
     }
 
     // find Last Filter for current user and branch scan
@@ -210,8 +213,7 @@ export class WebAwbFilterService {
         representative: {
           representativeCode: true,
         },
-      }).exec()
-    ;
+      }).exec();
 
     if (podFilter) {
       // if exists
@@ -219,19 +221,21 @@ export class WebAwbFilterService {
       if (podFilter.representativeIdFilter != bagData.bag.representativeIdTo) {
         RequestErrorService.throwObj({
           message: `Perwakilan berbeda. Harap selesaikan dahulu Perwakilan ${podFilter.representative.representativeCode}`,
-        }, 500);
+        }, HttpStatus.BAD_REQUEST);
+      } else {
+        // just update end_date_time that indicate scan this bag still in progress
+        await PodFilter.update(podFilter.podFilterId, {
+          endDateTime: moment().toDate(),
+          updatedTime: moment().toDate(),
+          userIdUpdated: authMeta.userId,
+        });
       }
-
-      // just update end_date_time that indicate scan this bag still in progress
-      await PodFilter.update(podFilter.podFilterId, {
-        endDateTime: moment().toDate(),
-        updatedTime: moment().toDate(),
-        userIdUpdated: authMeta.userId,
-      });
 
     } else {
       // if not exists, create new one
-      podFilter = await this.createPodFilter(authMeta, permissonPayload, bagData);
+      podFilter = await this.createPodFilter(
+        bagData.bag.representativeIdTo,
+      );
     }
 
     // update latest scan to is_active false
@@ -242,42 +246,71 @@ export class WebAwbFilterService {
       .andWhere(e => e.isDeleted, w => w.isFalse())
     ;
     if (podFilterDetailActive) {
-      podFilterDetailActive.isActive = false;
-      await podFilterDetailActive.save();
+      await this.podFilterDetailRepository.update(
+        podFilterDetailActive.podFilterId,
+        {
+          isActive: false,
+        },
+      );
     }
 
     // check this bag already scan or not
-    const podFilterDetail = await this.findAndCreatePodFilterDetail(authMeta, podFilter, bagData);
+    const podFilterDetail = await this.findAndCreatePodFilterDetail(
+      podFilter,
+      bagData.bagItemId,
+    );
 
     // retrieve all awb inside bag, then grouping each destination by district (to_id)
-    const raw_query = `
-      SELECT awb.to_id, COUNT(1) as count, COUNT(1) FILTER (WHERE is_district_filtered = true) as filtered
-      FROM pod_filter_detail pfd
-      INNER JOIN bag_item_awb bia ON pfd.bag_item_id = bia.bag_item_id AND pfd.is_deleted = false
-      INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = false
-      INNER JOIN awb_item_attr aia ON aia.awb_item_id = ai.awb_item_id AND ai.is_deleted = false
-      INNER JOIN awb ON awb.awb_id = ai.awb_id AND awb.is_deleted = false
-      WHERE pfd.pod_filter_id = '${podFilter.podFilterId}' AND
-        bia.bag_item_id = '${bagData.bagItemId}' AND awb.to_type = 40 AND bia.is_deleted = false
-      GROUP BY awb.to_id
-    `;
-    const result = await RawQueryService.query(raw_query);
-    const data = [];
-    for (const res of result) {
-      const district = await this.districtRepository.findOne({
-        where: {
-          districtId: res.to_id,
-        },
-        select: ['districtId', 'districtCode', 'districtName'],
-      });
-      data.push({
-        districtId: district.districtId,
-        districtCode: district.districtCode,
-        districtName: district.districtName,
-        totalAwb: res.count,
-        totalFiltered: res.filtered,
-      });
-    }
+    const qb = createQueryBuilder();
+    qb.addSelect('district.district_id', 'districtId');
+    qb.addSelect('district.district_code', 'districtCode');
+    qb.addSelect('district.district_name', 'districtName');
+    qb.addSelect('packages.total_awb', 'totalAwb');
+    qb.addSelect('packages.filtered', 'totalFiltered');
+    qb.from(subQueryBuilder => {
+      subQueryBuilder
+        .addSelect('awb.to_id', 'to_id')
+        .addSelect('COUNT(1)', 'total_awb')
+        .addSelect(
+          'COUNT(1) FILTER (WHERE is_district_filtered = true)',
+          'filtered',
+        )
+        .from('pod_filter_detail', 'pfd')
+        .innerJoin(
+          'bag_item_awb',
+          'bia',
+          'pfd.bag_item_id = bia.bag_item_id AND pfd.is_deleted = false',
+        )
+        .innerJoin(
+          'awb_item',
+          'ai',
+          'ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = false',
+        )
+        .innerJoin(
+          'awb_item_attr',
+          'aia',
+          'aia.awb_item_id = ai.awb_item_id AND ai.is_deleted = false',
+        )
+        .innerJoin(
+          'awb',
+          'awb',
+          'awb.awb_id = ai.awb_id AND awb.is_deleted = false',
+        )
+        .where('pfd.pod_filter_id = :podFilterId', {
+          podFilterId: 54,
+        })
+        .andWhere('bia.bag_item_id = :bagItemId', {
+          bagItemId: 123,
+        })
+        .andWhere('awb.to_type = 40 AND bia.is_deleted = false')
+        .groupBy('awb.to_id');
+      return subQueryBuilder;
+    }, 'packages').leftJoin(
+      'district',
+      'district',
+      'packages.to_id = district.district_id AND district.is_deleted = false',
+    );
+    const data = await qb.getRawMany();
 
     // get representative code, to inform frontend current active representative
     const representative = await this.representativeRepository.findOne({
@@ -294,7 +327,7 @@ export class WebAwbFilterService {
     response.podFilterCode = podFilter.podFilterCode;
     response.podFilterId = podFilterDetail.podFilterId;
     response.podFilterDetailId = podFilterDetail.podFilterDetailId;
-    response.representativeCode = representative.representativeCode;
+    response.representativeCode = representative ? representative.representativeCode : '';
     response.data = data;
 
     // remove key holdRedis
@@ -319,7 +352,7 @@ export class WebAwbFilterService {
     if (!podFilterDetailExists) {
       RequestErrorService.throwObj({
         message: `Invalid podFilterDetailId`,
-      }, 500);
+      }, HttpStatus.BAD_REQUEST);
     }
 
     // get all awb_number from payload
@@ -379,7 +412,10 @@ export class WebAwbFilterService {
             results.push(res);
 
             // save to pod_filter_detail_item
-            await this.createPodFilterDetailItem(authMeta, payload, awbItemAttr);
+            await this.createPodFilterDetailItem(
+              payload.podFilterDetailId,
+              awbItemAttr,
+            );
 
           } else {
             // response error, but still process sortir, just announce for CT this awb have a trouble package combine
@@ -409,10 +445,14 @@ export class WebAwbFilterService {
 
             // announce for CT using table awb_trouble and the category of trouble is awb_filter
             // save data to awb_trouble
-            const awbTrouble = await this.createAwbTrouble(authMeta, permissonPayload , awbNumber, res.message, podFilterDetail);
+            const awbTrouble = await this.createAwbTrouble(awbNumber, res.message, podFilterDetail);
 
             // save to pod_filter_detail_item
-            await this.createPodFilterDetailItem(authMeta, payload, awbItemAttr, awbTrouble);
+            await this.createPodFilterDetailItem(
+              payload.podFilterDetailId,
+              awbItemAttr,
+              awbTrouble,
+            );
           }
 
           // Update total_awb_filtered, total_awb_item, total_awb_not_in_bag
@@ -447,7 +487,6 @@ export class WebAwbFilterService {
           }
 
           // after scan filter done at all. do posting status last awb
-          // TODO: posting to awb_history, awb_item_summary
           // NOTE: posting to awb_history, awb_item_summary
           DoPodDetailPostMetaQueueService.createJobByAwbFilter(
             awbItemAttr.awbItemId,
@@ -560,47 +599,54 @@ export class WebAwbFilterService {
     return result;
   }
 
-  async createPodFilter(authMeta, permissonPayload, bagData) {
-      const podFilter = this.podFilterRepository.create();
-      podFilter.representativeIdFilter = bagData.bag.representativeIdTo;
-      podFilter.isActive = true;
-      podFilter.podFilterCode = await CustomCounterCode.podFilter(moment().toDate());
-      podFilter.startDateTime = moment().toDate();
-      podFilter.userIdScan = authMeta.userId;
-      podFilter.branchIdScan = permissonPayload.branchId;
-      podFilter.createdTime = moment().toDate();
-      podFilter.userIdCreated = authMeta.userId;
-      podFilter.endDateTime = moment().toDate();
-      podFilter.updatedTime = moment().toDate();
-      podFilter.userIdUpdated = authMeta.userId;
-      return await PodFilter.save(podFilter);
+  private async createPodFilter(representativeIdTo: number) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const podFilter = this.podFilterRepository.create();
+
+    podFilter.representativeIdFilter = representativeIdTo;
+    podFilter.isActive = true;
+    podFilter.podFilterCode = await CustomCounterCode.podFilter(moment().toDate());
+    podFilter.startDateTime = moment().toDate();
+    podFilter.userIdScan = authMeta.userId;
+    podFilter.branchIdScan = permissonPayload.branchId;
+    podFilter.createdTime = moment().toDate();
+    podFilter.userIdCreated = authMeta.userId;
+    podFilter.endDateTime = moment().toDate();
+    podFilter.updatedTime = moment().toDate();
+    podFilter.userIdUpdated = authMeta.userId;
+    return await PodFilter.save(podFilter);
   }
 
-  async createPodFilterDetailItem(authMeta, payload, awbItemAttr, awbTrouble = null) {
+  private async createPodFilterDetailItem(podFilterDetailId, awbItemAttr, awbTrouble = null) {
+    const authMeta = AuthService.getAuthData();
     const podFilterDetailItem = this.podFilterDetailItemRepository.create();
-    podFilterDetailItem.podFilterDetailId = payload.podFilterDetailId;
+
+    podFilterDetailItem.podFilterDetailId = podFilterDetailId;
     podFilterDetailItem.scanDateTime = moment().toDate();
     podFilterDetailItem.awbItemId = awbItemAttr.awbItemId;
     podFilterDetailItem.toType = awbItemAttr.awbItem.awb.toType;
     podFilterDetailItem.toId = awbItemAttr.awbItem.awb.toId;
-    if (awbTrouble != null) {
+    podFilterDetailItem.createdTime = moment().toDate();
+    podFilterDetailItem.userIdCreated = authMeta.userId;
+    podFilterDetailItem.updatedTime = moment().toDate();
+    podFilterDetailItem.userIdUpdated = authMeta.userId;
+
+    if (awbTrouble) {
       podFilterDetailItem.isTroubled = true;
       podFilterDetailItem.awbTroubleId = awbTrouble.awbTroubleId;
     } else {
       podFilterDetailItem.isTroubled = false;
     }
-    podFilterDetailItem.createdTime = moment().toDate();
-    podFilterDetailItem.userIdCreated = authMeta.userId;
-    podFilterDetailItem.updatedTime = moment().toDate();
-    podFilterDetailItem.userIdUpdated = authMeta.userId;
     return await this.podFilterDetailItemRepository.save(podFilterDetailItem);
   }
 
-  async findAndCreatePodFilterDetail(authMeta, podFilter, bagData) {
+  private async findAndCreatePodFilterDetail(podFilter, bagItemId) {
+    const authMeta = AuthService.getAuthData();
     // check this bag already scan or not
     let podFilterDetail = await RepositoryService.podFilterDetail
       .findOne()
-      .andWhere(e => e.bagItemId, w => w.equals(bagData.bagItemId))
+      .andWhere(e => e.bagItemId, w => w.equals(bagItemId))
       .andWhere(e => e.isDeleted, w => w.isFalse())
       .select({
         podFilterDetailId: true,
@@ -613,7 +659,7 @@ export class WebAwbFilterService {
     if (!podFilterDetail) {
       // save to pod_filter_detail for the first time scan
       podFilterDetail = await this.podFilterDetailRepository.create();
-      podFilterDetail.bagItemId = bagData.bagItemId;
+      podFilterDetail.bagItemId = bagItemId;
       podFilterDetail.isActive = true;
       podFilterDetail.scanDateTime = moment().toDate();
       podFilterDetail.podFilterId = podFilter.podFilterId;
@@ -657,14 +703,16 @@ export class WebAwbFilterService {
         });
         RequestErrorService.throwObj({
           message: `Gabung Paket sudah disortir oleh ${user.username} Gerai ${branch.branchName}`,
-        }, 500);
+        }, HttpStatus.BAD_REQUEST);
       }
 
     }
     return podFilterDetail;
   }
 
-  async createAwbTrouble(authMeta, permissonPayload, awbNumber, troubleDesc, podFilterDetail) {
+  async createAwbTrouble(awbNumber, troubleDesc, podFilterDetail) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const awbTroubleCode = await CustomCounterCode.awbTrouble(
       moment().toDate(),
     );
@@ -690,5 +738,4 @@ export class WebAwbFilterService {
     });
     return await AwbTrouble.save(awbTrouble);
   }
-
 }
