@@ -44,7 +44,10 @@ export class PermissionRolesPayloadVM {
 // #region Response section
 export class AuthLoginResponseVM {
   @ApiModelProperty()
-  userId: string;
+  userId: number;
+
+  @ApiModelProperty()
+  employeeId: number;
 
   @ApiModelProperty()
   accessToken: string;

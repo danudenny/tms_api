@@ -105,6 +105,8 @@ export class MobileInitDataService {
       'do_pod_deliver.do_pod_deliver_date_time',
       'doPodDeliverDateTime',
     );
+    qb.addSelect('employee.employee_id', 'employeeId');
+    qb.addSelect('employee.fullname', 'employeeName');
     qb.addSelect('awb.awb_id', 'awbId');
     qb.addSelect('awb_item_attr.awb_item_id', 'awbItemId');
     qb.addSelect('awb.awb_date', 'awbDate');
@@ -147,6 +149,11 @@ export class MobileInitDataService {
       'awb_status',
       'awb_status.awb_status_id = awb_item_attr.awb_status_id_last',
     );
+    qb.innerJoin(
+      'employee',
+      'employee',
+      'employee.employee_id = do_pod_deliver.employee_id_driver',
+    );
     qb.leftJoin(
       qbJoin => {
         qbJoin.select('array_agg(row_to_json(t))', 'data').from(qbJoinFrom => {
@@ -161,8 +168,8 @@ export class MobileInitDataService {
           qbJoinFrom.addSelect('reason.reason_id', 'reasonId');
           qbJoinFrom.addSelect('reason.reason_code', 'reasonCode');
           qbJoinFrom.addSelect('do_pod_deliver_history.desc', 'reasonNotes');
-          qbJoinFrom.addSelect('employee.employee_id', 'employeeId');
-          qbJoinFrom.addSelect('employee.fullname', 'employeeName');
+          qbJoinFrom.addSelect('employee_history.employee_id', 'employeeId');
+          qbJoinFrom.addSelect('employee_history.fullname', 'employeeName');
           qbJoinFrom.addSelect(
             'do_pod_deliver_history.awb_status_id',
             'awbStatusId',
@@ -195,15 +202,15 @@ export class MobileInitDataService {
           );
           qbJoinFrom.innerJoin(
             qbJoinFromJoin => {
-              qbJoinFromJoin.addSelect('employee.employee_id');
-              qbJoinFromJoin.addSelect('employee.fullname');
-              qbJoinFromJoin.from('employee', 'employee');
+              qbJoinFromJoin.addSelect('employee_history.employee_id');
+              qbJoinFromJoin.addSelect('employee_history.fullname');
+              qbJoinFromJoin.from('employee', 'employee_history');
               qbJoinFromJoin.where(
-                'employee.employee_id = do_pod_deliver_history.employee_id_driver',
+                'employee_history.employee_id = do_pod_deliver_history.employee_id_driver',
               );
               return qbJoinFromJoin;
             },
-            'employee',
+            'employee_history',
             'true',
           );
           return qbJoinFrom;

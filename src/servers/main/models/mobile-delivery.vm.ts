@@ -12,6 +12,12 @@ export class MobileDeliveryVm {
   doPodDeliverDateTime: string;
 
   @ApiModelProperty()
+  employeeId: number;
+
+  @ApiModelProperty()
+  employeeName: string;
+
+  @ApiModelProperty()
   awbId: number;
 
   @ApiModelProperty()
