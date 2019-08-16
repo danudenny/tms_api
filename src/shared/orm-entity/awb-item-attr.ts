@@ -154,7 +154,7 @@ export class AwbItemAttr extends BaseEntity {
     nullable: true,
     name: 'bag_item_id_last',
   })
-  bagItemIdLast: boolean;
+  bagItemIdLast: number;
 
   @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id_last'})

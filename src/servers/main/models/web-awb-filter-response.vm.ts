@@ -29,6 +29,9 @@ export class ScanAwbVm {
 export class WebAwbFilterScanAwbResponseVm {
 
   @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
   totalData: number;
 
   @ApiModelProperty({ type: [ScanAwbVm] })
