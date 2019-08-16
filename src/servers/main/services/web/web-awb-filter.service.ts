@@ -297,10 +297,10 @@ export class WebAwbFilterService {
           'awb.awb_id = ai.awb_id AND awb.is_deleted = false',
         )
         .where('pfd.pod_filter_id = :podFilterId', {
-          podFilterId: 54,
+          podFilterId: podFilter.podFilterId,
         })
         .andWhere('bia.bag_item_id = :bagItemId', {
-          bagItemId: 123,
+          bagItemId: bagData.bagItemId,
         })
         .andWhere('awb.to_type = 40 AND bia.is_deleted = false')
         .groupBy('awb.to_id');
