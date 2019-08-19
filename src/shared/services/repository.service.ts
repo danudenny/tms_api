@@ -19,6 +19,7 @@ import { RolePermission } from '../orm-entity/role-permission';
 import { User } from '../orm-entity/user';
 import { UserRole } from '../orm-entity/user-role';
 import { OrionRepositoryService } from './orion-repository.service';
+import { AwbStatus } from '../orm-entity/awb-status';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -30,6 +31,9 @@ export class RepositoryService {
   }
   static get awb() {
     return new OrionRepositoryService(Awb);
+  }
+  static get awbStatus() {
+    return new OrionRepositoryService(AwbStatus);
   }
   static get awbItem() {
     return new OrionRepositoryService(AwbItem);
