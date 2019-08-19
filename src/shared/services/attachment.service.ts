@@ -26,6 +26,8 @@ export class AttachmentService {
       bucketName,
     );
 
+    const url = `https://${bucketName}.s3.amazonaws.com/${uploadResponse.awsKey}`;
+
     const attachment = AttachmentTms.create({
       s3BucketName: bucketName,
       fileMime,
@@ -33,6 +35,7 @@ export class AttachmentService {
       attachmentPath: uploadResponse.awsKey,
       attachmentName: fileOriginalName,
       fileName: fileOriginalName,
+      url,
       userIdCreated: 1,
       userIdUpdated: 1,
     });
