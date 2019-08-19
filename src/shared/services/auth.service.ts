@@ -133,7 +133,8 @@ export class AuthService {
         cache: true,
         relations: ['branch', 'role'],
         where: {
-          user_id: toInteger(authMeta.userId),
+          userId: toInteger(authMeta.userId),
+          isDeleted: false,
         },
       });
 
@@ -146,9 +147,9 @@ export class AuthService {
       // result.roles = map(roles, role => pick(role, ['role_id', 'role.role_name', 'branch_id', 'branch.branch_name']));
       result.roles = map(roles, item => {
         const newObj = {
-          roleId: item.role_id,
+          roleId: item.roleId,
           roleName: item.role.roleName,
-          branchId: item.branch_id,
+          branchId: item.branchId,
           branchName: item.branch.branchName,
           branchCode: item.branch.branchCode,
           isHeadOffice: item.branch.isHeadOffice,
@@ -177,8 +178,8 @@ export class AuthService {
       const user = await RepositoryService.user
         .loadById(authMeta.userId)
         .innerJoinAndSelect(e => e.userRoles.role.rolePermissions)
-        .andWhere(e => e.userRoles.role_id, w => w.equals(roleId))
-        .andWhere(e => e.userRoles.branch_id, w => w.equals(branchId))
+        .andWhere(e => e.userRoles.roleId, w => w.equals(roleId))
+        .andWhere(e => e.userRoles.branchId, w => w.equals(branchId))
         .exec();
 
       if (!user) {

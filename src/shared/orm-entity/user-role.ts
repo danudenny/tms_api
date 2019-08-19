@@ -3,14 +3,36 @@ import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGen
 import { Branch } from './branch';
 import { Role } from './role';
 import { User } from './user';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('user_role', { schema: 'public' })
-export class UserRole extends BaseEntity {
+export class UserRole extends TmsBaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
+    name: 'user_role_id',
+  })
+  userRoleId: number;
+
   @Column('bigint', {
     nullable: false,
+    name: 'user_id',
   })
-  user_id: string;
+  userId: number;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'role_id',
+  })
+  roleId: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'branch_id',
+    default: () => '1',
+  })
+  branchId: number;
+
+  // relation model
   @ManyToOne(() => User)
   @JoinColumn({
     name: 'user_id',
@@ -18,49 +40,6 @@ export class UserRole extends BaseEntity {
   })
   users: User[];
 
-  @Column('bigint', {
-    nullable: false,
-  })
-  role_id: number;
-
-  @Column('bigint', {
-    nullable: false,
-  })
-  user_id_created: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-  })
-  created_time: Date;
-
-  @Column('bigint', {
-    nullable: false,
-  })
-  user_id_updated: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-  })
-  updated_time: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-  })
-  is_deleted: boolean;
-
-  @Column('bigint', {
-    nullable: false,
-    default: () => '1',
-  })
-  branch_id: number;
-
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
-  })
-  user_role_id: number;
-
-  // relation model
   @OneToOne(() => Branch, branch => branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
