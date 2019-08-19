@@ -111,6 +111,38 @@ export class WebAwbFilterResponseVm {
   isActive: boolean;
 }
 
+export class WebAwbListPodResponseVm {
+  @ApiModelProperty()
+  awbId: number;
+
+  @ApiModelProperty()
+  awbDate: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  awbStatusIdLast: number;
+
+  @ApiModelProperty()
+  fromId: number;
+
+  @ApiModelProperty()
+  toId: number;
+
+  @ApiModelProperty()
+  awbStatusTitle: string;
+
+  @ApiModelProperty()
+  districtNameFrom: string;
+
+  @ApiModelProperty()
+  districtNameTo: string;
+
+  @ApiModelProperty()
+  isProblem: boolean;
+}
+
 export class WebAwbFilterGetLatestResponseVm {
 
   @ApiModelProperty({ type: [WebAwbFilterScanBagResponseVm] })

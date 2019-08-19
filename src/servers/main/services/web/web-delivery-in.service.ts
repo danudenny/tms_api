@@ -24,6 +24,8 @@ import { Bag } from '../../../../shared/orm-entity/bag';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { AwbTroubleService } from '../../../../shared/services/awb-trouble.service';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
+import { Awb } from '../../../../shared/orm-entity/awb';
+import { WebAwbFListPodResponseVm } from '../../models/web-awb-filter-list.response.vm';
 // #endregion
 
 @Injectable()
@@ -577,6 +579,67 @@ export class WebDeliveryInService {
     result.totalSuccess = totalSuccess;
     result.totalError = totalError;
     result.data = dataItem;
+
+    return result;
+  }
+
+  async findAllPodListByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbFListPodResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbDate'] = 't1.awb_date';
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id_last';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'awbDate';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'awbDate',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(Awb, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_date', 'awbDate'],
+      ['t1.awb_number', 'awbNumber'],
+      ['t2.awb_status_id_last', 'awbStatusIdLast'],
+      ['t1.from_id', 'fromId'],
+      ['t3.district_name', 'districtNameFrom'],
+      ['t1.to_id', 'toId'],
+      ['t4.district_name', 'districtNameTo'],
+      ['t5.awb_status_title', 'awbStatusTitle'],
+      ['t5.is_problem', 'isProblem'],
+    );
+
+    q.innerJoin(e => e.awbItems.awbItemAttr, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.district, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.districtTo, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbItems.awbItemAttr.awbStatus, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.fromType, w => w.equals(40));
+    q.andWhere(e => e.toType, w => w.equals(40));
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebAwbFListPodResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }

@@ -1,6 +1,8 @@
-import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 
 import { AwbItem } from './awb-item';
+import { Branch } from './branch';
+import { District } from './district';
 
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
@@ -679,6 +681,14 @@ export class Awb extends BaseEntity {
 
   @OneToMany(() => AwbItem, e => e.awb, { cascade: ['insert'] })
   awbItems: AwbItem[];
+
+  @OneToOne(() => District)
+  @JoinColumn({ name: 'from_id' })
+  district: District;
+
+  @OneToOne(() => District)
+  @JoinColumn({ name: 'to_id' })
+  districtTo: District;
 
   // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.awb)

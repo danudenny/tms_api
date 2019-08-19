@@ -1,6 +1,7 @@
-import { BaseEntity, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, OneToOne } from 'typeorm';
 
 import { Awb } from './awb';
+import { AwbItemAttr } from './awb-item-attr';
 
 @Entity('awb_item', { schema: 'public' })
 @Index('awb_item_awb_id_idx', ['awbId', 'isDeleted'])
@@ -334,4 +335,8 @@ export class AwbItem extends BaseEntity {
   @ManyToOne(() => Awb, e => e.awbItems)
   @JoinColumn({ name: 'awb_id', referencedColumnName: 'awbId' })
   awb: Awb;
+
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  awbItemAttr: AwbItemAttr;
 }

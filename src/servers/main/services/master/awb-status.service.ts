@@ -27,6 +27,7 @@ export class AwbStatusService {
     qb.addSelect('awb_status.awb_status_name', 'awbStatusName');
     qb.addSelect('awb_status.awb_status_title', 'awbStatusTitle');
     qb.from('awb_status', 'awb_status');
+    qb.where('awb_status.awb_visibility = 10');
 
     const total = await qb.getCount();
 

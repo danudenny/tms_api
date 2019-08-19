@@ -19,8 +19,8 @@ import { MobileDashboardController } from './mobile/mobile-dashboard.controller'
 import { MobileSyncController } from './mobile/mobile-sync.controller';
 import { PrintController } from './print.controller';
 import { WebAwbFilterController } from './web/web-awb-filter.controller';
-import { WebAwbTroubleControlelr } from './web/web-awb-trouble.controller';
-import { WebBagTroubleControlelr } from './web/web-bag-trouble.controller';
+import { WebAwbPodController } from './web/web-awb-pod.controller';
+import { WebBagPodController } from './web/web-bag-pod.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
 import { WebDeliveryOutController } from './web/web-delivery-out.controller';
 import { WebMonitoringController } from './web/web-monitoring.controller';
@@ -49,8 +49,8 @@ import { WebMonitoringController } from './web/web-monitoring.controller';
     MobileCheckOutController,
     MobileSyncController,
     WebAwbFilterController,
-    WebAwbTroubleControlelr,
-    WebBagTroubleControlelr,
+    WebAwbPodController,
+    WebBagPodController,
     WebDeliveryInController,
     WebDeliveryOutController,
     WebMonitoringController,
