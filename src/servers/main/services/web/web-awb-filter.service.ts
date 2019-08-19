@@ -102,30 +102,10 @@ export class WebAwbFilterService {
 
       for (const res of podFilterDetail) {
         // retrieve all awb inside bag, then grouping each destination by district (to_id)
-        const raw_query = `
-          SELECT ab.*, d.district_id, d.district_code, d.district_name
-          FROM (
-            SELECT awb.to_id, COUNT(1) as count, COUNT(1) FILTER (WHERE is_district_filtered = true) as filtered
-            FROM bag_item_awb bia
-            INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = false
-            INNER JOIN awb_item_attr aia ON aia.awb_item_id = ai.awb_item_id AND ai.is_deleted = false
-            INNER JOIN awb ON awb.awb_id = ai.awb_id AND awb.is_deleted = false
-            WHERE bia.bag_item_id = '${res.bagItemId}'
-            GROUP BY awb.to_id
-          ) as ab
-          INNER JOIN district d ON d.district_id = ab.to_id
-        `;
-        const results = await RawQueryService.query(raw_query);
-        const data: DistrictVm[] = [];
-        for (const result of results) {
-          const districtVm = new DistrictVm();
-          districtVm.districtId = result.district_id;
-          districtVm.districtCode = result.district_code;
-          districtVm.districtName = result.district_name;
-          districtVm.totalAwb = result.count;
-          districtVm.totalFiltered = result.filtered;
-          data.push(districtVm);
-        }
+        const data: DistrictVm[] = await this.getDataGroupByDestination(
+          podFilter.podFilterId,
+          res.bagItemId,
+        );
 
         const awbFilterScanBag = new WebAwbFilterScanBagResponseVm();
         awbFilterScanBag.bagNumberSeq =
@@ -281,56 +261,7 @@ export class WebAwbFilterService {
     );
 
     // retrieve all awb inside bag, then grouping each destination by district (to_id)
-    const qb = createQueryBuilder();
-    qb.addSelect('district.district_id', 'districtId');
-    qb.addSelect('district.district_code', 'districtCode');
-    qb.addSelect('district.district_name', 'districtName');
-    qb.addSelect('packages.total_awb', 'totalAwb');
-    qb.addSelect('packages.filtered', 'totalFiltered');
-    qb.from(subQueryBuilder => {
-      subQueryBuilder
-        .addSelect('awb.to_id', 'to_id')
-        .addSelect('COUNT(1)', 'total_awb')
-        .addSelect(
-          'COUNT(1) FILTER (WHERE is_district_filtered = true)',
-          'filtered',
-        )
-        .from('pod_filter_detail', 'pfd')
-        .innerJoin(
-          'bag_item_awb',
-          'bia',
-          'pfd.bag_item_id = bia.bag_item_id AND pfd.is_deleted = false',
-        )
-        .innerJoin(
-          'awb_item',
-          'ai',
-          'ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = false',
-        )
-        .innerJoin(
-          'awb_item_attr',
-          'aia',
-          'aia.awb_item_id = ai.awb_item_id AND ai.is_deleted = false',
-        )
-        .innerJoin(
-          'awb',
-          'awb',
-          'awb.awb_id = ai.awb_id AND awb.is_deleted = false',
-        )
-        .where('pfd.pod_filter_id = :podFilterId', {
-          podFilterId: podFilter.podFilterId,
-        })
-        .andWhere('bia.bag_item_id = :bagItemId', {
-          bagItemId: bagData.bagItemId,
-        })
-        .andWhere('awb.to_type = 40 AND bia.is_deleted = false')
-        .groupBy('awb.to_id');
-      return subQueryBuilder;
-    }, 'packages').leftJoin(
-      'district',
-      'district',
-      'packages.to_id = district.district_id AND district.is_deleted = false',
-    );
-    const data = await qb.getRawMany();
+    const data = await this.getDataGroupByDestination(podFilter.podFilterId, bagData.bagItemId);
 
     // get representative code, to inform frontend current active representative
     const representative = await this.representativeRepository.findOne({
@@ -791,5 +722,61 @@ export class WebAwbFilterService {
       branchIdPic: permissonPayload.branchId,
     });
     return await AwbTrouble.save(awbTrouble);
+  }
+
+  private async getDataGroupByDestination(
+    podFilterId: number,
+    bagItemId: number,
+  ) {
+    const qb = createQueryBuilder();
+    qb.addSelect('district.district_id', 'districtId');
+    qb.addSelect('district.district_code', 'districtCode');
+    qb.addSelect('district.district_name', 'districtName');
+    qb.addSelect('packages.total_awb', 'totalAwb');
+    qb.addSelect('packages.filtered', 'totalFiltered');
+    qb.from(subQueryBuilder => {
+      subQueryBuilder
+        .addSelect('awb.to_id', 'to_id')
+        .addSelect('COUNT(1)', 'total_awb')
+        .addSelect(
+          'COUNT(1) FILTER (WHERE is_district_filtered = true)',
+          'filtered',
+        )
+        .from('pod_filter_detail', 'pfd')
+        .innerJoin(
+          'bag_item_awb',
+          'bia',
+          'pfd.bag_item_id = bia.bag_item_id AND pfd.is_deleted = false',
+        )
+        .innerJoin(
+          'awb_item',
+          'ai',
+          'ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = false',
+        )
+        .innerJoin(
+          'awb_item_attr',
+          'aia',
+          'aia.awb_item_id = ai.awb_item_id AND ai.is_deleted = false',
+        )
+        .innerJoin(
+          'awb',
+          'awb',
+          'awb.awb_id = ai.awb_id AND awb.is_deleted = false',
+        )
+        .where('pfd.pod_filter_id = :podFilterId', {
+          podFilterId,
+        })
+        .andWhere('bia.bag_item_id = :bagItemId', {
+          bagItemId,
+        })
+        .andWhere('awb.to_type = 40 AND bia.is_deleted = false')
+        .groupBy('awb.to_id');
+      return subQueryBuilder;
+    }, 'packages').leftJoin(
+      'district',
+      'district',
+      'packages.to_id = district.district_id AND district.is_deleted = false',
+    );
+    return await qb.getRawMany();
   }
 }
