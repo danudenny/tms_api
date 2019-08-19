@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
-import { MetaService } from '../../../../shared/services/meta.service';
 import { AwbStatusFindAllResponseVm } from '../../models/awb-status.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { RepositoryService } from '../../../../shared/services/repository.service';
 
 @Injectable()
 export class AwbStatusService {
@@ -21,23 +21,21 @@ export class AwbStatusService {
       },
     ];
 
-    // add select field
-    const qb = payload.buildQueryBuilder();
-    qb.addSelect('awb_status.awb_status_id', 'awbStatusId');
-    qb.addSelect('awb_status.awb_status_name', 'awbStatusName');
-    qb.addSelect('awb_status.awb_status_title', 'awbStatusTitle');
-    qb.from('awb_status', 'awb_status');
-    qb.where('awb_status.awb_visibility = 10');
+    const q = RepositoryService.awbStatus.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
 
-    const total = await qb.getCount();
+    q.selectRaw(
+      ['awb_status.awb_status_id', 'awbStatusId'],
+      ['awb_status.awb_status_name', 'awbStatusName'],
+      ['awb_status.awb_status_title', 'awbStatusTitle'],
+    );
 
-    // exec raw query
-    payload.applyPaginationToQueryBuilder(qb);
-    const data = await qb.execute();
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const result = new AwbStatusFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
+    result.buildPaging(payload.page, payload.limit, total);
 
     return result;
   }
