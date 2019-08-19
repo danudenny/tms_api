@@ -10,7 +10,7 @@ import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFil
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
 
-@ApiUseTags('Web Delivery In')
+@ApiUseTags('Web Awb Filter')
 @Controller('web/pod/awb/filter')
 export class WebAwbFilterController {
   constructor(

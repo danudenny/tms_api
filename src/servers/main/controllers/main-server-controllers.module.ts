@@ -24,6 +24,7 @@ import { WebBagPodController } from './web/web-bag-pod.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
 import { WebDeliveryOutController } from './web/web-delivery-out.controller';
 import { WebMonitoringController } from './web/web-monitoring.controller';
+import { WebAwbUpdateStatusController } from './web/web-awb-update-status.controller';
 
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -54,6 +55,7 @@ import { WebMonitoringController } from './web/web-monitoring.controller';
     WebDeliveryInController,
     WebDeliveryOutController,
     WebMonitoringController,
+    WebAwbUpdateStatusController,
   ],
 })
 export class MainServerControllersModule {}
