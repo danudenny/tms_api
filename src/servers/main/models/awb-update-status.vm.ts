@@ -37,7 +37,10 @@ export class AwbUpdateStatusResponseVm {
   totalData: number;
 
   @ApiModelProperty()
-  totalSuccess: number;
+  totalSuccessAwb: number;
+
+  @ApiModelProperty()
+  totalSuccessBag: number;
 
   @ApiModelProperty()
   totalError: number;

@@ -1,11 +1,7 @@
 import { AwbUpdateStatusPayloadVm, AwbUpdateStatusResponseVm, ScanInputNumberVm } from '../../models/awb-update-status.vm';
-import { WebScanInVm } from '../../models/web-scanin.vm';
-import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
-import { RequestErrorService } from '../../../../shared/services/request-error.service';
-import { HttpStatus } from '@nestjs/common';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 
 export class WebAwbUpdateStatusService {
@@ -13,14 +9,17 @@ export class WebAwbUpdateStatusService {
     payload: AwbUpdateStatusPayloadVm,
   ): Promise<AwbUpdateStatusResponseVm> {
 
-    let totalSuccess = 0;
+    let totalSuccessAwb = 0;
+    let totalSuccessBag = 0;
     let totalError = 0;
     const data: ScanInputNumberVm[] = [];
 
     for (const inputNumber of payload.inputNumber) {
       const dataItem = await this.checkTypeNumber(inputNumber, payload.awbStatusId);
       if (dataItem.status == 'ok') {
-        totalSuccess += 1;
+        dataItem.isBag
+          ? (totalSuccessBag += 1)
+          : (totalSuccessAwb += 1);
       } else {
         totalError += 1;
       }
@@ -29,7 +28,8 @@ export class WebAwbUpdateStatusService {
 
     const result = new AwbUpdateStatusResponseVm();
     result.totalData = payload.inputNumber.length;
-    result.totalSuccess = totalSuccess;
+    result.totalSuccessAwb = totalSuccessAwb;
+    result.totalSuccessBag = totalSuccessBag;
     result.totalError = totalError;
     result.data = data;
     return result;
