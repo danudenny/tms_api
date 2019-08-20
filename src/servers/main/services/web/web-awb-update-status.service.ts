@@ -5,6 +5,7 @@ import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 
 export class WebAwbUpdateStatusService {
+
   static async updateStatus(
     payload: AwbUpdateStatusPayloadVm,
   ): Promise<AwbUpdateStatusResponseVm> {
@@ -15,7 +16,10 @@ export class WebAwbUpdateStatusService {
     const data: ScanInputNumberVm[] = [];
 
     for (const inputNumber of payload.inputNumber) {
-      const dataItem = await this.checkTypeNumber(inputNumber, payload.awbStatusId);
+      const dataItem = await this.handleTypeNumber(
+        inputNumber,
+        payload.awbStatusId,
+      );
       if (dataItem.status == 'ok') {
         dataItem.isBag
           ? (totalSuccessBag += 1)
@@ -149,15 +153,22 @@ export class WebAwbUpdateStatusService {
     return dataItem;
   }
 
-  private static async checkTypeNumber(inputNumber: string, awbStatusId: number) {
-    if (inputNumber.length == 12) {
-      // NOTE: No Resi
+  private static async handleTypeNumber(
+    inputNumber: string,
+    awbStatusId: number,
+  ): Promise<ScanInputNumberVm> {
+
+    const regexNumber = /^[0-9]+$/;
+    inputNumber = inputNumber.trim();
+    if (inputNumber.length == 12 && regexNumber.test(inputNumber)) {
+      // awb number
       return await this.updateAwbStatus(inputNumber, awbStatusId);
-    } else if (inputNumber.length == 10) {
-      // NOTE: No Gabungan Paket
+    } else if (
+      inputNumber.length == 10 &&
+      regexNumber.test(inputNumber.substring(7, 10))) {
+      // bag number
       return await this.updateAwbStatusByBag(inputNumber, awbStatusId);
     } else {
-      // error message
       const dataItem = new ScanInputNumberVm();
       dataItem.inputNumber = inputNumber;
       dataItem.status = 'error';
