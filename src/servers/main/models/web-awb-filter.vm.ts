@@ -10,6 +10,9 @@ export class WebAwbFilterScanBagVm {
 export class WebAwbFilterScanAwbVm  {
 
   @ApiModelProperty()
+  podFilterId: number;
+
+  @ApiModelProperty()
   podFilterDetailId: number;
 
   @ApiModelProperty()
