@@ -1,4 +1,5 @@
 import express = require('express');
+import { sumBy } from 'lodash';
 import moment = require('moment');
 
 import { PrinterService } from '../../../shared/services/printer.service';
@@ -86,6 +87,94 @@ export class PrintService {
     };
 
     PrinterService.responseForJsReport(res, 'surat-jalan', jsreportParams);
+  }
+
+  public static async printDoPodBagByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doPod.findOne();
+    q.leftJoin(e => e.doPodDetails);
+
+    const doPod = await q
+      .select({
+        doPodId: true, // needs to be selected due to do_pod relations are being included
+        doPodCode: true,
+        employee: {
+          nickname: true,
+          nik: true,
+        },
+        branchTo: {
+          branchName: true,
+        },
+        doPodDetails: {
+          doPodDetailId: true, // needs to be selected due to do_pod_detail relations are being included
+          bagItem: {
+            bagItemId: true, // needs to be selected due to bag_item relations are being included
+            bagSeq: true,
+            bag: {
+              bagNumber: true,
+            },
+            bagItemAwbs: {
+              bagItemAwbId: true, // needs to be selected due to bag_item_awb relations are being included
+              awbItem: {
+                awbItemId: true, // needs to be selected due to awb_item relations are being included
+                awb: {
+                  awbNumber: true,
+                },
+              },
+            },
+          },
+        },
+      })
+      .where(e => e.doPodId, w => w.equals(queryParams.id));
+
+    if (!doPod) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    const currentUser = await RepositoryService.user
+      .loadById(queryParams.userId)
+      .select({
+        userId: true, // needs to be selected due to users relations are being included
+        employee: {
+          nickname: true,
+        },
+      });
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
+    const currentBranch = await RepositoryService.branch
+      .loadById(queryParams.branchId)
+      .select({
+        branchName: true,
+      });
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPod,
+      meta: {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        totalItems: sumBy(doPod.doPodDetails, doPodDetail => doPodDetail.bagItem.bagItemAwbs.length),
+      },
+    };
+
+    PrinterService.responseForJsReport(res, 'surat-jalan-gabung-paket', jsreportParams);
   }
 
   public static async printDoPodDeliverByRequest(

@@ -4,6 +4,7 @@ import express = require('express');
 
 import { ResponseSerializerOptions } from '../../../shared/decorators/response-serializer-options.decorator';
 import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm';
+import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
 import { PrintService } from '../services/print.service';
@@ -19,6 +20,16 @@ export class PrintController {
     @Response() serverResponse: express.Response,
   ) {
     return PrintService.printDoPodByRequest(serverResponse, queryParams);
+  }
+
+  @Get('do-pod-bag')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printDoPodBag(
+    @Query() queryParams: PrintDoPodBagPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintService.printDoPodBagByRequest(serverResponse, queryParams);
   }
 
   @Get('do-pod-deliver')
