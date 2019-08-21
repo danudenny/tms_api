@@ -1097,9 +1097,14 @@ export class WebDeliveryOutService {
       ['t2.awb_number', 'awbNumber'],
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t2.consignee_name', 'consigneeName'],
+      ['t3.awb_status_title', 'awbStatusTitle'],
+      ['CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))', 'totalCodValue'],
     );
 
     q.innerJoin(e => e.awbItem.awb, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbItem.awb.awbStatus, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 

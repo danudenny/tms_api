@@ -21,6 +21,12 @@ export class ItemDeliveryResponseVm {
 
   @ApiModelProperty()
   consigneeName: string;
+
+  @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
+  awbStatusTitle: string;
 }
 
 export class WebDeliveryListResponseVm extends BaseMetaResponseVm {

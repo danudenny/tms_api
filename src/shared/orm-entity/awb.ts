@@ -3,6 +3,7 @@ import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, O
 import { AwbItem } from './awb-item';
 import { Branch } from './branch';
 import { District } from './district';
+import { AwbStatus } from './awb-status';
 
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
@@ -689,6 +690,10 @@ export class Awb extends BaseEntity {
   @OneToOne(() => District)
   @JoinColumn({ name: 'to_id' })
   districtTo: District;
+
+  @OneToOne(() => AwbStatus)
+  @JoinColumn({ name: 'awb_status_id_last' })
+  awbStatus: AwbStatus;
 
   // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.awb)
