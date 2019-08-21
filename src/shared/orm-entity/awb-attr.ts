@@ -1,5 +1,6 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 import { AwbItemAttr } from './awb-item-attr';
+import { AwbStatus } from './awb-status';
 
 @Entity('awb_attr', { schema: 'public' })
 export class AwbAttr extends BaseEntity {
@@ -122,4 +123,8 @@ export class AwbAttr extends BaseEntity {
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'awb_attr_id' })
   awbItemAttr: AwbItemAttr;
+
+  @OneToOne(() => AwbStatus)
+  @JoinColumn({ name: 'awb_status_id_last' })
+  awbStatus: AwbStatus;
 }

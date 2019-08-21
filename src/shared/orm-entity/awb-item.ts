@@ -2,6 +2,7 @@ import { BaseEntity, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGenera
 
 import { Awb } from './awb';
 import { AwbItemAttr } from './awb-item-attr';
+import { AwbAttr } from './awb-attr';
 
 @Entity('awb_item', { schema: 'public' })
 @Index('awb_item_awb_id_idx', ['awbId', 'isDeleted'])
@@ -339,4 +340,8 @@ export class AwbItem extends BaseEntity {
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   awbItemAttr: AwbItemAttr;
+
+  @OneToOne(() => AwbAttr)
+  @JoinColumn({ name: 'awb_id', referencedColumnName: 'awbId' })
+  awbAttr: AwbAttr;
 }
