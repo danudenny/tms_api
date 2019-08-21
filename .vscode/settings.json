@@ -8,6 +8,5 @@
   "prettier.printWidth": 200,
   "typescript.tsdk": "node_modules/typescript/lib",
   "javascript.preferences.importModuleSpecifier": "relative",
-  "typescript.preferences.importModuleSpecifier": "relative",
   "vsicons.presets.nestjs": true
 }

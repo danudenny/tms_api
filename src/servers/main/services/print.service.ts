@@ -3,9 +3,11 @@ import { sumBy } from 'lodash';
 import moment = require('moment');
 
 import { PrinterService } from '../../../shared/services/printer.service';
+import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
 import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm';
+import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
 
@@ -91,7 +93,7 @@ export class PrintService {
 
   public static async printDoPodBagByRequest(
     res: express.Response,
-    queryParams: PrintDoPodPayloadQueryVm,
+    queryParams: PrintDoPodBagPayloadQueryVm,
   ) {
     const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetails);
@@ -170,11 +172,18 @@ export class PrintService {
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
-        totalItems: sumBy(doPod.doPodDetails, doPodDetail => doPodDetail.bagItem.bagItemAwbs.length),
+        totalItems: sumBy(
+          doPod.doPodDetails,
+          doPodDetail => doPodDetail.bagItem.bagItemAwbs.length,
+        ),
       },
     };
 
-    PrinterService.responseForJsReport(res, 'surat-jalan-gabung-paket', jsreportParams);
+    PrinterService.responseForJsReport(
+      res,
+      'surat-jalan-gabung-paket',
+      jsreportParams,
+    );
   }
 
   public static async printDoPodDeliverByRequest(
@@ -258,23 +267,110 @@ export class PrintService {
     );
   }
 
-  public static async printBagItemByRequest(
+  public static async printBagItemForStickerByRequest(
     res: express.Response,
     queryParams: PrintBagItemPayloadQueryVm,
   ) {
     const q = RepositoryService.bagItem.findOne();
-    q.leftJoin(e => e.bagItemAwbs);
+    q.innerJoin(e => e.bag);
+    q.leftJoin(e => e.bag.representative);
 
     const bagItem = await q
       .select({
-        bagItemId: queryParams.id, // needs to be selected due to do_pod_deliver relations are being included
+        bagItemId: true,
         bagSeq: true,
+        weight: true,
+        createdTime: true,
+        bag: {
+          bagId: true,
+          bagNumber: true,
+          representative: {
+            representativeName: true,
+            representativeCode: true,
+          },
+        },
+      })
+      .where(e => e.bagItemId, w => w.equals(queryParams.id));
+
+    if (!bagItem) {
+      RequestErrorService.throwObj({
+        message: 'Gabung paket tidak ditemukan',
+      });
+    }
+
+    const { cnt: bagItemsTotal } = await RawQueryService.exec(
+      `SELECT COUNT(1) as cnt FROM bag_item WHERE bag_id=:bagId`,
+      { bagId: bagItem.bagId },
+    );
+
+    const currentUser = await RepositoryService.user
+      .loadById(queryParams.userId)
+      .select({
+        userId: true, // needs to be selected due to users relations are being included
         employee: {
           nickname: true,
-          nik: true,
         },
-        branchNext: {
-          branchName: true,
+      })
+      .exec();
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
+    const currentBranch = await RepositoryService.branch
+      .loadById(queryParams.branchId)
+      .select({
+        branchName: true,
+      });
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: bagItem,
+      meta: {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        bagItemsTotal,
+      },
+    };
+
+    PrinterService.responseForJsReport(
+      res,
+      'surat-jalan-gabungan-sortir-sticker',
+      jsreportParams,
+    );
+  }
+
+  public static async printBagItemForPaperByRequest(
+    res: express.Response,
+    queryParams: PrintBagItemPayloadQueryVm,
+  ) {
+    const q = RepositoryService.bagItem.findOne();
+    q.innerJoin(e => e.bag);
+    q.leftJoin(e => e.bag.representative);
+
+    const bagItem = await q
+      .select({
+        bagItemId: true,
+        bagSeq: true,
+        weight: true,
+        createdTime: true,
+        bag: {
+          bagId: true,
+          bagNumber: true,
+          representative: {
+            representativeName: true,
+            representativeCode: true,
+          },
         },
         bagItemAwbs: {
           bagItemAwbId: true,
@@ -283,6 +379,8 @@ export class PrintService {
             awb: {
               awbNumber: true,
               consigneeName: true,
+              consigneeNumber: true,
+              totalWeightFinalRounded: true,
             },
           },
         },
@@ -291,7 +389,7 @@ export class PrintService {
 
     if (!bagItem) {
       RequestErrorService.throwObj({
-        message: 'Surat jalan tidak ditemukan',
+        message: 'Gabung paket tidak ditemukan',
       });
     }
 
@@ -331,13 +429,12 @@ export class PrintService {
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
-        totalItems: bagItem.bagItemAwbs.length,
       },
     };
 
     PrinterService.responseForJsReport(
       res,
-      'surat-jalan-bag-item',
+      'surat-jalan-gabungan-sortir-paper',
       jsreportParams,
     );
   }

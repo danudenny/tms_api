@@ -42,13 +42,23 @@ export class PrintController {
     return PrintService.printDoPodDeliverByRequest(serverResponse, queryParams);
   }
 
-  @Get('bag-item')
+  @Get('bag-item-for-sticker')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
-  public async printBagItem(
+  public async printBagItemSticker(
     @Query() queryParams: PrintBagItemPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintService.printBagItemByRequest(serverResponse, queryParams);
+    return PrintService.printBagItemForStickerByRequest(serverResponse, queryParams);
+  }
+
+  @Get('bag-item-for-paper')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printBagItemPaper(
+    @Query() queryParams: PrintBagItemPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintService.printBagItemForPaperByRequest(serverResponse, queryParams);
   }
 }
