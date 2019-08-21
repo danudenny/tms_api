@@ -316,31 +316,34 @@ export class WebDeliveryInService {
                 await DoPod.save(doPod);
 
                 // NOTE: status DO_HUB (12600: drop off hub)
-                const bagItemsAwb = await BagItemAwb.find({
-                  where: {
-                    bagItemId: bagData.bagItemId,
-                    isDeleted: false,
-                  },
-                });
-                const awbStatusId = isHub ? AWB_STATUS.DO_HUB : AWB_STATUS.IN_BRANCH;
-                if (bagItemsAwb && bagItemsAwb.length > 0) {
-                  for (const itemAwb of bagItemsAwb) {
-                    if (itemAwb.awbItemId) {
-                      await DeliveryService.updateAwbAttr(
-                        itemAwb.awbItemId,
-                        doPod.branchIdTo,
-                        awbStatusId,
-                      );
-                      // NOTE: queue by Bull
-                      DoPodDetailPostMetaQueueService.createJobByScanInBag(
-                        itemAwb.awbItemId,
-                        permissonPayload.branchId,
-                        authMeta.userId,
-                      );
+                if (isHub) {
+                  const bagItemsAwb = await BagItemAwb.find({
+                    where: {
+                      bagItemId: bagData.bagItemId,
+                      isDeleted: false,
+                    },
+                  });
+                  if (bagItemsAwb && bagItemsAwb.length > 0) {
+                    for (const itemAwb of bagItemsAwb) {
+                      if (itemAwb.awbItemId) {
+                        await DeliveryService.updateAwbAttr(
+                          itemAwb.awbItemId,
+                          doPod.branchIdTo,
+                          AWB_STATUS.DO_HUB,
+                        );
+                        // NOTE: queue by Bull
+                        DoPodDetailPostMetaQueueService.createJobByScanInBag(
+                          itemAwb.awbItemId,
+                          permissonPayload.branchId,
+                          authMeta.userId,
+                        );
+                      }
                     }
+                  } else {
+                    Logger.log(
+                      '### Data Bag Item Awb :: Not Found!!',
+                    );
                   }
-                } else {
-                  Logger.log('### Data Bag Item Awb :: Not Found!!');
                 }
 
                 totalSuccess += 1;
@@ -686,7 +689,7 @@ export class WebDeliveryInService {
     if (inputNumber.length == 12 && regexNumber.test(inputNumber)) {
       // awb number
       const scanIn = new WebScanInVm();
-      scanIn.awbNumber.push(inputNumber);
+      scanIn.awbNumber = [inputNumber];
       const result = await this.scanInAwb(scanIn);
       dataItem.inputNumber = result.data[0].awbNumber;
       dataItem.status = result.data[0].status;
@@ -701,7 +704,7 @@ export class WebDeliveryInService {
     ) {
       // bag number
       const scanIn = new WebScanInBagVm();
-      scanIn.bagNumber.push(inputNumber);
+      scanIn.bagNumber = [inputNumber];
       const result = await this.scanInBag(scanIn, false);
       dataItem.inputNumber = result.data[0].bagNumber;
       dataItem.status = result.data[0].status;
@@ -715,7 +718,7 @@ export class WebDeliveryInService {
       dataItem.status = 'error';
       dataItem.message = 'Nomor tidak valid';
       dataItem.trouble = true;
-
+      dataItem.isBag = false;
       return dataItem;
     }
   }
