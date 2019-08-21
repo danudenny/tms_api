@@ -529,7 +529,7 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi ${awbNumber} bukan milik gerai ini, ` +
+              response.message = `Resi ${awbNumber} milik gerai, ` +
               `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
             }
             break;
@@ -681,7 +681,7 @@ export class WebDeliveryOutService {
 
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi ${awbNumber} bukan milik gerai ini, ` +
+              response.message = `Resi ${awbNumber} milik gerai, ` +
               `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
             }
             break;

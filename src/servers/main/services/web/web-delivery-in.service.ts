@@ -548,7 +548,7 @@ export class WebDeliveryInService {
               response.status = 'error';
               response.trouble = true;
               response.message =
-                `Resi ${awbNumber} bukan milik gerai ini ` +
+                `Resi ${awbNumber} milik gerai ` +
                 `${awb.branchLast.branchCode} - ${
                   awb.branchLast.branchName
                 }.`;
