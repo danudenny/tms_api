@@ -13,3 +13,47 @@ export class WebScanInVm  {
   @Type(() => String)
   awbNumber: string[];
 }
+
+export class WebScanInBranchVm {
+  @ApiModelProperty({
+    example: ['112039', '11203922'],
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'No harus diisi' })
+  inputNumber: string[];
+}
+
+// Response
+export class ScanInputNumberBranchVm {
+  @ApiModelProperty()
+  inputNumber: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  isBag: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class WebScanInBranchResponseVm {
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccessAwb: number;
+
+  @ApiModelProperty()
+  totalSuccessBag: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
+  data: ScanInputNumberBranchVm[];
+}

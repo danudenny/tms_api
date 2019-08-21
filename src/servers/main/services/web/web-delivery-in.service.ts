@@ -17,7 +17,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInBagListResponseVm, WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm } from '../../models/web-scanin.vm';
+import { WebScanInVm, WebScanInBranchVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm } from '../../models/web-scanin.vm';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
@@ -158,7 +158,9 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.user.employee, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('t1.pod_scanin_date_time, t2.bag_number, t3.branch_name, t4.branch_name, t5.nickname, t6.bag_seq');
+    q.groupByRaw(
+      't1.pod_scanin_date_time, t2.bag_number, t3.branch_name, t4.branch_name, t5.nickname, t6.bag_seq',
+    );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -220,10 +222,14 @@ export class WebDeliveryInService {
    * Scan in Bag Number (Hub) - NewFlow
    * Flow Data : https://docs.google.com/document/d/1wnrYqlCmZruMMwgI9d-ko54JGQDWE9sn2yjSYhiAIrg/edit
    * @param {WebScanInBagVm} payload
+   * @param {boolean} isHub
    * @returns {Promise<WebScanInBagResponseVm>}
    * @memberof WebDeliveryInService
    */
-  async scanInBag(payload: WebScanInBagVm): Promise<WebScanInBagResponseVm> {
+  async scanInBag(
+    payload: WebScanInBagVm,
+    isHub: boolean = true,
+  ): Promise<WebScanInBagResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
@@ -251,7 +257,6 @@ export class WebDeliveryInService {
               'locking',
             );
             if (holdRedis) {
-
               // AFTER Scan IN ===============================================
               // #region after scanin
               // NOTE: check doPodDetail
@@ -317,13 +322,14 @@ export class WebDeliveryInService {
                     isDeleted: false,
                   },
                 });
+                const awbStatusId = isHub ? AWB_STATUS.DO_HUB : AWB_STATUS.IN_BRANCH;
                 if (bagItemsAwb && bagItemsAwb.length > 0) {
                   for (const itemAwb of bagItemsAwb) {
                     if (itemAwb.awbItemId) {
                       await DeliveryService.updateAwbAttr(
                         itemAwb.awbItemId,
                         doPod.branchIdTo,
-                        AWB_STATUS.DO_HUB,
+                        awbStatusId,
                       );
                       // NOTE: queue by Bull
                       DoPodDetailPostMetaQueueService.createJobByScanInBag(
@@ -361,9 +367,7 @@ export class WebDeliveryInService {
           }
         } else {
           // NOTE: create data bag trouble
-          const bagTroubleCode = await CustomCounterCode.bagTrouble(
-            timeNow,
-          );
+          const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
           const bagTrouble = BagTrouble.create({
             bagNumber,
             bagTroubleCode,
@@ -543,15 +547,16 @@ export class WebDeliveryInService {
               }
             } else {
               // save data to awb_trouble
-              await AwbTroubleService.fromScanIn(awbNumber, awb.awbStatusIdLast);
+              await AwbTroubleService.fromScanIn(
+                awbNumber,
+                awb.awbStatusIdLast,
+              );
               totalError += 1;
               response.status = 'error';
               response.trouble = true;
               response.message =
                 `Resi ${awbNumber} milik gerai ` +
-                `${awb.branchLast.branchCode} - ${
-                  awb.branchLast.branchName
-                }.`;
+                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
             }
             break;
 
@@ -580,6 +585,33 @@ export class WebDeliveryInService {
     result.totalError = totalError;
     result.data = dataItem;
 
+    return result;
+  }
+
+  async scanInBranch(
+    payload: WebScanInBranchVm,
+  ): Promise<WebScanInBranchResponseVm> {
+    let totalSuccessAwb = 0;
+    let totalSuccessBag = 0;
+    let totalError = 0;
+    const data: ScanInputNumberBranchVm[] = [];
+
+    for (const inputNumber of payload.inputNumber) {
+      const dataItem = await this.handleTypeNumber(inputNumber);
+      if (dataItem.status == 'ok') {
+        dataItem.isBag ? (totalSuccessBag += 1) : (totalSuccessAwb += 1);
+      } else {
+        totalError += 1;
+      }
+      data.push(dataItem);
+    }
+
+    const result = new WebScanInBranchResponseVm();
+    result.totalData = payload.inputNumber.length;
+    result.totalSuccessAwb = totalSuccessAwb;
+    result.totalSuccessBag = totalSuccessBag;
+    result.totalError = totalError;
+    result.data = data;
     return result;
   }
 
@@ -644,4 +676,47 @@ export class WebDeliveryInService {
     return result;
   }
 
+  private async handleTypeNumber(
+    inputNumber: string,
+  ): Promise<ScanInputNumberBranchVm> {
+    const dataItem = new ScanInputNumberBranchVm();
+    const regexNumber = /^[0-9]+$/;
+
+    inputNumber = inputNumber.trim();
+    if (inputNumber.length == 12 && regexNumber.test(inputNumber)) {
+      // awb number
+      const scanIn = new WebScanInVm();
+      scanIn.awbNumber.push(inputNumber);
+      const result = await this.scanInAwb(scanIn);
+      dataItem.inputNumber = result.data[0].awbNumber;
+      dataItem.status = result.data[0].status;
+      dataItem.message = result.data[0].message;
+      dataItem.trouble = result.data[0].trouble;
+      dataItem.isBag = false;
+
+      return dataItem;
+    } else if (
+      inputNumber.length == 10 &&
+      regexNumber.test(inputNumber.substring(7, 10))
+    ) {
+      // bag number
+      const scanIn = new WebScanInBagVm();
+      scanIn.bagNumber.push(inputNumber);
+      const result = await this.scanInBag(scanIn, false);
+      dataItem.inputNumber = result.data[0].bagNumber;
+      dataItem.status = result.data[0].status;
+      dataItem.message = result.data[0].message;
+      dataItem.trouble = result.data[0].trouble;
+      dataItem.isBag = true;
+
+      return dataItem;
+    } else {
+      dataItem.inputNumber = inputNumber;
+      dataItem.status = 'error';
+      dataItem.message = 'Nomor tidak valid';
+      dataItem.trouble = true;
+
+      return dataItem;
+    }
+  }
 }
