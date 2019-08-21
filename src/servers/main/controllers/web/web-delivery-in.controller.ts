@@ -9,7 +9,7 @@ import { BagRepository } from '../../../../shared/orm-repository/bag.repository'
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInListResponseVm, WebScanInBagListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm } from '../../models/web-scanin.vm';
+import { WebScanInVm, WebScanInBranchVm, WebScanInBranchResponseVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 
@@ -69,7 +69,16 @@ export class WebDeliveryInController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanInBagResponseVm })
-  public async findAllBag(@Body() payload: WebScanInBagVm) {
+  public async scanInBag(@Body() payload: WebScanInBagVm) {
     return this.webDeliveryService.scanInBag(payload);
+  }
+
+  @Post('branch')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanInBranchResponseVm })
+  public async scanInBranch(@Body() payload: WebScanInBranchVm) {
+    return this.webDeliveryService.scanInBranch(payload);
   }
 }
