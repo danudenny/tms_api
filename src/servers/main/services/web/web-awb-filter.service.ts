@@ -784,14 +784,6 @@ export class WebAwbFilterService {
         },
       });
 
-    if (!podFilterDetail) {
-      RequestErrorService.throwObj(
-        {
-          message: `Invalid podFilterId`,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
     return podFilterDetail;
   }
 
