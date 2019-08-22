@@ -68,14 +68,14 @@ export class MobileSyncService {
         await transactionEntitymanager.increment(
           DoPodDeliver,
           { doPodDeliverId: delivery.doPodDeliverId },
-          'total_problem',
+          'totalProblem',
           1,
         );
       } else if (awbStatus.isFinalStatus) {
         await transactionEntitymanager.increment(
           DoPodDeliver,
           { doPodDeliverId: delivery.doPodDeliverId },
-          'total_delivery',
+          'totalDelivery',
           1,
         );
       }
