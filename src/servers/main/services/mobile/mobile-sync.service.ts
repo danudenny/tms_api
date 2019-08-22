@@ -1,6 +1,9 @@
+import { last } from 'lodash';
 import moment = require('moment');
 import { EntityManager, getManager } from 'typeorm';
 
+import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
+import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 import { DoPodDeliverHistory } from '../../../../shared/orm-entity/do-pod-deliver-history';
 import { DeliveryService } from '../../../../shared/services/delivery.service';
@@ -57,8 +60,25 @@ export class MobileSyncService {
         doPodDeliverHistories,
       );
 
-      const lastDoPodDeliverHistory =
-        doPodDeliverHistories[doPodDeliverHistories.length - 1];
+      const lastDoPodDeliverHistory = last(doPodDeliverHistories);
+      const awbStatus = await AwbStatus.findOne(
+        lastDoPodDeliverHistory.awbStatusId,
+      );
+      if (awbStatus.isProblem) {
+        await transactionEntitymanager.increment(
+          DoPodDeliver,
+          { doPodDeliverId: delivery.doPodDeliverId },
+          'total_problem',
+          1,
+        );
+      } else if (awbStatus.isFinalStatus) {
+        await transactionEntitymanager.increment(
+          DoPodDeliver,
+          { doPodDeliverId: delivery.doPodDeliverId },
+          'total_delivery',
+          1,
+        );
+      }
       await transactionEntitymanager.update(
         DoPodDeliverDetail,
         delivery.doPodDeliverDetailId,
