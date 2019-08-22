@@ -1008,6 +1008,7 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.doPodDeliverDetails.awbItem.awb, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.andWhere(e => e.doPodDeliverDetails.awbStatus.isFinalStatus, w => w.isFalse());
     q.groupByRaw('t1.do_pod_deliver_id, t2.nickname');
 
     const data = await q.exec();
@@ -1104,7 +1105,7 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.awbItem.awb, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awbItem.awb.awbStatus, 't3', j =>
+    q.innerJoin(e => e.awbItem.awbAttr.awbStatus, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
