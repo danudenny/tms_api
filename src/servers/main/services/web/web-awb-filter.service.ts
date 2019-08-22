@@ -114,6 +114,9 @@ export class WebAwbFilterService {
         awbFilterScanBag.totalFiltered = sumBy(data, x =>
           Number(x.totalFiltered),
         );
+        awbFilterScanBag.totalScan = sumBy(data, x =>
+          Number(x.totalScan),
+        );
         awbFilterScanBag.totalProblem = sumBy(data, x => Number(x.totalProblem));
         awbFilterScanBag.podFilterCode = podFilter.podFilterCode;
         awbFilterScanBag.podFilterDetailId = res.podFilterDetailId;
