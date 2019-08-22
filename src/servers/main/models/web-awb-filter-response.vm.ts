@@ -52,6 +52,9 @@ export class DistrictVm {
   totalAwb: number;
 
   @ApiModelProperty()
+  totalScan: number;
+
+  @ApiModelProperty()
   totalFiltered: number;
 
   @ApiModelProperty()
@@ -68,6 +71,18 @@ export class WebAwbFilterScanBagResponseVm {
 
   @ApiModelProperty()
   totalData: number;
+
+  @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
+  totalFiltered: number;
+
+  @ApiModelProperty()
+  totalProblem: number;
+
+  @ApiModelProperty()
+  totalScan: number;
 
   @ApiModelProperty()
   representativeCode: string;
