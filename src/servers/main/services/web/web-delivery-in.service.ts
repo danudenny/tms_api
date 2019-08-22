@@ -250,7 +250,9 @@ export class WebDeliveryInService {
       const bagData = await DeliveryService.validBagNumber(bagNumber);
 
       if (bagData) {
-        if (bagData.branchIdNext == permissonPayload.branchId) {
+        // NOTE: check condition disable on check branchIdNext
+        // bagData.branchIdNext == permissonPayload.branchId;
+        if (permissonPayload.branchId) {
           if (bagData.bagItemStatusIdLast == 1000) {
             const holdRedis = await RedisService.locking(
               `hold:bagscanin:${bagData.bagItemId}`,
@@ -467,8 +469,9 @@ export class WebDeliveryInService {
             break;
 
           case 'OUT':
-            // check condition
-            if (awb.branchIdNext == permissonPayload.branchId) {
+            // NOTE: check condition disable on check branchIdNext
+            // awb.branchIdNext == permissonPayload.branchId;
+            if (permissonPayload.branchId) {
               // Add Locking setnx redis
               const holdRedis = await RedisService.locking(
                 `hold:scanin:${awb.awbItemId}`,
