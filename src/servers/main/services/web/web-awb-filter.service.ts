@@ -1,6 +1,8 @@
 // #region import
 import { HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createQueryBuilder } from 'typeorm';
+import { sumBy } from 'lodash';
 import moment = require('moment');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -10,7 +12,6 @@ import { Branch } from '../../../../shared/orm-entity/branch';
 import { PodFilter } from '../../../../shared/orm-entity/pod-filter';
 import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
 import { User } from '../../../../shared/orm-entity/user';
-import { DistrictRepository } from '../../../../shared/orm-repository/district.repository';
 import { PodFilterDetailItemRepository } from '../../../../shared/orm-repository/pod-filter-detail-item.repository';
 import { PodFilterDetailRepository } from '../../../../shared/orm-repository/pod-filter-detail.repository';
 import { PodFilterRepository } from '../../../../shared/orm-repository/pod-filter.repository';
@@ -40,12 +41,9 @@ import {
   WebAwbFilterScanBagVm,
 } from '../../models/web-awb-filter.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { createQueryBuilder } from 'typeorm';
 // #endregion
 export class WebAwbFilterService {
   constructor(
-    @InjectRepository(DistrictRepository)
-    private readonly districtRepository: DistrictRepository,
     @InjectRepository(PodFilterRepository)
     private readonly podFilterRepository: PodFilterRepository,
     @InjectRepository(RepresentativeRepository)
@@ -103,8 +101,7 @@ export class WebAwbFilterService {
       for (const res of podFilterDetail) {
         // retrieve all awb inside bag, then grouping each destination by district (to_id)
         const data: DistrictVm[] = await this.getDataGroupByDestination(
-          podFilter.podFilterId,
-          res.bagItemId,
+          res.podFilterDetailId,
         );
 
         const awbFilterScanBag = new WebAwbFilterScanBagResponseVm();
@@ -113,6 +110,11 @@ export class WebAwbFilterService {
           res.bagItem.bagSeq.toString().padStart(3, '0');
         awbFilterScanBag.isActive = res.isActive;
         awbFilterScanBag.totalData = data.length;
+        awbFilterScanBag.totalAwb = sumBy(data, x => Number(x.totalAwb));
+        awbFilterScanBag.totalFiltered = sumBy(data, x =>
+          Number(x.totalFiltered),
+        );
+        awbFilterScanBag.totalProblem = sumBy(data, x => Number(x.totalProblem));
         awbFilterScanBag.podFilterCode = podFilter.podFilterCode;
         awbFilterScanBag.podFilterDetailId = res.podFilterDetailId;
         awbFilterScanBag.podFilterId = podFilter.podFilterId;
@@ -123,6 +125,7 @@ export class WebAwbFilterService {
         responseData.push(awbFilterScanBag);
       }
 
+      // TODO: need refactoring data trouble
       const raw_query = `
         SELECT pfi.is_troubled, aa.awb_number, awb.to_id, aa.bag_item_id_last,
           bi.bag_seq, bag.bag_number
@@ -261,7 +264,9 @@ export class WebAwbFilterService {
     );
 
     // retrieve all awb inside bag, then grouping each destination by district (to_id)
-    const data = await this.getDataGroupByDestination(podFilter.podFilterId, bagData.bagItemId);
+    const data = await this.getDataGroupByDestination(
+      podFilterDetail.podFilterDetailId,
+    );
 
     // get representative code, to inform frontend current active representative
     const representative = await this.representativeRepository.findOne({
@@ -365,8 +370,8 @@ export class WebAwbFilterService {
             }
             // bag number
             bagNumberSeq =
-            `${podFilterDetail.bagItem.bag.bagNumber}` +
-            `${podFilterDetail.bagItem.bagSeq.toString().padStart(3, '0')}`;
+              `${podFilterDetail.bagItem.bag.bagNumber}` +
+              `${podFilterDetail.bagItem.bagSeq.toString().padStart(3, '0')}`;
 
             // Update total_awb_filtered, total_awb_item, total_awb_not_in_bag
             const keyRedis = `hold:awbfiltered:${
@@ -702,52 +707,82 @@ export class WebAwbFilterService {
   }
 
   private async getDataGroupByDestination(
-    podFilterId: number,
-    bagItemId: number,
+    podFilterDetailId: number,
   ) {
     const qb = createQueryBuilder();
     qb.addSelect('district.district_id', 'districtId');
     qb.addSelect('district.district_code', 'districtCode');
     qb.addSelect('district.district_name', 'districtName');
     qb.addSelect('packages.total_awb', 'totalAwb');
+    qb.addSelect('packages.total', 'totalScan');
     qb.addSelect('packages.filtered', 'totalFiltered');
+    qb.addSelect('packages.problem', 'totalProblem');
     qb.from(subQueryBuilder => {
       subQueryBuilder
-        .addSelect('awb.to_id', 'to_id')
-        .addSelect('COUNT(1)', 'total_awb')
-        .addSelect(
-          'COUNT(1) FILTER (WHERE is_district_filtered = true)',
-          'filtered',
-        )
-        .from('pod_filter_detail', 'pfd')
-        .innerJoin(
-          'bag_item_awb',
-          'bia',
-          'pfd.bag_item_id = bia.bag_item_id AND pfd.is_deleted = false',
-        )
-        .innerJoin(
-          'awb_item',
-          'ai',
-          'ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = false',
-        )
-        .innerJoin(
-          'awb_item_attr',
-          'aia',
-          'aia.awb_item_id = ai.awb_item_id AND ai.is_deleted = false',
-        )
-        .innerJoin(
-          'awb',
-          'awb',
-          'awb.awb_id = ai.awb_id AND awb.is_deleted = false',
-        )
-        .where('pfd.pod_filter_id = :podFilterId', {
-          podFilterId,
-        })
-        .andWhere('bia.bag_item_id = :bagItemId', {
-          bagItemId,
-        })
-        .andWhere('awb.to_type = 40 AND bia.is_deleted = false')
-        .groupBy('awb.to_id');
+        .addSelect('p1.*')
+        .addSelect('COALESCE(p2.total, 0)', 'total')
+        .addSelect('COALESCE(p2.filtered, 0)', 'filtered')
+        .addSelect('COALESCE(p2.problem, 0)', 'problem')
+        .from(subQueryBuilder2 => {
+          subQueryBuilder2
+            .addSelect('awb.to_id', 'to_id')
+            .addSelect('COUNT(1)', 'total_awb')
+            .from('pod_filter_detail', 'pfd')
+            .innerJoin(
+              'bag_item_awb',
+              'bia',
+              'pfd.bag_item_id = bia.bag_item_id AND pfd.is_deleted = false AND bia.is_deleted = false',
+            )
+            .innerJoin(
+              'awb_item',
+              'ai',
+              'ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = false',
+            )
+            .innerJoin(
+              'awb_item_attr',
+              'aia',
+              'aia.awb_item_id = ai.awb_item_id AND ai.is_deleted = false',
+            )
+            .innerJoin(
+              'awb',
+              'awb',
+              'awb.awb_id = ai.awb_id AND awb.is_deleted = false AND awb.to_type = 40',
+            )
+            .where('pfd.pod_filter_detail_id = :podFilterDetailId', {
+              podFilterDetailId,
+            })
+            .groupBy('awb.to_id');
+          return subQueryBuilder2;
+        }, 'p1')
+        .leftJoin(
+          sub => {
+            sub
+              .addSelect('pfdi.to_id', 'to_id')
+              .addSelect('COUNT(1)', 'total')
+              .addSelect(
+                'COUNT(1) FILTER (WHERE is_troubled = false)',
+                'filtered',
+              )
+              .addSelect(
+                'COUNT(1) FILTER (WHERE is_troubled = true)',
+                'problem',
+              )
+              .from('pod_filter_detail', 'pfd')
+              .innerJoin(
+                'pod_filter_detail_item',
+                'pfdi',
+                'pfd.pod_filter_detail_id = pfdi.pod_filter_detail_id',
+              )
+              .where('pfd.pod_filter_detail_id = :podFilterDetailId', {
+                podFilterDetailId,
+              })
+              .groupBy('pfdi.to_id');
+            return sub;
+          },
+          'p2',
+          'p1.to_id = p2.to_id',
+        );
+
       return subQueryBuilder;
     }, 'packages').leftJoin(
       'district',
