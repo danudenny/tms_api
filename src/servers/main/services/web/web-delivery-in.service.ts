@@ -686,10 +686,10 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.awbItems.awbItemAttr.awbStatus, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awbItems.awbItemAttr.bagItemLast, 't6', j =>
+    q.leftJoin(e => e.awbItems.awbItemAttr.bagItemLast, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awbItems.awbItemAttr.bagItemLast.bag, 't7', j =>
+    q.leftJoin(e => e.awbItems.awbItemAttr.bagItemLast.bag, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't8', j =>
@@ -698,7 +698,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.branchLast, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.packageType, 't10', j =>
+    q.innerJoin(e => e.packageType, 't10', j =>
       j.andWhere(e => e.is_deleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.customerAccount, 't11', j =>
