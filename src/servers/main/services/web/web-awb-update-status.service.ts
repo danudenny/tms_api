@@ -109,7 +109,7 @@ export class WebAwbUpdateStatusService {
     const result = new AwbUpdateDestinationResponseVm();
     result.status = status;
     result.message = message;
-    return null;
+    return result;
   }
 
   private static async updateAwbStatus(
