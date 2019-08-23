@@ -48,3 +48,44 @@ export class AwbUpdateStatusResponseVm {
   @ApiModelProperty({ type: [ScanInputNumberVm] })
   data: ScanInputNumberVm[];
 }
+
+export class AwbUpdateDestinationPayloadVm {
+  @ApiModelProperty({
+    example: '11203922',
+    skipValidation: true,
+  })
+  @IsDefined({message: 'No harus diisi'})
+  awbNumber: string;
+
+  @ApiModelProperty({
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'harus diisi' })
+  awbItemId: number;
+
+  @ApiModelProperty({
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'harus diisi' })
+  podFilterDetailItemId: number;
+
+  @ApiModelProperty({
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'harus diisi' })
+  districtCode: string;
+
+  @ApiModelProperty({
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'harus diisi' })
+  representativeId: number;
+}
+
+export class AwbUpdateDestinationResponseVm {
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+}

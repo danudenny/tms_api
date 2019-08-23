@@ -37,7 +37,7 @@ export class AwbProblemFilterVm {
   awbItemId: number;
 
   @ApiModelProperty()
-  podFilterDetailId: number;
+  podFilterDetailItemId: number;
 
   @ApiModelProperty()
   districtId: number;
@@ -106,6 +106,9 @@ export class WebAwbFilterScanBagResponseVm {
 
   @ApiModelProperty()
   representativeCode: string;
+
+  @ApiModelProperty()
+  representativeId: number;
 
   @ApiModelProperty()
   podFilterId: number;
