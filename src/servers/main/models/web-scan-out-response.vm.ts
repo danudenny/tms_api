@@ -76,6 +76,9 @@ export class WebScanInDeliverResponseVm {
   totalAwb: number;
 
   @ApiModelProperty()
+  isCod: boolean;
+
+  @ApiModelProperty()
   totalCodValue: number;
 
   @ApiModelProperty()
