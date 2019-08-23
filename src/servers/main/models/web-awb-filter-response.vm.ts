@@ -26,6 +26,23 @@ export class ScanAwbVm {
   message: string;
 }
 
+export class AwbProblemFilterVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  podFilterDetailId: number;
+
+  @ApiModelProperty()
+  districtId: number;
+
+  @ApiModelProperty()
+  message: string;
+}
+
 export class WebAwbFilterScanAwbResponseVm {
 
   @ApiModelProperty()

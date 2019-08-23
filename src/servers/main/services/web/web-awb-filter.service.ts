@@ -34,6 +34,7 @@ import {
   WebAwbFilterGetLatestResponseVm,
   WebAwbFilterScanAwbResponseVm,
   WebAwbFilterScanBagResponseVm,
+  AwbProblemFilterVm,
 } from '../../models/web-awb-filter-response.vm';
 import {
   WebAwbFilterFinishScanVm,
@@ -670,6 +671,8 @@ export class WebAwbFilterService {
   private async getDataGroupByDestination(
     podFilterDetailId: number,
   ) {
+    // TODO: need join query full outer join for combine data
+    // refactoring get data !!
     const qb = createQueryBuilder();
     qb.addSelect('district.district_id', 'districtId');
     qb.addSelect('district.district_code', 'districtCode');
@@ -820,9 +823,11 @@ export class WebAwbFilterService {
     return podFilterDetail;
   }
 
-  private async getDataProblem(podFilterId: number): Promise<ScanAwbVm[]> {
+  private async getDataProblem(podFilterId: number): Promise<AwbProblemFilterVm[]> {
     const qb = createQueryBuilder();
     qb.addSelect('aia.awb_number', 'awbNumber');
+    qb.addSelect('pfi.pod_filter_detail_id', 'podFilterDetailId');
+    qb.addSelect('pfi.awb_item_id', 'awbItemId');
 
     qb.from('pod_filter_detail', 'pfd');
     qb.innerJoin(
@@ -843,12 +848,10 @@ export class WebAwbFilterService {
       },
     );
     const result = await qb.getRawMany();
-    const response: ScanAwbVm[] = [];
+    const response: AwbProblemFilterVm[] = [];
     if (result) {
       for (const item of result) {
         const data = {
-          status: 'success',
-          trouble: true,
           districtId: null,
           message: `Resi ${item.awbNumber} tidak memiliki tujuan, harap di lengkapi`,
         };
