@@ -160,16 +160,22 @@ export class WebAwbListPodResponseVm {
   awbNumber: string;
 
   @ApiModelProperty()
-  awbStatusIdLast: number;
-
-  @ApiModelProperty()
   fromId: number;
 
   @ApiModelProperty()
   toId: number;
 
   @ApiModelProperty()
-  awbStatusTitle: string;
+  consigneeName: string;
+
+  @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
+  awbStatusIdLast: number;
+
+  @ApiModelProperty()
+  historyDateLast: string;
 
   @ApiModelProperty()
   districtNameFrom: string;
@@ -178,7 +184,25 @@ export class WebAwbListPodResponseVm {
   districtNameTo: string;
 
   @ApiModelProperty()
+  awbStatusTitle: string;
+
+  @ApiModelProperty()
   isProblem: boolean;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  branchNameLast: string;
+
+  @ApiModelProperty()
+  packageTypeCode: string;
+
+  @ApiModelProperty()
+  customerAccountName: string;
 }
 
 export class WebAwbFilterGetLatestResponseVm {

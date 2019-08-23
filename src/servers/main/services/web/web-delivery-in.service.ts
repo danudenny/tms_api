@@ -645,15 +645,33 @@ export class WebDeliveryInService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
+      ['t1.awb_id', 'awbId'],
       ['t1.awb_date', 'awbDate'],
       ['t1.awb_number', 'awbNumber'],
-      ['t2.awb_status_id_last', 'awbStatusIdLast'],
       ['t1.from_id', 'fromId'],
-      ['t3.district_name', 'districtNameFrom'],
       ['t1.to_id', 'toId'],
+      ['t1.consignee_name', 'consigneeName'],
+      [`CONCAT(CAST(t1.total_cod_value AS NUMERIC(20,2)))`, 'totalCodValue'],
+      ['t2.awb_status_id_last', 'awbStatusIdLast'],
+      ['t2.history_date_last', 'historyDateLast'],
+      ['t3.district_name', 'districtNameFrom'],
       ['t4.district_name', 'districtNameTo'],
       ['t5.awb_status_title', 'awbStatusTitle'],
       ['t5.is_problem', 'isProblem'],
+      [
+        `CASE LENGTH (CAST(t6.bag_seq AS varchar(10)))
+          WHEN 1 THEN
+            CONCAT (t7.bag_number,'00',t6.bag_seq)
+          WHEN 2 THEN
+            CONCAT (t7.bag_number,'0',t6.bag_seq)
+          ELSE
+            CONCAT (t7.bag_number,t6.bag_seq) END`,
+        'bagNumber',
+      ],
+      ['t8.branch_name', 'branchName'],
+      ['t9.branch_name', 'branchNameLast'],
+      ['t10.package_type_code', 'packageTypeCode'],
+      ['t11.customer_account_name', 'customerAccountName'],
     );
 
     q.innerJoin(e => e.awbItems.awbItemAttr, 't2', j =>
@@ -666,6 +684,24 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.awbItems.awbItemAttr.awbStatus, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbItems.awbItemAttr.bagItemLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbItems.awbItemAttr.bagItemLast.bag, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branchLast, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.packageType, 't10', j =>
+      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.customerAccount, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.fromType, w => w.equals(40));

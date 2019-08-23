@@ -4,6 +4,9 @@ import { AwbItem } from './awb-item';
 import { Branch } from './branch';
 import { District } from './district';
 import { AwbStatus } from './awb-status';
+import { BagItemAwb } from './bag-item-awb';
+import { PackageType } from './package-type';
+import { CustomerAccount } from './customer-account';
 
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
@@ -683,6 +686,14 @@ export class Awb extends BaseEntity {
   @OneToMany(() => AwbItem, e => e.awb, { cascade: ['insert'] })
   awbItems: AwbItem[];
 
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_last' })
+  branchLast: Branch;
+
   @OneToOne(() => District)
   @JoinColumn({ name: 'from_id' })
   district: District;
@@ -694,6 +705,18 @@ export class Awb extends BaseEntity {
   @OneToOne(() => AwbStatus)
   @JoinColumn({ name: 'awb_status_id_last' })
   awbStatus: AwbStatus;
+
+  @OneToOne(() => BagItemAwb)
+  @JoinColumn({ name: 'awb_number', referencedColumnName: 'awbNumber' })
+  bagItemAwb: BagItemAwb;
+
+  @OneToOne(() => PackageType)
+  @JoinColumn({ name: 'package_type_id' })
+  packageType: PackageType;
+
+  @OneToOne(() => CustomerAccount)
+  @JoinColumn({ name: 'customer_account_id' })
+  customerAccount: CustomerAccount;
 
   // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.awb)
