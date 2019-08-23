@@ -42,6 +42,7 @@ import {
   WebAwbFilterScanBagVm,
 } from '../../models/web-awb-filter.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { District } from '../../../../shared/orm-entity/district';
 // #endregion
 export class WebAwbFilterService {
   constructor(
@@ -275,6 +276,7 @@ export class WebAwbFilterService {
     // get all awb_number from payload
     for (const awbNumber of payload.awbNumber) {
       const res = new ScanAwbVm();
+      res.districtName = '';
       // find each awb_number
       const awbItemAttr = await RepositoryService.awbItemAttr
         .findOne()
@@ -327,8 +329,16 @@ export class WebAwbFilterService {
             res.status = 'success';
             res.trouble = true;
             if (!!awbItemAttr.awbItem.awb.toId) {
-              // TODO: add district Code ??
+              // NOTE: get data district
+              const getDistrict = await District.findOne({
+                cache: true,
+                where: {
+                  districtId: awbItemAttr.awbItem.awb.toId,
+                },
+              });
+
               res.districtId = awbItemAttr.awbItem.awb.toId;
+              res.districtName = getDistrict ? getDistrict.districtName : '';
               res.message = `Resi ${awbNumber} berhasil tersortir, tetapi tidak ada pada Gabung Paket`;
             } else {
               res.message = `Resi ${awbNumber} tidak memiliki tujuan, harap di lengkapi`;
@@ -668,6 +678,7 @@ export class WebAwbFilterService {
     return awbTrouble.awbTroubleId;
   }
 
+  // NOTE: need refactoring
   private async getDataGroupByDestination(
     podFilterDetailId: number,
   ) {
@@ -755,6 +766,56 @@ export class WebAwbFilterService {
       'packages.to_id = district.district_id AND district.is_deleted = false',
     );
     return await qb.getRawMany();
+  }
+
+  private async getDataRawDestination(
+    podFilterDetailId: number,
+  ) {
+    const rawQuery = `
+      SELECT district.district_id  AS "districtId",
+            district.district_code AS "districtCode",
+            district.district_name AS "districtName",
+            packages.total_awb     AS "totalAwb",
+            packages.filtered      AS "totalFiltered",
+            packages.trouble       AS "totalTrouble",
+            packages.total         AS "totalScan"
+      FROM (
+            SELECT COALESCE(p1.to_id, p2.to_id) AS to_id,
+                  COALESCE(p1.total_awb, 0)     AS total_awb,
+                  COALESCE(p2.total, 0)         AS total,
+                  COALESCE(p2.filtered, 0)      AS filtered,
+                  COALESCE(p2.trouble, 0)       AS trouble
+            FROM (SELECT awb.to_id AS "to_id", COUNT(1) AS "total_awb"
+                  FROM "public"."pod_filter_detail" "pfd"
+                        INNER JOIN "public"."bag_item_awb" "bia"
+                          ON pfd.bag_item_id = bia.bag_item_id AND bia.is_deleted = false
+                        INNER JOIN "public"."awb_item" "ai"
+                          ON ai.awb_item_id = bia.awb_item_id
+                          AND ai.is_deleted = false
+                        INNER JOIN "public"."awb_item_attr" "aia"
+                          ON aia.awb_item_id = ai.awb_item_id AND ai.is_deleted = false
+                        INNER JOIN "public"."awb" "awb" ON awb.awb_id = ai.awb_id AND awb.is_deleted = false
+                  WHERE pfd.pod_filter_detail_id = ${podFilterDetailId}
+                    AND awb.to_type = 40
+                    AND bia.is_deleted = false
+                  GROUP BY awb.to_id) "p1"
+                  FULL OUTER JOIN (
+                            SELECT pfdi.to_id                                 AS "to_id",
+                                  COUNT(1)                                    AS "total",
+                                  COUNT(1) FILTER (WHERE is_troubled = false) AS "filtered",
+                                  COUNT(1) FILTER (WHERE is_troubled = true)  AS "trouble"
+                            FROM "public"."pod_filter_detail" "pfd"
+                                  INNER JOIN "public"."pod_filter_detail_item" "pfdi"
+                                    ON pfd.pod_filter_detail_id = pfdi.pod_filter_detail_id AND
+                                      pfdi.to_id IS NOT NULL
+                            WHERE pfd.pod_filter_detail_id = ${podFilterDetailId}
+                            GROUP BY pfdi.to_id
+                  ) "p2" ON p1.to_id = p2.to_id
+          ) "packages"
+      LEFT JOIN "public"."district" "district" ON packages.to_id = district.district_id
+        AND district.is_deleted = false;
+    `;
+    return await RawQueryService.query(rawQuery);
   }
 
   private async getPodFilterDetail(
