@@ -104,12 +104,14 @@ export class WebAwbUpdateStatusService {
       } else {
         message = 'Kode Kecamatan tidak ditemukan di perwakilan ini';
       }
+    } else {
+      message = 'Kode Kecamatan tidak ditemukan';
     }
 
     const result = new AwbUpdateDestinationResponseVm();
     result.status = status;
     result.message = message;
-    return null;
+    return result;
   }
 
   private static async updateAwbStatus(
