@@ -124,6 +124,7 @@ export class WebAwbFilterService {
         awbFilterScanBag.podFilterCode = podFilter.podFilterCode;
         awbFilterScanBag.podFilterDetailId = res.podFilterDetailId;
         awbFilterScanBag.podFilterId = podFilter.podFilterId;
+        awbFilterScanBag.representativeId = podFilter.representativeIdFilter;
         awbFilterScanBag.representativeCode =
           podFilter.representative.representativeCode;
         awbFilterScanBag.bagItemId = res.bagItemId;
@@ -257,7 +258,9 @@ export class WebAwbFilterService {
     response.podFilterCode = podFilter.podFilterCode;
     response.podFilterId = podFilterDetail.podFilterId;
     response.podFilterDetailId = podFilterDetail.podFilterDetailId;
+    response.representativeId = podFilter.representativeIdFilter;
     response.representativeCode = representativeCode;
+
     response.data = data;
 
     // remove key holdRedis
@@ -334,6 +337,7 @@ export class WebAwbFilterService {
                 cache: true,
                 where: {
                   districtId: awbItemAttr.awbItem.awb.toId,
+                  isDeleted: false,
                 },
               });
 
@@ -777,7 +781,7 @@ export class WebAwbFilterService {
             district.district_name AS "districtName",
             packages.total_awb     AS "totalAwb",
             packages.filtered      AS "totalFiltered",
-            packages.trouble       AS "totalTrouble",
+            packages.trouble       AS "totalProblem",
             packages.total         AS "totalScan"
       FROM (
             SELECT COALESCE(p1.to_id, p2.to_id) AS to_id,
@@ -887,7 +891,7 @@ export class WebAwbFilterService {
   private async getDataProblem(podFilterId: number): Promise<AwbProblemFilterVm[]> {
     const qb = createQueryBuilder();
     qb.addSelect('aia.awb_number', 'awbNumber');
-    qb.addSelect('pfi.pod_filter_detail_id', 'podFilterDetailId');
+    qb.addSelect('pfi.pod_filter_detail_item_id', 'podFilterDetailItemId');
     qb.addSelect('pfi.awb_item_id', 'awbItemId');
 
     qb.from('pod_filter_detail', 'pfd');

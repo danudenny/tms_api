@@ -1,8 +1,13 @@
-import { AwbUpdateStatusPayloadVm, AwbUpdateStatusResponseVm, ScanInputNumberVm } from '../../models/awb-update-status.vm';
+import { AwbUpdateStatusPayloadVm, AwbUpdateStatusResponseVm, ScanInputNumberVm, AwbUpdateDestinationResponseVm, AwbUpdateDestinationPayloadVm } from '../../models/awb-update-status.vm';
 import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { District } from '../../../../shared/orm-entity/district';
+import { PodFilterDetailItem } from '../../../../shared/orm-entity/pod-filter-detail-item';
+import { AwbItem } from '../../../../shared/orm-entity/awb-item';
+import { Awb } from '../../../../shared/orm-entity/awb';
+import { Branch } from '../../../../shared/orm-entity/branch';
 
 export class WebAwbUpdateStatusService {
 
@@ -37,6 +42,74 @@ export class WebAwbUpdateStatusService {
     result.totalError = totalError;
     result.data = data;
     return result;
+  }
+
+  static async updateDestination(
+    payload: AwbUpdateDestinationPayloadVm,
+  ): Promise<AwbUpdateDestinationResponseVm> {
+    let status = 'error';
+    let message = 'data tidak ditemukan!';
+    // find data district by code
+    const district = await District.findOne({
+      cache: true,
+      where: {
+        districtCode: payload.districtCode,
+        isDeleted: false,
+      },
+    });
+    if (district) {
+      // TODO: validate district include on representative ??
+      const branch = await Branch.findAndCount({
+        where: {
+          representativeId: payload.representativeId,
+          districtId: district.districtId,
+          isDeleted: false,
+        },
+      });
+
+      if (branch) {
+        // find and update data to_id pod filter detail item
+        const podFilterDetailItem = await PodFilterDetailItem.findOne({
+          where: {
+            podFilterDetailItemId: payload.podFilterDetailItemId,
+            isDeleted: false,
+          },
+        });
+
+        if (podFilterDetailItem) {
+          PodFilterDetailItem.update(podFilterDetailItem.podFilterDetailItemId, {
+            toId: district.districtId,
+          });
+          // find awb item by awb item id
+          const awbItem = await AwbItem.findOne({
+            select: ['awbItemId', 'awbId'],
+            where: {
+              awbItemId: payload.awbItemId,
+              isDeleted: false,
+            },
+          });
+          if (awbItem) {
+            // TODO: and update data to_id awb
+            const awb = await Awb.update(awbItem.awbId, {
+              toId: district.districtId,
+            });
+
+            // TODO: awb trouble ??
+            // podFilterDetailItem.awbTroubleId;
+
+            status = 'ok';
+            message = 'success';
+          }
+        }
+      } else {
+        message = 'Kode Kecamatan tidak ditemukan di perwakilan ini';
+      }
+    }
+
+    const result = new AwbUpdateDestinationResponseVm();
+    result.status = status;
+    result.message = message;
+    return null;
   }
 
   private static async updateAwbStatus(
