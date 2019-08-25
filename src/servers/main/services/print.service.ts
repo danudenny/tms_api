@@ -88,7 +88,12 @@ export class PrintService {
       },
     };
 
-    PrinterService.responseForJsReport(res, 'surat-jalan', jsreportParams);
+    PrinterService.responseForJsReport({
+      res,
+      jsreportTemplateName: 'surat-jalan',
+      jsreportTemplateData: jsreportParams,
+      printerName: 'StrukPrinter',
+    });
   }
 
   public static async printDoPodBagByRequest(
@@ -179,11 +184,12 @@ export class PrintService {
       },
     };
 
-    PrinterService.responseForJsReport(
+    PrinterService.responseForJsReport({
       res,
-      'surat-jalan-gabung-paket',
-      jsreportParams,
-    );
+      jsreportTemplateName: 'surat-jalan-gabung-paket',
+      jsreportTemplateData: jsreportParams,
+      printerName: 'StrukPrinter',
+    });
   }
 
   public static async printDoPodDeliverByRequest(
@@ -260,11 +266,12 @@ export class PrintService {
       },
     };
 
-    PrinterService.responseForJsReport(
+    PrinterService.responseForJsReport({
       res,
-      'surat-jalan-antar',
-      jsreportParams,
-    );
+      jsreportTemplateName: 'surat-jalan-antar',
+      jsreportTemplateData: jsreportParams,
+      printerName: 'StrukPrinter',
+    });
   }
 
   public static async printBagItemForStickerByRequest(
@@ -372,7 +379,11 @@ export class PrintService {
       `PRINT 1\n` +
       `EOP`;
 
-    PrinterService.responseForRawCommands(res, rawTsplPrinterCommands);
+    PrinterService.responseForRawCommands({
+      res,
+      rawCommands: rawTsplPrinterCommands,
+      printerName: 'BarcodePrinter',
+    });
   }
 
   public static async printBagItemForPaperByRequest(
@@ -457,10 +468,11 @@ export class PrintService {
       },
     };
 
-    PrinterService.responseForJsReport(
+    PrinterService.responseForJsReport({
       res,
-      'surat-jalan-gabungan-sortir-paper',
-      jsreportParams,
-    );
+      jsreportTemplateName: 'surat-jalan-gabungan-sortir-paper',
+      jsreportTemplateData: jsreportParams,
+      printerName: 'StrukPrinter',
+    });
   }
 }
