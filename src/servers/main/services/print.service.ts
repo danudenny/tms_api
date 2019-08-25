@@ -278,6 +278,7 @@ export class PrintService {
     const bagItem = await q
       .select({
         bagItemId: true,
+        bagId: true,
         bagSeq: true,
         weight: true,
         createdTime: true,
@@ -298,7 +299,7 @@ export class PrintService {
       });
     }
 
-    const { cnt: bagItemsTotal } = await RawQueryService.exec(
+    const [{ cnt: bagItemsTotal }] = await RawQueryService.exec(
       `SELECT COUNT(1) as cnt FROM bag_item WHERE bag_id=:bagId`,
       { bagId: bagItem.bagId },
     );
@@ -344,23 +345,32 @@ export class PrintService {
     };
 
     const weightNumberOnly = `${bagItem.weight}`.replace(/\D/gm, '');
-    const finalWeightRounded2Decimal = parseFloat(`${bagItem.weight}`).toFixed(2);
+    const finalWeightRounded2Decimal = parseFloat(`${bagItem.weight}`).toFixed(
+      2,
+    );
     const finalBagItemSeq = String(bagItem.bagSeq).padStart(3, '0');
-    const finalBagItemBarcodeNumber = `${bagItem.bag.bagNumber}${finalBagItemSeq}${weightNumberOnly}`;
-    const rawTsplPrinterCommands = `SIZE 80 mm, 100 mm` +
-    `SPEED 3` +
-    `DENSITY 8` +
-    `DIRECTION 0` +
-    `OFFSET 0` +
-    `CLS` +
-    `TEXT 30,120,"5",0,1,1,0,"GABUNGAN PAKET"` +
-    `BARCODE 30,200,"128",100,1,0,3,10,"${finalBagItemBarcodeNumber}"` +
-    `TEXT 30,380,"3",0,1,1,"Koli ke : ${finalBagItemSeq}"` +
-    `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${bagItemsTotal}c"` +
-    `TEXT 30,460,"4",0,1,1,0,"${bagItem.bag.representative.representativeCode}"` +
-    `TEXT 30,510,"5",0,1,1,0,"${bagItem.bag.representative.representativeName}"` +
-    `PRINT 1` +
-    `EOP`;
+    const finalBagItemBarcodeNumber = `${
+      bagItem.bag.bagNumber
+    }${finalBagItemSeq}${weightNumberOnly}`;
+    const rawTsplPrinterCommands =
+      `SIZE 80 mm, 100 mm\n` +
+      `SPEED 3\n` +
+      `DENSITY 8\n` +
+      `DIRECTION 0\n` +
+      `OFFSET 0\n` +
+      `CLS\n` +
+      `TEXT 30,120,"5",0,1,1,0,"GABUNGAN PAKET"\n` +
+      `BARCODE 30,200,"128",100,1,0,3,10,"${finalBagItemBarcodeNumber}"\n` +
+      `TEXT 30,380,"3",0,1,1,"Koli ke : ${finalBagItemSeq}"\n` +
+      `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${bagItemsTotal}c"\n` +
+      `TEXT 30,460,"4",0,1,1,0,"${
+        bagItem.bag.representative.representativeCode
+      }"\n` +
+      `TEXT 30,510,"5",0,1,1,0,"${
+        bagItem.bag.representative.representativeName
+      }"\n` +
+      `PRINT 1\n` +
+      `EOP`;
 
     PrinterService.responseForRawCommands(res, rawTsplPrinterCommands);
   }
