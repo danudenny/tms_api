@@ -342,9 +342,7 @@ export class WebDeliveryInService {
                       }
                     }
                   } else {
-                    Logger.log(
-                      '### Data Bag Item Awb :: Not Found!!',
-                    );
+                    Logger.log('### Data Bag Item Awb :: Not Found!!');
                   }
                 }
 
@@ -594,6 +592,150 @@ export class WebDeliveryInService {
     return result;
   }
 
+  async scanInAwbBranch(payload: WebScanInVm): Promise<WebScanInAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new WebScanInAwbResponseVm();
+
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    for (const awbNumber of payload.awbNumber) {
+      const response = {
+        status: 'ok',
+        trouble: false,
+        message: 'Success',
+      };
+
+      const awb = await DeliveryService.validAwbNumber(awbNumber);
+      if (awb) {
+        const statusCode = await DeliveryService.awbStatusGroup(
+          awb.awbStatusIdLast,
+        );
+        switch (statusCode) {
+          case 'IN':
+            if (awb.branchIdLast == permissonPayload.branchId) {
+              // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
+              totalSuccess += 1;
+              response.message = `Resi ${awbNumber} sudah pernah scan ini`;
+            } else {
+              // TODO: construct data Awb Problem
+              // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
+              // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
+              // save data to awb_trouble
+              await AwbTroubleService.fromScanIn(
+                awbNumber,
+                awb.awbStatusIdLast,
+              );
+
+              totalError += 1;
+              response.status = 'error';
+              response.trouble = true;
+              response.message =
+                `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
+                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+            }
+            break;
+
+          case 'POD':
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Resi ${awbNumber} sudah di proses POD`;
+            break;
+
+          case 'OUT':
+            // NOTE: check condition disable on check branchIdNext
+            // awb.branchIdNext == permissonPayload.branchId;
+            if (permissonPayload.branchId) {
+              // Add Locking setnx redis
+              const holdRedis = await RedisService.locking(
+                `hold:scanin:${awb.awbItemId}`,
+                'locking',
+              );
+              if (holdRedis) {
+                // save data to table pod_scan_id
+                // TODO: to be review
+                const podScanIn = PodScanIn.create();
+                // podScanIn.awbId = ??;
+                // podScanIn.doPodId = ??;
+                podScanIn.scanInType = 'awb';
+                podScanIn.employeeId = authMeta.employeeId;
+                podScanIn.awbItemId = awb.awbItemId;
+                podScanIn.branchId = permissonPayload.branchId;
+                podScanIn.userId = authMeta.userId;
+                podScanIn.podScaninDateTime = timeNow;
+                await PodScanIn.save(podScanIn);
+
+                // AFTER Scan IN ===============================================
+                // #region after scanin
+                await DeliveryService.updateAwbAttr(
+                  awb.awbItemId,
+                  null,
+                  AWB_STATUS.IN_BRANCH,
+                );
+
+                // NOTE: queue by Bull
+                DoPodDetailPostMetaQueueService.createJobByScanInAwbBranch(
+                  awb.awbItemId,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                );
+                totalSuccess += 1;
+                // #endregion after scanin
+
+                // remove key holdRedis
+                RedisService.del(`hold:scanin:${awb.awbItemId}`);
+              } else {
+                totalError += 1;
+                response.status = 'error';
+                response.message = 'Server Busy';
+              }
+            } else {
+              // save data to awb_trouble
+              await AwbTroubleService.fromScanIn(
+                awbNumber,
+                awb.awbStatusIdLast,
+              );
+              totalError += 1;
+              response.status = 'error';
+              response.trouble = true;
+              response.message =
+                `Resi ${awbNumber} milik gerai ` +
+                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+            }
+            break;
+
+          default:
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
+            break;
+        }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Resi ${awbNumber} Tidak di Temukan`;
+      }
+
+      // push item
+      dataItem.push({
+        awbNumber,
+        ...response,
+      });
+    } // end of loop
+
+    // Populate return value
+    result.totalData = payload.awbNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
+
+    return result;
+  }
+
   async scanInBranch(
     payload: WebScanInBranchVm,
   ): Promise<WebScanInBranchResponseVm> {
@@ -729,7 +871,7 @@ export class WebDeliveryInService {
       // awb number
       const scanIn = new WebScanInVm();
       scanIn.awbNumber = [inputNumber];
-      const result = await this.scanInAwb(scanIn);
+      const result = await this.scanInAwbBranch(scanIn);
       dataItem.inputNumber = result.data[0].awbNumber;
       dataItem.status = result.data[0].status;
       dataItem.message = result.data[0].message;

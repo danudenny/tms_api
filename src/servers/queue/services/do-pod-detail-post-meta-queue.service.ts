@@ -382,4 +382,22 @@ export class DoPodDetailPostMetaQueueService {
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
+
+  public static async createJobByScanInAwbBranch(
+    awbItemId: number,
+    branchId: number,
+    userId: number,
+  ) {
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId: AWB_STATUS.IN_BRANCH,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver: null,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
 }
