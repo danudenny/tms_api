@@ -103,8 +103,9 @@ export class WebAwbFilterService {
       // TODO: need refactoring data
       for (const res of podFilterDetail) {
         // retrieve all awb inside bag, then grouping each destination by district (to_id)
-        const data: DistrictVm[] = await this.getDataGroupByDestination(
+        const data: DistrictVm[] = await this.getDataRawDestination(
           res.podFilterDetailId,
+          res.bagItemId,
         );
 
         const awbFilterScanBag = new WebAwbFilterScanBagResponseVm();
@@ -246,8 +247,9 @@ export class WebAwbFilterService {
     );
 
     // retrieve all awb inside bag, then grouping each destination by district (to_id)
-    const data = await this.getDataGroupByDestination(
+    const data = await this.getDataRawDestination(
       podFilterDetail.podFilterDetailId,
+      podFilterDetail.bagItemId,
     );
 
     const response = new WebAwbFilterScanBagResponseVm();
@@ -774,6 +776,7 @@ export class WebAwbFilterService {
 
   private async getDataRawDestination(
     podFilterDetailId: number,
+    bagItemId: number,
   ) {
     const rawQuery = `
       SELECT district.district_id  AS "districtId",
@@ -790,18 +793,13 @@ export class WebAwbFilterService {
                   COALESCE(p2.filtered, 0)      AS filtered,
                   COALESCE(p2.trouble, 0)       AS trouble
             FROM (SELECT awb.to_id AS "to_id", COUNT(1) AS "total_awb"
-                  FROM "public"."pod_filter_detail" "pfd"
-                        INNER JOIN "public"."bag_item_awb" "bia"
-                          ON pfd.bag_item_id = bia.bag_item_id AND bia.is_deleted = false
+                  FROM "public"."bag_item_awb" "bia"
                         INNER JOIN "public"."awb_item" "ai"
                           ON ai.awb_item_id = bia.awb_item_id
                           AND ai.is_deleted = false
-                        INNER JOIN "public"."awb_item_attr" "aia"
-                          ON aia.awb_item_id = ai.awb_item_id AND ai.is_deleted = false
                         INNER JOIN "public"."awb" "awb" ON awb.awb_id = ai.awb_id AND awb.is_deleted = false
-                  WHERE pfd.pod_filter_detail_id = ${podFilterDetailId}
-                    AND awb.to_type = 40
-                    AND bia.is_deleted = false
+                          AND awb.to_type = 40
+                  WHERE bia.bag_item_id = ${bagItemId} AND bia.is_deleted = false
                   GROUP BY awb.to_id) "p1"
                   FULL OUTER JOIN (
                             SELECT pfdi.to_id                                 AS "to_id",
