@@ -6,3 +6,26 @@ export class EmployeeFindAllResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [EmployeeVm] })
   data: EmployeeVm[];
 }
+
+export class EmployeeResponseVm {
+  @ApiModelProperty()
+  employeeId: number;
+
+  @ApiModelProperty()
+  nik: string;
+
+  @ApiModelProperty()
+  employeeName: string;
+
+  @ApiModelProperty()
+  homeAddress: string;
+
+  @ApiModelProperty()
+  idCardAddress: string;
+
+  @ApiModelProperty()
+  mobilePhone: string;
+
+  @ApiModelProperty()
+  attachmentUrl: string;
+}
