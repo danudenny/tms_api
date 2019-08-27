@@ -17,6 +17,7 @@ import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 
 @Injectable()
 export class GabunganService {
@@ -249,16 +250,27 @@ export class GabunganService {
     // open package combine
     const getNumberValue = value.replace('*BUKA ', '').trim();
     const bagNumber: string = getNumberValue.substring(0, 7);
-    const bagSequence: number = Number(getNumberValue.substring(7, 10));
+    const regexNumber = /^[0-9]+$/;
+    let bagSequence = getNumberValue.substring(7, 10);
 
+    if (getNumberValue.length !== 10 || !regexNumber.test(bagSequence)) {
+      RequestErrorService.throwObj(
+        {
+          message: 'No gabungan sortir tidak sesuai',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    bagSequence = Number(bagSequence);
     const bagParams = { bagNumber, bagSequence };
     const resultData = await this.querySearch(bagParams);
-    if (!resultData) {
+    if (!resultData.length) {
        RequestErrorService.throwObj(
         {
-          message: 'No gabung paket tidak ditemukan',
+          message: 'No gabung sortir tidak ditemukan',
         },
-        HttpStatus.NOT_FOUND,
+        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -276,13 +288,14 @@ export class GabunganService {
     const value = payload.value;
     const result = new Object();
     const authMeta = AuthService.getAuthData();
+
     if (payload.bagNumber) {
       const bagNumber: string = payload.bagNumber.substring(0, 7);
       const bagSequence: number = Number(payload.bagNumber.substring(7, 10));
       const bagParams = { bagNumber, bagSequence };
       const detailData = await this.querySearch(bagParams);
       if (detailData && detailData.length === Number(value)) {
-          assign(result, { bagItemId: detailData[0].bagItemId });
+          assign(result, { bagItemId: detailData[0].bagItemId, bagNumber: payload.bagNumber });
           // result.bagItemId = detailData[0].bagItemId;
       } else {
         RequestErrorService.throwObj(
@@ -313,6 +326,7 @@ export class GabunganService {
       if (filterDetailItem && filterDetailItem.length === Number(value)) {
         const qb = createQueryBuilder();
         qb.addSelect('a.bag_id', 'bagId');
+        qb.addSelect('a.bag_number', 'bagNumber');
         qb.addSelect('a.district_id_to', 'districtIdTo');
         qb.addSelect('MAX(b.bag_seq)', 'lastSequence');
         qb.from('bag', 'a');
@@ -325,11 +339,12 @@ export class GabunganService {
         const bagData = await qb.getRawOne();
         let bagId;
         let sequence;
+        let randomBagNumber;
         const permissonPayload = AuthService.getPermissionTokenPayload();
 
         if (!bagData) {
           // generate bag number
-          const randomBagNumber = 'GS' + sampleSize('012345678900123456789001234567890', 5).join('');
+          randomBagNumber = 'GS' + sampleSize('012345678900123456789001234567890', 5).join('');
           const bagDetail = Bag.create({
             bagNumber    : randomBagNumber,
             bagType      : 'district',
@@ -350,6 +365,7 @@ export class GabunganService {
         } else {
           bagId    = bagData.bagId;
           sequence = bagData.lastSequence + 1;
+          randomBagNumber = bagData.bagNumber;
         }
 
         // get all detail awb and insert into bag_item_Awb
@@ -396,7 +412,17 @@ export class GabunganService {
           const podFilterDetailItem            = await PodFilterDetailItem.findOne({ where: { awbItemId: awb.awbItemId, isDeleted: false } });
           podFilterDetailItem.bagItemId        = bagItem.bagItemId;
           podFilterDetailItem.isPackageCombine = true;
+          podFilterDetailItem.updatedTime      = moment().toDate();
+          podFilterDetailItem.userIdUpdated    = authMeta.userId;
+
           await PodFilterDetailItem.save(podFilterDetailItem);
+
+          // TODO: UPDATE awb_item_attr
+          const awbItemAttr            = await AwbItemAttr.findOne({ where: { awbItemId: awb.awbItemId, isDeleted: false } });
+          awbItemAttr.bagItemIdLast    = bagItem.bagItemId;
+          awbItemAttr.updatedTime      = moment().toDate();
+          await AwbItemAttr.save(awbItemAttr);
+
         }
 
         const updateBagItem = await BagItem.findOne({ where: { bagItemId: bagItem.bagItemId } });
@@ -404,7 +430,7 @@ export class GabunganService {
         updateBagItem.weight = totalWeight;
         await BagItem.save(updateBagItem);
 
-        assign(result,  { bagItemId: bagItem.bagItemId });
+        assign(result,  { bagItemId: bagItem.bagItemId, bagNumber: `${randomBagNumber}` + `${sequence.toString().padStart(3, '0')}` });
 
       } else {
         RequestErrorService.throwObj(
@@ -439,7 +465,7 @@ export class GabunganService {
       if (!resultData) {
          RequestErrorService.throwObj(
           {
-            message: 'No resi tidak ditemukan',
+            message: 'No resi tidak ditemukan / sudah di gabung sortir',
           },
           HttpStatus.BAD_REQUEST,
         );
@@ -494,7 +520,7 @@ export class GabunganService {
       if (!resultData) {
          RequestErrorService.throwObj(
           {
-            message: 'No resi tidak ditemukan',
+            message: 'No resi tidak ditemukan / sudah di gabung sortir',
           },
           HttpStatus.BAD_REQUEST,
         );
