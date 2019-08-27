@@ -992,7 +992,7 @@ export class WebDeliveryOutService {
       ['t1.total_delivery', 'totalDelivery'],
       ['t1.total_problem', 'totalProblem'],
       ['COUNT (t3.*)', 'totalAwb'],
-      ['t2.nickname', 'nickname'],
+      ['t2.fullname', 'nickname'],
       ['t4.is_cod', 'isCod'],
       [
         `CONCAT(CAST(SUM(t4.total_cod_value) AS NUMERIC(20,2)))`,
@@ -1009,9 +1009,10 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.doPodDeliverDetails.awbItem.awb, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.andWhere(e => e.doPodDeliverDetails.awbStatusIdLast, w => w.equals(14000));
-    q.orWhere(e => e.doPodDeliverDetails.awbStatusIdLast, w => w.equals(21500));
-    q.groupByRaw('t1.do_pod_deliver_id, t2.nickname, t4.is_cod');
+    q.andWhereIsolated(qw => {
+      qw.where(e => e.doPodDeliverDetails.awbStatusIdLast, w => w.equals(14000).or.equals(21500));
+    });
+    q.groupByRaw('t1.do_pod_deliver_id, t2.fullname, t4.is_cod');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
