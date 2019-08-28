@@ -991,7 +991,7 @@ export class WebDeliveryOutService {
       ['t1.description', 'description'],
       ['t1.total_delivery', 'totalDelivery'],
       ['t1.total_problem', 'totalProblem'],
-      ['COUNT (t3.*)', 'totalAwb'],
+      ['COUNT (t3.*) FILTER (WHERE t5.awb_status_id_last = 14000 OR t5.awb_status_id_last = 21500)', 'totalAwb'],
       ['t2.fullname', 'nickname'],
       ['t4.is_cod', 'isCod'],
       [
@@ -1001,6 +1001,9 @@ export class WebDeliveryOutService {
     );
 
     q.innerJoin(e => e.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodDeliverDetails, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.doPodDeliverDetails.awbItem, 't3', j =>
