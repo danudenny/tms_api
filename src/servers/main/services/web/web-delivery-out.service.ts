@@ -1012,9 +1012,9 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.doPodDeliverDetails.awbItem.awb, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.andWhereIsolated(qw => {
-      qw.where(e => e.doPodDeliverDetails.awbStatusIdLast, w => w.equals(14000).or.equals(21500));
-    });
+    // q.andWhereIsolated(qw => {
+    //   qw.where(e => e.doPodDeliverDetails.awbStatusIdLast, w => w.equals(14000).or.equals(21500));
+    // });
     q.groupByRaw('t1.do_pod_deliver_id, t2.fullname, t4.is_cod');
 
     const data = await q.exec();
