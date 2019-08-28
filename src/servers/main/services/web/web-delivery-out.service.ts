@@ -991,7 +991,7 @@ export class WebDeliveryOutService {
       ['t1.description', 'description'],
       ['t1.total_delivery', 'totalDelivery'],
       ['t1.total_problem', 'totalProblem'],
-      ['COUNT (t3.*) FILTER (WHERE t5.awb_status_id_last = 14000 OR t5.awb_status_id_last = 21500)', 'totalAwb'],
+      ['COUNT (t3.*) FILTER (WHERE t5.awb_status_id_last = 14000)', 'totalAwb'],
       ['t2.fullname', 'nickname'],
       ['t4.is_cod', 'isCod'],
       [
