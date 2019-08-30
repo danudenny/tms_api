@@ -1,38 +1,28 @@
-import { HttpStatus } from '@nestjs/common';
 import moment = require('moment');
-import { createQueryBuilder } from 'typeorm';
+import { createQueryBuilder, IsNull } from 'typeorm';
 
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { Reason } from '../../../../shared/orm-entity/reason';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { MobileInitDataResponseVm } from '../../models/mobile-init-data-response.vm';
+import { EmployeeJourney } from '../../../../shared/orm-entity/employee-journey';
+import { MobileCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
 
 export class MobileInitDataService {
   public static async getInitDataByRequest(
     fromDate?: string,
   ): Promise<MobileInitDataResponseVm> {
-    const authMeta = AuthService.getAuthMetadata();
+    const authMeta = AuthService.getAuthData();
+    const result = new MobileInitDataResponseVm();
 
-    if (authMeta) {
-      // TODO: query reason, awbStatus, and delivery based on fromDate (updated_time)
-      const result = new MobileInitDataResponseVm();
+    result.reason = await this.getReason(fromDate);
+    result.awbStatus = await this.getAwbStatus(fromDate);
+    result.delivery = await this.getDelivery(fromDate);
+    result.serverDateTime = new Date().toISOString();
+    result.checkIn = await this.getStatusCheckIn(authMeta.employeeId);
 
-      result.reason = await this.getReason(fromDate);
-      result.awbStatus = await this.getAwbStatus(fromDate);
-      result.delivery = await this.getDelivery(fromDate);
-      result.serverDateTime = new Date().toISOString();
-
-      return result;
-    } else {
-      RequestErrorService.throwObj(
-        {
-          message: 'global.error.USER_NOT_FOUND',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    return result;
   }
 
   private static async getReason(fromDate?: string) {
@@ -255,5 +245,39 @@ export class MobileInitDataService {
       );
     }
     return await qb.getRawMany();
+  }
+
+  private static async getStatusCheckIn(
+    employeeId: number,
+  ): Promise<MobileCheckInResponseVm> {
+    const result: MobileCheckInResponseVm = {
+      status: 'ok',
+      message: 'success',
+      branchName: '',
+      checkInDate: '',
+      attachmentId: null,
+      isCheckIn: false,
+    };
+
+    const employeeJourneyCheck = await EmployeeJourney.findOne(
+      {
+        where: {
+          employeeId,
+          checkOutDate: IsNull(),
+        },
+        order: {
+          checkInDate: 'DESC',
+        },
+      },
+    );
+    if (employeeJourneyCheck) {
+      result.status = 'error';
+      result.isCheckIn = true;
+      result.message =
+        'Check In sedang aktif, Harap CheckOut terlebih dahulu';
+      result.checkInDate = moment(employeeJourneyCheck.checkInDate)
+        .format('YYYY-MM-DD HH:mm:ss');
+    }
+    return result;
   }
 }

@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 
 export class MobileCheckInResponseVm {
 
@@ -16,4 +16,8 @@ export class MobileCheckInResponseVm {
 
   @ApiModelProperty()
   attachmentId: number;
+
+  @ApiModelPropertyOptional()
+  isCheckIn?: boolean;
+
 }
