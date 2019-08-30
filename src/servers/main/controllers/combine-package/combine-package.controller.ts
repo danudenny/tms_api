@@ -4,23 +4,23 @@ import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/ext
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { GabunganPayloadVm, PackagePayloadVm } from '../../models/gabungan-payload.vm';
 import { GabunganFindAllResponseVm, PackageAwbResponseVm } from '../../models/gabungan.response.vm';
-import { GabunganService } from '../../services/combine-package/gabungan.services';
+import { PackageService } from '../../services/combine-package/package.services';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('Resi Bag')
 @Controller('combine')
-export class GabunganController {
-  constructor(private readonly gabunganService: GabunganService) {}
+export class CombinePackageController {
+  constructor(private readonly packageService: PackageService) {}
 
-  @Post('bag')
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: GabunganFindAllResponseVm })
-  public async gabunganAwb(@Body() payload: GabunganPayloadVm) {
-
-    return this.gabunganService.gabunganAwb(payload);
-  }
+  // NOTE: not used
+  // @Post('bag')
+  // @HttpCode(200)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
+  // @ApiOkResponse({ type: GabunganFindAllResponseVm })
+  // public async gabunganAwb(@Body() payload: GabunganPayloadVm) {
+  //   return this.packageService.gabunganAwb(payload);
+  // }
 
   @Post('packages')
   @HttpCode(200)
@@ -28,8 +28,6 @@ export class GabunganController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: PackageAwbResponseVm })
   public async packageAwb(@Body() payload: PackagePayloadVm) {
-
-    return this.gabunganService.awbPackage(payload);
+    return this.packageService.awbPackage(payload);
   }
-
 }

@@ -1,17 +1,16 @@
-import { HttpStatus, Injectable, Query, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { sampleSize, find, assign } from 'lodash';
+import { sampleSize, assign } from 'lodash';
 import moment = require('moment');
 import { GabunganFindAllResponseVm, PackageAwbResponseVm } from '../../models/gabungan.response.vm';
 import { GabunganPayloadVm, PackagePayloadVm } from '../../models/gabungan-payload.vm';
-import { AwbRepository } from '../../../../shared/orm-repository/awb.repository';
 import { BagRepository } from '../../../../shared/orm-repository/bag.repository';
 import { BagItemRepository } from '../../../../shared/orm-repository/bagItem.repository';
 import { BagItemAwbRepository } from '../../../../shared/orm-repository/bagItemAwb.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
 import { District } from '../../../../shared/orm-entity/district';
-import { createQueryBuilder, MoreThan, In } from 'typeorm';
+import { createQueryBuilder, In } from 'typeorm';
 import { PodFilterDetailItem } from '../../../../shared/orm-entity/pod-filter-detail-item';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
@@ -20,17 +19,14 @@ import { RequestErrorService } from '../../../../shared/services/request-error.s
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 
 @Injectable()
-export class GabunganService {
+export class PackageService {
   constructor(
-    private readonly authService: AuthService,
     @InjectRepository(BagRepository)
     private readonly bagRepository: BagRepository,
     @InjectRepository(BagItemRepository)
     private readonly bagItemRepository: BagItemRepository,
     @InjectRepository(BagItemAwbRepository)
     private readonly bagItemAwbRepository: BagItemAwbRepository,
-    @InjectRepository(AwbRepository)
-    private readonly awbRepository: AwbRepository,
     ) {}
   async gabunganAwb(payload: GabunganPayloadVm): Promise<GabunganFindAllResponseVm> {
     // const authMeta = AuthService.getAuthMetadata();
@@ -138,7 +134,7 @@ export class GabunganService {
     } else if (regexNumber.test(value) && valueLength < 12) {
       // if district id not found
       if (!payload.districtId) {
-         RequestErrorService.throwObj(
+          RequestErrorService.throwObj(
           {
             message: 'Masukan kode kecamatan terlebih dahulu',
           },
@@ -147,7 +143,7 @@ export class GabunganService {
       }
 
       if (Number(value) < 1) {
-         RequestErrorService.throwObj(
+          RequestErrorService.throwObj(
           {
             message: 'Tidak ada data',
           },
@@ -161,7 +157,7 @@ export class GabunganService {
     } else if (regexNumber.test(value) && valueLength === 12) {
       //  scan resi
       if (!payload.districtId && !payload.bagNumber) {
-         RequestErrorService.throwObj(
+          RequestErrorService.throwObj(
           {
             message: 'Masukan kode kecamatan terlebih dahulu',
           },
@@ -266,7 +262,7 @@ export class GabunganService {
     const bagParams = { bagNumber, bagSequence };
     const resultData = await this.querySearch(bagParams);
     if (!resultData.length) {
-       RequestErrorService.throwObj(
+        RequestErrorService.throwObj(
         {
           message: 'No gabung sortir tidak ditemukan',
         },
@@ -463,7 +459,7 @@ export class GabunganService {
       const resultData = await this.querySearchPodFilter(params);
 
       if (!resultData) {
-         RequestErrorService.throwObj(
+          RequestErrorService.throwObj(
           {
             message: 'No resi tidak ditemukan / sudah di gabung sortir',
           },
@@ -518,7 +514,7 @@ export class GabunganService {
       const resultData = await this.querySearchPodFilter(params);
 
       if (!resultData) {
-         RequestErrorService.throwObj(
+          RequestErrorService.throwObj(
           {
             message: 'No resi tidak ditemukan / sudah di gabung sortir',
           },

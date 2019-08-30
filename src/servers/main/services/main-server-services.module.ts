@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { SharedModule } from '../../../shared/shared.module';
-import { GabunganService } from './combine-package/gabungan.services';
+import { PackageService } from './combine-package/package.services';
 import { AwbStatusService } from './master/awb-status.service';
 import { BranchService } from './master/branch.service';
 import { CustomerService } from './master/customer.service';
@@ -24,7 +24,7 @@ import { WebMonitoringService } from './web/web-monitoring.service';
     BranchService,
     CustomerService,
     EmployeeService,
-    GabunganService,
+    PackageService,
     MobileCheckInService,
     MobileCheckOutService,
     WebAwbFilterService,
@@ -42,7 +42,7 @@ import { WebMonitoringService } from './web/web-monitoring.service';
     BranchService,
     CustomerService,
     EmployeeService,
-    GabunganService,
+    PackageService,
     MobileCheckInService,
     MobileCheckOutService,
     WebAwbFilterService,
