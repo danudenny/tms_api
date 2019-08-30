@@ -1,8 +1,8 @@
-import { ApiModelProperty, ApiModelPropertyOptional }  from '@nestjs/swagger';
-import { BaseAuthVm } from './base-auth.vm';
-// import { UserSiCepatVm } from './user-si-cepat.vm';
+import {
+  ApiModelProperty,
+} from '../../../shared/external/nestjs-swagger';
 
-export class UserVm extends BaseAuthVm {
+export class UserVm {
   @ApiModelProperty()
   displayName: string;
 
@@ -17,4 +17,15 @@ export class UserVm extends BaseAuthVm {
 
   // @ApiModelPropertyOptional({ type: () => UserSiCepatVm })
   // userSiCepat: UserSiCepatVm;
+}
+
+export class UserResetPassword {
+  @ApiModelProperty()
+  requestId: string;
+
+  @ApiModelProperty()
+  password: string;
+
+  @ApiModelProperty()
+  passwordConfirmation: string;
 }
