@@ -7,6 +7,7 @@ import { PermissionTokenGuard } from '../../../../shared/guards/permission-token
 import { MobileSyncPayloadVm } from '../../models/mobile-sync-payload.vm';
 import { MobileSyncResponseVm } from '../../models/mobile-sync-response.vm';
 import { MobileSyncService } from '../../services/mobile/mobile-sync.service';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 
 @ApiUseTags('Mobile')
 @Controller('mobile/sync')
@@ -15,6 +16,7 @@ export class MobileSyncController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
   @ApiOkResponse({ type: MobileSyncResponseVm })
   public async sync(@Body() payload: MobileSyncPayloadVm) {
     return MobileSyncService.syncByRequest(payload);
