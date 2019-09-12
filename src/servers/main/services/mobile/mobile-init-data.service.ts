@@ -165,6 +165,10 @@ export class MobileInitDataService {
             'awbStatusId',
           );
           qbJoinFrom.addSelect(
+            'awb_status.awb_status_name',
+            'awbStatusName',
+          );
+          qbJoinFrom.addSelect(
             'do_pod_deliver_history.latitude_delivery',
             'latitudeDelivery',
           );
@@ -177,7 +181,7 @@ export class MobileInitDataService {
             'do_pod_deliver_history.do_pod_deliver_detail_id = do_pod_deliver_detail.do_pod_deliver_detail_id',
           );
           qbJoinFrom.andWhere('do_pod_deliver_history.is_deleted = false');
-          qbJoinFrom.innerJoin(
+          qbJoinFrom.leftJoin(
             qbJoinFromJoin => {
               qbJoinFromJoin.addSelect('reason.reason_id');
               qbJoinFromJoin.addSelect('reason.reason_code');
@@ -188,6 +192,19 @@ export class MobileInitDataService {
               return qbJoinFromJoin;
             },
             'reason',
+            'true',
+          );
+          qbJoinFrom.innerJoin(
+            qbJoinFromJoin => {
+              qbJoinFromJoin.addSelect('awb_status.awb_status_id');
+              qbJoinFromJoin.addSelect('awb_status.awb_status_name');
+              qbJoinFromJoin.from('awb_status', 'awb_status');
+              qbJoinFromJoin.where(
+                'awb_status.awb_status_id = do_pod_deliver_history.awb_status_id',
+              );
+              return qbJoinFromJoin;
+            },
+            'awb_status',
             'true',
           );
           qbJoinFrom.innerJoin(
