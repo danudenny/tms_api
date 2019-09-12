@@ -1,4 +1,5 @@
 import { getManager } from 'typeorm';
+import { MetaService } from './meta.service';
 
 export class RawQueryService {
 
@@ -12,6 +13,28 @@ export class RawQueryService {
 
   public static query(sql: string, parameters?: any[]) {
     return this.manager.query(sql, parameters);
+  }
+  public static async queryWithPaginate(
+    sql: string,
+    page: number = 1,
+    limit: number = 100,
+    countField: string = '1',
+    distinct: boolean = false,
+  ) {
+    const sqlCount = `SELECT COUNT(${
+      distinct ? 'DISTINCT ' : ''
+    }${countField}) AS total FROM (${sql}) as t`;
+
+    const countData = await this.manager.query(sqlCount);
+    const totalData =
+    countData && countData.length ? + countData[0].total : 0;
+
+    const offset = (page - 1) * limit;
+    const data = await this.manager.query(
+      sql + `LIMIT ${limit} OFFSET ${offset}`,
+    );
+    const paging = MetaService.set(page, limit, totalData);
+    return [ data,  paging ];
   }
 
   public static exec(sql: string, parameters: Object = {}) {
