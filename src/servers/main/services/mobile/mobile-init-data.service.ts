@@ -166,6 +166,10 @@ export class MobileInitDataService {
           );
           qbJoinFrom.addSelect(
             'awb_status.awb_status_name',
+            'awbStatusCode',
+          );
+          qbJoinFrom.addSelect(
+            'awb_status.awb_status_title',
             'awbStatusName',
           );
           qbJoinFrom.addSelect(
@@ -198,6 +202,7 @@ export class MobileInitDataService {
             qbJoinFromJoin => {
               qbJoinFromJoin.addSelect('awb_status.awb_status_id');
               qbJoinFromJoin.addSelect('awb_status.awb_status_name');
+              qbJoinFromJoin.addSelect('awb_status.awb_status_title');
               qbJoinFromJoin.from('awb_status', 'awb_status');
               qbJoinFromJoin.where(
                 'awb_status.awb_status_id = do_pod_deliver_history.awb_status_id',
