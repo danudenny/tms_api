@@ -20,13 +20,30 @@ export class WebScanInBranchVm {
     skipValidation: true,
   })
   @IsDefined({ message: 'No harus diisi' })
-  inputNumber: string[];
+  scanValue: string[];
+
+  @ApiModelProperty()
+  bagNumber: string;
+
 }
 
+export class WebScanInValidateBranchVm {
+  @ApiModelProperty()
+  verifyCode: string;
+
+  @ApiModelProperty()
+  notes: string;
+
+  @ApiModelProperty()
+  totalAwbScan: number;
+
+  @ApiModelProperty()
+  totalAwb: number;
+}
 // Response
 export class ScanInputNumberBranchVm {
   @ApiModelProperty()
-  inputNumber: string;
+  awbNumber: string;
 
   @ApiModelProperty()
   status: string;
@@ -34,8 +51,8 @@ export class ScanInputNumberBranchVm {
   @ApiModelProperty()
   trouble: boolean;
 
-  @ApiModelProperty()
-  isBag: boolean;
+  // @ApiModelProperty()
+  // isBag: boolean;
 
   @ApiModelProperty()
   message: string;
@@ -46,13 +63,18 @@ export class WebScanInBranchResponseVm {
   totalData: number;
 
   @ApiModelProperty()
-  totalSuccessAwb: number;
+  bagNumber: string;
+  // @ApiModelProperty()
+  // totalSuccessAwb: number;
+
+  // @ApiModelProperty()
+  // totalSuccessBag: number;
+
+  // @ApiModelProperty()
+  // totalError: number;
 
   @ApiModelProperty()
-  totalSuccessBag: number;
-
-  @ApiModelProperty()
-  totalError: number;
+  isBag: boolean;
 
   @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
   data: ScanInputNumberBranchVm[];

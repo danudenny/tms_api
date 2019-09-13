@@ -739,26 +739,19 @@ export class WebDeliveryInService {
   async scanInBranch(
     payload: WebScanInBranchVm,
   ): Promise<WebScanInBranchResponseVm> {
-    let totalSuccessAwb = 0;
-    let totalSuccessBag = 0;
-    let totalError = 0;
-    const data: ScanInputNumberBranchVm[] = [];
+    let isBag: boolean = false;
+    let data: ScanInputNumberBranchVm[] = [];
 
-    for (const inputNumber of payload.inputNumber) {
-      const dataItem = await this.handleTypeNumber(inputNumber);
-      if (dataItem.status == 'ok') {
-        dataItem.isBag ? (totalSuccessBag += 1) : (totalSuccessAwb += 1);
-      } else {
-        totalError += 1;
-      }
-      data.push(dataItem);
+    for (const inputNumber of payload.scanValue) {
+      const [dataScan, flagBag] = await this.handleTypeNumber(inputNumber);
+      isBag = flagBag;
+      data = dataScan;
     }
 
     const result = new WebScanInBranchResponseVm();
-    result.totalData = payload.inputNumber.length;
-    result.totalSuccessAwb = totalSuccessAwb;
-    result.totalSuccessBag = totalSuccessBag;
-    result.totalError = totalError;
+    result.totalData = payload.scanValue.length;
+    result.isBag = isBag;
+    result.bagNumber = payload.bagNumber;
     result.data = data;
     return result;
   }
@@ -862,9 +855,10 @@ export class WebDeliveryInService {
 
   private async handleTypeNumber(
     inputNumber: string,
-  ): Promise<ScanInputNumberBranchVm> {
-    const dataItem = new ScanInputNumberBranchVm();
+  ): Promise<[ScanInputNumberBranchVm[], boolean]> {
+    const dataScan = [];
     const regexNumber = /^[0-9]+$/;
+    let dataItem = new ScanInputNumberBranchVm();
 
     inputNumber = inputNumber.trim();
     if (inputNumber.length == 12 && regexNumber.test(inputNumber)) {
@@ -872,13 +866,14 @@ export class WebDeliveryInService {
       const scanIn = new WebScanInVm();
       scanIn.awbNumber = [inputNumber];
       const result = await this.scanInAwbBranch(scanIn);
-      dataItem.inputNumber = result.data[0].awbNumber;
+      dataItem.awbNumber = result.data[0].awbNumber;
       dataItem.status = result.data[0].status;
       dataItem.message = result.data[0].message;
       dataItem.trouble = result.data[0].trouble;
-      dataItem.isBag = false;
 
-      return dataItem;
+      dataScan.push(dataItem);
+
+      return [dataScan, false];
     } else if (
       inputNumber.length == 10 &&
       regexNumber.test(inputNumber.substring(7, 10))
@@ -887,20 +882,48 @@ export class WebDeliveryInService {
       const scanIn = new WebScanInBagVm();
       scanIn.bagNumber = [inputNumber];
       const result = await this.scanInBag(scanIn, false);
-      dataItem.inputNumber = result.data[0].bagNumber;
-      dataItem.status = result.data[0].status;
-      dataItem.message = result.data[0].message;
-      dataItem.trouble = result.data[0].trouble;
-      dataItem.isBag = true;
+      // TODO: find awb number
+      console.log('### Result ===================', result);
+      if (result) {
+        const bagData = await DeliveryService.validBagNumber(inputNumber);
+        if (bagData) {
+          const bagItemsAwb = await BagItemAwb.find({
+            where: {
+              bagItemId: bagData.bagItemId,
+              isDeleted: false,
+            },
+          });
+          if (bagItemsAwb && bagItemsAwb.length > 0) {
+            for (const itemAwb of bagItemsAwb) {
+              console.log(' ### AWB NUMBER =======', itemAwb.awbNumber);
+              if (itemAwb.awbItemId) {
+                dataItem = new ScanInputNumberBranchVm();
 
-      return dataItem;
+                dataItem.awbNumber = itemAwb.awbNumber;
+                dataItem.status = 'ok';
+                dataItem.message = '';
+                dataItem.trouble = false;
+
+                dataScan.push(dataItem);
+              }
+            } // end of loop
+          } else {
+            console.log('### Data tidak ditemukan !!');
+          }
+        } else {
+          console.log('### Bag Number tidak ditemukan !!');
+        }
+      } //
+
+      return [dataScan, true];
     } else {
-      dataItem.inputNumber = inputNumber;
+      dataItem.awbNumber = inputNumber;
       dataItem.status = 'error';
       dataItem.message = 'Nomor tidak valid';
       dataItem.trouble = true;
-      dataItem.isBag = false;
-      return dataItem;
+      dataScan.push(dataItem);
+
+      return [dataScan, false];
     }
   }
 }
