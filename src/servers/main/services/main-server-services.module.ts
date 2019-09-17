@@ -16,6 +16,7 @@ import { WebAwbFilterService } from './web/web-awb-filter.service';
 import { WebDeliveryInService } from './web/web-delivery-in.service';
 import { WebDeliveryOutService } from './web/web-delivery-out.service';
 import { WebMonitoringService } from './web/web-monitoring.service';
+import { WebAwbCountService } from './web/web-awb-count.service';
 
 @Module({
   imports: [SharedModule],
@@ -36,6 +37,7 @@ import { WebMonitoringService } from './web/web-monitoring.service';
     WebDeliveryInService,
     WebDeliveryOutService,
     WebMonitoringService,
+    WebAwbCountService,
   ],
   exports: [
     AwbStatusService,
@@ -54,6 +56,7 @@ import { WebMonitoringService } from './web/web-monitoring.service';
     WebDeliveryInService,
     WebDeliveryOutService,
     WebMonitoringService,
+    WebAwbCountService,
   ],
 })
 export class MainServerServicesModule {}

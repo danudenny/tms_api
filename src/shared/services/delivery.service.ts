@@ -6,6 +6,9 @@ import { AwbAttr } from '../orm-entity/awb-attr';
 import { AwbItem } from '../orm-entity/awb-item';
 import { BagItem } from '../orm-entity/bag-item';
 import moment = require('moment');
+import { Representative } from '../orm-entity/representative';
+import { PodFilterDetail } from '../orm-entity/pod-filter-detail';
+import { PodFilter } from '../orm-entity/pod-filter';
 
 export class DeliveryService {
 
@@ -129,6 +132,70 @@ export class DeliveryService {
     });
     q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
     q.andWhere(e => e.bagSeq, w => w.equals(seqNumber));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    return await q.exec();
+  }
+
+  public static async validBranchCode(repCode: string): Promise<Representative> {
+    const representativeCode: string = repCode;
+
+    const branchRepository = new OrionRepositoryService(Representative);
+    const q = branchRepository.findOne();
+
+    q.select({
+      representativeId: true,
+      representativeCode: true,
+      representativeName: true,
+    });
+    q.where(e => e.representativeCode, w => w.equals(representativeCode));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    return await q.exec();
+  }
+
+  public static async validBranchId(repId: number): Promise<Representative> {
+    const representativeId: number = repId;
+
+    const branchRepository = new OrionRepositoryService(Representative);
+    const q = branchRepository.findOne();
+
+    q.select({
+      representativeId: true,
+      representativeCode: true,
+      representativeName: true,
+    });
+    q.where(e => e.representativeId, w => w.equals(representativeId));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    return await q.exec();
+  }
+
+  public static async validBagPodFilterId(bagItemIds: number): Promise<PodFilterDetail> {
+    const bagItemId: number = bagItemIds;
+
+    const podFilterDetailRepository = new OrionRepositoryService(PodFilterDetail);
+    const q = podFilterDetailRepository.findOne();
+
+    q.select({
+      podFilterDetailId: true,
+      podFilterId: true,
+      bagItemId: true,
+    });
+    q.where(e => e.bagItemId, w => w.equals(bagItemId));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    return await q.exec();
+  }
+
+  public static async getPodFilter(podCode: string): Promise<PodFilter> {
+    const podFilterCode: string = podCode;
+
+    const podFilterRepository = new OrionRepositoryService(PodFilter);
+    const q = podFilterRepository.findOne();
+
+    q.select({
+      podFilterId: true,
+      podFilterCode: true,
+      representativeIdFilter: true,
+    });
+    q.where(e => e.podFilterCode, w => w.equals(podFilterCode));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     return await q.exec();
   }

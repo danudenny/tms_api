@@ -32,7 +32,7 @@ export class WebScanInAwbResponseVm  {
 export class ScanBagVm {
   @ApiModelProperty()
   bagNumber: string;
-
+  
   @ApiModelProperty()
   status: string;
 
@@ -42,6 +42,7 @@ export class ScanBagVm {
   @ApiModelProperty()
   message: string;
 }
+
 export class WebScanInBagResponseVm  {
 
   @ApiModelProperty()
@@ -55,4 +56,26 @@ export class WebScanInBagResponseVm  {
 
   @ApiModelProperty({ type: [ScanBagVm] })
   data: ScanBagVm[];
+}
+
+export class ValidateVm {
+  @ApiModelProperty()
+  totalBagItem: string;
+
+  @ApiModelProperty()
+  podFilterDetail: number;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class WebScanInValidateBagResponseVm  {
+  @ApiModelProperty({ type: [ValidateVm] })
+  data: ValidateVm[];
 }

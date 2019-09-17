@@ -1,0 +1,291 @@
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { AwbTroubleResponseVm } from '../../models/awb-trouble-response.vm';
+import { Injectable } from '@nestjs/common';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { WebScanInBranchVm, WebVerificationAwbVm } from '../../models/web-scanin-branch.vm';
+import { WebScanInBranchResponseVm, VerificationAwbResponseVm } from '../../models/web-scanin-branch.response.vm';
+import { AuthService } from 'src/shared/services/auth.service';
+import moment = require('moment');
+import { DeliveryService } from 'src/shared/services/delivery.service';
+import { RedisService } from 'src/shared/services/redis.service';
+import { PodFilter } from 'src/shared/orm-entity/pod-filter';
+import { WebScanInValidateBagVm } from '../../models/web-scanin-bag.vm';
+import { WebScanInValidateBagResponseVm } from '../../models/web-scanin-awb.response.vm';
+import { PodFilterDetail } from 'src/shared/orm-entity/pod-filter-detail';
+import { BagItem } from 'src/shared/orm-entity/bag-item';
+import { BagItemAwb } from 'src/shared/orm-entity/bag-item-awb';
+import { User } from 'src/shared/orm-entity/user';
+import { BagTrouble } from 'src/shared/orm-entity/bag-trouble';
+
+@Injectable()
+export class WebAwbCountService {
+  constructor() {}
+
+  public static async scanInBranch(
+    payload: WebScanInBranchVm,
+  ): Promise<WebScanInBranchResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new WebScanInBranchResponseVm();
+
+    const representativeCode = payload.representativeCode;
+    const representativeData = await DeliveryService.validBranchCode(representativeCode);
+    const response = {
+      reperesentativeTo: representativeData.representativeId,
+      podFilterId: null,
+      status: 'ok',
+      trouble: false,
+      message: 'Success',
+    };
+
+    if (representativeData) {
+      const holdRedis = await RedisService.locking(
+        `hold:branchscanin:${representativeData.representativeId}`,
+        'locking',
+      );
+      if (holdRedis) {
+        // AFTER Scan ===============================================
+
+        // #region after scan
+        // save data to table pod_filter
+        // TODO: to be review
+        const podFilter = PodFilter.create();
+        podFilter.podFilterCode = await CustomCounterCode.podFilter(timeNow);
+        podFilter.startDateTime = timeNow;
+        podFilter.endDateTime = timeNow;
+        podFilter.isActive = true;
+        podFilter.userIdScan = authMeta.userId;
+        podFilter.branchIdScan = permissonPayload.branchId;
+        podFilter.totalBagItem = 0;
+        podFilter.userIdCreated = authMeta.userId;
+        podFilter.createdTime = timeNow;
+        podFilter.updatedTime = timeNow;
+        podFilter.isDeleted = false;
+        podFilter.representativeIdFilter = representativeData.representativeId;
+        await PodFilter.save(podFilter);
+        // #endregion after scanin
+
+        // remove key holdRedis
+        RedisService.del(`hold:branchscanin:${representativeData.representativeId}`);
+
+        const podFilterData = await DeliveryService.getPodFilter(podFilter.podFilterCode);
+        response.podFilterId = podFilterData.podFilterId;
+      }
+    } else {
+      response.status = 'error';
+      response.message = `Perwakilan "${representativeCode}" Tidak di Temukan`;
+    }
+    dataItem.push({
+      ...response,
+    });
+    result.data = dataItem;
+
+    return result;
+  }
+
+  public static async scanInValidateBag(
+    payload: WebScanInValidateBagVm,
+  ): Promise<WebScanInValidateBagResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new WebScanInValidateBagResponseVm();
+
+    const response = {
+      bagNumber: payload.bagNumber,
+      totalBagItem: 0,
+      podFilterDetail: null,
+      status: 'ok',
+      trouble: false,
+      message: 'Success',
+    };
+
+    const bagData = await DeliveryService.validBagNumber(payload.bagNumber);
+    const representativeData = await DeliveryService.validBranchId(payload.representativeIdTo);
+    const PodFilterData = await DeliveryService.validBagPodFilterId(bagData.bagItemId);
+
+    if (PodFilterData){
+      response.status = 'error';
+      response.message = `Gabung Paket "${payload.bagNumber}" sudah pernah di Scan !`;
+    } else {
+      if (bagData.bag.representativeIdTo !== payload.representativeIdTo){
+        response.status = 'error';
+        response.message = `Gabung Paket Tidak sesuai, Gabung Paket ini untuk Perwakilan "${representativeData.representativeName}" !`;
+      } else {
+        const holdRedis = await RedisService.locking(
+          `hold:bagscaninvalidate:${bagData.bagItemId}`,
+          'locking',
+        );
+        if (holdRedis) {
+          // AFTER Scan ===============================================
+  
+          // #region after scan
+          // save data to table pod_filter
+          // TODO: to be review
+          const getTotalItemAwb = await BagItemAwb.findAndCount({
+            where: {
+              bagItemId: bagData.bagItemId,
+            },
+          });
+          response.totalBagItem = getTotalItemAwb[1];
+          
+          const podFilterDetail = PodFilterDetail.create();
+          podFilterDetail.podFilterId = payload.podFilterId;
+          podFilterDetail.scanDateTime = timeNow;
+          podFilterDetail.isActive = true;
+          podFilterDetail.bagItemId = bagData.bagItemId;
+          podFilterDetail.userIdCreated = authMeta.userId;
+          podFilterDetail.createdTime = timeNow;
+          podFilterDetail.userIdUpdated = authMeta.userId;
+          podFilterDetail.updatedTime = timeNow;
+          podFilterDetail.isDeleted = false;
+          podFilterDetail.totalAwbItem = getTotalItemAwb[1];
+          podFilterDetail.totalAwbFiltered = 0;
+          podFilterDetail.totalAwbNotInBag = 0;
+          podFilterDetail.startDateTime = timeNow;
+          podFilterDetail.endDateTime = timeNow;
+          await PodFilterDetail.save(podFilterDetail);
+
+          response.podFilterDetail = podFilterDetail.podFilterDetailId;
+
+          // update bagItem
+          const bagItem = await BagItem.findOne({
+            where: {
+              bagItemId: bagData.bagItemId,
+            },
+          });
+          bagItem.bagItemStatusIdLast = 4000;
+          bagItem.updatedTime = timeNow;
+          bagItem.userIdUpdated = authMeta.userId;
+          BagItem.save(bagItem);
+
+          // update PodFilter
+          const podFilter = await PodFilter.findOne({
+            where: {
+              podFilterId: payload.podFilterId,
+            },
+          });
+          podFilter.totalBagItem += 1;
+          podFilter.endDateTime = timeNow;
+          podFilter.updatedTime = timeNow;
+          podFilter.userIdUpdated = authMeta.userId;
+          PodFilter.save(podFilter);
+
+          // #endregion after scanin
+  
+          // remove key holdRedis
+          RedisService.del(`hold:bagscaninvalidate:${bagData.bagItemId}`);
+        }
+      }
+    }
+
+    dataItem.push({
+      ...response,
+    });
+    result.data = dataItem;
+
+    return result;
+  }
+
+  public static async verificationAwb(
+    payload: WebVerificationAwbVm,
+  ): Promise<VerificationAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new VerificationAwbResponseVm();
+
+    const totalAwbInput = payload.totalAwb;
+    const desc = payload.description;
+    const isMatch = payload.isMatch;
+    const podFilterDetail = payload.podFilterDetailId;
+    const nik = payload.nik;
+    const podFilterIds = payload.podFilterId;
+    const bagNumbers: string = payload.bagNumber.substring(0, 7);
+
+    const response = {
+      status: 'ok',
+      trouble: false,
+      message: 'Success',
+    };
+
+    if (isMatch) {
+      // update PodFilterDetail
+      const podFilterDetailData = await PodFilterDetail.findOne({
+        where: {
+          podFilterDetailId: podFilterDetail,
+        },
+      });
+      podFilterDetailData.totalAwbFiltered = totalAwbInput;
+      podFilterDetailData.endDateTime = timeNow;
+      podFilterDetailData.userIdUpdated = authMeta.userId;
+      podFilterDetailData.updatedTime = timeNow;
+      PodFilterDetail.save(podFilterDetailData);
+    } else {
+      const userData = await User.findOne({
+        where: {
+          employee_id: nik,
+        },
+      });
+      if (userData) {
+        const getUserId = userData.employee_id;
+        const podFilter = await PodFilter.findOne({
+          where: {
+            podFilterId: podFilterIds,
+          },
+        });
+        if (podFilter.userIdScan === parseInt(getUserId)) {
+          // update PodFilterDetail
+          const podFilterDetailData = await PodFilterDetail.findOne({
+            where: {
+              podFilterDetailId: podFilterDetail,
+            },
+          });
+          const totalAwbItem = podFilterDetailData.totalAwbItem
+          podFilterDetailData.totalAwbFiltered = totalAwbInput;
+          podFilterDetailData.totalAwbNotInBag = totalAwbItem - totalAwbInput;
+          podFilterDetailData.endDateTime = timeNow;
+          podFilterDetailData.userIdUpdated = authMeta.userId;
+          podFilterDetailData.updatedTime = timeNow;
+          PodFilterDetail.save(podFilterDetailData);
+
+          // insert bagTrouble
+          const bagTrouble = BagTrouble.create();
+          bagTrouble.bagStatusId = 4000;
+          bagTrouble.bagNumber = bagNumbers;
+          bagTrouble.employeeId = parseInt(userData.employee_id);
+          bagTrouble.branchId = permissonPayload.branchId;
+          bagTrouble.userIdCreated = authMeta.userId;
+          bagTrouble.createdTime = timeNow;
+          bagTrouble.userIdUpdated = authMeta.userId;
+          bagTrouble.updatedTime = timeNow;
+          bagTrouble.isDeleted = false;
+          bagTrouble.description = desc;
+          bagTrouble.bagTroubleStatus = 100;
+          bagTrouble.bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
+        } else {
+          response.status = 'error';
+          response.message = `Code Verifikasi Tidak Sesuai !`;
+        }
+      } else {
+        response.status = 'error';
+        response.message = `Code Verifikasi Tidak Ditemukan !`;
+      }
+    }
+    dataItem.push({
+      ...response,
+    });
+    result.data = dataItem;
+
+    return result;
+  }
+}
