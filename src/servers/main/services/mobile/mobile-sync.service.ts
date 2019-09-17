@@ -9,8 +9,11 @@ import { DoPodDeliverHistory } from '../../../../shared/orm-entity/do-pod-delive
 import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { MobileDeliveryVm } from '../../models/mobile-delivery.vm';
-import { MobileSyncPayloadVm } from '../../models/mobile-sync-payload.vm';
+import { MobileSyncPayloadVm, MobileSyncImagePayloadVm } from '../../models/mobile-sync-payload.vm';
 import { MobileInitDataService } from './mobile-init-data.service';
+import { MobileSyncImageResponseVm } from '../../models/mobile-sync-response.vm';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 
 export class MobileSyncService {
   public static async syncByRequest(payload: MobileSyncPayloadVm) {
@@ -100,5 +103,50 @@ export class MobileSyncService {
         lastDoPodDeliverHistory.awbStatusId,
       );
     }
+  }
+
+  public static async syncImage(
+    payload: MobileSyncImagePayloadVm,
+    file,
+  ): Promise<MobileSyncImageResponseVm> {
+    // const authMeta = AuthService.getAuthData();
+    const result = new MobileSyncImageResponseVm();
+    let url = null;
+    let attachmentId = null;
+
+    // const timeNow = moment().toDate();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const checkAttachment = await AttachmentTms.findOne({
+      where: {
+        fileName: file.originalname,
+      },
+    });
+
+    if (checkAttachment) {
+      // attachment exist
+      attachmentId = checkAttachment.attachmentTmsId;
+      url = checkAttachment.url;
+    } else {
+      // upload image
+      const attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        'tms-delivery',
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+        url = attachment.url;
+      }
+    }
+
+    // TODO: update data attachmentId on delivery
+    //
+    //
+    // payload.id
+    result.url = url;
+    result.attachmentId = attachmentId;
+    return result;
   }
 }
