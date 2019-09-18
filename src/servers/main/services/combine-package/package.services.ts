@@ -17,103 +17,11 @@ import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 
 @Injectable()
 export class PackageService {
-  constructor(
-    @InjectRepository(BagRepository)
-    private readonly bagRepository: BagRepository,
-    @InjectRepository(BagItemRepository)
-    private readonly bagItemRepository: BagItemRepository,
-    @InjectRepository(BagItemAwbRepository)
-    private readonly bagItemAwbRepository: BagItemAwbRepository,
-    ) {}
-  async gabunganAwb(payload: GabunganPayloadVm): Promise<GabunganFindAllResponseVm> {
-    // const authMeta = AuthService.getAuthMetadata();
-
-    // if (!!authMeta) {
-      const dataItem = [];
-      const timeNow = moment().toDate();
-      // const permissonPayload = await this.authService.handlePermissionJwtToken(payload.permissionToken);
-
-      // console.log( moment().format('DD'))
-      // console.log( moment().format('MM'))
-      const random = sampleSize('ABCDEFGHIJKLMNOPQRSTUVWXYZ012345678900123456789001234567890', 7).join('');
-
-      let awb;
-      let data;
-      let checkbag;
-      let bagNumber;
-      let totalSuccess = 0;
-      let totalError = 0;
-    // insert to bag
-
-      const bag = this.bagRepository.create({
-
-        bagNumber: random,
-        representativeIdTo: 12,
-        userIdCreated: 14,
-        createdTime: timeNow,
-        userIdUpdated: 14,
-        updatedTime: timeNow,
-        branchId: 12,
-      });
-      await this.bagRepository.save(bag);
-      bagNumber = random;
-// insert to bag item
-      const bagItem = this.bagItemRepository.create({
-        bagId: bag.bagId,
-        bagSeq: 1,
-        userIdCreated: 14,
-        createdTime: timeNow,
-        userIdUpdated: 14,
-        updatedTime: timeNow,
-      });
-      await this.bagItemRepository.save(bagItem);
-
-      for (const awbNumbers of payload.awbNumber) {
-        // NOTE:
-        // console.log(payload.awbNumber)
-        // console.log(awbNumbers)
-
-        // checkbag = await this.bagRepository.findOne({
-        //   select: ['bagId', 'branchId'],
-        //   where: { awbNumbers },
-        // });
-        // console.log(awb)
-        if (bagItem) {
-            // save data to table bagAwbItem
-          const bagAwbItem = this.bagItemAwbRepository.create();
-          bagAwbItem.bagItemId = bagItem.bagItemId;
-          bagAwbItem.awbNumber = awbNumbers;
-          bagAwbItem.userIdCreated = bagItem.userIdCreated;
-          bagAwbItem.userIdUpdated = bagItem.userIdUpdated;
-          bagAwbItem.updatedTime = bagItem.updatedTime;
-          bagAwbItem.createdTime = moment().toDate();
-          await this.bagItemAwbRepository.save(bagAwbItem);
-
-          totalSuccess += 1;
-          dataItem.push({
-            bagNumber,
-            status: 'ok',
-            message: 'Success',
-          });
-        } else {
-            totalError += 1;
-            dataItem.push({
-              bagNumber,
-                status : 'error',
-                message:  `No Bag ${bagNumber} Tidak di Temukan`,
-            });
-          }
-
-        const result = new GabunganFindAllResponseVm();
-        data = bag.bagNumber;
-        result.data  = dataItem;
-        return result ;
-
-        }
-  }
+  constructor() {}
 
   async awbPackage(payload: PackagePayloadVm): Promise<PackageAwbResponseVm> {
 
@@ -166,6 +74,7 @@ export class PackageService {
       }
       const scanResult = await this.awbScan(payload);
       result.dataBag      = scanResult.dataBag;
+      result.bagNumber    = scanResult.bagNumber;
       result.districtId   = scanResult.districtId;
       result.districtName = scanResult.districtName;
       result.data         = scanResult.data;
@@ -281,9 +190,10 @@ export class PackageService {
   }
 
   private async createBagNumber(payload): Promise<any> {
-    const value = payload.value;
-    const result = new Object();
-    const authMeta = AuthService.getAuthData();
+    const value            = payload.value;
+    const result           = new Object();
+    const authMeta         = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
 
     if (payload.bagNumber) {
       const bagNumber: string = payload.bagNumber.substring(0, 7);
@@ -319,7 +229,9 @@ export class PackageService {
             isDeleted       : false,
           },
       });
-      if (filterDetailItem && filterDetailItem.length === Number(value)) {
+      if (filterDetailItem
+        // && filterDetailItem.length === Number(value)
+        ) {
         const qb = createQueryBuilder();
         qb.addSelect('a.bag_id', 'bagId');
         qb.addSelect('a.bag_number', 'bagNumber');
@@ -336,7 +248,6 @@ export class PackageService {
         let bagId;
         let sequence;
         let randomBagNumber;
-        const permissonPayload = AuthService.getPermissionTokenPayload();
 
         if (!bagData) {
           // generate bag number
@@ -390,6 +301,7 @@ export class PackageService {
         const bagItem = await BagItem.save(bagItemDetail);
 
         let totalWeight = 0;
+        // TODO: force insert awb
         for (const awb of awbDetail) {
           totalWeight += parseFloat(awb.weight);
           const bagItemAwbDetail = BagItemAwb.create({
@@ -410,14 +322,26 @@ export class PackageService {
           podFilterDetailItem.isPackageCombine = true;
           podFilterDetailItem.updatedTime      = moment().toDate();
           podFilterDetailItem.userIdUpdated    = authMeta.userId;
-
           await PodFilterDetailItem.save(podFilterDetailItem);
 
-          // TODO: UPDATE awb_item_attr
+          // update awb_item_attr
           const awbItemAttr            = await AwbItemAttr.findOne({ where: { awbItemId: awb.awbItemId, isDeleted: false } });
           awbItemAttr.bagItemIdLast    = bagItem.bagItemId;
           awbItemAttr.updatedTime      = moment().toDate();
           await AwbItemAttr.save(awbItemAttr);
+
+          // await DeliveryService.updateAwbAttr(
+          //   awb.awbItemId,
+          //   doPod.branchIdTo,
+          //   AWB_STATUS.IN_BRANCH,
+          // );
+
+          // update status
+          DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+            awb.awbItemId,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
 
         }
 
@@ -444,6 +368,8 @@ export class PackageService {
   private async awbScan(payload): Promise<any> {
     const value = payload.value;
     const result = new Object();
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
 
     if (payload.bagNumber) {
       const bagNumber: string = payload.bagNumber.substring(0, 7);
@@ -495,11 +421,24 @@ export class PackageService {
       podFilterDetailItem.isPackageCombine = true;
       await PodFilterDetailItem.save(podFilterDetailItem);
 
+      // update awb_item_attr
+      const awbItemAttr            = await AwbItemAttr.findOne({ where: { awbItemId: resultData.awbItemId, isDeleted: false } });
+      awbItemAttr.bagItemIdLast    = bagItemAwb.bagItemId;
+      awbItemAttr.updatedTime      = moment().toDate();
+      await AwbItemAttr.save(awbItemAttr);
+
+      DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+        resultData.awbItemId,
+        permissonPayload.branchId,
+        authMeta.userId,
+      );
+
       const bagParams = { bagNumber, bagSequence };
       const detailData = await this.querySearch(bagParams);
 
       assign(result, {
         dataBag: detailData,
+        bagNumber: payload.bagNumber,
         districtName: detailData[0].districtName,
         districtId: detailData[0].districtId,
       });
@@ -522,11 +461,17 @@ export class PackageService {
         );
       }
 
+      // Generate Bag Number
+      assign(payload, { awbItemId: [resultData.awbItemId] });
+      const genBagNumber = await this.createBagNumber(payload);
+
       assign(result, {
+        bagNumber: genBagNumber.bagNumber,
         data: resultData,
         districtId: districtDetail.districtId,
         districtName: districtDetail.districtName,
       });
+
     }
 
     return result;
