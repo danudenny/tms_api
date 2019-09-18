@@ -72,6 +72,9 @@ export class WebScanOutBagVm {
   @IsDefined({message: 'POD ID harus diisi'})
   doPodId: number;
 
+  @ApiModelProperty()
+  isTransit: boolean;
+
   @ApiModelProperty({
     example: ['00020001', '00020002'],
     skipValidation: true,
