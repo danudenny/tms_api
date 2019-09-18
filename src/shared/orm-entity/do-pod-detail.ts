@@ -35,6 +35,12 @@ export class DoPodDetail extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: true,
+    name: 'bag_id',
+  })
+  bagId: number | null;
+
+  @Column('bigint', {
+    nullable: true,
     name: 'bag_item_id',
   })
   bagItemId: number | null;
