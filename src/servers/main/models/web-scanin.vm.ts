@@ -27,6 +27,18 @@ export class WebScanInBranchVm {
 
 }
 
+export class WebScanInBranchHubVm {
+  @ApiModelProperty({
+    example: ['112039', '11203922'],
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'No harus diisi' })
+  bagNumber: string[];
+
+  @ApiModelProperty()
+  doPodCode: string;
+}
+
 export class WebScanInValidateBranchVm {
   @ApiModelProperty()
   verifyCode: string;

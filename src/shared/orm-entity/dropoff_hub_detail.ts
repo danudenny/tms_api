@@ -3,7 +3,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn
 import { TmsBaseEntity } from './tms-base';
 
 @Entity('dropoff_hub_detail', { schema: 'public' })
-export class DropOffHubDetail extends TmsBaseEntity {
+export class DropoffHubDetail extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'dropoff_hub_detail_id',

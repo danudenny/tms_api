@@ -26,6 +26,9 @@ import { AwbTroubleService } from '../../../../shared/services/awb-trouble.servi
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { Awb } from '../../../../shared/orm-entity/awb';
 import { WebAwbFListPodResponseVm } from '../../models/web-awb-filter-list.response.vm';
+import { BagService } from '../v1/bag.service';
+import { DropoffHub } from '../../../../shared/orm-entity/dropoff_hub';
+
 // #endregion
 
 @Injectable()
@@ -334,11 +337,11 @@ export class WebDeliveryInService {
                           AWB_STATUS.DO_HUB,
                         );
                         // NOTE: queue by Bull
-                        DoPodDetailPostMetaQueueService.createJobByScanInBag(
-                          itemAwb.awbItemId,
-                          permissonPayload.branchId,
-                          authMeta.userId,
-                        );
+                        // DoPodDetailPostMetaQueueService.createJobByScanInBag(
+                        //   itemAwb.awbItemId,
+                        //   permissonPayload.branchId,
+                        //   authMeta.userId,
+                        // );
                       }
                     }
                   } else {
@@ -592,6 +595,7 @@ export class WebDeliveryInService {
     return result;
   }
 
+  // TODO: need refactoring ??
   async scanInAwbBranch(payload: WebScanInVm): Promise<WebScanInAwbResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -736,6 +740,9 @@ export class WebDeliveryInService {
     return result;
   }
 
+  // NOTE: scan in package on branch
+  // 1. scan bag number
+  // 2. scan awb number on bag and calculate
   async scanInBranch(
     payload: WebScanInBranchVm,
   ): Promise<WebScanInBranchResponseVm> {
@@ -753,6 +760,81 @@ export class WebDeliveryInService {
     result.isBag = isBag;
     result.bagNumber = payload.bagNumber;
     result.data = data;
+    return result;
+  }
+
+  // NOTE: scan dropoff_hub
+  async scanInBagHub(payload: WebScanInBagVm): Promise<WebScanInBagResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new WebScanInBagResponseVm();
+
+    const totalSuccess = 0;
+    let totalError = 0;
+
+    for (const bagNumber of payload.bagNumber) {
+      const response = {
+        status: 'ok',
+        trouble: false,
+        message: 'Success',
+      };
+
+      const bagData = await BagService.validBagNumber(bagNumber);
+      if (bagData) {
+        // NOTE: check condition disable on check branchIdNext
+        // status bagItemStatusIdLast ??
+
+        // TODO: find bag do_pod and update??
+        // SKIP.
+
+        const bagItem = await BagItem.findOne({
+          where: {
+            bagItemId: bagData.bagItemId,
+          },
+        });
+        if (bagItem) {
+          // update status bagItem
+          BagItem.update(bagItem.bagItemId, {
+            bagItemStatusIdLast: 2000,
+            branchIdLast: permissonPayload.branchId,
+            updatedTime: timeNow,
+            userIdUpdated: authMeta.userId,
+          });
+          // create data dropoff hub
+          const dropoffHub = DropoffHub.create();
+          dropoffHub.branchId = permissonPayload.branchId;
+          dropoffHub.bagId = bagData.bagId;
+          dropoffHub.bagItemId = bagData.bagItemId;
+          await DropoffHub.save(dropoffHub);
+
+          // TODO: send on background job ??
+          // create dropoff hub detail
+          // NOTE: status DO_HUB (12600: drop off hub)
+          await BagService.statusDropoffAwbBag(
+            bagData.bagItemId,
+            dropoffHub.dropoffHubId,
+          );
+        }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
+      }
+      // push item
+      dataItem.push({
+        bagNumber,
+        ...response,
+      });
+    } // end of loop
+
+    result.totalData = payload.bagNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
+
     return result;
   }
 

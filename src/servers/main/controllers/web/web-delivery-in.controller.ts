@@ -73,6 +73,15 @@ export class WebDeliveryInController {
     return this.webDeliveryService.scanInBag(payload);
   }
 
+  @Post('dropoff')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanInBagResponseVm })
+  public async scanInBagHub(@Body() payload: WebScanInBagVm) {
+    return this.webDeliveryService.scanInBagHub(payload);
+  }
+
   @Post('branch')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

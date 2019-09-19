@@ -32,8 +32,10 @@ export class DoPodDetailPostMetaQueueService {
   });
 
   public static boot() {
+    // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(async job => {
       const data = job.data;
+      console.log('### JOB ID =========', job.id);
       await getManager().transaction(async transactionalEntityManager => {
 
         // NOTE: get awb_ite_attr and update awb_history_id
@@ -59,33 +61,34 @@ export class DoPodDetailPostMetaQueueService {
 
           await transactionalEntityManager.save(awbHistory);
 
-          // NOTE: update if exists or insert awbItemSummary
-          let awbItemSummary = await AwbItemSummary.findOne({
-            where: {
-              awbItemId: data.awbItemId,
-              summaryDate: moment().format('YYYY-MM-DD'),
-              isDeleted: false,
-            },
-          });
+          // NOTE: SKIP this step
+          // // NOTE: update if exists or insert awbItemSummary
+          // let awbItemSummary = await AwbItemSummary.findOne({
+          //   where: {
+          //     awbItemId: data.awbItemId,
+          //     summaryDate: moment().format('YYYY-MM-DD'),
+          //     isDeleted: false,
+          //   },
+          // });
 
-          if (!awbItemSummary) {
-            // create data
-            awbItemSummary = AwbItemSummary.create();
-            awbItemSummary.userIdCreated = data.userIdCreated;
-          }
-          const convertTimeObject = moment().startOf('day').toDate();
+          // if (!awbItemSummary) {
+          //   // create data
+          //   awbItemSummary = AwbItemSummary.create();
+          //   awbItemSummary.userIdCreated = data.userIdCreated;
+          // }
+          // const convertTimeObject = moment().startOf('day').toDate();
 
-          // Update data
-          awbItemSummary.summaryDate = convertTimeObject;
-          awbItemSummary.awbItemId = awbHistory.awbItemId;
-          awbItemSummary.awbHistoryIdLast = awbHistory.awbHistoryId;
-          awbItemSummary.awbStatusIdLast = awbHistory.awbStatusId;
-          awbItemSummary.awbStatusIdLastPublic = data.awbStatusIdLastPublic;
-          awbItemSummary.userIdLast = awbHistory.userId;
-          awbItemSummary.branchIdLast = awbHistory.branchId;
-          awbItemSummary.historyDateLast = awbHistory.historyDate;
-          awbItemSummary.userIdUpdated = data.userIdUpdated;
-          await transactionalEntityManager.save(awbItemSummary);
+          // // Update data
+          // awbItemSummary.summaryDate = convertTimeObject;
+          // awbItemSummary.awbItemId = awbHistory.awbItemId;
+          // awbItemSummary.awbHistoryIdLast = awbHistory.awbHistoryId;
+          // awbItemSummary.awbStatusIdLast = awbHistory.awbStatusId;
+          // awbItemSummary.awbStatusIdLastPublic = data.awbStatusIdLastPublic;
+          // awbItemSummary.userIdLast = awbHistory.userId;
+          // awbItemSummary.branchIdLast = awbHistory.branchId;
+          // awbItemSummary.historyDateLast = awbHistory.historyDate;
+          // awbItemSummary.userIdUpdated = data.userIdUpdated;
+          // await transactionalEntityManager.save(awbItemSummary);
 
           // update data awb_item_attr
           awbItemAttr.awbHistoryIdLast = awbHistory.awbHistoryId;
@@ -94,6 +97,16 @@ export class DoPodDetailPostMetaQueueService {
         }
       }); // end transaction
 
+    });
+
+    this.queue.on('completed', job => {
+      // cleans all jobs that completed over 5 seconds ago.
+      this.queue.clean(5000);
+      console.log(`Job with id ${job.id} has been completed`);
+    });
+
+    this.queue.on('cleaned', function(job, type) {
+      console.log('Cleaned %s %s jobs', job.length, type);
     });
   }
 
@@ -263,7 +276,7 @@ export class DoPodDetailPostMetaQueueService {
     }
   }
 
-  public static async createJobByScanInBag(
+  public static async createJobByDropoffBag(
     awbItemId: number,
     branchId: number,
     userId: number,

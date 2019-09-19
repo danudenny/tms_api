@@ -100,6 +100,8 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       await app.listen(process.env.PORT || serverConfig.port, serverConfig.host || '0.0.0.0');
     }
 
+    // init boot Queue
     DoPodDetailPostMetaQueueService.boot();
+    // GenerateReportQueueService.boot();
   }
 }
