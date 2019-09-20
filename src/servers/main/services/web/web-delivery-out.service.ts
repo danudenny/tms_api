@@ -91,7 +91,7 @@ export class WebDeliveryOutService {
     doPod.description = payload.desc || null;
 
     // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
-    doPod.doPodStatusIdLast = 1000; // created
+    doPod.transactionStatusId = 1000; // created
     doPod.branchId = permissonPayload.branchId;
     doPod.userId = authMeta.userId;
 
