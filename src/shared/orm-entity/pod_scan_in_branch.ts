@@ -2,13 +2,19 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn
 
 import { TmsBaseEntity } from './tms-base';
 
-@Entity('pod_scan_in_hub', { schema: 'public' })
-export class PodScanInHub extends TmsBaseEntity {
+@Entity('pod_scan_in_branch', { schema: 'public' })
+export class PodScanInBranch extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'pod_scan_in_hub_id',
+    name: 'pod_scan_in_branch_id',
   })
-  podScanInHubId: number;
+  podScanInBranchId: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'branch_id',
+  })
+  branchId: number;
 
   @Column('character varying', {
     nullable: false,
@@ -20,11 +26,6 @@ export class PodScanInHub extends TmsBaseEntity {
     nullable: false,
     name: 'transaction_status_id',
   })
-  transactionStatusId: string;
+  transactionStatusId: number;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'branch_id',
-  })
-  branchId: number;
 }
