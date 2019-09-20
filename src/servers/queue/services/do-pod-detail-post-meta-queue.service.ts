@@ -195,43 +195,27 @@ export class DoPodDetailPostMetaQueueService {
 
   }
 
-  public static async createJobByScanOutBag(doPodDetailId: number, awbItemId: number) {
-    // TODO: ???
-    const doPodDetailRepository = new OrionRepositoryService(DoPodDetail);
-    const q = doPodDetailRepository.findOne();
-    // Manage relation (default inner join)
-    q.innerJoin(e => e.doPod);
+  // NOTE: same provide data
+  public static async createJobByScanOutBag(
+    awbItemId: number,
+    branchId: number,
+    userId: number,
+    employeeIdDriver: number,
+  ) {
+    // TODO: find awbStatusIdLastPublic on awb_status
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId: AWB_STATUS.OUT_HUB,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver,
+    };
 
-    q.select({
-      doPodDetailId: true,
-      bagItemId: true,
-      userIdCreated: true,
-      userIdUpdated: true,
-      doPod: {
-        doPodId: true,
-        branchId: true,
-        userId: true,
-      },
-    });
-    q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
-    const doPodDetail = await q.exec();
-
-    if (doPodDetail) {
-      // TODO: find awbStatusIdLastPublic on awb_status
-      // provide data
-      const obj = {
-        awbItemId,
-        userId: doPodDetail.doPod.userId,
-        branchId: doPodDetail.doPod.branchId,
-        awbStatusId: AWB_STATUS.OUT_HUB,
-        awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-        userIdCreated: doPodDetail.userIdCreated,
-        userIdUpdated: doPodDetail.userIdUpdated,
-        employeeIdDriver: null,
-      };
-
-      return DoPodDetailPostMetaQueueService.queue.add(obj);
-    }
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
   public static async createJobByScanInAwb(doPodDetailId: number) {
@@ -276,6 +260,7 @@ export class DoPodDetailPostMetaQueueService {
     }
   }
 
+  // NOTE: same provide data
   public static async createJobByDropoffBag(
     awbItemId: number,
     branchId: number,

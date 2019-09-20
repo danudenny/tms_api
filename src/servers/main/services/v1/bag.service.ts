@@ -7,6 +7,7 @@ import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { DropoffHubDetail } from '../../../../shared/orm-entity/dropoff_hub_detail';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
 
 export class BagService {
 
@@ -84,4 +85,54 @@ export class BagService {
     return true;
   }
 
+  static async statusOutBranchAwbBag(
+    bagId: number,
+    bagItemId: number,
+    doPodId: number,
+    branchIdNext: number,
+    employeeIdDriver: number,
+  ) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const bagItemsAwb = await BagItemAwb.find({
+      where: {
+        bagItemId,
+        isDeleted: false,
+      },
+    });
+    if (bagItemsAwb && bagItemsAwb.length) {
+      for (const itemAwb of bagItemsAwb) {
+        if (itemAwb.awbItemId) {
+          const doPodDetail = DoPodDetail.create();
+          doPodDetail.doPodId = doPodId;
+          doPodDetail.awbItemId = itemAwb.awbItemId;
+          doPodDetail.bagId = bagId;
+          doPodDetail.bagItemId = bagItemId;
+          doPodDetail.transcationStatusIdLast = 1000;
+          doPodDetail.isScanOut = true;
+          doPodDetail.scanOutType = 'bag';
+          await DoPodDetail.save(doPodDetail);
+
+          // NOTE: update status on awb item attr
+          // last awb status
+          await AwbService.updateAwbAttr(
+            itemAwb.awbItemId,
+            AWB_STATUS.OUT_HUB,
+            branchIdNext,
+          );
+          // TODO: if isTransit auto IN and OUT
+          // TODO: need refactoring queue bull
+          DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+            itemAwb.awbItemId,
+            permissonPayload.branchId,
+            authMeta.userId,
+            employeeIdDriver,
+          );
+        }
+      }
+    } else {
+      Logger.log('### Data Bag Item Awb :: Not Found!!');
+    }
+    return true;
+  }
 }
