@@ -66,15 +66,15 @@ export class BagItem extends TmsBaseEntity {
   })
   baggingIdLast: number | null;
 
-  @Column('integer', {
-    nullable: true,
-    name: 'employee_id_last',
-  })
-  employeeIdLast: number;
+  // @Column('integer', {
+  //   nullable: true,
+  //   name: 'employee_id_last',
+  // })
+  // employeeIdLast: number;
 
   @ManyToOne(() => Employee)
-  @JoinColumn({ name: 'employee_id_last' })
-  employee: Employee;
+  // @JoinColumn({ name: 'employee_id_last' })
+  // employee: Employee;
 
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_next' })

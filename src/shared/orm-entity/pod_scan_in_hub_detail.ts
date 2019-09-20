@@ -12,9 +12,9 @@ export class PodScanInHubDetail extends TmsBaseEntity {
 
   @Column({
     type: 'bigint',
-    name: 'pod_scan_in_hub',
+    name: 'pod_scan_in_hub_id',
   })
-  podScanInHub: number;
+  podScanInHubId: number;
 
   @Column('bigint', {
     nullable: false,

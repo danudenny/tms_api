@@ -12,7 +12,8 @@ export class PodScanInHub extends TmsBaseEntity {
 
   @Column('character varying', {
     nullable: false,
-    length: 255,
+    length: 10,
+    name: 'scan_in_type',
   })
   scanInType: string;
 
@@ -20,7 +21,7 @@ export class PodScanInHub extends TmsBaseEntity {
     nullable: false,
     name: 'transaction_status_id',
   })
-  transactionStatusId: string;
+  transactionStatusId: number;
 
   @Column('bigint', {
     nullable: false,

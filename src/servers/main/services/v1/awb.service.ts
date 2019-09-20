@@ -19,6 +19,8 @@ export class AwbService {
       awbStatusIdLast: true,
       awbItemId: true,
       awbNumber: true,
+      isPackageCombined: true,
+      bagItemIdLast: true,
       branchIdLast: true,
       branchIdNext: true,
       branchLast: {
