@@ -109,9 +109,9 @@ export class DoPod extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: true,
-    name: 'do_pod_status_id_last',
+    name: 'transaction_status_id',
   })
-  doPodStatusIdLast: number | null;
+  transactionStatusId: number | null;
 
   @Column('bigint', {
     nullable: true,

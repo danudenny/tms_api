@@ -2,19 +2,19 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn
 
 import { TmsBaseEntity } from './tms-base';
 
-@Entity('pod_scan_in_hub_detail', { schema: 'public' })
-export class PodScanInHubDetail extends TmsBaseEntity {
+@Entity('pod_scan_in_branch_detail', { schema: 'public' })
+export class PodScanInBranchDetail extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'pod_scan_in_hub_detail_id',
+    name: 'pod_scan_in_branch_detail_id',
   })
-  podScanInHubDetailId: number;
+  podScanInBranchDetailId: number;
 
-  @Column({
-    type: 'bigint',
-    name: 'pod_scan_in_hub_id',
+  @Column('bigint', {
+    nullable: false,
+    name: 'pod_scan_in_branch_id',
   })
-  podScanInHubId: number;
+  podScanInBranchId: number;
 
   @Column('bigint', {
     nullable: false,

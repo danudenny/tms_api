@@ -677,11 +677,11 @@ export class Awb extends BaseEntity {
   })
   refRepresentativeCode: string | null;
 
-  @Column('bigint', {
-    nullable: true,
-    name: 'awb_trouble_id',
-  })
-  awbTroubleId: number | null;
+  // @Column('bigint', {
+  //   nullable: true,
+  //   name: 'awb_trouble_id',
+  // })
+  // awbTroubleId: number | null;
 
   @OneToMany(() => AwbItem, e => e.awb, { cascade: ['insert'] })
   awbItems: AwbItem[];
