@@ -45,7 +45,7 @@ export class User extends BaseEntity {
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'user_name',
+    name: 'username',
   })
   username: string;
 
