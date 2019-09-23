@@ -1,12 +1,21 @@
 {
   "apps": [{
-    "name": "tms-api",
+    "name": "TMS-API",
     "script": "dist/main.js",
-    "cwd": "/var/www/sicepat-tms-api/current",
-    "error_file": "/var/www/sicepat-tms-api/current/log/app.err.log",
-    "out_file": "/var/www/sicepat-tms-api/current/log/app.out.log",
-    "watch": true,
-    "instance_var": "INSTANCE_ID",
-    "exec_mode": "fork_mode"
-  }]
+    "error_file": "/var/www/sicepat-tms-api/log/app.err.log",
+    "out_file": "/var/www/sicepat-tms-api/log/app.out.log"
+  }],
+  "deploy": {
+    "production": {
+      "user": "ubuntu",
+      "host": ["staging-pod.sicepat.com"],
+      "ref": "origin/deployer",
+      "repo": "git@github.com:githubsicepat/sicepat-tms-api.git",
+      "path": "/var/www/sicepat-tms-api",
+      "post-deploy": "npm install; npm run build; pm2 startOrRestart ecosystem.json",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
 }
