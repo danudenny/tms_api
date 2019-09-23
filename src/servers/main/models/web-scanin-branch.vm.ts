@@ -38,3 +38,11 @@ export class WebVerificationAwbVm  {
   @ApiModelProperty()
   bagNumber: string;
 }
+
+export class WebVerificationBagVm  {
+  @ApiModelProperty()
+  representativeIdTo: number;
+
+  @ApiModelProperty()
+  bagNumber: string;
+}

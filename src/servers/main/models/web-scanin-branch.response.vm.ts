@@ -17,6 +17,20 @@ export class ScanBranchVm {
   message: string;
 }
 
+export class ScanBranchNewVm {
+  @ApiModelProperty()
+  reperesentativeTo: number;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
 export class VerificationAwbVm {
   @ApiModelProperty()
   status: string;
@@ -31,6 +45,11 @@ export class VerificationAwbVm {
 export class WebScanInBranchResponseVm  {
   @ApiModelProperty({ type: [ScanBranchVm] })
   data: ScanBranchVm[];
+}
+
+export class WebScanInBranchResponseNewVm  {
+  @ApiModelProperty({ type: [ScanBranchNewVm] })
+  data: ScanBranchNewVm[];
 }
 
 export class VerificationAwbResponseVm  {

@@ -2,8 +2,8 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs
 
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { WebScanInBranchVm, WebVerificationAwbVm } from '../../models/web-scanin-branch.vm';
-import { WebScanInBranchResponseVm, VerificationAwbResponseVm } from '../../models/web-scanin-branch.response.vm';
+import { WebScanInBranchVm, WebVerificationAwbVm, WebVerificationBagVm } from '../../models/web-scanin-branch.vm';
+import { WebScanInBranchResponseVm, VerificationAwbResponseVm, WebScanInBranchResponseNewVm } from '../../models/web-scanin-branch.response.vm';
 import { WebAwbCountService } from '../../services/web/web-awb-count.service';
 import { PermissionTokenGuard } from 'src/shared/guards/permission-token.guard';
 import { WebScanInValidateBagResponseVm } from '../../models/web-scanin-awb.response.vm';
@@ -37,5 +37,23 @@ export class WebAwbCountController {
   @ApiOkResponse({ type: VerificationAwbResponseVm })
   public async bagVerify(@Body() payload: WebVerificationAwbVm) {
     return WebAwbCountService.verificationAwb(payload);
+  }
+
+  @Post('branchValidate')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanInBranchResponseNewVm })
+  public async branchValidate(@Body() payload: WebScanInBranchVm) {
+    return WebAwbCountService.scanInValidateBranch(payload);
+  }
+
+  @Post('bagScanVerification')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: VerificationAwbResponseVm })
+  public async bagScanVerify(@Body() payload: WebVerificationBagVm) {
+    return WebAwbCountService.verificationBag(payload);
   }
 }

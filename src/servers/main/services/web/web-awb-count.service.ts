@@ -5,8 +5,8 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { AwbTroubleResponseVm } from '../../models/awb-trouble-response.vm';
 import { Injectable } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
-import { WebScanInBranchVm, WebVerificationAwbVm } from '../../models/web-scanin-branch.vm';
-import { WebScanInBranchResponseVm, VerificationAwbResponseVm } from '../../models/web-scanin-branch.response.vm';
+import { WebScanInBranchVm, WebVerificationAwbVm, WebVerificationBagVm } from '../../models/web-scanin-branch.vm';
+import { WebScanInBranchResponseVm, VerificationAwbResponseVm, WebScanInBranchResponseNewVm } from '../../models/web-scanin-branch.response.vm';
 import { AuthService } from 'src/shared/services/auth.service';
 import moment = require('moment');
 import { DeliveryService } from 'src/shared/services/delivery.service';
@@ -19,6 +19,10 @@ import { BagItem } from 'src/shared/orm-entity/bag-item';
 import { BagItemAwb } from 'src/shared/orm-entity/bag-item-awb';
 import { User } from 'src/shared/orm-entity/user';
 import { BagTrouble } from 'src/shared/orm-entity/bag-trouble';
+import { DropoffSortation } from 'src/shared/orm-entity/dropoff_sortation';
+import { DropoffSortationDetail } from 'src/shared/orm-entity/dropoff_sortation_detail';
+import { AwbItemAttr } from 'src/shared/orm-entity/awb-item-attr';
+import { AwbAttr } from 'src/shared/orm-entity/awb-attr';
 
 @Injectable()
 export class WebAwbCountService {
@@ -108,7 +112,7 @@ export class WebAwbCountService {
     };
 
     const bagData = await DeliveryService.validBagNumber(payload.bagNumber);
-    const representativeData = await DeliveryService.validBranchId(payload.representativeIdTo);
+    const representativeData = await DeliveryService.validBranchId(bagData.bag.representativeIdTo);
     const PodFilterData = await DeliveryService.validBagPodFilterId(bagData.bagItemId);
 
     if (PodFilterData){
@@ -281,6 +285,159 @@ export class WebAwbCountService {
         response.message = `Code Verifikasi Tidak Ditemukan !`;
       }
     }
+    dataItem.push({
+      ...response,
+    });
+    result.data = dataItem;
+
+    return result;
+  }
+
+  public static async scanInValidateBranch(
+    payload: WebScanInBranchVm,
+  ): Promise<WebScanInBranchResponseNewVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new WebScanInBranchResponseNewVm();
+
+    const representativeCode = payload.representativeCode;
+    const representativeData = await DeliveryService.validBranchCode(representativeCode);
+    const response = {
+      reperesentativeTo: null,
+      status: 'ok',
+      trouble: false,
+      message: 'Success',
+    };
+
+    if (!representativeData) {
+      response.status = 'error';
+      response.message = `Perwakilan "${representativeCode}" Tidak di Temukan`;
+    } else {
+      response.reperesentativeTo = representativeData.representativeId;
+    }
+    dataItem.push({
+      ...response,
+    });
+    result.data = dataItem;
+
+    return result;
+  }
+
+  public static async verificationBag(
+    payload: WebVerificationBagVm,
+  ): Promise<VerificationAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new VerificationAwbResponseVm();
+    
+    const representativeId = payload.representativeIdTo;
+
+    const bagData = await DeliveryService.validBagNumber(payload.bagNumber);
+
+    const response = {
+      status: 'ok',
+      trouble: false,
+      message: 'Success',
+    };
+
+    if(bagData){
+      const representativeIdTo = bagData.bag.representativeIdTo;
+      const representativeData = await DeliveryService.validBranchId(representativeIdTo);
+
+      if (representativeId === representativeIdTo) {
+        const holdRedis = await RedisService.locking(
+          `hold:bagscanverification:${bagData.bagItemId}`,
+          'locking',
+        );
+        if (holdRedis) {
+          // AFTER Scan ===============================================
+  
+          // #region after scan
+          // update bagItem
+          const bagItem = await BagItem.findOne({
+            where: {
+              bagItemId: bagData.bagItemId,
+            },
+          });
+          bagItem.bagItemStatusIdLast = 4000;
+          bagItem.updatedTime = timeNow;
+          bagItem.userIdUpdated = authMeta.userId;
+          BagItem.save(bagItem);
+  
+          // get BagItemAwb and Count
+          const getAllBagAwb = await BagItemAwb.findAndCount({
+            where: {
+              bagItemId: bagData.bagItemId,
+            },
+          });
+          
+          // insert DropOffSortation
+          const dropoffSortation = DropoffSortation.create();
+          dropoffSortation.branchId = permissonPayload.branchId;
+          dropoffSortation.representativeId = representativeId;
+          dropoffSortation.bagId = bagData.bag.bagId;
+          dropoffSortation.bagItemId = bagData.bagItemId;
+          dropoffSortation.userIdUpdated = authMeta.userId;
+          dropoffSortation.updatedTime = timeNow;
+          dropoffSortation.userIdCreated = authMeta.userId;
+          dropoffSortation.createdTime = timeNow;
+          dropoffSortation.isDeleted = false;
+          await DropoffSortation.save(dropoffSortation);
+  
+          const dropOffId = dropoffSortation.dropoffSortationId;
+  
+          // Insert All BagAwbItem to DropOffSortationDetail
+          getAllBagAwb[0].forEach(async data => {
+            const awbAttr = await AwbAttr.findOne({
+              where: {
+                awbNumber: data.awbNumber,
+              },
+            });
+  
+            // insert DropOffSortationDetail
+            const dropoffSortationDetail = DropoffSortationDetail.create();
+            dropoffSortationDetail.dropoffSortationId = dropOffId;
+            dropoffSortationDetail.awbId = awbAttr.awbId;
+            dropoffSortationDetail.awbItemId = data.awbItemId;
+            dropoffSortationDetail.userIdUpdated = authMeta.userId;
+            dropoffSortationDetail.updatedTime = timeNow;
+            dropoffSortationDetail.userIdCreated = authMeta.userId;
+            dropoffSortationDetail.createdTime = timeNow;
+            dropoffSortationDetail.isDeleted = false;
+            await DropoffSortationDetail.save(dropoffSortationDetail);
+  
+            const awbItemAttr = await AwbItemAttr.findOne({
+              where: {
+                awbItemId: data.awbItemId,
+              },
+            });
+  
+            // update status AwbItemAttr
+            awbItemAttr.awbStatusIdLast = 2600;
+            awbItemAttr.updatedTime = timeNow;
+            await AwbItemAttr.save(awbItemAttr);
+          });
+  
+          // #endregion after scanin
+    
+          // remove key holdRedis
+          RedisService.del(`hold:bagscanverification:${bagData.bagItemId}`);
+        }
+      } else {
+        response.status = 'error';
+        response.message = `Gabung Paket Tidak sesuai, Gabung Paket ini untuk Perwakilan "${representativeData.representativeName}" !`;
+      }
+    } else {
+      response.status = 'error';
+      response.message = `Gabung Paket "${payload.bagNumber}" Tidak Ditemukan !`;
+    }
+    
     dataItem.push({
       ...response,
     });
