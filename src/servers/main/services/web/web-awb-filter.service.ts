@@ -290,7 +290,7 @@ export class WebAwbFilterService {
         .select({
           awbItemId: true,
           awbItemAttrId: true,
-          isDistrictFiltered: true,
+          // isDistrictFiltered: true,
           bagItemIdLast: true,
           branchIdNext: true,
           awbItem: {
@@ -303,7 +303,7 @@ export class WebAwbFilterService {
         });
 
       if (awbItemAttr) {
-        if (awbItemAttr.isDistrictFiltered) {
+        if (true) {
           // this awb is already filtered
           res.status = 'error';
           res.trouble = false;
@@ -377,9 +377,9 @@ export class WebAwbFilterService {
             );
 
             // NOTE:: update awb_item_attr last to IN
-            await AwbItemAttr.update(awbItemAttr.awbItemAttrId, {
-              isDistrictFiltered: true,
-            });
+            // await AwbItemAttr.update(awbItemAttr.awbItemAttrId, {
+            //   isDistrictFiltered: true,
+            // });
 
             await DeliveryService.updateAwbAttr(
               awbItemAttr.awbItemId,

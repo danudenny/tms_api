@@ -178,7 +178,8 @@ export class PackageService {
     const podScanInHubData = PodScanInHub.create({
           branchId: permissonPayload.branchId,
           scanInType: 'BAG',
-          transactionStatusId: 200,
+          // 100 = inprogress, 200 = done
+          transactionStatusId: 100,
           userIdCreated: authMeta.userId,
           createdTime  : moment().toDate(),
           updatedTime  : moment().toDate(),
@@ -303,9 +304,36 @@ export class PackageService {
 
   private async insertDetailAwb(payload): Promise<any> {
     const result = new Object();
+    const authMeta         = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const bagDetail = await this.getBagDetail(payload.bagNumber);
 
-    const bagNumber: string = payload.bagNumber.substring(0, 7);
-    const bagSequence: number = Number(payload.bagNumber.substring(7, 10));
+    // Insert into table bag item awb
+    const bagItemAwbData = BagItemAwb.create({
+      bagItemId    : bagDetail.bagItemId,
+      awbNumber    : payload.awbDetail.awbNumber,
+      weight       : payload.awbDetail.weight,
+      awbItemId    : payload.awbItemId,
+      userIdCreated: authMeta.userId,
+      createdTime  : moment().toDate(),
+      updatedTime  : moment().toDate(),
+      userIdUpdated: authMeta.userId,
+    });
+    await BagItemAwb.save(bagItemAwbData);
+
+    // Insert into table pod scan in hub detail
+    const podScanInHubDetailData = PodScanInHubDetail.create({
+      // podScanInHubId: podScanInHub.podScanInHubId,
+      bagId: bagDetail.bagId,
+      bagItemId: bagDetail.bagItemId,
+      awbItemId: payload.awbItemId,
+      awbId: payload.awbDetail.awbId,
+      userIdCreated: authMeta.userId,
+      createdTime  : moment().toDate(),
+      updatedTime  : moment().toDate(),
+      userIdUpdated: authMeta.userId,
+    });
+    const podScanInHubDetail = await PodScanInHubDetail.save(podScanInHubDetailData);
 
     return result;
   }
