@@ -115,11 +115,11 @@ export class WebAwbCountService {
     const representativeData = await DeliveryService.validBranchId(bagData.bag.representativeIdTo);
     const PodFilterData = await DeliveryService.validBagPodFilterId(bagData.bagItemId);
 
-    if (PodFilterData){
+    if (PodFilterData) {
       response.status = 'error';
       response.message = `Gabung Paket "${payload.bagNumber}" sudah pernah di Scan !`;
     } else {
-      if (bagData.bag.representativeIdTo !== payload.representativeIdTo){
+      if (bagData.bag.representativeIdTo !== payload.representativeIdTo) {
         response.status = 'error';
         response.message = `Gabung Paket Tidak sesuai, Gabung Paket ini untuk Perwakilan "${representativeData.representativeName}" !`;
       } else {
@@ -129,7 +129,7 @@ export class WebAwbCountService {
         );
         if (holdRedis) {
           // AFTER Scan ===============================================
-  
+
           // #region after scan
           // save data to table pod_filter
           // TODO: to be review
@@ -139,7 +139,7 @@ export class WebAwbCountService {
             },
           });
           response.totalBagItem = getTotalItemAwb[1];
-          
+
           const podFilterDetail = PodFilterDetail.create();
           podFilterDetail.podFilterId = payload.podFilterId;
           podFilterDetail.scanDateTime = timeNow;
@@ -183,7 +183,7 @@ export class WebAwbCountService {
           PodFilter.save(podFilter);
 
           // #endregion after scanin
-  
+
           // remove key holdRedis
           RedisService.del(`hold:bagscaninvalidate:${bagData.bagItemId}`);
         }
@@ -241,20 +241,20 @@ export class WebAwbCountService {
         },
       });
       if (userData) {
-        const getUserId = userData.employee_id;
+        const getUserId = userData.userId;
         const podFilter = await PodFilter.findOne({
           where: {
             podFilterId: podFilterIds,
           },
         });
-        if (podFilter.userIdScan === parseInt(getUserId)) {
+        if (podFilter.userIdScan === (getUserId)) {
           // update PodFilterDetail
           const podFilterDetailData = await PodFilterDetail.findOne({
             where: {
               podFilterDetailId: podFilterDetail,
             },
           });
-          const totalAwbItem = podFilterDetailData.totalAwbItem
+          const totalAwbItem = podFilterDetailData.totalAwbItem;
           podFilterDetailData.totalAwbFiltered = totalAwbInput;
           podFilterDetailData.totalAwbNotInBag = totalAwbItem - totalAwbInput;
           podFilterDetailData.endDateTime = timeNow;
@@ -266,7 +266,7 @@ export class WebAwbCountService {
           const bagTrouble = BagTrouble.create();
           bagTrouble.bagStatusId = 4000;
           bagTrouble.bagNumber = bagNumbers;
-          bagTrouble.employeeId = parseInt(userData.employee_id);
+          bagTrouble.employeeId = (userData.userId);
           bagTrouble.branchId = permissonPayload.branchId;
           bagTrouble.userIdCreated = authMeta.userId;
           bagTrouble.createdTime = timeNow;
@@ -335,7 +335,7 @@ export class WebAwbCountService {
     const dataItem = [];
     const timeNow = moment().toDate();
     const result = new VerificationAwbResponseVm();
-    
+
     const representativeId = payload.representativeIdTo;
 
     const bagData = await DeliveryService.validBagNumber(payload.bagNumber);
@@ -346,7 +346,7 @@ export class WebAwbCountService {
       message: 'Success',
     };
 
-    if(bagData){
+    if (bagData) {
       const representativeIdTo = bagData.bag.representativeIdTo;
       const representativeData = await DeliveryService.validBranchId(representativeIdTo);
 
@@ -357,7 +357,7 @@ export class WebAwbCountService {
         );
         if (holdRedis) {
           // AFTER Scan ===============================================
-  
+
           // #region after scan
           // update bagItem
           const bagItem = await BagItem.findOne({
@@ -369,14 +369,14 @@ export class WebAwbCountService {
           bagItem.updatedTime = timeNow;
           bagItem.userIdUpdated = authMeta.userId;
           BagItem.save(bagItem);
-  
+
           // get BagItemAwb and Count
           const getAllBagAwb = await BagItemAwb.findAndCount({
             where: {
               bagItemId: bagData.bagItemId,
             },
           });
-          
+
           // insert DropOffSortation
           const dropoffSortation = DropoffSortation.create();
           dropoffSortation.branchId = permissonPayload.branchId;
@@ -389,9 +389,9 @@ export class WebAwbCountService {
           dropoffSortation.createdTime = timeNow;
           dropoffSortation.isDeleted = false;
           await DropoffSortation.save(dropoffSortation);
-  
+
           const dropOffId = dropoffSortation.dropoffSortationId;
-  
+
           // Insert All BagAwbItem to DropOffSortationDetail
           getAllBagAwb[0].forEach(async data => {
             const awbAttr = await AwbAttr.findOne({
@@ -399,7 +399,7 @@ export class WebAwbCountService {
                 awbNumber: data.awbNumber,
               },
             });
-  
+
             // insert DropOffSortationDetail
             const dropoffSortationDetail = DropoffSortationDetail.create();
             dropoffSortationDetail.dropoffSortationId = dropOffId;
@@ -411,21 +411,21 @@ export class WebAwbCountService {
             dropoffSortationDetail.createdTime = timeNow;
             dropoffSortationDetail.isDeleted = false;
             await DropoffSortationDetail.save(dropoffSortationDetail);
-  
+
             const awbItemAttr = await AwbItemAttr.findOne({
               where: {
                 awbItemId: data.awbItemId,
               },
             });
-  
+
             // update status AwbItemAttr
             awbItemAttr.awbStatusIdLast = 2600;
             awbItemAttr.updatedTime = timeNow;
             await AwbItemAttr.save(awbItemAttr);
           });
-  
+
           // #endregion after scanin
-    
+
           // remove key holdRedis
           RedisService.del(`hold:bagscanverification:${bagData.bagItemId}`);
         }
@@ -437,7 +437,7 @@ export class WebAwbCountService {
       response.status = 'error';
       response.message = `Gabung Paket "${payload.bagNumber}" Tidak Ditemukan !`;
     }
-    
+
     dataItem.push({
       ...response,
     });

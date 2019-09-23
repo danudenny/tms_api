@@ -3,6 +3,7 @@ import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'ty
 import { TmsBaseEntity } from './tms-base';
 import { Branch } from './branch';
 import { Attachment } from './attachment';
+import { User } from './user';
 
 @Entity('employee', { schema: 'public' })
 export class Employee extends TmsBaseEntity {
@@ -291,4 +292,8 @@ export class Employee extends TmsBaseEntity {
   @OneToOne(() => Attachment)
   @JoinColumn({ name: 'attachment_id' })
   attachment: Attachment;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'employee_id', referencedColumnName: 'employeeId' })
+  user: User;
 }

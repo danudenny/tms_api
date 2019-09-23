@@ -5,10 +5,14 @@ export class EmployeeVm {
   employeeId: number;
 
   @ApiModelProperty()
+  userId: number;
+
+  @ApiModelProperty()
   nik: string;
 
   @ApiModelProperty()
   employeeName: string;
+
 }
 
 export class EmployeeSearchVm {

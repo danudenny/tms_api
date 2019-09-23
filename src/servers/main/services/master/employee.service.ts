@@ -31,8 +31,11 @@ export class EmployeeService {
       ['employee.employee_id', 'employeeId'],
       ['employee.nik', 'nik'],
       ['employee.fullname', 'employeeName'],
+      ['users.user_id', 'userId'],
     );
-
+    q.innerJoin(u => u.user, 'users', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -67,11 +70,17 @@ export class EmployeeService {
       ['employee.employee_id', 'employeeId'],
       ['employee.nik', 'nik'],
       ['employee.fullname', 'employeeName'],
+      ['users.user_id', 'userId'],
     );
 
     q.innerJoin(e => e.branch, 't2', j =>
+
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(u => u.user, 'users', j =>
+
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
     q.andWhere(e => e.branch.branchId, w => w.equals(branchId));
 
     const data = await q.exec();
@@ -97,6 +106,9 @@ export class EmployeeService {
         employeeId: true,
         employeeName: true,
         nik: true,
+        user: {
+          userId : true,
+        },
         homeAddress: true,
         idCardAddress: true,
         mobile1: true,
@@ -118,8 +130,8 @@ export class EmployeeService {
         mobilePhone: employee.mobile1
           ? employee.mobile1
           : employee.mobile2,
+          userId: employee.user.userId,
       };
-
       return {...employee, ...additional};
     } else {
       RequestErrorService.throwObj(

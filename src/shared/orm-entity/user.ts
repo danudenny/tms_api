@@ -24,94 +24,111 @@ export class User extends BaseEntity {
 
   @Column('bigint', {
     nullable: true,
+    name: 'employee_id',
   })
-  employee_id: string | null;
+  employeeId: string | null;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name: 'first_name',
   })
-  first_name: string;
+  firstName: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'last_name',
   })
-  last_name: string | null;
+  lastName: string | null;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name: 'user_name',
   })
   username: string;
 
   @Column('character varying', {
     nullable: false,
     length: 500,
+    name: 'password',
   })
   password: string;
 
   @Column('integer', {
     nullable: true,
+    name: 'login_count',
   })
-  login_count: number | null;
+  loginCount: number | null;
 
   @Column('integer', {
     nullable: true,
+    name: 'login_attempt_error',
   })
-  login_attempt_error: number | null;
+  loginAttemptError: number | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
+    name: 'last_login',
   })
-  last_login: Date | null;
+  lastLogin: Date | null;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_created',
   })
-  user_id_created: number;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'created_time',
   })
-  created_time: Date;
+  createdTime: Date;
 
   @Column('bigint', {
     nullable: false,
+    name: 'user_id_updated',
   })
-  user_id_updated: number;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
+    name: 'updated_time',
   })
-  updated_time: Date;
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'email',
   })
   email: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
+    name: 'password_reset',
   })
-  password_reset: string | null;
+  passwordReset: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
+    name: 'otp_reset',
   })
-  otp_reset: string | null;
+  otpReset: string | null;
 
   @OneToMany(() => UserRole, e => e.user, {
     cascade: ['insert'],
+
   })
   userRoles: UserRole[];
 
