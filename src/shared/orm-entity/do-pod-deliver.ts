@@ -41,9 +41,15 @@ export class DoPodDeliver extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: true,
-    name: 'employee_id_driver',
+    name: 'user_id_driver',
   })
-  employeeIdDriver: number | null;
+  userIdDriver: number | null;
+
+  // @Column('bigint', {
+  //   nullable: true,
+  //   name: 'employee_id_driver',
+  // })
+  // employeeIdDriver: number | null;
 
   @Column('text', {
     nullable: true,

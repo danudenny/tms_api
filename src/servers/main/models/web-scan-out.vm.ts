@@ -118,7 +118,7 @@ export class WebScanOutVm {
     skipValidation: true,
   })
   @IsDefined({message: 'Driver harus diisi'})
-  employeeIdDriver: number;
+  userIdDriver: number;
 
   @ApiModelPropertyOptional()
   partnerLogisticId?: number;
@@ -223,7 +223,7 @@ export class WebScanOutCreateDeliveryVm {
     skipValidation: true,
   })
   @IsDefined({message: 'Sigesit harus diisi'})
-  employeeIdDriver: number;
+  userIdDriver: number;
 
   @ApiModelProperty({
     example: '2019-05-01 00:00:00',

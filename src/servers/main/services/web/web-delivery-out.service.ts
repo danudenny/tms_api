@@ -86,7 +86,7 @@ export class WebDeliveryOutService {
     doPod.branchIdTo = payload.branchIdTo || null;
 
     // doPod.userIdDriver = payload.
-    doPod.employeeIdDriver = payload.employeeIdDriver || null;
+    doPod.userIdDriver = payload.userIdDriver || null;
     doPod.doPodDateTime = doPodDateTime;
 
     doPod.vehicleNumber = payload.vehicleNumber || null;
@@ -95,7 +95,7 @@ export class WebDeliveryOutService {
     // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
     doPod.transactionStatusId = 1000; // created
     doPod.branchId = permissonPayload.branchId;
-    doPod.userId = authMeta.userId;
+    // doPod.userId = authMeta.userId;
 
     // await for get do pod id
     await this.doPodRepository.save(doPod);
@@ -201,7 +201,7 @@ export class WebDeliveryOutService {
           payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
         partnerLogisticId: payload.partnerLogisticId,
         branchIdTo: payload.branchIdTo,
-        employeeIdDriver: payload.employeeIdDriver,
+        userIdDriver: payload.userIdDriver,
         vehicleNumber: payload.vehicleNumber,
         description: payload.desc,
         transcationStatusIdLast: 1100,
@@ -344,7 +344,7 @@ export class WebDeliveryOutService {
           payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
         partnerLogisticId: payload.partnerLogisticId,
         branchIdTo: payload.branchIdTo,
-        employeeIdDriver: payload.employeeIdDriver,
+        userIdDriver: payload.userIdDriver,
         vehicleNumber: payload.vehicleNumber,
         description: payload.desc,
         transcationStatusIdLast: 1100,
@@ -390,7 +390,7 @@ export class WebDeliveryOutService {
     ); // generate code
 
     // doPod.userIdDriver = payload.
-    doPod.employeeIdDriver = payload.employeeIdDriver || null;
+    doPod.userIdDriver = payload.userIdDriver || null;
     doPod.doPodDeliverDateTime = doPodDateTime;
     doPod.description = payload.desc || null;
 
@@ -787,7 +787,7 @@ export class WebDeliveryOutService {
               bagData.bagItemId,
               doPod.doPodId,
               doPod.branchIdTo,
-              doPod.employeeIdDriver,
+              doPod.userIdDriver,
             );
           }
           // #endregion after scanout

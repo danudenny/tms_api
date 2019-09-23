@@ -34,11 +34,11 @@ export class DoPod extends TmsBaseEntity {
   })
   doPodDateTime: Date;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id',
-  })
-  userId: number;
+  // @Column('bigint', {
+  //   nullable: false,
+  //   name: 'user_id',
+  // })
+  // userId: number;
 
   @Column('bigint', {
     nullable: false,
@@ -64,11 +64,11 @@ export class DoPod extends TmsBaseEntity {
   })
   userIdDriver: number | null;
 
-  @Column('bigint', {
-    nullable: true,
-    name: 'employee_id_driver',
-  })
-  employeeIdDriver: number | null;
+  // @Column('bigint', {
+  //   nullable: true,
+  //   name: 'user_id_driver',
+  // })
+  // userIdDriver: number | null;
 
   @Column('character varying', {
     nullable: true,

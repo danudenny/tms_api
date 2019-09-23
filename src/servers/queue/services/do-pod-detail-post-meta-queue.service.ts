@@ -126,7 +126,7 @@ export class DoPodDetailPostMetaQueueService {
       doPod: {
         doPodId: true,
         branchId: true,
-        userId: true,
+        // userId: true,
       },
     });
     q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
@@ -138,7 +138,7 @@ export class DoPodDetailPostMetaQueueService {
       // provide data
       const obj = {
         awbItemId: doPodDetail.awbItemId,
-        userId: doPodDetail.doPod.userId,
+        // userId: null,
         branchId: doPodDetail.doPod.branchId,
         awbStatusId: AWB_STATUS.OUT_BRANCH,
         awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
@@ -168,7 +168,6 @@ export class DoPodDetailPostMetaQueueService {
       userIdUpdated: true,
       doPodDeliver: {
         doPodDeliverId: true,
-        employeeIdDriver: true,
         branchId: true,
         userId: true,
       },
@@ -187,7 +186,7 @@ export class DoPodDetailPostMetaQueueService {
         awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
         userIdCreated: doPodDetailDeliver.userIdCreated,
         userIdUpdated: doPodDetailDeliver.userIdUpdated,
-        employeeIdDriver: doPodDetailDeliver.doPodDeliver.employeeIdDriver,
+        employeeIdDriver: null,
       };
 
       return DoPodDetailPostMetaQueueService.queue.add(obj);
@@ -319,7 +318,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdUpdated: true,
       doPodDeliver: {
         doPodDeliverId: true,
-        employeeIdDriver: true,
+        // employeeIdDriver: true,
         branchId: true,
         userId: true,
       },
@@ -351,7 +350,7 @@ export class DoPodDetailPostMetaQueueService {
         userIdCreated: doPodDetailDeliver.userIdCreated,
         userIdUpdated: doPodDetailDeliver.userIdUpdated,
         employeeIdDriver:
-          doPodDetailDeliver.doPodDeliver.employeeIdDriver,
+          null,
       };
 
       return DoPodDetailPostMetaQueueService.queue.add(obj);
