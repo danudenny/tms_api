@@ -10,7 +10,6 @@ import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm'
 import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
-import { Bag } from 'src/shared/orm-entity/bag';
 
 export class PrintService {
   public static async printDoPodByRequest(
