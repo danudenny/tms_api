@@ -10,6 +10,7 @@ import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm'
 import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
+import { Bag } from 'src/shared/orm-entity/bag';
 
 export class PrintService {
   public static async printDoPodByRequest(
@@ -30,6 +31,7 @@ export class PrintService {
         branchTo: {
           branchName: true,
         },
+        vehicleNumber: true,
         doPodDetails: {
           doPodDetailId: true, // needs to be selected due to do_pod_detail relations are being included
           awbItem: {
@@ -114,6 +116,7 @@ export class PrintService {
         branchTo: {
           branchName: true,
         },
+        vehicleNumber: true,
         doPodDetails: {
           doPodDetailId: true, // needs to be selected due to do_pod_detail relations are being included
           bagItem: {
@@ -214,6 +217,7 @@ export class PrintService {
             awb: {
               awbNumber: true,
               consigneeName: true,
+              consigneeNumber: true,
             },
           },
         },
