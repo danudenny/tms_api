@@ -1,28 +1,23 @@
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
-import { MetaService } from '../../../../shared/services/meta.service';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { AwbTroubleResponseVm } from '../../models/awb-trouble-response.vm';
 import { Injectable } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { WebScanInBranchVm, WebVerificationAwbVm, WebVerificationBagVm } from '../../models/web-scanin-branch.vm';
 import { WebScanInBranchResponseVm, VerificationAwbResponseVm, WebScanInBranchResponseNewVm } from '../../models/web-scanin-branch.response.vm';
-import { AuthService } from 'src/shared/services/auth.service';
+import { AuthService } from '../../../../shared/services/auth.service';
 import moment = require('moment');
-import { DeliveryService } from 'src/shared/services/delivery.service';
-import { RedisService } from 'src/shared/services/redis.service';
-import { PodFilter } from 'src/shared/orm-entity/pod-filter';
+import { DeliveryService } from '../../../../shared/services/delivery.service';
+import { RedisService } from '../../../../shared/services/redis.service';
 import { WebScanInValidateBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInValidateBagResponseVm } from '../../models/web-scanin-awb.response.vm';
-import { PodFilterDetail } from 'src/shared/orm-entity/pod-filter-detail';
-import { BagItem } from 'src/shared/orm-entity/bag-item';
-import { BagItemAwb } from 'src/shared/orm-entity/bag-item-awb';
-import { User } from 'src/shared/orm-entity/user';
-import { BagTrouble } from 'src/shared/orm-entity/bag-trouble';
-import { DropoffSortation } from 'src/shared/orm-entity/dropoff_sortation';
-import { DropoffSortationDetail } from 'src/shared/orm-entity/dropoff_sortation_detail';
-import { AwbItemAttr } from 'src/shared/orm-entity/awb-item-attr';
-import { AwbAttr } from 'src/shared/orm-entity/awb-attr';
+import { PodFilter } from '../../../../shared/orm-entity/pod-filter';
+import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
+import { BagItem } from '../../../../shared/orm-entity/bag-item';
+import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
+import { User } from '../../../../shared/orm-entity/user';
+import { BagTrouble } from '../../../../shared/orm-entity/bag-trouble';
+import { DropoffSortation } from '../../../../shared/orm-entity/dropoff_sortation';
+import { DropoffSortationDetail } from '../../../../shared/orm-entity/dropoff_sortation_detail';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
 
 @Injectable()
 export class WebAwbCountService {

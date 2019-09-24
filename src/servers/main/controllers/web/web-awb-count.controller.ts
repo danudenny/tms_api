@@ -5,9 +5,9 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { WebScanInBranchVm, WebVerificationAwbVm, WebVerificationBagVm } from '../../models/web-scanin-branch.vm';
 import { WebScanInBranchResponseVm, VerificationAwbResponseVm, WebScanInBranchResponseNewVm } from '../../models/web-scanin-branch.response.vm';
 import { WebAwbCountService } from '../../services/web/web-awb-count.service';
-import { PermissionTokenGuard } from 'src/shared/guards/permission-token.guard';
 import { WebScanInValidateBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInValidateBagVm } from '../../models/web-scanin-bag.vm';
+import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('Web Count Awb Pod')
 @Controller('web/pod/count')
