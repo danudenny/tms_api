@@ -16,11 +16,11 @@ export class DropoffSortationDetail extends TmsBaseEntity {
   })
   dropoffSortationId: number;
 
-  @Column({
-    type: 'bigint',
-    name: 'dropoff_hub_id',
-  })
-  dropoffHubId: number;
+  // @Column({
+  //   type: 'bigint',
+  //   name: 'dropoff_hub_id',
+  // })
+  // dropoffHubId: number;
 
   @Column('bigint', {
     nullable: true,
