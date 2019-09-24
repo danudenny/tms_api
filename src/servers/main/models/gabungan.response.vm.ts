@@ -45,4 +45,7 @@ export class PackageAwbResponseVm   {
 
   @ApiModelPropertyOptional()
   bagItemId: number;
+
+  @ApiModelPropertyOptional()
+  podScanInHubId: number;
 }

@@ -665,7 +665,7 @@ export class WebAwbFilterService {
       awbTroubleCode,
       troubleCategory: 'awb_filtered',
       troubleDesc,
-      awbTroubleStatusId: 100,
+      transactionStatusId: 100,
       awbStatusId: 12800,
       employeeIdTrigger: authMeta.employeeId,
       branchIdTrigger: permissonPayload.branchId,
