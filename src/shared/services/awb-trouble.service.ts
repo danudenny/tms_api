@@ -34,7 +34,7 @@ export class AwbTroubleService {
     const awbTrouble = AwbTrouble.create({
       awbNumber,
       awbTroubleCode,
-      awbTroubleStatusId: 100,
+      transactionStatusId: 100,
       awbStatusId: awbStatusIdLast,
       userIdTrigger: authMeta.userId,
       employeeIdTrigger: authMeta.employeeId,
@@ -59,7 +59,7 @@ export class AwbTroubleService {
     const awbTrouble = AwbTrouble.create({
       awbNumber,
       awbTroubleCode,
-      awbTroubleStatusId: 100,
+      transactionStatusId: 100,
       awbStatusId: awbStatusIdLast,
       userIdTrigger: authMeta.userId,
       employeeIdTrigger: authMeta.employeeId,
