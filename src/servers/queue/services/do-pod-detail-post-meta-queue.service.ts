@@ -111,7 +111,7 @@ export class DoPodDetailPostMetaQueueService {
   }
 
   // TODO: simplify get data
-  public static async createJobByScanOutAwb(doPodDetailId: number) {
+  public static async createJobByScanOutAwb(doPodDetailId: string) {
 
     const doPodDetailRepository = new OrionRepositoryService(DoPodDetail);
     const q = doPodDetailRepository.findOne();
@@ -217,7 +217,7 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
-  public static async createJobByScanInAwb(doPodDetailId: number) {
+  public static async createJobByScanInAwb(doPodDetailId: string) {
     // TODO: ???
     const doPodDetailRepository = new OrionRepositoryService(
       DoPodDetail,

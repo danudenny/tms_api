@@ -2,9 +2,9 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGene
 
 import { Branch } from './branch';
 import { DoPodDetail } from './do-pod-detail';
-import { Employee } from './employee';
 import { TmsBaseEntity } from './tms-base';
 import { PartnerLogistic } from './partner-logistic';
+import { User } from './user';
 
 @Entity('do_pod', { schema: 'public' })
 export class DoPod extends TmsBaseEntity {
@@ -265,7 +265,7 @@ export class DoPod extends TmsBaseEntity {
   @OneToMany(() => DoPodDetail, e => e.doPod)
   doPodDetails: DoPodDetail[];
 
-  // @ManyToOne(() => Employee)
-  // @JoinColumn({ name: 'employee_id_driver' })
-  // employee: Employee;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_driver' })
+  userDriver: User;
 }

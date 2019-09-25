@@ -23,9 +23,12 @@ export class PrintService {
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
         doPodCode: true,
-        employee: {
-          nickname: true,
-          nik: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
         },
         branchTo: {
           branchName: true,
@@ -108,9 +111,12 @@ export class PrintService {
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
         doPodCode: true,
-        employee: {
-          nickname: true,
-          nik: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
         },
         branchTo: {
           branchName: true,
@@ -205,9 +211,12 @@ export class PrintService {
       .select({
         doPodDeliverId: true, // needs to be selected due to do_pod_deliver relations are being included
         doPodDeliverCode: true,
-        employee: {
-          nickname: true,
-          nik: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
         },
         doPodDeliverDetails: {
           doPodDeliverDetailId: true, // needs to be selected due to do_pod_deliver_detail relations are being included

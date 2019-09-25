@@ -101,7 +101,7 @@ export class BagService {
   static async statusOutBranchAwbBag(
     bagId: number,
     bagItemId: number,
-    doPodId: number,
+    doPodId: string,
     branchIdNext: number,
     employeeIdDriver: number,
   ) {

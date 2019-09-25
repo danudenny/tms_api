@@ -4,6 +4,7 @@ import { Branch } from './branch';
 import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 import { Employee } from './employee';
 import { TmsBaseEntity } from './tms-base';
+import { User } from './user';
 
 @Entity('do_pod_deliver', { schema: 'public' })
 export class DoPodDeliver extends TmsBaseEntity {
@@ -119,7 +120,7 @@ export class DoPodDeliver extends TmsBaseEntity {
   @OneToMany(() => DoPodDeliverDetail, e => e.doPodDeliver)
   doPodDeliverDetails: DoPodDeliverDetail[];
 
-  // @ManyToOne(() => Employee)
-  // @JoinColumn({ name: 'user_id_driver' })
-  // employee: Employee;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_driver' })
+  userDriver: User;
 }
