@@ -12,7 +12,7 @@ export class WebScanOutAwbVm  {
     skipValidation: true,
   })
   @IsDefined({message: 'POD ID harus diisi'})
-  doPodId: number;
+  doPodId: string;
 
   @ApiModelProperty({
     example: ['00020001', '00020002'],
@@ -160,11 +160,11 @@ export class WebScanOutCreateVm extends WebScanOutVm {
 export class WebScanOutEditVm extends WebScanOutVm {
 
   @ApiModelProperty({
-    example: 203,
+    example: 'asdkjashfhasifhasifhasihf',
     skipValidation: true,
   })
   @IsDefined({message: 'POD ID harus diisi'})
-  doPodId: number;
+  doPodId: string;
 
   @ApiModelPropertyOptional({
     example: ['00020001', '00020002'],
@@ -195,7 +195,7 @@ export class WebScanOutEditHubVm extends WebScanOutVm {
     skipValidation: true,
   })
   @IsDefined({message: 'POD ID harus diisi'})
-  doPodId: number;
+  doPodId: string;
 
   @ApiModelPropertyOptional({
     example: ['00020001', '00020002'],

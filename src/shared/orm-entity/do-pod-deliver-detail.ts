@@ -14,11 +14,11 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
   })
   doPodDeliverDetailId: number;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: false,
     name: 'do_pod_deliver_id',
   })
-  doPodDeliverId: number;
+  doPodDeliverId: string;
 
   @Column('bigint', {
     nullable: true,

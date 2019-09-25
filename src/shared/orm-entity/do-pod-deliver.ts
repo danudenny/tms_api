@@ -8,11 +8,10 @@ import { User } from './user';
 
 @Entity('do_pod_deliver', { schema: 'public' })
 export class DoPodDeliver extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_pod_deliver_id',
   })
-  doPodDeliverId: number;
+  doPodDeliverId: string;
 
   @Column('character varying', {
     nullable: false,
@@ -121,11 +120,7 @@ export class DoPodDeliver extends TmsBaseEntity {
   @OneToMany(() => DoPodDeliverDetail, e => e.doPodDeliver)
   doPodDeliverDetails: DoPodDeliverDetail[];
 
-  @ManyToOne(() => Employee)
-  @JoinColumn({ name: 'employee_id_driver' })
-  employee: Employee;
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_driver', referencedColumnName: 'userId' })
-  user: User;
+  userDriver: User;
 }

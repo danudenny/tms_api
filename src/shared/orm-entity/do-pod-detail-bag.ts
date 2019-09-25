@@ -10,11 +10,11 @@ export class DoPodDetailBag extends TmsBaseEntity {
   })
   doPodDetailBagId: number;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: false,
     name: 'do_pod_id',
   })
-  doPodId: number;
+  doPodId: string;
 
   @Column('bigint', {
     nullable: true,
@@ -33,5 +33,4 @@ export class DoPodDetailBag extends TmsBaseEntity {
     name: 'transaction_status_id_last',
   })
   transactionStatusIdLast: number;
-
 }

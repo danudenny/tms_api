@@ -2,25 +2,19 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn
 
 import { TmsBaseEntity } from './tms-base';
 
-@Entity('pod_scan_in_hub_bag', { schema: 'public' })
-export class PodScanInHubBag extends TmsBaseEntity {
+@Entity('pod_scan_in_branch_bag', { schema: 'public' })
+export class PodScanInBranchBag extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'pod_scan_in_hub_bag_id',
+    name: 'pod_scan_in_branch_bag_id',
   })
-  podScanInHubBagId: number;
+  podScanInBranchBagId: number;
 
   @Column({
     type: 'bigint',
-    name: 'pod_scan_in_hub_id',
+    name: 'pod_scan_in_branch_id',
   })
-  podScanInHubId: number;
-
-  @Column('bigint', {
-    nullable: true,
-    name: 'branch_id',
-  })
-  branchId: number | null;
+  podScanInBranchId: number;
 
   @Column('bigint', {
     nullable: false,
@@ -54,4 +48,11 @@ export class PodScanInHubBag extends TmsBaseEntity {
     name: 'total_diff',
   })
   totalDiff: number | null;
+
+  @Column('character varying', {
+    nullable: true,
+    name: 'notes',
+  })
+  notes: string | null;
+
 }

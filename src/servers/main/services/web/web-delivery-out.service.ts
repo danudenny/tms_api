@@ -103,7 +103,7 @@ export class WebDeliveryOutService {
     // Populate return value
     result.status = 'ok';
     result.message = 'success';
-    result.doPodId = Number(doPod.doPodId);
+    result.doPodId = doPod.doPodId;
 
     return result;
   }
@@ -141,7 +141,7 @@ export class WebDeliveryOutService {
           const doPodDetail = DoPodDetail.create();
           doPodDetail.doPodId = payload.doPodId;
           doPodDetail.awbItemId = awb.awbItemId;
-          doPodDetail.transcationStatusIdLast = 1000;
+          doPodDetail.transactionStatusIdLast = 1000;
           doPodDetail.isScanOut = true;
           doPodDetail.scanOutType = 'awb';
           await DoPodDetail.save(doPodDetail);
@@ -256,7 +256,7 @@ export class WebDeliveryOutService {
           const doPodDetail = DoPodDetail.create();
           doPodDetail.doPodId = payload.doPodId;
           doPodDetail.bagItemId = bag.bagItemId;
-          doPodDetail.transcationStatusIdLast = 1000;
+          doPodDetail.transactionStatusIdLast = 1000;
           doPodDetail.isScanOut = true;
           doPodDetail.scanOutType = 'bag';
           await DoPodDetail.save(doPodDetail);
@@ -403,7 +403,7 @@ export class WebDeliveryOutService {
     // Populate return value
     result.status = 'ok';
     result.message = 'success';
-    result.doPodId = Number(doPod.doPodDeliverId);
+    result.doPodId = doPod.doPodDeliverId;
 
     return result;
   }
@@ -476,7 +476,7 @@ export class WebDeliveryOutService {
                 const doPodDetail = DoPodDetail.create();
                 doPodDetail.doPodId = payload.doPodId;
                 doPodDetail.awbItemId = awb.awbItemId;
-                doPodDetail.transcationStatusIdLast = 1000;
+                doPodDetail.transactionStatusIdLast = 1000;
                 doPodDetail.isScanOut = true;
                 doPodDetail.scanOutType = 'awb';
                 await DoPodDetail.save(doPodDetail);
@@ -880,11 +880,12 @@ export class WebDeliveryOutService {
       ['t1.do_pod_method', 'doPodMethod'],
       ['t1.vehicle_number', 'vehicleNumber'],
       ['t1.branch_id_to', 'branchIdTo'],
-      ['t2.nickname', 'nickname'],
+      ['t2.username', 'nickname'],
       ['t3.branch_name', 'branchTo'],
     );
+    // TODO: relation userDriver to Employee Driver
 
-    q.innerJoin(e => e.employee, 't2', j =>
+    q.innerJoin(e => e.userDriver, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branchTo, 't3', j =>
@@ -951,8 +952,11 @@ export class WebDeliveryOutService {
       ['t1.description', 'description'],
       ['t1.total_delivery', 'totalDelivery'],
       ['t1.total_problem', 'totalProblem'],
-      ['COUNT (t3.*) FILTER (WHERE t5.awb_status_id_last = 14000)', 'totalAwb'],
-      ['t2.fullname', 'nickname'],
+      [
+        'COUNT (t3.*) FILTER (WHERE t5.awb_status_id_last = 14000)',
+        'totalAwb',
+      ],
+      ['t2.username', 'nickname'],
       ['t4.is_cod', 'isCod'],
       [
         `CONCAT(CAST(SUM(t4.total_cod_value) AS NUMERIC(20,2)))`,
@@ -960,7 +964,7 @@ export class WebDeliveryOutService {
       ],
     );
 
-    q.innerJoin(e => e.employee, 't2', j =>
+    q.innerJoin(e => e.userDriver, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.doPodDeliverDetails, 't5', j =>
@@ -1207,7 +1211,7 @@ export class WebDeliveryOutService {
     return result;
   }
 
-  private async getTotalDetailById(doPodId: number) {
+  private async getTotalDetailById(doPodId: string) {
     const qb = createQueryBuilder();
     qb.from('do_pod_detail', 'do_pod_detail');
     qb.where('do_pod_detail.do_pod_id = :doPodId', {
@@ -1264,8 +1268,8 @@ export class WebDeliveryOutService {
         ['t3.branch_name', 'branchTo'],
         ['t3.branch_code', 'branchCode'],
       );
-
-      q.innerJoin(e => e.employee, 't2', j =>
+      // TODO: fix query relation to employee
+      q.innerJoin(e => e.userDriver, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.innerJoin(e => e.branchTo, 't3', j =>
@@ -1283,13 +1287,13 @@ export class WebDeliveryOutService {
         ['t1.do_pod_method', 'doPodMethod'],
         ['t1.vehicle_number', 'vehicleNumber'],
         ['t1.branch_id_to', 'branchIdTo'],
-        ['t2.fullname', 'employeeName'],
+        ['t2.username', 'employeeName'],
         ['t2.nik', 'nik'],
         ['t3.branch_name', 'branchTo'],
         ['t3.branch_code', 'branchCode'],
       );
-
-      q.innerJoin(e => e.employee, 't2', j =>
+      // TODO: fix query relation to employee
+      q.innerJoin(e => e.userDriver, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.innerJoin(e => e.branchTo, 't3', j =>

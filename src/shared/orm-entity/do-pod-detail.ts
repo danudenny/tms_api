@@ -9,11 +9,10 @@ import { TmsBaseEntity } from './tms-base';
 
 @Entity('do_pod_detail', { schema: 'public' })
 export class DoPodDetail extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_pod_detail_id',
   })
-  doPodDetailId: number;
+  doPodDetailId: string;
 
   @Column('bigint', {
     nullable: true,
@@ -21,11 +20,11 @@ export class DoPodDetail extends TmsBaseEntity {
   })
   podScanInId: number | null;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: false,
     name: 'do_pod_id',
   })
-  doPodId: number;
+  doPodId: string;
 
   @Column('bigint', {
     nullable: true,
@@ -46,16 +45,10 @@ export class DoPodDetail extends TmsBaseEntity {
   bagItemId: number | null;
 
   @Column('bigint', {
-    nullable: false,
-    name: 'transcation_status_id_last',
-  })
-  transcationStatusIdLast: number;
-
-  @Column('bigint', {
     nullable: true,
-    name: 'do_pod_history_id_last',
+    name: 'transaction_status_id_last',
   })
-  doPodHistoryIdLast: number | null;
+  transactionStatusIdLast: number;
 
   @Column('bigint', {
     nullable: false,
@@ -131,22 +124,6 @@ export class DoPodDetail extends TmsBaseEntity {
     name: 'is_posted',
   })
   isPosted: boolean | null;
-
-  @Column('numeric', {
-    nullable: false,
-    precision: 20,
-    scale: 5,
-    name: 'total_weight_final',
-  })
-  totalWeightFinal: string;
-
-  @Column('numeric', {
-    nullable: false,
-    precision: 20,
-    scale: 5,
-    name: 'total_weight_final_rounded',
-  })
-  totalWeightFinalRounded: string;
 
   @OneToOne(() => PodScanIn)
   @JoinColumn({ name: 'pod_scan_in_id' })

@@ -51,12 +51,13 @@ export class WebMonitoringService {
       ['t1.percen_scan_in_out', 'percenScanInOut'],
       ['t1.total_scan_in', 'totalScanIn'],
       ['t1.total_scan_out', 'totalScanOut'],
-      ['t2.fullname', 'fullname'],
+      ['t2.username', 'fullname'],
       ['t3.branch_name', 'branchName'],
       ['COUNT (t4.*)', 'totalAwb'],
     );
 
-    q.innerJoin(e => e.employee, 't2', j =>
+    // TODO: fix query relation to employee
+    q.innerJoin(e => e.userDriver, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't3', j =>
