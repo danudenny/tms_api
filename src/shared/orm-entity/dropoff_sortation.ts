@@ -7,7 +7,7 @@ export class DropoffSortation extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'dropoff_sortation_id',
   })
-  dropoffSortationId: number;
+  dropoffSortationId: string;
 
   // @Column({
   //   name: 'dropoff_hub_id',

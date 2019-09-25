@@ -2,7 +2,7 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class MobileDeliveryHistoryVm {
   @ApiModelProperty()
-  doPodDeliverHistoryId: number;
+  doPodDeliverHistoryId: string;
 
   @ApiModelProperty({ format: 'date-time' })
   historyDateTime: string;

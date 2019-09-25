@@ -50,7 +50,7 @@ export class PackageAwbResponseVm   {
   bagItemId: number;
 
   @ApiModelPropertyOptional()
-  podScanInHubId: number;
+  podScanInHubId: string;
 
   @ApiModelProperty()
   isAllow: boolean;

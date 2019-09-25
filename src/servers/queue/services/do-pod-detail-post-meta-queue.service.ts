@@ -152,7 +152,7 @@ export class DoPodDetailPostMetaQueueService {
 
   }
 
-  public static async createJobByScanOutAwbDeliver(doPodDeliverDetailId: number) {
+  public static async createJobByScanOutAwbDeliver(doPodDeliverDetailId: string) {
 
     const doPodDetailRepository = new OrionRepositoryService(
       DoPodDeliverDetail,
@@ -302,7 +302,7 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
-  public static async createJobByMobileSyncAwb(doPodDeliverDetailId: number, awbStatusId: number) {
+  public static async createJobByMobileSyncAwb(doPodDeliverDetailId: string, awbStatusId: number) {
 
     const doPodDetailRepository = new OrionRepositoryService(
       DoPodDeliverDetail,
