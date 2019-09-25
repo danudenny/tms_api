@@ -8,6 +8,7 @@ import { DropoffHubDetail } from '../../../../shared/orm-entity/dropoff_hub_deta
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
+import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 
 export class BagService {
 
@@ -58,25 +59,37 @@ export class BagService {
         if (itemAwb.awbItemId) {
           // create dropoffDetail
           // =============================================================
-          const dropoffDetail = DropoffHubDetail.create();
-          dropoffDetail.dropoffHubId = dropoffHubId;
-          dropoffDetail.branchId = permissonPayload.branchId;
-          // dropoffDetail.awbId = ;
-          dropoffDetail.awbItemId = itemAwb.awbItemId;
-          await DropoffHubDetail.save(dropoffDetail);
+          // find awb where awb_item_id
+          const awbItem = await AwbItem.findOne({
+            where: {
+              awbItemId: itemAwb.awbItemId,
+              isDeleted: false,
+            },
+          });
 
-          await AwbService.updateAwbAttr(
-            itemAwb.awbItemId,
-            AWB_STATUS.DO_HUB,
-          );
-          // TODO: check awb status for auto check out ??
-          // NOTE: queue by Bull
-          // add awb history with background process
-          DoPodDetailPostMetaQueueService.createJobByDropoffBag(
-            itemAwb.awbItemId,
-            permissonPayload.branchId,
-            authMeta.userId,
-          );
+          if (awbItem) {
+            const dropoffDetail = DropoffHubDetail.create();
+            dropoffDetail.dropoffHubId = dropoffHubId;
+            dropoffDetail.branchId = permissonPayload.branchId;
+            dropoffDetail.awbId = awbItem.awbId;
+            dropoffDetail.awbItemId = itemAwb.awbItemId;
+            await DropoffHubDetail.save(dropoffDetail);
+
+            await AwbService.updateAwbAttr(
+              itemAwb.awbItemId,
+              AWB_STATUS.DO_HUB,
+            );
+            // TODO: check awb status for auto check out ??
+            // NOTE: queue by Bull
+            // add awb history with background process
+            DoPodDetailPostMetaQueueService.createJobByDropoffBag(
+              itemAwb.awbItemId,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
+          } else {
+            Logger.log('### Data Awb Item :: Not Found!!');
+          }
         }
       } // end of loop
     } else {
@@ -108,7 +121,7 @@ export class BagService {
           doPodDetail.awbItemId = itemAwb.awbItemId;
           doPodDetail.bagId = bagId;
           doPodDetail.bagItemId = bagItemId;
-          doPodDetail.transcationStatusIdLast = 1000;
+          doPodDetail.transactionStatusIdLast = 1000;
           doPodDetail.isScanOut = true;
           doPodDetail.scanOutType = 'bag';
           await DoPodDetail.save(doPodDetail);

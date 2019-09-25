@@ -17,9 +17,9 @@ import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-
 import { AwbService } from '../v1/awb.service';
 import { Awb } from '../../../../shared/orm-entity/awb';
 import { PodScanIn } from '../../../../shared/orm-entity/pod-scan-in';
-import { PodScanInHub } from '../../../../shared/orm-entity/pod_scan_in_hub';
-import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod_scan_in_hub_detail';
-import { PodScanInHubBag } from '../../../../shared/orm-entity/pod_scan_in_hub_bag';
+import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
+import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
+import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 
@@ -53,7 +53,11 @@ export class PackageService {
       result.districtId     = scanResult.districtId;
       result.districtName   = scanResult.districtName;
       result.data           = scanResult.data;
+      result.bagItemId      = scanResult.bagItemId;
+      result.isAllow        = scanResult.isAllow;
       result.podScanInHubId = scanResult.podScanInHubId;
+    } else if (value === '*SELESAI' || value === '*selesai' ) {
+      await this.onFinish(payload);
     } else {
       // search district code
       const district = await District.findOne({
@@ -120,13 +124,11 @@ export class PackageService {
       let districtId;
       let districtName;
       let bagItemId;
-      // for (const val of data) {
+
       bagNumber = `${data[0].bagNumber}${data[0].bagSeq.toString().padStart(3, '0')}`;
       districtId = data[0].districtId;
       districtName = data[0].districtName;
       bagItemId = data[0].bagItemId;
-
-      // }
 
       result.bagNumber      = bagNumber;
       result.districtId     = districtId;
@@ -138,6 +140,16 @@ export class PackageService {
     }
     return result;
   }
+
+  private async onFinish(payload): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const podScanInHub = await PodScanInHub.findOne({ where: { podScanInHubId: payload.podScanInHubId } });
+    podScanInHub.transactionStatusId = 200;
+    podScanInHub.updatedTime         = moment().toDate();
+    podScanInHub.userIdUpdated       = authMeta.userId;
+    podScanInHub.save();
+  }
+
   private async createBagNumber(payload): Promise<any> {
     const value            = payload.value;
     const result           = new Object();
@@ -162,6 +174,7 @@ export class PackageService {
     qb.from('bag', 'a');
     qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
     qb.where('a.created_time::date = :today', { today: moment().format('YYYY-MM-DD') });
+    qb.andWhere('a.district_id_to = :districtId', { districtId });
     qb.andWhere('a.is_deleted = false');
     qb.groupBy('a.bag_id');
 
@@ -175,8 +188,8 @@ export class PackageService {
           randomBagNumber = 'GS' + sampleSize('012345678900123456789001234567890', 5).join('');
           const bagDetail = Bag.create({
             bagNumber    : randomBagNumber,
-            bagType      : 'district',
             districtIdTo : districtId,
+            bagType      : 'district',
             branchId     : permissonPayload.branchId,
             bagDate      : moment().format('YYYY-MM-DD'),
             bagDateReal  : moment().toDate(),
@@ -291,7 +304,7 @@ export class PackageService {
     assign(result,  {
       bagItemId     : bagItem.bagItemId,
       podScanInHubId: podScanInHub.podScanInHubId,
-      bagNumber     : `${randomBagNumber}; ` + `;$;{sequence.toString().padStart(3, '0');}`,
+      bagNumber     : `${randomBagNumber}${sequence.toString().padStart(3, '0')}`,
     });
 
     return result;
@@ -302,12 +315,14 @@ export class PackageService {
     const result           = new Object();
     const authMeta         = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    let isTrouble: boolean  = false;
-    const troubleDesc: String[] = [];
     const awbItemAttr      = await AwbService.validAwbNumber(value);
-    const districtId       = payload.districtId;
-    let bagNumber          = payload.bagNumber;
-    let podScanInHubId     = payload.podScanInHubId;
+    const districtId: number    = payload.districtId;
+    let bagNumber: number       = payload.bagNumber;
+    let podScanInHubId: number  = payload.podScanInHubId;
+    let bagItemId: number       = payload.bagItemId;
+    let isTrouble: boolean      = false;
+    let isAllow: boolean        = true;
+    const troubleDesc: String[] = [];
 
     if (!awbItemAttr) {
       RequestErrorService.throwObj(
@@ -332,54 +347,74 @@ export class PackageService {
 
     const awb = await Awb.findOne({ where: { awbNumber: value } });
 
-    if (awb.toId !== districtId) {
-      isTrouble = true;
-      troubleDesc.push('Tujuan tidak sesuai');
-    }
-
-    const districtDetail = await District.findOne({ where: { isDeleted: false, districtId } });
-
-    const detail = {
-      awbNumber     : awb.awbNumber,
-      weight        : awb.totalWeightRealRounded,
-      consigneeName : awb.consigneeName,
-      awbItemId     : awbItemAttr.awbItemId,
-      customerId    : awb.customerAccountId,
-      pickupMerchant: awb.pickupMerchant,
-      shipperName   : awb.refReseller,
-    };
-
-    assign(payload, {
-      awbItemId: awbItemAttr.awbItemId,
-      awbDetail: awb,
-      isTrouble,
-      troubleDesc,
-    });
-
-    if (payload.bagNumber) {
-      await this.insertDetailAwb(payload);
+    if (awb.toId) {
+      if (awb.toId !== districtId) {
+        isAllow = false;
+      }
     } else {
-      // Generate Bag Number
-      const genBagNumber = await this.createBagNumber(payload);
-      bagNumber  = genBagNumber.bagNumber;
-      podScanInHubId = genBagNumber.podScanInHubId;
+      isTrouble = true;
+      troubleDesc.push('Tidak ada tujuan');
     }
 
-    if (isTrouble) {
-      const dataTrouble = {
-        awbNumber: awb.awbNumber,
-        troubleDesc: join(troubleDesc, ' dan '),
+    if (isAllow) {
+      const districtDetail = await District.findOne({ where: { isDeleted: false, districtId } });
+
+      const detail = {
+        awbNumber     : awb.awbNumber,
+        weight        : awb.totalWeightRealRounded,
+        consigneeName : awb.consigneeName,
+        awbItemId     : awbItemAttr.awbItemId,
+        customerId    : awb.customerAccountId,
+        pickupMerchant: awb.pickupMerchant,
+        shipperName   : awb.refReseller,
+        isTrouble,
       };
-      await this.insertAwbTrouble(dataTrouble);
-    }
 
-    assign(result, {
-      bagNumber,
-      podScanInHubId,
-      data        : detail,
-      districtId  : districtDetail.districtId,
-      districtName: districtDetail.districtName,
-    });
+      assign(payload, {
+        awbItemId: awbItemAttr.awbItemId,
+        awbDetail: awb,
+        isTrouble,
+        troubleDesc,
+      });
+
+      if (payload.bagNumber) {
+        await this.insertDetailAwb(payload);
+      } else {
+        // Generate Bag Number
+        const genBagNumber = await this.createBagNumber(payload);
+        bagNumber          = genBagNumber.bagNumber;
+        bagItemId          = genBagNumber.bagItemId;
+        podScanInHubId     = genBagNumber.podScanInHubId;
+      }
+
+      if (isTrouble) {
+        const dataTrouble = {
+          awbNumber: awb.awbNumber,
+          troubleDesc: join(troubleDesc, ' dan '),
+        };
+        await this.insertAwbTrouble(dataTrouble);
+      }
+
+      assign(result, {
+        bagNumber,
+        isAllow,
+        podScanInHubId,
+        bagItemId,
+        districtId,
+        data        : detail,
+        districtName: districtDetail.districtName,
+      });
+    } else {
+      assign(result, {
+        isAllow,
+        bagNumber,
+        podScanInHubId,
+        bagItemId,
+        data: [],
+        districtId,
+        districtName: null,
+      });
+    }
 
     return result;
   }
@@ -388,8 +423,7 @@ export class PackageService {
     const authMeta         = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const bagDetail = await this.getBagDetail(payload.bagNumber);
-    console.log(payload);
-    console.log('-------------------------');
+
     // Insert into table bag item awb
     const bagItemAwbData = BagItemAwb.create({
       bagItemId    : bagDetail.bagItemId,
