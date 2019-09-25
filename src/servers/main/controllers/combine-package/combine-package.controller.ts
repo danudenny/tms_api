@@ -30,4 +30,13 @@ export class CombinePackageController {
   public async packageAwb(@Body() payload: PackagePayloadVm) {
     return this.packageService.awbPackage(payload);
   }
+
+  @Post('loadPackages')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: PackageAwbResponseVm })
+  public async loadPackageAwb() {
+    return this.packageService.loadAwbPackage();
+  }
 }

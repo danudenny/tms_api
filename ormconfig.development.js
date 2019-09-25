@@ -1,11 +1,11 @@
 module.exports = {
   type: 'postgres',
   host:
-    'sicepat-tms-masterdata-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+    'sicepat-tms-reborn.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
   port: 5432,
-  username: 'sicepatstaging',
-  password: 's1c3p4T$t46Ingb05$sQu',
-  database: 'sicepattmsstaging2',
+  username: 'sicepattmsuser',
+  password: 's1c3p4Ttm$us3R3ncrypT3dbo05$',
+  database: 'sicepattms',
   schema: 'public',
   entities: ['src/shared/orm-entity/*.ts'],
   migrations: ['src/shared/orm-migration/*.ts'],

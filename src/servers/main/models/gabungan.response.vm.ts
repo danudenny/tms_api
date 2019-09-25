@@ -24,6 +24,9 @@ export class AwbPackageDetail {
 
   @ApiModelProperty()
   consigneeName: string;
+
+  @ApiModelProperty()
+  isTrouble: boolean;
 }
 
 export class PackageAwbResponseVm   {
@@ -45,4 +48,10 @@ export class PackageAwbResponseVm   {
 
   @ApiModelPropertyOptional()
   bagItemId: number;
+
+  @ApiModelPropertyOptional()
+  podScanInHubId: number;
+
+  @ApiModelProperty()
+  isAllow: boolean;
 }

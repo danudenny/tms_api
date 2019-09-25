@@ -28,4 +28,11 @@ export class PodScanInBranch extends TmsBaseEntity {
   })
   transactionStatusId: number;
 
+  @Column('integer', {
+    nullable: false,
+    default: () => 0,
+    name: 'total_bag_scan',
+  })
+  totalBagScan: number | null;
+
 }

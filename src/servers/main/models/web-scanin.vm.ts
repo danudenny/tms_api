@@ -14,7 +14,7 @@ export class WebScanInVm  {
   awbNumber: string[];
 }
 
-export class WebScanInBranchVm {
+export class WebScanInBagBranchVm {
   @ApiModelProperty({
     example: ['112039', '11203922'],
     skipValidation: true,
@@ -41,16 +41,11 @@ export class WebScanInBranchHubVm {
 
 export class WebScanInValidateBranchVm {
   @ApiModelProperty()
-  verifyCode: string;
-
-  @ApiModelProperty()
   notes: string;
 
   @ApiModelProperty()
-  totalAwbScan: number;
+  bagNumber: string[];
 
-  @ApiModelProperty()
-  totalAwb: number;
 }
 // Response
 export class ScanInputNumberBranchVm {

@@ -45,4 +45,9 @@ export class PackagePayloadVm {
     example: 'GS002939403001',
   })
   bagNumber?: string;
+
+  @ApiModelPropertyOptional({
+    example: '112',
+  })
+  podScanInHubId?: number;
 }

@@ -22,9 +22,9 @@ export class AwbTrouble extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: false,
-    name: 'awb_trouble_status_id',
+    name: 'transaction_status_id',
   })
-  awbTroubleStatusId: number;
+  transactionStatusId: number;
 
   @Column('bigint', {
     nullable: false,

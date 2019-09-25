@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { sampleSize, assign } from 'lodash';
+import { sampleSize, assign, join } from 'lodash';
 import moment = require('moment');
 import { PackageAwbResponseVm } from '../../models/gabungan.response.vm';
 import { PackagePayloadVm } from '../../models/gabungan-payload.vm';
@@ -17,9 +17,11 @@ import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-
 import { AwbService } from '../v1/awb.service';
 import { Awb } from '../../../../shared/orm-entity/awb';
 import { PodScanIn } from '../../../../shared/orm-entity/pod-scan-in';
-import { PodScanInHub } from '../../../../shared/orm-entity/pod_scan_in_hub';
-import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod_scan_in_hub_detail';
-import { PodScanInHubBag } from '../../../../shared/orm-entity/pod_scan_in_hub_bag';
+import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
+import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
+import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
+import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 
 @Injectable()
 export class PackageService {
@@ -46,11 +48,16 @@ export class PackageService {
         );
       }
       const scanResult = await this.awbScan(payload);
-      result.dataBag      = scanResult.dataBag;
-      result.bagNumber    = scanResult.bagNumber;
-      result.districtId   = scanResult.districtId;
-      result.districtName = scanResult.districtName;
-      result.data         = scanResult.data;
+      result.dataBag        = scanResult.dataBag;
+      result.bagNumber      = scanResult.bagNumber;
+      result.districtId     = scanResult.districtId;
+      result.districtName   = scanResult.districtName;
+      result.data           = scanResult.data;
+      result.bagItemId      = scanResult.bagItemId;
+      result.isAllow        = scanResult.isAllow;
+      result.podScanInHubId = scanResult.podScanInHubId;
+    } else if (value === '*SELESAI' || value === '*selesai' ) {
+      await this.onFinish(payload);
     } else {
       // search district code
       const district = await District.findOne({
@@ -71,6 +78,76 @@ export class PackageService {
     }
 
     return result;
+  }
+
+  async loadAwbPackage(): Promise<PackageAwbResponseVm> {
+    const authMeta         = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const result           = new PackageAwbResponseVm();
+
+    result.districtId = 0;
+
+    const podScanInHub = await PodScanInHub.findOne({ where: {
+        branchId           : permissonPayload.branchId,
+        userIdCreated      : authMeta.userId,
+        transactionStatusId: 100,
+        scanInType         : 'BAG',
+        isDeleted          : false,
+    }});
+
+    if (podScanInHub) {
+      const podScanInHubId = podScanInHub.podScanInHubId;
+      const qb = createQueryBuilder();
+      qb.addSelect('b.bag_number', 'bagNumber');
+      qb.addSelect('c.bag_seq', 'bagSeq');
+      qb.addSelect('c.bag_item_id', 'bagItemId');
+      qb.addSelect('b.district_id_to', 'districtId');
+      qb.addSelect('f.district_name', 'districtName');
+      qb.addSelect('d.consignee_name', 'consigneeName');
+      qb.addSelect('a.awb_item_id', 'awbItemId');
+      qb.addSelect('d.awb_number', 'awbNumber');
+      qb.addSelect('d.customer_account_id', 'customerId');
+      qb.addSelect('d.pickup_merchant', 'pickupMerchant');
+      qb.addSelect('d.ref_reseller', 'shipperName');
+      qb.addSelect('d.total_weight_real_rounded', 'weight');
+      qb.from('pod_scan_in_hub_detail', 'a');
+      qb.innerJoin('bag', 'b', 'a.bag_id = b.bag_id');
+      qb.innerJoin('bag_item', 'c', 'c.bag_item_id = a.bag_item_id');
+      qb.innerJoin('awb', 'd', 'd.awb_id = a.awb_id');
+      qb.innerJoin('awb_item', 'e', 'e.awb_item_id = a.awb_item_id');
+      qb.innerJoin('district', 'f', 'f.district_id = b.district_id_to');
+      qb.where('a.pod_scan_in_hub_id = :podScanInHubId', { podScanInHubId });
+      qb.andWhere('a.is_deleted = false');
+
+      const data = await qb.getRawMany();
+      let bagNumber;
+      let districtId;
+      let districtName;
+      let bagItemId;
+
+      bagNumber = `${data[0].bagNumber}${data[0].bagSeq.toString().padStart(3, '0')}`;
+      districtId = data[0].districtId;
+      districtName = data[0].districtName;
+      bagItemId = data[0].bagItemId;
+
+      result.bagNumber      = bagNumber;
+      result.districtId     = districtId;
+      result.districtName   = districtName;
+      result.podScanInHubId = podScanInHubId;
+      result.bagItemId      = bagItemId;
+      result.dataBag        = data;
+
+    }
+    return result;
+  }
+
+  private async onFinish(payload): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const podScanInHub = await PodScanInHub.findOne({ where: { podScanInHubId: payload.podScanInHubId } });
+    podScanInHub.transactionStatusId = 200;
+    podScanInHub.updatedTime         = moment().toDate();
+    podScanInHub.userIdUpdated       = authMeta.userId;
+    podScanInHub.save();
   }
 
   private async createBagNumber(payload): Promise<any> {
@@ -97,6 +174,7 @@ export class PackageService {
     qb.from('bag', 'a');
     qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
     qb.where('a.created_time::date = :today', { today: moment().format('YYYY-MM-DD') });
+    qb.andWhere('a.district_id_to = :districtId', { districtId });
     qb.andWhere('a.is_deleted = false');
     qb.groupBy('a.bag_id');
 
@@ -110,14 +188,14 @@ export class PackageService {
           randomBagNumber = 'GS' + sampleSize('012345678900123456789001234567890', 5).join('');
           const bagDetail = Bag.create({
             bagNumber    : randomBagNumber,
-            bagType      : 'district',
             districtIdTo : districtId,
+            bagType      : 'district',
             branchId     : permissonPayload.branchId,
-            userIdCreated: authMeta.userId,
             bagDate      : moment().format('YYYY-MM-DD'),
             bagDateReal  : moment().toDate(),
             createdTime  : moment().toDate(),
             updatedTime  : moment().toDate(),
+            userIdCreated: authMeta.userId,
             userIdUpdated: authMeta.userId,
           });
 
@@ -133,6 +211,7 @@ export class PackageService {
 
     const awbDetail = payload.awbDetail;
 
+    // INSERT INTO TABLE BAG ITEM
     const bagItemDetail = BagItem.create({
             bagId,
             bagSeq             : sequence,
@@ -146,10 +225,11 @@ export class PackageService {
     const bagItem = await BagItem.save(bagItemDetail);
 
     const totalWeight = parseFloat(awbDetail.weight);
+    // INSERT INTO TABLE BAG ITEM AWB
     const bagItemAwbDetail = BagItemAwb.create({
             bagItemId    : bagItem.bagItemId,
             awbNumber    : awbDetail.awbNumber,
-            weight       : awbDetail.weight,
+            weight       : parseFloat(awbDetail.totalWeightRealRounded),
             awbItemId    : awbDetail.awbItemId,
             userIdCreated: authMeta.userId,
             createdTime  : moment().toDate(),
@@ -165,7 +245,7 @@ export class PackageService {
     awbItemAttr.isPackageCombined = true;
     awbItemAttr.awbStatusIdLast   = 4500;
     awbItemAttr.userIdLast        = authMeta.userId,
-      await AwbItemAttr.save(awbItemAttr);
+    await AwbItemAttr.save(awbItemAttr);
 
         // update status
     DoPodDetailPostMetaQueueService.createJobByAwbFilter(
@@ -221,7 +301,11 @@ export class PackageService {
     updateBagItem.weight = totalWeight;
     await BagItem.save(updateBagItem);
 
-    assign(result,  { bagItemId: bagItem.bagItemId, bagNumber: `${randomBagNumber}` + `${sequence.toString().padStart(3, '0')}` });
+    assign(result,  {
+      bagItemId     : bagItem.bagItemId,
+      podScanInHubId: podScanInHub.podScanInHubId,
+      bagNumber     : `${randomBagNumber}${sequence.toString().padStart(3, '0')}`,
+    });
 
     return result;
   }
@@ -231,11 +315,14 @@ export class PackageService {
     const result           = new Object();
     const authMeta         = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    let isTrouble: boolean  = false;
-    const troubleDesc: String[] = [];
     const awbItemAttr      = await AwbService.validAwbNumber(value);
-    const districtId       = payload.districtId;
-    let bagNumber          = payload.bagNumber;
+    const districtId: number    = payload.districtId;
+    let bagNumber: number       = payload.bagNumber;
+    let podScanInHubId: number  = payload.podScanInHubId;
+    let bagItemId: number       = payload.bagItemId;
+    let isTrouble: boolean      = false;
+    let isAllow: boolean        = true;
+    const troubleDesc: String[] = [];
 
     if (!awbItemAttr) {
       RequestErrorService.throwObj(
@@ -260,50 +347,79 @@ export class PackageService {
 
     const awb = await Awb.findOne({ where: { awbNumber: value } });
 
-    if (awb.toId !== districtId) {
-      isTrouble = true;
-      troubleDesc.push('Tujuan tidak sesuai');
-    }
-
-    const districtDetail = await District.findOne({ where: { isDeleted: false, districtId } });
-
-    const detail = {
-      awbNumber     : awb.awbNumber,
-      weight        : awb.totalWeightRealRounded,
-      consigneeName : awb.consigneeName,
-      awbItemId     : awbItemAttr.awbItemId,
-      customerId    : awb.customerAccountId,
-      pickupMerchant: awb.pickupMerchant,
-      shipperName   : awb.refReseller,
-    };
-
-    assign(payload, {
-      awbItemId: awbItemAttr.awbItemId,
-      awbDetail: awb,
-      isTrouble,
-      troubleDesc,
-    });
-
-    if (!payload.bagNumber) {
-      // Generate Bag Number
-      const genBagNumber = await this.createBagNumber(payload);
-      bagNumber  = genBagNumber.bagNumber;
+    if (awb.toId) {
+      if (awb.toId !== districtId) {
+        isAllow = false;
+      }
     } else {
-      await this.insertDetailAwb(payload);
+      isTrouble = true;
+      troubleDesc.push('Tidak ada tujuan');
     }
 
-    assign(result, {
-      bagNumber,
-      data      : detail,
-      districtId: districtDetail.districtId,
-      districtName: districtDetail.districtName,
-    });
+    if (isAllow) {
+      const districtDetail = await District.findOne({ where: { isDeleted: false, districtId } });
+
+      const detail = {
+        awbNumber     : awb.awbNumber,
+        weight        : awb.totalWeightRealRounded,
+        consigneeName : awb.consigneeName,
+        awbItemId     : awbItemAttr.awbItemId,
+        customerId    : awb.customerAccountId,
+        pickupMerchant: awb.pickupMerchant,
+        shipperName   : awb.refReseller,
+        isTrouble,
+      };
+
+      assign(payload, {
+        awbItemId: awbItemAttr.awbItemId,
+        awbDetail: awb,
+        isTrouble,
+        troubleDesc,
+      });
+
+      if (payload.bagNumber) {
+        await this.insertDetailAwb(payload);
+      } else {
+        // Generate Bag Number
+        const genBagNumber = await this.createBagNumber(payload);
+        bagNumber          = genBagNumber.bagNumber;
+        bagItemId          = genBagNumber.bagItemId;
+        podScanInHubId     = genBagNumber.podScanInHubId;
+      }
+
+      if (isTrouble) {
+        const dataTrouble = {
+          awbNumber: awb.awbNumber,
+          troubleDesc: join(troubleDesc, ' dan '),
+        };
+        await this.insertAwbTrouble(dataTrouble);
+      }
+
+      assign(result, {
+        bagNumber,
+        isAllow,
+        podScanInHubId,
+        bagItemId,
+        districtId,
+        data        : detail,
+        districtName: districtDetail.districtName,
+      });
+    } else {
+      assign(result, {
+        isAllow,
+        bagNumber,
+        podScanInHubId,
+        bagItemId,
+        data: [],
+        districtId,
+        districtName: null,
+      });
+    }
 
     return result;
   }
 
   private async insertDetailAwb(payload): Promise<any> {
-    const result = new Object();
     const authMeta         = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const bagDetail = await this.getBagDetail(payload.bagNumber);
@@ -312,7 +428,7 @@ export class PackageService {
     const bagItemAwbData = BagItemAwb.create({
       bagItemId    : bagDetail.bagItemId,
       awbNumber    : payload.awbDetail.awbNumber,
-      weight       : payload.awbDetail.weight,
+      weight       : parseFloat(payload.awbDetail.totalWeightRealRounded),
       awbItemId    : payload.awbItemId,
       userIdCreated: authMeta.userId,
       createdTime  : moment().toDate(),
@@ -323,7 +439,7 @@ export class PackageService {
 
     // Insert into table pod scan in hub detail
     const podScanInHubDetailData = PodScanInHubDetail.create({
-      // podScanInHubId: podScanInHub.podScanInHubId,
+      podScanInHubId: payload.podScanInHubId,
       bagId: bagDetail.bagId,
       bagItemId: bagDetail.bagItemId,
       awbItemId: payload.awbItemId,
@@ -335,10 +451,29 @@ export class PackageService {
     });
     const podScanInHubDetail = await PodScanInHubDetail.save(podScanInHubDetailData);
 
-    return result;
+    // update awb_item_attr
+    const awbItemAttr             = await AwbItemAttr.findOne({ where: { awbItemId: payload.awbItemId, isDeleted: false } });
+    awbItemAttr.bagItemIdLast     = bagDetail.bagItemId;
+    awbItemAttr.updatedTime       = moment().toDate();
+    awbItemAttr.isPackageCombined = true;
+    awbItemAttr.awbStatusIdLast   = 4500;
+    awbItemAttr.userIdLast        = authMeta.userId,
+    await AwbItemAttr.save(awbItemAttr);
+
+        // update status
+    DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+          payload.awbItemId,
+          permissonPayload.branchId,
+          authMeta.userId,
+        );
+
   }
 
-  private async getBagDetail(bagNumber: string): Promise<any> {
+  private async getBagDetail(bagNumber: string): Promise<{
+    bagNumber: number,
+    bagId: number,
+    bagItemId: number,
+  }> {
     const bagNumberReal: string = bagNumber.substring(0, 7);
     const bagSequence: number = Number(bagNumber.substring(7, 10));
 
@@ -355,5 +490,29 @@ export class PackageService {
     const bagDetail = await qb.getRawOne();
 
     return bagDetail;
+  }
+
+  private async insertAwbTrouble(data): Promise<any> {
+    const authMeta         = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const awbTroubleCode = await CustomCounterCode.awbTrouble(
+      moment().toDate(),
+    );
+    const awbTroubleData = AwbTrouble.create({
+        awbTroubleCode,
+        awbStatusId       : 2600,
+        transactionStatusId: 500,
+        awbNumber         : data.awbNumber,
+        troubleDesc       : data.troubleDesc,
+        troubleCategory   : 'sortir_bag',
+        employeeIdTrigger : authMeta.userId,
+        userIdTrigger     : authMeta.userId,
+        branchIdTrigger   : permissonPayload.branchId,
+        createdTime       : moment().toDate(),
+        updatedTime       : moment().toDate(),
+        userIdCreated     : authMeta.userId,
+        userIdUpdated     : authMeta.userId,
+    });
+    await AwbTrouble.save(awbTroubleData);
   }
 }
