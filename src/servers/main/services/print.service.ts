@@ -407,7 +407,7 @@ export class PrintService {
   ) {
     const q = RepositoryService.bagItem.findOne();
     q.innerJoin(e => e.bag);
-    q.leftJoin(e => e.bag.representative);
+    q.leftJoin(e => e.bag.district);
 
     const bagItem = await q
       .select({
@@ -418,9 +418,9 @@ export class PrintService {
         bag: {
           bagId: true,
           bagNumber: true,
-          representative: {
-            representativeName: true,
-            representativeCode: true,
+          district: {
+            districtName: true,
+            districtCode: true,
           },
         },
         bagItemAwbs: {
