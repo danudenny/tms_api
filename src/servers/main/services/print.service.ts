@@ -18,15 +18,22 @@ export class PrintService {
   ) {
     const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetails);
+    q.leftJoin(e => e.user.employee);
 
     const doPod = await q
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
         doPodCode: true,
-        employee: {
-          nickname: true,
-          nik: true,
+        user: {
+          employee: {
+            nickname: true, // needs to be selected due to user and employee relations are being included
+            nik: true,
+          },
         },
+        // employee: {
+        //   nickname: true,
+        //   nik: true,
+        // },
         branchTo: {
           branchName: true,
         },
@@ -103,15 +110,22 @@ export class PrintService {
   ) {
     const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetails);
+    q.leftJoin(e => e.user.employee);
 
     const doPod = await q
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
         doPodCode: true,
-        employee: {
-          nickname: true,
-          nik: true,
+        user: {
+          employee: {
+            nickname: true, // needs to be selected due to user and employee relations are being included
+            nik: true,
+          },
         },
+        // employee: {
+        //   nickname: true,
+        //   nik: true,
+        // },
         branchTo: {
           branchName: true,
         },
@@ -200,15 +214,22 @@ export class PrintService {
   ) {
     const q = RepositoryService.doPodDeliver.findOne();
     q.leftJoin(e => e.doPodDeliverDetails);
+    q.leftJoin(e => e.user.employee);
 
     const doPodDeliver = await q
       .select({
         doPodDeliverId: true, // needs to be selected due to do_pod_deliver relations are being included
         doPodDeliverCode: true,
-        employee: {
-          nickname: true,
-          nik: true,
+        user: {
+          employee: {
+            nickname: true, // needs to be selected due to user and employee relations are being included
+            nik: true,
+          },
         },
+        // employee: {
+        //   nickname: true,
+        //   nik: true,
+        // },
         doPodDeliverDetails: {
           doPodDeliverDetailId: true, // needs to be selected due to do_pod_deliver_detail relations are being included
           awbItem: {
