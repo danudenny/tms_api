@@ -117,6 +117,6 @@ export class Bag extends TmsBaseEntity {
   bagItems: BagItem[];
 
   @OneToOne(() => Representative)
-  @JoinColumn({ name: 'representative_id_to' })
+  @JoinColumn({ name: 'district_id_to', referencedColumnName: 'representativeId' })
   representative: Representative;
 }
