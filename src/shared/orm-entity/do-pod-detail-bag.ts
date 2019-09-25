@@ -4,11 +4,10 @@ import { TmsBaseEntity } from './tms-base';
 
 @Entity('do_pod_detail_bag', { schema: 'public' })
 export class DoPodDetailBag extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_pod_detail_bag_id',
   })
-  doPodDetailBagId: number;
+  doPodDetailBagId: string;
 
   @Column('character varying', {
     nullable: false,

@@ -8,11 +8,10 @@ import { AwbStatus } from './awb-status';
 
 @Entity('do_pod_deliver_detail', { schema: 'public' })
 export class DoPodDeliverDetail extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_pod_deliver_detail_id',
   })
-  doPodDeliverDetailId: number;
+  doPodDeliverDetailId: string;
 
   @Column('character varying', {
     nullable: false,

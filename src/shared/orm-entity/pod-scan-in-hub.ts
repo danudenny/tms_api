@@ -4,11 +4,10 @@ import { TmsBaseEntity } from './tms-base';
 
 @Entity('pod_scan_in_hub', { schema: 'public' })
 export class PodScanInHub extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'pod_scan_in_hub_id',
   })
-  podScanInHubId: number;
+  podScanInHubId: string;
 
   @Column('character varying', {
     nullable: false,

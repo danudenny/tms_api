@@ -15,6 +15,16 @@ export class ScanBranchVm {
 
   @ApiModelProperty()
   message: string;
+
+  @ApiModelProperty()
+  totalAwbScan: number;
+
+  @ApiModelProperty()
+  totalAwbItem: number;
+
+  @ApiModelProperty()
+  totalBagScan: number;
+
 }
 
 export class ScanBranchNewVm {
