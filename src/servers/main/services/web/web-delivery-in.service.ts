@@ -17,7 +17,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInBagListResponseVm, WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm, WebScanInBranchVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm } from '../../models/web-scanin.vm';
+import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm } from '../../models/web-scanin.vm';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
@@ -744,7 +744,7 @@ export class WebDeliveryInService {
   // 1. scan bag number
   // 2. scan awb number on bag and calculate
   async scanInBranch(
-    payload: WebScanInBranchVm,
+    payload: WebScanInBagBranchVm,
   ): Promise<WebScanInBranchResponseVm> {
     let isBag: boolean = false;
     let data: ScanInputNumberBranchVm[] = [];

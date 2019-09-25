@@ -1,8 +1,3 @@
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
-import { MetaService } from '../../../../shared/services/meta.service';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { AwbTroubleResponseVm } from '../../models/awb-trouble-response.vm';
 import { Injectable } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { WebScanInBranchVm, WebVerificationAwbVm, WebVerificationBagVm } from '../../models/web-scanin-branch.vm';
