@@ -141,7 +141,7 @@ export class WebDeliveryOutService {
           const doPodDetail = DoPodDetail.create();
           doPodDetail.doPodId = payload.doPodId;
           doPodDetail.awbItemId = awb.awbItemId;
-          doPodDetail.transcationStatusIdLast = 1000;
+          doPodDetail.transactionStatusIdLast = 1000;
           doPodDetail.isScanOut = true;
           doPodDetail.scanOutType = 'awb';
           await DoPodDetail.save(doPodDetail);
@@ -256,7 +256,7 @@ export class WebDeliveryOutService {
           const doPodDetail = DoPodDetail.create();
           doPodDetail.doPodId = payload.doPodId;
           doPodDetail.bagItemId = bag.bagItemId;
-          doPodDetail.transcationStatusIdLast = 1000;
+          doPodDetail.transactionStatusIdLast = 1000;
           doPodDetail.isScanOut = true;
           doPodDetail.scanOutType = 'bag';
           await DoPodDetail.save(doPodDetail);
@@ -476,7 +476,7 @@ export class WebDeliveryOutService {
                 const doPodDetail = DoPodDetail.create();
                 doPodDetail.doPodId = payload.doPodId;
                 doPodDetail.awbItemId = awb.awbItemId;
-                doPodDetail.transcationStatusIdLast = 1000;
+                doPodDetail.transactionStatusIdLast = 1000;
                 doPodDetail.isScanOut = true;
                 doPodDetail.scanOutType = 'awb';
                 await DoPodDetail.save(doPodDetail);
