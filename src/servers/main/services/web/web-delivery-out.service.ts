@@ -103,7 +103,7 @@ export class WebDeliveryOutService {
     // Populate return value
     result.status = 'ok';
     result.message = 'success';
-    result.doPodId = Number(doPod.doPodId);
+    result.doPodId = doPod.doPodId;
 
     return result;
   }
@@ -403,7 +403,7 @@ export class WebDeliveryOutService {
     // Populate return value
     result.status = 'ok';
     result.message = 'success';
-    result.doPodId = Number(doPod.doPodDeliverId);
+    result.doPodId = doPod.doPodDeliverId;
 
     return result;
   }
@@ -1207,7 +1207,7 @@ export class WebDeliveryOutService {
     return result;
   }
 
-  private async getTotalDetailById(doPodId: number) {
+  private async getTotalDetailById(doPodId: string) {
     const qb = createQueryBuilder();
     qb.from('do_pod_detail', 'do_pod_detail');
     qb.where('do_pod_detail.do_pod_id = :doPodId', {
