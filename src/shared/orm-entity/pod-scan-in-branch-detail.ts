@@ -1,22 +1,21 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
 
 @Entity('pod_scan_in_branch_detail', { schema: 'public' })
 export class PodScanInBranchDetail extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'pod_scan_in_branch_detail_id',
   })
-  podScanInBranchDetailId: number;
+  podScanInBranchDetailId: string;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: false,
     name: 'pod_scan_in_branch_id',
   })
-  podScanInBranchId: number;
+  podScanInBranchId: string;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: false,
     name: 'bag_id',
   })

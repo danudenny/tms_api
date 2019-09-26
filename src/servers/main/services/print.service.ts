@@ -18,14 +18,18 @@ export class PrintService {
   ) {
     const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetails);
+    q.leftJoin(e => e.userDriver.employee);
 
     const doPod = await q
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
         doPodCode: true,
-        employee: {
-          nickname: true,
-          nik: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
         },
         branchTo: {
           branchName: true,
@@ -103,14 +107,18 @@ export class PrintService {
   ) {
     const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetails);
+    q.leftJoin(e => e.userDriver.employee);
 
     const doPod = await q
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
         doPodCode: true,
-        employee: {
-          nickname: true,
-          nik: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
         },
         branchTo: {
           branchName: true,
@@ -200,14 +208,18 @@ export class PrintService {
   ) {
     const q = RepositoryService.doPodDeliver.findOne();
     q.leftJoin(e => e.doPodDeliverDetails);
+    q.leftJoin(e => e.userDriver.employee);
 
     const doPodDeliver = await q
       .select({
         doPodDeliverId: true, // needs to be selected due to do_pod_deliver relations are being included
         doPodDeliverCode: true,
-        employee: {
-          nickname: true,
-          nik: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
         },
         doPodDeliverDetails: {
           doPodDeliverDetailId: true, // needs to be selected due to do_pod_deliver_detail relations are being included
@@ -395,7 +407,7 @@ export class PrintService {
   ) {
     const q = RepositoryService.bagItem.findOne();
     q.innerJoin(e => e.bag);
-    q.leftJoin(e => e.bag.representative);
+    q.leftJoin(e => e.bag.district);
 
     const bagItem = await q
       .select({
@@ -406,9 +418,9 @@ export class PrintService {
         bag: {
           bagId: true,
           bagNumber: true,
-          representative: {
-            representativeName: true,
-            representativeCode: true,
+          district: {
+            districtName: true,
+            districtCode: true,
           },
         },
         bagItemAwbs: {

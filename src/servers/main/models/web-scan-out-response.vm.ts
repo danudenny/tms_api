@@ -106,7 +106,7 @@ export class WebScanOutCreateResponseVm {
   message: string;
 
   @ApiModelProperty()
-  doPodId: number;
+  doPodId: string;
 }
 
 // Scan Out Awb

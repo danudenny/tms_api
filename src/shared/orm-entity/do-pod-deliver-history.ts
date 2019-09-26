@@ -5,17 +5,16 @@ import { TmsBaseEntity } from './tms-base';
 
 @Entity('do_pod_deliver_history', { schema: 'public' })
 export class DoPodDeliverHistory extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_pod_deliver_history_id',
   })
-  doPodDeliverHistoryId: number;
+  doPodDeliverHistoryId: string;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: false,
     name: 'do_pod_deliver_detail_id',
   })
-  doPodDeliverDetailId: number;
+  doPodDeliverDetailId: string;
 
   @Column('bigint', {
     nullable: false,

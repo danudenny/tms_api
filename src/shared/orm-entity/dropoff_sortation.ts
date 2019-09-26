@@ -4,17 +4,15 @@ import { TmsBaseEntity } from './tms-base';
 
 @Entity('dropoff_sortation', { schema: 'public' })
 export class DropoffSortation extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'dropoff_sortation_id',
   })
-  dropoffSortationId: number;
+  dropoffSortationId: string;
 
   // @Column({
-  //   type: 'bigint',
   //   name: 'dropoff_hub_id',
   // })
-  // dropoffHubId: number;
+  // dropoffHubId: string;
 
   @Column('bigint', {
     nullable: true,

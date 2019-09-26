@@ -42,7 +42,7 @@ export class BagService {
 
   static async statusDropoffAwbBag(
     bagItemId: number,
-    dropoffHubId: number,
+    dropoffHubId: string,
   ): Promise<boolean> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -101,7 +101,7 @@ export class BagService {
   static async statusOutBranchAwbBag(
     bagId: number,
     bagItemId: number,
-    doPodId: number,
+    doPodId: string,
     branchIdNext: number,
     employeeIdDriver: number,
   ) {

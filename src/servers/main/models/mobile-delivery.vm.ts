@@ -3,10 +3,10 @@ import { MobileDeliveryHistoryVm } from './mobile-delivery-history.vm';
 
 export class MobileDeliveryVm {
   @ApiModelProperty()
-  doPodDeliverDetailId: number;
+  doPodDeliverDetailId: string;
 
   @ApiModelProperty()
-  doPodDeliverId: number;
+  doPodDeliverId: string;
 
   @ApiModelProperty({ format: 'date-time' })
   doPodDeliverDateTime: string;

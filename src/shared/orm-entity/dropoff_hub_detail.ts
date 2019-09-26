@@ -4,17 +4,15 @@ import { TmsBaseEntity } from './tms-base';
 
 @Entity('dropoff_hub_detail', { schema: 'public' })
 export class DropoffHubDetail extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'dropoff_hub_detail_id',
   })
-  dropoffHubDetailId: number;
+  dropoffHubDetailId: string;
 
-  @Column({
-    type: 'bigint',
+  @Column('character varying', {
     name: 'dropoff_hub_id',
   })
-  dropoffHubId: number;
+  dropoffHubId: string;
 
   @Column('bigint', {
     nullable: true,

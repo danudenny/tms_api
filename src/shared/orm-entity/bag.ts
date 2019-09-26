@@ -2,6 +2,7 @@ import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, Joi
 import { BagItem } from './bag-item';
 import { TmsBaseEntity } from './tms-base';
 import { Representative } from './representative';
+import { District } from './district';
 
 @Entity('bag', { schema: 'public' })
 @Index('bag_bag_date_idx', ['bagDate'])
@@ -119,4 +120,8 @@ export class Bag extends TmsBaseEntity {
   @OneToOne(() => Representative)
   @JoinColumn({ name: 'representative_id_to' })
   representative: Representative;
+
+  @OneToOne(() => District)
+  @JoinColumn({ name: 'district_id_to' })
+  district: District;
 }

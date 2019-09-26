@@ -9,11 +9,10 @@ import { TmsBaseEntity } from './tms-base';
 
 @Entity('do_pod_detail', { schema: 'public' })
 export class DoPodDetail extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_pod_detail_id',
   })
-  doPodDetailId: number;
+  doPodDetailId: string;
 
   @Column('bigint', {
     nullable: true,
@@ -21,11 +20,11 @@ export class DoPodDetail extends TmsBaseEntity {
   })
   podScanInId: number | null;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: false,
     name: 'do_pod_id',
   })
-  doPodId: number;
+  doPodId: string;
 
   @Column('bigint', {
     nullable: true,

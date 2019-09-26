@@ -2,17 +2,16 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGene
 
 import { Branch } from './branch';
 import { DoPodDetail } from './do-pod-detail';
-import { Employee } from './employee';
 import { TmsBaseEntity } from './tms-base';
 import { PartnerLogistic } from './partner-logistic';
+import { User } from './user';
 
 @Entity('do_pod', { schema: 'public' })
 export class DoPod extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_pod_id',
   })
-  doPodId: number;
+  doPodId: string;
 
   @Column('character varying', {
     nullable: false,
@@ -70,42 +69,42 @@ export class DoPod extends TmsBaseEntity {
   // })
   // userIdDriver: number | null;
 
-  @Column('character varying', {
-    nullable: true,
-    length: 100,
-    name: 'latitude_last',
-  })
-  latitudeLast: string | null;
+  // @Column('character varying', {
+  //   nullable: true,
+  //   length: 100,
+  //   name: 'latitude_last',
+  // })
+  // latitudeLast: string | null;
 
-  @Column('character varying', {
-    nullable: true,
-    length: 100,
-    name: 'longitude_last',
-  })
-  longitudeLast: string | null;
+  // @Column('character varying', {
+  //   nullable: true,
+  //   length: 100,
+  //   name: 'longitude_last',
+  // })
+  // longitudeLast: string | null;
 
-  @Column('integer', {
-    nullable: false,
-    default: () => '0',
-    name: 'total_item',
-  })
-  totalItem: number;
+  // @Column('integer', {
+  //   nullable: false,
+  //   default: () => '0',
+  //   name: 'total_item',
+  // })
+  // totalItem: number;
 
-  @Column('integer', {
-    nullable: false,
-    default: () => '0',
-    name: 'total_pod_item',
-  })
-  totalPodItem: number;
+  // @Column('integer', {
+  //   nullable: false,
+  //   default: () => '0',
+  //   name: 'total_pod_item',
+  // })
+  // totalPodItem: number;
 
-  @Column('numeric', {
-    nullable: false,
-    default: () => '0',
-    precision: 20,
-    scale: 5,
-    name: 'total_weight',
-  })
-  totalWeight: number;
+  // @Column('numeric', {
+  //   nullable: false,
+  //   default: () => '0',
+  //   precision: 20,
+  //   scale: 5,
+  //   name: 'total_weight',
+  // })
+  // totalWeight: number;
 
   @Column('bigint', {
     nullable: true,
@@ -113,17 +112,17 @@ export class DoPod extends TmsBaseEntity {
   })
   transactionStatusId: number | null;
 
-  @Column('bigint', {
-    nullable: true,
-    name: 'do_pod_history_id_last',
-  })
-  doPodHistoryIdLast: number | null;
+  // @Column('bigint', {
+  //   nullable: true,
+  //   name: 'do_pod_history_id_last',
+  // })
+  // doPodHistoryIdLast: number | null;
 
-  @Column('timestamp without time zone', {
-    nullable: true,
-    name: 'history_date_time_last',
-  })
-  historyDateTimeLast: Date | null;
+  // @Column('timestamp without time zone', {
+  //   nullable: true,
+  //   name: 'history_date_time_last',
+  // })
+  // historyDateTimeLast: Date | null;
 
   @Column('bigint', {
     nullable: false,
@@ -183,6 +182,7 @@ export class DoPod extends TmsBaseEntity {
 
   @Column('text', {
     nullable: true,
+    name: 'description',
   })
   description: string | null;
 
@@ -198,11 +198,11 @@ export class DoPod extends TmsBaseEntity {
   })
   totalScanOut: number | 0;
 
-  @Column('integer', {
-    nullable: true,
-    name: 'percen_scan_in_out',
-  })
-  percenScanInOut: number | 0;
+  // @Column('integer', {
+  //   nullable: true,
+  //   name: 'percen_scan_in_out',
+  // })
+  // percenScanInOut: number | 0;
 
   @Column('timestamp', {
     nullable: true,
@@ -265,7 +265,7 @@ export class DoPod extends TmsBaseEntity {
   @OneToMany(() => DoPodDetail, e => e.doPod)
   doPodDetails: DoPodDetail[];
 
-  @ManyToOne(() => Employee)
-  @JoinColumn({ name: 'employee_id_driver' })
-  employee: Employee;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_driver', referencedColumnName: 'userId' })
+  userDriver: User;
 }
