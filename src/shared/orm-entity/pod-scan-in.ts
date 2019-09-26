@@ -13,7 +13,6 @@ import { Awb } from './awb';
 import { User } from './user';
 import { DoPod } from './do-pod';
 import { Bag } from './bag';
-import { DoPodDetail } from './do-pod-detail';
 import { AwbItem } from './awb-item';
 import { Employee } from './employee';
 import { AwbItemAttr } from './awb-item-attr';
@@ -139,9 +138,9 @@ export class PodScanIn extends TmsBaseEntity {
   @JoinColumn({ name: 'employee_id' })
   employee: Employee;
 
-  @OneToOne(() => DoPodDetail)
-  @JoinColumn({ name: 'pod_scan_in_id', referencedColumnName: 'podScanInId' })
-  do_pod_detail: DoPodDetail;
+  // @OneToOne(() => DoPodDetail)
+  // @JoinColumn({ name: 'pod_scan_in_id', referencedColumnName: 'podScanInId' })
+  // do_pod_detail: DoPodDetail;
 
   @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id' })

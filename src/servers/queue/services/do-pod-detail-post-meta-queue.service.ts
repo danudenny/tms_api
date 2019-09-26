@@ -224,19 +224,19 @@ export class DoPodDetailPostMetaQueueService {
     );
     const q = doPodDetailRepository.findOne();
     // Manage relation (default inner join)
-    q.innerJoin(e => e.podScanIn);
+    // q.innerJoin(e => e.podScanIn);
 
     q.select({
       doPodDetailId: true,
       awbItemId: true,
       userIdCreated: true,
       userIdUpdated: true,
-      podScanIn: {
-        podScanInId: true,
-        branchId: true,
-        userId: true,
-        employeeId: true,
-      },
+      // podScanIn: {
+      //   podScanInId: true,
+      //   branchId: true,
+      //   userId: true,
+      //   employeeId: true,
+      // },
     });
     q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
     const doPodDetail = await q.exec();
@@ -246,8 +246,8 @@ export class DoPodDetailPostMetaQueueService {
       // provide data
       const obj = {
         awbItemId: doPodDetail.awbItemId,
-        userId: doPodDetail.podScanIn.userId,
-        branchId: doPodDetail.podScanIn.branchId,
+        // userId: doPodDetail.podScanIn.userId,
+        // branchId: doPodDetail.podScanIn.branchId,
         awbStatusId: AWB_STATUS.IN_BRANCH,
         awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
         userIdCreated: doPodDetail.userIdCreated,
