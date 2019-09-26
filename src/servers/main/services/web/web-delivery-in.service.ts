@@ -68,8 +68,8 @@ export class WebDeliveryInService {
       ['t2.awb_number', 'awbNumber'],
       ['t3.branch_name', 'branchNameScan'],
       ['t3.branch_code', 'branchCodeScan'],
-      ['t3.branch_name', 'branchNameFrom'],
-      ['t3.branch_code', 'branchCodeFrom'],
+      ['t4.branch_name', 'branchNameFrom'],
+      ['t4.branch_code', 'branchCodeFrom'],
       ['t5.nickname', 'employeeName'],
     );
 
@@ -79,9 +79,9 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // q.innerJoin(e => e.doPodDetail.doPod.branch, 't4', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
+    q.innerJoin(e => e.do_pod_detail.doPod.branch, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.innerJoin(e => e.employee, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -139,7 +139,7 @@ export class WebDeliveryInService {
         'bagNumberCode',
       ],
       ['t3.branch_name', 'branchNameScan'],
-      ['t3.branch_name', 'branchNameFrom'],
+      ['t4.branch_name', 'branchNameFrom'],
       ['t5.nickname', 'employeeName'],
       ['COUNT (t7.*)', 'totalAwb'],
     );
@@ -156,9 +156,9 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // q.innerJoin(e => e.doPodDetail.doPod.branch, 't4', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
+    q.innerJoin(e => e.do_pod_detail.doPod.branch, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.innerJoin(e => e.user.employee, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -501,6 +501,11 @@ export class WebDeliveryInService {
                     isDeleted: false,
                   },
                 });
+                await DeliveryService.updateAwbAttr(
+                  awb.awbItemId,
+                  null,
+                  AWB_STATUS.IN_BRANCH,
+                );
                 if (doPodDetail) {
                   // Update Data doPodDetail
                   // doPodDetail.podScanInId = podScanIn.podScanInId;
