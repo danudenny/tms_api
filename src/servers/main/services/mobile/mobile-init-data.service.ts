@@ -142,7 +142,10 @@ export class MobileInitDataService {
     qb.innerJoin(
       'employee',
       'employee',
-      'employee.employee_id = do_pod_deliver.employee_id_driver',
+      'employee.employee_id = :employeeIdDriver',
+      {
+        employeeIdDriver: authMeta.employeeId,
+      },
     );
     qb.leftJoin(
       qbJoin => {
@@ -236,8 +239,8 @@ export class MobileInitDataService {
     qb.take(0);
     qb.skip(200);
 
-    qb.andWhere('do_pod_deliver.employee_id_driver = :employeeIdDriver', {
-      employeeIdDriver: authMeta.employeeId,
+    qb.andWhere('do_pod_deliver.user_id_driver = :userIdDriver', {
+      userIdDriver: authMeta.userId,
     });
 
     // COMMENTED FOR TEST PURPOSE
