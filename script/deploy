@@ -18,9 +18,7 @@ ssh ubuntu@18.138.172.59 <<'ENDSSH'
   cd /var/www/api-jenkins/releases/"$foldername"
   npm install --silent --no-progress
   echo "npm install =================================="
-  pm2 stop ecosystem.json
-  echo "stop server =================================="
-  pm2 start ecosystem.json
-  echo "start server =================================="
+  pm2 startOrRestart ecosystem.json
+  echo "startOrRestart server =================================="
   exit
 ENDSSH
