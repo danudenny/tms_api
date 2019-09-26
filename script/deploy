@@ -4,11 +4,13 @@ scp sicepat-tms-api.tar.gz ubuntu@18.138.172.59:~
 echo "copy file to server ======================================"
 rm sicepat-tms-api.tar.gz
 ssh ubuntu@18.138.172.59 <<'ENDSSH'
-  mv /home/ubuntu/sicepat-tms-api.tar.gz /var/www/api-jenkins/
+  mv /home/ubuntu/sicepat-tms-api.tar.gz /var/www/api-jenkins/releases/
   echo "Testing Deploy =================================="
-  cd /var/www/api-jenkins
-  mkdir releases
-  tar xf sicepat-tms-api.tar.gz -C releases
+  cd /var/www/api-jenkins/releases/
+  foldername=$(date +%Y%m%d)
+  mkdir -p "$foldername"
+  tar xf sicepat-tms-api.tar.gz -C "$foldername"
   rm sicepat-tms-api.tar.gz
+  ln -s /var/www/api-jenkins/releases/"$foldername" /var/www/api-jenkins/current
   exit
 ENDSSH
