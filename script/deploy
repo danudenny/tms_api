@@ -15,8 +15,12 @@ ssh ubuntu@18.138.172.59 <<'ENDSSH'
   echo "link shared config ==========================="
   ln -s /var/www/api-jenkins/shared/ormconfig.js /var/www/api-jenkins/releases/"$foldername"/ormconfig.js
   mv /var/www/api-jenkins/releases/current /var/www/api-jenkins
-  cd /var/www/api-jenkins/releases/"$foldername" && /usr/bin/env npm install --silent --no-progress
+  cd /var/www/api-jenkins/releases/"$foldername"
+  npm install --silent --no-progress
   echo "npm install =================================="
-
+  pm2 stop ecosystem.json
+  echo "stop server =================================="
+  pm2 start ecosystem.json
+  echo "start server =================================="
   exit
 ENDSSH
