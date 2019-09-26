@@ -11,9 +11,10 @@ ssh ubuntu@18.138.172.59 <<'ENDSSH'
   mkdir -p "$foldername"
   tar xf sicepat-tms-api.tar.gz -C "$foldername"
   rm sicepat-tms-api.tar.gz
-  ln -s /var/www/api-jenkins/current /var/www/api-jenkins/releases/"$foldername"
-  /var/www/api-jenkins/current
-  echo "Current folder Deploy =================================="
-  npm install --production
+  ln -s /var/www/api-jenkins/releases/"$foldername" /var/www/api-jenkins/releases/current
+  mv /var/www/api-jenkins/releases/current /var/www/api-jenkins
+  cd /var/www/api-jenkins/releases/"$foldername" && /usr/bin/env npm install --production --silent --no-progress
+  echo "npm install =================================="
+
   exit
 ENDSSH
