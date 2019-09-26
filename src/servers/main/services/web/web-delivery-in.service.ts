@@ -501,11 +501,7 @@ export class WebDeliveryInService {
                     isDeleted: false,
                   },
                 });
-                await DeliveryService.updateAwbAttr(
-                  awb.awbItemId,
-                  null,
-                  AWB_STATUS.IN_BRANCH,
-                );
+
                 if (doPodDetail) {
                   // Update Data doPodDetail
                   // doPodDetail.podScanInId = podScanIn.podScanInId;
@@ -667,6 +663,7 @@ export class WebDeliveryInService {
               if (holdRedis) {
                 // save data to table pod_scan_id
                 // TODO: to be review
+                // change create table
                 const podScanIn = PodScanIn.create();
                 // podScanIn.awbId = ??;
                 // podScanIn.doPodId = ??;
@@ -968,9 +965,11 @@ export class WebDeliveryInService {
       // bag number
       const scanIn = new WebScanInBagVm();
       scanIn.bagNumber = [inputNumber];
+      // TODO: create pod_scan_in_branch
+      // create pod_scan_in_bag
+      // create pod_scan_in_bag_detail
+
       const result = await this.scanInBag(scanIn, false);
-      // TODO: find awb number
-      console.log('### Result ===================', result);
       if (result) {
         const bagData = await DeliveryService.validBagNumber(inputNumber);
         if (bagData) {
