@@ -14,11 +14,11 @@ export class DoPodDetail extends TmsBaseEntity {
   })
   doPodDetailId: string;
 
-  @Column('bigint', {
-    nullable: true,
-    name: 'pod_scan_in_id',
-  })
-  podScanInId: number | null;
+  // @Column('bigint', {
+  //   nullable: true,
+  //   name: 'pod_scan_in_id',
+  // })
+  // podScanInId: number | null;
 
   @Column('character varying', {
     nullable: false,
@@ -125,9 +125,9 @@ export class DoPodDetail extends TmsBaseEntity {
   })
   isPosted: boolean | null;
 
-  @OneToOne(() => PodScanIn)
-  @JoinColumn({ name: 'pod_scan_in_id' })
-  podScanIn: PodScanIn;
+  // @OneToOne(() => PodScanIn)
+  // @JoinColumn({ name: 'pod_scan_in_id' })
+  // podScanIn: PodScanIn;
 
   @ManyToOne(() => DoPod)
   @JoinColumn({ name: 'do_pod_id' })

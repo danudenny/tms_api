@@ -503,7 +503,7 @@ export class WebDeliveryInService {
                 });
                 if (doPodDetail) {
                   // Update Data doPodDetail
-                  doPodDetail.podScanInId = podScanIn.podScanInId;
+                  // doPodDetail.podScanInId = podScanIn.podScanInId;
                   doPodDetail.isScanIn = true;
                   doPodDetail.updatedTime = timeNow;
                   doPodDetail.userIdUpdated = authMeta.userId;
