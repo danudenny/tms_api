@@ -79,9 +79,9 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.do_pod_detail.doPod.branch, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    // q.innerJoin(e => e.do_pod_detail.doPod.branch, 't4', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
     q.innerJoin(e => e.employee, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -156,9 +156,9 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.do_pod_detail.doPod.branch, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    // q.innerJoin(e => e.do_pod_detail.doPod.branch, 't4', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
     q.innerJoin(e => e.user.employee, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
