@@ -218,6 +218,7 @@ export class PackageService {
             branchIdLast       : permissonPayload.branchId,
             bagItemStatusIdLast: 3000,
             userIdCreated      : authMeta.userId,
+            weight             : parseFloat(awbDetail.totalWeightRealRounded),
             createdTime        : moment().toDate(),
             updatedTime        : moment().toDate(),
             userIdUpdated: authMeta.userId,
@@ -230,7 +231,7 @@ export class PackageService {
             bagItemId    : bagItem.bagItemId,
             awbNumber    : awbDetail.awbNumber,
             weight       : parseFloat(awbDetail.totalWeightRealRounded),
-            awbItemId    : awbDetail.awbItemId,
+            awbItemId    : payload.awbItemId,
             userIdCreated: authMeta.userId,
             createdTime  : moment().toDate(),
             updatedTime  : moment().toDate(),
@@ -294,12 +295,6 @@ export class PackageService {
           userIdUpdated: authMeta.userId,
         });
     const podScanInHubBag = await PodScanInHubBag.save(podScanInHubBagData);
-
-        // update bagItem
-    const updateBagItem = await BagItem.findOne({ where: { bagItemId: bagItem.bagItemId } });
-
-    updateBagItem.weight = totalWeight;
-    await BagItem.save(updateBagItem);
 
     assign(result,  {
       bagItemId     : bagItem.bagItemId,
@@ -436,6 +431,11 @@ export class PackageService {
       userIdUpdated: authMeta.userId,
     });
     await BagItemAwb.save(bagItemAwbData);
+
+    // update weight in bag item
+    const bagItem = await BagItem.findOne({ where: { bagItemId: bagDetail.bagItemId } });
+    bagItem.weight += parseFloat(payload.awbDetail.totalWeightRealRounded);
+    bagItem.save();
 
     // Insert into table pod scan in hub detail
     const podScanInHubDetailData = PodScanInHubDetail.create({
