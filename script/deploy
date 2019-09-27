@@ -1,5 +1,5 @@
 #!/bin/sh
-tar czf sicepat-tms-api.tar.gz dist package.json package-lock.json yarn.lock ecosystem.json
+tar czf sicepat-tms-api.tar.gz dist patches node_modules ecosystem.json
 scp sicepat-tms-api.tar.gz ubuntu@18.138.172.59:~
 echo "copy file to server ======================================"
 rm sicepat-tms-api.tar.gz
@@ -16,8 +16,6 @@ ssh ubuntu@18.138.172.59 <<'ENDSSH'
   ln -s /var/www/api-jenkins/shared/ormconfig.js /var/www/api-jenkins/releases/"$foldername"/ormconfig.js
   mv /var/www/api-jenkins/releases/current /var/www/api-jenkins
   cd /var/www/api-jenkins/releases/"$foldername"
-  npm install --silent --no-progress
-  echo "npm install =================================="
   pm2 startOrRestart ecosystem.json
   echo "startOrRestart server =================================="
   exit
