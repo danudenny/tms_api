@@ -9,7 +9,7 @@ import { BagRepository } from '../../../../shared/orm-repository/bag.repository'
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInListResponseVm, WebScanInBagListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm, WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebScanInBagBranchVm } from '../../models/web-scanin.vm';
+import { WebScanInVm, WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebScanInBagBranchVm, WebScanInLoadBranchResponseVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 
@@ -99,5 +99,15 @@ export class WebDeliveryInController {
   public async validateBranch(@Body() payload: WebScanInValidateBranchVm) {
     // TODO: butuh table baru??
     return null; // this.webDeliveryService.scanInBranch(payload);
+  }
+
+  @Post('loadBranch')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanInLoadBranchResponseVm })
+  public async loadPackageAwb() {
+
+    return this.loadService.loadAwbPackage();
   }
 }
