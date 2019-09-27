@@ -1,5 +1,5 @@
 import express = require('express');
-import { sumBy } from 'lodash';
+import { map } from 'lodash';
 import moment = require('moment');
 
 import { PrinterService } from '../../../shared/services/printer.service';
@@ -106,7 +106,7 @@ export class PrintService {
     queryParams: PrintDoPodBagPayloadQueryVm,
   ) {
     const q = RepositoryService.doPod.findOne();
-    q.leftJoin(e => e.doPodDetails);
+    q.leftJoin(e => e.doPodDetailBag);
     q.leftJoin(e => e.userDriver.employee);
 
     const doPod = await q
@@ -124,22 +124,13 @@ export class PrintService {
           branchName: true,
         },
         vehicleNumber: true,
-        doPodDetails: {
-          doPodDetailId: true, // needs to be selected due to do_pod_detail relations are being included
+        doPodDetailBag: {
+          doPodDetailBagId: true, // needs to be selected due to do_pod_detail relations are being included
           bagItem: {
             bagItemId: true, // needs to be selected due to bag_item relations are being included
             bagSeq: true,
             bag: {
               bagNumber: true,
-            },
-            bagItemAwbs: {
-              bagItemAwbId: true, // needs to be selected due to bag_item_awb relations are being included
-              awbItem: {
-                awbItemId: true, // needs to be selected due to awb_item relations are being included
-                awb: {
-                  awbNumber: true,
-                },
-              },
             },
           },
         },
@@ -151,6 +142,10 @@ export class PrintService {
         message: 'Surat jalan tidak ditemukan',
       });
     }
+
+    const bagItemIds = map(doPod.doPodDetailBag, doPodDetail => doPodDetail.bagItem.bagItemId);
+    const result = await RawQueryService.query(`SELECT COUNT(1) as cnt FROM bag_item WHERE bag_item_id IN (${bagItemIds.join(',')})`);
+    const totalBagItem = result[0].cnt;
 
     const currentUser = await RepositoryService.user
       .loadById(queryParams.userId)
@@ -187,10 +182,7 @@ export class PrintService {
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
-        totalItems: sumBy(
-          doPod.doPodDetails,
-          doPodDetail => doPodDetail.bagItem.bagItemAwbs.length,
-        ),
+        totalItems: totalBagItem,
       },
     };
 
@@ -295,7 +287,7 @@ export class PrintService {
   ) {
     const q = RepositoryService.bagItem.findOne();
     q.innerJoin(e => e.bag);
-    q.leftJoin(e => e.bag.representative);
+    q.leftJoin(e => e.bag.district);
 
     const bagItem = await q
       .select({
@@ -307,9 +299,9 @@ export class PrintService {
         bag: {
           bagId: true,
           bagNumber: true,
-          representative: {
-            representativeName: true,
-            representativeCode: true,
+          district: {
+            districtName: true,
+            districtCode: true,
           },
         },
       })
@@ -386,10 +378,10 @@ export class PrintService {
       `TEXT 30,380,"3",0,1,1,"Koli ke : ${finalBagItemSeq}"\n` +
       `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${bagItemsTotal}c"\n` +
       `TEXT 30,460,"4",0,1,1,0,"${
-        bagItem.bag.representative.representativeCode
+        bagItem.bag.district.districtCode
       }"\n` +
       `TEXT 30,510,"5",0,1,1,0,"${
-        bagItem.bag.representative.representativeName
+        bagItem.bag.district.districtName
       }"\n` +
       `PRINT 1\n` +
       `EOP`;

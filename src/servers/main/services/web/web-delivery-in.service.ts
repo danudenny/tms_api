@@ -36,6 +36,7 @@ import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
 export class WebDeliveryInService {
   constructor() {}
 
+  // #region findAll
   async findAllAwbByRequest(
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanInListResponseVm> {
@@ -68,8 +69,8 @@ export class WebDeliveryInService {
       ['t2.awb_number', 'awbNumber'],
       ['t3.branch_name', 'branchNameScan'],
       ['t3.branch_code', 'branchCodeScan'],
-      ['t3.branch_name', 'branchNameFrom'],
-      ['t3.branch_code', 'branchCodeFrom'],
+      ['t4.branch_name', 'branchNameFrom'],
+      ['t4.branch_code', 'branchCodeFrom'],
       ['t5.nickname', 'employeeName'],
     );
 
@@ -79,7 +80,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // q.innerJoin(e => e.doPodDetail.doPod.branch, 't4', j =>
+    // q.innerJoin(e => e.do_pod_detail.doPod.branch, 't4', j =>
     //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
     // );
     q.innerJoin(e => e.employee, 't5', j =>
@@ -139,7 +140,7 @@ export class WebDeliveryInService {
         'bagNumberCode',
       ],
       ['t3.branch_name', 'branchNameScan'],
-      ['t3.branch_name', 'branchNameFrom'],
+      ['t4.branch_name', 'branchNameFrom'],
       ['t5.nickname', 'employeeName'],
       ['COUNT (t7.*)', 'totalAwb'],
     );
@@ -156,7 +157,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // q.innerJoin(e => e.doPodDetail.doPod.branch, 't4', j =>
+    // q.innerJoin(e => e.do_pod_detail.doPod.branch, 't4', j =>
     //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
     // );
     q.innerJoin(e => e.user.employee, 't5', j =>
@@ -218,6 +219,440 @@ export class WebDeliveryInService {
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllPodListByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbFListPodResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbDate'] = 't1.awb_date';
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id_last';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'awbDate';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'awbDate',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(Awb, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_id', 'awbId'],
+      ['t1.awb_date', 'awbDate'],
+      ['t1.awb_number', 'awbNumber'],
+      ['t1.from_id', 'fromId'],
+      ['t1.to_id', 'toId'],
+      ['t1.consignee_name', 'consigneeName'],
+      [`CONCAT(CAST(t1.total_cod_value AS NUMERIC(20,2)))`, 'totalCodValue'],
+      ['t2.awb_status_id_last', 'awbStatusIdLast'],
+      ['t2.history_date_last', 'historyDateLast'],
+      ['t3.district_name', 'districtNameFrom'],
+      ['t4.district_name', 'districtNameTo'],
+      ['t5.awb_status_title', 'awbStatusTitle'],
+      ['t5.is_problem', 'isProblem'],
+      [
+        `CASE LENGTH (CAST(t6.bag_seq AS varchar(10)))
+          WHEN 1 THEN
+            CONCAT (t7.bag_number,'00',t6.bag_seq)
+          WHEN 2 THEN
+            CONCAT (t7.bag_number,'0',t6.bag_seq)
+          ELSE
+            CONCAT (t7.bag_number,t6.bag_seq) END`,
+        'bagNumber',
+      ],
+      ['t8.branch_name', 'branchName'],
+      ['t9.branch_name', 'branchNameLast'],
+      ['t10.package_type_code', 'packageTypeCode'],
+      ['t11.customer_account_name', 'customerAccountName'],
+    );
+
+    q.innerJoin(e => e.awbItems.awbItemAttr, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.district, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.districtTo, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbItems.awbItemAttr.awbStatus, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.awbItems.awbItemAttr.bagItemLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.awbItems.awbItemAttr.bagItemLast.bag, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branchLast, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.packageType, 't10', j =>
+      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.customerAccount, 't11', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.fromType, w => w.equals(40));
+    q.andWhere(e => e.toType, w => w.equals(40));
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebAwbFListPodResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  // #endregion
+
+  // #region scanIn
+  /**
+   * Scan in Awb Number (Branch) - NewFlow
+   * Flow Data : https://docs.google.com/document/d/1wnrYqlCmZruMMwgI9d-ko54JGQDWE9sn2yjSYhiAIrg/edit
+   * @param {WebScanInVm} payload
+   * @returns {Promise<WebScanInAwbResponseVm>}
+   * @memberof WebDeliveryInService
+   */
+  async scanInAwb(payload: WebScanInVm): Promise<WebScanInAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new WebScanInAwbResponseVm();
+
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    for (const awbNumber of payload.awbNumber) {
+      const response = {
+        status: 'ok',
+        trouble: false,
+        message: 'Success',
+      };
+
+      const awb = await DeliveryService.validAwbNumber(awbNumber);
+      if (awb) {
+        const statusCode = await DeliveryService.awbStatusGroup(
+          awb.awbStatusIdLast,
+        );
+        switch (statusCode) {
+          case 'IN':
+            if (awb.branchIdLast == permissonPayload.branchId) {
+              // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
+              totalSuccess += 1;
+              response.message = `Resi ${awbNumber} sudah pernah scan ini`;
+            } else {
+              // TODO: construct data Awb Problem
+              // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
+              // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
+              // save data to awb_trouble
+              await AwbTroubleService.fromScanIn(
+                awbNumber,
+                awb.awbStatusIdLast,
+              );
+
+              totalError += 1;
+              response.status = 'error';
+              response.trouble = true;
+              response.message =
+                `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
+                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+            }
+            break;
+
+          case 'POD':
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Resi ${awbNumber} sudah di proses POD`;
+            break;
+
+          case 'OUT':
+            // NOTE: check condition disable on check branchIdNext
+            // awb.branchIdNext == permissonPayload.branchId;
+            if (permissonPayload.branchId) {
+              // Add Locking setnx redis
+              const holdRedis = await RedisService.locking(
+                `hold:scanin:${awb.awbItemId}`,
+                'locking',
+              );
+              if (holdRedis) {
+                // save data to table pod_scan_id
+                // TODO: to be review
+                const podScanIn = PodScanIn.create();
+                // podScanIn.awbId = ??;
+                // podScanIn.doPodId = ??;
+                podScanIn.scanInType = 'awb';
+                podScanIn.employeeId = authMeta.employeeId;
+                podScanIn.awbItemId = awb.awbItemId;
+                podScanIn.branchId = permissonPayload.branchId;
+                podScanIn.userId = authMeta.userId;
+                podScanIn.podScaninDateTime = timeNow;
+                await PodScanIn.save(podScanIn);
+
+                // AFTER Scan IN ===============================================
+                // #region after scanin
+                const doPodDetail = await DoPodDetail.findOne({
+                  where: {
+                    awbItemId: awb.awbItemId,
+                    isScanIn: false,
+                    isDeleted: false,
+                  },
+                });
+
+                if (doPodDetail) {
+                  // Update Data doPodDetail
+                  // doPodDetail.podScanInId = podScanIn.podScanInId;
+                  doPodDetail.isScanIn = true;
+                  doPodDetail.updatedTime = timeNow;
+                  doPodDetail.userIdUpdated = authMeta.userId;
+                  await DoPodDetail.save(doPodDetail);
+
+                  // Update do_pod dengan field
+                  const doPod = await DoPod.findOne({
+                    where: {
+                      doPodId: doPodDetail.doPodId,
+                      isDeleted: false,
+                    },
+                  });
+
+                  // counter total scan in
+                  doPod.totalScanIn = doPod.totalScanIn + 1;
+
+                  if (doPod.totalScanIn == 1) {
+                    doPod.firstDateScanIn = timeNow;
+                    doPod.lastDateScanIn = timeNow;
+                  } else {
+                    doPod.lastDateScanIn = timeNow;
+                  }
+                  await DoPod.save(doPod);
+                  await DeliveryService.updateAwbAttr(
+                    awb.awbItemId,
+                    doPod.branchIdTo,
+                    AWB_STATUS.IN_BRANCH,
+                  );
+
+                  // NOTE: queue by Bull
+                  DoPodDetailPostMetaQueueService.createJobByScanInAwb(
+                    doPodDetail.doPodDetailId,
+                  );
+                  totalSuccess += 1;
+                } else {
+                  totalError += 1;
+                  response.status = 'error';
+                  response.message = `Resi ${awbNumber} belum di scan out`;
+                }
+                // #endregion after scanin
+
+                // remove key holdRedis
+                RedisService.del(`hold:scanin:${awb.awbItemId}`);
+              } else {
+                totalError += 1;
+                response.status = 'error';
+                response.message = 'Server Busy';
+              }
+            } else {
+              // save data to awb_trouble
+              await AwbTroubleService.fromScanIn(
+                awbNumber,
+                awb.awbStatusIdLast,
+              );
+              totalError += 1;
+              response.status = 'error';
+              response.trouble = true;
+              response.message =
+                `Resi ${awbNumber} milik gerai ` +
+                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+            }
+            break;
+
+          default:
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
+            break;
+        }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Resi ${awbNumber} Tidak di Temukan`;
+      }
+
+      // push item
+      dataItem.push({
+        awbNumber,
+        ...response,
+      });
+    } // end of loop
+
+    // Populate return value
+    result.totalData = payload.awbNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
+
+    return result;
+  }
+
+  // TODO: need refactoring ??
+  async scanInAwbBranch(payload: WebScanInVm): Promise<WebScanInAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new WebScanInAwbResponseVm();
+
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    for (const awbNumber of payload.awbNumber) {
+      const response = {
+        status: 'ok',
+        trouble: false,
+        message: 'Success',
+      };
+
+      const awb = await DeliveryService.validAwbNumber(awbNumber);
+      if (awb) {
+        const statusCode = await DeliveryService.awbStatusGroup(
+          awb.awbStatusIdLast,
+        );
+        switch (statusCode) {
+          case 'IN':
+            if (awb.branchIdLast == permissonPayload.branchId) {
+              // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
+              totalSuccess += 1;
+              response.message = `Resi ${awbNumber} sudah pernah scan ini`;
+            } else {
+              // TODO: construct data Awb Problem
+              // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
+              // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
+              // save data to awb_trouble
+              await AwbTroubleService.fromScanIn(
+                awbNumber,
+                awb.awbStatusIdLast,
+              );
+
+              totalError += 1;
+              response.status = 'error';
+              response.trouble = true;
+              response.message =
+                `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
+                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+            }
+            break;
+
+          case 'POD':
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Resi ${awbNumber} sudah di proses POD`;
+            break;
+
+          case 'OUT':
+            // NOTE: check condition disable on check branchIdNext
+            // awb.branchIdNext == permissonPayload.branchId;
+            if (permissonPayload.branchId) {
+              // Add Locking setnx redis
+              const holdRedis = await RedisService.locking(
+                `hold:scanin:${awb.awbItemId}`,
+                'locking',
+              );
+              if (holdRedis) {
+                // save data to table pod_scan_id
+                // TODO: to be review
+                // change create table
+                const podScanIn = PodScanIn.create();
+                // podScanIn.awbId = ??;
+                // podScanIn.doPodId = ??;
+                podScanIn.scanInType = 'awb';
+                podScanIn.employeeId = authMeta.employeeId;
+                podScanIn.awbItemId = awb.awbItemId;
+                podScanIn.branchId = permissonPayload.branchId;
+                podScanIn.userId = authMeta.userId;
+                podScanIn.podScaninDateTime = timeNow;
+                await PodScanIn.save(podScanIn);
+
+                // AFTER Scan IN ===============================================
+                // #region after scanin
+                await DeliveryService.updateAwbAttr(
+                  awb.awbItemId,
+                  null,
+                  AWB_STATUS.IN_BRANCH,
+                );
+
+                // NOTE: queue by Bull
+                DoPodDetailPostMetaQueueService.createJobByScanInAwbBranch(
+                  awb.awbItemId,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                );
+                totalSuccess += 1;
+                // #endregion after scanin
+
+                // remove key holdRedis
+                RedisService.del(`hold:scanin:${awb.awbItemId}`);
+              } else {
+                totalError += 1;
+                response.status = 'error';
+                response.message = 'Server Busy';
+              }
+            } else {
+              // save data to awb_trouble
+              await AwbTroubleService.fromScanIn(
+                awbNumber,
+                awb.awbStatusIdLast,
+              );
+              totalError += 1;
+              response.status = 'error';
+              response.trouble = true;
+              response.message =
+                `Resi ${awbNumber} milik gerai ` +
+                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+            }
+            break;
+
+          default:
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
+            break;
+        }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Resi ${awbNumber} Tidak di Temukan`;
+      }
+
+      // push item
+      dataItem.push({
+        awbNumber,
+        ...response,
+      });
+    } // end of loop
+
+    // Populate return value
+    result.totalData = payload.awbNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
 
     return result;
   }
@@ -407,362 +842,6 @@ export class WebDeliveryInService {
 
     return result;
   }
-
-  /**
-   * Scan in Awb Number (Branch) - NewFlow
-   * Flow Data : https://docs.google.com/document/d/1wnrYqlCmZruMMwgI9d-ko54JGQDWE9sn2yjSYhiAIrg/edit
-   * @param {WebScanInVm} payload
-   * @returns {Promise<WebScanInAwbResponseVm>}
-   * @memberof WebDeliveryInService
-   */
-  async scanInAwb(payload: WebScanInVm): Promise<WebScanInAwbResponseVm> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-
-    const dataItem = [];
-    const timeNow = moment().toDate();
-    const result = new WebScanInAwbResponseVm();
-
-    let totalSuccess = 0;
-    let totalError = 0;
-
-    for (const awbNumber of payload.awbNumber) {
-      const response = {
-        status: 'ok',
-        trouble: false,
-        message: 'Success',
-      };
-
-      const awb = await DeliveryService.validAwbNumber(awbNumber);
-      if (awb) {
-        const statusCode = await DeliveryService.awbStatusGroup(
-          awb.awbStatusIdLast,
-        );
-        switch (statusCode) {
-          case 'IN':
-            if (awb.branchIdLast == permissonPayload.branchId) {
-              // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
-              totalSuccess += 1;
-              response.message = `Resi ${awbNumber} sudah pernah scan ini`;
-            } else {
-              // TODO: construct data Awb Problem
-              // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
-              // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
-              // save data to awb_trouble
-              await AwbTroubleService.fromScanIn(
-                awbNumber,
-                awb.awbStatusIdLast,
-              );
-
-              totalError += 1;
-              response.status = 'error';
-              response.trouble = true;
-              response.message =
-                `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
-                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
-            }
-            break;
-
-          case 'POD':
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Resi ${awbNumber} sudah di proses POD`;
-            break;
-
-          case 'OUT':
-            // NOTE: check condition disable on check branchIdNext
-            // awb.branchIdNext == permissonPayload.branchId;
-            if (permissonPayload.branchId) {
-              // Add Locking setnx redis
-              const holdRedis = await RedisService.locking(
-                `hold:scanin:${awb.awbItemId}`,
-                'locking',
-              );
-              if (holdRedis) {
-                // save data to table pod_scan_id
-                // TODO: to be review
-                const podScanIn = PodScanIn.create();
-                // podScanIn.awbId = ??;
-                // podScanIn.doPodId = ??;
-                podScanIn.scanInType = 'awb';
-                podScanIn.employeeId = authMeta.employeeId;
-                podScanIn.awbItemId = awb.awbItemId;
-                podScanIn.branchId = permissonPayload.branchId;
-                podScanIn.userId = authMeta.userId;
-                podScanIn.podScaninDateTime = timeNow;
-                await PodScanIn.save(podScanIn);
-
-                // AFTER Scan IN ===============================================
-                // #region after scanin
-                const doPodDetail = await DoPodDetail.findOne({
-                  where: {
-                    awbItemId: awb.awbItemId,
-                    isScanIn: false,
-                    isDeleted: false,
-                  },
-                });
-                if (doPodDetail) {
-                  // Update Data doPodDetail
-                  // doPodDetail.podScanInId = podScanIn.podScanInId;
-                  doPodDetail.isScanIn = true;
-                  doPodDetail.updatedTime = timeNow;
-                  doPodDetail.userIdUpdated = authMeta.userId;
-                  await DoPodDetail.save(doPodDetail);
-
-                  // Update do_pod dengan field
-                  const doPod = await DoPod.findOne({
-                    where: {
-                      doPodId: doPodDetail.doPodId,
-                      isDeleted: false,
-                    },
-                  });
-
-                  // counter total scan in
-                  doPod.totalScanIn = doPod.totalScanIn + 1;
-
-                  if (doPod.totalScanIn == 1) {
-                    doPod.firstDateScanIn = timeNow;
-                    doPod.lastDateScanIn = timeNow;
-                  } else {
-                    doPod.lastDateScanIn = timeNow;
-                  }
-                  await DoPod.save(doPod);
-                  await DeliveryService.updateAwbAttr(
-                    awb.awbItemId,
-                    doPod.branchIdTo,
-                    AWB_STATUS.IN_BRANCH,
-                  );
-
-                  // NOTE: queue by Bull
-                  DoPodDetailPostMetaQueueService.createJobByScanInAwb(
-                    doPodDetail.doPodDetailId,
-                  );
-                  totalSuccess += 1;
-                } else {
-                  totalError += 1;
-                  response.status = 'error';
-                  response.message = `Resi ${awbNumber} belum di scan out`;
-                }
-                // #endregion after scanin
-
-                // remove key holdRedis
-                RedisService.del(`hold:scanin:${awb.awbItemId}`);
-              } else {
-                totalError += 1;
-                response.status = 'error';
-                response.message = 'Server Busy';
-              }
-            } else {
-              // save data to awb_trouble
-              await AwbTroubleService.fromScanIn(
-                awbNumber,
-                awb.awbStatusIdLast,
-              );
-              totalError += 1;
-              response.status = 'error';
-              response.trouble = true;
-              response.message =
-                `Resi ${awbNumber} milik gerai ` +
-                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
-            }
-            break;
-
-          default:
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
-            break;
-        }
-      } else {
-        totalError += 1;
-        response.status = 'error';
-        response.message = `Resi ${awbNumber} Tidak di Temukan`;
-      }
-
-      // push item
-      dataItem.push({
-        awbNumber,
-        ...response,
-      });
-    } // end of loop
-
-    // Populate return value
-    result.totalData = payload.awbNumber.length;
-    result.totalSuccess = totalSuccess;
-    result.totalError = totalError;
-    result.data = dataItem;
-
-    return result;
-  }
-
-  // TODO: need refactoring ??
-  async scanInAwbBranch(payload: WebScanInVm): Promise<WebScanInAwbResponseVm> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-
-    const dataItem = [];
-    const timeNow = moment().toDate();
-    const result = new WebScanInAwbResponseVm();
-
-    let totalSuccess = 0;
-    let totalError = 0;
-
-    for (const awbNumber of payload.awbNumber) {
-      const response = {
-        status: 'ok',
-        trouble: false,
-        message: 'Success',
-      };
-
-      const awb = await DeliveryService.validAwbNumber(awbNumber);
-      if (awb) {
-        const statusCode = await DeliveryService.awbStatusGroup(
-          awb.awbStatusIdLast,
-        );
-        switch (statusCode) {
-          case 'IN':
-            if (awb.branchIdLast == permissonPayload.branchId) {
-              // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
-              totalSuccess += 1;
-              response.message = `Resi ${awbNumber} sudah pernah scan ini`;
-            } else {
-              // TODO: construct data Awb Problem
-              // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
-              // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
-              // save data to awb_trouble
-              await AwbTroubleService.fromScanIn(
-                awbNumber,
-                awb.awbStatusIdLast,
-              );
-
-              totalError += 1;
-              response.status = 'error';
-              response.trouble = true;
-              response.message =
-                `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
-                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
-            }
-            break;
-
-          case 'POD':
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Resi ${awbNumber} sudah di proses POD`;
-            break;
-
-          case 'OUT':
-            // NOTE: check condition disable on check branchIdNext
-            // awb.branchIdNext == permissonPayload.branchId;
-            if (permissonPayload.branchId) {
-              // Add Locking setnx redis
-              const holdRedis = await RedisService.locking(
-                `hold:scanin:${awb.awbItemId}`,
-                'locking',
-              );
-              if (holdRedis) {
-                // save data to table pod_scan_id
-                // TODO: to be review
-                const podScanIn = PodScanIn.create();
-                // podScanIn.awbId = ??;
-                // podScanIn.doPodId = ??;
-                podScanIn.scanInType = 'awb';
-                podScanIn.employeeId = authMeta.employeeId;
-                podScanIn.awbItemId = awb.awbItemId;
-                podScanIn.branchId = permissonPayload.branchId;
-                podScanIn.userId = authMeta.userId;
-                podScanIn.podScaninDateTime = timeNow;
-                await PodScanIn.save(podScanIn);
-
-                // AFTER Scan IN ===============================================
-                // #region after scanin
-                await DeliveryService.updateAwbAttr(
-                  awb.awbItemId,
-                  null,
-                  AWB_STATUS.IN_BRANCH,
-                );
-
-                // NOTE: queue by Bull
-                DoPodDetailPostMetaQueueService.createJobByScanInAwbBranch(
-                  awb.awbItemId,
-                  permissonPayload.branchId,
-                  authMeta.userId,
-                );
-                totalSuccess += 1;
-                // #endregion after scanin
-
-                // remove key holdRedis
-                RedisService.del(`hold:scanin:${awb.awbItemId}`);
-              } else {
-                totalError += 1;
-                response.status = 'error';
-                response.message = 'Server Busy';
-              }
-            } else {
-              // save data to awb_trouble
-              await AwbTroubleService.fromScanIn(
-                awbNumber,
-                awb.awbStatusIdLast,
-              );
-              totalError += 1;
-              response.status = 'error';
-              response.trouble = true;
-              response.message =
-                `Resi ${awbNumber} milik gerai ` +
-                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
-            }
-            break;
-
-          default:
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
-            break;
-        }
-      } else {
-        totalError += 1;
-        response.status = 'error';
-        response.message = `Resi ${awbNumber} Tidak di Temukan`;
-      }
-
-      // push item
-      dataItem.push({
-        awbNumber,
-        ...response,
-      });
-    } // end of loop
-
-    // Populate return value
-    result.totalData = payload.awbNumber.length;
-    result.totalSuccess = totalSuccess;
-    result.totalError = totalError;
-    result.data = dataItem;
-
-    return result;
-  }
-
-  // NOTE: scan in package on branch
-  // 1. scan bag number
-  // 2. scan awb number on bag and calculate
-  async scanInBranch(
-    payload: WebScanInBagBranchVm,
-  ): Promise<WebScanInBranchResponseVm> {
-    let isBag: boolean = false;
-    let data: ScanInputNumberBranchVm[] = [];
-
-    for (const inputNumber of payload.scanValue) {
-      const [dataScan, flagBag] = await this.handleTypeNumber(inputNumber);
-      isBag = flagBag;
-      data = dataScan;
-    }
-
-    const result = new WebScanInBranchResponseVm();
-    result.totalData = payload.scanValue.length;
-    result.isBag = isBag;
-    result.bagNumber = payload.bagNumber;
-    result.data = data;
-    return result;
-  }
-
   // NOTE: scan dropoff_hub
   async scanInBagHub(payload: WebScanInBagVm): Promise<WebScanInBagResponseVm> {
     const authMeta = AuthService.getAuthData();
@@ -837,103 +916,30 @@ export class WebDeliveryInService {
 
     return result;
   }
+  // NOTE: scan in package on branch
+  // 1. scan bag number
+  // 2. scan awb number on bag and calculate
+  async scanInBranch(
+    payload: WebScanInBagBranchVm,
+  ): Promise<WebScanInBranchResponseVm> {
+    let isBag: boolean = false;
+    let data: ScanInputNumberBranchVm[] = [];
 
-  async findAllPodListByRequest(
-    payload: BaseMetaPayloadVm,
-  ): Promise<WebAwbFListPodResponseVm> {
-    // mapping field
-    payload.fieldResolverMap['awbDate'] = 't1.awb_date';
-    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
-    payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id_last';
-    if (payload.sortBy === '') {
-      payload.sortBy = 'awbDate';
+    for (const inputNumber of payload.scanValue) {
+      const [dataScan, flagBag] = await this.handleTypeNumber(inputNumber);
+      isBag = flagBag;
+      data = dataScan;
     }
 
-    // mapping search field and operator default ilike
-    payload.globalSearchFields = [
-      {
-        field: 'awbDate',
-      },
-    ];
-
-    const repo = new OrionRepositoryService(Awb, 't1');
-    const q = repo.findAllRaw();
-
-    payload.applyToOrionRepositoryQuery(q, true);
-
-    q.selectRaw(
-      ['t1.awb_id', 'awbId'],
-      ['t1.awb_date', 'awbDate'],
-      ['t1.awb_number', 'awbNumber'],
-      ['t1.from_id', 'fromId'],
-      ['t1.to_id', 'toId'],
-      ['t1.consignee_name', 'consigneeName'],
-      [`CONCAT(CAST(t1.total_cod_value AS NUMERIC(20,2)))`, 'totalCodValue'],
-      ['t2.awb_status_id_last', 'awbStatusIdLast'],
-      ['t2.history_date_last', 'historyDateLast'],
-      ['t3.district_name', 'districtNameFrom'],
-      ['t4.district_name', 'districtNameTo'],
-      ['t5.awb_status_title', 'awbStatusTitle'],
-      ['t5.is_problem', 'isProblem'],
-      [
-        `CASE LENGTH (CAST(t6.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t7.bag_number,'00',t6.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t7.bag_number,'0',t6.bag_seq)
-          ELSE
-            CONCAT (t7.bag_number,t6.bag_seq) END`,
-        'bagNumber',
-      ],
-      ['t8.branch_name', 'branchName'],
-      ['t9.branch_name', 'branchNameLast'],
-      ['t10.package_type_code', 'packageTypeCode'],
-      ['t11.customer_account_name', 'customerAccountName'],
-    );
-
-    q.innerJoin(e => e.awbItems.awbItemAttr, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.district, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.districtTo, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.awbItems.awbItemAttr.awbStatus, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.awbItems.awbItemAttr.bagItemLast, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.awbItems.awbItemAttr.bagItemLast.bag, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.branch, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.branchLast, 't9', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.packageType, 't10', j =>
-      j.andWhere(e => e.is_deleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.customerAccount, 't11', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.andWhere(e => e.fromType, w => w.equals(40));
-    q.andWhere(e => e.toType, w => w.equals(40));
-
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
-
-    const result = new WebAwbFListPodResponseVm();
-
+    const result = new WebScanInBranchResponseVm();
+    result.totalData = payload.scanValue.length;
+    result.isBag = isBag;
+    result.bagNumber = payload.bagNumber;
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
-
     return result;
   }
+
+  // #endregion
 
   private async handleTypeNumber(
     inputNumber: string,
@@ -963,9 +969,11 @@ export class WebDeliveryInService {
       // bag number
       const scanIn = new WebScanInBagVm();
       scanIn.bagNumber = [inputNumber];
+      // TODO: create pod_scan_in_branch
+      // create pod_scan_in_bag
+      // create pod_scan_in_bag_detail
+
       const result = await this.scanInBag(scanIn, false);
-      // TODO: find awb number
-      console.log('### Result ===================', result);
       if (result) {
         const bagData = await DeliveryService.validBagNumber(inputNumber);
         if (bagData) {

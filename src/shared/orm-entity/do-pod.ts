@@ -5,6 +5,7 @@ import { DoPodDetail } from './do-pod-detail';
 import { TmsBaseEntity } from './tms-base';
 import { PartnerLogistic } from './partner-logistic';
 import { User } from './user';
+import { DoPodDetailBag } from './do-pod-detail-bag';
 
 @Entity('do_pod', { schema: 'public' })
 export class DoPod extends TmsBaseEntity {
@@ -264,6 +265,9 @@ export class DoPod extends TmsBaseEntity {
 
   @OneToMany(() => DoPodDetail, e => e.doPod)
   doPodDetails: DoPodDetail[];
+
+  @OneToMany(() => DoPodDetailBag, e => e.doPod)
+  doPodDetailBag: DoPodDetailBag[];
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_driver', referencedColumnName: 'userId' })
