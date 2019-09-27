@@ -36,6 +36,7 @@ import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
 export class WebDeliveryInService {
   constructor() {}
 
+  // #region findAll
   async findAllAwbByRequest(
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanInListResponseVm> {
@@ -222,192 +223,106 @@ export class WebDeliveryInService {
     return result;
   }
 
-  /**
-   * Scan in Bag Number (Hub) - NewFlow
-   * Flow Data : https://docs.google.com/document/d/1wnrYqlCmZruMMwgI9d-ko54JGQDWE9sn2yjSYhiAIrg/edit
-   * @param {WebScanInBagVm} payload
-   * @param {boolean} isHub
-   * @returns {Promise<WebScanInBagResponseVm>}
-   * @memberof WebDeliveryInService
-   */
-  async scanInBag(
-    payload: WebScanInBagVm,
-    isHub: boolean = true,
-  ): Promise<WebScanInBagResponseVm> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+  async findAllPodListByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbFListPodResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbDate'] = 't1.awb_date';
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id_last';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'awbDate';
+    }
 
-    const dataItem = [];
-    const timeNow = moment().toDate();
-    const result = new WebScanInBagResponseVm();
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'awbDate',
+      },
+    ];
 
-    let totalSuccess = 0;
-    let totalError = 0;
+    const repo = new OrionRepositoryService(Awb, 't1');
+    const q = repo.findAllRaw();
 
-    for (const bagNumber of payload.bagNumber) {
-      const response = {
-        status: 'ok',
-        trouble: false,
-        message: 'Success',
-      };
+    payload.applyToOrionRepositoryQuery(q, true);
 
-      const bagData = await DeliveryService.validBagNumber(bagNumber);
+    q.selectRaw(
+      ['t1.awb_id', 'awbId'],
+      ['t1.awb_date', 'awbDate'],
+      ['t1.awb_number', 'awbNumber'],
+      ['t1.from_id', 'fromId'],
+      ['t1.to_id', 'toId'],
+      ['t1.consignee_name', 'consigneeName'],
+      [`CONCAT(CAST(t1.total_cod_value AS NUMERIC(20,2)))`, 'totalCodValue'],
+      ['t2.awb_status_id_last', 'awbStatusIdLast'],
+      ['t2.history_date_last', 'historyDateLast'],
+      ['t3.district_name', 'districtNameFrom'],
+      ['t4.district_name', 'districtNameTo'],
+      ['t5.awb_status_title', 'awbStatusTitle'],
+      ['t5.is_problem', 'isProblem'],
+      [
+        `CASE LENGTH (CAST(t6.bag_seq AS varchar(10)))
+          WHEN 1 THEN
+            CONCAT (t7.bag_number,'00',t6.bag_seq)
+          WHEN 2 THEN
+            CONCAT (t7.bag_number,'0',t6.bag_seq)
+          ELSE
+            CONCAT (t7.bag_number,t6.bag_seq) END`,
+        'bagNumber',
+      ],
+      ['t8.branch_name', 'branchName'],
+      ['t9.branch_name', 'branchNameLast'],
+      ['t10.package_type_code', 'packageTypeCode'],
+      ['t11.customer_account_name', 'customerAccountName'],
+    );
 
-      if (bagData) {
-        // NOTE: check condition disable on check branchIdNext
-        // bagData.branchIdNext == permissonPayload.branchId;
-        if (permissonPayload.branchId) {
-          if (bagData.bagItemStatusIdLast) {
-            const holdRedis = await RedisService.locking(
-              `hold:bagscanin:${bagData.bagItemId}`,
-              'locking',
-            );
-            if (holdRedis) {
-              // AFTER Scan IN ===============================================
-              // #region after scanin
-              // NOTE: check doPodDetail
-              const doPodDetail = await DoPodDetail.findOne({
-                where: {
-                  bagItemId: bagData.bagItemId,
-                  isScanIn: false,
-                  isDeleted: false,
-                },
-              });
-              if (doPodDetail) {
-                // save data to table pod_scan_id
-                // Update Data doPodDetail
-                // doPodDetail.podScanInId = podScanIn.podScanInId;
-                doPodDetail.isScanIn = true;
-                doPodDetail.updatedTime = timeNow;
-                doPodDetail.userIdUpdated = authMeta.userId;
-                await DoPodDetail.save(doPodDetail);
+    q.innerJoin(e => e.awbItems.awbItemAttr, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.district, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.districtTo, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbItems.awbItemAttr.awbStatus, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.awbItems.awbItemAttr.bagItemLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.awbItems.awbItemAttr.bagItemLast.bag, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branchLast, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.packageType, 't10', j =>
+      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.customerAccount, 't11', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.fromType, w => w.equals(40));
+    q.andWhere(e => e.toType, w => w.equals(40));
 
-                // NOTE:
-                // const doPod = await DoPod.findOne({
-                //   where: {
-                //     doPodId: doPodDetail.doPodId,
-                //     isDeleted: false,
-                //   },
-                // });
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
-                // counter total scan in
-                // doPod.totalScanIn = doPod.totalScanIn + 1;
-                // if (doPod.totalScanIn == 1) {
-                //   doPod.firstDateScanIn = timeNow;
-                //   doPod.lastDateScanIn = timeNow;
-                // } else {
-                //   doPod.lastDateScanIn = timeNow;
-                // }
-                // await DoPod.save(doPod);
-              }
+    const result = new WebAwbFListPodResponseVm();
 
-              totalSuccess += 1;
-              // update bagItem
-              const bagItem = await BagItem.findOne({
-                where: {
-                  bagItemId: bagData.bagItemId,
-                },
-              });
-
-              if (bagItem) {
-                bagItem.bagItemStatusIdLast = isHub ? 3500 : 2000;
-                bagItem.branchIdLast = permissonPayload.branchId;
-                bagItem.updatedTime = timeNow;
-                bagItem.userIdUpdated = authMeta.userId;
-                BagItem.save(bagItem);
-
-                // NOTE: status DO_HUB (12600: drop off hub)
-                if (isHub) {
-                  const bagItemsAwb = await BagItemAwb.find({
-                    where: {
-                      bagItemId: bagData.bagItemId,
-                      isDeleted: false,
-                    },
-                  });
-                  if (bagItemsAwb && bagItemsAwb.length > 0) {
-                    for (const itemAwb of bagItemsAwb) {
-                      if (itemAwb.awbItemId) {
-                        await DeliveryService.updateAwbAttr(
-                          itemAwb.awbItemId,
-                          null,
-                          AWB_STATUS.DO_HUB,
-                        );
-                        // NOTE: queue by Bull
-                        DoPodDetailPostMetaQueueService.createJobByDropoffBag(
-                          itemAwb.awbItemId,
-                          permissonPayload.branchId,
-                          authMeta.userId,
-                        );
-                      }
-                    }
-                  } else {
-                    Logger.log('### Data Bag Item Awb :: Not Found!!');
-                  }
-                }
-              }
-
-              // else {
-              //   totalError += 1;
-              //   response.status = 'error';
-              //   response.message = `Gabung paket ${bagNumber} belum scan out di gerai sebelumnya`;
-              // }
-              // #endregion after scanin
-
-              // remove key holdRedis
-              RedisService.del(`hold:bagscanin:${bagData.bagItemId}`);
-            } else {
-              totalError += 1;
-              response.status = 'error';
-              response.message = 'Server Busy';
-            }
-
-            // TODO: add bag trouble (with status 500)
-          } else {
-            totalSuccess += 1;
-            // status 1000
-            response.message = `Gabung paket ${bagNumber} belum scan out di gerai sebelumnya`;
-            if (Number(bagData.bagItemStatusIdLast) == 2000) {
-              response.message = `Gabung paket ${bagNumber} sudah pernah scan in`;
-            }
-          }
-        } else {
-          // TODO: bag trouble (warning)
-          // NOTE: create data bag trouble
-          const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
-          const bagTrouble = BagTrouble.create({
-            bagNumber,
-            bagTroubleCode,
-            bagTroubleStatus: 100,
-            bagStatusId: 2000,
-            employeeId: authMeta.employeeId,
-            branchId: permissonPayload.branchId,
-          });
-          await BagTrouble.save(bagTrouble);
-
-          totalError += 1;
-          response.status = 'error';
-          response.message = `Gabung paket ${bagNumber} bukan milik gerai ini`;
-        }
-      } else {
-        totalError += 1;
-        response.status = 'error';
-        response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
-      }
-      // push item
-      dataItem.push({
-        bagNumber,
-        ...response,
-      });
-    } // end of loop
-
-    result.totalData = payload.bagNumber.length;
-    result.totalSuccess = totalSuccess;
-    result.totalError = totalError;
-    result.data = dataItem;
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
 
+  // #endregion
+
+  // #region scanIn
   /**
    * Scan in Awb Number (Branch) - NewFlow
    * Flow Data : https://docs.google.com/document/d/1wnrYqlCmZruMMwgI9d-ko54JGQDWE9sn2yjSYhiAIrg/edit
@@ -742,29 +657,191 @@ export class WebDeliveryInService {
     return result;
   }
 
-  // NOTE: scan in package on branch
-  // 1. scan bag number
-  // 2. scan awb number on bag and calculate
-  async scanInBranch(
-    payload: WebScanInBagBranchVm,
-  ): Promise<WebScanInBranchResponseVm> {
-    let isBag: boolean = false;
-    let data: ScanInputNumberBranchVm[] = [];
+  /**
+   * Scan in Bag Number (Hub) - NewFlow
+   * Flow Data : https://docs.google.com/document/d/1wnrYqlCmZruMMwgI9d-ko54JGQDWE9sn2yjSYhiAIrg/edit
+   * @param {WebScanInBagVm} payload
+   * @param {boolean} isHub
+   * @returns {Promise<WebScanInBagResponseVm>}
+   * @memberof WebDeliveryInService
+   */
+  async scanInBag(
+    payload: WebScanInBagVm,
+    isHub: boolean = true,
+  ): Promise<WebScanInBagResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    for (const inputNumber of payload.scanValue) {
-      const [dataScan, flagBag] = await this.handleTypeNumber(inputNumber);
-      isBag = flagBag;
-      data = dataScan;
-    }
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new WebScanInBagResponseVm();
 
-    const result = new WebScanInBranchResponseVm();
-    result.totalData = payload.scanValue.length;
-    result.isBag = isBag;
-    result.bagNumber = payload.bagNumber;
-    result.data = data;
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    for (const bagNumber of payload.bagNumber) {
+      const response = {
+        status: 'ok',
+        trouble: false,
+        message: 'Success',
+      };
+
+      const bagData = await DeliveryService.validBagNumber(bagNumber);
+
+      if (bagData) {
+        // NOTE: check condition disable on check branchIdNext
+        // bagData.branchIdNext == permissonPayload.branchId;
+        if (permissonPayload.branchId) {
+          if (bagData.bagItemStatusIdLast) {
+            const holdRedis = await RedisService.locking(
+              `hold:bagscanin:${bagData.bagItemId}`,
+              'locking',
+            );
+            if (holdRedis) {
+              // AFTER Scan IN ===============================================
+              // #region after scanin
+              // NOTE: check doPodDetail
+              const doPodDetail = await DoPodDetail.findOne({
+                where: {
+                  bagItemId: bagData.bagItemId,
+                  isScanIn: false,
+                  isDeleted: false,
+                },
+              });
+              if (doPodDetail) {
+                // save data to table pod_scan_id
+                // Update Data doPodDetail
+                // doPodDetail.podScanInId = podScanIn.podScanInId;
+                doPodDetail.isScanIn = true;
+                doPodDetail.updatedTime = timeNow;
+                doPodDetail.userIdUpdated = authMeta.userId;
+                await DoPodDetail.save(doPodDetail);
+
+                // NOTE:
+                // const doPod = await DoPod.findOne({
+                //   where: {
+                //     doPodId: doPodDetail.doPodId,
+                //     isDeleted: false,
+                //   },
+                // });
+
+                // counter total scan in
+                // doPod.totalScanIn = doPod.totalScanIn + 1;
+                // if (doPod.totalScanIn == 1) {
+                //   doPod.firstDateScanIn = timeNow;
+                //   doPod.lastDateScanIn = timeNow;
+                // } else {
+                //   doPod.lastDateScanIn = timeNow;
+                // }
+                // await DoPod.save(doPod);
+              }
+
+              totalSuccess += 1;
+              // update bagItem
+              const bagItem = await BagItem.findOne({
+                where: {
+                  bagItemId: bagData.bagItemId,
+                },
+              });
+
+              if (bagItem) {
+                bagItem.bagItemStatusIdLast = isHub ? 3500 : 2000;
+                bagItem.branchIdLast = permissonPayload.branchId;
+                bagItem.updatedTime = timeNow;
+                bagItem.userIdUpdated = authMeta.userId;
+                BagItem.save(bagItem);
+
+                // NOTE: status DO_HUB (12600: drop off hub)
+                if (isHub) {
+                  const bagItemsAwb = await BagItemAwb.find({
+                    where: {
+                      bagItemId: bagData.bagItemId,
+                      isDeleted: false,
+                    },
+                  });
+                  if (bagItemsAwb && bagItemsAwb.length > 0) {
+                    for (const itemAwb of bagItemsAwb) {
+                      if (itemAwb.awbItemId) {
+                        await DeliveryService.updateAwbAttr(
+                          itemAwb.awbItemId,
+                          null,
+                          AWB_STATUS.DO_HUB,
+                        );
+                        // NOTE: queue by Bull
+                        DoPodDetailPostMetaQueueService.createJobByDropoffBag(
+                          itemAwb.awbItemId,
+                          permissonPayload.branchId,
+                          authMeta.userId,
+                        );
+                      }
+                    }
+                  } else {
+                    Logger.log('### Data Bag Item Awb :: Not Found!!');
+                  }
+                }
+              }
+
+              // else {
+              //   totalError += 1;
+              //   response.status = 'error';
+              //   response.message = `Gabung paket ${bagNumber} belum scan out di gerai sebelumnya`;
+              // }
+              // #endregion after scanin
+
+              // remove key holdRedis
+              RedisService.del(`hold:bagscanin:${bagData.bagItemId}`);
+            } else {
+              totalError += 1;
+              response.status = 'error';
+              response.message = 'Server Busy';
+            }
+
+            // TODO: add bag trouble (with status 500)
+          } else {
+            totalSuccess += 1;
+            // status 1000
+            response.message = `Gabung paket ${bagNumber} belum scan out di gerai sebelumnya`;
+            if (Number(bagData.bagItemStatusIdLast) == 2000) {
+              response.message = `Gabung paket ${bagNumber} sudah pernah scan in`;
+            }
+          }
+        } else {
+          // TODO: bag trouble (warning)
+          // NOTE: create data bag trouble
+          const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
+          const bagTrouble = BagTrouble.create({
+            bagNumber,
+            bagTroubleCode,
+            bagTroubleStatus: 100,
+            bagStatusId: 2000,
+            employeeId: authMeta.employeeId,
+            branchId: permissonPayload.branchId,
+          });
+          await BagTrouble.save(bagTrouble);
+
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Gabung paket ${bagNumber} bukan milik gerai ini`;
+        }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
+      }
+      // push item
+      dataItem.push({
+        bagNumber,
+        ...response,
+      });
+    } // end of loop
+
+    result.totalData = payload.bagNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
+
     return result;
   }
-
   // NOTE: scan dropoff_hub
   async scanInBagHub(payload: WebScanInBagVm): Promise<WebScanInBagResponseVm> {
     const authMeta = AuthService.getAuthData();
@@ -839,103 +916,30 @@ export class WebDeliveryInService {
 
     return result;
   }
+  // NOTE: scan in package on branch
+  // 1. scan bag number
+  // 2. scan awb number on bag and calculate
+  async scanInBranch(
+    payload: WebScanInBagBranchVm,
+  ): Promise<WebScanInBranchResponseVm> {
+    let isBag: boolean = false;
+    let data: ScanInputNumberBranchVm[] = [];
 
-  async findAllPodListByRequest(
-    payload: BaseMetaPayloadVm,
-  ): Promise<WebAwbFListPodResponseVm> {
-    // mapping field
-    payload.fieldResolverMap['awbDate'] = 't1.awb_date';
-    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
-    payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id_last';
-    if (payload.sortBy === '') {
-      payload.sortBy = 'awbDate';
+    for (const inputNumber of payload.scanValue) {
+      const [dataScan, flagBag] = await this.handleTypeNumber(inputNumber);
+      isBag = flagBag;
+      data = dataScan;
     }
 
-    // mapping search field and operator default ilike
-    payload.globalSearchFields = [
-      {
-        field: 'awbDate',
-      },
-    ];
-
-    const repo = new OrionRepositoryService(Awb, 't1');
-    const q = repo.findAllRaw();
-
-    payload.applyToOrionRepositoryQuery(q, true);
-
-    q.selectRaw(
-      ['t1.awb_id', 'awbId'],
-      ['t1.awb_date', 'awbDate'],
-      ['t1.awb_number', 'awbNumber'],
-      ['t1.from_id', 'fromId'],
-      ['t1.to_id', 'toId'],
-      ['t1.consignee_name', 'consigneeName'],
-      [`CONCAT(CAST(t1.total_cod_value AS NUMERIC(20,2)))`, 'totalCodValue'],
-      ['t2.awb_status_id_last', 'awbStatusIdLast'],
-      ['t2.history_date_last', 'historyDateLast'],
-      ['t3.district_name', 'districtNameFrom'],
-      ['t4.district_name', 'districtNameTo'],
-      ['t5.awb_status_title', 'awbStatusTitle'],
-      ['t5.is_problem', 'isProblem'],
-      [
-        `CASE LENGTH (CAST(t6.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t7.bag_number,'00',t6.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t7.bag_number,'0',t6.bag_seq)
-          ELSE
-            CONCAT (t7.bag_number,t6.bag_seq) END`,
-        'bagNumber',
-      ],
-      ['t8.branch_name', 'branchName'],
-      ['t9.branch_name', 'branchNameLast'],
-      ['t10.package_type_code', 'packageTypeCode'],
-      ['t11.customer_account_name', 'customerAccountName'],
-    );
-
-    q.innerJoin(e => e.awbItems.awbItemAttr, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.district, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.districtTo, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.awbItems.awbItemAttr.awbStatus, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.awbItems.awbItemAttr.bagItemLast, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.awbItems.awbItemAttr.bagItemLast.bag, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.branch, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.branchLast, 't9', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.packageType, 't10', j =>
-      j.andWhere(e => e.is_deleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.customerAccount, 't11', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.andWhere(e => e.fromType, w => w.equals(40));
-    q.andWhere(e => e.toType, w => w.equals(40));
-
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
-
-    const result = new WebAwbFListPodResponseVm();
-
+    const result = new WebScanInBranchResponseVm();
+    result.totalData = payload.scanValue.length;
+    result.isBag = isBag;
+    result.bagNumber = payload.bagNumber;
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
-
     return result;
   }
+
+  // #endregion
 
   private async handleTypeNumber(
     inputNumber: string,
