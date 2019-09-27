@@ -18,6 +18,10 @@ export class AwbService {
       awbItemAttrId: true,
       awbStatusIdLast: true,
       awbItemId: true,
+      awbItem: {
+        awbItemId: true,
+        awbId: true,
+      },
       awbNumber: true,
       isPackageCombined: true,
       bagItemIdLast: true,
