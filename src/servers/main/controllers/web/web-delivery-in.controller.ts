@@ -108,6 +108,6 @@ export class WebDeliveryInController {
   @ApiOkResponse({ type: WebScanInLoadBranchResponseVm })
   public async loadPackageAwb() {
 
-    return this.loadService.loadAwbPackage();
+    return null; // this.loadService.loadAwbPackage();
   }
 }
