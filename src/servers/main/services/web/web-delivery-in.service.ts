@@ -1071,7 +1071,7 @@ export class WebDeliveryInService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     // create pod_scan_in_branch
-    if (payload.podScanInBranchId && payload.podScanInBranchId == '') {
+    if (payload.podScanInBranchId == '') {
       const podScanInBranch = PodScanInBranch.create();
       podScanInBranch.branchId = permissonPayload.branchId;
       podScanInBranch.scanInType = 'bag';
@@ -1091,7 +1091,7 @@ export class WebDeliveryInService {
     result.totalData = payload.scanValue.length;
     result.isBag = isBag;
     result.bagNumber = payload.bagNumber;
-    result.podScanInBranch = payload.podScanInBranchId;
+    result.podScanInBranchId = payload.podScanInBranchId;
     result.data = data;
     return result;
   }

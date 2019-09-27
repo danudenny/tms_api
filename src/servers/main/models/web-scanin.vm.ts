@@ -99,7 +99,7 @@ export class WebScanInBranchResponseVm {
   bagNumber: string;
 
   @ApiModelProperty()
-  podScanInBranch: string;
+  podScanInBranchId: string;
 
   // @ApiModelProperty()
   // totalSuccessAwb: number;
