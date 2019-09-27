@@ -18,6 +18,7 @@ export class PodScanInBranch extends TmsBaseEntity {
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name: 'scan_in_type',
   })
   scanInType: string;
 

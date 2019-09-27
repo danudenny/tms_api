@@ -16,6 +16,12 @@ export class PodScanInBranchBag extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: false,
+    name: 'branch_id',
+  })
+  branchId: number;
+
+  @Column('bigint', {
+    nullable: false,
     name: 'bag_id',
   })
   bagId: number;
@@ -52,5 +58,4 @@ export class PodScanInBranchBag extends TmsBaseEntity {
     name: 'notes',
   })
   notes: string | null;
-
 }
