@@ -871,7 +871,7 @@ export class WebDeliveryInService {
       if (permissonPayload.branchId) {
         if (bagData.bagItemStatusIdLast) {
           const holdRedis = await RedisService.locking(
-            `hold:bagscanin:${bagData.bagItemId}`,
+            `hold:bag-scanin-branch:${bagData.bagItemId}`,
             'locking',
           );
           if (holdRedis) {
@@ -894,8 +894,6 @@ export class WebDeliveryInService {
               doPodDetail.userIdUpdated = authMeta.userId;
               await DoPodDetail.save(doPodDetail);
             }
-
-            totalSuccess += 1;
             // update bagItem
             const bagItem = await BagItem.findOne({
               where: {
@@ -938,7 +936,7 @@ export class WebDeliveryInService {
             // #endregion after scanin
 
             // remove key holdRedis
-            RedisService.del(`hold:bagscanin:${bagData.bagItemId}`);
+            RedisService.del(`hold:bag-scanin-branch:${bagData.bagItemId}`);
           } else {
             totalError += 1;
             response.status = 'error';
@@ -1077,7 +1075,7 @@ export class WebDeliveryInService {
       const podScanInBranch = PodScanInBranch.create();
       podScanInBranch.branchId = permissonPayload.branchId;
       podScanInBranch.scanInType = 'bag';
-      podScanInBranch.transactionStatusId = 1000;
+      podScanInBranch.transactionStatusId = 600;
       podScanInBranch.totalBagScan = 0;
       await PodScanInBranch.save(podScanInBranch);
       payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
@@ -1100,9 +1098,9 @@ export class WebDeliveryInService {
 
   // #endregion
 
-  private async handleTypeNumber(
+ private async handleTypeNumber(
     inputNumber: string,
-  ): Promise<[ScanInputNumberBranchVm[], boolean]> {
+ ): Promise<[ScanInputNumberBranchVm[], boolean]> {
     let dataScan = [];
     const regexNumber = /^[0-9]+$/;
     const dataItem = new ScanInputNumberBranchVm();
@@ -1126,8 +1124,6 @@ export class WebDeliveryInService {
       regexNumber.test(inputNumber.substring(7, 10))
     ) {
       // bag number
-      // TODO: create pod_scan_in_branch
-      // create pod_scan_in_bag
       // create pod_scan_in_bag_detail
 
       const result = await this.scanInBagBranch(inputNumber);
