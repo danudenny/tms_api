@@ -26,6 +26,9 @@ export class WebScanInBagBranchVm {
   @ApiModelProperty()
   bagNumber: string;
 
+  @ApiModelProperty()
+  podScanInBranchId: string;
+
 }
 
 export class WebScanInBranchHubVm {
@@ -94,6 +97,10 @@ export class WebScanInBranchResponseVm {
 
   @ApiModelProperty()
   bagNumber: string;
+
+  @ApiModelProperty()
+  podScanInBranch: string;
+
   // @ApiModelProperty()
   // totalSuccessAwb: number;
 

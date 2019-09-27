@@ -29,6 +29,7 @@ import { WebAwbFListPodResponseVm } from '../../models/web-awb-filter-list.respo
 import { BagService } from '../v1/bag.service';
 import { DropoffHub } from '../../../../shared/orm-entity/dropoff_hub';
 import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
+import { PodScanInBranch } from '../../../../shared/orm-entity/pod-scan-in-branch';
 
 // #endregion
 
@@ -1069,6 +1070,18 @@ export class WebDeliveryInService {
   ): Promise<WebScanInBranchResponseVm> {
     let isBag: boolean = false;
     let data: ScanInputNumberBranchVm[] = [];
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    // create pod_scan_in_branch
+    if (payload.podScanInBranchId && payload.podScanInBranchId == '') {
+      const podScanInBranch = PodScanInBranch.create();
+      podScanInBranch.branchId = permissonPayload.branchId;
+      podScanInBranch.scanInType = 'bag';
+      podScanInBranch.transactionStatusId = 1000;
+      podScanInBranch.totalBagScan = 0;
+      await PodScanInBranch.save(podScanInBranch);
+      payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+    }
 
     for (const inputNumber of payload.scanValue) {
       const [dataScan, flagBag] = await this.handleTypeNumber(inputNumber);
@@ -1080,6 +1093,7 @@ export class WebDeliveryInService {
     result.totalData = payload.scanValue.length;
     result.isBag = isBag;
     result.bagNumber = payload.bagNumber;
+    result.podScanInBranch = payload.podScanInBranchId;
     result.data = data;
     return result;
   }
