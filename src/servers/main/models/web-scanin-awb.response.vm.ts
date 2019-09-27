@@ -1,4 +1,5 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ScanInputNumberBranchVm } from './web-scanin.vm';
 
 export class ScanAwbVm {
   @ApiModelProperty()
@@ -32,7 +33,7 @@ export class WebScanInAwbResponseVm  {
 export class ScanBagVm {
   @ApiModelProperty()
   bagNumber: string;
-  
+
   @ApiModelProperty()
   status: string;
 
@@ -56,6 +57,19 @@ export class WebScanInBagResponseVm  {
 
   @ApiModelProperty({ type: [ScanBagVm] })
   data: ScanBagVm[];
+}
+export class WebScanInBagBranchResponseVm {
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
+  data: ScanInputNumberBranchVm[];
 }
 
 export class ValidateVm {

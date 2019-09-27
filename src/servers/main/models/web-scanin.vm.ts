@@ -2,6 +2,7 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 import { IsDefined, ValidateNested } from 'class-validator';
 import { IsAwbNumber } from '../../../shared/decorators/custom-validation.decorator';
 import { Type } from 'class-transformer';
+import { AwbDetail } from 'src/shared/orm-entity/awb-detail';
 
 export class WebScanInVm  {
   @ApiModelProperty({
@@ -24,6 +25,9 @@ export class WebScanInBagBranchVm {
 
   @ApiModelProperty()
   bagNumber: string;
+
+  @ApiModelProperty()
+  podScanInBranchId: string;
 
 }
 
@@ -65,12 +69,38 @@ export class ScanInputNumberBranchVm {
   message: string;
 }
 
+export class ScanInputNumberLoadBranchVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class WebScanInLoadBranchResponseVm   {
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  AwbDetail: ScanInputNumberLoadBranchVm[];
+}
+
 export class WebScanInBranchResponseVm {
   @ApiModelProperty()
   totalData: number;
 
   @ApiModelProperty()
   bagNumber: string;
+
+  @ApiModelProperty()
+  podScanInBranch: string;
+
   // @ApiModelProperty()
   // totalSuccessAwb: number;
 

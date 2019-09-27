@@ -14,7 +14,7 @@ import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { RedisService } from '../../../../shared/services/redis.service';
-import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
+import { WebScanInAwbResponseVm, WebScanInBagResponseVm, WebScanInBagBranchResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInBagListResponseVm, WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm } from '../../models/web-scanin.vm';
@@ -29,6 +29,7 @@ import { WebAwbFListPodResponseVm } from '../../models/web-awb-filter-list.respo
 import { BagService } from '../v1/bag.service';
 import { DropoffHub } from '../../../../shared/orm-entity/dropoff_hub';
 import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
+import { PodScanInBranch } from '../../../../shared/orm-entity/pod-scan-in-branch';
 
 // #endregion
 
@@ -842,6 +843,149 @@ export class WebDeliveryInService {
 
     return result;
   }
+
+  async scanInBagBranch(
+    bagNumber: string,
+  ): Promise<WebScanInBagBranchResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new WebScanInBagBranchResponseVm();
+
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    const response = {
+      status: 'ok',
+      trouble: false,
+      message: 'Success',
+    };
+
+    const bagData = await DeliveryService.validBagNumber(bagNumber);
+
+    if (bagData) {
+      // NOTE: check condition disable on check branchIdNext
+      // bagData.branchIdNext == permissonPayload.branchId;
+      if (permissonPayload.branchId) {
+        if (bagData.bagItemStatusIdLast) {
+          const holdRedis = await RedisService.locking(
+            `hold:bagscanin:${bagData.bagItemId}`,
+            'locking',
+          );
+          if (holdRedis) {
+            // AFTER Scan IN ===============================================
+            // #region after scanin
+            // NOTE: check doPodDetail
+            const doPodDetail = await DoPodDetail.findOne({
+              where: {
+                bagItemId: bagData.bagItemId,
+                isScanIn: false,
+                isDeleted: false,
+              },
+            });
+            if (doPodDetail) {
+              // save data to table pod_scan_id
+              // Update Data doPodDetail
+              // doPodDetail.podScanInId = podScanIn.podScanInId;
+              doPodDetail.isScanIn = true;
+              doPodDetail.updatedTime = timeNow;
+              doPodDetail.userIdUpdated = authMeta.userId;
+              await DoPodDetail.save(doPodDetail);
+            }
+
+            totalSuccess += 1;
+            // update bagItem
+            const bagItem = await BagItem.findOne({
+              where: {
+                bagItemId: bagData.bagItemId,
+              },
+            });
+
+            if (bagItem) {
+              bagItem.bagItemStatusIdLast = 2000;
+              bagItem.branchIdLast = permissonPayload.branchId;
+              bagItem.updatedTime = timeNow;
+              bagItem.userIdUpdated = authMeta.userId;
+              BagItem.save(bagItem);
+              // get data awb on bag
+              const bagItemsAwb = await BagItemAwb.find({
+                where: {
+                  bagItemId: bagData.bagItemId,
+                  isDeleted: false,
+                },
+              });
+
+              if (bagItemsAwb && bagItemsAwb.length > 0) {
+                for (const itemAwb of bagItemsAwb) {
+                  if (itemAwb.awbItemId) {
+                    const dataAwb = new ScanInputNumberBranchVm();
+
+                    dataAwb.awbNumber = itemAwb.awbNumber;
+                    dataAwb.status = 'ok';
+                    dataAwb.message = '';
+                    dataAwb.trouble = false;
+
+                    dataItem.push(dataAwb);
+                  }
+                } // end of loop
+              } else {
+                console.log('### Data tidak ditemukan !!');
+              }
+            }
+
+            // #endregion after scanin
+
+            // remove key holdRedis
+            RedisService.del(`hold:bagscanin:${bagData.bagItemId}`);
+          } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = 'Server Busy';
+          }
+
+          // TODO: add bag trouble (with status 500)
+        } else {
+          totalSuccess += 1;
+          // status 1000
+          response.message = `Gabung paket ${bagNumber} belum scan out di gerai sebelumnya`;
+          if (Number(bagData.bagItemStatusIdLast) == 2000) {
+            response.message = `Gabung paket ${bagNumber} sudah pernah scan in`;
+          }
+        }
+      } else {
+        // TODO: bag trouble (warning)
+        // NOTE: create data bag trouble
+        const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
+        const bagTrouble = BagTrouble.create({
+          bagNumber,
+          bagTroubleCode,
+          bagTroubleStatus: 100,
+          bagStatusId: 2000,
+          employeeId: authMeta.employeeId,
+          branchId: permissonPayload.branchId,
+        });
+        await BagTrouble.save(bagTrouble);
+
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Gabung paket ${bagNumber} bukan milik gerai ini`;
+      }
+    } else {
+      totalError += 1;
+      response.status = 'error';
+      response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
+    }
+
+    result.totalData = dataItem.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
+
+    return result;
+  }
+
   // NOTE: scan dropoff_hub
   async scanInBagHub(payload: WebScanInBagVm): Promise<WebScanInBagResponseVm> {
     const authMeta = AuthService.getAuthData();
@@ -851,7 +995,7 @@ export class WebDeliveryInService {
     const timeNow = moment().toDate();
     const result = new WebScanInBagResponseVm();
 
-    const totalSuccess = 0;
+    let totalSuccess = 0;
     let totalError = 0;
 
     for (const bagNumber of payload.bagNumber) {
@@ -896,6 +1040,7 @@ export class WebDeliveryInService {
             bagData.bagItemId,
             dropoffHub.dropoffHubId,
           );
+          totalSuccess += 1;
         }
       } else {
         totalError += 1;
@@ -916,6 +1061,7 @@ export class WebDeliveryInService {
 
     return result;
   }
+
   // NOTE: scan in package on branch
   // 1. scan bag number
   // 2. scan awb number on bag and calculate
@@ -924,6 +1070,18 @@ export class WebDeliveryInService {
   ): Promise<WebScanInBranchResponseVm> {
     let isBag: boolean = false;
     let data: ScanInputNumberBranchVm[] = [];
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    // create pod_scan_in_branch
+    if (payload.podScanInBranchId && payload.podScanInBranchId == '') {
+      const podScanInBranch = PodScanInBranch.create();
+      podScanInBranch.branchId = permissonPayload.branchId;
+      podScanInBranch.scanInType = 'bag';
+      podScanInBranch.transactionStatusId = 1000;
+      podScanInBranch.totalBagScan = 0;
+      await PodScanInBranch.save(podScanInBranch);
+      payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+    }
 
     for (const inputNumber of payload.scanValue) {
       const [dataScan, flagBag] = await this.handleTypeNumber(inputNumber);
@@ -935,6 +1093,7 @@ export class WebDeliveryInService {
     result.totalData = payload.scanValue.length;
     result.isBag = isBag;
     result.bagNumber = payload.bagNumber;
+    result.podScanInBranch = payload.podScanInBranchId;
     result.data = data;
     return result;
   }
@@ -944,9 +1103,9 @@ export class WebDeliveryInService {
   private async handleTypeNumber(
     inputNumber: string,
   ): Promise<[ScanInputNumberBranchVm[], boolean]> {
-    const dataScan = [];
+    let dataScan = [];
     const regexNumber = /^[0-9]+$/;
-    let dataItem = new ScanInputNumberBranchVm();
+    const dataItem = new ScanInputNumberBranchVm();
 
     inputNumber = inputNumber.trim();
     if (inputNumber.length == 12 && regexNumber.test(inputNumber)) {
@@ -967,43 +1126,14 @@ export class WebDeliveryInService {
       regexNumber.test(inputNumber.substring(7, 10))
     ) {
       // bag number
-      const scanIn = new WebScanInBagVm();
-      scanIn.bagNumber = [inputNumber];
       // TODO: create pod_scan_in_branch
       // create pod_scan_in_bag
       // create pod_scan_in_bag_detail
 
-      const result = await this.scanInBag(scanIn, false);
+      const result = await this.scanInBagBranch(inputNumber);
       if (result) {
-        const bagData = await DeliveryService.validBagNumber(inputNumber);
-        if (bagData) {
-          const bagItemsAwb = await BagItemAwb.find({
-            where: {
-              bagItemId: bagData.bagItemId,
-              isDeleted: false,
-            },
-          });
-          if (bagItemsAwb && bagItemsAwb.length > 0) {
-            for (const itemAwb of bagItemsAwb) {
-              console.log(' ### AWB NUMBER =======', itemAwb.awbNumber);
-              if (itemAwb.awbItemId) {
-                dataItem = new ScanInputNumberBranchVm();
-
-                dataItem.awbNumber = itemAwb.awbNumber;
-                dataItem.status = 'ok';
-                dataItem.message = '';
-                dataItem.trouble = false;
-
-                dataScan.push(dataItem);
-              }
-            } // end of loop
-          } else {
-            console.log('### Data tidak ditemukan !!');
-          }
-        } else {
-          console.log('### Bag Number tidak ditemukan !!');
-        }
-      } //
+        dataScan = result.data;
+      }
 
       return [dataScan, true];
     } else {
