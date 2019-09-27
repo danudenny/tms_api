@@ -105,6 +105,10 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodBagPayloadQueryVm,
   ) {
+    const m = moment();
+    const dateNow = await m.format('DD/MM/YY');
+    const timeNow = await m.format('HH:mm');
+
     const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetailBag);
     q.leftJoin(e => e.userDriver.employee);
@@ -174,14 +178,13 @@ export class PrintService {
       });
     }
 
-    const m = moment();
     const jsreportParams = {
       data: doPod,
       meta: {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
-        date: m.format('DD/MM/YY'),
-        time: m.format('HH:mm'),
+        date: dateNow,
+        time: timeNow,
         totalItems: totalBagItem,
       },
     };
