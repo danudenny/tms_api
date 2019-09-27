@@ -16,6 +16,10 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodPayloadQueryVm,
   ) {
+    const m = moment();
+    const dateNow = await m.format('DD/MM/YY');
+    const timeNow = await m.format('HH:mm');
+
     const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetails);
     q.leftJoin(e => e.userDriver.employee);
@@ -81,14 +85,13 @@ export class PrintService {
       });
     }
 
-    const m = moment();
     const jsreportParams = {
       data: doPod,
       meta: {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
-        date: m.format('DD/MM/YY'),
-        time: m.format('HH:mm'),
+        date: dateNow,
+        time: timeNow,
         totalItems: doPod.doPodDetails.length,
       },
     };
@@ -201,6 +204,10 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodDeliverPayloadQueryVm,
   ) {
+    const m = moment();
+    const dateNow = await m.format('DD/MM/YY');
+    const timeNow = await m.format('HH:mm');
+
     const q = RepositoryService.doPodDeliver.findOne();
     q.leftJoin(e => e.doPodDeliverDetails);
     q.leftJoin(e => e.userDriver.employee);
@@ -224,6 +231,7 @@ export class PrintService {
               awbNumber: true,
               consigneeName: true,
               consigneeNumber: true,
+              totalCodValue: true,
             },
           },
         },
@@ -235,6 +243,10 @@ export class PrintService {
         message: 'Surat jalan tidak ditemukan',
       });
     }
+
+    const awbIds = map(doPodDeliver.doPodDeliverDetails, doPodDeliverDetail => doPodDeliverDetail.awbItem.awb.awbId);
+    const result = await RawQueryService.query(`SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(',')})`);
+    const totalAllCod = result[0].total;
 
     const currentUser = await RepositoryService.user
       .loadById(queryParams.userId)
@@ -264,15 +276,15 @@ export class PrintService {
       });
     }
 
-    const m = moment();
     const jsreportParams = {
       data: doPodDeliver,
       meta: {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
-        date: m.format('DD/MM/YY'),
-        time: m.format('HH:mm'),
+        date: dateNow,
+        time: timeNow,
         totalItems: doPodDeliver.doPodDeliverDetails.length,
+        totalCod: totalAllCod,
       },
     };
 
