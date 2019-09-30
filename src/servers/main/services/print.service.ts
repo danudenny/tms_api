@@ -88,7 +88,7 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.format('HH:mm'),
+        time: m.add(7, 'hours').format('HH:mm'),
         totalItems: doPod.doPodDetails.length,
       },
     };
@@ -181,7 +181,7 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.format('HH:mm'),
+        time: m.add(7, 'hours').format('HH:mm'),
         totalItems: totalBagItem,
       },
     };
@@ -273,7 +273,7 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.format('HH:mm'),
+        time: m.add(7, 'hours').format('HH:mm'),
         totalItems: doPodDeliver.doPodDeliverDetails.length,
         totalCod: totalAllCod,
       },
@@ -359,7 +359,7 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.format('HH:mm'),
+        time: m.add(7, 'hours').format('HH:mm'),
         bagItemsTotal,
       },
     };
@@ -477,7 +477,7 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.format('HH:mm'),
+        time: m.add(7, 'hours').format('HH:mm'),
       },
     };
 
