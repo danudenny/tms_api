@@ -1,7 +1,8 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('bag_item_history', { schema: 'public' })
-export class BagItemHistory extends BaseEntity {
+export class BagItemHistory extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'bag_item_history_id',
@@ -62,35 +63,4 @@ export class BagItemHistory extends BaseEntity {
     name: 'ref_module',
   })
   refModule: string | null;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_created',
-  })
-  userIdCreated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'created_time',
-  })
-  createdTime: Date;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_updated',
-  })
-  userIdUpdated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'updated_time',
-  })
-  updatedTime: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
 }
