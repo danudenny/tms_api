@@ -97,8 +97,7 @@ export class WebDeliveryInController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanInBranchResponseVm })
   public async validateBranch(@Body() payload: WebScanInValidateBranchVm) {
-    // TODO: butuh table baru??
-    return null; // this.webDeliveryService.scanInBranch(payload);
+    return this.webDeliveryService.scanInValidateBranch(payload);
   }
 
   @Post('loadBranch')

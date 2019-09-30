@@ -289,6 +289,7 @@ export class PackageService {
           bagId,
           bagItemId: bagItem.bagItemId,
           totalAwbItem: 1,
+          totalAwbScan: 1,
           userIdCreated: authMeta.userId,
           createdTime  : moment().toDate(),
           updatedTime  : moment().toDate(),
@@ -451,6 +452,12 @@ export class PackageService {
     });
     const podScanInHubDetail = await PodScanInHubDetail.save(podScanInHubDetailData);
 
+    // Update Pod scan in hub bag
+    const podScanInHubBag = await PodScanInHubBag.findOne({ where: { podScanInHubId: payload.podScanInHubId } });
+    podScanInHubBag.totalAwbItem += 1;
+    podScanInHubBag.totalAwbScan += 1;
+    await PodScanInHubBag.save(podScanInHubBag);
+
     // update awb_item_attr
     const awbItemAttr             = await AwbItemAttr.findOne({ where: { awbItemId: payload.awbItemId, isDeleted: false } });
     awbItemAttr.bagItemIdLast     = bagDetail.bagItemId;
@@ -460,7 +467,7 @@ export class PackageService {
     awbItemAttr.userIdLast        = authMeta.userId,
     await AwbItemAttr.save(awbItemAttr);
 
-        // update status
+    // update status
     DoPodDetailPostMetaQueueService.createJobByAwbFilter(
           payload.awbItemId,
           permissonPayload.branchId,

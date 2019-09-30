@@ -17,7 +17,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm, WebScanInBagBranchResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInBagListResponseVm, WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm } from '../../models/web-scanin.vm';
+import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm, WebScanInValidateBranchVm } from '../../models/web-scanin.vm';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
@@ -1133,11 +1133,68 @@ export class WebDeliveryInService {
     result.totalData = payload.scanValue.length;
     result.isBag = isBag;
     result.bagNumber = payload.bagNumber;
+    result.bagItemId = null; // #TODO:
     result.podScanInBranchId = payload.podScanInBranchId;
     result.data = data;
     return result;
   }
 
+  async scanInValidateBranch(payload: WebScanInValidateBranchVm): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timeNow = moment().toDate();
+
+    if (payload.bagNumberDetail && payload.bagNumberDetail.length) {
+      for (const item of payload.bagNumberDetail) {
+        const bagData = await BagService.validBagNumber(item.bagNumber);
+        if (bagData) {
+          // NOTE: update data pod scan in branch bag
+          const podScanInBag = await PodScanInBranchBag.findOne({
+            where: {
+              podScanInBranchId: payload.podScanInBranchId,
+              bagId: bagData.bagId,
+              bagItemId: bagData.bagItemId,
+              isDeleted: false,
+            },
+          });
+          if (podScanInBag) {
+            const totalDiff = item.totalAwbInBag - item.totalAwbScan;
+            PodScanInBranchBag.update(podScanInBag.podScanInBranchBagId, {
+              totalAwbScan: item.totalAwbScan,
+              totalDiff,
+            });
+          }
+          // NOTE: add to bag trouble
+          const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
+          const bagTrouble = BagTrouble.create({
+            bagNumber: item.bagNumber,
+            bagTroubleCode,
+            bagTroubleStatus: 100,
+            bagStatusId: 2000,
+            employeeId: authMeta.employeeId,
+            branchId: permissonPayload.branchId,
+          });
+          await BagTrouble.save(bagTrouble);
+        }
+      }
+    }
+
+    // TODO: update data podScanInBranch
+    const podScanInBranch = await PodScanInBranch.findOne({
+      where: {
+        podScanInBranchId: payload.podScanInBranchId,
+        isDeleted: false,
+      },
+    });
+
+    if (podScanInBranch) {
+      PodScanInBranch.update(payload.podScanInBranchId, {
+        transactionStatusId: 2000,
+      });
+    }
+
+    return { status: 'ok' };
+  }
   // #endregion
 
   private async handleTypeNumber(
