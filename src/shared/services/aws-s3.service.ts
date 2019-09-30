@@ -40,6 +40,50 @@ export class AwsS3Service {
       });
   }
 
+  public static uploadFileBase64(
+    base64String: string,
+    fileOriginalName: string,
+    pathId?: string,
+    bucketName?: string,
+  ) {
+    if (!bucketName && ConfigService.has('cloudStorage.cloudBucket')) {
+      bucketName = ConfigService.get('cloudStorage.cloudBucket');
+    }
+
+    const awsKey = `attachments/${
+      pathId ? `${pathId}/` : ''
+    }${moment().format('Y/M/D')}/${fileOriginalName}`;
+    // attachments/tms-check-in/123456789-file.png OR attachments/123456789-file.png
+    // CHANGE: attachments/tms-check-in/19/8/12/file.png OR attachments/19/8/12/file.png
+
+    // Ensure that you POST a base64 data to your server.
+    const base64Data = Buffer.from(
+      base64String.replace(/^data:image\/\w+;base64,/, ''),
+      'base64',
+    );
+
+    // Getting the file type, ie: jpeg, png or gif
+    const type = base64String.split(';')[0].split('/')[1];
+    const contentType = `image/${type}`;
+
+    // NOTE: The optional contentType option can be used to set Content/mime type of the file.
+    // By default the content type is set to application/octet-stream.
+    return AWS_S3.putObject({
+      ACL: 'public-read',
+      ContentType: contentType,
+      Body: base64Data,
+      Bucket: bucketName,
+      Key: awsKey,
+    })
+      .promise()
+      .then(result => {
+        return {
+          awsKey,
+          contentType,
+        };
+      });
+  }
+
   public static async uploadFromFilePath(
     filePath: string,
     fileName: string,
