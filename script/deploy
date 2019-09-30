@@ -7,7 +7,7 @@ ssh ubuntu@18.138.172.59 <<'ENDSSH'
   mv /home/ubuntu/sicepat-tms-api.tar.gz /var/www/api-jenkins/releases/
   echo "Testing Deploy =================================="
   cd /var/www/api-jenkins/releases/
-  foldername=$(date +%Y%m%d)
+  foldername="release-candidate"
   mkdir -p "$foldername"
   tar xf sicepat-tms-api.tar.gz -C "$foldername"
   rm sicepat-tms-api.tar.gz
