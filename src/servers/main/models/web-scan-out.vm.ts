@@ -154,6 +154,12 @@ export class WebScanOutCreateVm extends WebScanOutVm {
   @IsDefined({message: 'Tanggal pengiriman harus diisi'})
   doPodDateTime: string;
 
+  @ApiModelPropertyOptional()
+  isHub?: boolean;
+
+  @ApiModelPropertyOptional()
+  base64Image?: string;
+
 }
 
 // Edit DO POD AWB
