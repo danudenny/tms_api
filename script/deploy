@@ -7,7 +7,7 @@ ssh ubuntu@18.138.172.59 <<'ENDSSH'
   mv /home/ubuntu/sicepat-tms-api.tar.gz /var/www/api-jenkins/releases/
   echo "Testing Deploy =================================="
   cd /var/www/api-jenkins/releases/
-  foldername="release-candidate"
+  foldername=$(date +%Y%m%d)
   mkdir -p "$foldername"
   tar xf sicepat-tms-api.tar.gz -C "$foldername"
   rm sicepat-tms-api.tar.gz
@@ -16,6 +16,7 @@ ssh ubuntu@18.138.172.59 <<'ENDSSH'
   ln -s /var/www/api-jenkins/shared/ormconfig.js /var/www/api-jenkins/releases/"$foldername"/ormconfig.js
   mv /var/www/api-jenkins/releases/current /var/www/api-jenkins
   cd /var/www/api-jenkins/releases/"$foldername"
+  export NODE_ENV="production"
   pm2 startOrRestart ecosystem.json
   echo "startOrRestart server =================================="
   exit
