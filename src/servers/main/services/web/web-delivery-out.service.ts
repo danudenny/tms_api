@@ -870,22 +870,21 @@ export class WebDeliveryOutService {
       ['t1.do_pod_code', 'doPodCode'],
       ['t1.do_pod_date_time', 'doPodDateTime'],
       ['t1.description', 'description'],
-      ['t1.percen_scan_in_out', 'percenScanInOut'],
       ['t1.total_scan_in', 'totalScanIn'],
       ['t1.total_scan_out', 'totalScanOut'],
       ['t1.last_date_scan_in', 'lastDateScanIn'],
       ['t1.last_date_scan_out', 'lastDateScanOut'],
-      ['t1.employee_id_driver', 'employeeIdDriver'],
+      ['t2.employee_id', 'employeeIdDriver'],
       ['t1.partner_logistic_id', 'partnerLogisticId'],
       ['t1.do_pod_method', 'doPodMethod'],
       ['t1.vehicle_number', 'vehicleNumber'],
       ['t1.branch_id_to', 'branchIdTo'],
-      ['t2.username', 'nickname'],
+      ['t2.fullname', 'nickname'],
       ['t3.branch_name', 'branchTo'],
     );
     // TODO: relation userDriver to Employee Driver
 
-    q.innerJoin(e => e.userDriver, 't2', j =>
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branchTo, 't3', j =>
@@ -956,7 +955,7 @@ export class WebDeliveryOutService {
         'COUNT (t3.*) FILTER (WHERE t5.awb_status_id_last = 14000)',
         'totalAwb',
       ],
-      ['t2.username', 'nickname'],
+      ['t2.fullname', 'nickname'],
       ['t4.is_cod', 'isCod'],
       [
         `CONCAT(CAST(SUM(t4.total_cod_value) AS NUMERIC(20,2)))`,
@@ -964,7 +963,7 @@ export class WebDeliveryOutService {
       ],
     );
 
-    q.innerJoin(e => e.userDriver, 't2', j =>
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.doPodDeliverDetails, 't5', j =>
