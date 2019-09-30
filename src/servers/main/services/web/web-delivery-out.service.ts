@@ -49,6 +49,7 @@ import {
 } from '../../models/web-scan-out.vm';
 import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag';
 import { BagService } from '../v1/bag.service';
+import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 // #endregion
 
 @Injectable()
@@ -780,6 +781,13 @@ export class WebDeliveryOutService {
               userIdUpdated: authMeta.userId,
             });
 
+            // NOTE: background job for insert bag item history
+            BagItemHistoryQueueService.addData(
+              bagData.bagItemId,
+              1000,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
             // NOTE: Loop data bag_item_awb for update status awb
             // and create do_pod_detail (data awb on bag)
             await BagService.statusOutBranchAwbBag(
@@ -1217,28 +1225,6 @@ export class WebDeliveryOutService {
       doPodId,
     });
     return await qb.getCount();
-  }
-
-  private async validateBag(bagData: any) {
-    // if (bagData.branchIdLast == permissonPayload.branchId) {
-    //   //
-    // } else {
-    //   // NOTE: create data bag trouble
-    //   const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
-    //   const bagTrouble = BagTrouble.create({
-    //     bagNumber,
-    //     bagTroubleCode,
-    //     bagTroubleStatus: 100,
-    //     bagStatusId: 1000,
-    //     employeeId: authMeta.employeeId,
-    //     branchId: permissonPayload.branchId,
-    //   });
-    //   await BagTrouble.save(bagTrouble);
-
-    //   totalError += 1;
-    //   response.status = 'error';
-    //   response.message = `Gabung paket ${bagNumber} bukan milik gerai ini`;
-    // }
   }
 
   async scanOutLoadForEdit(

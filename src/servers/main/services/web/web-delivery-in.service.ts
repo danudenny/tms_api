@@ -32,6 +32,7 @@ import { PodScanInBranch } from '../../../../shared/orm-entity/pod-scan-in-branc
 import { PodScanInBranchBag } from '../../../../shared/orm-entity/pod-scan-in-branch-bag';
 import { PodScanInBranchDetail } from '../../../../shared/orm-entity/pod-scan-in-branch-detail';
 import { AwbService } from '../v1/awb.service';
+import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 
 // #endregion
 
@@ -934,6 +935,13 @@ export class WebDeliveryInService {
                 bagItem.userIdUpdated = authMeta.userId;
                 BagItem.save(bagItem);
 
+                // NOTE: background job for insert bag item history
+                BagItemHistoryQueueService.addData(
+                  bagData.bagItemId,
+                  2000,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                );
                 // get data awb on bag
                 const bagItemsAwb = await BagItemAwb.find({
                   where: {
@@ -1062,6 +1070,14 @@ export class WebDeliveryInService {
             updatedTime: timeNow,
             userIdUpdated: authMeta.userId,
           });
+          // NOTE: background job for insert bag item history
+          BagItemHistoryQueueService.addData(
+            bagData.bagItemId,
+            3500,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
+
           // create data dropoff hub
           const dropoffHub = DropoffHub.create();
           dropoffHub.branchId = permissonPayload.branchId;
@@ -1189,12 +1205,46 @@ export class WebDeliveryInService {
 
     if (podScanInBranch) {
       PodScanInBranch.update(payload.podScanInBranchId, {
-        transactionStatusId: 2000,
+        transactionStatusId: 700,
       });
     }
 
     return { status: 'ok' };
   }
+
+  async loadBranchPackage() {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const podScanInBranch = await PodScanInBranch.findOne({
+      where: {
+        userIdCreated: authMeta.userId,
+        branchId: permissonPayload.branchId,
+        transactionStatusId: 600,
+        isDeleted: false,
+      },
+    });
+
+    if (podScanInBranch) {
+      // find pod scan in bag
+      const podScanInBranchBag = await PodScanInBranchBag.find({
+        where: {
+          podScanInBranchId: podScanInBranch.podScanInBranchId,
+          isDeleted: false,
+        },
+      });
+      // TODO:
+      if (podScanInBranchBag) {}
+    } else {
+      console.log('not found!');
+    }
+
+    // TODO: response vm ??
+    //
+
+    return {};
+  }
+
   // #endregion
 
   private async handleTypeNumber(
