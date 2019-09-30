@@ -16,10 +16,6 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodPayloadQueryVm,
   ) {
-    const m = moment();
-    const dateNow = await m.format('DD/MM/YY');
-    const timeNow = await m.format('HH:mm');
-
     const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetails);
     q.leftJoin(e => e.userDriver.employee);
@@ -85,13 +81,14 @@ export class PrintService {
       });
     }
 
+    const m = moment();
     const jsreportParams = {
       data: doPod,
       meta: {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
-        date: dateNow,
-        time: timeNow,
+        date: m.format('DD/MM/YY'),
+        time: m.add(7, 'hours').format('HH:mm'),
         totalItems: doPod.doPodDetails.length,
       },
     };
@@ -108,10 +105,6 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodBagPayloadQueryVm,
   ) {
-    const m = moment();
-    const dateNow = await m.format('DD/MM/YY');
-    const timeNow = await m.format('HH:mm');
-
     const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetailBag);
     q.leftJoin(e => e.userDriver.employee);
@@ -181,13 +174,14 @@ export class PrintService {
       });
     }
 
+    const m = moment();
     const jsreportParams = {
       data: doPod,
       meta: {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
-        date: dateNow,
-        time: timeNow,
+        date: m.format('DD/MM/YY'),
+        time: m.add(7, 'hours').format('HH:mm'),
         totalItems: totalBagItem,
       },
     };
@@ -204,10 +198,6 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodDeliverPayloadQueryVm,
   ) {
-    const m = moment();
-    const dateNow = await m.format('DD/MM/YY');
-    const timeNow = await m.format('HH:mm');
-
     const q = RepositoryService.doPodDeliver.findOne();
     q.leftJoin(e => e.doPodDeliverDetails);
     q.leftJoin(e => e.userDriver.employee);
@@ -276,13 +266,14 @@ export class PrintService {
       });
     }
 
+    const m = moment();
     const jsreportParams = {
       data: doPodDeliver,
       meta: {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
-        date: dateNow,
-        time: timeNow,
+        date: m.format('DD/MM/YY'),
+        time: m.add(7, 'hours').format('HH:mm'),
         totalItems: doPodDeliver.doPodDeliverDetails.length,
         totalCod: totalAllCod,
       },
@@ -368,7 +359,7 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.format('HH:mm'),
+        time: m.add(7, 'hours').format('HH:mm'),
         bagItemsTotal,
       },
     };
@@ -486,7 +477,7 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.format('HH:mm'),
+        time: m.add(7, 'hours').format('HH:mm'),
       },
     };
 

@@ -42,6 +42,40 @@ export class AttachmentService {
     return AttachmentTms.save(attachment);
   }
 
+  public static async uploadFileBase64(
+    base64String: string,
+    pathId?: string,
+    bucketName?: string,
+  ) {
+    if (!bucketName && ConfigService.has('cloudStorage.cloudBucket')) {
+      bucketName = ConfigService.get('cloudStorage.cloudBucket');
+    }
+    const uuidv1 = require('uuid/v1');
+
+    const fileRandomName = uuidv1();
+    const uploadResponse = await AwsS3Service.uploadFileBase64(
+      base64String,
+      fileRandomName,
+      pathId,
+      bucketName,
+    );
+
+    const url = `https://${bucketName}.s3.amazonaws.com/${uploadResponse.awsKey}`;
+
+    const attachment = AttachmentTms.create({
+      s3BucketName: bucketName,
+      fileMime: uploadResponse.contentType,
+      fileProvider: FILE_PROVIDER.AWS_S3,
+      attachmentPath: uploadResponse.awsKey,
+      attachmentName: fileRandomName,
+      fileName: fileRandomName,
+      url,
+      userIdCreated: 1,
+      userIdUpdated: 1,
+    });
+    return AttachmentTms.save(attachment);
+  }
+
   public static async sendAttachmentToClient(
     res: express.Response,
     attachmentId: number,

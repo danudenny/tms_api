@@ -69,7 +69,8 @@
     "sprintf-js": "^1.1.2",
     "stacktrace-js": "^2.0.0",
     "swagger-ui-express": "^4.0.2",
-    "typeorm": "^0.2.18"
+    "typeorm": "^0.2.18",
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
     "@entity-factory/core": "^0.2.1",
