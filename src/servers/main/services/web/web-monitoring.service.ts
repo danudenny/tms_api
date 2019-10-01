@@ -68,7 +68,7 @@ export class WebMonitoringService {
     );
     q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.TRANSIT_HUB));
     q.andWhere(e => e.branchIdTo, w => w.equals(permissionPayload.branchId));
-    q.andWhere(e => e.totalScanOut, w => w.greaterThan(0));
+    q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     q.groupByRaw(
       't1.doPodId, t2.fullname, t3.branch_name',
     );

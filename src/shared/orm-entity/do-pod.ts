@@ -211,17 +211,17 @@ export class DoPod extends TmsBaseEntity {
   })
   totalScanOutBag: number | 0;
 
-  @Column('integer', {
-    nullable: true,
-    name: 'total_scan_in',
-  })
-  totalScanIn: number | 0;
+  // @Column('integer', {
+  //   nullable: true,
+  //   name: 'total_scan_in',
+  // })
+  // totalScanIn: number | 0;
 
-  @Column('integer', {
-    nullable: true,
-    name: 'total_scan_out',
-  })
-  totalScanOut: number | 0;
+  // @Column('integer', {
+  //   nullable: true,
+  //   name: 'total_scan_out',
+  // })
+  // totalScanOut: number | 0;
 
   // @Column('integer', {
   //   nullable: true,
