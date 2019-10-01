@@ -4,6 +4,7 @@ import { TmsBaseEntity } from './tms-base';
 import { Representative } from './representative';
 import { District } from './district';
 import { PodScanInBranchBag } from './pod-scan-in-branch-bag';
+import { PodScanInBranchDetail } from './pod-scan-in-branch-detail';
 
 @Entity('bag', { schema: 'public' })
 @Index('bag_bag_date_idx', ['bagDate'])
@@ -120,6 +121,9 @@ export class Bag extends TmsBaseEntity {
 
   @OneToMany(() => PodScanInBranchBag, e => e.bag, { cascade: ['insert'] })
   podScanInBranchBags: PodScanInBranchBag[];
+
+  @OneToMany(() => PodScanInBranchDetail, e => e.bag, { cascade: ['insert'] })
+  podScanInBranchDetails: PodScanInBranchDetail[];
 
   @OneToOne(() => Representative)
   @JoinColumn({ name: 'representative_id_to' })

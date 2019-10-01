@@ -155,9 +155,6 @@ export class WebScanOutCreateVm extends WebScanOutVm {
   doPodDateTime: string;
 
   @ApiModelPropertyOptional()
-  isHub?: boolean;
-
-  @ApiModelPropertyOptional()
   base64Image?: string;
 
 }

@@ -50,6 +50,7 @@ import {
 import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag';
 import { BagService } from '../v1/bag.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
 // #endregion
 
 @Injectable()
@@ -93,10 +94,21 @@ export class WebDeliveryOutService {
     doPod.vehicleNumber = payload.vehicleNumber || null;
     doPod.description = payload.desc || null;
 
-    // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
-    doPod.transactionStatusId = 1000; // created
     doPod.branchId = permissonPayload.branchId;
     // doPod.userId = authMeta.userId;
+
+    if (payload.base64Image) {
+      const attachment = await AttachmentService.uploadFileBase64(
+        payload.base64Image,
+        'do-pod',
+      );
+      if (attachment) {
+        doPod.photoId = attachment.attachmentTmsId;
+      }
+      doPod.transactionStatusId = 300; // HUB
+    } else {
+      doPod.transactionStatusId = 800; // BRANCH
+    }
 
     // await for get do pod id
     await this.doPodRepository.save(doPod);
@@ -794,21 +806,24 @@ export class WebDeliveryOutService {
               userIdUpdated: authMeta.userId,
             });
 
-            // NOTE: background job for insert bag item history
-            BagItemHistoryQueueService.addData(
-              bagData.bagItemId,
-              1000,
-              permissonPayload.branchId,
-              authMeta.userId,
-            );
             // NOTE: Loop data bag_item_awb for update status awb
             // and create do_pod_detail (data awb on bag)
+            // TODO: need to refactor
             await BagService.statusOutBranchAwbBag(
               bagData.bagId,
               bagData.bagItemId,
               doPod.doPodId,
               doPod.branchIdTo,
               doPod.userIdDriver,
+              doPod.doPodType,
+            );
+
+            // NOTE: background job for insert bag item history
+            BagItemHistoryQueueService.addData(
+              bagData.bagItemId,
+              1000,
+              permissonPayload.branchId,
+              authMeta.userId,
             );
           }
           // #endregion after scanout
@@ -1126,6 +1141,7 @@ export class WebDeliveryOutService {
   ): Promise<WebDeliveryListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    payload.fieldResolverMap['bagNumber'] = 't3.bag_number';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -1134,7 +1150,7 @@ export class WebDeliveryOutService {
       },
     ];
 
-    const repo = new OrionRepositoryService(DoPodDetail, 't1');
+    const repo = new OrionRepositoryService(DoPodDetailBag, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -1150,8 +1166,11 @@ export class WebDeliveryOutService {
             CONCAT (t3.bag_number,t2.bag_seq) END`,
         'bagNumber',
       ],
+      // ['t2.bag_item_id', 'bagItemId'],
+      ['t1.created_time', 'createdTime'],
       ['COUNT (t4.*)', 'totalAwb'],
-      ['t5.representative_name', 'representativeIdTo'],
+      ['t5.representative_code', 'representativeIdTo'],
+      ['t6.branch_name', 'branchName'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
 
@@ -1161,15 +1180,18 @@ export class WebDeliveryOutService {
     q.leftJoin(e => e.bagItem.bag, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoin(e => e.bagItem.branchLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.leftJoin(e => e.bagItem.bagItemAwbs, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.bagItem.bag.representative, 't5', j =>
+    q.leftJoin(e => e.bag.representative, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.groupByRaw(
-      't3.bag_number, t2.bag_seq, t2.weight, t5.representative_name',
+      't1.do_pod_id, t1.created_time, t3.bag_number, t2.bag_seq, t2.weight, t5.representative_name, t5.representative_code, t6.branch_name',
     );
 
     const data = await q.exec();

@@ -200,6 +200,7 @@ export class DoPodDetailPostMetaQueueService {
     branchId: number,
     userId: number,
     employeeIdDriver: number,
+    awbStatusId: number,
   ) {
     // TODO: find awbStatusIdLastPublic on awb_status
     // provide data
@@ -207,7 +208,7 @@ export class DoPodDetailPostMetaQueueService {
       awbItemId,
       userId,
       branchId,
-      awbStatusId: AWB_STATUS.OUT_HUB,
+      awbStatusId,
       awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
       userIdCreated: userId,
       userIdUpdated: userId,
@@ -273,6 +274,27 @@ export class DoPodDetailPostMetaQueueService {
       userId,
       branchId,
       awbStatusId: AWB_STATUS.DO_HUB,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver: null,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
+    public static async createJobByDoSortBag(
+    awbItemId: number,
+    branchId: number,
+    userId: number,
+  ) {
+    // TODO: need to be reviewed ??
+    // find awbStatusIdLastPublic on awb_status
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId: AWB_STATUS.DO_SORTIR,
       awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
       userIdCreated: userId,
       userIdUpdated: userId,

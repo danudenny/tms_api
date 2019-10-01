@@ -181,6 +181,12 @@ export class DoPod extends TmsBaseEntity {
   })
   vehicleNumber: string | null;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'photo_id',
+  })
+  photoId: number | null;
+
   @Column('text', {
     nullable: true,
     name: 'description',

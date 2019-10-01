@@ -29,7 +29,13 @@ export class WebScanInBranchResponseVm {
   bagItemId: string;
 
   @ApiModelProperty()
+  podScanInBranchId: string;
+
+  @ApiModelProperty()
   refRepresentativeCode: string;
+
+  @ApiModelProperty()
+  bagNumberCode: string;
 
   @ApiModelProperty()
   branchNameFrom: string;

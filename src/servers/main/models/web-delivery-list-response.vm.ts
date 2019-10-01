@@ -11,6 +11,15 @@ export class ItemDeliveryResponseVm {
   bagNumber: string;
 
   @ApiModelProperty()
+  bagItemId: string;
+
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
   totalAwb: number;
 
   @ApiModelProperty()
@@ -21,6 +30,12 @@ export class ItemDeliveryResponseVm {
 
   @ApiModelProperty()
   consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  districtName: string;
 
   @ApiModelProperty()
   totalCodValue: number;

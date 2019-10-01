@@ -19,6 +19,7 @@ import { DropoffSortationDetail } from '../../../../shared/orm-entity/dropoff_so
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 
 @Injectable()
 export class WebAwbCountService {
@@ -93,6 +94,7 @@ export class WebAwbCountService {
     payload: WebScanInValidateBagVm,
   ): Promise<WebScanInValidateBagResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const dataItem = [];
     const timeNow = moment().toDate();
@@ -396,6 +398,7 @@ export class WebAwbCountService {
 
           const dropOffId = dropoffSortation.dropoffSortationId;
 
+          // TODO: to be refactoring
           // Insert All BagAwbItem to DropOffSortationDetail
           getAllBagAwb[0].forEach(async data => {
             const awbAttr = await AwbAttr.findOne({
@@ -416,16 +419,23 @@ export class WebAwbCountService {
             dropoffSortationDetail.isDeleted = false;
             await DropoffSortationDetail.save(dropoffSortationDetail);
 
+            // TODO: to be fix
             const awbItemAttr = await AwbItemAttr.findOne({
               where: {
                 awbItemId: data.awbItemId,
               },
             });
-
             // update status AwbItemAttr
             awbItemAttr.awbStatusIdLast = 2600;
             awbItemAttr.updatedTime = timeNow;
             await AwbItemAttr.save(awbItemAttr);
+
+            // add awb history with background process
+            DoPodDetailPostMetaQueueService.createJobByDoSortBag(
+              data.awbItemId,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
           });
 
           // #endregion after scanin
