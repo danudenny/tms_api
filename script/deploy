@@ -1,5 +1,5 @@
 #!/bin/sh
-tar czf sicepat-tms-api.tar.gz dist patches node_modules ecosystem.json
+tar czf sicepat-tms-api.tar.gz dist patches node_modules ecosystem.json package.json package-lock.json
 scp sicepat-tms-api.tar.gz ubuntu@18.138.172.59:~
 echo "copy file to server ======================================"
 rm sicepat-tms-api.tar.gz
