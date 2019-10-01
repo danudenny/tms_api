@@ -1126,6 +1126,7 @@ export class WebDeliveryOutService {
   ): Promise<WebDeliveryListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    payload.fieldResolverMap['bagNumber'] = 't3.bag_number';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -1134,7 +1135,7 @@ export class WebDeliveryOutService {
       },
     ];
 
-    const repo = new OrionRepositoryService(DoPodDetail, 't1');
+    const repo = new OrionRepositoryService(DoPodDetailBag, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -1150,8 +1151,11 @@ export class WebDeliveryOutService {
             CONCAT (t3.bag_number,t2.bag_seq) END`,
         'bagNumber',
       ],
+      // ['t2.bag_item_id', 'bagItemId'],
+      ['t1.created_time', 'createdTime'],
       ['COUNT (t4.*)', 'totalAwb'],
-      ['t5.representative_name', 'representativeIdTo'],
+      ['t5.representative_code', 'representativeIdTo'],
+      ['t6.branch_name', 'branchName'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
 
@@ -1161,15 +1165,18 @@ export class WebDeliveryOutService {
     q.leftJoin(e => e.bagItem.bag, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoin(e => e.bagItem.branchLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.leftJoin(e => e.bagItem.bagItemAwbs, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.bagItem.bag.representative, 't5', j =>
+    q.leftJoin(e => e.bag.representative, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.groupByRaw(
-      't3.bag_number, t2.bag_seq, t2.weight, t5.representative_name',
+      't1.do_pod_id, t1.created_time, t3.bag_number, t2.bag_seq, t2.weight, t5.representative_name, t5.representative_code, t6.branch_name',
     );
 
     const data = await q.exec();

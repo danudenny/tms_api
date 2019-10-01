@@ -3,6 +3,7 @@ import { Column, Entity,  PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOn
 import { TmsBaseEntity } from './tms-base';
 import { DoPod } from './do-pod';
 import { BagItem } from './bag-item';
+import { Bag } from './bag';
 
 @Entity('do_pod_detail_bag', { schema: 'public' })
 export class DoPodDetailBag extends TmsBaseEntity {
@@ -42,4 +43,10 @@ export class DoPodDetailBag extends TmsBaseEntity {
   @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id' })
   bagItem: BagItem;
+
+  @ManyToOne(() => Bag, bag => bag.bagItems, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'bag_id', referencedColumnName: 'bagId' })
+  bag: Bag;
 }

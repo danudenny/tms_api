@@ -6,6 +6,7 @@ import { Branch } from './branch';
 import { Employee } from './employee';
 import { TmsBaseEntity } from './tms-base';
 import { PodScanInBranchBag } from './pod-scan-in-branch-bag';
+import { PodScanInBranchDetail } from './pod-scan-in-branch-detail';
 
 @Entity('bag_item', { schema: 'public' })
 @Index('bag_item_bag_id_idx', ['bagId'])
@@ -96,4 +97,7 @@ export class BagItem extends TmsBaseEntity {
 
   @OneToMany(() => PodScanInBranchBag, e => e.bagItem, { cascade: ['insert'] })
   podScanInBranchBag: PodScanInBranchBag[];
+
+  @OneToMany(() => PodScanInBranchDetail, e => e.bagItem, { cascade: ['insert'] })
+  podScanInBranchDetails: PodScanInBranchDetail[];
 }
