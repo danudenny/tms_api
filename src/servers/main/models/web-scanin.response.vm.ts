@@ -60,6 +60,29 @@ export class WebScanInBranchResponseVm {
 
 }
 
+export class WebScanInHubSortResponseVm {
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  bagNumberCode: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  bagSeq: string;
+
+  @ApiModelProperty()
+  districtName: string;
+
+  @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
+  weight: string;
+}
+
 export class WebScanInBagResponseVm {
   @ApiModelProperty()
   podScaninDateTime: string;
@@ -74,7 +97,7 @@ export class WebScanInBagResponseVm {
   bagNumberCode: string;
 
   @ApiModelProperty()
-  totalAwb: string;
+  totalAwb: number;
 
   @ApiModelProperty()
   branchNameScan: string;
