@@ -689,6 +689,20 @@ export class WebDeliveryInService {
                   // #endregion after scanin
                 }
 
+                const bagItemAwb = await BagItemAwb.findOne({
+                  where: {
+                    bagItemId: bagData.bagItemId,
+                    awbItemId: awb.awbItemId,
+                    isDeleted: false,
+                  },
+                });
+
+                if (!bagItemAwb) {
+                  totalError += 1;
+                  response.status = 'error';
+                  response.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
+                }
+
                 // remove key holdRedis
                 RedisService.del(`hold:scanin:${awb.awbItemId}`);
               } else {
