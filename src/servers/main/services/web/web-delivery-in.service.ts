@@ -186,21 +186,18 @@ export class WebDeliveryInService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanInBranchListResponseVm> {
     // mapping field
-    payload.fieldResolverMap['createdTIme'] = 't1.created_time';
-    // payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
-    // payload.fieldResolverMap['branchIdScan'] = 't3.branch_id';
-    // payload.fieldResolverMap['branchNameScan'] = 't3.branch_name';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
     payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
-    // payload.fieldResolverMap['employeeName'] = 't5.nickname';
     if (payload.sortBy === '') {
-      payload.sortBy = 'createdTIme';
+      payload.sortBy = 'createdTime';
     }
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
-        field: 'createdTIme',
+        field: 'createdTime',
       },
     ];
 

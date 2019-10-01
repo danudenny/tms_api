@@ -23,7 +23,7 @@ export class WebScanInResponseVm {
 
 export class WebScanInBranchResponseVm {
   @ApiModelProperty()
-  createdDate: string;
+  createdTime: string;
 
   @ApiModelProperty()
   bagItemId: string;
