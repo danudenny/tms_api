@@ -21,6 +21,7 @@ export class RoleService {
       ['role.role_id', 'roleId'],
       ['role.role_name', 'roleName'],
     );
+    q.where(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

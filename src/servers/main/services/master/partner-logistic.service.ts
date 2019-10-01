@@ -27,6 +27,7 @@ export class PartnerLogisticService {
       ['partner_logistic.partner_logistic_name', 'partnerLogisticName'],
       ['partner_logistic.partner_logistic_email', 'partnerLogisticEmail'],
     );
+    q.where(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
