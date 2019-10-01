@@ -840,6 +840,7 @@ export class WebDeliveryOutService {
   async findAllScanOutList(
     payload: BaseMetaPayloadVm,
     isHub = false,
+    isHubTransit = false,
   ): Promise<WebScanOutAwbListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
@@ -878,8 +879,8 @@ export class WebDeliveryOutService {
       ['t1.do_pod_code', 'doPodCode'],
       ['t1.do_pod_date_time', 'doPodDateTime'],
       ['t1.description', 'description'],
-      ['t1.total_scan_in', 'totalScanIn'],
-      ['t1.total_scan_out', 'totalScanOut'],
+      ['t1.total_scan_in_bag', 'totalScanIn'],
+      ['t1.total_scan_out_bag', 'totalScanOut'],
       ['t1.last_date_scan_in', 'lastDateScanIn'],
       ['t1.last_date_scan_out', 'lastDateScanOut'],
       ['t2.employee_id', 'employeeIdDriver'],
@@ -899,11 +900,14 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     if (isHub) {
-      q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.TRANSIT_HUB));
-      q.andWhere(e => e.totalScanOut, w => w.greaterThan(0));
+      q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB));
+      q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
+    } else if (isHubTransit) {
+      q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.HUB_TRANSIT));
+      q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     } else {
-      q.andWhere(e => e.doPodType, w => w.notEquals(POD_TYPE.TRANSIT_HUB));
-      q.andWhere(e => e.totalScanOut, w => w.greaterThan(0));
+      q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
+      q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     }
 
     const data = await q.exec();

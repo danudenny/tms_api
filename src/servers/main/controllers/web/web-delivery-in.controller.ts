@@ -54,6 +54,17 @@ export class WebDeliveryInController {
     return this.webDeliveryService.findAllBagByRequest(payload);
   }
 
+  @Post('branchList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanInBagListResponseVm })
+  // @ResponseSerializerOptions({ disable: true })
+  public async findAllBranchList(@Body() payload: BaseMetaPayloadVm) {
+    // TODO:
+    return this.webDeliveryService.findAllBranchInByRequest(payload);
+  }
+
   @Post('bagListDetail')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { Bag } from './bag';
 
 @Entity('pod_scan_in_branch_bag', { schema: 'public' })
 export class PodScanInBranchBag extends TmsBaseEntity {
@@ -58,4 +59,10 @@ export class PodScanInBranchBag extends TmsBaseEntity {
     name: 'notes',
   })
   notes: string | null;
+
+  @ManyToOne(() => Bag, bag => bag.podScanInBranchBags, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'bag_id', referencedColumnName: 'bagId' })
+  bag: Bag;
 }

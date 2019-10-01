@@ -162,6 +162,26 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllScanOutList(payload, true);
   }
 
+  @Post('hubTransitList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
+  public async hubTransitList(@Body() payload: WebScanOutAwbListPayloadVm) {
+    // TODO: add filter by doPodType (Transit HUB)
+    return this.webDeliveryOutService.findAllScanOutList(payload, false, true);
+  }
+
+  @Post('branchList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
+  public async branchList(@Body() payload: WebScanOutAwbListPayloadVm) {
+    // TODO: add filter by doPodType (Transit HUB)
+    return this.webDeliveryOutService.findAllScanOutList(payload);
+  }
+
   @Post('awbDeliveryOrder')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
