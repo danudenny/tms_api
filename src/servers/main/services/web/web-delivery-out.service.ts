@@ -50,6 +50,7 @@ import {
 import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag';
 import { BagService } from '../v1/bag.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
 // #endregion
 
 @Injectable()
@@ -97,6 +98,16 @@ export class WebDeliveryOutService {
     doPod.transactionStatusId = 1000; // created
     doPod.branchId = permissonPayload.branchId;
     // doPod.userId = authMeta.userId;
+
+    if (payload.base64Image) {
+      const attachment = await AttachmentService.uploadFileBase64(
+        payload.base64Image,
+        'do-pod',
+      );
+      if (attachment) {
+        doPod.photoId = attachment.attachmentTmsId;
+      }
+    }
 
     // await for get do pod id
     await this.doPodRepository.save(doPod);
