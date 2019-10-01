@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn
 
 import { TmsBaseEntity } from './tms-base';
 import { Bag } from './bag';
+import { BagItem } from './bag-item';
 
 @Entity('pod_scan_in_branch_bag', { schema: 'public' })
 export class PodScanInBranchBag extends TmsBaseEntity {
@@ -65,4 +66,10 @@ export class PodScanInBranchBag extends TmsBaseEntity {
   })
   @JoinColumn({ name: 'bag_id', referencedColumnName: 'bagId' })
   bag: Bag;
+
+  @ManyToOne(() => BagItem, e => e.podScanInBranchBag, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'bag_item_id', referencedColumnName: 'bagItemId' })
+  bagItem: BagItem;
 }

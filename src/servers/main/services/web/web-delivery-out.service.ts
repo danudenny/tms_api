@@ -194,7 +194,7 @@ export class WebDeliveryOutService {
       }
 
       const totalItem = await this.getTotalDetailById(doPod.doPodId);
-      const totalScanOut = doPod.totalScanOut + totalAdd - totalRemove;
+      const totalScanOut = doPod.totalScanOutAwb + totalAdd - totalRemove;
       // update data
       // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
       const updateDoPod = {
@@ -337,7 +337,7 @@ export class WebDeliveryOutService {
       }
 
       const totalItem = await this.getTotalDetailById(doPod.doPodId);
-      const totalScanOut = doPod.totalScanOut + totalAdd - totalRemove;
+      const totalScanOut = doPod.totalScanOutAwb + totalAdd - totalRemove;
       // update data
       // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
       const updateDoPod = {
@@ -492,8 +492,8 @@ export class WebDeliveryOutService {
                 });
 
                 // counter total scan in
-                doPod.totalScanOut = doPod.totalScanOut + 1;
-                if (doPod.totalScanOut == 1) {
+                doPod.totalScanOutAwb = doPod.totalScanOutAwb + 1;
+                if (doPod.totalScanOutAwb == 1) {
                   doPod.firstDateScanOut = timeNow;
                   doPod.lastDateScanOut = timeNow;
                 } else {
@@ -756,6 +756,19 @@ export class WebDeliveryOutService {
             },
           });
 
+          if (doPod) {
+            // counter total scan in
+            doPod.totalScanOutBag = doPod.totalScanOutBag + 1;
+            if (doPod.totalScanOutBag == 1) {
+              doPod.firstDateScanOut = timeNow;
+              doPod.lastDateScanOut = timeNow;
+            } else {
+              doPod.lastDateScanOut = timeNow;
+            }
+            await DoPod.save(doPod);
+          }
+
+          // TODO: need refactoring ??
           // NOTE: create DoPodDetailBag
           const doPodDetailBag = DoPodDetailBag.create();
           doPodDetailBag.doPodId = doPod.doPodId;
