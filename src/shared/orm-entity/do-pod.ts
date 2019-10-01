@@ -189,15 +189,39 @@ export class DoPod extends TmsBaseEntity {
 
   @Column('integer', {
     nullable: true,
-    name: 'total_scan_in',
+    name: 'total_scan_in_awb',
   })
-  totalScanIn: number | 0;
+  totalScanInAwb: number | 0;
 
   @Column('integer', {
     nullable: true,
-    name: 'total_scan_out',
+    name: 'total_scan_out_awb',
   })
-  totalScanOut: number | 0;
+  totalScanOutAwb: number | 0;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'total_scan_in_bag',
+  })
+  totalScanInBag: number | 0;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'total_scan_out_bag',
+  })
+  totalScanOutBag: number | 0;
+
+  // @Column('integer', {
+  //   nullable: true,
+  //   name: 'total_scan_in',
+  // })
+  // totalScanIn: number | 0;
+
+  // @Column('integer', {
+  //   nullable: true,
+  //   name: 'total_scan_out',
+  // })
+  // totalScanOut: number | 0;
 
   // @Column('integer', {
   //   nullable: true,
