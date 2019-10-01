@@ -58,6 +58,18 @@ export class WebScanInBagResponseVm  {
   @ApiModelProperty({ type: [ScanBagVm] })
   data: ScanBagVm[];
 }
+
+export class ResponseBagBranchVm {
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
 export class WebScanInBagBranchResponseVm {
   @ApiModelProperty()
   totalData: number;
@@ -67,6 +79,9 @@ export class WebScanInBagBranchResponseVm {
 
   @ApiModelProperty()
   totalError: number;
+
+  @ApiModelProperty({ type: () => ResponseBagBranchVm })
+  response: ResponseBagBranchVm;
 
   @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
   data: ScanInputNumberBranchVm[];
