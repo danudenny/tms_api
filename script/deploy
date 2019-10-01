@@ -7,12 +7,14 @@ ssh ubuntu@18.138.172.59 <<'ENDSSH'
   mv /home/ubuntu/sicepat-tms-api.tar.gz /var/www/api-jenkins/releases/
   echo "Testing Deploy =================================="
   cd /var/www/api-jenkins/releases/
-  foldername=$(date +%Y%m%d)
+  foldername="staging"
   mkdir -p "$foldername"
   tar xf sicepat-tms-api.tar.gz -C "$foldername"
   rm sicepat-tms-api.tar.gz
+  unlink /var/www/api-jenkins/releases/"$foldername" /var/www/api-jenkins/releases/current
   ln -s /var/www/api-jenkins/releases/"$foldername" /var/www/api-jenkins/releases/current
   echo "link shared config ==========================="
+  unlink /var/www/api-jenkins/shared/ormconfig.js /var/www/api-jenkins/releases/"$foldername"/ormconfig.js
   ln -s /var/www/api-jenkins/shared/ormconfig.js /var/www/api-jenkins/releases/"$foldername"/ormconfig.js
   mv /var/www/api-jenkins/releases/current /var/www/api-jenkins
   cd /var/www/api-jenkins/releases/"$foldername"
