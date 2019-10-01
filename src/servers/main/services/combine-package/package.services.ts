@@ -22,6 +22,7 @@ import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hu
 import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 
 @Injectable()
 export class PackageService {
@@ -224,6 +225,14 @@ export class PackageService {
             userIdUpdated: authMeta.userId,
         });
     const bagItem = await BagItem.save(bagItemDetail);
+
+    // NOTE: background job for insert bag item history
+    BagItemHistoryQueueService.addData(
+      bagItem.bagItemId,
+      3000,
+      permissonPayload.branchId,
+      authMeta.userId,
+    );
 
     const totalWeight = parseFloat(awbDetail.weight);
     // INSERT INTO TABLE BAG ITEM AWB
