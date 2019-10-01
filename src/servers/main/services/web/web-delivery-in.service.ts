@@ -16,7 +16,7 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { RedisService } from '../../../../shared/services/redis.service';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm, WebScanInBagBranchResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
-import { WebScanInBagListResponseVm, WebScanInListResponseVm, WebScanInBranchListResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebScanInBagListResponseVm, WebScanInListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm, WebScanInValidateBranchVm } from '../../models/web-scanin.vm';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
@@ -240,7 +240,7 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.groupByRaw(
-      `t1.createdTime,
+      `t1.created_time,
        t1.bag_item_id,
        t1.pod_scan_in_branch_id,
        t1.total_awb_item,
@@ -257,6 +257,132 @@ export class WebDeliveryInService {
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanInBranchListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllHubSortInByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInHubSortListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't2.created_time';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+      {
+        field: 'bagNumberCode',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(Bag, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      [
+        `CASE LENGTH (CAST(t2.bag_seq AS varchar(10)))
+          WHEN 1 THEN
+            CONCAT (t1.bag_number,'00',t2.bag_seq)
+          WHEN 2 THEN
+            CONCAT (t1.bag_number,'0',t2.bag_seq)
+          ELSE
+            CONCAT (t1.bag_number,t2.bag_seq) END`,
+        'bagNumberCode',
+      ],
+      ['t1.bag_number', 'bagNumber'],
+      ['t2.bag_seq', 'bagSeq'],
+      ['t2.created_time', 'createdTime'],
+      ['t3.district_name', 'districtName'],
+      ['COUNT (t4.*)', 'totalAwb'],
+      [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+    );
+
+    q.innerJoin(e => e.bagItems, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.district, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItems.bagItemAwbs, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.districtIdTo, w => w.isNotNull);
+    q.groupByRaw(
+      `t2.created_time,
+       t2.bag_seq,
+       t1.bag_number,
+       t2.weight,
+       t3.district_name`,
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInHubSortListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllHubSortDetailByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebDeliveryListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['bagNumber'] = 't4.bag_number';
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'bagNumber',
+      },
+      {
+        field: 'bagSeq',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(BagItemAwb, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_number', 'awbNumber'],
+      ['t2.consignee_name', 'consigneeName'],
+      ['t2.consignee_address', 'consigneeAddress'],
+      ['t5.district_name', 'districtName'],
+    );
+
+    q.innerJoin(e => e.awbItem.awb, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem.bag, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbItem.awb.district, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebDeliveryListResponseVm();
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
