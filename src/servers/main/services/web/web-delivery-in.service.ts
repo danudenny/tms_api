@@ -437,15 +437,16 @@ export class WebDeliveryInService {
                     },
                   });
 
-                  // counter total scan in
-                  doPod.totalScanIn = doPod.totalScanIn + 1;
+                  // counter total scan in awb
+                  doPod.totalScanInAwb = doPod.totalScanInAwb + 1;
 
-                  if (doPod.totalScanIn == 1) {
+                  if (doPod.totalScanInAwb == 1) {
                     doPod.firstDateScanIn = timeNow;
                     doPod.lastDateScanIn = timeNow;
                   } else {
                     doPod.lastDateScanIn = timeNow;
                   }
+
                   await DoPod.save(doPod);
                   await DeliveryService.updateAwbAttr(
                     awb.awbItemId,
@@ -618,6 +619,20 @@ export class WebDeliveryInService {
                   );
                   totalSuccess += 1;
                   // #endregion after scanin
+                }
+
+                const bagItemAwb = await BagItemAwb.findOne({
+                  where: {
+                    bagItemId: bagData.bagItemId,
+                    awbItemId: awb.awbItemId,
+                    isDeleted: false,
+                  },
+                });
+
+                if (!bagItemAwb) {
+                  totalError += 1;
+                  response.status = 'error';
+                  response.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
                 }
 
                 // remove key holdRedis
