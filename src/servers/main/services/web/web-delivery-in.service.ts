@@ -16,7 +16,7 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { RedisService } from '../../../../shared/services/redis.service';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm, WebScanInBagBranchResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
-import { WebScanInBagListResponseVm, WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebScanInBagListResponseVm, WebScanInListResponseVm, WebScanInBranchListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm, WebScanInValidateBranchVm } from '../../models/web-scanin.vm';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
@@ -175,6 +175,74 @@ export class WebDeliveryInService {
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanInBagListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllBranchInByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInBranchListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
+    payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
+    payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(PodScanInBranchBag, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.bag_item_id', 'bagItemId'],
+      ['t1.created_time', 'createdTime'],
+      ['t2.ref_representative_code', 'refRepresentativeCode'],
+      ['t4.branch_name', 'branchNameFrom'],
+      ['t1.total_awb_item', 'totalAwbItem'],
+      ['t1.total_awb_scan', 'totalAwbScan'],
+      ['t1.total_diff', 'totalDiff'],
+      ['t3.weight', 'weight'],
+      // ['t6.bag_seq', 'bagSeq'],
+      // ['t2.bag_number', 'bagNumber'],
+      // [
+      //   `CASE LENGTH (CAST(t6.bag_seq AS varchar(10)))
+      //     WHEN 1 THEN
+      //       CONCAT (t2.bag_number,'00',t6.bag_seq)
+      //     WHEN 2 THEN
+      //       CONCAT (t2.bag_number,'0',t6.bag_seq)
+      //     ELSE
+      //       CONCAT (t2.bag_number,t6.bag_seq) END`,
+      //   'bagNumberCode',
+      // ],
+    );
+
+    q.innerJoin(e => e.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem.branchLast, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInBranchListResponseVm();
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);

@@ -5,6 +5,7 @@ import { BagItemAwb } from './bag-item-awb';
 import { Branch } from './branch';
 import { Employee } from './employee';
 import { TmsBaseEntity } from './tms-base';
+import { PodScanInBranchBag } from './pod-scan-in-branch-bag';
 
 @Entity('bag_item', { schema: 'public' })
 @Index('bag_item_bag_id_idx', ['bagId'])
@@ -80,6 +81,10 @@ export class BagItem extends TmsBaseEntity {
   @JoinColumn({ name: 'branch_id_next' })
   branchNext: Branch;
 
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_last' })
+  branchLast: Branch;
+
   @ManyToOne(() => Bag, bag => bag.bagItems, {
     onDelete: 'CASCADE',
   })
@@ -88,4 +93,7 @@ export class BagItem extends TmsBaseEntity {
 
   @OneToMany(() => BagItemAwb, bagItemAwb => bagItemAwb.bagItem)
   bagItemAwbs: BagItemAwb[];
+
+  @OneToMany(() => PodScanInBranchBag, e => e.bagItem, { cascade: ['insert'] })
+  podScanInBranchBag: PodScanInBranchBag[];
 }

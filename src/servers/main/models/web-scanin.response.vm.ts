@@ -21,6 +21,33 @@ export class WebScanInResponseVm {
 
 }
 
+export class WebScanInBranchResponseVm {
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  bagItemId: string;
+
+  @ApiModelProperty()
+  refRepresentativeCode: string;
+
+  @ApiModelProperty()
+  branchNameFrom: string;
+
+  @ApiModelProperty()
+  totalAwbItem: string;
+
+  @ApiModelProperty()
+  totalAwbScan: string;
+
+  @ApiModelProperty()
+  totalDiff: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+}
+
 export class WebScanInBagResponseVm {
   @ApiModelProperty()
   podScaninDateTime: string;
