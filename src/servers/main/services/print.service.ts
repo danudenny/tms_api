@@ -75,7 +75,7 @@ export class PrintService {
         branchName: true,
       });
 
-    if (!currentUser) {
+    if (!currentBranch) {
       RequestErrorService.throwObj({
         message: 'Gerai asal tidak ditemukan',
       });
@@ -168,7 +168,7 @@ export class PrintService {
         branchName: true,
       });
 
-    if (!currentUser) {
+    if (!currentBranch) {
       RequestErrorService.throwObj({
         message: 'Gerai asal tidak ditemukan',
       });
@@ -260,7 +260,7 @@ export class PrintService {
         branchName: true,
       });
 
-    if (!currentUser) {
+    if (!currentBranch) {
       RequestErrorService.throwObj({
         message: 'Gerai asal tidak ditemukan',
       });
@@ -346,7 +346,7 @@ export class PrintService {
         branchName: true,
       });
 
-    if (!currentUser) {
+    if (!currentBranch) {
       RequestErrorService.throwObj({
         message: 'Gerai asal tidak ditemukan',
       });
@@ -464,7 +464,7 @@ export class PrintService {
         branchName: true,
       });
 
-    if (!currentUser) {
+    if (!currentBranch) {
       RequestErrorService.throwObj({
         message: 'Gerai asal tidak ditemukan',
       });

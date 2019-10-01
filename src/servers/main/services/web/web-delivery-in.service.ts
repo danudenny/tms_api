@@ -215,7 +215,7 @@ export class WebDeliveryInService {
       ['t1.total_awb_item', 'totalAwbItem'],
       ['t1.total_awb_scan', 'totalAwbScan'],
       ['t1.total_diff', 'totalDiff'],
-      ['t3.weight', 'weight'],
+      [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t3.bag_seq', 'bagSeq'],
       ['t2.bag_number', 'bagNumber'],
       [
