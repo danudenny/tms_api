@@ -26,6 +26,12 @@ export class WebScanInBranchResponseVm {
   createdTime: string;
 
   @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  bagSeq: string;
+
+  @ApiModelProperty()
   bagItemId: string;
 
   @ApiModelProperty()
