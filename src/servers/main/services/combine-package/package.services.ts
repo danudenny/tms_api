@@ -22,6 +22,7 @@ import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hu
 import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 
 @Injectable()
 export class PackageService {
@@ -225,6 +226,14 @@ export class PackageService {
         });
     const bagItem = await BagItem.save(bagItemDetail);
 
+    // NOTE: background job for insert bag item history
+    BagItemHistoryQueueService.addData(
+      bagItem.bagItemId,
+      3000,
+      permissonPayload.branchId,
+      authMeta.userId,
+    );
+
     const totalWeight = parseFloat(awbDetail.weight);
     // INSERT INTO TABLE BAG ITEM AWB
     const bagItemAwbDetail = BagItemAwb.create({
@@ -289,6 +298,7 @@ export class PackageService {
           bagId,
           bagItemId: bagItem.bagItemId,
           totalAwbItem: 1,
+          totalAwbScan: 1,
           userIdCreated: authMeta.userId,
           createdTime  : moment().toDate(),
           updatedTime  : moment().toDate(),
@@ -451,6 +461,12 @@ export class PackageService {
     });
     const podScanInHubDetail = await PodScanInHubDetail.save(podScanInHubDetailData);
 
+    // Update Pod scan in hub bag
+    const podScanInHubBag = await PodScanInHubBag.findOne({ where: { podScanInHubId: payload.podScanInHubId } });
+    podScanInHubBag.totalAwbItem += 1;
+    podScanInHubBag.totalAwbScan += 1;
+    await PodScanInHubBag.save(podScanInHubBag);
+
     // update awb_item_attr
     const awbItemAttr             = await AwbItemAttr.findOne({ where: { awbItemId: payload.awbItemId, isDeleted: false } });
     awbItemAttr.bagItemIdLast     = bagDetail.bagItemId;
@@ -460,7 +476,7 @@ export class PackageService {
     awbItemAttr.userIdLast        = authMeta.userId,
     await AwbItemAttr.save(awbItemAttr);
 
-        // update status
+    // update status
     DoPodDetailPostMetaQueueService.createJobByAwbFilter(
           payload.awbItemId,
           permissonPayload.branchId,

@@ -16,6 +16,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { DoPodDetailPostMetaQueueService } from './services/do-pod-detail-post-meta-queue.service';
 import { QueueServerInjectorService } from './services/queue-server-injector.service';
 import { QueueServerServicesModule } from './services/queue-server-services.module';
+import { BagItemHistoryQueueService } from './services/bag-item-history-queue.service';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -102,6 +103,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
 
     // init boot Queue
     DoPodDetailPostMetaQueueService.boot();
+    BagItemHistoryQueueService.boot();
     // GenerateReportQueueService.boot();
   }
 }

@@ -43,14 +43,37 @@ export class WebScanInBranchHubVm {
   doPodCode: string;
 }
 
-export class WebScanInValidateBranchVm {
+export class ScanValidateBranchVm {
   @ApiModelProperty()
-  notes: string;
+  bagNumber: string;
 
   @ApiModelProperty()
-  bagNumber: string[];
+  totalAwbInBag: number;
+
+  @ApiModelProperty()
+  totalAwbScan: number;
+
+  @ApiModelProperty()
+  totalAwbMore: number;
+
+  @ApiModelProperty()
+  totalAwbLess: number;
 
 }
+
+export class WebScanInValidateBranchVm {
+
+  @ApiModelProperty()
+  podScanInBranchId: string;
+
+  @ApiModelPropertyOptional()
+  notes?: string;
+
+  @ApiModelPropertyOptional({type: [ScanValidateBranchVm]})
+  bagNumberDetail?: ScanValidateBranchVm[];
+
+}
+
 // Response
 export class ScanInputNumberBranchVm {
   @ApiModelProperty()
@@ -97,6 +120,9 @@ export class WebScanInBranchResponseVm {
 
   @ApiModelProperty()
   bagNumber: string;
+
+  @ApiModelProperty()
+  bagItemId: number;
 
   @ApiModelProperty()
   podScanInBranchId: string;

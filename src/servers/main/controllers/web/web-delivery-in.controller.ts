@@ -12,6 +12,7 @@ import { WebScanInListResponseVm, WebScanInBagListResponseVm } from '../../model
 import { WebScanInVm, WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebScanInBagBranchVm, WebScanInLoadBranchResponseVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 
 @ApiUseTags('Web Delivery In')
 @Controller('web/pod/scanIn')
@@ -95,19 +96,19 @@ export class WebDeliveryInController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebScanInBranchResponseVm })
+  @ResponseSerializerOptions({ disable: true })
+  // @ApiOkResponse({ type: WebScanInBranchResponseVm })
   public async validateBranch(@Body() payload: WebScanInValidateBranchVm) {
-    // TODO: butuh table baru??
-    return null; // this.webDeliveryService.scanInBranch(payload);
+    return this.webDeliveryService.scanInValidateBranch(payload);
   }
 
   @Post('loadBranch')
   @HttpCode(200)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebScanInLoadBranchResponseVm })
-  public async loadPackageAwb() {
-
-    return null; // this.loadService.loadAwbPackage();
+  @ResponseSerializerOptions({ disable: true })
+  // @ApiOkResponse({ type: WebScanInLoadBranchResponseVm })
+  public async loadBranchPackage() {
+    return this.webDeliveryService.loadBranchPackage();
   }
 }

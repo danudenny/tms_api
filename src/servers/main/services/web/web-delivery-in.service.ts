@@ -17,7 +17,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm, WebScanInBagBranchResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInBagListResponseVm, WebScanInListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm } from '../../models/web-scanin.vm';
+import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm, WebScanInValidateBranchVm } from '../../models/web-scanin.vm';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
@@ -32,6 +32,7 @@ import { PodScanInBranch } from '../../../../shared/orm-entity/pod-scan-in-branc
 import { PodScanInBranchBag } from '../../../../shared/orm-entity/pod-scan-in-branch-bag';
 import { PodScanInBranchDetail } from '../../../../shared/orm-entity/pod-scan-in-branch-detail';
 import { AwbService } from '../v1/awb.service';
+import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 
 // #endregion
 
@@ -934,6 +935,13 @@ export class WebDeliveryInService {
                 bagItem.userIdUpdated = authMeta.userId;
                 BagItem.save(bagItem);
 
+                // NOTE: background job for insert bag item history
+                BagItemHistoryQueueService.addData(
+                  bagData.bagItemId,
+                  2000,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                );
                 // get data awb on bag
                 const bagItemsAwb = await BagItemAwb.find({
                   where: {
@@ -1062,6 +1070,14 @@ export class WebDeliveryInService {
             updatedTime: timeNow,
             userIdUpdated: authMeta.userId,
           });
+          // NOTE: background job for insert bag item history
+          BagItemHistoryQueueService.addData(
+            bagData.bagItemId,
+            3500,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
+
           // create data dropoff hub
           const dropoffHub = DropoffHub.create();
           dropoffHub.branchId = permissonPayload.branchId;
@@ -1133,9 +1149,100 @@ export class WebDeliveryInService {
     result.totalData = payload.scanValue.length;
     result.isBag = isBag;
     result.bagNumber = payload.bagNumber;
+    result.bagItemId = null; // #TODO:
     result.podScanInBranchId = payload.podScanInBranchId;
     result.data = data;
     return result;
+  }
+
+  async scanInValidateBranch(payload: WebScanInValidateBranchVm): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timeNow = moment().toDate();
+
+    if (payload.bagNumberDetail && payload.bagNumberDetail.length) {
+      for (const item of payload.bagNumberDetail) {
+        const bagData = await BagService.validBagNumber(item.bagNumber);
+        if (bagData) {
+          // NOTE: update data pod scan in branch bag
+          const podScanInBag = await PodScanInBranchBag.findOne({
+            where: {
+              podScanInBranchId: payload.podScanInBranchId,
+              bagId: bagData.bagId,
+              bagItemId: bagData.bagItemId,
+              isDeleted: false,
+            },
+          });
+          if (podScanInBag) {
+            const totalDiff = item.totalAwbInBag - item.totalAwbScan;
+            PodScanInBranchBag.update(podScanInBag.podScanInBranchBagId, {
+              totalAwbScan: item.totalAwbScan,
+              totalDiff,
+            });
+          }
+          // NOTE: add to bag trouble
+          const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
+          const bagTrouble = BagTrouble.create({
+            bagNumber: item.bagNumber,
+            bagTroubleCode,
+            bagTroubleStatus: 100,
+            bagStatusId: 2000,
+            employeeId: authMeta.employeeId,
+            branchId: permissonPayload.branchId,
+          });
+          await BagTrouble.save(bagTrouble);
+        }
+      }
+    }
+
+    // TODO: update data podScanInBranch
+    const podScanInBranch = await PodScanInBranch.findOne({
+      where: {
+        podScanInBranchId: payload.podScanInBranchId,
+        isDeleted: false,
+      },
+    });
+
+    if (podScanInBranch) {
+      PodScanInBranch.update(payload.podScanInBranchId, {
+        transactionStatusId: 700,
+      });
+    }
+
+    return { status: 'ok' };
+  }
+
+  async loadBranchPackage() {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const podScanInBranch = await PodScanInBranch.findOne({
+      where: {
+        userIdCreated: authMeta.userId,
+        branchId: permissonPayload.branchId,
+        transactionStatusId: 600,
+        isDeleted: false,
+      },
+    });
+
+    if (podScanInBranch) {
+      // find pod scan in bag
+      const podScanInBranchBag = await PodScanInBranchBag.find({
+        where: {
+          podScanInBranchId: podScanInBranch.podScanInBranchId,
+          isDeleted: false,
+        },
+      });
+      // TODO:
+      if (podScanInBranchBag) {}
+    } else {
+      console.log('not found!');
+    }
+
+    // TODO: response vm ??
+    //
+
+    return {};
   }
 
   // #endregion

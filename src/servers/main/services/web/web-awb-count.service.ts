@@ -18,6 +18,7 @@ import { DropoffSortation } from '../../../../shared/orm-entity/dropoff_sortatio
 import { DropoffSortationDetail } from '../../../../shared/orm-entity/dropoff_sortation_detail';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
+import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 
 @Injectable()
 export class WebAwbCountService {
@@ -364,6 +365,14 @@ export class WebAwbCountService {
           bagItem.updatedTime = timeNow;
           bagItem.userIdUpdated = authMeta.userId;
           BagItem.save(bagItem);
+
+          // NOTE: background job for insert bag item history
+          BagItemHistoryQueueService.addData(
+            bagItem.bagItemId,
+            4000,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
 
           // get BagItemAwb and Count
           const getAllBagAwb = await BagItemAwb.findAndCount({
