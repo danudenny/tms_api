@@ -50,6 +50,7 @@ import {
 import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag';
 import { BagService } from '../v1/bag.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
 // #endregion
 
 @Injectable()
@@ -93,10 +94,21 @@ export class WebDeliveryOutService {
     doPod.vehicleNumber = payload.vehicleNumber || null;
     doPod.description = payload.desc || null;
 
-    // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
-    doPod.transactionStatusId = 1000; // created
     doPod.branchId = permissonPayload.branchId;
     // doPod.userId = authMeta.userId;
+
+    if (payload.base64Image) {
+      const attachment = await AttachmentService.uploadFileBase64(
+        payload.base64Image,
+        'do-pod',
+      );
+      if (attachment) {
+        doPod.photoId = attachment.attachmentTmsId;
+      }
+      doPod.transactionStatusId = 300; // HUB
+    } else {
+      doPod.transactionStatusId = 800; // BRANCH
+    }
 
     // await for get do pod id
     await this.doPodRepository.save(doPod);
@@ -794,21 +806,24 @@ export class WebDeliveryOutService {
               userIdUpdated: authMeta.userId,
             });
 
-            // NOTE: background job for insert bag item history
-            BagItemHistoryQueueService.addData(
-              bagData.bagItemId,
-              1000,
-              permissonPayload.branchId,
-              authMeta.userId,
-            );
             // NOTE: Loop data bag_item_awb for update status awb
             // and create do_pod_detail (data awb on bag)
+            // TODO: need to refactor
             await BagService.statusOutBranchAwbBag(
               bagData.bagId,
               bagData.bagItemId,
               doPod.doPodId,
               doPod.branchIdTo,
               doPod.userIdDriver,
+              doPod.doPodType,
+            );
+
+            // NOTE: background job for insert bag item history
+            BagItemHistoryQueueService.addData(
+              bagData.bagItemId,
+              1000,
+              permissonPayload.branchId,
+              authMeta.userId,
             );
           }
           // #endregion after scanout
