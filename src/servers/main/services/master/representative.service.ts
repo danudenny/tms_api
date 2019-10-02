@@ -27,7 +27,7 @@ export class RepresentativeService {
       ['representative.representative_name', 'representativeName'],
       ['representative.representative_code', 'representativeCode'],
     );
-    q.where(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
