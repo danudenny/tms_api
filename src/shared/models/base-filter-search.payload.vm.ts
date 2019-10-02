@@ -1,4 +1,5 @@
 import { ApiModelProperty } from '../external/nestjs-swagger';
+import { IsDefined } from 'class-validator';
 
 export class WebDeliverySearchVm {
   @ApiModelProperty()
@@ -14,4 +15,10 @@ export class SearchColumnsVm {
 
   @ApiModelProperty()
   value: string;
+}
+
+export class BaseMetaSortirPayloadVm  {
+  @ApiModelProperty()
+  @IsDefined({message: 'No Resi harus diisi'})
+  awbNumber: string;
 }

@@ -9,6 +9,8 @@ import { WebAwbFilterScanBagVm, WebAwbFilterScanAwbVm, WebAwbFilterFinishScanVm 
 import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFilterFinishScanResponseVm, WebAwbFilterGetLatestResponseVm } from '../../models/web-awb-filter-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
+import { BaseMetaSortirPayloadVm } from 'src/shared/models/base-filter-search.payload.vm';
+import { WebAwbSortirResponseVm } from '../../models/web-awb-sortir-response.vm';
 
 @ApiUseTags('Web Awb Filter')
 @Controller('web/pod/awb/filter')
@@ -64,4 +66,14 @@ export class WebAwbFilterController {
   public async loadScanFiltered() {
     return this.webAwbFilterService.loadScanFiltered();
   }
+
+  @Post('sortir')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebAwbSortirResponseVm })
+  public async findAllAwbSortirList(@Body() payload: BaseMetaSortirPayloadVm) {
+    return this.webAwbFilterService.findAllAwbSortirList(payload);
+  }
+
 }
