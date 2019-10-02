@@ -218,6 +218,7 @@ export class PrintService {
           awbItem: {
             awbItemId: true, // needs to be selected due to awb_item relations are being included
             awb: {
+              awbId: true,
               awbNumber: true,
               consigneeName: true,
               consigneeNumber: true,
@@ -364,7 +365,7 @@ export class PrintService {
       },
     };
 
-    const weightNumberOnly = `${bagItem.weight}`.replace(/\D/gm, '');
+    const weightNumberOnly = `${bagItem.weight}`.replace(/\D/gm, '').substring(0, 5);
     const finalWeightRounded2Decimal = parseFloat(`${bagItem.weight}`).toFixed(
       2,
     );
