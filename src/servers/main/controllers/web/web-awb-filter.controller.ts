@@ -69,8 +69,8 @@ export class WebAwbFilterController {
 
   @Post('sortir')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebAwbSortirResponseVm })
   public async findAllAwbSortirList(@Body() payload: BaseMetaSortirPayloadVm) {
     return this.webAwbFilterService.findAllAwbSortirList(payload);
