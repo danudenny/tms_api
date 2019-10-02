@@ -149,14 +149,6 @@ export class BagService {
                 employeeIdDriver,
                 AWB_STATUS.IN_HUB,
               );
-
-              // NOTE: background job for insert bag item history
-              BagItemHistoryQueueService.addData(
-                bagItemId,
-                3000,
-                permissonPayload.branchId,
-                authMeta.userId,
-              );
             }
 
             // queue bull OUT HUB
