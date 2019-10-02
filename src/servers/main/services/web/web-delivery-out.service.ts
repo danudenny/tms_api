@@ -818,6 +818,17 @@ export class WebDeliveryOutService {
               doPod.doPodType,
             );
 
+            // TODO: if isTransit auto IN
+            if (doPod.doPodType == 3020) {
+              // NOTE: background job for insert bag item history
+              BagItemHistoryQueueService.addData(
+                bagData.bagItemId,
+                3000,
+                permissonPayload.branchId,
+                authMeta.userId,
+              );
+            }
+
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
               bagData.bagItemId,
