@@ -51,6 +51,8 @@ import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag'
 import { BagService } from '../v1/bag.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { BagOrderResponseVm } from '../../models/bag-order-detail-response.vm';
+import { BagAwbVm } from '../../models/bag-order-response.vm';
 // #endregion
 
 @Injectable()
@@ -1137,6 +1139,32 @@ export class WebDeliveryOutService {
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
+    return result;
+  }
+
+  async bagorderdetail(
+    payload: BagAwbVm,
+  ): Promise<BagOrderResponseVm> {
+
+    const qz = createQueryBuilder();
+    qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
+    qz.from('bag_item_awb', 'bag_item_awb');
+    qz.where(
+      'bag_item_awb.bag_item_id = :bagNumber AND bag_item_awb.is_deleted = false',
+      {
+        bagNumber: payload.bagNumber,
+      },
+    );
+
+    const data = await qz.getRawMany();
+    const result = new BagOrderResponseVm();
+    const awb = [];
+    for (const a in data) {
+      awb.push(data[a].awbNumber);
+    }
+    if (data) {
+        result.awbNumber  = awb;
+      }
     return result;
   }
 
