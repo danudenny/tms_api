@@ -70,23 +70,6 @@ export class ResponseBagBranchVm {
   message: string;
 }
 
-export class WebScanInBagBranchResponseVm {
-  @ApiModelProperty()
-  totalData: number;
-
-  @ApiModelProperty()
-  totalSuccess: number;
-
-  @ApiModelProperty()
-  totalError: number;
-
-  @ApiModelProperty({ type: () => ResponseBagBranchVm })
-  response: ResponseBagBranchVm;
-
-  @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
-  data: ScanInputNumberBranchVm[];
-}
-
 export class ValidateVm {
   @ApiModelProperty()
   totalBagItem: string;
