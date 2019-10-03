@@ -539,6 +539,7 @@ export class WebAwbFilterService {
 
     const qb = createQueryBuilder();
     qb.addSelect('awb.awb_number', 'awbNumber');
+    qb.addSelect('awb.ref_representative_code', 'refRepresentativeCode');
     qb.addSelect('district.district_id', 'districtId');
     qb.addSelect('district.district_code', 'districtCode');
     qb.from('awb', 'awb');
@@ -562,6 +563,8 @@ export class WebAwbFilterService {
     if (data) {
       result.districtTo = data.districtId;
       result.districtCode = data.districtCode;
+      result.awbNumber = data.awbNumber;
+      result.refRepresentativeCode = data.refRepresentativeCode;
     }
     return result;
   }

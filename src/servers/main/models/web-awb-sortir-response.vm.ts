@@ -7,4 +7,10 @@ export class WebAwbSortirResponseVm {
   @ApiModelProperty()
   districtCode: string;
 
+  @ApiModelProperty()
+  awbNumber: number;
+
+  @ApiModelProperty()
+  refRepresentativeCode: string;
+
 }
