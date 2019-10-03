@@ -53,6 +53,9 @@ import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-his
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { BagOrderResponseVm } from '../../models/bag-order-detail-response.vm';
 import { BagAwbVm } from '../../models/bag-order-response.vm';
+import { WebScanPhotoResponseVm } from '../../models/web-scan-photo-response.vm';
+import { ScanOutPhotoVm } from '../../models/scan-out-photo-response.vm';
+import { url } from 'inspector';
 // #endregion
 
 @Injectable()
@@ -1168,6 +1171,33 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  async webScanPhoto(
+    payload: ScanOutPhotoVm,
+  ): Promise<WebScanPhotoResponseVm> {
+
+    const qbig = createQueryBuilder();
+    qbig.addSelect('attachment_tms.url', 'url');
+    qbig.from('attachment_tms', 'attachment_tms');
+    qbig.innerJoin(
+      'do_pod',
+      'do_pod',
+      'do_pod.photo_id = attachment_tms.attachment_tms_id AND attachment_tms.is_deleted = false',
+    );
+    qbig.where(
+      'attachment_tms.attachment_tms_id = :photoId AND attachment_tms.is_deleted = false',
+      {
+        photoId: payload.photoId,
+      },
+    );
+
+    const data = await qbig.getRawOne();
+    const result = new WebScanPhotoResponseVm();
+
+    if (data) {
+        result.url  = data.url;
+      }
+    return result;
+  }
   /**
    *
    *
