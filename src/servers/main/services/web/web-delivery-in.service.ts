@@ -33,6 +33,9 @@ import { PodScanInBranchBag } from '../../../../shared/orm-entity/pod-scan-in-br
 import { PodScanInBranchDetail } from '../../../../shared/orm-entity/pod-scan-in-branch-detail';
 import { AwbService } from '../v1/awb.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
+import { DropoffSortationDetail } from '../../../../shared/orm-entity/dropoff_sortation_detail';
+import { DropoffHubDetail } from '../../../../shared/orm-entity/dropoff_hub_detail';
+import { DropoffSortation } from '../../../../shared/orm-entity/dropoff_sortation';
 
 // #endregion
 
@@ -1527,6 +1530,264 @@ export class WebDeliveryInService {
     //
 
     return {};
+  }
+
+  async loadDropOffList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInHubSortListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchIdFrom'] = 't3.branch_id_last';
+    payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
+    payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+      {
+        field: 'bagNumberCode',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffHub, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      [
+        `CASE LENGTH (CAST(t3.bag_seq AS varchar(10)))
+          WHEN 1 THEN
+            CONCAT (t2.bag_number,'00',t3.bag_seq)
+          WHEN 2 THEN
+            CONCAT (t2.bag_number,'0',t3.bag_seq)
+          ELSE
+            CONCAT (t2.bag_number,t3.bag_seq) END`,
+        'bagNumberCode',
+      ],
+      ['t2.bag_number', 'bagNumber'],
+      ['t2.ref_representative_code', 'representativeCode'],
+      ['t3.bag_seq', 'bagSeq'],
+      ['t1.created_time', 'createdTime'],
+      ['t1.dropoff_hub_id', 'dropoffHubId'],
+      ['t5.branch_name', 'branchName'],
+      ['COUNT (t4.*)', 'totalAwb'],
+      [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+    );
+
+    q.innerJoin(e => e.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.dropoffHubDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem.branchLast, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw(`
+      t1.created_time,
+      t1.dropoff_hub_id,
+      t3.bag_seq,
+      t2.bag_number,
+      t2.ref_representative_code,
+      t3.weight,
+      t5.branch_name
+      `,
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInHubSortListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async loadDropOffListDetail(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebDeliveryListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['dropOffHubId'] = 't1.dropoff_hub_id';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'dropOffHubId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffHubDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t2.awb_number', 'awbNumber'],
+      ['t3.consignee_name', 'consigneeName'],
+      ['t3.consignee_address', 'consigneeAddress'],
+      ['t4.district_name', 'districtName'],
+    );
+
+    q.innerJoin(e => e.awbItemAttr, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.district, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebDeliveryListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async loadSortationList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInHubSortListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchIdFrom'] = 't3.branch_id_last';
+    payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
+    payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+      {
+        field: 'bagNumberCode',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffSortation, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      [
+        `CASE LENGTH (CAST(t3.bag_seq AS varchar(10)))
+          WHEN 1 THEN
+            CONCAT (t2.bag_number,'00',t3.bag_seq)
+          WHEN 2 THEN
+            CONCAT (t2.bag_number,'0',t3.bag_seq)
+          ELSE
+            CONCAT (t2.bag_number,t3.bag_seq) END`,
+        'bagNumberCode',
+      ],
+      ['t2.bag_number', 'bagNumber'],
+      ['t2.ref_representative_code', 'representativeCode'],
+      ['t3.bag_seq', 'bagSeq'],
+      ['t1.created_time', 'createdTime'],
+      ['t1.dropoff_sortation_id', 'dropoffSortationId'],
+      ['t5.branch_name', 'branchName'],
+      ['COUNT (t4.*)', 'totalAwb'],
+      [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+    );
+
+    q.innerJoin(e => e.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.dropoffSortationDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem.branchLast, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw(`
+      t1.created_time,
+      t1.dropoff_sortation_id,
+      t3.bag_seq,
+      t2.bag_number,
+      t2.ref_representative_code,
+      t3.weight,
+      t5.branch_name
+      `,
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInHubSortListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async loadSortationListDetail(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebDeliveryListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['dropoffSortationId'] = 't1.dropoff_sortation_id';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'dropoffSortationId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffSortationDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t2.awb_number', 'awbNumber'],
+      ['t3.consignee_name', 'consigneeName'],
+      ['t3.consignee_address', 'consigneeAddress'],
+      ['t4.district_name', 'districtName'],
+    );
+
+    q.innerJoin(e => e.awbItemAttr, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.district, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebDeliveryListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 
   // #endregion
