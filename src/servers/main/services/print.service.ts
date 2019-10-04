@@ -88,7 +88,7 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.add(7, 'hours').format('HH:mm'),
+        time: m.format('HH:mm'),
         totalItems: doPod.doPodDetails.length,
       },
     };
@@ -181,7 +181,7 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.add(7, 'hours').format('HH:mm'),
+        time: m.format('HH:mm'),
         totalItems: totalBagItem,
       },
     };
@@ -218,9 +218,12 @@ export class PrintService {
           awbItem: {
             awbItemId: true, // needs to be selected due to awb_item relations are being included
             awb: {
+              awbId: true,
               awbNumber: true,
               consigneeName: true,
               consigneeNumber: true,
+              consigneeAddress: true,
+              consigneeZip: true,
               totalCodValue: true,
             },
           },
@@ -273,7 +276,7 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.add(7, 'hours').format('HH:mm'),
+        time: m.format('HH:mm'),
         totalItems: doPodDeliver.doPodDeliverDetails.length,
         totalCod: totalAllCod,
       },
@@ -359,12 +362,12 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.add(7, 'hours').format('HH:mm'),
+        time: m.format('HH:mm'),
         bagItemsTotal,
       },
     };
 
-    const weightNumberOnly = `${bagItem.weight}`.replace(/\D/gm, '');
+    const weightNumberOnly = `${bagItem.weight}`.replace(/\D/gm, '').substring(0, 5);
     const finalWeightRounded2Decimal = parseFloat(`${bagItem.weight}`).toFixed(
       2,
     );
@@ -379,10 +382,10 @@ export class PrintService {
       `DIRECTION 0\n` +
       `OFFSET 0\n` +
       `CLS\n` +
-      `TEXT 30,120,"5",0,1,1,0,"GABUNGAN PAKET"\n` +
+      `TEXT 30,120,"5",0,1,1,0,"GABUNGAN SORTIR"\n` +
       `BARCODE 30,200,"128",100,1,0,3,10,"${finalBagItemBarcodeNumber}"\n` +
       `TEXT 30,380,"3",0,1,1,"Koli ke : ${finalBagItemSeq}"\n` +
-      `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${bagItemsTotal}c"\n` +
+      `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${bagItemsTotal} resi"\n` +
       `TEXT 30,460,"4",0,1,1,0,"${
         bagItem.bag.district.districtCode
       }"\n` +
@@ -477,7 +480,7 @@ export class PrintService {
         currentUserName: currentUser.employee.nickname,
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
-        time: m.add(7, 'hours').format('HH:mm'),
+        time: m.format('HH:mm'),
       },
     };
 

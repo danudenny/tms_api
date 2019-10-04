@@ -32,6 +32,10 @@ import {
 import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { BagOrderResponseVm} from '../../models/bag-order-detail-response.vm';
+import { BagAwbVm } from '../../models/bag-order-response.vm';
+import { WebScanPhotoResponseVm } from '../../models/web-scan-photo-response.vm';
+import { ScanOutPhotoVm } from '../../models/scan-out-photo-response.vm';
 // #endregion
 
 @ApiUseTags('Web Delivery Out')
@@ -234,5 +238,23 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebScanOutResponseForPrintVm })
   public async scanOutBagItemForPrint(@Body() payload: WebScanOutBagForPrintVm) {
     return this.webDeliveryOutService.getBagItemId(payload);
+  }
+
+  @Post('bagOrderDetail')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: BagOrderResponseVm })
+  public async bagOrderDetail(@Body() payload: BagAwbVm) {
+    return this.webDeliveryOutService.bagorderdetail(payload);
+  }
+
+  @Post('photo')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanPhotoResponseVm })
+  public async webScanPhoto(@Body() payload: ScanOutPhotoVm) {
+    return this.webDeliveryOutService.webScanPhoto(payload);
   }
 }

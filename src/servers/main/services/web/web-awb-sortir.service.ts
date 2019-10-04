@@ -43,11 +43,6 @@ import {
 } from '../../models/web-awb-filter.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { District } from '../../../../shared/orm-entity/district';
-import { WebAwbSortirListResponseVm } from '../../models/web-awb-sortir-list.response.vm';
-import { string } from 'yargs';
-import { Awb } from 'src/shared/orm-entity/awb';
-import { WebAwbSortirResponseVm } from '../../models/web-awb-sortir-response.vm';
-import { BaseMetaSortirPayloadVm } from 'src/shared/models/base-filter-search.payload.vm';
 // #endregion
 export class WebAwbFilterService {
   constructor(
@@ -453,7 +448,7 @@ export class WebAwbFilterService {
     response.message = 'Berhasil menutup Perwakilan ini';
     return response;
   }
-  async findAllAwbFilterList(
+  async findAllAwbSortirList(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbFilterListResponseVm> {
     // mapping field
@@ -532,43 +527,6 @@ export class WebAwbFilterService {
 
     return result;
   }
-
-  async findAllAwbSortirList(
-    payload: BaseMetaSortirPayloadVm,
-  ): Promise<WebAwbSortirResponseVm> {
-
-    const qb = createQueryBuilder();
-    qb.addSelect('awb.awb_number', 'awbNumber');
-    qb.addSelect('awb.ref_representative_code', 'refRepresentativeCode');
-    qb.addSelect('district.district_id', 'districtId');
-    qb.addSelect('district.district_code', 'districtCode');
-    qb.from('awb', 'awb');
-    qb.innerJoin(
-      'district',
-      'district',
-      'district.district_id = awb.to_id AND district.is_deleted = false',
-    );
-    qb.where(
-      'awb.awb_number = :awbNumber AND awb.is_deleted = false',
-      {
-        awbNumber: payload.awbNumber,
-      },
-    );
-
-    const data = await qb.getRawOne();
-    // console.log(data);
-    const result = new WebAwbSortirResponseVm();
-    // console.log(data.districtCode);
-    // console.log(data.districtId);
-    if (data) {
-      result.districtTo = data.districtId;
-      result.districtCode = data.districtCode;
-      result.awbNumber = data.awbNumber;
-      result.refRepresentativeCode = data.refRepresentativeCode;
-    }
-    return result;
-  }
-
   private async createPodFilter(representativeIdTo: number) {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();

@@ -71,16 +71,28 @@ export class WebScanInHubSortResponseVm {
   bagNumber: string;
 
   @ApiModelProperty()
+  dropoffHubId: string;
+
+  @ApiModelProperty()
+  dropoffSortationId: string;
+
+  @ApiModelProperty()
   bagSeq: string;
 
   @ApiModelProperty()
   districtName: string;
 
   @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
   totalAwb: number;
 
   @ApiModelProperty()
   weight: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
 }
 
 export class WebScanInBagResponseVm {

@@ -85,9 +85,6 @@ export class ScanInputNumberBranchVm {
   @ApiModelProperty()
   trouble: boolean;
 
-  // @ApiModelProperty()
-  // isBag: boolean;
-
   @ApiModelProperty()
   message: string;
 }
@@ -114,31 +111,81 @@ export class WebScanInLoadBranchResponseVm   {
   AwbDetail: ScanInputNumberLoadBranchVm[];
 }
 
-export class WebScanInBranchResponseVm {
+export class ScanBranchBagVm {
   @ApiModelProperty()
-  totalData: number;
-
-  @ApiModelProperty()
-  bagNumber: string;
+  bagId: number;
 
   @ApiModelProperty()
   bagItemId: number;
 
   @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class WebScanInBagBranchResponseVm {
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({ type: () => ScanBranchBagVm })
+  dataBag: ScanBranchBagVm;
+
+  @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
+  data: ScanInputNumberBranchVm[];
+}
+
+export class ScanBranchAwbVm extends ScanInputNumberLoadBranchVm {
+  @ApiModelProperty({ type: [ScanBranchBagVm] })
+  dataBag: ScanBranchBagVm;
+}
+
+export class WebScanInBranchResponseVm {
+  @ApiModelProperty()
   podScanInBranchId: string;
 
-  // @ApiModelProperty()
-  // totalSuccessAwb: number;
-
-  // @ApiModelProperty()
-  // totalSuccessBag: number;
-
-  // @ApiModelProperty()
-  // totalError: number;
+  @ApiModelProperty()
+  bagNumber: string;
 
   @ApiModelProperty()
   isBag: boolean;
 
+  @ApiModelProperty({ type: [ScanBranchBagVm] })
+  dataBag: ScanBranchBagVm;
+
   @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
   data: ScanInputNumberBranchVm[];
+
+}
+
+export class AwbBagLoadVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  isTrouble: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class WebScanInBranchLoadResponseVm {
+  @ApiModelProperty()
+  podScanInBranchId: string;
+
+  @ApiModelProperty({ type: [AwbBagLoadVm] })
+  data: AwbBagLoadVm[];
 }

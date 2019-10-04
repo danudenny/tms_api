@@ -62,4 +62,11 @@ export class PodScanInBranchDetail extends TmsBaseEntity {
   })
   @JoinColumn({ name: 'bag_item_id', referencedColumnName: 'bagItemId' })
   bagItem: BagItem;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_trouble',
+  })
+  isTrouble: boolean;
 }

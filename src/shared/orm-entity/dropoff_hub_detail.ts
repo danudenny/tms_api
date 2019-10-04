@@ -1,6 +1,9 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { DropoffHub } from './dropoff_hub';
+import { AwbItemAttr } from './awb-item-attr';
+import { Awb } from './awb';
 
 @Entity('dropoff_hub_detail', { schema: 'public' })
 export class DropoffHubDetail extends TmsBaseEntity {
@@ -31,4 +34,18 @@ export class DropoffHubDetail extends TmsBaseEntity {
     name: 'awb_item_id',
   })
   awbItemId: number | null;
+
+  @ManyToOne(() => DropoffHub, e => e.dropoffHubDetails, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'dropoff_hub_id', referencedColumnName: 'dropoffHubId' })
+  dropoffHub: DropoffHub;
+
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  awbItemAttr: AwbItemAttr;
+
+  @OneToOne(() => Awb)
+  @JoinColumn({ name: 'awb_id' })
+  awb: Awb;
 }

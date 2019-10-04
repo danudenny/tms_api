@@ -1,6 +1,9 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { DropoffSortation } from './dropoff_sortation';
+import { AwbItemAttr } from './awb-item-attr';
+import { Awb } from './awb';
 
 @Entity('dropoff_sortation_detail', { schema: 'public' })
 export class DropoffSortationDetail extends TmsBaseEntity {
@@ -30,4 +33,18 @@ export class DropoffSortationDetail extends TmsBaseEntity {
     name: 'awb_item_id',
   })
   awbItemId: number | null;
+
+  @ManyToOne(() => DropoffSortation, e => e.dropoffSortationDetails, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'dropoff_sortation_id', referencedColumnName: 'dropoffSortationId' })
+  dropoffSortation: DropoffSortation;
+
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  awbItemAttr: AwbItemAttr;
+
+  @OneToOne(() => Awb)
+  @JoinColumn({ name: 'awb_id' })
+  awb: Awb;
 }

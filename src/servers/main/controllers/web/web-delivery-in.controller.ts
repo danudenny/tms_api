@@ -144,4 +144,40 @@ export class WebDeliveryInController {
   public async loadBranchPackage() {
     return this.webDeliveryService.loadBranchPackage();
   }
+
+  @Post('dropOffList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanInHubSortListResponseVm })
+  public async loadDropOffHubList(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryService.loadDropOffList(payload);
+  }
+
+  @Post('dropOffListDetail')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebDeliveryListResponseVm })
+  public async loadDropOffHubListDetail(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryService.loadDropOffListDetail(payload);
+  }
+
+  @Post('sortationHubList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanInHubSortListResponseVm })
+  public async loadSortationHubList(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryService.loadSortationList(payload);
+  }
+
+  @Post('sortationHubListDetail')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebDeliveryListResponseVm })
+  public async loadSortationHubListDetail(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryService.loadSortationListDetail(payload);
+  }
 }

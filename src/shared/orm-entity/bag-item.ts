@@ -7,6 +7,8 @@ import { Employee } from './employee';
 import { TmsBaseEntity } from './tms-base';
 import { PodScanInBranchBag } from './pod-scan-in-branch-bag';
 import { PodScanInBranchDetail } from './pod-scan-in-branch-detail';
+import { DropoffHub } from './dropoff_hub';
+import { DropoffSortation } from './dropoff_sortation';
 
 @Entity('bag_item', { schema: 'public' })
 @Index('bag_item_bag_id_idx', ['bagId'])
@@ -100,4 +102,10 @@ export class BagItem extends TmsBaseEntity {
 
   @OneToMany(() => PodScanInBranchDetail, e => e.bagItem, { cascade: ['insert'] })
   podScanInBranchDetails: PodScanInBranchDetail[];
+
+  @OneToMany(() => DropoffHub, e => e.bagItem, { cascade: ['insert'] })
+  dropoffHub: DropoffHub[];
+
+  @OneToMany(() => DropoffSortation, e => e.bagItem, { cascade: ['insert'] })
+  dropoffSortation: DropoffSortation[];
 }
