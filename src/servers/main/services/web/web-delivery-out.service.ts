@@ -1148,27 +1148,42 @@ export class WebDeliveryOutService {
   async bagorderdetail(
     payload: BagAwbVm,
   ): Promise<BagOrderResponseVm> {
+    const bag = await  BagService.validBagNumber(payload.bagNumber);
+    if (bag) {
+      const qz = createQueryBuilder();
+      qz.addSelect('bag.bag_id', 'bagId');
+      qz.addSelect('bag_item_id.bag_item_id', 'bagItemId');
+      qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
+      qz.from('bag', 'bag');
+      qz.innerJoin(
+        'bag_item',
+        'bag_item_id',
+        'bag_item_id.bag_id = bag.bag_id',
+      );
+      qz.innerJoin(
+        'bag_item_awb',
+        'bag_item_awb',
+        'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
+      );
+      qz.where(
+        'bag.bag_number = :bag AND bag_item_id.bag_seq = :seq',
+        {
+          bag: bag.bag.bagNumber,
+          seq: bag.bagSeq,
+        },
+      );
 
-    const qz = createQueryBuilder();
-    qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
-    qz.from('bag_item_awb', 'bag_item_awb');
-    qz.where(
-      'bag_item_awb.bag_item_id = :bagNumber AND bag_item_awb.is_deleted = false',
-      {
-        bagNumber: payload.bagNumber,
-      },
-    );
-
-    const data = await qz.getRawMany();
-    const result = new BagOrderResponseVm();
-    const awb = [];
-    for (const a in data) {
-      awb.push(data[a].awbNumber);
-    }
-    if (data) {
-        result.awbNumber  = awb;
+      const data = await qz.getRawMany();
+      const result = new BagOrderResponseVm();
+      const awb = [];
+      for (const a in data) {
+        awb.push(data[a].awbNumber);
       }
-    return result;
+      if (data) {
+          result.awbNumber  = awb;
+        }
+      return result;
+    }
   }
 
   async webScanPhoto(
