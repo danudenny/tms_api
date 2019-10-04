@@ -17,7 +17,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInBagListResponseVm, WebScanInListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm, WebScanInValidateBranchVm, ScanBranchBagVm, ScanBranchAwbVm, WebScanInBagBranchResponseVm } from '../../models/web-scanin.vm';
+import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm, WebScanInValidateBranchVm, ScanBranchBagVm, ScanBranchAwbVm, WebScanInBagBranchResponseVm, WebScanInBranchLoadResponseVm } from '../../models/web-scanin.vm';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
@@ -36,6 +36,7 @@ import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-his
 import { DropoffSortationDetail } from '../../../../shared/orm-entity/dropoff_sortation_detail';
 import { DropoffHubDetail } from '../../../../shared/orm-entity/dropoff_hub_detail';
 import { DropoffSortation } from '../../../../shared/orm-entity/dropoff_sortation';
+import { createQueryBuilder } from 'typeorm';
 
 // #endregion
 
@@ -751,8 +752,10 @@ export class WebDeliveryInService {
     const dataBag = new ScanBranchBagVm();
     const result = new ScanBranchAwbVm();
     result.awbNumber = awbNumber;
-    result.trouble = false;
     result.dataBag = null;
+    result.trouble = false;
+    result.status = 'ok';
+    result.message = 'Success';
 
     const awb = await AwbService.validAwbNumber(awbNumber);
     if (awb) {
@@ -1490,8 +1493,10 @@ export class WebDeliveryInService {
     return { status: 'ok' };
   }
 
-  async loadBranchPackage() {
+  async loadBranchPackage(): Promise<WebScanInBranchLoadResponseVm> {
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    let podScanInBranchId = '';
+    let data = [];
 
     const podScanInBranch = await PodScanInBranch.findOne({
       where: {
@@ -1502,24 +1507,42 @@ export class WebDeliveryInService {
     });
 
     if (podScanInBranch) {
-      // find pod scan in bag
-      const podScanInBranchBag = await PodScanInBranchBag.find({
-        where: {
-          podScanInBranchId: podScanInBranch.podScanInBranchId,
-          isDeleted: false,
+      podScanInBranchId = podScanInBranch.podScanInBranchId;
+      const qz = createQueryBuilder();
+      qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
+      qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
+      qz.from('pod_scan_in_branch_detail', 'psi_bd');
+      qz.innerJoin(
+        'awb_item_attr', 'aia',
+        'aia.awb_item_id = psi_bd.awb_item_id and aia.is_deleted = false',
+      );
+      qz.leftJoin(
+        'bag_item',
+        'bi',
+        'bi.bag_item_id = psi_bd.bag_item_id and bi.is_deleted = false',
+      );
+      qz.leftJoin(
+        'bag',
+        'bag',
+        'bag.bag_id = psi_bd.bag_id and bag.is_deleted = false',
+      );
+      qz.where(
+        'psi_bd.pod_scan_in_branch_id = :podScanInBranchId AND psi_bd.is_deleted = false',
+        {
+          podScanInBranchId,
         },
-      });
-      // TODO:
-      if (podScanInBranchBag) {
-      }
+      );
+
+      data = await qz.getRawMany();
     } else {
       console.log('not found!');
     }
 
     // TODO: response vm ??
-    //
-
-    return {};
+    const result = new WebScanInBranchLoadResponseVm();
+    result.podScanInBranchId = podScanInBranchId;
+    result.data = data;
+    return result;
   }
 
   async loadDropOffList(
@@ -1528,7 +1551,8 @@ export class WebDeliveryInService {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchIdFrom'] = 't3.branch_id_last';
-    payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
+    payload.fieldResolverMap['representativeFrom'] =
+      't2.ref_representative_code';
     payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -1590,8 +1614,7 @@ export class WebDeliveryInService {
       t2.ref_representative_code,
       t3.weight,
       t5.branch_name
-      `,
-    );
+      `);
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -1657,7 +1680,8 @@ export class WebDeliveryInService {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchIdFrom'] = 't3.branch_id_last';
-    payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
+    payload.fieldResolverMap['representativeFrom'] =
+      't2.ref_representative_code';
     payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -1719,8 +1743,7 @@ export class WebDeliveryInService {
       t2.ref_representative_code,
       t3.weight,
       t5.branch_name
-      `,
-    );
+      `);
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
