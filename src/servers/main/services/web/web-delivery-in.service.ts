@@ -37,6 +37,7 @@ import { DropoffSortationDetail } from '../../../../shared/orm-entity/dropoff_so
 import { DropoffHubDetail } from '../../../../shared/orm-entity/dropoff_hub_detail';
 import { DropoffSortation } from '../../../../shared/orm-entity/dropoff_sortation';
 import { createQueryBuilder } from 'typeorm';
+import { chain, map, omit } from 'lodash';
 
 // #endregion
 
@@ -1519,31 +1520,84 @@ export class WebDeliveryInService {
     if (podScanInBranch) {
       podScanInBranchId = podScanInBranch.podScanInBranchId;
       const qz = createQueryBuilder();
-      qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
-      qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
-      qz.from('pod_scan_in_branch_detail', 'psi_bd');
+      qz.select('bia.awb_number', 'awbNumber');
+      qz.addSelect(
+        `CONCAT(bag.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`,
+        'bagNumber',
+      );
+      qz.addSelect(`COALESCE(scan_detail.scan, false)`, 'scan');
+      qz.addSelect(`COALESCE(scan_detail.trouble, false)`, 'trouble');
+      qz.addSelect(
+        `CASE COALESCE(scan_detail.trouble, false)
+        WHEN true THEN 'error'
+        ELSE 'ok' END`,
+        'status',
+      );
+      qz.addSelect(
+        `CASE COALESCE(scan_detail.trouble, false)
+        WHEN true THEN CONCAT('Resi ', bia.awb_number, 'tidak ada dalam gabung paket')
+        ELSE '' END`,
+        'message',
+      );
+      qz.from('pod_scan_in_branch_bag', 'psi_bag');
       qz.innerJoin(
-        'awb_item_attr', 'aia',
-        'aia.awb_item_id = psi_bd.awb_item_id and aia.is_deleted = false',
+        'bag_item_awb',
+        'bia',
+        'bia.bag_item_id = psi_bag.bag_item_id and bia.is_deleted = false',
       );
       qz.leftJoin(
         'bag_item',
         'bi',
-        'bi.bag_item_id = psi_bd.bag_item_id and bi.is_deleted = false',
+        'bi.bag_item_id = psi_bag.bag_item_id and bi.is_deleted = false',
       );
       qz.leftJoin(
         'bag',
         'bag',
-        'bag.bag_id = psi_bd.bag_id and bag.is_deleted = false',
+        'bag.bag_id = psi_bag.bag_id and bag.is_deleted = false',
+      );
+      qz.leftJoin(
+        qbJoin => {
+          qbJoin.select('aia.awb_number', 'awbNumber');
+          qbJoin.addSelect('aia.awb_item_id', 'awb_item_id');
+          qbJoin.addSelect('true', 'scan');
+          qbJoin.addSelect('psi_bd.is_trouble', 'trouble');
+          qbJoin.from('pod_scan_in_branch_detail', 'psi_bd');
+          qbJoin.leftJoin(
+            'awb_item_attr',
+            'aia',
+            'aia.awb_item_id = psi_bd.awb_item_id and aia.is_deleted = false',
+          );
+          qbJoin.where(
+            'psi_bd.pod_scan_in_branch_id = :podScanInBranchId AND psi_bd.is_deleted = false',
+            {
+              podScanInBranchId,
+            },
+          );
+          return qbJoin;
+        },
+        'scan_detail',
+        'scan_detail.awb_item_id = bia.awb_item_id',
       );
       qz.where(
-        'psi_bd.pod_scan_in_branch_id = :podScanInBranchId AND psi_bd.is_deleted = false',
+        'psi_bag.pod_scan_in_branch_id = :podScanInBranchId AND psi_bag.is_deleted = false',
         {
           podScanInBranchId,
         },
       );
 
       data = await qz.getRawMany();
+
+      if (data && data.length) {
+        data = chain(data)
+          .groupBy('bagNumber')
+          .map((value, key) => {
+            return {
+              bagNumber: key, // the index was transformed into a string, this will make it a number again.
+              awb: map(value, o => omit(o, 'bagNumber')), // do not include the index key from the previous objects
+            };
+          })
+          .value();
+      }
     } else {
       console.log('not found!');
     }
