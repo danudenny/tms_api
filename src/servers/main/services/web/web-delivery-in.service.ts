@@ -754,8 +754,8 @@ export class WebDeliveryInService {
     result.awbNumber = awbNumber;
     result.dataBag = null;
     result.trouble = false;
-    result.status = 'ok';
-    result.message = 'Success';
+    result.status = 'error';
+    result.message = 'Pending';
 
     const awb = await AwbService.validAwbNumber(awbNumber);
     if (awb) {
@@ -815,7 +815,7 @@ export class WebDeliveryInService {
           let bagId = null;
           let bagItemId = null;
 
-          const podScanInBranchDetail = PodScanInBranchDetail.findOne({
+          const podScanInBranchDetail = await PodScanInBranchDetail.findOne({
             where: {
               podScanInBranchId,
               awbItemId: awb.awbItemId,
@@ -1372,9 +1372,19 @@ export class WebDeliveryInService {
     const regexNumber = /^[0-9]+$/;
     const dataItem = new ScanInputNumberBranchVm();
 
-    // create pod_scan_in_branch
-    if (payload.podScanInBranchId == '') {
-      const podScanInBranch = PodScanInBranch.create();
+    // find and create pod_scan_in_branch
+    let podScanInBranch = await PodScanInBranch.findOne({
+      where: {
+        branchId: permissonPayload.branchId,
+        transactionStatusId: 600,
+        isDeleted: false,
+      },
+    });
+
+    if (podScanInBranch) {
+      payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+    } else {
+      podScanInBranch = PodScanInBranch.create();
       podScanInBranch.branchId = permissonPayload.branchId;
       podScanInBranch.scanInType = 'bag'; // default
       podScanInBranch.transactionStatusId = 600;
