@@ -783,6 +783,7 @@ export class WebDeliveryInService {
 
         case 'POD':
           result.status = 'error';
+          result.trouble = true;
           result.message = `Resi ${awbNumber} sudah di proses POD`;
           break;
 
@@ -793,6 +794,7 @@ export class WebDeliveryInService {
 
         default:
           result.status = 'error';
+          result.trouble = true;
           result.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
           break;
       }
@@ -851,7 +853,7 @@ export class WebDeliveryInService {
               result.message = 'Success';
             } else {
               result.status = 'error';
-              result.message = `Resi ${awbNumber} tidak ada gabung paket`;
+              result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
             }
 
             const podScanInBranchDetailObj = PodScanInBranchDetail.create();
@@ -860,6 +862,7 @@ export class WebDeliveryInService {
             podScanInBranchDetailObj.bagItemId = bagItemId;
             podScanInBranchDetailObj.awbId = awb.awbItem.awbId;
             podScanInBranchDetailObj.awbItemId = awb.awbItemId;
+            podScanInBranchDetailObj.isTrouble = result.status == 'error' ? true : false;
             await PodScanInBranchDetail.save(podScanInBranchDetailObj);
 
             // AFTER Scan IN ===============================================
@@ -1367,7 +1370,7 @@ export class WebDeliveryInService {
     const dataItem = new ScanInputNumberBranchVm();
 
     // create pod_scan_in_branch
-    if (payload.podScanInBranchId || payload.podScanInBranchId == '') {
+    if (payload.podScanInBranchId == '') {
       const podScanInBranch = PodScanInBranch.create();
       podScanInBranch.branchId = permissonPayload.branchId;
       podScanInBranch.scanInType = 'bag'; // default
