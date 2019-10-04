@@ -9,8 +9,8 @@ import { WebAwbFilterScanBagVm, WebAwbFilterScanAwbVm, WebAwbFilterFinishScanVm 
 import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFilterFinishScanResponseVm, WebAwbFilterGetLatestResponseVm } from '../../models/web-awb-filter-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
-import { BaseMetaSortirPayloadVm } from 'src/shared/models/base-filter-search.payload.vm';
 import { WebAwbSortirResponseVm } from '../../models/web-awb-sortir-response.vm';
+import { BaseMetaSortirPayloadVm } from '../../../../shared/models/base-filter-search.payload.vm';
 
 @ApiUseTags('Web Awb Filter')
 @Controller('web/pod/awb/filter')
