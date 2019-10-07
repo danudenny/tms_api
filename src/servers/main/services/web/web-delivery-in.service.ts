@@ -767,8 +767,6 @@ export class WebDeliveryInService {
         case 'IN':
           if (awb.branchIdLast == permissonPayload.branchId) {
             // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
-            result.status = 'error';
-            result.trouble = true;
             result.message = `Resi ${awbNumber} sudah pernah scan in`;
           } else {
             // TODO: construct data Awb Problem
@@ -776,9 +774,6 @@ export class WebDeliveryInService {
             // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
             // save data to awb_trouble
             await AwbTroubleService.fromScanIn(awbNumber, awb.awbStatusIdLast);
-
-            result.status = 'error';
-            result.trouble = true;
             result.message =
               `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
               `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
@@ -786,8 +781,6 @@ export class WebDeliveryInService {
           break;
 
         case 'POD':
-          result.status = 'error';
-          result.trouble = true;
           result.message = `Resi ${awbNumber} sudah di proses POD`;
           break;
 
@@ -797,13 +790,12 @@ export class WebDeliveryInService {
           break;
 
         default:
-          result.status = 'error';
-          result.trouble = true;
           result.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
           break;
       }
       // =====================================================================
 
+      // TODO: handle validasi statusCode ??
       if (permissonPayload.branchId) {
         // Add Locking setnx redis
         const holdRedis = await RedisService.locking(
@@ -825,9 +817,14 @@ export class WebDeliveryInService {
           });
 
           if (podScanInBranchDetail) {
+            result.status = 'error';
+            result.message = `Resi ${awbNumber} sudah scan in`;
             // TODO: update data podScanInBranchDetail
           } else {
             if (bagNumber != '') {
+              result.status = 'ok';
+              result.message = 'Success';
+
               const bagData = await DeliveryService.validBagNumber(bagNumber);
               if (bagData) {
                 const bagItemAwb = await BagItemAwb.findOne({
@@ -839,10 +836,10 @@ export class WebDeliveryInService {
                 });
 
                 if (!bagItemAwb) {
-                  result.status = 'error';
+                  result.status = 'warning';
                   result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
                 }
-                // set data
+                // set data bag
                 bagId = bagData.bagId;
                 bagItemId = bagData.bagItemId;
 
@@ -853,10 +850,8 @@ export class WebDeliveryInService {
                 dataBag.trouble = false;
                 result.dataBag = dataBag;
               }
-              result.status = 'ok';
-              result.message = 'Success';
             } else {
-              result.status = 'error';
+              result.status = 'warning';
               result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
             }
 
@@ -866,7 +861,7 @@ export class WebDeliveryInService {
             podScanInBranchDetailObj.bagItemId = bagItemId;
             podScanInBranchDetailObj.awbId = awb.awbItem.awbId;
             podScanInBranchDetailObj.awbItemId = awb.awbItemId;
-            podScanInBranchDetailObj.isTrouble = result.status == 'error' ? true : false;
+            podScanInBranchDetailObj.isTrouble = result.status == 'warning' ? true : false;
             await PodScanInBranchDetail.save(podScanInBranchDetailObj);
 
             // AFTER Scan IN ===============================================
@@ -889,22 +884,19 @@ export class WebDeliveryInService {
           // remove key holdRedis
           RedisService.del(`hold:scanin-awb-branch:${awb.awbItemId}`);
         } else {
-          result.status = 'error';
           result.message = 'Server Busy';
         }
       } else {
         // save data to awb_trouble
         await AwbTroubleService.fromScanIn(awbNumber, awb.awbStatusIdLast);
-        result.status = 'error';
-        result.trouble = true;
         result.message =
           `Resi ${awbNumber} milik gerai ` +
           `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
       }
     } else {
-      result.status = 'error';
       result.message = `Resi ${awbNumber} Tidak di Temukan`;
     }
+
     return result;
   }
 
