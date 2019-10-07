@@ -176,7 +176,10 @@ export class ScanInAwbLoadVm {
   trouble: boolean;
 
   @ApiModelProperty()
-  scan: boolean;
+  isFiltered: boolean;
+
+  @ApiModelProperty()
+  status: string;
 
   @ApiModelProperty()
   message: string;
