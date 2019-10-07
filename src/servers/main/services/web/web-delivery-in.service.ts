@@ -821,9 +821,10 @@ export class WebDeliveryInService {
             result.message = `Resi ${awbNumber} sudah scan in`;
             // TODO: update data podScanInBranchDetail
           } else {
+            result.status = 'ok';
+            result.message = 'Success';
+
             if (bagNumber != '') {
-              result.status = 'ok';
-              result.message = 'Success';
 
               const bagData = await DeliveryService.validBagNumber(bagNumber);
               if (bagData) {
@@ -849,10 +850,39 @@ export class WebDeliveryInService {
                 dataBag.message = 'Success';
                 dataBag.trouble = false;
                 result.dataBag = dataBag;
+              } else {
+                result.status = 'warning';
+                result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
               }
             } else {
-              result.status = 'warning';
-              result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
+              // NOTE: if awb item attr bagItemLast not null
+              // find bag if lazy scan bag number
+              const podScanInBranchBag = await PodScanInBranchBag.findOne(
+                {
+                  where: {
+                    podScanInBranchId,
+                    bagItemId: awb.bagItemLast.bagItemId,
+                    bagId: awb.bagItemLast.bagId,
+                    isDeleted: false,
+                  },
+                },
+              );
+              Logger.log(podScanInBranchBag, '===============================');
+              if (podScanInBranchBag) {
+                // set data bag
+                bagId = podScanInBranchBag.bagId;
+                bagItemId = podScanInBranchBag.bagItemId;
+
+                dataBag.bagId = bagId;
+                dataBag.bagItemId = bagItemId;
+                dataBag.status = 'ok';
+                dataBag.message = 'Success';
+                dataBag.trouble = false;
+                result.dataBag = dataBag;
+              } else {
+                result.status = 'warning';
+                result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
+              }
             }
 
             const podScanInBranchDetailObj = PodScanInBranchDetail.create();
