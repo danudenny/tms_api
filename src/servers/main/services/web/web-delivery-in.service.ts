@@ -758,7 +758,7 @@ export class WebDeliveryInService {
     result.status = 'error';
     result.message = 'Pending';
 
-    const awb = await AwbService.validAwbNumber(awbNumber);
+    const awb = await AwbService.validAwbBagNumber(awbNumber);
     if (awb) {
       const statusCode = await AwbService.awbStatusGroup(awb.awbStatusIdLast);
       // TODO: change validate status code ??

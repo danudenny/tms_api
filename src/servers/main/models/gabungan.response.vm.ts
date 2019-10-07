@@ -26,6 +26,9 @@ export class AwbPackageDetail {
   consigneeName: string;
 
   @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
   isTrouble: boolean;
 }
 

@@ -38,6 +38,40 @@ export class AwbService {
     return await q.exec();
   }
 
+  public static async validAwbBagNumber(awbNumber: string): Promise<AwbItemAttr> {
+    const awbRepository = new OrionRepositoryService(AwbItemAttr);
+    const q = awbRepository.findOne();
+    // Manage relation (default inner join)
+    q.innerJoin(e => e.branchLast);
+
+    q.select({
+      awbItemAttrId: true,
+      awbStatusIdLast: true,
+      awbItemId: true,
+      awbItem: {
+        awbItemId: true,
+        awbId: true,
+      },
+      awbNumber: true,
+      isPackageCombined: true,
+      bagItemIdLast: true,
+      bagItemLast: {
+        bagItemId: true,
+        bagId: true,
+      },
+      branchIdLast: true,
+      branchIdNext: true,
+      branchLast: {
+        branchId: true,
+        branchCode: true,
+        branchName: true,
+      },
+    });
+    // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
+    q.where(e => e.awbNumber, w => w.equals(awbNumber));
+    return await q.exec();
+  }
+
   public static async awbStatusGroup(awbStatusId: number): Promise<string> {
     const awbRepository = new OrionRepositoryService(AwbStatusGroupItem);
     const q = awbRepository.findOne();
