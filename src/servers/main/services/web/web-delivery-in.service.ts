@@ -1525,7 +1525,7 @@ export class WebDeliveryInService {
         `CONCAT(bag.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`,
         'bagNumber',
       );
-      qz.addSelect(`COALESCE(scan_detail.scan, false)`, 'scan');
+      qz.addSelect(`COALESCE(scan_detail.scan, false)`, 'isFiltered');
       qz.addSelect(`COALESCE(scan_detail.trouble, false)`, 'trouble');
       qz.addSelect(
         `CASE COALESCE(scan_detail.trouble, false)
