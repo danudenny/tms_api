@@ -932,8 +932,10 @@ export class WebDeliveryOutService {
       ['t1.do_pod_method', 'doPodMethod'],
       ['t1.vehicle_number', 'vehicleNumber'],
       ['t1.branch_id_to', 'branchIdTo'],
+      ['t1.photo_id', 'PhotoId'],
       ['t2.fullname', 'nickname'],
       ['t3.branch_name', 'branchTo'],
+      ['t4.url', 'url'],
     );
     // TODO: relation userDriver to Employee Driver
 
@@ -943,6 +945,10 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.attachment, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     if (isHub) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB));
       q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
