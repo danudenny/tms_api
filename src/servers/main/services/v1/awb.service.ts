@@ -12,7 +12,7 @@ export class AwbService {
     const awbRepository = new OrionRepositoryService(AwbItemAttr);
     const q = awbRepository.findOne();
     // Manage relation (default inner join)
-    q.innerJoin(e => e.branchLast);
+    q.leftJoin(e => e.branchLast);
 
     q.select({
       awbItemAttrId: true,
@@ -42,7 +42,7 @@ export class AwbService {
     const awbRepository = new OrionRepositoryService(AwbItemAttr);
     const q = awbRepository.findOne();
     // Manage relation (default inner join)
-    q.innerJoin(e => e.branchLast);
+    q.leftJoin(e => e.branchLast);
 
     q.select({
       awbItemAttrId: true,

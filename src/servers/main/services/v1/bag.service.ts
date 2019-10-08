@@ -42,6 +42,32 @@ export class BagService {
     return await q.exec();
   }
 
+  static async getBagNumber(bagItemId: number): Promise<BagItem> {
+
+    const bagRepository = new OrionRepositoryService(BagItem);
+    const q = bagRepository.findOne();
+    // Manage relation (default inner join)
+    q.innerJoin(e => e.bag, null, join => join.andWhere(e => e.isDeleted, w => w.isFalse()));
+
+    q.select({
+      bagItemId: true,
+      bagItemStatusIdLast: true,
+      branchIdLast: true,
+      branchIdNext: true,
+      bagSeq: true,
+      bagId: true,
+      bag: {
+        representativeIdTo: true,
+        refRepresentativeCode: true,
+        bagId: true,
+        bagNumber: true,
+      },
+    });
+    q.where(e => e.bagItemId, w => w.equals(bagItemId));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    return await q.exec();
+  }
+
   static async statusDropoffAwbBag(
     bagItemId: number,
     dropoffHubId: string,
