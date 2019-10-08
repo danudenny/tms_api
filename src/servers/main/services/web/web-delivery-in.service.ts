@@ -1460,6 +1460,14 @@ export class WebDeliveryInService {
       }
     }
 
+    // get bag number
+    if (dataBag && payload.bagNumber == '') {
+      const bagItem = await BagService.getBagNumber(dataBag.bagItemId);
+      if (bagItem) {
+        payload.bagNumber = bagItem.bag.bagNumber + bagItem.bagSeq.toString().padStart(3, '0');
+      }
+    }
+
     const result = new WebScanInBranchResponseVm();
     result.bagNumber = payload.bagNumber;
     result.podScanInBranchId = payload.podScanInBranchId;
