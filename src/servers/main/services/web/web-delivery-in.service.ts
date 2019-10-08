@@ -17,7 +17,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInBagListResponseVm, WebScanInListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm, WebScanInValidateBranchVm, ScanBranchBagVm, ScanBranchAwbVm, WebScanInBagBranchResponseVm } from '../../models/web-scanin.vm';
+import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm, WebScanInValidateBranchVm, ScanBranchBagVm, ScanBranchAwbVm, WebScanInBagBranchResponseVm, WebScanInBranchLoadResponseVm } from '../../models/web-scanin.vm';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
@@ -36,6 +36,8 @@ import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-his
 import { DropoffSortationDetail } from '../../../../shared/orm-entity/dropoff_sortation_detail';
 import { DropoffHubDetail } from '../../../../shared/orm-entity/dropoff_hub_detail';
 import { DropoffSortation } from '../../../../shared/orm-entity/dropoff_sortation';
+import { createQueryBuilder } from 'typeorm';
+import { chain, map, omit } from 'lodash';
 
 // #endregion
 
@@ -751,10 +753,12 @@ export class WebDeliveryInService {
     const dataBag = new ScanBranchBagVm();
     const result = new ScanBranchAwbVm();
     result.awbNumber = awbNumber;
-    result.trouble = false;
     result.dataBag = null;
+    result.trouble = false;
+    result.status = 'error';
+    result.message = 'Pending';
 
-    const awb = await AwbService.validAwbNumber(awbNumber);
+    const awb = await AwbService.validAwbBagNumber(awbNumber);
     if (awb) {
       const statusCode = await AwbService.awbStatusGroup(awb.awbStatusIdLast);
       // TODO: change validate status code ??
@@ -763,8 +767,6 @@ export class WebDeliveryInService {
         case 'IN':
           if (awb.branchIdLast == permissonPayload.branchId) {
             // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
-            result.status = 'error';
-            result.trouble = true;
             result.message = `Resi ${awbNumber} sudah pernah scan in`;
           } else {
             // TODO: construct data Awb Problem
@@ -772,9 +774,6 @@ export class WebDeliveryInService {
             // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
             // save data to awb_trouble
             await AwbTroubleService.fromScanIn(awbNumber, awb.awbStatusIdLast);
-
-            result.status = 'error';
-            result.trouble = true;
             result.message =
               `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
               `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
@@ -782,7 +781,6 @@ export class WebDeliveryInService {
           break;
 
         case 'POD':
-          result.status = 'error';
           result.message = `Resi ${awbNumber} sudah di proses POD`;
           break;
 
@@ -792,12 +790,12 @@ export class WebDeliveryInService {
           break;
 
         default:
-          result.status = 'error';
           result.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
           break;
       }
       // =====================================================================
 
+      // TODO: handle validasi statusCode ??
       if (permissonPayload.branchId) {
         // Add Locking setnx redis
         const holdRedis = await RedisService.locking(
@@ -810,7 +808,7 @@ export class WebDeliveryInService {
           let bagId = null;
           let bagItemId = null;
 
-          const podScanInBranchDetail = PodScanInBranchDetail.findOne({
+          const podScanInBranchDetail = await PodScanInBranchDetail.findOne({
             where: {
               podScanInBranchId,
               awbItemId: awb.awbItemId,
@@ -819,9 +817,15 @@ export class WebDeliveryInService {
           });
 
           if (podScanInBranchDetail) {
+            result.status = 'error';
+            result.message = `Resi ${awbNumber} sudah scan in`;
             // TODO: update data podScanInBranchDetail
           } else {
+            result.status = 'ok';
+            result.message = 'Success';
+
             if (bagNumber != '') {
+
               const bagData = await DeliveryService.validBagNumber(bagNumber);
               if (bagData) {
                 const bagItemAwb = await BagItemAwb.findOne({
@@ -833,10 +837,10 @@ export class WebDeliveryInService {
                 });
 
                 if (!bagItemAwb) {
-                  result.status = 'error';
+                  result.status = 'warning';
                   result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
                 }
-                // set data
+                // set data bag
                 bagId = bagData.bagId;
                 bagItemId = bagData.bagItemId;
 
@@ -846,12 +850,39 @@ export class WebDeliveryInService {
                 dataBag.message = 'Success';
                 dataBag.trouble = false;
                 result.dataBag = dataBag;
+              } else {
+                result.status = 'warning';
+                result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
               }
-              result.status = 'ok';
-              result.message = 'Success';
             } else {
-              result.status = 'error';
-              result.message = `Resi ${awbNumber} tidak ada gabung paket`;
+              // NOTE: if awb item attr bagItemLast not null
+              // find bag if lazy scan bag number
+              const podScanInBranchBag = await PodScanInBranchBag.findOne(
+                {
+                  where: {
+                    podScanInBranchId,
+                    bagItemId: awb.bagItemLast.bagItemId,
+                    bagId: awb.bagItemLast.bagId,
+                    isDeleted: false,
+                  },
+                },
+              );
+              Logger.log(podScanInBranchBag, '===============================');
+              if (podScanInBranchBag) {
+                // set data bag
+                bagId = podScanInBranchBag.bagId;
+                bagItemId = podScanInBranchBag.bagItemId;
+
+                dataBag.bagId = bagId;
+                dataBag.bagItemId = bagItemId;
+                dataBag.status = 'ok';
+                dataBag.message = 'Success';
+                dataBag.trouble = false;
+                result.dataBag = dataBag;
+              } else {
+                result.status = 'warning';
+                result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
+              }
             }
 
             const podScanInBranchDetailObj = PodScanInBranchDetail.create();
@@ -860,6 +891,7 @@ export class WebDeliveryInService {
             podScanInBranchDetailObj.bagItemId = bagItemId;
             podScanInBranchDetailObj.awbId = awb.awbItem.awbId;
             podScanInBranchDetailObj.awbItemId = awb.awbItemId;
+            podScanInBranchDetailObj.isTrouble = result.status == 'warning' ? true : false;
             await PodScanInBranchDetail.save(podScanInBranchDetailObj);
 
             // AFTER Scan IN ===============================================
@@ -882,22 +914,19 @@ export class WebDeliveryInService {
           // remove key holdRedis
           RedisService.del(`hold:scanin-awb-branch:${awb.awbItemId}`);
         } else {
-          result.status = 'error';
           result.message = 'Server Busy';
         }
       } else {
         // save data to awb_trouble
         await AwbTroubleService.fromScanIn(awbNumber, awb.awbStatusIdLast);
-        result.status = 'error';
-        result.trouble = true;
         result.message =
           `Resi ${awbNumber} milik gerai ` +
           `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
       }
     } else {
-      result.status = 'error';
       result.message = `Resi ${awbNumber} Tidak di Temukan`;
     }
+
     return result;
   }
 
@@ -1366,9 +1395,19 @@ export class WebDeliveryInService {
     const regexNumber = /^[0-9]+$/;
     const dataItem = new ScanInputNumberBranchVm();
 
-    // create pod_scan_in_branch
-    if (payload.podScanInBranchId || payload.podScanInBranchId == '') {
-      const podScanInBranch = PodScanInBranch.create();
+    // find and create pod_scan_in_branch
+    let podScanInBranch = await PodScanInBranch.findOne({
+      where: {
+        branchId: permissonPayload.branchId,
+        transactionStatusId: 600,
+        isDeleted: false,
+      },
+    });
+
+    if (podScanInBranch) {
+      payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+    } else {
+      podScanInBranch = PodScanInBranch.create();
       podScanInBranch.branchId = permissonPayload.branchId;
       podScanInBranch.scanInType = 'bag'; // default
       podScanInBranch.transactionStatusId = 600;
@@ -1418,6 +1457,14 @@ export class WebDeliveryInService {
         dataItem.message = 'Nomor tidak valid';
         dataItem.trouble = true;
         data.push(dataItem);
+      }
+    }
+
+    // get bag number
+    if (dataBag && payload.bagNumber == '') {
+      const bagItem = await BagService.getBagNumber(dataBag.bagItemId);
+      if (bagItem) {
+        payload.bagNumber = bagItem.bag.bagNumber + bagItem.bagSeq.toString().padStart(3, '0');
       }
     }
 
@@ -1487,8 +1534,10 @@ export class WebDeliveryInService {
     return { status: 'ok' };
   }
 
-  async loadBranchPackage() {
+  async loadBranchPackage(): Promise<WebScanInBranchLoadResponseVm> {
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    let podScanInBranchId = '';
+    let data = [];
 
     const podScanInBranch = await PodScanInBranch.findOne({
       where: {
@@ -1499,24 +1548,95 @@ export class WebDeliveryInService {
     });
 
     if (podScanInBranch) {
-      // find pod scan in bag
-      const podScanInBranchBag = await PodScanInBranchBag.find({
-        where: {
-          podScanInBranchId: podScanInBranch.podScanInBranchId,
-          isDeleted: false,
+      podScanInBranchId = podScanInBranch.podScanInBranchId;
+      const qz = createQueryBuilder();
+      qz.select('bia.awb_number', 'awbNumber');
+      qz.addSelect(
+        `CONCAT(bag.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`,
+        'bagNumber',
+      );
+      qz.addSelect(`COALESCE(scan_detail.scan, false)`, 'isFiltered');
+      qz.addSelect(`COALESCE(scan_detail.trouble, false)`, 'trouble');
+      qz.addSelect(
+        `CASE COALESCE(scan_detail.trouble, false)
+        WHEN true THEN 'error'
+        ELSE 'ok' END`,
+        'status',
+      );
+      qz.addSelect(
+        `CASE COALESCE(scan_detail.trouble, false)
+        WHEN true THEN CONCAT('Resi ', bia.awb_number, 'tidak ada dalam gabung paket')
+        ELSE '' END`,
+        'message',
+      );
+      qz.from('pod_scan_in_branch_bag', 'psi_bag');
+      qz.innerJoin(
+        'bag_item_awb',
+        'bia',
+        'bia.bag_item_id = psi_bag.bag_item_id and bia.is_deleted = false',
+      );
+      qz.leftJoin(
+        'bag_item',
+        'bi',
+        'bi.bag_item_id = psi_bag.bag_item_id and bi.is_deleted = false',
+      );
+      qz.leftJoin(
+        'bag',
+        'bag',
+        'bag.bag_id = psi_bag.bag_id and bag.is_deleted = false',
+      );
+      qz.leftJoin(
+        qbJoin => {
+          qbJoin.select('aia.awb_number', 'awbNumber');
+          qbJoin.addSelect('aia.awb_item_id', 'awb_item_id');
+          qbJoin.addSelect('true', 'scan');
+          qbJoin.addSelect('psi_bd.is_trouble', 'trouble');
+          qbJoin.from('pod_scan_in_branch_detail', 'psi_bd');
+          qbJoin.leftJoin(
+            'awb_item_attr',
+            'aia',
+            'aia.awb_item_id = psi_bd.awb_item_id and aia.is_deleted = false',
+          );
+          qbJoin.where(
+            'psi_bd.pod_scan_in_branch_id = :podScanInBranchId AND psi_bd.is_deleted = false',
+            {
+              podScanInBranchId,
+            },
+          );
+          return qbJoin;
         },
-      });
-      // TODO:
-      if (podScanInBranchBag) {
+        'scan_detail',
+        'scan_detail.awb_item_id = bia.awb_item_id',
+      );
+      qz.where(
+        'psi_bag.pod_scan_in_branch_id = :podScanInBranchId AND psi_bag.is_deleted = false',
+        {
+          podScanInBranchId,
+        },
+      );
+
+      data = await qz.getRawMany();
+
+      if (data && data.length) {
+        data = chain(data)
+          .groupBy('bagNumber')
+          .map((value, key) => {
+            return {
+              bagNumber: key, // the index was transformed into a string, this will make it a number again.
+              awb: map(value, o => omit(o, 'bagNumber')), // do not include the index key from the previous objects
+            };
+          })
+          .value();
       }
     } else {
       console.log('not found!');
     }
 
     // TODO: response vm ??
-    //
-
-    return {};
+    const result = new WebScanInBranchLoadResponseVm();
+    result.podScanInBranchId = podScanInBranchId;
+    result.data = data;
+    return result;
   }
 
   async loadDropOffList(
@@ -1525,7 +1645,8 @@ export class WebDeliveryInService {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchIdFrom'] = 't3.branch_id_last';
-    payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
+    payload.fieldResolverMap['representativeFrom'] =
+      't2.ref_representative_code';
     payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -1587,8 +1708,7 @@ export class WebDeliveryInService {
       t2.ref_representative_code,
       t3.weight,
       t5.branch_name
-      `,
-    );
+      `);
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -1654,7 +1774,8 @@ export class WebDeliveryInService {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchIdFrom'] = 't3.branch_id_last';
-    payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
+    payload.fieldResolverMap['representativeFrom'] =
+      't2.ref_representative_code';
     payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -1716,8 +1837,7 @@ export class WebDeliveryInService {
       t2.ref_representative_code,
       t3.weight,
       t5.branch_name
-      `,
-    );
+      `);
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

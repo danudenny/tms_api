@@ -372,6 +372,7 @@ export class PackageService {
         customerId    : awb.customerAccountId,
         pickupMerchant: awb.pickupMerchant,
         shipperName   : awb.refReseller,
+        consigneeAddress: awb.consigneeAddress,
         isTrouble,
       };
 

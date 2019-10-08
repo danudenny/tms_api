@@ -9,7 +9,7 @@ import { BagRepository } from '../../../../shared/orm-repository/bag.repository'
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInListResponseVm, WebScanInBagListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm, WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebScanInBagBranchVm, WebScanInLoadBranchResponseVm } from '../../models/web-scanin.vm';
+import { WebScanInVm, WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebScanInBagBranchVm, WebScanInLoadBranchResponseVm, WebScanInBranchLoadResponseVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
@@ -139,8 +139,8 @@ export class WebDeliveryInController {
   @HttpCode(200)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ResponseSerializerOptions({ disable: true })
-  // @ApiOkResponse({ type: WebScanInLoadBranchResponseVm })
+  // @ResponseSerializerOptions({ disable: true })
+  @ApiOkResponse({ type: WebScanInBranchLoadResponseVm })
   public async loadBranchPackage() {
     return this.webDeliveryService.loadBranchPackage();
   }

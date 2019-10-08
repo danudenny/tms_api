@@ -167,3 +167,36 @@ export class WebScanInBranchResponseVm {
   data: ScanInputNumberBranchVm[];
 
 }
+
+export class ScanInAwbLoadVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  isFiltered: boolean;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class ScanInBagLoadVm {
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty({ type: [ScanInAwbLoadVm] })
+  awb: ScanInAwbLoadVm[];
+}
+
+export class WebScanInBranchLoadResponseVm {
+  @ApiModelProperty()
+  podScanInBranchId: string;
+
+  @ApiModelProperty({ type: [ScanInBagLoadVm] })
+  data: ScanInBagLoadVm[];
+}
