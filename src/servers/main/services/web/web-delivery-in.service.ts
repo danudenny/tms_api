@@ -1182,7 +1182,7 @@ export class WebDeliveryInService {
             if (podScanInBranchBag) {
               totalError += 1;
               response.status = 'error';
-              response.message = 'Already exist!!!';
+              response.message = 'Gabungan paket sudah discan sebelumnya';
             } else {
               const bagItem = await BagItem.findOne({
                 where: {
