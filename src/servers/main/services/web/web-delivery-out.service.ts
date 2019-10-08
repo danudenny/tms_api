@@ -932,8 +932,10 @@ export class WebDeliveryOutService {
       ['t1.do_pod_method', 'doPodMethod'],
       ['t1.vehicle_number', 'vehicleNumber'],
       ['t1.branch_id_to', 'branchIdTo'],
+      ['t1.photo_id', 'PhotoId'],
       ['t2.fullname', 'nickname'],
       ['t3.branch_name', 'branchTo'],
+      ['t4.url', 'url'],
     );
     // TODO: relation userDriver to Employee Driver
 
@@ -943,6 +945,10 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoin(e => e.attachment, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     if (isHub) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB));
       q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
@@ -1365,7 +1371,7 @@ export class WebDeliveryOutService {
       // Get Data for 3pl Method
       q.selectRaw(
         ['t1.do_pod_id', 'doPodId'],
-        ['t1.employee_id_driver', 'employeeIdDriver'],
+        ['t1.user_id_driver', 'employeeIdDriver'],
         ['t1.partner_logistic_id', 'partnerLogisticId'],
         ['t4.partner_logistic_name', 'partnerLogisticName'],
         ['t1.do_pod_method', 'doPodMethod'],
@@ -1377,7 +1383,7 @@ export class WebDeliveryOutService {
         ['t3.branch_code', 'branchCode'],
       );
       // TODO: fix query relation to employee
-      q.innerJoin(e => e.userDriver, 't2', j =>
+      q.innerJoin(e => e.userDriver.employee, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.innerJoin(e => e.branchTo, 't3', j =>
@@ -1391,17 +1397,17 @@ export class WebDeliveryOutService {
       // Get Data for internal Method
       q.selectRaw(
         ['t1.do_pod_id', 'doPodId'],
-        ['t1.employee_id_driver', 'employeeIdDriver'],
+        ['t1.user_id_driver', 'employeeIdDriver'],
         ['t1.do_pod_method', 'doPodMethod'],
         ['t1.vehicle_number', 'vehicleNumber'],
         ['t1.branch_id_to', 'branchIdTo'],
-        ['t2.username', 'employeeName'],
+        ['t2.fullname', 'employeeName'],
         ['t2.nik', 'nik'],
         ['t3.branch_name', 'branchTo'],
         ['t3.branch_code', 'branchCode'],
       );
       // TODO: fix query relation to employee
-      q.innerJoin(e => e.userDriver, 't2', j =>
+      q.innerJoin(e => e.userDriver.employee, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.innerJoin(e => e.branchTo, 't3', j =>

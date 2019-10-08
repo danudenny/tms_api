@@ -6,6 +6,7 @@ import { TmsBaseEntity } from './tms-base';
 import { PartnerLogistic } from './partner-logistic';
 import { User } from './user';
 import { DoPodDetailBag } from './do-pod-detail-bag';
+import { AttachmentTms } from './attachment-tms';
 
 @Entity('do_pod', { schema: 'public' })
 export class DoPod extends TmsBaseEntity {
@@ -288,6 +289,10 @@ export class DoPod extends TmsBaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_to' })
   branchTo: Branch;
+
+  @OneToOne(() => AttachmentTms)
+  @JoinColumn({ name: 'photo_id', referencedColumnName: 'attachmentTmsId' })
+  attachment: AttachmentTms;
 
   @OneToOne(() => PartnerLogistic)
   @JoinColumn({ name: 'partner_logistic_id' })
