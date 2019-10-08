@@ -945,7 +945,7 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.attachment, 't4', j =>
+    q.leftJoin(e => e.attachment, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
