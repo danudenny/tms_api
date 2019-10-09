@@ -817,6 +817,7 @@ export class WebDeliveryInService {
 
           if (podScanInBranchDetail) {
             result.status = 'error';
+            result.trouble = true;
             result.message = `Resi ${awbNumber} sudah scan in`;
             // TODO: update data podScanInBranchDetail
           } else {
@@ -881,14 +882,21 @@ export class WebDeliveryInService {
               }
             }
 
+            // Create Awb Trouble if status warning
+            if (result.status == 'warning') {
+              await AwbTroubleService.fromScanIn(
+                awbNumber, awb.awbStatusIdLast, result.message,
+              );
+              result.trouble = true;
+            }
+
             const podScanInBranchDetailObj = PodScanInBranchDetail.create();
             podScanInBranchDetailObj.podScanInBranchId = podScanInBranchId;
             podScanInBranchDetailObj.bagId = bagId;
             podScanInBranchDetailObj.bagItemId = bagItemId;
             podScanInBranchDetailObj.awbId = awb.awbItem.awbId;
             podScanInBranchDetailObj.awbItemId = awb.awbItemId;
-            podScanInBranchDetailObj.isTrouble =
-              result.status == 'warning' ? true : false;
+            podScanInBranchDetailObj.isTrouble = result.trouble;
             await PodScanInBranchDetail.save(podScanInBranchDetailObj);
 
             // AFTER Scan IN ===============================================

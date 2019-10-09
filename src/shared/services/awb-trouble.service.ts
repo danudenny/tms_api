@@ -48,13 +48,17 @@ export class AwbTroubleService {
   public static async fromScanIn(
     awbNumber: string,
     awbStatusIdLast: number,
+    message: string = '',
   ) {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timeNow = moment().toDate();
 
     const awbTroubleCode = await CustomCounterCode.awbTrouble(timeNow);
-    const troubleDesc = `Resi Bermasalah pada gerai. Harap hubungi CT (Control Tower) Kantor Pusat`;
+    const troubleDesc =
+      message == ''
+        ? `Peringatan Resi ${awbNumber} Bermasalah pada gerai.`
+        : message;
 
     const awbTrouble = AwbTrouble.create({
       awbNumber,
