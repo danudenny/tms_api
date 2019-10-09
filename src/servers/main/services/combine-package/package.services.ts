@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { sampleSize, assign, join } from 'lodash';
 import moment = require('moment');
-import { PackageAwbResponseVm } from '../../models/gabungan.response.vm';
+import { PackageAwbResponseVm, AwbPackageDetail } from '../../models/gabungan.response.vm';
 import { PackagePayloadVm } from '../../models/gabungan-payload.vm';
 import _ from 'lodash';
 import { District } from '../../../../shared/orm-entity/district';
@@ -23,6 +23,7 @@ import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-b
 import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
+import { BagService } from '../v1/bag.service';
 
 @Injectable()
 export class PackageService {
@@ -38,7 +39,14 @@ export class PackageService {
     result.districtId   = 0;
     result.districtName = null;
 
-    if (regexNumber.test(value) && valueLength === 12) {
+    if (value.includes('*BUKA')) {
+      const dataResult      = await this.openSortirCombine(payload);
+      result.bagNumber      = dataResult.bagNumber;
+      result.districtName   = dataResult.districtName;
+      result.districtId     = dataResult.districtId;
+      result.podScanInHubId = dataResult.podScanInHubId;
+      result.dataBag        = dataResult.dataBag;
+    } else if (regexNumber.test(value) && valueLength === 12) {
       //  scan resi
       if (!payload.districtId && !payload.bagNumber) {
           RequestErrorService.throwObj(
@@ -79,6 +87,62 @@ export class PackageService {
     }
 
     return result;
+  }
+
+  private async openSortirCombine(payload): Promise<{
+    bagNumber: string,
+    districtId: number,
+    districtName: string,
+    podScanInHubId: string,
+    dataBag: AwbPackageDetail[],
+  }> {
+    const value = payload.value;
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    // open package combine
+    const getNumberValue = value.replace('*BUKA ', '').trim();
+    const bagNumber: string = getNumberValue.substring(0, 10);
+    const bagDetail = await BagService.validBagNumber(bagNumber);
+
+    if (!bagDetail) {
+      RequestErrorService.throwObj(
+        {
+          message: 'No gabungan sortir tidak ditemukan',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const qb = createQueryBuilder();
+    qb.addSelect('c.awb_number', 'awbNumber');
+    qb.addSelect('c.consignee_name', 'consigneeName');
+    qb.addSelect('c.consignee_address', 'consigneeAddress');
+    qb.addSelect('c.total_weight_real_rounded', 'weight');
+    qb.addSelect('c.customer_account_id', 'customerId');
+    qb.addSelect('c.pickup_merchant', 'pickupMerchant');
+    qb.addSelect('c.ref_reseller', 'refReseller');
+    qb.addSelect('a.pod_scan_in_hub_id', 'podScanInHubId');
+    qb.addSelect('e.district_id', 'districtId');
+    qb.addSelect('e.district_name', 'districtName');
+    qb.addSelect('false', 'isTrouble');
+    qb.from('pod_scan_in_hub_bag', 'a');
+    qb.innerJoin('pod_scan_in_hub_detail', 'b', 'a.pod_scan_in_hub_id = b.pod_scan_in_hub_id AND b.is_deleted = false');
+    qb.innerJoin('awb', 'c', 'c.awb_id = b.awb_id AND c.is_deleted = false');
+    qb.innerJoin('bag', 'd', 'd.bag_id = b.bag_id AND d.is_deleted = false');
+    qb.innerJoin('district', 'e', 'e.district_id = d.district_id_to AND e.is_deleted = false');
+    qb.where('a.is_deleted = false');
+    qb.andWhere('a.bag_id = :bagId', { bagId: bagDetail.bagId });
+    qb.andWhere('a.bag_item_id = :bagItemId', { bagItemId: bagDetail.bagItemId });
+    qb.andWhere('a.branch_id = :branchId', { branchId: permissonPayload.branchId });
+    const data = await qb.getRawMany();
+
+    const dataResult = {
+      bagNumber,
+      districtId: data[0].districtId,
+      districtName: data[0].districtName,
+      podScanInHubId: data[0].podScanInHubId,
+      dataBag: data,
+    };
+    return dataResult;
   }
 
   async loadAwbPackage(): Promise<PackageAwbResponseVm> {
@@ -318,8 +382,6 @@ export class PackageService {
   private async awbScan(payload): Promise<any> {
     const value            = payload.value;
     const result           = new Object();
-    const authMeta         = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
     const awbItemAttr      = await AwbService.validAwbNumber(value);
     const districtId: number    = payload.districtId;
     let bagNumber: number       = payload.bagNumber;
