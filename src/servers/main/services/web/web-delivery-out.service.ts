@@ -1153,7 +1153,7 @@ export class WebDeliveryOutService {
     return result;
   }
 
-  async bagorderdetail(
+  async bagOrderDetail(
     payload: BagAwbVm,
   ): Promise<BagOrderResponseVm> {
     const bag = await  BagService.validBagNumber(payload.bagNumber);
@@ -1194,33 +1194,6 @@ export class WebDeliveryOutService {
     }
   }
 
-  async webScanPhoto(
-    payload: ScanOutPhotoVm,
-  ): Promise<WebScanPhotoResponseVm> {
-
-    const qbig = createQueryBuilder();
-    qbig.addSelect('attachment_tms.url', 'url');
-    qbig.from('attachment_tms', 'attachment_tms');
-    qbig.innerJoin(
-      'do_pod',
-      'do_pod',
-      'do_pod.photo_id = attachment_tms.attachment_tms_id AND attachment_tms.is_deleted = false',
-    );
-    qbig.where(
-      'attachment_tms.attachment_tms_id = :photoId AND attachment_tms.is_deleted = false',
-      {
-        photoId: payload.photoId,
-      },
-    );
-
-    const data = await qbig.getRawOne();
-    const result = new WebScanPhotoResponseVm();
-
-    if (data) {
-        result.url  = data.url;
-      }
-    return result;
-  }
   /**
    *
    *
