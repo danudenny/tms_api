@@ -231,6 +231,15 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.scanOutLoadForEdit(payload, true);
   }
 
+  @Post('bagDeliverLoadForEdit')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutResponseForEditVm })
+  public async scanOutBagDeliverLoadForEdit(@Body() payload: WebScanOutLoadForEditVm) {
+    return this.webDeliveryOutService.scanOutDeliverLoadForEdit(payload, true);
+  }
+
   @Post('bagItemForPrint')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
