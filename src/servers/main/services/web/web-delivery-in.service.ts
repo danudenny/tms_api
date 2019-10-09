@@ -1834,8 +1834,8 @@ export class WebDeliveryInService {
   private async getDataRawLoadScanBranch(podScanInBranchId: string) {
     const rawQuery = `
       SELECT
-        COALESCE(p1.awb_number, p2.awb_number) as awb_number,
-        CONCAT(bag.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bag_number,
+        COALESCE(p1.awb_number, p2.awb_number) as "awbNumber",
+        CONCAT(bag.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as "bagNumber",
         COALESCE(p1.bag_item_id, p2.bag_item_id) as bag_item_id,
         COALESCE(p2.scan, false) as "isFiltered",
         COALESCE(p2.trouble, false) as trouble,
@@ -1843,7 +1843,7 @@ export class WebDeliveryInService {
         WHEN true THEN 'warning'
         ELSE 'ok' END AS status,
         CASE COALESCE(p2.trouble, false)
-        WHEN true THEN CONCAT('Resi ', p2.awb_number, 'tidak ada dalam gabung paket')
+        WHEN true THEN CONCAT('Resi ', p2.awb_number, ' tidak ada dalam gabung paket')
         ELSE '' END AS message
       FROM (
         SELECT bia.awb_number as awb_number,
