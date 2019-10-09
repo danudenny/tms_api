@@ -29,13 +29,10 @@ import {
   WebScanOutResponseForEditVm,
   WebScanOutResponseForPrintVm,
 } from '../../models/web-scan-out-response.vm';
-import { WebDeliveryList } from '../../models/web-delivery-list-payload.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { BagOrderResponseVm} from '../../models/bag-order-detail-response.vm';
 import { BagAwbVm } from '../../models/bag-order-response.vm';
-import { WebScanPhotoResponseVm } from '../../models/web-scan-photo-response.vm';
-import { ScanOutPhotoVm } from '../../models/scan-out-photo-response.vm';
 // #endregion
 
 @ApiUseTags('Web Delivery Out')
