@@ -1017,6 +1017,9 @@ export class WebDeliveryOutService {
         'COUNT (t3.*) FILTER (WHERE t5.awb_status_id_last = 14000)',
         'totalAwb',
       ],
+      [
+        'COUNT (t3.*)', 'totalAssigned',
+      ],
       ['t2.fullname', 'nickname'],
       ['t4.is_cod', 'isCod'],
       [
@@ -1046,7 +1049,6 @@ export class WebDeliveryOutService {
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanOutDeliverListResponseVm();
-
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
