@@ -760,40 +760,39 @@ export class WebDeliveryInService {
 
     const awb = await AwbService.validAwbBagNumber(awbNumber);
     if (awb) {
-      const statusCode = await AwbService.awbStatusGroup(awb.awbStatusIdLast);
       // TODO: change validate status code ??
-      // ================================================================
-      switch (statusCode) {
-        case 'IN':
-          if (awb.branchIdLast == permissonPayload.branchId) {
-            // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
-            result.message = `Resi ${awbNumber} sudah pernah scan in`;
-          } else {
-            // TODO: construct data Awb Problem
-            // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
-            // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
-            // save data to awb_trouble
-            await AwbTroubleService.fromScanIn(awbNumber, awb.awbStatusIdLast);
-            result.message =
-              `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
-              `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
-          }
-          break;
-
-        case 'POD':
-          result.message = `Resi ${awbNumber} sudah di proses POD`;
-          break;
-
-        case 'OUT':
-          // NOTE: check condition disable on check branchIdNext
-          // awb.branchIdNext == permissonPayload.branchId;
-          break;
-
-        default:
-          result.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
-          break;
-      }
-      // =====================================================================
+      // #region check awb status
+      // const statusCode = await AwbService.awbStatusGroup(awb.awbStatusIdLast);
+      // // ================================================================
+      // switch (statusCode) {
+      //   case 'IN':
+      //     if (awb.branchIdLast == permissonPayload.branchId) {
+      //       // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
+      //       result.message = `Resi ${awbNumber} sudah pernah scan in`;
+      //     } else {
+      //       // TODO: construct data Awb Problem
+      //       // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
+      //       // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
+      //       // save data to awb_trouble
+      //       await AwbTroubleService.fromScanIn(awbNumber, awb.awbStatusIdLast);
+      //       result.message =
+      //         `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
+      //         `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+      //     }
+      //     break;
+      //   case 'POD':
+      //     result.message = `Resi ${awbNumber} sudah di proses POD`;
+      //     break;
+      //   case 'OUT':
+      //     // NOTE: check condition disable on check branchIdNext
+      //     // awb.branchIdNext == permissonPayload.branchId;
+      //     break;
+      //   default:
+      //     result.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
+      //     break;
+      // }
+      // =======================================================================
+      // #endregion
 
       // TODO: handle validasi statusCode ??
       if (permissonPayload.branchId) {
