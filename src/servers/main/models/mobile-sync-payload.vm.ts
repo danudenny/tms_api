@@ -10,9 +10,10 @@ export class MobileSyncPayloadVm {
 }
 
 export class MobileSyncImagePayloadVm {
-  @ApiModelPropertyOptional()
-  id?: number;
+  // do_pod_deliver_detail_id
+  @ApiModelProperty()
+  id: string;
 
-  @ApiModelPropertyOptional()
-  awbItemId?: number;
+  @ApiModelProperty()
+  awbItemId: string;
 }

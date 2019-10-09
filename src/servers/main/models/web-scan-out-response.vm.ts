@@ -51,6 +51,9 @@ export class WebScanInResponseVm {
 
   @ApiModelProperty()
   branchIdTo: string;
+
+  @ApiModelProperty()
+  url: string;
 }
 
 export class WebScanInDeliverResponseVm {
@@ -65,6 +68,9 @@ export class WebScanInDeliverResponseVm {
 
   @ApiModelProperty()
   description: string;
+
+  @ApiModelProperty()
+  totalAssigned: number;
 
   @ApiModelProperty()
   totalDelivery: number;

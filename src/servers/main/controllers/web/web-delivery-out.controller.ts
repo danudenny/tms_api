@@ -231,6 +231,15 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.scanOutLoadForEdit(payload, true);
   }
 
+  @Post('bagDeliverLoadForEdit')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutResponseForEditVm })
+  public async scanOutBagDeliverLoadForEdit(@Body() payload: WebScanOutLoadForEditVm) {
+    return this.webDeliveryOutService.scanOutDeliverLoadForEdit(payload, true);
+  }
+
   @Post('bagItemForPrint')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -246,15 +255,7 @@ export class WebDeliveryOutController {
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: BagOrderResponseVm })
   public async bagOrderDetail(@Body() payload: BagAwbVm) {
-    return this.webDeliveryOutService.bagorderdetail(payload);
+    return this.webDeliveryOutService.bagOrderDetail(payload);
   }
 
-  @Post('photo')
-  @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanPhotoResponseVm })
-  public async webScanPhoto(@Body() payload: ScanOutPhotoVm) {
-    return this.webDeliveryOutService.webScanPhoto(payload);
-  }
 }

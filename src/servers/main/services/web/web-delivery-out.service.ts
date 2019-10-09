@@ -932,8 +932,10 @@ export class WebDeliveryOutService {
       ['t1.do_pod_method', 'doPodMethod'],
       ['t1.vehicle_number', 'vehicleNumber'],
       ['t1.branch_id_to', 'branchIdTo'],
+      ['t1.photo_id', 'PhotoId'],
       ['t2.fullname', 'nickname'],
       ['t3.branch_name', 'branchTo'],
+      ['t4.url', 'url'],
     );
     // TODO: relation userDriver to Employee Driver
 
@@ -943,6 +945,10 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoin(e => e.attachment, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     if (isHub) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB));
       q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
@@ -1011,6 +1017,9 @@ export class WebDeliveryOutService {
         'COUNT (t3.*) FILTER (WHERE t5.awb_status_id_last = 14000)',
         'totalAwb',
       ],
+      [
+        'COUNT (t3.*)', 'totalAssigned',
+      ],
       ['t2.fullname', 'nickname'],
       ['t4.is_cod', 'isCod'],
       [
@@ -1040,7 +1049,6 @@ export class WebDeliveryOutService {
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanOutDeliverListResponseVm();
-
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
@@ -1145,7 +1153,7 @@ export class WebDeliveryOutService {
     return result;
   }
 
-  async bagorderdetail(
+  async bagOrderDetail(
     payload: BagAwbVm,
   ): Promise<BagOrderResponseVm> {
     const bag = await  BagService.validBagNumber(payload.bagNumber);
@@ -1186,33 +1194,6 @@ export class WebDeliveryOutService {
     }
   }
 
-  async webScanPhoto(
-    payload: ScanOutPhotoVm,
-  ): Promise<WebScanPhotoResponseVm> {
-
-    const qbig = createQueryBuilder();
-    qbig.addSelect('attachment_tms.url', 'url');
-    qbig.from('attachment_tms', 'attachment_tms');
-    qbig.innerJoin(
-      'do_pod',
-      'do_pod',
-      'do_pod.photo_id = attachment_tms.attachment_tms_id AND attachment_tms.is_deleted = false',
-    );
-    qbig.where(
-      'attachment_tms.attachment_tms_id = :photoId AND attachment_tms.is_deleted = false',
-      {
-        photoId: payload.photoId,
-      },
-    );
-
-    const data = await qbig.getRawOne();
-    const result = new WebScanPhotoResponseVm();
-
-    if (data) {
-        result.url  = data.url;
-      }
-    return result;
-  }
   /**
    *
    *
@@ -1365,7 +1346,7 @@ export class WebDeliveryOutService {
       // Get Data for 3pl Method
       q.selectRaw(
         ['t1.do_pod_id', 'doPodId'],
-        ['t1.employee_id_driver', 'employeeIdDriver'],
+        ['t1.user_id_driver', 'employeeIdDriver'],
         ['t1.partner_logistic_id', 'partnerLogisticId'],
         ['t4.partner_logistic_name', 'partnerLogisticName'],
         ['t1.do_pod_method', 'doPodMethod'],
@@ -1377,7 +1358,7 @@ export class WebDeliveryOutService {
         ['t3.branch_code', 'branchCode'],
       );
       // TODO: fix query relation to employee
-      q.innerJoin(e => e.userDriver, 't2', j =>
+      q.innerJoin(e => e.userDriver.employee, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.innerJoin(e => e.branchTo, 't3', j =>
@@ -1391,17 +1372,17 @@ export class WebDeliveryOutService {
       // Get Data for internal Method
       q.selectRaw(
         ['t1.do_pod_id', 'doPodId'],
-        ['t1.employee_id_driver', 'employeeIdDriver'],
+        ['t1.user_id_driver', 'employeeIdDriver'],
         ['t1.do_pod_method', 'doPodMethod'],
         ['t1.vehicle_number', 'vehicleNumber'],
         ['t1.branch_id_to', 'branchIdTo'],
-        ['t2.username', 'employeeName'],
+        ['t2.fullname', 'employeeName'],
         ['t2.nik', 'nik'],
         ['t3.branch_name', 'branchTo'],
         ['t3.branch_code', 'branchCode'],
       );
       // TODO: fix query relation to employee
-      q.innerJoin(e => e.userDriver, 't2', j =>
+      q.innerJoin(e => e.userDriver.employee, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.innerJoin(e => e.branchTo, 't3', j =>
@@ -1467,6 +1448,67 @@ export class WebDeliveryOutService {
       q2.andWhere(e => e.doPodId, w => w.equals(doPodId));
       q2.andWhere(e => e.isDeleted, w => w.isFalse());
     }
+
+    const data2 = await q2.exec();
+    // Get Data for scanout detail end
+
+    const result = new WebScanOutResponseForEditVm();
+
+    result.data = data;
+    result.data_detail = data2;
+
+    return result;
+  }
+
+  async scanOutDeliverLoadForEdit(
+    payload: WebScanOutLoadForEditVm,
+    isHub = false,
+  ): Promise<WebScanOutResponseForEditVm> {
+    const doPodDeliverId = payload.doPodId;
+    const doPodMethod = payload.doPodMethod;
+
+    // Get Data from do_pod scanout start
+    const repo = new OrionRepositoryService(DoPodDeliver, 't1');
+    const q = repo.findAllRaw();
+
+    // Get Data for internal Method
+    q.selectRaw(
+      ['t1.do_pod_deliver_id', 'doPodId'],
+      ['t1.user_id_driver', 'employeeIdDriver'],
+      ['t1.branch_id', 'branchIdTo'],
+      ['t2.fullname', 'employeeName'],
+      ['t2.nik', 'nik'],
+      ['t3.branch_name', 'branchTo'],
+      ['t3.branch_code', 'branchCode'],
+    );
+    // TODO: fix query relation to employee
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.doPodDeliverId, w => w.equals(doPodDeliverId));
+
+    const data = await q.exec();
+    // Get Data from do_pod scanout end
+
+    // Get Data for scanout detail start
+    const repo2 = new OrionRepositoryService(DoPodDeliverDetail, 'tb1');
+    const q2 = repo2.findAllRaw();
+
+    // Get Data for scanout for awb detail
+    q2.selectRaw(
+      ['tb2.awb_number', 'awbNumber'],
+      [`CONCAT(CAST(tb2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      ['tb2.consignee_name', 'consigneeName'],
+    );
+
+    q2.innerJoin(e => e.awbItem.awb, 'tb2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q2.andWhere(e => e.doPodDeliverId, w => w.equals(doPodDeliverId));
+    q2.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data2 = await q2.exec();
     // Get Data for scanout detail end
