@@ -945,7 +945,7 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.attachment, 't4', j =>
+    q.leftJoin(e => e.attachment, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -1017,6 +1017,9 @@ export class WebDeliveryOutService {
         'COUNT (t3.*) FILTER (WHERE t5.awb_status_id_last = 14000)',
         'totalAwb',
       ],
+      [
+        'COUNT (t3.*)', 'totalAssigned',
+      ],
       ['t2.fullname', 'nickname'],
       ['t4.is_cod', 'isCod'],
       [
@@ -1046,7 +1049,6 @@ export class WebDeliveryOutService {
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanOutDeliverListResponseVm();
-
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
@@ -1151,7 +1153,7 @@ export class WebDeliveryOutService {
     return result;
   }
 
-  async bagorderdetail(
+  async bagOrderDetail(
     payload: BagAwbVm,
   ): Promise<BagOrderResponseVm> {
     const bag = await  BagService.validBagNumber(payload.bagNumber);
@@ -1192,33 +1194,6 @@ export class WebDeliveryOutService {
     }
   }
 
-  async webScanPhoto(
-    payload: ScanOutPhotoVm,
-  ): Promise<WebScanPhotoResponseVm> {
-
-    const qbig = createQueryBuilder();
-    qbig.addSelect('attachment_tms.url', 'url');
-    qbig.from('attachment_tms', 'attachment_tms');
-    qbig.innerJoin(
-      'do_pod',
-      'do_pod',
-      'do_pod.photo_id = attachment_tms.attachment_tms_id AND attachment_tms.is_deleted = false',
-    );
-    qbig.where(
-      'attachment_tms.attachment_tms_id = :photoId AND attachment_tms.is_deleted = false',
-      {
-        photoId: payload.photoId,
-      },
-    );
-
-    const data = await qbig.getRawOne();
-    const result = new WebScanPhotoResponseVm();
-
-    if (data) {
-        result.url  = data.url;
-      }
-    return result;
-  }
   /**
    *
    *

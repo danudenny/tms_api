@@ -70,6 +70,9 @@ export class WebScanInDeliverResponseVm {
   description: string;
 
   @ApiModelProperty()
+  totalAssigned: number;
+
+  @ApiModelProperty()
   totalDelivery: number;
 
   @ApiModelProperty()

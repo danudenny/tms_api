@@ -36,8 +36,8 @@ import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-his
 import { DropoffSortationDetail } from '../../../../shared/orm-entity/dropoff_sortation_detail';
 import { DropoffHubDetail } from '../../../../shared/orm-entity/dropoff_hub_detail';
 import { DropoffSortation } from '../../../../shared/orm-entity/dropoff_sortation';
-import { createQueryBuilder } from 'typeorm';
 import { chain, map, omit } from 'lodash';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 // #endregion
 
@@ -760,40 +760,39 @@ export class WebDeliveryInService {
 
     const awb = await AwbService.validAwbBagNumber(awbNumber);
     if (awb) {
-      const statusCode = await AwbService.awbStatusGroup(awb.awbStatusIdLast);
       // TODO: change validate status code ??
-      // ================================================================
-      switch (statusCode) {
-        case 'IN':
-          if (awb.branchIdLast == permissonPayload.branchId) {
-            // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
-            result.message = `Resi ${awbNumber} sudah pernah scan in`;
-          } else {
-            // TODO: construct data Awb Problem
-            // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
-            // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
-            // save data to awb_trouble
-            await AwbTroubleService.fromScanIn(awbNumber, awb.awbStatusIdLast);
-            result.message =
-              `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
-              `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
-          }
-          break;
-
-        case 'POD':
-          result.message = `Resi ${awbNumber} sudah di proses POD`;
-          break;
-
-        case 'OUT':
-          // NOTE: check condition disable on check branchIdNext
-          // awb.branchIdNext == permissonPayload.branchId;
-          break;
-
-        default:
-          result.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
-          break;
-      }
-      // =====================================================================
+      // #region check awb status
+      // const statusCode = await AwbService.awbStatusGroup(awb.awbStatusIdLast);
+      // // ================================================================
+      // switch (statusCode) {
+      //   case 'IN':
+      //     if (awb.branchIdLast == permissonPayload.branchId) {
+      //       // NOTE: Mau IN tapi udah IN di BRANCH SAMA = TROUBLE(PASS)
+      //       result.message = `Resi ${awbNumber} sudah pernah scan in`;
+      //     } else {
+      //       // TODO: construct data Awb Problem
+      //       // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
+      //       // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
+      //       // save data to awb_trouble
+      //       await AwbTroubleService.fromScanIn(awbNumber, awb.awbStatusIdLast);
+      //       result.message =
+      //         `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
+      //         `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+      //     }
+      //     break;
+      //   case 'POD':
+      //     result.message = `Resi ${awbNumber} sudah di proses POD`;
+      //     break;
+      //   case 'OUT':
+      //     // NOTE: check condition disable on check branchIdNext
+      //     // awb.branchIdNext == permissonPayload.branchId;
+      //     break;
+      //   default:
+      //     result.message = `Resi ${awbNumber} tidak dapat SCAN IN, Harap hubungi kantor pusat`;
+      //     break;
+      // }
+      // =======================================================================
+      // #endregion
 
       // TODO: handle validasi statusCode ??
       if (permissonPayload.branchId) {
@@ -818,6 +817,7 @@ export class WebDeliveryInService {
 
           if (podScanInBranchDetail) {
             result.status = 'error';
+            result.trouble = true;
             result.message = `Resi ${awbNumber} sudah scan in`;
             // TODO: update data podScanInBranchDetail
           } else {
@@ -825,7 +825,6 @@ export class WebDeliveryInService {
             result.message = 'Success';
 
             if (bagNumber != '') {
-
               const bagData = await DeliveryService.validBagNumber(bagNumber);
               if (bagData) {
                 const bagItemAwb = await BagItemAwb.findOne({
@@ -857,16 +856,14 @@ export class WebDeliveryInService {
             } else {
               // NOTE: if awb item attr bagItemLast not null
               // find bag if lazy scan bag number
-              const podScanInBranchBag = await PodScanInBranchBag.findOne(
-                {
-                  where: {
-                    podScanInBranchId,
-                    bagItemId: awb.bagItemLast.bagItemId,
-                    bagId: awb.bagItemLast.bagId,
-                    isDeleted: false,
-                  },
+              const podScanInBranchBag = await PodScanInBranchBag.findOne({
+                where: {
+                  podScanInBranchId,
+                  bagItemId: awb.bagItemLast.bagItemId,
+                  bagId: awb.bagItemLast.bagId,
+                  isDeleted: false,
                 },
-              );
+              });
               Logger.log(podScanInBranchBag, '===============================');
               if (podScanInBranchBag) {
                 // set data bag
@@ -885,13 +882,21 @@ export class WebDeliveryInService {
               }
             }
 
+            // Create Awb Trouble if status warning
+            if (result.status == 'warning') {
+              await AwbTroubleService.fromScanIn(
+                awbNumber, awb.awbStatusIdLast, result.message,
+              );
+              result.trouble = true;
+            }
+
             const podScanInBranchDetailObj = PodScanInBranchDetail.create();
             podScanInBranchDetailObj.podScanInBranchId = podScanInBranchId;
             podScanInBranchDetailObj.bagId = bagId;
             podScanInBranchDetailObj.bagItemId = bagItemId;
             podScanInBranchDetailObj.awbId = awb.awbItem.awbId;
             podScanInBranchDetailObj.awbItemId = awb.awbItemId;
-            podScanInBranchDetailObj.isTrouble = result.status == 'warning' ? true : false;
+            podScanInBranchDetailObj.isTrouble = result.trouble;
             await PodScanInBranchDetail.save(podScanInBranchDetailObj);
 
             // AFTER Scan IN ===============================================
@@ -1182,7 +1187,7 @@ export class WebDeliveryInService {
             if (podScanInBranchBag) {
               totalError += 1;
               response.status = 'error';
-              response.message = 'Already exist!!!';
+              response.message = 'Gabungan paket sudah discan sebelumnya';
             } else {
               const bagItem = await BagItem.findOne({
                 where: {
@@ -1464,7 +1469,8 @@ export class WebDeliveryInService {
     if (dataBag && payload.bagNumber == '') {
       const bagItem = await BagService.getBagNumber(dataBag.bagItemId);
       if (bagItem) {
-        payload.bagNumber = bagItem.bag.bagNumber + bagItem.bagSeq.toString().padStart(3, '0');
+        payload.bagNumber =
+          bagItem.bag.bagNumber + bagItem.bagSeq.toString().padStart(3, '0');
       }
     }
 
@@ -1549,74 +1555,7 @@ export class WebDeliveryInService {
 
     if (podScanInBranch) {
       podScanInBranchId = podScanInBranch.podScanInBranchId;
-      const qz = createQueryBuilder();
-      qz.select('bia.awb_number', 'awbNumber');
-      qz.addSelect(
-        `CONCAT(bag.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`,
-        'bagNumber',
-      );
-      qz.addSelect(`COALESCE(scan_detail.scan, false)`, 'isFiltered');
-      qz.addSelect(`COALESCE(scan_detail.trouble, false)`, 'trouble');
-      qz.addSelect(
-        `CASE COALESCE(scan_detail.trouble, false)
-        WHEN true THEN 'error'
-        ELSE 'ok' END`,
-        'status',
-      );
-      qz.addSelect(
-        `CASE COALESCE(scan_detail.trouble, false)
-        WHEN true THEN CONCAT('Resi ', bia.awb_number, 'tidak ada dalam gabung paket')
-        ELSE '' END`,
-        'message',
-      );
-      qz.from('pod_scan_in_branch_bag', 'psi_bag');
-      qz.innerJoin(
-        'bag_item_awb',
-        'bia',
-        'bia.bag_item_id = psi_bag.bag_item_id and bia.is_deleted = false',
-      );
-      qz.leftJoin(
-        'bag_item',
-        'bi',
-        'bi.bag_item_id = psi_bag.bag_item_id and bi.is_deleted = false',
-      );
-      qz.leftJoin(
-        'bag',
-        'bag',
-        'bag.bag_id = psi_bag.bag_id and bag.is_deleted = false',
-      );
-      qz.leftJoin(
-        qbJoin => {
-          qbJoin.select('aia.awb_number', 'awbNumber');
-          qbJoin.addSelect('aia.awb_item_id', 'awb_item_id');
-          qbJoin.addSelect('true', 'scan');
-          qbJoin.addSelect('psi_bd.is_trouble', 'trouble');
-          qbJoin.from('pod_scan_in_branch_detail', 'psi_bd');
-          qbJoin.leftJoin(
-            'awb_item_attr',
-            'aia',
-            'aia.awb_item_id = psi_bd.awb_item_id and aia.is_deleted = false',
-          );
-          qbJoin.where(
-            'psi_bd.pod_scan_in_branch_id = :podScanInBranchId AND psi_bd.is_deleted = false',
-            {
-              podScanInBranchId,
-            },
-          );
-          return qbJoin;
-        },
-        'scan_detail',
-        'scan_detail.awb_item_id = bia.awb_item_id',
-      );
-      qz.where(
-        'psi_bag.pod_scan_in_branch_id = :podScanInBranchId AND psi_bag.is_deleted = false',
-        {
-          podScanInBranchId,
-        },
-      );
-
-      data = await qz.getRawMany();
-
+      data = await this.getDataRawLoadScanBranch(podScanInBranchId);
       if (data && data.length) {
         data = chain(data)
           .groupBy('bagNumber')
@@ -1898,4 +1837,47 @@ export class WebDeliveryInService {
   }
 
   // #endregion
+
+  private async getDataRawLoadScanBranch(podScanInBranchId: string) {
+    const rawQuery = `
+      SELECT
+        COALESCE(p1.awb_number, p2.awb_number) as "awbNumber",
+        CONCAT(bag.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as "bagNumber",
+        COALESCE(p1.bag_item_id, p2.bag_item_id) as bag_item_id,
+        COALESCE(p2.scan, false) as "isFiltered",
+        COALESCE(p2.trouble, false) as trouble,
+        CASE COALESCE(p2.trouble, false)
+        WHEN true THEN 'warning'
+        ELSE 'ok' END AS status,
+        CASE COALESCE(p2.trouble, false)
+        WHEN true THEN CONCAT('Resi ', p2.awb_number, ' tidak ada dalam gabung paket')
+        ELSE '' END AS message
+      FROM (
+        SELECT bia.awb_number as awb_number,
+          bia.awb_item_id,
+          bia.bag_item_id,
+          false as scan
+        FROM "public"."bag_item_awb" "bia"
+        JOIN "public"."pod_scan_in_branch_bag" "psi_bag" ON bia.bag_item_id = psi_bag.bag_item_id and psi_bag.is_deleted = false
+        WHERE
+        psi_bag.pod_scan_in_branch_id = '${podScanInBranchId}'
+        AND psi_bag.is_deleted = false
+      ) p1
+      FULL OUTER JOIN (
+        SELECT aia.awb_number    AS awb_number,
+          aia.awb_item_id,
+          psi_bd.bag_item_id,
+          psi_bd.is_trouble AS trouble,
+          true as scan
+        FROM "public"."pod_scan_in_branch_detail" "psi_bd"
+        LEFT JOIN "public"."awb_item_attr" "aia"
+        ON aia.awb_item_id = psi_bd.awb_item_id and aia.is_deleted = false
+        WHERE psi_bd.pod_scan_in_branch_id = '${podScanInBranchId}'
+        AND psi_bd.is_deleted = false
+      ) p2 ON p1.awb_item_id = p2.awb_item_id
+      LEFT JOIN "public"."bag_item" "bi" ON bi.bag_item_id = p1.bag_item_id and bi.is_deleted = false
+      LEFT JOIN "public"."bag" "bag" ON bag.bag_id = bi.bag_id and bag.is_deleted = false
+    `;
+    return await RawQueryService.query(rawQuery);
+  }
 }

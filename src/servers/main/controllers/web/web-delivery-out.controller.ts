@@ -255,15 +255,7 @@ export class WebDeliveryOutController {
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: BagOrderResponseVm })
   public async bagOrderDetail(@Body() payload: BagAwbVm) {
-    return this.webDeliveryOutService.bagorderdetail(payload);
+    return this.webDeliveryOutService.bagOrderDetail(payload);
   }
 
-  @Post('photo')
-  @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanPhotoResponseVm })
-  public async webScanPhoto(@Body() payload: ScanOutPhotoVm) {
-    return this.webDeliveryOutService.webScanPhoto(payload);
-  }
 }
