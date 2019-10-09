@@ -1485,6 +1485,67 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  async scanOutDeliverLoadForEdit(
+    payload: WebScanOutLoadForEditVm,
+    isHub = false,
+  ): Promise<WebScanOutResponseForEditVm> {
+    const doPodDeliverId = payload.doPodId;
+    const doPodMethod = payload.doPodMethod;
+
+    // Get Data from do_pod scanout start
+    const repo = new OrionRepositoryService(DoPodDeliver, 't1');
+    const q = repo.findAllRaw();
+
+    // Get Data for internal Method
+    q.selectRaw(
+      ['t1.do_pod_deliver_id', 'doPodId'],
+      ['t1.user_id_driver', 'employeeIdDriver'],
+      ['t1.branch_id', 'branchIdTo'],
+      ['t2.fullname', 'employeeName'],
+      ['t2.nik', 'nik'],
+      ['t3.branch_name', 'branchTo'],
+      ['t3.branch_code', 'branchCode'],
+    );
+    // TODO: fix query relation to employee
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.doPodDeliverId, w => w.equals(doPodDeliverId));
+
+    const data = await q.exec();
+    // Get Data from do_pod scanout end
+
+    // Get Data for scanout detail start
+    const repo2 = new OrionRepositoryService(DoPodDeliverDetail, 'tb1');
+    const q2 = repo2.findAllRaw();
+
+    // Get Data for scanout for awb detail
+    q2.selectRaw(
+      ['tb2.awb_number', 'awbNumber'],
+      [`CONCAT(CAST(tb2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      ['tb2.consignee_name', 'consigneeName'],
+    );
+
+    q2.innerJoin(e => e.awbItem.awb, 'tb2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q2.andWhere(e => e.doPodDeliverId, w => w.equals(doPodDeliverId));
+    q2.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data2 = await q2.exec();
+    // Get Data for scanout detail end
+
+    const result = new WebScanOutResponseForEditVm();
+
+    result.data = data;
+    result.data_detail = data2;
+
+    return result;
+  }
+
   async getBagItemId(
     payload: WebScanOutBagForPrintVm,
   ): Promise<WebScanOutResponseForPrintVm> {
