@@ -14,6 +14,6 @@ export class MobileSyncImagePayloadVm {
   @ApiModelProperty()
   id: string;
 
-  @ApiModelPropertyOptional()
-  awbItemId?: number;
+  @ApiModelProperty()
+  awbItemId: string;
 }
