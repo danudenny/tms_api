@@ -19,6 +19,12 @@ export class DoPodRepository extends Repository<DoPod> {
       doPodCode: true,
       doPodMethod: true,
       doPodType: true,
+      description: true,
+      vehicleNumber: true,
+      userIdDriver: true,
+      userIdCreated: true,
+      totalScanOutAwb: true,
+      totalScanOutBag: true,
       transactionStatus: {
         transactionStatusId: true,
         statusCategory: true,

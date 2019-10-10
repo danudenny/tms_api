@@ -49,8 +49,8 @@ import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag'
 import { BagService } from '../v1/bag.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
-import { BagOrderResponseVm } from '../../models/bag-order-detail-response.vm';
-import { BagAwbVm } from '../../models/bag-order-response.vm';
+import { BagOrderResponseVm, BagDetailResponseVm } from '../../models/bag-order-detail-response.vm';
+import { BagAwbVm, BagDetailVm } from '../../models/bag-order-response.vm';
 import { WebScanPhotoResponseVm } from '../../models/web-scan-photo-response.vm';
 import { ScanOutPhotoVm } from '../../models/scan-out-photo-response.vm';
 import { url } from 'inspector';
@@ -1152,6 +1152,23 @@ export class WebDeliveryOutService {
       if (data) {
         result.awbNumber = awb;
       }
+      return result;
+    }
+  }
+
+  async doPodDetail(payload: BagDetailVm): Promise<BagDetailResponseVm> {
+    const doPod = await DoPodRepository.getDataById(payload.doPodId);
+
+    if (doPod) {
+      const result = new BagDetailResponseVm();
+      result.doPodCode = doPod.doPodCode;
+      result.userIdDriver = doPod.userIdDriver;
+      result.userIdCreated = doPod.userIdCreated;
+      result.vehicleNumber = doPod.vehicleNumber;
+      result.branchToName = doPod.branchTo.branchName;
+      result.totalScanOutAwb = doPod.totalScanOutAwb;
+      result.description = doPod.description;
+
       return result;
     }
   }
