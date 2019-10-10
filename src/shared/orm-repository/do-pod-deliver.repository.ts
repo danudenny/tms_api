@@ -23,6 +23,7 @@ export class DoPodDeliverRepository extends Repository<DoPodDeliver> {
       },
       userDriver: {
         userId: true,
+        employeeId: true,
         username: true,
         employee: {
           employeeId: true,

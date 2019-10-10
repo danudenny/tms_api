@@ -380,6 +380,7 @@ export class DoPodDetailPostMetaQueueService {
 
   }
 
+  // NOTE: general purpose
   public static async createJobByAwbUpdateStatus(
     awbItemId: number,
     awbStatusId: number,
@@ -398,6 +399,29 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver: null,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
+  public static async createJobByAwbDeliver(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    userId: number,
+    employeeIdDriver: number,
+  ) {
+    // TODO: need to be reviewed ??
+    // find awbStatusIdLastPublic on awb_status
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver,
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }

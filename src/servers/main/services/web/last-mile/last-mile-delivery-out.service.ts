@@ -15,6 +15,7 @@ import moment = require('moment');
 import { DoPod } from '../../../../../shared/orm-entity/do-pod';
 import { IsNull, createQueryBuilder } from 'typeorm';
 import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
+import { DoPodDeliverRepository } from '../../../../../shared/orm-repository/do-pod-deliver.repository';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -77,13 +78,7 @@ export class LastMileDeliveryOutService {
     let totalAdd = 0;
     let totalRemove = 0;
     // edit do_pod (Surat Jalan)
-    const doPod = await DoPod.findOne({
-      where: {
-        doPodId: payload.doPodId,
-        totalScanIn: IsNull(),
-        isDeleted: false,
-      },
-    });
+    const doPod = await DoPodDeliverRepository.getDataById(payload.doPodId);
     if (doPod) {
       // looping data list add awb number
       if (payload.addAwbNumber && payload.addAwbNumber.length) {
@@ -102,14 +97,18 @@ export class LastMileDeliveryOutService {
           // awb_item_attr and awb_history ??
           await DeliveryService.updateAwbAttr(
             awb.awbItemId,
-            doPod.branchIdTo,
+            null,
             AWB_STATUS.OUT_BRANCH,
           );
 
           // TODO: need refactoring
           // NOTE: queue by Bull
-          DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
-            doPodDetail.doPodDetailId,
+          DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
+            awb.awbItemId,
+            AWB_STATUS.OUT_BRANCH,
+            permissonPayload.branchId,
+            authMeta.userId,
+            doPod.userDriver.employeeId,
           );
         }
         totalAdd = payload.addAwbNumber.length;
@@ -134,38 +133,43 @@ export class LastMileDeliveryOutService {
             // NOTE: update awb_item_attr and awb_history
             await DeliveryService.updateAwbAttr(
               awb.awbItemId,
-              doPod.branchIdTo,
+              null,
               AWB_STATUS.IN_BRANCH,
             );
             // TODO: need refactoring
             // NOTE: queue by Bull
-            DoPodDetailPostMetaQueueService.createJobByScanInAwb(
-              doPodDetail.doPodDetailId,
+            DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
+              awb.awbItemId,
+              AWB_STATUS.IN_BRANCH,
+              permissonPayload.branchId,
+              authMeta.userId,
+              doPod.userDriver.employeeId,
             );
           }
         }
         totalRemove = payload.removeAwbNumber.length;
       }
 
-      const totalItem = await LastMileDeliveryOutService.getTotalDetailById(doPod.doPodId);
-      const totalScanOut = doPod.totalScanOutAwb + totalAdd - totalRemove;
+      // const totalItem = await LastMileDeliveryOutService.getTotalDetailById(doPod.doPodId);
+      // const totalScanOut = doPod.totalScanOutAwb + totalAdd - totalRemove;
       // update data
       // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
-      const updateDoPod = {
-        doPodMethod:
-          payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
-        partnerLogisticId: payload.partnerLogisticId,
-        branchIdTo: payload.branchIdTo,
-        userIdDriver: payload.userIdDriver,
-        vehicleNumber: payload.vehicleNumber,
-        description: payload.desc,
-        transcationStatusIdLast: 1100,
-        branchId: permissonPayload.branchId,
-        userId: authMeta.userId,
-        totalItem,
-        totalScanOut,
-      };
-      await DoPod.update(doPod.doPodId, updateDoPod);
+
+      // const updateDoPod = {
+      //   doPodMethod:
+      //     payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
+      //   partnerLogisticId: payload.partnerLogisticId,
+      //   branchIdTo: payload.branchIdTo,
+      //   userIdDriver: payload.userIdDriver,
+      //   vehicleNumber: payload.vehicleNumber,
+      //   description: payload.desc,
+      //   transcationStatusIdLast: 1100,
+      //   branchId: permissonPayload.branchId,
+      //   userId: authMeta.userId,
+      //   totalItem,
+      //   totalScanOut,
+      // };
+      // await DoPod.update(doPod.doPodDeliverId, updateDoPod);
 
       // TODO: insert table audit history
 
@@ -179,12 +183,10 @@ export class LastMileDeliveryOutService {
     return result;
   }
 
-  static  async scanOutDeliverLoadForEdit(
+  static async scanOutDeliverLoadForEdit(
     payload: WebScanOutLoadForEditVm,
-    isHub = false,
   ): Promise<WebScanOutResponseForEditVm> {
     const doPodDeliverId = payload.doPodId;
-    const doPodMethod = payload.doPodMethod;
 
     // Get Data from do_pod scanout start
     const repo = new OrionRepositoryService(DoPodDeliver, 't1');
