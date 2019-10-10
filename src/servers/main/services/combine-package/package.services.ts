@@ -169,6 +169,7 @@ export class PackageService {
       qb.addSelect('b.district_id_to', 'districtId');
       qb.addSelect('f.district_name', 'districtName');
       qb.addSelect('d.consignee_name', 'consigneeName');
+      qb.addSelect('d.consignee_address', 'consigneeAddress');
       qb.addSelect('a.awb_item_id', 'awbItemId');
       qb.addSelect('d.awb_number', 'awbNumber');
       qb.addSelect('d.customer_account_id', 'customerId');
