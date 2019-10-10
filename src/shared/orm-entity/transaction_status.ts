@@ -13,24 +13,28 @@ export class TransactionStatus extends TmsBaseEntity {
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name: 'status_category',
   })
   statusCategory: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name: 'status_code',
   })
   statusCode: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name: 'status_title',
   })
   statusTitle: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
+    name: 'status_name',
   })
   statusName: string;
 }

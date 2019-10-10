@@ -161,7 +161,7 @@ export class WebDeliveryOutService {
           const doPodDetail = DoPodDetail.create();
           doPodDetail.doPodId = payload.doPodId;
           doPodDetail.awbItemId = awb.awbItemId;
-          doPodDetail.transactionStatusIdLast = 1000;
+          doPodDetail.transactionStatusIdLast = 800;
           doPodDetail.isScanOut = true;
           doPodDetail.scanOutType = 'awb';
           await DoPodDetail.save(doPodDetail);
@@ -173,6 +173,7 @@ export class WebDeliveryOutService {
             AWB_STATUS.OUT_BRANCH,
           );
 
+          // TODO: need refactoring
           // NOTE: queue by Bull
           DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
             doPodDetail.doPodDetailId,
@@ -203,6 +204,7 @@ export class WebDeliveryOutService {
               doPod.branchIdTo,
               AWB_STATUS.IN_BRANCH,
             );
+            // TODO: need refactoring
             // NOTE: queue by Bull
             DoPodDetailPostMetaQueueService.createJobByScanInAwb(
               doPodDetail.doPodDetailId,

@@ -1,4 +1,5 @@
-import { WebScanOutCreateDeliveryVm, WebScanOutLoadForEditVm, WebScanOutAwbVm } from '../../../models/web-scan-out.vm';
+// #region import
+import { WebScanOutCreateDeliveryVm, WebScanOutLoadForEditVm, WebScanOutAwbVm, WebScanOutEditVm } from '../../../models/web-scan-out.vm';
 import { WebScanOutCreateResponseVm, WebScanOutResponseForEditVm, WebScanOutAwbResponseVm } from '../../../models/web-scan-out-response.vm';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { DoPodDeliver } from '../../../../../shared/orm-entity/do-pod-deliver';
@@ -11,6 +12,10 @@ import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant'
 import { RedisService } from '../../../../../shared/services/redis.service';
 import { AwbTroubleService } from '../../../../../shared/services/awb-trouble.service';
 import moment = require('moment');
+import { DoPod } from '../../../../../shared/orm-entity/do-pod';
+import { IsNull, createQueryBuilder } from 'typeorm';
+import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
+// #endregion
 
 export class LastMileDeliveryOutService {
 
@@ -53,6 +58,124 @@ export class LastMileDeliveryOutService {
     result.message = 'success';
     result.doPodId = doPod.doPodDeliverId;
 
+    return result;
+  }
+
+  /**
+   * Edit DO POD AWB
+   * with type: Transit (Internal/3PL) and Criss Cross
+   * @param {WebScanOutCreateVm} payload
+   * @returns {Promise<WebScanOutCreateResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
+  async scanOutEdit(
+    payload: WebScanOutEditVm,
+  ): Promise<WebScanOutCreateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const result = new WebScanOutCreateResponseVm();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    let totalAdd = 0;
+    let totalRemove = 0;
+    // edit do_pod (Surat Jalan)
+    const doPod = await DoPod.findOne({
+      where: {
+        doPodId: payload.doPodId,
+        totalScanIn: IsNull(),
+        isDeleted: false,
+      },
+    });
+    if (doPod) {
+      // looping data list add awb number
+      if (payload.addAwbNumber && payload.addAwbNumber.length) {
+        for (const addAwb of payload.addAwbNumber) {
+          // find awb_item_attr
+          const awb = await DeliveryService.validAwbNumber(addAwb);
+          // add data do_pod_detail
+          const doPodDetail = DoPodDetail.create();
+          doPodDetail.doPodId = payload.doPodId;
+          doPodDetail.awbItemId = awb.awbItemId;
+          doPodDetail.transactionStatusIdLast = 800;
+          doPodDetail.isScanOut = true;
+          doPodDetail.scanOutType = 'awb';
+          await DoPodDetail.save(doPodDetail);
+
+          // awb_item_attr and awb_history ??
+          await DeliveryService.updateAwbAttr(
+            awb.awbItemId,
+            doPod.branchIdTo,
+            AWB_STATUS.OUT_BRANCH,
+          );
+
+          // TODO: need refactoring
+          // NOTE: queue by Bull
+          DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
+            doPodDetail.doPodDetailId,
+          );
+        }
+        totalAdd = payload.addAwbNumber.length;
+      }
+
+      // looping data list remove awb number
+      if (payload.removeAwbNumber && payload.removeAwbNumber.length) {
+        for (const addAwb of payload.removeAwbNumber) {
+          const awb = await DeliveryService.validAwbNumber(addAwb);
+          const doPodDetail = await DoPodDetail.findOne({
+            where: {
+              doPodId: payload.doPodId,
+              awbItemId: awb.awbItemId,
+              isDeleted: false,
+            },
+          });
+
+          if (doPodDetail) {
+            DoPodDetail.update(doPodDetail.doPodDetailId, {
+              isDeleted: true,
+            });
+            // NOTE: update awb_item_attr and awb_history
+            await DeliveryService.updateAwbAttr(
+              awb.awbItemId,
+              doPod.branchIdTo,
+              AWB_STATUS.IN_BRANCH,
+            );
+            // TODO: need refactoring
+            // NOTE: queue by Bull
+            DoPodDetailPostMetaQueueService.createJobByScanInAwb(
+              doPodDetail.doPodDetailId,
+            );
+          }
+        }
+        totalRemove = payload.removeAwbNumber.length;
+      }
+
+      const totalItem = await LastMileDeliveryOutService.getTotalDetailById(doPod.doPodId);
+      const totalScanOut = doPod.totalScanOutAwb + totalAdd - totalRemove;
+      // update data
+      // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
+      const updateDoPod = {
+        doPodMethod:
+          payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
+        partnerLogisticId: payload.partnerLogisticId,
+        branchIdTo: payload.branchIdTo,
+        userIdDriver: payload.userIdDriver,
+        vehicleNumber: payload.vehicleNumber,
+        description: payload.desc,
+        transcationStatusIdLast: 1100,
+        branchId: permissonPayload.branchId,
+        userId: authMeta.userId,
+        totalItem,
+        totalScanOut,
+      };
+      await DoPod.update(doPod.doPodId, updateDoPod);
+
+      // TODO: insert table audit history
+
+      result.status = 'ok';
+      result.message = 'success';
+    } else {
+      result.status = 'error';
+      result.message = 'Surat Jalan tidak valid/Sudah pernah Scan In';
+    }
+    result.doPodId = payload.doPodId;
     return result;
   }
 
@@ -262,5 +385,15 @@ export class LastMileDeliveryOutService {
     result.data = dataItem;
 
     return result;
+  }
+
+  // private
+  private static async getTotalDetailById(doPodId: string) {
+    const qb = createQueryBuilder();
+    qb.from('do_pod_detail', 'do_pod_detail');
+    qb.where('do_pod_detail.do_pod_id = :doPodId', {
+      doPodId,
+    });
+    return await qb.getCount();
   }
 }
