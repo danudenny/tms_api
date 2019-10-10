@@ -16,6 +16,8 @@ export class DoPodDeliverRepository extends Repository<DoPodDeliver> {
     q.select({
       doPodDeliverId: true,
       doPodDeliverCode: true,
+      totalAwb: true,
+      description: true,
       branch: {
         branchId: true,
         branchCode: true,

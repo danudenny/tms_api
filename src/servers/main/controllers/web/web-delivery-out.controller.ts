@@ -80,7 +80,17 @@ export class WebDeliveryOutController {
   public async scanOutCreateDelivery(
     @Body() payload: WebScanOutCreateDeliveryVm,
   ) {
-    return this.webDeliveryOutService.scanOutCreateDelivery(payload);
+    return LastMileDeliveryOutService.scanOutCreateDelivery(payload);
+  }
+
+  @Post('updateDeliver')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutCreateResponseVm })
+  @Transactional()
+  public async scanOutUpdateDeliver(@Body() payload: WebScanOutEditVm) {
+    return LastMileDeliveryOutService.scanOutUpdateDelivery(payload);
   }
 
   @Post('awb')
@@ -234,7 +244,9 @@ export class WebDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutResponseForEditVm })
-  public async scanOutAwbDeliverLoadForEdit(@Body() payload: WebScanOutLoadForEditVm) {
+  public async scanOutAwbDeliverLoadForEdit(
+    @Body() payload: WebScanOutLoadForEditVm,
+  ) {
     return LastMileDeliveryOutService.scanOutDeliverLoadForEdit(payload);
   }
 
@@ -243,7 +255,9 @@ export class WebDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutResponseForPrintVm })
-  public async scanOutBagItemForPrint(@Body() payload: WebScanOutBagForPrintVm) {
+  public async scanOutBagItemForPrint(
+    @Body() payload: WebScanOutBagForPrintVm,
+  ) {
     return this.webDeliveryOutService.getBagItemId(payload);
   }
 
@@ -255,5 +269,4 @@ export class WebDeliveryOutController {
   public async bagOrderDetail(@Body() payload: BagAwbVm) {
     return this.webDeliveryOutService.bagOrderDetail(payload);
   }
-
 }

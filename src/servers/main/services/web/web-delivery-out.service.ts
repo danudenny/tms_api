@@ -393,49 +393,6 @@ export class WebDeliveryOutService {
     return result;
   }
 
-  // TODO: move to last mile service
-  /**
-   * Create DO POD Deliver
-   * with type: Deliver (Sigesit)
-   * @param {WebScanOutCreateDeliveryVm} payload
-   * @returns {Promise<WebScanOutCreateResponseVm>}
-   * @memberof WebDeliveryOutService
-   */
-  async scanOutCreateDelivery(
-    payload: WebScanOutCreateDeliveryVm,
-  ): Promise<WebScanOutCreateResponseVm> {
-    const authMeta = AuthService.getAuthData();
-    const result = new WebScanOutCreateResponseVm();
-
-    // create do_pod_deliver (Surat Jalan Antar sigesit)
-    const doPod = DoPodDeliver.create();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    const doPodDateTime = moment(payload.doPodDateTime).toDate();
-
-    // NOTE: Tipe surat (jalan Antar Sigesit)
-    doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
-      doPodDateTime,
-    ); // generate code
-
-    // doPod.userIdDriver = payload.
-    doPod.userIdDriver = payload.userIdDriver || null;
-    doPod.doPodDeliverDateTime = doPodDateTime;
-    doPod.description = payload.desc || null;
-
-    doPod.branchId = permissonPayload.branchId;
-    doPod.userId = authMeta.userId;
-
-    // await for get do pod id
-    await DoPodDeliver.save(doPod);
-
-    // Populate return value
-    result.status = 'ok';
-    result.message = 'success';
-    result.doPodId = doPod.doPodDeliverId;
-
-    return result;
-  }
-
   /**
    * Create DO POD Detail
    * with scan awb number
