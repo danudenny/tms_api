@@ -118,7 +118,7 @@ export class WebDeliveryOutService {
     // await for get do pod id
     await this.doPodRepository.save(doPod);
 
-    // TODO: insert table audit history
+    await this.createAuditHistory(doPod.doPodId);
 
     // Populate return value
     result.status = 'ok';
@@ -152,36 +152,6 @@ export class WebDeliveryOutService {
       },
     });
     if (doPod) {
-      // looping data list add awb number
-      if (payload.addAwbNumber && payload.addAwbNumber.length) {
-        for (const addAwb of payload.addAwbNumber) {
-          // find awb_item_attr
-          const awb = await DeliveryService.validAwbNumber(addAwb);
-          // add data do_pod_detail
-          const doPodDetail = DoPodDetail.create();
-          doPodDetail.doPodId = payload.doPodId;
-          doPodDetail.awbItemId = awb.awbItemId;
-          doPodDetail.transactionStatusIdLast = 800;
-          doPodDetail.isScanOut = true;
-          doPodDetail.scanOutType = 'awb';
-          await DoPodDetail.save(doPodDetail);
-
-          // awb_item_attr and awb_history ??
-          await DeliveryService.updateAwbAttr(
-            awb.awbItemId,
-            doPod.branchIdTo,
-            AWB_STATUS.OUT_BRANCH,
-          );
-
-          // TODO: need refactoring
-          // NOTE: queue by Bull
-          DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
-            doPodDetail.doPodDetailId,
-          );
-        }
-        totalAdd = payload.addAwbNumber.length;
-      }
-
       // looping data list remove awb number
       if (payload.removeAwbNumber && payload.removeAwbNumber.length) {
         for (const addAwb of payload.removeAwbNumber) {
@@ -213,11 +183,39 @@ export class WebDeliveryOutService {
         }
         totalRemove = payload.removeAwbNumber.length;
       }
+      // looping data list add awb number
+      if (payload.addAwbNumber && payload.addAwbNumber.length) {
+        for (const addAwb of payload.addAwbNumber) {
+          // find awb_item_attr
+          const awb = await DeliveryService.validAwbNumber(addAwb);
+          // add data do_pod_detail
+          const doPodDetail = DoPodDetail.create();
+          doPodDetail.doPodId = payload.doPodId;
+          doPodDetail.awbItemId = awb.awbItemId;
+          doPodDetail.transactionStatusIdLast = 800;
+          doPodDetail.isScanOut = true;
+          doPodDetail.scanOutType = 'awb';
+          await DoPodDetail.save(doPodDetail);
+
+          // awb_item_attr and awb_history ??
+          await DeliveryService.updateAwbAttr(
+            awb.awbItemId,
+            doPod.branchIdTo,
+            AWB_STATUS.OUT_BRANCH,
+          );
+
+          // TODO: need refactoring
+          // NOTE: queue by Bull
+          DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
+            doPodDetail.doPodDetailId,
+          );
+        }
+        totalAdd = payload.addAwbNumber.length;
+      }
 
       const totalItem = await this.getTotalDetailById(doPod.doPodId);
       const totalScanOut = doPod.totalScanOutAwb + totalAdd - totalRemove;
       // update data
-      // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
       const updateDoPod = {
         doPodMethod:
           payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
@@ -226,15 +224,13 @@ export class WebDeliveryOutService {
         userIdDriver: payload.userIdDriver,
         vehicleNumber: payload.vehicleNumber,
         description: payload.desc,
-        transcationStatusIdLast: 1100,
         branchId: permissonPayload.branchId,
         userId: authMeta.userId,
         totalItem,
         totalScanOut,
       };
       await DoPod.update(doPod.doPodId, updateDoPod);
-
-      // TODO: insert table audit history
+      await this.createAuditHistory(doPod.doPodId);
 
       result.status = 'ok';
       result.message = 'success';
@@ -273,6 +269,47 @@ export class WebDeliveryOutService {
       },
     });
     if (doPod) {
+      // looping data list remove bag number
+      if (payload.removeBagNumber && payload.removeBagNumber.length) {
+        for (const removeBag of payload.removeBagNumber) {
+          const bagData = await DeliveryService.validBagNumber(removeBag);
+
+          if (bagData) {
+            const doPodDetailBag = await DoPodDetailBag.findOne({
+              where: {
+                doPodId: payload.doPodId,
+                bagItemId: bagData.bagItemId,
+                isDeleted: false,
+              },
+            });
+
+            if (doPodDetailBag) {
+              DoPodDetailBag.update(doPodDetailBag.doPodDetailBagId, {
+                isDeleted: true,
+              });
+
+              // reverse data ???
+              // TODO: need reviewed
+              // NOTE: Loop data bag_item_awb for update status awb
+              // const bagItemsAwb = await BagItemAwb.find({
+              //   where: {
+              //     bagItemId: bag.bagItemId,
+              //     isDeleted: false,
+              //   },
+              // });
+              // if (bagItemsAwb && bagItemsAwb.length) {
+              //   for (const itemAwb of bagItemsAwb) {
+              //     if (itemAwb.awbItemId) {
+              //       // TODO: update awb_item_attr and awb_history ??
+              //       //==========================================================
+              //     }
+              //   }
+              // }
+            }
+          }
+        }
+        totalRemove = payload.removeBagNumber.length;
+      }
       // looping data list add bag number
       if (payload.addBagNumber && payload.addBagNumber.length) {
         for (const addBag of payload.addBagNumber) {
@@ -320,51 +357,10 @@ export class WebDeliveryOutService {
         }
         totalAdd = payload.addBagNumber.length;
       }
-      // looping data list remove bag number
-      if (payload.removeBagNumber && payload.removeBagNumber.length) {
-        for (const removeBag of payload.removeBagNumber) {
-          const bagData = await DeliveryService.validBagNumber(removeBag);
-
-          if (bagData) {
-            const doPodDetailBag = await DoPodDetailBag.findOne({
-              where: {
-                doPodId: payload.doPodId,
-                bagItemId: bagData.bagItemId,
-                isDeleted: false,
-              },
-            });
-
-            if (doPodDetailBag) {
-              DoPodDetailBag.update(doPodDetailBag.doPodDetailBagId, {
-                isDeleted: true,
-              });
-
-              // TODO: need reviewed
-              // NOTE: Loop data bag_item_awb for update status awb
-              // const bagItemsAwb = await BagItemAwb.find({
-              //   where: {
-              //     bagItemId: bag.bagItemId,
-              //     isDeleted: false,
-              //   },
-              // });
-              // if (bagItemsAwb && bagItemsAwb.length) {
-              //   for (const itemAwb of bagItemsAwb) {
-              //     if (itemAwb.awbItemId) {
-              //       // TODO: update awb_item_attr and awb_history ??
-              //       //==========================================================
-              //     }
-              //   }
-              // }
-            }
-          }
-        }
-        totalRemove = payload.removeBagNumber.length;
-      }
 
       const totalItem = await this.getTotalDetailById(doPod.doPodId);
       const totalScanOut = doPod.totalScanOutAwb + totalAdd - totalRemove;
       // update data
-      // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
       const updateDoPod = {
         doPodMethod:
           payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
@@ -373,15 +369,13 @@ export class WebDeliveryOutService {
         userIdDriver: payload.userIdDriver,
         vehicleNumber: payload.vehicleNumber,
         description: payload.desc,
-        transcationStatusIdLast: 1100,
         branchId: permissonPayload.branchId,
         userId: authMeta.userId,
         totalItem,
         totalScanOut,
       };
       await DoPod.update(doPod.doPodId, updateDoPod);
-
-      // TODO: insert table audit history
+      await this.createAuditHistory(doPod.doPodId);
 
       result.status = 'ok';
       result.message = 'success';
@@ -1468,51 +1462,26 @@ export class WebDeliveryOutService {
   // TODO: send to background job process
   private async createAuditHistory(
     doPodId: string,
-    doPodType: number,
-    transactionStatusId: number,
   ) {
-      // find doPod/ doPodDeliver
-      const doPodRepository = new OrionRepositoryService(DoPod);
-      const q = doPodRepository.findOne();
-      // Manage relation (default inner join)
-      q.leftJoin(e => e.branch);
-      q.leftJoin(e => e.branchTo);
-      q.leftJoin(e => e.userDriver);
-
-      q.select({
-        doPodId: true,
-        branch: {
-          branchId: true,
-          branchCode: true,
-          branchName: true,
-        },
-        branchTo: {
-          branchId: true,
-          branchCode: true,
-          branchName: true,
-        },
-        userDriver: {
-          userId: true,
-          username: true,
-          employee: {
-            employeeId: true,
-            employeeName: true,
-          },
-        },
-      });
-      q.where(e => e.doPodId, w => w.equals(doPodId));
-      q.andWhere(e => e.isDeleted, w => w.equals(false));
-      const doPod = await q.exec();
-      if (doPod) {
-
-        // construct note for information
-        const note = '';
-        // create new object AuditHistory
-        const auditHistory = AuditHistory.create();
-        auditHistory.changeId = doPodId;
-        auditHistory.transactionStatusId = transactionStatusId;
-        auditHistory.note = note;
-        return await AuditHistory.save(auditHistory);
-      }
+    // find doPod
+    const doPod = await DoPodRepository.getDataById(doPodId);
+    if (doPod) {
+      // construct note for information
+      const description = doPod.description
+        ? doPod.description
+        : '';
+      const note = `
+        Nama Driver  : ${doPod.userDriver.employee.employeeName}
+        Gerai Assign : ${doPod.branch.branchName}
+        Gerai Tujuan : ${doPod.branchTo.branchName}
+        Note         : ${description}
+      `;
+      // create new object AuditHistory
+      const auditHistory = AuditHistory.create();
+      auditHistory.changeId = doPodId;
+      auditHistory.transactionStatusId = doPod.transactionStatusId;
+      auditHistory.note = note;
+      return await AuditHistory.save(auditHistory);
     }
+  }
 }

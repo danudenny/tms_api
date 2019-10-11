@@ -12,9 +12,7 @@ import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant'
 import { RedisService } from '../../../../../shared/services/redis.service';
 import { AwbTroubleService } from '../../../../../shared/services/awb-trouble.service';
 import moment = require('moment');
-import { DoPod } from '../../../../../shared/orm-entity/do-pod';
-import { IsNull, createQueryBuilder } from 'typeorm';
-import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
+import { createQueryBuilder } from 'typeorm';
 import { DoPodDeliverRepository } from '../../../../../shared/orm-repository/do-pod-deliver.repository';
 import { AuditHistory } from '../../../../../shared/orm-entity/audit-history';
 // #endregion
@@ -196,7 +194,7 @@ export class LastMileDeliveryOutService {
     // Get Data for internal Method
     q.selectRaw(
       ['t1.do_pod_deliver_id', 'doPodId'],
-      ['t1.user_id_driver', 'employeeIdDriver'],
+      ['t1.user_id_driver', 'userIdDriver'],
       ['t1.branch_id', 'branchIdTo'],
       ['t2.fullname', 'employeeName'],
       ['t2.nik', 'nik'],
@@ -246,6 +244,7 @@ export class LastMileDeliveryOutService {
   static async scanOutAwbDeliver(
     payload: WebScanOutAwbVm,
   ): Promise<WebScanOutAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const dataItem = [];
@@ -333,8 +332,12 @@ export class LastMileDeliveryOutService {
                 );
 
                 // NOTE: queue by Bull
-                DoPodDetailPostMetaQueueService.createJobByScanOutAwbDeliver(
-                  doPodDeliverDetail.doPodDeliverDetailId,
+                DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
+                  awb.awbItemId,
+                  AWB_STATUS.ANT,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                  doPodDeliver.userDriver.employeeId,
                 );
                 // #endregion after scanout
 
