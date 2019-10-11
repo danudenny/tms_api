@@ -241,13 +241,20 @@ export class WebScanOutCreateDeliveryVm {
   desc?: string;
 }
 
-export class WebScanOutDeliverEditVm extends WebScanOutCreateDeliveryVm {
+export class WebScanOutDeliverEditVm {
   @ApiModelProperty({
     example: 'asdkjashfhasifhasifhasihf',
     skipValidation: true,
   })
   @IsDefined({ message: 'POD ID harus diisi' })
   doPodDeliverId: string;
+
+  @ApiModelProperty({
+    example: 123,
+    skipValidation: true,
+  })
+  @IsDefined({message: 'Sigesit harus diisi'})
+  userIdDriver: number;
 
   @ApiModelPropertyOptional({
     example: ['00020001', '00020002'],
