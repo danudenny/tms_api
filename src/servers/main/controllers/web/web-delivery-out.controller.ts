@@ -51,23 +51,23 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.scanOutCreate(payload);
   }
 
-  @Post('edit')
+  @Post('updateAwb')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutCreateResponseVm })
   @Transactional()
-  public async scanOutEdit(@Body() payload: WebScanOutEditVm) {
+  public async scanOutUpdateAwb(@Body() payload: WebScanOutEditVm) {
     return this.webDeliveryOutService.scanOutEdit(payload);
   }
 
-  @Post('editHub')
+  @Post('updateBag')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutCreateResponseVm })
   @Transactional()
-  public async scanOutEditBag(@Body() payload: WebScanOutEditHubVm) {
+  public async scanOutUpdateBag(@Body() payload: WebScanOutEditHubVm) {
     return this.webDeliveryOutService.scanOutEditHub(payload);
   }
 

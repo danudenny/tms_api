@@ -1310,7 +1310,7 @@ export class WebDeliveryOutService {
       // Get Data for 3pl Method
       q.selectRaw(
         ['t1.do_pod_id', 'doPodId'],
-        ['t1.user_id_driver', 'employeeIdDriver'],
+        ['t1.user_id_driver', 'userIdDriver'],
         ['t1.partner_logistic_id', 'partnerLogisticId'],
         ['t4.partner_logistic_name', 'partnerLogisticName'],
         ['t1.do_pod_method', 'doPodMethod'],
