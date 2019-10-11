@@ -49,11 +49,8 @@ import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag'
 import { BagService } from '../v1/bag.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
-import { BagOrderResponseVm, BagDetailResponseVm } from '../../models/bag-order-detail-response.vm';
+import { BagOrderResponseVm, BagDetailResponseVm, AuditHistVm } from '../../models/bag-order-detail-response.vm';
 import { BagAwbVm, BagDetailVm } from '../../models/bag-order-response.vm';
-import { WebScanPhotoResponseVm } from '../../models/web-scan-photo-response.vm';
-import { ScanOutPhotoVm } from '../../models/scan-out-photo-response.vm';
-import { url } from 'inspector';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 // #endregion
 
@@ -135,7 +132,7 @@ export class WebDeliveryOutService {
    * @returns {Promise<WebScanOutCreateResponseVm>}
    * @memberof WebDeliveryOutService
    */
-  async scanOutEdit(
+  async scanOutUpdateAwb(
     payload: WebScanOutEditVm,
   ): Promise<WebScanOutCreateResponseVm> {
     const authMeta = AuthService.getAuthData();
@@ -249,7 +246,7 @@ export class WebDeliveryOutService {
    * @returns {Promise<WebScanOutCreateResponseVm>}
    * @memberof WebDeliveryOutService
    */
-  async scanOutEditHub(
+  async scanOutUpdateBag(
     payload: WebScanOutEditHubVm,
   ): Promise<WebScanOutCreateResponseVm> {
     const authMeta = AuthService.getAuthData();
@@ -503,161 +500,6 @@ export class WebDeliveryOutService {
               // find scanin before -> (awb_item_attr) unclear
               // trigger current user
               // from do_pod before in ??
-              await AwbTroubleService.fromScanOut(
-                awbNumber,
-                awb.branchLast.branchName,
-                awb.awbStatusIdLast,
-              );
-
-              totalError += 1;
-              response.status = 'error';
-              response.message =
-                `Resi ${awbNumber} milik gerai, ` +
-                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
-            }
-            break;
-
-          default:
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Resi ${awbNumber} tidak dapat SCAN OUT, Harap hubungi kantor pusat`;
-            break;
-        }
-      } else {
-        totalError += 1;
-        response.status = 'error';
-        response.message = `Resi ${awbNumber} Tidak di Temukan`;
-      }
-
-      // push item
-      dataItem.push({
-        awbNumber,
-        ...response,
-      });
-    } // end of loop
-
-    // Populate return value
-    result.totalData = payload.awbNumber.length;
-    result.totalSuccess = totalSuccess;
-    result.totalError = totalError;
-    result.data = dataItem;
-
-    return result;
-  }
-
-  // TODO: move to last mile service
-  /**
-   * Create DO POD Detail Deliver
-   * with scan awb number
-   * @param {WebScanOutAwbVm} payload
-   * @returns {Promise<WebScanOutAwbResponseVm>}
-   * @memberof WebDeliveryOutService
-   */
-  async scanOutAwbDeliver(
-    payload: WebScanOutAwbVm,
-  ): Promise<WebScanOutAwbResponseVm> {
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-
-    const dataItem = [];
-    const result = new WebScanOutAwbResponseVm();
-
-    let totalSuccess = 0;
-    let totalError = 0;
-
-    for (const awbNumber of payload.awbNumber) {
-      const response = {
-        status: 'ok',
-        message: 'Success',
-      };
-
-      const awb = await DeliveryService.validAwbNumber(awbNumber);
-      if (awb) {
-        const statusCode = await DeliveryService.awbStatusGroup(
-          awb.awbStatusIdLast,
-        );
-
-        switch (statusCode) {
-          case 'OUT':
-            // check condition
-            if (awb.branchIdLast == permissonPayload.branchId) {
-              totalSuccess += 1;
-              response.message = `Resi ${awbNumber} sudah pernah scan out`;
-            } else {
-              // save data to awb_trouble
-              await AwbTroubleService.fromScanOut(
-                awbNumber,
-                awb.branchLast.branchName,
-                awb.awbStatusIdLast,
-              );
-
-              totalError += 1;
-              response.status = 'error';
-              response.message =
-                `Resi ${awbNumber} belum scan in, mohon untuk` +
-                `melakukan scan in terlebih dahulu di gerai` +
-                ` - ${awb.branchLast.branchName}`;
-            }
-            break;
-
-          case 'POD':
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Resi ${awbNumber} sudah di proses POD`;
-            break;
-
-          case 'IN':
-            if (awb.branchIdLast == permissonPayload.branchId) {
-              // Add Locking setnx redis
-              const holdRedis = await RedisService.locking(
-                `hold:scanoutant:${awb.awbItemId}`,
-                'locking',
-              );
-              if (holdRedis) {
-                // save table do_pod_detail
-                // NOTE: create data do pod detail per awb number
-                const doPodDeliverDetail = DoPodDeliverDetail.create();
-                doPodDeliverDetail.doPodDeliverId = payload.doPodId;
-                doPodDeliverDetail.awbItemId = awb.awbItemId;
-                doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
-                await DoPodDeliverDetail.save(doPodDeliverDetail);
-
-                // AFTER Scan OUT ===============================================
-                // #region after scanout
-
-                // Update do_pod
-                const doPodDeliver = await DoPodDeliver.findOne({
-                  select: ['doPodDeliverId', 'totalAwb'],
-                  where: {
-                    doPodDeliverId: payload.doPodId,
-                    isDeleted: false,
-                  },
-                });
-
-                // counter total scan out
-                doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
-                await DoPodDeliver.save(doPodDeliver);
-                await DeliveryService.updateAwbAttr(
-                  awb.awbItemId,
-                  null,
-                  AWB_STATUS.ANT,
-                );
-
-                // NOTE: queue by Bull
-                DoPodDetailPostMetaQueueService.createJobByScanOutAwbDeliver(
-                  doPodDeliverDetail.doPodDeliverDetailId,
-                );
-                // #endregion after scanout
-
-                totalSuccess += 1;
-                // remove key holdRedis
-                RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
-              } else {
-                totalError += 1;
-                response.status = 'error';
-                response.message = 'Server Busy';
-              }
-            } else {
-              // save data to awb_trouble
               await AwbTroubleService.fromScanOut(
                 awbNumber,
                 awb.branchLast.branchName,
@@ -1150,23 +992,6 @@ export class WebDeliveryOutService {
     }
   }
 
-  async doPodDetail(payload: BagDetailVm): Promise<BagDetailResponseVm> {
-    const doPod = await DoPodRepository.getDataById(payload.doPodId);
-
-    if (doPod) {
-      const result = new BagDetailResponseVm();
-      result.doPodCode = doPod.doPodCode;
-      result.userIdDriver = doPod.userIdDriver;
-      result.userIdCreated = doPod.userIdCreated;
-      result.vehicleNumber = doPod.vehicleNumber;
-      result.branchToName = doPod.branchTo.branchName;
-      result.totalScanOutAwb = doPod.totalScanOutAwb;
-      result.description = doPod.description;
-
-      return result;
-    }
-  }
-
   /**
    *
    *
@@ -1243,6 +1068,51 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  async doPodDetail(payload: BagDetailVm): Promise<BagDetailResponseVm> {
+    const doPod = await DoPodRepository.getDataById(payload.doPodId);
+    const result = new BagDetailResponseVm();
+
+    if (doPod) {
+      result.doPodCode = doPod.doPodCode;
+      result.driverName = doPod.userDriver.employee.employeeName;
+      result.createdName = doPod.userCreated.employee.employeeName;
+      result.vehicleNumber = doPod.vehicleNumber;
+      result.branchToName = doPod.branchTo.branchName;
+      result.totalScanOutAwb = doPod.totalScanOutAwb;
+      result.description = doPod.description;
+
+      const auditHistory = new OrionRepositoryService(AuditHistory);
+      const q = auditHistory.findAll();
+      q.select({
+        createdTime: true,
+        note: true,
+        userCreated: {
+          userId: true,
+          employee: {
+            employeeId: true,
+            employeeName: true,
+          },
+        },
+      });
+      q.where(e => e.changeId, w => w.equals(doPod.doPodId));
+      q.andWhere(e => e.isDeleted, w => w.equals(false));
+      const history = await q.exec();
+
+      if (history) {
+        const itemHistory = [];
+        for (const item of history) {
+          const itemResult = new AuditHistVm();
+          itemResult.createdTime = item.createdTime;
+          itemResult.note = item.note;
+          itemResult.username = item.userCreated.employee.employeeName;
+
+          itemHistory.push(itemResult);
+        }
+        result.history = itemHistory;
+      }
+      return result;
+    }
+  }
   async scanOutAwbValidate(
     payload: WebScanOutAwbValidateVm,
   ): Promise<ScanAwbVm> {
@@ -1460,16 +1330,12 @@ export class WebDeliveryOutService {
   }
 
   // TODO: send to background job process
-  private async createAuditHistory(
-    doPodId: string,
-  ) {
+  private async createAuditHistory(doPodId: string) {
     // find doPod
     const doPod = await DoPodRepository.getDataById(doPodId);
     if (doPod) {
       // construct note for information
-      const description = doPod.description
-        ? doPod.description
-        : '';
+      const description = doPod.description ? doPod.description : '';
       const note = `
         Nama Driver  : ${doPod.userDriver.employee.employeeName}
         Gerai Assign : ${doPod.branch.branchName}

@@ -164,7 +164,6 @@ export class LastMileDeliveryOutService {
       // NOTE: (current status) (next feature, ada scan berangkat dan tiba)
       const updateDoPod = {
         userIdDriver: payload.userIdDriver,
-        description: payload.desc,
         branchId: permissonPayload.branchId,
         userId: authMeta.userId,
         totalAwb,

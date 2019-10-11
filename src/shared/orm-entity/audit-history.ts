@@ -2,9 +2,12 @@ import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { User } from './user';
 
 @Entity('audit_history', { schema: 'public' })
 export class AuditHistory extends TmsBaseEntity {
@@ -32,4 +35,9 @@ export class AuditHistory extends TmsBaseEntity {
     name: 'transaction_status_id',
   })
   transactionStatusId: number;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_created', referencedColumnName: 'userId' })
+  userCreated: User;
+
 }

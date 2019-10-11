@@ -59,7 +59,7 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebScanOutCreateResponseVm })
   @Transactional()
   public async scanOutUpdateAwb(@Body() payload: WebScanOutEditVm) {
-    return this.webDeliveryOutService.scanOutEdit(payload);
+    return this.webDeliveryOutService.scanOutUpdateAwb(payload);
   }
 
   @Post('updateBag')
@@ -69,7 +69,7 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebScanOutCreateResponseVm })
   @Transactional()
   public async scanOutUpdateBag(@Body() payload: WebScanOutEditHubVm) {
-    return this.webDeliveryOutService.scanOutEditHub(payload);
+    return this.webDeliveryOutService.scanOutUpdateBag(payload);
   }
 
   @Post('createDeliver')
