@@ -52,6 +52,7 @@ import { AttachmentService } from '../../../../shared/services/attachment.servic
 import { BagOrderResponseVm, BagDetailResponseVm, AuditHistVm } from '../../models/bag-order-detail-response.vm';
 import { BagAwbVm, BagDetailVm } from '../../models/bag-order-response.vm';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
+import { AwbService } from '../v1/awb.service';
 // #endregion
 
 @Injectable()
@@ -166,52 +167,58 @@ export class WebDeliveryOutService {
               isDeleted: true,
             });
             // NOTE: update awb_item_attr and awb_history
-            await DeliveryService.updateAwbAttr(
+            await AwbService.updateAwbAttr(
               awb.awbItemId,
-              doPod.branchIdTo,
               AWB_STATUS.IN_BRANCH,
+              null,
             );
-            // TODO: need refactoring
             // NOTE: queue by Bull
-            DoPodDetailPostMetaQueueService.createJobByScanInAwb(
-              doPodDetail.doPodDetailId,
+            DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
+              awb.awbItemId,
+              AWB_STATUS.IN_BRANCH,
+              permissonPayload.branchId,
+              authMeta.userId,
             );
+            totalRemove += 1;
           }
-        }
-        totalRemove = payload.removeAwbNumber.length;
+        } // end of loop
       }
       // looping data list add awb number
       if (payload.addAwbNumber && payload.addAwbNumber.length) {
         for (const addAwb of payload.addAwbNumber) {
           // find awb_item_attr
           const awb = await DeliveryService.validAwbNumber(addAwb);
-          // add data do_pod_detail
-          const doPodDetail = DoPodDetail.create();
-          doPodDetail.doPodId = payload.doPodId;
-          doPodDetail.awbItemId = awb.awbItemId;
-          doPodDetail.transactionStatusIdLast = 800;
-          doPodDetail.isScanOut = true;
-          doPodDetail.scanOutType = 'awb';
-          await DoPodDetail.save(doPodDetail);
+          if (awb) {
+            // add data do_pod_detail
+            const doPodDetail = DoPodDetail.create();
+            doPodDetail.doPodId = payload.doPodId;
+            doPodDetail.awbItemId = awb.awbItemId;
+            doPodDetail.transactionStatusIdLast = 800;
+            doPodDetail.isScanOut = true;
+            doPodDetail.scanOutType = 'awb';
+            await DoPodDetail.save(doPodDetail);
 
-          // awb_item_attr and awb_history ??
-          await DeliveryService.updateAwbAttr(
-            awb.awbItemId,
-            doPod.branchIdTo,
-            AWB_STATUS.OUT_BRANCH,
-          );
+            // awb_item_attr and awb_history ??
+            await AwbService.updateAwbAttr(
+              awb.awbItemId,
+              AWB_STATUS.OUT_BRANCH,
+              doPod.branchIdTo,
+            );
 
-          // TODO: need refactoring
-          // NOTE: queue by Bull
-          DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
-            doPodDetail.doPodDetailId,
-          );
-        }
-        totalAdd = payload.addAwbNumber.length;
+            // NOTE: queue by Bull
+            DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
+              awb.awbItemId,
+              AWB_STATUS.OUT_BRANCH,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
+            totalAdd += 1;
+          }
+        } // end of loop
       }
 
       const totalItem = await this.getTotalDetailById(doPod.doPodId);
-      const totalScanOut = doPod.totalScanOutAwb + totalAdd - totalRemove;
+      const totalScanOutAwb = doPod.totalScanOutAwb + totalAdd - totalRemove;
       // update data
       const updateDoPod = {
         doPodMethod:
@@ -224,7 +231,7 @@ export class WebDeliveryOutService {
         branchId: permissonPayload.branchId,
         userId: authMeta.userId,
         totalItem,
-        totalScanOut,
+        totalScanOutAwb,
       };
       await DoPod.update(doPod.doPodId, updateDoPod);
       await this.createAuditHistory(doPod.doPodId);
@@ -285,27 +292,42 @@ export class WebDeliveryOutService {
                 isDeleted: true,
               });
 
-              // reverse data ???
-              // TODO: need reviewed
-              // NOTE: Loop data bag_item_awb for update status awb
-              // const bagItemsAwb = await BagItemAwb.find({
-              //   where: {
-              //     bagItemId: bag.bagItemId,
-              //     isDeleted: false,
-              //   },
-              // });
-              // if (bagItemsAwb && bagItemsAwb.length) {
-              //   for (const itemAwb of bagItemsAwb) {
-              //     if (itemAwb.awbItemId) {
-              //       // TODO: update awb_item_attr and awb_history ??
-              //       //==========================================================
-              //     }
-              //   }
-              // }
+              // TODO: reverse data ???
+              const bagItem = await BagItem.findOne(
+                {
+                  where: {
+                    bagItemId:
+                      bagData.bagItemId,
+                  },
+                },
+              );
+              if (bagItem) {
+                BagItem.update(bagItem.bagItemId, {
+                  bagItemStatusIdLast: 2000,
+                  branchIdLast: doPod.branchId,
+                  branchIdNext: null,
+                  updatedTime: timeNow,
+                  userIdUpdated: authMeta.userId,
+                });
+
+                // loop reverse status update to IN
+                BagService.statusInAwbBag(
+                  doPod.doPodId,
+                  bagItem.bagItemId,
+                  doPod.doPodType,
+                );
+                // reverse bag history
+                BagItemHistoryQueueService.addData(
+                  bagData.bagItemId,
+                  2000,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                );
+              }
             }
+            totalRemove += 1;
           }
-        }
-        totalRemove = payload.removeBagNumber.length;
+        } // end of loop
       }
       // looping data list add bag number
       if (payload.addBagNumber && payload.addBagNumber.length) {
@@ -348,19 +370,29 @@ export class WebDeliveryOutService {
                 doPod.userIdDriver,
                 doPod.doPodType,
               );
+              // NOTE: background job for insert bag item history
+              BagItemHistoryQueueService.addData(
+                bagData.bagItemId,
+                1000,
+                permissonPayload.branchId,
+                authMeta.userId,
+              );
             }
             // #endregion
+            totalAdd += 1;
           }
-        }
-        totalAdd = payload.addBagNumber.length;
+        } // end of loop
       }
 
       const totalItem = await this.getTotalDetailById(doPod.doPodId);
-      const totalScanOut = doPod.totalScanOutAwb + totalAdd - totalRemove;
+      const totalScanOutBag =
+        doPod.totalScanOutBag + totalAdd - totalRemove;
       // update data
       const updateDoPod = {
         doPodMethod:
-          payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
+          payload.doPodMethod && payload.doPodMethod == '3pl'
+            ? 3000
+            : 1000,
         partnerLogisticId: payload.partnerLogisticId,
         branchIdTo: payload.branchIdTo,
         userIdDriver: payload.userIdDriver,
@@ -369,7 +401,7 @@ export class WebDeliveryOutService {
         branchId: permissonPayload.branchId,
         userId: authMeta.userId,
         totalItem,
-        totalScanOut,
+        totalScanOutBag,
       };
       await DoPod.update(doPod.doPodId, updateDoPod);
       await this.createAuditHistory(doPod.doPodId);
@@ -384,6 +416,7 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  // TODO: need refactoring
   /**
    * Create DO POD Detail
    * with scan awb number
@@ -392,6 +425,7 @@ export class WebDeliveryOutService {
    * @memberof WebDeliveryOutService
    */
   async scanOutAwb(payload: WebScanOutAwbVm): Promise<WebScanOutAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const dataItem = [];
@@ -453,7 +487,7 @@ export class WebDeliveryOutService {
                 const doPodDetail = DoPodDetail.create();
                 doPodDetail.doPodId = payload.doPodId;
                 doPodDetail.awbItemId = awb.awbItemId;
-                doPodDetail.transactionStatusIdLast = 1000;
+                doPodDetail.transactionStatusIdLast = 800;
                 doPodDetail.isScanOut = true;
                 doPodDetail.scanOutType = 'awb';
                 await DoPodDetail.save(doPodDetail);
@@ -483,8 +517,11 @@ export class WebDeliveryOutService {
                 );
 
                 // NOTE: queue by Bull
-                DoPodDetailPostMetaQueueService.createJobByScanOutAwb(
-                  doPodDetail.doPodDetailId,
+                DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
+                  awb.awbItemId,
+                  AWB_STATUS.OUT_BRANCH,
+                  permissonPayload.branchId,
+                  authMeta.userId,
                 );
                 // #endregion after scanout
                 totalSuccess += 1;
@@ -1165,6 +1202,7 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  // TODO: need refactoring
   async scanOutLoadForEdit(
     payload: WebScanOutLoadForEditVm,
     isHub = false,
@@ -1206,7 +1244,7 @@ export class WebDeliveryOutService {
       // Get Data for internal Method
       q.selectRaw(
         ['t1.do_pod_id', 'doPodId'],
-        ['t1.user_id_driver', 'employeeIdDriver'],
+        ['t1.user_id_driver', 'userIdDriver'],
         ['t1.do_pod_method', 'doPodMethod'],
         ['t1.vehicle_number', 'vehicleNumber'],
         ['t1.branch_id_to', 'branchIdTo'],
