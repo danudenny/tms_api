@@ -71,6 +71,9 @@ export class WebScanInHubSortResponseVm {
   bagNumber: string;
 
   @ApiModelProperty()
+  bagItemId: string;
+
+  @ApiModelProperty()
   dropoffHubId: string;
 
   @ApiModelProperty()

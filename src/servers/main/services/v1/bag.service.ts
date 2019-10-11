@@ -150,9 +150,14 @@ export class BagService {
           doPodDetail.awbItemId = itemAwb.awbItemId;
           doPodDetail.bagId = bagId;
           doPodDetail.bagItemId = bagItemId;
-          doPodDetail.transactionStatusIdLast = 1000;
           doPodDetail.isScanOut = true;
           doPodDetail.scanOutType = 'bag';
+          // Branch
+          if (doPodType == 3005) {
+            doPodDetail.transactionStatusIdLast = 800;
+          } else {
+            doPodDetail.transactionStatusIdLast = 300;
+          }
           await DoPodDetail.save(doPodDetail);
 
           // NOTE: update status on awb item attr
@@ -204,6 +209,59 @@ export class BagService {
           }
         }
       }
+    } else {
+      Logger.log('### Data Bag Item Awb :: Not Found!!');
+    }
+    return true;
+  }
+
+  static async statusInAwbBag(
+    doPodId: string,
+    bagItemId: number,
+    doPodType: number,
+  ) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const bagItemsAwb = await BagItemAwb.find({
+      where: {
+        bagItemId,
+        isDeleted: false,
+      },
+    });
+    if (bagItemsAwb && bagItemsAwb.length) {
+      for (const itemAwb of bagItemsAwb) {
+        if (itemAwb.awbItemId) {
+          const doPodDetail = await DoPodDetail.findOne({
+            where: {
+              doPodId,
+              awbItemId: itemAwb.awbItemId,
+              isDeleted: false,
+            },
+          });
+          if (doPodDetail) {
+            DoPodDetail.update(doPodDetail.doPodDetailId, {
+              isDeleted: true,
+            });
+            const awbStatus =
+              doPodType == 3005
+                ? AWB_STATUS.IN_BRANCH
+                : AWB_STATUS.IN_HUB;
+
+            await AwbService.updateAwbAttr(
+              itemAwb.awbItemId,
+              awbStatus,
+              null,
+            );
+            // queue bull
+            DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
+              itemAwb.awbItemId,
+              awbStatus,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
+          }
+        }
+      } // end of loop
     } else {
       Logger.log('### Data Bag Item Awb :: Not Found!!');
     }

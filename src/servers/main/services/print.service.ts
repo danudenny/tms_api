@@ -93,12 +93,23 @@ export class PrintService {
       },
     };
 
-    PrinterService.responseForJsReport({
-      res,
-      jsreportTemplateName: 'surat-jalan',
-      jsreportTemplateData: jsreportParams,
-      printerName: 'StrukPrinter',
-    });
+    if (queryParams.threeTimes) {
+      for (let i = 0; i < 3; i++) {
+        PrinterService.responseForJsReport({
+          res,
+          jsreportTemplateName: 'surat-jalan',
+          jsreportTemplateData: jsreportParams,
+          printerName: 'StrukPrinter',
+        });
+      }
+    } else {
+      PrinterService.responseForJsReport({
+        res,
+        jsreportTemplateName: 'surat-jalan',
+        jsreportTemplateData: jsreportParams,
+        printerName: 'StrukPrinter',
+      });
+    }
   }
 
   public static async printDoPodBagByRequest(
@@ -186,12 +197,24 @@ export class PrintService {
       },
     };
 
-    PrinterService.responseForJsReport({
-      res,
-      jsreportTemplateName: 'surat-jalan-gabung-paket',
-      jsreportTemplateData: jsreportParams,
-      printerName: 'StrukPrinter',
-    });
+    // TODO: 3x print
+    if (queryParams.threeTimes) {
+      for (let i = 0; i < 3; i++) {
+        PrinterService.responseForJsReport({
+          res,
+          jsreportTemplateName: 'surat-jalan-gabung-paket',
+          jsreportTemplateData: jsreportParams,
+          printerName: 'StrukPrinter',
+        });
+      }
+    } else {
+      PrinterService.responseForJsReport({
+        res,
+        jsreportTemplateName: 'surat-jalan-gabung-paket',
+        jsreportTemplateData: jsreportParams,
+        printerName: 'StrukPrinter',
+      });
+    }
   }
 
   public static async printDoPodDeliverByRequest(
@@ -282,12 +305,23 @@ export class PrintService {
       },
     };
 
-    PrinterService.responseForJsReport({
-      res,
-      jsreportTemplateName: 'surat-jalan-antar',
-      jsreportTemplateData: jsreportParams,
-      printerName: 'StrukPrinter',
-    });
+    if (queryParams.threeTimes) {
+      for (let i = 0; i < 3; i++) {
+        PrinterService.responseForJsReport({
+          res,
+          jsreportTemplateName: 'surat-jalan-antar',
+          jsreportTemplateData: jsreportParams,
+          printerName: 'StrukPrinter',
+        });
+      }
+    } else {
+      PrinterService.responseForJsReport({
+        res,
+        jsreportTemplateName: 'surat-jalan-antar',
+        jsreportTemplateData: jsreportParams,
+        printerName: 'StrukPrinter',
+      });
+    }
   }
 
   public static async printBagItemForStickerByRequest(

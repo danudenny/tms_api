@@ -306,6 +306,7 @@ export class WebDeliveryInService {
       ],
       ['t1.bag_number', 'bagNumber'],
       ['t2.bag_seq', 'bagSeq'],
+      ['t2.bag_item_id', 'bagItemId'],
       ['t2.created_time', 'createdTime'],
       ['t3.district_name', 'districtName'],
       ['COUNT (t4.*)', 'totalAwb'],
@@ -325,6 +326,7 @@ export class WebDeliveryInService {
     q.groupByRaw(`
       t2.created_time,
       t2.bag_seq,
+      t2.bag_item_id,
       t1.bag_number,
       t2.weight,
       t3.district_name

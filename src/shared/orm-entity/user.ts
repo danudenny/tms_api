@@ -26,7 +26,7 @@ export class User extends BaseEntity {
     nullable: true,
     name: 'employee_id',
   })
-  employeeId: string | null;
+  employeeId: number | null;
 
   @Column('character varying', {
     nullable: false,

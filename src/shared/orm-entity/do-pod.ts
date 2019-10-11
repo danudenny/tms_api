@@ -7,6 +7,7 @@ import { PartnerLogistic } from './partner-logistic';
 import { User } from './user';
 import { DoPodDetailBag } from './do-pod-detail-bag';
 import { AttachmentTms } from './attachment-tms';
+import { TransactionStatus } from './transaction_status';
 
 @Entity('do_pod', { schema: 'public' })
 export class DoPod extends TmsBaseEntity {
@@ -307,4 +308,12 @@ export class DoPod extends TmsBaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_driver', referencedColumnName: 'userId' })
   userDriver: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_created', referencedColumnName: 'userId' })
+  userCreated: User;
+
+  @ManyToOne(() => TransactionStatus)
+  @JoinColumn({ name: 'transaction_status_id' })
+  transactionStatus: TransactionStatus;
 }

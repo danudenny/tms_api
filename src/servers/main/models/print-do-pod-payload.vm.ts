@@ -9,4 +9,7 @@ export class PrintDoPodPayloadQueryVm {
 
   @ApiModelProperty()
   branchId: number;
+
+  @ApiModelProperty()
+  threeTimes: boolean;
 }
