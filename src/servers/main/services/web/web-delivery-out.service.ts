@@ -132,7 +132,7 @@ export class WebDeliveryOutService {
    * @returns {Promise<WebScanOutCreateResponseVm>}
    * @memberof WebDeliveryOutService
    */
-  async scanOutEdit(
+  async scanOutUpdateAwb(
     payload: WebScanOutEditVm,
   ): Promise<WebScanOutCreateResponseVm> {
     const authMeta = AuthService.getAuthData();
@@ -246,7 +246,7 @@ export class WebDeliveryOutService {
    * @returns {Promise<WebScanOutCreateResponseVm>}
    * @memberof WebDeliveryOutService
    */
-  async scanOutEditHub(
+  async scanOutUpdateBag(
     payload: WebScanOutEditHubVm,
   ): Promise<WebScanOutCreateResponseVm> {
     const authMeta = AuthService.getAuthData();
@@ -500,161 +500,6 @@ export class WebDeliveryOutService {
               // find scanin before -> (awb_item_attr) unclear
               // trigger current user
               // from do_pod before in ??
-              await AwbTroubleService.fromScanOut(
-                awbNumber,
-                awb.branchLast.branchName,
-                awb.awbStatusIdLast,
-              );
-
-              totalError += 1;
-              response.status = 'error';
-              response.message =
-                `Resi ${awbNumber} milik gerai, ` +
-                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
-            }
-            break;
-
-          default:
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Resi ${awbNumber} tidak dapat SCAN OUT, Harap hubungi kantor pusat`;
-            break;
-        }
-      } else {
-        totalError += 1;
-        response.status = 'error';
-        response.message = `Resi ${awbNumber} Tidak di Temukan`;
-      }
-
-      // push item
-      dataItem.push({
-        awbNumber,
-        ...response,
-      });
-    } // end of loop
-
-    // Populate return value
-    result.totalData = payload.awbNumber.length;
-    result.totalSuccess = totalSuccess;
-    result.totalError = totalError;
-    result.data = dataItem;
-
-    return result;
-  }
-
-  // TODO: move to last mile service
-  /**
-   * Create DO POD Detail Deliver
-   * with scan awb number
-   * @param {WebScanOutAwbVm} payload
-   * @returns {Promise<WebScanOutAwbResponseVm>}
-   * @memberof WebDeliveryOutService
-   */
-  async scanOutAwbDeliver(
-    payload: WebScanOutAwbVm,
-  ): Promise<WebScanOutAwbResponseVm> {
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-
-    const dataItem = [];
-    const result = new WebScanOutAwbResponseVm();
-
-    let totalSuccess = 0;
-    let totalError = 0;
-
-    for (const awbNumber of payload.awbNumber) {
-      const response = {
-        status: 'ok',
-        message: 'Success',
-      };
-
-      const awb = await DeliveryService.validAwbNumber(awbNumber);
-      if (awb) {
-        const statusCode = await DeliveryService.awbStatusGroup(
-          awb.awbStatusIdLast,
-        );
-
-        switch (statusCode) {
-          case 'OUT':
-            // check condition
-            if (awb.branchIdLast == permissonPayload.branchId) {
-              totalSuccess += 1;
-              response.message = `Resi ${awbNumber} sudah pernah scan out`;
-            } else {
-              // save data to awb_trouble
-              await AwbTroubleService.fromScanOut(
-                awbNumber,
-                awb.branchLast.branchName,
-                awb.awbStatusIdLast,
-              );
-
-              totalError += 1;
-              response.status = 'error';
-              response.message =
-                `Resi ${awbNumber} belum scan in, mohon untuk` +
-                `melakukan scan in terlebih dahulu di gerai` +
-                ` - ${awb.branchLast.branchName}`;
-            }
-            break;
-
-          case 'POD':
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Resi ${awbNumber} sudah di proses POD`;
-            break;
-
-          case 'IN':
-            if (awb.branchIdLast == permissonPayload.branchId) {
-              // Add Locking setnx redis
-              const holdRedis = await RedisService.locking(
-                `hold:scanoutant:${awb.awbItemId}`,
-                'locking',
-              );
-              if (holdRedis) {
-                // save table do_pod_detail
-                // NOTE: create data do pod detail per awb number
-                const doPodDeliverDetail = DoPodDeliverDetail.create();
-                doPodDeliverDetail.doPodDeliverId = payload.doPodId;
-                doPodDeliverDetail.awbItemId = awb.awbItemId;
-                doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
-                await DoPodDeliverDetail.save(doPodDeliverDetail);
-
-                // AFTER Scan OUT ===============================================
-                // #region after scanout
-
-                // Update do_pod
-                const doPodDeliver = await DoPodDeliver.findOne({
-                  select: ['doPodDeliverId', 'totalAwb'],
-                  where: {
-                    doPodDeliverId: payload.doPodId,
-                    isDeleted: false,
-                  },
-                });
-
-                // counter total scan out
-                doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
-                await DoPodDeliver.save(doPodDeliver);
-                await DeliveryService.updateAwbAttr(
-                  awb.awbItemId,
-                  null,
-                  AWB_STATUS.ANT,
-                );
-
-                // NOTE: queue by Bull
-                DoPodDetailPostMetaQueueService.createJobByScanOutAwbDeliver(
-                  doPodDeliverDetail.doPodDeliverDetailId,
-                );
-                // #endregion after scanout
-
-                totalSuccess += 1;
-                // remove key holdRedis
-                RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
-              } else {
-                totalError += 1;
-                response.status = 'error';
-                response.message = 'Server Busy';
-              }
-            } else {
-              // save data to awb_trouble
               await AwbTroubleService.fromScanOut(
                 awbNumber,
                 awb.branchLast.branchName,
@@ -1267,7 +1112,6 @@ export class WebDeliveryOutService {
       }
       return result;
     }
-
   }
   async scanOutAwbValidate(
     payload: WebScanOutAwbValidateVm,
@@ -1486,16 +1330,12 @@ export class WebDeliveryOutService {
   }
 
   // TODO: send to background job process
-  private async createAuditHistory(
-    doPodId: string,
-  ) {
+  private async createAuditHistory(doPodId: string) {
     // find doPod
     const doPod = await DoPodRepository.getDataById(doPodId);
     if (doPod) {
       // construct note for information
-      const description = doPod.description
-        ? doPod.description
-        : '';
+      const description = doPod.description ? doPod.description : '';
       const note = `
         Nama Driver  : ${doPod.userDriver.employee.employeeName}
         Gerai Assign : ${doPod.branch.branchName}
