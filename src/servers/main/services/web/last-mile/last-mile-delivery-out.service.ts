@@ -1,5 +1,5 @@
 // #region import
-import { WebScanOutCreateDeliveryVm, WebScanOutLoadForEditVm, WebScanOutAwbVm, WebScanOutEditVm } from '../../../models/web-scan-out.vm';
+import { WebScanOutCreateDeliveryVm, WebScanOutLoadForEditVm, WebScanOutAwbVm, WebScanOutEditVm, WebScanOutDeliverEditVm } from '../../../models/web-scan-out.vm';
 import { WebScanOutCreateResponseVm, WebScanOutResponseForEditVm, WebScanOutAwbResponseVm } from '../../../models/web-scan-out-response.vm';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { DoPodDeliver } from '../../../../../shared/orm-entity/do-pod-deliver';
@@ -73,7 +73,7 @@ export class LastMileDeliveryOutService {
    * @memberof WebDeliveryOutService
    */
   static async scanOutUpdateDelivery(
-    payload: WebScanOutEditVm,
+    payload: WebScanOutDeliverEditVm,
   ): Promise<WebScanOutCreateResponseVm> {
     const authMeta = AuthService.getAuthData();
     const result = new WebScanOutCreateResponseVm();
@@ -82,19 +82,23 @@ export class LastMileDeliveryOutService {
     let totalAdd = 0;
     let totalRemove = 0;
     // edit do_pod (Surat Jalan)
-    const doPod = await DoPodDeliverRepository.getDataById(payload.doPodId);
+    const doPod = await DoPodDeliverRepository.getDataById(
+      payload.doPodDeliverId,
+    );
     if (doPod) {
       // looping data list remove awb number
       if (payload.removeAwbNumber && payload.removeAwbNumber.length) {
         for (const addAwb of payload.removeAwbNumber) {
           const awb = await DeliveryService.validAwbNumber(addAwb);
-          const doPodDeliverDetail = await DoPodDeliverDetail.findOne({
-            where: {
-              doPodDeliverId: payload.doPodId,
-              awbItemId: awb.awbItemId,
-              isDeleted: false,
+          const doPodDeliverDetail = await DoPodDeliverDetail.findOne(
+            {
+              where: {
+                doPodDeliverId: payload.doPodDeliverId,
+                awbItemId: awb.awbItemId,
+                isDeleted: false,
+              },
             },
-          });
+          );
 
           if (doPodDeliverDetail) {
             DoPodDeliverDetail.update(
@@ -128,7 +132,7 @@ export class LastMileDeliveryOutService {
           const awb = await DeliveryService.validAwbNumber(addAwb);
           // add data do_pod_detail
           const doPodDeliverDetail = DoPodDeliverDetail.create();
-          doPodDeliverDetail.doPodDeliverId = payload.doPodId;
+          doPodDeliverDetail.doPodDeliverId = payload.doPodDeliverId;
           doPodDeliverDetail.awbItemId = awb.awbItemId;
           doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
           await DoPodDeliverDetail.save(doPodDeliverDetail);
@@ -178,7 +182,7 @@ export class LastMileDeliveryOutService {
       result.status = 'error';
       result.message = 'Surat Jalan tidak valid/Sudah pernah Scan In';
     }
-    result.doPodId = payload.doPodId;
+    result.doPodId = payload.doPodDeliverId;
     return result;
   }
 

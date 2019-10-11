@@ -240,3 +240,32 @@ export class WebScanOutCreateDeliveryVm {
   })
   desc?: string;
 }
+
+export class WebScanOutDeliverEditVm extends WebScanOutCreateDeliveryVm {
+  @ApiModelProperty({
+    example: 'asdkjashfhasifhasifhasihf',
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'POD ID harus diisi' })
+  doPodDeliverId: string;
+
+  @ApiModelPropertyOptional({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+  // @IsDefined({message: 'Nomor resi harus diisi'})
+  // @ValidateNested({ each: true })
+  // @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  addAwbNumber: string[];
+
+  @ApiModelPropertyOptional({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+  // @IsDefined({message: 'Nomor resi harus diisi'})
+  // @ValidateNested({ each: true })
+  // @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  removeAwbNumber: string[];
+}

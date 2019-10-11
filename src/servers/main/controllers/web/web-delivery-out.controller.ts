@@ -17,6 +17,7 @@ import {
   WebScanOutBagValidateVm,
   WebScanOutLoadForEditVm,
   WebScanOutBagForPrintVm,
+  WebScanOutDeliverEditVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutAwbResponseVm,
@@ -89,7 +90,7 @@ export class WebDeliveryOutController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutCreateResponseVm })
   @Transactional()
-  public async scanOutUpdateDeliver(@Body() payload: WebScanOutEditVm) {
+  public async scanOutUpdateDeliver(@Body() payload: WebScanOutDeliverEditVm) {
     return LastMileDeliveryOutService.scanOutUpdateDelivery(payload);
   }
 
