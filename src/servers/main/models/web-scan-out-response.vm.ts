@@ -190,7 +190,7 @@ export class EditDataAwbVm {
   branchTo: string;
 
   @ApiModelProperty()
-  employeeIdDriver: string;
+  userIdDriver: string;
 
   @ApiModelProperty()
   employeeName: string;
