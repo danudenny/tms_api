@@ -113,9 +113,8 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
   @Transactional()
   public async scanOutAwbDeliver(@Body() payload: WebScanOutAwbVm) {
-    // NOTE: Scan Out With Awb
     // Antar (Sigesit)
-    return this.webDeliveryOutService.scanOutAwbDeliver(payload);
+    return LastMileDeliveryOutService.scanOutAwbDeliver(payload);
   }
 
   @Post('bag')
