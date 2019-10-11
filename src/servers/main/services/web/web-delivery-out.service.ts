@@ -49,11 +49,8 @@ import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag'
 import { BagService } from '../v1/bag.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
-import { BagOrderResponseVm, BagDetailResponseVm } from '../../models/bag-order-detail-response.vm';
+import { BagOrderResponseVm, BagDetailResponseVm, AuditHistVm } from '../../models/bag-order-detail-response.vm';
 import { BagAwbVm, BagDetailVm } from '../../models/bag-order-response.vm';
-import { WebScanPhotoResponseVm } from '../../models/web-scan-photo-response.vm';
-import { ScanOutPhotoVm } from '../../models/scan-out-photo-response.vm';
-import { url } from 'inspector';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 // #endregion
 
@@ -1150,23 +1147,6 @@ export class WebDeliveryOutService {
     }
   }
 
-  async doPodDetail(payload: BagDetailVm): Promise<BagDetailResponseVm> {
-    const doPod = await DoPodRepository.getDataById(payload.doPodId);
-
-    if (doPod) {
-      const result = new BagDetailResponseVm();
-      result.doPodCode = doPod.doPodCode;
-      result.userIdDriver = doPod.userIdDriver;
-      result.userIdCreated = doPod.userIdCreated;
-      result.vehicleNumber = doPod.vehicleNumber;
-      result.branchToName = doPod.branchTo.branchName;
-      result.totalScanOutAwb = doPod.totalScanOutAwb;
-      result.description = doPod.description;
-
-      return result;
-    }
-  }
-
   /**
    *
    *
@@ -1243,6 +1223,52 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  async doPodDetail(payload: BagDetailVm): Promise<BagDetailResponseVm> {
+    const doPod = await DoPodRepository.getDataById(payload.doPodId);
+    const result = new BagDetailResponseVm();
+
+    if (doPod) {
+      result.doPodCode = doPod.doPodCode;
+      result.driverName = doPod.userDriver.employee.employeeName;
+      result.createdName = doPod.userCreated.employee.employeeName;
+      result.vehicleNumber = doPod.vehicleNumber;
+      result.branchToName = doPod.branchTo.branchName;
+      result.totalScanOutAwb = doPod.totalScanOutAwb;
+      result.description = doPod.description;
+
+      const auditHistory = new OrionRepositoryService(AuditHistory);
+      const q = auditHistory.findAll();
+      q.select({
+        createdTime: true,
+        note: true,
+        userCreated: {
+          userId: true,
+          employee: {
+            employeeId: true,
+            employeeName: true,
+          },
+        },
+      });
+      q.where(e => e.changeId, w => w.equals(doPod.doPodId));
+      q.andWhere(e => e.isDeleted, w => w.equals(false));
+      const history = await q.exec();
+
+      if (history) {
+        const itemHistory = [];
+        for (const item of history) {
+          const itemResult = new AuditHistVm();
+          itemResult.createdTime = item.createdTime;
+          itemResult.note = item.note;
+          itemResult.username = item.userCreated.employee.employeeName;
+
+          itemHistory.push(itemResult);
+        }
+        result.history = itemHistory;
+      }
+      return result;
+    }
+
+  }
   async scanOutAwbValidate(
     payload: WebScanOutAwbValidateVm,
   ): Promise<ScanAwbVm> {

@@ -309,6 +309,10 @@ export class DoPod extends TmsBaseEntity {
   @JoinColumn({ name: 'user_id_driver', referencedColumnName: 'userId' })
   userDriver: User;
 
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_created', referencedColumnName: 'userId' })
+  userCreated: User;
+
   @ManyToOne(() => TransactionStatus)
   @JoinColumn({ name: 'transaction_status_id' })
   transactionStatus: TransactionStatus;
