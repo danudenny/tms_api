@@ -1202,6 +1202,7 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  // TODO: need refactoring
   async scanOutLoadForEdit(
     payload: WebScanOutLoadForEditVm,
     isHub = false,
@@ -1243,7 +1244,7 @@ export class WebDeliveryOutService {
       // Get Data for internal Method
       q.selectRaw(
         ['t1.do_pod_id', 'doPodId'],
-        ['t1.user_id_driver', 'employeeIdDriver'],
+        ['t1.user_id_driver', 'userIdDriver'],
         ['t1.do_pod_method', 'doPodMethod'],
         ['t1.vehicle_number', 'vehicleNumber'],
         ['t1.branch_id_to', 'branchIdTo'],
