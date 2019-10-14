@@ -14,6 +14,7 @@ import { MobileInitDataService } from './mobile-init-data.service';
 import { MobileSyncImageResponseVm } from '../../models/mobile-sync-response.vm';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
+import { DoPodDeliverAttachment } from '../../../../shared/orm-entity/do_pod_deliver_attachment';
 
 export class MobileSyncService {
   public static async syncByRequest(payload: MobileSyncPayloadVm) {
@@ -109,31 +110,29 @@ export class MobileSyncService {
     payload: MobileSyncImagePayloadVm,
     file,
   ): Promise<MobileSyncImageResponseVm> {
-    // const authMeta = AuthService.getAuthData();
     const result = new MobileSyncImageResponseVm();
+
     let url = null;
     let attachmentId = null;
 
-    // const timeNow = moment().toDate();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
-
-    const checkAttachment = await AttachmentTms.findOne({
+    let attachment = await AttachmentTms.findOne({
       where: {
         fileName: file.originalname,
       },
     });
 
-    if (checkAttachment) {
+    if (attachment) {
       // attachment exist
-      attachmentId = checkAttachment.attachmentTmsId;
-      url = checkAttachment.url;
+      attachmentId = attachment.attachmentTmsId;
+      url = attachment.url;
     } else {
       // upload image
-      const attachment = await AttachmentService.uploadFileBufferToS3(
+      const pathId = `tms-delivery-${payload.imageType}`;
+      attachment = await AttachmentService.uploadFileBufferToS3(
         file.buffer,
         file.originalname,
         file.mimetype,
-        'tms-delivery',
+        pathId,
       );
       if (attachment) {
         attachmentId = attachment.attachmentTmsId;
@@ -141,10 +140,16 @@ export class MobileSyncService {
       }
     }
 
-    // TODO: update data attachmentId on delivery
-    //
-    //
-    // payload.id
+    // NOTE: insert data
+    if (attachmentId) {
+      // TODO: validate doPodDeliverDetailId ??
+      const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
+      doPodDeliverAttachment.doPodDeliverDetailId = payload.id;
+      doPodDeliverAttachment.attachmentTmsId = attachmentId;
+      doPodDeliverAttachment.type = payload.imageType;
+      DoPodDeliverAttachment.save(doPodDeliverAttachment);
+    }
+
     result.url = url;
     result.attachmentId = attachmentId;
     return result;
