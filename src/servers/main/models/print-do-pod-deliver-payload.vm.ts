@@ -11,5 +11,5 @@ export class PrintDoPodDeliverPayloadQueryVm {
   branchId: number;
 
   @ApiModelProperty()
-  threeTimes: boolean;
+  printCopy: number;
 }

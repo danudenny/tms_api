@@ -90,26 +90,34 @@ export class PrintService {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
         totalItems: doPod.doPodDetails.length,
+        printCopy: 3,
       },
     };
 
-    if (queryParams.threeTimes) {
-      for (let i = 0; i < 3; i++) {
-        PrinterService.responseForJsReport({
-          res,
-          jsreportTemplateName: 'surat-jalan',
-          jsreportTemplateData: jsreportParams,
-          printerName: 'StrukPrinter',
-        });
-      }
-    } else {
-      PrinterService.responseForJsReport({
-        res,
-        jsreportTemplateName: 'surat-jalan',
-        jsreportTemplateData: jsreportParams,
-        printerName: 'StrukPrinter',
-      });
-    }
+    PrinterService.responseForJsReport({
+      res,
+      jsreportTemplateName: 'surat-jalan',
+      jsreportTemplateData: jsreportParams,
+      printerName: 'StrukPrinter',
+    });
+
+    // if (queryParams.threeTimes) {
+    //   for (let i = 0; i < 3; i++) {
+    //     PrinterService.responseForJsReport({
+    //       res,
+    //       jsreportTemplateName: 'surat-jalan',
+    //       jsreportTemplateData: jsreportParams,
+    //       printerName: 'StrukPrinter',
+    //     });
+    //   }
+    // } else {
+    //   PrinterService.responseForJsReport({
+    //     res,
+    //     jsreportTemplateName: 'surat-jalan',
+    //     jsreportTemplateData: jsreportParams,
+    //     printerName: 'StrukPrinter',
+    //   });
+    // }
   }
 
   public static async printDoPodBagByRequest(
@@ -194,27 +202,35 @@ export class PrintService {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
         totalItems: totalBagItem,
+        printCopy: 3,
       },
     };
 
+    PrinterService.responseForJsReport({
+      res,
+      jsreportTemplateName: 'surat-jalan-gabung-paket',
+      jsreportTemplateData: jsreportParams,
+      printerName: 'StrukPrinter',
+    });
+
     // TODO: 3x print
-    if (queryParams.threeTimes) {
-      for (let i = 0; i < 3; i++) {
-        PrinterService.responseForJsReport({
-          res,
-          jsreportTemplateName: 'surat-jalan-gabung-paket',
-          jsreportTemplateData: jsreportParams,
-          printerName: 'StrukPrinter',
-        });
-      }
-    } else {
-      PrinterService.responseForJsReport({
-        res,
-        jsreportTemplateName: 'surat-jalan-gabung-paket',
-        jsreportTemplateData: jsreportParams,
-        printerName: 'StrukPrinter',
-      });
-    }
+    // if (queryParams.threeTimes) {
+    //   for (let i = 0; i < 3; i++) {
+    //     PrinterService.responseForJsReport({
+    //       res,
+    //       jsreportTemplateName: 'surat-jalan-gabung-paket',
+    //       jsreportTemplateData: jsreportParams,
+    //       printerName: 'StrukPrinter',
+    //     });
+    //   }
+    // } else {
+    //   PrinterService.responseForJsReport({
+    //     res,
+    //     jsreportTemplateName: 'surat-jalan-gabung-paket',
+    //     jsreportTemplateData: jsreportParams,
+    //     printerName: 'StrukPrinter',
+    //   });
+    // }
   }
 
   public static async printDoPodDeliverByRequest(
@@ -302,26 +318,34 @@ export class PrintService {
         time: m.format('HH:mm'),
         totalItems: doPodDeliver.doPodDeliverDetails.length,
         totalCod: totalAllCod,
+        printCopy: 3,
       },
     };
 
-    if (queryParams.threeTimes) {
-      for (let i = 0; i < 3; i++) {
-        PrinterService.responseForJsReport({
-          res,
-          jsreportTemplateName: 'surat-jalan-antar',
-          jsreportTemplateData: jsreportParams,
-          printerName: 'StrukPrinter',
-        });
-      }
-    } else {
-      PrinterService.responseForJsReport({
-        res,
-        jsreportTemplateName: 'surat-jalan-antar',
-        jsreportTemplateData: jsreportParams,
-        printerName: 'StrukPrinter',
-      });
-    }
+    PrinterService.responseForJsReport({
+      res,
+      jsreportTemplateName: 'surat-jalan-antar',
+      jsreportTemplateData: jsreportParams,
+      printerName: 'StrukPrinter',
+    });
+
+    // if (queryParams.threeTimes) {
+    //   for (let i = 0; i < 3; i++) {
+    //     PrinterService.responseForJsReport({
+    //       res,
+    //       jsreportTemplateName: 'surat-jalan-antar',
+    //       jsreportTemplateData: jsreportParams,
+    //       printerName: 'StrukPrinter',
+    //     });
+    //   }
+    // } else {
+    //   PrinterService.responseForJsReport({
+    //     res,
+    //     jsreportTemplateName: 'surat-jalan-antar',
+    //     jsreportTemplateData: jsreportParams,
+    //     printerName: 'StrukPrinter',
+    //   });
+    // }
   }
 
   public static async printBagItemForStickerByRequest(
