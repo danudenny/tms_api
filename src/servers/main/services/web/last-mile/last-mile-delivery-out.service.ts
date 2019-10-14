@@ -323,8 +323,13 @@ export class LastMileDeliveryOutService {
 
                 if (doPodDeliver) {
                   // counter total scan out
-                  doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
-                  await DoPodDeliver.save(doPodDeliver);
+                  const totalAwb = doPodDeliver.totalAwb + 1;
+                  await DoPodDeliver.update(
+                    doPodDeliver.doPodDeliverId,
+                    {
+                      totalAwb,
+                    },
+                  );
                   await DeliveryService.updateAwbAttr(
                     awb.awbItemId,
                     null,
