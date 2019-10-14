@@ -217,20 +217,16 @@ export class WebDeliveryOutService {
         } // end of loop
       }
 
-      const totalItem = await this.getTotalDetailById(doPod.doPodId);
+      // const totalItem = await this.getTotalDetailById(doPod.doPodId);
       const totalScanOutAwb = doPod.totalScanOutAwb + totalAdd - totalRemove;
       // update data
       const updateDoPod = {
         doPodMethod:
           payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
-        partnerLogisticId: payload.partnerLogisticId,
+        partnerLogisticId: Number(payload.partnerLogisticId),
         branchIdTo: payload.branchIdTo,
         userIdDriver: payload.userIdDriver,
         vehicleNumber: payload.vehicleNumber,
-        description: payload.desc,
-        branchId: permissonPayload.branchId,
-        userId: authMeta.userId,
-        totalItem,
         totalScanOutAwb,
       };
       await DoPod.update(doPod.doPodId, updateDoPod);
@@ -384,7 +380,7 @@ export class WebDeliveryOutService {
         } // end of loop
       }
 
-      const totalItem = await this.getTotalDetailById(doPod.doPodId);
+      // const totalItem = await this.getTotalDetailById(doPod.doPodId);
       const totalScanOutBag =
         doPod.totalScanOutBag + totalAdd - totalRemove;
       // update data
@@ -393,14 +389,10 @@ export class WebDeliveryOutService {
           payload.doPodMethod && payload.doPodMethod == '3pl'
             ? 3000
             : 1000,
-        partnerLogisticId: payload.partnerLogisticId,
+        partnerLogisticId: Number(payload.partnerLogisticId),
         branchIdTo: payload.branchIdTo,
         userIdDriver: payload.userIdDriver,
         vehicleNumber: payload.vehicleNumber,
-        description: payload.desc,
-        branchId: permissonPayload.branchId,
-        userId: authMeta.userId,
-        totalItem,
         totalScanOutBag,
       };
       await DoPod.update(doPod.doPodId, updateDoPod);
