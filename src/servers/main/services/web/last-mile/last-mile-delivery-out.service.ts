@@ -317,31 +317,33 @@ export class LastMileDeliveryOutService {
                 // #region after scanout
 
                 // Update do_pod
-                const doPodDeliver = await DoPodDeliver.findOne({
-                  select: ['doPodDeliverId', 'totalAwb'],
-                  where: {
-                    doPodDeliverId: payload.doPodId,
-                    isDeleted: false,
-                  },
-                });
-
-                // counter total scan out
-                doPodDeliver.totalAwb = doPodDeliver.totalAwb + 1;
-                await DoPodDeliver.save(doPodDeliver);
-                await DeliveryService.updateAwbAttr(
-                  awb.awbItemId,
-                  null,
-                  AWB_STATUS.ANT,
+                const doPodDeliver = await DoPodDeliverRepository.getDataById(
+                  payload.doPodId,
                 );
 
-                // NOTE: queue by Bull
-                DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
-                  awb.awbItemId,
-                  AWB_STATUS.ANT,
-                  permissonPayload.branchId,
-                  authMeta.userId,
-                  doPodDeliver.userDriver.employeeId,
-                );
+                if (doPodDeliver) {
+                  // counter total scan out
+                  const totalAwb = doPodDeliver.totalAwb + 1;
+                  await DoPodDeliver.update(
+                    doPodDeliver.doPodDeliverId,
+                    {
+                      totalAwb,
+                    },
+                  );
+                  await DeliveryService.updateAwbAttr(
+                    awb.awbItemId,
+                    null,
+                    AWB_STATUS.ANT,
+                  );
+                  // NOTE: queue by Bull
+                  DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
+                    awb.awbItemId,
+                    AWB_STATUS.ANT,
+                    permissonPayload.branchId,
+                    authMeta.userId,
+                    doPodDeliver.userDriver.employeeId,
+                  );
+                }
                 // #endregion after scanout
 
                 totalSuccess += 1;
