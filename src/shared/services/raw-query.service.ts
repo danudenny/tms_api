@@ -3,6 +3,7 @@ import { MetaService } from './meta.service';
 
 export class RawQueryService {
 
+  // TODO: fix config get connection manager??
   // init connect
   static manager = getManager();
   static connection = RawQueryService.manager.connection;
@@ -13,6 +14,11 @@ export class RawQueryService {
 
   public static query(sql: string, parameters?: any[]) {
     return this.manager.query(sql, parameters);
+  }
+
+  public static queryWithParams(sql: string, parameters: Object) {
+    const [q, params] = this.connection.driver.escapeQueryWithParameters(sql, parameters, {});
+    return this.manager.query(q, params);
   }
 
   public static async queryCount(sql: string, sqlParamters?: any[]) {
