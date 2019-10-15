@@ -1,19 +1,16 @@
-import * as Bull from 'bull';
-
 import moment = require('moment');
 import { ConfigService } from '../../../shared/services/config.service';
 import { AwbHistory } from '../../../shared/orm-entity/awb-history';
-import { AwbItemSummary } from '../../../shared/orm-entity/awb-item-summary';
 import { DoPodDetail } from '../../../shared/orm-entity/do-pod-detail';
 import { OrionRepositoryService } from '../../../shared/services/orion-repository.service';
 import { getManager } from 'typeorm';
 import { DoPodDeliverDetail } from '../../../shared/orm-entity/do-pod-deliver-detail';
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
-import { AwbStatus } from '../../../shared/orm-entity/awb-status';
+import { QueueBullBoard } from './queue-bull-board';
 
 export class DoPodDetailPostMetaQueueService {
-  public static queue = new Bull('awb-history-post-meta', {
+  public static queue = QueueBullBoard.createQueue.add('awb-history-post-meta', {
     defaultJobOptions: {
       timeout: 0,
       attempts: Math.round(
@@ -28,7 +25,6 @@ export class DoPodDetailPostMetaQueueService {
         delay: ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
       },
     },
-    redis: ConfigService.get('redis'),
   });
 
   public static boot() {
