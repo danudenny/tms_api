@@ -251,7 +251,7 @@ export class PackageService {
 
     if (!bagData) {
           // generate bag number
-          randomBagNumber = 'GS' + sampleSize('012345678900123456789001234567890', 5).join('');
+          randomBagNumber = 'S' + sampleSize('012345678900123456789001234567890', 6).join('');
           const bagDetail = Bag.create({
             bagNumber    : randomBagNumber,
             districtIdTo : districtId,

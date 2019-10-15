@@ -26,6 +26,7 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
 import { WebMonitoringController } from './web/web-monitoring.controller';
 import { WebAwbUpdateStatusController } from './web/web-awb-update-status.controller';
 import { WebAwbCountController } from './web/web-awb-count.controller';
+import { WebTrackingController } from './web/web-tracking.controller';
 
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -58,6 +59,7 @@ import { WebAwbCountController } from './web/web-awb-count.controller';
     WebMonitoringController,
     WebAwbUpdateStatusController,
     WebAwbCountController,
+    WebTrackingController,
   ],
 })
 export class MainServerControllersModule {}
