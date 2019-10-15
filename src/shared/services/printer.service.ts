@@ -31,16 +31,19 @@ export class PrinterService {
     jsreportTemplateName,
     jsreportTemplateData,
     printerName,
+    printCopy = 1,
   }: {
     res: express.Response;
     jsreportTemplateName: string;
     jsreportTemplateData?: any;
     printerName?: string;
+    printCopy?: number;
   }) {
     const payload: any = {};
     payload.type = 'jsreport';
     payload.jsreportTemplateName = jsreportTemplateName;
     payload.printerName = printerName;
+    payload.printCopy = printCopy;
     if (jsreportTemplateData && size(jsreportTemplateData)) {
       payload.jsreportTemplateData = jsreportTemplateData;
     }
