@@ -14,32 +14,36 @@ import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-his
 export class BagService {
 
   static async validBagNumber(bagNumberSeq: string): Promise<BagItem> {
-    const bagNumber: string = bagNumberSeq.substring(0, 7);
-    const seqNumber: number = Number(bagNumberSeq.substring(7, 10));
+    const regexNumber = /^[0-9]+$/;
+    if (regexNumber.test(bagNumberSeq.substring(7, 10))) {
+      const bagNumber: string = bagNumberSeq.substring(0, 7);
+      const seqNumber: number = Number(bagNumberSeq.substring(7, 10));
+      const bagRepository = new OrionRepositoryService(BagItem);
+      const q = bagRepository.findOne();
+      // Manage relation (default inner join)
+      q.innerJoin(e => e.bag, null, join => join.andWhere(e => e.isDeleted, w => w.isFalse()));
 
-    const bagRepository = new OrionRepositoryService(BagItem);
-    const q = bagRepository.findOne();
-    // Manage relation (default inner join)
-    q.innerJoin(e => e.bag, null, join => join.andWhere(e => e.isDeleted, w => w.isFalse()));
-
-    q.select({
-      bagItemId: true,
-      bagItemStatusIdLast: true,
-      branchIdLast: true,
-      branchIdNext: true,
-      bagSeq: true,
-      bagId: true,
-      bag: {
-        representativeIdTo: true,
-        refRepresentativeCode: true,
+      q.select({
+        bagItemId: true,
+        bagItemStatusIdLast: true,
+        branchIdLast: true,
+        branchIdNext: true,
+        bagSeq: true,
         bagId: true,
-        bagNumber: true,
-      },
-    });
-    q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
-    q.andWhere(e => e.bagSeq, w => w.equals(seqNumber));
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-    return await q.exec();
+        bag: {
+          representativeIdTo: true,
+          refRepresentativeCode: true,
+          bagId: true,
+          bagNumber: true,
+        },
+      });
+      q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
+      q.andWhere(e => e.bagSeq, w => w.equals(seqNumber));
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+      return await q.exec();
+    } else {
+      return null;
+    }
   }
 
   static async getBagNumber(bagItemId: number): Promise<BagItem> {
