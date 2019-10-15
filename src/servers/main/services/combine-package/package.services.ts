@@ -46,6 +46,7 @@ export class PackageService {
       result.districtId     = dataResult.districtId;
       result.podScanInHubId = dataResult.podScanInHubId;
       result.dataBag        = dataResult.dataBag;
+      result.bagItemId      = dataResult.bagItemId;
     } else if (regexNumber.test(value) && valueLength === 12) {
       //  scan resi
       if (!payload.districtId && !payload.bagNumber) {
@@ -95,6 +96,7 @@ export class PackageService {
     districtName: string,
     podScanInHubId: string,
     dataBag: AwbPackageDetail[],
+    bagItemId: number,
   }> {
     const value = payload.value;
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -141,6 +143,7 @@ export class PackageService {
       districtName: data[0].districtName,
       podScanInHubId: data[0].podScanInHubId,
       dataBag: data,
+      bagItemId: bagDetail.bagItemId,
     };
     return dataResult;
   }
@@ -386,8 +389,8 @@ export class PackageService {
     const awbItemAttr      = await AwbService.validAwbNumber(value);
     const districtId: number    = payload.districtId;
     let bagNumber: number       = payload.bagNumber;
-    let podScanInHubId: number  = payload.podScanInHubId;
-    let bagItemId: number       = payload.bagItemId;
+    let podScanInHubId: string  = payload.podScanInHubId;
+    let bagItemId: string       = payload.bagItemId;
     let isTrouble: boolean      = false;
     let isAllow: boolean        = true;
     const troubleDesc: String[] = [];
