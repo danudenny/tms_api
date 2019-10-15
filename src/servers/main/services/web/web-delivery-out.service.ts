@@ -1107,7 +1107,7 @@ export class WebDeliveryOutService {
       result.createdName = doPod.userCreated.employee.employeeName;
       result.vehicleNumber = doPod.vehicleNumber;
       result.branchToName = doPod.branchTo.branchName;
-      result.totalScanOutAwb = doPod.totalScanOutAwb;
+      result.totalScanOutBag = doPod.totalScanOutBag;
       result.description = doPod.description;
 
       const auditHistory = new OrionRepositoryService(AuditHistory);
