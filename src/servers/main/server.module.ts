@@ -95,6 +95,13 @@ export class MainServerModule extends MultiServerAppModule implements NestModule
       );
     }
 
+    // NOTE: bull-board
+    // https://www.npmjs.com/package/bull-board
+    if (serverConfig.bullBoard) {
+      const { UI } = require('bull-board');
+      app.use('/bull/queues', UI);
+    }
+
     if (process.env.NODE_ENV === 'test') {
       await app.init();
     } else {

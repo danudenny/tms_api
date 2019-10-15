@@ -1,15 +1,12 @@
-import * as Bull from 'bull';
-
 import moment = require('moment');
 import { ConfigService } from '../../../shared/services/config.service';
-import { getManager } from 'typeorm';
-import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
+import { QueueBullBoard } from './queue-bull-board';
 
 // DOC: https://optimalbits.github.io/bull/
 
 export class BagItemHistoryQueueService {
-  public static queue = new Bull('bag-item-history-queue', {
+  public static queue = QueueBullBoard.createQueue.add('bag-item-history-queue', {
     defaultJobOptions: {
       timeout: 0,
       attempts: Math.round(
@@ -24,7 +21,6 @@ export class BagItemHistoryQueueService {
         delay: ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
       },
     },
-    redis: ConfigService.get('redis'),
     limiter: {
       max: 1000,
       duration: 5000, // on seconds

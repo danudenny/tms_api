@@ -7,4 +7,5 @@ module.exports = {
     description: "SiCepat TMS main server api",
     path: "docs",
   },
+  bullBoard: true,
 };
