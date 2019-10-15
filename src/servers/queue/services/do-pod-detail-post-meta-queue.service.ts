@@ -311,7 +311,7 @@ export class DoPodDetailPostMetaQueueService {
       awbItemId,
       userId,
       branchId,
-      awbStatusId: AWB_STATUS.IN_BRANCH,
+      awbStatusId: AWB_STATUS.IN_HUB,
       awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
       userIdCreated: userId,
       userIdUpdated: userId,
