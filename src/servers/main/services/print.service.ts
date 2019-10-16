@@ -326,8 +326,8 @@ export class PrintService {
     }
 
     const [{ cnt: bagItemsTotal }] = await RawQueryService.exec(
-      `SELECT COUNT(1) as cnt FROM bag_item WHERE bag_id=:bagId`,
-      { bagId: bagItem.bagId },
+      `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
+      { bagItemId: bagItem.bagItemId },
     );
 
     const currentUser = await RepositoryService.user
