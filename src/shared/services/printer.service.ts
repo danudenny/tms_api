@@ -28,25 +28,21 @@ export class PrinterService {
 
   public static responseForJsReport({
     res,
-    jsreportTemplateName,
-    jsreportTemplateData,
     printerName,
-    printCopy = 1,
+    templates,
   }: {
     res: express.Response;
-    jsreportTemplateName: string;
-    jsreportTemplateData?: any;
     printerName?: string;
-    printCopy?: number;
+    templates: Array<{
+      templateName: string;
+      templateData?: any;
+      printCopy?: number;
+    }>
   }) {
     const payload: any = {};
     payload.type = 'jsreport';
-    payload.jsreportTemplateName = jsreportTemplateName;
     payload.printerName = printerName;
-    payload.printCopy = printCopy;
-    if (jsreportTemplateData && size(jsreportTemplateData)) {
-      payload.jsreportTemplateData = jsreportTemplateData;
-    }
+    payload.templates = templates;
 
     const reqTmsPrinter = request.post({
       url: ConfigService.get('printerHelper.url'),
