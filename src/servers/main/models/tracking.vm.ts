@@ -98,7 +98,51 @@ export class TrackingAwbResponseVm {
   awbHistory: AwbHistoryResponseVm[];
 }
 
+export class BagHistoryResponseVm {
+  @ApiModelProperty()
+  bagItemStatusId: number;
+
+  @ApiModelProperty()
+  bagItemStatusName: string;
+
+  @ApiModelProperty()
+  username: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  historyDate: string;
+}
+
 export class TrackingBagResponseVm {
   @ApiModelProperty()
   bagNumber: string;
+
+  @ApiModelProperty()
+  weight: number;
+
+  @ApiModelProperty()
+  bagItemId: number;
+
+  @ApiModelProperty()
+  bagItemStatusId: number;
+
+  @ApiModelProperty()
+  bagItemStatusName: string;
+
+  @ApiModelProperty()
+  branchCodeLast: string;
+
+  @ApiModelProperty()
+  branchNameLast: string;
+
+  @ApiModelProperty()
+  branchCodeNext: string;
+
+  @ApiModelProperty()
+  branchNameNext: string;
+
+  @ApiModelProperty({ type: () => [BagHistoryResponseVm] })
+  bagHistory: BagHistoryResponseVm[];
 }
