@@ -297,6 +297,13 @@ export class PackageService {
     // NOTE: background job for insert bag item history
     BagItemHistoryQueueService.addData(
       bagItem.bagItemId,
+      500,
+      permissonPayload.branchId,
+      authMeta.userId,
+    );
+
+    BagItemHistoryQueueService.addData(
+      bagItem.bagItemId,
       3000,
       permissonPayload.branchId,
       authMeta.userId,
