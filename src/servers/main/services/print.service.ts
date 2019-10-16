@@ -95,10 +95,12 @@ export class PrintService {
 
     PrinterService.responseForJsReport({
       res,
-      jsreportTemplateName: 'surat-jalan',
-      jsreportTemplateData: jsreportParams,
       printerName: 'StrukPrinter',
-      printCopy: queryParams.printCopy,
+      templates: [{
+        templateName: 'surat-jalan',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
     });
   }
 
@@ -189,10 +191,12 @@ export class PrintService {
 
     PrinterService.responseForJsReport({
       res,
-      jsreportTemplateName: 'surat-jalan-gabung-paket',
-      jsreportTemplateData: jsreportParams,
       printerName: 'StrukPrinter',
-      printCopy: queryParams.printCopy,
+      templates: [{
+        templateName: 'surat-jalan-gabung-paket',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
     });
   }
 
@@ -286,10 +290,12 @@ export class PrintService {
 
     PrinterService.responseForJsReport({
       res,
-      jsreportTemplateName: 'surat-jalan-antar',
-      jsreportTemplateData: jsreportParams,
       printerName: 'StrukPrinter',
-      printCopy: queryParams.printCopy,
+      templates: [{
+        templateName: 'surat-jalan-antar',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
     });
   }
 
@@ -489,9 +495,11 @@ export class PrintService {
 
     PrinterService.responseForJsReport({
       res,
-      jsreportTemplateName: 'surat-jalan-gabungan-sortir-paper',
-      jsreportTemplateData: jsreportParams,
       printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'surat-jalan-gabungan-sortir-paper',
+        templateData: jsreportParams,
+      }],
     });
   }
 }
