@@ -614,6 +614,7 @@ export class WebDeliveryOutService {
               doPod.lastDateScanOut = timeNow;
             }
             await DoPod.save(doPod);
+
           }
 
           // TODO: need refactoring ??
@@ -665,10 +666,12 @@ export class WebDeliveryOutService {
               );
             }
 
+            // TODO: need refactoring
+            const bagStatus = doPod.doPodType == 3005 ? 1000 : 4500 ;
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
               bagData.bagItemId,
-              1000,
+              bagStatus,
               permissonPayload.branchId,
               authMeta.userId,
             );
