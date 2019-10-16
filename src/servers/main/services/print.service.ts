@@ -246,7 +246,11 @@ export class PrintService {
 
     const awbIds = map(doPodDeliver.doPodDeliverDetails, doPodDeliverDetail => doPodDeliverDetail.awbItem.awb.awbId);
     const result = await RawQueryService.query(`SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(',')})`);
-    const totalAllCod = result[0].total;
+    let totalAllCod = result[0].total;
+
+    if (totalAllCod < 1) {
+      totalAllCod = 0;
+    }
 
     const currentUser = await RepositoryService.user
       .loadById(queryParams.userId)
