@@ -231,6 +231,7 @@ export class PrintService {
               consigneeAddress: true,
               consigneeZip: true,
               totalCodValue: true,
+              isCod: true,
             },
           },
         },
@@ -291,11 +292,18 @@ export class PrintService {
     PrinterService.responseForJsReport({
       res,
       printerName: 'StrukPrinter',
-      templates: [{
-        templateName: 'surat-jalan-antar',
-        templateData: jsreportParams,
-        printCopy: queryParams.printCopy,
-      }],
+      templates: [
+        {
+          templateName: 'surat-jalan-antar',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+        {
+          templateName: 'surat-jalan-antar-admin',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+      ],
     });
   }
 
