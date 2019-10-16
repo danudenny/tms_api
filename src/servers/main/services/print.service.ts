@@ -95,10 +95,12 @@ export class PrintService {
 
     PrinterService.responseForJsReport({
       res,
-      jsreportTemplateName: 'surat-jalan',
-      jsreportTemplateData: jsreportParams,
       printerName: 'StrukPrinter',
-      printCopy: queryParams.printCopy,
+      templates: [{
+        templateName: 'surat-jalan',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
     });
   }
 
@@ -189,10 +191,12 @@ export class PrintService {
 
     PrinterService.responseForJsReport({
       res,
-      jsreportTemplateName: 'surat-jalan-gabung-paket',
-      jsreportTemplateData: jsreportParams,
       printerName: 'StrukPrinter',
-      printCopy: queryParams.printCopy,
+      templates: [{
+        templateName: 'surat-jalan-gabung-paket',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
     });
   }
 
@@ -286,10 +290,12 @@ export class PrintService {
 
     PrinterService.responseForJsReport({
       res,
-      jsreportTemplateName: 'surat-jalan-antar',
-      jsreportTemplateData: jsreportParams,
       printerName: 'StrukPrinter',
-      printCopy: queryParams.printCopy,
+      templates: [{
+        templateName: 'surat-jalan-antar',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
     });
   }
 
@@ -326,8 +332,8 @@ export class PrintService {
     }
 
     const [{ cnt: bagItemsTotal }] = await RawQueryService.exec(
-      `SELECT COUNT(1) as cnt FROM bag_item WHERE bag_id=:bagId`,
-      { bagId: bagItem.bagId },
+      `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
+      { bagItemId: bagItem.bagItemId },
     );
 
     const currentUser = await RepositoryService.user
@@ -489,9 +495,11 @@ export class PrintService {
 
     PrinterService.responseForJsReport({
       res,
-      jsreportTemplateName: 'surat-jalan-gabungan-sortir-paper',
-      jsreportTemplateData: jsreportParams,
       printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'surat-jalan-gabungan-sortir-paper',
+        templateData: jsreportParams,
+      }],
     });
   }
 }
