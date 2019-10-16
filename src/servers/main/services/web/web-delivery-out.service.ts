@@ -116,7 +116,7 @@ export class WebDeliveryOutService {
     // await for get do pod id
     await this.doPodRepository.save(doPod);
 
-    await this.createAuditHistory(doPod.doPodId);
+    await this.createAuditHistory(doPod.doPodId, false);
 
     // Populate return value
     result.status = 'ok';
@@ -289,14 +289,11 @@ export class WebDeliveryOutService {
               });
 
               // TODO: reverse data ???
-              const bagItem = await BagItem.findOne(
-                {
-                  where: {
-                    bagItemId:
-                      bagData.bagItemId,
-                  },
+              const bagItem = await BagItem.findOne({
+                where: {
+                  bagItemId: bagData.bagItemId,
                 },
-              );
+              });
               if (bagItem) {
                 BagItem.update(bagItem.bagItemId, {
                   bagItemStatusIdLast: 2000,
@@ -381,14 +378,11 @@ export class WebDeliveryOutService {
       }
 
       // const totalItem = await this.getTotalDetailById(doPod.doPodId);
-      const totalScanOutBag =
-        doPod.totalScanOutBag + totalAdd - totalRemove;
+      const totalScanOutBag = doPod.totalScanOutBag + totalAdd - totalRemove;
       // update data
       const updateDoPod = {
         doPodMethod:
-          payload.doPodMethod && payload.doPodMethod == '3pl'
-            ? 3000
-            : 1000,
+          payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
         partnerLogisticId: Number(payload.partnerLogisticId),
         branchIdTo: payload.branchIdTo,
         userIdDriver: payload.userIdDriver,
@@ -1360,13 +1354,15 @@ export class WebDeliveryOutService {
   }
 
   // TODO: send to background job process
-  private async createAuditHistory(doPodId: string) {
+  private async createAuditHistory(doPodId: string, isUpdate: boolean = true) {
     // find doPod
     const doPod = await DoPodRepository.getDataById(doPodId);
     if (doPod) {
       // construct note for information
       const description = doPod.description ? doPod.description : '';
+      const stage = isUpdate ? 'Updated' : 'Created';
       const note = `
+        Data ${stage} \n
         Nama Driver  : ${doPod.userDriver.employee.employeeName}
         Gerai Assign : ${doPod.branch.branchName}
         Gerai Tujuan : ${doPod.branchTo.branchName}

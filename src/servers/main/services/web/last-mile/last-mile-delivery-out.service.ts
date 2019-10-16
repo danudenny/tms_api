@@ -53,8 +53,9 @@ export class LastMileDeliveryOutService {
     // await for get do pod id
     await DoPodDeliver.save(doPod);
 
-    await LastMileDeliveryOutService.createAuditDeliveryHistory(
+    await this.createAuditDeliveryHistory(
       doPod.doPodDeliverId,
+      false,
     );
 
     // Populate return value
@@ -171,7 +172,7 @@ export class LastMileDeliveryOutService {
       await DoPodDeliver.update(doPod.doPodDeliverId, updateDoPod);
 
       // NOTE: insert table audit history
-      await LastMileDeliveryOutService.createAuditDeliveryHistory(
+      await this.createAuditDeliveryHistory(
         doPod.doPodDeliverId,
       );
 
@@ -409,7 +410,10 @@ export class LastMileDeliveryOutService {
   }
 
   // TODO: send to background job process
-  private static async createAuditDeliveryHistory(doPodDeliveryId: string) {
+  private static async createAuditDeliveryHistory(
+    doPodDeliveryId: string,
+    isUpdate: boolean = true,
+  ) {
     // find doPodDeliver
     const doPodDeliver = await DoPodDeliverRepository.getDataById(
       doPodDeliveryId,
@@ -419,7 +423,9 @@ export class LastMileDeliveryOutService {
       const description = doPodDeliver.description
         ? doPodDeliver.description
         : '';
+      const stage = isUpdate ? 'Updated' : 'Created';
       const note = `
+        Data ${stage} \n
         Nama Driver  : ${doPodDeliver.userDriver.employee.employeeName}
         Gerai Assign : ${doPodDeliver.branch.branchName}
         Note         : ${description}
