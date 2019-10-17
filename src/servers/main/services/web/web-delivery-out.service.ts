@@ -1001,7 +1001,7 @@ export class WebDeliveryOutService {
         'bag_item_awb',
         'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
       );
-      qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq', {
+      qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND bag.bag_date is not null', {
         bag: bag.bag.bagNumber,
         seq: bag.bagSeq,
       });
