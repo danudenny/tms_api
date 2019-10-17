@@ -565,6 +565,7 @@ export class WebDeliveryOutService {
     return result;
   }
 
+  // TODO: need refactoring
   /**
    * Create DO POD Detail
    * with scan bag number
@@ -588,111 +589,111 @@ export class WebDeliveryOutService {
         status: 'ok',
         message: 'Success',
       };
-      const bagData = await DeliveryService.validBagNumber(bagNumber);
+      const bagData = await BagService.validBagNumber(bagNumber);
       if (bagData) {
-        // NOTE: validate bag status last ??
-        // if (bagData.bagItemStatusIdLast == 2000 || bagData.bagItemStatusIdLast == 500) {
-        const holdRedis = await RedisService.locking(
-          `hold:bagscanout:${bagData.bagItemId}`,
-          'locking',
-        );
-        if (holdRedis) {
-          const doPod = await DoPod.findOne({
-            where: {
-              doPodId: payload.doPodId,
-              isDeleted: false,
-            },
-          });
-
-          if (doPod) {
-            // counter total scan in
-            doPod.totalScanOutBag = doPod.totalScanOutBag + 1;
-            if (doPod.totalScanOutBag == 1) {
-              doPod.firstDateScanOut = timeNow;
-              doPod.lastDateScanOut = timeNow;
-            } else {
-              doPod.lastDateScanOut = timeNow;
-            }
-            await DoPod.save(doPod);
-
+        // NOTE: validate bag branch id last
+        if (bagData.branchIdLast == permissonPayload.branchId) {
+          totalError += 1;
+          response.message = `Gabung paket ${bagNumber} sudah pernah scan out`;
+          if (bagData.bagItemStatusIdLast == 1000) {
+            response.message = `Gabung paket belum scan in, mohon untuk melakukan scan in terlebih dahulu`;
           }
-
-          // TODO: need refactoring ??
-          // NOTE: create DoPodDetailBag
-          const doPodDetailBag = DoPodDetailBag.create();
-          doPodDetailBag.doPodId = doPod.doPodId;
-          doPodDetailBag.bagId = bagData.bagId;
-          doPodDetailBag.bagItemId = bagData.bagItemId;
-          doPodDetailBag.transactionStatusIdLast = 1000;
-          await DoPodDetailBag.save(doPodDetailBag);
-
-          // AFTER Scan OUT ===============================================
-          // #region after scanout
-          // Update bag_item set bag_item_status_id = 1000
-          const bagItem = await BagItem.findOne({
-            where: {
-              bagItemId: bagData.bagItemId,
-            },
-          });
-          if (bagItem) {
-            BagItem.update(bagItem.bagItemId, {
-              bagItemStatusIdLast: 1000,
-              branchIdLast: doPod.branchId,
-              branchIdNext: doPod.branchIdTo,
-              updatedTime: timeNow,
-              userIdUpdated: authMeta.userId,
+        } else {
+          const holdRedis = await RedisService.locking(
+            `hold:bagscanout:${bagData.bagItemId}`,
+            'locking',
+          );
+          if (holdRedis) {
+            const doPod = await DoPod.findOne({
+              where: {
+                doPodId: payload.doPodId,
+                isDeleted: false,
+              },
             });
 
-            // NOTE: Loop data bag_item_awb for update status awb
-            // and create do_pod_detail (data awb on bag)
-            // TODO: need to refactor
-            await BagService.statusOutBranchAwbBag(
-              bagData.bagId,
-              bagData.bagItemId,
-              doPod.doPodId,
-              doPod.branchIdTo,
-              doPod.userIdDriver,
-              doPod.doPodType,
-            );
+            if (doPod) {
+              // bag status scan out by doPodType (3005 Branch/ 3010 and 3020 HUB)
+              const bagStatus = doPod.doPodType == 3005 ? 1000 : 4500 ;
+              // counter total scan in
+              doPod.totalScanOutBag = doPod.totalScanOutBag + 1;
+              if (doPod.totalScanOutBag == 1) {
+                doPod.firstDateScanOut = timeNow;
+                doPod.lastDateScanOut = timeNow;
+              } else {
+                doPod.lastDateScanOut = timeNow;
+              }
+              await DoPod.save(doPod);
 
-            // TODO: if isTransit auto IN
-            if (doPod.doPodType == 3020) {
-              // NOTE: background job for insert bag item history
-              BagItemHistoryQueueService.addData(
-                bagData.bagItemId,
-                3000,
-                permissonPayload.branchId,
-                authMeta.userId,
-              );
+              // TODO: need refactoring ??
+              // NOTE: create DoPodDetailBag
+              const doPodDetailBag = DoPodDetailBag.create();
+              doPodDetailBag.doPodId = doPod.doPodId;
+              doPodDetailBag.bagId = bagData.bagId;
+              doPodDetailBag.bagItemId = bagData.bagItemId;
+              doPodDetailBag.transactionStatusIdLast = 1000;
+              await DoPodDetailBag.save(doPodDetailBag);
+
+              // AFTER Scan OUT ===============================================
+              // #region after scanout
+              // Update bag_item set bag_item_status_id = 1000
+              const bagItem = await BagItem.findOne({
+                where: {
+                  bagItemId: bagData.bagItemId,
+                },
+              });
+              if (bagItem) {
+                BagItem.update(bagItem.bagItemId, {
+                  bagItemStatusIdLast: bagStatus,
+                  branchIdLast: doPod.branchId,
+                  branchIdNext: doPod.branchIdTo,
+                  updatedTime: timeNow,
+                  userIdUpdated: authMeta.userId,
+                });
+
+                // NOTE: Loop data bag_item_awb for update status awb
+                // and create do_pod_detail (data awb on bag)
+                // TODO: need to refactor
+                await BagService.statusOutBranchAwbBag(
+                  bagData.bagId,
+                  bagData.bagItemId,
+                  doPod.doPodId,
+                  doPod.branchIdTo,
+                  doPod.userIdDriver,
+                  doPod.doPodType,
+                );
+
+                // TODO: if isTransit auto IN
+                if (doPod.doPodType == 3020) {
+                  // NOTE: background job for insert bag item history
+                  BagItemHistoryQueueService.addData(
+                    bagData.bagItemId,
+                    3000,
+                    permissonPayload.branchId,
+                    authMeta.userId,
+                  );
+                }
+
+                // TODO: need refactoring
+                // NOTE: background job for insert bag item history
+                BagItemHistoryQueueService.addData(
+                  bagData.bagItemId,
+                  bagStatus,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                );
+              }
+              // #endregion after scanout
             }
 
-            // TODO: need refactoring
-            const bagStatus = doPod.doPodType == 3005 ? 1000 : 4500 ;
-            // NOTE: background job for insert bag item history
-            BagItemHistoryQueueService.addData(
-              bagData.bagItemId,
-              bagStatus,
-              permissonPayload.branchId,
-              authMeta.userId,
-            );
+            totalSuccess += 1;
+            // remove key holdRedis
+            RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
+          } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = 'Server Busy';
           }
-          // #endregion after scanout
-
-          totalSuccess += 1;
-          // remove key holdRedis
-          RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
-        } else {
-          totalError += 1;
-          response.status = 'error';
-          response.message = 'Server Busy';
         }
-        // } else {
-        //   totalSuccess += 1;
-        //   response.message = `Gabung paket ${bagNumber} sudah pernah scan out`;
-        //   if (bagData.bagItemStatusIdLast == 1000) {
-        //     response.message = `Gabung paket belum scan in, mohon untuk melakukan scan in terlebih dahulu`;
-        //   }
-        // }
       } else {
         totalError += 1;
         response.status = 'error';
