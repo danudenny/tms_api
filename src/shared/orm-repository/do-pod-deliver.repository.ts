@@ -25,6 +25,7 @@ export class DoPodDeliverRepository extends Repository<DoPodDeliver> {
       },
       userDriver: {
         userId: true,
+        userIdCreated: true,
         employeeId: true,
         username: true,
         employee: {
@@ -32,6 +33,17 @@ export class DoPodDeliverRepository extends Repository<DoPodDeliver> {
           employeeName: true,
         },
       },
+      userCreated: {
+        userId: true,
+        userIdCreated: true,
+        employeeId: true,
+        username: true,
+        employee: {
+          employeeId: true,
+          employeeName: true,
+        },
+      },
+
     });
     q.where(e => e.doPodDeliverId, w => w.equals(doPodDeliverId));
     q.andWhere(e => e.isDeleted, w => w.equals(false));

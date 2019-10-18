@@ -27,6 +27,35 @@ export class BranchSearchVm {
 
 }
 
+export class BagDeliveryDetailResponseVm {
+  @ApiModelProperty()
+  doPodCode: string;
+
+  @ApiModelProperty()
+  createdName: string;
+
+  @ApiModelProperty()
+  driverName: string;
+
+  @ApiModelProperty()
+  vehicleNumber: string;
+
+  @ApiModelProperty()
+  branchToName: string;
+
+  @ApiModelProperty()
+  totalScanOutAwb: number;
+
+  @ApiModelProperty()
+  totalScanOutBag: number;
+
+  @ApiModelProperty()
+  description: string;
+
+  @ApiModelProperty({ type: () => [AuditHistVm] })
+  history: AuditHistVm[];
+}
+
 export class BagDetailResponseVm {
   @ApiModelProperty()
   doPodCode: string;

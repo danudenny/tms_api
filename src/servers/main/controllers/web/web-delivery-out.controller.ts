@@ -32,8 +32,8 @@ import {
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { BagOrderResponseVm, BagDetailResponseVm, PhotoResponseVm} from '../../models/bag-order-detail-response.vm';
-import { BagAwbVm, BagDetailVm, PhotoDetailVm } from '../../models/bag-order-response.vm';
+import { BagOrderResponseVm, BagDetailResponseVm, PhotoResponseVm, BagDeliveryDetailResponseVm} from '../../models/bag-order-detail-response.vm';
+import { BagAwbVm, BagDetailVm, PhotoDetailVm, BagDeliveryDetailVm } from '../../models/bag-order-response.vm';
 import { LastMileDeliveryOutService } from '../../services/web/last-mile/last-mile-delivery-out.service';
 // #endregion
 
@@ -277,6 +277,15 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: BagDetailResponseVm })
   public async doPodDetail(@Body() payload: BagDetailVm) {
     return this.webDeliveryOutService.doPodDetail(payload);
+  }
+
+  @Post('doPodDeliverDetail')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: BagDeliveryDetailResponseVm })
+  public async doPodDeliverDetail(@Body() payload: BagDeliveryDetailVm) {
+    return this.webDeliveryOutService.doPodDeliveryDetail(payload);
   }
 
   @Post('photoDetail')

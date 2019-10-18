@@ -49,10 +49,11 @@ import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag'
 import { BagService } from '../v1/bag.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
-import { BagOrderResponseVm, BagDetailResponseVm, AuditHistVm, PhotoResponseVm } from '../../models/bag-order-detail-response.vm';
-import { BagAwbVm, BagDetailVm, PhotoDetailVm } from '../../models/bag-order-response.vm';
+import { BagOrderResponseVm, BagDetailResponseVm, AuditHistVm, PhotoResponseVm, BagDeliveryDetailResponseVm } from '../../models/bag-order-detail-response.vm';
+import { BagAwbVm, BagDetailVm, PhotoDetailVm, BagDeliveryDetailVm } from '../../models/bag-order-response.vm';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 import { AwbService } from '../v1/awb.service';
+import { DoPodDeliverRepository } from 'src/shared/orm-repository/do-pod-deliver.repository';
 // #endregion
 
 @Injectable()
@@ -1093,6 +1094,48 @@ export class WebDeliveryOutService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
+  }
+
+  async doPodDeliveryDetail(payload: BagDeliveryDetailVm): Promise<BagDeliveryDetailResponseVm> {
+    const doPodDelivery = await DoPodDeliverRepository.getDataById(payload.doPodDeliveryId);
+    const result = new BagDeliveryDetailResponseVm();
+
+    if (doPodDelivery) {
+      result.doPodCode = doPodDelivery.doPodDeliverCode;
+      result.driverName = doPodDelivery.userDriver.employee.employeeName;
+      result.createdName = doPodDelivery.userCreated.employee.employeeName;
+      result.totalScanOutAwb = doPodDelivery.totalAwb;
+      const auditHistory = new OrionRepositoryService(AuditHistory);
+      const q = auditHistory.findAll();
+      q.select({
+        createdTime: true,
+        note: true,
+        userCreated: {
+          userId: true,
+          employee: {
+            employeeId: true,
+            employeeName: true,
+          },
+        },
+      });
+      q.where(e => e.changeId, w => w.equals(doPodDelivery.doPodDeliverId));
+      q.andWhere(e => e.isDeleted, w => w.equals(false));
+      const history = await q.exec();
+
+      if (history) {
+        const itemHistory = [];
+        for (const item of history) {
+          const itemResult = new AuditHistVm();
+          itemResult.createdTime = item.createdTime;
+          itemResult.note = item.note;
+          itemResult.username = item.userCreated.employee.employeeName;
+
+          itemHistory.push(itemResult);
+        }
+        result.history = itemHistory;
+      }
+      return result;
+    }
   }
 
   async doPodDetail(payload: BagDetailVm): Promise<BagDetailResponseVm> {
