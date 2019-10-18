@@ -18,14 +18,15 @@ import { MobileCheckOutController } from './mobile/mobile-check-out.controller';
 import { MobileDashboardController } from './mobile/mobile-dashboard.controller';
 import { MobileSyncController } from './mobile/mobile-sync.controller';
 import { PrintController } from './print.controller';
+import { WebAwbCountController } from './web/web-awb-count.controller';
 import { WebAwbFilterController } from './web/web-awb-filter.controller';
 import { WebAwbPodController } from './web/web-awb-pod.controller';
+import { WebAwbUpdateStatusController } from './web/web-awb-update-status.controller';
 import { WebBagPodController } from './web/web-bag-pod.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
 import { WebDeliveryOutController } from './web/web-delivery-out.controller';
+import { WebFirstMileController } from './web/web-first-mile.controller';
 import { WebMonitoringController } from './web/web-monitoring.controller';
-import { WebAwbUpdateStatusController } from './web/web-awb-update-status.controller';
-import { WebAwbCountController } from './web/web-awb-count.controller';
 import { WebTrackingController } from './web/web-tracking.controller';
 
 @Module({
@@ -60,6 +61,7 @@ import { WebTrackingController } from './web/web-tracking.controller';
     WebAwbUpdateStatusController,
     WebAwbCountController,
     WebTrackingController,
+    WebFirstMileController,
   ],
 })
 export class MainServerControllersModule {}
