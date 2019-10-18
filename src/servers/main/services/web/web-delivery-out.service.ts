@@ -49,8 +49,8 @@ import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag'
 import { BagService } from '../v1/bag.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
-import { BagOrderResponseVm, BagDetailResponseVm, AuditHistVm } from '../../models/bag-order-detail-response.vm';
-import { BagAwbVm, BagDetailVm } from '../../models/bag-order-response.vm';
+import { BagOrderResponseVm, BagDetailResponseVm, AuditHistVm, PhotoResponseVm } from '../../models/bag-order-detail-response.vm';
+import { BagAwbVm, BagDetailVm, PhotoDetailVm } from '../../models/bag-order-response.vm';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 import { AwbService } from '../v1/awb.service';
 // #endregion
@@ -1380,4 +1380,33 @@ export class WebDeliveryOutService {
       return await AuditHistory.save(auditHistory);
     }
   }
+
+  async photoDetail(payload: PhotoDetailVm): Promise<PhotoResponseVm> {
+    const qq = createQueryBuilder();
+    qq.addSelect('attachments.url', 'url');
+    qq.addSelect('dpda.type', 'type');
+    qq.from('do_pod_deliver_attachment', 'dpda');
+    qq.innerJoin(
+      'do_pod_deliver_detail',
+      'dpdd',
+      'dpdd.do_pod_deliver_detail_id = dpda.do_pod_deliver_detail_id',
+    );
+    qq.innerJoin(
+      'attachment_tms',
+      'attachments',
+      'attachments.attachment_tms_id = dpda.attachment_tms_id',
+    );
+    qq.where('dpdd.do_pod_deliver_id = :doPodDeliverId', {
+      doPodDeliverId: payload.doPodDeliverId,
+
+    });
+
+    const result = new PhotoResponseVm();
+    const data = await qq.getRawMany();
+    if (data) {
+      result.data = data;
+    }
+    return result;
+  }
+
 }

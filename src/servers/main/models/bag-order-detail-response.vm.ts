@@ -55,3 +55,16 @@ export class BagDetailResponseVm {
   @ApiModelProperty({ type: () => [AuditHistVm] })
   history: AuditHistVm[];
 }
+
+export class PhotoDetailResponseVm {
+  @ApiModelProperty()
+  url: string;
+
+  @ApiModelProperty()
+  type: string;
+}
+
+export class PhotoResponseVm {
+  @ApiModelProperty({ type: () => [PhotoDetailResponseVm] })
+  data: PhotoDetailResponseVm[];
+}
