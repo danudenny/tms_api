@@ -53,7 +53,7 @@ import { BagOrderResponseVm, BagDetailResponseVm, AuditHistVm, PhotoResponseVm, 
 import { BagAwbVm, BagDetailVm, PhotoDetailVm, BagDeliveryDetailVm } from '../../models/bag-order-response.vm';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 import { AwbService } from '../v1/awb.service';
-import { DoPodDeliverRepository } from 'src/shared/orm-repository/do-pod-deliver.repository';
+import { DoPodDeliverRepository } from '../../../../shared/orm-repository/do-pod-deliver.repository';
 // #endregion
 
 @Injectable()
