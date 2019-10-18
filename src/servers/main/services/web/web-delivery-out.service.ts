@@ -1105,6 +1105,7 @@ export class WebDeliveryOutService {
       result.driverName = doPodDelivery.userDriver.employee.employeeName;
       result.createdName = doPodDelivery.userCreated.employee.employeeName;
       result.totalScanOutAwb = doPodDelivery.totalAwb;
+      result.description = doPodDelivery.description;
       const auditHistory = new OrionRepositoryService(AuditHistory);
       const q = auditHistory.findAll();
       q.select({
