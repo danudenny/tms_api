@@ -12,3 +12,15 @@ export class BagDetailVm  {
   doPodId: string;
 
   }
+
+export class BagDeliveryDetailVm  {
+  @ApiModelProperty()
+  doPodDeliveryId: string;
+
+  }
+
+export class PhotoDetailVm  {
+    @ApiModelProperty()
+    doPodDeliverId: string;
+
+    }

@@ -1,6 +1,6 @@
 // #region import
-import { WebScanOutCreateVm, WebScanOutEditHubVm, WebScanOutEditVm } from '../../../models/web-scan-out.vm';
-import { WebScanOutCreateResponseVm } from '../../../models/web-scan-out-response.vm';
+import { WebScanOutCreateVm, WebScanOutEditHubVm, WebScanOutEditVm, WebScanOutBagVm } from '../../../models/web-scan-out.vm';
+import { WebScanOutCreateResponseVm, WebScanOutBagResponseVm } from '../../../models/web-scan-out-response.vm';
 import { DoPod } from '../../../../../shared/orm-entity/do-pod';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import moment = require('moment');
@@ -14,6 +14,8 @@ import { DeliveryService } from '../../../../../shared/services/delivery.service
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { BagItem } from '../../../../../shared/orm-entity/bag-item';
+import { RedisService } from '../../../../../shared/services/redis.service';
+import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
 // #endregion
 
 export class FirstMileDeliveryOutService {
@@ -329,6 +331,146 @@ export class FirstMileDeliveryOutService {
       result.message = 'Surat Jalan tidak valid';
     }
     result.doPodId = payload.doPodId;
+    return result;
+  }
+
+  // TODO: need refactoring
+  /**
+   * Create DO POD Detail bag on branch
+   * with scan bag number
+   * @param {WebScanOutBagVm} payload
+   * @returns {Promise<WebScanOutBagResponseVm>}
+   * @memberof WebDeliveryOutService
+   */
+  async scanOutBag(payload: WebScanOutBagVm): Promise<WebScanOutBagResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new WebScanOutBagResponseVm();
+
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    for (const bagNumber of payload.bagNumber) {
+      const response = {
+        status: 'ok',
+        message: 'Success',
+      };
+      const bagData = await BagService.validBagNumber(bagNumber);
+      if (bagData) {
+        // NOTE: validate bag branch id last
+        if (bagData.branchIdLast == permissonPayload.branchId) {
+          totalError += 1;
+          response.message = `Gabung paket ${bagNumber} sudah pernah scan out`;
+          if (bagData.bagItemStatusIdLast == 1000) {
+            response.message = `Gabung paket belum scan in, mohon untuk melakukan scan in terlebih dahulu`;
+          }
+        } else {
+          const holdRedis = await RedisService.locking(
+            `hold:bagscanout:${bagData.bagItemId}`,
+            'locking',
+          );
+          if (holdRedis) {
+            const doPod = await DoPod.findOne({
+              where: {
+                doPodId: payload.doPodId,
+                isDeleted: false,
+              },
+            });
+
+            if (doPod) {
+              // bag status scan out by doPodType (3005 Branch)
+              const bagStatus = 1000;
+              // counter total scan in
+              doPod.totalScanOutBag = doPod.totalScanOutBag + 1;
+              if (doPod.totalScanOutBag == 1) {
+                doPod.firstDateScanOut = timeNow;
+                doPod.lastDateScanOut = timeNow;
+              } else {
+                doPod.lastDateScanOut = timeNow;
+              }
+              await DoPod.save(doPod);
+
+              // TODO: need refactoring ??
+              // NOTE: create DoPodDetailBag
+              const doPodDetailBag = DoPodDetailBag.create();
+              doPodDetailBag.doPodId = doPod.doPodId;
+              doPodDetailBag.bagId = bagData.bagId;
+              doPodDetailBag.bagItemId = bagData.bagItemId;
+              doPodDetailBag.transactionStatusIdLast = 1000;
+              await DoPodDetailBag.save(doPodDetailBag);
+
+              // AFTER Scan OUT ===============================================
+              // #region after scanout
+              // Update bag_item set bag_item_status_id = 1000
+              const bagItem = await BagItem.findOne({
+                where: {
+                  bagItemId: bagData.bagItemId,
+                },
+              });
+              if (bagItem) {
+                BagItem.update(bagItem.bagItemId, {
+                  bagItemStatusIdLast: bagStatus,
+                  branchIdLast: doPod.branchId,
+                  branchIdNext: doPod.branchIdTo,
+                  updatedTime: timeNow,
+                  userIdUpdated: authMeta.userId,
+                });
+
+                // NOTE: Loop data bag_item_awb for update status awb
+                // and create do_pod_detail (data awb on bag)
+                // TODO: need to refactor
+                await BagService.statusOutBranchAwbBag(
+                  bagData.bagId,
+                  bagData.bagItemId,
+                  doPod.doPodId,
+                  doPod.branchIdTo,
+                  doPod.userIdDriver,
+                  doPod.doPodType,
+                );
+
+                // TODO: need refactoring
+                // NOTE: background job for insert bag item history
+                BagItemHistoryQueueService.addData(
+                  bagData.bagItemId,
+                  bagStatus,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                );
+              }
+              // #endregion after scanout
+            }
+
+            totalSuccess += 1;
+            // remove key holdRedis
+            RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
+          } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = 'Server Busy';
+          }
+        }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
+      }
+
+      // push item
+      dataItem.push({
+        bagNumber,
+        ...response,
+      });
+    } // end of loop
+
+    // Populate return value
+    result.totalData = payload.bagNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
+
     return result;
   }
 

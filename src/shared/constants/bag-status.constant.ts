@@ -1,0 +1,9 @@
+export const BAG_STATUS = {
+  CREATED: 500,
+  OUT_BRANCH: 1000,
+  IN_BRANCH: 2000,
+  IN_HUB: 3000,
+  DO_HUB: 3500,
+  DO_SORTIR: 4000,
+  OUT_HUB: 4500,
+};

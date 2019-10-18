@@ -123,4 +123,8 @@ export class DoPodDeliver extends TmsBaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_driver', referencedColumnName: 'userId' })
   userDriver: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_created', referencedColumnName: 'userId' })
+  userCreated: User;
 }
