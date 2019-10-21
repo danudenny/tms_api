@@ -6,11 +6,15 @@ import moment = require('moment');
 
 export class BagTroubleService {
 
-  static async create(bagNumber: string, bagStatusId: number) {
+  static async create(
+    bagNumber: string,
+    bagStatusId: number,
+    desc: string = '',
+  ) {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timeNow = moment().toDate();
-
+    const description = desc != '' ? desc : '';
     // NOTE: add to bag trouble
     const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
     const bagTrouble = BagTrouble.create({
@@ -20,6 +24,7 @@ export class BagTroubleService {
       bagTroubleStatus: 100,
       employeeId: authMeta.employeeId,
       branchId: permissonPayload.branchId,
+      description,
     });
     await BagTrouble.save(bagTrouble);
   }
