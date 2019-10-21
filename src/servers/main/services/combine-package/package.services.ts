@@ -136,6 +136,14 @@ export class PackageService {
     qb.andWhere('a.bag_item_id = :bagItemId', { bagItemId: bagDetail.bagItemId });
     qb.andWhere('a.branch_id = :branchId', { branchId: permissonPayload.branchId });
     const data = await qb.getRawMany();
+    if (data.length < 1) {
+      RequestErrorService.throwObj(
+        {
+          message: 'No gabungan sortir tidak ditemukan pada gerai ini',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     const dataResult = {
       bagNumber,
