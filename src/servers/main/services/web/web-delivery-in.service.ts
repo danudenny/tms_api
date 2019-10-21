@@ -1316,16 +1316,22 @@ export class WebDeliveryInService {
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
         const notScan =  bagData.bagItemStatusIdLast != BAG_STATUS.DO_HUB ? true : false;
-        // TODO: find bag do_pod and update??
-        // SKIP.
         if (notScan) {
-
-          if (bagData.bagItemStatusIdLast != BAG_STATUS.OUT_BRANCH) {
+          // validate scan branch
+          const notScanBranch = bagData.branchIdNext != permissonPayload.branchId ? true : false;
+          // TODO: move to method create bag trouble ==========================
+          if (
+            bagData.bagItemStatusIdLast != BAG_STATUS.OUT_BRANCH ||
+            notScanBranch
+          ) {
+            const desc = notScanBranch ? 'Gerai tidak sesuai' : 'Status bag tidak sesuai';
             BagTroubleService.create(
               bagNumber,
               bagData.bagItemStatusIdLast,
+              desc,
             );
           }
+          // ==================================================================
 
           const bagItem = await BagItem.findOne({
             where: {
