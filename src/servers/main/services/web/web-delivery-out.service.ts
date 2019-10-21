@@ -1092,7 +1092,7 @@ export class WebDeliveryOutService {
     q.leftJoin(e => e.bagItem.bag, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.bagItem.branchLast, 't6', j =>
+    q.leftJoin(e => e.bag.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.bagItem.bagItemAwbs, 't4', j =>
