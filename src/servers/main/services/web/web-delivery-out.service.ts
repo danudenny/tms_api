@@ -1078,7 +1078,6 @@ export class WebDeliveryOutService {
             CONCAT (t3.bag_number,t2.bag_seq) END`,
         'bagNumber',
       ],
-      // ['t2.bag_item_id', 'bagItemId'],
       ['t1.created_time', 'createdTime'],
       ['COUNT (t4.*)', 'totalAwb'],
       ['t5.representative_code', 'representativeIdTo'],
@@ -1090,7 +1089,7 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.bagItem.bag, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()).andWhere(e => e.bagDate, w => w.isNotNull()),
     );
     q.leftJoin(e => e.bag.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
