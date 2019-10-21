@@ -1090,7 +1090,8 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.bagItem.bag, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()).andWhere(e => e.bagDate, w => w.isNotNull()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      // .andWhere(e => e.bagDate, w => w.isNotNull()),
     );
     q.leftJoin(e => e.bag.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
