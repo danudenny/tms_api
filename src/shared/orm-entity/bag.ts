@@ -7,6 +7,7 @@ import { PodScanInBranchBag } from './pod-scan-in-branch-bag';
 import { PodScanInBranchDetail } from './pod-scan-in-branch-detail';
 import { DropoffHub } from './dropoff_hub';
 import { DropoffSortation } from './dropoff_sortation';
+import { Branch } from './branch';
 
 @Entity('bag', { schema: 'public' })
 @Index('bag_bag_date_idx', ['bagDate'])
@@ -140,4 +141,8 @@ export class Bag extends TmsBaseEntity {
   @OneToOne(() => District)
   @JoinColumn({ name: 'district_id_to' })
   district: District;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 }

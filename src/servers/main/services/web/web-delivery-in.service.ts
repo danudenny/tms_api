@@ -243,7 +243,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItem, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.bagItem.branchLast, 't4', j =>
+    q.innerJoin(e => e.bag.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.groupByRaw(`
@@ -1588,7 +1588,8 @@ export class WebDeliveryInService {
   ): Promise<WebScanInHubSortListResponseVm> {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['branchIdFrom'] = 't3.branch_id_last';
+    // payload.fieldResolverMap['branchIdFrom'] = 't3.branch_id_last';
+    payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
     payload.fieldResolverMap['representativeFrom'] =
       't2.ref_representative_code';
     payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
@@ -1641,7 +1642,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.dropoffHubDetails, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.bagItem.branchLast, 't5', j =>
+    q.innerJoin(e => e.bag.branch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.groupByRaw(`
@@ -1717,7 +1718,8 @@ export class WebDeliveryInService {
   ): Promise<WebScanInHubSortListResponseVm> {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['branchIdFrom'] = 't3.branch_id_last';
+    // payload.fieldResolverMap['branchIdFrom'] = 't3.branch_id_last';
+    payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
     payload.fieldResolverMap['representativeFrom'] =
       't2.ref_representative_code';
     payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
@@ -1770,7 +1772,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.dropoffSortationDetails, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.bagItem.branchLast, 't5', j =>
+    q.innerJoin(e => e.bag.branch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.groupByRaw(`
