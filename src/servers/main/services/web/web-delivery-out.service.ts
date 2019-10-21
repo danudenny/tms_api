@@ -710,7 +710,7 @@ export class WebDeliveryOutService {
           }
         } else {
           totalError += 1;
-          response.message = 'error';
+          response.status = 'error';
           response.message = `Gabung paket ${bagNumber} sudah di proses`;
           // if (bagData.bagItemStatusIdLast == 1000) {
           //   response.message = `Gabung paket belum scan in, mohon untuk melakukan scan in terlebih dahulu`;
