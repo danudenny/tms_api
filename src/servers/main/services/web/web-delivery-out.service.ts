@@ -596,7 +596,10 @@ export class WebDeliveryOutService {
       if (bagData) {
         // NOTE: validate bag branch id last
         // TODO: validation need improvement
-        let stageBag = BAG_STATUS.OUT_HUB;
+        // bag status scan out by doPodType (3005 Branch/ 3010 and 3020 HUB)
+        let bagStatus = BAG_STATUS.OUT_HUB;
+        let transactionStatusId = 300; // OUT HUB
+
         const doPod = await DoPod.findOne({
           where: {
             doPodId: payload.doPodId,
@@ -606,19 +609,19 @@ export class WebDeliveryOutService {
 
         // Branch
         if (doPod.doPodType == 3005) {
-          stageBag = BAG_STATUS.OUT_BRANCH;
+          bagStatus = BAG_STATUS.OUT_BRANCH;
+          transactionStatusId =  800;
         }
-        const notScan =  bagData.bagItemStatusIdLast != stageBag ? true : false;
+        const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
 
         if (notScan) {
           // create bag trouble
-          if (
-            bagData.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH ||
-            bagData.bagItemStatusIdLast != BAG_STATUS.IN_HUB
-          ) {
+          const statusNotTrouble = [BAG_STATUS.CREATED, BAG_STATUS.IN_BRANCH, BAG_STATUS.IN_HUB];
+          if (!statusNotTrouble.includes(bagData.bagItemStatusIdLast)) {
             BagTroubleService.create(
               bagNumber,
               bagData.bagItemStatusIdLast,
+              transactionStatusId,
             );
           }
 
@@ -628,8 +631,6 @@ export class WebDeliveryOutService {
           );
 
           if (holdRedis) {
-            // bag status scan out by doPodType (3005 Branch/ 3010 and 3020 HUB)
-            const bagStatus = doPod.doPodType == 3005 ? 1000 : 4500 ;
             // counter total scan in
             doPod.totalScanOutBag = doPod.totalScanOutBag + 1;
             if (doPod.totalScanOutBag == 1) {
@@ -646,7 +647,7 @@ export class WebDeliveryOutService {
             doPodDetailBag.doPodId = doPod.doPodId;
             doPodDetailBag.bagId = bagData.bagId;
             doPodDetailBag.bagItemId = bagData.bagItemId;
-            doPodDetailBag.transactionStatusIdLast = 1000;
+            doPodDetailBag.transactionStatusIdLast = transactionStatusId;
             await DoPodDetailBag.save(doPodDetailBag);
 
             // AFTER Scan OUT ===============================================
@@ -683,7 +684,7 @@ export class WebDeliveryOutService {
                 // NOTE: background job for insert bag item history
                 BagItemHistoryQueueService.addData(
                   bagData.bagItemId,
-                  3000,
+                  BAG_STATUS.IN_HUB,
                   permissonPayload.branchId,
                   authMeta.userId,
                 );

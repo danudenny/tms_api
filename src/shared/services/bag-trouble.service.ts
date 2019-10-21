@@ -9,6 +9,7 @@ export class BagTroubleService {
   static async create(
     bagNumber: string,
     bagStatusId: number,
+    transactionStatusId: number,
     desc: string = '',
   ) {
     const authMeta = AuthService.getAuthData();
@@ -21,7 +22,8 @@ export class BagTroubleService {
       bagNumber,
       bagTroubleCode,
       bagStatusId,
-      bagTroubleStatus: 100,
+      transactionStatusId,
+      bagTroubleStatus: 500,
       employeeId: authMeta.employeeId,
       branchId: permissonPayload.branchId,
       description,

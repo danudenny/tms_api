@@ -19,6 +19,12 @@ export class BagTrouble extends TmsBaseEntity {
   })
   bagStatusId: number;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'transaction_status_id',
+  })
+  transactionStatusId: number;
+
   @Column('character varying', {
     nullable: false,
     length: 255,

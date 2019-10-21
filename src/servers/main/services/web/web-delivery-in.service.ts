@@ -1150,6 +1150,7 @@ export class WebDeliveryInService {
           BagTroubleService.create(
             bagNumber,
             bagData.bagItemStatusIdLast,
+            600, // IN BRANCH
             desc,
           );
         }
@@ -1323,6 +1324,7 @@ export class WebDeliveryInService {
             BagTroubleService.create(
               bagNumber,
               bagData.bagItemStatusIdLast,
+              100, // IN HUB
               desc,
             );
           }
