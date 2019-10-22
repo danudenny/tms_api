@@ -1,9 +1,38 @@
 #!/bin/sh
 tar czf sicepat-tms-api.tar.gz dist patches node_modules ecosystem.json package.json package-lock.json ormconfig.js ormconfig.production.js
+echo "copy file to server staging API ========================================="
 scp sicepat-tms-api.tar.gz ubuntu@18.136.83.163:~
-echo "copy file to server ======================================"
+echo "copy file to server staging Mobile API =================================="
+scp sicepat-tms-api.tar.gz ubuntu@13.251.209.206:~
+echo "copy file to server staging Workers API ================================="
+scp sicepat-tms-api.tar.gz ubuntu@18.140.152.211:~
 rm sicepat-tms-api.tar.gz
+
 ssh ubuntu@18.136.83.163 <<'ENDSSH'
+  echo "Extract File on Staging Server =================================="
+  mv /home/ubuntu/sicepat-tms-api.tar.gz /home/ubuntu/sicepat-tms-api/
+  cd /home/ubuntu/sicepat-tms-api/
+  tar xf sicepat-tms-api.tar.gz
+  rm sicepat-tms-api.tar.gz
+  export NODE_ENV="production"
+  pm2 startOrRestart ecosystem.json
+  echo "startOrRestart server =================================="
+  exit
+ENDSSH
+
+ssh ubuntu@13.251.209.206 <<'ENDSSH'
+  echo "Extract File on Staging Server =================================="
+  mv /home/ubuntu/sicepat-tms-api.tar.gz /home/ubuntu/sicepat-tms-api/
+  cd /home/ubuntu/sicepat-tms-api/
+  tar xf sicepat-tms-api.tar.gz
+  rm sicepat-tms-api.tar.gz
+  export NODE_ENV="production"
+  pm2 startOrRestart ecosystem.json
+  echo "startOrRestart server =================================="
+  exit
+ENDSSH
+
+ssh ubuntu@18.140.152.211 <<'ENDSSH'
   echo "Extract File on Staging Server =================================="
   mv /home/ubuntu/sicepat-tms-api.tar.gz /home/ubuntu/sicepat-tms-api/
   cd /home/ubuntu/sicepat-tms-api/
