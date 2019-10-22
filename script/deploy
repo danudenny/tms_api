@@ -4,8 +4,10 @@ scp sicepat-tms-api.tar.gz ubuntu@18.136.83.163:~
 echo "copy file to server ======================================"
 rm sicepat-tms-api.tar.gz
 ssh ubuntu@18.136.83.163 <<'ENDSSH'
-  mv /home/ubuntu/sicepat-tms-api.tar.gz /home/ubuntu/sicepat-tms-api/
   echo "Testing Deploy =================================="
+  mv /home/ubuntu/sicepat-tms-api.tar.gz /home/ubuntu/sicepat-tms-api/
+  cd /home/ubuntu/sicepat-tms-api/
+  tar xf sicepat-tms-api.tar.gz
   export NODE_ENV="production"
   pm2 startOrRestart ecosystem.json
   echo "startOrRestart server =================================="
