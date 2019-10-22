@@ -1024,7 +1024,7 @@ export class WebDeliveryOutService {
         'bag_item_awb',
         'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
       );
-      qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND bag.bag_date is not null', {
+      qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq ', {
         bag: bag.bag.bagNumber,
         seq: bag.bagSeq,
       });
@@ -1379,7 +1379,6 @@ export class WebDeliveryOutService {
 
     const data2 = await q2.exec();
     // Get Data for scanout detail end
-
     const result = new WebScanOutResponseForEditVm();
 
     result.data = data;
