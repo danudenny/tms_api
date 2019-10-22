@@ -61,4 +61,14 @@ export class PrintController {
   ) {
     return PrintService.printBagItemForPaperByRequest(serverResponse, queryParams);
   }
+
+  @Get('bag-item-sticker-paper')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printBagItemStickerPaper(
+    @Query() queryParams: PrintBagItemPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintService.printBagItemStickerAndPaperByRequest(serverResponse, queryParams);
+  }
 }
