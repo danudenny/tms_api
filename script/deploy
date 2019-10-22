@@ -1,23 +1,11 @@
 #!/bin/sh
 tar czf sicepat-tms-api.tar.gz dist patches node_modules ecosystem.json package.json package-lock.json
-scp sicepat-tms-api.tar.gz ubuntu@18.138.172.59:~
+scp sicepat-tms-api.tar.gz ubuntu@18.136.83.163:~
 echo "copy file to server ======================================"
 rm sicepat-tms-api.tar.gz
-ssh ubuntu@18.138.172.59 <<'ENDSSH'
-  mv /home/ubuntu/sicepat-tms-api.tar.gz /var/www/api-jenkins/releases/
+ssh ubuntu@18.136.83.163 <<'ENDSSH'
+  mv /home/ubuntu/sicepat-tms-api.tar.gz /home/ubuntu/sicepat-tms-api/
   echo "Testing Deploy =================================="
-  cd /var/www/api-jenkins/releases/
-  foldername="staging"
-  mkdir -p "$foldername"
-  tar xf sicepat-tms-api.tar.gz -C "$foldername"
-  rm sicepat-tms-api.tar.gz
-  unlink /var/www/api-jenkins/releases/"$foldername" /var/www/api-jenkins/releases/current
-  ln -s /var/www/api-jenkins/releases/"$foldername" /var/www/api-jenkins/releases/current
-  echo "link shared config ==========================="
-  unlink /var/www/api-jenkins/shared/ormconfig.js /var/www/api-jenkins/releases/"$foldername"/ormconfig.js
-  ln -s /var/www/api-jenkins/shared/ormconfig.js /var/www/api-jenkins/releases/"$foldername"/ormconfig.js
-  mv /var/www/api-jenkins/releases/current /var/www/api-jenkins
-  cd /var/www/api-jenkins/releases/"$foldername"
   export NODE_ENV="production"
   pm2 startOrRestart ecosystem.json
   echo "startOrRestart server =================================="
