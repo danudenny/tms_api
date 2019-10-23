@@ -43,11 +43,8 @@ import {
 } from '../../models/web-awb-filter.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { District } from '../../../../shared/orm-entity/district';
-import { WebAwbSortirListResponseVm } from '../../models/web-awb-sortir-list.response.vm';
-import { string } from 'yargs';
-import { Awb } from 'src/shared/orm-entity/awb';
 import { WebAwbSortirResponseVm } from '../../models/web-awb-sortir-response.vm';
-import { BaseMetaSortirPayloadVm } from 'src/shared/models/base-filter-search.payload.vm';
+import { BaseMetaSortirPayloadVm } from '../../../../shared/models/base-filter-search.payload.vm';
 // #endregion
 export class WebAwbFilterService {
   constructor(
@@ -724,96 +721,6 @@ export class WebAwbFilterService {
     });
     await AwbTrouble.save(awbTrouble);
     return awbTrouble.awbTroubleId;
-  }
-
-  // NOTE: need refactoring
-  private async getDataGroupByDestination(
-    podFilterDetailId: number,
-  ) {
-    // TODO: need join query full outer join for combine data
-    // refactoring get data !!
-    const qb = createQueryBuilder();
-    qb.addSelect('district.district_id', 'districtId');
-    qb.addSelect('district.district_code', 'districtCode');
-    qb.addSelect('district.district_name', 'districtName');
-    qb.addSelect('packages.total_awb', 'totalAwb');
-    qb.addSelect('packages.total', 'totalScan');
-    qb.addSelect('packages.filtered', 'totalFiltered');
-    qb.addSelect('packages.problem', 'totalProblem');
-    qb.from(subQueryBuilder => {
-      subQueryBuilder
-        .addSelect('p1.*')
-        .addSelect('COALESCE(p2.total, 0)', 'total')
-        .addSelect('COALESCE(p2.filtered, 0)', 'filtered')
-        .addSelect('COALESCE(p2.problem, 0)', 'problem')
-        .from(subQueryBuilder2 => {
-          subQueryBuilder2
-            .addSelect('awb.to_id', 'to_id')
-            .addSelect('COUNT(1)', 'total_awb')
-            .from('pod_filter_detail', 'pfd')
-            .innerJoin(
-              'bag_item_awb',
-              'bia',
-              'pfd.bag_item_id = bia.bag_item_id AND pfd.is_deleted = false AND bia.is_deleted = false',
-            )
-            .innerJoin(
-              'awb_item',
-              'ai',
-              'ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = false',
-            )
-            .innerJoin(
-              'awb_item_attr',
-              'aia',
-              'aia.awb_item_id = ai.awb_item_id AND ai.is_deleted = false',
-            )
-            .innerJoin(
-              'awb',
-              'awb',
-              'awb.awb_id = ai.awb_id AND awb.is_deleted = false AND awb.to_type = 40',
-            )
-            .where('pfd.pod_filter_detail_id = :podFilterDetailId', {
-              podFilterDetailId,
-            })
-            .groupBy('awb.to_id');
-          return subQueryBuilder2;
-        }, 'p1')
-        .leftJoin(
-          sub => {
-            sub
-              .addSelect('pfdi.to_id', 'to_id')
-              .addSelect('COUNT(1)', 'total')
-              .addSelect(
-                'COUNT(1) FILTER (WHERE is_troubled = false)',
-                'filtered',
-              )
-              .addSelect(
-                'COUNT(1) FILTER (WHERE is_troubled = true)',
-                'problem',
-              )
-              .from('pod_filter_detail', 'pfd')
-              .innerJoin(
-                'pod_filter_detail_item',
-                'pfdi',
-                `pfd.pod_filter_detail_id = pfdi.pod_filter_detail_id ` +
-                  `AND pfdi.is_deleted = false AND pfdi.to_id IS NOT NULL`,
-              )
-              .where('pfd.pod_filter_detail_id = :podFilterDetailId', {
-                podFilterDetailId,
-              })
-              .groupBy('pfdi.to_id');
-            return sub;
-          },
-          'p2',
-          'p1.to_id = p2.to_id',
-        );
-
-      return subQueryBuilder;
-    }, 'packages').leftJoin(
-      'district',
-      'district',
-      'packages.to_id = district.district_id AND district.is_deleted = false',
-    );
-    return await qb.getRawMany();
   }
 
   private async getDataRawDestination(
