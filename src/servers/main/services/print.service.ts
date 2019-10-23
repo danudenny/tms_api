@@ -514,4 +514,12 @@ export class PrintService {
       }],
     });
   }
+
+  public static async printBagItemStickerAndPaperByRequest(
+    res: express.Response,
+    queryParams: PrintBagItemPayloadQueryVm,
+  ) {
+    await this.printBagItemForStickerByRequest(res, queryParams);
+    await this.printBagItemForPaperByRequest(res, queryParams);
+  }
 }

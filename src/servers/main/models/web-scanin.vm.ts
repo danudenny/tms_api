@@ -2,7 +2,6 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 import { IsDefined, ValidateNested } from 'class-validator';
 import { IsAwbNumber } from '../../../shared/decorators/custom-validation.decorator';
 import { Type } from 'class-transformer';
-import { AwbDetail } from 'src/shared/orm-entity/awb-detail';
 
 export class WebScanInVm  {
   @ApiModelProperty({

@@ -4,8 +4,12 @@ import {
 } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { WebScanOutCreateResponseVm } from '../../models/web-scan-out-response.vm';
-import { WebScanOutCreateVm } from '../../models/web-scan-out.vm';
+import {
+    WebScanOutAwbResponseVm, WebScanOutBagResponseVm, WebScanOutCreateResponseVm,
+} from '../../models/web-scan-out-response.vm';
+import {
+    WebScanOutAwbVm, WebScanOutBagVm, WebScanOutCreateVm, WebScanOutEditHubVm, WebScanOutEditVm,
+} from '../../models/web-scan-out.vm';
 import {
     FirstMileDeliveryOutService,
 } from '../../services/web/first-mile/first-mile-delivery-out.service';
@@ -24,17 +28,38 @@ export class WebFirstMileController {
    *
    */
 
-  @Post('createPod')
+  @Post('scanOut/create')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebScanOutCreateResponseVm })
   public async scanOutCreate(@Body() payload: WebScanOutCreateVm) {
     return FirstMileDeliveryOutService.scanOutCreate(payload);
   }
 
-  // TODO:
-  // add endpoint editPodAwb
-  // add endpoint editPodBag
+  @Post('scanOut/updateAwb')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanOutCreateResponseVm })
+  public async scanOutUpdateAwb(@Body() payload: WebScanOutEditVm) {
+    return FirstMileDeliveryOutService.scanOutUpdateAwb(payload);
+  }
 
-  // add endpoint scanOutAwb
-  // add endpoint scanOutBag
+  @Post('scanOut/updateBag')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanOutCreateResponseVm })
+  public async scanOutUpdateBag(@Body() payload: WebScanOutEditHubVm) {
+    return FirstMileDeliveryOutService.scanOutUpdateBag(payload);
+  }
+
+  @Post('scanOut/awb')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanOutAwbResponseVm })
+  public async scanOutAwb(@Body() payload: WebScanOutAwbVm) {
+    return FirstMileDeliveryOutService.scanOutAwb(payload);
+  }
+
+  @Post('scanOut/bag')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanOutBagResponseVm })
+  public async findAllBag(@Body() payload: WebScanOutBagVm) {
+    return FirstMileDeliveryOutService.scanOutBag(payload);
+  }
 }
