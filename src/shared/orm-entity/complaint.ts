@@ -10,7 +10,6 @@ export class Complaint extends BaseEntity {
 
   @Column('character varying', {
     nullable: false,
-    length: 255,
   })
   url: string;
 
@@ -33,8 +32,7 @@ export class Complaint extends BaseEntity {
   attachmentId: number;
 
   @Column('text', {
-    nullable: false,
-    name: 'description',
+    nullable: true,
   })
   description: string | null;
 

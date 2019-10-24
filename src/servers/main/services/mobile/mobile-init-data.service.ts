@@ -316,11 +316,14 @@ export class MobileInitDataService {
     ): Promise<WebScanInBranchListResponseVm> {
       // mapping field
       payload.fieldResolverMap['url'] = 't1.url';
-      payload.fieldResolverMap['description'] = 't1.description';
-      payload.fieldResolverMap['createdTime'] = 't1.createdTime';
-      payload.fieldResolverMap['recipient'] = 't1.recipient';
       payload.fieldResolverMap['subject'] = 't1.subject';
-      payload.fieldResolverMap['is_deleted'] = 't1.isDeleted';
+      payload.fieldResolverMap['recipient'] = 't1.recipient';
+      payload.fieldResolverMap['description'] = 't1.description';
+      payload.fieldResolverMap['createdTime'] = 't1.created_time';
+
+      if (payload.sortBy === '') {
+        payload.sortBy = 'createdTime';
+      }
       payload.globalSearchFields = [
         {
           field: 'createdTime',
@@ -338,14 +341,12 @@ export class MobileInitDataService {
         ['t1.created_time', 'createdTime'],
         ['t1.recipient', 'recipient'],
         ['t1.subject', 'subject'],
-        ['t1.is_deleted', 'isDeleted'],
       );
-
-      q.where(e => e.isDeleted, w => w.isFalse());
 
       q.leftJoin(e => e.attachment, 'Complaint', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+      );
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
 
       const data = await q.exec();
       const total = await q.countWithoutTakeAndSkip();
