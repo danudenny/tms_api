@@ -1017,7 +1017,7 @@ export class WebDeliveryOutService {
       qz.innerJoin(
         'bag_item',
         'bag_item_id',
-        'bag_item_id.bag_id = bag.bag_id',
+        'bag_item_id.bag_id = bag.bag_id AND bag_item_id.bag_item_status_id_last != 500',
       );
       qz.innerJoin(
         'bag_item_awb',
@@ -1091,7 +1091,6 @@ export class WebDeliveryOutService {
     );
     q.leftJoin(e => e.bagItem.bag, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      // .andWhere(e => e.bagDate, w => w.isNotNull()),
     );
     q.leftJoin(e => e.bag.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),

@@ -24,6 +24,7 @@ import { PodFilterRepository } from './pod-filter.repository';
 import { RepresentativeRepository } from './representative.repository';
 import { PodFilterDetailRepository } from './pod-filter-detail.repository';
 import { PodFilterDetailItemRepository } from './pod-filter-detail-item.repository';
+import { ComplaintRepository } from './complaint.repository';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { PodFilterDetailItemRepository } from './pod-filter-detail-item.reposito
       PodFilterRepository,
       PodFilterDetailRepository,
       PodFilterDetailItemRepository,
+      ComplaintRepository,
     ]),
   ],
   exports: [
