@@ -63,6 +63,13 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
   })
   latitudeDeliveryLast: string | null;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'consignee_name',
+  })
+  consigneeName: string | null;
+
   @Column('text', {
     nullable: true,
     name: 'desc_last',

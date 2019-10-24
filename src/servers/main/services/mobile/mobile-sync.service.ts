@@ -24,13 +24,15 @@ export class MobileSyncService {
       }
     });
 
-    // NOTE: queue by Bull
+    // TODO: queue by Bull need refactoring
     for (const deliverDetail of payload.deliveries) {
       DoPodDetailPostMetaQueueService.createJobByMobileSyncAwb(
         deliverDetail.doPodDeliverDetailId,
+        deliverDetail.employeeId,
         deliverDetail.awbStatusId,
       );
     }
+
     return MobileInitDataService.getInitDataByRequest(payload.lastSyncDateTime);
   }
 
@@ -46,7 +48,7 @@ export class MobileSyncService {
           doPodDeliverDetailId: delivery.doPodDeliverDetailId,
           awbStatusId: deliveryHistory.awbStatusId,
           reasonId: deliveryHistory.reasonId,
-          syncDateTime: new Date(),
+          syncDateTime: moment().toDate(),
           latitudeDelivery: deliveryHistory.latitudeDelivery,
           longitudeDelivery: deliveryHistory.longitudeDelivery,
           desc: deliveryHistory.reasonNotes,
@@ -83,6 +85,8 @@ export class MobileSyncService {
           1,
         );
       }
+
+      // Update data DoPodDeliverDetail
       await transactionEntitymanager.update(
         DoPodDeliverDetail,
         delivery.doPodDeliverDetailId,
@@ -94,15 +98,18 @@ export class MobileSyncService {
           reasonIdLast: lastDoPodDeliverHistory.reasonId,
           syncDateTimeLast: lastDoPodDeliverHistory.syncDateTime,
           descLast: lastDoPodDeliverHistory.desc,
-          updatedTime: new Date(),
+          consigneeName: delivery.consigneeNameNote,
+          updatedTime: moment().toDate(),
         },
       );
 
+      // Update status awb item attr
       await DeliveryService.updateAwbAttr(
         delivery.awbItemId,
         null,
         lastDoPodDeliverHistory.awbStatusId,
       );
+
     }
   }
 
