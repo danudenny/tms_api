@@ -10,6 +10,12 @@ export class MobileComplaintListResponseVm {
 
   @ApiModelProperty()
   createdTime: string;
+
+  @ApiModelProperty()
+  recipient: string;
+
+  @ApiModelProperty()
+  subject: string;
 }
 
 export class MobileComplaintListResponseAllVm extends BaseMetaResponseVm {

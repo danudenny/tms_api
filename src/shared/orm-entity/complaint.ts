@@ -14,6 +14,18 @@ export class Complaint extends BaseEntity {
   })
   url: string;
 
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+  })
+  subject: string;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+  })
+  recipient: string;
+
   @Column('bigint', {
     nullable: false,
     name: 'attachment_id',
