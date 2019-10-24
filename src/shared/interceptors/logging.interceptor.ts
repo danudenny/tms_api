@@ -2,6 +2,7 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import { Observable } from 'rxjs';
 
 import { PinoLoggerService } from '../services/pino-logger.service';
+import { WinstonLogglyService } from '../services/winston-loggly.service';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -14,13 +15,16 @@ export class LoggingInterceptor implements NestInterceptor {
     const params = req.params;
     const query = req.query;
 
-    PinoLoggerService.withContext('LoggingInterceptor').debug({
+    const dataLog = {
       url,
       method,
       body,
       params,
       query,
-    });
+    };
+    PinoLoggerService.withContext('LoggingInterceptor').debug(dataLog);
+    // Loggly
+    WinstonLogglyService.info(dataLog);
 
     return next.handle();
   }
