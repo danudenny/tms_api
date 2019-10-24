@@ -47,8 +47,9 @@ export class Complaint extends BaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @OneToOne(() => AttachmentTms)
   @JoinColumn({ name: 'attachment_id', referencedColumnName: 'attachmentTmsId' })

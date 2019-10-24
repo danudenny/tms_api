@@ -2,8 +2,6 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class MobileComplaintListPayloadVm {
   @ApiModelProperty()
-  date_start: string;
+  createdTime: string;
 
-  @ApiModelProperty()
-  date_end: string;
 }

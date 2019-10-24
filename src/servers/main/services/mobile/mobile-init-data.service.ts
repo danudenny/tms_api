@@ -304,6 +304,7 @@ export class MobileInitDataService {
         createdTime: timeNow,
         recipient: payload.recipient,
         subject: payload.subject,
+        isDeleted: false,
       });
     await Complaint.save(complaintSigesit);
 
@@ -319,6 +320,12 @@ export class MobileInitDataService {
       payload.fieldResolverMap['createdTime'] = 't1.createdTime';
       payload.fieldResolverMap['recipient'] = 't1.recipient';
       payload.fieldResolverMap['subject'] = 't1.subject';
+      payload.fieldResolverMap['is_deleted'] = 't1.isDeleted';
+      payload.globalSearchFields = [
+        {
+          field: 'createdTime',
+        },
+      ];
 
       const repo = new OrionRepositoryService(Complaint, 't1');
       const q = repo.findAllRaw();
@@ -331,11 +338,12 @@ export class MobileInitDataService {
         ['t1.created_time', 'createdTime'],
         ['t1.recipient', 'recipient'],
         ['t1.subject', 'subject'],
+        ['t1.is_deleted', 'isDeleted'],
       );
 
-      q.where(e => e.is_deleted, w => w.isFalse());
+      q.where(e => e.isDeleted, w => w.isFalse());
 
-      q.leftJoin(e => e.attachment, 't1', j =>
+      q.leftJoin(e => e.attachment, 'Complaint', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
