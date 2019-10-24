@@ -15,7 +15,7 @@ import { MobileComplaintResponseVm } from '../../models/mobile-complaint-respons
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MobileComplaintPayloadVm } from '../../models/mobile-complaint-payload.vm';
 import { MobileComplaintListResponseAllVm } from '../../models/mobile-complaint-list-response.vm';
-import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('Dashboard')
 @Controller('mobile')
