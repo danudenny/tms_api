@@ -7,7 +7,14 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MobileInitDataResponseVm } from '../../models/mobile-init-data-response.vm';
 import { EmployeeJourney } from '../../../../shared/orm-entity/employee-journey';
+import { Complaint } from '../../../../shared/orm-entity/complaint';
 import { MobileCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
+import { MobileComplaintPayloadVm } from '../../models/mobile-complaint-payload.vm';
+import { MobileComplaintResponseVm } from '../../models/mobile-complaint-response.vm';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { WebScanInBranchListResponseVm } from '../../models/web-scanin-list.response.vm';
+import { MetaService } from '../../../../shared/services/meta.service';
 
 export class MobileInitDataService {
   public static async getInitDataByRequest(
@@ -272,6 +279,85 @@ export class MobileInitDataService {
     return await qb.getRawMany();
   }
 
+  static async complaintSigesit(
+    payload: MobileComplaintPayloadVm,
+    file,
+  ): Promise<MobileComplaintResponseVm> {
+    const result = new MobileComplaintResponseVm();
+    let attachmentId = null;
+    const timeNow = moment().toDate();
+    if (file) {
+      const attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        'complaint',
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+      }
+    }
+
+    const complaintSigesit = Complaint.create({
+        attachmentId,
+        description: payload.description,
+        createdTime: timeNow,
+        recipient: payload.recipient,
+        subject: payload.subject,
+        isDeleted: false,
+      });
+    await Complaint.save(complaintSigesit);
+
+    return result;
+  }
+
+  static async complaintListSigesit(
+      payload: BaseMetaPayloadVm,
+    ): Promise<WebScanInBranchListResponseVm> {
+      // mapping field
+      payload.fieldResolverMap['url'] = 't1.url';
+      payload.fieldResolverMap['subject'] = 't1.subject';
+      payload.fieldResolverMap['recipient'] = 't1.recipient';
+      payload.fieldResolverMap['description'] = 't1.description';
+      payload.fieldResolverMap['createdTime'] = 't1.created_time';
+
+      if (payload.sortBy === '') {
+        payload.sortBy = 'createdTime';
+      }
+      payload.globalSearchFields = [
+        {
+          field: 'createdTime',
+        },
+      ];
+
+      const repo = new OrionRepositoryService(Complaint, 't1');
+      const q = repo.findAllRaw();
+
+      payload.applyToOrionRepositoryQuery(q, true);
+
+      q.selectRaw(
+        ['t1.url', 'url'],
+        ['t1.description', 'description'],
+        ['t1.created_time', 'createdTime'],
+        ['t1.recipient', 'recipient'],
+        ['t1.subject', 'subject'],
+      );
+
+      q.leftJoin(e => e.attachment, 'Complaint', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+      const data = await q.exec();
+      const total = await q.countWithoutTakeAndSkip();
+
+      const result = new WebScanInBranchListResponseVm();
+
+      result.data = data;
+      result.paging = MetaService.set(payload.page, payload.limit, total);
+
+      return result;
+    }
   private static async getStatusCheckIn(
     employeeId: number,
   ): Promise<MobileCheckInResponseVm> {

@@ -1017,14 +1017,14 @@ export class WebDeliveryOutService {
       qz.innerJoin(
         'bag_item',
         'bag_item_id',
-        'bag_item_id.bag_id = bag.bag_id',
+        'bag_item_id.bag_id = bag.bag_id AND bag_item_id.bag_item_status_id_last != 500',
       );
       qz.innerJoin(
         'bag_item_awb',
         'bag_item_awb',
         'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
       );
-      qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND bag.bag_date is not null', {
+      qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq ', {
         bag: bag.bag.bagNumber,
         seq: bag.bagSeq,
       });
@@ -1091,7 +1091,6 @@ export class WebDeliveryOutService {
     );
     q.leftJoin(e => e.bagItem.bag, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      // .andWhere(e => e.bagDate, w => w.isNotNull()),
     );
     q.leftJoin(e => e.bag.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -1379,7 +1378,6 @@ export class WebDeliveryOutService {
 
     const data2 = await q2.exec();
     // Get Data for scanout detail end
-
     const result = new WebScanOutResponseForEditVm();
 
     result.data = data;

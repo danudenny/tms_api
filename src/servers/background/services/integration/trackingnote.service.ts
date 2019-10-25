@@ -5,8 +5,8 @@ import { TrackingNoteResponseVm } from '../../models/trackingnote.response.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { DatabaseConfig } from '../../config/database/db.config';
 import * as sql from 'mssql';
-import { AwbHistoryLastSyncPod } from 'src/shared/orm-entity/awb-history-last-sync-pod';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { AwbHistoryLastSyncPod } from '../../../../shared/orm-entity/awb-history-last-sync-pod';
 
 export class TrackingNoteService {
   static async findLastAwbHistory(
@@ -19,7 +19,7 @@ export class TrackingNoteService {
       },
     });
     if (awbHistoryLastSyncPod) {
-      const data = await this.getRawAwbHistory(awbHistoryLastSyncPod.awbHistoryId,);
+      const data = await this.getRawAwbHistory(awbHistoryLastSyncPod.awbHistoryId);
       if (data) {
         this.insertTmsTrackingNote(awbHistoryLastSyncPod, data);
         result.data = data;
@@ -31,7 +31,7 @@ export class TrackingNoteService {
           HttpStatus.UNPROCESSABLE_ENTITY,
         );
       }
-    } else{
+    } else {
       RequestErrorService.throwObj(
         {
           message: 'Last Awb History Empty',
@@ -39,7 +39,7 @@ export class TrackingNoteService {
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
-  
+
     return result;
   }
 
@@ -68,7 +68,7 @@ export class TrackingNoteService {
       awbHistoryId,
     });
   }
-  
+
   private static async getRawLastAwbHistory(): Promise<any> {
     const query = `
       SELECT *
@@ -79,67 +79,65 @@ export class TrackingNoteService {
   }
 
   private static async insertTmsTrackingNote(awbHistoryLastSyncPod: any, data: any): Promise<any> {
-     // Connect to POD
-     const conn = await DatabaseConfig.getPodDbConn();
-     // const transaction = new sql.Transaction();
-     // transaction.begin(err => {
-     //     // ... error checks
-     let lastSyncId = 0;
-     let ctr = 0;
-     for (const item of data) {
-       const request = conn.request();
-       request.input('AwbHistoryId', sql.Int, item.awbHistoryId);
-       request.input('ReceiptNumber', sql.VarChar, item.receiptNumber);
-       request.input('TrackingDateTime', sql.DateTime, item.trackingDateTime);
-       request.input('AwbStatusId', sql.Int, item.awbStatusId);
-       request.input('TrackingType', sql.VarChar, item.trackingType);
-       request.input('CourierName', sql.VarChar, item.courierName);
-       request.input('Nik', sql.VarChar, item.nik);
-       request.input('BranchCode', sql.VarChar, item.branchCode);
-       request.input('UsrCrt', sql.VarChar, "TMS");
-       request.input('UsrUpd', sql.VarChar, "TMS");
-       request.input('DtmCrt', sql.DateTime, new Date());
-       request.input('DtmUpd', sql.DateTime, new Date());
-       request.query(`
-         insert into TmsTrackingNote (
-           AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, UsrCrt, UsrUpd, DtmCrt, DtmUpd
-           ) 
-         values (
-           @AwbHistoryId, @ReceiptNumber, @TrackingDateTime, @AwbStatusId, @TrackingType, @CourierName, @Nik, @BranchCode, @UsrCrt, @UsrUpd, @DtmCrt, @DtmUpd
-         )`, (err, result) => {
-           if(!err){
-            ctr++;
-            lastSyncId = item.awbHistoryId;
-            if (ctr == data.length){
-              AwbHistoryLastSyncPod.update(awbHistoryLastSyncPod.awbHistoryLastSyncPodId, {
-                awbHistoryId: lastSyncId,
-                updatedTime: new Date(),
-              });
-              console.log('[ALL SUCCESS] Last awb history id === ' + lastSyncId);
-            }
-           } else {
-            if (lastSyncId != 0){
+    // Connect to POD
+    const conn = await DatabaseConfig.getPodDbConn();
+    // const transaction = new sql.Transaction();
+    // transaction.begin(err => {
+    //     // ... error checks
+    let lastSyncId = 0;
+    let ctr = 0;
+    for (const item of data) {
+      const request = conn.request();
+      request.input('AwbHistoryId', sql.Int, item.awbHistoryId);
+      request.input('ReceiptNumber', sql.VarChar, item.receiptNumber);
+      request.input('TrackingDateTime', sql.DateTime, item.trackingDateTime);
+      request.input('AwbStatusId', sql.Int, item.awbStatusId);
+      request.input('TrackingType', sql.VarChar, item.trackingType);
+      request.input('CourierName', sql.VarChar, item.courierName);
+      request.input('Nik', sql.VarChar, item.nik);
+      request.input('BranchCode', sql.VarChar, item.branchCode);
+      request.input('UsrCrt', sql.VarChar, 'TMS');
+      request.input('UsrUpd', sql.VarChar, 'TMS');
+      request.input('DtmCrt', sql.DateTime, new Date());
+      request.input('DtmUpd', sql.DateTime, new Date());
+      request.query(`
+        insert into TmsTrackingNote (
+          AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, UsrCrt, UsrUpd, DtmCrt, DtmUpd
+          )
+        values (
+          @AwbHistoryId, @ReceiptNumber, @TrackingDateTime, @AwbStatusId, @TrackingType, @CourierName, @Nik, @BranchCode, @UsrCrt, @UsrUpd, @DtmCrt, @DtmUpd
+        )`, (err, result) => {
+          if (!err) {
+          ctr++;
+          lastSyncId = item.awbHistoryId;
+          if (ctr == data.length) {
+            AwbHistoryLastSyncPod.update(awbHistoryLastSyncPod.awbHistoryLastSyncPodId, {
+              awbHistoryId: lastSyncId,
+              updatedTime: new Date(),
+            });
+            console.log('[ALL SUCCESS] Last awb history id === ' + lastSyncId);
+          }
+          } else {
+            if (lastSyncId != 0) {
               AwbHistoryLastSyncPod.update(awbHistoryLastSyncPod.awbHistoryLastSyncPodId, {
                 awbHistoryId: lastSyncId,
                 updatedTime: new Date(),
               });
               console.log('[ERROR STOP] Last awb history id === ' + lastSyncId);
             }
-             RequestErrorService.throwObj(
-               {
-                 message: err,
-               },
-               HttpStatus.UNPROCESSABLE_ENTITY,
-             );
-           }  
-           // transaction.commit(err => {
-           //     // ... error checks
-   
-           //     console.log("Transaction committed.")
-           // })
-         }
-       );
-     }
-// })
+            RequestErrorService.throwObj({
+              message: err,
+            },
+              HttpStatus.UNPROCESSABLE_ENTITY,
+            );
+          }
+          // transaction.commit(err => {
+          //     // ... error checks
+
+          //     console.log("Transaction committed.")
+          // })
+        },
+      );
+    }
   }
 }

@@ -9,7 +9,6 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
-import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 
 export class BagService {
 
@@ -211,6 +210,136 @@ export class BagService {
               AWB_STATUS.OUT_BRANCH,
             );
           }
+        }
+      }
+    } else {
+      Logger.log('### Data Bag Item Awb :: Not Found!!');
+    }
+    return true;
+  }
+
+  // TODO: create background job
+  static async scanOutBagBranch(
+    bagId: number,
+    bagItemId: number,
+    doPodId: string,
+    branchIdNext: number,
+    employeeIdDriver: number,
+  ) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const bagItemsAwb = await BagItemAwb.find({
+      where: {
+        bagItemId,
+        isDeleted: false,
+      },
+    });
+    // TODO: raw query select insert into
+    // 1. insert table doPOdDetail ??
+    // 2. update table awbItemAttr ??
+    // 3. insert table AwbHistory ??
+
+    if (bagItemsAwb && bagItemsAwb.length) {
+      for (const itemAwb of bagItemsAwb) {
+        if (itemAwb.awbItemId) {
+          const doPodDetail = DoPodDetail.create();
+          doPodDetail.doPodId = doPodId;
+          doPodDetail.awbItemId = itemAwb.awbItemId;
+          doPodDetail.bagId = bagId;
+          doPodDetail.bagItemId = bagItemId;
+          doPodDetail.isScanOut = true;
+          doPodDetail.scanOutType = 'bag';
+          doPodDetail.transactionStatusIdLast = 800; // OUT_BRANCH
+          await DoPodDetail.save(doPodDetail);
+
+          // NOTE: update status on awb item attr
+          // last awb status OUT_BRANCH
+          await AwbService.updateAwbAttr(
+            itemAwb.awbItemId,
+            AWB_STATUS.OUT_BRANCH,
+            branchIdNext,
+          );
+
+          // queue bull
+          DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+            itemAwb.awbItemId,
+            permissonPayload.branchId,
+            authMeta.userId,
+            employeeIdDriver,
+            AWB_STATUS.OUT_BRANCH,
+          );
+        }
+      }
+    } else {
+      Logger.log('### Data Bag Item Awb :: Not Found!!');
+    }
+    return true;
+  }
+
+  // TODO: create background job
+  static async scanOutBagHub(
+    bagId: number,
+    bagItemId: number,
+    doPodId: string,
+    branchIdNext: number,
+    employeeIdDriver: number,
+    doPodType: number,
+  ) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const bagItemsAwb = await BagItemAwb.find({
+      where: {
+        bagItemId,
+        isDeleted: false,
+      },
+    });
+    // TODO: raw query select insert into
+    // 1. insert table doPOdDetail ??
+    // 2. update table awbItemAttr ??
+    // 3. insert table AwbHistory ??
+
+    if (bagItemsAwb && bagItemsAwb.length) {
+      for (const itemAwb of bagItemsAwb) {
+        if (itemAwb.awbItemId) {
+          const doPodDetail = DoPodDetail.create();
+          doPodDetail.doPodId = doPodId;
+          doPodDetail.awbItemId = itemAwb.awbItemId;
+          doPodDetail.bagId = bagId;
+          doPodDetail.bagItemId = bagItemId;
+          doPodDetail.isScanOut = true;
+          doPodDetail.scanOutType = 'bag';
+          doPodDetail.transactionStatusIdLast = 300; // OUT_HUB
+          await DoPodDetail.save(doPodDetail);
+
+          // NOTE: update status on awb item attr
+          // last awb status
+          // HUB
+          await AwbService.updateAwbAttr(
+            itemAwb.awbItemId,
+            AWB_STATUS.OUT_HUB,
+            branchIdNext,
+          );
+
+          // TODO: if isTransit auto IN
+          if (doPodType == 3020) {
+            // queue bull IN HUB
+            DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+              itemAwb.awbItemId,
+              permissonPayload.branchId,
+              authMeta.userId,
+              employeeIdDriver,
+              AWB_STATUS.IN_HUB,
+            );
+          }
+
+          // queue bull OUT HUB
+          DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+            itemAwb.awbItemId,
+            permissonPayload.branchId,
+            authMeta.userId,
+            employeeIdDriver,
+            AWB_STATUS.OUT_HUB,
+          );
         }
       }
     } else {

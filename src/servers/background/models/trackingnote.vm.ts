@@ -1,7 +1,4 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
-import { take } from 'rxjs/operators';
-import { AwbHistory } from 'src/shared/orm-entity/awb-history';
-import { DatetimeAttributeValue } from 'aws-sdk/clients/clouddirectory';
 
 export class TrackingNoteVm {
   @ApiModelProperty()

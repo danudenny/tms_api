@@ -321,7 +321,11 @@ export class DoPodDetailPostMetaQueueService {
   }
 
   // TODO: fix get data
-  public static async createJobByMobileSyncAwb(doPodDeliverDetailId: string, awbStatusId: number) {
+  public static async createJobByMobileSyncAwb(
+    doPodDeliverDetailId: string,
+    employeeIdDriver: number,
+    awbStatusId: number,
+    ) {
 
     const doPodDetailRepository = new OrionRepositoryService(
       DoPodDeliverDetail,
@@ -337,10 +341,6 @@ export class DoPodDetailPostMetaQueueService {
       userIdUpdated: true,
       doPodDeliver: {
         doPodDeliverId: true,
-        userDriver: {
-          userId: true,
-          employeeId: true,
-        },
         branchId: true,
         userId: true,
       },
@@ -371,7 +371,7 @@ export class DoPodDetailPostMetaQueueService {
         branchId: doPodDetailDeliver.doPodDeliver.branchId,
         userIdCreated: doPodDetailDeliver.userIdCreated,
         userIdUpdated: doPodDetailDeliver.userIdUpdated,
-        employeeIdDriver: doPodDetailDeliver.doPodDeliver.userDriver.employeeId,
+        employeeIdDriver,
       };
 
       return DoPodDetailPostMetaQueueService.queue.add(obj);

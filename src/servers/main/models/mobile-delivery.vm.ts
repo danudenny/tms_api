@@ -42,6 +42,9 @@ export class MobileDeliveryVm {
   consigneeName: string;
 
   @ApiModelProperty()
+  consigneeNameNote: string;
+
+  @ApiModelProperty()
   consigneeAddress: string;
 
   @ApiModelProperty()

@@ -1406,7 +1406,6 @@ export class WebDeliveryInService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const regexNumber = /^[0-9]+$/;
-    const dataItem = new ScanInputNumberBranchVm();
 
     // find and create pod_scan_in_branch
     let podScanInBranch = await PodScanInBranch.findOne({
@@ -1440,7 +1439,7 @@ export class WebDeliveryInService {
           payload.bagNumber,
           payload.podScanInBranchId,
         );
-
+        const dataItem = new ScanInputNumberBranchVm();
         dataItem.awbNumber = resultAwb.awbNumber;
         dataItem.status = resultAwb.status;
         dataItem.message = resultAwb.message;
@@ -1465,6 +1464,7 @@ export class WebDeliveryInService {
           dataBag = resultBag.dataBag;
         }
       } else {
+        const dataItem = new ScanInputNumberBranchVm();
         dataItem.awbNumber = inputNumber;
         dataItem.status = 'error';
         dataItem.message = 'Nomor tidak valid';
