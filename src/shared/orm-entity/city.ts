@@ -1,15 +1,16 @@
-import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 import { PackagePrice } from './package-price';
 import { PackagePriceSpecial } from './package-price-special';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('city', { schema: 'public' })
-export class City extends BaseEntity {
+export class City extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'city_id',
   })
-  cityId: string;
+  cityId: number;
 
   @Column('character varying', {
     nullable: false,
@@ -36,50 +37,19 @@ export class City extends BaseEntity {
     nullable: false,
     name: 'country_id',
   })
-  countryId: string;
+  countryId: number;
 
   @Column('bigint', {
     nullable: false,
     name: 'province_id',
   })
-  provinceId: string;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_created',
-  })
-  userIdCreated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'created_time',
-  })
-  createdTime: Date;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_updated',
-  })
-  userIdUpdated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'updated_time',
-  })
-  updatedTime: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
+  provinceId: number;
 
   @Column('bigint', {
     nullable: true,
     name: 'city_id_ref_price',
   })
-  cityIdRefPrice: string | null;
+  cityIdRefPrice: number | null;
 
   @Column('boolean', {
     nullable: true,
@@ -95,20 +65,20 @@ export class City extends BaseEntity {
   })
   cityCodeBackup: string | null;
 
-  @OneToMany(type => PackagePrice, package_price => package_price.cityIdFrom)
+  @OneToMany(() => PackagePrice, package_price => package_price.cityIdFrom)
   packagePrices: PackagePrice[];
 
-  @OneToMany(type => PackagePrice, package_price => package_price.cityIdTo)
+  @OneToMany(() => PackagePrice, package_price => package_price.cityIdTo)
   packagePrices2: PackagePrice[];
 
   @OneToMany(
-    type => PackagePriceSpecial,
+    () => PackagePriceSpecial,
     package_price_special => package_price_special.cityIdFrom,
   )
   packagePriceSpecials: PackagePriceSpecial[];
 
   @OneToMany(
-    type => PackagePriceSpecial,
+    () => PackagePriceSpecial,
     package_price_special => package_price_special.cityIdTo,
   )
   packagePriceSpecials2: PackagePriceSpecial[];
