@@ -20,6 +20,9 @@ import { User } from '../orm-entity/user';
 import { UserRole } from '../orm-entity/user-role';
 import { OrionRepositoryService } from './orion-repository.service';
 import { AwbStatus } from '../orm-entity/awb-status';
+import { Province } from '../orm-entity/province';
+import { City } from '../orm-entity/city';
+import { District } from '../orm-entity/district';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -88,5 +91,14 @@ export class RepositoryService {
   }
   static get userRole() {
     return new OrionRepositoryService(UserRole);
+  }
+  static get province() {
+    return new OrionRepositoryService(Province);
+  }
+  static get city() {
+    return new OrionRepositoryService(City);
+  }
+  static get district() {
+    return new OrionRepositoryService(District);
   }
 }

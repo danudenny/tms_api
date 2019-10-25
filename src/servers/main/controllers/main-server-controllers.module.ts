@@ -1,3 +1,4 @@
+// #region import
 import { Module } from '@nestjs/common';
 
 import { SharedModule } from '../../../shared/shared.module';
@@ -28,7 +29,10 @@ import { WebDeliveryOutController } from './web/web-delivery-out.controller';
 import { WebFirstMileController } from './web/web-first-mile.controller';
 import { WebMonitoringController } from './web/web-monitoring.controller';
 import { WebTrackingController } from './web/web-tracking.controller';
-
+import { ProvincesController } from './master/provinces.controller';
+import { CitiesController } from './master/cities.controller';
+import { DistrictsController } from './master/districts.controller';
+// #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
   controllers: [
@@ -62,6 +66,9 @@ import { WebTrackingController } from './web/web-tracking.controller';
     WebAwbCountController,
     WebTrackingController,
     WebFirstMileController,
+    ProvincesController,
+    CitiesController,
+    DistrictsController,
   ],
 })
 export class MainServerControllersModule {}
