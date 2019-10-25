@@ -132,8 +132,10 @@ export class PrintService {
           bagItem: {
             bagItemId: true, // needs to be selected due to bag_item relations are being included
             bagSeq: true,
+            weight: true,
             bag: {
               bagNumber: true,
+              refRepresentativeCode: true,
             },
           },
         },
