@@ -1,5 +1,5 @@
 import winston = require('winston');
-const { Loggly } = require('winston-loggly-bulk');
+import { Loggly } from 'winston-loggly-bulk';
 
 export class WinstonLogglyService {
   public static setup() {

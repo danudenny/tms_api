@@ -15,17 +15,21 @@ export class LoggingInterceptor implements NestInterceptor {
     const params = req.params;
     const query = req.query;
 
+    // Configure sensitive parameters which will be filtered from the log file.
+    const bodyLog = Object.assign({}, body);
+    if (bodyLog && bodyLog.password) {
+      bodyLog.password = '*****';
+    }
     const dataLog = {
       url,
       method,
-      body,
+      bodyLog,
       params,
       query,
     };
     PinoLoggerService.withContext('LoggingInterceptor').debug(dataLog);
     // Loggly
     WinstonLogglyService.info(dataLog);
-
     return next.handle();
   }
 }
