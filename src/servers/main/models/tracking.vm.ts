@@ -112,6 +112,9 @@ export class TrackingAwbResponseVm {
   @ApiModelProperty()
   refRepresentativeCode: string;
 
+  @ApiModelProperty()
+  parcelValue: string;
+
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];
 }

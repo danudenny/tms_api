@@ -35,6 +35,7 @@ export class WebTrackingService {
       result.refResellerPhone = data.refResellerPhone;
       result.consigneePhone = data.consigneePhone;
       result.refRepresentativeCode = data.refRepresentativeCode;
+      result.parcelValue = data.parcelValue;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -92,6 +93,7 @@ export class WebTrackingService {
         a.ref_representative_code as "refRepresentativeCode",
         ast.awb_status_name as "awbStatusLast",
         a.history_date_last as "historyDateLast",
+        prd.parcel_value as "parcelValue",
         COALESCE(pt.package_type_code, '') as "packageTypeCode",
         COALESCE(pt.package_type_name, '') as "packageTypeName",
         COALESCE(p.payment_method_code, '') as "paymentMethodCode",
@@ -104,6 +106,7 @@ export class WebTrackingService {
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
         LEFT JOIN customer_account ca ON ca.customer_account_id = a.customer_account_id
         LEFT JOIN branch b ON b.branch_id = a.branch_id
+        LEFT JOIN pickup_request_detail prd ON a.awb_id = prd.awb_item_id
         LEFT JOIN district df ON df.district_id = a.from_id AND a.from_type = 40
         LEFT JOIN district dt ON dt.district_id = a.to_id AND a.to_type = 40
         LEFT JOIN branch bt ON bt.branch_id = dt.branch_id_delivery
