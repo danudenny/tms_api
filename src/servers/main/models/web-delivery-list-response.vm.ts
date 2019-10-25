@@ -42,6 +42,9 @@ export class ItemDeliveryResponseVm {
 
   @ApiModelProperty()
   awbStatusTitle: string;
+
+  @ApiModelProperty()
+  isCod: string;
 }
 
 export class WebDeliveryListResponseVm extends BaseMetaResponseVm {

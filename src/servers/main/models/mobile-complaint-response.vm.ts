@@ -7,4 +7,11 @@ export class MobileComplaintResponseVm {
   @ApiModelProperty()
   description: string;
 
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  code: string;
+
+
 }

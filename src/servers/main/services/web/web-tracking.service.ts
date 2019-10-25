@@ -30,7 +30,11 @@ export class WebTrackingService {
       result.totalCodValue = data.totalCodValue;
       result.totalWeightFinal = data.totalWeightFinal;
       result.totalWeightFinalRounded = data.totalWeightFinalRounded;
-
+      result.isCod = data.isCod;
+      result.totalWeightVolume = data.totalWeightVolume;
+      result.refResellerPhone = data.refResellerPhone;
+      result.consigneePhone = data.consigneePhone;
+      result.refRepresentativeCode = data.refRepresentativeCode;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -81,6 +85,11 @@ export class WebTrackingService {
         COALESCE(a.consignee_name, '') as "consigneeName",
         COALESCE(a.consignee_address, '') as "consigneeAddress",
         a.awb_date as "awbDate",
+        a.is_cod as "isCod",
+        a.ref_reseller_phone as "refResellerPhone",
+        a.total_weight_volume as "totalWeightVolume",
+        a.consignee_phone as "consigneePhone",
+        a.ref_representative_code as "refRepresentativeCode",
         ast.awb_status_name as "awbStatusLast",
         a.history_date_last as "historyDateLast",
         COALESCE(pt.package_type_code, '') as "packageTypeCode",

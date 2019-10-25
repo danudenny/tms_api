@@ -285,6 +285,8 @@ export class MobileInitDataService {
   ): Promise<MobileComplaintResponseVm> {
     const result = new MobileComplaintResponseVm();
     let attachmentId = null;
+    const status = 'ok';
+    const code = '200';
     const timeNow = moment().toDate();
     if (file) {
       const attachment = await AttachmentService.uploadFileBufferToS3(
@@ -308,6 +310,8 @@ export class MobileInitDataService {
       });
     await Complaint.save(complaintSigesit);
 
+    result.status = status;
+    result.code = code;
     return result;
   }
 

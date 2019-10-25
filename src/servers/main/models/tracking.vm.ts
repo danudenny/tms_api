@@ -94,6 +94,24 @@ export class TrackingAwbResponseVm {
   @ApiModelProperty()
   awbStatusLast: string;
 
+  @ApiModelProperty()
+  isCod: string;
+
+  @ApiModelProperty()
+  totalWeightVolume: string;
+
+  @ApiModelProperty()
+  totalWeightVolumeReal: string;
+
+  @ApiModelProperty()
+  refResellerPhone: string;
+
+  @ApiModelProperty()
+  consigneePhone: string;
+
+  @ApiModelProperty()
+  refRepresentativeCode: string;
+
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];
 }

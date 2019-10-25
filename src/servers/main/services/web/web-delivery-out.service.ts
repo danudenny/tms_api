@@ -982,6 +982,7 @@ export class WebDeliveryOutService {
 
     q.selectRaw(
       ['t2.awb_number', 'awbNumber'],
+      ['t2.is_cod', 'isCod'],
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t2.consignee_name', 'consigneeName'],
       ['t3.awb_status_title', 'awbStatusTitle'],
@@ -997,7 +998,6 @@ export class WebDeliveryOutService {
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
-
     const result = new WebDeliveryListResponseVm();
 
     result.data = data;
