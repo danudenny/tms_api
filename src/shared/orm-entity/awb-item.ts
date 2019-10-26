@@ -315,6 +315,25 @@ export class AwbItem extends BaseEntity {
   })
   isDeleted: boolean;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'partner_logistic_awb',
+  })
+  partnerLogisticAwb: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'origin_awb_id',
+  })
+  originAwbId: number;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_return',
+  })
+  isReturn: boolean;
+
   @Column('numeric', {
     nullable: false,
     default: () => '0',
