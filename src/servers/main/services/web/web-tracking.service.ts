@@ -37,6 +37,7 @@ export class WebTrackingService {
       result.consigneePhone = data.consigneePhone;
       result.refRepresentativeCode = data.refRepresentativeCode;
       result.parcelValue = data.parcelValue;
+      result.PartnerLogisticAwb = data.PartnerLogisticAwb;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -101,6 +102,7 @@ export class WebTrackingService {
         COALESCE(pt.package_type_name, '') as "packageTypeName",
         COALESCE(p.payment_method_code, '') as "paymentMethodCode",
         a.total_cod_value as "totalCodValue",
+        ait.partner_logistic_awb as "partnerLogisticAwb",
         CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
         COALESCE(bg.bagging_code, '') as "baggingCode",
         COALESCE(s.smu_code, '') as "smuCode"
