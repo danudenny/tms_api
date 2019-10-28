@@ -36,6 +36,8 @@ module.exports = {
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
-  sentry: { dsn: 'http://69d535e3c29a42de850aafd6e04b6e44@sicepat-sentry.eastus.cloudapp.azure.com:9000/3' },
+  sentry: {
+    dsn: 'http://ab6f52ba994f42dc9d15d23464dfbcee@sicepat-sentry.eastus.cloudapp.azure.com:9000/2'
+  },
   servers: getAllServerConfigurations("default.js"),
 };
