@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 
 import { AwbItem } from './awb-item';
 import { Branch } from './branch';
@@ -7,6 +7,7 @@ import { AwbStatus } from './awb-status';
 import { BagItemAwb } from './bag-item-awb';
 import { PackageType } from './package-type';
 import { CustomerAccount } from './customer-account';
+import { User } from './user';
 
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
@@ -717,6 +718,10 @@ export class Awb extends BaseEntity {
   @OneToOne(() => CustomerAccount)
   @JoinColumn({ name: 'customer_account_id' })
   customerAccount: CustomerAccount;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'userId' })
+  userCreated: User;
 
   // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.awb)

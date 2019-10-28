@@ -62,6 +62,9 @@ export class TrackingAwbResponseVm {
   customerName: string;
 
   @ApiModelProperty()
+  createdName: string;
+
+  @ApiModelProperty()
   customerNameRds: string;
 
   @ApiModelProperty()
