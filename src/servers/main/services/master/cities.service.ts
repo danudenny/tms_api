@@ -9,14 +9,14 @@ export class CitiesService {
     provinceId: number,
   ): Promise<CityFindAllResponseVm> {
     // mapping search field and operator default ilike
-    // payload.globalSearchFields = [
-    //   {
-    //     field: 'province_code',
-    //   },
-    //   {
-    //     field: 'province_name',
-    //   },
-    // ];
+    payload.globalSearchFields = [
+      {
+        field: 'cityCode',
+      },
+      {
+        field: 'cityName',
+      },
+    ];
     // mapping field
     payload.fieldResolverMap['cityCode'] = 'city.city_code';
 
