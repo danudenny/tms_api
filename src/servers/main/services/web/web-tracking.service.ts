@@ -37,7 +37,7 @@ export class WebTrackingService {
       result.consigneePhone = data.consigneePhone;
       result.refRepresentativeCode = data.refRepresentativeCode;
       result.parcelValue = data.parcelValue;
-      result.PartnerLogisticAwb = data.PartnerLogisticAwb;
+      result.partnerLogisticAwb = data.partnerLogisticAwb;
       // TODO: get data image awb number
       // relation to do pod deliver
 
