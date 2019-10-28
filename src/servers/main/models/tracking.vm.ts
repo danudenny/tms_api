@@ -62,6 +62,9 @@ export class TrackingAwbResponseVm {
   customerName: string;
 
   @ApiModelProperty()
+  createdName: string;
+
+  @ApiModelProperty()
   customerNameRds: string;
 
   @ApiModelProperty()
@@ -114,6 +117,9 @@ export class TrackingAwbResponseVm {
 
   @ApiModelProperty()
   parcelValue: string;
+
+  @ApiModelProperty()
+  PartnerLogisticAwb: string;
 
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];
