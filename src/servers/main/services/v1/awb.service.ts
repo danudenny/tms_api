@@ -5,6 +5,7 @@ import { AwbStatusGroupItem } from '../../../../shared/orm-entity/awb-status-gro
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
+import { createQueryBuilder } from 'typeorm';
 
 export class AwbService {
 
@@ -70,6 +71,55 @@ export class AwbService {
     // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
     q.where(e => e.awbNumber, w => w.equals(awbNumber));
     return await q.exec();
+  }
+
+  public static async getDataPickupRequest(awbNumber: string): Promise<any> {
+    const qb = createQueryBuilder();
+    qb.addSelect('awb.awb_id', 'awbId');
+    qb.addSelect('awb.awb_number', 'awbNumber');
+    qb.addSelect('awb.customer_account_id', 'customerAccountId');
+    qb.addSelect('prd.work_order_id_last', 'workOrderId');
+    qb.addSelect('COALESCE(prd.shipper_name, ca.customer_account_name)', 'consigneName');
+    qb.addSelect('prd.shipper_phone', 'consignePhone');
+    qb.addSelect('prd.shipper_address', 'consigneAddress');
+    qb.addSelect('prd.shipper_zip', 'consigneZip');
+    qb.addSelect('d.province_id', 'provinceId');
+    qb.addSelect('d.city_id', 'cityId');
+    qb.addSelect('d.district_id', 'districtId');
+    qb.from('awb', 'awb');
+    qb.innerJoin(
+      'awb_item',
+      'ai',
+      'awb.awb_id = ai.awb_id AND ai.is_deleted = false',
+    );
+    qb.leftJoin(
+      'customer_account',
+      'ca',
+      'ca.customer_account_id = awb.customer_account_id and ca.is_deleted = false',
+    );
+    qb.leftJoin(
+      'pickup_request_detail',
+      'prd',
+      'prd.awb_item_id = ai.awb_item_id and prd.is_deleted = false',
+    );
+    qb.leftJoin(
+      'work_order',
+      'wo',
+      'prd.work_order_id_last = wo.work_order_id and wo.is_deleted = false',
+    );
+    qb.leftJoin(
+      'branch',
+      'b',
+      'wo.branch_id_assigned = b.branch_id and b.is_deleted = false',
+    );
+    qb.leftJoin(
+      'district',
+      'd',
+      'b.district_id = d.district_id and d.is_deleted = false',
+    );
+    qb.where('awb.awb_number = :awbNumber', { awbNumber });
+    qb.andWhere('awb.is_deleted = false');
+    return await qb.getRawOne();
   }
 
   public static async awbStatusGroup(awbStatusId: number): Promise<string> {

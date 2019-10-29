@@ -9,14 +9,14 @@ export class DistrictsService {
     cityId: number,
   ): Promise<DistrictFindAllResponseVm> {
     // mapping search field and operator default ilike
-    // payload.globalSearchFields = [
-    //   {
-    //     field: 'district_code',
-    //   },
-    //   {
-    //     field: 'district_name',
-    //   },
-    // ];
+    payload.globalSearchFields = [
+      {
+        field: 'districtCode',
+      },
+      {
+        field: 'districtName',
+      },
+    ];
     // mapping field
     payload.fieldResolverMap['districtCode'] = 'district.district_code';
 

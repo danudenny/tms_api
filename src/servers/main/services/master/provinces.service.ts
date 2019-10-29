@@ -9,14 +9,14 @@ export class ProvincesService {
     countryId: number,
   ): Promise<ProvinceFindAllResponseVm> {
     // mapping search field and operator default ilike
-    // payload.globalSearchFields = [
-    //   {
-    //     field: 'province_code',
-    //   },
-    //   {
-    //     field: 'province_name',
-    //   },
-    // ];
+    payload.globalSearchFields = [
+      {
+        field: 'provinceCode',
+      },
+      {
+        field: 'provinceName',
+      },
+    ];
     // mapping field
     payload.fieldResolverMap['provinceCode'] = 'province.province_code';
 
