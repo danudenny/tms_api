@@ -34,7 +34,7 @@ export class WebAwbReturnService {
 
       result.awbId = awb.awbId;
       result.awbNumber = awb.awbNumber;
-      result.consigneeName = awb.consigneeeName;
+      result.consigneeName = awb.consigneeName;
       result.consigneeAddress = address;
       result.consigneeZipCode = awb.consigneeZip;
       result.customerAccountId = awb.customerAccountId;
