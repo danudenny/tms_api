@@ -79,10 +79,10 @@ export class AwbService {
     qb.addSelect('awb.awb_number', 'awbNumber');
     qb.addSelect('awb.customer_account_id', 'customerAccountId');
     qb.addSelect('prd.work_order_id_last', 'workOrderId');
-    qb.addSelect('COALESCE(prd.shipper_name, ca.customer_account_name)', 'consigneName');
-    qb.addSelect('prd.shipper_phone', 'consignePhone');
-    qb.addSelect('prd.shipper_address', 'consigneAddress');
-    qb.addSelect('prd.shipper_zip', 'consigneZip');
+    qb.addSelect('COALESCE(prd.shipper_name, ca.customer_account_name)', 'consigneeName');
+    qb.addSelect('prd.shipper_phone', 'consigneePhone');
+    qb.addSelect('prd.shipper_address', 'consigneeAddress');
+    qb.addSelect('prd.shipper_zip', 'consigneeZip');
     qb.addSelect('d.province_id', 'provinceId');
     qb.addSelect('d.city_id', 'cityId');
     qb.addSelect('d.district_id', 'districtId');

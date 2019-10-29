@@ -324,6 +324,7 @@ export class MobileInitDataService {
       payload.fieldResolverMap['recipient'] = 't1.recipient';
       payload.fieldResolverMap['description'] = 't1.description';
       payload.fieldResolverMap['createdTime'] = 't1.created_time';
+      payload.fieldResolverMap['attachmentTmsId'] = 't2.attachment_tms_id';
 
       if (payload.sortBy === '') {
         payload.sortBy = 'createdTime';
@@ -340,17 +341,17 @@ export class MobileInitDataService {
       payload.applyToOrionRepositoryQuery(q, true);
 
       q.selectRaw(
-        ['t1.url', 'url'],
+        ['t2.url', 'url'],
         ['t1.description', 'description'],
         ['t1.created_time', 'createdTime'],
         ['t1.recipient', 'recipient'],
         ['t1.subject', 'subject'],
+        ['t2.attachment_tms_id', 'attachmentTmsId'],
       );
 
-      q.leftJoin(e => e.attachment, 'Complaint', j =>
+      q.innerJoin(e => e.attachment, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
-      q.andWhere(e => e.isDeleted, w => w.isFalse());
 
       const data = await q.exec();
       const total = await q.countWithoutTakeAndSkip();

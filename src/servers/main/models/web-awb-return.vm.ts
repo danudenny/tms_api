@@ -13,13 +13,13 @@ export class WebAwbReturnGetAwbResponseVm {
   awbNumber: string;
 
   @ApiModelProperty()
-  consigneName: string;
+  consigneeName: string;
 
   @ApiModelProperty()
-  consigneAddress: string[];
+  consigneeAddress: string[];
 
   @ApiModelProperty()
-  consigneZipCode: string;
+  consigneeZipCode: string;
 
   @ApiModelProperty()
   workOrderId: number;
