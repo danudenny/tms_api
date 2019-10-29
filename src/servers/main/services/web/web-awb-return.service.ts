@@ -69,6 +69,7 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['returnAwbId'] = 't1.return_awb_id';
     payload.fieldResolverMap['returnAwbNumber'] = 't1.return_awb_number';
     payload.fieldResolverMap['isPartnerLogistic'] = 't1.is_partner_logistic';
+    payload.fieldResolverMap['partnerLogisticName'] = 't1.partner_logistic_name';
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
 
@@ -82,6 +83,8 @@ export class WebAwbReturnService {
       ['t1.origin_awb_id', 'originAwbId'],
       ['t1.origin_awb_number', 'originAwbNumber'],
       ['t1.return_awb_id', 'returnAwbId'],
+      ['t1.is_partner_logistic', 'isPartnerLogistic'],
+      ['t1.partner_logistic_name', 'partnerLogisticName'],
       ['t1.return_awb_number', 'returnAwbNumber'],
       ['t1.branch_id', 'branchId'],
       ['t1.created_time', 'createdTime'],

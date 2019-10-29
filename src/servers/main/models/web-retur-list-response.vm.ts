@@ -21,10 +21,10 @@ export class ItemReturResponseVm {
   branchId: string;
 
   @ApiModelProperty()
-  PartnerLogisticName: string;
+  partnerLogisticName: string;
 
   @ApiModelProperty()
-  isParterLogistic: string;
+  isPartnerLogistic: boolean;
 
   @ApiModelProperty()
   consigneeAddress: string;
