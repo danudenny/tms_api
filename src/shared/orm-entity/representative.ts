@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { Branch } from './branch';
 
 @Entity('representative', { schema: 'public' })
 export class Representative extends TmsBaseEntity {
@@ -60,4 +61,8 @@ export class Representative extends TmsBaseEntity {
     name: 'representative_id_parent',
   })
   representativeIdParent: string | null;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 }

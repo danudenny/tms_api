@@ -7,6 +7,7 @@ import { AwbStatus } from './awb-status';
 import { BagItemAwb } from './bag-item-awb';
 import { PackageType } from './package-type';
 import { CustomerAccount } from './customer-account';
+import { Representative } from './representative';
 
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
@@ -689,6 +690,10 @@ export class Awb extends BaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
+
+  @OneToOne(() => Representative)
+  @JoinColumn({ name: 'ref_representative_code', referencedColumnName: 'representativeCode' })
+  representative: Representative;
 
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_last' })
