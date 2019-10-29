@@ -75,7 +75,7 @@ export class AwbService {
 
   public static async getDataPickupRequest(awbNumber: string): Promise<any> {
     const qb = createQueryBuilder();
-    qb.addSelect('awb.awb_id', 'awbNumber');
+    qb.addSelect('awb.awb_id', 'awbId');
     qb.addSelect('awb.awb_number', 'awbNumber');
     qb.addSelect('awb.customer_account_id', 'customerAccountId');
     qb.addSelect('prd.work_order_id_last', 'workOrderId');
@@ -113,7 +113,7 @@ export class AwbService {
       'b.district_id = d.district_id and d.is_deleted = false',
     );
     qb.where('awb.awb_number = :awbNumber', { awbNumber });
-    qb.andWhere('a.is_deleted = false');
+    qb.andWhere('awb.is_deleted = false');
     return await qb.getRawOne();
   }
 

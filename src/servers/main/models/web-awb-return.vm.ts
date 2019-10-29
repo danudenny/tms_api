@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 
 export class WebAwbReturnGetAwbPayloadVm {
   @ApiModelProperty()
@@ -35,4 +35,12 @@ export class WebAwbReturnGetAwbResponseVm {
 
   @ApiModelProperty()
   districtId: number;
+}
+
+export class WebAwbReturnCreatePayload {
+  @ApiModelProperty()
+  awbId: number;
+
+  @ApiModelPropertyOptional()
+  base64Image?: string;
 }

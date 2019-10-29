@@ -1,7 +1,8 @@
-import { WebAwbReturnGetAwbPayloadVm, WebAwbReturnGetAwbResponseVm } from '../../models/web-awb-return.vm';
+import { WebAwbReturnGetAwbPayloadVm, WebAwbReturnGetAwbResponseVm, WebAwbReturnCreatePayload } from '../../models/web-awb-return.vm';
 import { AwbService } from '../v1/awb.service';
 import { CustomerAddress } from '../../../../shared/orm-entity/customer-address';
 import { map } from 'lodash';
+import { Awb } from '../../../../shared/orm-entity/awb';
 
 export class WebAwbReturnService {
   static async getAwb(
@@ -39,8 +40,14 @@ export class WebAwbReturnService {
     return result;
   }
 
-  static async createAwbReturn(payload) {
+  static async createAwbReturn(payload: WebAwbReturnCreatePayload) {
     // TODO: create table awb
+    const awb = await Awb.findOne({
+      where: {
+        awbId: payload.awbId,
+        isDeleted: false,
+      }
+    });
     // create table awb item
     // create table awb history;
     // create table awb return;
