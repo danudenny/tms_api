@@ -13,7 +13,7 @@ export class WebAwbReturnService {
     const awb = await AwbService.getDataPickupRequest(payload.awbNumber);
     if (awb) {
       if (awb.workOrderId) {
-        address.push(awb.consigneAddress);
+        address.push(awb.consigneeAddress);
       } else {
         // find customer address
         const customerAddress = await CustomerAddress.find({
@@ -29,9 +29,9 @@ export class WebAwbReturnService {
 
       result.awbId = awb.awbId;
       result.awbNumber = awb.awbNumber;
-      result.consigneName = awb.consigneName;
-      result.consigneAddress = address;
-      result.consigneZipCode = awb.consigneZip;
+      result.consigneeName = awb.consigneeeName;
+      result.consigneeAddress = address;
+      result.consigneeZipCode = awb.consigneeZip;
       result.customerAccountId = awb.customerAccountId;
       result.provinceId = awb.provinceId;
       result.cityId = awb.cityId;
@@ -46,7 +46,7 @@ export class WebAwbReturnService {
       where: {
         awbId: payload.awbId,
         isDeleted: false,
-      }
+      },
     });
     // create table awb item
     // create table awb history;
