@@ -783,14 +783,14 @@ export class PrintService {
         `BARCODE 30,120,"128",100,1,0,3,10,"${awbItem.awbNumber}"\n` +
         `TEXT 400,120,"4",0,1,1,"${awbItem.refRepresentativeCode}"\n` +
         data2 +
-        `TEXT 400,` + (rightX + 25) + `,"3",0,1,1,"${consZip}"\n` +
+        `TEXT 400,` + (rightX) + `,"3",0,1,1,"${consZip}"\n` +
         `TEXT 30,280,"2",0,1,1,"No Resi : ${awbItem.awbNumber}"\n` +
         `TEXT 30,310,"2",0,1,1,"Penerima : ${awbItem.consigneeName}"\n` +
         `TEXT 30,340,"2",0,1,1,"Telp : ${awbItem.consigneeNumber}"\n` +
         data1 +
         `TEXT 30,` + (addX + 30) + `,"2",0,1,1,"Diterima Oleh,"\n` +
         `TEXT 30,` + (addX + 120) + `,"2",0,1,1,"(TTD & Nama Terang)"\n` +
-        `TEXT 30,` + (addX + 220) + `,"2",0,1,1,"Pengirim : ${awbItem.branch.branchName}"\n` +
+        `TEXT 30,` + (addX + 220) + `,"2",0,1,1,"Pengirim : Sicepat Gerai ${awbItem.branch.branchName}"\n` +
         `TEXT 30,` + (addX + 250) + `,"2",0,1,1,"Telp : ${awbItem.branch.phone1}"\n` +
         `PRINT 1\n` +
         `EOP`;
