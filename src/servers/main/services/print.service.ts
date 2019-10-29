@@ -529,7 +529,7 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintAwbPayloadQueryVm,
   ) {
-    if (queryParams.is_partner_logistic === '1') {
+    if (queryParams.isPartnerLogistic === '1') {
       const q = RepositoryService.awb.findOne();
       q.innerJoin(e => e.branch);
 

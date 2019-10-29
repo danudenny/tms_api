@@ -16,7 +16,7 @@ export class PrintAwbPayloadQueryVm {
   id: number;
 
   @ApiModelProperty()
-  is_partner_logistic: string;
+  isPartnerLogistic: string;
 
   @ApiModelProperty()
   userId: number;
