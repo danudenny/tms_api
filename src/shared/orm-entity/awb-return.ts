@@ -49,4 +49,11 @@ export class AwbReturn extends TmsBaseEntity {
   })
   branchId: number;
 
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'partner_logistic_name',
+  })
+  partnerLogisticName: string;
+
 }
