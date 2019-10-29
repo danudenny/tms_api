@@ -6,7 +6,10 @@ export class ItemReturResponseVm {
   awbNumber: string;
 
   @ApiModelProperty()
-  originAwbId: string;
+  originAwbNumber: string;
+
+  @ApiModelProperty()
+  returnAwbNumber: string;
 
   @ApiModelProperty()
   via: string;
@@ -15,7 +18,13 @@ export class ItemReturResponseVm {
   createdTime: string;
 
   @ApiModelProperty()
-  customer: string;
+  branchId: string;
+
+  @ApiModelProperty()
+  PartnerLogisticName: string;
+
+  @ApiModelProperty()
+  isParterLogistic: string;
 
   @ApiModelProperty()
   consigneeAddress: string;
