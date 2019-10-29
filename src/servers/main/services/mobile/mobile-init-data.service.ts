@@ -349,7 +349,7 @@ export class MobileInitDataService {
         ['t2.attachment_tms_id', 'attachmentTmsId'],
       );
 
-      q.innerJoin(e => e.attachment, 't2', j =>
+      q.leftJoin(e => e.attachment, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
