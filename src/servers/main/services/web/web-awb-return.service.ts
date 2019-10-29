@@ -31,7 +31,7 @@ export class WebAwbReturnService {
       result.awbNumber = awb.awbNumber;
       result.consigneName = awb.consigneName;
       result.consigneAddress = address;
-      result.consigneZipCode = awb.consigneZipCode;
+      result.consigneZipCode = awb.consigneZip;
       result.customerAccountId = awb.customerAccountId;
       result.provinceId = awb.provinceId;
       result.cityId = awb.cityId;

@@ -79,10 +79,10 @@ export class AwbService {
     qb.addSelect('awb.awb_number', 'awbNumber');
     qb.addSelect('awb.customer_account_id', 'customerAccountId');
     qb.addSelect('prd.work_order_id_last', 'workOrderId');
-    qb.addSelect('prd.shipper_name', 'shipperName');
-    qb.addSelect('prd.shipper_phone', 'shipperPhone');
-    qb.addSelect('prd.shipper_address', 'shipperAddress');
-    qb.addSelect('prd.shipper_zip', 'shipperZip');
+    qb.addSelect('COALESCE(prd.shipper_name, ca.customer_account_name)', 'consigneName');
+    qb.addSelect('prd.shipper_phone', 'consignePhone');
+    qb.addSelect('prd.shipper_address', 'consigneAddress');
+    qb.addSelect('prd.shipper_zip', 'consigneZip');
     qb.addSelect('d.province_id', 'provinceId');
     qb.addSelect('d.city_id', 'cityId');
     qb.addSelect('d.district_id', 'districtId');
@@ -91,6 +91,11 @@ export class AwbService {
       'awb_item',
       'ai',
       'awb.awb_id = ai.awb_id AND ai.is_deleted = false',
+    );
+    qb.leftJoin(
+      'customer_account',
+      'ca',
+      'ca.customer_account_id = awb.customer_account_id and ca.is_deleted = false',
     );
     qb.leftJoin(
       'pickup_request_detail',
