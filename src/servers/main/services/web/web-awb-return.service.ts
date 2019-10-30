@@ -1,13 +1,13 @@
 import { WebAwbReturnGetAwbPayloadVm, WebAwbReturnGetAwbResponseVm, WebAwbReturnCreatePayload } from '../../models/web-awb-return.vm';
 import { AwbService } from '../v1/awb.service';
 import { CustomerAddress } from '../../../../shared/orm-entity/customer-address';
-import { map } from 'lodash';
 import { Awb } from '../../../../shared/orm-entity/awb';
 import { WebReturListResponseVm } from '../../models/web-retur-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 
 export class WebAwbReturnService {
   static async getAwb(
@@ -53,6 +53,17 @@ export class WebAwbReturnService {
         isDeleted: false,
       },
     });
+    if (awb) {
+      const awbReturnNumber = await CustomCounterCode.awbReturn();
+      awb.awbId = null;
+      awb.awbNumber = awbReturnNumber;
+      awb.awbCode = awbReturnNumber;
+      awb.refAwbNumber = awbReturnNumber;
+
+      const newAwb = await Awb.insert(awb);
+
+      console.log(awb.awbId);
+    }
     // create table awb item
     // create table awb history;
     // create table awb return;

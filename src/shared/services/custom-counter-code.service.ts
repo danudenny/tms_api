@@ -21,7 +21,7 @@ export class CustomCounterCode {
   public static async awbReturn() {
     const prefix = `R`;
     const last_number = await this.getLastNumber(prefix);
-    return prefix + last_number.toString().padStart(9, '0');
+    return prefix + last_number.toString().padStart(11, '0');
   }
 
   public static async doPod(dateTime: Date, digit: number = 8) {
