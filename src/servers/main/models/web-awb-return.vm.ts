@@ -105,5 +105,8 @@ export class WebAwbReturnCreateResponse {
   status: string;
 
   @ApiModelProperty()
+  awbReturnNumber: string;
+
+  @ApiModelProperty()
   message: string;
 }
