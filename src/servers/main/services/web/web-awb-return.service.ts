@@ -13,6 +13,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
+import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
 
 export class WebAwbReturnService {
   static async getAwb(
@@ -69,7 +70,7 @@ export class WebAwbReturnService {
       },
     });
     if (awb) {
-      const awbReturnNumber = await CustomCounterCode.awbReturn();
+      let awbReturnNumber = await CustomCounterCode.awbReturn();
       // set data return
       awb.awbId = null;
       awb.awbBookingId = 0;
@@ -191,7 +192,42 @@ export class WebAwbReturnService {
         await AwbHistory.insert(awbReturnHistories);
 
         // create table awb item attr ??
+
         // create table awb return;
+        let isPartnerLogistic = false;
+        let partnerLogisticName = '';
+        // check partner logistic
+        if (payload.partnerLogisticId != 0) {
+          isPartnerLogistic = true;
+          const partnerLogistic = await PartnerLogistic.findOne({
+            where: {
+              partnerLogisticId: payload.partnerLogisticId,
+              isDeleted: false,
+            },
+          });
+          if (partnerLogistic) {
+            partnerLogisticName = partnerLogistic.partnerLogisticName;
+            awbReturnNumber = payload.awbNumber;
+          }
+        }
+
+        const awbReturn = AwbReturn.create(  {
+          originAwbId: payload.awbId,
+          originAwbNumber: payload.awbNumber,
+          returnAwbId: awb.awbId,
+          returnAwbNumber: awbReturnNumber,
+          isPartnerLogistic,
+          branchId: permissonPayload.branchId,
+          userIdCreated: authMeta.userId,
+          createdTime: timeNow,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+          partnerLogisticName,
+        });
+
+        // insert data awb return
+        AwbReturn.insert(awbReturn);
+
       }
 
       result.status = 'ok';
