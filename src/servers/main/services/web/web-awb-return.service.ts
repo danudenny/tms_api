@@ -227,13 +227,10 @@ export class WebAwbReturnService {
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
-        field: 'createdTime',
-      },
-      {
         field: 'originAwbNumber',
       },
       {
-        field: 'customerAccountId',
+        field: 'customerAccountName',
       },
 
     ];
