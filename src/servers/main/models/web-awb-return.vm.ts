@@ -55,9 +55,28 @@ export class WebAwbReturnGetAwbResponseVm {
   districtName: string;
 }
 
+// consigneeDistrict: { value: 112, label: 'DPS33 - Cicurug' }
+export class ConsigneeDistrict {
+  @ApiModelProperty()
+  value: number;
+
+  @ApiModelProperty()
+  label: string;
+
+}
+
 export class WebAwbReturnCreatePayload {
   @ApiModelProperty()
   awbId: number;
+
+  @ApiModelProperty()
+  partnerLogisticId: number;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  doPodVia: string;
 
   @ApiModelProperty()
   consigneeName: string;
@@ -71,6 +90,20 @@ export class WebAwbReturnCreatePayload {
   @ApiModelProperty()
   consigneeZip: string;
 
+  @ApiModelProperty()
+  consigneeDistrict: ConsigneeDistrict;
+
+  @ApiModelProperty()
+  description: string;
+
   @ApiModelPropertyOptional()
   base64Image?: string;
+}
+
+export class WebAwbReturnCreateResponse {
+  @ApiModelProperty()
+  status: number;
+
+  @ApiModelProperty()
+  message: string;
 }
