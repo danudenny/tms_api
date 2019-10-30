@@ -194,10 +194,10 @@ export class WebAwbReturnService {
         // create table awb return;
       }
 
-      result.status = 200;
-      result.message = 'ok';
+      result.status = 'ok';
+      result.message = `No Resi Retur ${awbReturnNumber}`;
     } else {
-      result.status = 400;
+      result.status = 'error';
       result.message = `No Resi ${payload.awbNumber} tidak ditemukan`;
     }
     return result;

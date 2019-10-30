@@ -102,7 +102,7 @@ export class WebAwbReturnCreatePayload {
 
 export class WebAwbReturnCreateResponse {
   @ApiModelProperty()
-  status: number;
+  status: string;
 
   @ApiModelProperty()
   message: string;
