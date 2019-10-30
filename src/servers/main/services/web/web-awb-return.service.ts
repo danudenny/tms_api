@@ -96,8 +96,8 @@ export class WebAwbReturnService {
       awb.awbHistoryIdLast = null;
       awb.awbStatusIdLast = null;
       awb.awbStatusIdLastPublic = null;
-      awb.userIdLast = null;
-      awb.branchIdLast = null;
+      awb.userIdLast = authMeta.userId;
+      awb.branchIdLast = permissonPayload.branchId;
       awb.historyDateLast = null;
       awb.pickupMerchant = null;
       awb.refAwbNumberJne = null;
@@ -173,8 +173,8 @@ export class WebAwbReturnService {
         for (const item of awbReturnItems) {
           const tempHistory = AwbHistory.create({
             awbItemId: item.awbItemId,
-            userId: item.userId,
-            branchId: item.branchId,
+            userId: item.userIdLast,
+            branchId: item.branchIdLast,
             historyDate: timeNow,
             awbStatusId: 1500,
             awbNote: payload.description,
