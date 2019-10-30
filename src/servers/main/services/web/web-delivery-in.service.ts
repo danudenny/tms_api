@@ -403,7 +403,7 @@ export class WebDeliveryInService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebDeliveryListResponseVm> {
     // mapping field
-    payload.fieldResolverMap['bagNumber'] = 't5.bag_number';
+    payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     payload.fieldResolverMap['bagSeq'] = 't6.bag_seq';
 
@@ -417,7 +417,7 @@ export class WebDeliveryInService {
       },
     ];
 
-    const repo = new OrionRepositoryService(PodScanInBranchDetail, 't1');
+    const repo = new OrionRepositoryService(Bag, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -429,21 +429,22 @@ export class WebDeliveryInService {
       ['t4.district_name', 'districtName'],
     );
 
-    q.innerJoin(e => e.awbItemAttr, 't2', j =>
+    q.innerJoin(e => e.bagItems, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awb, 't3', j =>
+    q.innerJoin(e => e.bagItems.bagItemAwbs, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awb.district, 't4', j =>
+    q.innerJoin(e => e.bagItems.bagItemAwbs.awbItem.awb, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.bag, 't5', j =>
+    q.innerJoin(e => e.bagItems.bagItemAwbs.awbItem.awb.district, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.bagItem, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    // q.innerJoin(e => e.bag, 't5', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
+    
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
