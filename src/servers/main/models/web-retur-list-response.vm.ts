@@ -27,6 +27,9 @@ export class ItemReturResponseVm {
   partnerLogisticName: string;
 
   @ApiModelProperty()
+  partnerLogisticAwb: string;
+
+  @ApiModelProperty()
   isPartnerLogistic: boolean;
 
   @ApiModelProperty()

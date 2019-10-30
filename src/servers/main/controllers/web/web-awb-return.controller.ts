@@ -4,10 +4,12 @@ import {
 } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { WebAwbReturnGetAwbPayloadVm, WebAwbReturnGetAwbResponseVm, WebAwbReturnCreatePayload, WebAwbReturnCreateResponse } from '../../models/web-awb-return.vm';
+import { WebAwbReturnGetAwbPayloadVm, WebAwbReturnGetAwbResponseVm, WebAwbReturnCreatePayload } from '../../models/web-awb-return.vm';
 import { WebAwbReturnService } from '../../services/web/web-awb-return.service';
 import { WebReturListResponseVm } from '../../models/web-retur-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { WebReturUpdateListPayloadVm} from '../../models/web-retur-update-response.vm';
+import { WebReturUpdateResponseVm } from '../../models/web-retur-update-list-response.vm';
 
 @ApiUseTags('Web Awb Return')
 @Controller('web/pod/return')
@@ -33,9 +35,16 @@ export class WebAwbReturnController {
     return WebAwbReturnService.listReturn(payload);
   }
 
+  @Post('update')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebReturUpdateResponseVm })
+  public async updateAwb(@Body() payload: WebReturUpdateListPayloadVm) {
+    return WebAwbReturnService.updateAwbReturn(payload);
+  }
+
   @Post('create')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: WebAwbReturnCreateResponse })
+  @ApiOkResponse({ type: WebReturListResponseVm })
   public async createReturn(@Body() payload: WebAwbReturnCreatePayload) {
     return WebAwbReturnService.createAwbReturn(payload);
   }

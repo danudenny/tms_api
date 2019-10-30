@@ -14,6 +14,8 @@ import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
+import { WebReturUpdateListPayloadVm } from '../../models/web-retur-update-response.vm';
+import { WebReturUpdateResponseVm } from '../../models/web-retur-update-list-response.vm';
 
 export class WebAwbReturnService {
   static async getAwb(
@@ -257,6 +259,42 @@ export class WebAwbReturnService {
     return result;
   }
 
+  static async updateAwbReturn(
+    payload: WebReturUpdateListPayloadVm,
+  ): Promise<WebReturUpdateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const result = new WebReturUpdateResponseVm();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    // edit Return 3PL
+    const awbReturn = await AwbReturn.findOne({
+      where: {
+        originAwbNumber: payload.originAwbNumber,
+        isDeleted: false,
+      },
+    });
+    if (awbReturn) {
+      // looping data list remove awb number
+      if (payload.originAwbNumber.length) {
+          const awbReturn = await AwbReturn.findOne({
+            where: {
+              originAwbNumber: payload.originAwbNumber,
+              isDeleted: false,
+            },
+          });
+
+          if (awbReturn) {
+              AwbReturn.update(awbReturn.awbReturnId, {
+              partnerLogisticAwb: payload.partnerLogisticAwb,
+
+            });
+          }
+          result.status = 'ok';
+          result.message = 'success';
+          return result;
+        }
+      }
+  }
+
   static async listReturn(
     payload: BaseMetaPayloadVm,
   ): Promise<WebReturListResponseVm> {
@@ -265,6 +303,7 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['originAwbId'] = 't1.origin_awb_id';
     payload.fieldResolverMap['originAwbNumber'] = 't1.origin_awb_number';
     payload.fieldResolverMap['returnAwbId'] = 't1.return_awb_id';
+    payload.fieldResolverMap['partnerLogisticAwb'] = 't1.partner_logistic_awb';
     payload.fieldResolverMap['returnAwbNumber'] = 't1.return_awb_number';
     payload.fieldResolverMap['isPartnerLogistic'] = 't1.is_partner_logistic';
     payload.fieldResolverMap['partnerLogisticName'] = 't1.partner_logistic_name';
@@ -297,6 +336,7 @@ export class WebAwbReturnService {
     q.selectRaw(
       ['t1.awb_return_id', 'awbReturnId'],
       ['t1.origin_awb_id', 'originAwbId'],
+      ['t1.partner_logistic_awb', 'partnerLogisticAwb'],
       ['t1.origin_awb_number', 'originAwbNumber'],
       ['t1.return_awb_id', 'returnAwbId'],
       ['t1.is_partner_logistic', 'isPartnerLogistic'],
