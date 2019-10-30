@@ -1,4 +1,4 @@
-import { WebAwbReturnGetAwbPayloadVm, WebAwbReturnGetAwbResponseVm, WebAwbReturnCreatePayload } from '../../models/web-awb-return.vm';
+import { WebAwbReturnGetAwbPayloadVm, WebAwbReturnGetAwbResponseVm, WebAwbReturnCreatePayload, WebAwbReturnCreateResponse } from '../../models/web-awb-return.vm';
 import { AwbService } from '../v1/awb.service';
 import { CustomerAddress } from '../../../../shared/orm-entity/customer-address';
 import { Awb } from '../../../../shared/orm-entity/awb';
@@ -11,6 +11,8 @@ import { CustomCounterCode } from '../../../../shared/services/custom-counter-co
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 
 export class WebAwbReturnService {
   static async getAwb(
@@ -54,9 +56,10 @@ export class WebAwbReturnService {
     return result;
   }
 
-  static async createAwbReturn(payload: WebAwbReturnCreatePayload) {
-    // const authMeta = AuthService.getAuthData();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
+  static async createAwbReturn(payload: WebAwbReturnCreatePayload): Promise<WebAwbReturnCreateResponse> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const result = new WebAwbReturnCreateResponse();
     const timeNow = moment().toDate();
     // TODO: create table awb
     const awb = await Awb.findOne({
@@ -83,12 +86,12 @@ export class WebAwbReturnService {
       awb.consigneeZip = payload.consigneeZip;
       awb.consigneeDistrict = '';
       awb.packageTypeId = 1; // default REG
-      awb.userId = 1; // authMeta.userId
-      awb.branchId = null; // permissonPayload.branchId;
+      awb.userId = authMeta.userId;
+      awb.branchId = permissonPayload.branchId;
       awb.fromType = 40; // code for district
-      awb.fromId = null; // permissonPayload.branchId;
+      awb.fromId = permissonPayload.branchId;
       awb.toType = 40; // code for district
-      awb.toId = null; // payload district Id
+      awb.toId = payload.consigneeDistrict.value; // payload district Id
 
       awb.awbHistoryIdLast = null;
       awb.awbStatusIdLast = null;
@@ -107,8 +110,21 @@ export class WebAwbReturnService {
       await Awb.insert(awb);
       // create table awb attr ??
 
-      console.log(awb.awbId);
+      if (payload.base64Image) {
+        const pathImage = `RTN/${awbReturnNumber.substring(0, 7)}/${awbReturnNumber}`;
+        const attachment = await AttachmentService.uploadFileBase64(
+          payload.base64Image,
+          'RTN',
+          pathImage,
+          false,
+        );
+        // NOTE: attachment tms image ??
+        if (attachment) {
+          console.log(attachment);
+        }
+      }
 
+      // TODO: move to background jobs
       // create table awb item
       const awbItems = await AwbItem.find({
         where: {
@@ -130,15 +146,15 @@ export class WebAwbReturnService {
           item.packingTypeId = 1; // what this ??
           item.awbStatusIdLast = 1500;
           item.awbStatusIdFinal = 2000;
-          item.userIdLast = 1; // user login
-          item.branchIdLast = null; // branch id login
+          item.userIdLast = awb.userIdLast; // user login
+          item.branchIdLast = awb.branchIdLast; // branch id login
           item.historyDateLast = null;
           item.tryAttempt = 0;
           item.awbDate = awb.awbDate;
           item.awbDateReal = awb.awbDateReal;
           item.awbHistoryIdLast = null;
-          item.userIdCreated = 1; // user id login
-          item.userIdUpdated = 1; // user id login
+          item.userIdCreated = awb.userIdCreated; // user id login
+          item.userIdUpdated = awb.userIdUpdated; // user id login
           item.createdTime = timeNow;
           item.updatedTime = timeNow;
 
@@ -151,16 +167,40 @@ export class WebAwbReturnService {
         // insert data on awb item
         await AwbItem.insert(awbReturnItems);
 
-        console.log(awbReturnItems);
         // create table awb history;
+        const awbReturnHistories = [];
+        // loop data
+        for (const item of awbReturnItems) {
+          const tempHistory = AwbHistory.create({
+            awbItemId: item.awbItemId,
+            userId: item.userId,
+            branchId: item.branchId,
+            historyDate: timeNow,
+            awbStatusId: 1500,
+            awbNote: payload.description,
+            createdTime: timeNow,
+            updatedTime: timeNow,
+            userIdCreated: item.userIdCreated,
+            userIdUpdated: item.userIdUpdated,
+            isScanSingle: true,
+            isDirectionBack: true,
+          });
+          awbReturnHistories.push(tempHistory);
+        }
+        // insert data on awb history
+        await AwbHistory.insert(awbReturnHistories);
 
         // create table awb item attr ??
-
         // create table awb return;
       }
 
+      result.status = 200;
+      result.message = 'ok';
+    } else {
+      result.status = 400;
+      result.message = `No Resi ${payload.awbNumber} tidak ditemukan`;
     }
-    return null;
+    return result;
   }
 
   static async listReturn(

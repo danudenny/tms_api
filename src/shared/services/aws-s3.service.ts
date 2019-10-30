@@ -33,7 +33,7 @@ export class AwsS3Service {
       Key: awsKey,
     })
       .promise()
-      .then(result => {
+      .then(() => {
         return {
           awsKey,
         };
@@ -42,17 +42,16 @@ export class AwsS3Service {
 
   public static uploadFileBase64(
     base64String: string,
-    fileOriginalName: string,
-    pathId?: string,
+    awsKey: string,
     bucketName?: string,
   ) {
     if (!bucketName && ConfigService.has('cloudStorage.cloudBucket')) {
       bucketName = ConfigService.get('cloudStorage.cloudBucket');
     }
 
-    const awsKey = `attachments/${
-      pathId ? `${pathId}/` : ''
-    }${moment().format('Y/M/D')}/${fileOriginalName}`;
+    // const awsKey = `attachments/${
+    //   pathId ? `${pathId}/` : ''
+    // }${moment().format('Y/M/D')}/${fileOriginalName}`;
     // attachments/tms-check-in/123456789-file.png OR attachments/123456789-file.png
     // CHANGE: attachments/tms-check-in/19/8/12/file.png OR attachments/19/8/12/file.png
 
@@ -76,7 +75,7 @@ export class AwsS3Service {
       Key: awsKey,
     })
       .promise()
-      .then(result => {
+      .then(() => {
         return {
           awsKey,
           contentType,
@@ -103,7 +102,7 @@ export class AwsS3Service {
         Key: awsKey,
       })
         .promise()
-        .then(result => {
+        .then(() => {
           return { awsKey };
         });
     } catch (err) {
