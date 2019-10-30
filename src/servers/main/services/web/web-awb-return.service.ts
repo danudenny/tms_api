@@ -195,9 +195,11 @@ export class WebAwbReturnService {
       }
 
       result.status = 'ok';
+      result.awbReturnNumber = awbReturnNumber;
       result.message = `No Resi Retur ${awbReturnNumber}`;
     } else {
       result.status = 'error';
+      result.awbReturnNumber = '';
       result.message = `No Resi ${payload.awbNumber} tidak ditemukan`;
     }
     return result;
