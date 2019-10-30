@@ -200,10 +200,10 @@ export class WebAwbReturnService {
       ['t2.notes', 'notes'],
     );
 
-    q.innerJoin(e => e.OriginAwb, 't2', j =>
+    q.innerJoin(e => e.originAwb, 't2', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
   );
-    q.innerJoin(e => e.Cust, 't2', j =>
+    q.innerJoin(e => e.customer, 't3', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
   );
 

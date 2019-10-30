@@ -31,13 +31,6 @@ export class Customer extends TmsBaseEntity {
   })
   email1: string | null;
 
-  @Column('boolean', {
-    nullable: true,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
-
   @Column('character varying', {
     nullable: true,
     length: 200,
