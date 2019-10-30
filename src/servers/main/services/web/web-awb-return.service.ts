@@ -62,7 +62,6 @@ export class WebAwbReturnService {
 
       const newAwb = await Awb.insert(awb);
 
-      console.log(awb.awbId);
     }
     // create table awb item
     // create table awb history;
@@ -83,6 +82,9 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['partnerLogisticName'] = 't1.partner_logistic_name';
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['consigneeAddress'] = 't2.consignee_address';
+    payload.fieldResolverMap['refCustomerAccountId'] = 't2.ref_customer_account_id';
+    payload.fieldResolverMap['notes'] = 't2.notes';
 
     const repo = new OrionRepositoryService(AwbReturn, 't1');
     const q = repo.findAllRaw();
@@ -99,9 +101,17 @@ export class WebAwbReturnService {
       ['t1.return_awb_number', 'returnAwbNumber'],
       ['t1.branch_id', 'branchId'],
       ['t1.created_time', 'createdTime'],
+      ['t2.consignee_address', 'consigneeAddress'],
+      ['t2.ref_customer_account_id', 'refCustomerAccountId'],
+      ['t2.notes', 'notes'],
     );
 
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.innerJoin(e => e.OriginAwb, 't2', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
+    q.innerJoin(e => e.Cust, 't2', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

@@ -352,6 +352,14 @@ export class AwbItem extends BaseEntity {
   })
   codValue: number;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'awb_type',
+  })
+  awbType: string;
+
+
   @ManyToOne(() => Awb, e => e.awbItems)
   @JoinColumn({ name: 'awb_id', referencedColumnName: 'awbId' })
   awb: Awb;

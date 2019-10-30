@@ -21,6 +21,9 @@ export class ItemReturResponseVm {
   branchId: string;
 
   @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
   partnerLogisticName: string;
 
   @ApiModelProperty()
@@ -31,6 +34,12 @@ export class ItemReturResponseVm {
 
   @ApiModelProperty()
   notes: string;
+
+  @ApiModelProperty()
+  refCustomerAccountId: string;
+
+  @ApiModelProperty()
+  customerName: string;
 }
 
 export class WebReturListResponseVm extends BaseMetaResponseVm {
