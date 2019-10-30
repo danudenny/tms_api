@@ -73,7 +73,7 @@ export class WebAwbReturnService {
       // TODO: check data awb return
       const hasAwbReturn = await AwbReturn.findOne({
         where: {
-          originAwb: payload.awbId,
+          originAwbId: payload.awbId,
           isDeleted: false,
         },
       });
