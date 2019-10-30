@@ -70,7 +70,8 @@ export class WebAwbReturnService {
       },
     });
     if (awb) {
-      let awbReturnNumber = await CustomCounterCode.awbReturn();
+      const awbReturnNumber = await CustomCounterCode.awbReturn();
+      let finalAwbNumber = awbReturnNumber;
       // set data return
       awb.awbId = null;
       awb.awbBookingId = 0;
@@ -196,6 +197,7 @@ export class WebAwbReturnService {
         // create table awb return;
         let isPartnerLogistic = false;
         let partnerLogisticName = '';
+
         // check partner logistic
         if (payload.partnerLogisticId != 0) {
           isPartnerLogistic = true;
@@ -207,7 +209,7 @@ export class WebAwbReturnService {
           });
           if (partnerLogistic) {
             partnerLogisticName = partnerLogistic.partnerLogisticName;
-            awbReturnNumber = payload.awbNumber;
+            finalAwbNumber = payload.awbNumber;
           }
         }
 
@@ -231,7 +233,7 @@ export class WebAwbReturnService {
       }
 
       result.status = 'ok';
-      result.awbReturnNumber = awbReturnNumber;
+      result.awbReturnNumber = finalAwbNumber;
       result.message = `No Resi Retur ${awbReturnNumber}`;
     } else {
       result.status = 'error';

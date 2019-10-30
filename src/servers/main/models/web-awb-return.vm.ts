@@ -90,7 +90,7 @@ export class WebAwbReturnCreatePayload {
   @ApiModelProperty()
   consigneeZipCode: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({ type: () => ConsigneeDistrict })
   consigneeDistrict: ConsigneeDistrict;
 
   @ApiModelProperty()
