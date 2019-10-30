@@ -83,8 +83,8 @@ export class WebAwbReturnService {
       awb.consigneeName = payload.consigneeName;
       awb.consigneeAddress = payload.consigneeAddress;
       awb.consigneeNumber = payload.consigneePhone;
-      awb.consigneeZip = payload.consigneeZip;
-      awb.consigneeDistrict = '';
+      awb.consigneeZip = payload.consigneeZipCode;
+      awb.consigneeDistrict = payload.consigneeDistrict.label;
       awb.packageTypeId = 1; // default REG
       awb.userId = authMeta.userId;
       awb.branchId = permissonPayload.branchId;
