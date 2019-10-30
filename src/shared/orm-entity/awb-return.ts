@@ -62,8 +62,4 @@ export class AwbReturn extends TmsBaseEntity {
   @JoinColumn({ name: 'origin_awb_id' })
   originAwb: Awb;
 
-  @OneToOne(() => Customer)
-  @JoinColumn({ name: 'ref_customer_account_id' })
-  customer: Customer;
-
 }

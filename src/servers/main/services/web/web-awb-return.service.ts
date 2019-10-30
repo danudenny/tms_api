@@ -177,8 +177,26 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['consigneeAddress'] = 't2.consignee_address';
-    payload.fieldResolverMap['refCustomerAccountId'] = 't2.ref_customer_account_id';
+    payload.fieldResolverMap['customerAccountId'] = 't2.customer_account_id';
+    payload.fieldResolverMap['customerAccountName'] = 't3.customer_account_name';
     payload.fieldResolverMap['notes'] = 't2.notes';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+      {
+        field: 'originAwbNumber',
+      },
+      {
+        field: 'customerAccountId',
+      },
+
+    ];
 
     const repo = new OrionRepositoryService(AwbReturn, 't1');
     const q = repo.findAllRaw();
@@ -196,14 +214,15 @@ export class WebAwbReturnService {
       ['t1.branch_id', 'branchId'],
       ['t1.created_time', 'createdTime'],
       ['t2.consignee_address', 'consigneeAddress'],
-      ['t2.ref_customer_account_id', 'refCustomerAccountId'],
+      ['t2.customer_account_id', 'customerAccountId'],
+      ['t3.customer_account_name', 'customerAccountName'],
       ['t2.notes', 'notes'],
     );
 
     q.innerJoin(e => e.originAwb, 't2', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
   );
-    q.innerJoin(e => e.customer, 't3', j =>
+    q.leftJoin(e => e.originAwb.customerAccount, 't3', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
   );
 
