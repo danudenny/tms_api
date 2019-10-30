@@ -83,9 +83,15 @@ export class AwbService {
     qb.addSelect('prd.shipper_phone', 'consigneePhone');
     qb.addSelect('prd.shipper_address', 'consigneeAddress');
     qb.addSelect('prd.shipper_zip', 'consigneeZip');
-    qb.addSelect('d.province_id', 'provinceId');
-    qb.addSelect('d.city_id', 'cityId');
+    qb.addSelect('p.province_id', 'provinceId');
+    qb.addSelect('p.province_code', 'provinceCode');
+    qb.addSelect('p.province_Name', 'provinceName');
+    qb.addSelect('c.city_id', 'cityId');
+    qb.addSelect('c.city_code', 'cityCode');
+    qb.addSelect('c.city_name', 'cityName');
     qb.addSelect('d.district_id', 'districtId');
+    qb.addSelect('d.district_code', 'districtCode');
+    qb.addSelect('d.district_Name', 'districtName');
     qb.from('awb', 'awb');
     qb.innerJoin(
       'awb_item',
@@ -105,17 +111,27 @@ export class AwbService {
     qb.leftJoin(
       'work_order',
       'wo',
-      'prd.work_order_id_last = wo.work_order_id and wo.is_deleted = false',
+      'prd.work_order_id_last = wo.work_order_id AND wo.is_deleted = false',
     );
     qb.leftJoin(
       'branch',
       'b',
-      'wo.branch_id_assigned = b.branch_id and b.is_deleted = false',
+      'wo.branch_id_assigned = b.branch_id AND b.is_deleted = false',
     );
     qb.leftJoin(
       'district',
       'd',
-      'b.district_id = d.district_id and d.is_deleted = false',
+      'b.district_id = d.district_id AND d.is_deleted = false',
+    );
+    qb.leftJoin(
+      'city',
+      'c',
+      'c.city_id = d.city_id AND c.is_deleted = false',
+    );
+    qb.leftJoin(
+      'province',
+      'p',
+      'p.province_id = d.province_id AND p.is_deleted = false',
     );
     qb.where('awb.awb_number = :awbNumber', { awbNumber });
     qb.andWhere('awb.is_deleted = false');

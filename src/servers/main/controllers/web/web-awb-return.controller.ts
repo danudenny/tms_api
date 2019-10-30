@@ -11,8 +11,8 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 
 @ApiUseTags('Web Awb Return')
 @Controller('web/pod/return')
-@ApiBearerAuth()
-@UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+// @ApiBearerAuth()
+// @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
 export class WebAwbReturnController {
   // TODO: create endpoint
   // 1. get data awb

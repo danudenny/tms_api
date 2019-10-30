@@ -8,6 +8,9 @@ import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import moment = require('moment');
+import { AuthService } from '../../../../shared/services/auth.service';
+import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 
 export class WebAwbReturnService {
   static async getAwb(
@@ -39,13 +42,22 @@ export class WebAwbReturnService {
       result.consigneeZipCode = awb.consigneeZip;
       result.customerAccountId = awb.customerAccountId;
       result.provinceId = awb.provinceId;
+      result.provinceCode = awb.provinceCode;
+      result.provinceName = awb.provinceName;
       result.cityId = awb.cityId;
+      result.cityCode = awb.cityCode;
+      result.cityName = awb.cityName;
       result.districtId = awb.districtId;
+      result.districtCode = awb.districtCode;
+      result.districtName = awb.districtName;
     }
     return result;
   }
 
   static async createAwbReturn(payload: WebAwbReturnCreatePayload) {
+    // const authMeta = AuthService.getAuthData();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timeNow = moment().toDate();
     // TODO: create table awb
     const awb = await Awb.findOne({
       where: {
@@ -55,17 +67,99 @@ export class WebAwbReturnService {
     });
     if (awb) {
       const awbReturnNumber = await CustomCounterCode.awbReturn();
+      // set data return
       awb.awbId = null;
+      awb.awbBookingId = 0;
+      awb.customerAccountId = null;
+      awb.consigneeTitle = null;
       awb.awbNumber = awbReturnNumber;
       awb.awbCode = awbReturnNumber;
       awb.refAwbNumber = awbReturnNumber;
+      awb.awbDate = moment().startOf('day').toDate();
+      awb.awbDateReal = timeNow;
+      awb.consigneeName = payload.consigneeName;
+      awb.consigneeAddress = payload.consigneeAddress;
+      awb.consigneeNumber = payload.consigneePhone;
+      awb.consigneeZip = payload.consigneeZip;
+      awb.consigneeDistrict = '';
+      awb.packageTypeId = 1; // default REG
+      awb.userId = 1; // authMeta.userId
+      awb.branchId = null; // permissonPayload.branchId;
+      awb.fromType = 40; // code for district
+      awb.fromId = null; // permissonPayload.branchId;
+      awb.toType = 40; // code for district
+      awb.toId = null; // payload district Id
 
-      const newAwb = await Awb.insert(awb);
+      awb.awbHistoryIdLast = null;
+      awb.awbStatusIdLast = null;
+      awb.awbStatusIdLastPublic = null;
+      awb.userIdLast = null;
+      awb.branchIdLast = null;
+      awb.historyDateLast = null;
+      awb.pickupMerchant = null;
+      awb.refAwbNumberJne = null;
+      awb.isJne = false;
+
+      awb.createdTime = timeNow;
+      awb.updatedTime = timeNow;
+      awb.userIdCreated = 1;
+      awb.userIdUpdated = 1;
+      await Awb.insert(awb);
+      // create table awb attr ??
+
+      console.log(awb.awbId);
+
+      // create table awb item
+      const awbItems = await AwbItem.find({
+        where: {
+          awbId: payload.awbId,
+          isDeleted: false,
+        },
+      });
+      if (awbItems && awbItems.length) {
+        const awbReturnItems = [];
+        // loop data
+        for (const item of awbItems) {
+          // set data awb item
+          item.awbItemId = null;
+          item.awbId = awb.awbId;
+          item.bagItemIdLast = 0;
+          item.doAwbIdDelivery = null;
+          item.doAwbIdPickup = null;
+          item.attachmentTmsId = null;
+          item.packingTypeId = 1; // what this ??
+          item.awbStatusIdLast = 1500;
+          item.awbStatusIdFinal = 2000;
+          item.userIdLast = 1; // user login
+          item.branchIdLast = null; // branch id login
+          item.historyDateLast = null;
+          item.tryAttempt = 0;
+          item.awbDate = awb.awbDate;
+          item.awbDateReal = awb.awbDateReal;
+          item.awbHistoryIdLast = null;
+          item.userIdCreated = 1; // user id login
+          item.userIdUpdated = 1; // user id login
+          item.createdTime = timeNow;
+          item.updatedTime = timeNow;
+
+          // NOTE: new field
+          item.isReturn = true;
+          item.partnerLogisticAwb = null; // payload
+          // item.awbType = ??
+          awbReturnItems.push(item);
+        }
+        // insert data on awb item
+        await AwbItem.insert(awbReturnItems);
+
+        console.log(awbReturnItems);
+        // create table awb history;
+
+        // create table awb item attr ??
+
+        // create table awb return;
+      }
 
     }
-    // create table awb item
-    // create table awb history;
-    // create table awb return;
     return null;
   }
 

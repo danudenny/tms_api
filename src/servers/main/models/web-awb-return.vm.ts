@@ -31,15 +31,45 @@ export class WebAwbReturnGetAwbResponseVm {
   provinceId: number;
 
   @ApiModelProperty()
+  provinceCode: string;
+
+  @ApiModelProperty()
+  provinceName: string;
+
+  @ApiModelProperty()
   cityId: number;
 
   @ApiModelProperty()
+  cityCode: string;
+
+  @ApiModelProperty()
+  cityName: string;
+
+  @ApiModelProperty()
   districtId: number;
+
+  @ApiModelProperty()
+  districtCode: string;
+
+  @ApiModelProperty()
+  districtName: string;
 }
 
 export class WebAwbReturnCreatePayload {
   @ApiModelProperty()
   awbId: number;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  consigneePhone: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  consigneeZip: string;
 
   @ApiModelPropertyOptional()
   base64Image?: string;

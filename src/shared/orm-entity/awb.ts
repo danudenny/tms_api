@@ -112,6 +112,7 @@ export class Awb extends BaseEntity {
   })
   consigneeAddress: string | null;
 
+  // TODO: change name??
   @Column('character varying', {
     nullable: true,
     length: 255,
