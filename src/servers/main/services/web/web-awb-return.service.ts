@@ -266,6 +266,7 @@ export class WebAwbReturnService {
     const result = new WebReturUpdateResponseVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     // edit Return 3PL
+    // TODO: change filter by originAwbId
     const awbReturn = await AwbReturn.findOne({
       where: {
         originAwbNumber: payload.originAwbNumber,
@@ -273,26 +274,14 @@ export class WebAwbReturnService {
       },
     });
     if (awbReturn) {
-      // looping data list remove awb number
-      if (payload.originAwbNumber.length) {
-          const awbReturn = await AwbReturn.findOne({
-            where: {
-              originAwbNumber: payload.originAwbNumber,
-              isDeleted: false,
-            },
-          });
+      AwbReturn.update(awbReturn.awbReturnId, {
+        partnerLogisticAwb: payload.partnerLogisticAwb,
+      });
 
-          if (awbReturn) {
-              AwbReturn.update(awbReturn.awbReturnId, {
-              partnerLogisticAwb: payload.partnerLogisticAwb,
-
-            });
-          }
-          result.status = 'ok';
-          result.message = 'success';
-          return result;
-        }
-      }
+      result.status = 'ok';
+      result.message = 'success';
+      return result;
+    }
   }
 
   static async listReturn(
