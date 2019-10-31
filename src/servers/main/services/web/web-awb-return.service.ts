@@ -269,13 +269,18 @@ export class WebAwbReturnService {
     // TODO: change filter by originAwbId
     const awbReturn = await AwbReturn.findOne({
       where: {
-        originAwbNumber: payload.originAwbNumber,
+        originAwbId: payload.awbReturnId,
         isDeleted: false,
       },
     });
     if (awbReturn) {
       AwbReturn.update(awbReturn.awbReturnId, {
         partnerLogisticAwb: payload.partnerLogisticAwb,
+      });
+
+      // TODO: update awb
+      Awb.update(awbReturn.originAwbId, {
+        refAwbNumberJne: payload.partnerLogisticAwb,
       });
 
       result.status = 'ok';

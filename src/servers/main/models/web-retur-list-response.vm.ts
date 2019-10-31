@@ -6,6 +6,9 @@ export class ItemReturResponseVm {
   awbNumber: string;
 
   @ApiModelProperty()
+  awbReturnId: string;
+
+  @ApiModelProperty()
   originAwbNumber: string;
 
   @ApiModelProperty()
