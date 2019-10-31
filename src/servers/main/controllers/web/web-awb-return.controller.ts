@@ -4,7 +4,7 @@ import {
 } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { WebAwbReturnGetAwbPayloadVm, WebAwbReturnGetAwbResponseVm, WebAwbReturnCreatePayload } from '../../models/web-awb-return.vm';
+import { WebAwbReturnGetAwbPayloadVm, WebAwbReturnGetAwbResponseVm, WebAwbReturnCreatePayload, WebAwbReturnCreateResponse } from '../../models/web-awb-return.vm';
 import { WebAwbReturnService } from '../../services/web/web-awb-return.service';
 import { WebReturListResponseVm } from '../../models/web-retur-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -44,7 +44,7 @@ export class WebAwbReturnController {
 
   @Post('create')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: WebReturListResponseVm })
+  @ApiOkResponse({ type: WebAwbReturnCreateResponse })
   public async createReturn(@Body() payload: WebAwbReturnCreatePayload) {
     return WebAwbReturnService.createAwbReturn(payload);
   }
