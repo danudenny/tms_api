@@ -7,8 +7,8 @@ import { WebAwbDeliverService } from '../../services/web/web-awb-deliver.service
 
 @ApiUseTags('Web Pod Manual')
 @Controller('web/pod/manual')
-// @ApiBearerAuth()
-// @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+@ApiBearerAuth()
+@UseGuards(AuthenticatedGuard, PermissionTokenGuard)
 export class WebAwbDeliverController {
   // 1. get data awb deliver
 
@@ -23,6 +23,6 @@ export class WebAwbDeliverController {
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebAwbDeliverGetResponseVm })
   public async syncAwb(@Body() payload: WebAwbDeliverSyncPayloadVm) {
-    return null; // WebAwbDeliverService.getAwbDeliver(payload);
+    return WebAwbDeliverService.syncAwbDeliver(payload);
   }
 }

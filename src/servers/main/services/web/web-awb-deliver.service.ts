@@ -87,8 +87,8 @@ export class WebAwbDeliverService {
       reasonId: delivery.reasonId,
       syncDateTime: moment().toDate(),
       desc: delivery.reasonNotes,
-      awbStatusDateTime: moment().toDate(),
-      historyDateTime: moment().toDate(),
+      awbStatusDateTime: moment(delivery.doPodDeliverDate).toDate(),
+      historyDateTime: moment(delivery.doPodDeliverDate).toDate(),
       employeeIdDriver: delivery.employeeId,
     });
 

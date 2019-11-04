@@ -59,6 +59,9 @@ export class WebDeliveryVm {
   @ApiModelProperty()
   doPodDeliverId: string;
 
+  @ApiModelProperty({ format: 'date-time' })
+  doPodDeliverDate: string;
+
   @ApiModelProperty()
   employeeId: number;
 
