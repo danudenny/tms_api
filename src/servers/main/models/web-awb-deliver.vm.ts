@@ -52,6 +52,14 @@ export class WebAwbDeliverGetResponseVm {
   @ApiModelProperty({ type: [AwbDeliverManualResponseVm] })
   data: AwbDeliverManualResponseVm[];
 }
+export class WebAwbDeliverSyncResponseVm {
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+}
+
 export class WebDeliveryVm {
   @ApiModelProperty()
   doPodDeliverDetailId: string;

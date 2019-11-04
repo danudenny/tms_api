@@ -11,7 +11,7 @@ import {
 } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
     AwbDeliverManualResponseVm, WebAwbDeliverGetPayloadVm, WebAwbDeliverGetResponseVm,
-    WebAwbDeliverSyncPayloadVm, WebDeliveryVm,
+    WebAwbDeliverSyncPayloadVm, WebDeliveryVm, WebAwbDeliverSyncResponseVm,
 } from '../../models/web-awb-deliver.vm';
 import { AwbService } from '../v1/awb.service';
 import moment = require('moment');
@@ -52,27 +52,34 @@ export class WebAwbDeliverService {
 
   static async syncAwbDeliver(
     payload: WebAwbDeliverSyncPayloadVm,
-  ): Promise<any> {
+  ): Promise<WebAwbDeliverSyncResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const result = new WebAwbDeliverSyncResponseVm();
+    try {
+      await getManager().transaction(async transactionEntityManager => {
+        for (const delivery of payload.deliveries) {
+          // set data deliver
+          delivery.employeeId = authMeta.employeeId;
+          await this.syncDeliver(transactionEntityManager, delivery);
+        }
+      });
 
-    await getManager().transaction(async transactionEntityManager => {
-      for (const delivery of payload.deliveries) {
-        // set data deliver
-        delivery.employeeId = authMeta.employeeId;
-        await this.syncDeliver(transactionEntityManager, delivery);
+      // TODO: queue by Bull need refactoring
+      for (const deliverDetail of payload.deliveries) {
+        DoPodDetailPostMetaQueueService.createJobByMobileSyncAwb(
+          deliverDetail.doPodDeliverDetailId,
+          deliverDetail.employeeId,
+          deliverDetail.awbStatusId,
+        );
       }
-    });
 
-    // TODO: queue by Bull need refactoring
-    for (const deliverDetail of payload.deliveries) {
-      DoPodDetailPostMetaQueueService.createJobByMobileSyncAwb(
-        deliverDetail.doPodDeliverDetailId,
-        deliverDetail.employeeId,
-        deliverDetail.awbStatusId,
-      );
+      result.status = 'ok';
+      result.message = 'success';
+    } catch (error) {
+      result.status = 'error';
+      result.message = `message error ${error.message}`;
     }
-
-    return null;
+    return result;
   }
 
   private static async syncDeliver(
