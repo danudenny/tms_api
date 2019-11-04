@@ -33,6 +33,7 @@ import { ProvincesController } from './master/provinces.controller';
 import { CitiesController } from './master/cities.controller';
 import { DistrictsController } from './master/districts.controller';
 import { WebAwbDeliverController } from './web/web-awb-deliver.controller';
+import { MobileAttendanceController } from './mobile/mobile-attendance.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -71,6 +72,7 @@ import { WebAwbDeliverController } from './web/web-awb-deliver.controller';
     CitiesController,
     DistrictsController,
     WebAwbDeliverController,
+    MobileAttendanceController,
   ],
 })
 export class MainServerControllersModule {}
