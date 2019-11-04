@@ -21,6 +21,9 @@ export class AwbDeliverManualVm {
   awbNumber: string;
 
   @ApiModelProperty()
+  doPodDeliverId: string;
+
+  @ApiModelProperty()
   doPodDeliverDetailId: string;
 
   @ApiModelProperty()
@@ -36,6 +39,9 @@ export class AwbDeliverManualResponseVm {
   awb: AwbDeliverManualVm;
 
   @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
   status: string;
 
   @ApiModelProperty()
@@ -45,4 +51,68 @@ export class AwbDeliverManualResponseVm {
 export class WebAwbDeliverGetResponseVm {
   @ApiModelProperty({ type: [AwbDeliverManualResponseVm] })
   data: AwbDeliverManualResponseVm[];
+}
+export class WebDeliveryVm {
+  @ApiModelProperty()
+  doPodDeliverDetailId: string;
+
+  @ApiModelProperty()
+  doPodDeliverId: string;
+
+  @ApiModelProperty()
+  employeeId: number;
+
+  // @ApiModelProperty()
+  // employeeName: string;
+
+  // @ApiModelProperty()
+  // awbId: number;
+
+  @ApiModelProperty()
+  awbItemId: number;
+
+  // @ApiModelProperty({ format: 'date-time' })
+  // awbDate: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  awbStatusId: number;
+
+  // @ApiModelProperty()
+  // awbStatusName: string;
+
+  // @ApiModelProperty()
+  // merchant: string;
+
+  // @ApiModelProperty()
+  // consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeNameNote: string;
+
+  // @ApiModelProperty()
+  // consigneeAddress: string;
+
+  // @ApiModelProperty()
+  // consigneeNote: string;
+
+  // @ApiModelProperty()
+  // consigneeNumber: string;
+
+  // @ApiModelProperty()
+  // packageTypeName: string;
+
+  @ApiModelProperty()
+  reasonId: number;
+
+  @ApiModelProperty()
+  reasonNotes: string;
+
+}
+
+export class WebAwbDeliverSyncPayloadVm {
+  @ApiModelProperty({ type: () => [WebDeliveryVm] })
+  deliveries: WebDeliveryVm[];
 }

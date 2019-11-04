@@ -144,6 +144,7 @@ export class AwbService {
     qb.addSelect('aia.awb_item_id', 'awbItemId');
     qb.addSelect('aia.awb_number', 'awbNumber');
     qb.addSelect('dpdd.do_pod_deliver_detail_id', 'doPodDeliverDetailId');
+    qb.addSelect('dpd.do_pod_deliver_id', 'doPodDeliverId');
     qb.addSelect('dpdd.awb_status_id_last', 'awbStatusId');
     qb.from('awb_item_attr', 'aia');
     qb.innerJoin(
