@@ -106,10 +106,11 @@ export class BagService {
             dropoffDetail.awbItemId = itemAwb.awbItemId;
             await DropoffHubDetail.save(dropoffDetail);
 
-            await AwbService.updateAwbAttr(
-              itemAwb.awbItemId,
-              AWB_STATUS.DO_HUB,
-            );
+            // await AwbService.updateAwbAttr(
+            //   itemAwb.awbItemId,
+            //   AWB_STATUS.DO_HUB,
+            // );
+
             // TODO: check awb status for auto check out ??
             // NOTE: queue by Bull
             // add awb history with background process
