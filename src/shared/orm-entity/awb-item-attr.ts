@@ -83,7 +83,7 @@ export class AwbItemAttr extends BaseEntity {
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'final_status_date',
+    name: 'awb_status_final_date',
     })
   awbStatusFinalDate: Date | null;
 
