@@ -19,6 +19,7 @@ export class AwbService {
     q.select({
       awbItemAttrId: true,
       awbStatusIdLast: true,
+      awbHistoryIdLast: true,
       awbItemId: true,
       awbItem: {
         awbItemId: true,
