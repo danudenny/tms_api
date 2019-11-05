@@ -61,15 +61,15 @@ export class AwbAttr extends BaseEntity {
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'history_date_last',
+    name: 'awb_history_date_last',
     })
-  historyDateLast: Date | null;
+  awbhistoryDateLast: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'final_status_date',
+    name: 'awb_status_final_date',
     })
-  finalStatusDate: Date | null;
+  awbStatusFinalDate: Date | null;
 
   @Column('bigint', {
     nullable: true,
@@ -127,4 +127,12 @@ export class AwbAttr extends BaseEntity {
   @OneToOne(() => AwbStatus)
   @JoinColumn({ name: 'awb_status_id_last' })
   awbStatus: AwbStatus;
+
+  // new field
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_sync',
+  })
+  isSync: boolean;
 }

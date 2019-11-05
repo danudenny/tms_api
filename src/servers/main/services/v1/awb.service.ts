@@ -209,7 +209,7 @@ export class AwbService {
       if (branchIdNext) {
         awbItemAttr.branchIdNext = branchIdNext;
       }
-      awbItemAttr.historyDateLast = timeNow;
+      awbItemAttr.awbHistoryDateLast = timeNow;
       awbItemAttr.updatedTime = timeNow;
       await AwbItemAttr.save(awbItemAttr);
     }
@@ -234,7 +234,7 @@ export class AwbService {
       awbAttr.awbStatusIdLast = status;
       awbAttr.branchIdLast = permissonPayload.branchId;
       awbAttr.branchIdNext = branchIdNext;
-      awbAttr.historyDateLast = timeNow;
+      awbAttr.awbhistoryDateLast = timeNow;
       awbAttr.updatedTime = timeNow;
       await AwbAttr.save(awbAttr);
     }

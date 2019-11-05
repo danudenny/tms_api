@@ -3,7 +3,6 @@ import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColum
 import { AwbItem } from './awb-item';
 import { BagItem } from './bag-item';
 import { Branch } from './branch';
-import { BagItemAwb } from './bag-item-awb';
 import { AwbStatus } from './awb-status';
 
 @Entity('awb_item_attr', { schema: 'public' })
@@ -72,9 +71,9 @@ export class AwbItemAttr extends BaseEntity {
 
   @Column('timestamp without time zone', {
     nullable: true,
-    name: 'history_date_last',
+    name: 'awb_history_date_last',
     })
-  historyDateLast: Date | null;
+  awbHistoryDateLast: Date | null;
 
   @Column('bigint', {
     nullable: false,
@@ -86,7 +85,7 @@ export class AwbItemAttr extends BaseEntity {
     nullable: true,
     name: 'final_status_date',
     })
-  finalStatusDate: Date | null;
+  awbStatusFinalDate: Date | null;
 
   @Column('bigint', {
     nullable: false,
@@ -168,4 +167,12 @@ export class AwbItemAttr extends BaseEntity {
   @OneToOne(() => AwbStatus)
   @JoinColumn({ name: 'awb_status_id_last'})
   awbStatus: AwbStatus;
+
+  // new field
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_sync',
+  })
+  isSync: boolean;
 }

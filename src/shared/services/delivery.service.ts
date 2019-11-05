@@ -77,7 +77,7 @@ export class DeliveryService {
       awbItemAttr.userIdLast = authMeta.userId;
       awbItemAttr.branchIdLast = permissonPayload.branchId;
       awbItemAttr.branchIdNext = branchIdNext;
-      awbItemAttr.historyDateLast = timeNow;
+      awbItemAttr.awbHistoryDateLast = timeNow;
       awbItemAttr.updatedTime = timeNow;
       await AwbItemAttr.save(awbItemAttr);
     }
@@ -102,7 +102,7 @@ export class DeliveryService {
       awbAttr.awbStatusIdLast = status;
       awbAttr.branchIdLast = permissonPayload.branchId;
       awbAttr.branchIdNext = branchIdNext;
-      awbAttr.historyDateLast = timeNow;
+      awbAttr.awbhistoryDateLast = timeNow;
       awbAttr.updatedTime = timeNow;
       await AwbAttr.save(awbAttr);
     }

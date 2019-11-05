@@ -37,4 +37,19 @@ export class PodScanInHubDetail extends TmsBaseEntity {
     name: 'awb_item_id',
   })
   awbItemId: number | null;
+
+  // new field
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'awb_number',
+  })
+  awbNumber: string;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'bag_number',
+  })
+  bagNumber: string;
 }

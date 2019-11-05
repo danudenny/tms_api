@@ -44,6 +44,21 @@ export class PodScanInBranchDetail extends TmsBaseEntity {
   })
   awbItemId: number | null;
 
+  // new field
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'awb_number',
+  })
+  awbNumber: string;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'bag_number',
+  })
+  bagNumber: string;
+
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   awbItemAttr: AwbItemAttr;
