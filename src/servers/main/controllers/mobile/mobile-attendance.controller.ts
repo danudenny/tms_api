@@ -11,6 +11,9 @@ import { MobileAttendanceInPayloadVm } from '../../models/mobile-attendance-in-p
 import { MobileCheckOutResponseVm } from '../../models/mobile-check-out-response.vm';
 import { MobileAttendanceOutPayloadVm } from '../../models/mobile-attendance-out-payload.vm';
 import { MobileAttendanceService } from '../../services/mobile/mobile-attendance.service';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { MobileAtendanceListResponseVm } from '../../models/mobile-attendance-list-response.vm';
 
 @ApiUseTags('Mobile Attendance')
 @Controller('mobile')
@@ -42,5 +45,15 @@ export class MobileAttendanceController {
     @UploadedFile() file,
   ) {
     return this.mobileAttendanceService.checkOutAttendance(payload, file);
+  }
+
+  @Post('attendance/list')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  @ApiOkResponse({ type: MobileAtendanceListResponseVm })
+  public async listAttendance(@Body() payload: BaseMetaPayloadVm) {
+    return this.mobileAttendanceService.listAttendance(payload);
   }
 }
