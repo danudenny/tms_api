@@ -13,6 +13,7 @@ import { WebScanInVm, WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebS
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
+import { LastMileDeliveryInService } from '../../services/web/last-mile/last-mile-delivery-in.service';
 
 @ApiUseTags('Web Delivery In')
 @Controller('web/pod/scanIn')
@@ -39,7 +40,6 @@ export class WebDeliveryInController {
   @ApiOkResponse({ type: WebScanInListResponseVm })
   // @ResponseSerializerOptions({ disable: true })
   public async findAllDeliveryList(@Body() payload: BaseMetaPayloadVm) {
-    // TODO:
     return this.webDeliveryService.findAllAwbByRequest(payload);
   }
 
@@ -50,7 +50,6 @@ export class WebDeliveryInController {
   @ApiOkResponse({ type: WebScanInBagListResponseVm })
   // @ResponseSerializerOptions({ disable: true })
   public async findAllBagList(@Body() payload: BaseMetaPayloadVm) {
-    // TODO:
     return this.webDeliveryService.findAllBagByRequest(payload);
   }
 
@@ -61,7 +60,6 @@ export class WebDeliveryInController {
   @ApiOkResponse({ type: WebScanInBranchListResponseVm })
   // @ResponseSerializerOptions({ disable: true })
   public async findAllBranchList(@Body() payload: BaseMetaPayloadVm) {
-    // TODO:
     return this.webDeliveryService.findAllBranchInByRequest(payload);
   }
 
@@ -72,7 +70,6 @@ export class WebDeliveryInController {
   @ApiOkResponse({ type: WebScanInHubSortListResponseVm })
   // @ResponseSerializerOptions({ disable: true })
   public async findAllHubSortList(@Body() payload: BaseMetaPayloadVm) {
-    // TODO:
     return this.webDeliveryService.findAllHubSortInByRequest(payload);
   }
 
@@ -83,7 +80,6 @@ export class WebDeliveryInController {
   @ApiOkResponse({ type: WebDeliveryListResponseVm })
   // @ResponseSerializerOptions({ disable: true })
   public async findAllHubSortListDetail(@Body() payload: BaseMetaPayloadVm) {
-    // TODO:
     return this.webDeliveryService.findAllHubSortDetailByRequest(payload);
   }
 
@@ -94,7 +90,6 @@ export class WebDeliveryInController {
   @ApiOkResponse({ type: WebDeliveryListResponseVm })
   // @ResponseSerializerOptions({ disable: true })
   public async findAllBagListDetail(@Body() payload: BaseMetaPayloadVm) {
-    // TODO:
     return this.webDeliveryService.findAllBagDetailByRequest(payload);
   }
 
@@ -122,7 +117,7 @@ export class WebDeliveryInController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanInBranchResponseVm })
   public async scanInBranch(@Body() payload: WebScanInBagBranchVm) {
-    return this.webDeliveryService.scanInBranch(payload);
+    return LastMileDeliveryInService.scanInBranch(payload);
   }
 
   @Post('validateBranch')

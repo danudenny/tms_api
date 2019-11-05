@@ -745,6 +745,7 @@ export class WebDeliveryInService {
     return result;
   }
 
+  // TODO: depreacated move to last mile delivery in
   async scanInAwbBranch(
     awbNumber: string,
     bagNumber: string,
@@ -1114,6 +1115,7 @@ export class WebDeliveryInService {
   }
 
   // TODO: need to move last mile service
+  // TODO: depreacated move to last mile delivery in
   async scanInBagBranch(
     bagData: BagItem,
     bagNumber: string,
@@ -1427,6 +1429,7 @@ export class WebDeliveryInService {
     return result;
   }
 
+  // TODO: depreacated move to last mile delivery in
   // NOTE: scan in package on branch
   // 1. scan bag number / scan awb number
   // 2. create session per branch with insert table on pod scan in branch
