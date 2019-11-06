@@ -121,14 +121,14 @@ export class MobileAttendanceService {
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchId'] = 't4.branch_id';
 
-    // if (payload.sortBy === '') {
-    //   payload.sortBy = 'createdTime';
-    // }
-    // payload.globalSearchFields = [
-    //   {
-    //     field: 'createdTime',
-    //   },
-    // ];
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+    payload.globalSearchFields = [
+      {
+        field: 'fullname',
+      },
+    ];
 
     const repo = new OrionRepositoryService(EmployeeJourney, 't1');
     const q = repo.findAllRaw();
