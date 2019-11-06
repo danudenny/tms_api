@@ -118,6 +118,10 @@ export class MobileAttendanceService {
     payload.fieldResolverMap['attachmentTmsId'] = 't2.attachment_tms_id';
     payload.fieldResolverMap['urlCheckIn'] = 't2.url';
     payload.fieldResolverMap['urlCheckOut'] = 't2.url';
+    payload.fieldResolverMap['longitudeCheckIn'] = 't1.longitude_check_in';
+    payload.fieldResolverMap['longitudeCheckOut'] = 't1.longitude_check_out';
+    payload.fieldResolverMap['latitudeCheckIn'] = 't1.latitude_check_in';
+    payload.fieldResolverMap['latitudeCheckOut'] = 't1.latitude_check_out';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchId'] = 't4.branch_id';
 
@@ -142,6 +146,10 @@ export class MobileAttendanceService {
       ['t1.check_out_date', 'checkOutDate'],
       ['t4.branch_name', 'branchNameCheckIn'],
       ['t6.branch_name', 'branchNameCheckOut'],
+      ['t1.longitude_check_in', 'longitudeCheckIn'],
+      ['t1.longitude_check_out', 'longitudeCheckOut'],
+      ['t1.latitude_check_in', 'latitudeCheckIn'],
+      ['t1.latitude_check_out', 'latitudeCheckOut'],
       ['t1.created_time', 'createdTime'],
       ['t2.url', 'urlCheckIn'],
       ['t5.url', 'urlCheckOut'],

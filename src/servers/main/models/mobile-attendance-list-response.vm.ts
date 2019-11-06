@@ -22,6 +22,18 @@ export class MobileAtendanceListResponseAllVm {
   branchNameCheckIn: string;
 
   @ApiModelProperty()
+  longitudeCheckIn: string;
+
+  @ApiModelProperty()
+  latitudeCheckIn: string;
+
+  @ApiModelProperty()
+  longitudeCheckOut: string;
+
+  @ApiModelProperty()
+  latitudeCheckOut: string;
+
+  @ApiModelProperty()
   urlCheckIn: string;
 
   @ApiModelProperty()
