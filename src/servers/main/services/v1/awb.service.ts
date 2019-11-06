@@ -25,6 +25,7 @@ export class AwbService {
         awbItemId: true,
         awbId: true,
       },
+      awbId: true,
       awbNumber: true,
       isPackageCombined: true,
       bagItemIdLast: true,

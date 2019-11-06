@@ -295,11 +295,9 @@ export class LastMileDeliveryOutService {
           // TODO: set enable and disble
           if (statusCode == 'IN' && awb.branchIdLast != permissonPayload.branchId) {
             await AutoUpdateAwbStatusService.awbDeliver(
-              awb.awbItemId,
+              awb,
               authMeta.userId,
               permissonPayload.branchId,
-              awb.branchIdLast,
-              awb.awbHistoryIdLast,
             );
           }
 

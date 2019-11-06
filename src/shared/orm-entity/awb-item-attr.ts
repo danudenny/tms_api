@@ -169,6 +169,12 @@ export class AwbItemAttr extends BaseEntity {
   awbStatus: AwbStatus;
 
   // new field
+  @Column('bigint', {
+    nullable: true,
+    name: 'awb_id',
+  })
+  awbId: number | null;
+
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
