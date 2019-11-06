@@ -33,6 +33,9 @@ export class AwbHistoryResponseVm {
   branchName: string;
 
   @ApiModelProperty()
+  awbVisibility: string;
+
+  @ApiModelProperty()
   awbStatusName: string;
 
   @ApiModelProperty()

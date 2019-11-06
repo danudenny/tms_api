@@ -141,6 +141,7 @@ export class WebTrackingService {
       SELECT
         ah.awb_status_id as "awbStatusId",
         ah.history_date as "historyDate",
+        ast.awb_visibility as "awbVisibility",
         ah.employee_id_driver as "employeeIdDriver",
         e.fullname as "employeeNameDriver",
         u.username,
