@@ -227,16 +227,19 @@ export class AwbService {
           awbId: awbItem.awbId,
         },
       });
+      if (awbAttr) {
+        // TODO: how to update data??
+        // awbAttr.awbHistoryIdLast;
+        // awbAttr.awbStatusIdLastPublic;
+        await AwbAttr.update(awbAttr.awbAttrId, {
+          branchIdNext,
+          awbStatusIdLast: status,
+          branchIdLast: permissonPayload.branchId,
+          awbhistoryDateLast: timeNow,
+          updatedTime: timeNow,
+        });
+      }
 
-      // TODO: how to update data??
-      // awbAttr.awbHistoryIdLast;
-      // awbAttr.awbStatusIdLastPublic;
-      awbAttr.awbStatusIdLast = status;
-      awbAttr.branchIdLast = permissonPayload.branchId;
-      awbAttr.branchIdNext = branchIdNext;
-      awbAttr.awbhistoryDateLast = timeNow;
-      awbAttr.updatedTime = timeNow;
-      await AwbAttr.save(awbAttr);
     }
   }
 
