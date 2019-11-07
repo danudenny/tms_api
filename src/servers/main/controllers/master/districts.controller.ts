@@ -22,4 +22,13 @@ export class DistrictsController {
   ) {
     return DistrictsService.findAllCityId(payload, cityId);
   }
+
+  @Post('list')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: DistrictFindAllResponseVm })
+  public async findAllList(
+    @Body() payload: BaseMetaPayloadVm,
+  ) {
+    return DistrictsService.findAllListCityId(payload);
+  }
 }

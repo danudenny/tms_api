@@ -276,6 +276,7 @@ export class WebDeliveryInService {
   ): Promise<WebScanInHubSortListResponseVm> {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't2.created_time';
+    payload.fieldResolverMap['districtId'] = 't3.district_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -444,7 +445,6 @@ export class WebDeliveryInService {
     // q.innerJoin(e => e.bag, 't5', j =>
     //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
     // );
-    
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
