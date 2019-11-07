@@ -11,8 +11,6 @@ export class MobileAttendanceInPayloadVm {
   latitudeCheckIn: string;
 
   @ApiModelProperty()
-  branchIdCheckIn: string;
+  branchIdCheckIn: number;
 
-  @ApiModelProperty()
-  employeeId: string;
 }
