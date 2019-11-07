@@ -73,4 +73,10 @@ export class MobileDashboardController {
   public async complaintList(@Body() payload: BaseMetaPayloadVm) {
     return MobileInitDataService.complaintListSigesit(payload);
   }
+
+  @Get('ping')
+  @HttpCode(HttpStatus.OK)
+  public async ping() {
+    return { message: 'pong' };
+  }
 }
