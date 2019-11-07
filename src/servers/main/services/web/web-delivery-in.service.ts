@@ -1395,6 +1395,7 @@ export class WebDeliveryInService {
             dropoffHub.branchId = permissonPayload.branchId;
             dropoffHub.bagId = bagData.bag.bagId;
             dropoffHub.bagItemId = bagData.bagItemId;
+            dropoffHub.bagNumber = bagNumber;
             await DropoffHub.save(dropoffHub);
 
             // TODO: send on background job ??
