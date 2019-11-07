@@ -1250,11 +1250,11 @@ export class WebDeliveryOutService {
 
     const bag = await DeliveryService.validBagNumber(bagNumber);
     if (bag) {
-      if (bag.branchIdLast == permissonPayload.branchId) {
+      // if (bag.branchIdLast == permissonPayload.branchId) {
         response.status = 'ok';
         response.trouble = false;
         response.message = 'success';
-      }
+      // }
     }
     result = { bagNumber, ...response };
     return result;

@@ -20,7 +20,7 @@ import { MobileAtendanceListResponseVm } from '../../models/mobile-attendance-li
 export class MobileAttendanceController {
   constructor(private readonly mobileAttendanceService: MobileAttendanceService) {}
 
-  @Post('checkIn')
+  @Post('attendance/checkIn')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
   @ApiBearerAuth()
@@ -33,7 +33,7 @@ export class MobileAttendanceController {
     return this.mobileAttendanceService.checkInAttendance(payload, file);
   }
 
-  @Post('checkOut')
+  @Post('attendance/checkOut')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
   @ApiBearerAuth()
