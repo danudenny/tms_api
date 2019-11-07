@@ -312,6 +312,7 @@ export class LastMileDeliveryOutService {
             const doPodDeliverDetail = DoPodDeliverDetail.create();
             doPodDeliverDetail.doPodDeliverId = payload.doPodId;
             doPodDeliverDetail.awbItemId = awb.awbItemId;
+            doPodDeliverDetail.awbNumber = awbNumber;
             doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
             await DoPodDeliverDetail.save(doPodDeliverDetail);
 

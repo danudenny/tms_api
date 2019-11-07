@@ -23,6 +23,7 @@ import { AwbTroubleService } from '../../../../../shared/services/awb-trouble.se
 import { BagTroubleService } from '../../../../../shared/services/bag-trouble.service';
 // #endregion
 
+// Surat Jalan Keluar Gerai
 export class FirstMileDeliveryOutService {
 
   /**
@@ -277,6 +278,7 @@ export class FirstMileDeliveryOutService {
             // NOTE: create DoPodDetailBag
             const doPodDetailBag = DoPodDetailBag.create();
             doPodDetailBag.doPodId = doPod.doPodId;
+            doPodDetailBag.bagNumber = addBag;
             doPodDetailBag.bagId = bagData.bagId;
             doPodDetailBag.bagItemId = bagData.bagItemId;
             doPodDetailBag.transactionStatusIdLast = 800; // OUT BRANCH
@@ -308,6 +310,7 @@ export class FirstMileDeliveryOutService {
                 doPod.doPodId,
                 doPod.branchIdTo,
                 doPod.userIdDriver,
+                addBag,
               );
               // NOTE: background job for insert bag item history
               BagItemHistoryQueueService.addData(
@@ -543,31 +546,34 @@ export class FirstMileDeliveryOutService {
         const bagStatus = BAG_STATUS.OUT_BRANCH;
         const transactionStatusId = 800; // OUT HUB
 
-        const doPod = await DoPod.findOne({
-          where: {
-            doPodId: payload.doPodId,
-            isDeleted: false,
-          },
-        });
+        // TODO: need refactoring with branch id ??
         const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
+        const holdRedis = await RedisService.locking(
+          `hold:bagscanout:${bagData.bagItemId}`,
+          'locking',
+        );
 
-        if (notScan) {
-          // create bag trouble
-          const statusNotTrouble = [BAG_STATUS.IN_HUB];
-          if (!statusNotTrouble.includes(bagData.bagItemStatusIdLast)) {
-            BagTroubleService.create(
-              bagNumber,
-              bagData.bagItemStatusIdLast,
-              transactionStatusId,
-            );
-          }
+        if (notScan && holdRedis) {
+          const doPod = await DoPod.findOne({
+            where: {
+              doPodId: payload.doPodId,
+              isDeleted: false,
+            },
+          });
+          if (doPod) {
+            // create bag trouble
+            const statusNotTrouble = [BAG_STATUS.IN_HUB];
+            if (!statusNotTrouble.includes(bagData.bagItemStatusIdLast)) {
+              BagTroubleService.create(
+                bagNumber,
+                bagData.bagItemStatusIdLast,
+                transactionStatusId,
+              );
+            }
 
-          const holdRedis = await RedisService.locking(
-            `hold:bagscanout:${bagData.bagItemId}`,
-            'locking',
-          );
+            // TODO: Auto Status by bag status
+            // if status branch IN and diffrent branchIdLast
 
-          if (holdRedis) {
             // counter total scan in
             doPod.totalScanOutBag = doPod.totalScanOutBag + 1;
             if (doPod.totalScanOutBag == 1) {
@@ -582,6 +588,7 @@ export class FirstMileDeliveryOutService {
             // NOTE: create DoPodDetailBag
             const doPodDetailBag = DoPodDetailBag.create();
             doPodDetailBag.doPodId = doPod.doPodId;
+            doPodDetailBag.bagNumber = bagNumber;
             doPodDetailBag.bagId = bagData.bagId;
             doPodDetailBag.bagItemId = bagData.bagItemId;
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
@@ -593,6 +600,7 @@ export class FirstMileDeliveryOutService {
             const bagItem = await BagItem.findOne({
               where: {
                 bagItemId: bagData.bagItemId,
+                isDeleted: false,
               },
             });
             if (bagItem) {
@@ -614,6 +622,7 @@ export class FirstMileDeliveryOutService {
                 doPod.doPodId,
                 doPod.branchIdTo,
                 doPod.userIdDriver,
+                bagNumber,
               );
 
               // TODO: need refactoring
@@ -626,15 +635,11 @@ export class FirstMileDeliveryOutService {
               );
             }
             // #endregion after scanout
-
             totalSuccess += 1;
-            // remove key holdRedis
-            RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
-          } else {
-            totalError += 1;
-            response.status = 'error';
-            response.message = 'Server Busy';
           }
+          // remove key holdRedis
+          RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
+
         } else {
           totalError += 1;
           response.status = 'error';

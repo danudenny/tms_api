@@ -269,6 +269,7 @@ export class LastMileDeliveryInService {
             podScanInBranchBagObj.branchId = permissonPayload.branchId;
             podScanInBranchBagObj.bagId = bagData.bagId;
             podScanInBranchBagObj.bagItemId = bagData.bagItemId;
+            podScanInBranchBagObj.bagNumber = bagNumber;
             podScanInBranchBagObj.totalAwbItem = bagItemsAwb.length;
             podScanInBranchBagObj.totalAwbScan = 0;
             podScanInBranchBagObj.totalDiff = 0;
@@ -468,6 +469,8 @@ export class LastMileDeliveryInService {
             podScanInBranchDetailObj.bagItemId = bagItemId;
             podScanInBranchDetailObj.awbId = awb.awbItem.awbId;
             podScanInBranchDetailObj.awbItemId = awb.awbItemId;
+            podScanInBranchDetailObj.awbNumber = awbNumber;
+            podScanInBranchDetailObj.bagNumber = bagNumber;
             podScanInBranchDetailObj.isTrouble = result.trouble;
             await PodScanInBranchDetail.save(podScanInBranchDetailObj);
 

@@ -365,6 +365,7 @@ export class WebDeliveryOutService {
                 doPod.branchIdTo,
                 doPod.userIdDriver,
                 doPod.doPodType,
+                addBag,
               );
               // NOTE: background job for insert bag item history
               BagItemHistoryQueueService.addData(
@@ -645,6 +646,7 @@ export class WebDeliveryOutService {
             // NOTE: create DoPodDetailBag
             const doPodDetailBag = DoPodDetailBag.create();
             doPodDetailBag.doPodId = doPod.doPodId;
+            doPodDetailBag.bagNumber = bagNumber;
             doPodDetailBag.bagId = bagData.bagId;
             doPodDetailBag.bagItemId = bagData.bagItemId;
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
@@ -677,6 +679,7 @@ export class WebDeliveryOutService {
                 doPod.branchIdTo,
                 doPod.userIdDriver,
                 doPod.doPodType,
+                bagNumber,
               );
 
               // TODO: if isTransit auto IN

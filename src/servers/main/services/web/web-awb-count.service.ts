@@ -412,6 +412,7 @@ export class WebAwbCountService {
             dropoffSortationDetail.dropoffSortationId = dropOffId;
             dropoffSortationDetail.awbId = awbAttr.awbId;
             dropoffSortationDetail.awbItemId = data.awbItemId;
+            dropoffSortationDetail.awbNumber = data.awbNumber;
             dropoffSortationDetail.userIdUpdated = authMeta.userId;
             dropoffSortationDetail.updatedTime = timeNow;
             dropoffSortationDetail.userIdCreated = authMeta.userId;
