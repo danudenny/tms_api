@@ -17,6 +17,7 @@ import { MobileAtendanceListResponseVm } from '../../models/mobile-attendance-li
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { EmployeeJourney } from '../../../../shared/orm-entity/employee-journey';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { Attachment } from 'src/shared/orm-entity/attachment';
 
 @Injectable()
 export class MobileAttendanceService {
@@ -222,19 +223,12 @@ export class MobileAttendanceService {
         if (attachment) {
           attachmentId = attachment.attachmentTmsId;
         }
-        const employeeJourneyOut = this.employeeJourneyRepository.create({
-          employeeId: authMeta.employeeId,
-          checkInDate: timeNow,
-          latitudeCheckOut: payload.latitudeCheckOut,
-          longitudeCheckOut: payload.longitudeCheckOut,
-          userIdCreated: authMeta.userId,
-          createdTime: timeNow,
-          branchIdCheckOut: Number(payload.branchIdCheckout),
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-          attachmentIdCheckIn: attachmentId,
-        });
-        await this.employeeJourneyRepository.save(employeeJourneyOut);
+        employeeJourney.branchIdCheckOut = Number(payload.branchIdCheckout);
+        employeeJourney.latitudeCheckOut =  payload.latitudeCheckOut;
+        employeeJourney.attachmentIdCheckOut = attachmentId;
+        employeeJourney.checkOutDate = timeNow;
+
+        await this.employeeJourneyRepository.save(employeeJourney);
 
         const branch = await this.branchRepository.findOne({
           select: ['branchName'],
