@@ -88,9 +88,9 @@ export class WebAwbReturnCreatePayload {
   consigneeAddress: string;
 
   @ApiModelProperty()
-  consigneeZip: string;
+  consigneeZipCode: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({ type: () => ConsigneeDistrict })
   consigneeDistrict: ConsigneeDistrict;
 
   @ApiModelProperty()
@@ -102,7 +102,10 @@ export class WebAwbReturnCreatePayload {
 
 export class WebAwbReturnCreateResponse {
   @ApiModelProperty()
-  status: number;
+  status: string;
+
+  @ApiModelProperty()
+  awbReturnNumber: string;
 
   @ApiModelProperty()
   message: string;

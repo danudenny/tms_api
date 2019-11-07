@@ -33,6 +33,13 @@ export class DropoffSortationDetail extends TmsBaseEntity {
     name: 'awb_item_id',
   })
   awbItemId: number | null;
+  // new field
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'awb_number',
+  })
+  awbNumber: string;
 
   @ManyToOne(() => DropoffSortation, e => e.dropoffSortationDetails, {
     onDelete: 'CASCADE',

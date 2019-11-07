@@ -231,4 +231,26 @@ export class AwbHistory extends TmsBaseEntity {
     name: 'awb_history_id_prev',
   })
   awbHistoryIdPrev: number | null;
+
+  // new field
+  @Column('bigint', {
+    nullable: true,
+    name: 'awb_id',
+  })
+  awbId: number | null;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_system_genereted',
+  })
+  isSystemGenereted: boolean;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'ref_transaction_id',
+  })
+  refTransactionId: string;
+
 }

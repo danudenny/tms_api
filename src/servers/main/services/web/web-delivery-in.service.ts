@@ -10,7 +10,6 @@ import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
 import { PodScanIn } from '../../../../shared/orm-entity/pod-scan-in';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
-import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { RedisService } from '../../../../shared/services/redis.service';
@@ -40,6 +39,7 @@ import { chain, map, omit } from 'lodash';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagTroubleService } from '../../../../shared/services/bag-trouble.service';
+import { DoPodDetailBagRepository } from '../../../../shared/orm-repository/do-pod-detail-bag.repository';
 
 // #endregion
 
@@ -582,9 +582,9 @@ export class WebDeliveryInService {
         message: 'Success',
       };
 
-      const awb = await DeliveryService.validAwbNumber(awbNumber);
+      const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
-        const statusCode = await DeliveryService.awbStatusGroup(
+        const statusCode = await AwbService.awbStatusGroup(
           awb.awbStatusIdLast,
         );
         switch (statusCode) {
@@ -678,7 +678,7 @@ export class WebDeliveryInService {
                   }
 
                   await DoPod.save(doPod);
-                  await DeliveryService.updateAwbAttr(
+                  await AwbService.updateAwbAttr(
                     awb.awbItemId,
                     doPod.branchIdTo,
                     AWB_STATUS.IN_BRANCH,
@@ -746,6 +746,7 @@ export class WebDeliveryInService {
     return result;
   }
 
+  // TODO: depreacated move to last mile delivery in
   async scanInAwbBranch(
     awbNumber: string,
     bagNumber: string,
@@ -812,7 +813,7 @@ export class WebDeliveryInService {
             result.message = 'Success';
 
             if (bagNumber != '') {
-              const bagData = await DeliveryService.validBagNumber(
+              const bagData = await BagService.validBagNumber(
                 bagNumber,
               );
               if (bagData) {
@@ -897,7 +898,7 @@ export class WebDeliveryInService {
 
             // AFTER Scan IN ===============================================
             // #region after scanin
-            await DeliveryService.updateAwbAttr(
+            await AwbService.updateAwbAttr(
               awb.awbItemId,
               null,
               AWB_STATUS.IN_BRANCH,
@@ -956,7 +957,7 @@ export class WebDeliveryInService {
         message: 'Success',
       };
 
-      const bagData = await DeliveryService.validBagNumber(bagNumber);
+      const bagData = await BagService.validBagNumber(bagNumber);
 
       if (bagData) {
         // NOTE: check condition disable on check branchIdNext
@@ -1032,12 +1033,13 @@ export class WebDeliveryInService {
                   if (bagItemsAwb && bagItemsAwb.length > 0) {
                     for (const itemAwb of bagItemsAwb) {
                       if (itemAwb.awbItemId) {
-                        await DeliveryService.updateAwbAttr(
-                          itemAwb.awbItemId,
-                          null,
-                          AWB_STATUS.DO_HUB,
-                        );
-                        // NOTE: queue by Bull
+                        // NOTE: disable update status to awb item attr
+                        // await AwbService.updateAwbAttr(
+                        //   itemAwb.awbItemId,
+                        //   null,
+                        //   AWB_STATUS.DO_HUB,
+                        // );
+                        // NOTE: queue by Bull awb history
                         DoPodDetailPostMetaQueueService.createJobByDropoffBag(
                           itemAwb.awbItemId,
                           permissonPayload.branchId,
@@ -1114,6 +1116,7 @@ export class WebDeliveryInService {
   }
 
   // TODO: need to move last mile service
+  // TODO: depreacated move to last mile delivery in
   async scanInBagBranch(
     bagData: BagItem,
     bagNumber: string,
@@ -1313,8 +1316,13 @@ export class WebDeliveryInService {
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
         const notScan =  bagData.bagItemStatusIdLast != BAG_STATUS.DO_HUB ? true : false;
-        if (notScan) {
-          // validate scan branch
+        // Add Locking setnx redis
+        const holdRedis = await RedisService.locking(
+          `hold:dropoff:${bagData.bagItemId}`,
+          'locking',
+        );
+        if (notScan && holdRedis) {
+          // validate scan branch ??
           const notScanBranch = bagData.branchIdNext != permissonPayload.branchId ? true : false;
           // TODO: move to method create bag trouble ==========================
           if (
@@ -1338,12 +1346,38 @@ export class WebDeliveryInService {
           });
           if (bagItem) {
             // update status bagItem
-            BagItem.update(bagItem.bagItemId, {
+            await BagItem.update(bagItem.bagItemId, {
               bagItemStatusIdLast: BAG_STATUS.DO_HUB,
               branchIdLast: permissonPayload.branchId,
               updatedTime: timeNow,
               userIdUpdated: authMeta.userId,
             });
+            // update first scan in do pod
+            const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
+              bagData.bagItemId,
+              BAG_STATUS.DO_HUB,
+            );
+            if (doPodDetailBag) {
+              // counter total scan in
+              doPodDetailBag.doPod.totalScanInBag += 1;
+              if (doPodDetailBag.doPod.totalScanInBag == 1) {
+                await DoPod.update(doPodDetailBag.doPodId, {
+                  firstDateScanIn: timeNow,
+                  lastDateScanIn: timeNow,
+                  totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
+                  updatedTime: timeNow,
+                  userIdUpdated: authMeta.userId,
+                });
+              } else {
+                await DoPod.update(doPodDetailBag.doPodId, {
+                  lastDateScanIn: timeNow,
+                  totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
+                  updatedTime: timeNow,
+                  userIdUpdated: authMeta.userId,
+                });
+              }
+            }
+
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
               bagData.bagItemId,
@@ -1368,6 +1402,8 @@ export class WebDeliveryInService {
             );
             totalSuccess += 1;
           }
+          // remove key holdRedis
+          RedisService.del(`hold:dropoff:${bagData.bagItemId}`);
         } else {
           totalError += 1;
           response.status = 'error';
@@ -1394,6 +1430,7 @@ export class WebDeliveryInService {
     return result;
   }
 
+  // TODO: depreacated move to last mile delivery in
   // NOTE: scan in package on branch
   // 1. scan bag number / scan awb number
   // 2. create session per branch with insert table on pod scan in branch

@@ -8,7 +8,10 @@ import { WebAwbReturnGetAwbPayloadVm, WebAwbReturnGetAwbResponseVm, WebAwbReturn
 import { WebAwbReturnService } from '../../services/web/web-awb-return.service';
 import { WebReturListResponseVm } from '../../models/web-retur-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-
+import { WebReturUpdateListPayloadVm} from '../../models/web-retur-update-response.vm';
+import { WebReturUpdateResponseVm } from '../../models/web-retur-update-list-response.vm';
+// NOTE: PENDING TASK ==========================================================
+// ================================================================
 @ApiUseTags('Web Awb Return')
 @Controller('web/pod/return')
 @ApiBearerAuth()
@@ -31,6 +34,13 @@ export class WebAwbReturnController {
   @ApiOkResponse({ type: WebReturListResponseVm })
   public async listReturn(@Body() payload: BaseMetaPayloadVm) {
     return WebAwbReturnService.listReturn(payload);
+  }
+
+  @Post('update')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebReturUpdateResponseVm })
+  public async updateAwb(@Body() payload: WebReturUpdateListPayloadVm) {
+    return WebAwbReturnService.updateAwbReturn(payload);
   }
 
   @Post('create')

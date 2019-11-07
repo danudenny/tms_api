@@ -76,36 +76,13 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
   })
   descLast: string | null;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_created',
+  // new field
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'awb_number',
   })
-  userIdCreated: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'created_time',
-  })
-  createdTime: Date;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_updated',
-  })
-  userIdUpdated: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'updated_time',
-  })
-  updatedTime: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
+  awbNumber: string;
 
   @ManyToOne(() => DoPodDeliver)
   @JoinColumn({ name: 'do_pod_deliver_id' })

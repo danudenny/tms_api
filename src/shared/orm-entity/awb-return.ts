@@ -58,12 +58,15 @@ export class AwbReturn extends TmsBaseEntity {
   })
   partnerLogisticName: string;
 
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'partner_logistic_awb',
+  })
+  partnerLogisticAwb: string;
+
   @OneToOne(() => Awb)
   @JoinColumn({ name: 'origin_awb_id' })
   originAwb: Awb;
-
-  @OneToOne(() => Customer)
-  @JoinColumn({ name: 'ref_customer_account_id' })
-  customer: Customer;
 
 }

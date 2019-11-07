@@ -420,15 +420,15 @@ export class WebAwbCountService {
             await DropoffSortationDetail.save(dropoffSortationDetail);
 
             // TODO: to be fix
-            const awbItemAttr = await AwbItemAttr.findOne({
-              where: {
-                awbItemId: data.awbItemId,
-              },
-            });
-            // update status AwbItemAttr
-            awbItemAttr.awbStatusIdLast = 2600;
-            awbItemAttr.updatedTime = timeNow;
-            await AwbItemAttr.save(awbItemAttr);
+            // const awbItemAttr = await AwbItemAttr.findOne({
+            //   where: {
+            //     awbItemId: data.awbItemId,
+            //   },
+            // });
+            // // update status AwbItemAttr
+            // awbItemAttr.awbStatusIdLast = 2600;
+            // awbItemAttr.updatedTime = timeNow;
+            // await AwbItemAttr.save(awbItemAttr);
 
             // add awb history with background process
             DoPodDetailPostMetaQueueService.createJobByDoSortBag(

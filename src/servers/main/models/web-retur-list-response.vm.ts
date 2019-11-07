@@ -6,6 +6,9 @@ export class ItemReturResponseVm {
   awbNumber: string;
 
   @ApiModelProperty()
+  awbReturnId: string;
+
+  @ApiModelProperty()
   originAwbNumber: string;
 
   @ApiModelProperty()
@@ -25,6 +28,9 @@ export class ItemReturResponseVm {
 
   @ApiModelProperty()
   partnerLogisticName: string;
+
+  @ApiModelProperty()
+  partnerLogisticAwb: string;
 
   @ApiModelProperty()
   isPartnerLogistic: boolean;

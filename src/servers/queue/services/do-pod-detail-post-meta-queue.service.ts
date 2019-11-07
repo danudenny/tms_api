@@ -40,11 +40,12 @@ export class DoPodDetailPostMetaQueueService {
             awbItemId: data.awbItemId,
           },
         });
-
+        // TODO: to be fixed create data awb history
         if (awbItemAttr) {
           // NOTE: Insert Data awb history
           const awbHistory = AwbHistory.create({
             awbItemId: data.awbItemId,
+            refAwbNumber: awbItemAttr.awbNumber,
             userId: data.userId,
             branchId: data.branchId,
             employeeIdDriver: data.employeeIdDriver,

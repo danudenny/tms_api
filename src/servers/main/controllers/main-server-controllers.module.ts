@@ -32,7 +32,8 @@ import { WebTrackingController } from './web/web-tracking.controller';
 import { ProvincesController } from './master/provinces.controller';
 import { CitiesController } from './master/cities.controller';
 import { DistrictsController } from './master/districts.controller';
-import { WebAwbReturnController } from './web/web-awb-return.controller';
+import { WebAwbDeliverController } from './web/web-awb-deliver.controller';
+import { MobileAttendanceController } from './mobile/mobile-attendance.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -70,7 +71,8 @@ import { WebAwbReturnController } from './web/web-awb-return.controller';
     ProvincesController,
     CitiesController,
     DistrictsController,
-    WebAwbReturnController,
+    WebAwbDeliverController,
+    MobileAttendanceController,
   ],
 })
 export class MainServerControllersModule {}

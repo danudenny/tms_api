@@ -6,6 +6,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
 import { createQueryBuilder } from 'typeorm';
+import { AwbDeliverManualVm } from '../../models/web-awb-deliver.vm';
 
 export class AwbService {
 
@@ -18,11 +19,13 @@ export class AwbService {
     q.select({
       awbItemAttrId: true,
       awbStatusIdLast: true,
+      awbHistoryIdLast: true,
       awbItemId: true,
       awbItem: {
         awbItemId: true,
         awbId: true,
       },
+      awbId: true,
       awbNumber: true,
       isPackageCombined: true,
       bagItemIdLast: true,
@@ -138,6 +141,28 @@ export class AwbService {
     return await qb.getRawOne();
   }
 
+  public static async getDataDeliver(awbNumber: string, userIdDriver: number): Promise<AwbDeliverManualVm> {
+    const qb = createQueryBuilder();
+    qb.addSelect('aia.awb_item_id', 'awbItemId');
+    qb.addSelect('aia.awb_number', 'awbNumber');
+    qb.addSelect('dpdd.do_pod_deliver_detail_id', 'doPodDeliverDetailId');
+    qb.addSelect('dpd.do_pod_deliver_id', 'doPodDeliverId');
+    qb.addSelect('dpdd.awb_status_id_last', 'awbStatusId');
+    qb.from('awb_item_attr', 'aia');
+    qb.innerJoin(
+      'do_pod_deliver_detail',
+      'dpdd',
+      'aia.awb_item_id = dpdd.awb_item_id AND dpdd.awb_status_id_last = 14000 AND aia.is_deleted = false',
+    );
+    qb.innerJoin(
+      'do_pod_deliver',
+      'dpd',
+      'dpdd.do_pod_deliver_id = dpd.do_pod_deliver_id AND dpd.is_deleted = false',
+    );
+    qb.where('aia.awb_number = :awbNumber AND dpd.user_id_driver = :userIdDriver', { awbNumber, userIdDriver });
+    return await qb.getRawOne();
+  }
+
   public static async awbStatusGroup(awbStatusId: number): Promise<string> {
     const awbRepository = new OrionRepositoryService(AwbStatusGroupItem);
     const q = awbRepository.findOne();
@@ -185,7 +210,7 @@ export class AwbService {
       if (branchIdNext) {
         awbItemAttr.branchIdNext = branchIdNext;
       }
-      awbItemAttr.historyDateLast = timeNow;
+      awbItemAttr.awbHistoryDateLast = timeNow;
       awbItemAttr.updatedTime = timeNow;
       await AwbItemAttr.save(awbItemAttr);
     }
@@ -203,16 +228,19 @@ export class AwbService {
           awbId: awbItem.awbId,
         },
       });
+      if (awbAttr) {
+        // TODO: how to update data??
+        // awbAttr.awbHistoryIdLast;
+        // awbAttr.awbStatusIdLastPublic;
+        await AwbAttr.update(awbAttr.awbAttrId, {
+          branchIdNext,
+          awbStatusIdLast: status,
+          branchIdLast: permissonPayload.branchId,
+          awbhistoryDateLast: timeNow,
+          updatedTime: timeNow,
+        });
+      }
 
-      // TODO: how to update data??
-      // awbAttr.awbHistoryIdLast;
-      // awbAttr.awbStatusIdLastPublic;
-      awbAttr.awbStatusIdLast = status;
-      awbAttr.branchIdLast = permissonPayload.branchId;
-      awbAttr.branchIdNext = branchIdNext;
-      awbAttr.historyDateLast = timeNow;
-      awbAttr.updatedTime = timeNow;
-      await AwbAttr.save(awbAttr);
     }
   }
 

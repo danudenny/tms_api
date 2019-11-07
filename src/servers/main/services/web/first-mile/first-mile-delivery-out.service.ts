@@ -99,7 +99,7 @@ export class FirstMileDeliveryOutService {
       // looping data list remove awb number
       if (payload.removeAwbNumber && payload.removeAwbNumber.length) {
         for (const addAwb of payload.removeAwbNumber) {
-          const awb = await DeliveryService.validAwbNumber(addAwb);
+          const awb = await AwbService.validAwbNumber(addAwb);
           const doPodDetail = await DoPodDetail.findOne({
             where: {
               doPodId: payload.doPodId,
@@ -133,7 +133,7 @@ export class FirstMileDeliveryOutService {
       if (payload.addAwbNumber && payload.addAwbNumber.length) {
         for (const addAwb of payload.addAwbNumber) {
           // find awb_item_attr
-          const awb = await DeliveryService.validAwbNumber(addAwb);
+          const awb = await AwbService.validAwbNumber(addAwb);
           if (awb) {
             // add data do_pod_detail
             const doPodDetail = DoPodDetail.create();
@@ -373,9 +373,9 @@ export class FirstMileDeliveryOutService {
         message: 'Success',
       };
 
-      const awb = await DeliveryService.validAwbNumber(awbNumber);
+      const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
-        const statusCode = await DeliveryService.awbStatusGroup(
+        const statusCode = await AwbService.awbStatusGroup(
           awb.awbStatusIdLast,
         );
         switch (statusCode) {

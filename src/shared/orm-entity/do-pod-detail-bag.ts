@@ -36,6 +36,14 @@ export class DoPodDetailBag extends TmsBaseEntity {
   })
   transactionStatusIdLast: number;
 
+  // new field
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'bag_number',
+  })
+  bagNumber: string;
+
   @ManyToOne(() => DoPod)
   @JoinColumn({ name: 'do_pod_id' })
   doPod: DoPod;
