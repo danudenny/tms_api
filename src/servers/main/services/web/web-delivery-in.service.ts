@@ -197,6 +197,8 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
     payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -277,6 +279,8 @@ export class WebDeliveryInService {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't2.created_time';
     payload.fieldResolverMap['districtId'] = 't3.district_id';
+    payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -1633,7 +1637,9 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
     payload.fieldResolverMap['representativeFrom'] =
       't2.ref_representative_code';
-    payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    // payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -1763,7 +1769,9 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
     payload.fieldResolverMap['representativeFrom'] =
       't2.ref_representative_code';
-    payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    // payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
