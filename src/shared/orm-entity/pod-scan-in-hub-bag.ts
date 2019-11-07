@@ -58,4 +58,12 @@ export class PodScanInHubBag extends TmsBaseEntity {
     name: 'notes',
   })
   notes: string | null;
+
+  // new field
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'bag_number',
+  })
+  bagNumber: string;
 }

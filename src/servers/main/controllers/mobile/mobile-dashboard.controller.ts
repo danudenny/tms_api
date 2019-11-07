@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get, Param } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get, Param, UseInterceptors, UploadedFile } from '@nestjs/common';
 
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
@@ -11,6 +11,11 @@ import { MobileDashboardService } from '../../services/mobile/mobile-dashboard.s
 import { MobileInitDataService } from '../../services/mobile/mobile-init-data.service';
 import { EmployeeResponseVm } from '../../models/employee.response.vm';
 import { EmployeeService } from '../../services/master/employee.service';
+import { MobileComplaintResponseVm } from '../../models/mobile-complaint-response.vm';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { MobileComplaintPayloadVm } from '../../models/mobile-complaint-payload.vm';
+import { MobileComplaintListResponseAllVm } from '../../models/mobile-complaint-list-response.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('Dashboard')
 @Controller('mobile')
@@ -43,5 +48,35 @@ export class MobileDashboardController {
   @ApiOkResponse({ type: EmployeeResponseVm })
   public async findEmployee(@Param('employeeId') employeeId: number) {
     return this.employeeService.findById(employeeId);
+  }
+
+  @Post('complaint')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  @ApiOkResponse({ type: MobileComplaintResponseVm })
+  public async complaintSigesit(
+    @Body() payload: MobileComplaintPayloadVm,
+    @UploadedFile() file,
+  ) {
+    return MobileInitDataService.complaintSigesit(payload, file);
+  }
+
+  @Post('complaint/list')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  @ApiOkResponse({ type: MobileComplaintListResponseAllVm })
+  public async complaintList(@Body() payload: BaseMetaPayloadVm) {
+    return MobileInitDataService.complaintListSigesit(payload);
+  }
+
+  @Get('ping')
+  @HttpCode(HttpStatus.OK)
+  public async ping() {
+    return { message: 'pong' };
   }
 }

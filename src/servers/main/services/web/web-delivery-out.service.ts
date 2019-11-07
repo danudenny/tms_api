@@ -365,6 +365,7 @@ export class WebDeliveryOutService {
                 doPod.branchIdTo,
                 doPod.userIdDriver,
                 doPod.doPodType,
+                addBag,
               );
               // NOTE: background job for insert bag item history
               BagItemHistoryQueueService.addData(
@@ -645,6 +646,7 @@ export class WebDeliveryOutService {
             // NOTE: create DoPodDetailBag
             const doPodDetailBag = DoPodDetailBag.create();
             doPodDetailBag.doPodId = doPod.doPodId;
+            doPodDetailBag.bagNumber = bagNumber;
             doPodDetailBag.bagId = bagData.bagId;
             doPodDetailBag.bagItemId = bagData.bagItemId;
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
@@ -677,6 +679,7 @@ export class WebDeliveryOutService {
                 doPod.branchIdTo,
                 doPod.userIdDriver,
                 doPod.doPodType,
+                bagNumber,
               );
 
               // TODO: if isTransit auto IN
@@ -982,6 +985,7 @@ export class WebDeliveryOutService {
 
     q.selectRaw(
       ['t2.awb_number', 'awbNumber'],
+      ['t2.is_cod', 'isCod'],
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t2.consignee_name', 'consigneeName'],
       ['t3.awb_status_title', 'awbStatusTitle'],
@@ -997,7 +1001,6 @@ export class WebDeliveryOutService {
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
-
     const result = new WebDeliveryListResponseVm();
 
     result.data = data;
@@ -1017,7 +1020,7 @@ export class WebDeliveryOutService {
       qz.innerJoin(
         'bag_item',
         'bag_item_id',
-        'bag_item_id.bag_id = bag.bag_id',
+        'bag_item_id.bag_id = bag.bag_id AND bag_item_id.bag_item_status_id_last != 500',
       );
       qz.innerJoin(
         'bag_item_awb',
@@ -1091,7 +1094,6 @@ export class WebDeliveryOutService {
     );
     q.leftJoin(e => e.bagItem.bag, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      // .andWhere(e => e.bagDate, w => w.isNotNull()),
     );
     q.leftJoin(e => e.bag.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -1248,11 +1250,11 @@ export class WebDeliveryOutService {
 
     const bag = await DeliveryService.validBagNumber(bagNumber);
     if (bag) {
-      if (bag.branchIdLast == permissonPayload.branchId) {
+      // if (bag.branchIdLast == permissonPayload.branchId) {
         response.status = 'ok';
         response.trouble = false;
         response.message = 'success';
-      }
+      // }
     }
     result = { bagNumber, ...response };
     return result;

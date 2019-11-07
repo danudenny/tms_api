@@ -14,6 +14,7 @@ export class WebTrackingService {
     if (data) {
       // mapping data
       result.awbDate = data.awbDate;
+      result.createdName = data.employeeName;
       result.awbNumber = data.awbNumber;
       result.awbStatusLast = data.awbStatusLast;
       result.bagNumber = data.bagNumber;
@@ -30,7 +31,13 @@ export class WebTrackingService {
       result.totalCodValue = data.totalCodValue;
       result.totalWeightFinal = data.totalWeightFinal;
       result.totalWeightFinalRounded = data.totalWeightFinalRounded;
-
+      result.isCod = data.isCod;
+      result.totalWeightVolume = data.totalWeightVolume;
+      result.refResellerPhone = data.refResellerPhone;
+      result.consigneePhone = data.consigneePhone;
+      result.refRepresentativeCode = data.refRepresentativeCode;
+      result.parcelValue = data.parcelValue;
+      result.partnerLogisticAwb = data.partnerLogisticAwb;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -71,6 +78,8 @@ export class WebTrackingService {
         ai.awb_item_id as "awbItemId",
         a.total_item as "totalItem",
         a.awb_number as "awbNumber",
+        a.user_id as "userId",
+        e.fullname as "employeeName",
         a.total_sell_price as "totalSellPrice",
         a.total_weight_final::numeric(10, 2) as "totalWeightFinal",
         a.total_weight_final_rounded::numeric(10, 2) as "totalWeightFinalRounded",
@@ -81,12 +90,19 @@ export class WebTrackingService {
         COALESCE(a.consignee_name, '') as "consigneeName",
         COALESCE(a.consignee_address, '') as "consigneeAddress",
         a.awb_date as "awbDate",
+        a.is_cod as "isCod",
+        a.ref_reseller_phone as "refResellerPhone",
+        a.total_weight_volume as "totalWeightVolume",
+        a.consignee_phone as "consigneePhone",
+        a.ref_representative_code as "refRepresentativeCode",
         ast.awb_status_name as "awbStatusLast",
         a.history_date_last as "historyDateLast",
+        prd.parcel_value as "parcelValue",
         COALESCE(pt.package_type_code, '') as "packageTypeCode",
         COALESCE(pt.package_type_name, '') as "packageTypeName",
         COALESCE(p.payment_method_code, '') as "paymentMethodCode",
         a.total_cod_value as "totalCodValue",
+        ai.partner_logistic_awb as "partnerLogisticAwb",
         CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
         COALESCE(bg.bagging_code, '') as "baggingCode",
         COALESCE(s.smu_code, '') as "smuCode"
@@ -95,6 +111,9 @@ export class WebTrackingService {
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
         LEFT JOIN customer_account ca ON ca.customer_account_id = a.customer_account_id
         LEFT JOIN branch b ON b.branch_id = a.branch_id
+        LEFT JOIN users u on a.user_id = u.user_id
+        LEFT JOIN employee e on u.employee_id = e.employee_id
+        LEFT JOIN pickup_request_detail prd ON a.awb_id = prd.awb_item_id
         LEFT JOIN district df ON df.district_id = a.from_id AND a.from_type = 40
         LEFT JOIN district dt ON dt.district_id = a.to_id AND a.to_type = 40
         LEFT JOIN branch bt ON bt.branch_id = dt.branch_id_delivery
@@ -122,6 +141,7 @@ export class WebTrackingService {
       SELECT
         ah.awb_status_id as "awbStatusId",
         ah.history_date as "historyDate",
+        ast.awb_visibility as "awbVisibility",
         ah.employee_id_driver as "employeeIdDriver",
         e.fullname as "employeeNameDriver",
         u.username,

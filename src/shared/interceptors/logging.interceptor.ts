@@ -2,6 +2,7 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import { Observable } from 'rxjs';
 
 import { PinoLoggerService } from '../services/pino-logger.service';
+import { WinstonLogglyService } from '../services/winston-loggly.service';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -14,14 +15,21 @@ export class LoggingInterceptor implements NestInterceptor {
     const params = req.params;
     const query = req.query;
 
-    PinoLoggerService.withContext('LoggingInterceptor').debug({
+    // Configure sensitive parameters which will be filtered from the log file.
+    const bodyLog = Object.assign({}, body);
+    if (bodyLog && bodyLog.password) {
+      bodyLog.password = '*****';
+    }
+    const dataLog = {
       url,
       method,
-      body,
+      bodyLog,
       params,
       query,
-    });
-
+    };
+    PinoLoggerService.withContext('LoggingInterceptor').debug(dataLog);
+    // Loggly
+    WinstonLogglyService.info(dataLog);
     return next.handle();
   }
 }

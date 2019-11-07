@@ -3,7 +3,13 @@ import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
+  ManyToOne,
 } from 'typeorm';
+import { AttachmentTms } from './attachment-tms';
+import { Employee } from './employee';
+import { Branch } from './branch';
 
 @Entity('employee_journey', { schema: 'public' })
 export class EmployeeJourney extends BaseEntity {
@@ -115,4 +121,25 @@ export class EmployeeJourney extends BaseEntity {
     name: 'attachment_id_check_out',
   })
   attachmentIdCheckOut: number;
+
+  @OneToOne(() => AttachmentTms)
+  @JoinColumn({ name: 'attachment_id_check_in', referencedColumnName: 'attachmentTmsId' })
+  attachmentCheckIn: AttachmentTms;
+
+  @OneToOne(() => AttachmentTms)
+  @JoinColumn({ name: 'attachment_id_check_out', referencedColumnName: 'attachmentTmsId' })
+  attachmentCheckOut: AttachmentTms;
+
+  @ManyToOne(() => Employee)
+  @JoinColumn({ name: 'employee_id', referencedColumnName: 'employeeId' })
+  employee: Employee;
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_check_in', referencedColumnName: 'branchId' })
+  branchCheckIn: Branch;
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_check_out', referencedColumnName: 'branchId' })
+  branchCheckOut: Branch;
+
 }

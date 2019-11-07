@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiUseTags } from '@nestjs/swagger';
 import express = require('express');
 
 import { ResponseSerializerOptions } from '../../../shared/decorators/response-serializer-options.decorator';
-import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm';
+import { PrintBagItemPayloadQueryVm, PrintAwbPayloadQueryVm } from '../models/print-bag-item-payload.vm';
 import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
@@ -70,5 +70,15 @@ export class PrintController {
     @Response() serverResponse: express.Response,
   ) {
     return PrintService.printBagItemStickerAndPaperByRequest(serverResponse, queryParams);
+  }
+
+  @Get('awb-for-sticker')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printAwbSticker(
+    @Query() queryParams: PrintAwbPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintService.printAwbForStickerByRequest(serverResponse, queryParams);
   }
 }

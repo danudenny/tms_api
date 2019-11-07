@@ -17,6 +17,13 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
+  // counter code awb number for return
+  public static async awbReturn() {
+    const prefix = `R`;
+    const last_number = await this.getLastNumber(prefix);
+    return prefix + last_number.toString().padStart(11, '0');
+  }
+
   public static async doPod(dateTime: Date, digit: number = 8) {
     const prefix = `DOP/${moment(dateTime).format('YYMM/DD/')}`;
     const randomCode = this.randomCode(digit);

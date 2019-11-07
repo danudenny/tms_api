@@ -24,6 +24,7 @@ import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { BagService } from '../v1/bag.service';
+import { Representative } from '../../../../shared/orm-entity/representative';
 
 @Injectable()
 export class PackageService {
@@ -263,17 +264,22 @@ export class PackageService {
     if (!bagData) {
           // generate bag number
           randomBagNumber = 'S' + sampleSize('012345678900123456789001234567890', 6).join('');
+          const representativeCode = payload.districtDetail.districtCode.substring(0, 3);
+          const representative = await Representative.findOne({ where: { isDeleted: false, representativeCode } });
+
           const bagDetail = Bag.create({
-            bagNumber    : randomBagNumber,
-            districtIdTo : districtId,
-            bagType      : 'district',
-            branchId     : permissonPayload.branchId,
-            bagDate      : moment().format('YYYY-MM-DD'),
-            bagDateReal  : moment().toDate(),
-            createdTime  : moment().toDate(),
-            updatedTime  : moment().toDate(),
-            userIdCreated: authMeta.userId,
-            userIdUpdated: authMeta.userId,
+            bagNumber            : randomBagNumber,
+            districtIdTo         : districtId,
+            refRepresentativeCode: representative.representativeCode,
+            representativeIdTo   : representative.representativeId,
+            bagType              : 'district',
+            branchId             : permissonPayload.branchId,
+            bagDate              : moment().format('YYYY-MM-DD'),
+            bagDateReal          : moment().toDate(),
+            createdTime          : moment().toDate(),
+            updatedTime          : moment().toDate(),
+            userIdCreated        : authMeta.userId,
+            userIdUpdated        : authMeta.userId,
           });
 
           const bag = await Bag.save(bagDetail);
@@ -365,8 +371,10 @@ export class PackageService {
           podScanInHubId: podScanInHub.podScanInHubId,
           bagId,
           bagItemId: bagItem.bagItemId,
+          bagNumber: randomBagNumber,
           awbItemId: payload.awbItemId,
           awbId: awbDetail.awbId,
+          awbNumber: awbDetail.awbNumber,
           userIdCreated: authMeta.userId,
           createdTime  : moment().toDate(),
           updatedTime  : moment().toDate(),
@@ -379,6 +387,7 @@ export class PackageService {
           podScanInHubId: podScanInHub.podScanInHubId,
           branchId: permissonPayload.branchId,
           bagId,
+          bagNumber: randomBagNumber,
           bagItemId: bagItem.bagItemId,
           totalAwbItem: 1,
           totalAwbScan: 1,
@@ -462,6 +471,7 @@ export class PackageService {
         awbDetail: awb,
         isTrouble,
         troubleDesc,
+        districtDetail,
       });
 
       if (payload.bagNumber) {

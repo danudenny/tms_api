@@ -34,6 +34,13 @@ export class DropoffHubDetail extends TmsBaseEntity {
     name: 'awb_item_id',
   })
   awbItemId: number | null;
+  // new field
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'awb_number',
+  })
+  awbNumber: string;
 
   @ManyToOne(() => DropoffHub, e => e.dropoffHubDetails, {
     onDelete: 'CASCADE',

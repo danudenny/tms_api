@@ -10,3 +10,17 @@ export class PrintBagItemPayloadQueryVm {
   @ApiModelProperty()
   branchId: number;
 }
+
+export class PrintAwbPayloadQueryVm {
+  @ApiModelProperty()
+  id: number;
+
+  @ApiModelProperty()
+  isPartnerLogistic: string;
+
+  @ApiModelProperty()
+  userId: number;
+
+  @ApiModelProperty()
+  branchId: number;
+}

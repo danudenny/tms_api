@@ -1,11 +1,12 @@
-import { BaseEntity, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 import { PackagePrice } from './package-price';
 import { PackagePriceSpecial } from './package-price-special';
 import { Place } from './place';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('district', { schema: 'public' })
-export class District extends BaseEntity {
+export class District extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'district_id',
@@ -16,19 +17,19 @@ export class District extends BaseEntity {
     nullable: false,
     name: 'country_id',
   })
-  countryId: string;
+  countryId: number;
 
   @Column('bigint', {
     nullable: false,
     name: 'province_id',
   })
-  provinceId: string;
+  provinceId: number;
 
   @Column('bigint', {
     nullable: false,
     name: 'city_id',
   })
-  cityId: string;
+  cityId: number;
 
   @Column('character varying', {
     nullable: false,
@@ -48,13 +49,13 @@ export class District extends BaseEntity {
     nullable: false,
     name: 'zone_id',
   })
-  zoneId: string;
+  zoneId: number;
 
   @Column('bigint', {
     nullable: true,
     name: 'district_id_ref_price',
   })
-  districtIdRefPrice: string | null;
+  districtIdRefPrice: number | null;
 
   @Column('text', {
     nullable: true,
@@ -70,69 +71,38 @@ export class District extends BaseEntity {
   zipCode: string;
 
   @Column('bigint', {
-    nullable: false,
-    name: 'user_id_created',
-  })
-  userIdCreated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'created_time',
-  })
-  createdTime: Date;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_updated',
-  })
-  userIdUpdated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'updated_time',
-  })
-  updatedTime: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
-
-  @Column('bigint', {
     nullable: true,
     name: 'branch_id_delivery',
   })
-  branchIdDelivery: string | null;
+  branchIdDelivery: number | null;
 
   @Column('bigint', {
     nullable: true,
     name: 'branch_id_pickup',
   })
-  branchIdPickup: string | null;
+  branchIdPickup: number | null;
 
   @OneToMany(
-    type => PackagePrice,
+    () => PackagePrice,
     package_price => package_price.districtIdFrom,
   )
   packagePrices: PackagePrice[];
 
-  @OneToMany(type => PackagePrice, package_price => package_price.districtIdTo)
+  @OneToMany(() => PackagePrice, package_price => package_price.districtIdTo)
   packagePrices2: PackagePrice[];
 
   @OneToMany(
-    type => PackagePriceSpecial,
+    () => PackagePriceSpecial,
     package_price_special => package_price_special.districtIdFrom,
   )
   packagePriceSpecials: PackagePriceSpecial[];
 
   @OneToMany(
-    type => PackagePriceSpecial,
+    () => PackagePriceSpecial,
     package_price_special => package_price_special.districtIdTo,
   )
   packagePriceSpecials2: PackagePriceSpecial[];
 
-  @OneToMany(type => Place, place => place.district)
+  @OneToMany(() => Place, place => place.district)
   places: Place[];
 }

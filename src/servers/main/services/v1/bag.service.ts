@@ -104,12 +104,14 @@ export class BagService {
             dropoffDetail.branchId = permissonPayload.branchId;
             dropoffDetail.awbId = awbItem.awbId;
             dropoffDetail.awbItemId = itemAwb.awbItemId;
+            dropoffDetail.awbNumber = itemAwb.awbNumber;
             await DropoffHubDetail.save(dropoffDetail);
 
-            await AwbService.updateAwbAttr(
-              itemAwb.awbItemId,
-              AWB_STATUS.DO_HUB,
-            );
+            // await AwbService.updateAwbAttr(
+            //   itemAwb.awbItemId,
+            //   AWB_STATUS.DO_HUB,
+            // );
+
             // TODO: check awb status for auto check out ??
             // NOTE: queue by Bull
             // add awb history with background process
@@ -136,6 +138,7 @@ export class BagService {
     branchIdNext: number,
     employeeIdDriver: number,
     doPodType: number,
+    bagNumber: string,
   ) {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -151,6 +154,8 @@ export class BagService {
           const doPodDetail = DoPodDetail.create();
           doPodDetail.doPodId = doPodId;
           doPodDetail.awbItemId = itemAwb.awbItemId;
+          doPodDetail.awbNumber = itemAwb.awbNumber;
+          doPodDetail.bagNumber = bagNumber;
           doPodDetail.bagId = bagId;
           doPodDetail.bagItemId = bagItemId;
           doPodDetail.isScanOut = true;
@@ -225,6 +230,7 @@ export class BagService {
     doPodId: string,
     branchIdNext: number,
     employeeIdDriver: number,
+    bagNumber: string,
   ) {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -245,6 +251,8 @@ export class BagService {
           const doPodDetail = DoPodDetail.create();
           doPodDetail.doPodId = doPodId;
           doPodDetail.awbItemId = itemAwb.awbItemId;
+          doPodDetail.awbNumber = itemAwb.awbNumber;
+          doPodDetail.bagNumber = bagNumber;
           doPodDetail.bagId = bagId;
           doPodDetail.bagItemId = bagItemId;
           doPodDetail.isScanOut = true;
@@ -260,7 +268,7 @@ export class BagService {
             branchIdNext,
           );
 
-          // queue bull
+          // NOTE: queue bull
           DoPodDetailPostMetaQueueService.createJobByScanOutBag(
             itemAwb.awbItemId,
             permissonPayload.branchId,
@@ -304,6 +312,8 @@ export class BagService {
           const doPodDetail = DoPodDetail.create();
           doPodDetail.doPodId = doPodId;
           doPodDetail.awbItemId = itemAwb.awbItemId;
+          doPodDetail.awbNumber = itemAwb.awbNumber;
+          // doPodDetail.bagNumber = bagNumber
           doPodDetail.bagId = bagId;
           doPodDetail.bagItemId = bagItemId;
           doPodDetail.isScanOut = true;

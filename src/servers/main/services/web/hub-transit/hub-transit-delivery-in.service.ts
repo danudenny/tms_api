@@ -120,11 +120,11 @@ export class HubTransitDeliveryInService {
                   if (bagItemsAwb && bagItemsAwb.length > 0) {
                     for (const itemAwb of bagItemsAwb) {
                       if (itemAwb.awbItemId) {
-                        await DeliveryService.updateAwbAttr(
-                          itemAwb.awbItemId,
-                          null,
-                          AWB_STATUS.DO_HUB,
-                        );
+                        // await DeliveryService.updateAwbAttr(
+                        //   itemAwb.awbItemId,
+                        //   null,
+                        //   AWB_STATUS.DO_HUB,
+                        // );
                         // NOTE: queue by Bull
                         DoPodDetailPostMetaQueueService.createJobByDropoffBag(
                           itemAwb.awbItemId,

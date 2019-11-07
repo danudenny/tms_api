@@ -10,7 +10,6 @@ import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
 import { PodScanIn } from '../../../../shared/orm-entity/pod-scan-in';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
-import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { RedisService } from '../../../../shared/services/redis.service';
@@ -40,6 +39,7 @@ import { chain, map, omit } from 'lodash';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagTroubleService } from '../../../../shared/services/bag-trouble.service';
+import { DoPodDetailBagRepository } from '../../../../shared/orm-repository/do-pod-detail-bag.repository';
 
 // #endregion
 
@@ -197,6 +197,8 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
     payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -276,6 +278,9 @@ export class WebDeliveryInService {
   ): Promise<WebScanInHubSortListResponseVm> {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't2.created_time';
+    payload.fieldResolverMap['districtId'] = 't3.district_id';
+    payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -403,7 +408,7 @@ export class WebDeliveryInService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebDeliveryListResponseVm> {
     // mapping field
-    payload.fieldResolverMap['bagNumber'] = 't5.bag_number';
+    payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     payload.fieldResolverMap['bagSeq'] = 't6.bag_seq';
 
@@ -417,7 +422,7 @@ export class WebDeliveryInService {
       },
     ];
 
-    const repo = new OrionRepositoryService(PodScanInBranchDetail, 't1');
+    const repo = new OrionRepositoryService(Bag, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -429,21 +434,21 @@ export class WebDeliveryInService {
       ['t4.district_name', 'districtName'],
     );
 
-    q.innerJoin(e => e.awbItemAttr, 't2', j =>
+    q.innerJoin(e => e.bagItems, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awb, 't3', j =>
+    q.innerJoin(e => e.bagItems.bagItemAwbs, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awb.district, 't4', j =>
+    q.innerJoin(e => e.bagItems.bagItemAwbs.awbItem.awb, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.bag, 't5', j =>
+    q.innerJoin(e => e.bagItems.bagItemAwbs.awbItem.awb.district, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.bagItem, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    // q.innerJoin(e => e.bag, 't5', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -581,9 +586,9 @@ export class WebDeliveryInService {
         message: 'Success',
       };
 
-      const awb = await DeliveryService.validAwbNumber(awbNumber);
+      const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
-        const statusCode = await DeliveryService.awbStatusGroup(
+        const statusCode = await AwbService.awbStatusGroup(
           awb.awbStatusIdLast,
         );
         switch (statusCode) {
@@ -677,7 +682,7 @@ export class WebDeliveryInService {
                   }
 
                   await DoPod.save(doPod);
-                  await DeliveryService.updateAwbAttr(
+                  await AwbService.updateAwbAttr(
                     awb.awbItemId,
                     doPod.branchIdTo,
                     AWB_STATUS.IN_BRANCH,
@@ -745,6 +750,7 @@ export class WebDeliveryInService {
     return result;
   }
 
+  // TODO: depreacated move to last mile delivery in
   async scanInAwbBranch(
     awbNumber: string,
     bagNumber: string,
@@ -811,7 +817,7 @@ export class WebDeliveryInService {
             result.message = 'Success';
 
             if (bagNumber != '') {
-              const bagData = await DeliveryService.validBagNumber(
+              const bagData = await BagService.validBagNumber(
                 bagNumber,
               );
               if (bagData) {
@@ -896,7 +902,7 @@ export class WebDeliveryInService {
 
             // AFTER Scan IN ===============================================
             // #region after scanin
-            await DeliveryService.updateAwbAttr(
+            await AwbService.updateAwbAttr(
               awb.awbItemId,
               null,
               AWB_STATUS.IN_BRANCH,
@@ -955,7 +961,7 @@ export class WebDeliveryInService {
         message: 'Success',
       };
 
-      const bagData = await DeliveryService.validBagNumber(bagNumber);
+      const bagData = await BagService.validBagNumber(bagNumber);
 
       if (bagData) {
         // NOTE: check condition disable on check branchIdNext
@@ -1031,12 +1037,13 @@ export class WebDeliveryInService {
                   if (bagItemsAwb && bagItemsAwb.length > 0) {
                     for (const itemAwb of bagItemsAwb) {
                       if (itemAwb.awbItemId) {
-                        await DeliveryService.updateAwbAttr(
-                          itemAwb.awbItemId,
-                          null,
-                          AWB_STATUS.DO_HUB,
-                        );
-                        // NOTE: queue by Bull
+                        // NOTE: disable update status to awb item attr
+                        // await AwbService.updateAwbAttr(
+                        //   itemAwb.awbItemId,
+                        //   null,
+                        //   AWB_STATUS.DO_HUB,
+                        // );
+                        // NOTE: queue by Bull awb history
                         DoPodDetailPostMetaQueueService.createJobByDropoffBag(
                           itemAwb.awbItemId,
                           permissonPayload.branchId,
@@ -1113,6 +1120,7 @@ export class WebDeliveryInService {
   }
 
   // TODO: need to move last mile service
+  // TODO: depreacated move to last mile delivery in
   async scanInBagBranch(
     bagData: BagItem,
     bagNumber: string,
@@ -1312,8 +1320,13 @@ export class WebDeliveryInService {
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
         const notScan =  bagData.bagItemStatusIdLast != BAG_STATUS.DO_HUB ? true : false;
-        if (notScan) {
-          // validate scan branch
+        // Add Locking setnx redis
+        const holdRedis = await RedisService.locking(
+          `hold:dropoff:${bagData.bagItemId}`,
+          'locking',
+        );
+        if (notScan && holdRedis) {
+          // validate scan branch ??
           const notScanBranch = bagData.branchIdNext != permissonPayload.branchId ? true : false;
           // TODO: move to method create bag trouble ==========================
           if (
@@ -1337,12 +1350,38 @@ export class WebDeliveryInService {
           });
           if (bagItem) {
             // update status bagItem
-            BagItem.update(bagItem.bagItemId, {
+            await BagItem.update(bagItem.bagItemId, {
               bagItemStatusIdLast: BAG_STATUS.DO_HUB,
               branchIdLast: permissonPayload.branchId,
               updatedTime: timeNow,
               userIdUpdated: authMeta.userId,
             });
+            // update first scan in do pod
+            const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
+              bagData.bagItemId,
+              BAG_STATUS.DO_HUB,
+            );
+            if (doPodDetailBag) {
+              // counter total scan in
+              doPodDetailBag.doPod.totalScanInBag += 1;
+              if (doPodDetailBag.doPod.totalScanInBag == 1) {
+                await DoPod.update(doPodDetailBag.doPodId, {
+                  firstDateScanIn: timeNow,
+                  lastDateScanIn: timeNow,
+                  totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
+                  updatedTime: timeNow,
+                  userIdUpdated: authMeta.userId,
+                });
+              } else {
+                await DoPod.update(doPodDetailBag.doPodId, {
+                  lastDateScanIn: timeNow,
+                  totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
+                  updatedTime: timeNow,
+                  userIdUpdated: authMeta.userId,
+                });
+              }
+            }
+
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
               bagData.bagItemId,
@@ -1356,6 +1395,7 @@ export class WebDeliveryInService {
             dropoffHub.branchId = permissonPayload.branchId;
             dropoffHub.bagId = bagData.bag.bagId;
             dropoffHub.bagItemId = bagData.bagItemId;
+            dropoffHub.bagNumber = bagNumber;
             await DropoffHub.save(dropoffHub);
 
             // TODO: send on background job ??
@@ -1367,6 +1407,8 @@ export class WebDeliveryInService {
             );
             totalSuccess += 1;
           }
+          // remove key holdRedis
+          RedisService.del(`hold:dropoff:${bagData.bagItemId}`);
         } else {
           totalError += 1;
           response.status = 'error';
@@ -1393,6 +1435,7 @@ export class WebDeliveryInService {
     return result;
   }
 
+  // TODO: depreacated move to last mile delivery in
   // NOTE: scan in package on branch
   // 1. scan bag number / scan awb number
   // 2. create session per branch with insert table on pod scan in branch
@@ -1406,7 +1449,6 @@ export class WebDeliveryInService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const regexNumber = /^[0-9]+$/;
-    const dataItem = new ScanInputNumberBranchVm();
 
     // find and create pod_scan_in_branch
     let podScanInBranch = await PodScanInBranch.findOne({
@@ -1440,7 +1482,7 @@ export class WebDeliveryInService {
           payload.bagNumber,
           payload.podScanInBranchId,
         );
-
+        const dataItem = new ScanInputNumberBranchVm();
         dataItem.awbNumber = resultAwb.awbNumber;
         dataItem.status = resultAwb.status;
         dataItem.message = resultAwb.message;
@@ -1465,6 +1507,7 @@ export class WebDeliveryInService {
           dataBag = resultBag.dataBag;
         }
       } else {
+        const dataItem = new ScanInputNumberBranchVm();
         dataItem.awbNumber = inputNumber;
         dataItem.status = 'error';
         dataItem.message = 'Nomor tidak valid';
@@ -1595,7 +1638,9 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
     payload.fieldResolverMap['representativeFrom'] =
       't2.ref_representative_code';
-    payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    // payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -1725,7 +1770,9 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
     payload.fieldResolverMap['representativeFrom'] =
       't2.ref_representative_code';
-    payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    // payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }

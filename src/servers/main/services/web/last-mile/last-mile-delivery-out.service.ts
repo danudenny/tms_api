@@ -10,7 +10,6 @@ import {
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { AwbTroubleService } from '../../../../../shared/services/awb-trouble.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
-import { DeliveryService } from '../../../../../shared/services/delivery.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import {
@@ -24,6 +23,7 @@ import {
 } from '../../../models/web-scan-out.vm';
 import { AwbService } from '../../v1/awb.service';
 import moment = require('moment');
+import { AutoUpdateAwbStatusService } from '../../v1/auto-update-awb-status.service';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -99,7 +99,7 @@ export class LastMileDeliveryOutService {
       // looping data list remove awb number
       if (payload.removeAwbNumber && payload.removeAwbNumber.length) {
         for (const addAwb of payload.removeAwbNumber) {
-          const awb = await DeliveryService.validAwbNumber(addAwb);
+          const awb = await AwbService.validAwbNumber(addAwb);
           const doPodDeliverDetail = await DoPodDeliverDetail.findOne(
             {
               where: {
@@ -118,7 +118,7 @@ export class LastMileDeliveryOutService {
               },
             );
             // NOTE: update awb_item_attr and awb_history
-            await DeliveryService.updateAwbAttr(
+            await AwbService.updateAwbAttr(
               awb.awbItemId,
               null,
               AWB_STATUS.IN_BRANCH,
@@ -139,16 +139,18 @@ export class LastMileDeliveryOutService {
       if (payload.addAwbNumber && payload.addAwbNumber.length) {
         for (const addAwb of payload.addAwbNumber) {
           // find awb_item_attr
-          const awb = await DeliveryService.validAwbNumber(addAwb);
+          const awb = await AwbService.validAwbNumber(addAwb);
           // add data do_pod_detail
           const doPodDeliverDetail = DoPodDeliverDetail.create();
           doPodDeliverDetail.doPodDeliverId = payload.doPodDeliverId;
+          doPodDeliverDetail.awbId = awb.awbId;
           doPodDeliverDetail.awbItemId = awb.awbItemId;
+          doPodDeliverDetail.awbNumber = addAwb;
           doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
           await DoPodDeliverDetail.save(doPodDeliverDetail);
 
           // awb_item_attr and awb_history ??
-          await DeliveryService.updateAwbAttr(
+          await AwbService.updateAwbAttr(
             awb.awbItemId,
             null,
             AWB_STATUS.OUT_BRANCH,
@@ -282,12 +284,22 @@ export class LastMileDeliveryOutService {
           const statusCode = await AwbService.awbStatusGroup(
             awb.awbStatusIdLast,
           );
+          // save data to awb_troubleß
           if (statusCode != 'IN') {
-            // save data to awb_trouble
             await AwbTroubleService.fromScanOut(
               awbNumber,
               awb.branchLast.branchName,
               awb.awbStatusIdLast,
+            );
+          }
+
+          // AUTO STATUS
+          // TODO: set enable and disble
+          if (statusCode == 'IN' && awb.branchIdLast != permissonPayload.branchId) {
+            await AutoUpdateAwbStatusService.awbDeliver(
+              awb,
+              authMeta.userId,
+              permissonPayload.branchId,
             );
           }
 
@@ -301,13 +313,14 @@ export class LastMileDeliveryOutService {
             // NOTE: create data do pod detail per awb number
             const doPodDeliverDetail = DoPodDeliverDetail.create();
             doPodDeliverDetail.doPodDeliverId = payload.doPodId;
+            doPodDeliverDetail.awbId = awb.awbId;
             doPodDeliverDetail.awbItemId = awb.awbItemId;
+            doPodDeliverDetail.awbNumber = awbNumber;
             doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
             await DoPodDeliverDetail.save(doPodDeliverDetail);
 
             // AFTER Scan OUT ===============================================
             // #region after scanout
-
             // Update do_pod
             const doPodDeliver = await DoPodDeliverRepository.getDataById(
               payload.doPodId,
@@ -319,7 +332,7 @@ export class LastMileDeliveryOutService {
               await DoPodDeliver.update(doPodDeliver.doPodDeliverId, {
                 totalAwb,
               });
-              await DeliveryService.updateAwbAttr(
+              await AwbService.updateAwbAttr(
                 awb.awbItemId,
                 null,
                 AWB_STATUS.ANT,

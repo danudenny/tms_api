@@ -5,6 +5,7 @@ import { FILE_PROVIDER } from '../constants/file-provider.constant';
 import { AttachmentTms } from '../orm-entity/attachment-tms';
 import { AwsS3Service } from './aws-s3.service';
 import { ConfigService } from './config.service';
+import moment = require('moment');
 
 export class AttachmentService {
   public static async uploadFileBufferToS3(
@@ -45,18 +46,25 @@ export class AttachmentService {
   public static async uploadFileBase64(
     base64String: string,
     pathId?: string,
+    fileName?: string,
+    isRandomName: boolean = true,
     bucketName?: string,
   ) {
     if (!bucketName && ConfigService.has('cloudStorage.cloudBucket')) {
       bucketName = ConfigService.get('cloudStorage.cloudBucket');
     }
-    const uuidv1 = require('uuid/v1');
 
-    const fileRandomName = uuidv1();
+    if (isRandomName) {
+      const uuidv1 = require('uuid/v1');
+      const uuidString = uuidv1();
+      fileName = `attachments/${
+        pathId ? `${pathId}/` : ''
+      }${moment().format('Y/M/D')}/${uuidString}`;
+    }
+
     const uploadResponse = await AwsS3Service.uploadFileBase64(
       base64String,
-      fileRandomName,
-      pathId,
+      fileName,
       bucketName,
     );
 
@@ -67,8 +75,8 @@ export class AttachmentService {
       fileMime: uploadResponse.contentType,
       fileProvider: FILE_PROVIDER.AWS_S3,
       attachmentPath: uploadResponse.awsKey,
-      attachmentName: fileRandomName,
-      fileName: fileRandomName,
+      attachmentName: fileName,
+      fileName,
       url,
       userIdCreated: 1,
       userIdUpdated: 1,

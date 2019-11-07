@@ -6,7 +6,7 @@ import { PrinterService } from '../../../shared/services/printer.service';
 import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
-import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm';
+import { PrintBagItemPayloadQueryVm, PrintAwbPayloadQueryVm } from '../models/print-bag-item-payload.vm';
 import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
@@ -132,8 +132,10 @@ export class PrintService {
           bagItem: {
             bagItemId: true, // needs to be selected due to bag_item relations are being included
             bagSeq: true,
+            weight: true,
             bag: {
               bagNumber: true,
+              refRepresentativeCode: true,
             },
           },
         },
@@ -521,5 +523,283 @@ export class PrintService {
   ) {
     await this.printBagItemForStickerByRequest(res, queryParams);
     await this.printBagItemForPaperByRequest(res, queryParams);
+  }
+
+  public static async printAwbForStickerByRequest(
+    res: express.Response,
+    queryParams: PrintAwbPayloadQueryVm,
+  ) {
+    if (queryParams.isPartnerLogistic === '1') {
+      const q = RepositoryService.awb.findOne();
+      q.innerJoin(e => e.branch);
+
+      const awbItem = await q
+        .select({
+          awbNumber: true,
+          consigneeName: true,
+          consigneeNumber: true,
+          consigneeAddress: true,
+          createdTime: true,
+          branch: {
+            branchName: true,
+            phone1: true,
+            address: true,
+          },
+        })
+        .where(e => e.awbNumber, w => w.equals(queryParams.id));
+
+      if (!awbItem) {
+        RequestErrorService.throwObj({
+          message: 'Resi tidak ditemukan',
+        });
+      }
+
+      const currentUser = await RepositoryService.user
+        .loadById(queryParams.userId)
+        .select({
+          userId: true, // needs to be selected due to users relations are being included
+          employee: {
+            nickname: true,
+          },
+        })
+        .exec();
+
+      if (!currentUser) {
+        RequestErrorService.throwObj({
+          message: 'User tidak ditemukan',
+        });
+      }
+
+      const currentBranch = await RepositoryService.branch
+        .loadById(queryParams.branchId)
+        .select({
+          branchName: true,
+        });
+
+      if (!currentBranch) {
+        RequestErrorService.throwObj({
+          message: 'Gerai asal tidak ditemukan',
+        });
+      }
+
+      const m = moment();
+      const jsreportParams = {
+        data: awbItem,
+        meta: {
+          currentUserName: currentUser.employee.nickname,
+          currentBranchName: currentBranch.branchName,
+          date: m.format('DD/MM/YY'),
+          time: m.format('HH:mm'),
+        },
+      };
+
+      let data1 = `TEXT 30,100,"3",0,1,1,"Pengirim : ${awbItem.branch.branchName}"\n` +
+      `TEXT 30,135,"3",0,1,1,"Telp : ${awbItem.branch.phone1}"\n`;
+      let addX = 170;
+      let startX = 0;
+      let endX = 25;
+
+      if (awbItem.branch.address) {
+        const count = Math.round(awbItem.branch.address.length / 25);
+        for (let i = 0; i < count; i++) {
+          if (i === 0) {
+            data1 += `TEXT 30,` + addX + `,"3",0,1,1,"Alamat : ${awbItem.branch.address.substring(startX, endX)}"\n`;
+          } else {
+            data1 += `TEXT 30,` + addX + `,"3",0,1,1,"${awbItem.branch.address.substring(startX, endX)}"\n`;
+          }
+          addX += 35;
+          startX = endX;
+          endX = endX + 30;
+        }
+      } else {
+        data1 += `TEXT 30,` + addX + `,"3",0,1,1,"Alamat : ${awbItem.branch.address}"\n`;
+      }
+
+      const addYpn = addX + 70;
+      const addYtl = addYpn + 35;
+      let addY = addYtl + 35;
+      let startY = 0;
+      let endY = 25;
+      let data2 = `TEXT 30,` + addYpn + `,"3",0,1,1,"Penerima : ${awbItem.consigneeName}"\n` +
+      `TEXT 30,` + addYtl + `,"3",0,1,1,"Telp : ${awbItem.consigneeNumber}"\n`;
+
+      if (awbItem.consigneeAddress) {
+        const count = Math.round(awbItem.consigneeAddress.length / 25);
+        for (let i = 0; i < count; i++) {
+          if (i === 0) {
+            data2 += `TEXT 30,` + addY + `,"3",0,1,1,"Alamat : ${awbItem.consigneeAddress.substring(startY, endY)}"\n`;
+          } else {
+            data2 += `TEXT 30,` + addY + `,"3",0,1,1,"${awbItem.consigneeAddress.substring(startY, endY)}"\n`;
+          }
+          addY += 35;
+          startY = endY;
+          endY = endY + 30;
+        }
+      } else {
+        data2 += `TEXT 30,` + addY + `,"3",0,1,1,"Alamat : ${awbItem.consigneeAddress}"\n`;
+      }
+
+      const rawTsplPrinterCommands =
+        `SIZE 80 mm, 100 mm\n` +
+        `SPEED 3\n` +
+        `DENSITY 8\n` +
+        `DIRECTION 0\n` +
+        `OFFSET 0\n` +
+        `CLS\n` +
+        data1 +
+        data2 +
+        `PRINT 1\n` +
+        `EOP`;
+
+      PrinterService.responseForRawCommands({
+        res,
+        rawCommands: rawTsplPrinterCommands,
+        printerName: 'BarcodePrinter',
+      });
+    } else {
+      const q = RepositoryService.awb.findOne();
+      q.innerJoin(e => e.branch);
+      q.leftJoin(e => e.representative.branch.district);
+
+      const awbItem = await q
+        .select({
+          awbNumber: true,
+          consigneeName: true,
+          consigneeNumber: true,
+          consigneeAddress: true,
+          consigneeZip: true,
+          createdTime: true,
+          refRepresentativeCode: true,
+          district: {
+            districtName: true,
+          },
+          branch: {
+            branchName: true,
+            phone1: true,
+            address: true,
+          },
+        })
+        .where(e => e.awbNumber, w => w.equals(queryParams.id));
+        // .andWhere(e => e.refRepresentativeCode, w => w.isNotNull);
+
+      if (!awbItem) {
+        RequestErrorService.throwObj({
+          message: 'Resi tidak ditemukan',
+        });
+      }
+
+      const currentUser = await RepositoryService.user
+        .loadById(queryParams.userId)
+        .select({
+          userId: true, // needs to be selected due to users relations are being included
+          employee: {
+            nickname: true,
+          },
+        })
+        .exec();
+
+      if (!currentUser) {
+        RequestErrorService.throwObj({
+          message: 'User tidak ditemukan',
+        });
+      }
+
+      const currentBranch = await RepositoryService.branch
+        .loadById(queryParams.branchId)
+        .select({
+          branchName: true,
+        });
+
+      if (!currentBranch) {
+        RequestErrorService.throwObj({
+          message: 'Gerai asal tidak ditemukan',
+        });
+      }
+
+      const m = moment();
+      const jsreportParams = {
+        data: awbItem,
+        meta: {
+          currentUserName: currentUser.employee.nickname,
+          currentBranchName: currentBranch.branchName,
+          date: m.format('DD/MM/YY'),
+          time: m.format('HH:mm'),
+        },
+      };
+
+      const consZip = awbItem.consigneeZip.substring((awbItem.consigneeZip.length - 3), awbItem.consigneeZip.length);
+      let data1 = '';
+      let addX = 370;
+      let startX = 0;
+      let endX = 25;
+
+      if (awbItem.consigneeAddress) {
+        const count = Math.round(awbItem.consigneeAddress.length / 25);
+        for (let i = 0; i < count; i++) {
+          if (i === 0) {
+            data1 += `TEXT 30,` + addX + `,"2",0,1,1,"Alamat : ${awbItem.consigneeAddress.substring(startX, endX)}"\n`;
+          } else {
+            data1 += `TEXT 30,` + addX + `,"2",0,1,1,"${awbItem.consigneeAddress.substring(startX, endX)}"\n`;
+          }
+          addX += 27;
+          startX = endX;
+          endX = endX + 30;
+        }
+      } else {
+        data1 += `TEXT 30,` + addX + `,"2",0,1,1,"Alamat : ${awbItem.consigneeAddress}"\n`;
+      }
+
+      let data2 = '';
+      let rightX = 160;
+
+      if (awbItem.district.districtName) {
+        const disNameLength = awbItem.district.districtName.split(' ');
+        const disName2word = Math.round(disNameLength.length / 2);
+        let x = 0;
+
+        for (let i = 0; i < disName2word; i++ ) {
+          if (disNameLength.length < 2) {
+            data2 += `TEXT 400,` + rightX + `,"2",0,1,1,"${disNameLength[x]}"\n`;
+          } else {
+            x++;
+            if (x <= (disNameLength.length - 1)) {
+              data2 += `TEXT 400,` + rightX + `,"2",0,1,1,"${disNameLength[x - 1]} ${disNameLength[x]}"\n`;
+            } else {
+              data2 += `TEXT 400,` + rightX + `,"2",0,1,1,"${disNameLength[x - 1]}"\n`;
+            }
+            x++;
+          }
+          rightX = rightX + 30;
+        }
+      }
+
+      const rawTsplPrinterCommands =
+        `SIZE 80 mm, 100 mm\n` +
+        `SPEED 3\n` +
+        `DENSITY 8\n` +
+        `DIRECTION 0\n` +
+        `OFFSET 0\n` +
+        `CLS\n` +
+        `BARCODE 30,120,"128",100,1,0,3,10,"${awbItem.awbNumber}"\n` +
+        `TEXT 400,120,"4",0,1,1,"${awbItem.refRepresentativeCode}"\n` +
+        data2 +
+        `TEXT 400,` + (rightX) + `,"3",0,1,1,"${consZip}"\n` +
+        `TEXT 30,280,"2",0,1,1,"No Resi : ${awbItem.awbNumber}"\n` +
+        `TEXT 30,310,"2",0,1,1,"Penerima : ${awbItem.consigneeName}"\n` +
+        `TEXT 30,340,"2",0,1,1,"Telp : ${awbItem.consigneeNumber}"\n` +
+        data1 +
+        `TEXT 30,` + (addX + 30) + `,"2",0,1,1,"Diterima Oleh,"\n` +
+        `TEXT 30,` + (addX + 120) + `,"2",0,1,1,"(TTD & Nama Terang)"\n` +
+        `TEXT 30,` + (addX + 220) + `,"2",0,1,1,"Pengirim : Sicepat Gerai ${awbItem.branch.branchName}"\n` +
+        `TEXT 30,` + (addX + 250) + `,"2",0,1,1,"Telp : ${awbItem.branch.phone1}"\n` +
+        `PRINT 1\n` +
+        `EOP`;
+
+      PrinterService.responseForRawCommands({
+        res,
+        rawCommands: rawTsplPrinterCommands,
+        printerName: 'BarcodePrinter',
+      });
+    }
   }
 }

@@ -389,6 +389,7 @@ export class WebAwbCountService {
           dropoffSortation.representativeId = representativeId;
           dropoffSortation.bagId = bagData.bag.bagId;
           dropoffSortation.bagItemId = bagData.bagItemId;
+          dropoffSortation.bagNumber = payload.bagNumber;
           dropoffSortation.userIdUpdated = authMeta.userId;
           dropoffSortation.updatedTime = timeNow;
           dropoffSortation.userIdCreated = authMeta.userId;
@@ -412,6 +413,7 @@ export class WebAwbCountService {
             dropoffSortationDetail.dropoffSortationId = dropOffId;
             dropoffSortationDetail.awbId = awbAttr.awbId;
             dropoffSortationDetail.awbItemId = data.awbItemId;
+            dropoffSortationDetail.awbNumber = data.awbNumber;
             dropoffSortationDetail.userIdUpdated = authMeta.userId;
             dropoffSortationDetail.updatedTime = timeNow;
             dropoffSortationDetail.userIdCreated = authMeta.userId;
@@ -420,15 +422,15 @@ export class WebAwbCountService {
             await DropoffSortationDetail.save(dropoffSortationDetail);
 
             // TODO: to be fix
-            const awbItemAttr = await AwbItemAttr.findOne({
-              where: {
-                awbItemId: data.awbItemId,
-              },
-            });
-            // update status AwbItemAttr
-            awbItemAttr.awbStatusIdLast = 2600;
-            awbItemAttr.updatedTime = timeNow;
-            await AwbItemAttr.save(awbItemAttr);
+            // const awbItemAttr = await AwbItemAttr.findOne({
+            //   where: {
+            //     awbItemId: data.awbItemId,
+            //   },
+            // });
+            // // update status AwbItemAttr
+            // awbItemAttr.awbStatusIdLast = 2600;
+            // awbItemAttr.updatedTime = timeNow;
+            // await AwbItemAttr.save(awbItemAttr);
 
             // add awb history with background process
             DoPodDetailPostMetaQueueService.createJobByDoSortBag(

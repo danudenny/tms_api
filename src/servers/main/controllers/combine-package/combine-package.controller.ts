@@ -12,16 +12,6 @@ import { PermissionTokenGuard } from '../../../../shared/guards/permission-token
 export class CombinePackageController {
   constructor(private readonly packageService: PackageService) {}
 
-  // NOTE: not used
-  // @Post('bag')
-  // @HttpCode(200)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: GabunganFindAllResponseVm })
-  // public async gabunganAwb(@Body() payload: GabunganPayloadVm) {
-  //   return this.packageService.gabunganAwb(payload);
-  // }
-
   @Post('packages')
   @HttpCode(200)
   @ApiBearerAuth()
