@@ -216,15 +216,15 @@ export class LastMileDeliveryInService {
               doPodDetailBag.doPod.totalScanInBag += 1;
               if (doPodDetailBag.doPod.totalScanInBag == 1) {
                 await DoPod.update(doPodDetailBag.doPodId, {
-                  firstDateScanOut: timeNow,
-                  lastDateScanOut: timeNow,
+                  firstDateScanIn: timeNow,
+                  lastDateScanIn: timeNow,
                   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
                   updatedTime: timeNow,
                   userIdUpdated: authMeta.userId,
                 });
               } else {
                 await DoPod.update(doPodDetailBag.doPodId, {
-                  lastDateScanOut: timeNow,
+                  lastDateScanIn: timeNow,
                   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
                   updatedTime: timeNow,
                   userIdUpdated: authMeta.userId,

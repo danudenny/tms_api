@@ -1020,7 +1020,7 @@ export class WebDeliveryOutService {
       qz.innerJoin(
         'bag_item',
         'bag_item_id',
-        'bag_item_id.bag_id = bag.bag_id AND bag_item_id.bag_item_status_id_last != 500',
+        'bag_item_id.bag_id = bag.bag_id',
       );
       qz.innerJoin(
         'bag_item_awb',
