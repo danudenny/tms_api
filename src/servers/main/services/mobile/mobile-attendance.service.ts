@@ -225,6 +225,7 @@ export class MobileAttendanceService {
         }
         employeeJourney.branchIdCheckOut = Number(payload.branchIdCheckout);
         employeeJourney.latitudeCheckOut =  payload.latitudeCheckOut;
+        employeeJourney.longitudeCheckOut =  payload.longitudeCheckOut;
         employeeJourney.attachmentIdCheckOut = attachmentId;
         employeeJourney.checkOutDate = timeNow;
 
