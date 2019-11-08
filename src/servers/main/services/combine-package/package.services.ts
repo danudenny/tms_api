@@ -416,7 +416,7 @@ export class PackageService {
     let podScanInHubId: string  = payload.podScanInHubId;
     let bagItemId: string       = payload.bagItemId;
     let isTrouble: boolean      = false;
-    let isAllow: boolean        = true;
+    const isAllow: boolean        = true;
     const troubleDesc: String[] = [];
 
     if (!awbItemAttr) {
@@ -440,12 +440,13 @@ export class PackageService {
       troubleDesc.push('Awb status tidak sesuai');
     }
 
-    const awb = await Awb.findOne({ where: { awbNumber: value } });
+    const awb = await Awb.findOne({ where: { awbNumber: value, isDeleted: false } });
 
     if (awb.toId) {
-      if (awb.toId !== districtId) {
-        isAllow = false;
-      }
+      // NOTES: WILL BE USE IN NEXT FUTURE
+      // if (awb.toId !== districtId) {
+      //   isAllow = false;
+      // }
     } else {
       isTrouble = true;
       troubleDesc.push('Tidak ada tujuan');
