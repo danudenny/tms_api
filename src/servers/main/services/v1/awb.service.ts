@@ -177,7 +177,7 @@ export class AwbService {
       },
     });
 
-    q.where(e => e.awbStatusId, w => w.equals(awbStatusId));
+    q.where(e => e.awbStatusId, w => w.equals(Number(awbStatusId)));
     const result = await q.exec();
     return result ? result.awbStatusGroup.code : 'NoGroup';
   }
