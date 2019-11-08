@@ -444,9 +444,10 @@ export class PackageService {
 
     if (awb.toId) {
       // NOTES: WILL BE USE IN NEXT FUTURE
-      // if (awb.toId !== districtId) {
-      //   isAllow = false;
-      // }
+      if (awb.toId !== districtId) {
+        troubleDesc.push('Tujuan tidak sesuai');
+        // isAllow = false;
+      }
     } else {
       isTrouble = true;
       troubleDesc.push('Tidak ada tujuan');
