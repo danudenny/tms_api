@@ -684,8 +684,8 @@ export class WebDeliveryInService {
                   await DoPod.save(doPod);
                   await AwbService.updateAwbAttr(
                     awb.awbItemId,
-                    doPod.branchIdTo,
                     AWB_STATUS.IN_BRANCH,
+                    doPod.branchIdTo,
                   );
 
                   // NOTE: queue by Bull
@@ -904,8 +904,8 @@ export class WebDeliveryInService {
             // #region after scanin
             await AwbService.updateAwbAttr(
               awb.awbItemId,
-              null,
               AWB_STATUS.IN_BRANCH,
+              null,
             );
 
             // NOTE: queue by Bull

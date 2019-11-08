@@ -147,8 +147,8 @@ export class WebAwbUpdateStatusService {
         // update awb item attr
         await AwbService.updateAwbAttr(
           awb.awbItemId,
-          null,
           awbStatusId,
+          null,
         );
 
         // NOTE: queue by Bull
@@ -206,8 +206,8 @@ export class WebAwbUpdateStatusService {
             if (itemAwb.awbItemId) {
               await AwbService.updateAwbAttr(
                 itemAwb.awbItemId,
-                null,
                 awbStatusId,
+                null,
               );
               // NOTE: queue by Bull
               DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
