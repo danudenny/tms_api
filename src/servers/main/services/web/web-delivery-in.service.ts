@@ -1745,7 +1745,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.awb, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awb.district, 't4', j =>
+    q.innerJoin(e => e.awb.districtTo, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
