@@ -13,6 +13,4 @@ export class MobileAttendanceInPayloadVm {
   @ApiModelProperty()
   branchIdCheckIn: string;
 
-  @ApiModelProperty()
-  employeeId: string;
 }

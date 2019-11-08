@@ -365,6 +365,7 @@ export class WebDeliveryOutService {
                 doPod.branchIdTo,
                 doPod.userIdDriver,
                 doPod.doPodType,
+                addBag,
               );
               // NOTE: background job for insert bag item history
               BagItemHistoryQueueService.addData(
@@ -645,6 +646,7 @@ export class WebDeliveryOutService {
             // NOTE: create DoPodDetailBag
             const doPodDetailBag = DoPodDetailBag.create();
             doPodDetailBag.doPodId = doPod.doPodId;
+            doPodDetailBag.bagNumber = bagNumber;
             doPodDetailBag.bagId = bagData.bagId;
             doPodDetailBag.bagItemId = bagData.bagItemId;
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
@@ -677,6 +679,7 @@ export class WebDeliveryOutService {
                 doPod.branchIdTo,
                 doPod.userIdDriver,
                 doPod.doPodType,
+                bagNumber,
               );
 
               // TODO: if isTransit auto IN
@@ -1017,7 +1020,7 @@ export class WebDeliveryOutService {
       qz.innerJoin(
         'bag_item',
         'bag_item_id',
-        'bag_item_id.bag_id = bag.bag_id AND bag_item_id.bag_item_status_id_last != 500',
+        'bag_item_id.bag_id = bag.bag_id',
       );
       qz.innerJoin(
         'bag_item_awb',
@@ -1247,11 +1250,11 @@ export class WebDeliveryOutService {
 
     const bag = await DeliveryService.validBagNumber(bagNumber);
     if (bag) {
-      if (bag.branchIdLast == permissonPayload.branchId) {
+      // if (bag.branchIdLast == permissonPayload.branchId) {
         response.status = 'ok';
         response.trouble = false;
         response.message = 'success';
-      }
+      // }
     }
     result = { bagNumber, ...response };
     return result;

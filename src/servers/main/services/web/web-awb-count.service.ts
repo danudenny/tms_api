@@ -389,6 +389,7 @@ export class WebAwbCountService {
           dropoffSortation.representativeId = representativeId;
           dropoffSortation.bagId = bagData.bag.bagId;
           dropoffSortation.bagItemId = bagData.bagItemId;
+          dropoffSortation.bagNumber = payload.bagNumber;
           dropoffSortation.userIdUpdated = authMeta.userId;
           dropoffSortation.updatedTime = timeNow;
           dropoffSortation.userIdCreated = authMeta.userId;
@@ -412,6 +413,7 @@ export class WebAwbCountService {
             dropoffSortationDetail.dropoffSortationId = dropOffId;
             dropoffSortationDetail.awbId = awbAttr.awbId;
             dropoffSortationDetail.awbItemId = data.awbItemId;
+            dropoffSortationDetail.awbNumber = data.awbNumber;
             dropoffSortationDetail.userIdUpdated = authMeta.userId;
             dropoffSortationDetail.updatedTime = timeNow;
             dropoffSortationDetail.userIdCreated = authMeta.userId;

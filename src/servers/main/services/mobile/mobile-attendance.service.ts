@@ -17,6 +17,7 @@ import { MobileAtendanceListResponseVm } from '../../models/mobile-attendance-li
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { EmployeeJourney } from '../../../../shared/orm-entity/employee-journey';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { Attachment } from 'src/shared/orm-entity/attachment';
 
 @Injectable()
 export class MobileAttendanceService {
@@ -80,6 +81,7 @@ export class MobileAttendanceService {
           longitudeCheckIn: payload.longitudeCheckIn,
           userIdCreated: authMeta.userId,
           createdTime: timeNow,
+          branchIdCheckIn: Number(payload.branchIdCheckIn),
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
           attachmentIdCheckIn: attachmentId,
@@ -138,7 +140,6 @@ export class MobileAttendanceService {
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
-
     q.selectRaw(
       ['t1.employee_id', 'employeeId'],
       ['t3.fullname', 'fullname'],
@@ -173,7 +174,6 @@ export class MobileAttendanceService {
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
-
     const result = new MobileAtendanceListResponseVm();
 
     result.data = data;
@@ -190,8 +190,8 @@ export class MobileAttendanceService {
 
     if (!!authMeta) {
       const result = new MobileAttendanceOutResponseVm();
-      let status = 'ok';
-      let message = 'success';
+      const status = 'ok';
+      const message = 'success';
       let branchName = '';
       let checkInDate = '';
       let attachmentId = null;
@@ -201,7 +201,7 @@ export class MobileAttendanceService {
       // console.log(payload);
       const permissonPayload = AuthService.getPermissionTokenPayload();
 
-      const employeeJourneyCheckOutExist = await this.employeeJourneyRepository.findOne(
+      const employeeJourney = await this.employeeJourneyRepository.findOne(
         {
           where: {
             employeeId: authMeta.employeeId,
@@ -212,10 +212,7 @@ export class MobileAttendanceService {
           },
         },
       );
-      if (employeeJourneyCheckOutExist) {
-        status = 'error';
-        message = 'Check In sedang aktif, Harap CheckOut terlebih dahulu';
-      } else {
+      if (employeeJourney) {
         // upload image
         const attachment = await AttachmentService.uploadFileBufferToS3(
           file.buffer,
@@ -226,17 +223,11 @@ export class MobileAttendanceService {
         if (attachment) {
           attachmentId = attachment.attachmentTmsId;
         }
-        const employeeJourney = this.employeeJourneyRepository.create({
-          employeeId: authMeta.employeeId,
-          checkInDate: timeNow,
-          latitudeCheckOut: payload.latitudeCheckOut,
-          longitudeCheckOut: payload.longitudeCheckOut,
-          userIdCreated: authMeta.userId,
-          createdTime: timeNow,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-          attachmentIdCheckIn: attachmentId,
-        });
+        employeeJourney.branchIdCheckOut = Number(payload.branchIdCheckout);
+        employeeJourney.latitudeCheckOut =  payload.latitudeCheckOut;
+        employeeJourney.attachmentIdCheckOut = attachmentId;
+        employeeJourney.checkOutDate = timeNow;
+
         await this.employeeJourneyRepository.save(employeeJourney);
 
         const branch = await this.branchRepository.findOne({
