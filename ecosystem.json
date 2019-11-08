@@ -9,7 +9,8 @@
     "ignore_watch": ["node_modules"],
     "instance_var": "INSTANCE_ID",
     "env": {
-      "NODE_ENV": "production"
+      "NODE_ENV": "production",
+      "TZ": "Asia/Jakarta"
     }
   }]
 }
