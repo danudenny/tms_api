@@ -1026,7 +1026,7 @@ export class WebDeliveryOutService {
       qz.innerJoin(
         'bag_item_awb',
         'bag_item_awb',
-        'bag_item_awb.bag_item_id = bag_item_id.bag_item_id AND bag_item_awb.is_deleted = false',
+        'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
       );
 
       if (dpdd) {
@@ -1035,13 +1035,13 @@ export class WebDeliveryOutService {
           'do_pod_detail_bag',
           'do_pod_detail_bag.bag_item_id = bag_item_id.bag_item_id',
         );
-        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND do_pod_detail_bag.do_pod_id = :dpdd', {
+        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND do_pod_detail_bag.do_pod_id = :dpdd and bag.is_deleted= false' , {
           bag: bag.bag.bagNumber,
           seq: bag.bagSeq,
           dpdd,
         });
       } else {
-        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq ', {
+        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq and bag.is_deleted= false', {
           bag: bag.bag.bagNumber,
           seq: bag.bagSeq,
         });
