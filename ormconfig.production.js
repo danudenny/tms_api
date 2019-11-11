@@ -81,9 +81,8 @@ module.exports = {
     type: 'redis',
     duration: 10000,
     options: {
-      host: '3.1.243.32',
+      host: 'localhost',
       port: 6379,
-      passwod: '9F864DAF0B09974AA3F0E90646EEFEA3',
     },
   },
 };
