@@ -130,7 +130,7 @@ export class AuthService {
     // check user present
     if (!!authMeta) {
       const roles = await UserRole.find({
-        cache: true,
+        // cache: true,
         relations: ['branch', 'role'],
         where: {
           userId: toInteger(authMeta.userId),
@@ -192,7 +192,7 @@ export class AuthService {
       }
 
       const branch = await Branch.findOne({
-        cache: true,
+        // cache: true,
         where: {
           branchId,
         },

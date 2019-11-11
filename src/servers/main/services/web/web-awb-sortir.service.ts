@@ -336,7 +336,7 @@ export class WebAwbFilterService {
             if (!!awbItemAttr.awbItem.awb.toId) {
               // NOTE: get data district
               const getDistrict = await District.findOne({
-                cache: true,
+                // cache: true,
                 where: {
                   districtId: awbItemAttr.awbItem.awb.toId,
                   isDeleted: false,

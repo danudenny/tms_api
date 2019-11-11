@@ -18,7 +18,7 @@ export class AwbTroubleService {
     // get branch name
     const branchLogin = await Branch.findOne({
       select: ['branchName'],
-      cache: true,
+      // cache: true,
       where: {
         branchId: permissonPayload.branchId,
       },
