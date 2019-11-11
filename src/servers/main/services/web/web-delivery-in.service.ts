@@ -684,8 +684,8 @@ export class WebDeliveryInService {
                   await DoPod.save(doPod);
                   await AwbService.updateAwbAttr(
                     awb.awbItemId,
-                    doPod.branchIdTo,
                     AWB_STATUS.IN_BRANCH,
+                    doPod.branchIdTo,
                   );
 
                   // NOTE: queue by Bull
@@ -904,8 +904,8 @@ export class WebDeliveryInService {
             // #region after scanin
             await AwbService.updateAwbAttr(
               awb.awbItemId,
-              null,
               AWB_STATUS.IN_BRANCH,
+              null,
             );
 
             // NOTE: queue by Bull
@@ -1746,7 +1746,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.awb, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awb.district, 't4', j =>
+    q.innerJoin(e => e.awb.districtTo, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 

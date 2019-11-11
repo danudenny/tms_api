@@ -120,8 +120,8 @@ export class LastMileDeliveryOutService {
             // NOTE: update awb_item_attr and awb_history
             await AwbService.updateAwbAttr(
               awb.awbItemId,
-              null,
               AWB_STATUS.IN_BRANCH,
+              null,
             );
             // NOTE: queue by Bull
             DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
@@ -152,8 +152,8 @@ export class LastMileDeliveryOutService {
           // awb_item_attr and awb_history ??
           await AwbService.updateAwbAttr(
             awb.awbItemId,
-            null,
             AWB_STATUS.OUT_BRANCH,
+            null,
           );
 
           // TODO: need refactoring
@@ -334,8 +334,8 @@ export class LastMileDeliveryOutService {
               });
               await AwbService.updateAwbAttr(
                 awb.awbItemId,
-                null,
                 AWB_STATUS.ANT,
+                null,
               );
               // NOTE: queue by Bull
               DoPodDetailPostMetaQueueService.createJobByAwbDeliver(

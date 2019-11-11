@@ -1,13 +1,19 @@
-import { AwbUpdateStatusPayloadVm, AwbUpdateStatusResponseVm, ScanInputNumberVm, AwbUpdateDestinationResponseVm, AwbUpdateDestinationPayloadVm } from '../../models/awb-update-status.vm';
-import { DeliveryService } from '../../../../shared/services/delivery.service';
-import { AuthService } from '../../../../shared/services/auth.service';
+import { Awb } from '../../../../shared/orm-entity/awb';
+import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
-import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { Branch } from '../../../../shared/orm-entity/branch';
 import { District } from '../../../../shared/orm-entity/district';
 import { PodFilterDetailItem } from '../../../../shared/orm-entity/pod-filter-detail-item';
-import { AwbItem } from '../../../../shared/orm-entity/awb-item';
-import { Awb } from '../../../../shared/orm-entity/awb';
-import { Branch } from '../../../../shared/orm-entity/branch';
+import { AuthService } from '../../../../shared/services/auth.service';
+import {
+    DoPodDetailPostMetaQueueService,
+} from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import {
+    AwbUpdateDestinationPayloadVm, AwbUpdateDestinationResponseVm, AwbUpdateStatusPayloadVm,
+    AwbUpdateStatusResponseVm, ScanInputNumberVm,
+} from '../../models/awb-update-status.vm';
+import { AwbService } from '../v1/awb.service';
+import { BagService } from '../v1/bag.service';
 
 export class WebAwbUpdateStatusService {
 
@@ -128,9 +134,9 @@ export class WebAwbUpdateStatusService {
     dataItem.trouble = false;
     dataItem.isBag = false;
 
-    const awb = await DeliveryService.validAwbNumber(awbNumber);
+    const awb = await AwbService.validAwbNumber(awbNumber);
     if (awb) {
-      const statusCode = await DeliveryService.awbStatusGroup(
+      const statusCode = await AwbService.awbStatusGroup(
         awb.awbStatusIdLast,
       );
 
@@ -139,10 +145,10 @@ export class WebAwbUpdateStatusService {
         awb.branchIdLast == permissonPayload.branchId
       ) {
         // update awb item attr
-        await DeliveryService.updateAwbAttr(
+        await AwbService.updateAwbAttr(
           awb.awbItemId,
-          null,
           awbStatusId,
+          null,
         );
 
         // NOTE: queue by Bull
@@ -180,7 +186,7 @@ export class WebAwbUpdateStatusService {
     dataItem.trouble = false;
     dataItem.isBag = true;
 
-    const bagData = await DeliveryService.validBagNumber(bagNumber);
+    const bagData = await BagService.validBagNumber(bagNumber);
 
     if (bagData) {
 
@@ -198,10 +204,10 @@ export class WebAwbUpdateStatusService {
         if (bagItemsAwb && bagItemsAwb.length) {
           for (const itemAwb of bagItemsAwb) {
             if (itemAwb.awbItemId) {
-              await DeliveryService.updateAwbAttr(
+              await AwbService.updateAwbAttr(
                 itemAwb.awbItemId,
-                null,
                 awbStatusId,
+                null,
               );
               // NOTE: queue by Bull
               DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(

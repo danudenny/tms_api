@@ -478,8 +478,8 @@ export class LastMileDeliveryInService {
             // #region after scanin
             await AwbService.updateAwbAttr(
               awb.awbItemId,
-              null,
               AWB_STATUS.IN_BRANCH,
+              null,
             );
 
             // NOTE: queue by Bull add awb history with status scan in branch

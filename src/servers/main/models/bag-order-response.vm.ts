@@ -6,6 +6,9 @@ export class BagAwbVm  {
   @IsDefined({message: 'Bag Number harus diisi'})
   bagNumber: string;
 
+  @ApiModelProperty()
+  doPodId: string;
+
   }
 export class BagDetailVm  {
   @ApiModelProperty()

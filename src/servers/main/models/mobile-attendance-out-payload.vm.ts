@@ -11,6 +11,6 @@ export class MobileAttendanceOutPayloadVm {
   latitudeCheckOut: string;
 
   @ApiModelProperty()
-  branchIdCheckout: number;
+  branchIdCheckout: string;
 
 }

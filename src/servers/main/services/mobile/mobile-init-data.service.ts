@@ -257,7 +257,7 @@ export class MobileInitDataService {
     // });
 
     const currentMoment = moment();
-    const threeDaysAgo = currentMoment.subtract(3, 'd');
+    const threeDaysAgo = moment().subtract(3, 'd');
     qb.andWhere(
       'do_pod_deliver.do_pod_deliver_date_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
       {
