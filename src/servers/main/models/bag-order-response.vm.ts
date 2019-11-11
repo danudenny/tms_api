@@ -1,4 +1,4 @@
-import { ApiModelProperty} from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional} from '../../../shared/external/nestjs-swagger';
 import { IsDefined } from 'class-validator';
 
 export class BagAwbVm  {
@@ -6,13 +6,13 @@ export class BagAwbVm  {
   @IsDefined({message: 'Bag Number harus diisi'})
   bagNumber: string;
 
-  @ApiModelProperty()
-  doPodId: string;
+  @ApiModelPropertyOptional()
+  doPodId?: string;
 
   }
 export class BagDetailVm  {
-  @ApiModelProperty()
-  doPodId: string;
+  @ApiModelPropertyOptional()
+  doPodId?: string;
 
   }
 
