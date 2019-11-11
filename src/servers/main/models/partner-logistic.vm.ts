@@ -3,7 +3,7 @@ import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm
 
 export class PartnerLogisticVm {
   @ApiModelProperty()
-  partnerLogisticId: number;
+  partnerLogisticId: string;
 
   @ApiModelProperty()
   partnerLogisticEmail: string;

@@ -13,7 +13,7 @@ describe('transit-external-awb', () => {
   let awbAttr: AwbAttr[];
   let awbItemAttr: AwbItemAttr[];
 
-  let doPodId = 0;
+  let doPodId = null;
 
   beforeAll(async () => {
     awbAttr = await TEST_GLOBAL_VARIABLE.entityFactory.for(AwbAttr).with({
@@ -30,8 +30,8 @@ describe('transit-external-awb', () => {
     payload.doPodType = 3005; // Transit External
     payload.branchIdTo = 123;
     payload.doPodMethod = 'external';
-    payload.partnerLogisticId = 1;
-    payload.employeeIdDriver = 15;
+    payload.partnerLogisticId = '';
+    // payload.employeeIdDriver = 15;
     payload.vehicleNumber = 'DPS-17010675-523423-BC';
     payload.doPodDateTime = faker.date.between(
       '2019-01-01',

@@ -7,11 +7,10 @@ import {
 
 @Entity('awb_solution', { schema: 'public' })
 export class AwbSolution extends BaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'awb_solution_id',
   })
-  awbSolutionId: number;
+  awbSolutionId: string;
 
   @Column('bigint', {
     nullable: false,
@@ -19,11 +18,12 @@ export class AwbSolution extends BaseEntity {
   })
   awbHistoryId: number;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: false,
+    length: 50,
     name: 'awb_trouble_id',
   })
-  awbTroubleId: number;
+  awbTroubleId: string;
 
   @Column('character varying', {
     nullable: true,

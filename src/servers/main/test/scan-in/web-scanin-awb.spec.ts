@@ -14,7 +14,7 @@ describe('web-scanin-awb', () => {
   let awbAttr: AwbAttr[];
   let awbItemAttr: AwbItemAttr[];
 
-  let doPodId = 0;
+  let doPodId = null;
 
   // Create new data for Scan Out
   beforeAll(async () => {
@@ -33,8 +33,8 @@ describe('web-scanin-awb', () => {
     payload.doPodType = 3005; // Transit Internal
     payload.branchIdTo = 123;
     payload.doPodMethod = 'internal';
-    payload.partnerLogisticId = 1;
-    payload.employeeIdDriver = 15;
+    payload.partnerLogisticId = '';
+    // payload.employeeIdDriver = 15;
     payload.vehicleNumber = 'DPS-17010675-523423-BC';
     payload.doPodDateTime = faker.date
       .between('2019-01-01', '2019-08-01')

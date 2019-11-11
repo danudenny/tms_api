@@ -49,7 +49,7 @@ export class FirstMileDeliveryOutService {
       payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
     doPod.doPodMethod = method; // internal or 3PL/Third Party
     payload.doPodMethod && payload.doPodMethod == '3pl'
-      ? (doPod.partnerLogisticId = payload.partnerLogisticId || 1)
+      ? (doPod.partnerLogisticId = payload.partnerLogisticId || null)
       : (doPod.partnerLogisticId = null);
     // doPod.partnerLogisticId = payload.partnerLogisticId || null;
     doPod.branchIdTo = payload.branchIdTo || null;
@@ -170,7 +170,7 @@ export class FirstMileDeliveryOutService {
       const updateDoPod = {
         doPodMethod:
           payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
-        partnerLogisticId: Number(payload.partnerLogisticId),
+        partnerLogisticId: payload.partnerLogisticId,
         branchIdTo: payload.branchIdTo,
         userIdDriver: payload.userIdDriver,
         vehicleNumber: payload.vehicleNumber,
@@ -332,7 +332,7 @@ export class FirstMileDeliveryOutService {
       const updateDoPod = {
         doPodMethod:
           payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
-        partnerLogisticId: Number(payload.partnerLogisticId),
+        partnerLogisticId: payload.partnerLogisticId,
         branchIdTo: payload.branchIdTo,
         userIdDriver: payload.userIdDriver,
         vehicleNumber: payload.vehicleNumber,

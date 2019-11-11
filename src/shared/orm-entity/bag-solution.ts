@@ -7,11 +7,10 @@ import {
 
 @Entity('bag_solution', { schema: 'public' })
 export class BagSolution extends BaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'bag_solution_id',
   })
-  bagSolutionId: number;
+  bagSolutionId: string;
 
   @Column('bigint', {
     nullable: false,

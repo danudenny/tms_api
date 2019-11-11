@@ -213,7 +213,7 @@ export class WebAwbReturnService {
           let partnerLogisticName = '';
 
           // check partner logistic
-          if (payload.partnerLogisticId != 0) {
+          if (payload.partnerLogisticId != '') {
             isPartnerLogistic = true;
             const partnerLogistic = await PartnerLogistic.findOne({
               where: {

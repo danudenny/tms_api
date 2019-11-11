@@ -70,7 +70,7 @@ export class WebAwbReturnCreatePayload {
   awbId: number;
 
   @ApiModelProperty()
-  partnerLogisticId: number;
+  partnerLogisticId: string;
 
   @ApiModelProperty()
   awbNumber: string;

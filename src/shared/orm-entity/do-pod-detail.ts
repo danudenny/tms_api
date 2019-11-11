@@ -107,17 +107,19 @@ export class DoPodDetail extends TmsBaseEntity {
   })
   scanInType: string | null;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: true,
+    length: 50,
     name: 'employee_journey_id_in',
   })
-  employeeJourneyIdIn: number | null;
+  employeeJourneyIdIn: string | null;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: true,
+    length: 50,
     name: 'employee_journey_id_out',
   })
-  employeeJourneyIdOut: number | null;
+  employeeJourneyIdOut: string | null;
 
   @Column('boolean', {
     nullable: true,

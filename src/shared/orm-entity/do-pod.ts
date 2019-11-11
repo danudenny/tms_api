@@ -164,11 +164,11 @@ export class DoPod extends TmsBaseEntity {
   })
   doPodType: number | null;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: true,
     name: 'partner_logistic_id',
   })
-  partnerLogisticId: number | null;
+  partnerLogisticId: string | null;
 
   @Column('integer', {
     nullable: true,

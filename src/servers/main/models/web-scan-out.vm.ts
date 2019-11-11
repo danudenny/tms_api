@@ -121,7 +121,7 @@ export class WebScanOutVm {
   userIdDriver: number;
 
   @ApiModelPropertyOptional()
-  partnerLogisticId?: number;
+  partnerLogisticId?: string;
 
   @ApiModelProperty({
     skipValidation: true,
