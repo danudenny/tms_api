@@ -1010,6 +1010,7 @@ export class WebDeliveryOutService {
   }
 
   async bagOrderDetail(payload: BagAwbVm): Promise<BagOrderResponseVm> {
+    const dpdd = payload.doPodId
     const bag = await BagService.validBagNumber(payload.bagNumber);
     if (bag) {
       const qz = createQueryBuilder();
@@ -1027,9 +1028,15 @@ export class WebDeliveryOutService {
         'bag_item_awb',
         'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
       );
-      qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq ', {
+      qz.innerJoin(
+        'do_pod_detail_bag',
+        'do_pod_detail_bag',
+        'do_pod_detail_bag.bag_item_id = bag_item_id.bag_item_id',
+      );
+      qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND do_pod_detail_bag.do_pod_id = :dpdd', {
         bag: bag.bag.bagNumber,
         seq: bag.bagSeq,
+        dpdd: dpdd,
       });
 
       const data = await qz.getRawMany();
