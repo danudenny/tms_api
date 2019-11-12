@@ -74,6 +74,10 @@ export class MobileAttendanceService {
         if (attachment) {
           attachmentId = attachment.attachmentTmsId;
         }
+        const branch = await this.branchRepository.findOne({
+          where: { brancCode: payload.branchCode },
+        });
+
         const employeeJourney = this.employeeJourneyRepository.create({
           employeeId: authMeta.employeeId,
           checkInDate: timeNow,
@@ -81,17 +85,13 @@ export class MobileAttendanceService {
           longitudeCheckIn: payload.longitudeCheckIn,
           userIdCreated: authMeta.userId,
           createdTime: timeNow,
-          branchIdCheckIn: Number(payload.branchIdCheckIn),
+          branchIdCheckIn: branch.branchId,
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
           attachmentIdCheckIn: attachmentId,
         });
         await this.employeeJourneyRepository.save(employeeJourney);
 
-        const branch = await this.branchRepository.findOne({
-          select: ['branchName'],
-          where: { branchId: payload.branchIdCheckIn },
-        });
         branchName = branch.branchName;
         checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
       }
@@ -224,7 +224,10 @@ export class MobileAttendanceService {
         if (attachment) {
           attachmentId = attachment.attachmentTmsId;
         }
-        employeeJourney.branchIdCheckOut = Number(payload.branchIdCheckout);
+        const branchOut = await this.branchRepository.findOne({
+          where: { brancCode: payload.branchCode },
+        });
+        employeeJourney.branchIdCheckOut = branchOut.branchId;
         employeeJourney.latitudeCheckOut =  payload.latitudeCheckOut;
         employeeJourney.longitudeCheckOut =  payload.longitudeCheckOut;
         employeeJourney.attachmentIdCheckOut = attachmentId;
@@ -232,11 +235,7 @@ export class MobileAttendanceService {
 
         await this.employeeJourneyRepository.save(employeeJourney);
 
-        const branch = await this.branchRepository.findOne({
-          select: ['branchName'],
-          where: { branchId: payload.branchIdCheckout},
-        });
-        branchName = branch.branchName;
+        branchName = branchOut.branchName;
         checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
       }
       result.status = status;
