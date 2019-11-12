@@ -12,4 +12,7 @@ export class PrintDoPodBagPayloadQueryVm {
 
   @ApiModelProperty()
   printCopy: number;
+
+  @ApiModelProperty()
+  type: string;
 }

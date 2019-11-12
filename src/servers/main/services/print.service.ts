@@ -179,6 +179,19 @@ export class PrintService {
       });
     }
 
+    let printName = '';
+    let printColumn = '';
+    if (queryParams.type === '1') {
+      printName = 'GABUNGAN SORTIR';
+      printColumn = 'Gabung Sortir';
+    } else if (queryParams.type === '2') {
+      printName = 'HUB';
+      printColumn = 'Gabung Paket';
+    } else {
+      printName = 'GERAI';
+      printColumn = 'Gabung Paket';
+    }
+
     const m = moment();
     const jsreportParams = {
       data: doPod,
@@ -188,6 +201,8 @@ export class PrintService {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
         totalItems: totalBagItem,
+        printType: printName,
+        printCol: printColumn,
       },
     };
 
