@@ -49,8 +49,8 @@ export class MobileAttendanceController {
 
   @Post('attendance/list')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
   @ApiOkResponse({ type: MobileAtendanceListResponseVm })
   public async listAttendance(@Body() payload: BaseMetaPayloadVm) {
