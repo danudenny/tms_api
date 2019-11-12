@@ -181,10 +181,10 @@ export class PrintService {
 
     let printName = '';
     let printColumn = '';
-    if (queryParams.type === 1) {
+    if (queryParams.type === '1') {
       printName = 'GABUNGAN SORTIR';
       printColumn = 'Gabung Sortir';
-    } else if (queryParams.type === 2) {
+    } else if (queryParams.type === '2') {
       printName = 'HUB';
       printColumn = 'Gabung Paket';
     } else {
