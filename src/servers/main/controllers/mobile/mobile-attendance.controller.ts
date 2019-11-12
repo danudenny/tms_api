@@ -23,8 +23,8 @@ export class MobileAttendanceController {
   @Post('attendance/checkIn')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileCheckInResponseVm })
   public async checkInAttendance(
     @Body() payload: MobileAttendanceInPayloadVm,
