@@ -6,4 +6,7 @@ export class MobileAttendanceInResponseVm {
 
   @ApiModelProperty()
   message: string;
+
+  @ApiModelProperty()
+  branchName: string;
 }
