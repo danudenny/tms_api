@@ -90,7 +90,7 @@ export class MobileAttendanceService {
 
         const branch = await this.branchRepository.findOne({
           select: ['branchName'],
-          where: { branchId: permissonPayload.branchId },
+          where: { branchId: payload.branchIdCheckIn },
         });
         branchName = branch.branchName;
         checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -234,7 +234,7 @@ export class MobileAttendanceService {
 
         const branch = await this.branchRepository.findOne({
           select: ['branchName'],
-          where: { branchId: permissonPayload.branchId },
+          where: { branchId: payload.branchIdCheckout},
         });
         branchName = branch.branchName;
         checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
