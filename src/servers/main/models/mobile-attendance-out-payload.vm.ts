@@ -1,4 +1,5 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ApiModelPropertyOptional } from '@nestjs/swagger';
 
 export class MobileAttendanceOutPayloadVm {
   @ApiModelProperty()
@@ -10,7 +11,10 @@ export class MobileAttendanceOutPayloadVm {
   @ApiModelProperty()
   latitudeCheckOut: string;
 
-  @ApiModelProperty()
-  branchIdCheckout: string;
+  @ApiModelPropertyOptional()
+  branchIdCheckout?: string;
+
+  @ApiModelPropertyOptional()
+  branchCode?: string;
 
 }
