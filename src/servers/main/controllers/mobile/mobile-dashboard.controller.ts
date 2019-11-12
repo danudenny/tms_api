@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { MobileComplaintPayloadVm } from '../../models/mobile-complaint-payload.vm';
 import { MobileComplaintListResponseAllVm } from '../../models/mobile-complaint-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import moment = require('moment');
 
 @ApiUseTags('Dashboard')
 @Controller('mobile')
@@ -77,6 +78,6 @@ export class MobileDashboardController {
   @Get('ping')
   @HttpCode(HttpStatus.OK)
   public async ping() {
-    return { message: 'pong' };
+    return { message: 'pong', timeNow: moment().toDate(), timeString: moment().format('YYYY-MM-DD HH:mm:ss') };
   }
 }
