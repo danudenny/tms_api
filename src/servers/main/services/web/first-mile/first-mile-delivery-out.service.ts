@@ -1,31 +1,38 @@
 // #region import
-import { WebScanOutCreateVm, WebScanOutEditHubVm, WebScanOutEditVm, WebScanOutBagVm, WebScanOutAwbVm } from '../../../models/web-scan-out.vm';
-import { WebScanOutCreateResponseVm, WebScanOutBagResponseVm, WebScanOutAwbResponseVm } from '../../../models/web-scan-out-response.vm';
-import { DoPod } from '../../../../../shared/orm-entity/do-pod';
-import { AuthService } from '../../../../../shared/services/auth.service';
-import moment = require('moment');
-import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
-import { BagService } from '../../v1/bag.service';
-import { DoPodDetailBag } from '../../../../../shared/orm-entity/do-pod-detail-bag';
-import { IsNull, createQueryBuilder } from 'typeorm';
-import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
-import { AwbService } from '../../v1/awb.service';
-import { DeliveryService } from '../../../../../shared/services/delivery.service';
+import { createQueryBuilder, IsNull } from 'typeorm';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
-import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
-import { BagItem } from '../../../../../shared/orm-entity/bag-item';
-import { RedisService } from '../../../../../shared/services/redis.service';
-import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
-import { DoPodRepository } from '../../../../../shared/orm-repository/do-pod.repository';
-import { AuditHistory } from '../../../../../shared/orm-entity/audit-history';
 import { BAG_STATUS } from '../../../../../shared/constants/bag-status.constant';
+import { AuditHistory } from '../../../../../shared/orm-entity/audit-history';
+import { BagItem } from '../../../../../shared/orm-entity/bag-item';
+import { DoPod } from '../../../../../shared/orm-entity/do-pod';
+import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
+import { DoPodDetailBag } from '../../../../../shared/orm-entity/do-pod-detail-bag';
+import { DoPodRepository } from '../../../../../shared/orm-repository/do-pod.repository';
+import { AuthService } from '../../../../../shared/services/auth.service';
 import { AwbTroubleService } from '../../../../../shared/services/awb-trouble.service';
 import { BagTroubleService } from '../../../../../shared/services/bag-trouble.service';
+import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
+import { DeliveryService } from '../../../../../shared/services/delivery.service';
+import { RedisService } from '../../../../../shared/services/redis.service';
+import {
+    BagItemHistoryQueueService,
+} from '../../../../queue/services/bag-item-history-queue.service';
+import {
+    DoPodDetailPostMetaQueueService,
+} from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
+import {
+    WebScanOutAwbResponseVm, WebScanOutBagResponseVm, WebScanOutCreateResponseVm,
+} from '../../../models/web-scan-out-response.vm';
+import {
+    WebScanOutAwbVm, WebScanOutBagVm, WebScanOutCreateVm, WebScanOutEditHubVm, WebScanOutEditVm,
+} from '../../../models/web-scan-out.vm';
+import { AwbService } from '../../v1/awb.service';
+import { BagService } from '../../v1/bag.service';
+import moment = require('moment');
 // #endregion
 
 // Surat Jalan Keluar Gerai
 export class FirstMileDeliveryOutService {
-
   /**
    * Create DO POD
    * with type: Transit (Internal/3PL) and Criss Cross
@@ -359,7 +366,9 @@ export class FirstMileDeliveryOutService {
    * @returns {Promise<WebScanOutAwbResponseVm>}
    * @memberof WebDeliveryOutService
    */
-  static async scanOutAwb(payload: WebScanOutAwbVm): Promise<WebScanOutAwbResponseVm> {
+  static async scanOutAwb(
+    payload: WebScanOutAwbVm,
+  ): Promise<WebScanOutAwbResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
@@ -378,9 +387,7 @@ export class FirstMileDeliveryOutService {
 
       const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
-        const statusCode = await AwbService.awbStatusGroup(
-          awb.awbStatusIdLast,
-        );
+        const statusCode = await AwbService.awbStatusGroup(awb.awbStatusIdLast);
         switch (statusCode) {
           case 'OUT':
             // check condition, not scan in yet
@@ -522,7 +529,9 @@ export class FirstMileDeliveryOutService {
    * @returns {Promise<WebScanOutBagResponseVm>}
    * @memberof WebDeliveryOutService
    */
-  static async scanOutBag(payload: WebScanOutBagVm): Promise<WebScanOutBagResponseVm> {
+  static async scanOutBag(
+    payload: WebScanOutBagVm,
+  ): Promise<WebScanOutBagResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
@@ -544,7 +553,7 @@ export class FirstMileDeliveryOutService {
         // TODO: validation need improvement
         // bag status scan out by doPodType (3005 Branch)
         const bagStatus = BAG_STATUS.OUT_BRANCH;
-        const transactionStatusId = 800; // OUT HUB
+        const transactionStatusId = 800; // OUT_BRANCH
 
         // TODO: need refactoring with branch id ??
         const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
@@ -562,8 +571,17 @@ export class FirstMileDeliveryOutService {
           });
           if (doPod) {
             // create bag trouble
-            const statusNotTrouble = [BAG_STATUS.IN_HUB];
-            if (!statusNotTrouble.includes(bagData.bagItemStatusIdLast)) {
+            const statusNotTrouble = [
+              BAG_STATUS.CREATED,
+              BAG_STATUS.IN_BRANCH,
+              BAG_STATUS.IN_HUB,
+            ];
+            if (
+              !statusNotTrouble.includes(bagData.bagItemStatusIdLast) ||
+              bagData.branchIdLast != permissonPayload.branchId
+            ) {
+              // TODO: construct message?
+              response.status = 'warning';
               BagTroubleService.create(
                 bagNumber,
                 bagData.bagItemStatusIdLast,
@@ -639,7 +657,6 @@ export class FirstMileDeliveryOutService {
           }
           // remove key holdRedis
           RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
-
         } else {
           totalError += 1;
           response.status = 'error';
@@ -678,7 +695,10 @@ export class FirstMileDeliveryOutService {
   }
 
   // TODO: send to background job process
-  private static async createAuditHistory(doPodId: string, isUpdate: boolean = true) {
+  private static async createAuditHistory(
+    doPodId: string,
+    isUpdate: boolean = true,
+  ) {
     // find doPod
     const doPod = await DoPodRepository.getDataById(doPodId);
     if (doPod) {
