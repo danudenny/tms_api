@@ -241,6 +241,7 @@ export class MobileAttendanceService {
       }
       result.status = status;
       result.message = message;
+      result.branchName = branchName;
       return result;
     } else {
       RequestErrorService.throwObj(
