@@ -155,6 +155,7 @@ export class MobileAttendanceService {
       ['t1.created_time', 'createdTime'],
       ['t2.url', 'urlCheckIn'],
       ['t5.url', 'urlCheckOut'],
+      ['t7.branch_name', 'branchAsalDriver'],
     );
 
     q.leftJoin(e => e.branchCheckIn, 't4',
@@ -164,6 +165,9 @@ export class MobileAttendanceService {
     );
 
     q.leftJoin(e => e.employee, 't3',
+    );
+
+    q.leftJoin(e => e.employee.branch, 't7',
     );
 
     q.leftJoin(e => e.attachmentCheckIn, 't2',
@@ -179,7 +183,6 @@ export class MobileAttendanceService {
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
-
     return result;
   }
 
