@@ -23,6 +23,7 @@ export class EmployeeService {
 
     // mapping field
     payload.fieldResolverMap['employeeName'] = 'employee.fullname';
+    payload.fieldResolverMap['employeeRoleId'] = 'employee.employee_role_id';
 
     const q = RepositoryService.employee.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
@@ -64,6 +65,7 @@ export class EmployeeService {
 
     // mapping field
     payload.fieldResolverMap['employeeName'] = 'employee.fullname';
+    payload.fieldResolverMap['employeeRoleId'] = 'employee.employee_role_id';
 
     const q = RepositoryService.employee.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
