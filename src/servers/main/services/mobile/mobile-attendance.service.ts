@@ -75,7 +75,7 @@ export class MobileAttendanceService {
           attachmentId = attachment.attachmentTmsId;
         }
         const branch = await this.branchRepository.findOne({
-          where: { brancCode: payload.branchCode },
+          where: { branchCode: payload.branchCode },
         });
 
         const employeeJourney = this.employeeJourneyRepository.create({
@@ -225,7 +225,7 @@ export class MobileAttendanceService {
           attachmentId = attachment.attachmentTmsId;
         }
         const branchOut = await this.branchRepository.findOne({
-          where: { brancCode: payload.branchCode },
+          where: { branchCode: payload.branchCode },
         });
         employeeJourney.branchIdCheckOut = branchOut.branchId;
         employeeJourney.latitudeCheckOut =  payload.latitudeCheckOut;
