@@ -315,11 +315,11 @@ export class AwbItem extends BaseEntity {
   })
   isDeleted: boolean;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'partner_logistic_awb',
-  })
-  partnerLogisticAwb: number;
+  // @Column('bigint', {
+  //   nullable: false,
+  //   name: 'partner_logistic_awb',
+  // })
+  // partnerLogisticAwb: number;
 
   @Column('bigint', {
     nullable: false,
