@@ -24,6 +24,7 @@ import {
 import { AwbService } from '../../v1/awb.service';
 import moment = require('moment');
 import { AutoUpdateAwbStatusService } from '../../v1/auto-update-awb-status.service';
+import { ProofDeliveryResponseVm, ProofDeliveryPayloadVm } from '../../../models/last-mile/proof-delivery.vm';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -379,6 +380,43 @@ export class LastMileDeliveryOutService {
     result.totalSuccess = totalSuccess;
     result.totalError = totalError;
     result.data = dataItem;
+
+    return result;
+  }
+
+  static async listProofDelivery(payload: ProofDeliveryPayloadVm) {
+    // TODO:
+    // find data do_pod
+    const qb = createQueryBuilder();
+    qb.addSelect('dpdd.awb_number', 'awbNumber');
+    qb.addSelect(`COALESCE(dpdd.consignee_name, '')`, 'refConsigneeName');
+    qb.addSelect(`COALESCE(awb.consignee_name, '')`, 'consigneeName');
+    qb.addSelect(
+      `COALESCE(awb.consignee_address, '')`,
+      'consigneeAddress',
+    );
+    qb.addSelect('awb_status.awb_status_name', 'awbStatusCode');
+    qb.addSelect('awb_status.awb_status_title', 'awbStatusName');
+    qb.from('do_pod_deliver', 'dpd');
+    qb.innerJoin(
+      'do_pod_deliver_detail',
+      'dpdd',
+      'dpd.do_pod_deliver_id = dpdd.do_pod_deliver_id AND dpdd.is_deleted = false',
+    );
+    qb.innerJoin('awb', 'awb', 'dpdd.awb_id = awb.awb_id AND awb.is_deleted = false');
+    qb.innerJoin(
+      'awb_status',
+      'awb_status',
+      'awb_status.awb_status_id = dpdd.awb_status_id_last AND awb_status.is_deleted = false',
+    );
+    qb.andWhere(
+      'dpd.do_pod_deliver_code = :doPodDeliverCode AND dpd.is_deleted = false',
+      {
+        doPodDeliverCode: payload.doPodDeliverCode,
+      },
+    );
+    const result = new ProofDeliveryResponseVm();
+    result.data = await qb.getRawMany();
 
     return result;
   }
