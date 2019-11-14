@@ -1,4 +1,4 @@
-import { ApiModelProperty }  from '@nestjs/swagger';
+import { ApiModelProperty } from '../external/nestjs-swagger';
 
 export class BaseTimestampVm {
   @ApiModelProperty({ type: 'string', format: 'date-time' })
