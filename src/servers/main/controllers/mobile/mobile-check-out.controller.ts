@@ -1,8 +1,7 @@
 import { Controller, Post, HttpCode, UseGuards, Body, HttpStatus, Req, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 
-import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { MobileCheckOutPayloadVm } from '../../models/mobile-check-out-payload.vm';

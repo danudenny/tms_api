@@ -1,5 +1,4 @@
 import { Controller, Get, Query, Response } from '@nestjs/common';
-import { ApiBearerAuth, ApiUseTags } from '@nestjs/swagger';
 import express = require('express');
 
 import { ResponseSerializerOptions } from '../../../shared/decorators/response-serializer-options.decorator';
@@ -8,6 +7,7 @@ import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
 import { PrintService } from '../services/print.service';
+import { ApiUseTags, ApiBearerAuth } from '../../../shared/external/nestjs-swagger';
 
 @ApiUseTags('General')
 @Controller('print')
