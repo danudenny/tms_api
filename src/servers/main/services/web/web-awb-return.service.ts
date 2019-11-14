@@ -176,7 +176,7 @@ export class WebAwbReturnService {
 
             // NOTE: new field
             item.isReturn = true;
-            item.partnerLogisticAwb = null; // payload
+            // item.partnerLogisticAwb = null; // payload
             // item.awbType = ??
             awbReturnItems.push(item);
           }
