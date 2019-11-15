@@ -41,10 +41,10 @@ export class BagItemHistoryQueueService {
       bagItemHistory.userId = data.userId;
       bagItemHistory.bagItemId = data.bagItemId;
       bagItemHistory.bagItemStatusId = data.bagItemStatusId;
-      bagItemHistory.historyDate = moment().toDate();
+      bagItemHistory.historyDate = data.timestamp;
       bagItemHistory.userIdCreated = data.userId;
       bagItemHistory.userIdUpdated = data.userId;
-      BagItemHistory.save(bagItemHistory);
+      BagItemHistory.insert(bagItemHistory);
       return true;
     });
 
@@ -72,6 +72,7 @@ export class BagItemHistoryQueueService {
       bagItemStatusId,
       branchId,
       userId,
+      timestamp: moment().toDate(),
     };
 
     return BagItemHistoryQueueService.queue.add(obj);
