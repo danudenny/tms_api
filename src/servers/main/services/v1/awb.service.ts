@@ -39,6 +39,7 @@ export class AwbService {
     });
     // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
     q.where(e => e.awbNumber, w => w.equals(awbNumber));
+    q.take(1);
     return await q.exec();
   }
 
@@ -73,6 +74,7 @@ export class AwbService {
     });
     // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
     q.where(e => e.awbNumber, w => w.equals(awbNumber));
+    q.take(1);
     return await q.exec();
   }
 

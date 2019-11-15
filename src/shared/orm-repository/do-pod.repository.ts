@@ -59,6 +59,7 @@ export class DoPodRepository extends Repository<DoPod> {
     });
     q.where(e => e.doPodId, w => w.equals(doPodId));
     q.andWhere(e => e.isDeleted, w => w.equals(false));
+    q.take(1);
     return await q.exec();
   }
 }
