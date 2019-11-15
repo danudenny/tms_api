@@ -45,6 +45,12 @@ export class ItemDeliveryResponseVm {
 
   @ApiModelProperty()
   isCod: string;
+
+  @ApiModelProperty()
+  photoType: string;
+
+  @ApiModelProperty()
+  url: string;
 }
 
 export class WebDeliveryListResponseVm extends BaseMetaResponseVm {
