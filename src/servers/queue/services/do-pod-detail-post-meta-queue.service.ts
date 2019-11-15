@@ -38,6 +38,7 @@ export class DoPodDetailPostMetaQueueService {
         const awbItemAttr = await AwbItemAttr.findOne({
           where: {
             awbItemId: data.awbItemId,
+            isDeleted: false,
           },
         });
         // TODO: to be fixed create data awb history
@@ -49,14 +50,13 @@ export class DoPodDetailPostMetaQueueService {
             userId: data.userId,
             branchId: data.branchId,
             employeeIdDriver: data.employeeIdDriver,
-            historyDate: moment().toDate(),
+            historyDate: data.timestamp,
             awbStatusId: data.awbStatusId,
             awbHistoryIdPrev: awbItemAttr.awbHistoryIdLast,
             userIdCreated: data.userIdCreated,
             userIdUpdated: data.userIdUpdated,
           });
-
-          await transactionalEntityManager.save(awbHistory);
+          await transactionalEntityManager.insert(AwbHistory, awbHistory);
 
           // NOTE: SKIP this step
           // // NOTE: update if exists or insert awbItemSummary
@@ -88,9 +88,12 @@ export class DoPodDetailPostMetaQueueService {
           // await transactionalEntityManager.save(awbItemSummary);
 
           // update data awb_item_attr
-          awbItemAttr.awbHistoryIdLast = awbHistory.awbHistoryId;
-          awbItemAttr.updatedTime = moment().toDate();
-          await transactionalEntityManager.save(awbItemAttr);
+          // awbItemAttr.awbHistoryIdLast = awbHistory.awbHistoryId;
+          // awbItemAttr.updatedTime = data.timestamp;
+          await transactionalEntityManager.update(AwbItemAttr, awbItemAttr.awbItemAttrId, {
+            awbHistoryIdLast: awbHistory.awbHistoryId,
+            updatedTime: data.timestamp,
+          });
         }
       }); // end transaction
 
@@ -142,6 +145,7 @@ export class DoPodDetailPostMetaQueueService {
         userIdCreated: doPodDetail.userIdCreated,
         userIdUpdated: doPodDetail.userIdUpdated,
         employeeIdDriver: null,
+        timestamp: moment().toDate(),
       };
 
       return DoPodDetailPostMetaQueueService.queue.add(obj);
@@ -184,6 +188,7 @@ export class DoPodDetailPostMetaQueueService {
         userIdCreated: doPodDetailDeliver.userIdCreated,
         userIdUpdated: doPodDetailDeliver.userIdUpdated,
         employeeIdDriver: null,
+        timestamp: moment().toDate(),
       };
 
       return DoPodDetailPostMetaQueueService.queue.add(obj);
@@ -210,6 +215,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver,
+      timestamp: moment().toDate(),
     };
 
     return DoPodDetailPostMetaQueueService.queue.add(obj);
@@ -251,6 +257,7 @@ export class DoPodDetailPostMetaQueueService {
         userIdCreated: doPodDetail.userIdCreated,
         userIdUpdated: doPodDetail.userIdUpdated,
         employeeIdDriver: null,
+        timestamp: moment().toDate(),
       };
 
       return DoPodDetailPostMetaQueueService.queue.add(obj);
@@ -275,6 +282,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver: null,
+      timestamp: moment().toDate(),
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
@@ -296,6 +304,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver: null,
+      timestamp: moment().toDate(),
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
@@ -317,6 +326,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver: null,
+      timestamp: moment().toDate(),
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
@@ -373,6 +383,7 @@ export class DoPodDetailPostMetaQueueService {
         userIdCreated: doPodDetailDeliver.userIdCreated,
         userIdUpdated: doPodDetailDeliver.userIdUpdated,
         employeeIdDriver,
+        timestamp: moment().toDate(),
       };
 
       return DoPodDetailPostMetaQueueService.queue.add(obj);
@@ -399,6 +410,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver: null,
+      timestamp: moment().toDate(),
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
@@ -422,6 +434,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver,
+      timestamp: moment().toDate(),
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
@@ -440,6 +453,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver: null,
+      timestamp: moment().toDate(),
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }

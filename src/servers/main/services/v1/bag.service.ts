@@ -39,6 +39,7 @@ export class BagService {
       q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
       q.andWhere(e => e.bagSeq, w => w.equals(seqNumber));
       q.andWhere(e => e.isDeleted, w => w.isFalse());
+      q.take(1);
       return await q.exec();
     } else {
       return null;
@@ -68,6 +69,7 @@ export class BagService {
     });
     q.where(e => e.bagItemId, w => w.equals(bagItemId));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.take(1);
     return await q.exec();
   }
 
