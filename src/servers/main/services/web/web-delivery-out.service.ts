@@ -1467,6 +1467,7 @@ export class WebDeliveryOutService {
     const qq = createQueryBuilder();
     qq.addSelect('attachments.url', 'url');
     qq.addSelect('dpda.type', 'type');
+    qq.addSelect('dpdd.awb_number', 'awbNumber');
     qq.from('do_pod_deliver_attachment', 'dpda');
     qq.innerJoin(
       'do_pod_deliver_detail',
