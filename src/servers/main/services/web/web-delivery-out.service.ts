@@ -989,8 +989,8 @@ export class WebDeliveryOutService {
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t2.consignee_name', 'consigneeName'],
       ['t3.awb_status_title', 'awbStatusTitle'],
-      ['t4.type', 'photoType'],
-      ['t5.url', 'url'],
+      // ['t4.type', 'photoType'],
+      // ['t5.url', 'url'],
       ['CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))', 'totalCodValue'],
     );
 
@@ -1001,13 +1001,13 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.deliverAttachment, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    // q.leftJoin(e => e.deliverAttachment, 't4', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
 
-    q.leftJoin(e => e.deliverAttachment.attachment, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    // q.leftJoin(e => e.deliverAttachment.attachment, 't5', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
