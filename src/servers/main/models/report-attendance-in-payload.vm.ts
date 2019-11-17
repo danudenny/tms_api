@@ -6,7 +6,4 @@ export class ReportAttendancePayloadVm {
 
   @ApiModelProperty()
   endDate: string;
-
-  @ApiModelProperty()
-  employeeId: number;
 }

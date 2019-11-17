@@ -52,7 +52,8 @@ export class ReportAttendanceService {
       't5',
       't5.attachment_tms_id=t1.attachment_id_check_in',
     );
-    qb.where('t1.created_time >= :startDate AND t1.created_time <= :endDate AND t1.employee_id = :employeeId', {startDate: payload.startDate, endDate: payload.endDate, employeeId: payload.employeeId});
+    qb.where('t1.created_time >= :startDate AND t1.created_time <= :endDate',
+    {startDate: payload.startDate, endDate: payload.endDate});
 
     const result = await qb.getRawMany();
     return result;
