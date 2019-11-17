@@ -6,6 +6,9 @@ export class ReportAttendanceResponseVm {
   employeeName: string;
 
   @ApiModelProperty()
+  nik: string;
+
+  @ApiModelProperty()
   branchAsalName: string;
 
   @ApiModelProperty()

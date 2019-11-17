@@ -10,6 +10,7 @@ export class ReportAttendanceService {
   ) {
     const qb = createQueryBuilder();
     qb.addSelect('t1.employee_id', 'employeeId');
+    qb.addSelect('t3.nik', 'nik');
     qb.addSelect('t3.fullname', 'fullname');
     qb.addSelect('t7.branch_name', 'branchName');
     qb.addSelect('t1.check_in_date', 'checkInDate');
