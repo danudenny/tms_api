@@ -94,7 +94,6 @@ export class PhotoDetailResponseVm {
 
   @ApiModelProperty()
   awbNumber: string;
-
 }
 
 export class PhotoResponseVm {

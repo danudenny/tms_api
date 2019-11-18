@@ -28,8 +28,8 @@ export class EmployeeController {
 
   @Post('list')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: EmployeeFindAllResponseVm })
   public async findAllEmployee(@Body() payload: BaseMetaPayloadVm) {
     return this.employeeService.findAllEmployeeByRequest(payload);
