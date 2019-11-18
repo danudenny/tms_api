@@ -1,12 +1,16 @@
 {
   "apps": [{
-    "name": "tms-api",
+    "name": "tms-api-jenkins",
     "script": "dist/main.js",
-    "cwd": "/var/www/sicepat-tms-api/current",
-    "error_file": "/var/www/sicepat-tms-api/current/log/app.err.log",
-    "out_file": "/var/www/sicepat-tms-api/current/log/app.out.log",
+    "instances": "max",
+    "exec_mode": "cluster",
     "watch": true,
+    "watch_delay": 1000,
+    "ignore_watch": ["node_modules"],
     "instance_var": "INSTANCE_ID",
-    "exec_mode": "fork_mode"
+    "env": {
+      "NODE_ENV": "production",
+      "TZ": "Asia/Jakarta"
+    }
   }]
 }

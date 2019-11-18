@@ -13,11 +13,10 @@ import { Branch } from './branch';
 
 @Entity('employee_journey', { schema: 'public' })
 export class EmployeeJourney extends BaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'employee_journey_id',
   })
-  employeeJourneyId: number;
+  employeeJourneyId: string;
 
   @Column('bigint', {
     nullable: false,

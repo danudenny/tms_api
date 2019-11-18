@@ -1,8 +1,8 @@
-import { ApiModelProperty } from '@nestjs/swagger';
 import { BaseQueryPayloadVm } from '../../../shared/models/base-query-payload.vm';
 import { BaseQueryResponseVm } from '../../../shared/models/base-query-response.vm';
 import { User } from '../../../shared/orm-entity/user';
 import { UserVm } from './user.vm';
+import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class UserFindAllPayloadVm extends BaseQueryPayloadVm<User> {
   // skip(skip: any) {

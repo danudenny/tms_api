@@ -7,11 +7,10 @@ import { TmsBaseEntity } from './tms-base';
 
 @Entity('awb_trouble', { schema: 'public' })
 export class AwbTrouble extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'awb_trouble_id',
   })
-  awbTroubleId: number;
+  awbTroubleId: string;
 
   @Column('character varying', {
     nullable: false,

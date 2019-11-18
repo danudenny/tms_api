@@ -7,11 +7,10 @@ import { AwbStatus } from './awb-status';
 
 @Entity('awb_item_attr', { schema: 'public' })
 export class AwbItemAttr extends BaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'awb_item_attr_id',
   })
-  awbItemAttrId: number;
+  awbItemAttrId: string;
 
   // @Column('bigint', {
   //   nullable: true,

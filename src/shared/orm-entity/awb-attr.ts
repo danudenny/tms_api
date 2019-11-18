@@ -4,11 +4,10 @@ import { AwbStatus } from './awb-status';
 
 @Entity('awb_attr', { schema: 'public' })
 export class AwbAttr extends BaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'awb_attr_id',
   })
-  awbAttrId: number;
+  awbAttrId: string;
 
   @Column('bigint', {
     nullable: true,
@@ -62,13 +61,13 @@ export class AwbAttr extends BaseEntity {
   @Column('timestamp without time zone', {
     nullable: true,
     name: 'awb_history_date_last',
-    })
+  })
   awbhistoryDateLast: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
     name: 'awb_status_final_date',
-    })
+  })
   awbStatusFinalDate: Date | null;
 
   @Column('bigint', {
@@ -91,7 +90,7 @@ export class AwbAttr extends BaseEntity {
   @Column('timestamp without time zone', {
     nullable: false,
     name: 'updated_time',
-    })
+  })
   updatedTime: Date;
 
   @Column('boolean', {

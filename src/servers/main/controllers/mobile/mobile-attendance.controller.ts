@@ -1,8 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 
-import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import { ApiUseTags, ApiOkResponse, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';

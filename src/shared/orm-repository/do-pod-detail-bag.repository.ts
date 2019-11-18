@@ -13,6 +13,7 @@ export class DoPodDetailBagRepository extends Repository<DoPodDetailBag> {
 
     q.where(e => e.doPodId, w => w.equals(doPodDetailBagId));
     q.andWhere(e => e.isDeleted, w => w.equals(false));
+    q.take(1);
     return await q.exec();
   }
 
@@ -28,10 +29,13 @@ export class DoPodDetailBagRepository extends Repository<DoPodDetailBag> {
         totalScanOutBag: true,
       },
       bagItemId: true,
+      createdTime: true,
     });
     q.where(e => e.bagItem.bagItemStatusIdLast, w => w.equals(bagStatusId));
     q.andWhere(e => e.bagItemId, w => w.equals(bagItemId));
     q.andWhere(e => e.isDeleted, w => w.equals(false));
+    q.orderBy({ createdTime: 'DESC' });
+    q.take(1);
     return await q.exec();
   }
 }

@@ -1,5 +1,8 @@
 import { TmsBaseEntity } from './tms-base';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
+import { AttachmentTms } from './attachment-tms';
+import { DoPodDeliver } from './do-pod-deliver';
+import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 
 @Entity('do_pod_deliver_attachment', { schema: 'public' })
 export class DoPodDeliverAttachment extends TmsBaseEntity {
@@ -27,4 +30,12 @@ export class DoPodDeliverAttachment extends TmsBaseEntity {
     name: 'type',
   })
   type: string;
+
+  // @ManyToOne(() => DoPodDeliverDetail)
+  // @JoinColumn({ name: 'do_pod_deliver_detail_id' })
+  // doPodDeliverDetail: DoPodDeliverDetail;
+
+  @OneToOne(() => AttachmentTms)
+  @JoinColumn({ name: 'attachment_tms_id', referencedColumnName: 'attachmentTmsId' })
+  attachment: AttachmentTms;
 }

@@ -161,12 +161,12 @@ export class LastMileDeliveryInService {
       const notScan = bagData.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH ? true : false;
       if (notScan && holdRedis) {
         const notScanBranch = bagData.branchIdNext != permissonPayload.branchId ? true : false;
-        // TODO: move to method create bag trouble ==========================
         if (
           bagData.bagItemStatusIdLast != BAG_STATUS.OUT_HUB ||
           notScanBranch
         ) {
           const desc = notScanBranch ? 'Gerai tidak sesuai' : 'Status bag tidak sesuai';
+          response.status = 'warning';
           BagTroubleService.create(
             bagNumber,
             bagData.bagItemStatusIdLast,
@@ -328,12 +328,19 @@ export class LastMileDeliveryInService {
     if (awb) {
       // TODO: validation need improvement
       const notScanIn = awb.awbStatusIdLast != AWB_STATUS.IN_BRANCH ? true : false;
+      // Add Locking setnx redis
+      const holdRedis = await RedisService.locking(
+        `hold:scanin-awb-branch:${awb.awbItemId}`,
+        'locking',
+      );
 
-      if (notScanIn) {
+      if (notScanIn && holdRedis) {
         const statusCode = await AwbService.awbStatusGroup(
           awb.awbStatusIdLast,
         );
         if (statusCode != 'OUT') {
+          // TODO: AUTO UPDATE STATUS ??
+          result.status = 'warning';
           // save data to awb_trouble
           await AwbTroubleService.fromScanOut(
             awbNumber,
@@ -342,160 +349,145 @@ export class LastMileDeliveryInService {
           );
         }
 
-        // Add Locking setnx redis
-        const holdRedis = await RedisService.locking(
-          `hold:scanin-awb-branch:${awb.awbItemId}`,
-          'locking',
-        );
-        if (holdRedis) {
-          // save data to table pod_scan_id
-          // TODO: find by check data
-          let bagId = null;
-          let bagItemId = null;
+        // save data to table pod_scan_id
+        // TODO: find by check data
+        let bagId = null;
+        let bagItemId = null;
 
-          const podScanInBranchDetail = await PodScanInBranchDetail.findOne(
-            {
+        const podScanInBranchDetail = await PodScanInBranchDetail.findOne({
+          where: {
+            podScanInBranchId,
+            awbItemId: awb.awbItemId,
+            isDeleted: false,
+          },
+        });
+
+        if (podScanInBranchDetail) {
+          result.status = 'error';
+          result.trouble = true;
+          result.message = `Resi ${awbNumber} sudah scan in`;
+          // TODO: update data podScanInBranchDetail
+        } else {
+          result.status = 'ok';
+          result.message = 'Success';
+
+          if (bagNumber != '') {
+            const bagData = await BagService.validBagNumber(bagNumber);
+            if (bagData) {
+              const bagItemAwb = await BagItemAwb.findOne({
+                where: {
+                  bagItemId: bagData.bagItemId,
+                  awbItemId: awb.awbItemId,
+                  isDeleted: false,
+                },
+              });
+
+              if (!bagItemAwb) {
+                result.status = 'warning';
+                result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
+              }
+              // set data bag
+              bagId = bagData.bagId;
+              bagItemId = bagData.bagItemId;
+
+              dataBag.bagId = bagId;
+              dataBag.bagItemId = bagItemId;
+              dataBag.status = 'ok';
+              dataBag.message = 'Success';
+              dataBag.trouble = false;
+              result.dataBag = dataBag;
+            } else {
+              result.status = 'warning';
+              result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
+            }
+          } else {
+            // NOTE: if awb item attr bagItemLast not null
+            // find bag if lazy scan bag number
+            const podScanInBranchBag = await PodScanInBranchBag.findOne({
               where: {
                 podScanInBranchId,
-                awbItemId: awb.awbItemId,
+                bagItemId: awb.bagItemLast.bagItemId,
+                bagId: awb.bagItemLast.bagId,
                 isDeleted: false,
               },
-            },
-          );
+            });
 
-          if (podScanInBranchDetail) {
-            result.status = 'error';
-            result.trouble = true;
-            result.message = `Resi ${awbNumber} sudah scan in`;
-            // TODO: update data podScanInBranchDetail
-          } else {
-            result.status = 'ok';
-            result.message = 'Success';
+            if (podScanInBranchBag) {
+              // set data bag
+              bagId = podScanInBranchBag.bagId;
+              bagItemId = podScanInBranchBag.bagItemId;
 
-            if (bagNumber != '') {
-              const bagData = await BagService.validBagNumber(
-                bagNumber,
-              );
-              if (bagData) {
-                const bagItemAwb = await BagItemAwb.findOne({
-                  where: {
-                    bagItemId: bagData.bagItemId,
-                    awbItemId: awb.awbItemId,
-                    isDeleted: false,
-                  },
-                });
-
-                if (!bagItemAwb) {
-                  result.status = 'warning';
-                  result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
-                }
-                // set data bag
-                bagId = bagData.bagId;
-                bagItemId = bagData.bagItemId;
-
-                dataBag.bagId = bagId;
-                dataBag.bagItemId = bagItemId;
-                dataBag.status = 'ok';
-                dataBag.message = 'Success';
-                dataBag.trouble = false;
-                result.dataBag = dataBag;
-              } else {
-                result.status = 'warning';
-                result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
-              }
-            } else {
-              // NOTE: if awb item attr bagItemLast not null
-              // find bag if lazy scan bag number
-              const podScanInBranchBag = await PodScanInBranchBag.findOne(
-                {
-                  where: {
-                    podScanInBranchId,
-                    bagItemId: awb.bagItemLast.bagItemId,
-                    bagId: awb.bagItemLast.bagId,
-                    isDeleted: false,
-                  },
+              // NOTE: check doPodDetail ====================================
+              const doPodDetail = await DoPodDetail.findOne({
+                where: {
+                  awbItemId: awb.awbItemId,
+                  isScanIn: false,
+                  isDeleted: false,
                 },
-              );
-
-              if (podScanInBranchBag) {
-                // set data bag
-                bagId = podScanInBranchBag.bagId;
-                bagItemId = podScanInBranchBag.bagItemId;
-
-                // NOTE: check doPodDetail ====================================
-                const doPodDetail = await DoPodDetail.findOne({
-                  where: {
-                    awbItemId: awb.awbItemId,
-                    isScanIn: false,
-                    isDeleted: false,
-                  },
+              });
+              if (doPodDetail) {
+                // Update Data doPodDetail
+                await DoPodDetail.update(doPodDetail.doPodDetailId, {
+                  isScanIn: true,
+                  updatedTime: moment().toDate(),
+                  userIdUpdated: authMeta.userId,
                 });
-                if (doPodDetail) {
-                  // Update Data doPodDetail
-                  await DoPodDetail.update(doPodDetail.doPodDetailId, {
-                    isScanIn: true,
-                    updatedTime: moment().toDate(),
-                    userIdUpdated: authMeta.userId,
-                  });
-                }
-                // ============================================================
-
-                dataBag.bagId = bagId;
-                dataBag.bagItemId = bagItemId;
-                dataBag.status = 'ok';
-                dataBag.message = 'Success';
-                dataBag.trouble = false;
-
-                result.dataBag = dataBag;
-              } else {
-                result.status = 'warning';
-                result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
               }
+              // ============================================================
+
+              dataBag.bagId = bagId;
+              dataBag.bagItemId = bagItemId;
+              dataBag.status = 'ok';
+              dataBag.message = 'Success';
+              dataBag.trouble = false;
+
+              result.dataBag = dataBag;
+            } else {
+              result.status = 'warning';
+              result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
             }
-
-            // Create Awb Trouble if status warning
-            if (result.status == 'warning') {
-              await AwbTroubleService.fromScanIn(
-                awbNumber,
-                awb.awbStatusIdLast,
-                result.message,
-              );
-              result.trouble = true;
-            }
-
-            const podScanInBranchDetailObj = PodScanInBranchDetail.create();
-            podScanInBranchDetailObj.podScanInBranchId = podScanInBranchId;
-            podScanInBranchDetailObj.bagId = bagId;
-            podScanInBranchDetailObj.bagItemId = bagItemId;
-            podScanInBranchDetailObj.awbId = awb.awbItem.awbId;
-            podScanInBranchDetailObj.awbItemId = awb.awbItemId;
-            podScanInBranchDetailObj.awbNumber = awbNumber;
-            podScanInBranchDetailObj.bagNumber = bagNumber;
-            podScanInBranchDetailObj.isTrouble = result.trouble;
-            await PodScanInBranchDetail.save(podScanInBranchDetailObj);
-
-            // AFTER Scan IN ===============================================
-            // #region after scanin
-            await AwbService.updateAwbAttr(
-              awb.awbItemId,
-              AWB_STATUS.IN_BRANCH,
-              null,
-            );
-
-            // NOTE: queue by Bull add awb history with status scan in branch
-            DoPodDetailPostMetaQueueService.createJobByScanInAwbBranch(
-              awb.awbItemId,
-              permissonPayload.branchId,
-              authMeta.userId,
-            );
-            // #endregion after scanin
           }
 
-          // remove key holdRedis
-          RedisService.del(`hold:scanin-awb-branch:${awb.awbItemId}`);
-        } else {
-          result.message = 'Server Busy';
+          // Create Awb Trouble if status warning
+          if (result.status == 'warning') {
+            await AwbTroubleService.fromScanIn(
+              awbNumber,
+              awb.awbStatusIdLast,
+              result.message,
+            );
+            result.trouble = true;
+          }
+
+          const podScanInBranchDetailObj = PodScanInBranchDetail.create();
+          podScanInBranchDetailObj.podScanInBranchId = podScanInBranchId;
+          podScanInBranchDetailObj.bagId = bagId;
+          podScanInBranchDetailObj.bagItemId = bagItemId;
+          podScanInBranchDetailObj.awbId = awb.awbItem.awbId;
+          podScanInBranchDetailObj.awbItemId = awb.awbItemId;
+          podScanInBranchDetailObj.awbNumber = awbNumber;
+          podScanInBranchDetailObj.bagNumber = bagNumber;
+          podScanInBranchDetailObj.isTrouble = result.trouble;
+          await PodScanInBranchDetail.save(podScanInBranchDetailObj);
+
+          // AFTER Scan IN ===============================================
+          // #region after scanin
+          await AwbService.updateAwbAttr(
+            awb.awbItemId,
+            AWB_STATUS.IN_BRANCH,
+            null,
+          );
+
+          // NOTE: queue by Bull add awb history with status scan in branch
+          DoPodDetailPostMetaQueueService.createJobByScanInAwbBranch(
+            awb.awbItemId,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
+          // #endregion after scanin
         }
+
+        // remove key holdRedis
+        RedisService.del(`hold:scanin-awb-branch:${awb.awbItemId}`);
       } else {
         result.message = `Resi ${awbNumber} sudah di proses.`;
       }

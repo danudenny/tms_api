@@ -175,8 +175,8 @@ export class WebAwbReturnService {
             item.updatedTime = timeNow;
 
             // NOTE: new field
-            item.isReturn = true;
-            item.partnerLogisticAwb = null; // payload
+            // item.isReturn = true;
+            // item.partnerLogisticAwb = null; // payload
             // item.awbType = ??
             awbReturnItems.push(item);
           }
@@ -213,7 +213,7 @@ export class WebAwbReturnService {
           let partnerLogisticName = '';
 
           // check partner logistic
-          if (payload.partnerLogisticId != 0) {
+          if (payload.partnerLogisticId != '') {
             isPartnerLogistic = true;
             const partnerLogistic = await PartnerLogistic.findOne({
               where: {

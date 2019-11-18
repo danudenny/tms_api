@@ -1,7 +1,5 @@
 import { IsEmail } from 'class-validator';
-
-import { ApiModelProperty } from '@nestjs/swagger';
-
+import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class UserCreateCourierPayloadVm {
   @ApiModelProperty()

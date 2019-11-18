@@ -17,25 +17,25 @@ export class Employee extends TmsBaseEntity {
     nullable: true,
     name: 'employee_type_id',
   })
-  employeeTypeId: string | null;
+  employeeTypeId: number | null;
 
   @Column('bigint', {
     nullable: true,
     name: 'employee_role_id',
   })
-  employeeRoleId: string | null;
+  employeeRoleId: number | null;
 
   @Column('bigint', {
     nullable: true,
     name: 'department_id',
   })
-  departmentId: string | null;
+  departmentId: number | null;
 
   @Column('bigint', {
     nullable: true,
     name: 'attachment_id',
   })
-  attachmentId: string | null;
+  attachmentId: number | null;
 
   @Column('character varying', {
     nullable: false,
@@ -96,7 +96,7 @@ export class Employee extends TmsBaseEntity {
     nullable: true,
     name: 'district_id_home',
   })
-  districtIdHome: string | null;
+  districtIdHome: number | null;
 
   @Column('text', {
     nullable: true,
@@ -115,7 +115,7 @@ export class Employee extends TmsBaseEntity {
     nullable: true,
     name: 'district_id_id_card',
   })
-  districtIdIdCard: string | null;
+  districtIdIdCard: number | null;
 
   @Column('text', {
     nullable: true,
@@ -146,13 +146,13 @@ export class Employee extends TmsBaseEntity {
     nullable: true,
     name: 'employee_id_manager',
   })
-  employeeIdManager: string | null;
+  employeeIdManager: number | null;
 
   @Column('bigint', {
     nullable: true,
     name: 'employee_id_coach',
   })
-  employeeIdCoach: string | null;
+  employeeIdCoach: number | null;
 
   @Column('boolean', {
     nullable: false,
@@ -165,7 +165,7 @@ export class Employee extends TmsBaseEntity {
     nullable: true,
     name: 'country_id_nationality',
   })
-  countryIdNationality: string | null;
+  countryIdNationality: number | null;
 
   @Column('character varying', {
     nullable: true,
@@ -250,7 +250,7 @@ export class Employee extends TmsBaseEntity {
     nullable: true,
     name: 'bank_id_account',
   })
-  bankIdAccount: string | null;
+  bankIdAccount: number | null;
 
   @Column('character varying', {
     nullable: true,
@@ -277,13 +277,13 @@ export class Employee extends TmsBaseEntity {
     nullable: true,
     name: 'branch_id',
   })
-  branchId: string | null;
+  branchId: number | null;
 
   @Column('bigint', {
     nullable: true,
     name: 'division_id',
   })
-  divisionId: string | null;
+  divisionId: number | null;
 
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })

@@ -57,7 +57,7 @@ export class WebAwbUpdateStatusService {
     let message = 'data tidak ditemukan!';
     // find data district by code
     const district = await District.findOne({
-      cache: true,
+      // cache: true,
       where: {
         districtCode: payload.districtCode,
         isDeleted: false,

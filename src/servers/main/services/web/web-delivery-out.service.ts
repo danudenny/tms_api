@@ -88,7 +88,7 @@ export class WebDeliveryOutService {
       payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
     doPod.doPodMethod = method; // internal or 3PL/Third Party
     payload.doPodMethod && payload.doPodMethod == '3pl'
-      ? (doPod.partnerLogisticId = payload.partnerLogisticId || 1)
+      ? (doPod.partnerLogisticId = payload.partnerLogisticId || null)
       : (doPod.partnerLogisticId = null);
     // doPod.partnerLogisticId = payload.partnerLogisticId || null;
     doPod.branchIdTo = payload.branchIdTo || null;
@@ -226,7 +226,7 @@ export class WebDeliveryOutService {
       const updateDoPod = {
         doPodMethod:
           payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
-        partnerLogisticId: Number(payload.partnerLogisticId),
+        partnerLogisticId: payload.partnerLogisticId,
         branchIdTo: payload.branchIdTo,
         userIdDriver: payload.userIdDriver,
         vehicleNumber: payload.vehicleNumber,
@@ -387,7 +387,7 @@ export class WebDeliveryOutService {
       const updateDoPod = {
         doPodMethod:
           payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000,
-        partnerLogisticId: Number(payload.partnerLogisticId),
+        partnerLogisticId: payload.partnerLogisticId,
         branchIdTo: payload.branchIdTo,
         userIdDriver: payload.userIdDriver,
         vehicleNumber: payload.vehicleNumber,
@@ -989,6 +989,8 @@ export class WebDeliveryOutService {
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t2.consignee_name', 'consigneeName'],
       ['t3.awb_status_title', 'awbStatusTitle'],
+      // ['t4.type', 'photoType'],
+      // ['t5.url', 'url'],
       ['CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))', 'totalCodValue'],
     );
 
@@ -998,6 +1000,14 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.awbItem.awbAttr.awbStatus, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    // q.leftJoin(e => e.deliverAttachment, 't4', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
+
+    // q.leftJoin(e => e.deliverAttachment.attachment, 't5', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

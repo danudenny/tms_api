@@ -2,11 +2,10 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('partner_logistic', { schema: 'public' })
 export class PartnerLogistic extends BaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'partner_logistic_id',
   })
-  partnerLogisticId: number;
+  partnerLogisticId: string;
 
   @Column('character varying', {
     nullable: true,
