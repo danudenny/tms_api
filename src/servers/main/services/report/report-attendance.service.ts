@@ -20,7 +20,7 @@ export class ReportAttendanceService {
     qb.addSelect('t1.longitude_check_in', 'longitudeCheckIn');
     qb.addSelect('t1.longitude_check_out', 'longitudeCheckOut');
     qb.addSelect('t1.latitude_check_in', 'latitudeCheckIn');
-    qb.addSelect('t1.longitude_check_out', 'longitudeCheckOut');
+    qb.addSelect('t1.latitude_check_out', 'latitudeCheckOut');
     qb.addSelect('t1.created_time', 'createdTime');
     qb.from('employee_journey', 't1');
     qb.innerJoin(
