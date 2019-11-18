@@ -1,0 +1,13 @@
+diff --git a/node_modules/typeorm/query-builder/SelectQueryBuilder.js b/node_modules/typeorm/query-builder/SelectQueryBuilder.js
+index e711538..b99ebbe 100644
+--- a/node_modules/typeorm/query-builder/SelectQueryBuilder.js
++++ b/node_modules/typeorm/query-builder/SelectQueryBuilder.js
+@@ -1014,7 +1014,7 @@ var SelectQueryBuilder = /** @class */ (function (_super) {
+             // if join was build without relation (e.g. without "post.category") then it means that we have direct
+             // table to join, without junction table involved. This means we simply join direct table.
+             if (!parentAlias || !relation) {
+-                var destinationJoin = joinAttr.alias.subQuery ? joinAttr.alias.subQuery : _this.getTableName(destinationTableName);
++                var destinationJoin = joinAttr.alias.subQuery ? "LATERAL " + joinAttr.alias.subQuery : _this.getTableName(destinationTableName);
+                 return " " + joinAttr.direction + " JOIN " + destinationJoin + " " + _this.escape(destinationTableAlias) +
+                     (joinAttr.condition ? " ON " + _this.replacePropertyNames(joinAttr.condition) : "");
+             }

@@ -1,115 +1,112 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('do_smu_history', { schema: 'public' })
+export class DoSmuHistory extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("do_smu_history",{schema:"public" } )
-export class DoSmuHistory {
+  })
+  do_smu_history_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"do_smu_history_id"
-        })
-    doSmuHistoryId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"do_smu_id"
-        })
-    doSmuId:string;
-        
+  })
+  do_smu_id: string;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"do_smu_detail_id"
-        })
-    doSmuDetailId:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"do_smu_time"
-        })
-    doSmuTime:Date;
-        
+  })
+  do_smu_detail_id: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id"
-        })
-    userId:string;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"branch_id"
-        })
-    branchId:string;
-        
+  })
+  do_smu_time: Date;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"employee_id_driver"
-        })
-    employeeIdDriver:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"latitude"
-        })
-    latitude:string | null;
-        
+  })
+  user_id: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"longitude"
-        })
-    longitude:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("integer",{ 
-        nullable:false,
-        default: () => "1000",
-        name:"do_smu_status_id"
-        })
-    doSmuStatusId:number;
-        
+  })
+  branch_id: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  employee_id_driver: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  latitude: string | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+
+  })
+  longitude: string | null;
+
+  @Column('integer', {
+    nullable: false,
+    default: () => '1000',
+
+  })
+  do_smu_status_id: number;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }

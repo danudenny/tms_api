@@ -1,6 +1,6 @@
-import { SelectQueryBuilder } from "typeorm";
-import { EntityBase } from "../types/EntityBase";
-import { IQueryBuilderPart } from "./interfaces/IQueryBuilderPart";
+import { SelectQueryBuilder } from 'typeorm';
+import { EntityBase } from '../types/EntityBase';
+import { IQueryBuilderPart } from './interfaces/IQueryBuilderPart';
 
 export class QueryBuilderPart<T extends EntityBase> implements IQueryBuilderPart<T> {
     private readonly _queryAction: (...params: any[]) => SelectQueryBuilder<T>;

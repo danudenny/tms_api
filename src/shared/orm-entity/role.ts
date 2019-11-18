@@ -1,99 +1,64 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
+import { RolePermission } from './role-permission';
+import { TmsBaseEntity } from './tms-base';
 
-@Entity("role",{schema:"public" } )
-export class Role {
+@Entity('role', { schema: 'public' })
+export class Role extends TmsBaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
+    name: 'role_id',
+  })
+  roleId: number;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"role_id"
-        })
-    roleId:string;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'role_id_parent',
+  })
+  roleIdParent: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"role_id_parent"
-        })
-    roleIdParent:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id',
+  })
+  branchId: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"branch_id"
-        })
-    branchId:string | null;
-        
+  @Column('integer', {
+    nullable: true,
+  })
+  lft: number | null;
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"lft"
-        })
-    lft:number | null;
-        
+  @Column('integer', {
+    nullable: true,
+  })
+  rgt: number | null;
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"rgt"
-        })
-    rgt:number | null;
-        
+  @Column('integer', {
+    nullable: true,
+  })
+  depth: number | null;
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"depth"
-        })
-    depth:number | null;
-        
+  @Column('integer', {
+    nullable: true,
+  })
+  priority: number | null;
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"priority"
-        })
-    priority:number | null;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'role_name',
+  })
+  roleName: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"role_name"
-        })
-    roleName:string;
-        
+  @OneToMany(() => RolePermission, e => e.role, {
+    cascade: ['insert', 'update'],
+  })
+  rolePermissions: RolePermission[];
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  // @OneToMany(type => UserRole, user_role => user_role.roleId)
+  // userRoles: UserRole[];
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
-
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
-
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
-
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  // @OneToOne(type => Branch)
+  // @JoinColumn()
+  // branch: Branch;
 }

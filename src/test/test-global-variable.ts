@@ -1,6 +1,14 @@
-const TEST_GLOBAL_VARIABLE_VALUE: Partial<{
+import { EntityFactory } from '@entity-factory/core';
+
+import { AuthLoginResponseVM } from '../servers/auth/models/auth.vm';
+
+const TEST_GLOBAL_VARIABLE: Partial<{
+  entityFactory: EntityFactory,
   storage: { [key: string]: any };
   serverModules: { [key: string]: any };
-  superuserLoginToken: string;
+  webUserLogin: AuthLoginResponseVM;
+  mobileUserLogin: AuthLoginResponseVM;
+  webUserPermissionToken: string;
+  mobileUserPermissionToken: string;
 }> = {};
-export default TEST_GLOBAL_VARIABLE_VALUE;
+export default TEST_GLOBAL_VARIABLE;

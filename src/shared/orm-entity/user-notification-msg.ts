@@ -1,115 +1,112 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('user_notification_msg', { schema: 'public' })
+export class UserNotificationMsg extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("user_notification_msg",{schema:"public" } )
-export class UserNotificationMsg {
+  })
+  user_notification_msg_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"user_notification_msg_id"
-        })
-    userNotificationMsgId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"notification_msg_id"
-        })
-    notificationMsgId:string;
-        
+  })
+  notification_msg_id: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id"
-        })
-    userId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"branch_id"
-        })
-    branchId:string;
-        
+  })
+  user_id: string;
 
-    @Column("jsonb",{ 
-        nullable:false,
-        name:"notification_token_id_ref"
-        })
-    notificationTokenIdRef:Object;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("jsonb",{ 
-        nullable:true,
-        name:"response_token"
-        })
-    responseToken:Object | null;
-        
+  })
+  branch_id: string;
 
-    @Column("integer",{ 
-        nullable:false,
-        default: () => "0",
-        name:"is_notif_sent"
-        })
-    isNotifSent:number;
-        
+  @Column('jsonb', {
+    nullable: false,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_open"
-        })
-    isOpen:boolean;
-        
+  })
+  notification_token_id_ref: Object;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_read"
-        })
-    isRead:boolean;
-        
+  @Column('jsonb', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"last_seen"
-        })
-    lastSeen:Date | null;
-        
+  })
+  response_token: Object | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('integer', {
+    nullable: false,
+    default: () => '0',
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  is_notif_sent: number;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  is_open: boolean;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_read: boolean;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  last_seen: Date | null;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }

@@ -1,16 +1,16 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
-import { Test } from '@nestjs/testing';
 
 import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
-import { ErrorHandlerInterceptor } from '../../shared/interceptors/error-handler.interceptor';
+import { AllExceptionsFilter } from '../../shared/filters/all-exceptions.filter';
+import { LoggingInterceptor } from '../../shared/interceptors/logging.interceptor';
 import { ResponseSerializerInterceptor } from '../../shared/interceptors/response-serializer.interceptor';
 import { AuthMiddleware } from '../../shared/middlewares/auth.middleware';
 import { HeaderMetadataMiddleware } from '../../shared/middlewares/header-metadata.middleware';
 import { RequestContextMiddleware } from '../../shared/middlewares/request-context.middleware';
 import { MultiServerAppModule } from '../../shared/models/multi-server';
-import { RequestValidationPipe } from '../../shared/pipes/request-validation-pipe.pipe';
 import { ConfigService } from '../../shared/services/config.service';
+import { PinoLoggerService } from '../../shared/services/pino-logger.service';
 import { SharedModule } from '../../shared/shared.module';
 import { AuthServerControllersModule } from './controllers/auth-server-controllers.module';
 import { AuthServerInjectorService } from './services/auth-server-injector.service';
@@ -18,6 +18,7 @@ import { AuthServerInjectorService } from './services/auth-server-injector.servi
 @Module({
   imports: [SharedModule, AuthServerControllersModule],
 })
+
 export class AuthServerModule extends MultiServerAppModule implements NestModule {
   constructor(private readonly moduleRef: ModuleRef) {
     super();
@@ -39,19 +40,30 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
 
   public static async bootServer() {
     const serverConfig = ConfigService.get('servers.auth');
-    const app =
-      process.env.NODE_ENV === 'test'
-        ? (await Test.createTestingModule({
-            imports: [AuthServerModule],
-          }).compile()).createNestApplication()
-        : await NestFactory.create(AuthServerModule);
+
+    let app: any;
+    if (process.env.NODE_ENV === 'test') {
+      const { Test } = require('@nestjs/testing');
+      app = (await Test.createTestingModule({
+        imports: [AuthServerModule],
+      }).compile()).createNestApplication();
+    } else {
+      app = await NestFactory.create(
+        AuthServerModule,
+        {
+          logger: new PinoLoggerService(),
+        },
+      );
+    }
+
     this.app = app;
 
     app.enableCors();
 
     app.useGlobalPipes(
-      new RequestValidationPipe({
+      new ValidationPipe({
         transform: true,
+        whitelist: true,
         transformOptions: {
           strategy: 'excludeAll',
         },
@@ -59,25 +71,34 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
     );
     app.useGlobalInterceptors(
       new ResponseSerializerInterceptor(),
-      new ErrorHandlerInterceptor(),
+      new LoggingInterceptor(),
+    );
+    app.useGlobalFilters(
+      new AllExceptionsFilter(),
     );
 
     if (serverConfig.swagger.enabled) {
       const swaggerModule = new SwaggerModule();
       const options = new DocumentBuilder()
         .setTitle(serverConfig.swagger.title)
-        .setDescription(serverConfig.swagger.description)
+        .setDescription(
+          serverConfig.swagger.description,
+        )
         .setVersion('1.0')
         .addBearerAuth()
         .build();
       const document = swaggerModule.createDocument(app, options);
-      swaggerModule.setup(serverConfig.swagger.path, app, document);
+      swaggerModule.setup(
+        serverConfig.swagger.path,
+        app,
+        document,
+      );
     }
 
     if (process.env.NODE_ENV === 'test') {
       await app.init();
     } else {
-      await app.listen(process.env.PORT || serverConfig.port);
+      await app.listen(process.env.PORT || serverConfig.port, serverConfig.host || '0.0.0.0');
     }
   }
 }

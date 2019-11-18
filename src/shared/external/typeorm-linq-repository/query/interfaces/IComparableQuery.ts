@@ -1,10 +1,10 @@
-import { EntityBase } from "../../types/EntityBase";
-import { JoinedEntityType } from "../../types/JoinedEntityType";
-import { QueryConditionOptions } from "../../types/QueryConditionOptions";
-import { IComparableQueryBase } from "./IComparableQueryBase";
-import { IJoinedComparableQuery } from "./IJoinedComparableQuery";
-import { IQuery } from "./IQuery";
-import { ISelectQuery } from "./ISelectQuery";
+import { EntityBase } from '../../types/EntityBase';
+import { JoinedEntityType } from '../../types/JoinedEntityType';
+import { QueryConditionOptions } from '../../types/QueryConditionOptions';
+import { IComparableQueryBase } from './IComparableQueryBase';
+import { IJoinedComparableQuery } from './IJoinedComparableQuery';
+import { IQuery } from './IQuery';
+import { ISelectQuery } from './ISelectQuery';
 
 /**
  * Finalizes the comparison portion of a Query operation or joins a relation or foreign entity against which to compare a value.
@@ -39,7 +39,7 @@ export interface IComparableQuery<T extends EntityBase, R extends T | T[], P = T
      * @type {F} The type of the foreign entity to join.
      * @param foreignEntity The TypeORM entity whose table to join.
      */
-    from<F extends { id: number }>(foreignEntity: { new(...params: any[]): F; }): IJoinedComparableQuery<T, R, F>;
+    from<F extends { id: number }>(foreignEntity: new(...params: any[]) => F): IJoinedComparableQuery<T, R, F>;
     /**
      * Determines whether the previously selected property is greater than the specified value.
      * @param value The value against which to compare.

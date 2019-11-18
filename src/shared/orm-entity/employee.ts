@@ -1,375 +1,299 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 
+import { TmsBaseEntity } from './tms-base';
+import { Branch } from './branch';
+import { Attachment } from './attachment';
+import { User } from './user';
 
-@Entity("employee",{schema:"public" } )
-export class Employee {
+@Entity('employee', { schema: 'public' })
+export class Employee extends TmsBaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
+    name: 'employee_id',
+  })
+  employeeId: number;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"employee_id"
-        })
-    employeeId:string;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'employee_type_id',
+  })
+  employeeTypeId: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"employee_type_id"
-        })
-    employeeTypeId:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'employee_role_id',
+  })
+  employeeRoleId: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"employee_role_id"
-        })
-    employeeRoleId:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'department_id',
+  })
+  departmentId: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"department_id"
-        })
-    departmentId:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'attachment_id',
+  })
+  attachmentId: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"attachment_id"
-        })
-    attachmentId:string | null;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+  })
+  nik: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"nik"
-        })
-    nik:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'fullname',
+  })
+  employeeName: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"fullname"
-        })
-    fullname:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+  })
+  nickname: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"nickname"
-        })
-    nickname:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 500,
+  })
+  email1: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:500,
-        name:"email1"
-        })
-    email1:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+  })
+  email2: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"email2"
-        })
-    email2:string | null;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 100,
+  })
+  phone1: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:100,
-        name:"phone1"
-        })
-    phone1:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+  })
+  phone2: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"phone2"
-        })
-    phone2:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+  })
+  mobile1: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"mobile1"
-        })
-    mobile1:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+  })
+  mobile2: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"mobile2"
-        })
-    mobile2:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'district_id_home',
+  })
+  districtIdHome: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"district_id_home"
-        })
-    districtIdHome:string | null;
-        
+  @Column('text', {
+    nullable: true,
+    name: 'home_address',
+  })
+  homeAddress: string | null;
 
-    @Column("text",{ 
-        nullable:true,
-        name:"home_address"
-        })
-    homeAddress:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+    name: 'zip_code_home',
+  })
+  zipCodeHome: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:50,
-        name:"zip_code_home"
-        })
-    zipCodeHome:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'district_id_id_card',
+  })
+  districtIdIdCard: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"district_id_id_card"
-        })
-    districtIdIdCard:string | null;
-        
+  @Column('text', {
+    nullable: true,
+    name: 'id_card_address',
+  })
+  idCardAddress: string | null;
 
-    @Column("text",{ 
-        nullable:true,
-        name:"id_card_address"
-        })
-    idCardAddress:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+    name: 'zip_code_id_card',
+  })
+  zipCodeIdCard: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:50,
-        name:"zip_code_id_card"
-        })
-    zipCodeIdCard:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'date_of_entry',
+  })
+  dateOfEntry: Date;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"date_of_entry"
-        })
-    dateOfEntry:Date;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'date_of_resign',
+  })
+  dateOfResign: Date | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"date_of_resign"
-        })
-    dateOfResign:Date | null;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'employee_id_manager',
+  })
+  employeeIdManager: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"employee_id_manager"
-        })
-    employeeIdManager:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'employee_id_coach',
+  })
+  employeeIdCoach: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"employee_id_coach"
-        })
-    employeeIdCoach:string | null;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_manager',
+  })
+  isManager: boolean;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_manager"
-        })
-    isManager:boolean;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'country_id_nationality',
+  })
+  countryIdNationality: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"country_id_nationality"
-        })
-    countryIdNationality:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'identification_number',
+  })
+  identificationNumber: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"identification_number"
-        })
-    identificationNumber:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'driver_license_a',
+  })
+  driverLicenseA: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"driver_license_a"
-        })
-    driverLicenseA:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'driver_license_c',
+  })
+  driverLicenseC: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"driver_license_c"
-        })
-    driverLicenseC:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'passport_number',
+  })
+  passportNumber: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"passport_number"
-        })
-    passportNumber:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'npwp_number',
+  })
+  npwpNumber: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"npwp_number"
-        })
-    npwpNumber:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+  })
+  religion: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:50,
-        name:"religion"
-        })
-    religion:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+  })
+  gender: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:50,
-        name:"gender"
-        })
-    gender:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+    name: 'marital_status',
+  })
+  maritalStatus: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:50,
-        name:"marital_status"
-        })
-    maritalStatus:string | null;
-        
+  @Column('integer', {
+    nullable: true,
+    name: 'number_of_child',
+  })
+  numberOfChild: number | null;
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"number_of_child"
-        })
-    numberOfChild:number | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
+  })
+  birthdate: Date | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"birthdate"
-        })
-    birthdate:Date | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 200,
+    name: 'place_of_birth',
+  })
+  placeOfBirth: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:200,
-        name:"place_of_birth"
-        })
-    placeOfBirth:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+    name: 'cod_position',
+  })
+  codPosition: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:50,
-        name:"cod_position"
-        })
-    codPosition:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'bank_id_account',
+  })
+  bankIdAccount: number | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"bank_id_account"
-        })
-    bankIdAccount:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'bank_account_number',
+  })
+  bankAccountNumber: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"bank_account_number"
-        })
-    bankAccountNumber:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'bank_account_name',
+  })
+  bankAccountName: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"bank_account_name"
-        })
-    bankAccountName:string | null;
-        
+  @Column('integer', {
+    nullable: false,
+    default: () => '10',
+    name: 'status_employee',
+  })
+  statusEmployee: number;
 
-    @Column("integer",{ 
-        nullable:false,
-        default: () => "10",
-        name:"status_employee"
-        })
-    statusEmployee:number;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id',
+  })
+  branchId: number | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'division_id',
+  })
+  divisionId: number | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @OneToOne(() => Attachment)
+  @JoinColumn({ name: 'attachment_id' })
+  attachment: Attachment;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
-
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
-
-    @Column("bigint",{ 
-        nullable:true,
-        name:"branch_id"
-        })
-    branchId:string | null;
-        
-
-    @Column("bigint",{ 
-        nullable:true,
-        name:"division_id"
-        })
-    divisionId:string | null;
-        
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'employee_id', referencedColumnName: 'employeeId' })
+  user: User;
 }

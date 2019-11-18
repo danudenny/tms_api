@@ -1,65 +1,69 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('lph', { schema: 'public' })
+@Index('lph_awb_date_idx', ['awb_date'])
+export class Lph extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("lph",{schema:"public" } )
-@Index("lph_awb_date_idx",["awbDate",])
-export class Lph {
+  })
+  lph_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"lph_id"
-        })
-    lphId:string;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"awb_date"
-        })
-    awbDate:Date;
-        
+  })
+  awb_date: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  user_id_created: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  created_time: Date;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_jne"
-        })
-    isJne:boolean;
-        
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_jne: boolean;
 }

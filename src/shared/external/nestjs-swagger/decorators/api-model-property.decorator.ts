@@ -36,6 +36,7 @@ export const ApiModelProperty = (
     example?: any;
     name?: string;
     nameCase?: 'snake_case' | 'camelCase';
+    skipValidation?: boolean;
   } = {},
   dtoDownOptions?: ExposeOptions,
   dtoUpOptions?: ValidationOptions,
@@ -70,9 +71,11 @@ export const ApiModelProperty = (
       const dtoUpAllowDecorator = DtoUpAllow(dtoUpOptions);
       dtoUpAllowDecorator(target, propertyKey);
 
-      if (metadata.required) {
-        const dtoUpRequiredDecorator = DtoUpRequiredDecorator(dtoUpOptions);
-        dtoUpRequiredDecorator(target, propertyKey);
+      if (!metadata.skipValidation) {
+        if (metadata.required) {
+          const dtoUpRequiredDecorator = DtoUpRequiredDecorator(dtoUpOptions);
+          dtoUpRequiredDecorator(target, propertyKey);
+        }
       }
 
       const [type, isArray] = getTypeIsArrayTuple(
@@ -123,6 +126,7 @@ export const ApiModelPropertyOptional = (
     readOnly?: boolean;
     xml?: any;
     example?: any;
+    skipValidation?: boolean;
   } = {},
   exposeOptions?: ExposeOptions,
 ): PropertyDecorator =>

@@ -25,7 +25,7 @@ export class LinqRepository<T extends EntityBase> implements ILinqRepository<T> 
         let connectionName: string;
 
         if (options) {
-            if (typeof (options.autoGenerateId) === "boolean") {
+            if (typeof (options.autoGenerateId) === 'boolean') {
                 autoGenerateId = options.autoGenerateId;
             }
             if (options.connectionName) {
@@ -43,12 +43,11 @@ export class LinqRepository<T extends EntityBase> implements ILinqRepository<T> 
         if (this._autoGenerateId) {
             // Set "id" to undefined in order to allow auto-generation.
             if (entities instanceof Array) {
-                for (const entity of (<T[]>entities)) {
+                for (const entity of (entities as T[])) {
                     entity.id = undefined;
                 }
-            }
-            else {
-                (<T>entities).id = undefined;
+            } else {
+                (entities as T).id = undefined;
             }
         }
 
@@ -62,11 +61,10 @@ export class LinqRepository<T extends EntityBase> implements ILinqRepository<T> 
     public delete(entities: number | string | T | T[]): Promise<boolean> {
         let deletePromise: Promise<DeleteResult | T | T[]> = null;
 
-        if (typeof (entities) === "number" || typeof (entities) === "string") {
+        if (typeof (entities) === 'number' || typeof (entities) === 'string') {
             deletePromise = this._repository.delete(entities);
-        }
-        else {
-            deletePromise = this._repository.remove(<any>entities);
+        } else {
+            deletePromise = this._repository.remove(entities as any);
         }
 
         return deletePromise.then(() => {
@@ -75,35 +73,35 @@ export class LinqRepository<T extends EntityBase> implements ILinqRepository<T> 
     }
 
     public getAll(): IQuery<T, T[]> {
-        const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder("entity");
+        const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder('entity');
         const query: IQuery<T, T[]> = new Query(
-            queryBuilder, queryBuilder.getMany
+            queryBuilder, queryBuilder.getMany,
         );
 
         return query;
     }
 
     public getById(id: number | string): IQuery<T, T> {
-        const alias: string = "entity";
+        const alias: string = 'entity';
         let queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder(alias);
         queryBuilder = queryBuilder.where(`${alias}.id = :id`, { id });
         const query: IQuery<T, T> = new Query(
-            queryBuilder, queryBuilder.getOne
+            queryBuilder, queryBuilder.getOne,
         );
 
         return query;
     }
 
     public getOne(): IQuery<T, T> {
-        const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder("entity");
+        const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder('entity');
         const query: IQuery<T, T> = new Query(
-            queryBuilder, queryBuilder.getOne
+            queryBuilder, queryBuilder.getOne,
         );
 
         return query;
     }
 
     public update<E extends T | T[]>(entities: E): Promise<E> {
-        return <Promise<E>>this._repository.save(<any>entities);
+        return this._repository.save(entities as any) as Promise<E>;
     }
 }

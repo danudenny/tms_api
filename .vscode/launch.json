@@ -8,25 +8,44 @@
       "type": "node",
       "request": "launch",
       "name": "Debug",
-      "runtimeArgs": ["--nolazy", "-r", "ts-node/register"],
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "ts-node/register",
+        "-r",
+        "tsconfig-paths/register"
+      ],
       "args": ["${workspaceFolder}/src/main.ts"],
       "sourceMaps": true,
       "cwd": "${workspaceRoot}",
-      "protocol": "inspector"
+      "protocol": "inspector",
+      "console": "internalConsole",
+      "outputCapture": "std",
+      "env": {
+        "TS_NODE_FILES": "true"
+      }
     },
     {
       "type": "node",
       "request": "launch",
       "name": "Debug Test",
-      "preLaunchTask": "npm: test:prepare",
-      "runtimeArgs": ["--inspect-brk", "-r", "tsconfig-paths/register", "-r", "ts-node/register"],
+      "runtimeArgs": [
+        "--inspect-brk",
+        "-r",
+        "tsconfig-paths/register",
+        "-r",
+        "ts-node/register"
+      ],
       "args": ["--runInBand"],
+      "console": "internalConsole",
+      "outputCapture": "std",
       "sourceMaps": true,
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",
       "program": "${workspaceFolder}/node_modules/.bin/jest",
       "env": {
-        "NODE_ENV": "test"
+        "NODE_ENV": "test",
+        "TS_NODE_FILES": "true"
       }
     }
   ]

@@ -1,159 +1,151 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('notification_token', { schema: 'public' })
+export class NotificationToken extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("notification_token",{schema:"public" } )
-export class NotificationToken {
+  })
+  notification_token_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"notification_token_id"
-        })
-    notificationTokenId:string;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"user_id"
-        })
-    userId:string | null;
-        
+  })
+  user_id: string | null;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:600,
-        name:"token"
-        })
-    token:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 600,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"imei"
-        })
-    imei:string | null;
-        
+  })
+  token: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  imei: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  user_id_created: string;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"branch_id"
-        })
-    branchId:string | null;
-        
+  })
+  created_time: Date;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"ip_address_v4"
-        })
-    ipAddressV4:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"ip_address_v6"
-        })
-    ipAddressV6:string | null;
-        
+  })
+  user_id_updated: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"device_version"
-        })
-    deviceVersion:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"device_name"
-        })
-    deviceName:string | null;
-        
+  })
+  updated_time: Date;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"device_os"
-        })
-    deviceOs:string | null;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"mac_address_eth0"
-        })
-    macAddressEth0:string | null;
-        
+  })
+  is_deleted: boolean;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"mac_address_wlan0"
-        })
-    macAddressWlan0:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"apps_version"
-        })
-    appsVersion:string | null;
-        
+  })
+  branch_id: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"apps_version_release"
-        })
-    appsVersionRelease:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"connectivity_status"
-        })
-    connectivityStatus:string | null;
-        
+  })
+  ip_address_v4: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  ip_address_v6: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  device_version: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  device_name: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  device_os: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  mac_address_eth0: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  mac_address_wlan0: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  apps_version: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  apps_version_release: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  connectivity_status: string | null;
 }

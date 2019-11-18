@@ -1,81 +1,83 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('sync_awb_file', { schema: 'public' })
+export class SyncAwbFile extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("sync_awb_file",{schema:"public" } )
-export class SyncAwbFile {
+  })
+  sync_awb_file_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"sync_awb_file_id"
-        })
-    syncAwbFileId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"sync_id"
-        })
-    syncId:string;
-        
+  })
+  sync_id: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"download_date"
-        })
-    downloadDate:Date | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"filename"
-        })
-    filename:string;
-        
+  })
+  download_date: Date | null;
 
-    @Column("text",{ 
-        nullable:true,
-        name:"url"
-        })
-    url:string | null;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("text",{ 
-        nullable:true,
-        name:"error_message"
-        })
-    errorMessage:string | null;
-        
+  })
+  filename: string;
 
-    @Column("integer",{ 
-        nullable:false,
-        default: () => "0",
-        name:"total_update"
-        })
-    totalUpdate:number;
-        
+  @Column('text', {
+    nullable: true,
 
-    @Column("integer",{ 
-        nullable:false,
-        default: () => "0",
-        name:"total_insert"
-        })
-    totalInsert:number;
-        
+  })
+  url: string | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_done"
-        })
-    isDone:boolean;
-        
+  @Column('text', {
+    nullable: true,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_dead"
-        })
-    isDead:boolean;
-        
+  })
+  error_message: string | null;
+
+  @Column('integer', {
+    nullable: false,
+    default: () => '0',
+
+  })
+  total_update: number;
+
+  @Column('integer', {
+    nullable: false,
+    default: () => '0',
+
+  })
+  total_insert: number;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_done: boolean;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_dead: boolean;
 }

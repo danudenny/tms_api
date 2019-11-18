@@ -1,86 +1,87 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('log_history', { schema: 'public' })
+export class LogHistory extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("log_history",{schema:"public" } )
-export class LogHistory {
+  })
+  log_history_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"log_history_id"
-        })
-    logHistoryId:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"table_name"
-        })
-    tableName:string;
-        
+  })
+  table_name: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"reference_id"
-        })
-    referenceId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"field_name"
-        })
-    fieldName:string;
-        
+  })
+  reference_id: string;
 
-    @Column("text",{ 
-        nullable:true,
-        name:"value_before"
-        })
-    valueBefore:string | null;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("text",{ 
-        nullable:true,
-        name:"value_after"
-        })
-    valueAfter:string | null;
-        
+  })
+  field_name: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('text', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  value_before: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('text', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  value_after: string | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }

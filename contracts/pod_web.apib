@@ -1,0 +1,1245 @@
+FORMAT: 1A
+HOST: http://api.tms.sicepat.com
+
+# API POD for Web
+
+# Group Scan In
+
+## Scan In Awb [/web/pod/scanIn/awb]
+    Untuk Scan In Gerai dari Web POD per Resi
+
+### Scan In Awb [POST]
+
++ Request Scan In (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
+    + Attributes (object)
+        + awbNumber         : `0001`, `0002`, (array[string], required) - Awb Number
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "totalData" : 2,
+                "totalSuccess" : 1,
+                "totalError" : 1,
+                "data" : [
+                    {
+                        "awbNumber" : "0001",
+                        "status"    : "ok",
+                        "trouble"   : false,
+                        "message"   : "success",
+                    },
+                    {
+                        "awbNumber": "0002",
+                        "status"    : "error",
+                        "trouble"   : false,
+                        "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Scan In Awb List [/web/pod/scanIn/list]
+
+### Scan In Awb List [POST]
+
++ Request Scan In List (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+        + permissionToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI` (string, required) - Permission Token
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : `aa` (string)
+        + filters: (array)
+            + item:
+                + field   : awbNumber (string)
+                + operator : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value   : abc (string)
+            + item:
+                + field   : scanInDateTime (string)
+                + operator: ilike (string)
+                + value   : 20190801 (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage"   : 1,
+                    "nextPage"      : 2,
+                    "prevPage"      : 0,
+                    "totalPage"     : 8,
+                    "totalData"     : 798,
+                    "limit"         : 100
+                },
+                "data": [
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber"     : "123412311111",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "agus"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber"     : "12345",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "budi"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "awbNumber"     : "1234",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "aman"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "awbNumber"     : "12345",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "dian"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan In Bag [/web/pod/scanIn/bag]
+    Untuk Scan In Gerai dari Web POD per Gabung Paket
+
+### Scan In Bag [POST]
+
++ Request Scan In (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
+    + Attributes (object)
+
+        + bagNumber         : `0001`, `0002`, (array[string], required) - Awb Number
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "total_data" : 2,
+                "data" : [
+                    {
+                        "bagNumber" : "0001",
+                        "status"    : "ok",
+                        "trouble"   : false,
+                        "message"   : "success",
+                    },
+                    {
+                        "bagNumber": "0002",
+                        "status"    : "error",
+                        "trouble"   : false,
+                        "message"   : "Gabung Paket sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan In Bag List [/web/pod/scanIn/bagList]
+
+### Scan In Bag List [POST]
+
++ Request Scan In Bag List (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
+    + Attributes (object)
+
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : `aa` (string)
+        + filters: (array)
+            + item:
+                + field   : bagNumber (string)
+                + operator : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value   : abc (string)
+            + item:
+                + field   : scanInDateTime (string)
+                + operator: ilike (string)
+                + value   : 20190801 (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage"   : 1,
+                    "nextPage"      : 2,
+                    "prevPage"      : 0,
+                    "totalPage"     : 8,
+                    "totalData"     : 798,
+                    "limit"         : 100
+                },
+                "data": [
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "bagNumber"     : "123412311111",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "agus"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "bagNumber"     : "12345",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "budi"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-01 10:00:00",
+                        "bagNumber"     : "1234",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "aman"
+                    },
+                    {
+                        "scanInDateTime": "2019-03-02 10:00:00",
+                        "bagNumber"     : "12345",
+                        "branchNameScan": "Bandung",
+                        "branchNameFrom": "Jakarta",
+                        "employeeName"  : "dian"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+# Group Scan Out
+
+## Create Scan Out [/web/pod/scanOut/create]
+    Form Surat Jalan: Untuk Scan Out dari Web POD
+
+### Create Scan Out [POST]
+
++ Request Create Scan Out (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+    + Attributes (object)
+
+        + doPodType         : `20000`, `14000`, (string, required) - 20000 = CRISS CROSS, 14000 = ANTAR, TRANSIT (Hub, dan Gerai)
+        + doPodMethod       :  `internal`, `3pl`,  (string) - required sesuai doPodType
+        + branchIdTo        : branchIdTo, (string) - required when doPodType != Antar
+        + employeeIdDriver  : employeeId, (string, required)
+        + partnerLogisticId : partnerLogisticId, (string) - required when doPodMethod = 3PL/Third Party
+        + vehicleNumber     : `DPS-1701001-1234-ABC`, (string)
+        + doPodDateTime     : `2019-05-01 00:00:00` (string)
+        + desc              : `sss`, (string)
+        + totalBag          : 1, (number)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "status"    : "ok",
+                "message"   : "success",
+                "doPodId"   : 1
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Scan Out Awb [/web/pod/scanOut/awb]
+    Surat Jalan Resi: Untuk Scan Out dari Web POD
+
+### Scan Out Awb [POST]
+
++ Request Scan Out (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
+    + Attributes (object)
+        + doPodId           : 1, (number),
+        + awbNumber         : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "totalData"     : 2,
+                "totalSuccess"  : 1,
+                "totalError"    : 1,
+                "data" : [
+                    {
+                        "awbNumber" : "0001",
+                        "status"    : "ok",
+                        "trouble"   : false,
+                        "message"   : "success",
+                    },
+                    {
+                        "awbNumber": "0002",
+                        "status"    : "error",
+                        "trouble"   : false,
+                        "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan Out Bag [/web/pod/scanOut/bag]
+    Surat Jalan Gabung Paket: Untuk Scan Out dari Web POD
+
+### Scan Out Bag [POST]
+
++ Request Scan Out Bag (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
+    + Attributes (object)
+        + doPodId           : 1, (number),
+        + bagNumber         : `0001`, `0002`, (array[string], required) - required when accesspermission = hub
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "totalData"     : 2,
+                "totalSuccess"  : 1,
+                "totalError"    : 1,
+                "data" : [
+                    {
+                        "bagNumber" : "0001",
+                        "status"    : "ok",
+                        "trouble"   : false,
+                        "message"   : "success"
+                    },
+                    {
+                        "bagNumber" : "0002",
+                        "status"    : "error",
+                        "trouble"   : false,
+                        "message"   : "Gabung Paket sudah Scan In pada Gerai X (20-05-2019 16:00:00)"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Create Scan Out Deliver [/web/pod/scanOut/createDeliver]
+    Form Surat Jalan Antar: Untuk Scan Out dari Web POD
+
+### Create Scan Out Deliver [POST]
+
++ Request Create Scan Out Deliver(application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+    + Attributes (object)
+        + employeeIdDriver  : employeeId, (string, required)
+        + doPodDateTime     : `2019-05-01 00:00:00` (string)
+        + desc              : `sss`, (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "status"            : "ok",
+                "message"           : "success",
+                "doPodDeliverId"    : 1
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Scan Out Awb Deliver [/web/pod/scanOut/awbDeliver]
+    Surat Jalan Resi Antar: Untuk Scan Out dari Web POD
+
+### Scan Out Awb Deliver [POST]
+
++ Request Scan Out Awb Deliver (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
+    + Attributes (object)
+        + doPodDeliverId    : 1, (number),
+        + awbNumber         : `0001`, `0002`, (array[string], required) - required when accesspermission = gerai
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "totalData"     : 2,
+                "totalSuccess"  : 1,
+                "totalError"    : 1,
+                "data" : [
+                    {
+                        "awbNumber" : "0001",
+                        "status"    : "ok",
+                        "trouble"   : false,
+                        "message"   : "success",
+                    },
+                    {
+                        "awbNumber": "0002",
+                        "status"    : "error",
+                        "trouble"   : false,
+                        "message"   : "Resi sudah Scan In pada Gerai X (20-05-2019 16:00:00)",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan Out Resi List [/web/pod/scanOut/awbList]
+    Daftar Surat Jalan Resi: Untuk menampilkan daftar Scan Out dari Web POD
+
+### Scan Out Resi List [POST]
+
++ Request Scan Out List (application/json)
+
+    + Header
+
+             Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
+    + Attributes (object)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : a, (string)
+        + filters: (array)
+            + item: (object)
+                + field   : employeeIdDriver, (string)
+                + operator : ilike, (string) - ilike, eq, lt, gt, in, nin
+                + value   : 12, (string)
+            + item: (object)
+                + field   : doPodCode, (string)
+                + operator : eq, (string) - ilike, eq, lt, gt, in, nin
+                + value   : 12, (string)
+            + item: (object)
+                + field   : startScanInDate, (string)
+                + operator: gt, (string)
+                + value   : '2019-07-03' (string)
+            + item: (object)
+                + field   : endScanInDate, (string)
+                + operator: lt, (string)
+                + value   : '2019-07-04' (string)
+            + item: (object)
+                + field   : startDoPodDate, (string)
+                + operator: gt, (string)
+                + value   : '2019-07-03' (string)
+            + item: (object)
+                + field   : endDoPodDate, (string)
+                + operator: lt, (string)
+                + value   : '2019-07-03' (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage"   : 1,
+                    "nextPage"      : 0,
+                    "prevPage"      : 0,
+                    "totalPage"     : 1,
+                    "totalData"     : 2,
+                    "limit"         : 100
+                },
+                "data": [
+                    {
+                        "doPodDateTime" : "2019-03-02 10:00:00",
+                        "doPodCode"     : "DOP/1904/00001",
+                        "doPodId"       : "1",
+                        "fullname"      : "agus",
+                        "desc"          : "1234",
+                        "totalScanIn"   : "0",
+                        "totalScanOut"  : "10",
+                        "percenScanInOut" : "0%",
+                        "lastDateScanIn" : "",
+                        "lastDateScanOut" : "2019-06-28 10:00:00"
+                    },
+                    {
+                        "doPodDateTime" : "2019-03-02 12:00:00",
+                        "doPodCode"     : "DOP/1904/00002",
+                        "doPodId"       : "2",
+                        "fullname"      : "agus2",
+                        "desc"          : "1234",
+                        "totalScanIn"   : "8",
+                        "totalScanOut"  : "8",
+                        "percenScanInOut" : "100%",
+                        "lastDateScanIn" : "2019-06-28 20:00:00",
+                        "lastDateScanOut" : "2019-06-28 10:00:00"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan Out Bag List [/web/pod/scanOut/bagList]
+    Daftar Surat Jalan Gabung Paket: Untuk menampilkan daftar Scan Out dari Web POD
+
+### Scan Out Bag List [POST]
+
++ Request Scan Out List (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+    + Attributes (object)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : `aa` (string)
+        + filters: (array)
+            + item:
+                + field     : employeeIdDriver (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `112` (string)
+            + item:
+                + field   : doPodCode (string)
+                + operator: ilike (string)
+                + value   : `DOP/1904/00001` (string)
+            + item:
+                + field   : doPodDateTime (string)
+                + operator: ilike (string)
+                + value   : `20190801` (string)
+
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage"   : 1,
+                    "nextPage"      : 0,
+                    "prevPage"      : 0,
+                    "totalPage"     : 1,
+                    "totalData"     : 2,
+                    "limit"         : 100
+                },
+                "data": [
+                     {
+                        "doPodDateTime" : "2019-03-02 10:00:00",
+                        "doPodCode"     : "DOP/1904/00001",
+                        "doPodId"       : "1",
+                        "fullname"      : "agus",
+                        "desc"          : "1234",
+                        "totalScanIn"   : "0",
+                        "totalScanOut"  : "10",
+                        "percenScanInOut" : "0%",
+                        "lastDateScanIn" : "",
+                        "lastDateScanOut" : "2019-06-28 10:00:00"
+                    },
+                    {
+                        "doPodDateTime" : "2019-03-02 12:00:00",
+                        "doPodCode"     : "DOP/1904/00002",
+                        "doPodId"       : "2",
+                        "fullname"      : "agus2",
+                        "desc"          : "1234",
+                        "totalScanIn"   : "8",
+                        "totalScanOut"  : "8",
+                        "percenScanInOut" : "100%",
+                        "lastDateScanIn" : "2019-06-28 20:00:00",
+                        "lastDateScanOut" : "2019-06-28 10:00:00"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan Out List per DO [/web/pod/scanOut/awbDeliveryOrder]
+    Daftar Surat Jalan Resi: Untuk menampilkan detail Delivery Order ketika di klik No.Surat Jalan
+
+### Scan Out List per DO [POST]
+
++ Request Scan Out List per DO (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+    + Attributes (object)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : `aa` (string)
+        + filters: (array)
+            + item:
+                + field     : doPodId (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `112` (string)
+            + item:
+                + field   : awbNumber (string)
+                + operator: ilike (string)
+                + value   : `111234` (string)
+
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage"   : 1,
+                    "nextPage"      : 0,
+                    "prevPage"      : 0,
+                    "totalPage"     : 1,
+                    "totalData"     : 2,
+                    "limit"         : 100
+                },
+                "data": [
+                    {
+                        "awbNumber"     : "12314812",
+                        "weight"        : "3",
+                        "consigneeName" : "agus"
+                    },
+                    {
+                        "awbNumber"     : "12314812",
+                        "weight"        : "2",
+                        "consigneeName" : "agus2"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Scan Out List per DO [/web/pod/scanOut/bagDeliveryOrder]
+    Daftar Surat Jalan Gabung Paket: Untuk menampilkan detail Delivery Order ketika di klik No.Surat Jalan
+
+### Scan Out List per DO [POST]
+
++ Request Scan Out List per DO (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+    + Attributes (object)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : `aa` (string)
+        + filters: (array)
+            + item:
+                + field     : doPodId (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `112` (string)
+            + item:
+                + field   : bagNumber (string)
+                + operator: ilike (string)
+                + value   : `111234` (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage"   : 1,
+                    "nextPage"      : 0,
+                    "prevPage"      : 0,
+                    "totalPage"     : 1,
+                    "totalData"     : 2,
+                    "limit"         : 100
+                },
+                "data": [
+                    {
+                        "bagNumber"     : "12314812",
+                        "weight"        : "3",
+                        "consigneeName" : "agus"
+                    },
+                    {
+                        "bagNumber"     : "12314812",
+                        "weight"        : "2",
+                        "consigneeName" : "agus2"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+# Group Input Resi 3PL
+
+## Save Awb 3PL [/web/pod/awb3PL/save]
+    Input Resi 3PL: Untuk save Resi 3PL
+
+### Save Awb 3PL [POST]
+
++ Request Save Awb 3PL (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+    + Attributes (object)
+        + awbNumber         : `12412312` (string, required)
+        + partnerLogisticId : `1` (string, required)
+        + awbNumberPl      : `12314JOW` (string, required)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "status"    : "ok", // error if there is a problem
+                "message"   : "success", // error message
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+# Group List
+
+## Awb POD List [/web/pod/awbList]
+    Daftar Resi POD: Untuk menampilkan daftar status resi POD
+    Daftar Resi 3PL: Untuk menampilkan daftar status resi 3PL
+
+### Awb POD List [POST]
+
++ Request Awb POD List (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+    + Attributes (object)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : `aa` (string)
+        + filters: (array)
+            + item:
+                + field     : startDoPodDateTime (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `2019-05-01 00:00:00` (string)
+            + item:
+                + field   : endDoPodDateTime (string)
+                + operator: ilike (string)
+                + value   : `2019-05-01 00:00:00` (string)
+            + item:
+                + field   : awbNumber (string)
+                + operator: ilike (string)
+                + value   : `1234556` (string)
+            + item:
+                + field   : doPodStatus (string)
+                + operator: ilike (string)
+                + value   : `Delivered` (string)
+            + item:
+                + field   : partnerLogisticId (string)
+                + operator: ilike (string)
+                + value   : `1` (string)
+
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage"   : 1,
+                    "nextPage"      : 0,
+                    "prevPage"      : 0,
+                    "totalPage"     : 1,
+                    "totalData"     : 2,
+                    "limit"         : 100
+                },
+                "data": [
+                    {
+                        "doPodDateTime"         : "2019-03-02 10:00:00",
+                        "awbNumber"             : "000000012341",
+                        "awbNumberPl"          : "jow000012341",
+                        "branchName"            : "Larangan",
+                        "doPodStatus"           : "Delivered",
+                        "partnerLogisticName"   : "JNE"
+                    },
+                    {
+                        "doPodDateTime"         : "2019-03-02 10:00:00",
+                        "awbNumber"             : "000000012342",
+                        "awbNumberPl"          : "",
+                        "branchName"            : "Juanda",
+                        "doPodStatus"           : "Retur",
+                        "partnerLogisticName"   : ""
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Resi POD Delete [/web/pod/podList/delete]
+    Resi POD Delete: Untuk menghapus resi POD
+
+### Resi POD Delete [POST]
+
++ Request Resi POD Delete (application/json)
+
+    + Header
+        Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+    + Attributes (object)
+        + awbNumber : `001` (string)
+
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "totalData"     : 1,
+                "totalSuccess"  : 1,
+                "totalError"    : null,
+                "data" : [
+                    {
+                        "awbNumber" : "000000012341",
+                        "status"    : "ok",
+                        "message"   : "success",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Resi POD Edit [/web/pod/podList/edit]
+    Resi POD Delete: Untuk menghapus resi POD
+
+### Resi POD Edit [POST]
+
++ Request Resi POD Edit (application/json)
+
+    + Header
+        Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+    + Attributes (object)
+        + awbNumber     : `001` (string)
+        + branchName    : `Juanda` (string)
+
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "totalData"     : 1,
+                "totalSuccess"  : 1,
+                "totalError"    : null,
+                "data" : [
+                    {
+                        "awbNumber" : "000000012341",
+                        "status"    : "ok",
+                        "message"   : "success",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Resi Troubled List [/web/pod/troubledList]
+    Daftar Resi Bermasalah: Untuk menampilkan daftar status resi bermasalah
+
+### Resi Troubled List [POST]
+
++ Request Resi Troubled List (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+    + Attributes (object)
+        + page      : 1, (number) - Default 1
+        + limit     : 10, (number) - Default 10
+        + sortBy    : branchName, (string)
+        + sortDir   : asc, (string)
+        + search    : `aa` (string)
+        + filters: (array)
+            + item:
+                + field     : startScanInDateTime (string)
+                + operator  : ilike (string) - ilike, eq, lt, gt, in, nin
+                + value     : `2019-05-01 00:00:00` (string)
+            + item:
+                + field   : endScanInDateTime (string)
+                + operator: ilike (string)
+                + value   : `2019-05-01 00:00:00` (string)
+            + item:
+                + field   : awbNumber (string)
+                + operator: ilike (string)
+                + value   : `1234556` (string)
+
+
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "paging": {
+                    "currentPage": 1,
+                    "nextPage": 2,
+                    "prevPage": 0,
+                    "totalPage": 8,
+                    "totalData": 798,
+                    "limit": 100
+                },
+                "data": [
+                    {
+                        "scanInDateTime"    : "2019-03-02 10:00:00",
+                        "awbNumber"         : "000000012341",
+                        "desc"              : "Double Resi",
+                        "awbTroubleId"      : "0001",
+                        "awbTroubleName"    : "Resi Scan-in Digerai Lain",
+                        "statusResolveId"   : "Trouble"
+                    },
+                    {
+                        "scanInDateTime"    : "2019-03-02 10:00:00",
+                        "awbNumber"         : "000000012342",
+                        "desc"              : "Double Scan In",
+                        "awbTroubleId"      : "0002",
+                        "awbTroubleName"    : "",
+                        "statusResolveId"   : "Done"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Resi Troubled Detail [/web/pod/troubledList/detail]
+    Detail resi bermasalah: Untuk memperbaiki resi yang bermasalah
+
+### Resi Troubled Detail [POST]
+
++ Request Resi Troubled Detail (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+    + Attributes (object)
+        + awbNumber       : `123456789012` (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+            {
+                "totalData" : 2,
+                "totalSuccess" : 1,
+                "totalError" : null,
+                "data" : [
+                    {
+                        "awbId"             : "001",
+                        "awbNumber"         : "000000012341",
+                        "branchName"        : "Juanda",
+                        "consigneeAddress"  : "jl. abc",
+                        "customerName"      : "Bukalapak"
+                    },
+                    {
+                        "awbId"             : "002",
+                        "awbNumber"         : "000000012341",
+                        "branchName"        : "Juanda2",
+                        "consigneeAddress"  : "jl. abc2",
+                        "customerName"      : "Bukalapak2"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Resi Troubled Fixing [/web/pod/troubledList/edit]
+    Perbaiki resi bermasalah: Untuk memperbaiki resi yang bermasalah
+
+### Resi Troubled Fixing [POST]
+
++ Request Resi Troubled Fixing (application/json)
+
+    + Header
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+    + Attributes (object)
+        + awbNumber         : `123456789012` (string)
+        + awbId             : `001` (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+            {
+                "totalData" : 2,
+                "totalSuccess" : 1,
+                "totalError" : null,
+                "data" : [
+                    {
+                        "awbNumber"     : "000000012341",
+                        "branchName" : "Juanda",
+                        "consigneeAddress" : "jl. abc",
+                        "customerName" : "Bukalapak",
+                        "status"    : "ok",
+                        "message"   : "success",
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+
+# Group Role Permission
+
+## Role Permission List [/web/pod/rolePermission/list]
+    Untuk mendapatkan hak akses by RoleId
+
+### Role Permission List [POST]
+
++ Request Role Permission List (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
+    + Attributes (object)
+        + roleId : `1` (string, required) - RoleId
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "rolesAccessPermissions": [
+                    "dashboard",
+                    "pod",
+                    "pod_scan_in_branch",
+                    "pod_scan_in_hub",
+                    "do_pod",
+                    "do_pod_hub",
+                    "pod_sortir_hub",
+                    "pod_input_awb_3pl",
+                    "pod_manual",
+                    "scan_in_list",
+                    "do_pod_list",
+                    "do_pod_bag_list",
+                    "pod_awb_list",
+                    "awb_3pl_list",
+                    "pod_scan_in_problem_ct",
+                    "pod_scan_in_problem_branch",
+                    "pod_scan_in_problem_hub",
+                    "pod_awb_problem"
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Edit Role Permission [/web/pod/rolePermission/edit]
+    Untuk mendapatkan hak akses by RoleId
+
+### Edit Role Permission [POST]
+
++ Request Edit Role Permission (application/json)
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+            x-permission-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI
+
+    + Attributes (object)
+        + roleId : `1` (string, required) - RoleId
+        + rolesAccessPermissions: `dashboard`, `pod` (array, required) - List Access Permission
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "status"    : "ok", // error - if there is a problem
+                "message"   : "success", // error message here
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}

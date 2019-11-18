@@ -1,115 +1,113 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('log_login_fail', { schema: 'public' })
+export class LogLoginFail extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("log_login_fail",{schema:"public" } )
-export class LogLoginFail {
+  })
+  log_login_fail_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"log_login_fail_id"
-        })
-    logLoginFailId:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"username"
-        })
-    username:string;
-        
+  })
+  username: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"password"
-        })
-    password:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:500,
-        name:"session_id"
-        })
-    sessionId:string;
-        
+  })
+  password: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"error_message"
-        })
-    errorMessage:string | null;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 500,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"remote_addr"
-        })
-    remoteAddr:string | null;
-        
+  })
+  session_id: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"user_agent"
-        })
-    userAgent:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"platform_version"
-        })
-    platformVersion:string | null;
-        
+  })
+  error_message: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"platform"
-        })
-    platform:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"browser_version"
-        })
-    browserVersion:string | null;
-        
+  })
+  remote_addr: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"browser"
-        })
-    browser:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"login_date"
-        })
-    loginDate:Date | null;
-        
+  })
+  user_agent: string | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"login_fail_date"
-        })
-    loginFailDate:Date | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  })
+  platform_version: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  platform: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  browser_version: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  browser: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  login_date: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  login_fail_date: Date | null;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }

@@ -1,4 +1,4 @@
-import { EntityBase } from "../../types/EntityBase";
+import { EntityBase } from '../../types/EntityBase';
 
 /**
  * Used to select the desired propery from the desired entity when using an inner query.

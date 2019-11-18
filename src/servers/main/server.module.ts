@@ -1,9 +1,9 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
-import { Test } from '@nestjs/testing';
 
 import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
-import { ErrorHandlerInterceptor } from '../../shared/interceptors/error-handler.interceptor';
+import { AllExceptionsFilter } from '../../shared/filters/all-exceptions.filter';
+import { LoggingInterceptor } from '../../shared/interceptors/logging.interceptor';
 import { ResponseSerializerInterceptor } from '../../shared/interceptors/response-serializer.interceptor';
 import { AuthMiddleware } from '../../shared/middlewares/auth.middleware';
 import { HeaderMetadataMiddleware } from '../../shared/middlewares/header-metadata.middleware';
@@ -11,14 +11,16 @@ import { RequestContextMiddleware } from '../../shared/middlewares/request-conte
 import { MultiServerAppModule } from '../../shared/models/multi-server';
 import { RequestValidationPipe } from '../../shared/pipes/request-validation-pipe.pipe';
 import { ConfigService } from '../../shared/services/config.service';
+import { PinoLoggerService } from '../../shared/services/pino-logger.service';
 import { SharedModule } from '../../shared/shared.module';
 import { MainServerControllersModule } from './controllers/main-server-controllers.module';
 import { MainServerInjectorService } from './services/main-server-injector.service';
+import { MainServerServicesModule } from './services/main-server-services.module';
 
 @Module({
-  imports: [SharedModule, MainServerControllersModule],
+  imports: [SharedModule, MainServerControllersModule, LoggingInterceptor, MainServerServicesModule],
 })
-export class AuthServerModule extends MultiServerAppModule implements NestModule {
+export class MainServerModule extends MultiServerAppModule implements NestModule {
   constructor(private readonly moduleRef: ModuleRef) {
     super();
     MainServerInjectorService.setModuleRef(this.moduleRef);
@@ -39,12 +41,22 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
 
   public static async bootServer() {
     const serverConfig = ConfigService.get('servers.main');
-    const app =
-      process.env.NODE_ENV === 'test'
-        ? (await Test.createTestingModule({
-            imports: [AuthServerModule],
-          }).compile()).createNestApplication()
-        : await NestFactory.create(AuthServerModule);
+
+    let app: any;
+    if (process.env.NODE_ENV === 'test') {
+      const { Test } = require('@nestjs/testing');
+      app = (await Test.createTestingModule({
+        imports: [MainServerModule],
+      }).compile()).createNestApplication();
+    } else {
+      app = await NestFactory.create(
+        MainServerModule,
+        {
+          logger: new PinoLoggerService(),
+        },
+      );
+    }
+
     this.app = app;
 
     app.enableCors();
@@ -59,25 +71,41 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
     );
     app.useGlobalInterceptors(
       new ResponseSerializerInterceptor(),
-      new ErrorHandlerInterceptor(),
+      new LoggingInterceptor(),
+    );
+    app.useGlobalFilters(
+      new AllExceptionsFilter(),
     );
 
     if (serverConfig.swagger.enabled) {
       const swaggerModule = new SwaggerModule();
       const options = new DocumentBuilder()
         .setTitle(serverConfig.swagger.title)
-        .setDescription(serverConfig.swagger.description)
+        .setDescription(
+          serverConfig.swagger.description,
+        )
         .setVersion('1.0')
         .addBearerAuth()
         .build();
       const document = swaggerModule.createDocument(app, options);
-      swaggerModule.setup(serverConfig.swagger.path, app, document);
+      swaggerModule.setup(
+        serverConfig.swagger.path,
+        app,
+        document,
+      );
+    }
+
+    // NOTE: bull-board
+    // https://www.npmjs.com/package/bull-board
+    if (serverConfig.bullBoard) {
+      const { UI } = require('bull-board');
+      app.use('/bull/queues', UI);
     }
 
     if (process.env.NODE_ENV === 'test') {
       await app.init();
     } else {
-      await app.listen(process.env.PORT || serverConfig.port);
+      await app.listen(process.env.PORT || serverConfig.port, serverConfig.host || '0.0.0.0');
     }
   }
 }

@@ -1,169 +1,145 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+@Entity('smu', { schema: 'public' })
+export class Smu extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("smu",{schema:"public" } )
-export class Smu {
+  })
+  smu_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"smu_id"
-        })
-    smuId:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"smu_code"
-        })
-    smuCode:string;
-        
+  })
+  smu_code: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"smu_airline_number"
-        })
-    smuAirlineNumber:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"smu_date_time"
-        })
-    smuDateTime:Date;
-        
+  })
+  smu_airline_number: string | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"airline_id"
-        })
-    airlineId:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"representative_id"
-        })
-    representativeId:string;
-        
+  })
+  smu_date_time: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id"
-        })
-    userId:string;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"branch_id"
-        })
-    branchId:string;
-        
+  })
+  airline_id: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"flight_number"
-        })
-    flightNumber:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("text",{ 
-        nullable:true,
-        name:"note"
-        })
-    note:string | null;
-        
+  })
+  representative_id: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  user_id: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  branch_id: string;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        default: () => "'2018-09-18 11:01:58'",
-        name:"departure_time"
-        })
-    departureTime:Date;
-        
+  })
+  flight_number: string | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        default: () => "'2018-09-18 11:01:58'",
-        name:"arrival_time"
-        })
-    arrivalTime:Date;
-        
+  @Column('text', {
+    nullable: true,
 
-    @Column("integer",{ 
-        nullable:false,
-        default: () => "0",
-        name:"total_item"
-        })
-    totalItem:number;
-        
+  })
+  note: string | null;
 
-    @Column("numeric",{ 
-        nullable:true,
-        precision:10,
-        scale:5,
-        name:"total_weight"
-        })
-    totalWeight:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("date",{ 
-        nullable:true,
-        name:"smu_date"
-        })
-    smuDate:string | null;
-        
+  })
+  user_id_created: string;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"do_smu_id_delivery"
-        })
-    doSmuIdDelivery:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"do_smu_id_pickup"
-        })
-    doSmuIdPickup:string | null;
-        
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    default: () => '\'2018-09-18 11:01:58\'',
+
+  })
+  departure_time: Date;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    default: () => '\'2018-09-18 11:01:58\'',
+
+  })
+  arrival_time: Date;
+
+  @Column('integer', {
+    nullable: false,
+    default: () => '0',
+
+  })
+  total_item: number;
+
+  @Column('numeric', {
+    nullable: true,
+    precision: 10,
+    scale: 5,
+
+  })
+  total_weight: string | null;
+
+  @Column('date', {
+    nullable: true,
+
+  })
+  smu_date: string | null;
+
+  @Column('bigint', {
+    nullable: true,
+
+  })
+  do_smu_id_delivery: string | null;
+
+  @Column('bigint', {
+    nullable: true,
+
+  })
+  do_smu_id_pickup: string | null;
 }

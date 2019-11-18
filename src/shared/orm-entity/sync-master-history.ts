@@ -1,100 +1,99 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('sync_master_history', { schema: 'public' })
+export class SyncMasterHistory extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("sync_master_history",{schema:"public" } )
-export class SyncMasterHistory {
+  })
+  sync_master_history_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"sync_master_history_id"
-        })
-    syncMasterHistoryId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"sync_master_id"
-        })
-    syncMasterId:string;
-        
+  })
+  sync_master_id: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"module"
-        })
-    module:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("integer",{ 
-        nullable:false,
-        name:"page"
-        })
-    page:number;
-        
+  })
+  module: string;
 
-    @Column("integer",{ 
-        nullable:false,
-        name:"try_seq"
-        })
-    trySeq:number;
-        
+  @Column('integer', {
+    nullable: false,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"sync_url"
-        })
-    syncUrl:string;
-        
+  })
+  page: number;
 
-    @Column("integer",{ 
-        nullable:false,
-        name:"sync_status"
-        })
-    syncStatus:number;
-        
+  @Column('integer', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"request_datetime"
-        })
-    requestDatetime:Date;
-        
+  })
+  try_seq: number;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  sync_url: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('integer', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  sync_status: number;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  request_datetime: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }

@@ -1,0 +1,77 @@
+FORMAT: 1A
+HOST: http://tmsapi-staging2.sicepat.com
+
+# API User for Mobile
+
+# Group User
+
+## Get Profile [/api/user/profile]
+
+### Get Profile URL [GET]
+
++ Request Get Profile (application/json)
+
+    + Header
+
+            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+
+    + Attributes (object)
+        + clientId: `mobile`, (string, required) - Client id
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "userId": 11,
+                "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
+                "refreshToken": "8asfgasgwetw4tewtggg",
+                "email": "ade@sicepat.com",
+                "username": "adefast",
+                "displayName": "Ade",
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Change Profile [/api/user/profile]
+
+### Change Profile URL [POST]
+
++ Request Get Profile (application/json)
+
+    + Header
+
+            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+
+    + Attributes (object)
+        + clientId: `mobile`, (string, required) - Client id
+        + displayName: `XXXX`, (string, required) - Display Name
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "userId": 11,
+                "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
+                "refreshToken": "8asfgasgwetw4tewtggg",
+                "email": "ade@sicepat.com",
+                "username": "adefast",
+                "displayName": "XXX",
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}

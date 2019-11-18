@@ -1,156 +1,150 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
-import {PackagePrice} from "./package-price";
-import {PackagePriceSpecial} from "./package-price-special";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
+import { PackagePrice } from './package-price';
+import { PackagePriceSpecial } from './package-price-special';
 
+@Entity('package_type', { schema: 'public' })
+export class PackageType extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("package_type",{schema:"public" } )
-export class PackageType {
+  })
+  package_type_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"package_type_id"
-        })
-    packageTypeId:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"package_type_code"
-        })
-    packageTypeCode:string;
-        
+  })
+  package_type_code: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"package_type_name"
-        })
-    packageTypeName:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("numeric",{ 
-        nullable:false,
-        precision:10,
-        scale:5,
-        name:"min_weight"
-        })
-    minWeight:string;
-        
+  })
+  package_type_name: string;
 
-    @Column("numeric",{ 
-        nullable:false,
-        precision:10,
-        scale:5,
-        name:"weight_rounding_const"
-        })
-    weightRoundingConst:string;
-        
+  @Column('numeric', {
+    nullable: false,
+    precision: 10,
+    scale: 5,
 
-    @Column("numeric",{ 
-        nullable:false,
-        precision:10,
-        scale:5,
-        name:"weight_rounding_up_global"
-        })
-    weightRoundingUpGlobal:string;
-        
+  })
+  min_weight: string;
 
-    @Column("numeric",{ 
-        nullable:false,
-        precision:10,
-        scale:5,
-        name:"weight_rounding_up_detail"
-        })
-    weightRoundingUpDetail:string;
-        
+  @Column('numeric', {
+    nullable: false,
+    precision: 10,
+    scale: 5,
 
-    @Column("numeric",{ 
-        nullable:false,
-        precision:10,
-        scale:5,
-        name:"divider_volume"
-        })
-    dividerVolume:string;
-        
+  })
+  weight_rounding_const: string;
 
-    @Column("numeric",{ 
-        nullable:false,
-        precision:10,
-        scale:5,
-        name:"lead_time_min_days"
-        })
-    leadTimeMinDays:string;
-        
+  @Column('numeric', {
+    nullable: false,
+    precision: 10,
+    scale: 5,
 
-    @Column("numeric",{ 
-        nullable:false,
-        precision:10,
-        scale:5,
-        name:"lead_time_max_days"
-        })
-    leadTimeMaxDays:string;
-        
+  })
+  weight_rounding_up_global: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('numeric', {
+    nullable: false,
+    precision: 10,
+    scale: 5,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  weight_rounding_up_detail: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('numeric', {
+    nullable: false,
+    precision: 10,
+    scale: 5,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  divider_volume: string;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('numeric', {
+    nullable: false,
+    precision: 10,
+    scale: 5,
 
-    @Column("boolean",{ 
-        nullable:true,
-        default: () => "false",
-        name:"weight_rounding_up_global_bool"
-        })
-    weightRoundingUpGlobalBool:boolean | null;
-        
+  })
+  lead_time_min_days: string;
 
-    @Column("boolean",{ 
-        nullable:true,
-        default: () => "false",
-        name:"weight_rounding_up_detail_bool"
-        })
-    weightRoundingUpDetailBool:boolean | null;
-        
+  @Column('numeric', {
+    nullable: false,
+    precision: 10,
+    scale: 5,
 
-   
-    @OneToMany(type=>PackagePrice, package_price=>package_price.packageType)
-    packagePrices:PackagePrice[];
-    
+  })
+  lead_time_max_days: string;
 
-   
-    @OneToMany(type=>PackagePriceSpecial, package_price_special=>package_price_special.packageType)
-    packagePriceSpecials:PackagePriceSpecial[];
-    
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
+
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+
+  })
+  weight_rounding_up_global_bool: boolean | null;
+
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+
+  })
+  weight_rounding_up_detail_bool: boolean | null;
+
+  @OneToMany(type => PackagePrice, package_price => package_price.packageType)
+  packagePrices: PackagePrice[];
+
+  @OneToMany(
+    type => PackagePriceSpecial,
+    package_price_special => package_price_special.packageType,
+  )
+  packagePriceSpecials: PackagePriceSpecial[];
 }

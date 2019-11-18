@@ -37,6 +37,11 @@ export class ResponseSerializerInterceptor implements NestInterceptor {
       context.getClass(),
       context.getHandler(),
     );
+
+    if (serializeOptions && serializeOptions.disable) {
+      return response;
+    }
+
     const isArray = Array.isArray(response);
     if (!isObject(response) && !isArray) {
       return response;

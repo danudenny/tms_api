@@ -1,104 +1,103 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('pickup_request_invalid', { schema: 'public' })
+@Index('pickup_request_invalid_created_time', ['created_time'])
+@Index('pickup_request_invalid_ref_awb_number', ['ref_awb_number'])
+export class PickupRequestInvalid extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("pickup_request_invalid",{schema:"public" } )
-@Index("pickup_request_invalid_created_time",["createdTime",])
-@Index("pickup_request_invalid_ref_awb_number",["refAwbNumber",])
-export class PickupRequestInvalid {
+  })
+  pickup_request_invalid_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"pickup_request_invalid_id"
-        })
-    pickupRequestInvalidId:string;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"pickup_request_date_time"
-        })
-    pickupRequestDateTime:Date | null;
-        
+  })
+  pickup_request_date_time: Date | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"ref_awb_number"
-        })
-    refAwbNumber:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"message_error"
-        })
-    messageError:string | null;
-        
+  })
+  ref_awb_number: string | null;
 
-    @Column("json",{ 
-        nullable:true,
-        name:"request"
-        })
-    request:Object | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"partner_id"
-        })
-    partnerId:string | null;
-        
+  })
+  message_error: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('json', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"user_created"
-        })
-    userCreated:string | null;
-        
+  })
+  request: Object | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  })
+  partner_id: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"user_updated"
-        })
-    userUpdated:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  user_id_created: string;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  user_created: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  user_updated: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }

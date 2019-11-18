@@ -1,0 +1,7 @@
+{
+  "LOGIN_SESSION_NOT_FOUND": "Login Session Not Found",
+  "LOGIN_WRONG_PASSWORD": "Login Wrong Password",
+  "REFRESH_TOKEN_EXPIRED": "Refresh Token Expired",
+  "REFRESH_TOKEN_NOT_VALID": "Refresh Token Not Valid",
+  "USER_NOT_FOUND": "User Not Found"
+}

@@ -1,279 +1,253 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('work_order_schedule', { schema: 'public' })
+export class WorkOrderSchedule extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("work_order_schedule",{schema:"public" } )
-export class WorkOrderSchedule {
+  })
+  work_order_schedule_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"work_order_schedule_id"
-        })
-    workOrderScheduleId:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"work_order_schedule_code"
-        })
-    workOrderScheduleCode:string;
-        
+  })
+  work_order_schedule_code: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"work_order_schedule_date"
-        })
-    workOrderScheduleDate:Date;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id"
-        })
-    userId:string;
-        
+  })
+  work_order_schedule_date: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"branch_id"
-        })
-    branchId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("boolean",{ 
-        nullable:false,
-        name:"is_member"
-        })
-    isMember:boolean;
-        
+  })
+  user_id: string;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"customer_account_id"
-        })
-    customerAccountId:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"customer_account_id_child"
-        })
-    customerAccountIdChild:string | null;
-        
+  })
+  branch_id: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"guest_name"
-        })
-    guestName:string | null;
-        
+  @Column('boolean', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"pickup_active_date"
-        })
-    pickupActiveDate:Date;
-        
+  })
+  is_member: boolean;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"pickup_phone"
-        })
-    pickupPhone:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"pickup_email"
-        })
-    pickupEmail:string | null;
-        
+  })
+  customer_account_id: string | null;
 
-    @Column("text",{ 
-        nullable:true,
-        name:"pickup_address"
-        })
-    pickupAddress:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("text",{ 
-        nullable:true,
-        name:"pickup_notes"
-        })
-    pickupNotes:string | null;
-        
+  })
+  customer_account_id_child: string | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"branch_id_assigned"
-        })
-    branchIdAssigned:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"employee_id_driver"
-        })
-    employeeIdDriver:string | null;
-        
+  })
+  guest_name: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"encrypt_address100"
-        })
-    encryptAddress100:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"encrypt_address255"
-        })
-    encryptAddress255:string | null;
-        
+  })
+  pickup_active_date: Date;
 
-    @Column("boolean",{ 
-        nullable:true,
-        name:"is_monday"
-        })
-    isMonday:boolean | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("boolean",{ 
-        nullable:true,
-        name:"is_tuesday"
-        })
-    isTuesday:boolean | null;
-        
+  })
+  pickup_phone: string | null;
 
-    @Column("boolean",{ 
-        nullable:true,
-        name:"is_wednesday"
-        })
-    isWednesday:boolean | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("boolean",{ 
-        nullable:true,
-        name:"is_thursday"
-        })
-    isThursday:boolean | null;
-        
+  })
+  pickup_email: string | null;
 
-    @Column("boolean",{ 
-        nullable:true,
-        name:"is_friday"
-        })
-    isFriday:boolean | null;
-        
+  @Column('text', {
+    nullable: true,
 
-    @Column("boolean",{ 
-        nullable:true,
-        name:"is_saturday"
-        })
-    isSaturday:boolean | null;
-        
+  })
+  pickup_address: string | null;
 
-    @Column("boolean",{ 
-        nullable:true,
-        name:"is_sunday"
-        })
-    isSunday:boolean | null;
-        
+  @Column('text', {
+    nullable: true,
 
-    @Column("time without time zone",{ 
-        nullable:true,
-        name:"pickup_time_monday"
-        })
-    pickupTimeMonday:string | null;
-        
+  })
+  pickup_notes: string | null;
 
-    @Column("time without time zone",{ 
-        nullable:true,
-        name:"pickup_time_tuesday"
-        })
-    pickupTimeTuesday:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("time without time zone",{ 
-        nullable:true,
-        name:"pickup_time_wednesday"
-        })
-    pickupTimeWednesday:string | null;
-        
+  })
+  branch_id_assigned: string | null;
 
-    @Column("time without time zone",{ 
-        nullable:true,
-        name:"pickup_time_thursday"
-        })
-    pickupTimeThursday:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("time without time zone",{ 
-        nullable:true,
-        name:"pickup_time_friday"
-        })
-    pickupTimeFriday:string | null;
-        
+  })
+  employee_id_driver: string | null;
 
-    @Column("time without time zone",{ 
-        nullable:true,
-        name:"pickup_time_saturday"
-        })
-    pickupTimeSaturday:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
 
-    @Column("time without time zone",{ 
-        nullable:true,
-        name:"pickup_time_sunday"
-        })
-    pickupTimeSunday:string | null;
-        
+  })
+  encrypt_address100: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  encrypt_address255: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('boolean', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  is_monday: boolean | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('boolean', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"work_order_id_last"
-        })
-    workOrderIdLast:string | null;
-        
+  })
+  is_tuesday: boolean | null;
+
+  @Column('boolean', {
+    nullable: true,
+
+  })
+  is_wednesday: boolean | null;
+
+  @Column('boolean', {
+    nullable: true,
+
+  })
+  is_thursday: boolean | null;
+
+  @Column('boolean', {
+    nullable: true,
+
+  })
+  is_friday: boolean | null;
+
+  @Column('boolean', {
+    nullable: true,
+
+  })
+  is_saturday: boolean | null;
+
+  @Column('boolean', {
+    nullable: true,
+
+  })
+  is_sunday: boolean | null;
+
+  @Column('time without time zone', {
+    nullable: true,
+
+  })
+  pickup_time_monday: string | null;
+
+  @Column('time without time zone', {
+    nullable: true,
+
+  })
+  pickup_time_tuesday: string | null;
+
+  @Column('time without time zone', {
+    nullable: true,
+
+  })
+  pickup_time_wednesday: string | null;
+
+  @Column('time without time zone', {
+    nullable: true,
+
+  })
+  pickup_time_thursday: string | null;
+
+  @Column('time without time zone', {
+    nullable: true,
+
+  })
+  pickup_time_friday: string | null;
+
+  @Column('time without time zone', {
+    nullable: true,
+
+  })
+  pickup_time_saturday: string | null;
+
+  @Column('time without time zone', {
+    nullable: true,
+
+  })
+  pickup_time_sunday: string | null;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
+
+  @Column('bigint', {
+    nullable: true,
+
+  })
+  work_order_id_last: string | null;
 }

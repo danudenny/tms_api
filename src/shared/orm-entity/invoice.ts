@@ -1,143 +1,137 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('invoice', { schema: 'public' })
+export class Invoice extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("invoice",{schema:"public" } )
-export class Invoice {
+  })
+  invoice_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"invoice_id"
-        })
-    invoiceId:string;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"invoice_id_parent"
-        })
-    invoiceIdParent:string | null;
-        
+  })
+  invoice_id_parent: string | null;
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"invoice_code"
-        })
-    invoiceCode:number | null;
-        
+  @Column('integer', {
+    nullable: true,
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"invoice_seq"
-        })
-    invoiceSeq:number | null;
-        
+  })
+  invoice_code: number | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"invoice_date"
-        })
-    invoiceDate:Date | null;
-        
+  @Column('integer', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"awb_start_date"
-        })
-    awbStartDate:Date | null;
-        
+  })
+  invoice_seq: number | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"awb_end_date"
-        })
-    awbEndDate:Date | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"reminder_date"
-        })
-    reminderDate:Date | null;
-        
+  })
+  invoice_date: Date | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"customer_account_id"
-        })
-    customerAccountId:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"email"
-        })
-    email:string | null;
-        
+  })
+  awb_start_date: Date | null;
 
-    @Column("numeric",{ 
-        nullable:true,
-        default: () => "0",
-        precision:20,
-        scale:5,
-        name:"amount"
-        })
-    amount:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("numeric",{ 
-        nullable:true,
-        default: () => "0",
-        precision:20,
-        scale:5,
-        name:"weight"
-        })
-    weight:string | null;
-        
+  })
+  awb_end_date: Date | null;
 
-    @Column("numeric",{ 
-        nullable:true,
-        default: () => "0",
-        precision:20,
-        scale:5,
-        name:"total_awb"
-        })
-    totalAwb:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  })
+  reminder_date: Date | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  })
+  customer_account_id: string | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  })
+  email: string | null;
+
+  @Column('numeric', {
+    nullable: true,
+    default: () => '0',
+    precision: 20,
+    scale: 5,
+
+  })
+  amount: string | null;
+
+  @Column('numeric', {
+    nullable: true,
+    default: () => '0',
+    precision: 20,
+    scale: 5,
+
+  })
+  weight: string | null;
+
+  @Column('numeric', {
+    nullable: true,
+    default: () => '0',
+    precision: 20,
+    scale: 5,
+
+  })
+  total_awb: string | null;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }

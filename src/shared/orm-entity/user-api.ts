@@ -1,63 +1,67 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('user_api', { schema: 'public' })
+export class UserApi extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("user_api",{schema:"public" } )
-export class UserApi {
+  })
+  id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"id"
-        })
-    id:string;
-        
+  @Column('character varying', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        name:"name"
-        })
-    name:string | null;
-        
+  })
+  name: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        name:"email"
-        })
-    email:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        name:"password_digest"
-        })
-    passwordDigest:string | null;
-        
+  })
+  email: string | null;
 
-    @Column("boolean",{ 
-        nullable:true,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean | null;
-        
+  @Column('character varying', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"created_time"
-        })
-    createdTime:Date | null;
-        
+  })
+  password_digest: string | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"updated_time"
-        })
-    updatedTime:Date | null;
-        
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"client_id"
-        })
-    clientId:string | null;
-        
+  })
+  is_deleted: boolean | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  created_time: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  updated_time: Date | null;
+
+  @Column('bigint', {
+    nullable: true,
+
+  })
+  client_id: string | null;
 }

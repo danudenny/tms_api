@@ -1,6 +1,6 @@
-import { EntityBase } from "../../types/EntityBase";
-import { JoinedEntityType } from "../../types/JoinedEntityType";
-import { IJoinedComparableQuery } from "./IJoinedComparableQuery";
+import { EntityBase } from '../../types/EntityBase';
+import { JoinedEntityType } from '../../types/JoinedEntityType';
+import { IJoinedComparableQuery } from './IJoinedComparableQuery';
 
 /**
  * Enables IComparableQuery and IJoinedComparableQuery to join a relation from the current Query type.

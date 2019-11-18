@@ -1,111 +1,95 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import { BaseEntity, Column, Entity } from 'typeorm';
 
+@Entity('awb_status', { schema: 'public' })
+export class AwbStatus extends BaseEntity {
+  @Column('integer', {
+    nullable: false,
+    primary: true,
+    name: 'awb_status_id',
+  })
+  awbStatusId: number;
 
-@Entity("awb_status",{schema:"public" } )
-export class AwbStatus {
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'awb_status_name',
+  })
+  awbStatusName: string;
 
-    @Column("integer",{ 
-        nullable:false,
-        primary:true,
-        name:"awb_status_id"
-        })
-    awbStatusId:number;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'awb_status_title',
+  })
+  awbStatusTitle: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"awb_status_name"
-        })
-    awbStatusName:string;
-        
+  @Column('integer', {
+    nullable: false,
+    name: 'awb_visibility',
+  })
+  awbVisibility: number;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"awb_status_title"
-        })
-    awbStatusTitle:string;
-        
+  @Column('integer', {
+    nullable: false,
+    name: 'awb_level',
+  })
+  awbLevel: number;
 
-    @Column("integer",{ 
-        nullable:false,
-        name:"awb_visibility"
-        })
-    awbVisibility:number;
-        
+  @Column('text', {
+    nullable: true,
+    name: 'awb_desc',
+  })
+  awbDesc: string | null;
 
-    @Column("integer",{ 
-        nullable:false,
-        name:"awb_level"
-        })
-    awbLevel:number;
-        
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_created',
+  })
+  userIdCreated: string;
 
-    @Column("text",{ 
-        nullable:true,
-        name:"awb_desc"
-        })
-    awbDesc:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'created_time',
+  })
+  createdTime: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_updated',
+  })
+  userIdUpdated: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'updated_time',
+  })
+  updatedTime: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_deleted',
+  })
+  isDeleted: boolean;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_final_status',
+  })
+  isFinalStatus: boolean | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_attempted',
+  })
+  isAttempted: boolean | null;
 
-    @Column("boolean",{ 
-        nullable:true,
-        default: () => "false",
-        name:"is_final_status"
-        })
-    isFinalStatus:boolean | null;
-        
-
-    @Column("boolean",{ 
-        nullable:true,
-        default: () => "false",
-        name:"is_attempted"
-        })
-    isAttempted:boolean | null;
-        
-
-    @Column("boolean",{ 
-        nullable:true,
-        default: () => "false",
-        name:"is_problem"
-        })
-    isProblem:boolean | null;
-        
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_problem',
+  })
+  isProblem: boolean | null;
 }

@@ -10,5 +10,5 @@ export enum QueryMode {
     /**
      * The mode of a query in which a comparison is being made.
      */
-    Compare = 2
+    Compare = 2,
 }

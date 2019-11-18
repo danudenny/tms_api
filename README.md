@@ -29,6 +29,7 @@ The `tslint.json` are helping our development code style to be the same
 5. https://marketplace.visualstudio.com/items?itemName=CoenraadS.bracket-pair-colorizer
 6. https://marketplace.visualstudio.com/items?itemName=stringham.move-ts
 7. https://marketplace.visualstudio.com/items?itemName=wayou.vscode-todo-highlight
+8. https://marketplace.visualstudio.com/items?itemName=develiteio.api-blueprint-viewer
 
 ## How To Start Develop
 
@@ -38,6 +39,22 @@ Start an Android emulator or connect your phone by turning on Android Debugging 
 ```bash
 npm run start
 ```
+
+### Run API Blueprint Mock Server
+
+We are using API Blueprint format for contracts, and serving them with Drakov server. You can run Drakov server directly by typing:
+```bash
+npm run drakov:start
+```
+
+### Test Project
+
+First, you have to setup database needed for test by creating an empty database on your local PostgreSQL database called `sicepat-tms-api-test`, and then you are ready for running the test files by typing the following command:
+```bash
+npm run test
+```
+
+Note: It is not recommended to set the database test to other than you local db server, test setup will drop database first and then seeding the emptied database
 
 ### Build Project
 

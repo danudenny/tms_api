@@ -1,127 +1,123 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('employee_role', { schema: 'public' })
+export class EmployeeRole extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("employee_role",{schema:"public" } )
-export class EmployeeRole {
+  })
+  employee_role_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"employee_role_id"
-        })
-    employeeRoleId:string;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"employee_role_id_parent"
-        })
-    employeeRoleIdParent:string | null;
-        
+  })
+  employee_role_id_parent: string | null;
 
-    @Column("integer",{ 
-        nullable:false,
-        default: () => "0",
-        name:"lft"
-        })
-    lft:number;
-        
+  @Column('integer', {
+    nullable: false,
+    default: () => '0',
 
-    @Column("integer",{ 
-        nullable:false,
-        default: () => "0",
-        name:"rgt"
-        })
-    rgt:number;
-        
+  })
+  lft: number;
 
-    @Column("integer",{ 
-        nullable:false,
-        default: () => "1",
-        name:"depth"
-        })
-    depth:number;
-        
+  @Column('integer', {
+    nullable: false,
+    default: () => '0',
 
-    @Column("integer",{ 
-        nullable:false,
-        default: () => "1",
-        name:"priority"
-        })
-    priority:number;
-        
+  })
+  rgt: number;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"employee_role_code"
-        })
-    employeeRoleCode:string;
-        
+  @Column('integer', {
+    nullable: false,
+    default: () => '1',
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"employee_role_name"
-        })
-    employeeRoleName:string;
-        
+  })
+  depth: number;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"employee_level"
-        })
-    employeeLevel:string;
-        
+  @Column('integer', {
+    nullable: false,
+    default: () => '1',
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"employee_position"
-        })
-    employeePosition:string;
-        
+  })
+  priority: number;
 
-    @Column("text",{ 
-        nullable:true,
-        name:"description"
-        })
-    description:string | null;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  })
+  employee_role_code: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  })
+  employee_role_name: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  })
+  employee_level: string;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+
+  })
+  employee_position: string;
+
+  @Column('text', {
+    nullable: true,
+
+  })
+  description: string | null;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }
