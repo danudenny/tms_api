@@ -1556,6 +1556,7 @@ export class WebDeliveryInService {
             const totalDiff = item.totalAwbInBag - item.totalAwbScan;
             PodScanInBranchBag.update(podScanInBag.podScanInBranchBagId, {
               totalAwbScan: item.totalAwbScan,
+              notes: payload.notes,
               totalDiff,
             });
           }
