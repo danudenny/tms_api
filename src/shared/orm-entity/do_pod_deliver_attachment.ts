@@ -31,9 +31,9 @@ export class DoPodDeliverAttachment extends TmsBaseEntity {
   })
   type: string;
 
-  @ManyToOne(() => DoPodDeliverDetail)
-  @JoinColumn({ name: 'do_pod_deliver_detail_id' })
-  doPodDeliverDetail: DoPodDeliverDetail;
+  // @ManyToOne(() => DoPodDeliverDetail)
+  // @JoinColumn({ name: 'do_pod_deliver_detail_id' })
+  // doPodDeliverDetail: DoPodDeliverDetail;
 
   @OneToOne(() => AttachmentTms)
   @JoinColumn({ name: 'attachment_tms_id', referencedColumnName: 'attachmentTmsId' })
