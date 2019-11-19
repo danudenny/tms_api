@@ -199,12 +199,12 @@ export class MobileAttendanceService {
       const status = 'ok';
       const message = 'success';
       let branchName = '';
+      let checkInDate = '';
+      let attachmentId = null;
 
       const timeNow = moment().toDate();
 
-      // console.log(payload);
-
-      const employeeJourneyCheckOutExist = await this.employeeJourneyRepository.findOne(
+      const employeeJourney = await this.employeeJourneyRepository.findOne(
         {
           where: {
             employeeId: authMeta.employeeId,
@@ -215,19 +215,30 @@ export class MobileAttendanceService {
           },
         },
       );
-      if (employeeJourneyCheckOutExist) {
+      if (employeeJourney) {
+        // upload image
+        const attachment = await AttachmentService.uploadFileBufferToS3(
+          file.buffer,
+          file.originalname,
+          file.mimetype,
+          'Driver-check-Out',
+        );
+        if (attachment) {
+          attachmentId = attachment.attachmentTmsId;
+        }
         const branchOut = await this.branchRepository.findOne({
           where: { branchCode: payload.branchCode },
         });
-        employeeJourneyCheckOutExist.branchCheckOut = employeeJourneyCheckOutExist.branchCheckIn;
-        employeeJourneyCheckOutExist.latitudeCheckOut =  payload.latitudeCheckOut;
-        employeeJourneyCheckOutExist.longitudeCheckOut =  payload.longitudeCheckOut;
-        // employeeJourney.attachmentIdCheckOut = attachmentId;
-        employeeJourneyCheckOutExist.checkOutDate = timeNow;
+        employeeJourney.branchIdCheckOut = branchOut.branchId;
+        employeeJourney.latitudeCheckOut =  payload.latitudeCheckOut;
+        employeeJourney.longitudeCheckOut =  payload.longitudeCheckOut;
+        employeeJourney.attachmentIdCheckOut = attachmentId;
+        employeeJourney.checkOutDate = timeNow;
 
-        await this.employeeJourneyRepository.save(employeeJourneyCheckOutExist);
+        await this.employeeJourneyRepository.save(employeeJourney);
+
         branchName = branchOut.branchName;
-        // checkDate = moment().format('YYYY-MM-DD HH:mm:ss');
+        checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
       }
       result.status = status;
       result.message = message;
