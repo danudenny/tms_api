@@ -69,7 +69,7 @@ export class MobileAttendanceService {
           file.buffer,
           file.originalname,
           file.mimetype,
-          'Driver check-in',
+          'Driver-check-in',
         );
         if (attachment) {
           attachmentId = attachment.attachmentTmsId;
@@ -222,7 +222,7 @@ export class MobileAttendanceService {
           file.buffer,
           file.originalname,
           file.mimetype,
-          'Driver check-Out',
+          'Driver-check-Out',
         );
         if (attachment) {
           attachmentId = attachment.attachmentTmsId;
