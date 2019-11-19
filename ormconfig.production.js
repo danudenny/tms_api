@@ -10,8 +10,7 @@ module.exports = {
   type: 'postgres',
   replication: {
     master: {
-      host:
-        'sicepat-tmspod-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+      host: 'http://sicepat-tms-new.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
       port: 5432,
       username: 'sicepattmsuser',
       password: 's1c3p4Ttm$us3R3ncrypT3dbo05$',
@@ -20,35 +19,7 @@ module.exports = {
     },
     slaves: [
       {
-        host:
-          'sicepat-tmspod-frontend-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
-        port: 5432,
-        username: 'sicepattmsuser',
-        password: 's1c3p4Ttm$us3R3ncrypT3dbo05$',
-        database: 'sicepattms',
-        schema: 'public',
-      },
-      {
-        host:
-          'sicepat-tmspod-api-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
-        port: 5432,
-        username: 'sicepattmsuser',
-        password: 's1c3p4Ttm$us3R3ncrypT3dbo05$',
-        database: 'sicepattms',
-        schema: 'public',
-      },
-      {
-        host:
-          'sicepat-tmspod-background-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
-        port: 5432,
-        username: 'sicepattmsuser',
-        password: 's1c3p4Ttm$us3R3ncrypT3dbo05$',
-        database: 'sicepattms',
-        schema: 'public',
-      },
-      {
-        host:
-          'sicepat-tmspod-process-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+        host: 'sicepat-tms-aurora-rep-cluster.cluster-ro-cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
         port: 5432,
         username: 'sicepattmsuser',
         password: 's1c3p4Ttm$us3R3ncrypT3dbo05$',
