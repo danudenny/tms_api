@@ -116,8 +116,9 @@ export class MobileAttendanceService {
     payload.fieldResolverMap['employeeId'] = 't1.employee_id';
     payload.fieldResolverMap['checkInDate'] = 't1.check_in_date';
     payload.fieldResolverMap['checkOutDate'] = 't1.check_out_date';
-    payload.fieldResolverMap['branchIdCheckIn'] = 't1.branch_id_check_in';
-    payload.fieldResolverMap['branchIdCheckOut'] = 't1.branch_id_check_out';
+    payload.fieldResolverMap['branchNameCheckIn'] = 't4.branch_name';
+    payload.fieldResolverMap['branchAsalDriver'] = 't7.branch_name';
+    payload.fieldResolverMap['branchNameCheckOut'] = 't6.branch_name';
     payload.fieldResolverMap['attachmentTmsId'] = 't2.attachment_tms_id';
     payload.fieldResolverMap['urlCheckIn'] = 't2.url';
     payload.fieldResolverMap['urlCheckOut'] = 't2.url';
