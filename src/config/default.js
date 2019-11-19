@@ -9,7 +9,7 @@ module.exports = {
     db: process.env.NODE_ENV === 'test' ? 1 : 0,
   },
   jwt: {
-    secretKey: 'pleasedefineyoursecretkeyhere',
+    secretKey: '0ace7f5d7b18d2cc2ab0532b04085acc',
     accessTokenExpiration: '24h',
     refreshTokenExpiration: '30d',
   },
@@ -37,12 +37,11 @@ module.exports = {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
   sentry: {
-    dsn:
-      'http://ab6f52ba994f42dc9d15d23464dfbcee@sicepat-sentry.eastus.cloudapp.azure.com:9000/2',
+    dsn: 'http://ab6f52ba994f42dc9d15d23464dfbcee@sicepat-sentry.eastus.cloudapp.azure.com:9000/2',
   },
   loggly: {
-    token: '44060a1c-5fb6-4a9d-8bde-6925e7cc3fc8',
-    subdomain: 'adrysicepat',
+    token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
+    subdomain: 'sicepat',
   },
   servers: getAllServerConfigurations('default.js'),
 };

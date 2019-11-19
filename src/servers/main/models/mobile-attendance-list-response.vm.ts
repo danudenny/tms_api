@@ -41,9 +41,12 @@ export class MobileAtendanceListResponseAllVm {
 
   @ApiModelProperty()
   branchNameCheckOut: string;
+
+  @ApiModelProperty()
+  branchAsalDriver: string;
 }
 
 export class MobileAtendanceListResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [MobileAtendanceListResponseVm] })
-  data: MobileAtendanceListResponseVm[];
+  @ApiModelProperty({ type: () => [MobileAtendanceListResponseAllVm] })
+  data: MobileAtendanceListResponseAllVm[];
 }
