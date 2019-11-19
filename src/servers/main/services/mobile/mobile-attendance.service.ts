@@ -127,6 +127,7 @@ export class MobileAttendanceService {
     payload.fieldResolverMap['latitudeCheckOut'] = 't1.latitude_check_out';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchId'] = 't4.branch_id';
+    payload.fieldResolverMap['nik'] = 't3.nik';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -144,6 +145,7 @@ export class MobileAttendanceService {
     q.selectRaw(
       ['t1.employee_id', 'employeeId'],
       ['t3.fullname', 'fullname'],
+      ['t3.nik', 'nik'],
       ['t1.check_in_date', 'checkInDate'],
       ['t1.check_out_date', 'checkOutDate'],
       ['t4.branch_name', 'branchNameCheckIn'],
