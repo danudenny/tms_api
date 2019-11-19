@@ -199,15 +199,12 @@ export class MobileAttendanceService {
       const status = 'ok';
       const message = 'success';
       let branchName = '';
-      let checkInDate = '';
-      let attachmentId = null;
 
       const timeNow = moment().toDate();
 
       // console.log(payload);
-      const permissonPayload = AuthService.getPermissionTokenPayload();
 
-      const employeeJourney = await this.employeeJourneyRepository.findOne(
+      const employeeJourneyCheckOutExist = await this.employeeJourneyRepository.findOne(
         {
           where: {
             employeeId: authMeta.employeeId,
@@ -218,30 +215,19 @@ export class MobileAttendanceService {
           },
         },
       );
-      if (employeeJourney) {
-        // upload image
-        const attachment = await AttachmentService.uploadFileBufferToS3(
-          file.buffer,
-          file.originalname,
-          file.mimetype,
-          'Driver-check-Out',
-        );
-        if (attachment) {
-          attachmentId = attachment.attachmentTmsId;
-        }
+      if (employeeJourneyCheckOutExist) {
         const branchOut = await this.branchRepository.findOne({
           where: { branchCode: payload.branchCode },
         });
-        employeeJourney.branchIdCheckOut = branchOut.branchId;
-        employeeJourney.latitudeCheckOut =  payload.latitudeCheckOut;
-        employeeJourney.longitudeCheckOut =  payload.longitudeCheckOut;
-        employeeJourney.attachmentIdCheckOut = attachmentId;
-        employeeJourney.checkOutDate = timeNow;
+        employeeJourneyCheckOutExist.branchCheckOut = employeeJourneyCheckOutExist.branchCheckIn;
+        employeeJourneyCheckOutExist.latitudeCheckOut =  payload.latitudeCheckOut;
+        employeeJourneyCheckOutExist.longitudeCheckOut =  payload.longitudeCheckOut;
+        // employeeJourney.attachmentIdCheckOut = attachmentId;
+        employeeJourneyCheckOutExist.checkOutDate = timeNow;
 
-        await this.employeeJourneyRepository.save(employeeJourney);
-
+        await this.employeeJourneyRepository.save(employeeJourneyCheckOutExist);
         branchName = branchOut.branchName;
-        checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
+        // checkDate = moment().format('YYYY-MM-DD HH:mm:ss');
       }
       result.status = status;
       result.message = message;
