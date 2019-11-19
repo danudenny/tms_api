@@ -44,6 +44,9 @@ export class MobileAtendanceListResponseAllVm {
 
   @ApiModelProperty()
   branchAsalDriver: string;
+
+  @ApiModelProperty()
+  nik: string;
 }
 
 export class MobileAtendanceListResponseVm extends BaseMetaResponseVm {
