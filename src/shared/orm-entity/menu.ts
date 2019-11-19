@@ -1,148 +1,141 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('menu', { schema: 'public' })
+export class Menu extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("menu",{schema:"public" } )
-export class Menu {
+  })
+  menu_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"menu_id"
-        })
-    menuId:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"menu_code"
-        })
-    menuCode:string | null;
-        
+  })
+  menu_code: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"menu_name"
-        })
-    menuName:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  })
+  menu_name: string | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  })
+  user_id_created: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  })
+  created_time: Date;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"directory"
-        })
-    directory:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"controller"
-        })
-    controller:string | null;
-        
+  })
+  user_id_updated: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"method"
-        })
-    method:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"label"
-        })
-    label:string | null;
-        
+  })
+  updated_time: Date;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"icon"
-        })
-    icon:string | null;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"link"
-        })
-    link:string | null;
-        
+  })
+  is_deleted: boolean;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"menu_id_parent"
-        })
-    menuIdParent:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"lft"
-        })
-    lft:number | null;
-        
+  })
+  directory: string | null;
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"rgt"
-        })
-    rgt:number | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"depth"
-        })
-    depth:number | null;
-        
+  })
+  controller: string | null;
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"priority"
-        })
-    priority:number | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  method: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  label: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  icon: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  link: string | null;
+
+  @Column('bigint', {
+    nullable: true,
+
+  })
+  menu_id_parent: string | null;
+
+  @Column('integer', {
+    nullable: true,
+
+  })
+  lft: number | null;
+
+  @Column('integer', {
+    nullable: true,
+
+  })
+  rgt: number | null;
+
+  @Column('integer', {
+    nullable: true,
+
+  })
+  depth: number | null;
+
+  @Column('integer', {
+    nullable: true,
+
+  })
+  priority: number | null;
 }

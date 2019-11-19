@@ -16,95 +16,95 @@ import { TransactionalError } from './TransactionalError';
 export function Transactional(options?: {
   connectionName?: string
   propagation?: Propagation
-  isolationLevel?: IsolationLevel
+  isolationLevel?: IsolationLevel,
 }): MethodDecorator {
-  const connectionName: string = options && options.connectionName ? options.connectionName : 'default'
-  const propagation: Propagation = options && options.propagation ? options.propagation : Propagation.REQUIRED
-  const isolationLevel: IsolationLevel | undefined = options && options.isolationLevel
+  const connectionName: string = options && options.connectionName ? options.connectionName : 'default';
+  const propagation: Propagation = options && options.propagation ? options.propagation : Propagation.REQUIRED;
+  const isolationLevel: IsolationLevel | undefined = options && options.isolationLevel;
 
   return (target: any, methodName: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
     const originalMethod = descriptor.value;
 
-    descriptor.value = function (...args: any[]) {
-      const context = getNamespace(NAMESPACE_NAME)
+    descriptor.value = function(...args: any[]) {
+      const context = getNamespace(NAMESPACE_NAME);
       if (!context) {
         throw new Error(
-          'No CLS namespace defined in your app ... please call initializeTransactionalContext() before application start.'
-        )
+          'No CLS namespace defined in your app ... please call initializeTransactionalContext() before application start.',
+        );
       }
 
-      const runOriginal = async () => originalMethod.apply(this, [...args])
-      const runWithNewHook = async () => runInNewHookContext(context, runOriginal)
+      const runOriginal = async () => originalMethod.apply(this, [...args]);
+      const runWithNewHook = async () => runInNewHookContext(context, runOriginal);
 
       const runWithNewTransaction = async () => {
         const transactionCallback = async (entityManager: EntityManager) => {
-          setEntityManagerForConnection(connectionName, context, entityManager)
-          const result = await originalMethod.apply(this, [...args])
-          setEntityManagerForConnection(connectionName, context, null)
-          return result
-        }
+          setEntityManagerForConnection(connectionName, context, entityManager);
+          const result = await originalMethod.apply(this, [...args]);
+          setEntityManagerForConnection(connectionName, context, null);
+          return result;
+        };
 
         if (isolationLevel) {
-          return await runInNewHookContext(context, () => getManager(connectionName).transaction(isolationLevel, transactionCallback))
+          return await runInNewHookContext(context, () => getManager(connectionName).transaction(isolationLevel, transactionCallback));
         } else {
-          return await runInNewHookContext(context, () => getManager(connectionName).transaction(transactionCallback))
+          return await runInNewHookContext(context, () => getManager(connectionName).transaction(transactionCallback));
         }
-      }
+      };
 
       return context.runAndReturn(async () => {
-        const currentTransaction = getEntityManagerForConnection(connectionName, context)
+        const currentTransaction = getEntityManagerForConnection(connectionName, context);
 
         switch (propagation) {
           case Propagation.MANDATORY:
             if (!currentTransaction) {
               throw new TransactionalError(
-                "No existing transaction found for transaction marked with propagation 'MANDATORY'"
-              )
+                'No existing transaction found for transaction marked with propagation \'MANDATORY\'',
+              );
             }
-            return runOriginal()
+            return runOriginal();
           case Propagation.NESTED:
-            return runWithNewTransaction()
+            return runWithNewTransaction();
           case Propagation.NEVER:
             if (currentTransaction) {
               throw new TransactionalError(
-                "Found an existing transaction, transaction marked with propagation 'NEVER'"
-              )
+                'Found an existing transaction, transaction marked with propagation \'NEVER\'',
+              );
             }
-            return runWithNewHook()
+            return runWithNewHook();
           case Propagation.NOT_SUPPORTED:
             if (currentTransaction) {
-              setEntityManagerForConnection(connectionName, context, null)
-              const result = await runWithNewHook()
-              setEntityManagerForConnection(connectionName, context, currentTransaction)
-              return result
+              setEntityManagerForConnection(connectionName, context, null);
+              const result = await runWithNewHook();
+              setEntityManagerForConnection(connectionName, context, currentTransaction);
+              return result;
             }
-            return runOriginal()
+            return runOriginal();
           case Propagation.REQUIRED:
             if (currentTransaction) {
-              return runOriginal()
+              return runOriginal();
             }
-            return runWithNewTransaction()
+            return runWithNewTransaction();
           case Propagation.REQUIRES_NEW:
-            return runWithNewTransaction()
+            return runWithNewTransaction();
           case Propagation.SUPPORTS:
             if (currentTransaction) {
-              return runOriginal()
+              return runOriginal();
             } else {
-              return runWithNewHook()
+              return runWithNewHook();
             }
         }
         if (currentTransaction) {
-          return runOriginal()
+          return runOriginal();
         }
-        return runWithNewTransaction()
-      })
-    }
+        return runWithNewTransaction();
+      });
+    };
 
     Reflect.getMetadataKeys(originalMethod).forEach((previousMetadataKey) => {
       const previousMetadata = Reflect.getMetadata(previousMetadataKey, originalMethod);
       Reflect.defineMetadata(previousMetadataKey, previousMetadata, descriptor.value);
     });
-    
+
     Object.defineProperty(descriptor.value, 'name', {value: originalMethod.name, writable: false});
-  }
+  };
 }

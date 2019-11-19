@@ -1,85 +1,86 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('do_smu_detail', { schema: 'public' })
+export class DoSmuDetail extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("do_smu_detail",{schema:"public" } )
-export class DoSmuDetail {
+  })
+  do_smu_detail_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"do_smu_detail_id"
-        })
-    doSmuDetailId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"do_smu_id"
-        })
-    doSmuId:string;
-        
+  })
+  do_smu_id: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"smu_id"
-        })
-    smuId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  })
+  smu_id: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  })
+  user_id_created: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  })
+  created_time: Date;
 
-    @Column("text",{ 
-        nullable:true,
-        name:"note"
-        })
-    note:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("jsonb",{ 
-        nullable:true,
-        name:"attachment_tms_id_smu_pic"
-        })
-    attachmentTmsIdSmuPic:Object | null;
-        
+  })
+  user_id_updated: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        default: () => "0",
-        name:"smu_item_id"
-        })
-    smuItemId:string;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
+
+  @Column('text', {
+    nullable: true,
+
+  })
+  note: string | null;
+
+  @Column('jsonb', {
+    nullable: true,
+
+  })
+  attachment_tms_id_smu_pic: Object | null;
+
+  @Column('bigint', {
+    nullable: false,
+    default: () => '0',
+
+  })
+  smu_item_id: string;
 }

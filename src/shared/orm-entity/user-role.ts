@@ -1,71 +1,54 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
+import { Branch } from './branch';
+import { Role } from './role';
+import { User } from './user';
+import { TmsBaseEntity } from './tms-base';
 
-@Entity("user_role",{schema:"public" } )
-export class UserRole {
+@Entity('user_role', { schema: 'public' })
+export class UserRole extends TmsBaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
+    name: 'user_role_id',
+  })
+  userRoleId: number;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id"
-        })
-    userId:string;
-        
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id',
+  })
+  userId: number;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"role_id"
-        })
-    roleId:string;
-        
+  @Column('bigint', {
+    nullable: false,
+    name: 'role_id',
+  })
+  roleId: number;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('bigint', {
+    nullable: false,
+    name: 'branch_id',
+    default: () => '1',
+  })
+  branchId: number;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  // relation model
+  @ManyToOne(() => User)
+  @JoinColumn({
+    name: 'user_id',
+    referencedColumnName: 'userId',
+  })
+  users: User[];
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @OneToOne(() => Branch, branch => branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  @ManyToOne(() => User, e => e.userRoles)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
-
-    @Column("bigint",{ 
-        nullable:false,
-        default: () => "1",
-        name:"branch_id"
-        })
-    branchId:string;
-        
-
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"user_role_id"
-        })
-    userRoleId:string;
-        
+  @ManyToOne(() => Role)
+  @JoinColumn({ name: 'role_id' })
+  role: Role;
 }

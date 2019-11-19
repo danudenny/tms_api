@@ -1,0 +1,223 @@
+FORMAT: 1A
+HOST: http://auth-staging.sicepat.com
+
+# API Auth
+
+# Group Auth
+
+## Login Access [/auth/login]
+
+### Login URL [POST]
+
++ Request Login (application/json)
+
+    + Attributes (object)
+        + clientId: `mobile`, (string, required) - Client id
+        + email: `ade@sicepat.com`, (string) - User Email
+        + username: `adefast`, (string) - Username User
+        + password: `1234`, (string) - Password User
+        + grant: `asdasgsdafwerrer345`, (string) - Refresh Token
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "userId": 11,
+                "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
+                "refreshToken": "8asfgasgwetw4tewtggg",
+                "email": "ade@sicepat.com",
+                "username": "adefast",
+                "displayName": "Ade"
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+## Logout Access [/auth/logout]
+
+### Logout URL [POST]
+
++ Request Logout (application/json)
+
+    + Attributes (object)
+        + refreshToken: `8asfgasgwetw4tewtggg`, (string, required) - refreshToken
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "status": 200,
+                "message": 'ok',
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Refresh Token Access [/auth/refreshToken]
+
+### Login URL [POST]
+
++ Request Login (application/json)
+
+    + Attributes (object)
+        + refreshToken: `8asfgasgwetw4tewtggg`, (string, required) - refreshToken
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "userId": 11,
+                "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ",
+                "refreshToken": "8asfgasgwetw4tewtgggasdasdasfasga8gdsgdfghfdhdfh",
+                "email": "ade@sicepat.com",
+                "username": "adefast",
+                "displayName": "Ade"
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+## Permission Access [/auth/permissionAccess]
+    Untuk dapetkan akses permission sebenarnya hanya butuh roleId. BranchId dikirim hanya untuk indikasi dia login sebagai cabang/gerai mana, tujuannya hanya limit akses untuk boleh buka cabang lain / tidak, selain itu untuk indicator ketika scan, bisa tau dari cabang/gerai mana
+
+### Permission Access URL [POST]
+
++ Request Permission Access (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+        + clientId: mobile, (string, required) - Client id
+        + roleId: 123, (string) - Role Id User
+        + branchId: 12, (string) - Branch Id User
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "userId": 11,
+                "email": "ade@sicepat.com",
+                "username": "adefast",
+                "displayName": "Ade",
+                "branchName": "Kantor Pusat",
+                "branchCode": "0010000",
+                "roleName": "Sales",
+                "employeeId": "1",
+                "permissionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlSWQiOjEwLCJicmFuY2hJZCI6MSwiaWF0IjoxNTU5MTA0MTE2fQ.cU6UnG5_YbvnXUrYTVD0lymFgG5YlB4xP3JGUn-TpeI",
+                "rolesAccessPermissions": [
+                    "dashboard",
+                    "pod",
+                    "pod_scan_in_branch",
+                    "pod_scan_in_hub",
+                    "do_pod",
+                    "do_pod_hub",
+                    "pod_sortir_hub",
+                    "pod_input_awb_3pl",
+                    "pod_manual",
+                    "scan_in_list",
+                    "do_pod_list",
+                    "do_pod_bag_list",
+                    "pod_awb_list",
+                    "awb_3pl_list",
+                    "pod_scan_in_problem_ct",
+                    "pod_scan_in_problem_branch",
+                    "pod_scan_in_problem_hub",
+                    "pod_awb_problem"
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
+
+## Get Permission Roles [/auth/permissionRoles]
+
+### Get Permission Roles URL [POST]
+
++ Request Get Permission Access (application/json)
+
+    + Header
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ
+
+    + Attributes (object)
+        + clientId: mobile, (string, required) - Client id
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+                "userId": 11,
+                "email": "ade@sicepat.com",
+                "username": "adefast",
+                "displayName": "Ade",
+                "roles": [
+                    {
+                        "roleId" : "1",
+                        "branchId": "1",
+                        "branchName": "Kantor Pusat",
+                        "branchCode": "100000",
+                        "roleName": "Sales"
+                    },
+                    {
+                        "roleId" : "10",
+                        "branchId": "2",
+                        "branchName": "Pluit",
+                        "branchCode": "100100",
+                        "roleName": "Sigesit"
+                    },
+                    {
+                        "roleId" : "10",
+                        "branchId": "3",
+                        "branchName": "Daan Mogot",
+                        "branchCode": "100200",
+                        "roleName": "Sigesit"
+                    },
+                    {
+                        "roleId" : "5",
+                        "branchId": "3",
+                        "branchName": "Daan Mogot",
+                        "branchCode": "100200",
+                        "roleName": "Kepala Kurir"
+                    }
+                ]
+            }
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
+
++ Response 401 (application/json; charset=utf-8)
+    + Body
+
+            {}

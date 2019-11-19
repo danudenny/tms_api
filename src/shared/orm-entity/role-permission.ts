@@ -1,72 +1,68 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
+import { Role } from './role';
+import { TmsBaseEntity } from './tms-base';
 
-@Entity("role_permission",{schema:"public" } )
-export class RolePermission {
+@Entity('role_permission', { schema: 'public' })
+export class RolePermission extends TmsBaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"role_permission_id"
-        })
-    rolePermissionId:string;
-        
+  })
+  role_permission_id: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"role_id"
-        })
-    roleId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"nav"
-        })
-    nav:string;
-        
+  })
+  role_id: number;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"name"
-        })
-    name:string | null;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  })
+  nav: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  })
+  name: string | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  // @Column('bigint', {
+  //   nullable: false,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  // })
+  // user_id_created: string;
+
+  // @Column('timestamp without time zone', {
+  //   nullable: false,
+
+  // })
+  // created_time: Date;
+
+  // @Column('bigint', {
+  //   nullable: false,
+
+  // })
+  // user_id_updated: string;
+
+  // @Column('timestamp without time zone', {
+  //   nullable: false,
+
+  // })
+  // updated_time: Date;
+
+  // @Column('boolean', {
+  //   nullable: false,
+  //   default: () => 'false',
+
+  // })
+  // is_deleted: boolean;
+
+  @ManyToOne(() => Role, e => e.rolePermissions)
+  @JoinColumn({ name: 'role_id' })
+  role: Role;
 }

@@ -1,104 +1,103 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('invoice_detail', { schema: 'public' })
+export class InvoiceDetail extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("invoice_detail",{schema:"public" } )
-export class InvoiceDetail {
+  })
+  invoice_detail_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"invoice_detail_id"
-        })
-    invoiceDetailId:string;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"invoice_id"
-        })
-    invoiceId:string | null;
-        
+  })
+  invoice_id: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"type"
-        })
-    type:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"awb_price_id"
-        })
-    awbPriceId:string | null;
-        
+  })
+  type: string | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"invoice_date"
-        })
-    invoiceDate:Date | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("numeric",{ 
-        nullable:true,
-        default: () => "0",
-        precision:20,
-        scale:5,
-        name:"amount"
-        })
-    amount:string | null;
-        
+  })
+  awb_price_id: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"component_name"
-        })
-    componentName:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"component_desc"
-        })
-    componentDesc:string | null;
-        
+  })
+  invoice_date: Date | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('numeric', {
+    nullable: true,
+    default: () => '0',
+    precision: 20,
+    scale: 5,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  amount: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  component_name: string | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  component_desc: string | null;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }

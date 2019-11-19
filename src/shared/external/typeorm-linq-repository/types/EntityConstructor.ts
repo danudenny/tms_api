@@ -1,3 +1,3 @@
-import { EntityBase } from "./EntityBase";
+import { EntityBase } from './EntityBase';
 
-export declare type EntityConstructor<T extends EntityBase> = { new (...params: any[]): T; };
+export declare type EntityConstructor<T extends EntityBase> = new (...params: any[]) => T;

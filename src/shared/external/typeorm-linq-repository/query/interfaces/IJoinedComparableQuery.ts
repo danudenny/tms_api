@@ -1,7 +1,7 @@
-import { EntityBase } from "../../types/EntityBase";
-import { QueryConditionOptions } from "../../types/QueryConditionOptions";
-import { IComparableQueryBase } from "./IComparableQueryBase";
-import { IQuery } from "./IQuery";
+import { EntityBase } from '../../types/EntityBase';
+import { QueryConditionOptions } from '../../types/QueryConditionOptions';
+import { IComparableQueryBase } from './IComparableQueryBase';
+import { IQuery } from './IQuery';
 
 /**
  * Finalizes the comparing portion of a Query operation by performing comparison with the specified joined value.

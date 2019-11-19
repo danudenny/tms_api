@@ -1,6 +1,6 @@
-import { SelectQueryBuilder } from "typeorm";
-import { IQuery } from "../../query/interfaces/IQuery";
-import { EntityBase } from "../../types/EntityBase";
+import { SelectQueryBuilder } from 'typeorm';
+import { IQuery } from '../../query/interfaces/IQuery';
+import { EntityBase } from '../../types/EntityBase';
 
 /**
  * Base repository operations for TypeORM entities.

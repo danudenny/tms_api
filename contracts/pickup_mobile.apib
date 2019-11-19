@@ -1,0 +1,430 @@
+FORMAT: 1A
+HOST: http://tmsapi-staging2.sicepat.com
+
+# API Pickup for Mobile
+
+# Group Work Order SPK
+
+## 1. Work Order Download [/work_order/sigesit/download]
+
+### Work Order Download URL [POST]
+
++ Request
+    + Header
+
+            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+            Content-Type: application/json
+
+    + Attributes (object)
+        + request_id : 398472 (string, required)
+
++ Response 200 (application/json; charset=utf-8)
+
+    + Body
+        {
+            "meta": {
+                    "total_data": 2,
+                    "status": 200,
+                    "error_code": "0",
+                    "message": "Success"
+                    },
+            "payload": [
+            {
+                "customer_account_id": 21030,
+                "customer_account_name": "PT Maju Mundur Sukses",
+                "merchant_name": "Ujang Shudadang",
+                "merchant_phone": "0827387283",
+                "delivery_type": "REG",
+                "customer_category_name": "Ecommerce",
+                "pickup_schedule_date_time": "2019-03-29 09:00:00",
+                "pickup_address": "Jalan Maju Selatan Nomor 4 Kelurahan Jago Utara",
+                "branch_name": "Gambir",
+                "employee_id_driver": 3943,
+                "work_order_type": "automatic",
+                "work_order_id": 9257,
+                "check_in_date_time": null,
+                "check_out_date_time": null,
+                "awb_number": "9902838372",
+                "cod_value": 0.00,
+                "work_order_status_id_last": 2000,
+                "status_code": "",
+                "status_name": "Assign Sigesit",
+                "is_member": true
+            },
+            {
+                "customer_account_id": 21030,
+                "customer_account_name": "PT Maju Mundur Sukses",
+                "merchant_name": "Ujang Shudadang",
+                "merchant_phone": "0827387283",
+                "delivery_type": "BEST",
+                "customer_category_name": "Ecommerce",
+                "pickup_schedule_date_time": "2019-03-29 09:00:00",
+                "pickup_address": "Jalan Maju Selatan Nomor 4 Kelurahan Jago Utara",
+                "branch_name": "Gambir",
+                "employee_id_driver": 3943,
+                "work_order_type": "automatic",
+                "work_order_id": 9257,
+                "check_in_date_time": null,
+                "check_out_date_time": null,
+                "awb_number": "9902838372",
+                "cod_value": 0.00,
+                "work_order_status_id_last": 2000,
+                "status_code": "",
+                "status_name": "Assign Sigesit",
+                "is_member": true
+            }
+            ]
+        }
+
+## 2. Work Order Sync [/work_order/sigesit/sync]
+
+### Work Order Sync URL [POST]
+
++ Request
+    + Header
+
+            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+            Content-Type: application/json
+
+    + Attributes (object)
+        + request_id         : 398472 (string, required)
+        + customer_account_id: 21012 (number)
+        + customer_name      : PT Mundur Maju Sukses (string)
+        + employee_id_driver : 39243 (string)
+        + pickup_address     : Jalan keadilan raya no 1 (string)
+        + checkin_time       : `2019-03-29 01:01:09` (string)
+        + checkin_long       : 106.81360960006714 (string)
+        + checkin_lat        : `-6.179723739624023` (string)
+        + checkout_time      : `2019-03-29 01:02:24` (string)
+        + checkout_long      : 106.81360960006714 (string)
+        + checkout_lat       : `-6.179723739624023` (string)
+        + is_member          : true (string)
+        + is_final           : 1 (number)
+        + do_pickup_id       : 11 (number)
+        + pickup_image       : `attachments/pickup-images/2019/4/16/image.jpg` (string)
+        + pickup_signature   : `attachments/pickup-signatures/2019/4/16/signature.jpg` (string)
+        + merchant_name      : Toko Ceria (string)
+        + attachment_ids     : 1234, 123124, 23123 (array)
+        + workorders         : (array)
+            + item:
+                + work_order_id       : 8535 (string)
+                + awb_number          : 000185210629 (string)
+                + qty                 : 1 (number)
+                + reason_id           : 2 (number)
+                + reason_note         : `note`  (string)
+                + pickup_date_time    : `2019-03-29 01:01:40` (string)
+                + work_order_status_id: 5000 (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+    {
+        "meta": {
+                "status"      : 200,
+                "error_code"  : "0",
+                "message"     : "Success",
+                "do_pickup_id": 123
+                },
+        "payload": [
+            {
+                "work_order_id" :8535,
+                "mobile_ref_id" :12312412,
+                "awb_number"    :"1234830439",
+                "sync_date_time":"2019-03-29 07:55:16",
+                "sync_status"   :true,
+                "sync_message"  :"success sync data",
+            },
+            {
+                "work_order_id" :8531,
+                "mobile_ref_id" :1233463452,
+                "awb_number"    :"1234830439",
+                "sync_date_time":"2019-03-29 07:55:16",
+                "sync_status"   :true,
+                "sync_message"  :"success sync data"
+            }
+        ]
+    }
+
+## 3. Work Order History Scan [/work_order/sigesit/history_scan]
+
+### Work Order History Scan URL [POST]
+
++ Request
+    + Header
+
+            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+            Content-Type: application/json
+
+    + Attributes (object)
+        + request_id: 93934398 (string, required)
+        + order: check_out_date_time (string)
+        + sort: desc (string)
+        + page: 1 (number)
+        + limit: 10 (number)
+
++ Response 200 (application/json; charset=utf-8)
+
+    + Body
+
+        {
+            "meta": {
+                    "status"    : 200,
+                    "error_code": "0",
+                    "message"   : "Success",
+                    "current_page": 1,
+                    "next_page": 2,
+                    "prev_page": 0,
+                    "total_pages": 2,
+                    "total_count": 10,
+                    },
+            "payload": [
+                {
+                    "work_order_group": "11345~~0ea517dcbda9d5bede03b45d3893f8d0~29032019~3~4521~~~automatic",
+                    "work_order_key": "e5a0ccdda9379e05edc883225c49a800",
+                    "customer_account_name": "Lazada Indonesia",
+                    "merchant_name": "faiz_store",
+                    "total_awb": 5,
+                    "total_item": 10,
+                    "pickup_schedule_date_time": "2019-03-29 08:00:00",
+                    "pickup_address": "Rumah Susun Tanah Tinggi Lantai Dasar No.6 RT/RW 04/14 Kelurahan Tanah Tinggi Kecamatan Johar Baru Jakarta Pusat,DKI Jakarta,Kota Jakarta Pusat,Johar Baru",
+                    "branch_name": "Kebon Jeruk",
+                    "employee_id_driver": 4521,
+                    "work_order_type": "automatic",
+                    "is_member": true,
+                    "check_in_date_time": "2019-03-29 10:31:00",
+                    "check_out_date_time": "2019-03-29 10:31:09",
+                    "do_pickup_id": 634,
+                    "is_checkout": true
+                },
+                {
+                    "work_order_group": "1893~~643e60280c872cc27b34ac0436bf3c5c~29032019~3~4521~~553a867794504096a1380f3dff813d30~automatic",
+                    "work_order_key": "f839c2a954db4608795644adbdd4715d",
+                    "customer_account_name": "Bli2.com - Dg",
+                    "merchant_name": "EKA Helmet Shop",
+                    "total_awb": 1,
+                    "total_item": 1,
+                    "pickup_schedule_date_time": "2019-03-29 08:00:00",
+                    "pickup_address": "Jalan Empu Gandring Raya No 102 Rt/Rw: 04/03, Perumnas 2. Patokan: Sebelah TK Ramadhan, Gerbang Pintu warna Hijau Tua Cibodas-Cibodas Kota Tangerang|-|-|Banten",
+                    "branch_name": "Kebon Jeruk",
+                    "employee_id_driver": 4521,
+                    "work_order_type": "automatic",
+                    "is_member": true,
+                    "check_in_date_time": "2019-03-29 10:30:35",
+                    "check_out_date_time": "2019-03-29 10:30:41",
+                    "do_pickup_id": 633,
+                    "is_checkout": true
+                }
+            ]
+        }
+
+## 4. Work Order Detail POP [/work_order/sigesit/detail_pop]
+
+### Work Order Detail POP URL [POST]
+
++ Request
+    + Header
+
+            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+            Content-Type: application/json
+
+    + Attributes (object)
+        + request_id: 93934398 (string, required)
+        + work_order_group: `5987~~f618047543c4cb2d438139abc2aee477` (string)
+        + do_pickup_id: 630 (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+        {
+            "meta": {
+                    "status"    : 200,
+                    "error_code": "0",
+                    "message"   : "Success",
+                    "allow_cancel_checkout" : false,
+                    "is_active_checkin" : false
+                    },
+            "payload": [
+            {
+                "pickup_schedule_date_time": "2019-03-29 08:00:00",
+                "pickup_address": "l Taman Tekno Blok D2 No.2. Bumi Serpong Damai,  Kec. Setu , Tangerang Selatan, Banten, 15314. Setu-Setu Kota Tangerang Selatan|-|-|Banten",
+                "branch_name": "Kebon Jeruk",
+                "employee_id_driver": 4521,
+                "work_order_type": "automatic",
+                "work_order_id": 7849,
+                "check_in_date_time": "2019-03-29 10:09:04",
+                "check_out_date_time": "2019-03-29 10:09:14",
+                "work_order_group": "5987~~f618047543c4cb2d438139abc2aee477~29032019~3~4521~~6824324e2d0c95c535a49d83c0b4a659~automatic",
+                "awb_number": "000178136146",
+                "cod_value": 0.00,
+                "work_order_status_id_last": 2200,
+                "status_code": "PICK",
+                "status_name": "PICK (Picked Up)",
+                "merchant_name": "Enesis Official Store",
+                "merchant_phone": "6281311832151",
+                "reason_name": null,
+                "reason_note": "",
+                "work_order_status_id_pick": 5000,
+                "total_pickup_item": 1
+            },
+            {
+                "pickup_schedule_date_time": "2019-03-29 08:00:00",
+                "pickup_address": "l Taman Tekno Blok D2 No.2. Bumi Serpong Damai,  Kec. Setu , Tangerang Selatan, Banten, 15314. Setu-Setu Kota Tangerang Selatan|-|-|Banten",
+                "branch_name": "Kebon Jeruk",
+                "employee_id_driver": 4521,
+                "work_order_type": "automatic",
+                "work_order_id": 7848,
+                "check_in_date_time": "2019-03-29 10:09:04",
+                "check_out_date_time": "2019-03-29 10:09:14",
+                "work_order_group": "5987~~f618047543c4cb2d438139abc2aee477~29032019~3~4521~~6824324e2d0c95c535a49d83c0b4a659~automatic",
+                "awb_number": "000178129893",
+                "cod_value": 0.00,
+                "work_order_status_id_last": 2200,
+                "status_code": "UNPICK",
+                "status_name": "UNPICK (Reschedule) - Mobile",
+                "merchant_name": "Enesis Official Store",
+                "merchant_phone": "6281311832151",
+                "reason_name": "Not At Home",
+                "reason_note": "",
+                "work_order_status_id_pick": 4050,
+                "total_pickup_item": 0
+            }]
+        }
+
+
+## 5. Get Data Reasons [/reasons]
+
+### Get data list reasons URL [POST]
+
++ Request
+    + Header
+
+            Authorization: `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2FwaV9pZCI6MywiZXhwIjoxNTUwMDg4NTE0fQ.Jnp0NMZ05zlXs4mKNdbt7cJ4Xwf8mTZrU-PS_eQY-vQ`
+            Content-Type: application/json
+
+    + Attributes (object)
+        + request_id: `93934398` (string, required)
+        + do_pickup_id: 630 (string)
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+        {
+            "meta": {
+                    "status"    : 200,
+                    "error_code": "0",
+                    "message"   : "Success"
+                    },
+            "payload": [
+                {
+                    "reason_id": 1,
+                    "apps_code": "tms",
+                    "reason_category": "pickup",
+                    "reason_type": "problem",
+                    "reason_code": "NTH",
+                    "reason_name": "Not At Home",
+                    "reason_description": null,
+                    "user_id_created": 166,
+                    "created_time": "2019-01-09 18:09:45",
+                    "user_id_updated": 166,
+                    "updated_time": "2019-01-09 18:09:45",
+                    "is_deleted": false
+                },
+                {
+                    "reason_id": 2,
+                    "apps_code": "tms",
+                    "reason_category": "pickup",
+                    "reason_type": "problem",
+                    "reason_code": "NET",
+                    "reason_name": "Not Enough Time",
+                    "reason_description": null,
+                    "user_id_created": 166,
+                    "created_time": "2019-01-09 18:10:42",
+                    "user_id_updated": 166,
+                    "updated_time": "2019-01-09 18:10:42",
+                    "is_deleted": false
+                },
+                {
+                    "reason_id": 3,
+                    "apps_code": "tms",
+                    "reason_category": "pickup",
+                    "reason_type": "problem",
+                    "reason_code": "BA",
+                    "reason_name": "Bad Adress",
+                    "reason_description": null,
+                    "user_id_created": 166,
+                    "created_time": "2019-01-09 18:13:18",
+                    "user_id_updated": 166,
+                    "updated_time": "2019-01-21 15:59:42",
+                    "is_deleted": false
+                },
+                {
+                    "reason_id": 4,
+                    "apps_code": "tms",
+                    "reason_category": "pickup",
+                    "reason_type": "problem",
+                    "reason_code": "BEN",
+                    "reason_name": "Bencana Alam",
+                    "reason_description": null,
+                    "user_id_created": 166,
+                    "created_time": "2019-01-09 18:14:56",
+                    "user_id_updated": 166,
+                    "updated_time": "2019-01-21 16:00:11",
+                    "is_deleted": false
+                },
+                {
+                    "reason_id": 5,
+                    "apps_code": "tms",
+                    "reason_category": "pickup",
+                    "reason_type": "problem",
+                    "reason_code": "MSB",
+                    "reason_name": "Musibah ",
+                    "reason_description": null,
+                    "user_id_created": 166,
+                    "created_time": "2019-01-21 16:01:35",
+                    "user_id_updated": 166,
+                    "updated_time": "2019-01-21 16:01:35",
+                    "is_deleted": false
+                },
+                {
+                    "reason_id": 6,
+                    "apps_code": "tms",
+                    "reason_category": "pickup",
+                    "reason_type": "problem",
+                    "reason_code": "NR",
+                    "reason_name": "Barang Not Ready",
+                    "reason_description": null,
+                    "user_id_created": 166,
+                    "created_time": "2019-01-21 16:01:58",
+                    "user_id_updated": 166,
+                    "updated_time": "2019-01-21 16:01:58",
+                    "is_deleted": false
+                },
+                {
+                    "reason_id": 7,
+                    "apps_code": "tms",
+                    "reason_category": "pickup",
+                    "reason_type": "problem",
+                    "reason_code": "SA",
+                    "reason_name": "Salah Assign",
+                    "reason_description": null,
+                    "user_id_created": 166,
+                    "created_time": "2019-01-21 16:02:07",
+                    "user_id_updated": 166,
+                    "updated_time": "2019-01-21 16:02:07",
+                    "is_deleted": false
+                },
+                {
+                    "reason_id": 8,
+                    "apps_code": "tms",
+                    "reason_category": "pickup",
+                    "reason_type": "accepted",
+                    "reason_code": "DTM",
+                    "reason_name": "Diterima",
+                    "reason_description": null,
+                    "user_id_created": 166,
+                    "created_time": "2019-01-21 16:02:34",
+                    "user_id_updated": 166,
+                    "updated_time": "2019-01-21 16:02:34",
+                    "is_deleted": false
+                }
+            ]
+        }

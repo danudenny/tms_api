@@ -1,187 +1,175 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('partner', { schema: 'public' })
+export class Partner extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("partner",{schema:"public" } )
-export class Partner {
+  })
+  partner_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"partner_id"
-        })
-    partnerId:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"partner_name"
-        })
-    partnerName:string | null;
-        
+  })
+  partner_name: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"partner_email"
-        })
-    partnerEmail:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"api_key"
-        })
-    apiKey:string | null;
-        
+  })
+  partner_email: string | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"customer_account_id"
-        })
-    customerAccountId:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"awb_number_start"
-        })
-    awbNumberStart:string | null;
-        
+  })
+  api_key: string | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"awb_number_end"
-        })
-    awbNumberEnd:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"current_awb_number"
-        })
-    currentAwbNumber:string | null;
-        
+  })
+  customer_account_id: string | null;
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"sla_hour_pickup"
-        })
-    slaHourPickup:number | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_active"
-        })
-    isActive:boolean;
-        
+  })
+  awb_number_start: string | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_email_log"
-        })
-    isEmailLog:boolean;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_assign_to_branch"
-        })
-    isAssignToBranch:boolean;
-        
+  })
+  awb_number_end: string | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_assign_to_courier"
-        })
-    isAssignToCourier:boolean;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_pick_unpick"
-        })
-    isPickUnpick:boolean;
-        
+  })
+  current_awb_number: string | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_reschedule"
-        })
-    isReschedule:boolean;
-        
+  @Column('integer', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:20,
-        name:"sm_code"
-        })
-    smCode:string | null;
-        
+  })
+  sla_hour_pickup: number | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"user_created"
-        })
-    userCreated:string | null;
-        
+  })
+  is_active: boolean;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  })
+  is_email_log: boolean;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"user_updated"
-        })
-    userUpdated:string | null;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  is_assign_to_branch: boolean;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
 
-    @Column("json",{ 
-        nullable:true,
-        name:"validation"
-        })
-    validation:Object | null;
-        
+  })
+  is_assign_to_courier: boolean;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_pick_unpick: boolean;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_reschedule: boolean;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 20,
+
+  })
+  sm_code: string | null;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  user_created: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  user_updated: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
+
+  @Column('json', {
+    nullable: true,
+
+  })
+  validation: Object | null;
 }

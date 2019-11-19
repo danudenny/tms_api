@@ -1,223 +1,206 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('pickup_request_upload', { schema: 'public' })
+export class PickupRequestUpload extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("pickup_request_upload",{schema:"public" } )
-export class PickupRequestUpload {
+  })
+  pickup_request_upload_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"pickup_request_upload_id"
-        })
-    pickupRequestUploadId:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"pickup_request_upload_code"
-        })
-    pickupRequestUploadCode:string | null;
-        
+  })
+  pickup_request_upload_code: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"pickup_request_upload_name"
-        })
-    pickupRequestUploadName:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"pickup_request_upload_email"
-        })
-    pickupRequestUploadEmail:string | null;
-        
+  })
+  pickup_request_upload_name: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"pickup_request_upload_contact_no"
-        })
-    pickupRequestUploadContactNo:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
 
-    @Column("text",{ 
-        nullable:true,
-        name:"pickup_request_upload_address"
-        })
-    pickupRequestUploadAddress:string | null;
-        
+  })
+  pickup_request_upload_email: string | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"pickup_request_upload_date_time"
-        })
-    pickupRequestUploadDateTime:Date | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"pickup_schedule_date_time"
-        })
-    pickupScheduleDateTime:Date | null;
-        
+  })
+  pickup_request_upload_contact_no: string | null;
 
-    @Column("text",{ 
-        nullable:true,
-        name:"pickup_request_upload_notes"
-        })
-    pickupRequestUploadNotes:string | null;
-        
+  @Column('text', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"pickup_request_upload_status_id"
-        })
-    pickupRequestUploadStatusId:string | null;
-        
+  })
+  pickup_request_upload_address: string | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"pickup_request_upload_status_id_last"
-        })
-    pickupRequestUploadStatusIdLast:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:50,
-        name:"pickup_request_upload_type"
-        })
-    pickupRequestUploadType:string | null;
-        
+  })
+  pickup_request_upload_date_time: Date | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:200,
-        name:"reference_no"
-        })
-    referenceNo:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"order_date_time"
-        })
-    orderDateTime:Date | null;
-        
+  })
+  pickup_schedule_date_time: Date | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"expired_date_time"
-        })
-    expiredDateTime:Date | null;
-        
+  @Column('text', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"encrypt_address100"
-        })
-    encryptAddress100:string | null;
-        
+  })
+  pickup_request_upload_notes: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"encrypt_address255"
-        })
-    encryptAddress255:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"merchant_code"
-        })
-    merchantCode:string | null;
-        
+  })
+  pickup_request_upload_status_id: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:200,
-        name:"reference_number"
-        })
-    referenceNumber:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"partner_id"
-        })
-    partnerId:string | null;
-        
+  })
+  pickup_request_upload_status_id_last: string | null;
 
-    @Column("integer",{ 
-        nullable:true,
-        name:"total_awb"
-        })
-    totalAwb:number | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  })
+  pickup_request_upload_type: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"user_created"
-        })
-    userCreated:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 200,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  reference_no: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"user_updated"
-        })
-    userUpdated:string | null;
-        
+  })
+  order_date_time: Date | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  })
+  expired_date_time: Date | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"encrypt_merchant_name"
-        })
-    encryptMerchantName:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+
+  })
+  encrypt_address100: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  encrypt_address255: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+
+  })
+  merchant_code: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 200,
+
+  })
+  reference_number: string | null;
+
+  @Column('bigint', {
+    nullable: true,
+
+  })
+  partner_id: string | null;
+
+  @Column('integer', {
+    nullable: true,
+
+  })
+  total_awb: number | null;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  user_created: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  user_updated: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  encrypt_merchant_name: string | null;
 }

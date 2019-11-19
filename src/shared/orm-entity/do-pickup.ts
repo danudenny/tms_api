@@ -1,176 +1,165 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+@Entity('do_pickup', { schema: 'public' })
+export class DoPickup extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("do_pickup",{schema:"public" } )
-export class DoPickup {
+  })
+  do_pickup_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"do_pickup_id"
-        })
-    doPickupId:string;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"do_pickup_date"
-        })
-    doPickupDate:Date;
-        
+  })
+  do_pickup_date: Date;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id"
-        })
-    userId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"branch_id"
-        })
-    branchId:string;
-        
+  })
+  user_id: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"employee_id"
-        })
-    employeeId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"work_order_group"
-        })
-    workOrderGroup:string | null;
-        
+  })
+  branch_id: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"work_order_group_encrypt"
-        })
-    workOrderGroupEncrypt:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"latitude_check_in"
-        })
-    latitudeCheckIn:string | null;
-        
+  })
+  employee_id: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"latitude_check_out"
-        })
-    latitudeCheckOut:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"longitude_check_in"
-        })
-    longitudeCheckIn:string | null;
-        
+  })
+  work_order_group: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"longitude_check_out"
-        })
-    longitudeCheckOut:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"check_in_date_time"
-        })
-    checkInDateTime:Date | null;
-        
+  })
+  work_order_group_encrypt: string | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"check_out_date_time"
-        })
-    checkOutDateTime:Date | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"cancel_check_in_date_time"
-        })
-    cancelCheckInDateTime:Date | null;
-        
+  })
+  latitude_check_in: string | null;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"cancel_check_out_date_time"
-        })
-    cancelCheckOutDateTime:Date | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
 
-    @Column("boolean",{ 
-        nullable:true,
-        default: () => "false",
-        name:"is_active"
-        })
-    isActive:boolean | null;
-        
+  })
+  latitude_check_out: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  longitude_check_in: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  longitude_check_out: string | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"customer_account_id"
-        })
-    customerAccountId:string | null;
-        
+  })
+  check_in_date_time: Date | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"merchant_name"
-        })
-    merchantName:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  check_out_date_time: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  cancel_check_in_date_time: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  cancel_check_out_date_time: Date | null;
+
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+
+  })
+  is_active: boolean | null;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
+
+  @Column('bigint', {
+    nullable: true,
+
+  })
+  customer_account_id: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  merchant_name: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  pickup_image: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+
+  })
+  pickup_signature: string | null;
 }

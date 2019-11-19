@@ -1,96 +1,96 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('employee_education', { schema: 'public' })
+export class EmployeeEducation extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("employee_education",{schema:"public" } )
-export class EmployeeEducation {
+  })
+  employee_education_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"employee_education_id"
-        })
-    employeeEducationId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"employee_id"
-        })
-    employeeId:string;
-        
+  })
+  employee_id: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"education"
-        })
-    education:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"education_name"
-        })
-    educationName:string;
-        
+  })
+  education: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"majors"
-        })
-    majors:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"education_start"
-        })
-    educationStart:string;
-        
+  })
+  education_name: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:255,
-        name:"education_end"
-        })
-    educationEnd:string | null;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  })
+  majors: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  })
+  education_start: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  })
+  education_end: string | null;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_created: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }

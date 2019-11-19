@@ -1,94 +1,56 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
-import {PackagePrice} from "./package-price";
-import {PackagePriceSpecial} from "./package-price-special";
+import {
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { PackagePrice } from './package-price';
+import { PackagePriceSpecial } from './package-price-special';
+import { TmsBaseEntity } from './tms-base';
 
+@Entity('province', { schema: 'public' })
+export class Province extends TmsBaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
+    name: 'province_id',
+  })
+  provinceId: number;
 
-@Entity("province",{schema:"public" } )
-export class Province {
+  @Column('bigint', {
+    nullable: false,
+    name: 'country_id',
+  })
+  countryId: number;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"province_id"
-        })
-    provinceId:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'province_code',
+  })
+  provinceCode: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"country_id"
-        })
-    countryId:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'province_name',
+  })
+  provinceName: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"province_code"
-        })
-    provinceCode:string;
-        
+  @OneToMany(() => PackagePrice, package_price => package_price.provinceIdFrom)
+  packagePrices: PackagePrice[];
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"province_name"
-        })
-    provinceName:string;
-        
+  @OneToMany(() => PackagePrice, package_price => package_price.provinceIdTo)
+  packagePrices2: PackagePrice[];
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @OneToMany(
+    () => PackagePriceSpecial,
+    package_price_special => package_price_special.provinceIdFrom,
+  )
+  packagePriceSpecials: PackagePriceSpecial[];
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
-
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
-
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
-
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
-
-   
-    @OneToMany(type=>PackagePrice, package_price=>package_price.provinceIdFrom)
-    packagePrices:PackagePrice[];
-    
-
-   
-    @OneToMany(type=>PackagePrice, package_price=>package_price.provinceIdTo)
-    packagePrices2:PackagePrice[];
-    
-
-   
-    @OneToMany(type=>PackagePriceSpecial, package_price_special=>package_price_special.provinceIdFrom)
-    packagePriceSpecials:PackagePriceSpecial[];
-    
-
-   
-    @OneToMany(type=>PackagePriceSpecial, package_price_special=>package_price_special.provinceIdTo)
-    packagePriceSpecials2:PackagePriceSpecial[];
-    
+  @OneToMany(
+    () => PackagePriceSpecial,
+    package_price_special => package_price_special.provinceIdTo,
+  )
+  packagePriceSpecials2: PackagePriceSpecial[];
 }

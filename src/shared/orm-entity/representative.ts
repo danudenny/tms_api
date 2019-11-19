@@ -1,107 +1,68 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 
+import { TmsBaseEntity } from './tms-base';
+import { Branch } from './branch';
 
-@Entity("representative",{schema:"public" } )
-export class Representative {
+@Entity('representative', { schema: 'public' })
+export class Representative extends TmsBaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
+    name: 'representative_id',
+  })
+  representativeId: number;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"representative_id"
-        })
-    representativeId:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'representative_code',
+  })
+  representativeCode: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"representative_code"
-        })
-    representativeCode:string;
-        
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'representative_name',
+  })
+  representativeName: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"representative_name"
-        })
-    representativeName:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+    name: 'email',
+  })
+  email: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:500,
-        name:"email"
-        })
-    email:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id',
+  })
+  branchId: string | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"branch_id"
-        })
-    branchId:string | null;
-        
+  @Column('numeric', {
+    nullable: false,
+    default: () => '0',
+    precision: 10,
+    scale: 5,
+    name: 'min_weight',
+  })
+  minWeight: string;
 
-    @Column("numeric",{ 
-        nullable:false,
-        default: () => "0",
-        precision:10,
-        scale:5,
-        name:"min_weight"
-        })
-    minWeight:string;
-        
+  @Column('numeric', {
+    nullable: false,
+    default: () => '0',
+    precision: 10,
+    scale: 5,
+    name: 'price_per_kg',
+  })
+  pricePerKg: string;
 
-    @Column("numeric",{ 
-        nullable:false,
-        default: () => "0",
-        precision:10,
-        scale:5,
-        name:"price_per_kg"
-        })
-    pricePerKg:string;
-        
+  @Column('bigint', {
+    nullable: true,
+    name: 'representative_id_parent',
+  })
+  representativeIdParent: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
-
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
-
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
-
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
-
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
-
-    @Column("bigint",{ 
-        nullable:true,
-        name:"representative_id_parent"
-        })
-    representativeIdParent:string | null;
-        
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 }

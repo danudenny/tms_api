@@ -1,7 +1,7 @@
-import { EntityBase } from "../../types/EntityBase";
-import { IComparableQuery } from "./IComparableQuery";
-import { IQueryBase } from "./IQueryBase";
-import { ISelectQuery } from "./ISelectQuery";
+import { EntityBase } from '../../types/EntityBase';
+import { IComparableQuery } from './IComparableQuery';
+import { IQueryBase } from './IQueryBase';
+import { ISelectQuery } from './ISelectQuery';
 
 /**
  * Allows .where() to use the last joined entity's alias.

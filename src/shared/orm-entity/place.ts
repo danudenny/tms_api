@@ -1,86 +1,85 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
-import {PlaceType} from "./place-type";
-import {District} from "./district";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
+import { PlaceType } from './place-type';
+import { District } from './district';
 
+@Entity('place', { schema: 'public' })
+export class Place extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("place",{schema:"public" } )
-export class Place {
+  })
+  place_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"place_id"
-        })
-    placeId:string;
-        
+  @ManyToOne(type => PlaceType, place_type => place_type.places, {})
+  @JoinColumn({ name: 'place_type_id' })
+  placeType: PlaceType | null;
 
-   
-    @ManyToOne(type=>PlaceType, place_type=>place_type.places,{  })
-    @JoinColumn({ name:'place_type_id'})
-    placeType:PlaceType | null;
+  @ManyToOne(type => District, district => district.places, { nullable: false })
+  @JoinColumn({ name: 'district_id' })
+  district: District | null;
 
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-   
-    @ManyToOne(type=>District, district=>district.places,{  nullable:false, })
-    @JoinColumn({ name:'district_id'})
-    district:District | null;
+  })
+  place_code: string;
 
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"place_code"
-        })
-    placeCode:string;
-        
+  })
+  place_name: string;
 
-    @Column("character varying",{ 
-        nullable:false,
-        length:255,
-        name:"place_name"
-        })
-    placeName:string;
-        
+  @Column('text', {
+    nullable: true,
 
-    @Column("text",{ 
-        nullable:true,
-        name:"address"
-        })
-    address:string | null;
-        
+  })
+  address: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  user_id_created: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  created_time: Date;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }

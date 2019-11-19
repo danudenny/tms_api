@@ -1,127 +1,122 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('work_order_detail', { schema: 'public' })
+export class WorkOrderDetail extends BaseEntity {
+  @PrimaryGeneratedColumn({
+    type: 'bigint',
 
-@Entity("work_order_detail",{schema:"public" } )
-export class WorkOrderDetail {
+  })
+  work_order_detail_id: string;
 
-    @PrimaryGeneratedColumn({
-        type:"bigint", 
-        name:"work_order_detail_id"
-        })
-    workOrderDetailId:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"work_order_id"
-        })
-    workOrderId:string;
-        
+  })
+  work_order_id: string;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"pickup_request_id"
-        })
-    pickupRequestId:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"awb_item_id"
-        })
-    awbItemId:string | null;
-        
+  })
+  pickup_request_id: string | null;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"work_order_status_id_last"
-        })
-    workOrderStatusIdLast:string | null;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"reason_id"
-        })
-    reasonId:string | null;
-        
+  })
+  awb_item_id: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  work_order_status_id_last: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('bigint', {
+    nullable: true,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  reason_id: string | null;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"pickup_date_time"
-        })
-    pickupDateTime:Date | null;
-        
+  })
+  user_id_created: string;
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"check_in_date_time"
-        })
-    checkInDateTime:Date | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"check_out_date_time"
-        })
-    checkOutDateTime:Date | null;
-        
+  })
+  created_time: Date;
 
-    @Column("bigint",{ 
-        nullable:true,
-        name:"work_order_status_id_pick"
-        })
-    workOrderStatusIdPick:string | null;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:true,
-        name:"drop_date_time"
-        })
-    dropDateTime:Date | null;
-        
+  })
+  user_id_updated: string;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"ref_awb_number"
-        })
-    refAwbNumber:string | null;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  pickup_date_time: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  check_in_date_time: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  check_out_date_time: Date | null;
+
+  @Column('bigint', {
+    nullable: true,
+
+  })
+  work_order_status_id_pick: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+
+  })
+  drop_date_time: Date | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+
+  })
+  ref_awb_number: string | null;
 }

@@ -1,74 +1,77 @@
-import {BaseEntity,Column,Entity,Index,JoinColumn,JoinTable,ManyToMany,ManyToOne,OneToMany,OneToOne,PrimaryColumn,PrimaryGeneratedColumn,RelationId} from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  RelationId,
+} from 'typeorm';
 
+@Entity('pickup_request_status', { schema: 'public' })
+export class PickupRequestStatus extends BaseEntity {
+  @Column('bigint', {
+    nullable: false,
+    primary: true,
 
-@Entity("pickup_request_status",{schema:"public" } )
-export class PickupRequestStatus {
+  })
+  pickup_request_status_id: string;
 
-    @Column("bigint",{ 
-        nullable:false,
-        primary:true,
-        name:"pickup_request_status_id"
-        })
-    pickupRequestStatusId:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"status_code"
-        })
-    statusCode:string | null;
-        
+  })
+  status_code: string | null;
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"status_title"
-        })
-    statusTitle:string | null;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
 
-    @Column("character varying",{ 
-        nullable:true,
-        length:100,
-        name:"status_name"
-        })
-    statusName:string | null;
-        
+  })
+  status_title: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_created"
-        })
-    userIdCreated:string;
-        
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"created_time"
-        })
-    createdTime:Date;
-        
+  })
+  status_name: string | null;
 
-    @Column("bigint",{ 
-        nullable:false,
-        name:"user_id_updated"
-        })
-    userIdUpdated:string;
-        
+  @Column('bigint', {
+    nullable: false,
 
-    @Column("timestamp without time zone",{ 
-        nullable:false,
-        name:"updated_time"
-        })
-    updatedTime:Date;
-        
+  })
+  user_id_created: string;
 
-    @Column("boolean",{ 
-        nullable:false,
-        default: () => "false",
-        name:"is_deleted"
-        })
-    isDeleted:boolean;
-        
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  created_time: Date;
+
+  @Column('bigint', {
+    nullable: false,
+
+  })
+  user_id_updated: string;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+
+  })
+  updated_time: Date;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+
+  })
+  is_deleted: boolean;
 }
