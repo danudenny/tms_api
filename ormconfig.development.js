@@ -1,7 +1,6 @@
 module.exports = {
   type: 'postgres',
-  host:
-    'sicepat-tms-reborn.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+  host: 'sicepat-tmspod-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
   port: 5432,
   username: 'sicepattmsuser',
   password: 's1c3p4Ttm$us3R3ncrypT3dbo05$',
