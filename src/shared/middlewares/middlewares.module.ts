@@ -5,7 +5,7 @@ import { OrmRepositoryModule } from '../orm-repository/orm-repository.module';
 import { ServicesModule } from '../services/services.module';
 import { AuthMiddleware } from './auth.middleware';
 import { HeaderMetadataMiddleware } from './header-metadata.middleware';
-import { RequestContextMiddleware } from './request-context.middleware';
+import { LogglyMiddleware } from './loggly.middleware';
 
 @Module({
   imports: [
@@ -16,12 +16,12 @@ import { RequestContextMiddleware } from './request-context.middleware';
   providers: [
     AuthMiddleware,
     HeaderMetadataMiddleware,
-    RequestContextMiddleware,
+    LogglyMiddleware,
   ],
   exports: [
     AuthMiddleware,
     HeaderMetadataMiddleware,
-    RequestContextMiddleware,
+    LogglyMiddleware,
   ],
 })
 export class MiddlewaresModule {}
