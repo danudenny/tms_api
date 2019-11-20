@@ -69,7 +69,7 @@ export class MobileAttendanceService {
           file.buffer,
           file.originalname,
           file.mimetype,
-          'Driver check-in',
+          'Driver-check-in',
         );
         if (attachment) {
           attachmentId = attachment.attachmentTmsId;
@@ -116,8 +116,9 @@ export class MobileAttendanceService {
     payload.fieldResolverMap['employeeId'] = 't1.employee_id';
     payload.fieldResolverMap['checkInDate'] = 't1.check_in_date';
     payload.fieldResolverMap['checkOutDate'] = 't1.check_out_date';
-    payload.fieldResolverMap['branchIdCheckIn'] = 't1.branch_id_check_in';
-    payload.fieldResolverMap['branchIdCheckOut'] = 't1.branch_id_check_out';
+    payload.fieldResolverMap['branchNameCheckIn'] = 't4.branch_name';
+    payload.fieldResolverMap['branchAsalDriver'] = 't7.branch_name';
+    payload.fieldResolverMap['branchNameCheckOut'] = 't6.branch_name';
     payload.fieldResolverMap['attachmentTmsId'] = 't2.attachment_tms_id';
     payload.fieldResolverMap['urlCheckIn'] = 't2.url';
     payload.fieldResolverMap['urlCheckOut'] = 't2.url';
@@ -127,6 +128,7 @@ export class MobileAttendanceService {
     payload.fieldResolverMap['latitudeCheckOut'] = 't1.latitude_check_out';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchId'] = 't4.branch_id';
+    payload.fieldResolverMap['nik'] = 't3.nik';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -144,6 +146,7 @@ export class MobileAttendanceService {
     q.selectRaw(
       ['t1.employee_id', 'employeeId'],
       ['t3.fullname', 'fullname'],
+      ['t3.nik', 'nik'],
       ['t1.check_in_date', 'checkInDate'],
       ['t1.check_out_date', 'checkOutDate'],
       ['t4.branch_name', 'branchNameCheckIn'],
@@ -202,9 +205,6 @@ export class MobileAttendanceService {
 
       const timeNow = moment().toDate();
 
-      // console.log(payload);
-      const permissonPayload = AuthService.getPermissionTokenPayload();
-
       const employeeJourney = await this.employeeJourneyRepository.findOne(
         {
           where: {
@@ -222,7 +222,7 @@ export class MobileAttendanceService {
           file.buffer,
           file.originalname,
           file.mimetype,
-          'Driver check-Out',
+          'Driver-check-Out',
         );
         if (attachment) {
           attachmentId = attachment.attachmentTmsId;
