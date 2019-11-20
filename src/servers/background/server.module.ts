@@ -16,6 +16,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { BackgroundServerControllersModule } from './controllers/background-server-controllers.module';
 import { BackgroundServerInjectorService } from './services/background-server-injector.service';
 import { BackgroundServerServicesModule } from './services/background-server-services.module';
+import { LogglyMiddleware } from '../../shared/middlewares/loggly.middleware';
 
 @Module({
   imports: [SharedModule, BackgroundServerControllersModule, LoggingInterceptor, BackgroundServerServicesModule],
@@ -29,7 +30,7 @@ export class BackgroundServerModule extends MultiServerAppModule implements Nest
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(
-        RequestContextMiddleware,
+        LogglyMiddleware,
         HeaderMetadataMiddleware,
         AuthMiddleware,
       )
@@ -60,7 +61,7 @@ export class BackgroundServerModule extends MultiServerAppModule implements Nest
     this.app = app;
 
     app.enableCors();
-
+    app.use(RequestContextMiddleware.rawExpressMiddleware);
     app.useGlobalPipes(
       new RequestValidationPipe({
         transform: true,

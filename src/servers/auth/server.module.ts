@@ -14,6 +14,7 @@ import { PinoLoggerService } from '../../shared/services/pino-logger.service';
 import { SharedModule } from '../../shared/shared.module';
 import { AuthServerControllersModule } from './controllers/auth-server-controllers.module';
 import { AuthServerInjectorService } from './services/auth-server-injector.service';
+import { LogglyMiddleware } from '../../shared/middlewares/loggly.middleware';
 
 @Module({
   imports: [SharedModule, AuthServerControllersModule],
@@ -28,7 +29,7 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(
-        RequestContextMiddleware,
+        LogglyMiddleware,
         HeaderMetadataMiddleware,
         AuthMiddleware,
       )
@@ -59,7 +60,7 @@ export class AuthServerModule extends MultiServerAppModule implements NestModule
     this.app = app;
 
     app.enableCors();
-
+    app.use(RequestContextMiddleware.rawExpressMiddleware);
     app.useGlobalPipes(
       new ValidationPipe({
         transform: true,
