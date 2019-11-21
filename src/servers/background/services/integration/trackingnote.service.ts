@@ -50,10 +50,13 @@ export class TrackingNoteService {
         a.awb_number as "receiptNumber",
         ah.history_date as "trackingDateTime",
         s.awb_status_id as "awbStatusId",
-        s.awb_status_name as "trackingType",
+        s.awb_status_group as "trackingType",
         e.fullname as "courierName",
         e."nik",
-        b.branch_code as "branchCode"
+        b.branch_code as "branchCode",
+        ah.note_internal as "noteInternal",
+        ah.note_public as "notePublic",
+        ah.awb_note as "noteTms"
       FROM awb_history ah
       INNER JOIN awb_item ai on ai.awb_item_id=ah.awb_item_id and ai.is_deleted=false
       INNER JOIN awb a on a.awb_id=ai.awb_id and a.is_deleted=false
@@ -62,7 +65,8 @@ export class TrackingNoteService {
       LEFT JOIN employee e on u.employee_id=e.employee_id and e.is_deleted=false
       LEFT JOIN branch b on ah.branch_id=b.branch_id and b.is_deleted=false
       WHERE ah.awb_history_id > :awbHistoryId and ah.is_deleted=false
-      LIMIT 1000;
+      ORDER BY awb_history_id
+      LIMIT 2000;
     `;
     return await RawQueryService.queryWithParams(query, {
       awbHistoryId,
@@ -86,7 +90,31 @@ export class TrackingNoteService {
     //     // ... error checks
     let lastSyncId = 0;
     let ctr = 0;
+      //Bulk Insert Prepare Table
+     const table = new sql.Table('TmsTrackingNote');
+     table.columns.add('AwbHistoryId', sql.Int, {nullable: false});
+     table.columns.add('ReceiptNumber', sql.VarChar, {nullable: false});
+     table.columns.add('TrackingDateTime', sql.DateTime, {nullable: false});
+     table.columns.add('AwbStatusId', sql.Int, {nullable: false});
+     table.columns.add('TrackingType', sql.VarChar, {nullable: true});
+     table.columns.add('CourierName', sql.VarChar, {nullable: true});
+     table.columns.add('Nik', sql.VarChar, {nullable: true});
+     table.columns.add('BranchCode', sql.VarChar, {nullable: true});
+     table.columns.add('NoteInternal', sql.VarChar, {nullable: true});
+     table.columns.add('NotePublic', sql.VarChar, {nullable: true});
+     table.columns.add('NoteTms', sql.VarChar, {nullable: true});
+     table.columns.add('UsrCrt', sql.VarChar, {nullable: true});
+     table.columns.add('UsrUpd', sql.VarChar, {nullable: true});
+     table.columns.add('DtmCrt', sql.DateTime, {nullable: false});
+     table.columns.add('DtmUpd', sql.DateTime, {nullable: false});
+
     for (const item of data) {
+      lastSyncId = item.awbHistoryId;
+      // table.rows.add(lastSyncId, item.receiptNumber, item.trackingDateTime, item.awbStatusId, item.trackingType, 
+      //   item.courierName, item.nik, item.branchCode, 
+      //   // item.noteInternal, // item.notePublic, item.noteTms, 
+      //   'TMS', 'TMS', new Date(), new Date());
+      // break;
       const request = conn.request();
       request.input('AwbHistoryId', sql.Int, item.awbHistoryId);
       request.input('ReceiptNumber', sql.VarChar, item.receiptNumber);
@@ -96,10 +124,14 @@ export class TrackingNoteService {
       request.input('CourierName', sql.VarChar, item.courierName);
       request.input('Nik', sql.VarChar, item.nik);
       request.input('BranchCode', sql.VarChar, item.branchCode);
+      request.input('NoteInternal', sql.VarChar, item.noteInternal);
+      request.input('NotePublic', sql.VarChar, item.notePublic);
+      request.input('NoteTms', sql.VarChar, item.noteTms);
       request.input('UsrCrt', sql.VarChar, 'TMS');
       request.input('UsrUpd', sql.VarChar, 'TMS');
       request.input('DtmCrt', sql.DateTime, new Date());
       request.input('DtmUpd', sql.DateTime, new Date());
+
       request.query(`
         insert into TmsTrackingNote (
           AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, UsrCrt, UsrUpd, DtmCrt, DtmUpd
@@ -139,5 +171,24 @@ export class TrackingNoteService {
         },
       );
     }
+
+    // const request = conn.request();
+    // request.bulk(table, (err, result) => {
+    //   // ... error checks
+    //   if (!err) {
+    //     // AwbHistoryLastSyncPod.update(awbHistoryLastSyncPod.awbHistoryLastSyncPodId, {
+    //     //   awbHistoryId: lastSyncId,
+    //     //   updatedTime: new Date(),
+    //     // });
+    //     // console.log('[ALL SUCCESS] Last awb history id === ' + lastSyncId);
+    //   } else {
+    //     console.log('[ERROR STOP] Tracking Note Service === ' + err);
+    //     RequestErrorService.throwObj({
+    //       message: err,
+    //     },
+    //       HttpStatus.UNPROCESSABLE_ENTITY,
+    //     );
+    //   }       
+    // });
   }
 }
