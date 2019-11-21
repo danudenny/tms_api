@@ -125,12 +125,11 @@ export class LastMileDeliveryOutService {
               null,
             );
             // NOTE: queue by Bull
-            DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
+            DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
               awb.awbItemId,
               AWB_STATUS.IN_BRANCH,
               permissonPayload.branchId,
               authMeta.userId,
-              doPod.userDriver.employeeId,
             );
           }
         }
@@ -159,12 +158,11 @@ export class LastMileDeliveryOutService {
 
           // TODO: need refactoring
           // NOTE: queue by Bull
-          DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
+          DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
             awb.awbItemId,
             AWB_STATUS.OUT_BRANCH,
             permissonPayload.branchId,
             authMeta.userId,
-            doPod.userDriver.employeeId,
           );
         }
         totalAdd = payload.addAwbNumber.length;
@@ -338,13 +336,14 @@ export class LastMileDeliveryOutService {
                 AWB_STATUS.ANT,
                 null,
               );
-              // NOTE: queue by Bull
+              // NOTE: queue by Bull ANT
               DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
                 awb.awbItemId,
                 AWB_STATUS.ANT,
                 permissonPayload.branchId,
                 authMeta.userId,
                 doPodDeliver.userDriver.employeeId,
+                doPodDeliver.userDriver.employee.employeeName,
               );
             }
             // #endregion after scanout
