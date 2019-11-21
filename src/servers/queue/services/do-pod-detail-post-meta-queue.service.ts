@@ -59,7 +59,8 @@ export class DoPodDetailPostMetaQueueService {
             userIdCreated: data.userIdCreated,
             userIdUpdated: data.userIdUpdated,
             noteInternal: data.noteInternal,
-            noteExternal: data.noteInternal,
+            notePublic: data.notePublic,
+            receiverName: data.receiverName,
           });
           await transactionalEntityManager.insert(AwbHistory, awbHistory);
 
@@ -183,7 +184,7 @@ export class DoPodDetailPostMetaQueueService {
   ) {
     // TODO: ONLY IN_HUB, OUT_HUB, IN_BRANCH, OUT_BRANCH
     const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver}`;
-    const noteExternal = `Paket keluar dari ${cityName} [${branchName}]`;
+    const notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
 
     // provide data
     const obj = {
@@ -197,7 +198,7 @@ export class DoPodDetailPostMetaQueueService {
       employeeIdDriver,
       timestamp: moment().toDate(),
       noteInternal,
-      noteExternal,
+      notePublic,
     };
 
     return DoPodDetailPostMetaQueueService.queue.add(obj);
@@ -241,7 +242,7 @@ export class DoPodDetailPostMetaQueueService {
         employeeIdDriver: null,
         timestamp: moment().toDate(),
         noteInternal: '',
-        noteExternal: '',
+        notePublic: '',
       };
 
       return DoPodDetailPostMetaQueueService.queue.add(obj);
@@ -268,7 +269,7 @@ export class DoPodDetailPostMetaQueueService {
       employeeIdDriver: null,
       timestamp: moment().toDate(),
       noteInternal: '',
-      noteExternal: '',
+      notePublic: '',
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
@@ -292,7 +293,7 @@ export class DoPodDetailPostMetaQueueService {
       employeeIdDriver: null,
       timestamp: moment().toDate(),
       noteInternal: '',
-      noteExternal: '',
+      notePublic: '',
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
@@ -313,7 +314,7 @@ export class DoPodDetailPostMetaQueueService {
       cityName = branch.district.city.cityName;
     }
     const noteInternal = `Paket telah di terima di ${cityName} [${branchName}]`;
-    const noteExternal = `Paket telah di terima di ${cityName} [${branchName}]`;
+    const notePublic = `Paket telah di terima di ${cityName} [${branchName}]`;
 
     // provide data
     const obj = {
@@ -327,7 +328,7 @@ export class DoPodDetailPostMetaQueueService {
       employeeIdDriver: null,
       timestamp: moment().toDate(),
       noteInternal,
-      noteExternal,
+      notePublic,
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
@@ -379,7 +380,8 @@ export class DoPodDetailPostMetaQueueService {
       const awbStatusIdLastPublic = AWB_STATUS.ON_PROGRESS;
       // TODO: create note internal and note public ??
       let noteInternal = '';
-      let noteExternal = '';
+      let notePublic = '';
+      let receiverName = '';
       let branchName = 'Kantor Pusat';
       let cityName = 'Jakarta';
       const branch = await this.getDataBranchCity(doPodDetailDeliver.doPodDeliver.branchId);
@@ -388,13 +390,14 @@ export class DoPodDetailPostMetaQueueService {
         cityName = branch.district.city.cityName;
       }
       if (doPodDetailDeliver.awbStatusIdLast == AWB_STATUS.DLV) {
+        receiverName = doPodDetailDeliver.consigneeName;
         noteInternal = `Paket diterima oleh [Rahmat - (${doPodDetailDeliver.reasonLast.reasonCode}) ${doPodDetailDeliver.reasonLast.reasonName}]; catatan: ${doPodDetailDeliver.descLast}`;
-        noteExternal = `Paket diterima oleh [${doPodDetailDeliver.consigneeName}]`;
+        notePublic = `Paket diterima oleh [${doPodDetailDeliver.consigneeName}]`;
       } else {
         noteInternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${doPodDetailDeliver.awbStatus.awbStatusName}) ${doPodDetailDeliver.awbStatus.awbStatusTitle}; catatan: ${
           doPodDetailDeliver.descLast
         }`;
-        noteExternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${doPodDetailDeliver.awbStatus.awbStatusName}) ${doPodDetailDeliver.awbStatus.awbStatusTitle}`;
+        notePublic = `Paket di kembalikan di ${cityName} [${branchName}] - (${doPodDetailDeliver.awbStatus.awbStatusName}) ${doPodDetailDeliver.awbStatus.awbStatusTitle}`;
       }
 
       // provide data
@@ -409,7 +412,8 @@ export class DoPodDetailPostMetaQueueService {
         employeeIdDriver,
         timestamp: moment().toDate(),
         noteInternal,
-        noteExternal,
+        notePublic,
+        receiverName,
       };
 
       return DoPodDetailPostMetaQueueService.queue.add(obj);
@@ -426,7 +430,7 @@ export class DoPodDetailPostMetaQueueService {
   ) {
     // TODO: need to be reviewed ??
     const noteInternal = ``;
-    const noteExternal = ``;
+    const notePublic = ``;
 
     // provide data
     const obj = {
@@ -440,7 +444,7 @@ export class DoPodDetailPostMetaQueueService {
       employeeIdDriver: null,
       timestamp: moment().toDate(),
       noteInternal,
-      noteExternal,
+      notePublic,
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
@@ -455,7 +459,7 @@ export class DoPodDetailPostMetaQueueService {
     employeeName: string,
   ) {
     const noteInternal = `Paket dibawa [SIGESIT - ${employeeName}]`;
-    const noteExternal = `Paket dibawa [SIGESIT - ${employeeName}]`;
+    const notePublic = `Paket dibawa [SIGESIT - ${employeeName}]`;
     // provide data
     const obj = {
       awbItemId,
@@ -468,7 +472,7 @@ export class DoPodDetailPostMetaQueueService {
       employeeIdDriver,
       timestamp: moment().toDate(),
       noteInternal,
-      noteExternal,
+      notePublic,
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
