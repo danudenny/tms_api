@@ -263,7 +263,14 @@ export class AwbHistory extends TmsBaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 500,
-    name: 'note_external',
+    name: 'note_public',
   })
-  noteExternal: string;
+  notePublic: string;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'receiver_name',
+  })
+  receiverName: string;
 }
