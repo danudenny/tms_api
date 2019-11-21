@@ -1,5 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
+import moment = require('moment');
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { TrackingNoteResponseVm } from '../../models/trackingnote.response.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -56,7 +57,8 @@ export class TrackingNoteService {
         b.branch_code as "branchCode",
         ah.note_internal as "noteInternal",
         ah.note_public as "notePublic",
-        ah.awb_note as "noteTms"
+        ah.awb_note as "noteTms",
+        ah.receiver_name as "receiverName"
       FROM awb_history ah
       INNER JOIN awb_item ai on ai.awb_item_id=ah.awb_item_id and ai.is_deleted=false
       INNER JOIN awb a on a.awb_id=ai.awb_id and a.is_deleted=false
@@ -107,6 +109,7 @@ export class TrackingNoteService {
      table.columns.add('UsrUpd', sql.VarChar, {nullable: true});
      table.columns.add('DtmCrt', sql.DateTime, {nullable: false});
      table.columns.add('DtmUpd', sql.DateTime, {nullable: false});
+     table.columns.add('ReceiverName', sql.DateTime, {nullable: false});
 
     for (const item of data) {
       lastSyncId = item.awbHistoryId;
@@ -129,15 +132,16 @@ export class TrackingNoteService {
       request.input('NoteTms', sql.VarChar, item.noteTms);
       request.input('UsrCrt', sql.VarChar, 'TMS');
       request.input('UsrUpd', sql.VarChar, 'TMS');
-      request.input('DtmCrt', sql.DateTime, new Date());
-      request.input('DtmUpd', sql.DateTime, new Date());
+      request.input('DtmCrt', sql.DateTime, moment().toDate());
+      request.input('DtmUpd', sql.DateTime, moment().toDate());
+      request.input('ReceiverName', sql.DateTime, item.receiverName);
 
       request.query(`
-        insert into TmsTrackingNote (
-          AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, UsrCrt, UsrUpd, DtmCrt, DtmUpd
+        insert into TmsTrackingNoteStaging (
+          AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, NoteInternal, NotePublic, NoteTms, UsrCrt, UsrUpd, DtmCrt, DtmUpd, ReceiverName
           )
         values (
-          @AwbHistoryId, @ReceiptNumber, @TrackingDateTime, @AwbStatusId, @TrackingType, @CourierName, @Nik, @BranchCode, @UsrCrt, @UsrUpd, @DtmCrt, @DtmUpd
+          @AwbHistoryId, @ReceiptNumber, @TrackingDateTime, @AwbStatusId, @TrackingType, @CourierName, @Nik, @BranchCode, @NoteInternal, @NotePublic, @NoteTms, @UsrCrt, @UsrUpd, @DtmCrt, @DtmUpd, @ReceiverName
         )`, (err, result) => {
           if (!err) {
           ctr++;
