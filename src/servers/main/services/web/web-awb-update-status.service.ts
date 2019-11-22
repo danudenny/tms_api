@@ -161,8 +161,7 @@ export class WebAwbUpdateStatusService {
       } else {
         dataItem.status = 'error';
         dataItem.message =
-          `Resi ${awbNumber} milik gerai, ` +
-          `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+          `Resi ${awbNumber} milik gerai, `;
       }
     } else {
       dataItem.status = 'error';
