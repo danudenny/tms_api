@@ -61,6 +61,7 @@ export class DoPodDetailPostMetaQueueService {
             noteInternal: data.noteInternal,
             notePublic: data.notePublic,
             receiverName: data.receiverName,
+            awbNote: data.awbNote,
           });
           await transactionalEntityManager.insert(AwbHistory, awbHistory);
 
@@ -378,6 +379,7 @@ export class DoPodDetailPostMetaQueueService {
     if (doPodDetailDeliver) {
       // TODO: find awbStatusIdLastPublic on awb_status
       const awbStatusIdLastPublic = AWB_STATUS.ON_PROGRESS;
+      const awbNote = doPodDetailDeliver.descLast;
       // TODO: create note internal and note public ??
       let noteInternal = '';
       let notePublic = '';
@@ -414,6 +416,7 @@ export class DoPodDetailPostMetaQueueService {
         noteInternal,
         notePublic,
         receiverName,
+        awbNote,
       };
 
       return DoPodDetailPostMetaQueueService.queue.add(obj);
