@@ -195,7 +195,7 @@ export class AuthService {
         // cache: true,
         where: {
           branchId,
-          isDeleted: true,
+          isDeleted: false,
         },
       });
 
