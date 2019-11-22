@@ -42,7 +42,7 @@ module.exports = {
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
     subdomain: 'sicepat',
-    tags: ['API-POD-DEV'],
+    tags: ['API-POD'],
   },
   servers: getAllServerConfigurations('default.js'),
 };
