@@ -285,9 +285,10 @@ export class LastMileDeliveryOutService {
           );
           // save data to awb_troubleß
           if (statusCode != 'IN') {
+            const branchName = awb.branchLast ? awb.branchLast.branchName : '';
             await AwbTroubleService.fromScanOut(
               awbNumber,
-              awb.branchLast.branchName,
+              branchName,
               awb.awbStatusIdLast,
             );
           }
