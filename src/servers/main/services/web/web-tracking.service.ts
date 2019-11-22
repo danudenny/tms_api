@@ -106,7 +106,7 @@ export class WebTrackingService {
         COALESCE(bg.bagging_code, '') as "baggingCode",
         COALESCE(s.smu_code, '') as "smuCode"
       FROM awb a
-        INNER JOIN awb_item ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
+        INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
         LEFT JOIN customer_account ca ON ca.customer_account_id = a.customer_account_id
         LEFT JOIN branch b ON b.branch_id = a.branch_id

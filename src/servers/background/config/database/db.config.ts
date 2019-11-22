@@ -10,6 +10,7 @@ export abstract class DatabaseConfig {
     options: {
       encrypt: true, // Use this if you're on Windows Azure
     },
+    stream:true,
     connectionTimeout: 12000000, // 2 minutes,
     requestTimeout: 12000000, // 2 minutes
   };

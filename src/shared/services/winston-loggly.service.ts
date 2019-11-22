@@ -9,7 +9,7 @@ export class WinstonLogglyService {
       new Loggly({
         token: ConfigService.get('loggly.token'),
         subdomain: ConfigService.get('loggly.subdomain'),
-        tags: ['API-POD'],
+        tags: ConfigService.get('loggly.tags'),
         json: true,
       }),
     );

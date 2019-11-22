@@ -16,6 +16,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { MainServerControllersModule } from './controllers/main-server-controllers.module';
 import { MainServerInjectorService } from './services/main-server-injector.service';
 import { MainServerServicesModule } from './services/main-server-services.module';
+import { LogglyMiddleware } from '../../shared/middlewares/loggly.middleware';
 
 @Module({
   imports: [SharedModule, MainServerControllersModule, LoggingInterceptor, MainServerServicesModule],
@@ -29,7 +30,7 @@ export class MainServerModule extends MultiServerAppModule implements NestModule
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(
-        RequestContextMiddleware,
+        LogglyMiddleware,
         HeaderMetadataMiddleware,
         AuthMiddleware,
       )
@@ -60,7 +61,7 @@ export class MainServerModule extends MultiServerAppModule implements NestModule
     this.app = app;
 
     app.enableCors();
-
+    app.use(RequestContextMiddleware.rawExpressMiddleware);
     app.useGlobalPipes(
       new RequestValidationPipe({
         transform: true,
