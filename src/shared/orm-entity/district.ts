@@ -1,9 +1,10 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 
 import { PackagePrice } from './package-price';
 import { PackagePriceSpecial } from './package-price-special';
 import { Place } from './place';
 import { TmsBaseEntity } from './tms-base';
+import { City } from './city';
 
 @Entity('district', { schema: 'public' })
 export class District extends TmsBaseEntity {
@@ -105,4 +106,8 @@ export class District extends TmsBaseEntity {
 
   @OneToMany(() => Place, place => place.district)
   places: Place[];
+
+  @OneToOne(() => City)
+  @JoinColumn({ name: 'city_id' })
+  city: City;
 }

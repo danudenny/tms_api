@@ -17,6 +17,7 @@ import { DoPodDetailPostMetaQueueService } from './services/do-pod-detail-post-m
 import { QueueServerInjectorService } from './services/queue-server-injector.service';
 import { QueueServerServicesModule } from './services/queue-server-services.module';
 import { BagItemHistoryQueueService } from './services/bag-item-history-queue.service';
+import { LogglyMiddleware } from '../../shared/middlewares/loggly.middleware';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -30,7 +31,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(
-        RequestContextMiddleware,
+        LogglyMiddleware,
         HeaderMetadataMiddleware,
         AuthMiddleware,
       )
@@ -60,7 +61,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     this.app = app;
 
     app.enableCors();
-
+    app.use(RequestContextMiddleware.rawExpressMiddleware);
     app.useGlobalPipes(
       new RequestValidationPipe({
         transform: true,

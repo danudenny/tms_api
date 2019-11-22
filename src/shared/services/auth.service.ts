@@ -195,6 +195,7 @@ export class AuthService {
         // cache: true,
         where: {
           branchId,
+          isDeleted: true,
         },
       });
 
@@ -217,42 +218,17 @@ export class AuthService {
       result.displayName = authMeta.displayName;
       result.permissionToken = permissionToken;
       result.roleName = user.userRoles[0].role.roleName;
-
-      result.branchName = branch.branchName;
-      result.branchCode = branch.branchCode;
-      result.isHeadOffice = branch.isHeadOffice;
+      if (branch) {
+        result.branchName = branch.branchName;
+        result.branchCode = branch.branchCode;
+        result.isHeadOffice = branch.isHeadOffice;
+      }
 
       // FIXME: populate rolesAccessPermissions from user.userRoles[0].role.role_permissions
       result.rolesAccessPermissions = map(
         user.userRoles[0].role.rolePermissions,
         item => item.name,
       );
-      // NOTE: data for testing only
-      // [
-      //   'dashboard',
-      //   'pod',
-      //   'pod_scan_in_branch',
-      //   'pod_scan_in_hub',
-      //   'do_pod',
-      //   'do_pod_hub',
-      //   'pod_sortir_hub',
-      //   'pod_input_awb_3pl',
-      //   'pod_manual',
-      //   'scan_in_list',
-      //   'scan_in_list_hub',
-      //   'do_pod_list',
-      //   'pod_awb_list',
-      //   'awb_3pl_list',
-      //   'pod_scan_in_problem',
-      //   'pod_scan_in_problem_ct',
-      //   'pod_scan_in_problem_branch',
-      //   'pod_scan_in_problem_hub',
-      //   'pod_awb_problem',
-      //   'do_pod_bag_list',
-      //   'do_pod_deliver_list',
-      //   'pod_filter_list',
-      // ];
-
       return result;
     } else {
       RequestErrorService.throwObj(
