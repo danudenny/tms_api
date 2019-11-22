@@ -396,9 +396,10 @@ export class FirstMileDeliveryOutService {
               response.message = `Resi ${awbNumber} sudah pernah scan out`;
             } else {
               // save data to awb_trouble
+              const branchName = awb.branchLast ? awb.branchLast.branchName : '';
               await AwbTroubleService.fromScanOut(
                 awbNumber,
-                awb.branchLast.branchName,
+                branchName,
                 awb.awbStatusIdLast,
               );
 
@@ -407,7 +408,7 @@ export class FirstMileDeliveryOutService {
               response.message =
                 `Resi ${awbNumber} belum scan in, mohon untuk` +
                 `melakukan scan in terlebih dahulu di gerai` +
-                ` - ${awb.branchLast.branchName}`;
+                ` - ${branchName}`;
             }
             break;
 
@@ -479,17 +480,18 @@ export class FirstMileDeliveryOutService {
               // find scanin before -> (awb_item_attr) unclear
               // trigger current user
               // from do_pod before in ??
+
+              const branchName = awb.branchLast ? awb.branchLast.branchName : '';
               await AwbTroubleService.fromScanOut(
                 awbNumber,
-                awb.branchLast.branchName,
+                branchName,
                 awb.awbStatusIdLast,
               );
 
               totalError += 1;
               response.status = 'error';
               response.message =
-                `Resi ${awbNumber} milik gerai, ` +
-                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+                `Resi ${awbNumber} milik gerai, ${branchName}.`;
             }
             break;
 

@@ -1,6 +1,6 @@
 import { last } from 'lodash';
 import moment = require('moment');
-import { EntityManager, getManager } from 'typeorm';
+import { EntityManager, getManager, MoreThan } from 'typeorm';
 
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
@@ -82,6 +82,16 @@ export class MobileSyncService {
           DoPodDeliver,
           { doPodDeliverId: delivery.doPodDeliverId },
           'totalDelivery',
+          1,
+        );
+        // balance total problem
+        await transactionEntitymanager.decrement(
+          DoPodDeliver,
+          {
+            doPodDeliverId: delivery.doPodDeliverId,
+            totalProblem:  MoreThan(0),
+          },
+          'totalProblem',
           1,
         );
       }

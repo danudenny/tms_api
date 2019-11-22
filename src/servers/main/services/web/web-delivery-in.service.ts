@@ -611,8 +611,7 @@ export class WebDeliveryInService {
               response.status = 'error';
               response.trouble = true;
               response.message =
-                `Resi ${awbNumber} belum scan out di gerai sebelumnya ` +
-                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+                `Resi ${awbNumber} belum scan out di gerai sebelumnya `;
             }
             break;
 
@@ -717,8 +716,7 @@ export class WebDeliveryInService {
               response.status = 'error';
               response.trouble = true;
               response.message =
-                `Resi ${awbNumber} milik gerai ` +
-                `${awb.branchLast.branchCode} - ${awb.branchLast.branchName}.`;
+                `Resi ${awbNumber} milik gerai `;
             }
             break;
 
@@ -779,11 +777,12 @@ export class WebDeliveryInService {
         );
         if (statusCode != 'OUT') {
           // save data to awb_trouble
-          await AwbTroubleService.fromScanOut(
-            awbNumber,
-            awb.branchLast.branchName,
-            awb.awbStatusIdLast,
-          );
+            const branchName = awb.branchLast ? awb.branchLast.branchName : '';
+            await AwbTroubleService.fromScanOut(
+              awbNumber,
+              branchName,
+              awb.awbStatusIdLast,
+            );
         }
 
         // Add Locking setnx redis
