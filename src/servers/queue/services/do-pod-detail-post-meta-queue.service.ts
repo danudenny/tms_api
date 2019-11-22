@@ -480,11 +480,22 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
+  // NOTE: ONLY AWB_STATUS.IN_BRANCH
   public static async createJobByScanInAwbBranch(
     awbItemId: number,
     branchId: number,
     userId: number,
   ) {
+    let branchName = 'Kantor Pusat';
+    let cityName = 'Jakarta';
+    const branch = await this.getDataBranchCity(branchId);
+    if (branch) {
+      branchName = branch.branchName;
+      cityName = branch.district.city.cityName;
+    }
+    const noteInternal = `Paket telah di terima di ${cityName} [${branchName}]`;
+    const notePublic = `Paket telah di terima di ${cityName} [${branchName}]`;
+
     const obj = {
       awbItemId,
       userId,
@@ -495,6 +506,8 @@ export class DoPodDetailPostMetaQueueService {
       userIdUpdated: userId,
       employeeIdDriver: null,
       timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
