@@ -124,7 +124,7 @@ export class TrackingNoteService {
         const request = conn.request();
         request.input('AwbHistoryId', sql.Int, item.awbHistoryId);
         request.input('ReceiptNumber', sql.VarChar, item.receiptNumber);
-        request.input('TrackingDateTime', sql.DateTime, item.trackingDateTime);
+        request.input('TrackingDateTime', sql.DateTime, moment(item.trackingDateTime).add(7, 'hours').toDate());
         request.input('AwbStatusId', sql.Int, item.awbStatusId);
         request.input('TrackingType', sql.VarChar, item.trackingType);
         request.input('CourierName', sql.VarChar, item.courierName);
@@ -135,8 +135,8 @@ export class TrackingNoteService {
         request.input('NoteTms', sql.VarChar, item.noteTms);
         request.input('UsrCrt', sql.VarChar, 'TMS');
         request.input('UsrUpd', sql.VarChar, 'TMS');
-        request.input('DtmCrt', sql.DateTime, moment().toDate());
-        request.input('DtmUpd', sql.DateTime, moment().toDate());
+        request.input('DtmCrt', sql.DateTime, moment().add(7, 'hours').toDate());
+        request.input('DtmUpd', sql.DateTime, moment().add(7, 'hours').toDate());
         request.input('ReceiverName', sql.VarChar, item.receiverName);
         let isPublic = 0
         if (item.isPublic === 20) {
