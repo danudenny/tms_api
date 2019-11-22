@@ -3,9 +3,9 @@ const path = require("path");
 
 module.exports = {
   redis: {
-    host: 'localhost',
+    host: '18.141.116.177',
     port: '6379',
-    password: '',
+    password: 'r3di5S1c3pat116688_',
     db: process.env.NODE_ENV === 'test' ? 1 : 0,
   },
   jwt: {
