@@ -342,9 +342,10 @@ export class LastMileDeliveryInService {
           // TODO: AUTO UPDATE STATUS ??
           result.status = 'warning';
           // save data to awb_trouble
+          const branchName = awb.branchLast ? awb.branchLast.branchName : '';
           await AwbTroubleService.fromScanOut(
             awbNumber,
-            awb.branchLast.branchName,
+            branchName,
             awb.awbStatusIdLast,
           );
         }
