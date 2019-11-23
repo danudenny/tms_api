@@ -392,9 +392,10 @@ export class DoPodDetailPostMetaQueueService {
         cityName = branch.district.city.cityName;
       }
       if (doPodDetailDeliver.awbStatusIdLast == AWB_STATUS.DLV) {
+        // TODO: title case consigneeName
         receiverName = doPodDetailDeliver.consigneeName;
-        noteInternal = `Paket diterima oleh [Rahmat - (${doPodDetailDeliver.reasonLast.reasonCode}) ${doPodDetailDeliver.reasonLast.reasonName}]; catatan: ${doPodDetailDeliver.descLast}`;
-        notePublic = `Paket diterima oleh [${doPodDetailDeliver.consigneeName}]`;
+        noteInternal = `Paket diterima oleh [${doPodDetailDeliver.consigneeName} - (${doPodDetailDeliver.reasonLast.reasonCode}) ${doPodDetailDeliver.reasonLast.reasonName}]; catatan: ${doPodDetailDeliver.descLast}`;
+        notePublic = `Paket diterima oleh [${doPodDetailDeliver.consigneeName} - (${doPodDetailDeliver.reasonLast.reasonCode}) ${doPodDetailDeliver.reasonLast.reasonName}]`;
       } else {
         noteInternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${doPodDetailDeliver.awbStatus.awbStatusName}) ${doPodDetailDeliver.awbStatus.awbStatusTitle}; catatan: ${
           doPodDetailDeliver.descLast
