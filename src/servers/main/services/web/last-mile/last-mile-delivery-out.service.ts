@@ -276,7 +276,12 @@ export class LastMileDeliveryOutService {
       const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
         // TODO: validation need improvement
-        const notDeliver = awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
+        // handle if awb status is null
+        let notDeliver = true;
+        if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
+          notDeliver =
+            awb.awbStatusIdLast != AWB_STATUS.IN_BRANCH ? true : false;
+        }
 
         // NOTE: first must scan in branch
         if (notDeliver) {

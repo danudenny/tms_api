@@ -327,7 +327,11 @@ export class LastMileDeliveryInService {
     const awb = await AwbService.validAwbBagNumber(awbNumber);
     if (awb) {
       // TODO: validation need improvement
-      const notScanIn = awb.awbStatusIdLast != AWB_STATUS.IN_BRANCH ? true : false;
+      let notScanIn = true;
+      // handle if awb.awbStatusIdLast is null
+      if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
+        notScanIn = awb.awbStatusIdLast != AWB_STATUS.IN_BRANCH ? true : false;
+      }
       // Add Locking setnx redis
       const holdRedis = await RedisService.locking(
         `hold:scanin-awb-branch:${awb.awbItemId}`,
