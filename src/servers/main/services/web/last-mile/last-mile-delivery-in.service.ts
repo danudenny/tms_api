@@ -327,7 +327,11 @@ export class LastMileDeliveryInService {
     const awb = await AwbService.validAwbBagNumber(awbNumber);
     if (awb) {
       // TODO: validation need improvement
-      const notScanIn = awb.awbStatusIdLast != AWB_STATUS.IN_BRANCH ? true : false;
+      let notScanIn = true;
+      // handle if awb.awbStatusIdLast is null
+      if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
+        notScanIn = awb.awbStatusIdLast != AWB_STATUS.IN_BRANCH ? true : false;
+      }
       // Add Locking setnx redis
       const holdRedis = await RedisService.locking(
         `hold:scanin-awb-branch:${awb.awbItemId}`,
@@ -352,8 +356,8 @@ export class LastMileDeliveryInService {
 
         // save data to table pod_scan_id
         // TODO: find by check data
-        let bagId = null;
-        let bagItemId = null;
+        let bagId = 0;
+        let bagItemId = 0;
 
         const podScanInBranchDetail = await PodScanInBranchDetail.findOne({
           where: {
@@ -404,11 +408,13 @@ export class LastMileDeliveryInService {
           } else {
             // NOTE: if awb item attr bagItemLast not null
             // find bag if lazy scan bag number
+            bagId = awb.bagItemLast ? awb.bagItemLast.bagItemId : 0;
+            bagItemId = awb.bagItemLast ? awb.bagItemLast.bagItemId : 0;
             const podScanInBranchBag = await PodScanInBranchBag.findOne({
               where: {
                 podScanInBranchId,
-                bagItemId: awb.bagItemLast.bagItemId,
-                bagId: awb.bagItemLast.bagId,
+                bagId,
+                bagItemId,
                 isDeleted: false,
               },
             });
