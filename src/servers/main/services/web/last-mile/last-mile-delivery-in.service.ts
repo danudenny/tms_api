@@ -327,7 +327,7 @@ export class LastMileDeliveryInService {
     const awb = await AwbService.validAwbBagNumber(awbNumber);
     if (awb) {
       // TODO: validation need improvement
-      let notScanIn = false;
+      let notScanIn = true;
       // handle if awb.awbStatusIdLast is null
       if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
         notScanIn = awb.awbStatusIdLast != AWB_STATUS.IN_BRANCH ? true : false;

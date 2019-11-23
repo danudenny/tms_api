@@ -277,7 +277,7 @@ export class LastMileDeliveryOutService {
       if (awb) {
         // TODO: validation need improvement
         // handle if awb status is null
-        let notDeliver = false;
+        let notDeliver = true;
         if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
           notDeliver =
             awb.awbStatusIdLast != AWB_STATUS.IN_BRANCH ? true : false;
