@@ -15,6 +15,7 @@ export class AwbService {
     const q = awbRepository.findOne();
     // Manage relation (default inner join)
     q.leftJoin(e => e.branchLast);
+    q.leftJoin(e => e.bagItemLast);
 
     q.select({
       awbItemAttrId: true,
