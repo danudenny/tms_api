@@ -280,7 +280,7 @@ export class LastMileDeliveryOutService {
         let notDeliver = true;
         if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
           notDeliver =
-            awb.awbStatusIdLast != AWB_STATUS.IN_BRANCH ? true : false;
+            awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
         }
 
         // NOTE: first must scan in branch
