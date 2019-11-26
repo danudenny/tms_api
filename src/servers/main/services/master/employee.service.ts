@@ -80,7 +80,7 @@ export class EmployeeService {
     q.innerJoin(u => u.user, 'users', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.andWhere(e => e.branch.branchId, w => w.equals(branchId));
+    q.andWhere(e => e.user.userRoles.branchId, w => w.equals(branchId));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
