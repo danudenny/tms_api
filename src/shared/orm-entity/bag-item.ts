@@ -70,6 +70,11 @@ export class BagItem extends TmsBaseEntity {
   })
   baggingIdLast: number | null;
 
+  @Column('boolean', {
+    nullable: true,
+    name: 'is_sortir',
+  })
+  isSortir: boolean;
   // @Column('integer', {
   //   nullable: true,
   //   name: 'employee_id_last',

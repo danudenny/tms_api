@@ -118,6 +118,12 @@ export class Bag extends TmsBaseEntity {
   })
   districtIdTo: number;
 
+  @Column('boolean', {
+    nullable: true,
+    name: 'is_sortir',
+  })
+  isSortir: boolean;
+
   // relation model
   @OneToMany(() => BagItem, e => e.bag, { cascade: ['insert'] })
   bagItems: BagItem[];
