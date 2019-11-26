@@ -219,33 +219,32 @@ export class AwbService {
       await AwbItemAttr.save(awbItemAttr);
     }
 
-    const awbItem = await AwbItem.findOne({
-      where: {
-        awbItemId,
-        isDeleted: false,
-      },
-    });
-    if (awbItem) {
-      // Update awb_attr  semua field dengan suffix _last
-      const awbAttr = await AwbAttr.findOne({
-        where: {
-          awbId: awbItem.awbId,
-        },
-      });
-      if (awbAttr) {
-        // TODO: how to update data??
-        // awbAttr.awbHistoryIdLast;
-        // awbAttr.awbStatusIdLastPublic;
-        await AwbAttr.update(awbAttr.awbAttrId, {
-          branchIdNext,
-          awbStatusIdLast: status,
-          branchIdLast: permissonPayload.branchId,
-          awbhistoryDateLast: timeNow,
-          updatedTime: timeNow,
-        });
-      }
-
-    }
+    // const awbItem = await AwbItem.findOne({
+    //   where: {
+    //     awbItemId,
+    //     isDeleted: false,
+    //   },
+    // });
+    // if (awbItem) {
+    //   // Update awb_attr  semua field dengan suffix _last
+    //   const awbAttr = await AwbAttr.findOne({
+    //     where: {
+    //       awbId: awbItem.awbId,
+    //     },
+    //   });
+    //   if (awbAttr) {
+    //     // TODO: how to update data??
+    //     // awbAttr.awbHistoryIdLast;
+    //     // awbAttr.awbStatusIdLastPublic;
+    //     await AwbAttr.update(awbAttr.awbAttrId, {
+    //       branchIdNext,
+    //       awbStatusIdLast: status,
+    //       branchIdLast: permissonPayload.branchId,
+    //       awbhistoryDateLast: timeNow,
+    //       updatedTime: timeNow,
+    //     });
+    //   }
+    // }
   }
 
 }

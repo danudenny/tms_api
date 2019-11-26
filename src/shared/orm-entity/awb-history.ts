@@ -273,4 +273,10 @@ export class AwbHistory extends TmsBaseEntity {
     name: 'receiver_name',
   })
   receiverName: string;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id_next',
+  })
+  branchIdNext: number | null;
 }

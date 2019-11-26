@@ -62,9 +62,11 @@ export class DoPodDetailPostMetaQueueService {
             notePublic: data.notePublic,
             receiverName: data.receiverName,
             awbNote: data.awbNote,
+            branchIdNext: data.branchIdNext,
           });
           await transactionalEntityManager.insert(AwbHistory, awbHistory);
 
+          // TODO: to comment update with trigger SQL
           await transactionalEntityManager.update(AwbItemAttr, awbItemAttr.awbItemAttrId, {
             awbHistoryIdLast: awbHistory.awbHistoryId,
             updatedTime: data.timestamp,
@@ -182,8 +184,9 @@ export class DoPodDetailPostMetaQueueService {
     awbStatusId: number,
     branchName: string,
     cityName: string,
+    branchIdNext: number,
   ) {
-    // TODO: ONLY IN_HUB, OUT_HUB, IN_BRANCH, OUT_BRANCH
+    // TODO: ONLY OUT_HUB, OUT_BRANCH
     const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver}`;
     const notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
 
@@ -200,6 +203,7 @@ export class DoPodDetailPostMetaQueueService {
       timestamp: moment().toDate(),
       noteInternal,
       notePublic,
+      branchIdNext,
     };
 
     return DoPodDetailPostMetaQueueService.queue.add(obj);
@@ -392,9 +396,10 @@ export class DoPodDetailPostMetaQueueService {
         cityName = branch.district.city.cityName;
       }
       if (doPodDetailDeliver.awbStatusIdLast == AWB_STATUS.DLV) {
+        // TODO: title case consigneeName
         receiverName = doPodDetailDeliver.consigneeName;
-        noteInternal = `Paket diterima oleh [Rahmat - (${doPodDetailDeliver.reasonLast.reasonCode}) ${doPodDetailDeliver.reasonLast.reasonName}]; catatan: ${doPodDetailDeliver.descLast}`;
-        notePublic = `Paket diterima oleh [${doPodDetailDeliver.consigneeName}]`;
+        noteInternal = `Paket diterima oleh [${doPodDetailDeliver.consigneeName} - (${doPodDetailDeliver.reasonLast.reasonCode}) ${doPodDetailDeliver.reasonLast.reasonName}]; catatan: ${doPodDetailDeliver.descLast}`;
+        notePublic = `Paket diterima oleh [${doPodDetailDeliver.consigneeName} - (${doPodDetailDeliver.reasonLast.reasonCode}) ${doPodDetailDeliver.reasonLast.reasonName}]`;
       } else {
         noteInternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${doPodDetailDeliver.awbStatus.awbStatusName}) ${doPodDetailDeliver.awbStatus.awbStatusTitle}; catatan: ${
           doPodDetailDeliver.descLast
