@@ -985,13 +985,12 @@ export class WebDeliveryOutService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
+      ['t1.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       ['t2.awb_number', 'awbNumber'],
       ['t2.is_cod', 'isCod'],
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t2.consignee_name', 'consigneeName'],
       ['t3.awb_status_title', 'awbStatusTitle'],
-      // ['t4.type', 'photoType'],
-      // ['t5.url', 'url'],
       ['CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))', 'totalCodValue'],
     );
 
@@ -1001,14 +1000,6 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.awbItem.awbAttr.awbStatus, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
-    // q.leftJoin(e => e.deliverAttachment, 't4', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
-
-    // q.leftJoin(e => e.deliverAttachment.attachment, 't5', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -1490,8 +1481,8 @@ export class WebDeliveryOutService {
       'attachments',
       'attachments.attachment_tms_id = dpda.attachment_tms_id',
     );
-    qq.where('dpdd.do_pod_deliver_id = :doPodDeliverId', {
-      doPodDeliverId: payload.doPodDeliverId,
+    qq.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
+      doPodDeliverDetailId: payload.doPodDeliverDetailId,
 
     });
 

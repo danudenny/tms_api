@@ -46,6 +46,9 @@ export class ItemDeliveryResponseVm {
   @ApiModelProperty()
   isCod: string;
 
+  @ApiModelProperty()
+  doPodDeliverDetailId: string;
+
   // @ApiModelProperty()
   // photoType: string;
 
