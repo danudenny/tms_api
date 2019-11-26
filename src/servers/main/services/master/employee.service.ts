@@ -27,12 +27,11 @@ export class EmployeeService {
 
     const q = RepositoryService.employee.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
-
-    q.selectRaw(
-      ['employee.employee_id', 'employeeId'],
-      ['employee.nik', 'nik'],
-      ['employee.fullname', 'employeeName'],
-      ['users.user_id', 'userId'],
+    q.selectRaw(`
+      DISTINCT(users.user_id) AS "userId",
+      employee.nik AS "nik",
+      employee.employee_id AS "employeeId",
+      employee.fullname AS "employeeName"`,
     );
     q.innerJoin(u => u.user, 'users', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -70,17 +69,18 @@ export class EmployeeService {
     const q = RepositoryService.employee.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
-    q.selectRaw(
-      ['employee.employee_id', 'employeeId'],
-      ['employee.nik', 'nik'],
-      ['employee.fullname', 'employeeName'],
-      ['users.user_id', 'userId'],
+    q.selectRaw(`
+      DISTINCT(users.user_id) AS "userId",
+      employee.nik AS "nik",
+      employee.employee_id AS "employeeId",
+      employee.fullname AS "employeeName"`,
     );
 
     q.innerJoin(u => u.user, 'users', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.user.userRoles.branchId, w => w.equals(branchId));
+    q.andWhere(j => j.user.userRoles.isDeleted, w => w.isFalse());
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
