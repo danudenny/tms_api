@@ -87,6 +87,12 @@ export class BagItemAwb extends BaseEntity {
   })
   sendTrackingNoteOut: number | null;
 
+  @Column('boolean', {
+    nullable: true,
+    name: 'is_sortir',
+  })
+  isSortir: boolean;
+
   // relation model
   @ManyToOne(() => BagItem, bagItem => bagItem.bagItemAwbs, {
     onDelete: 'CASCADE',
