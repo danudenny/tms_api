@@ -111,7 +111,7 @@ export class LastMileDeliveryInService {
     }
 
     // get bag number
-    if (dataBag.bagItemId && payload.bagNumber == '') {
+    if (dataBag && dataBag.bagItemId && payload.bagNumber == '') {
       const bagItem = await BagService.getBagNumber(dataBag.bagItemId);
       if (bagItem) {
         payload.bagNumber =
