@@ -13,6 +13,8 @@ import { MobileAttendanceService } from '../../services/mobile/mobile-attendance
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MobileAtendanceListResponseVm } from '../../models/mobile-attendance-list-response.vm';
+import { MobileGoResponseVm } from '../../models/mobile-go-response.vm';
+import { MobileGoPayloadVm } from '../../models/mobile-go-payload.vm';
 
 @ApiUseTags('Mobile Attendance')
 @Controller('mobile')
@@ -22,14 +24,24 @@ export class MobileAttendanceController {
   @Post('attendance/checkIn')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileCheckInResponseVm })
   public async checkInAttendance(
     @Body() payload: MobileAttendanceInPayloadVm,
     @UploadedFile() file,
   ) {
     return this.mobileAttendanceService.checkInAttendance(payload, file);
+  }
+
+  @Post('attendance/go')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: MobileGoResponseVm })
+  public async goAttendance(@Body() payload: MobileGoPayloadVm) {
+    return this.mobileAttendanceService.goAttendance(payload);
+
   }
 
   @Post('attendance/checkOut')
