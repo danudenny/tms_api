@@ -123,6 +123,7 @@ export class MobileInitDataService {
     qb.addSelect('awb.total_cod_value', 'totalCodValue');
     qb.addSelect('awb.is_cod', 'isCOD');
     qb.addSelect('array_to_json(t.data)', 'deliveryHistory');
+    qb.addSelect('do_pod_deliver_detail.consignee_name', 'consigneeNameNote');
     qb.addSelect('do_pod_deliver_detail.is_deleted', 'isDeleted');
     qb.from('do_pod_deliver_detail', 'do_pod_deliver_detail');
     qb.innerJoin(
