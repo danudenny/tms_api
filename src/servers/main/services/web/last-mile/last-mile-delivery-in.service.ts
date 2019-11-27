@@ -86,8 +86,7 @@ export class LastMileDeliveryInService {
 
         dataBag = resultAwb.dataBag;
       } else if (
-        inputNumber.length == 10 &&
-        regexNumber.test(inputNumber.substring(7, 10))
+        inputNumber.length == 10 && regexNumber.test(inputNumber.substring(7, 10))
       ) {
         // check valid bag
         const bagData = await BagService.validBagNumber(inputNumber);
@@ -112,7 +111,7 @@ export class LastMileDeliveryInService {
     }
 
     // get bag number
-    if (dataBag && payload.bagNumber == '') {
+    if (dataBag.bagItemId && payload.bagNumber == '') {
       const bagItem = await BagService.getBagNumber(dataBag.bagItemId);
       if (bagItem) {
         payload.bagNumber =
@@ -406,53 +405,60 @@ export class LastMileDeliveryInService {
               result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
             }
           } else {
+            // ONLY SCAN AWB NUMBER ===========================================
             // NOTE: if awb item attr bagItemLast not null
             // find bag if lazy scan bag number
-            bagId = awb.bagItemLast ? awb.bagItemLast.bagItemId : 0;
-            bagItemId = awb.bagItemLast ? awb.bagItemLast.bagItemId : 0;
-            const podScanInBranchBag = await PodScanInBranchBag.findOne({
-              where: {
-                podScanInBranchId,
-                bagId,
-                bagItemId,
-                isDeleted: false,
-              },
-            });
+            // #region check bag if null
+            // bagId = awb.bagItemLast ? awb.bagItemLast.bagItemId : 0;
+            // bagItemId = awb.bagItemLast ? awb.bagItemLast.bagItemId : 0;
+            // const podScanInBranchBag = await PodScanInBranchBag.findOne({
+            //   where: {
+            //     podScanInBranchId,
+            //     bagId,
+            //     bagItemId,
+            //     isDeleted: false,
+            //   },
+            // });
 
-            if (podScanInBranchBag) {
-              // set data bag
-              bagId = podScanInBranchBag.bagId;
-              bagItemId = podScanInBranchBag.bagItemId;
+            // if (podScanInBranchBag) {
+            //   // set data bag
+            //   bagId = podScanInBranchBag.bagId;
+            //   bagItemId = podScanInBranchBag.bagItemId;
 
-              // NOTE: check doPodDetail ====================================
-              const doPodDetail = await DoPodDetail.findOne({
-                where: {
-                  awbItemId: awb.awbItemId,
-                  isScanIn: false,
-                  isDeleted: false,
-                },
-              });
-              if (doPodDetail) {
-                // Update Data doPodDetail
-                await DoPodDetail.update(doPodDetail.doPodDetailId, {
-                  isScanIn: true,
-                  updatedTime: moment().toDate(),
-                  userIdUpdated: authMeta.userId,
-                });
-              }
-              // ============================================================
+            //   // NOTE: check doPodDetail ====================================
+            //   const doPodDetail = await DoPodDetail.findOne({
+            //     where: {
+            //       awbItemId: awb.awbItemId,
+            //       isScanIn: false,
+            //       isDeleted: false,
+            //     },
+            //   });
+            //   if (doPodDetail) {
+            //     // Update Data doPodDetail
+            //     await DoPodDetail.update(doPodDetail.doPodDetailId, {
+            //       isScanIn: true,
+            //       updatedTime: moment().toDate(),
+            //       userIdUpdated: authMeta.userId,
+            //     });
+            //   }
+            //   // ============================================================
 
-              dataBag.bagId = bagId;
-              dataBag.bagItemId = bagItemId;
-              dataBag.status = 'ok';
-              dataBag.message = 'Success';
-              dataBag.trouble = false;
+            //   dataBag.bagId = bagId;
+            //   dataBag.bagItemId = bagItemId;
+            //   dataBag.status = 'ok';
+            //   dataBag.message = 'Success';
+            //   dataBag.trouble = false;
 
-              result.dataBag = dataBag;
-            } else {
-              result.status = 'warning';
-              result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
-            }
+            //   result.dataBag = dataBag;
+            // } else {
+            //   result.status = 'warning';
+            //   result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
+            // }
+            // #endregion check bag if null
+
+            // handle awb number only with not have bag number
+            result.status = 'warning';
+            result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
           }
 
           // Create Awb Trouble if status warning
