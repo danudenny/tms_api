@@ -280,6 +280,7 @@ export class PackageService {
             updatedTime          : moment().toDate(),
             userIdCreated        : authMeta.userId,
             userIdUpdated        : authMeta.userId,
+            isSortir             : true,
           });
 
           const bag = await Bag.save(bagDetail);
@@ -304,7 +305,8 @@ export class PackageService {
             weight             : parseFloat(awbDetail.totalWeightRealRounded),
             createdTime        : moment().toDate(),
             updatedTime        : moment().toDate(),
-            userIdUpdated: authMeta.userId,
+            userIdUpdated      : authMeta.userId,
+            isSortir           : true,
         });
     const bagItem = await BagItem.save(bagItemDetail);
 
@@ -334,6 +336,7 @@ export class PackageService {
             createdTime  : moment().toDate(),
             updatedTime  : moment().toDate(),
             userIdUpdated: authMeta.userId,
+            isSortir     : true,
         });
     await BagItemAwb.save(bagItemAwbDetail);
 

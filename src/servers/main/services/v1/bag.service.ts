@@ -216,6 +216,7 @@ export class BagService {
               AWB_STATUS.OUT_HUB,
               branchName,
               cityName,
+              branchIdNext,
             );
           } else {
             // BRANCH
@@ -235,6 +236,7 @@ export class BagService {
               AWB_STATUS.OUT_BRANCH,
               branchName,
               cityName,
+              branchIdNext,
             );
           }
         }
@@ -313,6 +315,7 @@ export class BagService {
             AWB_STATUS.OUT_BRANCH,
             branchName,
             cityName,
+            branchIdNext,
           );
         }
       }
@@ -402,6 +405,7 @@ export class BagService {
             AWB_STATUS.OUT_HUB,
             branchName,
             cityName,
+            branchIdNext,
           );
         }
       }
