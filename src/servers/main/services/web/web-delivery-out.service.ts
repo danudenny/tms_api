@@ -1012,7 +1012,7 @@ export class WebDeliveryOutService {
   }
 
   async bagOrderDetail(payload: BagAwbVm): Promise<BagOrderResponseVm> {
-    const dpdd = payload.doPodId;
+    const dpdd = payload.DoPodDeliverDetail;
     const bag = await BagService.validBagNumber(payload.bagNumber);
     if (bag) {
       const qz = createQueryBuilder();

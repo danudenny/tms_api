@@ -7,7 +7,7 @@ export class BagAwbVm  {
   bagNumber: string;
 
   @ApiModelPropertyOptional()
-  doPodId?: string;
+  DoPodDeliverDetail?: string;
 
   }
 export class BagDetailVm  {
