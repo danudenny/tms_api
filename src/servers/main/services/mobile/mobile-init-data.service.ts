@@ -105,7 +105,11 @@ export class MobileInitDataService {
     qb.addSelect('employee.employee_id', 'employeeId');
     qb.addSelect('employee.fullname', 'employeeName');
     qb.addSelect('awb.awb_id', 'awbId');
-    qb.addSelect('awb_item_attr.awb_item_id', 'awbItemId');
+    qb.addSelect('do_pod_deliver_detail.awb_item_id', 'awbItemId');
+    qb.addSelect(
+      'do_pod_deliver_detail.awb_status_date_time_last',
+      'awbStatusDateTimeLast',
+    );
     qb.addSelect('awb.awb_date', 'awbDate');
     qb.addSelect('awb.awb_number', 'awbNumber');
     qb.addSelect('awb_status.awb_status_id', 'awbStatusId');
@@ -119,6 +123,8 @@ export class MobileInitDataService {
     qb.addSelect('awb.total_cod_value', 'totalCodValue');
     qb.addSelect('awb.is_cod', 'isCOD');
     qb.addSelect('array_to_json(t.data)', 'deliveryHistory');
+    qb.addSelect('do_pod_deliver_detail.consignee_name', 'consigneeNameNote');
+    qb.addSelect('do_pod_deliver_detail.is_deleted', 'isDeleted');
     qb.from('do_pod_deliver_detail', 'do_pod_deliver_detail');
     qb.innerJoin(
       'do_pod_deliver',
@@ -126,16 +132,10 @@ export class MobileInitDataService {
       'do_pod_deliver.do_pod_deliver_id = do_pod_deliver_detail.do_pod_deliver_id',
     );
     qb.innerJoin(
-      'awb_item',
-      'awb_item',
-      'awb_item.awb_item_id = do_pod_deliver_detail.awb_item_id',
+      'awb',
+      'awb',
+      'awb.awb_id = do_pod_deliver_detail.awb_id',
     );
-    qb.innerJoin(
-      'awb_item_attr',
-      'awb_item_attr',
-      'awb_item_attr.awb_item_id = do_pod_deliver_detail.awb_item_id',
-    );
-    qb.innerJoin('awb', 'awb', 'awb.awb_id = awb_item.awb_id');
     qb.leftJoin(
       'package_type',
       'package_type',
@@ -144,7 +144,7 @@ export class MobileInitDataService {
     qb.innerJoin(
       'awb_status',
       'awb_status',
-      'awb_status.awb_status_id = awb_item_attr.awb_status_id_last',
+      'awb_status.awb_status_id = do_pod_deliver_detail.awb_status_id_last',
     );
     qb.innerJoin(
       'employee',
