@@ -228,11 +228,10 @@ export class WebScanOutCreateDeliveryVm {
   @IsDefined({message: 'Sigesit harus diisi'})
   userIdDriver: number;
 
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: '2019-05-01 00:00:00',
-    skipValidation: true,
+    format: 'date-time',
   })
-  @IsDefined({message: 'Tanggal pengiriman harus diisi'})
   doPodDateTime: string;
 
   @ApiModelPropertyOptional({
