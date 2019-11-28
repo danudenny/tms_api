@@ -446,7 +446,7 @@ export class LastMileDeliveryOutService {
       // add index awb number
       const awbDeliver = await DoPodDeliverDetail.findOne({
         where: {
-          awbNumber: payload.awbNumber,
+          awbNumber,
           awbStatusIdLast: AWB_STATUS.ANT,
           isDeleted: false,
         },
