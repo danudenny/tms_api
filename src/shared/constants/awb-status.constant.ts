@@ -9,4 +9,6 @@ export const AWB_STATUS = {
   IN_FILTER: 12800,
   ANT: 14000,
   DLV: 30000,
+  BROKE: 24000,
+  RTS: 25000,
 };
