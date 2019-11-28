@@ -19,7 +19,7 @@ import {
     WebScanOutAwbResponseVm, WebScanOutCreateResponseVm, WebScanOutResponseForEditVm,
 } from '../../../models/web-scan-out-response.vm';
 import {
-    WebScanOutAwbVm, WebScanOutCreateDeliveryVm, WebScanOutDeliverEditVm, WebScanOutLoadForEditVm,
+    WebScanOutAwbVm, WebScanOutCreateDeliveryVm, WebScanOutDeliverEditVm, WebScanOutLoadForEditVm, TransferAwbDeliverVm,
 } from '../../../models/web-scan-out.vm';
 import { AwbService } from '../../v1/awb.service';
 import moment = require('moment');
@@ -279,8 +279,7 @@ export class LastMileDeliveryOutService {
         // handle if awb status is null
         let notDeliver = true;
         if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
-          notDeliver =
-            awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
+          notDeliver = awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
         }
 
         // NOTE: first must scan in branch
@@ -300,13 +299,13 @@ export class LastMileDeliveryOutService {
 
           // AUTO STATUS
           // TODO: set enable and disble
-          if (statusCode == 'IN' && awb.branchIdLast != permissonPayload.branchId) {
-            await AutoUpdateAwbStatusService.awbDeliver(
-              awb,
-              authMeta.userId,
-              permissonPayload.branchId,
-            );
-          }
+          // if (statusCode == 'IN' && awb.branchIdLast != permissonPayload.branchId) {
+          //   await AutoUpdateAwbStatusService.awbDeliver(
+          //     awb,
+          //     authMeta.userId,
+          //     permissonPayload.branchId,
+          //   );
+          // }
 
           // Add Locking setnx redis
           const holdRedis = await RedisService.locking(
@@ -360,7 +359,7 @@ export class LastMileDeliveryOutService {
           } else {
             totalError += 1;
             response.status = 'error';
-            response.message = 'Server Busy';
+            response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
           }
         } else {
           totalError += 1;
@@ -422,6 +421,77 @@ export class LastMileDeliveryOutService {
     );
     const result = new ProofDeliveryResponseVm();
     result.data = await qb.getRawMany();
+
+    return result;
+  }
+
+  static async transferAwbNumber(
+    payload: TransferAwbDeliverVm,
+  ): Promise<WebScanOutAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
+    const dataItem = [];
+    const result = new WebScanOutAwbResponseVm();
+
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    for (const awbNumber of payload.awbNumber) {
+      const response = {
+        status: 'ok',
+        message: 'Success',
+      };
+
+      // NOTE: TRANSFER AWB NUMBER
+      // add index awb number
+      const awbDeliver = await DoPodDeliverDetail.findOne({
+        where: {
+          awbNumber,
+          awbStatusIdLast: AWB_STATUS.ANT,
+          isDeleted: false,
+        },
+      });
+      if (awbDeliver) {
+        // Add Locking setnx redis
+        const holdRedis = await RedisService.locking(
+          `hold:scanout-transfer:${awbDeliver.awbItemId}`,
+          'locking',
+        );
+        if (holdRedis) {
+          // Update data do pod detail per awb number
+          // doPodDeliverId;
+          await DoPodDeliverDetail.update(awbDeliver.doPodDeliverDetailId, {
+            isDeleted: true,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          });
+          totalSuccess += 1;
+
+          // remove key holdRedis
+          RedisService.del(`hold:scanout-transfer:${awbDeliver.awbItemId}`);
+        } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+          }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Resi ${awbNumber} Tidak di Temukan`;
+      }
+
+      // push item
+      dataItem.push({
+        awbNumber,
+        ...response,
+      });
+    } // end loop
+
+    // Populate return value
+    result.totalData = payload.awbNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
 
     return result;
   }
