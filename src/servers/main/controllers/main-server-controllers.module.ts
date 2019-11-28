@@ -35,7 +35,7 @@ import { DistrictsController } from './master/districts.controller';
 import { WebAwbDeliverController } from './web/web-awb-deliver.controller';
 import { MobileAttendanceController } from './mobile/mobile-attendance.controller';
 import { ReportPODController } from './report/report-pod.controller';
-import { WebLasttMileController } from './web/web-last-mile.controller';
+import { WebLastMileController } from './web/web-last-mile.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -76,7 +76,7 @@ import { WebLasttMileController } from './web/web-last-mile.controller';
     WebAwbDeliverController,
     MobileAttendanceController,
     ReportPODController,
-    WebLasttMileController,
+    WebLastMileController,
   ],
 })
 export class MainServerControllersModule {}
