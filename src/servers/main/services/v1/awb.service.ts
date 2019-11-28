@@ -158,9 +158,12 @@ export class AwbService {
       'dpd',
       'dpdd.do_pod_deliver_id = dpd.do_pod_deliver_id AND dpd.is_deleted = false',
     );
-    qb.where('dpdd.awb_number = :awbNumber AND dpdd.is_deleted = false', {
-      awbNumber,
-    });
+    qb.where(
+      'dpdd.awb_number = :awbNumber AND dpdd.awb_status_id_last = 14000 AND dpdd.is_deleted = false',
+      {
+        awbNumber,
+      },
+    );
     return await qb.getRawOne();
   }
 
