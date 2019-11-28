@@ -15,10 +15,10 @@ import { TransferAwbDeliverVm } from '../../models/web-scan-out.vm';
 import { WebScanOutAwbResponseVm } from '../../models/web-scan-out-response.vm';
 
 @ApiUseTags('Last Mile Delivery')
-@Controller('pod/lasttMile')
+@Controller('pod/lastMile')
 @ApiBearerAuth()
 @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-export class WebLasttMileController {
+export class WebLastMileController {
   constructor() {}
   /**
    * NOTE: Out of Branch last mile
