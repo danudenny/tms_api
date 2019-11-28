@@ -11,6 +11,8 @@ import {
 import {
     LastMileDeliveryOutService,
 } from '../../services/web/last-mile/last-mile-delivery-out.service';
+import { TransferAwbDeliverVm } from '../../models/web-scan-out.vm';
+import { WebScanOutAwbResponseVm } from '../../models/web-scan-out-response.vm';
 
 @ApiUseTags('Last Mile Delivery')
 @Controller('pod/lasttMile')
@@ -25,6 +27,13 @@ export class WebLasttMileController {
    *
    *
    */
+
+  @Post('transfer/delivery')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanOutAwbResponseVm })
+  public async transferAwbDelivery(@Body() payload: TransferAwbDeliverVm) {
+    return LastMileDeliveryOutService.transferAwbNumber(payload);
+  }
 
   @Post('proof/delivery')
   @HttpCode(HttpStatus.OK)
