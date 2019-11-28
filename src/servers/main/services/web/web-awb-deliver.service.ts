@@ -29,6 +29,7 @@ export class WebAwbDeliverService {
 
     for (const awbNumber of payload.awbNumber) {
       const awbManual = new AwbDeliverManualResponseVm();
+      // NOTE: take out validation user driver
       const awb = await AwbService.getDataDeliver(awbNumber, authMeta.userId);
       if (awb) {
         // TODO: check to table do pod deliver

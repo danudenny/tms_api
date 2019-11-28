@@ -878,7 +878,6 @@ export class WebDeliveryOutService {
       ['COUNT (t3.*) FILTER (WHERE t5.awb_status_id_last = 14000)', 'totalAwb'],
       ['COUNT (t3.*)', 'totalAssigned'],
       ['t2.fullname', 'nickname'],
-      ['t4.is_cod', 'isCod'],
       [
         `CONCAT(CAST(SUM(t4.total_cod_value) AS NUMERIC(20,2)))`,
         'totalCodValue',
@@ -900,7 +899,7 @@ export class WebDeliveryOutService {
     // q.andWhereIsolated(qw => {
     //   qw.where(e => e.doPodDeliverDetails.awbStatusIdLast, w => w.equals(14000).or.equals(21500));
     // });
-    q.groupByRaw('t1.do_pod_deliver_id, t2.fullname, t4.is_cod');
+    q.groupByRaw('t1.do_pod_deliver_id, t2.fullname');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
