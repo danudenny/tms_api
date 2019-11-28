@@ -147,23 +147,20 @@ export class AwbService {
 
   public static async getDataDeliver(awbNumber: string, userIdDriver: number): Promise<AwbDeliverManualVm> {
     const qb = createQueryBuilder();
-    qb.addSelect('aia.awb_item_id', 'awbItemId');
-    qb.addSelect('aia.awb_number', 'awbNumber');
+    qb.addSelect('dpdd.awb_item_id', 'awbItemId');
+    qb.addSelect('dpdd.awb_number', 'awbNumber');
     qb.addSelect('dpdd.do_pod_deliver_detail_id', 'doPodDeliverDetailId');
     qb.addSelect('dpd.do_pod_deliver_id', 'doPodDeliverId');
     qb.addSelect('dpdd.awb_status_id_last', 'awbStatusId');
-    qb.from('awb_item_attr', 'aia');
-    qb.innerJoin(
-      'do_pod_deliver_detail',
-      'dpdd',
-      'aia.awb_item_id = dpdd.awb_item_id AND dpdd.awb_status_id_last = 14000 AND aia.is_deleted = false',
-    );
+    qb.from('do_pod_deliver_detail', 'dpdd');
     qb.innerJoin(
       'do_pod_deliver',
       'dpd',
       'dpdd.do_pod_deliver_id = dpd.do_pod_deliver_id AND dpd.is_deleted = false',
     );
-    qb.where('aia.awb_number = :awbNumber AND dpd.user_id_driver = :userIdDriver', { awbNumber, userIdDriver });
+    qb.where('dpdd.awb_number = :awbNumber AND dpdd.is_deleted = false', {
+      awbNumber,
+    });
     return await qb.getRawOne();
   }
 
