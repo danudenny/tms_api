@@ -1,5 +1,5 @@
 // #region import
-import { createQueryBuilder } from 'typeorm';
+import { createQueryBuilder, getManager, MoreThan } from 'typeorm';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { AuditHistory } from '../../../../../shared/orm-entity/audit-history';
 import { DoPodDeliver } from '../../../../../shared/orm-entity/do-pod-deliver';
@@ -25,6 +25,7 @@ import { AwbService } from '../../v1/awb.service';
 import moment = require('moment');
 import { AutoUpdateAwbStatusService } from '../../v1/auto-update-awb-status.service';
 import { ProofDeliveryResponseVm, ProofDeliveryPayloadVm } from '../../../models/last-mile/proof-delivery.vm';
+import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -466,8 +467,33 @@ export class LastMileDeliveryOutService {
             userIdUpdated: authMeta.userId,
             updatedTime: moment().toDate(),
           });
-          totalSuccess += 1;
 
+          // balance total awb
+          await getManager().transaction(
+            async transactionEntityManager => {
+              await transactionEntityManager.update(
+                AwbItemAttr,
+                awbDeliver.awbItemId,
+                {
+                  awbStatusIdLast: AWB_STATUS.IN_BRANCH,
+                  updatedTime: moment().toDate(),
+                },
+              );
+              // TODO: awb history ??
+
+              await transactionEntityManager.decrement(
+                DoPodDeliver,
+                {
+                  doPodDeliverId: awbDeliver.doPodDeliverId,
+                  totalAwb: MoreThan(0),
+                },
+                'totalAwb',
+                1,
+              );
+            },
+          );
+
+          totalSuccess += 1;
           // remove key holdRedis
           RedisService.del(`hold:scanout-transfer:${awbDeliver.awbItemId}`);
         } else {
