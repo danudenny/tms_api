@@ -1,5 +1,5 @@
 // #region import
-import { createQueryBuilder } from 'typeorm';
+import { createQueryBuilder, getManager, MoreThan } from 'typeorm';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { AuditHistory } from '../../../../../shared/orm-entity/audit-history';
 import { DoPodDeliver } from '../../../../../shared/orm-entity/do-pod-deliver';
@@ -19,12 +19,13 @@ import {
     WebScanOutAwbResponseVm, WebScanOutCreateResponseVm, WebScanOutResponseForEditVm,
 } from '../../../models/web-scan-out-response.vm';
 import {
-    WebScanOutAwbVm, WebScanOutCreateDeliveryVm, WebScanOutDeliverEditVm, WebScanOutLoadForEditVm,
+    WebScanOutAwbVm, WebScanOutCreateDeliveryVm, WebScanOutDeliverEditVm, WebScanOutLoadForEditVm, TransferAwbDeliverVm,
 } from '../../../models/web-scan-out.vm';
 import { AwbService } from '../../v1/awb.service';
 import moment = require('moment');
 import { AutoUpdateAwbStatusService } from '../../v1/auto-update-awb-status.service';
 import { ProofDeliveryResponseVm, ProofDeliveryPayloadVm } from '../../../models/last-mile/proof-delivery.vm';
+import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -45,7 +46,8 @@ export class LastMileDeliveryOutService {
     // create do_pod_deliver (Surat Jalan Antar sigesit)
     const doPod = DoPodDeliver.create();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    const doPodDateTime = moment(payload.doPodDateTime).toDate();
+    // NOTE: moment(payload.doPodDateTime).toDate();
+    const doPodDateTime = moment().toDate();
 
     // NOTE: Tipe surat (jalan Antar Sigesit)
     doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
@@ -279,8 +281,7 @@ export class LastMileDeliveryOutService {
         // handle if awb status is null
         let notDeliver = true;
         if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
-          notDeliver =
-            awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
+          notDeliver = awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
         }
 
         // NOTE: first must scan in branch
@@ -300,13 +301,13 @@ export class LastMileDeliveryOutService {
 
           // AUTO STATUS
           // TODO: set enable and disble
-          if (statusCode == 'IN' && awb.branchIdLast != permissonPayload.branchId) {
-            await AutoUpdateAwbStatusService.awbDeliver(
-              awb,
-              authMeta.userId,
-              permissonPayload.branchId,
-            );
-          }
+          // if (statusCode == 'IN' && awb.branchIdLast != permissonPayload.branchId) {
+          //   await AutoUpdateAwbStatusService.awbDeliver(
+          //     awb,
+          //     authMeta.userId,
+          //     permissonPayload.branchId,
+          //   );
+          // }
 
           // Add Locking setnx redis
           const holdRedis = await RedisService.locking(
@@ -360,7 +361,7 @@ export class LastMileDeliveryOutService {
           } else {
             totalError += 1;
             response.status = 'error';
-            response.message = 'Server Busy';
+            response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
           }
         } else {
           totalError += 1;
@@ -422,6 +423,111 @@ export class LastMileDeliveryOutService {
     );
     const result = new ProofDeliveryResponseVm();
     result.data = await qb.getRawMany();
+
+    return result;
+  }
+
+  static async transferAwbNumber(
+    payload: TransferAwbDeliverVm,
+  ): Promise<WebScanOutAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
+    const dataItem = [];
+    const result = new WebScanOutAwbResponseVm();
+
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    for (const awbNumber of payload.awbNumber) {
+      const response = {
+        status: 'ok',
+        message: 'Success',
+      };
+
+      // NOTE: TRANSFER AWB NUMBER
+      // add index awb number
+      const awbDeliver = await DoPodDeliverDetail.findOne({
+        where: {
+          awbNumber,
+          awbStatusIdLast: AWB_STATUS.ANT,
+          isDeleted: false,
+        },
+      });
+      if (awbDeliver) {
+        // Add Locking setnx redis
+        const holdRedis = await RedisService.locking(
+          `hold:scanout-transfer:${awbDeliver.awbItemId}`,
+          'locking',
+        );
+        if (holdRedis) {
+          // Update data do pod detail per awb number
+          // doPodDeliverId;
+          await DoPodDeliverDetail.update(awbDeliver.doPodDeliverDetailId, {
+            isDeleted: true,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          });
+
+          // balance total awb
+          await getManager().transaction(
+            async transactionEntityManager => {
+              const awbItemAttr = await AwbItemAttr.findOne({
+                where: {
+                  awbItemId: awbDeliver.awbItemId,
+                  awbStatusIdLast: AWB_STATUS.ANT,
+                  isDeleted: false,
+                },
+              });
+              if (awbItemAttr) {
+                await transactionEntityManager.update(
+                  AwbItemAttr,
+                  awbItemAttr.awbItemAttrId,
+                  {
+                    awbStatusIdLast: AWB_STATUS.IN_BRANCH,
+                    updatedTime: moment().toDate(),
+                  },
+                );
+              }
+              // TODO: awb history ??
+
+              await transactionEntityManager.decrement(
+                DoPodDeliver,
+                {
+                  doPodDeliverId: awbDeliver.doPodDeliverId,
+                  totalAwb: MoreThan(0),
+                },
+                'totalAwb',
+                1,
+              );
+            },
+          );
+
+          totalSuccess += 1;
+          // remove key holdRedis
+          RedisService.del(`hold:scanout-transfer:${awbDeliver.awbItemId}`);
+        } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+          }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Resi ${awbNumber} Tidak di Temukan`;
+      }
+
+      // push item
+      dataItem.push({
+        awbNumber,
+        ...response,
+      });
+    } // end loop
+
+    // Populate return value
+    result.totalData = payload.awbNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
 
     return result;
   }

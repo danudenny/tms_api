@@ -65,6 +65,7 @@ export class EmployeeService {
     // mapping field
     payload.fieldResolverMap['employeeName'] = 'employee.fullname';
     payload.fieldResolverMap['employeeRoleId'] = 'employee.employee_role_id';
+    payload.fieldResolverMap['roleId'] = 'user_role.role_id';
 
     const q = RepositoryService.employee.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
@@ -79,8 +80,10 @@ export class EmployeeService {
     q.innerJoin(u => u.user, 'users', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(u => u.user.userRoles, 'user_role', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.andWhere(e => e.user.userRoles.branchId, w => w.equals(branchId));
-    q.andWhere(j => j.user.userRoles.isDeleted, w => w.isFalse());
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
