@@ -49,6 +49,9 @@ export class ItemDeliveryResponseVm {
   @ApiModelProperty()
   doPodDeliverDetailId: string;
 
+  @ApiModelProperty()
+  awbStatusIdLast: number;
+
   // @ApiModelProperty()
   // photoType: string;
 
