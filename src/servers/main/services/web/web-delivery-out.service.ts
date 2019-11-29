@@ -970,6 +970,7 @@ export class WebDeliveryOutService {
   ): Promise<WebDeliveryListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDeliverId'] = 't1.do_pod_deliver_id';
+    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -986,6 +987,7 @@ export class WebDeliveryOutService {
     q.selectRaw(
       ['t1.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       ['t2.awb_number', 'awbNumber'],
+      ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t2.is_cod', 'isCod'],
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t2.consignee_name', 'consigneeName'],
@@ -996,7 +998,7 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.awbItem.awb, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awbItem.awbAttr.awbStatus, 't3', j =>
+    q.innerJoin(e => e.awbStatus, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
