@@ -471,14 +471,23 @@ export class LastMileDeliveryOutService {
           // balance total awb
           await getManager().transaction(
             async transactionEntityManager => {
-              await transactionEntityManager.update(
-                AwbItemAttr,
-                awbDeliver.awbItemId,
-                {
-                  awbStatusIdLast: AWB_STATUS.IN_BRANCH,
-                  updatedTime: moment().toDate(),
+              const awbItemAttr = await AwbItemAttr.findOne({
+                where: {
+                  awbItemId: awbDeliver.awbItemId,
+                  awbStatusIdLast: AWB_STATUS.ANT,
+                  isDeleted: false,
                 },
-              );
+              });
+              if (awbItemAttr) {
+                await transactionEntityManager.update(
+                  AwbItemAttr,
+                  awbItemAttr.awbItemAttrId,
+                  {
+                    awbStatusIdLast: AWB_STATUS.IN_BRANCH,
+                    updatedTime: moment().toDate(),
+                  },
+                );
+              }
               // TODO: awb history ??
 
               await transactionEntityManager.decrement(
