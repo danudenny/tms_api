@@ -15,8 +15,8 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { RedisService } from '../../../../shared/services/redis.service';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
-import { WebScanInBagListResponseVm, WebScanInListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm, WebScanInBranchListBagResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm, WebScanInBranchResponseVm, ScanInputNumberBranchVm, WebScanInBagBranchVm, WebScanInValidateBranchVm, ScanBranchBagVm, ScanBranchAwbVm, WebScanInBagBranchResponseVm, WebScanInBranchLoadResponseVm } from '../../models/web-scanin.vm';
+import { WebScanInBagListResponseVm, WebScanInListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm, WebScanInBranchListBagResponseVm, WebScanInBranchListAwbResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebScanInVm, WebScanInValidateBranchVm, WebScanInBranchLoadResponseVm } from '../../models/web-scanin.vm';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
@@ -278,7 +278,7 @@ export class WebDeliveryInService {
   ): Promise<WebScanInBranchListBagResponseVm> {
     // mapping field
     payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
-    payload.fieldResolverMap['branchIdLast'] = 't3.branch_id_last';
+    payload.fieldResolverMap['branchName'] = 't4.branch_name';
     payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
     payload.fieldResolverMap['totalDiff'] = 't1.total_diff';
     payload.fieldResolverMap['totalAwbScan'] = 't1.total_awb_scan';
@@ -321,9 +321,9 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItem, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.branch, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.bagItem.branchLast, 't4', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -336,67 +336,62 @@ export class WebDeliveryInService {
     return result;
   }
 
-  // async findAllBranchListAwb(
-  //   payload: BaseMetaPayloadVm,
-  // ): Promise<WebScanInBranchListBagResponseVm> {
-  //   // mapping field
-  //   payload.fieldResolverMap['createdTime'] = 't1.created_time';
-  //   payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
-  //   payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
-  //   payload.fieldResolverMap['branchIdFrom'] = 't4.branch_id';
-  //   payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
-  //   payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
-  //   if (payload.sortBy === '') {
-  //     payload.sortBy = 'createdTime';
-  //   }
+  async findAllBranchListAwb(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInBranchListAwbResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['consigneeName'] = 't3.consignee_name';
+    payload.fieldResolverMap['consigneeAddress'] = 't3.consignee_address';
+    payload.fieldResolverMap['totalCodValue'] = 't3.total_cod_value';
+    payload.fieldResolverMap['branchName'] = 't4.branch_name';
+    payload.fieldResolverMap['totalWeightFinal'] = 't3.total_weight_final';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
 
-  //   // mapping search field and operator default ilike
-  //   payload.globalSearchFields = [
-  //     {
-  //       field: 'createdTime',
-  //     },
-  //   ];
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+    ];
 
-  //   const repo = new OrionRepositoryService(PodScanInBranchBag, 't1');
-  //   const q = repo.findAllRaw();
+    const repo = new OrionRepositoryService(PodScanInBranchDetail, 't1');
+    const q = repo.findAllRaw();
 
-  //   payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q, true);
 
-  //   q.selectRaw(
-  //     ['t1.bag_item_id', 'bagItemId'],
-  //     ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
-  //     ['t1.created_time', 'createdTime'],
-  //     ['t2.ref_representative_code', 'refRepresentativeCode'],
-  //     ['t4.branch_name', 'branchNameFrom'],
-  //     ['t1.total_awb_item', 'totalAwbItem'],
-  //     ['t1.total_awb_scan', 'totalAwbScan'],
-  //     ['t1.total_diff', 'totalDiff'],
-  //     [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
-  //     ['t3.bag_seq', 'bagSeq'],
-  //     ['t2.bag_number', 'bagNumber'],
+    q.selectRaw(
+      ['t1.awb_number', 'awbNumber'],
+      ['t1.created_time', 'createdTime'],
+      ['t3.consignee_name', 'consigneeName'],
+      ['t3.consignee_address', 'consigneeAddress'],
+      ['t3.total_cod_value', 'totalCodValue'],
+      ['t4.branch_name', 'branchName'],
+      [`CONCAT(CAST(t3.total_weight_final AS NUMERIC(20,2)),' Kg')`, 'totalWeightFinal'],
+    );
 
-  //   );
+    q.innerJoin(e => e.PodScanInBranchBag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.Awb, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.PodScanInBranchBag.branch, 't4', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
-  //   q.innerJoin(e => e.bag, 't2', j =>
-  //     j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  //   );
-  //   q.innerJoin(e => e.bagItem, 't3', j =>
-  //     j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  //   );
-  //   q.innerJoin(e => e.bag.branch, 't4', j =>
-  //     j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  //   );
+    const result = new WebScanInBranchListAwbResponseVm();
 
-  //   const data = await q.exec();
-  //   const total = await q.countWithoutTakeAndSkip();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
-  //   const result = new WebScanInBranchListBagResponseVm();
-
-  //   result.data = data;
-  //   result.paging = MetaService.set(payload.page, payload.limit, total);
-
-  //   return result;
-  // }
+    return result;
+  }
 
   async findAllHubSortInByRequest(
     payload: BaseMetaPayloadVm,

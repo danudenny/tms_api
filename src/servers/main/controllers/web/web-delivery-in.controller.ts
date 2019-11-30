@@ -8,7 +8,7 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { BagRepository } from '../../../../shared/orm-repository/bag.repository';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
-import { WebScanInListResponseVm, WebScanInBagListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm, WebScanInBranchListBagResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebScanInListResponseVm, WebScanInBagListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm, WebScanInBranchListBagResponseVm, WebScanInBranchListAwbResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm, WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebScanInBagBranchVm, WebScanInLoadBranchResponseVm, WebScanInBranchLoadResponseVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
@@ -73,15 +73,15 @@ export class WebDeliveryInController {
     return this.webDeliveryService.findAllBranchListBag(payload);
   }
 
-  // @Post('branchListAwb')
-  // @HttpCode(HttpStatus.OK)
-  // // @ApiBearerAuth()
-  // // @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: WebScanInBranchListBagResponseVm })
-  // // @ResponseSerializerOptions({ disable: true })
-  // public async findAllBranchListAwb(@Body() payload: BaseMetaPayloadVm) {
-  //   return this.webDeliveryService.findAllBranchListAwb(payload);
-  // }
+  @Post('branchListAwb')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanInBranchListAwbResponseVm })
+  // @ResponseSerializerOptions({ disable: true })
+  public async findAllBranchListAwb(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryService.findAllBranchListAwb(payload);
+  }
 
   @Post('hubSortList')
   @HttpCode(HttpStatus.OK)
