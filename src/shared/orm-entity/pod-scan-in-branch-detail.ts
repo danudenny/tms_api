@@ -6,6 +6,7 @@ import { Awb } from './awb';
 import { Bag } from './bag';
 import { BagItem } from './bag-item';
 import { BagItemAwb } from './bag-item-awb';
+import { PodScanInBranchBag } from './pod-scan-in-branch-bag';
 
 @Entity('pod_scan_in_branch_detail', { schema: 'public' })
 export class PodScanInBranchDetail extends TmsBaseEntity {
@@ -89,4 +90,12 @@ export class PodScanInBranchDetail extends TmsBaseEntity {
     name: 'is_trouble',
   })
   isTrouble: boolean;
+
+  @ManyToOne(() => PodScanInBranchBag)
+  @JoinColumn({ name: 'pod_scan_in_branch_id', referencedColumnName: 'podScanInBranchId' })
+  PodScanInBranchBag: PodScanInBranchBag;
+
+  @ManyToOne(() => Awb)
+  @JoinColumn({ name: 'awb_id', referencedColumnName: 'awbId' })
+  Awb: Awb;
 }

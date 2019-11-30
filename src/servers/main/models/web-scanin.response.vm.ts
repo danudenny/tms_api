@@ -60,6 +60,57 @@ export class WebScanInBranchResponseVm {
 
 }
 
+export class WebScanInBranchBagResponseVm {
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  refRepresentativeCode: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  totalAwbItem: string;
+
+  @ApiModelProperty()
+  totalAwbScan: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  totalDiff: string;
+
+}
+
+export class WebScanInBranchAwbResponseVm {
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  totalWeightFinal: string;
+
+  @ApiModelProperty()
+  totalCodValue: string;
+
+}
+
 export class WebScanInHubSortResponseVm {
   @ApiModelProperty()
   createdTime: string;
