@@ -80,6 +80,9 @@ export class WebScanInBranchBagResponseVm {
   totalAwbScan: string;
 
   @ApiModelProperty()
+  totalBagScan: string;
+
+  @ApiModelProperty()
   weight: string;
 
   @ApiModelProperty()

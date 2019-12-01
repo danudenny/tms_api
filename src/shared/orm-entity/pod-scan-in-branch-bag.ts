@@ -4,6 +4,7 @@ import { TmsBaseEntity } from './tms-base';
 import { Bag } from './bag';
 import { BagItem } from './bag-item';
 import { Branch } from './branch';
+import { PodScanInBranch } from './pod-scan-in-branch';
 
 @Entity('pod_scan_in_branch_bag', { schema: 'public' })
 export class PodScanInBranchBag extends TmsBaseEntity {
@@ -85,5 +86,9 @@ export class PodScanInBranchBag extends TmsBaseEntity {
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
   branch: Branch;
+
+  @ManyToOne(() => PodScanInBranch)
+  @JoinColumn({ name: 'pod_scan_in_branch_id', referencedColumnName: 'podScanInBranchId' })
+  podScanInBranch: PodScanInBranch;
 
 }
