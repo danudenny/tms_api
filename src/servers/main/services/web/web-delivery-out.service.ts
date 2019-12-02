@@ -843,6 +843,7 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['branchTo'] = 't1.branch_id_to';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
     payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
     payload.fieldResolverMap['description'] = 't1.description';

@@ -179,8 +179,8 @@ export class WebDeliveryOutController {
 
   @Post('transitList')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutTransitListResponseVm })
   public async transitList(@Body() payload: WebScanOutAwbListPayloadVm) {
     // TODO: add filter by doPodType (Transit HUB)
