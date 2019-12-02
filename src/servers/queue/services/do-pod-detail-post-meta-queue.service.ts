@@ -11,6 +11,7 @@ import { ConfigService } from '../../../shared/services/config.service';
 import { OrionRepositoryService } from '../../../shared/services/orion-repository.service';
 import { QueueBullBoard } from './queue-bull-board';
 import { Branch } from '../../../shared/orm-entity/branch';
+import { User } from '../../../shared/orm-entity/user';
 
 export class DoPodDetailPostMetaQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-history-post-meta', {
@@ -171,6 +172,50 @@ export class DoPodDetailPostMetaQueueService {
       return DoPodDetailPostMetaQueueService.queue.add(obj);
     }
 
+  }
+
+  public static async createJobByScanOutAwbBranch(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    userId: number,
+    userIdDriver: number,
+    branchIdNext: number,
+  ) {
+    // TODO: ONLY AWB OUT_BRANCH
+    let branchName = 'Kantor Pusat';
+    let cityName = 'Jakarta';
+    const branch = await this.getDataBranchCity(branchId);
+    if (branch) {
+      branchName = branch.branchName;
+      cityName = branch.district.city.cityName;
+    }
+    let employeeIdDriver = null;
+    let employeeNameDriver = '';
+    const userDriverRepo = await this.getDataUserEmployee(userIdDriver);
+    if (userDriverRepo) {
+      employeeIdDriver = userDriverRepo.employeeId;
+      employeeNameDriver = userDriverRepo.employee.employeeName;
+    }
+    const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver}`;
+    const notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver,
+      timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
+      branchIdNext,
+    };
+
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
   // NOTE: same provide data
@@ -515,6 +560,25 @@ export class DoPodDetailPostMetaQueueService {
       notePublic,
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
+  // TODO: need refactoring
+  private static async getDataUserEmployee(userId: number): Promise<User> {
+    const userhRepository = new OrionRepositoryService(User);
+    const q = userhRepository.findOne();
+    // Manage relation (default inner join)
+    q.leftJoin(e => e.employee);
+    q.select({
+      userId: true,
+      username: true,
+      employee: {
+        employeeId: true,
+        employeeName: true,
+      },
+    });
+    q.where(e => e.userId, w => w.equals(userId));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    return await q.exec();
   }
 
   private static async getDataAwbStatus(awbStatusId: number): Promise<AwbStatus> {
