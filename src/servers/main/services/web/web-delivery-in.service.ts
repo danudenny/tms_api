@@ -286,6 +286,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['weight'] = 't3.weight';
     payload.fieldResolverMap['totalBagScan'] = 't5.total_bag_scan';
+    payload.fieldResolverMap['bagItemId'] = 't6.bag_item_id';
     payload.fieldResolverMap['refRepresentativeCode'] = 't2.ref_representative_code';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -313,6 +314,7 @@ export class WebDeliveryInService {
       ['t1.total_awb_scan', 'totalAwbScan'],
       ['t1.total_diff', 'totalDiff'],
       ['t5.total_bag_scan', 'totalBagScan'],
+      ['t6.bag_item_id', 'bagItemId'],
       ['t2.ref_representative_code', 'refRepresentativeCode'],
       [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
@@ -327,6 +329,9 @@ export class WebDeliveryInService {
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.podScanInBranch, 't5', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem.bagItemAwbs, 't6', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -348,6 +353,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['consigneeName'] = 't3.consignee_name';
+    payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
     payload.fieldResolverMap['consigneeAddress'] = 't3.consignee_address';
     payload.fieldResolverMap['totalCodValue'] = 't3.total_cod_value';
     payload.fieldResolverMap['branchName'] = 't4.branch_name';
@@ -375,6 +381,7 @@ export class WebDeliveryInService {
       ['t3.consignee_address', 'consigneeAddress'],
       ['t3.total_cod_value', 'totalCodValue'],
       ['t4.branch_name', 'branchName'],
+      ['t1.bag_item_id', 'bagItemId'],
       [`CONCAT(CAST(t3.total_weight_final AS NUMERIC(20,2)),' Kg')`, 'totalWeightFinal'],
     );
 
@@ -386,7 +393,7 @@ export class WebDeliveryInService {
     );
     q.innerJoin(e => e.PodScanInBranchBag.branch, 't4', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  );
+    );
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
