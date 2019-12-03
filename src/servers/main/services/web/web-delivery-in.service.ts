@@ -287,6 +287,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['weight'] = 't3.weight';
     payload.fieldResolverMap['totalBagScan'] = 't5.total_bag_scan';
     payload.fieldResolverMap['bagItemId'] = 't6.bag_item_id';
+    payload.fieldResolverMap['podScanInBranchId'] = 't5.pod_scan_in_branch_id';
     payload.fieldResolverMap['refRepresentativeCode'] = 't2.ref_representative_code';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -303,7 +304,6 @@ export class WebDeliveryInService {
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
-
     q.selectRaw(
       ['t1.bag_item_id', 'bagItemId'],
       ['t1.bag_number', 'bagNumber'],
@@ -313,6 +313,7 @@ export class WebDeliveryInService {
       ['t1.total_awb_item', 'totalAwbItem'],
       ['t1.total_awb_scan', 'totalAwbScan'],
       ['t1.total_diff', 'totalDiff'],
+      ['t5.pod_scan_in_branch_id', 'podScanInBranchId'],
       ['t5.total_bag_scan', 'totalBagScan'],
       ['t6.bag_item_id', 'bagItemId'],
       ['t2.ref_representative_code', 'refRepresentativeCode'],
@@ -334,7 +335,6 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItem.bagItemAwbs, 't6', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -358,6 +358,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['totalCodValue'] = 't3.total_cod_value';
     payload.fieldResolverMap['branchName'] = 't4.branch_name';
     payload.fieldResolverMap['totalWeightFinal'] = 't3.total_weight_final';
+    payload.fieldResolverMap['podScanInBranchId'] = 't2.pod_scan_in_branch_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -382,6 +383,7 @@ export class WebDeliveryInService {
       ['t3.total_cod_value', 'totalCodValue'],
       ['t4.branch_name', 'branchName'],
       ['t1.bag_item_id', 'bagItemId'],
+      ['t2.pod_scan_in_branch_id', 'podScanInBranchId'],
       [`CONCAT(CAST(t3.total_weight_final AS NUMERIC(20,2)),' Kg')`, 'totalWeightFinal'],
     );
 
