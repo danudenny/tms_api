@@ -444,85 +444,84 @@ export class LastMileDeliveryOutService {
         message: 'Success',
       };
 
-      // NOTE: TRANSFER AWB NUMBER
-      // add index awb number
-      const awbDeliver = await DoPodDeliverDetail.findOne({
-        where: {
-          awbNumber,
-          isDeleted: false,
-        },
-      });
-      // handle only status ANT
-      if (awbDeliver.awbStatusIdLast === AWB_STATUS.ANT) {
-        // Add Locking setnx redis
-        const holdRedis = await RedisService.locking(
-          `hold:scanout-transfer:${awbDeliver.awbItemId}`,
-          'locking',
-        );
-        if (holdRedis) {
-          // Update data do pod detail per awb number
-          // doPodDeliverId;
-          await DoPodDeliverDetail.update(
-            awbDeliver.doPodDeliverDetailId,
-            {
-              isDeleted: true,
-              userIdUpdated: authMeta.userId,
-              updatedTime: moment().toDate(),
-            },
-          );
-
-          // balance total awb
-          await getManager().transaction(
-            async transactionEntityManager => {
-              const awbItemAttr = await AwbItemAttr.findOne({
-                where: {
-                  awbItemId: awbDeliver.awbItemId,
-                  isDeleted: false,
-                },
-              });
-              if (awbItemAttr) {
-                await transactionEntityManager.update(
-                  AwbItemAttr,
-                  awbItemAttr.awbItemAttrId,
-                  {
-                    awbStatusIdLast: AWB_STATUS.IN_BRANCH,
-                    updatedTime: moment().toDate(),
-                  },
-                );
-              }
-
-              await transactionEntityManager.decrement(
-                DoPodDeliver,
-                {
-                  doPodDeliverId: awbDeliver.doPodDeliverId,
-                  totalAwb: MoreThan(0),
-                },
-                'totalAwb',
-                1,
-              );
-            },
-          );
-
-          totalSuccess += 1;
-          // remove key holdRedis
-          RedisService.del(
+      const awb = await AwbService.validAwbNumber(awbNumber);
+      if (awb) {
+        // NOTE: TRANSFER AWB NUMBER
+        const awbDeliver = await DoPodDeliverDetail.findOne({
+          where: {
+            awbNumber,
+            awbStatusIdLast: AWB_STATUS.ANT,
+            isDeleted: false,
+          },
+        });
+        // handle only status ANT
+        if (awbDeliver) {
+          // Add Locking setnx redis
+          const holdRedis = await RedisService.locking(
             `hold:scanout-transfer:${awbDeliver.awbItemId}`,
+            'locking',
           );
+          if (holdRedis) {
+            // Update data do pod detail per awb number
+            // doPodDeliverId;
+            await DoPodDeliverDetail.update(
+              awbDeliver.doPodDeliverDetailId,
+              {
+                isDeleted: true,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              },
+            );
+
+            // balance total awb
+            await getManager().transaction(
+              async transactionEntityManager => {
+                const awbItemAttr = await AwbItemAttr.findOne({
+                  where: {
+                    awbItemId: awbDeliver.awbItemId,
+                    isDeleted: false,
+                  },
+                });
+                if (awbItemAttr) {
+                  await transactionEntityManager.update(
+                    AwbItemAttr,
+                    awbItemAttr.awbItemAttrId,
+                    {
+                      awbStatusIdLast: AWB_STATUS.IN_BRANCH,
+                      updatedTime: moment().toDate(),
+                    },
+                  );
+                }
+
+                await transactionEntityManager.decrement(
+                  DoPodDeliver,
+                  {
+                    doPodDeliverId: awbDeliver.doPodDeliverId,
+                    totalAwb: MoreThan(0),
+                  },
+                  'totalAwb',
+                  1,
+                );
+              },
+            );
+
+            totalSuccess += 1;
+            // remove key holdRedis
+            RedisService.del(`hold:scanout-transfer:${awbDeliver.awbItemId}`);
+          } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+          }
         } else {
           totalError += 1;
           response.status = 'error';
-          response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+          response.message = `Resi ${awbNumber}, bermasalah harap scan in terlebih dahulu`;
         }
       } else {
         totalError += 1;
         response.status = 'error';
-        if (awbDeliver.awbStatusIdLast !== AWB_STATUS.DLV) {
-          response.message = `Resi ${awbNumber}, bermasalah harap scan in terlebih dahulu`;
-        } else if (awbDeliver.awbStatusIdLast === AWB_STATUS.DLV) {
-          response.message = `Resi ${awbNumber} sudah DLV (Delivered)`;
-        } else {
-          response.message = `Resi ${awbNumber} Tidak di Temukan`;
-        }
+        response.message = `Resi ${awbNumber} Tidak di Temukan`;
       }
 
       // push item
