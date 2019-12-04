@@ -14,11 +14,11 @@ export class DoPodDetail extends TmsBaseEntity {
   })
   doPodDetailId: string;
 
-  // @Column('bigint', {
-  //   nullable: true,
-  //   name: 'pod_scan_in_id',
-  // })
-  // podScanInId: number | null;
+  @Column('bigint', {
+    nullable: true,
+    name: 'awb_id',
+  })
+  awbId: number | null;
 
   @Column('character varying', {
     nullable: false,

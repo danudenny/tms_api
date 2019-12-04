@@ -56,6 +56,84 @@ export class WebScanInResponseVm {
   url: string;
 }
 
+export class WebScanTransitResponseVm {
+  @ApiModelProperty()
+  doPodId: number;
+
+  @ApiModelProperty()
+  doPodDateTime: string;
+
+  @ApiModelProperty()
+  doPodCode: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  employeeName: string;
+
+  @ApiModelProperty()
+  totalAwb: string;
+
+  @ApiModelProperty()
+  description: string;
+
+}
+
+export class WebScanTransitAwbResponseVm {
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  bagItemId: string;
+
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
+  representativeIdTo: number;
+
+  @ApiModelProperty()
+  weight: number;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  districtName: string;
+
+  @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
+  isCod: string;
+
+  @ApiModelProperty()
+  doPodDeliverDetailId: string;
+
+  @ApiModelProperty()
+  doPodId: number;
+
+  // @ApiModelProperty()
+  // photoType: string;
+
+  // @ApiModelProperty()
+  // url: string;
+}
+
 export class WebScanInDeliverResponseVm {
   @ApiModelProperty()
   doPodDeliverId: number;
@@ -95,6 +173,17 @@ export class WebScanOutAwbListResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty({ type: () => [WebScanInResponseVm] })
   data: WebScanInResponseVm[];
+}
+
+export class WebScanOutTransitListResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [WebScanTransitResponseVm] })
+  data: WebScanTransitAwbResponseVm[];
+}
+
+export class WebScanOutTransitListAwbResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebScanTransitAwbResponseVm] })
+  data: WebScanTransitAwbResponseVm[];
 }
 
 export class WebScanOutDeliverListResponseVm extends BaseMetaResponseVm {

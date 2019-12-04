@@ -29,6 +29,9 @@ import {
   ScanBagVm,
   WebScanOutResponseForEditVm,
   WebScanOutResponseForPrintVm,
+  WebScanTransitResponseVm,
+  WebScanOutTransitListResponseVm,
+  WebScanOutTransitListAwbResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -172,6 +175,26 @@ export class WebDeliveryOutController {
   public async bagList(@Body() payload: WebScanOutAwbListPayloadVm) {
     // TODO: add filter by doPodType (Transit HUB)
     return this.webDeliveryOutService.findAllScanOutList(payload, true);
+  }
+
+  @Post('transitList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutTransitListResponseVm })
+  public async transitList(@Body() payload: WebScanOutAwbListPayloadVm) {
+    // TODO: add filter by doPodType (Transit HUB)
+    return this.webDeliveryOutService.findAllTransitList(payload);
+  }
+
+  @Post('transitListAwb')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutTransitListAwbResponseVm })
+  public async transitListAwb(@Body() payload: WebScanOutAwbListPayloadVm) {
+    // TODO: add filter by doPodType (Transit HUB)
+    return this.webDeliveryOutService.findAllTransitListAwb(payload);
   }
 
   @Post('hubTransitList')
