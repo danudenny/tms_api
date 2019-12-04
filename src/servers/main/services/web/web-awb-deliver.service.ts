@@ -69,6 +69,7 @@ export class WebAwbDeliverService {
           let syncManualDelivery = false;
           const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
           const awbDeliver = await DoPodDeliverDetail.findOne({
+            relations: ['doPodDeliver'],
             where: {
               awbNumber: delivery.awbNumber,
               isDeleted: false,
@@ -92,7 +93,10 @@ export class WebAwbDeliverService {
                   break;
                 case 'sigesit':
                   // check only own awb number
-                  if (awbDeliver.awbStatusIdLast == AWB_STATUS.ANT) {
+                  if (
+                    awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&
+                    awbDeliver.doPodDeliver.userIdDriver == authMeta.userId
+                  ) {
                     syncManualDelivery = true;
                   }
                   break;
