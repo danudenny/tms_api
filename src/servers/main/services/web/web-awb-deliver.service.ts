@@ -11,7 +11,7 @@ import {
 } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
     AwbDeliverManualResponseVm, WebAwbDeliverGetPayloadVm, WebAwbDeliverGetResponseVm,
-    WebAwbDeliverSyncPayloadVm, WebDeliveryVm, WebAwbDeliverSyncResponseVm,
+    WebAwbDeliverSyncPayloadVm, WebDeliveryVm, WebAwbDeliverSyncResponseVm, AwbDeliverManualSync,
 } from '../../models/web-awb-deliver.vm';
 import { AwbService } from '../v1/awb.service';
 import moment = require('moment');
@@ -21,6 +21,7 @@ export class WebAwbDeliverService {
   constructor() {
   }
 
+  // TODO: deprecated
   static async getAwbDeliver(
     payload: WebAwbDeliverGetPayloadVm,
   ): Promise<WebAwbDeliverGetResponseVm> {
@@ -56,31 +57,97 @@ export class WebAwbDeliverService {
     payload: WebAwbDeliverSyncPayloadVm,
   ): Promise<WebAwbDeliverSyncResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const response = new AwbDeliverManualSync();
     const result = new WebAwbDeliverSyncResponseVm();
+    const dataItem = [];
     try {
-      await getManager().transaction(async transactionEntityManager => {
-        for (const delivery of payload.deliveries) {
-          // set data deliver
-          delivery.employeeId = authMeta.employeeId;
-          await this.syncDeliver(transactionEntityManager, delivery);
+      for (const delivery of payload.deliveries) {
+        // TODO: check awb number
+        const awb = await AwbService.validAwbNumber(delivery.awbNumber);
+        if (awb) {
+          // payload.role ['palkur', 'ct', 'sigesit']
+          let syncManualDelivery = false;
+          const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
+          const awbDeliver = await DoPodDeliverDetail.findOne({
+            relations: ['doPodDeliver'],
+            where: {
+              awbNumber: delivery.awbNumber,
+              isDeleted: false,
+            },
+          });
+          if (awbDeliver) {
+            // NOTE: check validate role and status last
+            if ((awbDeliver.awbStatusIdLast == AWB_STATUS.ANT) && (delivery.awbStatusId == AWB_STATUS.DLV)) {
+              syncManualDelivery = true;
+            } else {
+              // check role
+              // role palkur => CODA, BA, RETUR tidak perlu ANT
+              switch (payload.role) {
+                case 'ct':
+                  syncManualDelivery = true;
+                  break;
+                case 'palkur':
+                  if (statusProblem.includes(delivery.awbStatusId)) {
+                    syncManualDelivery = true;
+                  }
+                  break;
+                case 'sigesit':
+                  // check only own awb number
+                  if (
+                    awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&
+                    awbDeliver.doPodDeliver.userIdDriver == authMeta.userId
+                  ) {
+                    syncManualDelivery = true;
+                  }
+                  break;
+
+                default:
+                  break;
+              }
+            }
+
+            if (syncManualDelivery) {
+              await getManager().transaction(async transactionEntityManager => {
+                // set data deliver
+                delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
+                delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
+                delivery.awbItemId = awbDeliver.awbItemId;
+                delivery.employeeId = authMeta.employeeId;
+                await this.syncDeliver(transactionEntityManager, delivery);
+              });
+
+              response.status = 'ok';
+              response.message = 'success';
+            } else {
+              response.status = 'error';
+              response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan in terlebih dahulu`;
+            }
+          } else {
+            response.status = 'error';
+            response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan antar terlebih dahulu`;
+          }
+        } else {
+          response.status = 'error';
+          response.message = `Resi ${delivery.awbNumber} tidak ditemukan`;
         }
-      });
 
-      // TODO: queue by Bull need refactoring
-      // for (const deliverDetail of payload.deliveries) {
-      //   DoPodDetailPostMetaQueueService.createJobByMobileSyncAwb(
-      //     deliverDetail.doPodDeliverDetailId,
-      //     deliverDetail.employeeId,
-      //     deliverDetail.awbStatusId,
-      //   );
-      // }
-
-      result.status = 'ok';
-      result.message = 'success';
+        // push item
+        dataItem.push({
+          awbNumber: delivery.awbNumber,
+          ...response,
+        });
+      } // end of for
     } catch (error) {
-      result.status = 'error';
-      result.message = `message error ${error.message}`;
+      response.status = 'error';
+      response.message = `message error ${error.message}`;
+      dataItem.push({
+        awbNumber: '',
+        ...response,
+      });
     }
+
+    // return array of data
+    result.data = dataItem;
     return result;
   }
 
@@ -96,8 +163,8 @@ export class WebAwbDeliverService {
       reasonId: delivery.reasonId,
       syncDateTime: moment().toDate(),
       desc: delivery.reasonNotes,
-      awbStatusDateTime: moment(delivery.doPodDeliverDate).toDate(),
-      historyDateTime: moment(delivery.doPodDeliverDate).toDate(),
+      awbStatusDateTime: moment().toDate(),
+      historyDateTime: moment().toDate(),
       employeeIdDriver: delivery.employeeId,
     });
 
