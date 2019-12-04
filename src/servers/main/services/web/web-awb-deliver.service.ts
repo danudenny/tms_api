@@ -68,12 +68,17 @@ export class WebAwbDeliverService {
           // payload.role ['palkur', 'ct', 'sigesit']
           let syncManualDelivery = false;
           const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
-          const awbDeliver = await AwbService.getDataDeliver(delivery.awbNumber, authMeta.userId);
+          const awbDeliver = await DoPodDeliverDetail.findOne({
+            where: {
+              awbNumber: delivery.awbNumber,
+              isDeleted: false,
+            },
+          });
           if (awbDeliver) {
             // NOTE: check validate role and status last
-            if ((awbDeliver.awbStatusId == AWB_STATUS.ANT) && (delivery.awbStatusId == AWB_STATUS.DLV)) {
+            if ((awbDeliver.awbStatusIdLast == AWB_STATUS.ANT) && (delivery.awbStatusId == AWB_STATUS.DLV)) {
               syncManualDelivery = true;
-            } else if (awbDeliver.awbStatusId != AWB_STATUS.ANT) {
+            } else {
               // check role
               // role palkur => CODA, BA, RETUR tidak perlu ANT
               switch (payload.role) {
@@ -82,6 +87,12 @@ export class WebAwbDeliverService {
                   break;
                 case 'palkur':
                   if (statusProblem.includes(delivery.awbStatusId)) {
+                    syncManualDelivery = true;
+                  }
+                  break;
+                case 'sigesit':
+                  // check only own awb number
+                  if (awbDeliver.awbStatusIdLast == AWB_STATUS.ANT) {
                     syncManualDelivery = true;
                   }
                   break;
@@ -109,7 +120,7 @@ export class WebAwbDeliverService {
             }
           } else {
             response.status = 'error';
-            response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan in terlebih dahulu`;
+            response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan antar terlebih dahulu`;
           }
         } else {
           response.status = 'error';
