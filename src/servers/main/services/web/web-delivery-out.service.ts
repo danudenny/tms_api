@@ -32,6 +32,9 @@ import {
   ScanBagVm,
   WebScanOutResponseForEditVm,
   WebScanOutResponseForPrintVm,
+  WebScanTransitResponseVm,
+  WebScanOutTransitListResponseVm,
+  WebScanOutTransitListAwbResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import {
   WebScanOutAwbVm,
@@ -826,6 +829,131 @@ export class WebDeliveryOutService {
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanOutAwbListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllTransitList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanOutTransitListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['branchTo'] = 't1.branch_id_to';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
+    payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
+    payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
+    payload.fieldResolverMap['description'] = 't1.description';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['nickname'] = 't2.nickname';
+    payload.fieldResolverMap['fullname'] = 't2.fullname';
+    payload.fieldResolverMap['branchName'] = 't3.branch_name';
+    payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'doPodDateTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDateTime',
+      },
+      {
+        field: 'doPodCode',
+      },
+      {
+        field: 'branchName',
+      },
+      {
+        field: 'fullname',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPod, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_id', 'doPodId'],
+      ['t1.created_time', 'createdTime'],
+      ['t1.do_pod_code', 'doPodCode'],
+      ['t1.do_pod_date_time', 'doPodDateTime'],
+      ['t1.description', 'description'],
+      ['t2.fullname', 'employeeName'],
+      ['t3.branch_name', 'branchName'],
+      ['COUNT (t4.do_pod_id)', 'totalAwb'],
+    );
+    q.innerJoin(e => e.doPodDetails, 't4', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+   );
+    q.innerJoin(e => e.branchTo, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name');
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanOutTransitListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllTransitListAwb(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanOutTransitListAwbResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodDeliverId'] = 't1.do_pod_deliver_id';
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDeliverId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPodDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_detail_id', 'doPodDetailId'],
+      ['t1.do_pod_id', 'doPodId'],
+      ['t2.awb_number', 'awbNumber'],
+      ['t1.created_time', 'createdTime'],
+      ['t2.is_cod', 'isCod'],
+      [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      ['t2.consignee_name', 'consigneeName'],
+      ['CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))', 'totalCodValue'],
+    );
+
+    q.innerJoin(e => e.awbItem.awb, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPod, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    // q.innerJoin(e => e.awbStatus, 't3', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new WebScanOutTransitListAwbResponseVm();
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);

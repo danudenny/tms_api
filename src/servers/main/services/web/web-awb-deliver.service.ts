@@ -1,4 +1,4 @@
-import { EntityManager, getManager } from 'typeorm';
+import { EntityManager, getManager, LessThan, MoreThan } from 'typeorm';
 
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
@@ -15,6 +15,7 @@ import {
 } from '../../models/web-awb-deliver.vm';
 import { AwbService } from '../v1/awb.service';
 import moment = require('moment');
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 
 export class WebAwbDeliverService {
   constructor() {
@@ -66,13 +67,13 @@ export class WebAwbDeliverService {
       });
 
       // TODO: queue by Bull need refactoring
-      for (const deliverDetail of payload.deliveries) {
-        DoPodDetailPostMetaQueueService.createJobByMobileSyncAwb(
-          deliverDetail.doPodDeliverDetailId,
-          deliverDetail.employeeId,
-          deliverDetail.awbStatusId,
-        );
-      }
+      // for (const deliverDetail of payload.deliveries) {
+      //   DoPodDetailPostMetaQueueService.createJobByMobileSyncAwb(
+      //     deliverDetail.doPodDeliverDetailId,
+      //     deliverDetail.employeeId,
+      //     deliverDetail.awbStatusId,
+      //   );
+      // }
 
       result.status = 'ok';
       result.message = 'success';
@@ -109,42 +110,86 @@ export class WebAwbDeliverService {
       doPodDeliverHistory.awbStatusId,
     );
 
-    if (awbStatus.isProblem) {
-      await transactionEntitymanager.increment(
-        DoPodDeliver,
-        { doPodDeliverId: delivery.doPodDeliverId },
-        'totalProblem',
-        1,
-      );
-    } else if (awbStatus.isFinalStatus) {
-      await transactionEntitymanager.increment(
-        DoPodDeliver,
-        { doPodDeliverId: delivery.doPodDeliverId },
-        'totalDelivery',
-        1,
-      );
-    }
-
-    // Update data DoPodDeliverDetail
-    await transactionEntitymanager.update(
-      DoPodDeliverDetail,
-      delivery.doPodDeliverDetailId,
-      {
-        awbStatusIdLast: doPodDeliverHistory.awbStatusId,
-        awbStatusDateTimeLast: doPodDeliverHistory.awbStatusDateTime,
-        reasonIdLast: doPodDeliverHistory.reasonId,
-        syncDateTimeLast: doPodDeliverHistory.syncDateTime,
-        descLast: doPodDeliverHistory.desc,
-        consigneeName: delivery.consigneeNameNote,
-        updatedTime: moment().toDate(),
+    // TODO: validation check final status last
+    const awbdDelivery = await DoPodDeliverDetail.findOne({
+      where: {
+        doPodDeliverDetailId: delivery.doPodDeliverDetailId,
+        isDeleted: false,
       },
-    );
+    });
+    const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
+    if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
+      // Update data DoPodDeliverDetail
+      await transactionEntitymanager.update(
+        DoPodDeliverDetail,
+        delivery.doPodDeliverDetailId,
+        {
+          awbStatusIdLast: doPodDeliverHistory.awbStatusId,
+          awbStatusDateTimeLast: doPodDeliverHistory.awbStatusDateTime,
+          reasonIdLast: doPodDeliverHistory.reasonId,
+          syncDateTimeLast: doPodDeliverHistory.syncDateTime,
+          descLast: doPodDeliverHistory.desc,
+          consigneeName: delivery.consigneeNameNote,
+          updatedTime: moment().toDate(),
+        },
+      );
 
-    // Update status awb item attr
-    await DeliveryService.updateAwbAttr(
-      delivery.awbItemId,
-      null,
-      doPodDeliverHistory.awbStatusId,
-    );
+      // TODO: validation DoPodDeliver
+      const doPodDeliver = await DoPodDeliver.findOne({
+        where: {
+          doPodDeliverId: delivery.doPodDeliverId,
+          isDeleted: false,
+        },
+      });
+      if (doPodDeliver) {
+        if (awbStatus.isProblem) {
+          await transactionEntitymanager.increment(
+            DoPodDeliver,
+            {
+              doPodDeliverId: delivery.doPodDeliverId,
+              totalProblem: LessThan(doPodDeliver.totalAwb),
+            },
+            'totalProblem',
+            1,
+          );
+        } else if (awbStatus.isFinalStatus) {
+          await transactionEntitymanager.increment(
+            DoPodDeliver,
+            {
+              doPodDeliverId: delivery.doPodDeliverId,
+              totalDelivery: LessThan(doPodDeliver.totalAwb),
+            },
+            'totalDelivery',
+            1,
+          );
+          // balance total problem
+          await transactionEntitymanager.decrement(
+            DoPodDeliver,
+            {
+              doPodDeliverId: delivery.doPodDeliverId,
+              totalProblem: MoreThan(0),
+            },
+            'totalProblem',
+            1,
+          );
+        }
+      }
+
+      // Update status awb item attr
+      await DeliveryService.updateAwbAttr(
+        delivery.awbItemId,
+        null,
+        doPodDeliverHistory.awbStatusId,
+      );
+
+      // TODO: queue by Bull need refactoring
+      DoPodDetailPostMetaQueueService.createJobByMobileSyncAwb(
+        delivery.doPodDeliverDetailId,
+        delivery.employeeId,
+        delivery.awbStatusId,
+      );
+    } else {
+      console.log('##### Data Not Valid', delivery);
+    }
   }
 }

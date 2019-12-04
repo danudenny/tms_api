@@ -387,119 +387,96 @@ export class FirstMileDeliveryOutService {
 
       const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
-        const statusCode = await AwbService.awbStatusGroup(awb.awbStatusIdLast);
-        switch (statusCode) {
-          case 'OUT':
-            // check condition, not scan in yet
-            if (awb.branchIdLast == permissonPayload.branchId) {
-              totalSuccess += 1;
-              response.message = `Resi ${awbNumber} sudah pernah scan out`;
-            } else {
-              // save data to awb_trouble
-              const branchName = awb.branchLast ? awb.branchLast.branchName : '';
-              await AwbTroubleService.fromScanOut(
-                awbNumber,
-                branchName,
-                awb.awbStatusIdLast,
-              );
+        // TODO: validation need improvement
+        // handle if awb status is null
+        let notDeliver = true;
+        if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
+          notDeliver = awb.awbStatusIdLast != AWB_STATUS.OUT_BRANCH ? true : false;
+        }
 
-              totalError += 1;
-              response.status = 'error';
-              response.message =
-                `Resi ${awbNumber} belum scan in, mohon untuk` +
-                `melakukan scan in terlebih dahulu di gerai` +
-                ` - ${branchName}`;
-            }
-            break;
+        if (notDeliver) {
+          const statusCode = await AwbService.awbStatusGroup(
+            awb.awbStatusIdLast,
+          );
+          // save data to awb_trouble
+          if (statusCode != 'IN') {
+            const branchName = awb.branchLast ? awb.branchLast.branchName : '';
+            await AwbTroubleService.fromScanOut(
+              awbNumber,
+              branchName,
+              awb.awbStatusIdLast,
+            );
+          }
+          // Add Locking setnx redis
+          const holdRedis = await RedisService.locking(
+            `hold:scanout:${awb.awbItemId}`,
+            'locking',
+          );
+          if (holdRedis) {
+            // NOTE: create data do pod detail per awb number
+            const doPodDetail = DoPodDetail.create();
+            doPodDetail.doPodId = payload.doPodId;
+            doPodDetail.awbId = awb.awbId;
+            doPodDetail.awbNumber = awbNumber;
+            doPodDetail.awbItemId = awb.awbItemId;
+            doPodDetail.transactionStatusIdLast = 800; // OUT_BRANCH
+            doPodDetail.isScanOut = true;
+            doPodDetail.scanOutType = 'awb';
+            await DoPodDetail.save(doPodDetail);
 
-          case 'POD':
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Resi ${awbNumber} sudah di proses POD`;
-            break;
+            // AFTER Scan OUT ===============================================
+            // #region after scanout
+            const doPod = await DoPod.findOne({
+              where: {
+                doPodId: payload.doPodId,
+                isDeleted: false,
+              },
+            });
 
-          case 'IN':
-            if (awb.branchIdLast == permissonPayload.branchId) {
-              // Add Locking setnx redis
-              const holdRedis = await RedisService.locking(
-                `hold:scanout:${awb.awbItemId}`,
-                'locking',
-              );
-              if (holdRedis) {
-                // NOTE: create data do pod detail per awb number
-                const doPodDetail = DoPodDetail.create();
-                doPodDetail.doPodId = payload.doPodId;
-                doPodDetail.awbItemId = awb.awbItemId;
-                doPodDetail.transactionStatusIdLast = 800;
-                doPodDetail.isScanOut = true;
-                doPodDetail.scanOutType = 'awb';
-                await DoPodDetail.save(doPodDetail);
-
-                // AFTER Scan OUT ===============================================
-                // #region after scanout
-                const doPod = await DoPod.findOne({
-                  where: {
-                    doPodId: payload.doPodId,
-                    isDeleted: false,
-                  },
-                });
-
-                // counter total scan in
-                doPod.totalScanOutAwb = doPod.totalScanOutAwb + 1;
-                if (doPod.totalScanOutAwb == 1) {
-                  doPod.firstDateScanOut = timeNow;
-                  doPod.lastDateScanOut = timeNow;
-                } else {
-                  doPod.lastDateScanOut = timeNow;
-                }
-                await DoPod.save(doPod);
-                await DeliveryService.updateAwbAttr(
-                  awb.awbItemId,
-                  doPod.branchIdTo,
-                  AWB_STATUS.OUT_BRANCH,
-                );
-
-                // NOTE: queue by Bull
-                DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
-                  awb.awbItemId,
-                  AWB_STATUS.OUT_BRANCH,
-                  permissonPayload.branchId,
-                  authMeta.userId,
-                );
-                // #endregion after scanout
-                totalSuccess += 1;
-                // remove key holdRedis
-                RedisService.del(`hold:scanout:${awb.awbItemId}`);
+            if (doPod) {
+              // counter total scan out
+              doPod.totalScanOutAwb = doPod.totalScanOutAwb + 1;
+              if (doPod.totalScanOutAwb == 1) {
+                doPod.firstDateScanOut = timeNow;
+                doPod.lastDateScanOut = timeNow;
               } else {
-                totalError += 1;
-                response.status = 'error';
-                response.message = 'Server Busy';
+                doPod.lastDateScanOut = timeNow;
               }
-            } else {
-              // save data to awb_trouble
-              // find scanin before -> (awb_item_attr) unclear
-              // trigger current user
-              // from do_pod before in ??
+              await DoPod.save(doPod);
 
-              const branchName = awb.branchLast ? awb.branchLast.branchName : '';
-              await AwbTroubleService.fromScanOut(
-                awbNumber,
-                branchName,
-                awb.awbStatusIdLast,
+              await DeliveryService.updateAwbAttr(
+                awb.awbItemId,
+                doPod.branchIdTo,
+                AWB_STATUS.OUT_BRANCH,
               );
 
+              // NOTE: queue by Bull
+              DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
+                awb.awbItemId,
+                AWB_STATUS.OUT_BRANCH,
+                permissonPayload.branchId,
+                authMeta.userId,
+                doPod.userIdDriver,
+                doPod.branchIdTo,
+              );
+              totalSuccess += 1;
+            } else {
               totalError += 1;
               response.status = 'error';
-              response.message =
-                `Resi ${awbNumber} milik gerai, ${branchName}.`;
+              response.message = `Surat Jalan Resi ${awbNumber} tidak valid.`;
             }
-            break;
-
-          default:
+            // #endregion after scanout
+            // remove key holdRedis
+            RedisService.del(`hold:scanout:${awb.awbItemId}`);
+          } else {
             totalError += 1;
             response.status = 'error';
-            response.message = `Resi ${awbNumber} tidak dapat SCAN OUT, Harap hubungi kantor pusat`;
-            break;
+            response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+          }
+        } else {
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Resi ${awbNumber} sudah di proses.`;
         }
       } else {
         totalError += 1;
