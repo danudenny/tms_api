@@ -29,31 +29,16 @@ export class WebScanInBranchResponseVm {
   bagNumber: string;
 
   @ApiModelProperty()
-  bagSeq: string;
-
-  @ApiModelProperty()
-  bagItemId: string;
+  totalBagScan: string;
 
   @ApiModelProperty()
   podScanInBranchId: string;
 
   @ApiModelProperty()
-  refRepresentativeCode: string;
-
-  @ApiModelProperty()
-  bagNumberCode: string;
-
-  @ApiModelProperty()
-  branchNameFrom: string;
-
-  @ApiModelProperty()
-  totalAwbItem: string;
+  branchName: string;
 
   @ApiModelProperty()
   totalAwbScan: string;
-
-  @ApiModelProperty()
-  totalDiff: string;
 
   @ApiModelProperty()
   weight: string;
@@ -65,28 +50,16 @@ export class WebScanInBranchBagResponseVm {
   createdTime: string;
 
   @ApiModelProperty()
-  bagNumber: string;
+  podScanInBranchId: string;
 
   @ApiModelProperty()
-  refRepresentativeCode: string;
-
-  @ApiModelProperty()
-  branchName: string;
-
-  @ApiModelProperty()
-  totalAwbItem: string;
+  branchNameFrom: string;
 
   @ApiModelProperty()
   totalAwbScan: string;
 
   @ApiModelProperty()
-  totalBagScan: string;
-
-  @ApiModelProperty()
   weight: string;
-
-  @ApiModelProperty()
-  totalDiff: string;
 
 }
 
@@ -96,6 +69,9 @@ export class WebScanInBranchAwbResponseVm {
 
   @ApiModelProperty()
   awbNumber: string;
+
+  @ApiModelProperty()
+  podScanInBranchId: string;
 
   @ApiModelProperty()
   branchName: string;
@@ -111,6 +87,9 @@ export class WebScanInBranchAwbResponseVm {
 
   @ApiModelProperty()
   totalCodValue: string;
+
+  @ApiModelProperty()
+  totalAwbScan: string;
 
 }
 
