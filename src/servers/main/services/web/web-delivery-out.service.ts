@@ -1001,10 +1001,19 @@ export class WebDeliveryOutService {
       ['t1.do_pod_deliver_code', 'doPodDeliverCode'],
       ['t1.do_pod_deliver_date_time', 'doPodDeliverDateTime'],
       ['t1.description', 'description'],
-      ['t1.total_delivery', 'totalDelivery'],
-      ['t1.total_problem', 'totalProblem'],
-      ['COUNT (t3.*) FILTER (WHERE t5.awb_status_id_last = 14000)', 'totalAwb'],
-      ['COUNT (t3.*)', 'totalAssigned'],
+      [
+        'COUNT(t3.awb_number)FILTER (WHERE t3.awb_status_id_last = 30000)',
+        'totalDelivery',
+      ],
+      [
+        'COUNT(t3.awb_number)FILTER (WHERE t3.awb_status_id_last NOT IN (30000, 14000))',
+        'totalProblem',
+      ],
+      [
+        'COUNT (t3.awbNumber) FILTER (WHERE t3.awb_status_id_last = 14000)',
+        'totalAwb',
+      ],
+      ['COUNT (t3.awbNumber)', 'totalAssigned'],
       ['t2.fullname', 'nickname'],
       [
         `CONCAT(CAST(SUM(t4.total_cod_value) AS NUMERIC(20,2)))`,
@@ -1015,13 +1024,10 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.doPodDeliverDetails, 't5', j =>
+    q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.doPodDeliverDetails.awbItem, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.doPodDeliverDetails.awbItem.awb, 't4', j =>
+    q.innerJoin(e => e.doPodDeliverDetails.awb, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     // q.andWhereIsolated(qw => {
