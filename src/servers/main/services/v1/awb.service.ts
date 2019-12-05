@@ -145,6 +145,7 @@ export class AwbService {
     return await qb.getRawOne();
   }
 
+  // TODO: deprecated
   public static async getDataDeliver(awbNumber: string, userIdDriver: number): Promise<AwbDeliverManualVm> {
     const qb = createQueryBuilder();
     qb.addSelect('dpdd.awb_item_id', 'awbItemId');
