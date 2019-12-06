@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { IsAwbNumber } from '../../../shared/decorators/custom-validation.decorator';
 import { IsDefined } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -52,7 +52,11 @@ export class WebAwbDeliverGetResponseVm {
   @ApiModelProperty({ type: [AwbDeliverManualResponseVm] })
   data: AwbDeliverManualResponseVm[];
 }
-export class WebAwbDeliverSyncResponseVm {
+
+export class AwbDeliverManualSync {
+  @ApiModelProperty()
+  awbNumber: string;
+
   @ApiModelProperty()
   status: string;
 
@@ -60,14 +64,19 @@ export class WebAwbDeliverSyncResponseVm {
   message: string;
 }
 
+export class WebAwbDeliverSyncResponseVm {
+  @ApiModelProperty({ type: [AwbDeliverManualSync] })
+  data: AwbDeliverManualSync[];
+}
+
 export class WebDeliveryVm {
-  @ApiModelProperty()
+  @ApiModelPropertyOptional()
   doPodDeliverDetailId: string;
 
-  @ApiModelProperty()
+  @ApiModelPropertyOptional()
   doPodDeliverId: string;
 
-  @ApiModelProperty({ format: 'date-time' })
+  @ApiModelPropertyOptional({ format: 'date-time' })
   doPodDeliverDate: string;
 
   @ApiModelProperty()
@@ -79,7 +88,7 @@ export class WebDeliveryVm {
   // @ApiModelProperty()
   // awbId: number;
 
-  @ApiModelProperty()
+  @ApiModelPropertyOptional()
   awbItemId: number;
 
   // @ApiModelProperty({ format: 'date-time' })
@@ -124,6 +133,9 @@ export class WebDeliveryVm {
 }
 
 export class WebAwbDeliverSyncPayloadVm {
+  @ApiModelProperty()
+  role: string;
+
   @ApiModelProperty({ type: () => [WebDeliveryVm] })
   deliveries: WebDeliveryVm[];
 }
