@@ -444,10 +444,10 @@ export class FirstMileDeliveryOutService {
               }
               await DoPod.save(doPod);
 
-              await DeliveryService.updateAwbAttr(
+              await AwbService.updateAwbAttr(
                 awb.awbItemId,
-                doPod.branchIdTo,
                 AWB_STATUS.OUT_BRANCH,
+                doPod.branchIdTo,
               );
 
               // NOTE: queue by Bull
