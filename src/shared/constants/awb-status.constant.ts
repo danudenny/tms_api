@@ -8,7 +8,10 @@ export const AWB_STATUS = {
   IN_BRANCH: 3500,
   IN_FILTER: 12800,
   ANT: 14000,
+  BA: 22000,
+  CODA: 23000,
   DLV: 30000,
   BROKE: 24000,
+  RTN: 24500,
   RTS: 25000,
 };

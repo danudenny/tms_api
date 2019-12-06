@@ -33,7 +33,7 @@ export class DoPodDetailPostMetaQueueService {
 
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
-    this.queue.process(async job => {
+    this.queue.process(10, async job => {
       const data = job.data;
       Logger.log('### JOB ID =========', job.id);
       await getManager().transaction(async transactionalEntityManager => {
@@ -433,19 +433,22 @@ export class DoPodDetailPostMetaQueueService {
       let noteInternal = '';
       let notePublic = '';
       let receiverName = '';
-      let branchName = 'Kantor Pusat';
-      let cityName = 'Jakarta';
-      const branch = await this.getDataBranchCity(doPodDetailDeliver.doPodDeliver.branchId);
-      if (branch) {
-        branchName = branch.branchName;
-        cityName = branch.district.city.cityName;
-      }
+
       if (doPodDetailDeliver.awbStatusIdLast == AWB_STATUS.DLV) {
         // TODO: title case consigneeName
         receiverName = doPodDetailDeliver.consigneeName;
         noteInternal = `Paket diterima oleh [${doPodDetailDeliver.consigneeName} - (${doPodDetailDeliver.reasonLast.reasonCode}) ${doPodDetailDeliver.reasonLast.reasonName}]; catatan: ${doPodDetailDeliver.descLast}`;
         notePublic = `Paket diterima oleh [${doPodDetailDeliver.consigneeName} - (${doPodDetailDeliver.reasonLast.reasonCode}) ${doPodDetailDeliver.reasonLast.reasonName}]`;
       } else {
+        let branchName = 'Kantor Pusat';
+        let cityName = 'Jakarta';
+        const branch = await this.getDataBranchCity(
+          doPodDetailDeliver.doPodDeliver.branchId,
+        );
+        if (branch) {
+          branchName = branch.branchName;
+          cityName = branch.district.city.cityName;
+        }
         noteInternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${doPodDetailDeliver.awbStatus.awbStatusName}) ${doPodDetailDeliver.awbStatus.awbStatusTitle}; catatan: ${
           doPodDetailDeliver.descLast
         }`;

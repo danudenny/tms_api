@@ -6,7 +6,7 @@ import { DoPodDeliver } from './do-pod-deliver';
 import { TmsBaseEntity } from './tms-base';
 import { AwbStatus } from './awb-status';
 import { Reason } from './reason';
-// import { DoPodDeliverAttachment } from './do_pod_deliver_attachment';
+import { Awb } from './awb';
 
 @Entity('do_pod_deliver_detail', { schema: 'public' })
 export class DoPodDeliverDetail extends TmsBaseEntity {
@@ -100,6 +100,10 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
   @JoinColumn({ name: 'awb_item_id' })
   awbItem: AwbItem;
 
+  @OneToOne(() => Awb)
+  @JoinColumn({ name: 'awb_id' })
+  awb: Awb;
+
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   awbItemAttr: AwbItemAttr;
@@ -112,6 +116,4 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
   @JoinColumn({ name: 'reason_id_last', referencedColumnName: 'reasonId' })
   reasonLast: Reason;
 
-  // @OneToMany(() => DoPodDeliverAttachment, e => e.doPodDeliverDetail)
-  // deliverAttachment: DoPodDeliverAttachment[];
 }
