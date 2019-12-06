@@ -149,6 +149,7 @@ export class WebAwbDeliverService {
   }
 
   private static async syncDeliver(delivery: WebDeliveryVm) {
+    const authMeta = AuthService.getAuthData();
     // Generate History by Status input pod manual
     const doPodDeliverHistory = DoPodDeliverHistory.create({
       doPodDeliverDetailId: delivery.doPodDeliverDetailId,
@@ -239,16 +240,16 @@ export class WebAwbDeliverService {
       // #endregion of transaction
 
       // Update status awb item attr
-      await DeliveryService.updateAwbAttr(
+      await AwbService.updateAwbAttr(
         delivery.awbItemId,
-        null,
         doPodDeliverHistory.awbStatusId,
+        null,
       );
 
       // TODO: queue by Bull need refactoring
-      DoPodDetailPostMetaQueueService.createJobByMobileSyncAwb(
+      DoPodDetailPostMetaQueueService.createJobByManualPodSync(
         delivery.doPodDeliverDetailId,
-        null,
+        authMeta.userId,
         delivery.awbStatusId,
       );
     } else {

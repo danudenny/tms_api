@@ -47,10 +47,6 @@ export class PodScanInBranch extends TmsBaseEntity {
   @JoinColumn({ name: 'pod_scan_in_branch_id', referencedColumnName: 'podScanInBranchId' })
   PodScanInBranchDetail: PodScanInBranchDetail;
 
-  @ManyToOne(() => BagItem)
-  @JoinColumn({ name: 'bag_item_id', referencedColumnName: 'bagItemId' })
-  bagItem: BagItem;
-
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
   branch: Branch;

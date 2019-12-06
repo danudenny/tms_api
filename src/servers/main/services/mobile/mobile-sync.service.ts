@@ -17,6 +17,7 @@ import { MobileSyncImagePayloadVm, MobileSyncPayloadVm } from '../../models/mobi
 import { MobileSyncImageResponseVm } from '../../models/mobile-sync-response.vm';
 import { MobileInitDataService } from './mobile-init-data.service';
 import moment = require('moment');
+import { AwbService } from '../v1/awb.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 
 export class MobileSyncService {
@@ -130,10 +131,10 @@ export class MobileSyncService {
         // #endregion of transaction
 
         // Update status awb item attr
-        await DeliveryService.updateAwbAttr(
+        await AwbService.updateAwbAttr(
           delivery.awbItemId,
-          null,
           lastDoPodDeliverHistory.awbStatusId,
+          null,
         );
 
         // TODO: queue by Bull need refactoring
