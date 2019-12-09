@@ -169,7 +169,7 @@ export class WebDeliveryInService {
   ): Promise<WebScanInBranchListResponseVm> {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['branchNameFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['branchIdFrom'] = 't1.branch_id';
     payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
     payload.fieldResolverMap['totalBagScan'] = 't1.total_bag_scan';
     payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
