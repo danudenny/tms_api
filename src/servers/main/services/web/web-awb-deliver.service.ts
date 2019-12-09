@@ -16,6 +16,7 @@ import {
 import { AwbService } from '../v1/awb.service';
 import moment = require('moment');
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 
 export class WebAwbDeliverService {
   constructor() {
@@ -68,13 +69,31 @@ export class WebAwbDeliverService {
           // payload.role ['palkur', 'ct', 'sigesit']
           let syncManualDelivery = false;
           const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
-          const awbDeliver = await DoPodDeliverDetail.findOne({
-            relations: ['doPodDeliver'],
-            where: {
-              awbNumber: delivery.awbNumber,
-              isDeleted: false,
+          const awbRepository = new OrionRepositoryService(
+            DoPodDeliverDetail,
+          );
+          const q = awbRepository.findOne();
+          // Manage relation (default inner join)
+          q.select({
+            doPodDeliverDetailId: true,
+            doPodDeliverId: true,
+            awbItemId: true,
+            awbNumber: true,
+            awbStatusIdLast: true,
+            awbStatusDateTimeLast: true,
+            doPodDeliver: {
+              branchId: true,
+              userIdDriver: true,
             },
           });
+          q.where(
+            e => e.awbNumber,
+            w => w.equals(delivery.awbNumber),
+          );
+          q.andWhere(e => e.isDeleted, w => w.isFalse());
+          q.orderBy({ awbStatusDateTimeLast: 'DESC' });
+          q.take(1);
+          const awbDeliver = await q.exec();
           if (awbDeliver) {
             // NOTE: check validate role and status last
             if ((awbDeliver.awbStatusIdLast == AWB_STATUS.ANT) && (delivery.awbStatusId == AWB_STATUS.DLV)) {
@@ -111,6 +130,8 @@ export class WebAwbDeliverService {
               delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
               delivery.awbItemId = awbDeliver.awbItemId;
               // delivery.employeeId = authMeta.employeeId;
+
+              // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
               await this.syncDeliver(delivery);
 
               response.status = 'ok';
@@ -120,6 +141,11 @@ export class WebAwbDeliverService {
               response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan in terlebih dahulu`;
             }
           } else {
+            // TODO: Manual Status not POD
+            // role palkur => CODA, BA, RETUR tidak perlu ANT
+            // update status awb item attr ??
+            // insert data awb history ??
+
             response.status = 'error';
             response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan antar terlebih dahulu`;
           }
