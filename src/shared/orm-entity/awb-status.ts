@@ -92,4 +92,11 @@ export class AwbStatus extends BaseEntity {
     name: 'is_problem',
   })
   isProblem: boolean | null;
+
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_return',
+  })
+  isReturn: boolean | null;
 }
