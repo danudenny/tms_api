@@ -1122,11 +1122,15 @@ export class WebDeliveryOutService {
       ['t1.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       ['t2.awb_number', 'awbNumber'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
+      ['t1.desc_last', 'note'],
       ['t2.is_cod', 'isCod'],
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
-      ['t2.consignee_name', 'consigneeName'],
+      ['COALESCE(t1.consignee_name, t2.consignee_name)', 'consigneeName'],
       ['t3.awb_status_title', 'awbStatusTitle'],
-      ['CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))', 'totalCodValue'],
+      [
+        'CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))',
+        'totalCodValue',
+      ],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
