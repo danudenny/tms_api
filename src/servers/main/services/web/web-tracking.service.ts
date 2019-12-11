@@ -146,6 +146,8 @@ export class WebTrackingService {
         u.username,
         b.branch_name as "branchName",
         ast.awb_status_name as "awbStatusName",
+        ah.note_internal as "noteInternal",
+        ah.note_public as "notePublic",
         case when is_direction_back = false then 'TIDAK' else 'YA' end as direction
       FROM awb_history ah
         LEFT JOIN branch b ON b.branch_id = ah.branch_id
