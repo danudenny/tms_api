@@ -52,8 +52,8 @@ export class ItemDeliveryResponseVm {
   @ApiModelProperty()
   awbStatusIdLast: number;
 
-  // @ApiModelProperty()
-  // photoType: string;
+  @ApiModelProperty()
+  note: string;
 
   // @ApiModelProperty()
   // url: string;

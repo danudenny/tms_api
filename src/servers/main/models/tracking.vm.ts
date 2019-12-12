@@ -40,6 +40,12 @@ export class AwbHistoryResponseVm {
 
   @ApiModelProperty()
   direction: string;
+
+  @ApiModelProperty()
+  noteInternal: string;
+
+  @ApiModelProperty()
+  notePublic: string;
 }
 
 export class TrackingAwbResponseVm {
