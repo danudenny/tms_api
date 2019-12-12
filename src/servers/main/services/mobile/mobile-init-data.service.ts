@@ -125,6 +125,14 @@ export class MobileInitDataService {
     qb.addSelect('array_to_json(t.data)', 'deliveryHistory');
     qb.addSelect('do_pod_deliver_detail.consignee_name', 'consigneeNameNote');
     qb.addSelect('do_pod_deliver_detail.is_deleted', 'isDeleted');
+    qb.addSelect(
+      'pickup_request_detail.recipient_longitude',
+      'recipientLongitude',
+    );
+    qb.addSelect(
+      'pickup_request_detail.recipient_latitude',
+      'recipientLatitude',
+    );
     qb.from('do_pod_deliver_detail', 'do_pod_deliver_detail');
     qb.innerJoin(
       'do_pod_deliver',
@@ -140,6 +148,11 @@ export class MobileInitDataService {
       'package_type',
       'package_type',
       'package_type.package_type_id = awb.package_type_id',
+    );
+    qb.leftJoin(
+      'pickup_request_detail',
+      'pickup_request_detail',
+      'pickup_request_detail.awb_item_id = do_pod_deliver_detail.awb_item_id',
     );
     qb.innerJoin(
       'awb_status',
@@ -266,7 +279,7 @@ export class MobileInitDataService {
       },
     );
 
-    qb.andWhere('do_pod_deliver_detail.is_deleted = false');
+    // qb.andWhere('do_pod_deliver_detail.is_deleted = false');
 
     if (fromDate) {
       // TODO: andWhereIsolated condition
