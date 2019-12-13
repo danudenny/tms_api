@@ -2,7 +2,7 @@ import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/ext
 import { Controller, UseGuards, Post, HttpCode, HttpStatus, Body } from '@nestjs/common';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { WebAwbDeliverGetPayloadVm, WebAwbDeliverGetResponseVm, WebAwbDeliverSyncPayloadVm, WebAwbDeliverSyncResponseVm } from '../../models/web-awb-deliver.vm';
+import { WebAwbDeliverSyncPayloadVm, WebAwbDeliverSyncResponseVm } from '../../models/web-awb-deliver.vm';
 import { WebAwbDeliverService } from '../../services/web/web-awb-deliver.service';
 
 @ApiUseTags('Web Pod Manual')
@@ -10,14 +10,6 @@ import { WebAwbDeliverService } from '../../services/web/web-awb-deliver.service
 @ApiBearerAuth()
 @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
 export class WebAwbDeliverController {
-  // 1. get data awb deliver
-
-  @Post('getAwb')
-  @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: WebAwbDeliverGetResponseVm })
-  public async getAwb(@Body() payload: WebAwbDeliverGetPayloadVm) {
-    return WebAwbDeliverService.getAwbDeliver(payload);
-  }
 
   @Post('sync')
   @HttpCode(HttpStatus.OK)
