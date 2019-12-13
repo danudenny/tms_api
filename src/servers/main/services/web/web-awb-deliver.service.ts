@@ -22,78 +22,23 @@ export class WebAwbDeliverService {
   constructor() {
   }
 
-  // TODO: deprecated
-  static async getAwbDeliver(
-    payload: WebAwbDeliverGetPayloadVm,
-  ): Promise<WebAwbDeliverGetResponseVm> {
-    const authMeta = AuthService.getAuthData();
-    const result = new WebAwbDeliverGetResponseVm();
-    const data: AwbDeliverManualResponseVm[] = [];
-
-    for (const awbNumber of payload.awbNumber) {
-      const awbManual = new AwbDeliverManualResponseVm();
-      // NOTE: take out validation user driver
-      const awb = await AwbService.getDataDeliver(awbNumber, authMeta.userId);
-      if (awb) {
-        // TODO: check to table do pod deliver
-        awbManual.awb = awb;
-        awbManual.awbNumber = awbNumber;
-        awbManual.status = 'ok';
-        awbManual.message = 'success';
-      } else {
-        awbManual.awbNumber = awbNumber;
-        awbManual.status = 'error';
-        awbManual.message = `Resi ${awbNumber} tidak ditemukan`;
-      }
-
-      // const awbDeliver = new AwbDeliverManualVm();
-      data.push(awbManual);
-    } // end of loop
-
-    result.data = data;
-    return result;
-  }
-
   static async syncAwbDeliver(
     payload: WebAwbDeliverSyncPayloadVm,
   ): Promise<WebAwbDeliverSyncResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const response = new AwbDeliverManualSync();
     const result = new WebAwbDeliverSyncResponseVm();
     const dataItem = [];
     try {
       for (const delivery of payload.deliveries) {
         // TODO: check awb number
+        // payload.role ['palkur', 'ct', 'sigesit']
+        let syncManualDelivery = false;
         const awb = await AwbService.validAwbNumber(delivery.awbNumber);
         if (awb) {
-          // payload.role ['palkur', 'ct', 'sigesit']
-          let syncManualDelivery = false;
           const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
-          const awbRepository = new OrionRepositoryService(
-            DoPodDeliverDetail,
-          );
-          const q = awbRepository.findOne();
-          // Manage relation (default inner join)
-          q.select({
-            doPodDeliverDetailId: true,
-            doPodDeliverId: true,
-            awbItemId: true,
-            awbNumber: true,
-            awbStatusIdLast: true,
-            awbStatusDateTimeLast: true,
-            doPodDeliver: {
-              branchId: true,
-              userIdDriver: true,
-            },
-          });
-          q.where(
-            e => e.awbNumber,
-            w => w.equals(delivery.awbNumber),
-          );
-          q.andWhere(e => e.isDeleted, w => w.isFalse());
-          q.orderBy({ awbStatusDateTimeLast: 'DESC' });
-          q.take(1);
-          const awbDeliver = await q.exec();
+          const awbDeliver = await this.getDeliverDetail(delivery.awbNumber);
           if (awbDeliver) {
             // NOTE: check validate role and status last
             if ((awbDeliver.awbStatusIdLast == AWB_STATUS.ANT) && (delivery.awbStatusId == AWB_STATUS.DLV)) {
@@ -138,16 +83,25 @@ export class WebAwbDeliverService {
               response.message = 'success';
             } else {
               response.status = 'error';
-              response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan in terlebih dahulu`;
+              response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan antar terlebih dahulu`;
             }
           } else {
-            // TODO: Manual Status not POD
-            // role palkur => CODA, BA, RETUR tidak perlu ANT
-            // update status awb item attr ??
-            // insert data awb history ??
-
-            response.status = 'error';
-            response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan antar terlebih dahulu`;
+            // NOTE: Manual Status not POD only status problem
+            delivery.awbItemId = awb.awbItemId;
+            const manualStatus = await this.syncStatusManual(
+              authMeta.userId,
+              permissonPayload.branchId,
+              payload.role,
+              delivery,
+              payload.isReturn,
+            );
+            if (manualStatus) {
+              response.status = 'ok';
+              response.message = 'success';
+            } else {
+              response.status = 'error';
+              response.message = `Resi ${delivery.awbNumber}, tidak dapat update status manual`;
+            }
           }
         } else {
           response.status = 'error';
@@ -281,5 +235,83 @@ export class WebAwbDeliverService {
     } else {
       console.log('##### Data Not Valid', delivery);
     }
+  }
+
+  private static async syncStatusManual(
+    userId: number,
+    branchId: number,
+    role: string,
+    delivery: WebDeliveryVm,
+    isReturn: boolean,
+  ) {
+    let syncManualDelivery = false;
+    // role palkur => CODA, BA, RETUR tidak perlu ANT
+    const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
+
+    if (delivery.awbStatusId != AWB_STATUS.DLV) {
+      switch (role) {
+        case 'ct':
+          syncManualDelivery = true;
+          break;
+        case 'palkur':
+          if (statusProblem.includes(delivery.awbStatusId)) {
+            syncManualDelivery = true;
+          }
+          break;
+        default:
+          break;
+      }
+      if (syncManualDelivery) {
+
+        if (isReturn) {
+          // TODO: handle is return status??
+        }
+
+        // Update status awb item attr
+        await AwbService.updateAwbAttr(
+          delivery.awbItemId,
+          delivery.awbStatusId,
+          null,
+        );
+
+        // TODO: queue by Bull need refactoring
+        DoPodDetailPostMetaQueueService.createJobByManualStatus(
+          delivery.awbItemId,
+          delivery.awbStatusId,
+          userId,
+          branchId,
+          delivery.reasonNotes,
+        );
+      }
+    }
+    return syncManualDelivery;
+  }
+
+  private static async getDeliverDetail(awbNumber: string): Promise<DoPodDeliverDetail> {
+    const awbRepository = new OrionRepositoryService(
+      DoPodDeliverDetail,
+    );
+    const q = awbRepository.findOne();
+    // Manage relation (default inner join)
+    q.select({
+      doPodDeliverDetailId: true,
+      doPodDeliverId: true,
+      awbItemId: true,
+      awbNumber: true,
+      awbStatusIdLast: true,
+      awbStatusDateTimeLast: true,
+      doPodDeliver: {
+        branchId: true,
+        userIdDriver: true,
+      },
+    });
+    q.where(
+      e => e.awbNumber,
+      w => w.equals(awbNumber),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.orderBy({ awbStatusDateTimeLast: 'DESC' });
+    q.take(1);
+    return await q.exec();
   }
 }

@@ -136,6 +136,9 @@ export class WebAwbDeliverSyncPayloadVm {
   @ApiModelProperty()
   role: string;
 
+  @ApiModelPropertyOptional()
+  isReturn: boolean;
+
   @ApiModelProperty({ type: () => [WebDeliveryVm] })
   deliveries: WebDeliveryVm[];
 }
