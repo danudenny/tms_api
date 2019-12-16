@@ -248,6 +248,7 @@ export class WebDeliveryInService {
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
       ['t1.bag_item_id', 'bagItemId'],
+      ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
       ['t1.bag_number', 'bagNumber'],
       ['t1.created_time', 'createdTime'],
       ['t3.branch_id_last', 'branchIdLast'],
