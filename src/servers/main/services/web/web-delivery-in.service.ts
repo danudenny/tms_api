@@ -229,9 +229,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['totalAwbItem'] = 't1.total_awb_item';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['weight'] = 't3.weight';
-    payload.fieldResolverMap['totalBagScan'] = 't5.total_bag_scan';
     payload.fieldResolverMap['bagItemId'] = 't6.bag_item_id';
-    payload.fieldResolverMap['podScanInBranchId'] = 't5.pod_scan_in_branch_id';
     payload.fieldResolverMap['refRepresentativeCode'] = 't2.ref_representative_code';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
