@@ -253,14 +253,11 @@ export class WebDeliveryInService {
       ['t1.bag_number', 'bagNumber'],
       ['t1.created_time', 'createdTime'],
       ['t3.branch_id_last', 'branchIdLast'],
-      ['t4.branch_name', 'branchName'],
+      ['t4.branch_name', 'branchNameFrom'],
       ['t1.total_awb_item', 'totalAwbItem'],
       ['t1.total_awb_scan', 'totalAwbScan'],
       ['t1.total_diff', 'totalDiff'],
-      ['t5.pod_scan_in_branch_id', 'podScanInBranchId'],
-      ['t5.total_bag_scan', 'totalBagScan'],
-      ['t6.bag_item_id', 'bagItemId'],
-      ['t2.ref_representative_code', 'refRepresentativeCode'],
+      ['t2.ref_representative_code', 'representativeCode'],
       [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
     q.innerJoin(e => e.bag, 't2', j =>
@@ -270,14 +267,10 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.bagItem.branchLast, 't4', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.podScanInBranch, 't5', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.bagItem.bagItemAwbs, 't6', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 

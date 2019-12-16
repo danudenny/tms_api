@@ -50,13 +50,25 @@ export class WebScanInBranchBagResponseVm {
   createdTime: string;
 
   @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
   podScanInBranchId: string;
 
   @ApiModelProperty()
   branchNameFrom: string;
 
   @ApiModelProperty()
-  totalAwbScan: string;
+  representativeCode: string;
+
+  @ApiModelProperty()
+  totalAwbScan: number;
+
+  @ApiModelProperty()
+  totalAwbItem: number;
+
+  @ApiModelProperty()
+  totalDiff: number;
 
   @ApiModelProperty()
   weight: string;
