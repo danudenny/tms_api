@@ -191,12 +191,12 @@ export class WebDeliveryInService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
-      ['t1.created_time', 'createdTime'],
-      ['t1.branch_id', 'branchId'],
       ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
-      ['t1.total_bag_scan', 'totalBagScan'],
-      ['t2.total_awb_scan', 'totalAwbScan'],
+      ['t1.created_time', 'createdTime'],
       ['t3.branch_name', 'branchName'],
+      ['COUNT(t2.bag_number)', 'totalBagScan'],
+      ['SUM(t2.total_awb_item)', 'totalAwbItem'],
+      ['SUM(t2.total_awb_scan)', 'totalAwbScan'],
     );
 
     q.innerJoin(e => e.podScanInBranchBag, 't2', j =>
@@ -205,6 +205,8 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.groupByRaw('t1.pod_scan_in_branch_id, t3.branch_name');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
