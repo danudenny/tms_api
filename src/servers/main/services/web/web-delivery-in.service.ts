@@ -174,7 +174,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['totalBagScan'] = 't1.total_bag_scan';
     payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
-    payload.fieldResolverMap['totalAwbScan'] = 't2.total_awb_scan';
+    // payload.fieldResolverMap['totalAwbScan'] = 't2.total_awb_scan';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -194,12 +194,11 @@ export class WebDeliveryInService {
       ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
       ['t1.created_time', 'createdTime'],
       ['t3.branch_name', 'branchName'],
-      ['COUNT(t2.bag_number)', 'totalBagScan'],
-      ['SUM(t2.total_awb_item)', 'totalAwbItem'],
-      ['SUM(t2.total_awb_scan)', 'totalAwbScan'],
+      ['t1.total_bag_scan', 'totalBagScan'],
+      ['COUNT(t4.awb_number)', 'totalAwbScan'],
     );
 
-    q.innerJoin(e => e.podScanInBranchBag, 't2', j =>
+    q.innerJoin(e => e.PodScanInBranchDetail, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't3', j =>
