@@ -62,6 +62,12 @@ export class WebScanInBranchBagResponseVm {
   representativeCode: string;
 
   @ApiModelProperty()
+  bagId: number;
+
+  @ApiModelProperty()
+  bagItemId: number;
+
+  @ApiModelProperty()
   totalAwbScan: number;
 
   @ApiModelProperty()

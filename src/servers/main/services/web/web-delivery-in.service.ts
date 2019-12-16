@@ -249,6 +249,7 @@ export class WebDeliveryInService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
+      ['t1.bag_id', 'bagId'],
       ['t1.bag_item_id', 'bagItemId'],
       ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
       ['t1.bag_number', 'bagNumber'],
@@ -267,7 +268,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItem, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.bagItem.branchLast, 't4', j =>
+    q.leftJoin(e => e.bagItem.branchLast, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
