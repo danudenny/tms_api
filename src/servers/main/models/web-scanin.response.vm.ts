@@ -95,6 +95,9 @@ export class WebScanInBranchAwbResponseVm {
   branchName: string;
 
   @ApiModelProperty()
+  branchId: string;
+
+  @ApiModelProperty()
   consigneeAddress: string;
 
   @ApiModelProperty()

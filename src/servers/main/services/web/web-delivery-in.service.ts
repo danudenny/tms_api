@@ -293,6 +293,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
     payload.fieldResolverMap['consigneeAddress'] = 't3.consignee_address';
     payload.fieldResolverMap['totalCodValue'] = 't3.total_cod_value';
+    payload.fieldResolverMap['branchId'] = 't3.branch_id';
     payload.fieldResolverMap['branchName'] = 't4.branch_name';
     payload.fieldResolverMap['totalWeightFinal'] = 't3.total_weight_final';
     payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
@@ -304,6 +305,9 @@ export class WebDeliveryInService {
     payload.globalSearchFields = [
       {
         field: 'createdTime',
+      },
+      {
+        field: 'branchName',
       },
     ];
 
@@ -318,6 +322,7 @@ export class WebDeliveryInService {
       ['t3.consignee_name', 'consigneeName'],
       ['t3.consignee_address', 'consigneeAddress'],
       ['t3.total_cod_value', 'totalCodValue'],
+      ['t3.branch_id', 'branchId'],
       ['t4.branch_name', 'branchName'],
       [`CONCAT(CAST(t3.total_weight AS NUMERIC(20,2)),' Kg')`, 'totalWeightFinal'],
     );
@@ -325,7 +330,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.Awb, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.podScanInBranch.branch, 't4', j =>
+    q.innerJoin(e => e.Awb.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
