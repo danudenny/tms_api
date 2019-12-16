@@ -28,6 +28,7 @@ import {
 import { AwbService } from '../../v1/awb.service';
 import { BagService } from '../../v1/bag.service';
 import moment = require('moment');
+import { getManager } from 'typeorm';
 // #endregion
 export class LastMileDeliveryInService {
 
@@ -262,17 +263,32 @@ export class LastMileDeliveryInService {
               console.log('### Data tidak ditemukan !!');
             }
 
-            // NOTE: create podScanInBranchBag
-            const podScanInBranchBagObj = PodScanInBranchBag.create();
-            podScanInBranchBagObj.podScanInBranchId = podScanInBranchId;
-            podScanInBranchBagObj.branchId = permissonPayload.branchId;
-            podScanInBranchBagObj.bagId = bagData.bagId;
-            podScanInBranchBagObj.bagItemId = bagData.bagItemId;
-            podScanInBranchBagObj.bagNumber = bagNumber;
-            podScanInBranchBagObj.totalAwbItem = bagItemsAwb.length;
-            podScanInBranchBagObj.totalAwbScan = 0;
-            podScanInBranchBagObj.totalDiff = 0;
-            PodScanInBranchBag.save(podScanInBranchBagObj);
+            // transaction
+            await getManager().transaction(async transactionEntityManager => {
+              // NOTE: create podScanInBranchBag
+              const podScanInBranchBagObj = PodScanInBranchBag.create();
+              podScanInBranchBagObj.podScanInBranchId = podScanInBranchId;
+              podScanInBranchBagObj.branchId = permissonPayload.branchId;
+              podScanInBranchBagObj.bagId = bagData.bagId;
+              podScanInBranchBagObj.bagItemId = bagData.bagItemId;
+              podScanInBranchBagObj.bagNumber = bagNumber;
+              podScanInBranchBagObj.totalAwbItem = bagItemsAwb.length;
+              podScanInBranchBagObj.totalAwbScan = 0;
+              podScanInBranchBagObj.totalDiff = 0;
+              await PodScanInBranchBag.save(podScanInBranchBagObj);
+
+              // update total bag scan on pod_scan_in_branch
+              await transactionEntityManager.increment(
+                PodScanInBranch,
+                {
+                  podScanInBranchId,
+                  isDeleted: false,
+                },
+                'totalBagScan',
+                1,
+              );
+            });
+
           }
         }
 
