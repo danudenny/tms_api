@@ -59,6 +59,9 @@ export class WebScanInBranchBagResponseVm {
   branchNameFrom: string;
 
   @ApiModelProperty()
+   branchId: string;
+
+  @ApiModelProperty()
   representativeCode: string;
 
   @ApiModelProperty()
