@@ -230,6 +230,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['totalAwbItem'] = 't1.total_awb_item';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['weight'] = 't3.weight';
+    payload.fieldResolverMap['branchId'] = 't3.branch_id_last';
     payload.fieldResolverMap['bagItemId'] = 't6.bag_item_id';
     payload.fieldResolverMap['refRepresentativeCode'] = 't2.ref_representative_code';
     if (payload.sortBy === '') {
@@ -253,7 +254,7 @@ export class WebDeliveryInService {
       ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
       ['t1.bag_number', 'bagNumber'],
       ['t1.created_time', 'createdTime'],
-      ['t3.branch_id_last', 'branchIdLast'],
+      ['t3.branch_id_last', 'branchId'],
       ['t4.branch_name', 'branchNameFrom'],
       ['t1.total_awb_item', 'totalAwbItem'],
       ['t1.total_awb_scan', 'totalAwbScan'],
