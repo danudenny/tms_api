@@ -107,12 +107,8 @@ export class WebScanOutVm {
   })
   doPodMethod?: string;
 
-  @ApiModelProperty({
-    skipValidation: true,
-    example: 23,
-  })
-  @IsDefined({message: 'Gerai tujuan harus diisi'})
-  branchIdTo: number;
+  @ApiModelPropertyOptional()
+  branchIdTo?: number;
 
   @ApiModelProperty({
     skipValidation: true,
