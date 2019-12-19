@@ -68,10 +68,10 @@ export class DoPodDetailPostMetaQueueService {
           await transactionalEntityManager.insert(AwbHistory, awbHistory);
 
           // TODO: to comment update with trigger SQL
-          await transactionalEntityManager.update(AwbItemAttr, awbItemAttr.awbItemAttrId, {
-            awbHistoryIdLast: awbHistory.awbHistoryId,
-            updatedTime: data.timestamp,
-          });
+          // await transactionalEntityManager.update(AwbItemAttr, awbItemAttr.awbItemAttrId, {
+          //   awbHistoryIdLast: awbHistory.awbHistoryId,
+          //   updatedTime: data.timestamp,
+          // });
         }
       }); // end transaction
 
