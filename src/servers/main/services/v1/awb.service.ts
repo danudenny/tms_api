@@ -187,38 +187,39 @@ export class AwbService {
     return result ? result.awbStatusGroup.code : 'NoGroup';
   }
 
+  // TODO: disable update awb item attr change to trigger
   public static async updateAwbAttr(
     awbItemId: number,
     status: number,
     branchIdNext: number = null,
   ) {
-    // TODO: fix data user id last (from session login or params mobile sync)
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    const timeNow = moment().toDate();
+    // // TODO: fix data user id last (from session login or params mobile sync)
+    // const authMeta = AuthService.getAuthData();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
+    // const timeNow = moment().toDate();
 
-    // TODO: table awb attr and awb item attr
-    // Update awb_item_attr  semua field dengan suffix _last
+    // // TODO: table awb attr and awb item attr
+    // // Update awb_item_attr  semua field dengan suffix _last
 
-    const awbItemAttr = await AwbItemAttr.findOne({
-      where: {
-        awbItemId,
-      },
-    });
-    if (awbItemAttr) {
-      // TODO: how to update data??
-      // awbItemAttr.awbHistoryIdLast;
-      // awbItemAttr.awbStatusIdLastPublic;
-      awbItemAttr.awbStatusIdLast = status;
-      awbItemAttr.userIdLast = authMeta.userId;
-      awbItemAttr.branchIdLast = permissonPayload.branchId;
-      if (branchIdNext) {
-        awbItemAttr.branchIdNext = branchIdNext;
-      }
-      awbItemAttr.awbHistoryDateLast = timeNow;
-      awbItemAttr.updatedTime = timeNow;
-      await AwbItemAttr.save(awbItemAttr);
-    }
+    // const awbItemAttr = await AwbItemAttr.findOne({
+    //   where: {
+    //     awbItemId,
+    //   },
+    // });
+    // if (awbItemAttr) {
+    //   // TODO: how to update data??
+    //   // awbItemAttr.awbHistoryIdLast;
+    //   // awbItemAttr.awbStatusIdLastPublic;
+    //   awbItemAttr.awbStatusIdLast = status;
+    //   awbItemAttr.userIdLast = authMeta.userId;
+    //   awbItemAttr.branchIdLast = permissonPayload.branchId;
+    //   if (branchIdNext) {
+    //     awbItemAttr.branchIdNext = branchIdNext;
+    //   }
+    //   awbItemAttr.awbHistoryDateLast = timeNow;
+    //   awbItemAttr.updatedTime = timeNow;
+    //   await AwbItemAttr.save(awbItemAttr);
+    // }
 
     // const awbItem = await AwbItem.findOne({
     //   where: {
@@ -246,6 +247,8 @@ export class AwbService {
     //     });
     //   }
     // }
+
+    return true;
   }
 
 }
