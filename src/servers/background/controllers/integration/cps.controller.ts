@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
 
 // import { BagPayloadVm } from '../../models/bag.payload.vm';
-import { CpsService } from '../../services/integration/Cps.service';
+import { CpsService } from '../../services/integration/cps.service';
 
 // @ApiUseTags('Master Data')
 @Controller('integration/cps')

@@ -1,23 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import moment = require('moment');
-import { BagResponseVm } from '../../models/bag.response.vm';
-import { Branch } from '../../../../shared/orm-entity/branch';
-import { Representative } from 'src/shared/orm-entity/representative';
-import { Bag } from 'src/shared/orm-entity/bag';
-import { BagItem } from 'src/shared/orm-entity/bag-item';
-import { BagItemHistory } from 'src/shared/orm-entity/bag-item-history';
-import { BagItemAwb } from 'src/shared/orm-entity/bag-item-awb';
-import {
-  BagItemAwbQueueService,
-} from '../../../queue/services/bag-item-awb-queue.service';
 
+import { Bag } from '../../../../shared/orm-entity/bag';
+import { BagItem } from '../../../../shared/orm-entity/bag-item';
+import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
+import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
+import { Branch } from '../../../../shared/orm-entity/branch';
+import { Representative } from '../../../../shared/orm-entity/representative';
+import { BagItemAwbQueueService } from '../../../queue/services/bag-item-awb-queue.service';
+import { BagResponseVm } from '../../models/bag.response.vm';
+
+import moment = require('moment');
 @Injectable()
 export class CpsService {
   static async postBag(
     payload: any,
   ): Promise<BagResponseVm> {
     const result = new BagResponseVm();
-    
+
     let totalProcess = 0;
     let bagInserted = [];
     let bagUpdated = [];
@@ -45,7 +44,7 @@ export class CpsService {
       });
       if (representativeIdTo) {
         representativeIdTo = representative.representativeId;
-      } 
+      }
 
       let noSttSc = item['NoSttSc'];
       let bagNumber =  noSttSc.substring(0, 7);
@@ -85,14 +84,14 @@ export class CpsService {
           userIdUpdated: 0,
           updatedTime: timeNow
         });
-        
+
         bagUpdated.push(noSttSc);
       }
 
       let isCreateHistory = false;
 
       let bagItem = await BagItem.findOne({
-        bagId: bag.bagId, 
+        bagId: bag.bagId,
         bagSeq: bagItemSeq
       });
 
@@ -121,7 +120,7 @@ export class CpsService {
           updatedTime: timeNow
         });
       }
-      
+
       if (isCreateHistory) {
         let bagItemHistory = BagItemHistory.create();
         bagItemHistory.bagItemId = bagItem.bagItemId.toString();
@@ -172,7 +171,7 @@ export class CpsService {
       console.log('##### BAG ITEM ID : ' + bagItem.bagItemId  + ' =======================================================');
 
       // BagItemAwbQueueService.addData(arrAwb);
-      
+
       totalProcess += 1;
     }
 
