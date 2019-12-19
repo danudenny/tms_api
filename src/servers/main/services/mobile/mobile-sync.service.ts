@@ -95,6 +95,7 @@ export class MobileSyncService {
             },
           });
           if (doPodDeliver) {
+            // TODO: check current awb status only ANT and problem increment totalProblem
             if (awbStatus.isProblem) {
               await transactionEntityManager.increment(
                 DoPodDeliver,
@@ -130,12 +131,12 @@ export class MobileSyncService {
         });
         // #endregion of transaction
 
-        // Update status awb item attr
-        await AwbService.updateAwbAttr(
-          delivery.awbItemId,
-          lastDoPodDeliverHistory.awbStatusId,
-          null,
-        );
+        // // Update status awb item attr
+        // await AwbService.updateAwbAttr(
+        //   delivery.awbItemId,
+        //   lastDoPodDeliverHistory.awbStatusId,
+        //   null,
+        // );
 
         // TODO: queue by Bull need refactoring
         DoPodDetailPostMetaQueueService.createJobByMobileSyncAwb(
