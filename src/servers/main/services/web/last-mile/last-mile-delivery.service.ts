@@ -2,16 +2,17 @@ import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payloa
 import { DoPodDeliver } from '../../../../../shared/orm-entity/do-pod-deliver';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebScanOutDeliverListResponseVm } from '../../../models/web-scan-out-response.vm';
+import { WebScanOutDeliverListResponseVm, WebScanOutDeliverGroupListResponseVm } from '../../../models/web-scan-out-response.vm';
 
 export class LastMileDeliveryService {
 
   static async findAllScanOutDeliverGroupList(
     payload: BaseMetaPayloadVm,
-  ): Promise<WebScanOutDeliverListResponseVm> {
+  ): Promise<WebScanOutDeliverGroupListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDeliverDateTime'] =
       't1.do_pod_deliver_date_time';
+    payload.fieldResolverMap['datePOD'] = 'datePOD';
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
     if (payload.sortBy === '') {
@@ -45,7 +46,7 @@ export class LastMileDeliveryService {
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
-    const result = new WebScanOutDeliverListResponseVm();
+    const result = new WebScanOutDeliverGroupListResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
