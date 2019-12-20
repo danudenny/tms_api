@@ -44,7 +44,7 @@ export class BagItemHistoryQueueService {
       bagItemHistory.historyDate = data.timestamp;
       bagItemHistory.userIdCreated = data.userId;
       bagItemHistory.userIdUpdated = data.userId;
-      BagItemHistory.insert(bagItemHistory);
+      await BagItemHistory.insert(bagItemHistory);
       return true;
     });
 
