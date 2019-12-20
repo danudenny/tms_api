@@ -81,6 +81,8 @@ export class BagScanOutBranchQueueService {
             doPodDetail.isScanOut = true;
             doPodDetail.scanOutType = 'bag';
             doPodDetail.transactionStatusIdLast = 800; // OUT_BRANCH
+            doPodDetail.userIdUpdated = data.userId;
+            doPodDetail.userIdCreated = data.userId;
             await DoPodDetail.insert(doPodDetail);
 
             // NOTE: queue bull
