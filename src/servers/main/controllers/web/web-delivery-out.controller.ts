@@ -1,5 +1,5 @@
 // #region import
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Param } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 import { WebDeliveryOutService } from '../../services/web/web-delivery-out.service';
@@ -18,6 +18,7 @@ import {
   WebScanOutLoadForEditVm,
   WebScanOutBagForPrintVm,
   WebScanOutDeliverEditVm,
+  WebScanOutDeliverListPayloadVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutAwbResponseVm,
@@ -144,11 +145,11 @@ export class WebDeliveryOutController {
 
   @Post('deliverList')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanOutDeliverListResponseVm })
-  public async deliverList(@Body() payload: BaseMetaPayloadVm) {
-    return this.webDeliveryOutService.findAllScanOutDeliverList(payload);
+  public async deliverList(@Body() payload: WebScanOutDeliverListPayloadVm) {
+    return LastMileDeliveryService.findAllScanOutDeliverList(payload);
   }
 
   @Post('deliverGroupList')

@@ -283,3 +283,11 @@ export class TransferAwbDeliverVm {
   @Type(() => String)
   awbNumber: string[];
 }
+
+export class WebScanOutDeliverListPayloadVm extends BaseMetaPayloadVm {
+  @ApiModelProperty({
+    example: '2019-05-14',
+    format: 'date',
+  })
+  datePod: string;
+}
