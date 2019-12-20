@@ -29,6 +29,7 @@ import {
 import { AwbService } from '../../v1/awb.service';
 import { BagService } from '../../v1/bag.service';
 import moment = require('moment');
+import { BagScanOutBranchQueueService } from '../../../../queue/services/bag-scan-out-branch-queue.service';
 // #endregion
 
 // Surat Jalan Keluar Gerai
@@ -613,13 +614,15 @@ export class FirstMileDeliveryOutService {
               // and create do_pod_detail (data awb on bag)
               // TODO: need to refactor
               // send to background job
-              await BagService.scanOutBagBranch(
+              BagScanOutBranchQueueService.perform(
                 bagData.bagId,
                 bagData.bagItemId,
                 doPod.doPodId,
                 doPod.branchIdTo,
                 doPod.userIdDriver,
                 bagNumber,
+                authMeta.userId,
+                permissonPayload.branchId,
               );
 
               // TODO: need refactoring
