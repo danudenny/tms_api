@@ -55,6 +55,7 @@ export class LastMileDeliveryService {
   }
 
   static async findAllScanOutDeliverList(
+    datePod: string,
     payload: WebScanOutDeliverListPayloadVm,
   ): Promise<WebScanOutDeliverListResponseVm> {
     // mapping field
@@ -125,7 +126,7 @@ export class LastMileDeliveryService {
     );
     // TODO: fix query
     q.andWhereRaw(
-      `DATE(t1.do_pod_deliver_date_time) = '${payload.datePod}'`,
+      `DATE(t1.do_pod_deliver_date_time) = '${datePod}'`,
     );
     q.groupByRaw('t1.do_pod_deliver_id, t2.fullname');
 

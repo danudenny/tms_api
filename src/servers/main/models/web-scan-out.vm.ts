@@ -285,9 +285,9 @@ export class TransferAwbDeliverVm {
 }
 
 export class WebScanOutDeliverListPayloadVm extends BaseMetaPayloadVm {
-  @ApiModelProperty({
-    example: '2019-05-14',
-    format: 'date',
-  })
-  datePod: string;
+  // @ApiModelProperty({
+  //   example: '2019-05-14',
+  //   format: 'date',
+  // })
+  // datePod: string;
 }
