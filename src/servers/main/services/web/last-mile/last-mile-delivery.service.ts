@@ -15,7 +15,7 @@ export class LastMileDeliveryService {
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
     if (payload.sortBy === '') {
-      payload.sortBy = 'doPodDeliverDateTime';
+      payload.sortBy = 'datePOD';
     }
 
     // mapping search field and operator default ilike
