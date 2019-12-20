@@ -24,6 +24,7 @@ export class PrintService {
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
         doPodCode: true,
+        description: true,
         userDriver: {
           userId: true,
           employee: {
@@ -116,6 +117,7 @@ export class PrintService {
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
         doPodCode: true,
+        description: true,
         userDriver: {
           userId: true,
           employee: {
@@ -229,6 +231,7 @@ export class PrintService {
       .select({
         doPodDeliverId: true, // needs to be selected due to do_pod_deliver relations are being included
         doPodDeliverCode: true,
+        description: true,
         userDriver: {
           userId: true,
           employee: {
