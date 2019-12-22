@@ -39,10 +39,10 @@ export class LastMileDeliveryService {
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.groupByRaw('t1.user_id_driver, t1.branch_id, t2.fullname, "datePOD"');
+    // q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
+    q.groupByRaw('"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -118,10 +118,10 @@ export class LastMileDeliveryService {
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
+    q.leftJoin(e => e.doPodDeliverDetails, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.doPodDeliverDetails.awb, 't4', j =>
+    q.leftJoin(e => e.doPodDeliverDetails.awb, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     // TODO: fix query
