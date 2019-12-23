@@ -175,6 +175,9 @@ export class WebScanInDeliverGroupResponseVm {
   datePOD: string;
 
   @ApiModelProperty()
+  totalSuratJalan: number;
+
+  @ApiModelProperty()
   totalAssigned: number;
 
   @ApiModelProperty()
