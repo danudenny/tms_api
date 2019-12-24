@@ -3,9 +3,9 @@ const path = require("path");
 
 module.exports = {
   redis: {
-    host: '3.1.243.32',
+    host: '18.141.116.177',
     port: '6379',
-    password: '9F864DAF0B09974AA3F0E90646EEFEA3',
+    password: 'r3di5S1c3pat116688_',
     db: process.env.NODE_ENV === 'test' ? 1 : 0,
   },
   jwt: {
@@ -18,8 +18,8 @@ module.exports = {
     assets: path.resolve(__dirname, '..', 'assets'),
   },
   cloudStorage: {
-    cloudUrl: 'https://sicepattesting.s3-ap-southeast-1.amazonaws.com',
-    cloudBucket: 'sicepattesting',
+    cloudUrl: 'https://sicepatmasterdata.s3-ap-southeast-1.amazonaws.com',
+    cloudBucket: 'sicepatmasterdata',
     cloudRegion: 'ap-southeast-1',
     cloudAccessKeyId: 'AKIAJHHTEMTLK42N7TQA',
     cloudSecretAccessKey: '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',
@@ -42,7 +42,7 @@ module.exports = {
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
     subdomain: 'sicepat',
-    tags: ['API-POD-DEV'],
+    tags: ['API-POD'],
   },
   servers: getAllServerConfigurations('default.js'),
 };
