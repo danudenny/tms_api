@@ -107,12 +107,8 @@ export class WebScanOutVm {
   })
   doPodMethod?: string;
 
-  @ApiModelProperty({
-    skipValidation: true,
-    example: 23,
-  })
-  @IsDefined({message: 'Gerai tujuan harus diisi'})
-  branchIdTo: number;
+  @ApiModelPropertyOptional()
+  branchIdTo?: number;
 
   @ApiModelProperty({
     skipValidation: true,
@@ -286,4 +282,12 @@ export class TransferAwbDeliverVm {
   @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   awbNumber: string[];
+}
+
+export class WebScanOutDeliverListPayloadVm extends BaseMetaPayloadVm {
+  // @ApiModelProperty({
+  //   example: '2019-05-14',
+  //   format: 'date',
+  // })
+  // datePod: string;
 }

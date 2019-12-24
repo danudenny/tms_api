@@ -169,6 +169,39 @@ export class WebScanInDeliverResponseVm {
   nickname: string;
 }
 
+export class WebScanInDeliverGroupResponseVm {
+
+  @ApiModelProperty({ format: 'date' })
+  datePOD: string;
+
+  @ApiModelProperty()
+  totalSuratJalan: number;
+
+  @ApiModelProperty()
+  totalAssigned: number;
+
+  @ApiModelProperty()
+  totalDelivery: number;
+
+  @ApiModelProperty()
+  totalProblem: number;
+
+  @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
+  nickname: string;
+
+  @ApiModelProperty()
+  branchId: number;
+
+  @ApiModelProperty()
+  userIdDriver: number;
+}
+
 export class WebScanOutAwbListResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty({ type: () => [WebScanInResponseVm] })
@@ -190,6 +223,13 @@ export class WebScanOutDeliverListResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty({ type: () => [WebScanInDeliverResponseVm] })
   data: WebScanInDeliverResponseVm[];
+}
+
+export class WebScanOutDeliverGroupListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({
+    type: () => [WebScanInDeliverGroupResponseVm],
+  })
+  data: WebScanInDeliverGroupResponseVm[];
 }
 
 // Create DO POD

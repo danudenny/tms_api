@@ -174,7 +174,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['totalBagScan'] = 't1.total_bag_scan';
     payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
-    payload.fieldResolverMap['totalAwbScan'] = 't2.total_awb_scan';
+    // payload.fieldResolverMap['totalAwbScan'] = 't2.total_awb_scan';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -191,20 +191,21 @@ export class WebDeliveryInService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
-      ['t1.created_time', 'createdTime'],
-      ['t1.branch_id', 'branchId'],
       ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
-      ['t1.total_bag_scan', 'totalBagScan'],
-      ['t2.total_awb_scan', 'totalAwbScan'],
+      ['t1.created_time', 'createdTime'],
       ['t3.branch_name', 'branchName'],
+      ['t1.total_bag_scan', 'totalBagScan'],
+      ['COUNT(t4.awb_number)', 'totalAwbScan'],
     );
 
-    q.innerJoin(e => e.podScanInBranchBag, 't2', j =>
+    q.innerJoin(e => e.PodScanInBranchDetail, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.groupByRaw('t1.pod_scan_in_branch_id, t3.branch_name');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -229,9 +230,8 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['totalAwbItem'] = 't1.total_awb_item';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['weight'] = 't3.weight';
-    payload.fieldResolverMap['totalBagScan'] = 't5.total_bag_scan';
+    payload.fieldResolverMap['branchId'] = 't3.branch_id_last';
     payload.fieldResolverMap['bagItemId'] = 't6.bag_item_id';
-    payload.fieldResolverMap['podScanInBranchId'] = 't5.pod_scan_in_branch_id';
     payload.fieldResolverMap['refRepresentativeCode'] = 't2.ref_representative_code';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -249,18 +249,17 @@ export class WebDeliveryInService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
+      ['t1.bag_id', 'bagId'],
       ['t1.bag_item_id', 'bagItemId'],
+      ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
       ['t1.bag_number', 'bagNumber'],
       ['t1.created_time', 'createdTime'],
-      ['t3.branch_id_last', 'branchIdLast'],
-      ['t4.branch_name', 'branchName'],
+      ['t3.branch_id_last', 'branchId'],
+      ['t4.branch_name', 'branchNameFrom'],
       ['t1.total_awb_item', 'totalAwbItem'],
       ['t1.total_awb_scan', 'totalAwbScan'],
       ['t1.total_diff', 'totalDiff'],
-      ['t5.pod_scan_in_branch_id', 'podScanInBranchId'],
-      ['t5.total_bag_scan', 'totalBagScan'],
-      ['t6.bag_item_id', 'bagItemId'],
-      ['t2.ref_representative_code', 'refRepresentativeCode'],
+      ['t2.ref_representative_code', 'representativeCode'],
       [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
     q.innerJoin(e => e.bag, 't2', j =>
@@ -269,15 +268,11 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItem, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.bagItem.branchLast, 't4', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q.leftJoin(e => e.bagItem.branchLast, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.podScanInBranch, 't5', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.bagItem.bagItemAwbs, 't6', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -299,10 +294,10 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
     payload.fieldResolverMap['consigneeAddress'] = 't3.consignee_address';
     payload.fieldResolverMap['totalCodValue'] = 't3.total_cod_value';
+    payload.fieldResolverMap['branchId'] = 't3.branch_id';
     payload.fieldResolverMap['branchName'] = 't4.branch_name';
-    payload.fieldResolverMap['totalAwbScan'] = 't2.total_awb_scan';
     payload.fieldResolverMap['totalWeightFinal'] = 't3.total_weight_final';
-    payload.fieldResolverMap['podScanInBranchId'] = 't2.pod_scan_in_branch_id';
+    payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -311,6 +306,9 @@ export class WebDeliveryInService {
     payload.globalSearchFields = [
       {
         field: 'createdTime',
+      },
+      {
+        field: 'branchName',
       },
     ];
 
@@ -325,34 +323,19 @@ export class WebDeliveryInService {
       ['t3.consignee_name', 'consigneeName'],
       ['t3.consignee_address', 'consigneeAddress'],
       ['t3.total_cod_value', 'totalCodValue'],
+      ['t3.branch_id', 'branchId'],
       ['t4.branch_name', 'branchName'],
-      ['t2.total_awb_scan', 'totalAwbScan'],
-      ['t2.pod_scan_in_branch_id', 'podScanInBranchId'],
       [`CONCAT(CAST(t3.total_weight AS NUMERIC(20,2)),' Kg')`, 'totalWeightFinal'],
-
-    );
-
-    q.innerJoin(e => e.PodScanInBranchBag, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.Awb, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.PodScanInBranchBag.branch, 't4', j =>
+    q.innerJoin(e => e.Awb.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw(`
-    t1.created_time,
-    t2.pod_scan_in_branch_id,
-    t2.total_awb_scan,
-    t4.branch_name,
-    t3.total_cod_value,
-    t3.total_weight,
-    t1.awb_number ,
-    t3.consignee_name,
-    t3.consignee_address
-  `);
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 

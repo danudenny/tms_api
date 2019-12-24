@@ -68,10 +68,10 @@ export class DoPodDetailPostMetaQueueService {
           await transactionalEntityManager.insert(AwbHistory, awbHistory);
 
           // TODO: to comment update with trigger SQL
-          await transactionalEntityManager.update(AwbItemAttr, awbItemAttr.awbItemAttrId, {
-            awbHistoryIdLast: awbHistory.awbHistoryId,
-            updatedTime: data.timestamp,
-          });
+          // await transactionalEntityManager.update(AwbItemAttr, awbItemAttr.awbItemAttrId, {
+          //   awbHistoryIdLast: awbHistory.awbHistoryId,
+          //   updatedTime: data.timestamp,
+          // });
         }
       }); // end transaction
 
@@ -388,7 +388,7 @@ export class DoPodDetailPostMetaQueueService {
     doPodDeliverDetailId: string,
     employeeIdDriver: number,
     awbStatusId: number,
-    ) {
+  ) {
 
     const doPodDetailRepository = new OrionRepositoryService(
       DoPodDeliverDetail,
@@ -483,7 +483,7 @@ export class DoPodDetailPostMetaQueueService {
     doPodDeliverDetailId: string,
     userId: number,
     awbStatusId: number,
-    ) {
+  ) {
 
     const doPodDetailRepository = new OrionRepositoryService(
       DoPodDeliverDetail,
@@ -577,6 +577,64 @@ export class DoPodDetailPostMetaQueueService {
       return DoPodDetailPostMetaQueueService.queue.add(obj);
     }
 
+  }
+
+    // Manual POD Sync
+  public static async createJobByManualStatus(
+    awbItemId: number,
+    awbStatusId: number,
+    userId: number,
+    branchId: number,
+    reasonNote: string,
+  ) {
+    // TODO: find awbStatusIdLastPublic on awb_status
+    const awbStatusIdLastPublic = AWB_STATUS.ON_PROGRESS;
+    const awbNote = reasonNote;
+
+    let noteInternal = '';
+    let notePublic = '';
+    let employeeName = '';
+    const userDriverRepo = await this.getDataUserEmployee(
+      userId,
+    );
+    if (userDriverRepo) {
+      employeeName = userDriverRepo.employee.employeeName;
+    }
+    const desc = `${reasonNote} (Status Manual by ${employeeName})`;
+
+    let branchName = 'Kantor Pusat';
+    let cityName = 'Jakarta';
+    const branch = await this.getDataBranchCity(
+      branchId,
+    );
+    if (branch) {
+      branchName = branch.branchName;
+      cityName = branch.district.city.cityName;
+    }
+    const awbStatus = await this.getDataAwbStatus(awbStatusId);
+    if (awbStatus) {
+      // awbStatusIdLastPublic = ??; // is final or is public
+      noteInternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${awbStatus.awbStatusName}) ${awbStatus.awbStatusTitle}; catatan: ${desc}`;
+      notePublic = `Paket di kembalikan di ${cityName} [${branchName}] - (${awbStatus.awbStatusName}) ${awbStatus.awbStatusTitle}`;
+    }
+
+    // provide data
+    const obj = {
+      awbStatusId,
+      awbStatusIdLastPublic,
+      awbItemId,
+      userId,
+      branchId,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver: null,
+      timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
+      awbNote,
+    };
+
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
   // NOTE: general purpose (IN / OUT)
@@ -688,8 +746,6 @@ export class DoPodDetailPostMetaQueueService {
 
   private static async getDataAwbStatus(awbStatusId: number): Promise<AwbStatus> {
     const awbStatus = await AwbStatus.findOne({
-      select: ['awbStatusId', 'awbVisibility', 'awbStatusTitle', 'awbStatusName', 'isProblem'],
-      // cache: true,
       where: {
         awbStatusId,
         isDeleted: false,

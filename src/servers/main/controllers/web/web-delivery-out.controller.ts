@@ -1,5 +1,5 @@
 // #region import
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Param } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 import { WebDeliveryOutService } from '../../services/web/web-delivery-out.service';
@@ -18,6 +18,7 @@ import {
   WebScanOutLoadForEditVm,
   WebScanOutBagForPrintVm,
   WebScanOutDeliverEditVm,
+  WebScanOutDeliverListPayloadVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutAwbResponseVm,
@@ -32,12 +33,14 @@ import {
   WebScanTransitResponseVm,
   WebScanOutTransitListResponseVm,
   WebScanOutTransitListAwbResponseVm,
+  WebScanOutDeliverGroupListResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { BagOrderResponseVm, BagDetailResponseVm, PhotoResponseVm, BagDeliveryDetailResponseVm} from '../../models/bag-order-detail-response.vm';
 import { BagAwbVm, BagDetailVm, PhotoDetailVm, BagDeliveryDetailVm } from '../../models/bag-order-response.vm';
 import { LastMileDeliveryOutService } from '../../services/web/last-mile/last-mile-delivery-out.service';
+import { LastMileDeliveryService } from '../../services/web/last-mile/last-mile-delivery.service';
 // #endregion
 
 @ApiUseTags('Web Delivery Out')
@@ -140,13 +143,25 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllScanOutList(payload);
   }
 
-  @Post('deliverList')
+  @Post('deliverList/:datePod')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanOutDeliverListResponseVm })
-  public async deliverList(@Body() payload: BaseMetaPayloadVm) {
-    return this.webDeliveryOutService.findAllScanOutDeliverList(payload);
+  public async deliverList(
+    @Param('datePod') datePod: string,
+    @Body() payload: WebScanOutDeliverListPayloadVm,
+  ) {
+    return LastMileDeliveryService.findAllScanOutDeliverList(datePod, payload);
+  }
+
+  @Post('deliverGroupList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutDeliverGroupListResponseVm })
+  public async deliverGroupList(@Body() payload: BaseMetaPayloadVm) {
+    return LastMileDeliveryService.findAllScanOutDeliverGroupList(payload);
   }
 
   @Post('awbValidate')
