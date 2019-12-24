@@ -1,6 +1,6 @@
 {
   "apps": [{
-    "name": "sicepat-tms-api",
+    "name": "tms-api-jenkins",
     "script": "dist/main.js",
     "instances": "max",
     "exec_mode": "cluster",
