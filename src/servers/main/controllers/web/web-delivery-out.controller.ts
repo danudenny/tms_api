@@ -143,6 +143,15 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllScanOutList(payload);
   }
 
+  @Post('deliverList')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutDeliverListResponseVm })
+  public async deliverListOld(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryOutService.findAllScanOutDeliverList(payload);
+  }
+
   @Post('deliverList/:datePod')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
