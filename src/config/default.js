@@ -1,5 +1,5 @@
-const { getAllServerConfigurations } = require("./util");
-const path = require("path");
+const { getAllServerConfigurations } = require('./util');
+const path = require('path');
 
 module.exports = {
   redis: {
