@@ -93,7 +93,7 @@ export class TrackingNoteService {
         // ... error checks
       let lastSyncId = 0;
       let ctr = 0;
-          //Bulk Insert Prepare Table
+        // Bulk Insert Prepare Table
         // const table = new sql.Table('TmsTrackingNote');
         // table.columns.add('AwbHistoryId', sql.Int, {nullable: false});
         // table.columns.add('ReceiptNumber', sql.VarChar, {nullable: false});
@@ -115,9 +115,9 @@ export class TrackingNoteService {
 
       for (const item of data) {
         lastSyncId = item.awbHistoryId;
-        // table.rows.add(lastSyncId, item.receiptNumber, item.trackingDateTime, item.awbStatusId, item.trackingType, 
-        //   item.courierName, item.nik, item.branchCode, 
-        //   // item.noteInternal, // item.notePublic, item.noteTms, 
+        // table.rows.add(lastSyncId, item.receiptNumber, item.trackingDateTime, item.awbStatusId, item.trackingType,
+        //   item.courierName, item.nik, item.branchCode,
+        //   // item.noteInternal, // item.notePublic, item.noteTms,
         //   'TMS', 'TMS', new Date(), new Date());
         // break;
         const request = conn.request();
@@ -137,9 +137,9 @@ export class TrackingNoteService {
         request.input('DtmCrt', sql.DateTime, moment().add(7, 'hours').toDate());
         request.input('DtmUpd', sql.DateTime, moment().add(7, 'hours').toDate());
         request.input('ReceiverName', sql.VarChar, item.receiverName);
-        let isPublic = 0
+        let isPublic = 0;
         if (item.isPublic === 20) {
-          isPublic = 1
+          isPublic = 1;
         }
         request.input('IsPublic', sql.Bit, isPublic);
 
@@ -159,29 +159,29 @@ export class TrackingNoteService {
                 });
                 transaction.commit(err => {
                   if (err) {
-                    console.log('[ERROR TRANSACTION] :: ' + err)
+                    console.log('[ERROR TRANSACTION] :: ' + err);
                     transaction.rollback(err => {
                       if (err) {
-                        console.log('[ERROR ROLLBACK TRANSACTION] :: ' + err)
+                        console.log('[ERROR ROLLBACK TRANSACTION] :: ' + err);
                       } else {
-                        console.log('[ROLLBACKED TRANSACTION]===================')
+                        console.log('[ROLLBACKED TRANSACTION]===================');
                       }
-                    })
+                    });
                   } else {
-                    console.log('[COMMITTED]===================')
+                    console.log('[COMMITTED]===================');
                   }
-                })
+                });
                 console.log('[ALL SUCCESS] Last awb history id === ' + lastSyncId);
               }
             } else {
               if (lastSyncId != 0) {
                 transaction.rollback(err => {
                   if (err) {
-                    console.log('[ERROR ROLLBACK] :: ' + err)
+                    console.log('[ERROR ROLLBACK] :: ' + err);
                   } else {
-                    console.log('[ROLLBACKED]===================')
+                    console.log('[ROLLBACKED]===================');
                   }
-                })
+                });
                 console.log('[ERROR STOP] Last awb history id === ' + lastSyncId);
               }
               RequestErrorService.throwObj({
@@ -210,8 +210,8 @@ export class TrackingNoteService {
         //     },
         //       HttpStatus.UNPROCESSABLE_ENTITY,
         //     );
-        //   }       
+        //   }
         // });
-    })
+    });
   }
 }
