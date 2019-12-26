@@ -15,7 +15,10 @@ export class LastMileDeliveryService {
       't1.do_pod_deliver_date_time';
     payload.fieldResolverMap['datePOD'] = 'datePOD';
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
     payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
+    payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
+    payload.fieldResolverMap['totalAssigned'] = 't4.awb_number';
     if (payload.sortBy === '') {
       payload.sortBy = 'datePOD';
     }
@@ -29,20 +32,30 @@ export class LastMileDeliveryService {
 
     q.selectRaw(
       ['t1.do_pod_deliver_date_time::date', 'datePOD'],
-      ['COUNT(t1.user_id_driver)', 'totalSuratJalan'],
+      ['COUNT(DISTINCT(t1.do_pod_deliver_code))', 'totalSuratJalan'],
       ['t1.user_id_driver', 'userIdDriver'],
-      ['t1.branch_id', 'branchId'],
+      ['t5.branch_name', 'branchName'],
+      ['t1.branch_id', 'branchForm'],
       ['t2.fullname', 'nickname'],
-      ['SUM (t1.total_awb)', 'totalAssigned'],
+      ['COUNT(t4.awb_number)', 'totalAwb'],
+      ['COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 14000)', 'totalAntar'],
+      ['COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 30000)', 'totalDelivery'],
+      ['COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000 and t3.awb_status_id_last <> 14000)', 'totalProblem'],
     );
 
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
-    q.groupByRaw('"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname');
+    q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodDeliverDetails.awb, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't5', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw('"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
