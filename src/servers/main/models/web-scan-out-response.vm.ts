@@ -184,6 +184,12 @@ export class WebScanInDeliverGroupResponseVm {
   totalDelivery: number;
 
   @ApiModelProperty()
+  totalAntar: number;
+
+  @ApiModelProperty()
+  branchName: number;
+
+  @ApiModelProperty()
   totalProblem: number;
 
   @ApiModelProperty()
