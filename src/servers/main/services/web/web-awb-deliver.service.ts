@@ -51,9 +51,9 @@ export class WebAwbDeliverService {
                   syncManualDelivery = true;
                   break;
                 case 'palkur':
-                  if (statusProblem.includes(delivery.awbStatusId)) {
-                    syncManualDelivery = true;
-                  }
+                  // if (statusProblem.includes(delivery.awbStatusId)) {
+                  // }
+                  syncManualDelivery = true;
                   break;
                 case 'sigesit':
                   // check only own awb number
