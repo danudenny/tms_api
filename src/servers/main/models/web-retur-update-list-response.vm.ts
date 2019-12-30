@@ -6,5 +6,4 @@ export class WebReturUpdateResponseVm {
 
   @ApiModelProperty()
   message: string;
-
 }

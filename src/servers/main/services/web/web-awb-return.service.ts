@@ -265,28 +265,56 @@ export class WebAwbReturnService {
     const authMeta = AuthService.getAuthData();
     const result = new WebReturUpdateResponseVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    // edit Return 3PL
-    // TODO: change filter by originAwbId
+    const awb = await AwbService.validAwbNumber(payload.awbReturnNumber);
+
     const awbReturn = await AwbReturn.findOne({
       where: {
-        originAwbId: payload.awbReturnId,
+        awbReturnId: payload.awbReturnId,
         isDeleted: false,
       },
     });
+
     if (awbReturn) {
-      AwbReturn.update(awbReturn.awbReturnId, {
-        partnerLogisticAwb: payload.partnerLogisticAwb,
-      });
+      // NOTE: If via internal
+      if (payload.partnerLogisticId === '') {
+        if (!awb) {
+          result.status = 'error';
+          result.message = `No resi ${payload.awbReturnNumber} tidak ditemukan`;
+        } else {
+          AwbReturn.update(awbReturn.awbReturnId, {
+              returnAwbId: awb.awbId,
+              returnAwbNumber: awb.awbNumber,
+              userIdUpdated: authMeta.userId,
+              updatedTime: moment().toDate(),
+          });
 
-      // TODO: update awb
-      Awb.update(awbReturn.originAwbId, {
-        refAwbNumberJne: payload.partnerLogisticAwb,
-      });
-
-      result.status = 'ok';
-      result.message = 'success';
-      return result;
+          result.status = 'ok';
+          result.message = 'success';
+        }
+      } else {
+        const partnerLogistic = await PartnerLogistic.findOne({ partnerLogisticId: payload.partnerLogisticId });
+        if (partnerLogistic) {
+          AwbReturn.update(awbReturn.awbReturnId, {
+            partnerLogisticId: payload.partnerLogisticId,
+            partnerLogisticName: partnerLogistic.partnerLogisticName,
+            isPartnerLogistic: true,
+            partnerLogisticAwb: payload.awbReturnNumber,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          });
+          result.status = 'ok';
+          result.message = 'success';
+        } else {
+          result.status = 'error';
+          result.message = '3PL tidak ditemukan';
+        }
+      }
+    } else {
+      result.status = 'error';
+      result.message = 'ID retur tidak ditemukan';
     }
+
+    return result;
   }
 
   static async listReturn(
@@ -302,11 +330,9 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['isPartnerLogistic'] = 't1.is_partner_logistic';
     payload.fieldResolverMap['partnerLogisticName'] = 't1.partner_logistic_name';
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
+    payload.fieldResolverMap['branchFrom'] = 't3.branch_name';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['consigneeAddress'] = 't2.consignee_address';
-    payload.fieldResolverMap['customerAccountId'] = 't2.customer_account_id';
-    payload.fieldResolverMap['customerAccountName'] = 't3.customer_account_name';
-    payload.fieldResolverMap['notes'] = 't2.notes';
+    payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -315,11 +341,7 @@ export class WebAwbReturnService {
     payload.globalSearchFields = [
       {
         field: 'originAwbNumber',
-      },
-      {
-        field: 'customerAccountName',
-      },
-
+      }
     ];
 
     const repo = new OrionRepositoryService(AwbReturn, 't1');
@@ -338,19 +360,16 @@ export class WebAwbReturnService {
       ['t1.return_awb_number', 'returnAwbNumber'],
       ['t1.branch_id', 'branchId'],
       ['t1.created_time', 'createdTime'],
-      ['t2.consignee_address', 'consigneeAddress'],
-      ['t2.customer_account_id', 'customerAccountId'],
-      ['t3.customer_account_name', 'customerAccountName'],
-      ['t2.notes', 'notes'],
+      ['t3.branch_name', 'branchFrom'],
+      ['t2.awb_status_name', 'awbStatus'],
     );
 
-    q.innerJoin(e => e.originAwb, 't2', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  );
-    q.leftJoin(e => e.originAwb.customerAccount, 't3', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  );
-
+    q.innerJoin(e => e.originAwb.awbItems.awbItemAttr.awbStatus, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
