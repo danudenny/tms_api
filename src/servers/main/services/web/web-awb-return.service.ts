@@ -398,7 +398,7 @@ export class WebAwbReturnService {
     qb.addSelect('c.do_pod_id', 'doPodId');
     qb.addSelect('c.branch_id_to', 'branchIdTo');
     qb.addSelect('d.branch_name', 'branchNameTo');
-    qb.addSelect('e.fistname', 'driverName');
+    qb.addSelect('e.first_name', 'driverName');
     qb.from('awb_return', 'a');
     qb.innerJoin('do_pod_detail', 'b', 'a.return_awb_number = b.awb_number AND b.is_deleted = false');
     qb.innerJoin('do_pod', 'c', 'c.do_pod_id = b.do_pod_id AND c.is_deleted = false');
