@@ -16,6 +16,9 @@ import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
 import { WebReturUpdateListPayloadVm } from '../../models/web-retur-update-response.vm';
 import { WebReturUpdateResponseVm } from '../../models/web-retur-update-list-response.vm';
+import { WebReturHistoryFindAllResponseVm } from '../../models/web-retur-history.response.vm';
+import { WebReturHistoryPayloadVm } from '../../models/web-retur-history-payload.vm';
+import { QueryBuilder, createQueryBuilder } from 'typeorm';
 
 export class WebAwbReturnService {
   static async getAwb(
@@ -333,6 +336,8 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['branchFrom'] = 't3.branch_name';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
+    payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
+    payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -357,11 +362,13 @@ export class WebAwbReturnService {
       ['t1.return_awb_id', 'returnAwbId'],
       ['t1.is_partner_logistic', 'isPartnerLogistic'],
       ['t1.partner_logistic_name', 'partnerLogisticName'],
+      ['t1.partner_logistic_id', 'partnerLogisticId'],
       ['t1.return_awb_number', 'returnAwbNumber'],
       ['t1.branch_id', 'branchId'],
       ['t1.created_time', 'createdTime'],
       ['t3.branch_name', 'branchFrom'],
       ['t2.awb_status_name', 'awbStatus'],
+      ['t2.awb_status_id', 'awbStatusId'],
     );
 
     q.innerJoin(e => e.originAwb.awbItems.awbItemAttr.awbStatus, 't2', j =>
@@ -378,6 +385,29 @@ export class WebAwbReturnService {
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
+    return result;
+  }
+
+  static async historyAwbReturn(
+    payload: WebReturHistoryPayloadVm,
+  ): Promise<WebReturHistoryFindAllResponseVm> {
+    const result = new WebReturHistoryFindAllResponseVm();
+    const qb = createQueryBuilder();
+    qb.addSelect('c.do_pod_date_time', 'doPodDateTime');
+    qb.addSelect('c.do_pod_code', 'doPodCode');
+    qb.addSelect('c.do_pod_id', 'doPodId');
+    qb.addSelect('c.branch_id_to', 'branchIdTo');
+    qb.addSelect('d.branch_name', 'branchNameTo');
+    qb.addSelect('e.fistname', 'driverName');
+    qb.from('awb_return', 'a');
+    qb.innerJoin('do_pod_detail', 'b', 'a.return_awb_number = b.awb_number AND b.is_deleted = false');
+    qb.innerJoin('do_pod', 'c', 'c.do_pod_id = b.do_pod_id AND c.is_deleted = false');
+    qb.innerJoin('branch', 'd', 'd.branch_id = c.branch_id_to AND d.is_deleted = false');
+    qb.innerJoin('users', 'e', 'c.user_id_driver = e.user_id AND e.is_deleted = false');
+    qb.where('a.is_deleted = false');
+    qb.andWhere('a.return_awb_number = :awbNumber', { awbNumber: payload.awbNumber });
+    const data = await qb.getRawMany();
+    result.data = data;
     return result;
   }
 }

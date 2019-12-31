@@ -1,6 +1,6 @@
 import { ApiModelProperty} from '../../../shared/external/nestjs-swagger';
 
-export class WebReturUpdateListPayloadVm {
+export class WebReturHistoryPayloadVm {
   @ApiModelProperty()
   awbNumber: string;
 }
