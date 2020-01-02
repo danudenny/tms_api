@@ -10,6 +10,8 @@ import { WebReturListResponseVm } from '../../models/web-retur-list-response.vm'
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { WebReturUpdateListPayloadVm} from '../../models/web-retur-update-response.vm';
 import { WebReturUpdateResponseVm } from '../../models/web-retur-update-list-response.vm';
+import { WebReturHistoryFindAllResponseVm } from '../../models/web-retur-history.response.vm';
+import { WebReturHistoryPayloadVm } from '../../models/web-retur-history-payload.vm';
 // NOTE: PENDING TASK ==========================================================
 // ================================================================
 @ApiUseTags('Web Awb Return')
@@ -43,10 +45,10 @@ export class WebAwbReturnController {
     return WebAwbReturnService.updateAwbReturn(payload);
   }
 
-  @Post('create')
+  @Post('history')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: WebAwbReturnCreateResponse })
-  public async createReturn(@Body() payload: WebAwbReturnCreatePayload) {
-    return WebAwbReturnService.createAwbReturn(payload);
+  @ApiOkResponse({ type: WebReturHistoryFindAllResponseVm })
+  public async historyAwb(@Body() payload: WebReturHistoryPayloadVm) {
+    return WebAwbReturnService.historyAwbReturn(payload);
   }
 }

@@ -5,6 +5,8 @@ export class WebReturUpdateListPayloadVm {
   awbReturnId: string;
 
   @ApiModelProperty()
-  partnerLogisticAwb: string;
+  awbReturnNumber: string;
 
+  @ApiModelProperty()
+  partnerLogisticId: string;
 }

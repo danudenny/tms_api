@@ -17,6 +17,7 @@ import { AwbService } from '../v1/awb.service';
 import moment = require('moment');
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
 
 export class WebAwbDeliverService {
   constructor() {
@@ -79,6 +80,22 @@ export class WebAwbDeliverService {
               // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
               await this.syncDeliver(delivery);
 
+              // is return insert into awb return
+              if (payload.isReturn) {
+                const awbReturnDetail = AwbReturn.create({
+                    originAwbId: awb.awbId,
+                    originAwbNumber: awb.awbNumber,
+                    branchId: permissonPayload.branchId,
+                    isDeleted: false,
+                    userIdCreated: authMeta.userId,
+                    userIdUpdated: authMeta.userId,
+                    createdTime: moment().toDate(),
+                    updatedTime: moment().toDate(),
+                });
+
+                await AwbReturn.save(awbReturnDetail);
+              }
+
               response.status = 'ok';
               response.message = 'success';
             } else {
@@ -94,6 +111,7 @@ export class WebAwbDeliverService {
               payload.role,
               delivery,
               payload.isReturn,
+              awb.awbId,
             );
             if (manualStatus) {
               response.status = 'ok';
@@ -243,6 +261,7 @@ export class WebAwbDeliverService {
     role: string,
     delivery: WebDeliveryVm,
     isReturn: boolean,
+    awbId: number,
   ) {
     let syncManualDelivery = false;
     // role palkur => CODA, BA, RETUR tidak perlu ANT
@@ -262,9 +281,22 @@ export class WebAwbDeliverService {
           break;
       }
       if (syncManualDelivery) {
-
         if (isReturn) {
           // TODO: handle is return status??
+
+          // NOTES: Insert into table awb return
+          const awbReturnData = AwbReturn.create({
+              originAwbId: awbId,
+              originAwbNumber: delivery.awbNumber,
+              branchId,
+              userIdCreated: userId,
+              createdTime: moment().toDate(),
+              userIdUpdated: userId,
+              updatedTime: moment().toDate(),
+              isDeleted: false,
+          });
+
+          await AwbReturn.save(awbReturnData);
         }
 
         // Update status awb item attr
