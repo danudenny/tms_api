@@ -371,7 +371,7 @@ export class WebAwbReturnService {
       ['t2.awb_status_id', 'awbStatusId'],
     );
 
-    q.innerJoin(e => e.originAwb.awbItems.awbItemAttr.awbStatus, 't2', j =>
+    q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't3', j =>

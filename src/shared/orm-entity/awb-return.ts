@@ -73,9 +73,9 @@ export class AwbReturn extends TmsBaseEntity {
   })
   partnerLogisticId: string;
 
-  @OneToOne(() => Awb)
-  @JoinColumn({ name: 'origin_awb_id' })
-  originAwb: Awb;
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'origin_awb_id', referencedColumnName: 'awbId'})
+  originAwb: AwbItemAttr;
 
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
