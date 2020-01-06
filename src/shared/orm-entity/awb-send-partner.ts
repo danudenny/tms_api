@@ -1,20 +1,8 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
-// import { BagItem } from './bag-item';
+import { Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
-// import { Representative } from './representative';
-// import { District } from './district';
-// import { PodScanInBranchBag } from './pod-scan-in-branch-bag';
-// import { PodScanInBranchDetail } from './pod-scan-in-branch-detail';
-// import { DropoffHub } from './dropoff_hub';
-// import { DropoffSortation } from './dropoff_sortation';
-// import { Branch } from './branch';
+import { Partner } from './partner';
 
 @Entity('awb_send_partner', { schema: 'public' })
-// @Index('bag_bag_date_idx', ['bagDate'])
-// @Index('bag_bag_number_idx', ['bagNumber'])
-// @Index('bag_branch_id_idx', ['branchId'])
-// @Index('bag_created_time_idx', ['createdTime'])
-// @Index('bag_is_deleted_idx', ['isDeleted'])
 export class AwbSendPartner extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
@@ -104,32 +92,9 @@ export class AwbSendPartner extends TmsBaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+  
+  @ManyToOne(() => Partner)
+  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partner_id' })
+  partner: Partner;
 
-  // relation model
-  // @OneToMany(() => BagItem, e => e.bag, { cascade: ['insert'] })
-  // bagItems: BagItem[];
-
-  // @OneToMany(() => PodScanInBranchBag, e => e.bag, { cascade: ['insert'] })
-  // podScanInBranchBags: PodScanInBranchBag[];
-
-  // @OneToMany(() => PodScanInBranchDetail, e => e.bag, { cascade: ['insert'] })
-  // podScanInBranchDetails: PodScanInBranchDetail[];
-
-  // @OneToMany(() => DropoffHub, e => e.bag, { cascade: ['insert'] })
-  // dropoffHubs: DropoffHub[];
-
-  // @OneToMany(() => DropoffSortation, e => e.bag, { cascade: ['insert'] })
-  // dropoffSortations: DropoffSortation[];
-
-  // @OneToOne(() => Representative)
-  // @JoinColumn({ name: 'representative_id_to' })
-  // representative: Representative;
-
-  // @OneToOne(() => District)
-  // @JoinColumn({ name: 'district_id_to' })
-  // district: District;
-
-  // @OneToOne(() => Branch)
-  // @JoinColumn({ name: 'branch_id' })
-  // branch: Branch;
 }
