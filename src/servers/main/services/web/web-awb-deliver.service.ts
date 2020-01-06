@@ -258,7 +258,7 @@ export class WebAwbDeliverService {
   ) {
     let syncManualDelivery = false;
     // role palkur => CODA, BA, RETUR tidak perlu ANT
-    const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
+    // const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
 
     if (delivery.awbStatusId != AWB_STATUS.DLV) {
       switch (role) {
@@ -266,9 +266,9 @@ export class WebAwbDeliverService {
           syncManualDelivery = true;
           break;
         case 'palkur':
-          if (statusProblem.includes(delivery.awbStatusId)) {
-            syncManualDelivery = true;
-          }
+          // if (statusProblem.includes(delivery.awbStatusId)) {
+          // }
+          syncManualDelivery = true;
           break;
         default:
           break;
