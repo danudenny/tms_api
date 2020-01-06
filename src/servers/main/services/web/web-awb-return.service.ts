@@ -299,6 +299,7 @@ export class WebAwbReturnService {
         if (partnerLogistic) {
           AwbReturn.update(awbReturn.awbReturnId, {
             partnerLogisticId: payload.partnerLogisticId,
+            returnAwbNumber: payload.awbReturnNumber,
             partnerLogisticName: partnerLogistic.partnerLogisticName,
             isPartnerLogistic: true,
             partnerLogisticAwb: payload.awbReturnNumber,
