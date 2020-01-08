@@ -5,8 +5,14 @@ export class RawQueryService {
 
   // TODO: fix config get connection manager??
   // init connect
-  static manager = getManager();
-  static connection = RawQueryService.manager.connection;
+
+  static get manager() {
+    return getManager();
+  }
+
+  static get connection() {
+    return RawQueryService.manager.connection;
+  }
 
   public static escapeQueryWithParameters(sql: string, parameters: Object) {
     return this.connection.driver.escapeQueryWithParameters(sql, parameters, {});
