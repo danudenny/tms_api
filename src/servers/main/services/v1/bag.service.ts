@@ -75,6 +75,7 @@ export class BagService {
     return await q.exec();
   }
 
+  // scan dropoff_hub update status awb
   static async statusDropoffAwbBag(
     bagItemId: number,
     dropoffHubId: string,
@@ -247,6 +248,7 @@ export class BagService {
     return true;
   }
 
+  // NOTE: not used now ==================================
   // TODO: create background job
   static async scanOutBagBranch(
     bagId: number,
