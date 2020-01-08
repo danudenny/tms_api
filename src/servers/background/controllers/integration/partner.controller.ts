@@ -2,11 +2,11 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { PartnerService } from '../../services/integration/partner.service';
 
 // @ApiUseTags('Master Data')
-@Controller('integration')
+@Controller('integration/partner')
 export class PartnerController {
   constructor() {}
 
-  @Post('PosIndonesia/awb')
+  @Post('posIndonesia/awb')
   // @HttpCode(HttpStatus.OK)
   // @ApiBearerAuth()
   // @UseGuards(AuthenticatedGuard)
