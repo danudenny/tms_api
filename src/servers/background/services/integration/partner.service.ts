@@ -4,10 +4,11 @@ import axios from 'axios';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { AwbSendPartner } from '../../../../shared/orm-entity/awb-send-partner';
+import { ConfigService } from '../../../../shared/services/config.service';
 
 @Injectable()
 export class PartnerService {
-
+  static postIndonesiaBaseUrl = ConfigService.get('posIndonesia.baseUrl');
   static async sendAwbPosIndonesia(
     payload: any,
   ): Promise<any> {
@@ -60,13 +61,13 @@ export class PartnerService {
     //   return accessToken
     // }
 
-    const urlToken = process.env['WEBHOOK_POS_INDONESIA_TOKEN'];
+    const urlToken = this.postIndonesiaBaseUrl + ConfigService.get('posIndonesia.tokenEndpoint')
     const params = {
       'grant_type': 'client_credentials'
     };
     const auth = {
-      'username': process.env['WEBHOOK_POS_INDONESIA_USERNAME'],
-      'password': process.env['WEBHOOK_POS_INDONESIA_PASSWORD']
+      'username': ConfigService.get('posIndonesia.username'),
+      'password': ConfigService.get('posIndonesia.password')
     };
     const headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -83,7 +84,7 @@ export class PartnerService {
       if (response.data.access_token) {
         accessToken = response.data.access_token;
         RedisService.set('posindonesia:access-token', accessToken);
-        RedisService.expireat('posindonesia:access-token', Number(process.env['TTL_WEBHOOK_TOKEN']))
+        RedisService.expireat('posindonesia:access-token', Number(ConfigService.get('posIndonesia.ttlToken')))
       }
     } catch (error){
       if (error.response) {
@@ -185,7 +186,7 @@ export class PartnerService {
   }
 
   private static async postPartnerPosIndonesia(data: any, token: string): Promise<any> {
-    const urlPost = process.env['WEBHOOK_POS_INDONESIA_POST_AWB'];
+    const urlPost = this.postIndonesiaBaseUrl + ConfigService.get('posIndonesia.postAwbEndpoint');
  
     const headers = {
       'Content-Type': 'application/json',
