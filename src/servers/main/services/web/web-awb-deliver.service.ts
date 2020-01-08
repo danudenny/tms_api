@@ -17,6 +17,7 @@ import { AwbService } from '../v1/awb.service';
 import moment = require('moment');
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
 
 export class WebAwbDeliverService {
   constructor() {
@@ -75,9 +76,18 @@ export class WebAwbDeliverService {
               delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
               delivery.awbItemId = awbDeliver.awbItemId;
               // delivery.employeeId = authMeta.employeeId;
-
-              // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
               await this.syncDeliver(delivery);
+
+              // is return insert into awb return
+              // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
+              if (payload.isReturn) {
+                await this.createAwbReturn(
+                  delivery.awbNumber,
+                  awb.awbId,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                );
+              }
 
               response.status = 'ok';
               response.message = 'success';
@@ -94,6 +104,7 @@ export class WebAwbDeliverService {
               payload.role,
               delivery,
               payload.isReturn,
+              awb.awbId,
             );
             if (manualStatus) {
               response.status = 'ok';
@@ -220,11 +231,11 @@ export class WebAwbDeliverService {
       // #endregion of transaction
 
       // Update status awb item attr
-      await AwbService.updateAwbAttr(
-        delivery.awbItemId,
-        doPodDeliverHistory.awbStatusId,
-        null,
-      );
+      // await AwbService.updateAwbAttr(
+      //   delivery.awbItemId,
+      //   doPodDeliverHistory.awbStatusId,
+      //   null,
+      // );
 
       // TODO: queue by Bull need refactoring
       DoPodDetailPostMetaQueueService.createJobByManualPodSync(
@@ -243,10 +254,11 @@ export class WebAwbDeliverService {
     role: string,
     delivery: WebDeliveryVm,
     isReturn: boolean,
+    awbId: number,
   ) {
     let syncManualDelivery = false;
     // role palkur => CODA, BA, RETUR tidak perlu ANT
-    const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
+    // const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
 
     if (delivery.awbStatusId != AWB_STATUS.DLV) {
       switch (role) {
@@ -254,25 +266,31 @@ export class WebAwbDeliverService {
           syncManualDelivery = true;
           break;
         case 'palkur':
-          if (statusProblem.includes(delivery.awbStatusId)) {
-            syncManualDelivery = true;
-          }
+          // if (statusProblem.includes(delivery.awbStatusId)) {
+          // }
+          syncManualDelivery = true;
           break;
         default:
           break;
       }
       if (syncManualDelivery) {
-
         if (isReturn) {
           // TODO: handle is return status??
+          // NOTES: Insert into table awb return
+          await this.createAwbReturn(
+            delivery.awbNumber,
+            awbId,
+            branchId,
+            userId,
+          );
         }
 
         // Update status awb item attr
-        await AwbService.updateAwbAttr(
-          delivery.awbItemId,
-          delivery.awbStatusId,
-          null,
-        );
+        // await AwbService.updateAwbAttr(
+        //   delivery.awbItemId,
+        //   delivery.awbStatusId,
+        //   null,
+        // );
 
         // TODO: queue by Bull need refactoring
         DoPodDetailPostMetaQueueService.createJobByManualStatus(
@@ -313,5 +331,36 @@ export class WebAwbDeliverService {
     q.orderBy({ awbStatusDateTimeLast: 'DESC' });
     q.take(1);
     return await q.exec();
+  }
+
+  private static async createAwbReturn(
+    awbNumber: string,
+    awbId: number,
+    branchId: number,
+    userId: number,
+  ): Promise<AwbReturn> {
+    // NOTES: Insert into table awb return
+    // check duplicate data
+    let awbReturnData = await AwbReturn.findOne({
+      where: {
+        originAwbNumber: awbNumber,
+        isDeleted: false,
+      },
+    });
+    if (awbReturnData) {
+      // TODO: update awb status ??
+    } else {
+      awbReturnData = AwbReturn.create({
+          originAwbId: awbId,
+          originAwbNumber: awbNumber,
+          branchId,
+          userIdCreated: userId,
+          userIdUpdated: userId,
+          createdTime: moment().toDate(),
+          updatedTime: moment().toDate(),
+      });
+      await AwbReturn.insert(awbReturnData);
+    }
+    return awbReturnData;
   }
 }

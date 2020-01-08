@@ -36,6 +36,7 @@ import { WebAwbDeliverController } from './web/web-awb-deliver.controller';
 import { MobileAttendanceController } from './mobile/mobile-attendance.controller';
 import { ReportPODController } from './report/report-pod.controller';
 import { WebLastMileController } from './web/web-last-mile.controller';
+import { WebAwbReturnController } from './web/web-awb-return.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -70,6 +71,7 @@ import { WebLastMileController } from './web/web-last-mile.controller';
     WebAwbCountController,
     WebTrackingController,
     WebFirstMileController,
+    WebAwbReturnController,
     ProvincesController,
     CitiesController,
     DistrictsController,
