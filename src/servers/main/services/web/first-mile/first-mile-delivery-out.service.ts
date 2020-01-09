@@ -312,13 +312,15 @@ export class FirstMileDeliveryOutService {
               // and create do_pod_detail (data awb on bag)
               // TODO: need to refactor
               // send background job
-              await BagService.scanOutBagBranch(
+              BagScanOutBranchQueueService.perform(
                 bagData.bagId,
                 bagData.bagItemId,
                 doPod.doPodId,
                 doPod.branchIdTo,
                 doPod.userIdDriver,
                 addBag,
+                authMeta.userId,
+                permissonPayload.branchId,
               );
               // NOTE: background job for insert bag item history
               BagItemHistoryQueueService.addData(

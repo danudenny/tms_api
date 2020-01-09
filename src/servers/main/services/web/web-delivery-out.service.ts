@@ -1106,6 +1106,8 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['doPodDeliverId'] = 't1.do_pod_deliver_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['consigneeName'] = 't1.consignee_name';
+
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {

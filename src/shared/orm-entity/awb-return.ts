@@ -1,8 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, OneToOne, ManyToOne } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
 import { Awb } from './awb';
 import { Customer } from './customer';
+import { Branch } from './branch';
+import { AwbItemAttr } from './awb-item-attr';
 
 @Entity('awb_return', { schema: 'public' })
 export class AwbReturn extends TmsBaseEntity {
@@ -65,8 +67,17 @@ export class AwbReturn extends TmsBaseEntity {
   })
   partnerLogisticAwb: string;
 
-  @OneToOne(() => Awb)
-  @JoinColumn({ name: 'origin_awb_id' })
-  originAwb: Awb;
+  @Column('uuid', {
+    nullable: true,
+    name: 'partner_logistic_id',
+  })
+  partnerLogisticId: string;
 
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'origin_awb_id', referencedColumnName: 'awbId'})
+  originAwb: AwbItemAttr;
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 }
