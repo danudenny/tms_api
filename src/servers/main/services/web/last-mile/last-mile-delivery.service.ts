@@ -137,10 +137,10 @@ export class LastMileDeliveryService {
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.doPodDeliverDetails, 't3', j =>
+    q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.doPodDeliverDetails.awb, 't4', j =>
+    q.innerJoin(e => e.doPodDeliverDetails.awb, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     // TODO: fix query
