@@ -78,6 +78,9 @@ export class WebScanTransitResponseVm {
   @ApiModelProperty()
   description: string;
 
+  @ApiModelProperty()
+  partnerLogisticName: string;
+
 }
 
 export class WebScanTransitAwbResponseVm {
@@ -217,7 +220,7 @@ export class WebScanOutAwbListResponseVm extends BaseMetaResponseVm {
 export class WebScanOutTransitListResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty({ type: () => [WebScanTransitResponseVm] })
-  data: WebScanTransitAwbResponseVm[];
+  data: WebScanTransitResponseVm[];
 }
 
 export class WebScanOutTransitListAwbResponseVm extends BaseMetaResponseVm {
