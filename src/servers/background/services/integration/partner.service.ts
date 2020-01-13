@@ -199,13 +199,13 @@ export class PartnerService {
 
     let jsonData = 
     {
-      "userid": 1,
-      "memberid": "SCP168",
+      "userid": 14,
+      "memberid": "LOGSICEPAT04100A",
       "orderid": "SCP" + data.refAwbNumber,
       "addresses": [
         {
           "addresstype": "senderlocation",
-          "customertype": 2,
+          "customertype": 1,
           "name": data.shipperName,
           "phone": data.shipperPhone,
           "email": "",
@@ -246,8 +246,8 @@ export class PartnerService {
         }
       ],
       "itemproperties": {
-        "itemtypeid": 2,
-        "productid": "210",
+        "itemtypeid": 1,
+        "productid": "871238",
         "valuegoods": 0,
         "weight": data.totalWeight * 1000,
         "length": data.parcelLength,
