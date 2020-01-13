@@ -197,26 +197,27 @@ export class PartnerService {
       headers,
     };
 
-    const jsonData = {
-      userid: 1,
-      memberid: 'SCP168',
-      orderid: 'SCP' + data.refAwbNumber,
-      addresses: [
+    let jsonData = 
+    {
+      "userid": 14,
+      "memberid": "LOGSICEPAT04100A",
+      "orderid": "SCP" + data.refAwbNumber,
+      "addresses": [
         {
-          addresstype: 'senderlocation',
-          customertype: 2,
-          name: data.shipperName,
-          phone: data.shipperPhone,
-          email: '',
-          address: data.shipperAddress,
-          subdistrict: data.shipperDistrict,
-          city: data.shipperCity,
-          province: data.shipperProvince,
-          zipcode: data.shipperZip,
-          country: 'Indonesia',
-          geolang: 0,
-          geolat: 0,
-          description: '',
+          "addresstype": "senderlocation",
+          "customertype": 1,
+          "name": data.shipperName,
+          "phone": data.shipperPhone,
+          "email": "",
+          "address": data.shipperAddress,
+          "subdistrict": data.shipperDistrict,
+          "city": data.shipperCity,
+          "province": data.shipperProvince,
+          "zipcode": data.shipperZip,
+          "country": "Indonesia",
+          "geolang": 0,
+          "geolat": 0,
+          "description": ""
         },
         {
           addresstype: 'receiverlocation',
@@ -244,17 +245,17 @@ export class PartnerService {
           value: data.parcelValue,
         },
       ],
-      itemproperties: {
-        itemtypeid: 2,
-        productid: '210',
-        valuegoods: 0,
-        weight: data.totalWeight * 1000,
-        length: data.parcelLength,
-        width: data.parcelWidth,
-        height: data.parcelHeight,
-        codvalue: data.codValue,
-        pin: 0,
-        itemdesc: data.parcelContent,
+      "itemproperties": {
+        "itemtypeid": 1,
+        "productid": "871238",
+        "valuegoods": 0,
+        "weight": data.totalWeight * 1000,
+        "length": data.parcelLength,
+        "width": data.parcelWidth,
+        "height": data.parcelHeight,
+        "codvalue": data.codValue,
+        "pin": 0,
+        "itemdesc": data.parcelContent
       },
       paymentvalues: [
         {
