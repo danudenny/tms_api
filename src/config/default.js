@@ -48,11 +48,6 @@ module.exports = {
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {
     ttlToken: 1000,
-    //PRODUCTION
-    // username: 'rHzS2Pf0djuTlBffxvIOtXWqSL0a',
-    // password: 'bqYVa8cAZDA0FjYfVpMIrGJMYFga',
-    // baseUrl: 'https://api.posindonesia.co.id:8245/',
-    //STAGING
     username: 'T1F2V4Xgof0hTvYlS9QYvTpitBka',
     password: 'tGLlYLfqRSiK7IA2mYHeu_EMbbwa',
     baseUrl: 'https://sandbox.posindonesia.co.id:8245/',
