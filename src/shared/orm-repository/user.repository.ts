@@ -7,6 +7,7 @@ import { User } from '../orm-entity/user';
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
 
+  // NOTE: email or username must be unique
   findByEmailOrUsername(email: string, username) {
     // TODO: condition query get user
     if (email) {
@@ -14,6 +15,7 @@ export class UserRepository extends Repository<User> {
       return this.findOne({
         where: {
           email,
+          isDeleted: false,
         },
       });
     } else {
@@ -21,6 +23,7 @@ export class UserRepository extends Repository<User> {
       return this.findOne({
         where: {
           username,
+          isDeleted: false,
         },
       });
     }
@@ -31,6 +34,7 @@ export class UserRepository extends Repository<User> {
       relations: ['roles'],
       where: {
         userId: user_id,
+        isDeleted: false,
       },
     });
   }
