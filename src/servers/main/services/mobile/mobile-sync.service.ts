@@ -54,6 +54,7 @@ export class MobileSyncService {
 
       // TODO: validation check final status last
       const awbdDelivery = await DoPodDeliverDetail.findOne({
+        relations: ['doPodDeliver'],
         where: {
           doPodDeliverDetailId: delivery.doPodDeliverDetailId,
           isDeleted: false,
@@ -61,6 +62,10 @@ export class MobileSyncService {
       });
       const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
       if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
+        const awbStatus = await AwbStatus.findOne(
+          lastDoPodDeliverHistory.awbStatusId,
+        );
+
         // #region transaction data
         await getManager().transaction(async transactionEntityManager => {
           await transactionEntityManager.insert(
@@ -68,9 +73,6 @@ export class MobileSyncService {
             doPodDeliverHistories,
           );
 
-          const awbStatus = await AwbStatus.findOne(
-            lastDoPodDeliverHistory.awbStatusId,
-          );
           // Update data DoPodDeliverDetail
           await transactionEntityManager.update(
             DoPodDeliverDetail,
@@ -131,18 +133,19 @@ export class MobileSyncService {
         });
         // #endregion of transaction
 
-        // // Update status awb item attr
-        // await AwbService.updateAwbAttr(
-        //   delivery.awbItemId,
-        //   lastDoPodDeliverHistory.awbStatusId,
-        //   null,
-        // );
-
         // TODO: queue by Bull need refactoring
-        DoPodDetailPostMetaQueueService.createJobByMobileSyncAwb(
-          delivery.doPodDeliverDetailId,
-          delivery.employeeId,
+        DoPodDetailPostMetaQueueService.createJobByMobileSync(
+          awbdDelivery.awbItemId,
           delivery.awbStatusId,
+          awbdDelivery.doPodDeliver.userId,
+          awbdDelivery.doPodDeliver.branchId,
+          awbdDelivery.userIdCreated,
+          delivery.employeeId,
+          lastDoPodDeliverHistory.reasonId,
+          lastDoPodDeliverHistory.desc,
+          delivery.consigneeNameNote,
+          awbStatus.awbStatusName,
+          awbStatus.awbStatusTitle,
         );
       } else {
         console.log('##### Data Not Valid', delivery);
