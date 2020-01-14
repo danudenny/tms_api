@@ -17,15 +17,15 @@ export class PartnerService {
     // let totalProcess = 0;
     // let awbs = [];
     let retry = 0;
-    let validAccessToken = false
+    let validAccessToken = false;
     let accessToken = '';
 
     while (validAccessToken == false && retry <=2) {
       retry++;
       accessToken = await this.getAccessTokenPosIndonesia();
-      console.log(accessToken)
+      console.log(accessToken);
       if (accessToken != '') {
-        validAccessToken = true
+        validAccessToken = true;
       }
     }
 
@@ -59,8 +59,8 @@ export class PartnerService {
 
     const redisData = await RedisService.get(`posindonesia:access-token`);
     if (redisData) {
-      console.log('GET ACCESS TOKEN FROM REDIS')
-      return redisData
+      console.log('GET ACCESS TOKEN FROM REDIS');
+      return redisData;
     }
 
     const urlToken = this.postIndonesiaBaseUrl + ConfigService.get('posIndonesia.tokenEndpoint')
@@ -73,13 +73,13 @@ export class PartnerService {
     };
     const headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
-    }
+    };
 
     const config = {
       auth: auth,
       params: params,
       headers: headers
-    }
+    };
     try {
       const response = await axios.post(urlToken, null, config);
       console.log(response);
