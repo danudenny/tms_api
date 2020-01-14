@@ -51,6 +51,6 @@ module.exports = {
     password: 'bqYVa8cAZDA0FjYfVpMIrGJMYFga',
     baseUrl: 'https://api.posindonesia.co.id:8245/',
     tokenEndpoint: 'token',
-    postAwbEndpoint: 'webhookpos/1.0.1/AddPostingDoc'
+    postAwbEndpoint: 'webhook/1.0/AddPostingDoc'
   }
 };
