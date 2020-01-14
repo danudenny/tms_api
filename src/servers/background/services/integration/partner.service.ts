@@ -56,8 +56,8 @@ export class PartnerService {
     let accessToken = '';
     let expiresIn = 3500;
 
-    if (RedisService.get('pos-indonesia:access-token')) {
-      accessToken = RedisService.get('pos-indonesia:access-token').toString();
+    if (RedisService.get('posindonesia:access-token')) {
+      accessToken = RedisService.get('posindonesia:access-token').toString();
       console.log('GET ACCESS TOKEN FROM REDIS');
       return accessToken
     }
