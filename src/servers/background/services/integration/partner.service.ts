@@ -20,9 +20,10 @@ export class PartnerService {
     let validAccessToken = false
     let accessToken = '';
 
-    while (validAccessToken == false || retry <=2) {
+    while (validAccessToken == false && retry <=2) {
       retry++;
       accessToken = await this.getAccessTokenPosIndonesia();
+      console.log(accessToken)
       if (accessToken != '') {
         validAccessToken = true
       }
@@ -56,10 +57,10 @@ export class PartnerService {
     let accessToken = '';
     let expiresIn = 3500;
 
-    if (RedisService.get('posindonesia:access-token')) {
-      accessToken = RedisService.get('posindonesia:access-token').toString();
-      console.log('GET ACCESS TOKEN FROM REDIS');
-      return accessToken
+    const redisData = await RedisService.get(`posindonesia:access-token`);
+    if (redisData) {
+      console.log('GET ACCESS TOKEN FROM REDIS')
+      return redisData
     }
 
     const urlToken = this.postIndonesiaBaseUrl + ConfigService.get('posIndonesia.tokenEndpoint')
@@ -85,8 +86,11 @@ export class PartnerService {
       if (response.data.access_token) {
         accessToken = response.data.access_token;
         expiresIn = response.data.expires_in;
-        RedisService.set('posindonesia:access-token', accessToken);
-        RedisService.expireat('posindonesia:access-token', Number(expiresIn) - 10)
+        await RedisService.setex(
+          `posindonesia:access-token`,
+          accessToken,
+          Number(expiresIn) - 10,
+        );
       }
     } catch (error){
       if (error.response) {
