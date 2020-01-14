@@ -9,9 +9,7 @@ import { ConfigService } from '../../../../shared/services/config.service';
 @Injectable()
 export class PartnerService {
   static postIndonesiaBaseUrl = ConfigService.get('posIndonesia.baseUrl');
-  static async sendAwbPosIndonesia(
-    payload: any,
-  ): Promise<any> {
+  static async sendAwbPosIndonesia(payload: any): Promise<any> {
     let result = {};
 
     // let totalProcess = 0;
@@ -20,9 +18,10 @@ export class PartnerService {
     let validAccessToken = false;
     let accessToken = '';
 
-    while (validAccessToken == false || retry <= 2) {
+    while (validAccessToken == false && retry <= 2) {
       retry++;
       accessToken = await this.getAccessTokenPosIndonesia();
+      console.log(accessToken);
       if (accessToken != '') {
         validAccessToken = true;
       }
@@ -56,13 +55,15 @@ export class PartnerService {
     let accessToken = '';
     let expiresIn = 3500;
 
-    if (RedisService.get('posindonesia:access-token')) {
-      accessToken = RedisService.get('posindonesia:access-token').toString();
+    const redisData = await RedisService.get(`posindonesia:access-token`);
+    if (redisData) {
       console.log('GET ACCESS TOKEN FROM REDIS');
-      return accessToken
+      return redisData;
     }
 
-    const urlToken = this.postIndonesiaBaseUrl + ConfigService.get('posIndonesia.tokenEndpoint');
+    const urlToken =
+      this.postIndonesiaBaseUrl +
+      ConfigService.get('posIndonesia.tokenEndpoint');
     const params = {
       grant_type: 'client_credentials',
     };
@@ -85,23 +86,28 @@ export class PartnerService {
       if (response.data.access_token) {
         accessToken = response.data.access_token;
         expiresIn = response.data.expires_in;
-        RedisService.set('posindonesia:access-token', accessToken);
-        RedisService.expireat('posindonesia:access-token', Number(expiresIn) - 10);
+        await RedisService.setex(
+          `posindonesia:access-token`,
+          accessToken,
+          Number(expiresIn) - 10,
+        );
       }
     } catch (error) {
       if (error.response) {
-          console.log(error.response);
-          console.log(error.response.data);
-          console.log(error.response.status);
-          console.log(error.response.headers);
-        }
+        console.log(error.response);
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+      }
     }
 
     return accessToken;
   }
 
   private static async getAwb(partnerId: number = 0): Promise<any> {
-    const backDate = moment().add(-3, 'days').toDate();
+    const backDate = moment()
+      .add(-3, 'days')
+      .toDate();
 
     const query = `
       SELECT
@@ -142,7 +148,10 @@ export class PartnerService {
     });
   }
 
-  private static async sendPosIndonesia(data: any, token: string): Promise<any> {
+  private static async sendPosIndonesia(
+    data: any,
+    token: string,
+  ): Promise<any> {
     const arrAwb = [];
     const partnerId = 0;
 
@@ -156,7 +165,7 @@ export class PartnerService {
         arrAwb.push(awb.refAwbNumber);
       }
 
-      if (awb.awbSendPartnerId == null)  {
+      if (awb.awbSendPartnerId == null) {
         const awbSendPartner = AwbSendPartner.create();
         awbSendPartner.partnerId = partnerId;
         awbSendPartner.awbNumber = awb.refAwbNumber;
@@ -176,19 +185,23 @@ export class PartnerService {
           responseCode: postPartner['code'],
           responseData: postPartner['data'],
           sendData: postPartner['sendData'],
-          sendCount: (awb.sendCount + 1),
+          sendCount: awb.sendCount + 1,
           lastSendDateTime: timeNow,
           userIdUpdated: 0,
           updatedTime: timeNow,
         });
       }
-
     }
     return arrAwb;
   }
 
-  private static async postPartnerPosIndonesia(data: any, token: string): Promise<any> {
-    const urlPost = this.postIndonesiaBaseUrl + ConfigService.get('posIndonesia.postAwbEndpoint');
+  private static async postPartnerPosIndonesia(
+    data: any,
+    token: string,
+  ): Promise<any> {
+    const urlPost =
+      this.postIndonesiaBaseUrl +
+      ConfigService.get('posIndonesia.postAwbEndpoint');
 
     const headers = {
       'Content-Type': 'application/json',
@@ -199,27 +212,26 @@ export class PartnerService {
       headers,
     };
 
-    let jsonData = 
-    {
-      "userid": 14,
-      "memberid": "LOGSICEPAT04100A",
-      "orderid": "SCP" + data.refAwbNumber,
-      "addresses": [
+    const jsonData = {
+      userid: 14,
+      memberid: 'LOGSICEPAT04100A',
+      orderid: 'SCP' + data.refAwbNumber,
+      addresses: [
         {
-          "addresstype": "senderlocation",
-          "customertype": 1,
-          "name": data.shipperName,
-          "phone": data.shipperPhone,
-          "email": "",
-          "address": data.shipperAddress,
-          "subdistrict": data.shipperDistrict,
-          "city": data.shipperCity,
-          "province": data.shipperProvince,
-          "zipcode": data.shipperZip,
-          "country": "Indonesia",
-          "geolang": 0,
-          "geolat": 0,
-          "description": ""
+          addresstype: 'senderlocation',
+          customertype: 1,
+          name: data.shipperName,
+          phone: data.shipperPhone,
+          email: '',
+          address: data.shipperAddress,
+          subdistrict: data.shipperDistrict,
+          city: data.shipperCity,
+          province: data.shipperProvince,
+          zipcode: data.shipperZip,
+          country: 'Indonesia',
+          geolang: 0,
+          geolat: 0,
+          description: '',
         },
         {
           addresstype: 'receiverlocation',
@@ -247,17 +259,17 @@ export class PartnerService {
           value: data.parcelValue,
         },
       ],
-      "itemproperties": {
-        "itemtypeid": 1,
-        "productid": "871238",
-        "valuegoods": 0,
-        "weight": data.totalWeight * 1000,
-        "length": data.parcelLength,
-        "width": data.parcelWidth,
-        "height": data.parcelHeight,
-        "codvalue": data.codValue,
-        "pin": 0,
-        "itemdesc": data.parcelContent
+      itemproperties: {
+        itemtypeid: 1,
+        productid: '871238',
+        valuegoods: 0,
+        weight: data.totalWeight * 1000,
+        length: data.parcelLength,
+        width: data.parcelWidth,
+        height: data.parcelHeight,
+        codvalue: data.codValue,
+        pin: 0,
+        itemdesc: data.parcelContent,
       },
       paymentvalues: [
         {
@@ -302,19 +314,18 @@ export class PartnerService {
       console.log(response.headers);
     } catch (error) {
       if (error.response) {
-          result = {
-            code: error.response.status,
-            data: error.response.data,
-            sendData: '',
-          };
-          console.log(error.response);
-          console.log(error.response.data);
-          console.log(error.response.status);
-          console.log(error.response.headers);
-        }
+        result = {
+          code: error.response.status,
+          data: error.response.data,
+          sendData: '',
+        };
+        console.log(error.response);
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+      }
     }
 
     return result;
   }
-
 }
