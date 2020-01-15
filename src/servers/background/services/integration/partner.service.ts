@@ -12,6 +12,15 @@ export class PartnerService {
   static async sendAwbPosIndonesia(payload: any): Promise<any> {
     let result = {};
 
+    const redisStatus = await RedisService.get(`posindonesia:status`);
+    console.log('Status ' + redisStatus);
+    if (redisStatus == '1') {
+      return result = {
+        code: '422',
+        message: 'ABORTED CAUSE PREVIOUS PROCESS IS RUNNING',
+      };
+    }
+
     // let totalProcess = 0;
     // let awbs = [];
     let retry = 0;
@@ -106,7 +115,7 @@ export class PartnerService {
 
   private static async getAwb(partnerId: number = 0): Promise<any> {
     const backDate = moment()
-      .add(-1, 'days')
+      .add(0, 'days')
       .toDate();
 
     const query = `
@@ -140,7 +149,7 @@ export class PartnerService {
       LEFT JOIN awb_send_partner a ON prd.ref_awb_number=a.awb_number and a.is_deleted=false
       WHERE prd.created_time >= :backDate and (a.awb_number IS NULL OR a.is_send=false) and prd.is_deleted=false and prd.ref_awb_number is not null
       --ORDER BY prd.pickup_request_detail_id
-      LIMIT 1000
+      LIMIT 2000
     `;
 
     return await RawQueryService.queryWithParams(query, {
@@ -154,6 +163,8 @@ export class PartnerService {
   ): Promise<any> {
     const arrAwb = [];
     const partnerId = 0;
+
+    await RedisService.setex(`posindonesia:status`, '1', 180);
 
     for (const awb of data) {
       const postPartner = await this.postPartnerPosIndonesia(awb, token);
@@ -192,6 +203,9 @@ export class PartnerService {
         });
       }
     }
+
+    await RedisService.setex(`posindonesia:status`, '0', 1000);
+
     return arrAwb;
   }
 
