@@ -17,6 +17,7 @@ import { MobileComplaintPayloadVm } from '../../models/mobile-complaint-payload.
 import { MobileComplaintListResponseAllVm } from '../../models/mobile-complaint-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import moment = require('moment');
+import { RedisService } from '../../../../shared/services/redis.service';
 
 @ApiUseTags('Dashboard')
 @Controller('mobile')
@@ -78,6 +79,24 @@ export class MobileDashboardController {
   @Get('ping')
   @HttpCode(HttpStatus.OK)
   public async ping() {
-    return { message: 'pong', timeNow: moment().toDate(), timeString: moment().format('YYYY-MM-DD HH:mm:ss') };
+    return {
+      message: 'pong',
+      timeNow: moment().toDate(),
+      timeString: moment().format('YYYY-MM-DD HH:mm:ss'),
+    };
+  }
+
+  @Get('version/:versionApp')
+  @HttpCode(HttpStatus.OK)
+  public async mobileVersion(@Param('versionApp') version: string) {
+    const versionRedis = await RedisService.get(`pod:mobile:versionApp`);
+    const versionApp = versionRedis ? versionRedis : process.env.ANDROID_APP_VERSION;
+    const valid = version == versionApp ? true : false;
+    return {
+      currentVersion: versionApp,
+      valid,
+      timeNow: moment().toDate(),
+      timeString: moment().format('YYYY-MM-DD HH:mm:ss'),
+    };
   }
 }
