@@ -106,7 +106,7 @@ export class PartnerService {
 
   private static async getAwb(partnerId: number = 0): Promise<any> {
     const backDate = moment()
-      .add(-3, 'days')
+      .add(-1, 'days')
       .toDate();
 
     const query = `
@@ -139,7 +139,7 @@ export class PartnerService {
       INNER JOIN pickup_request pr ON prd.pickup_request_id=pr.pickup_request_id and pr.is_deleted=false
       LEFT JOIN awb_send_partner a ON prd.ref_awb_number=a.awb_number and a.is_deleted=false
       WHERE prd.created_time >= :backDate and (a.awb_number IS NULL OR a.is_send=false) and prd.is_deleted=false
-      ORDER BY prd.pickup_request_detail_id
+      --ORDER BY prd.pickup_request_detail_id
       LIMIT 1000
     `;
 
