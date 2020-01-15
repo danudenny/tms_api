@@ -26,6 +26,10 @@ import moment = require('moment');
 import { AutoUpdateAwbStatusService } from '../../v1/auto-update-awb-status.service';
 import { ProofDeliveryResponseVm, ProofDeliveryPayloadVm } from '../../../models/last-mile/proof-delivery.vm';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { MetaService } from '../../../../../shared/services/meta.service';
+import { DoPod } from '../../../../../shared/orm-entity/do-pod';
+import { POD_TYPE } from '../../../../../shared/constants/pod-type.constant';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -536,6 +540,97 @@ export class LastMileDeliveryOutService {
     result.totalSuccess = totalSuccess;
     result.totalError = totalError;
     result.data = dataItem;
+
+    return result;
+  }
+
+  static async awbThirdPartyList(payload: BaseMetaPayloadVm) {
+    // mapping field
+    payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
+    payload.fieldResolverMap['nickname'] = 't2.nickname';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'doPodDateTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDateTime',
+      },
+      {
+        field: 'doPodCode',
+      },
+      {
+        field: 'nickname',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPod, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+// select
+//        dp.do_pod_code,
+//        dp.do_pod_date_time,
+//        dp.do_pod_type,
+//        pl.partner_logistic_name,
+//        e.fullname,
+//        dpd.awb_number,
+//        aia.awb_status_id_last,
+//        ast.awb_status_name,
+//        aia.awb_third_party
+// from do_pod dp
+//         inner join partner_logistic pl ON dp.partner_logistic_id = pl.partner_logistic_id AND pl.is_deleted = false
+//         inner join users u ON dp.user_id_driver = u.user_id AND u.is_deleted = false
+//         inner join employee e ON u.employee_id = e.employee_id AND e.is_deleted = false
+//         inner join do_pod_detail dpd ON dp.do_pod_id = dpd.do_pod_id AND dpd.is_deleted = false
+//         left join awb_item_attr aia ON dpd.awb_item_id = aia.awb_item_id AND aia.is_deleted = false
+//         left join awb_status ast ON aia.awb_status_id_last = ast.awb_status_id AND ast.is_deleted = false
+// where dp.do_pod_method = 3000
+// --   AND aia.awb_status_id_last = 3005
+// order by dp.do_pod_date_time desc;
+
+    q.selectRaw(
+      ['t1.do_pod_id', 'doPodId'],
+      ['t1.do_pod_code', 'doPodCode'],
+      ['t1.do_pod_date_time', 'doPodDateTime'],
+      ['t2.employee_id', 'employeeIdDriver'],
+      ['t2.fullname', 'nickname'],
+      ['t3.partner_logistic_id', 'partnerLogisticId'],
+      ['t3.partner_logistic_name', 'partnerLogisticName'],
+      ['t4.awb_number', 'awbNumber'],
+      ['t5.awb_number', 'awb_third_party'],
+    );
+    // TODO: relation userDriver to Employee Driver
+
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.partnerLogistic, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.doPodDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.doPodDetails.awbItemAttr, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
+    q.andWhere(e => e.doPodMethod, w => w.equals(3000)); // 3pl
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = null; // new WebScanOutAwbListResponseVm();
+
+    // result.data = data;
+    // result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
