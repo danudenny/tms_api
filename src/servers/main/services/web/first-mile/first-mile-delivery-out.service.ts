@@ -529,6 +529,12 @@ export class FirstMileDeliveryOutService {
     let totalError = 0;
 
     // find data doPod
+
+    const holdRedisPod = await RedisService.locking(
+      `hold:dopod-scanout:${payload.doPodId}`,
+      'locking',
+    );
+
     const doPod = await DoPod.findOne({
       where: {
         doPodId: payload.doPodId,
@@ -664,6 +670,8 @@ export class FirstMileDeliveryOutService {
           lastDateScanOut: timeNow,
         });
       }
+      // remove key holdRedis
+      RedisService.del(`hold:dopod-scanout:${payload.doPodId}`);
     }
 
     // Populate return value
@@ -764,7 +772,7 @@ export class FirstMileDeliveryOutService {
       });
     } // end of loop
 
-        // Populate return value
+    // Populate return value
     result.totalData = payload.bagNumber.length;
     result.totalSuccess = totalSuccess;
     result.totalError = totalError;
