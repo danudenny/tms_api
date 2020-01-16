@@ -14,6 +14,7 @@ import {
 import { TransferAwbDeliverVm } from '../../models/web-scan-out.vm';
 import { WebScanOutAwbResponseVm, WebAwbThirdPartyListResponseVm } from '../../models/web-scan-out-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { AwbThirdPartyVm, AwbThirdPartyUpdateResponseVm } from '../../models/last-mile/awb-third-party.vm';
 
 @ApiUseTags('Last Mile Delivery')
 @Controller('pod/lastMile')
@@ -48,5 +49,12 @@ export class WebLastMileController {
   @ApiOkResponse({ type: WebAwbThirdPartyListResponseVm })
   public async awbThirdPartyList(@Body() payload: BaseMetaPayloadVm) {
     return LastMileDeliveryOutService.awbThirdPartyList(payload);
+  }
+
+  @Post('awbThirdParty/update')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: AwbThirdPartyUpdateResponseVm })
+  public async awbThirdParty(@Body() payload: AwbThirdPartyVm) {
+    return LastMileDeliveryOutService.awbThirdPartyUpdate(payload);
   }
 }

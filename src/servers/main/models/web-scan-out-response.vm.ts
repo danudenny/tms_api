@@ -374,8 +374,10 @@ export class WebAwbThirdPartyResponseVm {
 
   @ApiModelProperty()
   partnerLogisticName: string;
+
   @ApiModelProperty()
   awbNumber: string;
+
   @ApiModelProperty()
   awbThirdParty: string;
 

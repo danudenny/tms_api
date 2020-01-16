@@ -30,6 +30,7 @@ import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payloa
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { DoPod } from '../../../../../shared/orm-entity/do-pod';
 import { POD_TYPE } from '../../../../../shared/constants/pod-type.constant';
+import { AwbThirdPartyVm, AwbThirdPartyUpdateResponseVm } from '../../../models/last-mile/awb-third-party.vm';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -544,7 +545,9 @@ export class LastMileDeliveryOutService {
     return result;
   }
 
-  static async awbThirdPartyList(payload: BaseMetaPayloadVm): Promise<WebAwbThirdPartyListResponseVm> {
+  static async awbThirdPartyList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbThirdPartyListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
@@ -610,6 +613,34 @@ export class LastMileDeliveryOutService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
+  }
+
+  static async awbThirdPartyUpdate(
+    payload: AwbThirdPartyVm,
+  ): Promise<AwbThirdPartyUpdateResponseVm> {
+    // const authMeta = AuthService.getAuthData();
+    const response = {
+      status: 'ok',
+      message: 'Success',
+    };
+
+    const awb = await AwbItemAttr.findOne({
+      where: {
+        awbItemId: payload.awbItemId,
+        isDeleted: false,
+      },
+    });
+
+    if (awb) {
+      await AwbItemAttr.update(awb.awbItemAttrId, {
+        awbThirdParty: payload.awbThirdParty,
+        updatedTime: moment().toDate(),
+      });
+    } else {
+      response.status = 'error';
+      response.message = `Resi ${payload.awbNumber} Tidak di Temukan`;
+    }
+    return response;
   }
 
   // private
