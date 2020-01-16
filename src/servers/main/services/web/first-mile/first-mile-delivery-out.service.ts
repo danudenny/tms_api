@@ -529,6 +529,12 @@ export class FirstMileDeliveryOutService {
     let totalError = 0;
 
     // find data doPod
+
+    const holdRedisPod = await RedisService.locking(
+      `hold:dopod-scanout:${payload.doPodId}`,
+      'locking',
+    );
+
     const doPod = await DoPod.findOne({
       where: {
         doPodId: payload.doPodId,
