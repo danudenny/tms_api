@@ -789,7 +789,7 @@ export class WebDeliveryOutService {
       ['t1.do_pod_date_time', 'doPodDateTime'],
       ['t1.description', 'description'],
       ['t1.total_scan_in_bag', 'totalScanIn'],
-      ['t1.total_scan_out_bag', 'totalScanOut'],
+      ['COUNT(t5.bag_item_id)', 'totalScanOut'],
       ['t1.last_date_scan_in', 'lastDateScanIn'],
       ['t1.last_date_scan_out', 'lastDateScanOut'],
       ['t2.employee_id', 'employeeIdDriver'],
@@ -814,6 +814,10 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    q.leftJoin(e => e.doPodDetailBag, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     if (isHub) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB));
       q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
@@ -824,6 +828,7 @@ export class WebDeliveryOutService {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
       q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     }
+    q.groupByRaw('t1.do_pod_id, t2.employee_id, t3.branch_name, t4.url');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -888,7 +893,7 @@ export class WebDeliveryOutService {
       ['COUNT (t4.do_pod_id)', 'totalAwb'],
       [`COALESCE(t5.partner_logistic_name, 'Internal')`, 'partnerLogisticName'],
     );
-  
+
     q.innerJoin(e => e.doPodDetails, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
