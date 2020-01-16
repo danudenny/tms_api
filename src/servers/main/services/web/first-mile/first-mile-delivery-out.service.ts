@@ -713,7 +713,7 @@ export class FirstMileDeliveryOutService {
               .createQueryBuilder()
               .update(DoPodDetail)
               .set({
-                isDeleted: false,
+                isDeleted: true,
                 updatedTime: timeNow,
                 userIdUpdated: authMeta.userId,
               })
