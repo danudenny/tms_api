@@ -655,24 +655,25 @@ export class FirstMileDeliveryOutService {
       });
     } // end of loop
 
-    if (doPod) {
-      // counter total scan in
-      if (doPod.totalScanOutBag == 0) {
-        await DoPod.update(doPod.doPodId, {
-          totalScanOutBag: totalSuccess,
-          firstDateScanOut: timeNow,
-          lastDateScanOut: timeNow,
-        });
-      } else {
-        const totalScanOutBag = doPod.totalScanOutBag + totalSuccess;
-        await DoPod.update(doPod.doPodId, {
-          totalScanOutBag,
-          lastDateScanOut: timeNow,
-        });
-      }
-      // remove key holdRedis
-      RedisService.del(`hold:dopod-scanout:${payload.doPodId}`);
-    }
+    // TODO: need improvement
+    // if (doPod) {
+    //   // counter total scan in
+    //   if (doPod.totalScanOutBag == 0) {
+    //     await DoPod.update(doPod.doPodId, {
+    //       totalScanOutBag: totalSuccess,
+    //       firstDateScanOut: timeNow,
+    //       lastDateScanOut: timeNow,
+    //     });
+    //   } else {
+    //     const totalScanOutBag = doPod.totalScanOutBag + totalSuccess;
+    //     await DoPod.update(doPod.doPodId, {
+    //       totalScanOutBag,
+    //       lastDateScanOut: timeNow,
+    //     });
+    //   }
+    //   // remove key holdRedis
+    //   RedisService.del(`hold:dopod-scanout:${payload.doPodId}`);
+    // }
 
     // Populate return value
     result.totalData = payload.bagNumber.length;
