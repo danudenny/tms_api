@@ -670,6 +670,8 @@ export class FirstMileDeliveryOutService {
           lastDateScanOut: timeNow,
         });
       }
+      // remove key holdRedis
+      RedisService.del(`hold:dopod-scanout:${payload.doPodId}`);
     }
 
     // Populate return value
@@ -770,7 +772,7 @@ export class FirstMileDeliveryOutService {
       });
     } // end of loop
 
-        // Populate return value
+    // Populate return value
     result.totalData = payload.bagNumber.length;
     result.totalSuccess = totalSuccess;
     result.totalError = totalError;
