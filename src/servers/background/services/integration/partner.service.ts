@@ -240,7 +240,7 @@ export class PartnerService {
           city: data.shipperCity,
           province: data.shipperProvince,
           zipcode: data.shipperZip,
-          country: 'Indonesia',
+          country: 'indonesia',
           geolang: 0,
           geolat: 0,
           description: '',
@@ -256,7 +256,7 @@ export class PartnerService {
           city: data.recipientCity,
           province: data.recipientProvince,
           zipcode: data.recipientZip,
-          country: 'Indonesia',
+          country: 'indonesia',
           geolang: 0,
           geolat: 0,
           description: '',
@@ -264,11 +264,11 @@ export class PartnerService {
       ],
       itemdetils: [
         {
-          hscode: '',
-          origincountry: '',
-          description: data.parcelCategory,
-          quantity: data.parcelQty,
-          value: data.parcelValue,
+          hscode: '0',
+          origincountry: '0',
+          description: '0',
+          quantity: '0',
+          value: '0',
         },
       ],
       itemproperties: {
@@ -288,11 +288,19 @@ export class PartnerService {
           name: 'fee',
           value: 1500,
         },
+        {
+          name: 'insurance',
+          value: 0,
+        },
       ],
       taxes: [
         {
           name: 'fee',
           value: 15,
+        },
+        {
+          name: 'insurance',
+          value: 0,
         },
       ],
       services: [
@@ -306,6 +314,18 @@ export class PartnerService {
         },
         {
           name: 'delivery',
+          value: 0,
+        },
+        {
+          name: 'insurance',
+          value: 0,
+        },
+        {
+          name: 'genreceipt',
+          value: 0,
+        },
+        {
+          name: 'printreceipt',
           value: 0,
         },
       ],
