@@ -528,6 +528,14 @@ export class FirstMileDeliveryOutService {
     let totalSuccess = 0;
     let totalError = 0;
 
+    // find data doPod
+    const doPod = await DoPod.findOne({
+      where: {
+        doPodId: payload.doPodId,
+        isDeleted: false,
+      },
+    });
+
     for (const bagNumber of payload.bagNumber) {
       const response = {
         status: 'ok',
@@ -549,12 +557,6 @@ export class FirstMileDeliveryOutService {
         );
 
         if (notScan && holdRedis) {
-          const doPod = await DoPod.findOne({
-            where: {
-              doPodId: payload.doPodId,
-              isDeleted: false,
-            },
-          });
           if (doPod) {
             // create bag trouble
             const statusNotTrouble = [
@@ -577,16 +579,6 @@ export class FirstMileDeliveryOutService {
 
             // TODO: Auto Status by bag status
             // if status branch IN and diffrent branchIdLast
-
-            // counter total scan in
-            doPod.totalScanOutBag += 1;
-            if (doPod.totalScanOutBag == 1) {
-              doPod.firstDateScanOut = timeNow;
-              doPod.lastDateScanOut = timeNow;
-            } else {
-              doPod.lastDateScanOut = timeNow;
-            }
-            await DoPod.save(doPod);
 
             // TODO: need refactoring ??
             // NOTE: create DoPodDetailBag
@@ -656,6 +648,23 @@ export class FirstMileDeliveryOutService {
         ...response,
       });
     } // end of loop
+
+    if (doPod) {
+      // counter total scan in
+      if (doPod.totalScanOutBag == 0) {
+        await DoPod.update(doPod.doPodId, {
+          totalScanOutBag: totalSuccess,
+          firstDateScanOut: timeNow,
+          lastDateScanOut: timeNow,
+        });
+      } else {
+        const totalScanOutBag = doPod.totalScanOutBag + totalSuccess;
+        await DoPod.update(doPod.doPodId, {
+          totalScanOutBag,
+          lastDateScanOut: timeNow,
+        });
+      }
+    }
 
     // Populate return value
     result.totalData = payload.bagNumber.length;
