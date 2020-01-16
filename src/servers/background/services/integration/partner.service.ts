@@ -114,7 +114,7 @@ export class PartnerService {
   }
 
   private static async getAwb(partnerId: number = 0): Promise<any> {
-    const backDate = moment().add(0, 'days').format('YYYY-MM-DD 00:00:00');
+    const backDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
 
     const query = `
       SELECT
