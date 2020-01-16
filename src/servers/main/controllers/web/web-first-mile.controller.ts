@@ -8,7 +8,7 @@ import {
     WebScanOutAwbResponseVm, WebScanOutBagResponseVm, WebScanOutCreateResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import {
-    WebScanOutAwbVm, WebScanOutBagVm, WebScanOutCreateVm, WebScanOutEditHubVm, WebScanOutEditVm,
+    WebScanOutAwbVm, WebScanOutBagVm, WebScanOutCreateVm, WebScanOutEditHubVm, WebScanOutEditVm, TransferBagNumberVm,
 } from '../../models/web-scan-out.vm';
 import {
     FirstMileDeliveryOutService,
@@ -61,5 +61,12 @@ export class WebFirstMileController {
   @ApiOkResponse({ type: WebScanOutBagResponseVm })
   public async findAllBag(@Body() payload: WebScanOutBagVm) {
     return FirstMileDeliveryOutService.scanOutBag(payload);
+  }
+
+  @Post('transfer/bagNumber')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanOutBagResponseVm })
+  public async transferAwbDelivery(@Body() payload: TransferBagNumberVm) {
+    return FirstMileDeliveryOutService.transferBagNumber(payload);
   }
 }

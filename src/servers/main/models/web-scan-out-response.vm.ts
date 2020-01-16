@@ -361,3 +361,34 @@ export class WebScanOutResponseForPrintVm {
   @ApiModelProperty()
   bagItemId: number;
 }
+
+export class WebAwbThirdPartyResponseVm {
+  @ApiModelProperty()
+  doPodCode: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  doPodDateTime: string;
+
+  @ApiModelProperty()
+  nickname: string;
+
+  @ApiModelProperty()
+  partnerLogisticName: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  awbThirdParty: string;
+
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  employeeIdDriver: number;
+}
+
+export class WebAwbThirdPartyListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebAwbThirdPartyResponseVm] })
+  data: WebAwbThirdPartyResponseVm[];
+}

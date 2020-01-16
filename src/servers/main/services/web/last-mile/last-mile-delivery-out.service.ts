@@ -16,7 +16,7 @@ import {
     DoPodDetailPostMetaQueueService,
 } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
-    WebScanOutAwbResponseVm, WebScanOutCreateResponseVm, WebScanOutResponseForEditVm,
+    WebScanOutAwbResponseVm, WebScanOutCreateResponseVm, WebScanOutResponseForEditVm, WebAwbThirdPartyListResponseVm,
 } from '../../../models/web-scan-out-response.vm';
 import {
     WebScanOutAwbVm, WebScanOutCreateDeliveryVm, WebScanOutDeliverEditVm, WebScanOutLoadForEditVm, TransferAwbDeliverVm,
@@ -26,6 +26,11 @@ import moment = require('moment');
 import { AutoUpdateAwbStatusService } from '../../v1/auto-update-awb-status.service';
 import { ProofDeliveryResponseVm, ProofDeliveryPayloadVm } from '../../../models/last-mile/proof-delivery.vm';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { MetaService } from '../../../../../shared/services/meta.service';
+import { DoPod } from '../../../../../shared/orm-entity/do-pod';
+import { POD_TYPE } from '../../../../../shared/constants/pod-type.constant';
+import { AwbThirdPartyVm, AwbThirdPartyUpdateResponseVm } from '../../../models/last-mile/awb-third-party.vm';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -538,6 +543,105 @@ export class LastMileDeliveryOutService {
     result.data = dataItem;
 
     return result;
+  }
+
+  static async awbThirdPartyList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbThirdPartyListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
+    payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
+    payload.fieldResolverMap['nickname'] = 't2.nickname';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'doPodDateTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDateTime',
+      },
+      {
+        field: 'doPodCode',
+      },
+      {
+        field: 'nickname',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPod, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_code', 'doPodCode'],
+      ['t1.do_pod_date_time', 'doPodDateTime'],
+      ['t2.employee_id', 'employeeIdDriver'],
+      ['t2.fullname', 'nickname'],
+      ['t3.partner_logistic_name', 'partnerLogisticName'],
+      ['t4.awb_number', 'awbNumber'],
+      ['t4.awb_item_id', 'awbItemId'],
+      ['t5.awb_third_party', 'awbThirdParty'],
+    );
+    // TODO: relation userDriver to Employee Driver
+
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.partnerLogistic, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.doPodDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.doPodDetails.awbItemAttr, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    // q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
+    q.andWhere(e => e.doPodMethod, w => w.equals(3000)); // 3pl
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebAwbThirdPartyListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async awbThirdPartyUpdate(
+    payload: AwbThirdPartyVm,
+  ): Promise<AwbThirdPartyUpdateResponseVm> {
+    // const authMeta = AuthService.getAuthData();
+    const response = {
+      status: 'ok',
+      message: 'Success',
+    };
+
+    const awb = await AwbItemAttr.findOne({
+      where: {
+        awbItemId: payload.awbItemId,
+        isDeleted: false,
+      },
+    });
+
+    if (awb) {
+      await AwbItemAttr.update(awb.awbItemAttrId, {
+        awbThirdParty: payload.awbThirdParty,
+        updatedTime: moment().toDate(),
+      });
+    } else {
+      response.status = 'error';
+      response.message = `Resi ${payload.awbNumber} Tidak di Temukan`;
+    }
+    return response;
   }
 
   // private
