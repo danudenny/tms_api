@@ -1,5 +1,5 @@
 // #region import
-import { createQueryBuilder, IsNull } from 'typeorm';
+import { createQueryBuilder, IsNull, getConnection } from 'typeorm';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { BAG_STATUS } from '../../../../../shared/constants/bag-status.constant';
 import { AuditHistory } from '../../../../../shared/orm-entity/audit-history';
@@ -602,7 +602,7 @@ export class FirstMileDeliveryOutService {
             // #region after scanout
             // Update bag_item set bag_item_status_id = 1000
 
-            BagItem.update(bagData.bagItemId, {
+            await BagItem.update(bagData.bagItemId, {
               bagItemStatusIdLast: bagStatus,
               branchIdLast: doPod.branchId,
               branchIdNext: doPod.branchIdTo,
@@ -696,7 +696,7 @@ export class FirstMileDeliveryOutService {
           const doPodBag = await DoPodDetailBag.findOne({
             where: {
               bagId: bagData.bagId,
-              bagItem: bagData.bagItemId,
+              bagItemId: bagData.bagItemId,
               transactionStatusIdLast: 800,
               isDeleted: false,
             },
@@ -708,17 +708,26 @@ export class FirstMileDeliveryOutService {
               userIdUpdated: authMeta.userId,
             });
 
-            // Update do pod detail
-            await DoPodDetail.update(
-              [bagData.bagId, bagData.bagItemId],
-              {
+            // Update do pod details
+            await getConnection()
+              .createQueryBuilder()
+              .update(DoPodDetail)
+              .set({
                 isDeleted: false,
                 updatedTime: timeNow,
                 userIdUpdated: authMeta.userId,
-              },
-            );
+              })
+              .where(
+                'bag_id = :bagId AND bag_item_id = :bagItemId',
+                {
+                  bagId: bagData.bagId,
+                  bagItemId: bagData.bagItemId,
+                },
+              )
+              .execute();
+
             // update status bag on bag item
-            BagItem.update(bagData.bagItemId, {
+            await BagItem.update(bagData.bagItemId, {
               bagItemStatusIdLast: BAG_STATUS.IN_BRANCH,
               branchIdLast: permissonPayload.branchId,
               branchIdNext: null,
