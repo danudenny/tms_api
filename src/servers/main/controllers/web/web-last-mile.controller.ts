@@ -12,7 +12,7 @@ import {
     LastMileDeliveryOutService,
 } from '../../services/web/last-mile/last-mile-delivery-out.service';
 import { TransferAwbDeliverVm } from '../../models/web-scan-out.vm';
-import { WebScanOutAwbResponseVm } from '../../models/web-scan-out-response.vm';
+import { WebScanOutAwbResponseVm, WebAwbThirdPartyListResponseVm } from '../../models/web-scan-out-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('Last Mile Delivery')
@@ -45,8 +45,8 @@ export class WebLastMileController {
 
   @Post('awbThirdPartyList')
   @HttpCode(HttpStatus.OK)
-  // @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
+  @ApiOkResponse({ type: WebAwbThirdPartyListResponseVm })
   public async awbThirdPartyList(@Body() payload: BaseMetaPayloadVm) {
-    return LastMileDeliveryOutService.awbThirdPartyList(payload); // this.webDeliveryOutService.findAllScanOutList(payload);
+    return LastMileDeliveryOutService.awbThirdPartyList(payload);
   }
 }

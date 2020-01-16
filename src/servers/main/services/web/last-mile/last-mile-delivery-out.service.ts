@@ -16,7 +16,7 @@ import {
     DoPodDetailPostMetaQueueService,
 } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
-    WebScanOutAwbResponseVm, WebScanOutCreateResponseVm, WebScanOutResponseForEditVm,
+    WebScanOutAwbResponseVm, WebScanOutCreateResponseVm, WebScanOutResponseForEditVm, WebAwbThirdPartyListResponseVm,
 } from '../../../models/web-scan-out-response.vm';
 import {
     WebScanOutAwbVm, WebScanOutCreateDeliveryVm, WebScanOutDeliverEditVm, WebScanOutLoadForEditVm, TransferAwbDeliverVm,
@@ -544,7 +544,7 @@ export class LastMileDeliveryOutService {
     return result;
   }
 
-  static async awbThirdPartyList(payload: BaseMetaPayloadVm) {
+  static async awbThirdPartyList(payload: BaseMetaPayloadVm): Promise<WebAwbThirdPartyListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
@@ -571,37 +571,15 @@ export class LastMileDeliveryOutService {
 
     payload.applyToOrionRepositoryQuery(q, true);
 
-// select
-//        dp.do_pod_code,
-//        dp.do_pod_date_time,
-//        dp.do_pod_type,
-//        pl.partner_logistic_name,
-//        e.fullname,
-//        dpd.awb_number,
-//        aia.awb_status_id_last,
-//        ast.awb_status_name,
-//        aia.awb_third_party
-// from do_pod dp
-//         inner join partner_logistic pl ON dp.partner_logistic_id = pl.partner_logistic_id AND pl.is_deleted = false
-//         inner join users u ON dp.user_id_driver = u.user_id AND u.is_deleted = false
-//         inner join employee e ON u.employee_id = e.employee_id AND e.is_deleted = false
-//         inner join do_pod_detail dpd ON dp.do_pod_id = dpd.do_pod_id AND dpd.is_deleted = false
-//         left join awb_item_attr aia ON dpd.awb_item_id = aia.awb_item_id AND aia.is_deleted = false
-//         left join awb_status ast ON aia.awb_status_id_last = ast.awb_status_id AND ast.is_deleted = false
-// where dp.do_pod_method = 3000
-// --   AND aia.awb_status_id_last = 3005
-// order by dp.do_pod_date_time desc;
-
     q.selectRaw(
-      ['t1.do_pod_id', 'doPodId'],
       ['t1.do_pod_code', 'doPodCode'],
       ['t1.do_pod_date_time', 'doPodDateTime'],
       ['t2.employee_id', 'employeeIdDriver'],
       ['t2.fullname', 'nickname'],
-      ['t3.partner_logistic_id', 'partnerLogisticId'],
       ['t3.partner_logistic_name', 'partnerLogisticName'],
       ['t4.awb_number', 'awbNumber'],
-      ['t5.awb_number', 'awb_third_party'],
+      ['t4.awb_item_id', 'awbItemId'],
+      ['t5.awb_third_party', 'awbThirdParty'],
     );
     // TODO: relation userDriver to Employee Driver
 
@@ -621,16 +599,15 @@ export class LastMileDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
+    // q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
     q.andWhere(e => e.doPodMethod, w => w.equals(3000)); // 3pl
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
-    const result = null; // new WebScanOutAwbListResponseVm();
-
-    // result.data = data;
-    // result.paging = MetaService.set(payload.page, payload.limit, total);
+    const result = new WebAwbThirdPartyListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
