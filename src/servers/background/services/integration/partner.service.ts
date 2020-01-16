@@ -4,26 +4,35 @@ import axios from 'axios';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { AwbSendPartner } from '../../../../shared/orm-entity/awb-send-partner';
+import { ConfigService } from '../../../../shared/services/config.service';
 
 @Injectable()
 export class PartnerService {
-
-  static async sendAwbPosIndonesia(
-    payload: any,
-  ): Promise<any> {
+  static postIndonesiaBaseUrl = ConfigService.get('posIndonesia.baseUrl');
+  static async sendAwbPosIndonesia(payload: any): Promise<any> {
     let result = {};
+
+    const redisStatus = await RedisService.get(`posindonesia:status`);
+    console.log('Status ' + redisStatus);
+    if (redisStatus == '1') {
+      return result = {
+        code: '422',
+        message: 'ABORTED CAUSE PREVIOUS PROCESS IS RUNNING',
+      };
+    }
 
     // let totalProcess = 0;
     // let awbs = [];
     let retry = 0;
-    let validAccessToken = false
+    let validAccessToken = false;
     let accessToken = '';
 
-    while (validAccessToken == false || retry <=2) {
+    while (validAccessToken == false && retry <= 2) {
       retry++;
       accessToken = await this.getAccessTokenPosIndonesia();
+      console.log(accessToken);
       if (accessToken != '') {
-        validAccessToken = true
+        validAccessToken = true;
       }
     }
 
@@ -37,71 +46,78 @@ export class PartnerService {
         arrAwb = await this.sendPosIndonesia(data, accessToken.toString());
       }
       result = {
-        'code': '200',
-        'message': 'Success',
-        'awb': arrAwb
-      }
+        code: '200',
+        message: 'Success',
+        awb: arrAwb,
+      };
     } else {
       result = {
-        'code': '422',
-        'message': 'Invalid Partner Access Token'
+        code: '422',
+        message: 'Invalid Partner Access Token',
       };
     }
 
     return result;
   }
 
-  static async getAccessTokenPosIndonesia(){
+  static async getAccessTokenPosIndonesia() {
     let accessToken = '';
+    let expiresIn = 3500;
 
-    // if (RedisService.get('pos-indonesia:access-token')) {
-    //   accessToken = RedisService.get('pos-indonesia:access-token').toString();
-    //   console.log('GET ACCESS TOKEN FROM LOCAL REDIS');
-    //   return accessToken
-    // }
+    const redisData = await RedisService.get(`posindonesia:access-token`);
+    if (redisData) {
+      console.log('GET ACCESS TOKEN FROM REDIS');
+      return redisData;
+    }
 
-    const urlToken = process.env['WEBHOOK_POS_INDONESIA_TOKEN'];
+    const urlToken =
+      this.postIndonesiaBaseUrl +
+      ConfigService.get('posIndonesia.tokenEndpoint');
     const params = {
-      'grant_type': 'client_credentials'
+      grant_type: 'client_credentials',
     };
     const auth = {
-      'username': process.env['WEBHOOK_POS_INDONESIA_USERNAME'],
-      'password': process.env['WEBHOOK_POS_INDONESIA_PASSWORD']
+      username: ConfigService.get('posIndonesia.username'),
+      password: ConfigService.get('posIndonesia.password'),
     };
     const headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
-    }
+    };
 
     const config = {
-      auth: auth,
-      params: params,
-      headers: headers
-    }
+      auth,
+      params,
+      headers,
+    };
     try {
       const response = await axios.post(urlToken, null, config);
       console.log(response);
       if (response.data.access_token) {
         accessToken = response.data.access_token;
-        RedisService.set('posindonesia:access-token', accessToken);
-        RedisService.expireat('posindonesia:access-token', Number(process.env['TTL_WEBHOOK_TOKEN']))
+        expiresIn = response.data.expires_in;
+        await RedisService.setex(
+          `posindonesia:access-token`,
+          accessToken,
+          Number(expiresIn) - 10,
+        );
       }
-    } catch (error){
+    } catch (error) {
       if (error.response) {
-          console.log(error.response);
-          console.log(error.response.data);
-          console.log(error.response.status);
-          console.log(error.response.headers);
-        }
+        console.log(error.response);
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+      }
     }
 
     return accessToken;
   }
 
   private static async getAwb(partnerId: number = 0): Promise<any> {
-    const backDate = moment().add(-3, 'days').toDate();
+    const backDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
 
     const query = `
-      SELECT 
+      SELECT
         prd.ref_awb_number as "refAwbNumber",
         prd.shipper_name as "shipperName",
         prd.shipper_address as "shipperAddress",
@@ -129,9 +145,9 @@ export class PartnerService {
       FROM pickup_request_detail prd
       INNER JOIN pickup_request pr ON prd.pickup_request_id=pr.pickup_request_id and pr.is_deleted=false
       LEFT JOIN awb_send_partner a ON prd.ref_awb_number=a.awb_number and a.is_deleted=false
-      WHERE prd.created_time >= :backDate and (a.awb_number IS NULL OR a.is_send=false) and prd.is_deleted=false 
-      ORDER BY prd.pickup_request_detail_id
-      LIMIT 1000
+      WHERE prd.created_time >= :backDate and (a.awb_number IS NULL OR a.is_send=false) and prd.is_deleted=false and prd.ref_awb_number is not null
+      --ORDER BY prd.pickup_request_detail_id
+      LIMIT 2000
     `;
 
     return await RawQueryService.queryWithParams(query, {
@@ -139,12 +155,17 @@ export class PartnerService {
     });
   }
 
-  private static async sendPosIndonesia(data: any, token: string): Promise<any> {
-    let arrAwb = [];
-    let partnerId = 0;
+  private static async sendPosIndonesia(
+    data: any,
+    token: string,
+  ): Promise<any> {
+    const arrAwb = [];
+    const partnerId = 0;
+
+    await RedisService.setex(`posindonesia:status`, '1', 180);
 
     for (const awb of data) {
-      let postPartner = await this.postPartnerPosIndonesia(awb, token);
+      const postPartner = await this.postPartnerPosIndonesia(awb, token);
 
       const timeNow = moment().toDate();
       let isSendPartner = false;
@@ -153,8 +174,8 @@ export class PartnerService {
         arrAwb.push(awb.refAwbNumber);
       }
 
-      if (awb.awbSendPartnerId == null)  {
-        let awbSendPartner = AwbSendPartner.create();
+      if (awb.awbSendPartnerId == null) {
+        const awbSendPartner = AwbSendPartner.create();
         awbSendPartner.partnerId = partnerId;
         awbSendPartner.awbNumber = awb.refAwbNumber;
         awbSendPartner.isSend = isSendPartner;
@@ -173,115 +194,141 @@ export class PartnerService {
           responseCode: postPartner['code'],
           responseData: postPartner['data'],
           sendData: postPartner['sendData'],
-          sendCount: (awb.sendCount + 1),
+          sendCount: awb.sendCount + 1,
           lastSendDateTime: timeNow,
           userIdUpdated: 0,
-          updatedTime: timeNow
+          updatedTime: timeNow,
         });
       }
-      
     }
+
+    await RedisService.setex(`posindonesia:status`, '0', 1000);
+
     return arrAwb;
   }
 
-  private static async postPartnerPosIndonesia(data: any, token: string): Promise<any> {
-    const urlPost = process.env['WEBHOOK_POS_INDONESIA_POST_AWB'];
- 
+  private static async postPartnerPosIndonesia(
+    data: any,
+    token: string,
+  ): Promise<any> {
+    const urlPost =
+      this.postIndonesiaBaseUrl +
+      ConfigService.get('posIndonesia.postAwbEndpoint');
+
     const headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token
-    }
+      'Authorization': 'Bearer ' + token,
+    };
 
     const config = {
-      headers: headers
-    }
+      headers,
+    };
 
-    let jsonData = 
-    {
-      "userid": 1,
-      "memberid": "SCP168",
-      "orderid": "SCP" + data.refAwbNumber,
-      "addresses": [
+    const jsonData = {
+      userid: 14,
+      memberid: 'LOGSICEPAT04100A',
+      orderid: 'SCP' + data.refAwbNumber,
+      addresses: [
         {
-          "addresstype": "senderlocation",
-          "customertype": 2,
-          "name": data.shipperName,
-          "phone": data.shipperPhone,
-          "email": "",
-          "address": data.shipperAddress,
-          "subdistrict": data.shipperDistrict,
-          "city": data.shipperCity,
-          "province": data.shipperProvince,
-          "zipcode": data.shipperZip,
-          "country": "Indonesia",
-          "geolang": 0,
-          "geolat": 0,
-          "description": ""
+          addresstype: 'senderlocation',
+          customertype: 1,
+          name: data.shipperName,
+          phone: data.shipperPhone,
+          email: '',
+          address: data.shipperAddress,
+          subdistrict: data.shipperDistrict,
+          city: data.shipperCity,
+          province: data.shipperProvince,
+          zipcode: data.shipperZip,
+          country: 'indonesia',
+          geolang: 0,
+          geolat: 0,
+          description: '',
         },
         {
-          "addresstype": "receiverlocation",
-          "customertype": 1,
-          "name": data.recipientName,
-          "phone": data.recipientPhone,
-          "email": data.pickupRequestEmail,
-          "address": data.recipientAddress,
-          "subdistrict": data.recipientDistrict,
-          "city": data.recipientCity,
-          "province": data.recipientProvince,
-          "zipcode": data.recipientZip,
-          "country": "Indonesia",
-          "geolang": 0,
-          "geolat": 0,
-          "description": ""
-        }
+          addresstype: 'receiverlocation',
+          customertype: 1,
+          name: data.recipientName,
+          phone: data.recipientPhone,
+          email: data.pickupRequestEmail,
+          address: data.recipientAddress,
+          subdistrict: data.recipientDistrict,
+          city: data.recipientCity,
+          province: data.recipientProvince,
+          zipcode: data.recipientZip,
+          country: 'indonesia',
+          geolang: 0,
+          geolat: 0,
+          description: '',
+        },
       ],
-      "itemdetils": [
+      itemdetils: [
         {
-          "hscode": "",
-          "origincountry": "",
-          "description": data.parcelCategory,
-          "quantity": data.parcelQty,
-          "value": data.parcelValue
-        }
+          hscode: '0',
+          origincountry: '0',
+          description: '0',
+          quantity: '0',
+          value: '0',
+        },
       ],
-      "itemproperties": {
-        "itemtypeid": 2,
-        "productid": "210",
-        "valuegoods": 0,
-        "weight": data.totalWeight * 1000,
-        "length": data.parcelLength,
-        "width": data.parcelWidth,
-        "height": data.parcelHeight,
-        "codvalue": data.codValue,
-        "pin": 0,
-        "itemdesc": data.parcelContent
+      itemproperties: {
+        itemtypeid: 1,
+        productid: '871238',
+        valuegoods: 0,
+        weight: data.totalWeight * 1000,
+        length: data.parcelLength,
+        width: data.parcelWidth,
+        height: data.parcelHeight,
+        codvalue: data.codValue,
+        pin: 0,
+        itemdesc: data.parcelContent,
       },
-      "paymentvalues": [
+      paymentvalues: [
         {
-          "name": "fee",
-          "value": 1500
-        }
-      ],
-      "taxes": [
-        {
-          "name": "fee",
-          "value": 15
-        }
-      ],
-      "services": [
-        {
-          "name": "cod",
-          "value": 0
+          name: 'fee',
+          value: 1500,
         },
         {
-          "name": "pickup",
-          "value": 0
+          name: 'insurance',
+          value: 0,
+        },
+      ],
+      taxes: [
+        {
+          name: 'fee',
+          value: 15,
         },
         {
-          "name": "delivery",
-          "value": 0
-        }
-      ]
+          name: 'insurance',
+          value: 0,
+        },
+      ],
+      services: [
+        {
+          name: 'cod',
+          value: 0,
+        },
+        {
+          name: 'pickup',
+          value: 0,
+        },
+        {
+          name: 'delivery',
+          value: 0,
+        },
+        {
+          name: 'insurance',
+          value: 0,
+        },
+        {
+          name: 'genreceipt',
+          value: 0,
+        },
+        {
+          name: 'printreceipt',
+          value: 0,
+        },
+      ],
     };
 
     let result = {};
@@ -289,29 +336,28 @@ export class PartnerService {
       console.log('#### START POST AWB POS INDONESIA');
       const response = await axios.post(urlPost, jsonData, config);
       result = {
-        'code': response.status,
-        'data': response.data,
-        'sendData': jsonData
+        code: response.status,
+        data: response.data,
+        sendData: jsonData,
       };
       console.log(response);
       console.log(response.data);
       console.log(response.status);
       console.log(response.headers);
-    } catch (error){
+    } catch (error) {
       if (error.response) {
-          result = {
-            'code': error.response.status,
-            'data': error.response.data,
-            'sendData': ''
-          };
-          console.log(error.response);
-          console.log(error.response.data);
-          console.log(error.response.status);
-          console.log(error.response.headers);
-        }
+        result = {
+          code: error.response.status,
+          data: error.response.data,
+          sendData: '',
+        };
+        console.log(error.response);
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+      }
     }
 
     return result;
   }
-
 }
