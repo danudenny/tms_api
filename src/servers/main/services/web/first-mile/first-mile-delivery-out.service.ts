@@ -529,7 +529,6 @@ export class FirstMileDeliveryOutService {
     let totalError = 0;
 
     // find data doPod
-
     const holdRedisPod = await RedisService.locking(
       `hold:dopod-scanout:${payload.doPodId}`,
       'locking',
@@ -540,6 +539,7 @@ export class FirstMileDeliveryOutService {
         doPodId: payload.doPodId,
         isDeleted: false,
       },
+      lock: { mode: 'pessimistic_write' },
     });
 
     for (const bagNumber of payload.bagNumber) {
@@ -656,24 +656,24 @@ export class FirstMileDeliveryOutService {
     } // end of loop
 
     // TODO: need improvement
-    // if (doPod) {
-    //   // counter total scan in
-    //   if (doPod.totalScanOutBag == 0) {
-    //     await DoPod.update(doPod.doPodId, {
-    //       totalScanOutBag: totalSuccess,
-    //       firstDateScanOut: timeNow,
-    //       lastDateScanOut: timeNow,
-    //     });
-    //   } else {
-    //     const totalScanOutBag = doPod.totalScanOutBag + totalSuccess;
-    //     await DoPod.update(doPod.doPodId, {
-    //       totalScanOutBag,
-    //       lastDateScanOut: timeNow,
-    //     });
-    //   }
-    //   // remove key holdRedis
-    //   RedisService.del(`hold:dopod-scanout:${payload.doPodId}`);
-    // }
+    if (doPod) {
+      // counter total scan in
+      if (doPod.totalScanOutBag == 0) {
+        await DoPod.update(doPod.doPodId, {
+          totalScanOutBag: totalSuccess,
+          firstDateScanOut: timeNow,
+          lastDateScanOut: timeNow,
+        });
+      } else {
+        const totalScanOutBag = doPod.totalScanOutBag + totalSuccess;
+        await DoPod.update(doPod.doPodId, {
+          totalScanOutBag,
+          lastDateScanOut: timeNow,
+        });
+      }
+      // remove key holdRedis
+      RedisService.del(`hold:dopod-scanout:${payload.doPodId}`);
+    }
 
     // Populate return value
     result.totalData = payload.bagNumber.length;

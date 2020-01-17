@@ -552,7 +552,9 @@ export class LastMileDeliveryOutService {
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
     payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
+    payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
+    payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
