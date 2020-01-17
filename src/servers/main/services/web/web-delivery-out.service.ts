@@ -1240,13 +1240,7 @@ export class WebDeliveryOutService {
 
     q.selectRaw(
       [
-        `CASE LENGTH (CAST(t2.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t3.bag_number,'00',t2.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t3.bag_number,'0',t2.bag_seq)
-          ELSE
-            CONCAT (t3.bag_number,t2.bag_seq) END`,
+        `CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`,
         'bagNumber',
       ],
       ['t1.created_time', 'createdTime'],
