@@ -713,8 +713,9 @@ export class FirstMileDeliveryOutService {
             },
           });
           if (doPodBag) {
+            // TODO: update counter bag on DoPod
             await DoPodDetailBag.update(doPodBag.doPodDetailBagId, {
-              isDeleted: false,
+              isDeleted: true,
               updatedTime: timeNow,
               userIdUpdated: authMeta.userId,
             });
