@@ -539,7 +539,7 @@ export class FirstMileDeliveryOutService {
         doPodId: payload.doPodId,
         isDeleted: false,
       },
-      lock: { mode: 'pessimistic_write' },
+      lock: { mode: 'pessimistic_read' },
     });
 
     for (const bagNumber of payload.bagNumber) {
