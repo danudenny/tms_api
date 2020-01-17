@@ -803,7 +803,9 @@ export class WebDeliveryOutService {
       ['t4.url', 'url'],
     );
     // TODO: relation userDriver to Employee Driver
-
+    q.innerJoin(e => e.doPodDetailBag, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -814,19 +816,15 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.doPodDetailBag, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     if (isHub) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB));
-      q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
+      // q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     } else if (isHubTransit) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.HUB_TRANSIT));
-      q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
+      // q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     } else {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
-      q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
+      // q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     }
     q.groupByRaw('t1.do_pod_id, t2.employee_id, t3.branch_name, t4.url');
 
