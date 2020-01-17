@@ -13,6 +13,7 @@ import {
 import {
     FirstMileDeliveryOutService,
 } from '../../services/web/first-mile/first-mile-delivery-out.service';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('First Mile Delivery')
 @Controller('pod/firstMile')
@@ -59,6 +60,7 @@ export class WebFirstMileController {
   @Post('scanOut/bag')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebScanOutBagResponseVm })
+  @Transactional()
   public async findAllBag(@Body() payload: WebScanOutBagVm) {
     return FirstMileDeliveryOutService.scanOutBag(payload);
   }
