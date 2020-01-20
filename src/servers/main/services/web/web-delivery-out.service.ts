@@ -1224,7 +1224,9 @@ export class WebDeliveryOutService {
   ): Promise<WebDeliveryListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
-    payload.fieldResolverMap['bagNumber'] = 't3.bag_number';
+    payload.fieldResolverMap[
+      'bagNumber'
+    ] = `CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`;
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
