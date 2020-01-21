@@ -1,10 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Param } from '@nestjs/common';
 import moment = require('moment');
 import axios from 'axios';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { AwbSendPartner } from '../../../../shared/orm-entity/awb-send-partner';
 import { ConfigService } from '../../../../shared/services/config.service';
+import { WorkOrder } from '../../../../shared/orm-entity/work-order';
+import { getMetadataArgsStorage } from 'typeorm';
+import { WorkOrderDetail } from 'src/shared/orm-entity/work-order-detail';
+import { PickupRequest } from 'src/shared/orm-entity/pickup-request';
+import { WorkOrderHistory } from 'src/shared/orm-entity/work-order-history';
+import { SysCounter } from 'src/shared/orm-entity/sys-counter';
+import { PickupRequestDetail } from 'src/shared/orm-entity/pickup-request-detail';
 
 @Injectable()
 export class PartnerService {
@@ -15,10 +22,10 @@ export class PartnerService {
     const redisStatus = await RedisService.get(`posindonesia:status`);
     console.log('Status ' + redisStatus);
     if (redisStatus == '1') {
-      return result = {
+      return (result = {
         code: '422',
         message: 'ABORTED CAUSE PREVIOUS PROCESS IS RUNNING',
-      };
+      });
     }
 
     // let totalProcess = 0;
@@ -114,7 +121,9 @@ export class PartnerService {
   }
 
   private static async getAwb(partnerId: number = 0): Promise<any> {
-    const backDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
+    const backDate = moment()
+      .add(-1, 'days')
+      .format('YYYY-MM-DD 00:00:00');
 
     const query = `
       SELECT
@@ -360,4 +369,275 @@ export class PartnerService {
 
     return result;
   }
+
+  static async dropAwbPosIndonesia(paramAwb: any): Promise<any> {
+    let result = {};
+    const timeNow = moment().toDate();
+    const workOrderUpdated = [];
+    const workOrderCreated = [];
+
+    // let totalProcess = 0;
+    // let awbs = [];
+    const retry = 0;
+    const validAccessToken = true;
+    const accessToken = '';
+
+    const arrAwb = [];
+    // Notes: Pos Indonesia Use All Awb
+    const data = await this.getAwbWorkOrderId(paramAwb);
+    let workOrderIdLast = null;
+    let pickupRequestId = null;
+    let workOrderStatusIdLast = null;
+    let refAwbNumber = null;
+    let pickupRequestDetailId = null;
+    const arrDropStatus = [7050, 7100];
+
+    for (const item of data) {
+      workOrderIdLast = item.work_order_id_last;
+      pickupRequestId = item.pickup_request_id;
+      workOrderStatusIdLast = item.work_order_status_id_last;
+      refAwbNumber = item.ref_awb_number;
+      pickupRequestDetailId = item.pickup_request_detail_id;
+    }
+
+    if (refAwbNumber != null) {
+      const dataWorkOrderCode = await this.getDataWorkOrderCode(timeNow);
+      if (arrDropStatus.indexOf(workOrderStatusIdLast) > -1) {
+        result = {
+          code: '422',
+          message: 'Awb Already Drop Status',
+        };
+      } else {
+        if (workOrderIdLast ===  null) {
+          const paramsWorkOrder = {
+            work_order_code: dataWorkOrderCode,
+            work_order_date: timeNow,
+            pickup_schedule_date_time: timeNow,
+            work_order_status_id_last: '7050',
+            work_order_status_id_pick: null,
+            branch_id_assigned: '0',
+            branch_id: '0',
+            is_member: false,
+            work_order_type: 'AUTOMATIC',
+            user_id: '1',
+            created_time: timeNow,
+            updated_time: timeNow,
+          };
+          const dataWorkOrder = await this.getDataWorkOrder(paramsWorkOrder);
+          const workOrder = await WorkOrder.insert(dataWorkOrder);
+
+          // console.log(work_order);
+          // console.log(work_order.raw[0].work_order_id);
+
+          const paramsWorkOrderDetail = {
+            work_order_id: workOrder.raw[0].work_order_id,
+            pickup_request_id: pickupRequestId,
+            work_order_status_id_last: '7050',
+            work_order_status_id_pick: null,
+            user_id: '1',
+            created_time: timeNow,
+            updated_time: timeNow,
+          };
+
+          const dataWorkOrderDetail = await this.getDataWorkOrderDetail(paramsWorkOrderDetail);
+          const work_order_detail = await WorkOrderDetail.insert(dataWorkOrderDetail);
+
+          console.log(work_order_detail);
+
+          const paramsWorkOrderHistory = {
+            work_order_id: workOrder.raw[0].work_order_id,
+            work_order_date: workOrder.raw[0].work_order_date,
+            pickup_request_id: pickupRequestId,
+            work_order_status_id_last: '7050',
+            work_order_status_id_pick: null,
+            branch_id: '0',
+            user_id: '1',
+            created_time: timeNow,
+            updated_time: timeNow,
+          };
+
+          const dataWorkOrderHistory = await this.getDataWorkOrderHistory(paramsWorkOrderHistory);
+          const work_order_history = await WorkOrderHistory.insert(dataWorkOrderHistory);
+
+          await PickupRequestDetail.update(pickupRequestDetailId, {
+            work_order_id_last: workOrder.raw[0].work_order_id,
+            user_id_updated: '1',
+            updated_time: timeNow,
+          });
+
+          result = {
+            code: '200',
+            message: 'Success',
+            awb: paramAwb,
+          };
+
+        } else {
+          await WorkOrder.update(workOrderIdLast, {
+            work_order_status_id_last: '7050',
+            work_order_status_id_pick: null,
+            user_id_updated: '1',
+            updated_time: timeNow,
+          });
+
+          const workOrderDetail = await WorkOrderDetail.findOne({
+            work_order_id: workOrderIdLast,
+          });
+
+          await WorkOrderDetail.update(workOrderDetail.work_order_detail_id, {
+            work_order_status_id_last: '7050',
+            work_order_status_id_pick: null,
+            user_id_updated: '1',
+            updated_time: timeNow,
+          });
+
+          const workOrder = await WorkOrder.findOne({
+            work_order_id: workOrderIdLast,
+          });
+          const paramsWorkOrderHistory = {
+            work_order_id: workOrder.work_order_id,
+            work_order_date: workOrder.work_order_date,
+            pickup_request_id: pickupRequestId,
+            work_order_status_id_last: '7050',
+            work_order_status_id_pick: null,
+            branch_id: '0',
+            user_id: '1',
+            created_time: timeNow,
+            updated_time: timeNow,
+          };
+
+          const dataWorkOrderHistory = await this.getDataWorkOrderHistory(paramsWorkOrderHistory);
+          const work_order_history = await WorkOrderHistory.insert(dataWorkOrderHistory);
+
+          await WorkOrder.update(workOrderIdLast, {
+            work_order_history_id_last: work_order_history.raw[0].work_order_history_id,
+            user_id_updated: '1',
+            updated_time: timeNow,
+          });
+
+          result = {
+            code: '200',
+            message: 'Success',
+            awb: paramAwb,
+          };
+        }
+
+      }
+
+    } else {
+      result = {
+        code: '422',
+        message: 'Invalid AWB Number',
+      };
+    }
+
+    return result;
+  }
+
+  private static async getAwbWorkOrderId(awb: string): Promise<any> {
+    // const backDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
+
+    const query = `
+      SELECT
+        prd.ref_awb_number,
+        prd.work_order_id_last,
+        prd.pickup_request_id,
+        prd.pickup_request_detail_id,
+        wo.work_order_status_id_last
+      FROM pickup_request_detail prd
+      LEFT JOIN work_order wo on prd.work_order_id_last = wo.work_order_id AND wo.is_deleted=FALSE
+      WHERE
+        prd.ref_awb_number = :awb AND
+        prd.is_deleted = FALSE
+    `;
+
+    return await RawQueryService.queryWithParams(query, {
+      awb,
+    });
+  }
+
+  public static async getDataWorkOrderCode(workOrderTime: any ): Promise<any> {
+    let workOrderCode = '';
+    let prefix = '';
+    let lastNumber = 0;
+    const timeNow = moment().toDate();
+    // $prefix = $prefix = 'SPK' .; '/' . date('ym', strtotime($work_order_time)) .; '/';
+    prefix = `SPK/${moment(workOrderTime).format('YYMM')}/`;
+    const code = await SysCounter.findOne({
+      where: {
+        key: prefix,
+        isDeleted: false,
+      },
+    });
+    // console.log(code);
+    // console.log(code.counter);
+    if (code.counter == 0 || code.counter == null ) {
+      lastNumber = 1;
+    } else {
+      lastNumber = Math.floor(code.counter) + 1;
+    }
+    await SysCounter.update(code.sysCounterId, {
+      counter: lastNumber,
+      updatedTime: timeNow,
+    });
+    workOrderCode = prefix + lastNumber.toString().padStart(5, '0');
+    // console.log(workOrderCode);
+    return workOrderCode;
+    // wo;
+  }
+
+  public static async getDataWorkOrder(params: {}): Promise<any> {
+    // const timeNow = moment().toDate();
+    const wo = await WorkOrder.create({
+      work_order_code : params['work_order_code'],
+      work_order_date : params['work_order_date'],
+      pickup_schedule_date_time : params['pickup_schedule_date_time'],
+      work_order_status_id_last : params['work_order_status_id_last'],
+      work_order_status_id_pick : params['work_order_status_id_pick'],
+      branch_id_assigned : params['branch_id_assigned'],
+      user_id : params['user_id'],
+      branch_id : params['branch_id'],
+      is_member : params['is_member'],
+      work_order_type : params['work_order_type'],
+      user_id_created : params['user_id'],
+      created_time : params['created_time'],
+      user_id_updated : params['user_id'],
+      updated_time : params['updated_time'],
+    });
+
+    return wo;
+  }
+
+  public static async getDataWorkOrderDetail(params: {}): Promise<any> {
+    // const timeNow = moment().toDate();
+    const wod = await WorkOrderDetail.create({
+      work_order_id: params['work_order_id'],
+      pickup_request_id: params['pickup_request_id'],
+      work_order_status_id_last: params['work_order_status_id_last'],
+      work_order_status_id_pick: params['work_order_status_id_pick'],
+      user_id_created : params['user_id'],
+      created_time : params['created_time'],
+      user_id_updated : params['user_id'],
+      updated_time : params['updated_time'],
+    });
+
+    return wod;
+  }
+
+  public static async getDataWorkOrderHistory(params: {}): Promise<any> {
+    // const timeNow = moment().toDate();
+    const woh = await WorkOrderHistory.create({
+      work_order_id : params['work_order_id'],
+      work_order_status_id : params['work_order_status_id_last'],
+      user_id : params['user_id'],
+      branch_id : params['branch_id'],
+      history_date_time : params['updated_time'],
+      user_id_created : params['user_id'],
+      created_time : params['created_time'],
+      user_id_updated : params['user_id'],
+      updated_time : params['updated_time'],
+    });
+
+    return woh;
+  }
+
 }
