@@ -460,9 +460,9 @@ export class PartnerService {
           const work_order_history = await WorkOrderHistory.insert(dataWorkOrderHistory);
 
           await PickupRequestDetail.update(pickupRequestDetailId, {
-            work_order_id_last: workOrder.raw[0].work_order_id,
-            user_id_updated: '1',
-            updated_time: timeNow,
+            workOrderIdLast: workOrder.raw[0].work_order_id,
+            userIdUpdated: 1,
+            updatedTime: timeNow,
           });
 
           result = {
