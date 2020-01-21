@@ -6,12 +6,10 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { AwbSendPartner } from '../../../../shared/orm-entity/awb-send-partner';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { WorkOrder } from '../../../../shared/orm-entity/work-order';
-import { getMetadataArgsStorage } from 'typeorm';
-import { WorkOrderDetail } from 'src/shared/orm-entity/work-order-detail';
-import { PickupRequest } from 'src/shared/orm-entity/pickup-request';
-import { WorkOrderHistory } from 'src/shared/orm-entity/work-order-history';
-import { SysCounter } from 'src/shared/orm-entity/sys-counter';
-import { PickupRequestDetail } from 'src/shared/orm-entity/pickup-request-detail';
+import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
+import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
+import { WorkOrderDetail } from '../../../../shared/orm-entity/work-order-detail';
+import { SysCounter } from '../../../../shared/orm-entity/sys-counter';
 
 @Injectable()
 export class PartnerService {
