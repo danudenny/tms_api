@@ -400,7 +400,7 @@ export class PartnerService {
 
     if (refAwbNumber != null) {
       const dataWorkOrderCode = await this.getDataWorkOrderCode(timeNow);
-      if (arrDropStatus.indexOf(workOrderStatusIdLast) > -1) {
+      if (arrDropStatus.indexOf(Math.floor(workOrderStatusIdLast)) > -1) {
         result = {
           code: '422',
           message: 'Awb Already Drop Status',
