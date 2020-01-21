@@ -477,11 +477,7 @@ export class PartnerService {
             updated_time: timeNow,
           });
 
-          const workOrderDetail = await WorkOrderDetail.findOne({
-            work_order_id: workOrderIdLast,
-          });
-
-          await WorkOrderDetail.update(workOrderDetail.work_order_detail_id, {
+          await WorkOrderDetail.update({work_order_id: workOrderIdLast}, {
             work_order_status_id_last: '7050',
             work_order_status_id_pick: null,
             user_id_updated: '1',
