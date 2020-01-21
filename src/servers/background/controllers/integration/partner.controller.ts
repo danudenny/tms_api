@@ -1,6 +1,7 @@
 import { Body, Controller, Post, Req } from '@nestjs/common';
 import { PartnerService } from '../../services/integration/partner.service';
 import { Partner } from '../../../../shared/orm-entity/partner';
+import { Transactional } from 'src/shared/external/typeorm-transactional-cls-hooked';
 
 // @ApiUseTags('Master Data')
 @Controller('integration/partner')
@@ -17,6 +18,7 @@ export class PartnerController {
   }
 
   @Post('posIndonesia/dropAwb')
+  @Transactional()
   // @HttpCode(HttpStatus.OK)
   // @ApiBearerAuth()
   // @UseGuards(AuthenticatedGuard)
