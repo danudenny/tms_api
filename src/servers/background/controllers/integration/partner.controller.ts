@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Req } from '@nestjs/common';
 import { PartnerService } from '../../services/integration/partner.service';
 import { Partner } from '../../../../shared/orm-entity/partner';
-import { Transactional } from 'src/shared/external/typeorm-transactional-cls-hooked';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 // @ApiUseTags('Master Data')
 @Controller('integration/partner')
