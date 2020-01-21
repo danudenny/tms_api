@@ -29,14 +29,13 @@ export class PartnerGojekController {
   @Get('gojek/estimatePrice')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
-  // @ApiOkResponse({ type: TrackingNoteResponseVm })
   public async estimatePrice(@Body() payload: any) {
     return null; // PartnerGojekService.getEstimatePrice();
   }
 
   @Get('gojek/checkOrderStatus/:orderNo')
   @HttpCode(HttpStatus.OK)
-  // @ApiOkResponse({ type: TrackingNoteResponseVm })
+  @ResponseSerializerOptions({ disable: true })
   public async checkOrderStatus(@Param('orderNo') orderNo: string) {
     return PartnerGojekService.getStatusOrder(orderNo);
   }

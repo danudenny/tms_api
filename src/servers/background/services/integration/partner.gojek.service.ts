@@ -10,7 +10,7 @@ export class PartnerGojekService {
 
   static async getStatusOrder(orderNo: string) {
     const response = await this.getStatusOrderGojek(orderNo);
-    return response.data;
+    return response;
   }
 
   static async cancelBooking() {
