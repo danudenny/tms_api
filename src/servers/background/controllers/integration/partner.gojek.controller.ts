@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Put, Get, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Put, Get, UseGuards, HttpCode, HttpStatus, Param } from '@nestjs/common';
 import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { AuthGojekGuard } from '../../../../shared/guards/auth-gojek.guard';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
@@ -34,11 +34,11 @@ export class PartnerGojekController {
     return null; // PartnerGojekService.getEstimatePrice();
   }
 
-  @Get('gojek/checkOrderStatus')
+  @Get('gojek/checkOrderStatus/:orderNo')
   @HttpCode(HttpStatus.OK)
   // @ApiOkResponse({ type: TrackingNoteResponseVm })
-  public async checkOrderStatus(@Body() payload: any) {
-    return PartnerGojekService.getStatusOrder('GK-368586');
+  public async checkOrderStatus(@Param('orderNo') orderNo: string) {
+    return PartnerGojekService.getStatusOrder(orderNo);
   }
 
   @Post('gojek/callback')

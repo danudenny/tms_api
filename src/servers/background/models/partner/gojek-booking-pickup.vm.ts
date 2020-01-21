@@ -25,17 +25,6 @@ export class GojekBookingResponseVm {
   errorMessage: string;
 }
 
-export class GojekBookingPickupResponseVm {
-  @ApiModelProperty()
-  status: string;
-
-  @ApiModelProperty()
-  message: string;
-
-  @ApiModelProperty({ type: () => GojekBookingResponseVm })
-  data: GojekBookingResponseVm;
-}
-
 export class GojekBookingPayloadVm {
   @ApiModelProperty()
   originContactName: string;
@@ -63,4 +52,18 @@ export class GojekBookingPayloadVm {
 
   @ApiModelProperty()
   item: string;
+}
+
+export class GojekBookingPickupResponseVm {
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({ type: () => GojekBookingPayloadVm })
+  data: GojekBookingPayloadVm;
+
+  @ApiModelProperty({ type: () => GojekBookingResponseVm })
+  response: GojekBookingResponseVm;
 }

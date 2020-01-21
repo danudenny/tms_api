@@ -301,4 +301,26 @@ export class PickupRequestDetail extends TmsBaseEntity {
     name: 'recipient_latitude',
   })
   recipientLatitude: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'shipper_latitude',
+  })
+  shipperLatitude: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'shipper_longitude',
+  })
+  shipperLongitude: string | null;
+
+  @Column('numeric', {
+    nullable: true,
+    precision: 18,
+    scale: 2,
+    name: 'tax_value',
+  })
+  taxValue: string | null;
 }

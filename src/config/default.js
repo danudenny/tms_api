@@ -52,6 +52,12 @@ module.exports = {
     password: 'tGLlYLfqRSiK7IA2mYHeu_EMbbwa',
     baseUrl: 'https://sandbox.posindonesia.co.id:8245/',
     tokenEndpoint: 'token',
-    postAwbEndpoint: 'webhookpos/1.0.1/AddPostingDoc'
-  }
+    postAwbEndpoint: 'webhookpos/1.0.1/AddPostingDoc',
+  },
+  gojek: {
+    baseUrl: 'https://integration-kilat-api.gojekapi.com/gokilat/v10/',
+    clientId: 'si-cepat-engine',
+    passKey: '2e8a7f4d5ef4b746a503ef270ce2a98e562bc77e2dd6c19bf10e3d95e3390393',
+    shipmentMethod: 'Instant',
+  },
 };
