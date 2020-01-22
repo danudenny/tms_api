@@ -6,14 +6,22 @@ export class MobileDashboardFindAllResponseVm  {
   data: MobiledashboardVm[];
 }
 
+export class MobileTransitResponseVm {
+  @ApiModelProperty()
+  dateTime: string;
+
+  @ApiModelProperty()
+  total: number;
+}
+
 export class MobileDetailTransitResponseVm {
 
   @ApiModelProperty()
-  totalNotScanInAwb: number;
+  notScanInAwb: MobileTransitResponseVm;
 
   @ApiModelProperty()
-  totalScanInAwb: number;
+  scanInAwb: MobileTransitResponseVm;
 
   @ApiModelProperty()
-  totalNotScanOutAwb: number;
+  notScanOutAwb: MobileTransitResponseVm;
 }

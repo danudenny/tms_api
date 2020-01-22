@@ -1,11 +1,18 @@
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { MobileDashboardFindAllResponseVm, MobileDetailTransitResponseVm } from '../../models/mobile-dashboard.response.vm';
+import {
+  MobileDashboardFindAllResponseVm,
+  MobileDetailTransitResponseVm,
+  MobileTransitResponseVm,
+} from '../../models/mobile-dashboard.response.vm';
 import { createQueryBuilder } from 'typeorm';
 import { AuthService } from 'src/shared/services/auth.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import moment = require('moment');
 
 export class MobileDashboardService {
-  public static async getDashboardDataByRequest(): Promise<MobileDashboardFindAllResponseVm> {
+  public static async getDashboardDataByRequest(): Promise<
+    MobileDashboardFindAllResponseVm
+  > {
     // TODO: Fix Query !!!
     const starttoday = '2019-02-02 00:00:00';
     const endtoday = '2019-02-03 00:00:00';
@@ -37,44 +44,86 @@ export class MobileDashboardService {
     return result;
   }
 
-  public static async getTransitDetail(): Promise<MobileDetailTransitResponseVm>{
-    let qb = createQueryBuilder();
+  public static async getTransitDetail(): Promise<
+    MobileDetailTransitResponseVm
+  > {
     const authMeta = AuthService.getAuthMetadata();
-    const outBranchCode = AWB_STATUS.OUT_BRANCH;
-    const inBranchCode = AWB_STATUS.IN_BRANCH;
-    const antCode = AWB_STATUS.ANT;
-    const result = new MobileDetailTransitResponseVm();
+    const currentMoment = moment();
+    const mobileTransitResponseVm = new MobileTransitResponseVm();
+    const mobileTransitResponseVm2 = new MobileTransitResponseVm();
+    const mobileTransitResponseVm3 = new MobileTransitResponseVm();
 
     // Total barang belum scan masuk
-    qb.addSelect('COUNT(CASE WHEN aia.awb_status_id_last = '+outBranchCode+' THEN aia.awb_item_attr_id END)', 'totalNotScanInAwb')
-    .addSelect('COUNT(CASE WHEN aia.awb_status_id_last = '+inBranchCode+' THEN aia.awb_item_attr_id END)', 'totalNotScanOutAwb')
-    .from('awb_item_attr', 'aia')
-    .innerJoin(
-      'do_pod_detail',
-      'dpd',
-      'dpd.awb_item_id = aia.awb_item_id',
-    )
-    .innerJoin(
-      'do_pod',
-      'dp',
-      'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = '+authMeta.userId,
+    const qb = createQueryBuilder();
+    qb.addSelect(
+      'aia.awb_number',
+      'awbNumber',
     );
-    let res = await qb.getRawOne();
-    result.totalNotScanInAwb = res.totalNotScanInAwb;
-    result.totalNotScanOutAwb = res.totalNotScanOutAwb;
+    qb.from('awb_item_attr', 'aia');
+    qb.innerJoin('do_pod_detail', 'dpd', 'dpd.awb_item_id = aia.awb_item_id');
+    qb.innerJoin(
+        'do_pod',
+        'dp',
+        'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+      );
+    qb.where(
+      'dp.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      {
+        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
+        currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
+      },
+    );
+    qb.andWhere('aia.awb_status_id_last = :outBranchCode', { outBranchCode: AWB_STATUS.OUT_BRANCH });
+    mobileTransitResponseVm.total = await qb.getCount();
 
     // Total barang scan masuk
-    qb = createQueryBuilder();
-    qb.addSelect('COUNT(dpd.awb_number)', 'totalScanInAwb')
-    .from('do_pod_detail', 'dpd')
-    .innerJoin(
+    const qb2 = createQueryBuilder();
+    qb2.addSelect(
+      'aia.awb_number',
+      'awbNumber',
+    );
+    qb2.from('awb_item_attr', 'aia');
+    qb2.innerJoin('do_pod_detail', 'dpd', 'dpd.awb_item_id = aia.awb_item_id');
+    qb2.innerJoin(
       'do_pod',
       'dp',
-      'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = '+authMeta.userId,
+      'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
     );
-    res = await qb.getRawOne();
-    result.totalScanInAwb = res.totalScanInAwb;
-    
+    qb2.where(
+      'dp.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      {
+        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
+        currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
+      },
+    );
+    qb2.andWhere('aia.awb_status_id_last = :inBranchCode', { inBranchCode: AWB_STATUS.IN_BRANCH });
+    mobileTransitResponseVm2.total = await qb2.getCount();
+
+    // Total barang belum scan keluar
+    const qb3 = createQueryBuilder();
+    qb3.addSelect('dpd.awb_number)', 'totalScanInAwb');
+    qb3.from('do_pod_detail', 'dpd');
+    qb3.innerJoin(
+        'do_pod',
+        'dp',
+        'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+      );
+    qb3.where(
+      'dp.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      {
+        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
+        currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
+      },
+    );
+    mobileTransitResponseVm3.total = await qb3.getCount();
+
+    mobileTransitResponseVm.dateTime = mobileTransitResponseVm2.dateTime = mobileTransitResponseVm3.dateTime = currentMoment.format('YYYY-MM-DD');
+
+    const result = new MobileDetailTransitResponseVm();
+    result.notScanInAwb = mobileTransitResponseVm;
+    result.notScanOutAwb = mobileTransitResponseVm2;
+    result.scanInAwb = mobileTransitResponseVm3;
+
     return result;
   }
 }
