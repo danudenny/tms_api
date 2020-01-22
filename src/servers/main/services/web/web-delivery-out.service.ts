@@ -905,8 +905,7 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    // TODO: pod type transit list ??
-    q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
+    q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH_AWB));
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
 
     q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name');
