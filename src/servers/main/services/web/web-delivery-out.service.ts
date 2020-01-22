@@ -905,6 +905,10 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    // TODO: pod type transit list ??
+    q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
+    q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
+
     q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -925,6 +929,7 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
@@ -1224,7 +1229,9 @@ export class WebDeliveryOutService {
   ): Promise<WebDeliveryListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
-    payload.fieldResolverMap['bagNumber'] = 't3.bag_number';
+    payload.fieldResolverMap[
+      'bagNumber'
+    ] = `CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`;
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
