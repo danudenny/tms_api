@@ -1,10 +1,12 @@
 // #region import
+import { getManager, MoreThan } from 'typeorm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 import {
     DoPodDeliverRepository,
 } from '../../../../shared/orm-repository/do-pod-deliver.repository';
+import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbTroubleService } from '../../../../shared/services/awb-trouble.service';
 import { RedisService } from '../../../../shared/services/redis.service';
@@ -16,8 +18,11 @@ import {
 } from '../../models/mobile-scanout-response.vm';
 import {
     MobileScanOutAwbVm,
+    TransferAwbDeliverVm,
 } from '../../models/mobile-scanout.vm';
 import { AwbService } from '../v1/awb.service';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -143,6 +148,119 @@ export class LastMileDeliveryOutService {
         ...response,
       });
     } // end of loop
+
+    // Populate return value
+    result.totalData = payload.awbNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
+
+    return result;
+  }
+
+  static async transferAwbNumber(
+    payload: TransferAwbDeliverVm,
+  ): Promise<MobileScanOutAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
+    const dataItem = [];
+    const result = new MobileScanOutAwbResponseVm();
+
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    for (const awbNumber of payload.awbNumber) {
+      const response = {
+        status: 'ok',
+        message: 'Success',
+      };
+
+      const awb = await AwbService.validAwbNumber(awbNumber);
+      if (awb) {
+        // NOTE: TRANSFER AWB NUMBER
+        const awbDeliver = await DoPodDeliverDetail.findOne({
+          where: {
+            awbNumber,
+            awbStatusIdLast: AWB_STATUS.ANT,
+            isDeleted: false,
+          },
+        });
+        // handle only status ANT
+        if (awbDeliver) {
+          // Add Locking setnx redis
+          const holdRedis = await RedisService.locking(
+            `hold:scanout-transfer:${awbDeliver.awbItemId}`,
+            'locking',
+          );
+          if (holdRedis) {
+            // Update data do pod detail per awb number
+            // doPodDeliverId;
+            await DoPodDeliverDetail.update(
+              awbDeliver.doPodDeliverDetailId,
+              {
+                isDeleted: true,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              },
+            );
+
+            // balance total awb
+            await getManager().transaction(
+              async transactionEntityManager => {
+                const awbItemAttr = await AwbItemAttr.findOne({
+                  where: {
+                    awbItemId: awbDeliver.awbItemId,
+                    isDeleted: false,
+                  },
+                });
+                if (awbItemAttr) {
+                  await transactionEntityManager.update(
+                    AwbItemAttr,
+                    awbItemAttr.awbItemAttrId,
+                    {
+                      awbStatusIdLast: AWB_STATUS.IN_BRANCH,
+                      updatedTime: moment().toDate(),
+                    },
+                  );
+                }
+
+                await transactionEntityManager.decrement(
+                  DoPodDeliver,
+                  {
+                    doPodDeliverId: awbDeliver.doPodDeliverId,
+                    totalAwb: MoreThan(0),
+                  },
+                  'totalAwb',
+                  1,
+                );
+              },
+            );
+
+            totalSuccess += 1;
+            // remove key holdRedis
+            RedisService.del(`hold:scanout-transfer:${awbDeliver.awbItemId}`);
+          } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+          }
+        } else {
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Resi ${awbNumber}, bermasalah harap scan in terlebih dahulu`;
+        }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Resi ${awbNumber} Tidak di Temukan`;
+      }
+
+      // push item
+      dataItem.push({
+        awbNumber,
+        ...response,
+      });
+    } // end loop
 
     // Populate return value
     result.totalData = payload.awbNumber.length;

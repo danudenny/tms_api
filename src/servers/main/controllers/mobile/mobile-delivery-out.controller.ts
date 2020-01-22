@@ -5,6 +5,7 @@ import { Transactional } from '../../../../shared/external/typeorm-transactional
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { LastMileDeliveryOutService } from '../../services/mobile/mobile-last-mile-delivery-out.service';
+import { TransferAwbDeliverVm } from '../../models/mobile-scanout.vm';
 import {
   MobileScanOutAwbVm,
 } from '../../models/mobile-scanout.vm';
@@ -19,14 +20,10 @@ import {
 export class MobileDeliveryOutController {
   constructor() {}
 
-  @Post('awbDeliver')
+  @Post('delivery')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileScanOutAwbResponseVm })
-  @Transactional()
-  public async scanOutAwbDeliver(@Body() payload: MobileScanOutAwbVm) {
-    // Antar (Sigesit)
-    return LastMileDeliveryOutService.scanOutAwbDeliver(payload);
+  public async transferAwbDelivery(@Body() payload: TransferAwbDeliverVm) {
+    return LastMileDeliveryOutService.transferAwbNumber(payload);
   }
 }

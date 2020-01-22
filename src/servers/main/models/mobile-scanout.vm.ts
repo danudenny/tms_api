@@ -22,3 +22,15 @@ export class MobileScanOutAwbVm  {
   @Type(() => String)
   awbNumber: string[];
 }
+
+export class TransferAwbDeliverVm {
+  @ApiModelProperty({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+
+  @IsDefined({message: 'Nomor resi harus diisi'})
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  awbNumber: string[];
+}
