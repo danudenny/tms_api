@@ -46,14 +46,9 @@ export class MobileDashboardService {
     const result = new MobileDetailTransitResponseVm();
 
     // Total barang belum scan masuk
-    qb.addSelect('COUNT(aia.awb_item_attr_id)', 'totalOutBranch')
+    qb.addSelect('COUNT(CASE WHEN aia.awb_status_id_last = '+outBranchCode+' THEN aia.awb_item_attr_id END)', 'totalNotScanInAwb')
+    .addSelect('COUNT(CASE WHEN aia.awb_status_id_last = '+inBranchCode+' THEN aia.awb_item_attr_id END)', 'totalNotScanOutAwb')
     .from('awb_item_attr', 'aia')
-    .where(
-      'aia.awb_status_id_last = :outBranchCode',
-      {
-        outBranchCode,
-      },
-    )
     .innerJoin(
       'do_pod_detail',
       'dpd',
@@ -65,11 +60,12 @@ export class MobileDashboardService {
       'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = '+authMeta.userId,
     );
     let res = await qb.getRawOne();
-    result.totalNotScanInAwb = res.totalOutBranch;
-    
+    result.totalNotScanInAwb = res.totalNotScanInAwb;
+    result.totalNotScanOutAwb = res.totalNotScanOutAwb;
+
     // Total barang scan masuk
     qb = createQueryBuilder();
-    qb.addSelect('COUNT(dpd.awb_number)', 'totalInBranch')
+    qb.addSelect('COUNT(dpd.awb_number)', 'totalScanInAwb')
     .from('do_pod_detail', 'dpd')
     .innerJoin(
       'do_pod',
@@ -77,30 +73,7 @@ export class MobileDashboardService {
       'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = '+authMeta.userId,
     );
     res = await qb.getRawOne();
-    result.totalScanInAwb = res.totalInBranch;
-    
-    // Total barang belum scan keluar
-    qb = createQueryBuilder();
-    qb.addSelect('COUNT(aia.awb_item_attr_id)', 'totalAnt')
-    .from('awb_item_attr', 'aia')
-    .where(
-      'aia.awb_status_id_last = :inBranchCode',
-      {
-        inBranchCode,
-      },
-    )
-    .innerJoin(
-      'do_pod_detail',
-      'dpd',
-      'dpd.awb_item_id = aia.awb_item_id',
-    )
-    .innerJoin(
-      'do_pod',
-      'dp',
-      'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = '+authMeta.userId,
-    );
-    res = await qb.getRawOne();
-    result.totalNotScanOutAwb = res.totalAnt;
+    result.totalScanInAwb = res.totalScanInAwb;
     
     return result;
   }
