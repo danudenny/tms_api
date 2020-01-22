@@ -100,7 +100,7 @@ export class MobileDashboardController {
     };
   }
 
-  @Post('detail/transit')
+  @Get('detail/transit')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
