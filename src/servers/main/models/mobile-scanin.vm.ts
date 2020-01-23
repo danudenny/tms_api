@@ -82,35 +82,54 @@ export class MobileScanInBagBranchResponseVm {
   data: ScanInputNumberBranchVm[];
 }
 export class MobileScanInBagBranchVm {
+  @ApiModelProperty()
+  @IsDefined({ message: 'No harus diisi' })
+  scanValue: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  podScanInBranchId: string;
+
+  @ApiModelProperty()
+  date: string;
+}
+
+export class MobileScanInBranchResponseVm {
+  @ApiModelProperty()
+  service: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  consigneePhone: string;
+
+  @ApiModelProperty()
+  totalCodValue: string;
+
+  @ApiModelProperty()
+  dateTime: string;
+
+  @ApiModelProperty()
+  podScanInBranchId: string;
+  
+  @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
+  data: ScanInputNumberBranchVm[];
+}
+
+export class MobileScanInDetailVm {
   @ApiModelProperty({
     example: ['112039', '11203922'],
     skipValidation: true,
   })
   @IsDefined({ message: 'No harus diisi' })
-  scanValue: string[];
-
-  @ApiModelProperty()
-  bagNumber: string;
-
-  @ApiModelProperty()
-  podScanInBranchId: string;
-
-}
-
-export class MobileScanInBranchResponseVm {
-  @ApiModelProperty()
-  podScanInBranchId: string;
-
-  @ApiModelProperty()
-  bagNumber: string;
-
-  @ApiModelProperty()
-  isBag: boolean;
-
-  @ApiModelProperty({ type: [ScanBranchBagVm] })
-  dataBag: ScanBranchBagVm;
-
-  @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
-  data: ScanInputNumberBranchVm[];
-
+  scanValue: string;
 }

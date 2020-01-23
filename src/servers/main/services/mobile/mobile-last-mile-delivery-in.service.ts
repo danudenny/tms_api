@@ -22,12 +22,12 @@ import {
 } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
     ScanBranchAwbVm, ScanBranchBagVm, ScanInputNumberBranchVm, MobileScanInBagBranchResponseVm,
-    MobileScanInBagBranchVm, MobileScanInBranchResponseVm,
+    MobileScanInBagBranchVm, MobileScanInBranchResponseVm, MobileScanInDetailVm
 } from '../../models/mobile-scanin.vm';
 import { AwbService } from '../v1/awb.service';
 import { BagService } from '../v1/bag.service';
 import moment = require('moment');
-import { getManager } from 'typeorm';
+import { getManager, createQueryBuilder } from 'typeorm';
 // #endregion
 export class LastMileDeliveryInService {
 
@@ -42,32 +42,64 @@ export class LastMileDeliveryInService {
     let data: ScanInputNumberBranchVm[] = [];
     let dataBag = new ScanBranchBagVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-
+    const authMeta = AuthService.getAuthData();
     const regexNumber = /^[0-9]+$/;
 
-    // find and create pod_scan_in_branch
-    let podScanInBranch = await PodScanInBranch.findOne({
-      where: {
-        branchId: permissonPayload.branchId,
-        transactionStatusId: 600,
-        isDeleted: false,
-      },
+    const qb = createQueryBuilder();
+
+    // Total barang belum scan masuk
+    qb.addSelect( 'awb.awb_number', 'awbNumber');
+    qb.addSelect( 'awb.consignee_name', 'consigneeName');
+    qb.addSelect( 'awb.consignee_address', 'consigneeAddress');
+    qb.addSelect( 'awb.consignee_phone', 'consigneePhone');
+    qb.addSelect( 'awb.total_cod_value', 'totalCodValue');
+    qb.addSelect( 'pt.package_type_code', 'service');
+
+    qb.from('awb', 'awb');
+    qb.innerJoin(
+      'package_type',
+      'pt',
+      'pt.package_type_id = awb.package_type_id'
+      );
+    qb.innerJoin('do_pod_detail',
+      'dpd',
+      'dpd.awb_number = awb.awb_number'
+      );
+    qb.innerJoin(
+        'do_pod',
+        'dp',
+        'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+      );
+    qb.andWhere('awb.awb_number = :awbNumber',
+    {
+      awbNumber: payload.scanValue
     });
+    const res = await qb.getRawOne();
 
-    if (podScanInBranch) {
-      payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
-    } else {
-      podScanInBranch = PodScanInBranch.create();
-      podScanInBranch.branchId = permissonPayload.branchId;
-      podScanInBranch.scanInType = 'bag'; // default
-      podScanInBranch.transactionStatusId = 600;
-      podScanInBranch.totalBagScan = 0;
+    if(res){
+      let podScanInBranch = await PodScanInBranch.findOne({
+        where: {
+          branchId: permissonPayload.branchId,
+          transactionStatusId: 600,
+          isDeleted: false,
+        },
+      });
 
-      await PodScanInBranch.save(podScanInBranch);
-      payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
-    }
+      if (podScanInBranch) {
+        payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+      } else {
+        podScanInBranch = PodScanInBranch.create();
+        podScanInBranch.branchId = permissonPayload.branchId;
+        podScanInBranch.scanInType = 'bag'; // default
+        podScanInBranch.transactionStatusId = 600;
+        podScanInBranch.totalBagScan = 0;
 
-    for (let inputNumber of payload.scanValue) {
+        await PodScanInBranch.save(podScanInBranch);
+        payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+      }
+
+      // for (let inputNumber of payload.scanValue) {
+      let inputNumber = payload.scanValue;
       // Check type scan value number
       inputNumber = inputNumber.trim();
       if (regexNumber.test(inputNumber)) {
@@ -93,23 +125,29 @@ export class LastMileDeliveryInService {
         dataItem.trouble = true;
         data.push(dataItem);
       }
-    }
+      const result = new MobileScanInBranchResponseVm();
+      result.data = data;
 
-    // get bag number
-    if (dataBag && dataBag.bagItemId && payload.bagNumber == '') {
-      const bagItem = await BagService.getBagNumber(dataBag.bagItemId);
-      if (bagItem) {
-        payload.bagNumber =
-          bagItem.bag.bagNumber + bagItem.bagSeq.toString().padStart(3, '0');
+      if(!data[0].trouble){
+        result.service = res.service;
+        result.awbNumber = res.awbNumber;
+        result.consigneeName = res.consigneeName;
+        result.consigneeAddress = res.consigneeAddress;
+        result.consigneePhone = res.consigneePhone;
+        result.totalCodValue = res.totalCodValue;
+        result.dateTime = moment().format('YYYY-MM-DD H:ii:s');
+        result.podScanInBranchId = payload.podScanInBranchId;
       }
+      return result;
     }
-
+    const dataItem = new ScanInputNumberBranchVm();
+    dataItem.awbNumber = payload.scanValue;
+    dataItem.status = 'error';
+    dataItem.message = 'Nomor tidak valid atau tidak ditemukan';
+    dataItem.trouble = true;
+    data.push(dataItem);
     const result = new MobileScanInBranchResponseVm();
-    result.bagNumber = payload.bagNumber;
-    result.podScanInBranchId = payload.podScanInBranchId;
-    result.isBag = isBag;
     result.data = data;
-    result.dataBag = dataBag;
     return result;
   }
 
@@ -405,57 +443,6 @@ export class LastMileDeliveryInService {
               result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
             }
           } else {
-            // ONLY SCAN AWB NUMBER ===========================================
-            // NOTE: if awb item attr bagItemLast not null
-            // find bag if lazy scan bag number
-            // #region check bag if null
-            // bagId = awb.bagItemLast ? awb.bagItemLast.bagItemId : 0;
-            // bagItemId = awb.bagItemLast ? awb.bagItemLast.bagItemId : 0;
-            // const podScanInBranchBag = await PodScanInBranchBag.findOne({
-            //   where: {
-            //     podScanInBranchId,
-            //     bagId,
-            //     bagItemId,
-            //     isDeleted: false,
-            //   },
-            // });
-
-            // if (podScanInBranchBag) {
-            //   // set data bag
-            //   bagId = podScanInBranchBag.bagId;
-            //   bagItemId = podScanInBranchBag.bagItemId;
-
-            //   // NOTE: check doPodDetail ====================================
-            //   const doPodDetail = await DoPodDetail.findOne({
-            //     where: {
-            //       awbItemId: awb.awbItemId,
-            //       isScanIn: false,
-            //       isDeleted: false,
-            //     },
-            //   });
-            //   if (doPodDetail) {
-            //     // Update Data doPodDetail
-            //     await DoPodDetail.update(doPodDetail.doPodDetailId, {
-            //       isScanIn: true,
-            //       updatedTime: moment().toDate(),
-            //       userIdUpdated: authMeta.userId,
-            //     });
-            //   }
-            //   // ============================================================
-
-            //   dataBag.bagId = bagId;
-            //   dataBag.bagItemId = bagItemId;
-            //   dataBag.status = 'ok';
-            //   dataBag.message = 'Success';
-            //   dataBag.trouble = false;
-
-            //   result.dataBag = dataBag;
-            // } else {
-            //   result.status = 'warning';
-            //   result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
-            // }
-            // #endregion check bag if null
-
             // handle awb number only with not have bag number
             result.status = 'warning';
             result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
@@ -508,6 +495,33 @@ export class LastMileDeliveryInService {
       result.message = `Resi ${awbNumber} Tidak di Temukan`;
     }
 
+    return result;
+  }
+
+  static async scanInDetail(
+    payload: MobileScanInDetailVm,
+  ){
+    const qb = createQueryBuilder();
+    let result = [];
+
+    // Total barang belum scan masuk
+    qb.addSelect( 'awb.awb_number', 'awbNumber');
+    qb.addSelect( 'awb.consignee_name', 'consigneeName');
+    qb.addSelect( 'awb.consignee_address', 'consigneeAddress');
+    qb.addSelect( 'awb.consignee_phone', 'consigneePhone');
+    qb.addSelect( 'awb.total_cod_value', 'totalCodValue');
+    qb.addSelect( 'pt.package_type_code', 'service');
+
+    qb.from('awb', 'awb');
+    qb.innerJoin('package_type', 'pt', 'pt.package_type_id = awb.package_type_id');
+    qb.andWhere('awb.awb_number = :awbNumber',
+    {
+      awbNumber: payload.scanValue
+    });
+    const res = await qb.getRawOne();
+
+    console.log(res);
+    //getRawMany
     return result;
   }
 }
