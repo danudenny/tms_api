@@ -10,6 +10,7 @@ import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-histo
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { WorkOrderDetail } from '../../../../shared/orm-entity/work-order-detail';
 import { SysCounter } from '../../../../shared/orm-entity/sys-counter';
+import { AwbPartnerLog } from '../../../../shared/orm-entity/awb-partner-log';
 
 @Injectable()
 export class PartnerService {
@@ -368,7 +369,7 @@ export class PartnerService {
     return result;
   }
 
-  static async dropAwbPosIndonesia(paramAwb: any): Promise<any> {
+  static async dropAwbPosIndonesia(payload: any): Promise<any> {
     let result = {};
     const timeNow = moment().toDate();
     const workOrderUpdated = [];
@@ -376,11 +377,13 @@ export class PartnerService {
 
     // let totalProcess = 0;
     // let awbs = [];
-    const retry = 0;
-    const validAccessToken = true;
-    const accessToken = '';
+    let paramAwb = '';
+    let paramBranchCode = '';
+    let paramPartnerId = '';
+    paramAwb = payload.awb;
+    paramBranchCode = payload.branch_code;
+    paramPartnerId = payload.partner_id;
 
-    const arrAwb = [];
     // Notes: Pos Indonesia Use All Awb
     const data = await this.getAwbWorkOrderId(paramAwb);
     let workOrderIdLast = null;
@@ -388,7 +391,10 @@ export class PartnerService {
     let workOrderStatusIdLast = null;
     let refAwbNumber = null;
     let pickupRequestDetailId = null;
-    const arrDropStatus = [7050, 7100];
+    let branchPartnerId = null;
+    const arrDropStatus = [7050];
+
+    const dataBranch = await this.getBranchPartnerId(paramBranchCode);
 
     for (const item of data) {
       workOrderIdLast = item.work_order_id_last;
@@ -398,6 +404,10 @@ export class PartnerService {
       pickupRequestDetailId = item.pickup_request_detail_id;
     }
 
+    for (const itemBranch of dataBranch) {
+      branchPartnerId = itemBranch.branch_partner_id;
+    }
+
     if (refAwbNumber != null) {
       const dataWorkOrderCode = await this.getDataWorkOrderCode(timeNow);
       if (arrDropStatus.indexOf(Math.floor(workOrderStatusIdLast)) > -1) {
@@ -405,116 +415,172 @@ export class PartnerService {
           code: '422',
           message: 'Awb Already Drop Status',
         };
+        const paramsAwbPartnerLog = {
+          partner_id: paramPartnerId,
+          awb_number: refAwbNumber,
+          request_data: payload.body,
+          response_code: 422,
+          response_data: 'Awb Already Drop Status',
+          user_id: '1',
+          created_time: timeNow,
+          updated_time: timeNow,
+        };
+        const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
+        const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
       } else {
-        if (workOrderIdLast ===  null) {
-          const paramsWorkOrder = {
-            work_order_code: dataWorkOrderCode,
-            work_order_date: timeNow,
-            pickup_schedule_date_time: timeNow,
-            work_order_status_id_last: '7050',
-            work_order_status_id_pick: null,
-            branch_id_assigned: '0',
-            branch_id: '0',
-            is_member: false,
-            work_order_type: 'AUTOMATIC',
-            user_id: '1',
-            created_time: timeNow,
-            updated_time: timeNow,
-          };
-          const dataWorkOrder = await this.getDataWorkOrder(paramsWorkOrder);
-          const workOrder = await WorkOrder.insert(dataWorkOrder);
-
-          // console.log(work_order);
-          // console.log(work_order.raw[0].work_order_id);
-
-          const paramsWorkOrderDetail = {
-            work_order_id: workOrder.raw[0].work_order_id,
-            pickup_request_id: pickupRequestId,
-            work_order_status_id_last: '7050',
-            work_order_status_id_pick: null,
-            user_id: '1',
-            created_time: timeNow,
-            updated_time: timeNow,
-          };
-
-          const dataWorkOrderDetail = await this.getDataWorkOrderDetail(paramsWorkOrderDetail);
-          const work_order_detail = await WorkOrderDetail.insert(dataWorkOrderDetail);
-
-          console.log(work_order_detail);
-
-          const paramsWorkOrderHistory = {
-            work_order_id: workOrder.raw[0].work_order_id,
-            work_order_date: workOrder.raw[0].work_order_date,
-            pickup_request_id: pickupRequestId,
-            work_order_status_id_last: '7050',
-            work_order_status_id_pick: null,
-            branch_id: '0',
-            user_id: '1',
-            created_time: timeNow,
-            updated_time: timeNow,
-          };
-
-          const dataWorkOrderHistory = await this.getDataWorkOrderHistory(paramsWorkOrderHistory);
-          const work_order_history = await WorkOrderHistory.insert(dataWorkOrderHistory);
-
-          await PickupRequestDetail.update(pickupRequestDetailId, {
-            work_order_id_last: workOrder.raw[0].work_order_id,
-            user_id_updated: '1',
-            updated_time: timeNow,
-          });
-
+        if (branchPartnerId == null) {
           result = {
-            code: '200',
-            message: 'Success',
-            awb: paramAwb,
+            code: '422',
+            message: 'Branch code not found',
           };
-
+          const paramsAwbPartnerLog = {
+            partner_id: paramPartnerId,
+            awb_number: refAwbNumber,
+            request_data: payload.body,
+            response_code: 422,
+            response_data: 'Branch code not Status',
+            user_id: '1',
+            created_time: timeNow,
+            updated_time: timeNow,
+          };
+          const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
+          const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
         } else {
-          await WorkOrder.update(workOrderIdLast, {
-            work_order_status_id_last: '7050',
-            work_order_status_id_pick: null,
-            user_id_updated: '1',
-            updated_time: timeNow,
-          });
+          if (workOrderIdLast ===  null) {
+            const paramsWorkOrder = {
+              work_order_code: dataWorkOrderCode,
+              work_order_date: timeNow,
+              pickup_schedule_date_time: timeNow,
+              work_order_status_id_last: '7050',
+              work_order_status_id_pick: null,
+              branch_id_assigned: '0',
+              branch_id: '0',
+              is_member: false,
+              work_order_type: 'AUTOMATIC',
+              branch_partner_id: branchPartnerId,
+              user_id: '1',
+              created_time: timeNow,
+              updated_time: timeNow,
+            };
+            const dataWorkOrder = await this.getDataWorkOrder(paramsWorkOrder);
+            const workOrder = await WorkOrder.insert(dataWorkOrder);
 
-          await WorkOrderDetail.update({work_order_id: workOrderIdLast}, {
-            work_order_status_id_last: '7050',
-            work_order_status_id_pick: null,
-            user_id_updated: '1',
-            updated_time: timeNow,
-          });
+            // console.log(work_order);
+            // console.log(work_order.raw[0].work_order_id);
 
-          const workOrder = await WorkOrder.findOne({
-            work_order_id: workOrderIdLast,
-          });
-          const paramsWorkOrderHistory = {
-            work_order_id: workOrder.work_order_id,
-            work_order_date: workOrder.work_order_date,
-            pickup_request_id: pickupRequestId,
-            work_order_status_id_last: '7050',
-            work_order_status_id_pick: null,
-            branch_id: '0',
-            user_id: '1',
-            created_time: timeNow,
-            updated_time: timeNow,
-          };
+            const paramsWorkOrderDetail = {
+              work_order_id: workOrder.raw[0].work_order_id,
+              pickup_request_id: pickupRequestId,
+              work_order_status_id_last: '7050',
+              work_order_status_id_pick: null,
+              user_id: '1',
+              created_time: timeNow,
+              updated_time: timeNow,
+            };
 
-          const dataWorkOrderHistory = await this.getDataWorkOrderHistory(paramsWorkOrderHistory);
-          const work_order_history = await WorkOrderHistory.insert(dataWorkOrderHistory);
+            const dataWorkOrderDetail = await this.getDataWorkOrderDetail(paramsWorkOrderDetail);
+            const work_order_detail = await WorkOrderDetail.insert(dataWorkOrderDetail);
 
-          await WorkOrder.update(workOrderIdLast, {
-            work_order_history_id_last: work_order_history.raw[0].work_order_history_id,
-            user_id_updated: '1',
-            updated_time: timeNow,
-          });
+            console.log(work_order_detail);
 
-          result = {
-            code: '200',
-            message: 'Success',
-            awb: paramAwb,
-          };
+            const paramsWorkOrderHistory = {
+              work_order_id: workOrder.raw[0].work_order_id,
+              work_order_date: workOrder.raw[0].work_order_date,
+              pickup_request_id: pickupRequestId,
+              work_order_status_id_last: '7050',
+              work_order_status_id_pick: null,
+              branch_id: '0',
+              user_id: '1',
+              created_time: timeNow,
+              updated_time: timeNow,
+            };
+
+            const dataWorkOrderHistory = await this.getDataWorkOrderHistory(paramsWorkOrderHistory);
+            const work_order_history = await WorkOrderHistory.insert(dataWorkOrderHistory);
+
+            await PickupRequestDetail.update(pickupRequestDetailId, {
+              work_order_id_last: workOrder.raw[0].work_order_id,
+              user_id_updated: '1',
+              updated_time: timeNow,
+            });
+
+            result = {
+              code: '200',
+              message: 'Success',
+              awb: paramAwb,
+            };
+            const paramsAwbPartnerLog = {
+              partner_id: paramPartnerId,
+              awb_number: refAwbNumber,
+              request_data: payload.body,
+              response_code: 200,
+              response_data: result,
+              user_id: '1',
+              created_time: timeNow,
+              updated_time: timeNow,
+            };
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
+            const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+
+          } else {
+            await WorkOrder.update(workOrderIdLast, {
+              work_order_status_id_last: '7050',
+              work_order_status_id_pick: null,
+              branch_partner_id: branchPartnerId,
+              user_id_updated: '1',
+              updated_time: timeNow,
+            });
+
+            await WorkOrderDetail.update({work_order_id: workOrderIdLast}, {
+              work_order_status_id_last: '7050',
+              work_order_status_id_pick: null,
+              user_id_updated: '1',
+              updated_time: timeNow,
+            });
+
+            const workOrder = await WorkOrder.findOne({
+              work_order_id: workOrderIdLast,
+            });
+            const paramsWorkOrderHistory = {
+              work_order_id: workOrder.work_order_id,
+              work_order_date: workOrder.work_order_date,
+              pickup_request_id: pickupRequestId,
+              work_order_status_id_last: '7050',
+              work_order_status_id_pick: null,
+              branch_id: '0',
+              user_id: '1',
+              created_time: timeNow,
+              updated_time: timeNow,
+            };
+
+            const dataWorkOrderHistory = await this.getDataWorkOrderHistory(paramsWorkOrderHistory);
+            const work_order_history = await WorkOrderHistory.insert(dataWorkOrderHistory);
+
+            await WorkOrder.update(workOrderIdLast, {
+              work_order_history_id_last: work_order_history.raw[0].work_order_history_id,
+              user_id_updated: '1',
+              updated_time: timeNow,
+            });
+
+            result = {
+              code: '200',
+              message: 'Success',
+              awb: paramAwb,
+            };
+            const paramsAwbPartnerLog = {
+              partner_id: paramPartnerId,
+              awb_number: refAwbNumber,
+              request_data: payload.body,
+              response_code: 200,
+              response_data: result,
+              user_id: '1',
+              created_time: timeNow,
+              updated_time: timeNow,
+            };
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
+            const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+          }
         }
-
       }
 
     } else {
@@ -522,6 +588,18 @@ export class PartnerService {
         code: '422',
         message: 'Invalid AWB Number',
       };
+      const paramsAwbPartnerLog = {
+        partner_id: paramPartnerId,
+        awb_number: refAwbNumber,
+        request_data: payload.body,
+        response_code: 422,
+        response_data: 'Invalid AWB Number',
+        user_id: '1',
+        created_time: timeNow,
+        updated_time: timeNow,
+      };
+      const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
+      const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
     }
 
     return result;
@@ -546,6 +624,25 @@ export class PartnerService {
 
     return await RawQueryService.queryWithParams(query, {
       awb,
+    });
+  }
+
+  private static async getBranchPartnerId(branchPartnerCode: string): Promise<any> {
+    // const backDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
+
+    const query = `
+      SELECT
+        branch_partner_id,
+        branch_partner_code,
+        branch_partner_name
+      FROM branch_partner prd
+      WHERE
+        branch_partner_code = :branchPartnerCode AND
+        is_deleted = FALSE
+    `;
+
+    return await RawQueryService.queryWithParams(query, {
+      branchPartnerCode,
     });
   }
 
@@ -592,6 +689,7 @@ export class PartnerService {
       branch_id : params['branch_id'],
       is_member : params['is_member'],
       work_order_type : params['work_order_type'],
+      branch_partner_id: params['branch_partner_id'],
       user_id_created : params['user_id'],
       created_time : params['created_time'],
       user_id_updated : params['user_id'],
@@ -632,6 +730,23 @@ export class PartnerService {
     });
 
     return woh;
+  }
+
+  public static async getDataAwbPartnerLog(params: {}): Promise<any> {
+    // const timeNow = moment().toDate();
+    const apl = await AwbPartnerLog.create({
+      partnerId : params['partner_id'],
+      awbNumber : params['awb_number'],
+      requestData : params['request_data'],
+      responseCode : params['response_code'],
+      responseData : params['response_data'],
+      userIdCreated : params['user_id'],
+      createdTime : params['created_time'],
+      userIdUpdated : params['user_id'],
+      updatedTime : params['updated_time'],
+    });
+
+    return apl;
   }
 
 }
