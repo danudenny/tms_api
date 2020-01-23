@@ -68,7 +68,7 @@ export class LastMileDeliveryInService {
     qb.innerJoin(
         'do_pod',
         'dp',
-        'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = \'5240\''
+        'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
       );
     qb.andWhere('awb.awb_number = :awbNumber',
     {
@@ -137,6 +137,7 @@ export class LastMileDeliveryInService {
         result.consigneePhone = res.consigneePhone;
         result.totalCodValue = res.totalCodValue;
         result.dateTime = moment().format("YYYY-MM-DD HH:mm:ss");
+        
         result.podScanInBranchId = payload.podScanInBranchId;
       }
       return result;
