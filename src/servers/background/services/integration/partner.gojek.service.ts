@@ -105,6 +105,11 @@ export class PartnerGojekService {
     return result;
   }
 
+  static async callbackOrder(payload: any) {
+
+    return true;
+  }
+
   private static get gojekBaseUrl() {
     return ConfigService.get('gojek.baseUrl');
   }
