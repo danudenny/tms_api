@@ -385,6 +385,15 @@ export class FirstMileDeliveryOutService {
     let totalSuccess = 0;
     let totalError = 0;
 
+    // find data doPod
+    const doPod = await DoPod.findOne({
+      where: {
+        doPodId: payload.doPodId,
+        isDeleted: false,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
+
     for (const awbNumber of payload.awbNumber) {
       const response = {
         status: 'ok',
@@ -400,26 +409,27 @@ export class FirstMileDeliveryOutService {
           notDeliver =
             awb.awbStatusIdLast != AWB_STATUS.OUT_BRANCH ? true : false;
         }
+        // Add Locking setnx redis
+        const holdRedis = await RedisService.locking(
+          `hold:scanout:${awb.awbItemId}`,
+          'locking',
+        );
 
-        if (notDeliver) {
-          const statusCode = await AwbService.awbStatusGroup(
-            awb.awbStatusIdLast,
-          );
-          // save data to awb_trouble
-          if (statusCode != 'IN') {
-            const branchName = awb.branchLast ? awb.branchLast.branchName : '';
-            await AwbTroubleService.fromScanOut(
-              awbNumber,
-              branchName,
+        if (notDeliver && holdRedis) {
+          if (doPod) {
+            const statusCode = await AwbService.awbStatusGroup(
               awb.awbStatusIdLast,
             );
-          }
-          // Add Locking setnx redis
-          const holdRedis = await RedisService.locking(
-            `hold:scanout:${awb.awbItemId}`,
-            'locking',
-          );
-          if (holdRedis) {
+            // save data to awb_trouble
+            if (statusCode != 'IN') {
+              const branchName = awb.branchLast ? awb.branchLast.branchName : '';
+              await AwbTroubleService.fromScanOut(
+                awbNumber,
+                branchName,
+                awb.awbStatusIdLast,
+              );
+            }
+
             // NOTE: create data do pod detail per awb number
             const doPodDetail = DoPodDetail.create();
             doPodDetail.doPodId = payload.doPodId;
@@ -433,53 +443,26 @@ export class FirstMileDeliveryOutService {
 
             // AFTER Scan OUT ===============================================
             // #region after scanout
-            const doPod = await DoPod.findOne({
-              where: {
-                doPodId: payload.doPodId,
-                isDeleted: false,
-              },
-            });
 
-            if (doPod) {
-              // counter total scan out
-              doPod.totalScanOutAwb = doPod.totalScanOutAwb + 1;
-              if (doPod.totalScanOutAwb == 1) {
-                doPod.firstDateScanOut = timeNow;
-                doPod.lastDateScanOut = timeNow;
-              } else {
-                doPod.lastDateScanOut = timeNow;
-              }
-              await DoPod.save(doPod);
-
-              await AwbService.updateAwbAttr(
-                awb.awbItemId,
-                AWB_STATUS.OUT_BRANCH,
-                doPod.branchIdTo,
-              );
-
-              // NOTE: queue by Bull
-              DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
-                awb.awbItemId,
-                AWB_STATUS.OUT_BRANCH,
-                permissonPayload.branchId,
-                authMeta.userId,
-                doPod.userIdDriver,
-                doPod.branchIdTo,
-              );
-              totalSuccess += 1;
-            } else {
-              totalError += 1;
-              response.status = 'error';
-              response.message = `Surat Jalan Resi ${awbNumber} tidak valid.`;
-            }
+            // NOTE: queue by Bull
+            DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
+              awb.awbItemId,
+              AWB_STATUS.OUT_BRANCH,
+              permissonPayload.branchId,
+              authMeta.userId,
+              doPod.userIdDriver,
+              doPod.branchIdTo,
+            );
+            totalSuccess += 1;
             // #endregion after scanout
-            // remove key holdRedis
-            RedisService.del(`hold:scanout:${awb.awbItemId}`);
           } else {
             totalError += 1;
             response.status = 'error';
-            response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+            response.message = `Surat Jalan Resi ${awbNumber} tidak valid.`;
           }
+
+          // remove key holdRedis
+          RedisService.del(`hold:scanout:${awb.awbItemId}`);
         } else {
           totalError += 1;
           response.status = 'error';
@@ -497,6 +480,24 @@ export class FirstMileDeliveryOutService {
         ...response,
       });
     } // end of loop
+
+    // TODO: need improvement
+    if (doPod) {
+      // counter total scan in
+      if (doPod.totalScanOutAwb == 0) {
+        await DoPod.update(doPod.doPodId, {
+          totalScanOutAwb: totalSuccess,
+          firstDateScanOut: timeNow,
+          lastDateScanOut: timeNow,
+        });
+      } else {
+        const totalScanOutAwb = doPod.totalScanOutAwb + totalSuccess;
+        await DoPod.update(doPod.doPodId, {
+          totalScanOutAwb,
+          lastDateScanOut: timeNow,
+        });
+      }
+    }
 
     // Populate return value
     result.totalData = payload.awbNumber.length;
@@ -565,8 +566,7 @@ export class FirstMileDeliveryOutService {
               BAG_STATUS.IN_BRANCH,
               BAG_STATUS.IN_HUB,
             ];
-            if (
-              !statusNotTrouble.includes(bagData.bagItemStatusIdLast) ||
+            if (!statusNotTrouble.includes(bagData.bagItemStatusIdLast) ||
               bagData.branchIdLast != permissonPayload.branchId
             ) {
               // TODO: construct message?
@@ -629,6 +629,10 @@ export class FirstMileDeliveryOutService {
 
             // #endregion after scanout
             totalSuccess += 1;
+          } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Surat Jalan Bag ${bagNumber} tidak valid.`;
           }
           // remove key holdRedis
           RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
