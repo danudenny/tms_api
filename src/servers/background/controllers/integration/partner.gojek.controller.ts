@@ -4,7 +4,7 @@ import { AuthGojekGuard } from '../../../../shared/guards/auth-gojek.guard';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { PartnerGojekService } from '../../services/integration/partner.gojek.service';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
-import { GojekBookingPickupVm, GojekBookingPickupResponseVm } from '../../models/partner/gojek-booking-pickup.vm';
+import { GojekBookingPickupVm, GojekBookingPickupResponseVm, GojekCancelBookingVm } from '../../models/partner/gojek-booking-pickup.vm';
 
 @ApiUseTags('Partner Integration Gojek')
 @Controller('integration')
@@ -21,22 +21,21 @@ export class PartnerGojekController {
 
   @Put('gojek/cancelBooking')
   @HttpCode(HttpStatus.OK)
-  // @ApiOkResponse({ type: TrackingNoteResponseVm })
-  public async cancelBooking(@Body() payload: any) {
-    return {};
+  @ResponseSerializerOptions({ disable: true })
+  public async cancelBooking(@Body() payload: GojekCancelBookingVm) {
+    return PartnerGojekService.cancelBooking(payload);
   }
 
   @Get('gojek/estimatePrice')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
-  // @ApiOkResponse({ type: TrackingNoteResponseVm })
   public async estimatePrice(@Body() payload: any) {
     return null; // PartnerGojekService.getEstimatePrice();
   }
 
   @Get('gojek/checkOrderStatus/:orderNo')
   @HttpCode(HttpStatus.OK)
-  // @ApiOkResponse({ type: TrackingNoteResponseVm })
+  @ResponseSerializerOptions({ disable: true })
   public async checkOrderStatus(@Param('orderNo') orderNo: string) {
     return PartnerGojekService.getStatusOrder(orderNo);
   }
@@ -44,7 +43,7 @@ export class PartnerGojekController {
   @Post('gojek/callback')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGojekGuard)
-  // @ApiOkResponse({ type: TrackingNoteResponseVm })
+  @ResponseSerializerOptions({ disable: true })
   public async webHookCallback(@Body() payload: any) {
     PinoLoggerService.log(payload);
     return { status: 'ok', message: 'success' };

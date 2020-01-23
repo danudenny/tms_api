@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { GojekBookingPickupVm, GojekBookingPickupResponseVm, GojekBookingPayloadVm, GojekBookingResponseVm } from '../../models/partner/gojek-booking-pickup.vm';
+import { GojekBookingPickupVm, GojekBookingPickupResponseVm, GojekBookingPayloadVm, GojekBookingResponseVm, GojekCancelBookingVm } from '../../models/partner/gojek-booking-pickup.vm';
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { Not, IsNull } from 'typeorm';
@@ -10,21 +10,13 @@ export class PartnerGojekService {
 
   static async getStatusOrder(orderNo: string) {
     const response = await this.getStatusOrderGojek(orderNo);
-    return response.data;
+    return response;
   }
 
-  static async cancelBooking() {
-    // request
-    // {
-    //   "orderNo": "GK-364491"
-    // }
-
-    // response
-    // {
-    //   "statusCode": 200,
-    //   "message": "Booking cancelled"
-    // }
-    return null;
+  static async cancelBooking(payload: GojekCancelBookingVm) {
+    const response = await this.cancelBookingGojek(payload.orderNo);
+    // TODO: handle success cancel Booking ??
+    return response;
   }
 
   static async createBookingPickup(
@@ -35,13 +27,6 @@ export class PartnerGojekService {
     result.message = 'success';
     result.data = null;
     result.response = null;
-    // TODO:
-    // find data pickup_request_detail where work_order_id
-    // get data shipper lat,long, address, shipper name, shipper mobile phone
-    // find data branch where branch_id
-    // get data branch lat, long and address, mobile phone, PIC
-    // item ??
-    console.log(payload);
 
     const pickupDetail = await PickupRequestDetail.findOne({
       where: {
@@ -184,8 +169,21 @@ export class PartnerGojekService {
     const options = {
       headers: this.headerGojek,
     };
-    const response = await axios.get(url, options);
-    return response.data;
+    const result = await axios.get(url, options);
+    return result.data;
+  }
+
+  private static async cancelBookingGojek(orderNo: string) {
+    const url = `${this.gojekBaseUrl}booking/cancel`;
+    const options = {
+      headers: this.headerGojek,
+    };
+    const data = {
+      orderNo,
+    };
+
+    const result = await axios.put(url, data, options);
+    return result.data;
   }
 
   private static async getEstimatePrice(

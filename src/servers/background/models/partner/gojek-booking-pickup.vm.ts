@@ -10,6 +10,10 @@ export class GojekBookingPickupVm {
   @ApiModelProperty()
   userId: number;
 }
+export class GojekCancelBookingVm {
+  @ApiModelProperty()
+  orderNo: string;
+}
 
 export class GojekBookingResponseVm {
   @ApiModelProperty()
