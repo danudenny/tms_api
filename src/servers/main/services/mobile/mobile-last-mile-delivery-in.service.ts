@@ -135,7 +135,7 @@ export class LastMileDeliveryInService {
         result.consigneeAddress = res.consigneeAddress;
         result.consigneePhone = res.consigneePhone;
         result.totalCodValue = res.totalCodValue;
-        result.dateTime = moment().format('YYYY-MM-DD H:ii:s');
+        result.dateTime = moment().format("YYYY-MM-DD HH:mm:ss");
         result.podScanInBranchId = payload.podScanInBranchId;
       }
       return result;
