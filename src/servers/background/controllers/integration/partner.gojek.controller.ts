@@ -26,12 +26,12 @@ export class PartnerGojekController {
     return PartnerGojekService.cancelBooking(payload);
   }
 
-  @Get('gojek/estimatePrice')
-  @HttpCode(HttpStatus.OK)
-  @ResponseSerializerOptions({ disable: true })
-  public async estimatePrice(@Body() payload: any) {
-    return null; // PartnerGojekService.getEstimatePrice();
-  }
+  // @Get('gojek/estimatePrice')
+  // @HttpCode(HttpStatus.OK)
+  // @ResponseSerializerOptions({ disable: true })
+  // public async estimatePrice(@Body() payload: any) {
+  //   return PartnerGojekService.getEstimatePrice();
+  // }
 
   @Get('gojek/checkOrderStatus/:orderNo')
   @HttpCode(HttpStatus.OK)
@@ -45,7 +45,7 @@ export class PartnerGojekController {
   @UseGuards(AuthGojekGuard)
   @ResponseSerializerOptions({ disable: true })
   public async webHookCallback(@Body() payload: any) {
-    PinoLoggerService.log(payload);
+    PartnerGojekService.callbackOrder(payload);
     return { status: 'ok', message: 'success' };
   }
 }
