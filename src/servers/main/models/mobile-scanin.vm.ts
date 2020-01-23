@@ -91,9 +91,6 @@ export class MobileScanInBagBranchVm {
 
   @ApiModelProperty()
   podScanInBranchId: string;
-
-  @ApiModelProperty()
-  date: string;
 }
 
 export class MobileScanInBranchResponseVm {
