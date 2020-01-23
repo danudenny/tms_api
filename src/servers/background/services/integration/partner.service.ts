@@ -427,6 +427,7 @@ export class PartnerService {
         };
         const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
         const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+        return result;
       } else {
         if (workOrderIdLast ===  null) {
           const paramsWorkOrder = {
@@ -501,6 +502,7 @@ export class PartnerService {
           };
           const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
           const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+          return result;
         } else {
           if (workOrderIdLast ===  null) {
             const paramsWorkOrder = {
@@ -577,6 +579,7 @@ export class PartnerService {
             };
             const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
             const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+            return result;
 
           } else {
             await WorkOrder.update(workOrderIdLast, {
@@ -635,6 +638,7 @@ export class PartnerService {
             };
             const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
             const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+            return result;
           }
         }
       }
@@ -656,6 +660,7 @@ export class PartnerService {
       };
       const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
       const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+      return result;
     }
 
     return result;
