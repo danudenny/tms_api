@@ -449,7 +449,7 @@ export class PartnerService {
           const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
           return result;
         } else {
-          if (workOrderIdLast ===  null) {
+          if (workOrderIdLast === null) {
             const paramsWorkOrder = {
               work_order_code: dataWorkOrderCode,
               work_order_date: timeNow,
@@ -481,8 +481,12 @@ export class PartnerService {
               updated_time: timeNow,
             };
 
-            const dataWorkOrderDetail = await this.getDataWorkOrderDetail(paramsWorkOrderDetail);
-            const work_order_detail = await WorkOrderDetail.insert(dataWorkOrderDetail);
+            const dataWorkOrderDetail = await this.getDataWorkOrderDetail(
+              paramsWorkOrderDetail,
+            );
+            const work_order_detail = await WorkOrderDetail.insert(
+              dataWorkOrderDetail,
+            );
 
             console.log(work_order_detail);
 
@@ -498,13 +502,17 @@ export class PartnerService {
               updated_time: timeNow,
             };
 
-            const dataWorkOrderHistory = await this.getDataWorkOrderHistory(paramsWorkOrderHistory);
-            const work_order_history = await WorkOrderHistory.insert(dataWorkOrderHistory);
+            const dataWorkOrderHistory = await this.getDataWorkOrderHistory(
+              paramsWorkOrderHistory,
+            );
+            const work_order_history = await WorkOrderHistory.insert(
+              dataWorkOrderHistory,
+            );
 
             await PickupRequestDetail.update(pickupRequestDetailId, {
-              work_order_id_last: workOrder.raw[0].work_order_id,
-              user_id_updated: '1',
-              updated_time: timeNow,
+              workOrderIdLast: workOrder.raw[0].work_order_id,
+              userIdUpdated: 1,
+              updatedTime: timeNow,
             });
 
             result = {
@@ -535,12 +543,15 @@ export class PartnerService {
               updated_time: timeNow,
             });
 
-            await WorkOrderDetail.update({work_order_id: workOrderIdLast}, {
-              work_order_status_id_last: '7050',
-              work_order_status_id_pick: null,
-              user_id_updated: '1',
-              updated_time: timeNow,
-            });
+            await WorkOrderDetail.update(
+              { work_order_id: workOrderIdLast },
+              {
+                work_order_status_id_last: '7050',
+                work_order_status_id_pick: null,
+                user_id_updated: '1',
+                updated_time: timeNow,
+              },
+            );
 
             const workOrder = await WorkOrder.findOne({
               work_order_id: workOrderIdLast,
@@ -557,11 +568,16 @@ export class PartnerService {
               updated_time: timeNow,
             };
 
-            const dataWorkOrderHistory = await this.getDataWorkOrderHistory(paramsWorkOrderHistory);
-            const work_order_history = await WorkOrderHistory.insert(dataWorkOrderHistory);
+            const dataWorkOrderHistory = await this.getDataWorkOrderHistory(
+              paramsWorkOrderHistory,
+            );
+            const work_order_history = await WorkOrderHistory.insert(
+              dataWorkOrderHistory,
+            );
 
             await WorkOrder.update(workOrderIdLast, {
-              work_order_history_id_last: work_order_history.raw[0].work_order_history_id,
+              work_order_history_id_last:
+                work_order_history.raw[0].work_order_history_id,
               user_id_updated: '1',
               updated_time: timeNow,
             });
@@ -587,7 +603,6 @@ export class PartnerService {
           }
         }
       }
-
     } else {
       result = {
         code: '422',
@@ -633,7 +648,9 @@ export class PartnerService {
     });
   }
 
-  private static async getBranchPartnerId(branchPartnerCode: string): Promise<any> {
+  private static async getBranchPartnerId(
+    branchPartnerCode: string,
+  ): Promise<any> {
     // const backDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
 
     const query = `
@@ -652,7 +669,7 @@ export class PartnerService {
     });
   }
 
-  public static async getDataWorkOrderCode(workOrderTime: any ): Promise<any> {
+  public static async getDataWorkOrderCode(workOrderTime: any): Promise<any> {
     let workOrderCode = '';
     let prefix = '';
     let lastNumber = 0;
@@ -667,7 +684,7 @@ export class PartnerService {
     });
     // console.log(code);
     // console.log(code.counter);
-    if (code.counter == 0 || code.counter == null ) {
+    if (code.counter == 0 || code.counter == null) {
       lastNumber = 1;
     } else {
       lastNumber = Math.floor(code.counter) + 1;
@@ -685,21 +702,21 @@ export class PartnerService {
   public static async getDataWorkOrder(params: {}): Promise<any> {
     // const timeNow = moment().toDate();
     const wo = await WorkOrder.create({
-      work_order_code : params['work_order_code'],
-      work_order_date : params['work_order_date'],
-      pickup_schedule_date_time : params['pickup_schedule_date_time'],
-      work_order_status_id_last : params['work_order_status_id_last'],
-      work_order_status_id_pick : params['work_order_status_id_pick'],
-      branch_id_assigned : params['branch_id_assigned'],
-      user_id : params['user_id'],
-      branch_id : params['branch_id'],
-      is_member : params['is_member'],
-      work_order_type : params['work_order_type'],
+      work_order_code: params['work_order_code'],
+      work_order_date: params['work_order_date'],
+      pickup_schedule_date_time: params['pickup_schedule_date_time'],
+      work_order_status_id_last: params['work_order_status_id_last'],
+      work_order_status_id_pick: params['work_order_status_id_pick'],
+      branch_id_assigned: params['branch_id_assigned'],
+      user_id: params['user_id'],
+      branch_id: params['branch_id'],
+      is_member: params['is_member'],
+      work_order_type: params['work_order_type'],
       branch_partner_id: params['branch_partner_id'],
-      user_id_created : params['user_id'],
-      created_time : params['created_time'],
-      user_id_updated : params['user_id'],
-      updated_time : params['updated_time'],
+      user_id_created: params['user_id'],
+      created_time: params['created_time'],
+      user_id_updated: params['user_id'],
+      updated_time: params['updated_time'],
     });
 
     return wo;
@@ -712,10 +729,10 @@ export class PartnerService {
       pickup_request_id: params['pickup_request_id'],
       work_order_status_id_last: params['work_order_status_id_last'],
       work_order_status_id_pick: params['work_order_status_id_pick'],
-      user_id_created : params['user_id'],
-      created_time : params['created_time'],
-      user_id_updated : params['user_id'],
-      updated_time : params['updated_time'],
+      user_id_created: params['user_id'],
+      created_time: params['created_time'],
+      user_id_updated: params['user_id'],
+      updated_time: params['updated_time'],
     });
 
     return wod;
@@ -724,15 +741,15 @@ export class PartnerService {
   public static async getDataWorkOrderHistory(params: {}): Promise<any> {
     // const timeNow = moment().toDate();
     const woh = await WorkOrderHistory.create({
-      work_order_id : params['work_order_id'],
-      work_order_status_id : params['work_order_status_id_last'],
-      user_id : params['user_id'],
-      branch_id : params['branch_id'],
-      history_date_time : params['updated_time'],
-      user_id_created : params['user_id'],
-      created_time : params['created_time'],
-      user_id_updated : params['user_id'],
-      updated_time : params['updated_time'],
+      work_order_id: params['work_order_id'],
+      work_order_status_id: params['work_order_status_id_last'],
+      user_id: params['user_id'],
+      branch_id: params['branch_id'],
+      history_date_time: params['updated_time'],
+      user_id_created: params['user_id'],
+      created_time: params['created_time'],
+      user_id_updated: params['user_id'],
+      updated_time: params['updated_time'],
     });
 
     return woh;
@@ -742,18 +759,17 @@ export class PartnerService {
     // const timeNow = moment().toDate();
     // test
     const apl = await AwbPartnerLog.create({
-      partnerId : params['partner_id'],
-      awbNumber : params['awb_number'],
-      requestData : params['request_data'],
-      responseCode : params['response_code'],
-      responseData : params['response_data'],
-      userIdCreated : params['user_id'],
-      createdTime : params['created_time'],
-      userIdUpdated : params['user_id'],
-      updatedTime : params['updated_time'],
+      partnerId: params['partner_id'],
+      awbNumber: params['awb_number'],
+      requestData: params['request_data'],
+      responseCode: params['response_code'],
+      responseData: params['response_data'],
+      userIdCreated: params['user_id'],
+      createdTime: params['created_time'],
+      userIdUpdated: params['user_id'],
+      updatedTime: params['updated_time'],
     });
 
     return apl;
   }
-
 }
