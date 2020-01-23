@@ -68,13 +68,14 @@ export class LastMileDeliveryInService {
     qb.innerJoin(
         'do_pod',
         'dp',
-        'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+        'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = \'5240\''
       );
     qb.andWhere('awb.awb_number = :awbNumber',
     {
       awbNumber: payload.scanValue
     });
     const res = await qb.getRawOne();
+    console.log(res);
 
     if(res){
       let podScanInBranch = await PodScanInBranch.findOne({
@@ -490,8 +491,10 @@ export class LastMileDeliveryInService {
         RedisService.del(`hold:scanin-awb-branch:${awb.awbItemId}`);
       } else {
         result.message = `Resi ${awbNumber} sudah di proses.`;
+        result.trouble = true;
       }
     } else {
+      result.trouble = true;
       result.message = `Resi ${awbNumber} Tidak di Temukan`;
     }
 
