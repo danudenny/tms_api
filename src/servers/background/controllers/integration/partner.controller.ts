@@ -2,6 +2,7 @@ import { Body, Controller, Post, Req } from '@nestjs/common';
 import { PartnerService } from '../../services/integration/partner.service';
 import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
+import { PosindonesiaPayloadVm } from '../../models/posindonesia.payload.vm';
 
 // @ApiUseTags('Master Data')
 @Controller('integration/partner')
@@ -23,8 +24,8 @@ export class PartnerController {
   // @ApiBearerAuth()
   // @UseGuards(AuthenticatedGuard)
   // @ApiOkResponse({ type: TrackingNoteResponseVm })
-  public async dropAwbPosIndonesia(@Req() payload: any) {
-    const apiKeyPartner = payload.headers['x-api-key'];
+  public async dropAwbPosIndonesia(@Req() request: any, @Body() payload: PosindonesiaPayloadVm) {
+    const apiKeyPartner = request.headers['x-api-key'];
     let result = {};
     if (!apiKeyPartner) {
        result = {
@@ -45,7 +46,8 @@ export class PartnerController {
       return result;
     } else {
       if (partner.partner_name.toLocaleLowerCase() === 'pos indonesia') {
-        return PartnerService.dropAwbPosIndonesia(payload.body['awb']);
+        payload.partner_id = partner.partner_id;
+        return PartnerService.dropAwbPosIndonesia(payload);
       } else {
         result = {
           code: '422',
