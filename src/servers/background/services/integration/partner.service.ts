@@ -393,6 +393,7 @@ export class PartnerService {
     let pickupRequestDetailId = null;
     let branchPartnerId = null;
     const arrDropStatus = [7050];
+    const err = '';
 
     const dataBranch = await this.getBranchPartnerId(paramBranchCode);
 
@@ -795,6 +796,7 @@ export class PartnerService {
 
   public static async getDataAwbPartnerLog(params: {}): Promise<any> {
     // const timeNow = moment().toDate();
+    // test
     const apl = await AwbPartnerLog.create({
       partnerId : params['partner_id'],
       awbNumber : params['awb_number'],
