@@ -20,7 +20,7 @@ import {
 } from '../../models/mobile-scanout.vm';
 import { AwbService } from '../v1/awb.service';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
-import { MobileScanOutAwbResponseVm } from '../../models/mobile-scanout-response.vm';
+import { MobileScanOutAwbResponseVm, CreateDoPodResponseVm } from '../../models/mobile-scanout-response.vm';
 import { CustomCounterCode } from 'src/shared/services/custom-counter-code.service';
 import { AuditHistory } from 'src/shared/orm-entity/audit-history';
 import { ScanAwbVm } from '../../models/mobile-scanin-awb.response.vm';
@@ -42,38 +42,10 @@ export class LastMileDeliveryOutService {
   ): Promise<MobileScanOutAwbResponseVm> {
     const authMeta = AuthService.getAuthData();
     const result = new MobileScanOutAwbResponseVm();
-
-    // create do_pod_deliver (Surat Jalan Antar sigesit)
-    const doPod = DoPodDeliver.create();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    // NOTE: moment(payload.doPodDateTime).toDate();
-    const doPodDateTime = moment().toDate();
 
-    // NOTE: Tipe surat (jalan Antar Sigesit)
-    doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
-      doPodDateTime,
-    ); // generate code
-
-    // doPod.userIdDriver = payload.
-    doPod.userIdDriver = authMeta.userId;
-    doPod.doPodDeliverDateTime = doPodDateTime;
-    doPod.description = null;
-
-    doPod.branchId = permissonPayload.branchId;
-    doPod.userId = authMeta.userId;
-
-    // await for get do pod id
-    await DoPodDeliver.save(doPod);
-
-    await this.createAuditDeliveryHistory(
-      doPod.doPodDeliverId,
-      false,
-    );
-
-    // END OF PROCESS CREATE DELIVERY LETTER (surat jalan antar)
-    // =========================================================
-    // START OF PROCESS AWB SCANNING
-    // =========================================================
+    // Create Delivery Do POD (surat jalan antar)
+    const res = await this.createDeliveryDoPod(payload);
 
     const dataItem = [];
 
@@ -117,7 +89,7 @@ export class LastMileDeliveryOutService {
           // save table do_pod_detail
           // NOTE: create data do pod detail per awb number
           const doPodDeliverDetail = DoPodDeliverDetail.create();
-          doPodDeliverDetail.doPodDeliverId = doPod.doPodDeliverId;
+          doPodDeliverDetail.doPodDeliverId = res.doPodId;
           doPodDeliverDetail.awbId = awb.awbId;
           doPodDeliverDetail.awbItemId = awb.awbItemId;
           doPodDeliverDetail.awbNumber = awbNumber;
@@ -128,7 +100,7 @@ export class LastMileDeliveryOutService {
           // #region after scanout
           // Update do_pod
           const doPodDeliver = await DoPodDeliverRepository.getDataById(
-            doPod.doPodDeliverId,
+            res.doPodId,
           );
 
           if (doPodDeliver) {
@@ -207,5 +179,43 @@ export class LastMileDeliveryOutService {
       auditHistory.note = note;
       return await AuditHistory.save(auditHistory);
     }
+  }
+
+  static async createDeliveryDoPod(
+    payload: TransferAwbDeliverVm,
+  ): Promise<CreateDoPodResponseVm>{
+    const authMeta = AuthService.getAuthData();
+    const result = new CreateDoPodResponseVm();
+
+    // create do_pod_deliver (Surat Jalan Antar sigesit)
+    const doPod = DoPodDeliver.create();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    // NOTE: moment(payload.doPodDateTime).toDate();
+    const doPodDateTime = moment().toDate();
+
+    // NOTE: Tipe surat (jalan Antar Sigesit)
+    doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
+      doPodDateTime,
+    ); // generate code
+
+    // doPod.userIdDriver = payload.
+    doPod.userIdDriver = authMeta.userId;
+    doPod.doPodDeliverDateTime = doPodDateTime;
+    doPod.description = null;
+
+    doPod.branchId = permissonPayload.branchId;
+    doPod.userId = authMeta.userId;
+
+    // await for get do pod id
+    await DoPodDeliver.save(doPod);
+
+    await this.createAuditDeliveryHistory(
+      doPod.doPodDeliverId,
+      false,
+    );
+
+    result.status = "ok";
+    result.doPodId = doPod.doPodDeliverId;
+    return result;
   }
 }

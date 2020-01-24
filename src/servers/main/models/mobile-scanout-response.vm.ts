@@ -22,3 +22,17 @@ export class MobileScanOutAwbResponseVm {
   @ApiModelProperty({ type: [ScanAwbVm] })
   data: ScanAwbVm;
 }
+
+export class CreateDoPodResponseVm {
+  @ApiModelProperty()
+  doPodId: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
