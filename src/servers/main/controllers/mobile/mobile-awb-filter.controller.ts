@@ -7,7 +7,7 @@ import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
 import { MobileAwbFilterListResponseVm } from '../../models/mobile-awb-filter-list.response.vm';
 import { MobileAwbFilterService } from '../../services/mobile/mobile-awb-filter.service';
 
-@ApiUseTags('Mobile Delivery In')
+@ApiUseTags('Mobile Transit Detail Awb List')
 @Controller('mobile')
 export class MobileAwbFilterController {
   constructor(private readonly mobileAwbFilterService: MobileAwbFilterService) {}
