@@ -106,7 +106,7 @@ export class MobileDashboardService {
     qb3.innerJoin(
         'pod_scan_in_branch',
         'pcb',
-        'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId ', { userId: authMeta.userId }
+        'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId ', { userId: authMeta.userId }
       );
     qb3.where(
       'pcb.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
