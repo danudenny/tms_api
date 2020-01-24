@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseGuards, UseInterceptors, Get } from '@nestjs/common';
 
 import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
@@ -12,22 +12,22 @@ import { MobileAwbFilterService } from '../../services/mobile/mobile-awb-filter.
 export class MobileAwbFilterController {
   constructor(private readonly mobileAwbFilterService: MobileAwbFilterService) {}
 
-  @Post('pod/scanIn/list')
+  @Get('pod/scanIn/list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileAwbFilterListResponseVm })
-  public async findAllAwbScanInFilterList(@Body() payload: BaseMetaPayloadVm) {
-    return this.mobileAwbFilterService.findAllScanInFilterList(payload);
+  public async findAllAwbScanInFilterList() {
+    return this.mobileAwbFilterService.findAllScanInFilterList();
   }
 
-  @Post('pod/notScanIn/list')
+  @Get('pod/notScanIn/list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileAwbFilterListResponseVm })
-  public async findAllAwbNotScanInFilterList(@Body() payload: BaseMetaPayloadVm) {
-    return this.mobileAwbFilterService.findAllNotScanInFilterList(payload);
+  public async findAllAwbNotScanInFilterList() {
+    return this.mobileAwbFilterService.findAllNotScanInFilterList();
   }
 
   @Post('pod/notScanOut/list')
@@ -35,7 +35,7 @@ export class MobileAwbFilterController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileAwbFilterListResponseVm })
-  public async findAllAwbNotScanOutFilterList(@Body() payload: BaseMetaPayloadVm) {
-    return this.mobileAwbFilterService.findAllNotScanOutFilterList(payload);
+  public async findAllAwbNotScanOutFilterList() {
+    return this.mobileAwbFilterService.findAllNotScanOutFilterList();
   }
 }

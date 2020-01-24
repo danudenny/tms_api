@@ -13,12 +13,7 @@ import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 export class MobileAwbFilterService {
   constructor() {}
 
-  async findAllScanInFilterList(
-    payload: BaseMetaPayloadVm,
-  ): Promise<MobileAwbFilterListResponseVm> {
-    // mapping field
-    payload.fieldResolverMap['filteredDateTime'] = 'awb.created_time';
-    payload.fieldFilterManualMap['filteredDateTime'] = true;
+  async findAllScanInFilterList(): Promise<MobileAwbFilterListResponseVm> {
     const authMeta = AuthService.getAuthData();
     const currentMoment = moment();
     const qb = createQueryBuilder();
@@ -62,22 +57,13 @@ export class MobileAwbFilterService {
     qb.andWhere('aia.awb_status_id_last = :inBranchCode', { inBranchCode: AWB_STATUS.IN_BRANCH });
     const data = await qb.getRawMany();
 
-    const total = await QueryBuilderService.count(qb, '1');
-    payload.applyRawPaginationToQueryBuilder(qb);
-
     const result = new MobileAwbFilterListResponseVm();
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
 
-  async findAllNotScanInFilterList(
-    payload: BaseMetaPayloadVm,
-  ): Promise<MobileAwbFilterListResponseVm> {
-    // mapping field
-    payload.fieldResolverMap['filteredDateTime'] = 'awb.created_time';
-    payload.fieldFilterManualMap['filteredDateTime'] = true;
+  async findAllNotScanInFilterList(): Promise<MobileAwbFilterListResponseVm> {
     const authMeta = AuthService.getAuthData();
     const currentMoment = moment();
     const qb = createQueryBuilder();
@@ -121,22 +107,13 @@ export class MobileAwbFilterService {
     qb.andWhere('aia.awb_status_id_last = :outBranchCode', { outBranchCode: AWB_STATUS.OUT_BRANCH });
     const data = await qb.getRawMany();
 
-    const total = await QueryBuilderService.count(qb, '1');
-    payload.applyRawPaginationToQueryBuilder(qb);
-
     const result = new MobileAwbFilterListResponseVm();
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
 
-  async findAllNotScanOutFilterList(
-    payload: BaseMetaPayloadVm,
-  ): Promise<MobileAwbFilterListResponseVm> {
-    // mapping field
-    payload.fieldResolverMap['filteredDateTime'] = 'awb.created_time';
-    payload.fieldFilterManualMap['filteredDateTime'] = true;
+  async findAllNotScanOutFilterList(): Promise<MobileAwbFilterListResponseVm> {
     const authMeta = AuthService.getAuthData();
     const currentMoment = moment();
     const qb = createQueryBuilder();
@@ -174,12 +151,8 @@ export class MobileAwbFilterService {
     );
     const data = await qb.getRawMany();
 
-    const total = await QueryBuilderService.count(qb, '1');
-    payload.applyRawPaginationToQueryBuilder(qb);
-
     const result = new MobileAwbFilterListResponseVm();
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
