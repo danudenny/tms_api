@@ -18,7 +18,7 @@ export class MobileAwbFilterService {
     const currentMoment = moment();
     const qb = createQueryBuilder();
 
-    // Total barang scan masuk
+    // Total barang belum scan keluar
     qb.addSelect( 'awb.awb_number', 'awbNumber');
     qb.addSelect( 'awb.consignee_name', 'consigneeName');
     qb.addSelect( 'awb.consignee_address', 'consigneeAddress');
@@ -38,17 +38,17 @@ export class MobileAwbFilterService {
       'aia.awb_id = awb.awb_id'
     );
     qb.innerJoin(
-      'pod_scan_in_branch_detail',
-      'pcbd',
-      'pcbd.awb_item_id = aia.awb_item_id'
+      'do_pod_detail',
+      'dpd',
+      'dpd.awb_item_id = aia.awb_item_id'
     );
     qb.innerJoin(
-      'pod_scan_in_branch',
-      'pcb',
-      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId', { userId: authMeta.userId }
+      'do_pod',
+      'dp',
+      'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
     );
     qb.where(
-      'pcb.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      'dp.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
       {
         currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
         currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
@@ -118,7 +118,7 @@ export class MobileAwbFilterService {
     const currentMoment = moment();
     const qb = createQueryBuilder();
 
-    // Total barang belum scan keluar
+    // Total barang scan masuk
     qb.addSelect( 'awb.awb_number', 'awbNumber');
     qb.addSelect( 'awb.consignee_name', 'consigneeName');
     qb.addSelect( 'awb.consignee_address', 'consigneeAddress');
@@ -133,17 +133,17 @@ export class MobileAwbFilterService {
       'pt.package_type_id = awb.package_type_id'
     );
     qb.innerJoin(
-      'do_pod_detail',
-      'dpd',
-      'dpd.awb_number = awb.awb_number'
+      'pod_scan_in_branch_detail',
+      'pcbd',
+      'pcbd.awb_item_id = aia.awb_item_id'
     );
     qb.innerJoin(
-      'do_pod',
-      'dp',
-      'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+      'pod_scan_in_branch',
+      'pcb',
+      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId', { userId: authMeta.userId }
     );
     qb.where(
-      'dp.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      'pcb.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
       {
         currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
         currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
