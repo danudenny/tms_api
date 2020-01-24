@@ -39,6 +39,7 @@ import { WebLastMileController } from './web/web-last-mile.controller';
 import { WebAwbReturnController } from './web/web-awb-return.controller';
 import { MobileDeliveryInController } from './mobile/mobile-delivery-in.controller';
 import { MobileDeliveryOutController } from './mobile/mobile-delivery-out.controller';
+import { MobileAwbFilterController } from './mobile/mobile-awb-filter.controller';
 
 // #endregion
 @Module({
@@ -84,6 +85,7 @@ import { MobileDeliveryOutController } from './mobile/mobile-delivery-out.contro
     WebLastMileController,
     MobileDeliveryInController,
     MobileDeliveryOutController,
+    MobileAwbFilterController,
   ],
 })
 export class MainServerControllersModule {}
