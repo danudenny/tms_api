@@ -320,16 +320,6 @@ export class LastMileDeliveryOutService {
             'locking',
           );
           if (holdRedis) {
-            // save table do_pod_detail
-            // NOTE: create data do pod detail per awb number
-            const doPodDeliverDetail = DoPodDeliverDetail.create();
-            doPodDeliverDetail.doPodDeliverId = payload.doPodId;
-            doPodDeliverDetail.awbId = awb.awbId;
-            doPodDeliverDetail.awbItemId = awb.awbItemId;
-            doPodDeliverDetail.awbNumber = awbNumber;
-            doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
-            await DoPodDeliverDetail.save(doPodDeliverDetail);
-
             // AFTER Scan OUT ===============================================
             // #region after scanout
             // Update do_pod
@@ -338,6 +328,16 @@ export class LastMileDeliveryOutService {
             );
 
             if (doPodDeliver) {
+              // save table do_pod_detail
+              // NOTE: create data do pod detail per awb number
+              const doPodDeliverDetail = DoPodDeliverDetail.create();
+              doPodDeliverDetail.doPodDeliverId = payload.doPodId;
+              doPodDeliverDetail.awbId = awb.awbId;
+              doPodDeliverDetail.awbItemId = awb.awbItemId;
+              doPodDeliverDetail.awbNumber = awbNumber;
+              doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
+              await DoPodDeliverDetail.insert(doPodDeliverDetail);
+
               // counter total scan out
               const totalAwb = doPodDeliver.totalAwb + 1;
               await DoPodDeliver.update(doPodDeliver.doPodDeliverId, {
@@ -357,10 +357,13 @@ export class LastMileDeliveryOutService {
                 doPodDeliver.userDriver.employeeId,
                 doPodDeliver.userDriver.employee.employeeName,
               );
+              totalSuccess += 1;
+            } else {
+              totalError += 1;
+              response.status = 'error';
+              response.message = `Surat Jalan: Resi ${awbNumber} tidak valid.`;
             }
             // #endregion after scanout
-
-            totalSuccess += 1;
             // remove key holdRedis
             RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
           } else {
