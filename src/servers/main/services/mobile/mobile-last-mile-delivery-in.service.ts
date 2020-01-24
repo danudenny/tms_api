@@ -75,7 +75,6 @@ export class LastMileDeliveryInService {
       awbNumber: payload.scanValue
     });
     const res = await qb.getRawOne();
-    console.log(res);
 
     if(res){
       let podScanInBranch = await PodScanInBranch.findOne({

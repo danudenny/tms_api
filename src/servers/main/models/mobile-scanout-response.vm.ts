@@ -19,6 +19,30 @@ export class ScanAwbVm {
 }
 
 export class MobileScanOutAwbResponseVm {
+  @ApiModelProperty()
+  service: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  consigneePhone: string;
+
+  @ApiModelProperty()
+  totalCodValue: string;
+
+  @ApiModelProperty()
+  dateTime: string;
+
+  @ApiModelProperty()
+  doPodId: string;
+
   @ApiModelProperty({ type: [ScanAwbVm] })
   data: ScanAwbVm;
 }

@@ -121,8 +121,8 @@ export class MobileDashboardService {
 
     const result = new MobileDetailTransitResponseVm();
     result.notScanInAwb = mobileTransitResponseVm;
-    result.notScanOutAwb = mobileTransitResponseVm2;
-    result.scanInAwb = mobileTransitResponseVm3;
+    result.scanInAwb = mobileTransitResponseVm2;
+    result.notScanOutAwb = mobileTransitResponseVm3;
 
     return result;
   }
