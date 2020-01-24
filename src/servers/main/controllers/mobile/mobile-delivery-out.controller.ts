@@ -6,12 +6,8 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { LastMileDeliveryOutService } from '../../services/mobile/mobile-last-mile-delivery-out.service';
 import { TransferAwbDeliverVm } from '../../models/mobile-scanout.vm';
-import {
-  MobileScanOutAwbVm,
-} from '../../models/mobile-scanout.vm';
-import {
-  MobileScanOutAwbResponseVm,
-} from '../../models/mobile-scanout-response.vm';
+import { MobileScanOutCreateDeliveryVm } from '../../models/mobile-scanout.vm';
+import { MobileScanOutAwbResponseVm } from '../../models/mobile-scanout-response.vm';
 
 // #endregion
 
@@ -22,8 +18,11 @@ export class MobileDeliveryOutController {
 
   @Post('delivery')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileScanOutAwbResponseVm })
+  @Transactional()
   public async transferAwbDelivery(@Body() payload: TransferAwbDeliverVm) {
-    return LastMileDeliveryOutService.transferAwbNumber(payload);
+    return LastMileDeliveryOutService.scanOutDeliveryAwb(payload);
   }
 }

@@ -14,14 +14,16 @@ import {
     DoPodDetailPostMetaQueueService,
 } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
-    MobileScanOutAwbResponseVm,
-} from '../../models/mobile-scanout-response.vm';
-import {
     MobileScanOutAwbVm,
     TransferAwbDeliverVm,
+    MobileScanOutCreateDeliveryVm,
 } from '../../models/mobile-scanout.vm';
 import { AwbService } from '../v1/awb.service';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { MobileScanOutAwbResponseVm } from '../../models/mobile-scanout-response.vm';
+import { CustomCounterCode } from 'src/shared/services/custom-counter-code.service';
+import { AuditHistory } from 'src/shared/orm-entity/audit-history';
+import { ScanAwbVm } from '../../models/mobile-scanin-awb.response.vm';
 
 // #endregion
 
@@ -30,244 +32,180 @@ export class LastMileDeliveryOutService {
   /**
    * Create DO POD Deliver
    * with type: Deliver (Sigesit)
-   * @param {MobileScanOutCreateDeliveryVm} payload
-   * @returns {Promise<MobileScanOutCreateResponseVm>}
-   * @memberof MobileDeliveryOutService
+   * @param {TransferAwbDeliverVm} payload
+   * @returns {Promise<MobileScanOutAwbResponseVm>}
+   * @memberof LastMileDeliveryOutService
    */
-  
-  static async scanOutAwbDeliver(
-    payload: MobileScanOutAwbVm,
+
+  static async scanOutDeliveryAwb(
+  payload: TransferAwbDeliverVm,
   ): Promise<MobileScanOutAwbResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const result = new MobileScanOutAwbResponseVm();
+
+    // create do_pod_deliver (Surat Jalan Antar sigesit)
+    const doPod = DoPodDeliver.create();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    // NOTE: moment(payload.doPodDateTime).toDate();
+    const doPodDateTime = moment().toDate();
+
+    // NOTE: Tipe surat (jalan Antar Sigesit)
+    doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
+      doPodDateTime,
+    ); // generate code
+
+    // doPod.userIdDriver = payload.
+    doPod.userIdDriver = authMeta.userId;
+    doPod.doPodDeliverDateTime = doPodDateTime;
+    doPod.description = null;
+
+    doPod.branchId = permissonPayload.branchId;
+    doPod.userId = authMeta.userId;
+
+    // await for get do pod id
+    await DoPodDeliver.save(doPod);
+
+    await this.createAuditDeliveryHistory(
+      doPod.doPodDeliverId,
+      false,
+    );
+
+    // END OF PROCESS CREATE DELIVERY LETTER (surat jalan antar)
+    // =========================================================
+    // START OF PROCESS AWB SCANNING
+    // =========================================================
 
     const dataItem = [];
-    const result = new MobileScanOutAwbResponseVm();
 
     let totalSuccess = 0;
     let totalError = 0;
+    const awbNumber = payload.scanValue;
+    const response = new ScanAwbVm();
 
-    for (const awbNumber of payload.awbNumber) {
-      const response = {
-        status: 'ok',
-        message: 'Success',
-      };
+    const awb = await AwbService.validAwbNumber(awbNumber);
+    if (awb) {
+      // TODO: validation need improvement
+      // handle if awb status is null
+      let notDeliver = true;
+      if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
+        notDeliver = awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
+      }
 
-      const awb = await AwbService.validAwbNumber(awbNumber);
-      if (awb) {
-        // TODO: validation need improvement
-        // handle if awb status is null
-        let notDeliver = true;
-        if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
-          notDeliver = awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
-        }
-
-        // NOTE: first must scan in branch
-        if (notDeliver) {
-          const statusCode = await AwbService.awbStatusGroup(
+      // NOTE: first must scan in branch
+      if (notDeliver) {
+        const statusCode = await AwbService.awbStatusGroup(
+          awb.awbStatusIdLast,
+        );
+        // save data to awb_troubleß
+        if (statusCode != 'IN') {
+          const branchName = awb.branchLast ? awb.branchLast.branchName : '';
+          await AwbTroubleService.fromScanOut(
+            awbNumber,
+            branchName,
             awb.awbStatusIdLast,
           );
-          // save data to awb_troubleß
-          if (statusCode != 'IN') {
-            const branchName = awb.branchLast ? awb.branchLast.branchName : '';
-            await AwbTroubleService.fromScanOut(
-              awbNumber,
-              branchName,
-              awb.awbStatusIdLast,
-            );
-          }
+        }
 
-          // Add Locking setnx redis
-          const holdRedis = await RedisService.locking(
-            `hold:scanoutant:${awb.awbItemId}`,
-            'locking',
+        // Add Locking setnx redis
+        const holdRedis = await RedisService.locking(
+          `hold:scanoutant:${awb.awbItemId}`,
+          'locking',
+        );
+
+      // return result;
+        if (holdRedis) {
+          // save table do_pod_detail
+          // NOTE: create data do pod detail per awb number
+          const doPodDeliverDetail = DoPodDeliverDetail.create();
+          doPodDeliverDetail.doPodDeliverId = doPod.doPodDeliverId;
+          doPodDeliverDetail.awbId = awb.awbId;
+          doPodDeliverDetail.awbItemId = awb.awbItemId;
+          doPodDeliverDetail.awbNumber = awbNumber;
+          doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
+          await DoPodDeliverDetail.save(doPodDeliverDetail);
+
+          // AFTER Scan OUT ===============================================
+          // #region after scanout
+          // Update do_pod
+          const doPodDeliver = await DoPodDeliverRepository.getDataById(
+            doPod.doPodDeliverId,
           );
-          if (holdRedis) {
-            // save table do_pod_detail
-            // NOTE: create data do pod detail per awb number
-            const doPodDeliverDetail = DoPodDeliverDetail.create();
-            doPodDeliverDetail.doPodDeliverId = payload.doPodId;
-            doPodDeliverDetail.awbId = awb.awbId;
-            doPodDeliverDetail.awbItemId = awb.awbItemId;
-            doPodDeliverDetail.awbNumber = awbNumber;
-            doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
-            await DoPodDeliverDetail.save(doPodDeliverDetail);
 
-            // AFTER Scan OUT ===============================================
-            // #region after scanout
-            // Update do_pod
-            const doPodDeliver = await DoPodDeliverRepository.getDataById(
-              payload.doPodId,
+          if (doPodDeliver) {
+            // counter total scan out
+            const totalAwb = doPodDeliver.totalAwb + 1;
+            await DoPodDeliver.update(doPodDeliver.doPodDeliverId, {
+              totalAwb,
+            });
+            await AwbService.updateAwbAttr(
+              awb.awbItemId,
+              AWB_STATUS.ANT,
+              null,
             );
-
-            if (doPodDeliver) {
-              // counter total scan out
-              const totalAwb = doPodDeliver.totalAwb + 1;
-              await DoPodDeliver.update(doPodDeliver.doPodDeliverId, {
-                totalAwb,
-              });
-              await AwbService.updateAwbAttr(
-                awb.awbItemId,
-                AWB_STATUS.ANT,
-                null,
-              );
-              // NOTE: queue by Bull ANT
-              DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
-                awb.awbItemId,
-                AWB_STATUS.ANT,
-                permissonPayload.branchId,
-                authMeta.userId,
-                doPodDeliver.userDriver.employeeId,
-                doPodDeliver.userDriver.employee.employeeName,
-              );
-            }
-            // #endregion after scanout
-
-            totalSuccess += 1;
-            // remove key holdRedis
-            RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
-          } else {
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+            // NOTE: queue by Bull ANT
+            DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
+              awb.awbItemId,
+              AWB_STATUS.ANT,
+              permissonPayload.branchId,
+              authMeta.userId,
+              doPodDeliver.userDriver.employeeId,
+              doPodDeliver.userDriver.employee.employeeName,
+            );
           }
+          // #endregion after scanout
+
+          totalSuccess += 1;
+          // remove key holdRedis
+          RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
         } else {
           totalError += 1;
           response.status = 'error';
-          response.message = `Resi ${awbNumber} sudah di proses.`;
+          response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
         }
       } else {
         totalError += 1;
         response.status = 'error';
-        response.message = `Resi ${awbNumber} Tidak di Temukan`;
+        response.message = `Resi ${awbNumber} sudah di proses.`;
       }
+    } else {
+      totalError += 1;
+      response.status = 'error';
+      response.message = `Resi ${awbNumber} Tidak di Temukan`;
+    }
 
-      // push item
-      dataItem.push({
-        awbNumber,
-        ...response,
-      });
-    } // end of loop
-
-    // Populate return value
-    result.totalData = payload.awbNumber.length;
-    result.totalSuccess = totalSuccess;
-    result.totalError = totalError;
-    result.data = dataItem;
+    response.trouble = false;
+    response.awbNumber = payload.scanValue;
+    result.data = response;
 
     return result;
   }
 
-  static async transferAwbNumber(
-    payload: TransferAwbDeliverVm,
-  ): Promise<MobileScanOutAwbResponseVm> {
-    const authMeta = AuthService.getAuthData();
-
-    const dataItem = [];
-    const result = new MobileScanOutAwbResponseVm();
-
-    let totalSuccess = 0;
-    let totalError = 0;
-
-    for (const awbNumber of payload.awbNumber) {
-      const response = {
-        status: 'ok',
-        message: 'Success',
-      };
-
-      const awb = await AwbService.validAwbNumber(awbNumber);
-      if (awb) {
-        // NOTE: TRANSFER AWB NUMBER
-        const awbDeliver = await DoPodDeliverDetail.findOne({
-          where: {
-            awbNumber,
-            awbStatusIdLast: AWB_STATUS.ANT,
-            isDeleted: false,
-          },
-        });
-        // handle only status ANT
-        if (awbDeliver) {
-          // Add Locking setnx redis
-          const holdRedis = await RedisService.locking(
-            `hold:scanout-transfer:${awbDeliver.awbItemId}`,
-            'locking',
-          );
-          if (holdRedis) {
-            // Update data do pod detail per awb number
-            // doPodDeliverId;
-            await DoPodDeliverDetail.update(
-              awbDeliver.doPodDeliverDetailId,
-              {
-                isDeleted: true,
-                userIdUpdated: authMeta.userId,
-                updatedTime: moment().toDate(),
-              },
-            );
-
-            // balance total awb
-            await getManager().transaction(
-              async transactionEntityManager => {
-                const awbItemAttr = await AwbItemAttr.findOne({
-                  where: {
-                    awbItemId: awbDeliver.awbItemId,
-                    isDeleted: false,
-                  },
-                });
-                if (awbItemAttr) {
-                  await transactionEntityManager.update(
-                    AwbItemAttr,
-                    awbItemAttr.awbItemAttrId,
-                    {
-                      awbStatusIdLast: AWB_STATUS.IN_BRANCH,
-                      updatedTime: moment().toDate(),
-                    },
-                  );
-                }
-
-                await transactionEntityManager.decrement(
-                  DoPodDeliver,
-                  {
-                    doPodDeliverId: awbDeliver.doPodDeliverId,
-                    totalAwb: MoreThan(0),
-                  },
-                  'totalAwb',
-                  1,
-                );
-              },
-            );
-
-            totalSuccess += 1;
-            // remove key holdRedis
-            RedisService.del(`hold:scanout-transfer:${awbDeliver.awbItemId}`);
-          } else {
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
-          }
-        } else {
-          totalError += 1;
-          response.status = 'error';
-          response.message = `Resi ${awbNumber}, bermasalah harap scan in terlebih dahulu`;
-        }
-      } else {
-        totalError += 1;
-        response.status = 'error';
-        response.message = `Resi ${awbNumber} Tidak di Temukan`;
-      }
-
-      // push item
-      dataItem.push({
-        awbNumber,
-        ...response,
-      });
-    } // end loop
-
-    // Populate return value
-    result.totalData = payload.awbNumber.length;
-    result.totalSuccess = totalSuccess;
-    result.totalError = totalError;
-    result.data = dataItem;
-
-    return result;
+  private static async createAuditDeliveryHistory(
+    doPodDeliveryId: string,
+    isUpdate: boolean = true,
+  ) {
+    // find doPodDeliver
+    const doPodDeliver = await DoPodDeliverRepository.getDataById(
+      doPodDeliveryId,
+    );
+    if (doPodDeliver) {
+      // construct note for information
+      const description = doPodDeliver.description
+        ? doPodDeliver.description
+        : '';
+      const stage = isUpdate ? 'Updated' : 'Created';
+      const note = `
+        Data ${stage} \n
+        Nama Driver  : ${doPodDeliver.userDriver.employee.employeeName}
+        Gerai Assign : ${doPodDeliver.branch.branchName}
+        Note         : ${description}
+      `;
+      // create new object AuditHistory
+      const auditHistory = AuditHistory.create();
+      auditHistory.changeId = doPodDeliveryId;
+      auditHistory.transactionStatusId = 1300; // NOTE: doPodDelivery
+      auditHistory.note = note;
+      return await AuditHistory.save(auditHistory);
+    }
   }
 }

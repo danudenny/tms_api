@@ -19,16 +19,6 @@ export class ScanAwbVm {
 }
 
 export class MobileScanOutAwbResponseVm {
-
-  @ApiModelProperty()
-  totalData: number;
-
-  @ApiModelProperty()
-  totalSuccess: number;
-
-  @ApiModelProperty()
-  totalError: number;
-
   @ApiModelProperty({ type: [ScanAwbVm] })
-  data: ScanAwbVm[];
+  data: ScanAwbVm;
 }
