@@ -22,7 +22,7 @@ import {
 } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
     ScanBranchAwbVm, ScanBranchBagVm, ScanInputNumberBranchVm, MobileScanInBagBranchResponseVm,
-    MobileScanInBagBranchVm, MobileScanInBranchResponseVm, MobileScanInDetailVm
+    MobileScanInBagBranchVm, MobileScanInBranchResponseVm
 } from '../../models/mobile-scanin.vm';
 import { AwbService } from '../v1/awb.service';
 import { BagService } from '../v1/bag.service';
@@ -137,7 +137,7 @@ export class LastMileDeliveryInService {
         result.consigneePhone = res.consigneePhone;
         result.totalCodValue = res.totalCodValue;
         result.dateTime = moment().format("YYYY-MM-DD HH:mm:ss");
-        
+
         result.podScanInBranchId = payload.podScanInBranchId;
       }
       return result;
@@ -499,33 +499,6 @@ export class LastMileDeliveryInService {
       result.message = `Resi ${awbNumber} Tidak di Temukan`;
     }
 
-    return result;
-  }
-
-  static async scanInDetail(
-    payload: MobileScanInDetailVm,
-  ){
-    const qb = createQueryBuilder();
-    let result = [];
-
-    // Total barang belum scan masuk
-    qb.addSelect( 'awb.awb_number', 'awbNumber');
-    qb.addSelect( 'awb.consignee_name', 'consigneeName');
-    qb.addSelect( 'awb.consignee_address', 'consigneeAddress');
-    qb.addSelect( 'awb.consignee_phone', 'consigneePhone');
-    qb.addSelect( 'awb.total_cod_value', 'totalCodValue');
-    qb.addSelect( 'pt.package_type_code', 'service');
-
-    qb.from('awb', 'awb');
-    qb.innerJoin('package_type', 'pt', 'pt.package_type_id = awb.package_type_id');
-    qb.andWhere('awb.awb_number = :awbNumber',
-    {
-      awbNumber: payload.scanValue
-    });
-    const res = await qb.getRawOne();
-
-    console.log(res);
-    //getRawMany
     return result;
   }
 }

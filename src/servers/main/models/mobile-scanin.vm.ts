@@ -121,12 +121,3 @@ export class MobileScanInBranchResponseVm {
   @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
   data: ScanInputNumberBranchVm[];
 }
-
-export class MobileScanInDetailVm {
-  @ApiModelProperty({
-    example: ['112039', '11203922'],
-    skipValidation: true,
-  })
-  @IsDefined({ message: 'No harus diisi' })
-  scanValue: string;
-}

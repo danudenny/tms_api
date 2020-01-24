@@ -3,7 +3,7 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseGuards, 
 import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { MobileScanInBranchResponseVm, MobileScanInBagBranchVm, MobileScanInDetailVm } from '../../models/mobile-scanin.vm';
+import { MobileScanInBranchResponseVm, MobileScanInBagBranchVm } from '../../models/mobile-scanin.vm';
 import { LastMileDeliveryInService } from '../../services/mobile/mobile-last-mile-delivery-in.service';
 
 @ApiUseTags('Mobile Delivery In')
@@ -18,14 +18,5 @@ export class MobileDeliveryInController {
   @ApiOkResponse({ type: MobileScanInBranchResponseVm })
   public async scanInBranch(@Body() payload: MobileScanInBagBranchVm) {
     return LastMileDeliveryInService.scanInBranch(payload);
-  }
-
-  @Post('detail')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: MobileScanInBranchResponseVm })
-  public async scanInDetail(@Body() payload: MobileScanInDetailVm) {
-    return LastMileDeliveryInService.scanInDetail(payload);
   }
 }
