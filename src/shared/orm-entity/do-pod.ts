@@ -297,7 +297,7 @@ export class DoPod extends TmsBaseEntity {
 
   @OneToOne(() => PartnerLogistic)
   @JoinColumn({ name: 'partner_logistic_id' })
-  partner_logistic: PartnerLogistic;
+  partnerLogistic: PartnerLogistic;
 
   @OneToMany(() => DoPodDetail, e => e.doPod)
   doPodDetails: DoPodDetail[];

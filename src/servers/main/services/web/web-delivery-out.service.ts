@@ -886,18 +886,23 @@ export class WebDeliveryOutService {
       ['t2.fullname', 'employeeName'],
       ['t3.branch_name', 'branchName'],
       ['COUNT (t4.do_pod_id)', 'totalAwb'],
+      [`COALESCE(t5.partner_logistic_name, 'Internal')`, 'partnerLogisticName'],
     );
+  
     q.innerJoin(e => e.doPodDetails, 't4', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-   );
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoin(e => e.partnerLogistic, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
 
-    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name');
+    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -1453,7 +1458,7 @@ export class WebDeliveryOutService {
       q.innerJoin(e => e.branchTo, 't3', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
-      q.innerJoin(e => e.partner_logistic, 't4', j =>
+      q.leftJoin(e => e.partnerLogistic, 't4', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.andWhere(e => e.doPodId, w => w.equals(doPodId));
