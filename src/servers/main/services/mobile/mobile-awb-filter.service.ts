@@ -13,7 +13,7 @@ import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 export class MobileAwbFilterService {
   constructor() {}
 
-  async findAllScanInFilterList(): Promise<MobileAwbFilterListResponseVm> {
+  async findAllNotScanOutFilterList(): Promise<MobileAwbFilterListResponseVm> {
     const authMeta = AuthService.getAuthData();
     const currentMoment = moment();
     const qb = createQueryBuilder();
@@ -113,7 +113,7 @@ export class MobileAwbFilterService {
     return result;
   }
 
-  async findAllNotScanOutFilterList(): Promise<MobileAwbFilterListResponseVm> {
+  async findAllScanInFilterList(): Promise<MobileAwbFilterListResponseVm> {
     const authMeta = AuthService.getAuthData();
     const currentMoment = moment();
     const qb = createQueryBuilder();

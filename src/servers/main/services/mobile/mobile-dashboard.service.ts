@@ -76,7 +76,7 @@ export class MobileDashboardService {
     qb.andWhere('aia.awb_status_id_last = :outBranchCode', { outBranchCode: AWB_STATUS.OUT_BRANCH });
     mobileTransitResponseVm.total = await qb.getCount();
 
-    // Total barang scan masuk
+    // Total barang belum scan keluar
     const qb2 = createQueryBuilder();
     qb2.addSelect(
       'aia.awb_number',
@@ -99,7 +99,7 @@ export class MobileDashboardService {
     qb2.andWhere('aia.awb_status_id_last = :inBranchCode', { inBranchCode: AWB_STATUS.IN_BRANCH });
     mobileTransitResponseVm2.total = await qb2.getCount();
 
-    // Total barang belum scan keluar
+    // Total barang scan masuk
     const qb3 = createQueryBuilder();
     qb3.addSelect('dpd.awb_number)', 'totalScanInAwb');
     qb3.from('do_pod_detail', 'dpd');
@@ -121,8 +121,8 @@ export class MobileDashboardService {
 
     const result = new MobileDetailTransitResponseVm();
     result.notScanInAwb = mobileTransitResponseVm;
-    result.scanInAwb = mobileTransitResponseVm2;
-    result.notScanOutAwb = mobileTransitResponseVm3;
+    result.notScanOutAwb = mobileTransitResponseVm2;
+    result.scanInAwb = mobileTransitResponseVm3;
 
     return result;
   }
