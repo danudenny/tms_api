@@ -30,7 +30,7 @@ export class MobileAwbFilterController {
     return this.mobileAwbFilterService.findAllNotScanInFilterList();
   }
 
-  @Post('pod/notScanOut/list')
+  @Get('pod/notScanOut/list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
