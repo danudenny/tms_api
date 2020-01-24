@@ -101,15 +101,15 @@ export class MobileDashboardService {
 
     // Total barang scan masuk
     const qb3 = createQueryBuilder();
-    qb3.addSelect('dpd.awb_number)', 'totalScanInAwb');
-    qb3.from('do_pod_detail', 'dpd');
+    qb3.addSelect('pcbd.awb_number)', 'totalScanInAwb');
+    qb3.from('pod_scan_in_branch_detail', 'pcbd');
     qb3.innerJoin(
-        'do_pod',
-        'dp',
-        'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+        'pod_scan_in_branch',
+        'pcb',
+        'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId ', { userId: authMeta.userId }
       );
     qb3.where(
-      'dp.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      'pcb.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
       {
         currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
         currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),

@@ -38,17 +38,17 @@ export class MobileAwbFilterService {
       'aia.awb_id = awb.awb_id'
     );
     qb.innerJoin(
-      'do_pod_detail',
-      'dpd',
-      'dpd.awb_item_id = aia.awb_item_id'
+      'pod_scan_in_branch_detail',
+      'pcbd',
+      'pcbd.awb_item_id = aia.awb_item_id'
     );
     qb.innerJoin(
-      'do_pod',
-      'dp',
-      'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+      'pod_scan_in_branch',
+      'pcb',
+      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId', { userId: authMeta.userId }
     );
     qb.where(
-      'dp.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      'pcb.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
       {
         currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
         currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
