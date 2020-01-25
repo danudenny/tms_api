@@ -135,7 +135,7 @@ export class MobileAwbFilterService {
     qb.innerJoin(
       'pod_scan_in_branch_detail',
       'pcbd',
-      'pcbd.awb_item_id = aia.awb_item_id'
+      'pcbd.awb_id = awb.awb_id'
     );
     qb.innerJoin(
       'pod_scan_in_branch',
