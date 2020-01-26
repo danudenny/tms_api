@@ -117,7 +117,7 @@ export class MobileScanInBranchResponseVm {
 
   @ApiModelProperty()
   podScanInBranchId: string;
-  
+
   @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
-  data: ScanInputNumberBranchVm[];
+  data: ScanInputNumberBranchVm;
 }

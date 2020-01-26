@@ -39,8 +39,7 @@ export class LastMileDeliveryInService {
     payload: MobileScanInBagBranchVm,
   ): Promise<MobileScanInBranchResponseVm> {
     let isBag: boolean = false;
-    let data: ScanInputNumberBranchVm[] = [];
-    let dataBag = new ScanBranchBagVm();
+    let data = new ScanInputNumberBranchVm;
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
     const regexNumber = /^[0-9]+$/;
@@ -109,44 +108,36 @@ export class LastMileDeliveryInService {
           payload.bagNumber,
           payload.podScanInBranchId,
         );
-        const dataItem = new ScanInputNumberBranchVm();
-        dataItem.awbNumber = resultAwb.awbNumber;
-        dataItem.status = resultAwb.status;
-        dataItem.message = resultAwb.message;
-        dataItem.trouble = resultAwb.trouble;
-        data.push(dataItem);
+        data.awbNumber = resultAwb.awbNumber;
+        data.status = resultAwb.status;
+        data.message = resultAwb.message;
+        data.trouble = resultAwb.trouble;
 
-        dataBag = resultAwb.dataBag;
       }else {
-        const dataItem = new ScanInputNumberBranchVm();
-        dataItem.awbNumber = inputNumber;
-        dataItem.status = 'error';
-        dataItem.message = 'Nomor tidak valid';
-        dataItem.trouble = true;
-        data.push(dataItem);
+        data.awbNumber = inputNumber;
+        data.status = 'error';
+        data.message = 'Nomor tidak valid';
+        data.trouble = true;
       }
       const result = new MobileScanInBranchResponseVm();
       result.data = data;
 
-      if(!data[0].trouble){
-        result.service = res.service;
-        result.awbNumber = res.awbNumber;
-        result.consigneeName = res.consigneeName;
-        result.consigneeAddress = res.consigneeAddress;
-        result.consigneePhone = res.consigneePhone;
-        result.totalCodValue = res.totalCodValue;
-        result.dateTime = moment().format("YYYY-MM-DD HH:mm:ss");
+      result.service = res.service;
+      result.awbNumber = res.awbNumber;
+      result.consigneeName = res.consigneeName;
+      result.consigneeAddress = res.consigneeAddress;
+      result.consigneePhone = res.consigneePhone;
+      result.totalCodValue = res.totalCodValue;
+      result.dateTime = moment().format("YYYY-MM-DD HH:mm:ss");
 
-        result.podScanInBranchId = payload.podScanInBranchId;
-      }
+      result.podScanInBranchId = payload.podScanInBranchId;
+
       return result;
     }
-    const dataItem = new ScanInputNumberBranchVm();
-    dataItem.awbNumber = payload.scanValue;
-    dataItem.status = 'error';
-    dataItem.message = 'Nomor tidak valid atau tidak ditemukan';
-    dataItem.trouble = true;
-    data.push(dataItem);
+    data.awbNumber = payload.scanValue;
+    data.status = 'error';
+    data.message = 'Nomor tidak valid atau tidak ditemukan';
+    data.trouble = true;
     const result = new MobileScanInBranchResponseVm();
     result.data = data;
     return result;
