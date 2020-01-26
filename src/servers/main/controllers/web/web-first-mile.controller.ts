@@ -8,11 +8,12 @@ import {
     WebScanOutAwbResponseVm, WebScanOutBagResponseVm, WebScanOutCreateResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import {
-    WebScanOutAwbVm, WebScanOutBagVm, WebScanOutCreateVm, WebScanOutEditHubVm, WebScanOutEditVm,
+    WebScanOutAwbVm, WebScanOutBagVm, WebScanOutCreateVm, WebScanOutEditHubVm, WebScanOutEditVm, TransferBagNumberVm,
 } from '../../models/web-scan-out.vm';
 import {
     FirstMileDeliveryOutService,
 } from '../../services/web/first-mile/first-mile-delivery-out.service';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('First Mile Delivery')
 @Controller('pod/firstMile')
@@ -52,6 +53,7 @@ export class WebFirstMileController {
   @Post('scanOut/awb')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
+  @Transactional()
   public async scanOutAwb(@Body() payload: WebScanOutAwbVm) {
     return FirstMileDeliveryOutService.scanOutAwb(payload);
   }
@@ -59,7 +61,15 @@ export class WebFirstMileController {
   @Post('scanOut/bag')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebScanOutBagResponseVm })
+  @Transactional()
   public async findAllBag(@Body() payload: WebScanOutBagVm) {
     return FirstMileDeliveryOutService.scanOutBag(payload);
+  }
+
+  @Post('transfer/bagNumber')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanOutBagResponseVm })
+  public async transferAwbDelivery(@Body() payload: TransferBagNumberVm) {
+    return FirstMileDeliveryOutService.transferBagNumber(payload);
   }
 }
