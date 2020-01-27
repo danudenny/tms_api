@@ -3,7 +3,6 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseGuards, 
 import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
 import { MobileAwbFilterListResponseVm } from '../../models/mobile-awb-filter-list.response.vm';
 import { MobileAwbFilterService } from '../../services/mobile/mobile-awb-filter.service';
 
