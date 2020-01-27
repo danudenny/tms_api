@@ -149,15 +149,18 @@ export class BaseMetaPayloadVm {
       targetField = snakeCase(field);
     }
 
-    const dotFields = targetField.split('.');
-    targetField = dotFields
-      .map(subField => {
-        if (!/^"/.test(targetField)) {
-          return `"${subField}"`;
-        }
-        return subField;
-      })
-      .join('.');
+    // NOTE: handle custom field filter
+    if (!/CONCAT/.test(targetField)) {
+      const dotFields = targetField.split('.');
+      targetField = dotFields
+        .map(subField => {
+          if (!/^"/.test(targetField)) {
+            return `"${subField}"`;
+          }
+          return subField;
+        })
+        .join('.');
+    }
 
     return targetField;
   }

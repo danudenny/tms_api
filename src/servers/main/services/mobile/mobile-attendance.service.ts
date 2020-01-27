@@ -17,6 +17,8 @@ import { MobileAtendanceListResponseVm } from '../../models/mobile-attendance-li
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { EmployeeJourney } from '../../../../shared/orm-entity/employee-journey';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { MobileGoResponseVm } from '../../models/mobile-go-response.vm';
+import { MobileGoPayloadVm } from '../../models/mobile-go-payload.vm';
 
 @Injectable()
 export class MobileAttendanceService {
@@ -27,6 +29,68 @@ export class MobileAttendanceService {
     @InjectRepository(BranchRepository)
     private readonly branchRepository: BranchRepository,
   ) {}
+
+  async goAttendance(
+    payload: MobileGoPayloadVm,
+  ): Promise<MobileGoResponseVm> {
+    const authMeta = AuthService.getAuthMetadata();
+
+    if (!!authMeta) {
+      const result = new MobileGoResponseVm();
+      const status = 'ok';
+      const message = 'success';
+      let branchName = '';
+      let checkInDate = '';
+
+      const timeNow = moment().toDate();
+
+      // console.log(payload);
+
+      const employeeJourneyCheckOutExist = await this.employeeJourneyRepository.findOne(
+        {
+          where: {
+            employeeId: authMeta.employeeId,
+            checkInDate: IsNull(),
+          },
+          order: {
+            checkInDate: 'DESC',
+          },
+        },
+      );
+
+      const branch = await this.branchRepository.findOne({
+        where: { branchCode: payload.branchCode },
+      });
+
+      const employeeJourneyStart = this.employeeJourneyRepository.create({
+        employeeId: authMeta.employeeId,
+        startDate: timeNow,
+        latitudeStart: payload.latitudeStart,
+        longitudeStart: payload.longitudeStart,
+        userIdCreated: authMeta.userId,
+        createdTime: timeNow,
+        userIdUpdated: authMeta.userId,
+        updatedTime: timeNow,
+        branchIdStart: branch.branchId,
+        });
+      await this.employeeJourneyRepository.save(employeeJourneyStart);
+
+      branchName = branch.branchName;
+      checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
+
+      result.status = status;
+      result.message = message;
+      result.branchNameStart = branchName;
+      return result;
+    } else {
+      RequestErrorService.throwObj(
+        {
+          message: 'global.error.USER_NOT_FOUND',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
 
   // TODO: unused method
   async checkInAttendance(
@@ -52,10 +116,10 @@ export class MobileAttendanceService {
         {
           where: {
             employeeId: authMeta.employeeId,
-            checkOutDate: IsNull(),
+            checkInDate: IsNull(),
           },
           order: {
-            checkInDate: 'DESC',
+            startDate: 'DESC',
           },
         },
       );
@@ -77,19 +141,14 @@ export class MobileAttendanceService {
           where: { branchCode: payload.branchCode },
         });
 
-        const employeeJourney = this.employeeJourneyRepository.create({
-          employeeId: authMeta.employeeId,
-          checkInDate: timeNow,
-          latitudeCheckIn: payload.latitudeCheckIn,
-          longitudeCheckIn: payload.longitudeCheckIn,
-          userIdCreated: authMeta.userId,
-          createdTime: timeNow,
-          branchIdCheckIn: branch.branchId,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-          attachmentIdCheckIn: attachmentId,
-        });
-        await this.employeeJourneyRepository.save(employeeJourney);
+        employeeJourneyCheckOutExist.branchIdCheckIn = branch.branchId;
+        employeeJourneyCheckOutExist.latitudeCheckIn =  payload.latitudeCheckIn;
+        employeeJourneyCheckOutExist.longitudeCheckIn =  payload.longitudeCheckIn;
+        employeeJourneyCheckOutExist.checkInDate = timeNow;
+        employeeJourneyCheckOutExist.updatedTime = timeNow,
+        employeeJourneyCheckOutExist.attachmentIdCheckIn = attachmentId,
+
+        await this.employeeJourneyRepository.save(employeeJourneyCheckOutExist);
 
         branchName = branch.branchName;
         checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -113,16 +172,20 @@ export class MobileAttendanceService {
   ): Promise<MobileAtendanceListResponseVm> {
     // mapping field
     payload.fieldResolverMap['employeeId'] = 't1.employee_id';
+    payload.fieldResolverMap['startDate'] = 't1.start_date';
     payload.fieldResolverMap['checkInDate'] = 't1.check_in_date';
     payload.fieldResolverMap['checkOutDate'] = 't1.check_out_date';
     payload.fieldResolverMap['branchNameCheckIn'] = 't4.branch_name';
     payload.fieldResolverMap['branchAsalDriver'] = 't7.branch_name';
+    payload.fieldResolverMap['branchNameStart'] = 't8.branch_name';
     payload.fieldResolverMap['branchNameCheckOut'] = 't6.branch_name';
     payload.fieldResolverMap['attachmentTmsId'] = 't2.attachment_tms_id';
     payload.fieldResolverMap['urlCheckIn'] = 't2.url';
     payload.fieldResolverMap['urlCheckOut'] = 't2.url';
     payload.fieldResolverMap['longitudeCheckIn'] = 't1.longitude_check_in';
     payload.fieldResolverMap['longitudeCheckOut'] = 't1.longitude_check_out';
+    payload.fieldResolverMap['longitudeStart'] = 't1.longitude_start';
+    payload.fieldResolverMap['latitudeStart'] = 't1.latitude_start';
     payload.fieldResolverMap['latitudeCheckIn'] = 't1.latitude_check_in';
     payload.fieldResolverMap['latitudeCheckOut'] = 't1.latitude_check_out';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
@@ -148,19 +211,25 @@ export class MobileAttendanceService {
       ['t3.nik', 'nik'],
       ['t1.check_in_date', 'checkInDate'],
       ['t1.check_out_date', 'checkOutDate'],
+      ['t1.start_date', 'startDate'],
       ['t4.branch_name', 'branchNameCheckIn'],
       ['t6.branch_name', 'branchNameCheckOut'],
       ['t1.longitude_check_in', 'longitudeCheckIn'],
+      ['t1.longitude_start', 'longitudeStart'],
       ['t1.longitude_check_out', 'longitudeCheckOut'],
+      ['t1.latitude_start', 'latitudeStart'],
       ['t1.latitude_check_in', 'latitudeCheckIn'],
       ['t1.latitude_check_out', 'latitudeCheckOut'],
       ['t1.created_time', 'createdTime'],
       ['t2.url', 'urlCheckIn'],
       ['t5.url', 'urlCheckOut'],
       ['t7.branch_name', 'branchAsalDriver'],
+      ['t8.branch_name', 'branchNameStart'],
     );
 
     q.leftJoin(e => e.branchCheckIn, 't4',
+    );
+    q.leftJoin(e => e.branchStart, 't8',
     );
 
     q.leftJoin(e => e.branchCheckOut, 't6',
@@ -234,7 +303,7 @@ export class MobileAttendanceService {
         employeeJourney.longitudeCheckOut =  payload.longitudeCheckOut;
         employeeJourney.attachmentIdCheckOut = attachmentId;
         employeeJourney.checkOutDate = timeNow;
-
+        employeeJourney.updatedTime = timeNow;
         await this.employeeJourneyRepository.save(employeeJourney);
 
         branchName = branchOut.branchName;
