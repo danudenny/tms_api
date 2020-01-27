@@ -17,7 +17,6 @@ import { MobileAtendanceListResponseVm } from '../../models/mobile-attendance-li
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { EmployeeJourney } from '../../../../shared/orm-entity/employee-journey';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { Attachment } from 'src/shared/orm-entity/attachment';
 import { MobileGoResponseVm } from '../../models/mobile-go-response.vm';
 import { MobileGoPayloadVm } from '../../models/mobile-go-payload.vm';
 

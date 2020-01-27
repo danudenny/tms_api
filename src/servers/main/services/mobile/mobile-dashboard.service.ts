@@ -5,9 +5,9 @@ import {
   MobileTransitResponseVm,
 } from '../../models/mobile-dashboard.response.vm';
 import { createQueryBuilder } from 'typeorm';
-import { AuthService } from 'src/shared/services/auth.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import moment = require('moment');
+import { AuthService } from '../../../../shared/services/auth.service';
 
 export class MobileDashboardService {
   public static async getDashboardDataByRequest(): Promise<

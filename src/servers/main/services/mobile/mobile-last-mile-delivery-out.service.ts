@@ -21,11 +21,11 @@ import {
 import { AwbService } from '../v1/awb.service';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { MobileScanOutAwbResponseVm, CreateDoPodResponseVm } from '../../models/mobile-scanout-response.vm';
-import { CustomCounterCode } from 'src/shared/services/custom-counter-code.service';
-import { AuditHistory } from 'src/shared/orm-entity/audit-history';
 import { ScanAwbVm } from '../../models/mobile-scanin-awb.response.vm';
 import { ScanInputNumberBranchVm } from '../../models/web-scanin.vm';
 import { MobileScanInBranchResponseVm } from '../../models/mobile-scanin.vm';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 
 // #endregion
 
