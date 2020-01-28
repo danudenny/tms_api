@@ -32,6 +32,7 @@ import { WebTrackingController } from './web/web-tracking.controller';
 import { ProvincesController } from './master/provinces.controller';
 import { CitiesController } from './master/cities.controller';
 import { DistrictsController } from './master/districts.controller';
+import { DoReturnStatusController } from './master/do-return-status.controller';
 import { WebAwbDeliverController } from './web/web-awb-deliver.controller';
 import { MobileAttendanceController } from './mobile/mobile-attendance.controller';
 import { ReportPODController } from './report/report-pod.controller';
@@ -79,6 +80,7 @@ import { WebAwbReturnController } from './web/web-awb-return.controller';
     MobileAttendanceController,
     ReportPODController,
     WebLastMileController,
+    DoReturnStatusController,
   ],
 })
 export class MainServerControllersModule {}
