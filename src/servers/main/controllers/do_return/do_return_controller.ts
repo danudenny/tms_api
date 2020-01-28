@@ -1,20 +1,19 @@
-import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, UseGuards, HttpStatus } from '@nestjs/common';
 
 import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { DoReturnService } from '../../services/do-return/do-return.service';
 import { ReturnPayloadVm, DoReturnResponseVm } from '../../models/do-return.vm';
 import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
+import { ReturnFindAllResponseVm } from '../../models/do-return.response.vm';
 
 @ApiUseTags('Do Return')
-@Controller('doBalik')
+@Controller('doReturn')
 export class DoReturnController {
-  constructor(private readonly doReturnService: DoReturnService) {}
-
-  @Post('list')
-  @HttpCode(200)
+  @Post('listAwb')
+  @HttpCode(HttpStatus.OK)
   // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: DoReturnResponseVm })
+  @ApiOkResponse({ type: ReturnFindAllResponseVm })
   public async findAllByRequest(@Body() payload: BaseMetaPayloadVm ) {
-    return this.doReturnService.findAllByRequest(payload);
+    return DoReturnService.findAllByRequest(payload);
   }
 }

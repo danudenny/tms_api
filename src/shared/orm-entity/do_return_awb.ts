@@ -1,6 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany, ManyToOne } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { Branch } from './branch';
+import { Customer } from './customer';
+import { AwbStatus } from './awb-status';
 
 @Entity('do_return_awb', { schema: 'public' })
 export class DoReturnAwb extends TmsBaseEntity {
@@ -52,6 +54,12 @@ export class DoReturnAwb extends TmsBaseEntity {
   })
   doReturnCollectionToCustId: number | null;
 
+  @Column('character varying', {
+    nullable: true,
+    name: 'do_return_awb_number',
+  })
+  doReturnAwbNumber: string | null;
+
   @Column('bigint', {
     nullable: true,
     name: 'customer_id',
@@ -68,4 +76,11 @@ export class DoReturnAwb extends TmsBaseEntity {
   @JoinColumn({ name: 'branch_id_last' })
   branchTo: Branch;
 
+  @ManyToOne(() => Customer)
+  @JoinColumn({ name: 'customer_id' })
+  customer: Customer;
+
+  @ManyToOne(() => AwbStatus)
+  @JoinColumn({ name: 'awb_status_id_last' })
+  awbStatusDetail: AwbStatus;
 }

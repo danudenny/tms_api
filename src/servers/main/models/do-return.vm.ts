@@ -8,13 +8,19 @@ export class DoReturnResponseVm extends BaseMetaResponseVm {
   awbNumber: string;
 
   @ApiModelProperty()
-  awbStatusName: string;
+  awbStatus: string;
 
   @ApiModelProperty()
   customerName: string;
 
   @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
   podDatetime: string;
+
+  @ApiModelProperty()
+  doReturnAwbNumber: string;
 
   @ApiModelProperty()
   doReturnHistoryIdLast: string;
