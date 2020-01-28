@@ -4,7 +4,7 @@ import { ResponseSerializerOptions } from '../../../../shared/decorators/respons
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { MobileDashboardFindAllResponseVm } from '../../models/mobile-dashboard.response.vm';
+import { MobileDashboardFindAllResponseVm, MobileDetailTransitResponseVm } from '../../models/mobile-dashboard.response.vm';
 import { MobileInitDataPayloadVm } from '../../models/mobile-init-data-payload.vm';
 import { MobileInitDataResponseVm } from '../../models/mobile-init-data-response.vm';
 import { MobileDashboardService } from '../../services/mobile/mobile-dashboard.service';
@@ -17,6 +17,7 @@ import { MobileComplaintPayloadVm } from '../../models/mobile-complaint-payload.
 import { MobileComplaintListResponseAllVm } from '../../models/mobile-complaint-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import moment = require('moment');
+import { RedisService } from '../../../../shared/services/redis.service';
 
 @ApiUseTags('Dashboard')
 @Controller('mobile')
@@ -78,6 +79,33 @@ export class MobileDashboardController {
   @Get('ping')
   @HttpCode(HttpStatus.OK)
   public async ping() {
-    return { message: 'pong', timeNow: moment().toDate(), timeString: moment().format('YYYY-MM-DD HH:mm:ss') };
+    return {
+      message: 'pong',
+      timeNow: moment().toDate(),
+      timeString: moment().format('YYYY-MM-DD HH:mm:ss'),
+    };
+  }
+
+  @Get('version/:versionApp')
+  @HttpCode(HttpStatus.OK)
+  public async mobileVersion(@Param('versionApp') version: string) {
+    const versionRedis = await RedisService.get(`pod:mobile:versionApp`);
+    const versionApp = versionRedis ? versionRedis : process.env.ANDROID_APP_VERSION;
+    const valid = version == versionApp ? true : false;
+    return {
+      currentVersion: versionApp,
+      valid,
+      timeNow: moment().toDate(),
+      timeString: moment().format('YYYY-MM-DD HH:mm:ss'),
+    };
+  }
+
+  @Get('detail/transit')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: MobileDetailTransitResponseVm })
+  public async detailTransit() {
+    return MobileDashboardService.getTransitDetail();
   }
 }
