@@ -7,6 +7,7 @@ import { PinoLoggerService } from '../../../../shared/services/pino-logger.servi
 import { ConfigService } from '../../../../shared/services/config.service';
 import { WorkOrderAttr } from '../../../../shared/orm-entity/work-order-attr';
 import moment = require('moment');
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
 
 export class PartnerGojekService {
 
@@ -15,10 +16,30 @@ export class PartnerGojekService {
     return response;
   }
 
-  static async cancelBooking(payload: GojekCancelBookingVm) {
-    const response = await this.cancelBookingGojek(payload.orderNo);
-    // TODO: handle success cancel Booking ??
-    return response;
+  static async cancelBooking(payload: GojekBookingPickupVm) {
+    const order = await WorkOrderAttr.findOne({
+      select: ['workOrderAttrId', 'refOrderNo'],
+      where: {
+        workOrderId: payload.workOrderId,
+        isDeleted: false,
+      },
+    });
+    if (order) {
+      const response = await this.cancelBookingGojek(order.refOrderNo);
+      if (response.statusCode == 200) {
+        // TODO: update data
+        await WorkOrderAttr.update(order.workOrderAttrId, {
+          userIdUpdated: payload.userId,
+          updatedTime: moment().toDate(),
+        });
+      }
+      // TODO: handle success cancel Booking ??
+      return response;
+    } else {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
   }
 
   static async createBookingPickup(
@@ -119,17 +140,22 @@ export class PartnerGojekService {
         this.updateStatusOrder(payload);
         break;
       case 'DRIVER_FOUND':
+        this.updateStatusOrder(payload);
         break;
       case 'PICKED_UP':
+        this.updateStatusOrder(payload);
         break;
       case 'COMPLETED':
+        this.updateStatusOrder(payload);
         break;
       case 'DRIVER_NOT_FOUND':
+        this.updateStatusOrder(payload);
         break;
       case 'CUSTOMER_CANCELLED':
+        this.updateStatusOrder(payload);
         break;
       default:
-        console.log(payload);
+        PinoLoggerService.log(payload);
         break;
     }
     return true;
@@ -202,6 +228,7 @@ export class PartnerGojekService {
         refPickupEta: params.pickup_eta,
         refCancellationReason: params.cancellation_reason,
       });
+      // TODO: add awb history
     } else {
       PinoLoggerService.log('#### Not Found!!!');
     }
