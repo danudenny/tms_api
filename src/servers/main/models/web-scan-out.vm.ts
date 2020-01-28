@@ -86,6 +86,18 @@ export class WebScanOutBagVm {
   bagNumber: string[];
 }
 
+export class TransferBagNumberVm {
+  @ApiModelProperty({
+    example: ['00020001', '00020002'],
+    skipValidation: true,
+  })
+  // TODO: validation if array length = 0
+  @IsDefined({message: 'No gabung paket harus diisi'})
+  @IsBagNumber({ message: 'No gabung paket tidak sesuai' })
+  @Type(() => String)
+  bagNumber: string[];
+}
+
 // Scan Out Awb List
 export class FilterScanOutAwbListVm {
 

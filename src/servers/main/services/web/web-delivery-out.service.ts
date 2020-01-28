@@ -592,6 +592,15 @@ export class WebDeliveryOutService {
     let totalSuccess = 0;
     let totalError = 0;
 
+    // find data doPod
+    const doPod = await DoPod.findOne({
+      where: {
+        doPodId: payload.doPodId,
+        isDeleted: false,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
+
     for (const bagNumber of payload.bagNumber) {
       const response = {
         status: 'ok',
@@ -602,49 +611,40 @@ export class WebDeliveryOutService {
         // NOTE: validate bag branch id last
         // TODO: validation need improvement
         // bag status scan out by doPodType (3005 Branch/ 3010 and 3020 HUB)
-        let bagStatus = BAG_STATUS.OUT_HUB;
-        let transactionStatusId = 300; // OUT HUB
-
-        const doPod = await DoPod.findOne({
-          where: {
-            doPodId: payload.doPodId,
-            isDeleted: false,
-          },
-        });
+        const bagStatus = BAG_STATUS.OUT_HUB;
+        const transactionStatusId = 300; // OUT HUB
 
         // Branch
-        if (doPod.doPodType == 3005) {
-          bagStatus = BAG_STATUS.OUT_BRANCH;
-          transactionStatusId =  800;
-        }
+        // if (doPod.doPodType == 3005) {
+        //   bagStatus = BAG_STATUS.OUT_BRANCH;
+        //   transactionStatusId =  800;
+        // }
+
         const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
+        const holdRedis = await RedisService.locking(
+          `hold:bagscanout:${bagData.bagItemId}`,
+          'locking',
+        );
 
-        if (notScan) {
-          // create bag trouble
-          const statusNotTrouble = [BAG_STATUS.CREATED, BAG_STATUS.IN_BRANCH, BAG_STATUS.IN_HUB];
-          if (!statusNotTrouble.includes(bagData.bagItemStatusIdLast)) {
-            BagTroubleService.create(
-              bagNumber,
-              bagData.bagItemStatusIdLast,
-              transactionStatusId,
-            );
-          }
-
-          const holdRedis = await RedisService.locking(
-            `hold:bagscanout:${bagData.bagItemId}`,
-            'locking',
-          );
-
-          if (holdRedis) {
-            // counter total scan in
-            doPod.totalScanOutBag = doPod.totalScanOutBag + 1;
-            if (doPod.totalScanOutBag == 1) {
-              doPod.firstDateScanOut = timeNow;
-              doPod.lastDateScanOut = timeNow;
-            } else {
-              doPod.lastDateScanOut = timeNow;
+        if (notScan && holdRedis) {
+          if (doPod) {
+            // create bag trouble
+            const statusNotTrouble = [
+              BAG_STATUS.CREATED,
+              BAG_STATUS.IN_BRANCH,
+              BAG_STATUS.IN_HUB,
+            ];
+            if (!statusNotTrouble.includes(bagData.bagItemStatusIdLast) ||
+              bagData.branchIdLast != permissonPayload.branchId
+            ) {
+              // TODO: construct message?
+              response.status = 'warning';
+              BagTroubleService.create(
+                bagNumber,
+                bagData.bagItemStatusIdLast,
+                transactionStatusId,
+              );
             }
-            await DoPod.save(doPod);
 
             // TODO: need refactoring ??
             // NOTE: create DoPodDetailBag
@@ -654,68 +654,64 @@ export class WebDeliveryOutService {
             doPodDetailBag.bagId = bagData.bagId;
             doPodDetailBag.bagItemId = bagData.bagItemId;
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
-            await DoPodDetailBag.save(doPodDetailBag);
+            await DoPodDetailBag.insert(doPodDetailBag);
 
             // AFTER Scan OUT ===============================================
             // #region after scanout
             // Update bag_item set bag_item_status_id = 1000
-            const bagItem = await BagItem.findOne({
-              where: {
-                bagItemId: bagData.bagItemId,
-              },
+
+            BagItem.update(bagData.bagItemId, {
+              bagItemStatusIdLast: bagStatus,
+              branchIdLast: doPod.branchId,
+              branchIdNext: doPod.branchIdTo,
+              updatedTime: timeNow,
+              userIdUpdated: authMeta.userId,
             });
-            if (bagItem) {
-              BagItem.update(bagItem.bagItemId, {
-                bagItemStatusIdLast: bagStatus,
-                branchIdLast: doPod.branchId,
-                branchIdNext: doPod.branchIdTo,
-                updatedTime: timeNow,
-                userIdUpdated: authMeta.userId,
-              });
 
-              // NOTE: Loop data bag_item_awb for update status awb
-              // and create do_pod_detail (data awb on bag)
-              // TODO: need to refactor
-              await BagService.statusOutBranchAwbBag(
-                bagData.bagId,
-                bagData.bagItemId,
-                doPod.doPodId,
-                doPod.branchIdTo,
-                doPod.userIdDriver,
-                doPod.doPodType,
-                bagNumber,
-              );
+            // NOTE: Loop data bag_item_awb for update status awb
+            // and create do_pod_detail (data awb on bag)
+            // TODO: need to refactor send to background job
+            // BagScanOutBranchQueueService.perform
+            await BagService.statusOutBranchAwbBag(
+              bagData.bagId,
+              bagData.bagItemId,
+              doPod.doPodId,
+              doPod.branchIdTo,
+              doPod.userIdDriver,
+              doPod.doPodType,
+              bagNumber,
+            );
 
-              // TODO: if isTransit auto IN
-              if (doPod.doPodType == 3020) {
-                // NOTE: background job for insert bag item history
-                BagItemHistoryQueueService.addData(
-                  bagData.bagItemId,
-                  BAG_STATUS.IN_HUB,
-                  permissonPayload.branchId,
-                  authMeta.userId,
-                );
-              }
-
-              // TODO: need refactoring
+            // TODO: if isTransit auto IN
+            if (doPod.doPodType == 3020) {
               // NOTE: background job for insert bag item history
               BagItemHistoryQueueService.addData(
                 bagData.bagItemId,
-                bagStatus,
+                BAG_STATUS.IN_HUB,
                 permissonPayload.branchId,
                 authMeta.userId,
               );
             }
+
+            // TODO: need refactoring
+            // NOTE: background job for insert bag item history
+            BagItemHistoryQueueService.addData(
+              bagData.bagItemId,
+              bagStatus,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
             // #endregion after scanout
 
             totalSuccess += 1;
-            // remove key holdRedis
-            RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
           } else {
             totalError += 1;
             response.status = 'error';
-            response.message = 'Server Busy';
+            response.message = `Surat Jalan Bag ${bagNumber} tidak valid.`;
           }
+          // remove key holdRedis
+          RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
+
         } else {
           totalError += 1;
           response.status = 'error';
@@ -736,6 +732,24 @@ export class WebDeliveryOutService {
         ...response,
       });
     } // end of loop
+
+    // TODO: need improvement
+    if (doPod) {
+      // counter total scan in
+      if (doPod.totalScanOutBag == 0) {
+        await DoPod.update(doPod.doPodId, {
+          totalScanOutBag: totalSuccess,
+          firstDateScanOut: timeNow,
+          lastDateScanOut: timeNow,
+        });
+      } else {
+        const totalScanOutBag = doPod.totalScanOutBag + totalSuccess;
+        await DoPod.update(doPod.doPodId, {
+          totalScanOutBag,
+          lastDateScanOut: timeNow,
+        });
+      }
+    }
 
     // Populate return value
     result.totalData = payload.bagNumber.length;
@@ -789,7 +803,7 @@ export class WebDeliveryOutService {
       ['t1.do_pod_date_time', 'doPodDateTime'],
       ['t1.description', 'description'],
       ['t1.total_scan_in_bag', 'totalScanIn'],
-      ['t1.total_scan_out_bag', 'totalScanOut'],
+      ['COUNT(t5.bag_item_id)', 'totalScanOut'],
       ['t1.last_date_scan_in', 'lastDateScanIn'],
       ['t1.last_date_scan_out', 'lastDateScanOut'],
       ['t2.employee_id', 'employeeIdDriver'],
@@ -803,7 +817,9 @@ export class WebDeliveryOutService {
       ['t4.url', 'url'],
     );
     // TODO: relation userDriver to Employee Driver
-
+    q.innerJoin(e => e.doPodDetailBag, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -816,14 +832,15 @@ export class WebDeliveryOutService {
 
     if (isHub) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB));
-      q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
+      // q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     } else if (isHubTransit) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.HUB_TRANSIT));
-      q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
+      // q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     } else {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
-      q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
+      // q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     }
+    q.groupByRaw('t1.do_pod_id, t2.employee_id, t3.branch_name, t4.url');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -888,7 +905,7 @@ export class WebDeliveryOutService {
       ['COUNT (t4.do_pod_id)', 'totalAwb'],
       [`COALESCE(t5.partner_logistic_name, 'Internal')`, 'partnerLogisticName'],
     );
-  
+
     q.innerJoin(e => e.doPodDetails, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -901,6 +918,9 @@ export class WebDeliveryOutService {
     q.leftJoin(e => e.partnerLogistic, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH_AWB));
+    q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
 
     q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name');
     const data = await q.exec();
@@ -922,6 +942,7 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
@@ -1221,7 +1242,9 @@ export class WebDeliveryOutService {
   ): Promise<WebDeliveryListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
-    payload.fieldResolverMap['bagNumber'] = 't3.bag_number';
+    payload.fieldResolverMap[
+      'bagNumber'
+    ] = `CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`;
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -1237,13 +1260,7 @@ export class WebDeliveryOutService {
 
     q.selectRaw(
       [
-        `CASE LENGTH (CAST(t2.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t3.bag_number,'00',t2.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t3.bag_number,'0',t2.bag_seq)
-          ELSE
-            CONCAT (t3.bag_number,t2.bag_seq) END`,
+        `CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`,
         'bagNumber',
       ],
       ['t1.created_time', 'createdTime'],

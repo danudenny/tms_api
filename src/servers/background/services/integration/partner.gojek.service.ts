@@ -5,6 +5,8 @@ import { Branch } from '../../../../shared/orm-entity/branch';
 import { Not, IsNull } from 'typeorm';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { ConfigService } from '../../../../shared/services/config.service';
+import { WorkOrderAttr } from '../../../../shared/orm-entity/work-order-attr';
+import moment = require('moment');
 
 export class PartnerGojekService {
 
@@ -81,6 +83,11 @@ export class PartnerGojekService {
             const requestGojek = await this.createBooking(data);
             if (requestGojek) {
               // TODO: save response data to db
+              // find and update data to work order attr
+              await this.findAndCreateOrder(
+                payload.workOrderId,
+                requestGojek.orderNo,
+              );
               result.data = data;
               result.response = requestGojek;
             } else {
@@ -106,10 +113,93 @@ export class PartnerGojekService {
   }
 
   static async callbackOrder(payload: any) {
-
+    switch (payload.type) {
+      case 'CREATED':
+        this.updateStatusOrder(payload);
+        break;
+      case 'DRIVER_FOUND':
+        break;
+      case 'PICKED_UP':
+        break;
+      case 'COMPLETED':
+        break;
+      case 'DRIVER_NOT_FOUND':
+        break;
+      case 'CUSTOMER_CANCELLED':
+        break;
+      default:
+        console.log(payload);
+        break;
+    }
     return true;
   }
 
+  // Work Order ==============================================================
+  private static async findAndCreateOrder(workOrderId: number, orderNumber: string) {
+    // TODO: find WorkOrderAttr
+    try {
+      const wo = WorkOrderAttr.findOne({
+        where: {
+          workOrderId,
+          isDeleted: false,
+        },
+      });
+      if (wo) {
+        await WorkOrderAttr.update(
+          { workOrderId },
+          {
+            refOrderNo: orderNumber,
+            refOrderCreatedTime: moment().toDate(),
+          },
+        );
+      } else {
+        const woAttr = await WorkOrderAttr.create({
+          workOrderId,
+          refOrderNo: orderNumber,
+          refOrderCreatedTime: moment().toDate(),
+        });
+        await WorkOrderAttr.insert(woAttr);
+      }
+      return true;
+    } catch (error) {
+      PinoLoggerService.error(error);
+      return false;
+    }
+  }
+
+  private static async updateStatusOrder(params: any) {
+
+    const order = await WorkOrderAttr.findOne({
+      where: {
+        refOrderNo: params.booking_id,
+        isDeleted: false,
+      },
+    });
+
+    if (order) {
+      await WorkOrderAttr.update(order.workOrderAttrId, {
+        refBookingType: params.type,
+        refStatus: params.status,
+        refReceiverName: params.receiver_name,
+        refDriverName: params.driver_name,
+        refDriverPhone: params.driver_phone,
+        refTotalDistanceInKms: params.total_distance_in_kms,
+        refLiveTrackingUrl: params.live_tracking_url,
+        refDeliveryEta: params.delivery_eta,
+        refPickupEta: params.pickup_eta,
+        refCancellationReason: params.cancellation_reason,
+      });
+    } else {
+      PinoLoggerService.log('#### Not Found!!!');
+    }
+    return true;
+  }
+
+  private static createWorkOrderHistory() {
+    return null;
+  }
+
+  // Partner GOJEK ============================================================
   private static get gojekBaseUrl() {
     return ConfigService.get('gojek.baseUrl');
   }

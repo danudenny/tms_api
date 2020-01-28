@@ -12,6 +12,7 @@ import { OrionRepositoryService } from '../../../shared/services/orion-repositor
 import { QueueBullBoard } from './queue-bull-board';
 import { Branch } from '../../../shared/orm-entity/branch';
 import { User } from '../../../shared/orm-entity/user';
+import { Reason } from '../../../shared/orm-entity/reason';
 
 export class DoPodDetailPostMetaQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-history-post-meta', {
@@ -86,92 +87,6 @@ export class DoPodDetailPostMetaQueueService {
     this.queue.on('cleaned', function(job, type) {
       Logger.log('Cleaned %s %s jobs', job.length, type);
     });
-  }
-
-  // NOTE: not used now =======================
-  public static async createJobByScanOutAwb(doPodDetailId: string) {
-
-    const doPodDetailRepository = new OrionRepositoryService(DoPodDetail);
-    const q = doPodDetailRepository.findOne();
-    // Manage relation (default inner join)
-    q.innerJoin(e => e.doPod);
-
-    q.select({
-      doPodDetailId: true,
-      awbItemId: true,
-      userIdCreated: true,
-      userIdUpdated: true,
-      doPod: {
-        doPodId: true,
-        branchId: true,
-        // userId: true,
-      },
-    });
-    q.where(e => e.doPodDetailId, w => w.equals(doPodDetailId));
-    const doPodDetail = await q.exec();
-
-    if (doPodDetail) {
-
-      // TODO: find awbStatusIdLastPublic on awb_status
-      // provide data
-      const obj = {
-        awbItemId: doPodDetail.awbItemId,
-        // userId: null,
-        branchId: doPodDetail.doPod.branchId,
-        awbStatusId: AWB_STATUS.OUT_BRANCH,
-        awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-        userIdCreated: doPodDetail.userIdCreated,
-        userIdUpdated: doPodDetail.userIdUpdated,
-        employeeIdDriver: null,
-        timestamp: moment().toDate(),
-      };
-
-      return DoPodDetailPostMetaQueueService.queue.add(obj);
-    }
-
-  }
-  // NOTE: not used now =======================
-  public static async createJobByScanOutAwbDeliver(doPodDeliverDetailId: string) {
-
-    const doPodDetailRepository = new OrionRepositoryService(
-      DoPodDeliverDetail,
-    );
-    const q = doPodDetailRepository.findOne();
-    // Manage relation (default inner join)
-    q.innerJoin(e => e.doPodDeliver);
-
-    q.select({
-      doPodDeliverDetailId: true,
-      awbItemId: true,
-      userIdCreated: true,
-      userIdUpdated: true,
-      doPodDeliver: {
-        doPodDeliverId: true,
-        branchId: true,
-        userId: true,
-      },
-    });
-    q.where(e => e.doPodDeliverDetailId, w => w.equals(doPodDeliverDetailId));
-    const doPodDetailDeliver = await q.exec();
-
-    if (doPodDetailDeliver) {
-      // TODO: find awbStatusIdLastPublic on awb_status
-      // provide data
-      const obj = {
-        awbItemId: doPodDetailDeliver.awbItemId,
-        userId: doPodDetailDeliver.doPodDeliver.userId,
-        branchId: doPodDetailDeliver.doPodDeliver.branchId,
-        awbStatusId: AWB_STATUS.ANT,
-        awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-        userIdCreated: doPodDetailDeliver.userIdCreated,
-        userIdUpdated: doPodDetailDeliver.userIdUpdated,
-        employeeIdDriver: null,
-        timestamp: moment().toDate(),
-      };
-
-      return DoPodDetailPostMetaQueueService.queue.add(obj);
-    }
-
   }
 
   public static async createJobByScanOutAwbBranch(
@@ -383,7 +298,9 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
-  // TODO: fix get data
+  // MOBILE SYNC
+  // #region mobile sync data
+  // NOTE: deprecated
   public static async createJobByMobileSyncAwb(
     doPodDeliverDetailId: string,
     employeeIdDriver: number,
@@ -476,6 +393,67 @@ export class DoPodDetailPostMetaQueueService {
     }
 
   }
+
+  public static async createJobByMobileSync(
+    awbItemId: number,
+    awbStatusId: number,
+    userId: number,
+    branchId: number,
+    userIdCreated: number,
+    employeeIdDriver: number,
+    reasonId: number,
+    descLast: string,
+    consigneeName: string,
+    awbStatusName: string,
+    awbStatusCode: string,
+  ) {
+    // TODO: find awbStatusIdLastPublic on awb_status
+    const awbStatusIdLastPublic = AWB_STATUS.ON_PROGRESS;
+    const awbNote = descLast;
+    // TODO: create note internal and note public ??
+    let noteInternal = '';
+    let notePublic = '';
+    let receiverName = '';
+
+    if (awbStatusId == AWB_STATUS.DLV) {
+      // TODO: title case consigneeName
+      receiverName = consigneeName;
+      const reason = await Reason.findOne(reasonId);
+
+      noteInternal = `Paket diterima oleh [${consigneeName} - (${reason.reasonCode}) ${reason.reasonName}]; catatan: ${descLast}`;
+      notePublic = `Paket diterima oleh [${consigneeName} - (${reason.reasonCode}) ${reason.reasonName}]`;
+    } else {
+      let branchName = 'Kantor Pusat';
+      let cityName = 'Jakarta';
+      const branch = await this.getDataBranchCity(branchId);
+      if (branch) {
+        branchName = branch.branchName;
+        cityName = branch.district.city.cityName;
+      }
+      noteInternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${awbStatusName}) ${awbStatusCode}; catatan: ${descLast}`;
+      notePublic = `Paket di kembalikan di ${cityName} [${branchName}] - (${awbStatusName}) ${awbStatusCode}`;
+    }
+
+    // provide data
+    const obj = {
+      awbStatusId,
+      awbStatusIdLastPublic,
+      awbItemId,
+      userId,
+      branchId,
+      userIdCreated,
+      userIdUpdated: userIdCreated,
+      employeeIdDriver,
+      timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
+      receiverName,
+      awbNote,
+    };
+
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+  // #endregion mobile sync data ===============================================
 
   // TODO: need refactoring
   // Manual POD Sync
