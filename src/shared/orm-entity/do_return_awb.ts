@@ -1,7 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import { Branch } from './branch';
 
-@Entity('do_return_awb ', { schema: 'public' })
+@Entity('do_return_awb', { schema: 'public' })
 export class DoReturnAwb extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'do_return_awb_id',
@@ -62,5 +63,9 @@ export class DoReturnAwb extends TmsBaseEntity {
     name: 'pod_datetime',
   })
   podDatetime: Date;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_last' })
+  branchTo: Branch;
 
 }

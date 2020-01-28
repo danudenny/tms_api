@@ -18,6 +18,7 @@ import { WebDeliveryOutService } from './web/web-delivery-out.service';
 import { WebMonitoringService } from './web/web-monitoring.service';
 import { WebAwbCountService } from './web/web-awb-count.service';
 import { MobileAttendanceService } from './mobile/mobile-attendance.service';
+import { DoReturnService } from './do-return/do-return.service';
 
 @Module({
   imports: [SharedModule],
@@ -40,6 +41,7 @@ import { MobileAttendanceService } from './mobile/mobile-attendance.service';
     WebMonitoringService,
     WebAwbCountService,
     MobileAttendanceService,
+    DoReturnService,
   ],
   exports: [
     AwbStatusService,
@@ -60,6 +62,7 @@ import { MobileAttendanceService } from './mobile/mobile-attendance.service';
     WebMonitoringService,
     WebAwbCountService,
     MobileAttendanceService,
+    DoReturnService,
   ],
 })
 export class MainServerServicesModule {}

@@ -24,6 +24,7 @@ import { Province } from '../orm-entity/province';
 import { City } from '../orm-entity/city';
 import { District } from '../orm-entity/district';
 import { DoReturnMaster } from '../orm-entity/do_return_master';
+import { DoReturnAwb } from '../orm-entity/do_return_awb';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -104,5 +105,9 @@ export class RepositoryService {
   }
   static get doReturnMaster() {
     return new OrionRepositoryService(DoReturnMaster);
+  }
+
+  static get doReturnAwb() {
+    return new OrionRepositoryService(DoReturnAwb);
   }
 }
