@@ -392,6 +392,7 @@ export class PartnerService {
     let refAwbNumber = null;
     let pickupRequestDetailId = null;
     let branchPartnerId = null;
+    let awbItemId = null;
     const arrDropStatus = [7050];
     const err = '';
 
@@ -403,6 +404,7 @@ export class PartnerService {
       workOrderStatusIdLast = item.work_order_status_id_last;
       refAwbNumber = item.ref_awb_number;
       pickupRequestDetailId = item.pickup_request_detail_id;
+      awbItemId = item.awb_item_id;
     }
 
     for (const itemBranch of dataBranch) {
@@ -476,6 +478,7 @@ export class PartnerService {
               pickup_request_id: pickupRequestId,
               work_order_status_id_last: '7050',
               work_order_status_id_pick: null,
+              awb_item_id: awbItemId,
               user_id: '1',
               created_time: timeNow,
               updated_time: timeNow,
@@ -496,7 +499,8 @@ export class PartnerService {
               pickup_request_id: pickupRequestId,
               work_order_status_id_last: '7050',
               work_order_status_id_pick: null,
-              branch_id: '0',
+              branch_id: '1481',
+              is_final: true,
               user_id: '1',
               created_time: timeNow,
               updated_time: timeNow,
@@ -562,7 +566,8 @@ export class PartnerService {
               pickup_request_id: pickupRequestId,
               work_order_status_id_last: '7050',
               work_order_status_id_pick: null,
-              branch_id: '0',
+              branch_id: '1481',
+              is_final: true,
               user_id: '1',
               created_time: timeNow,
               updated_time: timeNow,
@@ -635,7 +640,8 @@ export class PartnerService {
         prd.work_order_id_last,
         prd.pickup_request_id,
         prd.pickup_request_detail_id,
-        wo.work_order_status_id_last
+        wo.work_order_status_id_last,
+        prd.awb_item_id
       FROM pickup_request_detail prd
       LEFT JOIN work_order wo on prd.work_order_id_last = wo.work_order_id AND wo.is_deleted=FALSE
       WHERE
@@ -729,6 +735,7 @@ export class PartnerService {
       pickup_request_id: params['pickup_request_id'],
       work_order_status_id_last: params['work_order_status_id_last'],
       work_order_status_id_pick: params['work_order_status_id_pick'],
+      awb_item_id: params['awb_item_id'],
       user_id_created: params['user_id'],
       created_time: params['created_time'],
       user_id_updated: params['user_id'],
@@ -745,6 +752,7 @@ export class PartnerService {
       work_order_status_id: params['work_order_status_id_last'],
       user_id: params['user_id'],
       branch_id: params['branch_id'],
+      is_final: params['is_final'],
       history_date_time: params['updated_time'],
       user_id_created: params['user_id'],
       created_time: params['created_time'],
