@@ -30,7 +30,7 @@ export class ProofDeliverDataVm {
   awbStatusDateLast: Date;
 
   @ApiModelProperty()
-  podDeliveryCode: string;
+  doPodDeliverCode: string;
 
   @ApiModelProperty()
   totalSuccessAwb: number;
