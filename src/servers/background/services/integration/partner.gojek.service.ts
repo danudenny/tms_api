@@ -87,6 +87,7 @@ export class PartnerGojekService {
               await this.findAndCreateOrder(
                 payload.workOrderId,
                 requestGojek.orderNo,
+                payload.userId,
               );
               result.data = data;
               result.response = requestGojek;
@@ -135,28 +136,40 @@ export class PartnerGojekService {
   }
 
   // Work Order ==============================================================
-  private static async findAndCreateOrder(workOrderId: number, orderNumber: string) {
+  private static async findAndCreateOrder(
+    workOrderId: number,
+    orderNumber: string,
+    userId: number,
+  ) {
+    const timeNow = moment().toDate();
     // TODO: find WorkOrderAttr
     try {
-      const wo = WorkOrderAttr.findOne({
+      const order = await WorkOrderAttr.findOne({
+        select: ['workOrderAttrId'],
         where: {
           workOrderId,
           isDeleted: false,
         },
       });
-      if (wo) {
-        await WorkOrderAttr.update(
-          { workOrderId },
+
+      if (order) {
+        await WorkOrderAttr.update(order.workOrderAttrId,
           {
             refOrderNo: orderNumber,
-            refOrderCreatedTime: moment().toDate(),
+            refOrderCreatedTime: timeNow,
           },
         );
       } else {
+        // NOTE: partnerId gojek from table partner
         const woAttr = await WorkOrderAttr.create({
           workOrderId,
           refOrderNo: orderNumber,
-          refOrderCreatedTime: moment().toDate(),
+          refOrderCreatedTime: timeNow,
+          partnerId: 1,
+          userIdCreated: userId,
+          userIdUpdated: userId,
+          createdTime: timeNow,
+          updatedTime: timeNow,
         });
         await WorkOrderAttr.insert(woAttr);
       }

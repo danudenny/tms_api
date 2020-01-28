@@ -28,7 +28,7 @@ export class WorkOrderAttr extends TmsBaseEntity {
     nullable: false,
     name: 'partner_id',
   })
-  partnerId: string;
+  partnerId: number;
 
   @Column('character varying', {
     nullable: false,
