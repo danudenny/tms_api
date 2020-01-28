@@ -28,6 +28,7 @@ import { ProofDeliveryResponseVm, ProofDeliveryPayloadVm } from '../../../models
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../../shared/services/meta.service';
+import { QueryBuilderService } from '../../../../../shared/services/query-builder.service';
 import { DoPod } from '../../../../../shared/orm-entity/do-pod';
 import { POD_TYPE } from '../../../../../shared/constants/pod-type.constant';
 import { AwbThirdPartyVm, AwbThirdPartyUpdateResponseVm } from '../../../models/last-mile/awb-third-party.vm';
@@ -402,7 +403,14 @@ export class LastMileDeliveryOutService {
     // TODO:
     // find data do_pod
     const qb = createQueryBuilder();
+    qb.addSelect('employee.nik', 'driverNik');
+    qb.addSelect('employee.fullname', 'driverFullName');
     qb.addSelect('dpdd.awb_number', 'awbNumber');
+    qb.addSelect('dpdd.awb_status_date_time_last', 'awbStatusDateLast');
+    qb.addSelect('dpd.do_pod_deliver_code', 'podDeliveryCode');
+    qb.addSelect('do_pod_detail.do_pod_id', 'doPodId');
+    qb.addSelect('COUNT(1) FILTER (WHERE dpdd.awb_status_id_last = 30000)', 'totalSuccessAwb');
+    qb.addSelect('COUNT(1) FILTER (WHERE dpdd.awb_status_id_last <> 30000)', 'totalErrorAwb');
     qb.addSelect(`COALESCE(dpdd.consignee_name, '')`, 'refConsigneeName');
     qb.addSelect(`COALESCE(awb.consignee_name, '')`, 'consigneeName');
     qb.addSelect(
@@ -411,11 +419,28 @@ export class LastMileDeliveryOutService {
     );
     qb.addSelect('awb_status.awb_status_name', 'awbStatusCode');
     qb.addSelect('awb_status.awb_status_title', 'awbStatusName');
+    qb.groupBy(`employee.nik, employee.fullname, dpdd.awb_number, dpdd.awb_status_date_time_last, dpd.do_pod_deliver_code, do_pod_detail.do_pod_id,
+                dpdd.consignee_name, awb.consignee_name, awb.consignee_address, awb_status.awb_status_name, awb_status.awb_status_title`);
     qb.from('do_pod_deliver', 'dpd');
+    qb.innerJoin(
+      'users',
+      'users',
+      'users.user_id = dpd.user_id_driver',
+    );
+    qb.innerJoin(
+      'employee',
+      'employee',
+      'employee.employee_id = users.employee_id',
+    );
     qb.innerJoin(
       'do_pod_deliver_detail',
       'dpdd',
       'dpd.do_pod_deliver_id = dpdd.do_pod_deliver_id AND dpdd.is_deleted = false',
+    );
+    qb.innerJoin(
+      'do_pod_detail',
+      'do_pod_detail',
+      'do_pod_detail.awb_item_id = dpdd.awb_item_id',
     );
     qb.innerJoin('awb', 'awb', 'dpdd.awb_id = awb.awb_id AND awb.is_deleted = false');
     qb.innerJoin(
@@ -430,6 +455,10 @@ export class LastMileDeliveryOutService {
       },
     );
     const result = new ProofDeliveryResponseVm();
+    const total = await QueryBuilderService.count(qb, '1');
+    payload.applyRawPaginationToQueryBuilder(qb);
+
+    result.paging = MetaService.set(payload.page, payload.limit, total);
     result.data = await qb.getRawMany();
 
     return result;
