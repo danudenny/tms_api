@@ -78,6 +78,9 @@ export class WebScanTransitResponseVm {
   @ApiModelProperty()
   description: string;
 
+  @ApiModelProperty()
+  partnerLogisticName: string;
+
 }
 
 export class WebScanTransitAwbResponseVm {
@@ -217,7 +220,7 @@ export class WebScanOutAwbListResponseVm extends BaseMetaResponseVm {
 export class WebScanOutTransitListResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty({ type: () => [WebScanTransitResponseVm] })
-  data: WebScanTransitAwbResponseVm[];
+  data: WebScanTransitResponseVm[];
 }
 
 export class WebScanOutTransitListAwbResponseVm extends BaseMetaResponseVm {
@@ -357,4 +360,35 @@ export class WebScanOutResponseForEditVm {
 export class WebScanOutResponseForPrintVm {
   @ApiModelProperty()
   bagItemId: number;
+}
+
+export class WebAwbThirdPartyResponseVm {
+  @ApiModelProperty()
+  doPodCode: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  doPodDateTime: string;
+
+  @ApiModelProperty()
+  nickname: string;
+
+  @ApiModelProperty()
+  partnerLogisticName: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  awbThirdParty: string;
+
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  employeeIdDriver: number;
+}
+
+export class WebAwbThirdPartyListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebAwbThirdPartyResponseVm] })
+  data: WebAwbThirdPartyResponseVm[];
 }
