@@ -168,7 +168,7 @@ export class PartnerService {
     token: string,
   ): Promise<any> {
     const arrAwb = [];
-    const partnerId = 0;
+    const partnerId = 74;
 
     await RedisService.setex(`posindonesia:status`, '1', 180);
 
