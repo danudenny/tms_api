@@ -40,7 +40,7 @@ export class WebLastMileController {
   @Post('proof/delivery')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: ProofDeliveryResponseVm })
-  public async listProofDelivery(@Body() payload: ProofDeliveryPayloadVm) {
+  public async listProofDelivery(@Body() payload: BaseMetaPayloadVm) {
     return LastMileDeliveryOutService.listProofDelivery(payload);
   }
 
