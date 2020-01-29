@@ -52,4 +52,16 @@ export class ProofDeliveryResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty({ type: () => [ProofDeliverDataVm] })
   data: ProofDeliverDataVm[];
+
+  @ApiModelProperty()
+  driverNik: string;
+
+  @ApiModelProperty()
+  driverFullName: string;
+
+  @ApiModelProperty()
+  doPodId: string;
+
+  @ApiModelProperty()
+  doPodDeliverCode: string;
 }
