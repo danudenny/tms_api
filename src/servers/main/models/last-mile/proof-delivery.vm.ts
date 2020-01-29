@@ -28,12 +28,6 @@ export class ProofDeliverDataVm {
 
   @ApiModelProperty()
   awbStatusDateLast: Date;
-
-  @ApiModelProperty()
-  totalSuccessAwb: number;
-
-  @ApiModelProperty()
-  totalErrorAwb: number;
 }
 
 export class ProofDeliveryResponseVm extends BaseMetaResponseVm {
@@ -52,4 +46,10 @@ export class ProofDeliveryResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty()
   doPodDeliverCode: string;
+
+  @ApiModelProperty()
+  totalSuccessAwb: number;
+
+  @ApiModelProperty()
+  totalErrorAwb: number;
 }
