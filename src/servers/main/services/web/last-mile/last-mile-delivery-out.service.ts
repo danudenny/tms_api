@@ -400,15 +400,20 @@ export class LastMileDeliveryOutService {
     return result;
   }
 
-  static async listProofDelivery(payload: BaseMetaPayloadVm) 
+  static async listProofDelivery(payload: BaseMetaPayloadVm)
   : Promise<ProofDeliveryResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
+    payload.fieldResolverMap['awbNumber'] = 't3.awb_number';
+
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
         field: 'doPodDeliverCode',
+      },
+      {
+        field: 'awbNumber',
       },
     ];
 
@@ -445,7 +450,7 @@ export class LastMileDeliveryOutService {
         'totalErrorAwb',
       ],
       );
-    q1.groupByRaw(`t1.do_pod_deliver_code`);
+    q1.groupByRaw(`t1.do_pod_deliver_code, t3.awb_number`);
     const dataTotal = await q1.exec();
     result.totalSuccessAwb = 0;
     result.totalErrorAwb = 0;
@@ -458,6 +463,7 @@ export class LastMileDeliveryOutService {
 
     // GET SELECTED FIELD
     const q2 = q;
+    payload.applyToOrionRepositoryQuery(q, true);
     q2.selectRaw(
       ['t1.do_pod_deliver_code', 'doPodDeliverCode'],
       ['t1.do_pod_deliver_id', 'doPodDeliverId'],
@@ -471,7 +477,7 @@ export class LastMileDeliveryOutService {
       [`COALESCE(t6.consignee_name, '')`, 'consigneeName'],
       [`COALESCE(t6.consignee_address, '')`, 'consigneeAddress'],
     );
-    q2.groupByRaw(`t2.nik, t2.fullname, t3.awb_number, t3.awb_status_date_time_last, t1.do_pod_deliver_code, t1.do_pod_deliver_id, t3.awb_status_id_last,
+    q2.groupByRaw(`t1.do_pod_deliver_code, t3.awb_number, t2.nik, t2.fullname, t3.awb_status_date_time_last, t1.do_pod_deliver_id, t3.awb_status_id_last,
                 t3.consignee_name, t6.consignee_name, t6.consignee_address, t5.awb_status_name, t5.awb_status_title`);
     const data = await q2.exec();
     const total = await q2.countWithoutTakeAndSkip();
