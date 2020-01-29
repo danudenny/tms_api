@@ -32,6 +32,7 @@ import { QueryBuilderService } from '../../../../../shared/services/query-builde
 import { DoPod } from '../../../../../shared/orm-entity/do-pod';
 import { POD_TYPE } from '../../../../../shared/constants/pod-type.constant';
 import { AwbThirdPartyVm, AwbThirdPartyUpdateResponseVm } from '../../../models/last-mile/awb-third-party.vm';
+import { PodScanIn } from '../../../../../shared/orm-entity/pod-scan-in';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -399,67 +400,85 @@ export class LastMileDeliveryOutService {
     return result;
   }
 
-  static async listProofDelivery(payload: ProofDeliveryPayloadVm) {
-    // TODO:
-    // find data do_pod
-    const qb = createQueryBuilder();
-    qb.addSelect('employee.nik', 'driverNik');
-    qb.addSelect('employee.fullname', 'driverFullName');
-    qb.addSelect('dpdd.awb_number', 'awbNumber');
-    qb.addSelect('dpdd.awb_status_date_time_last', 'awbStatusDateLast');
-    qb.addSelect('dpd.do_pod_deliver_code', 'podDeliveryCode');
-    qb.addSelect('do_pod_detail.do_pod_id', 'doPodId');
-    qb.addSelect('COUNT(1) FILTER (WHERE dpdd.awb_status_id_last = 30000)', 'totalSuccessAwb');
-    qb.addSelect('COUNT(1) FILTER (WHERE dpdd.awb_status_id_last <> 30000)', 'totalErrorAwb');
-    qb.addSelect(`COALESCE(dpdd.consignee_name, '')`, 'refConsigneeName');
-    qb.addSelect(`COALESCE(awb.consignee_name, '')`, 'consigneeName');
-    qb.addSelect(
-      `COALESCE(awb.consignee_address, '')`,
-      'consigneeAddress',
-    );
-    qb.addSelect('awb_status.awb_status_name', 'awbStatusCode');
-    qb.addSelect('awb_status.awb_status_title', 'awbStatusName');
-    qb.groupBy(`employee.nik, employee.fullname, dpdd.awb_number, dpdd.awb_status_date_time_last, dpd.do_pod_deliver_code, do_pod_detail.do_pod_id,
-                dpdd.consignee_name, awb.consignee_name, awb.consignee_address, awb_status.awb_status_name, awb_status.awb_status_title`);
-    qb.from('do_pod_deliver', 'dpd');
-    qb.innerJoin(
-      'users',
-      'users',
-      'users.user_id = dpd.user_id_driver',
-    );
-    qb.innerJoin(
-      'employee',
-      'employee',
-      'employee.employee_id = users.employee_id',
-    );
-    qb.innerJoin(
-      'do_pod_deliver_detail',
-      'dpdd',
-      'dpd.do_pod_deliver_id = dpdd.do_pod_deliver_id AND dpdd.is_deleted = false',
-    );
-    qb.innerJoin(
-      'do_pod_detail',
-      'do_pod_detail',
-      'do_pod_detail.awb_item_id = dpdd.awb_item_id',
-    );
-    qb.innerJoin('awb', 'awb', 'dpdd.awb_id = awb.awb_id AND awb.is_deleted = false');
-    qb.innerJoin(
-      'awb_status',
-      'awb_status',
-      'awb_status.awb_status_id = dpdd.awb_status_id_last AND awb_status.is_deleted = false',
-    );
-    qb.andWhere(
-      'dpd.do_pod_deliver_code = :doPodDeliverCode AND dpd.is_deleted = false',
-      {
-        doPodDeliverCode: payload.doPodDeliverCode,
-      },
-    );
-    const result = new ProofDeliveryResponseVm();
-    const total = await QueryBuilderService.count(qb, '1');
-    payload.applyRawPaginationToQueryBuilder(qb);
+  static async listProofDelivery(payload: BaseMetaPayloadVm) 
+  : Promise<ProofDeliveryResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
 
-    result.paging = MetaService.set(payload.page, payload.limit, total);
-    result.data = await qb.getRawMany();
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDeliverCode',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPodDeliver, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_deliver_code', 'doPodDeliverCode'],
+      ['t2.nik', 'driverNik'],
+      ['t2.fullname', 'driverFullName'],
+      ['t3.awb_number', 'awbNumber'],
+      ['t3.awb_status_date_time_last', 'awbStatusDateLast'],
+      ['COUNT(1) FILTER (WHERE t3.awb_status_id_last = 30000)', 'totalSuccessAwb'],
+      ['COUNT(1) FILTER (WHERE t3.awb_status_id_last <> 30000)', 'totalErrorAwb'],
+      [`COALESCE(t3.consignee_name, '')`, 'refConsigneeName'],
+      ['t4.do_pod_id', 'doPodId'],
+      ['t5.awb_status_name', 'awbStatusCode'],
+      ['t5.awb_status_title', 'awbStatusName'],
+      [`COALESCE(t6.consignee_name, '')`, 'consigneeName'],
+      [`COALESCE(t6.consignee_address, '')`, 'consigneeAddress'],
+    );
+
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.doPodDeliverDetails.doPodDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.doPodDeliverDetails.awbStatus, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.doPodDeliverDetails.awb, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.groupByRaw(`t2.nik, t2.fullname, t3.awb_number, t3.awb_status_date_time_last, t1.do_pod_deliver_code, t4.do_pod_id,
+                t3.consignee_name, t6.consignee_name, t6.consignee_address, t5.awb_status_name, t5.awb_status_title`);
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new ProofDeliveryResponseVm();
+    result.doPodDeliverCode = '';
+    result.driverNik = '';
+    result.driverFullName = '';
+    result.doPodId = '';
+    result.totalSuccessAwb = 0;
+    result.totalErrorAwb = 0;
+
+    if(data.length != 0){
+      const temp = data[0];
+      result.doPodDeliverCode = temp.doPodDeliverCode;
+      result.driverNik        = temp.driverNik;
+      result.driverFullName   = temp.driverFullName;
+      result.doPodId          = temp.doPodId;
+      result.totalSuccessAwb  = temp.totalSuccessAwb;
+      result.totalErrorAwb    = temp.totalErrorAwb;
+    }
+
+    result.data = data;
+    result.buildPaging(payload.page, payload.limit, total);
 
     return result;
   }
