@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 
-@Entity('do_return_admin_to_ct ', { schema: 'public' })
+@Entity('do_return_admin_to_ct', { schema: 'public' })
 export class DoReturnAdmintoCt extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'do_return_admin_to_ct_id',

@@ -12,10 +12,12 @@ export class DoReturnService {
     payload: BaseMetaPayloadVm,
   ): Promise<ReturnFindAllResponseVm> {
     // mapping search field and operator default ilike
-    payload.fieldResolverMap['createdTime'] = 'return.created_time';
-    payload.fieldResolverMap['branchName'] = 'branch.branch_name';
+    payload.fieldResolverMap['podDatetime'] = 'return.pod_datetime';
     payload.fieldResolverMap['branchIdLast'] = 'return.branch_id_last';
-    payload.fieldResolverMap['createdTime'] = 'return.created_time';
+    payload.fieldResolverMap['customerId'] = 'return.customer_id';
+    payload.fieldResolverMap['doReturnAwbNumber'] = 'return.do_return_awb_number';
+    payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
+    payload.fieldResolverMap['doReturnMasterCode'] = 'do_return_master.do_return_master_code';
     const repo = new OrionRepositoryService(DoReturnAwb, 'return');
 
     // const q = repo.findAllRaw();
@@ -27,6 +29,7 @@ export class DoReturnService {
       ['return.awb_number', 'awbNumber'],
       ['return.do_return_awb_number', 'doReturnAwbNumber'],
       ['return.pod_datetime', 'podDatetime'],
+      ['return.customer_id', 'customerId'],
       ['branch.branch_name', 'branchName'],
       ['customer.customer_name', 'customerName'],
       ['awb_status.awb_status_title', 'awbStatus'],

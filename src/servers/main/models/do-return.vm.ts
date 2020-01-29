@@ -39,6 +39,9 @@ export class DoReturnResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty()
   doReturnMasterDesc: string;
+
+  @ApiModelProperty()
+  doCode: string;
 }
 
 export class ReturnSearchVm {
