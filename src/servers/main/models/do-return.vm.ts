@@ -43,6 +43,23 @@ export class DoReturnResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty()
   doCode: string;
 }
+export class DoReturnAdminResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty()
+  doReturnAdminId: string;
+
+  @ApiModelProperty()
+  doReturnAdminCode: string;
+
+  @ApiModelProperty()
+  countAwb: number;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  newAwbNumber: string;
+}
 
 export class ReturnSearchVm {
   @ApiModelProperty()
