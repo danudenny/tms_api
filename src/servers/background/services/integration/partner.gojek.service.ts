@@ -218,9 +218,9 @@ export class PartnerGojekService {
   }
 
   private static async updateStatusOrder(params: any, workOrderStatusId: number) {
-
+    const timeNow = moment().toDate();
     const order = await WorkOrderAttr.findOne({
-      select: ['workOrderAttrId', 'workOrderId'],
+      select: ['workOrderAttrId', 'workOrderId', 'userIdCreated'],
       where: {
         refOrderNo: params.booking_id,
         isDeleted: false,
@@ -230,7 +230,7 @@ export class PartnerGojekService {
     if (order) {
 
       await WorkOrder.update(order.workOrderId, {
-        work_order_status_id_last: workOrderStatusId.toString(),
+        workOrderStatusIdLast: workOrderStatusId,
       });
 
       await WorkOrderAttr.update(order.workOrderAttrId, {
@@ -248,18 +248,19 @@ export class PartnerGojekService {
       });
 
       // TODO: add awb history
-      // const woh = await WorkOrderHistory.create({
-      //   work_order_id: params['work_order_id'],
-      //   work_order_status_id: params['work_order_status_id_last'],
-      //   user_id: params['user_id'],
-      //   branch_id: params['branch_id'],
-      //   is_final: params['is_final'],
-      //   history_date_time: params['updated_time'],
-      //   user_id_created: params['user_id'],
-      //   created_time: params['created_time'],
-      //   user_id_updated: params['user_id'],
-      //   updated_time: params['updated_time'],
-      // });
+      const woh = await WorkOrderHistory.create({
+        workOrderId: order.workOrderId,
+        workOrderStatusId,
+        userId: params['user_id'],
+        branchId: params['branch_id'],
+        isFinal: params['is_final'],
+        historyDateTime: params['updated_time'],
+        userIdCreated: order.userIdCreated,
+        createdTime: timeNow,
+        userIdUpdated: order.userIdCreated,
+        updatedTime: timeNow,
+      });
+      await WorkOrderHistory.insert(woh);
 
     } else {
       PinoLoggerService.log('#### Not Found!!!');
