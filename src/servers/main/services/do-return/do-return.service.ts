@@ -10,6 +10,8 @@ import { DoReturnHistory } from '../../../../shared/orm-entity/do_return_history
 import { DoReturnMaster } from '../../../../shared/orm-entity/do_return_master';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { ReturnUpdateFindAllResponseVm } from '../../models/do-return-update.response.vm';
+import { DoReturnCreateVm, ReturnCreateVm } from '../../models/do-return-create.vm';
+import moment = require('moment');
 
 @Injectable()
 export class DoReturnService {
@@ -169,4 +171,35 @@ export class DoReturnService {
 
     return result;
   }
+
+  // create do retrurn
+  static async returnCreate(
+    payload: ReturnCreateVm,
+  ): Promise<ReturnUpdateFindAllResponseVm> {
+    const result = new ReturnUpdateFindAllResponseVm();
+    const status = 'ok';
+    const message = 'success';
+
+    // create do_pod (Surat Jalan)
+    for (const history of payload.data) {
+      const doReturn = DoReturnAwb.create();
+      const doPodDateTime = moment(history.podDatetime).toDate();
+      doReturn.awbNumber = history.awbNumber;
+      doReturn.doReturnAwbNumber = history.doReturnNo;
+      doReturn.customerId = history.customerId;
+      doReturn.awbStatusIdLast = history.lastStatusAwb;
+      doReturn.branchIdLast = history.branchIdLast;
+      doReturn.podDatetime = history.podDatetime;
+      doReturn.userIdCreated = 3;
+      doReturn.userIdUpdated = 3;
+
+      const insert = await DoReturnAwb.save(doReturn);
+    }
+
+    result.status = status;
+    result.message = message;
+
+    return result;
+  }
+
 }

@@ -27,12 +27,6 @@ export class DoReturnCollectionToCust extends TmsBaseEntity {
   })
   attachmentId: string;
 
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-  })
-  is_deleted: boolean;
-
   @Column('character varying', {
     nullable: true,
     length: 255,

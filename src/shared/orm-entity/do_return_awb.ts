@@ -56,12 +56,6 @@ export class DoReturnAwb extends TmsBaseEntity {
   })
   doReturnCollectionToCustId: string | null;
 
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-  })
-  is_deleted: boolean;
-
   @Column('character varying', {
     nullable: true,
     name: 'do_return_awb_number',
@@ -78,7 +72,7 @@ export class DoReturnAwb extends TmsBaseEntity {
     nullable: false,
     name: 'pod_datetime',
   })
-  podDatetime: Date;
+  podDatetime: string;
 
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_last' })

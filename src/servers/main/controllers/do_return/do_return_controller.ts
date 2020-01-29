@@ -7,6 +7,7 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { DoReturnPayloadVm } from '../../models/do-return-update.vm';
 import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm } from '../../models/do-return.response.vm';
 import { ReturnUpdateFindAllResponseVm } from '../../models/do-return-update.response.vm';
+import { DoReturnCreateVm, ReturnCreateVm } from '../../models/do-return-create.vm';
 
 @ApiUseTags('Do Return')
 @Controller('doReturn')
@@ -34,4 +35,15 @@ export class DoReturnController {
   public async findAllDoListAdmin(@Body() payload: BaseMetaPayloadVm ) {
     return DoReturnService.findAllDoListAdmin(payload);
   }
+
+  @Post('create')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
+  // @Transactional()
+  public async returnCreate(@Body() payload: ReturnCreateVm) {
+    return DoReturnService.returnCreate(payload);
+  }
+
 }
