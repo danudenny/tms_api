@@ -5,6 +5,10 @@ import { ReturnFindAllResponseVm } from '../../models/do-return.response.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoReturnAwb } from '../../../../shared/orm-entity/do_return_awb';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { DoReturnPayloadVm } from '../../models/do-return-update.vm';
+import { DoReturnHistory } from 'src/shared/orm-entity/do_return_history';
+import { DoReturnMaster } from 'src/shared/orm-entity/do_return_master';
+import { AuthService } from 'src/shared/services/auth.service';
 
 @Injectable()
 export class DoReturnService {
@@ -64,5 +68,40 @@ export class DoReturnService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
+  }
+  static async updateDoReturn(
+    payload: DoReturnPayloadVm,
+  ): Promise<ReturnFindAllResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const result = new ReturnFindAllResponseVm();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const doReturnMaster = await DoReturnMaster.findOne({
+      where: {
+        doReturnMasterCode : payload.returnStatus,
+      },
+    });
+    if (doReturnMaster) {
+
+      for (const history of payload.returnAwbId) {
+       const hist = DoReturnHistory.create({
+          doReturnAwbId : history,
+          doReturnMasterId : doReturnMaster.doReturnMasterId,
+
+        });
+       const update = await DoReturnHistory.save(hist);
+       const returnHistId = update.doReturnHistoryId;
+
+       await DoReturnAwb.update(
+         history,
+         {
+           doReturnIdHistoryLast : returnHistId,
+           userIdUpdated : authMeta.userId,
+           updatedTime :  new Date(Date.now()).toLocaleString(),
+         });
+    }
+
+      return result ;
+  }
   }
 }

@@ -56,6 +56,12 @@ export class DoReturnAwb extends TmsBaseEntity {
   })
   doReturnCollectionToCustId: string | null;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+  })
+  is_deleted: boolean;
+
   @Column('character varying', {
     nullable: true,
     name: 'do_return_awb_number',

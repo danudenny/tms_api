@@ -9,6 +9,12 @@ export class DoReturnMaster extends TmsBaseEntity {
   })
   doReturnMasterId: number;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+  })
+  is_deleted: boolean;
+
   @Column('character varying', {
     nullable: true,
     length: 255,

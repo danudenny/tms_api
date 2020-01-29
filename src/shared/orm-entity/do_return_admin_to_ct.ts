@@ -34,6 +34,12 @@ export class DoReturnAdmintoCt extends TmsBaseEntity {
   })
   partnerLogisticId: string;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+  })
+  is_deleted: boolean;
+
   @Column('character varying', {
     nullable: true,
     length: 255,

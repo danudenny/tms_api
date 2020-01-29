@@ -9,17 +9,23 @@ export class DoReturnHistory extends TmsBaseEntity {
   })
   doReturnHistoryId: string;
 
-  @Column('bigint', {
+  @Column('uuid', {
     nullable: true,
     name: 'do_return_awb_id',
   })
   doReturnAwbId: string;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+  })
+  is_deleted: boolean;
+
   @Column('bigint', {
     nullable: true,
     name: 'do_return_master_id',
   })
-  doReturnMasterId: string;
+  doReturnMasterId: number;
 
   @ManyToOne(() => DoReturnMaster)
   @JoinColumn({ name: 'do_return_master_id' })
