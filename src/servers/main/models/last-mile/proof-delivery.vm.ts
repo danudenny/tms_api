@@ -30,22 +30,10 @@ export class ProofDeliverDataVm {
   awbStatusDateLast: Date;
 
   @ApiModelProperty()
-  doPodDeliverCode: string;
-
-  @ApiModelProperty()
   totalSuccessAwb: number;
 
   @ApiModelProperty()
   totalErrorAwb: number;
-
-  @ApiModelProperty()
-  driverNik: string;
-
-  @ApiModelProperty()
-  driverFullName: string;
-
-  @ApiModelProperty()
-  doPodId: string;
 }
 
 export class ProofDeliveryResponseVm extends BaseMetaResponseVm {
