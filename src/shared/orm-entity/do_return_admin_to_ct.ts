@@ -19,7 +19,7 @@ export class DoReturnAdmintoCt extends TmsBaseEntity {
     nullable: true,
     name: 'count_awb_do_return_admin_to_ct',
   })
-  countAwbDoReturnAdminToCt: string;
+  countAwb: number;
 
   @Column('boolean', {
     nullable: false,

@@ -19,7 +19,7 @@ export class DoReturnCollectionToCust extends TmsBaseEntity {
     nullable: true,
     name: 'count_awb_do_return_ct_to_collection',
   })
-  countAwbDoReturnCtToCollection: string;
+  countAwb: number;
 
   @Column('bigint', {
     nullable: true,
