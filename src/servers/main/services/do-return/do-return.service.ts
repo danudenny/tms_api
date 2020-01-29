@@ -96,7 +96,7 @@ export class DoReturnService {
        await DoReturnAwb.update(
          history,
          {
-           doReturnIdHistoryLast : returnHistId,
+           doReturnHistoryIdLast : returnHistId,
            userIdUpdated : authMeta.userId,
            updatedTime :  new Date(Date.now()).toLocaleString(),
          });

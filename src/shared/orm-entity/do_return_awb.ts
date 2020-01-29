@@ -34,9 +34,9 @@ export class DoReturnAwb extends TmsBaseEntity {
 
   @Column('uuid', {
     nullable: true,
-    name: 'do_return_id_history_last',
+    name: 'do_return_history_id_last',
   })
-  doReturnIdHistoryLast: string | null;
+  doReturnHistoryIdLast: string | null;
 
   @Column('uuid', {
     nullable: true,

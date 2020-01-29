@@ -5,6 +5,9 @@ import { BaseMetaResponseVm } from 'src/shared/models/base-meta-response.vm';
 export class DoReturnResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty()
+  doReturnAwbId: string;
+
+  @ApiModelProperty()
   awbNumber: string;
 
   @ApiModelProperty()

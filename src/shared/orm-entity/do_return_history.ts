@@ -15,12 +15,6 @@ export class DoReturnHistory extends TmsBaseEntity {
   })
   doReturnAwbId: string;
 
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-  })
-  is_deleted: boolean;
-
   @Column('bigint', {
     nullable: true,
     name: 'do_return_master_id',
