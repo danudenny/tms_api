@@ -42,7 +42,7 @@ export class ProofDeliveryResponseVm extends BaseMetaResponseVm {
   driverFullName: string;
 
   @ApiModelProperty()
-  doPodId: string;
+  doPodDeliverId: string;
 
   @ApiModelProperty()
   doPodDeliverCode: string;

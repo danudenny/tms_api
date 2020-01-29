@@ -414,67 +414,79 @@ export class LastMileDeliveryOutService {
 
     const repo = new OrionRepositoryService(DoPodDeliver, 't1');
     const q = repo.findAllRaw();
-
     payload.applyToOrionRepositoryQuery(q, true);
-
-    q.selectRaw(
-      ['t1.do_pod_deliver_code', 'doPodDeliverCode'],
-      ['t2.nik', 'driverNik'],
-      ['t2.fullname', 'driverFullName'],
-      ['t3.awb_number', 'awbNumber'],
-      ['t3.awb_status_date_time_last', 'awbStatusDateLast'],
-      ['COUNT(1) FILTER (WHERE t3.awb_status_id_last = 30000)', 'totalSuccessAwb'],
-      ['COUNT(1) FILTER (WHERE t3.awb_status_id_last <> 30000)', 'totalErrorAwb'],
-      [`COALESCE(t3.consignee_name, '')`, 'refConsigneeName'],
-      ['t4.do_pod_id', 'doPodId'],
-      ['t5.awb_status_name', 'awbStatusCode'],
-      ['t5.awb_status_title', 'awbStatusName'],
-      [`COALESCE(t6.consignee_name, '')`, 'consigneeName'],
-      [`COALESCE(t6.consignee_address, '')`, 'consigneeAddress'],
-    );
 
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.doPodDeliverDetails.doPodDetails, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.doPodDeliverDetails.awbStatus, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.doPodDeliverDetails.awb, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
-    q.groupByRaw(`t2.nik, t2.fullname, t3.awb_number, t3.awb_status_date_time_last, t1.do_pod_deliver_code, t4.do_pod_id,
-                t3.consignee_name, t6.consignee_name, t6.consignee_address, t5.awb_status_name, t5.awb_status_title`);
-
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
-
     const result = new ProofDeliveryResponseVm();
+
+    // GET TOTAL STATUS AWB
+    const q1 = q;
+    q1.selectRaw(
+      [
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 30000)',
+        'totalSuccessAwb',
+      ],
+      [
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000)',
+        'totalErrorAwb',
+      ],
+      );
+    q1.groupByRaw(`t1.do_pod_deliver_code`);
+    const dataTotal = await q1.exec();
+    result.totalSuccessAwb = 0;
+    result.totalErrorAwb = 0;
+
+    if(dataTotal.length != 0){
+      const temp = dataTotal[0];
+      result.totalSuccessAwb = temp.totalSuccessAwb;
+      result.totalErrorAwb = temp.totalErrorAwb;
+    }
+
+    // GET SELECTED FIELD
+    const q2 = q;
+    q2.selectRaw(
+      ['t1.do_pod_deliver_code', 'doPodDeliverCode'],
+      ['t1.do_pod_deliver_id', 'doPodDeliverId'],
+      ['t2.nik', 'driverNik'],
+      ['t2.fullname', 'driverFullName'],
+      ['t3.awb_number', 'awbNumber'],
+      ['t3.awb_status_date_time_last', 'awbStatusDateLast'],
+      [`COALESCE(t3.consignee_name, '')`, 'refConsigneeName'],
+      ['t5.awb_status_name', 'awbStatusCode'],
+      ['t5.awb_status_title', 'awbStatusName'],
+      [`COALESCE(t6.consignee_name, '')`, 'consigneeName'],
+      [`COALESCE(t6.consignee_address, '')`, 'consigneeAddress'],
+    );
+    q2.groupByRaw(`t2.nik, t2.fullname, t3.awb_number, t3.awb_status_date_time_last, t1.do_pod_deliver_code, t1.do_pod_deliver_id, t3.awb_status_id_last,
+                t3.consignee_name, t6.consignee_name, t6.consignee_address, t5.awb_status_name, t5.awb_status_title`);
+    const data = await q2.exec();
+    const total = await q2.countWithoutTakeAndSkip();
+
     result.doPodDeliverCode = '';
     result.driverNik = '';
     result.driverFullName = '';
-    result.doPodId = '';
-    result.totalSuccessAwb = 0;
-    result.totalErrorAwb = 0;
+    result.doPodDeliverId = '';
 
     if(data.length != 0){
       const temp = data[0];
       result.doPodDeliverCode = temp.doPodDeliverCode;
       result.driverNik        = temp.driverNik;
       result.driverFullName   = temp.driverFullName;
-      result.doPodId          = temp.doPodId;
-      result.totalSuccessAwb  = temp.totalSuccessAwb;
-      result.totalErrorAwb    = temp.totalErrorAwb;
+      result.doPodDeliverId   = temp.doPodDeliverId;
     }
 
     result.data = data;
