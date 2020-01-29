@@ -464,6 +464,8 @@ export class LastMileDeliveryOutService {
     result.driverNik = '';
     result.driverFullName = '';
     result.doPodId = '';
+    result.totalSuccessAwb = 0;
+    result.totalErrorAwb = 0;
 
     if(data.length != 0){
       const temp = data[0];
@@ -471,6 +473,8 @@ export class LastMileDeliveryOutService {
       result.driverNik        = temp.driverNik;
       result.driverFullName   = temp.driverFullName;
       result.doPodId          = temp.doPodId;
+      result.totalSuccessAwb  = temp.totalSuccessAwb;
+      result.totalErrorAwb    = temp.totalErrorAwb;
     }
 
     result.data = data;
