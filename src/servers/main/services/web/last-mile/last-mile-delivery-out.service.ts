@@ -467,10 +467,10 @@ export class LastMileDeliveryOutService {
 
     if(data.length != 0){
       const temp = data[0];
-      result.doPodDeliverCode = temp.doPodDeliverCode
-      result.driverNik        = temp.driverNik
-      result.driverFullName   = temp.driverFullName
-      result.doPodId          = temp.doPodId
+      result.doPodDeliverCode = temp.doPodDeliverCode;
+      result.driverNik        = temp.driverNik;
+      result.driverFullName   = temp.driverFullName;
+      result.doPodId          = temp.doPodId;
     }
 
     result.data = data;
