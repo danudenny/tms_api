@@ -8,6 +8,8 @@ import { ConfigService } from '../../../../shared/services/config.service';
 import { WorkOrderAttr } from '../../../../shared/orm-entity/work-order-attr';
 import moment = require('moment');
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { WorkOrder } from '../../../../shared/orm-entity/work-order';
+import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
 
 export class PartnerGojekService {
 
@@ -135,24 +137,32 @@ export class PartnerGojekService {
   }
 
   static async callbackOrder(payload: any) {
+    // NOTE: mapping status gojek
+    // 9000 'FINDING DRIVER'
+    // 9010 'DRIVER_FOUND'
+    // 9020 'PICKED_UP'
+    // 9030 'DRIVER_NOT_FOUND'
+    // 9040 'CUSTOMER_CANCELLED'
+    // 9050 'COMPLETED'
+    // =====================================
     switch (payload.type) {
       case 'CREATED':
-        this.updateStatusOrder(payload);
+        this.updateStatusOrder(payload, 9000);
         break;
       case 'DRIVER_FOUND':
-        this.updateStatusOrder(payload);
+        this.updateStatusOrder(payload, 9010);
         break;
       case 'PICKED_UP':
-        this.updateStatusOrder(payload);
-        break;
-      case 'COMPLETED':
-        this.updateStatusOrder(payload);
+        this.updateStatusOrder(payload, 9020);
         break;
       case 'DRIVER_NOT_FOUND':
-        this.updateStatusOrder(payload);
+        this.updateStatusOrder(payload, 9030);
         break;
       case 'CUSTOMER_CANCELLED':
-        this.updateStatusOrder(payload);
+        this.updateStatusOrder(payload, 9040);
+        break;
+      case 'COMPLETED':
+        this.updateStatusOrder(payload, 9050);
         break;
       default:
         PinoLoggerService.log(payload);
@@ -181,6 +191,7 @@ export class PartnerGojekService {
       if (order) {
         await WorkOrderAttr.update(order.workOrderAttrId,
           {
+            refBookingType: 'CREATED',
             refOrderNo: orderNumber,
             refOrderCreatedTime: timeNow,
           },
@@ -206,9 +217,10 @@ export class PartnerGojekService {
     }
   }
 
-  private static async updateStatusOrder(params: any) {
+  private static async updateStatusOrder(params: any, workOrderStatusId: number) {
 
     const order = await WorkOrderAttr.findOne({
+      select: ['workOrderAttrId', 'workOrderId'],
       where: {
         refOrderNo: params.booking_id,
         isDeleted: false,
@@ -216,6 +228,11 @@ export class PartnerGojekService {
     });
 
     if (order) {
+
+      await WorkOrder.update(order.workOrderId, {
+        work_order_status_id_last: workOrderStatusId.toString(),
+      });
+
       await WorkOrderAttr.update(order.workOrderAttrId, {
         refBookingType: params.type,
         refStatus: params.status,
@@ -226,9 +243,24 @@ export class PartnerGojekService {
         refLiveTrackingUrl: params.live_tracking_url,
         refDeliveryEta: params.delivery_eta,
         refPickupEta: params.pickup_eta,
+        refCancelledBy: params.cancelled_by,
         refCancellationReason: params.cancellation_reason,
       });
+
       // TODO: add awb history
+      // const woh = await WorkOrderHistory.create({
+      //   work_order_id: params['work_order_id'],
+      //   work_order_status_id: params['work_order_status_id_last'],
+      //   user_id: params['user_id'],
+      //   branch_id: params['branch_id'],
+      //   is_final: params['is_final'],
+      //   history_date_time: params['updated_time'],
+      //   user_id_created: params['user_id'],
+      //   created_time: params['created_time'],
+      //   user_id_updated: params['user_id'],
+      //   updated_time: params['updated_time'],
+      // });
+
     } else {
       PinoLoggerService.log('#### Not Found!!!');
     }
