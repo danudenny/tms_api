@@ -33,6 +33,12 @@ export class DoReturnResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty()
   doReturnCollectionToCustId: string;
+
+  @ApiModelProperty()
+  doReturnMasterCode: number;
+
+  @ApiModelProperty()
+  doReturnMasterDesc: string;
 }
 
 export class ReturnSearchVm {

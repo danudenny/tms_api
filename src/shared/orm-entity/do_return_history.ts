@@ -1,7 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, ManyToOne } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import { DoReturnMaster } from './do_return_master';
 
-@Entity('do_return_history ', { schema: 'public' })
+@Entity('do_return_history', { schema: 'public' })
 export class DoReturnHistory extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'do_return_history_id',
@@ -20,4 +21,7 @@ export class DoReturnHistory extends TmsBaseEntity {
   })
   doReturnMasterId: string;
 
+  @ManyToOne(() => DoReturnMaster)
+  @JoinColumn({ name: 'do_return_master_id' })
+  doReturnMaster: DoReturnMaster;
 }

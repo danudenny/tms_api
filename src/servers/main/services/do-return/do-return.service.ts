@@ -34,6 +34,9 @@ export class DoReturnService {
       ['return.do_return_admin_to_ct_id', 'doReturnAdminToCtId'],
       ['return.do_return_ct_to_collection_id', 'doReturnCtToCollectionId'],
       ['return.do_return_collection_to_cust_id', 'doReturnCollectionToCustId'],
+      ['do_return_master.do_return_master_desc', 'doReturnMasterDesc'],
+      ['do_return_master.do_return_master_code', 'doReturnMasterCode'],
+      ['do_return_admin.', 'do_return_admin_to_ct', 'doCode'],
     );
     q.innerJoin(e => e.branchTo, 'branch', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -42,6 +45,12 @@ export class DoReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.awbStatusDetail, 'awb_status', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doReturnHistory.doReturnMaster, 'do_return_master', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doReturnAdmin, 'do_return_admin', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     const data = await q.exec();

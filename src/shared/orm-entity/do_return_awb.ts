@@ -3,6 +3,8 @@ import { TmsBaseEntity } from './tms-base';
 import { Branch } from './branch';
 import { Customer } from './customer';
 import { AwbStatus } from './awb-status';
+import { DoReturnHistory } from './do_return_history';
+import { DoReturnAdmintoCt } from './do_return_admin_to_ct';
 
 @Entity('do_return_awb', { schema: 'public' })
 export class DoReturnAwb extends TmsBaseEntity {
@@ -30,29 +32,29 @@ export class DoReturnAwb extends TmsBaseEntity {
   })
   awbStatusIdLast: number | null;
 
-  @Column('bigint', {
+  @Column('uuid', {
     nullable: true,
     name: 'do_return_id_history_last',
   })
-  doReturnIdHistoryLast: number | null;
+  doReturnIdHistoryLast: string | null;
 
-  @Column('bigint', {
+  @Column('uuid', {
     nullable: true,
     name: 'do_return_admin_to_ct_id',
   })
-  doReturnAdminToCtId: number | null;
+  doReturnAdminToCtId: string | null;
 
-  @Column('bigint', {
+  @Column('uuid', {
     nullable: true,
     name: 'do_return_ct_to_collection_id',
   })
-  doReturnCtToCollectionId: number | null;
+  doReturnCtToCollectionId: string | null;
 
-  @Column('bigint', {
+  @Column('uuid', {
     nullable: true,
     name: 'do_return_collection_to_cust_id',
   })
-  doReturnCollectionToCustId: number | null;
+  doReturnCollectionToCustId: string | null;
 
   @Column('character varying', {
     nullable: true,
@@ -83,4 +85,12 @@ export class DoReturnAwb extends TmsBaseEntity {
   @ManyToOne(() => AwbStatus)
   @JoinColumn({ name: 'awb_status_id_last' })
   awbStatusDetail: AwbStatus;
+
+  @OneToOne(() => DoReturnHistory)
+  @JoinColumn({ name: 'do_return_history_id_last' })
+  doReturnHistory: DoReturnHistory;
+
+  @OneToOne(() => DoReturnAdmintoCt)
+  @JoinColumn({ name: 'do_return_admin_to_ct_id' })
+  doReturnAdmin: DoReturnAdmintoCt;
 }
