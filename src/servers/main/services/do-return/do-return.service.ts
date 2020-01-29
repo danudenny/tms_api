@@ -6,9 +6,10 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { DoReturnAwb } from '../../../../shared/orm-entity/do_return_awb';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { DoReturnPayloadVm } from '../../models/do-return-update.vm';
-import { DoReturnHistory } from 'src/shared/orm-entity/do_return_history';
-import { DoReturnMaster } from 'src/shared/orm-entity/do_return_master';
-import { AuthService } from 'src/shared/services/auth.service';
+import { DoReturnHistory } from '../../../../shared/orm-entity/do_return_history';
+import { DoReturnMaster } from '../../../../shared/orm-entity/do_return_master';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { ReturnUpdateFindAllResponseVm } from '../../models/do-return-update.response.vm';
 
 @Injectable()
 export class DoReturnService {
@@ -71,11 +72,12 @@ export class DoReturnService {
   }
   static async updateDoReturn(
     payload: DoReturnPayloadVm,
-  ): Promise<ReturnFindAllResponseVm> {
+  ): Promise<ReturnUpdateFindAllResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const result = new ReturnFindAllResponseVm();
+    const result = new ReturnUpdateFindAllResponseVm();
     // const permissonPayload = AuthService.getPermissionTokenPayload();
-
+    let status = 'ok';
+    let message = 'success';
     const doReturnMaster = await DoReturnMaster.findOne({
       where: {
         doReturnMasterCode : payload.returnStatus,
@@ -99,9 +101,15 @@ export class DoReturnService {
            userIdUpdated : authMeta.userId,
            updatedTime :  new Date(Date.now()).toLocaleString(),
          });
+      }
+      status = 'ok';
+      message = 'Success';
+    } else {
+      status = 'error';
+      message = 'Status tidak sesuai';
     }
-
-      return result ;
-  }
+    result.status = status;
+    result.message = message;
+    return result ;
   }
 }

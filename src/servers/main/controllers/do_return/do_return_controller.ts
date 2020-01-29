@@ -23,6 +23,6 @@ export class DoReturnController {
   // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: ReturnFindAllResponseVm })
   public async updateDoReturn(@Body() payload: DoReturnPayloadVm ) {
-    // return DoReturnService.updateDoReturn(payload);
+    return DoReturnService.updateDoReturn(payload);
   }
 }
