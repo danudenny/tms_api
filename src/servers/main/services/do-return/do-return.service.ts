@@ -55,10 +55,7 @@ export class DoReturnService {
       ['do_return_master.do_return_master_desc', 'doReturnMasterDesc'],
       ['do_return_master.do_return_master_code', 'doReturnMasterCode'],
       ['do_return_admin.do_return_admin_to_ct', 'doCode'],
-<<<<<<< HEAD
-=======
       [`CONCAT(user_driver.first_name, ' ', user_driver.last_name)`, 'userDriver'],
->>>>>>> 169fd8ee412e535519c256a4bcbf1eb9650c9f1b
     );
     q.innerJoin(e => e.branchTo, 'branch', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -290,6 +287,7 @@ export class DoReturnService {
   }
     result.status = status;
     result.message = message;
+    result.doId = admin.doReturnAdminToCtId;
 
     return result;
   }
@@ -346,6 +344,7 @@ export class DoReturnService {
   }
     result.status = status;
     result.message = message;
+    result.doId = admin.doReturnCtToCollectionId;
 
     return result;
   }
@@ -401,6 +400,7 @@ export class DoReturnService {
   }
     result.status = status;
     result.message = message;
+    result.doId = admin.doReturnCollectionToCustId;
 
     return result;
   }

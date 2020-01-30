@@ -6,4 +6,8 @@ export class ReturnUpdateFindAllResponseVm {
 
   @ApiModelProperty()
   status: string;
+
+  @ApiModelProperty()
+  doId: string;
+
 }
