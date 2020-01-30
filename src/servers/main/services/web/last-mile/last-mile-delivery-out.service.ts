@@ -402,6 +402,10 @@ export class LastMileDeliveryOutService {
 
   static async listProofDelivery(payload: BaseMetaPayloadVm)
   : Promise<ProofDeliveryResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't3.awb_number';
+    payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
+    payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_deliver_date_time';
 
     const repo = new OrionRepositoryService(DoPodDeliver, 't1');
     const q = repo.findAllRaw();
@@ -443,11 +447,6 @@ export class LastMileDeliveryOutService {
       result.totalErrorAwb = temp.totalErrorAwb;
     }
 
-    // mapping field
-    payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
-    payload.fieldResolverMap['awbNumber'] = 't3.awb_number';
-    payload.fieldResolverMap['doPodDeliverDateTime'] =
-      't1.do_pod_deliver_date_time';
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDeliverDateTime';
     }
