@@ -402,20 +402,6 @@ export class LastMileDeliveryOutService {
 
   static async listProofDelivery(payload: BaseMetaPayloadVm)
   : Promise<ProofDeliveryResponseVm> {
-    // mapping field
-    payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
-    payload.fieldResolverMap['awbNumber'] = 't3.awb_number';
-
-
-    // mapping search field and operator default ilike
-    payload.globalSearchFields = [
-      {
-        field: 'doPodDeliverCode',
-      },
-      {
-        field: 'awbNumber',
-      },
-    ];
 
     const repo = new OrionRepositoryService(DoPodDeliver, 't1');
     const q = repo.findAllRaw();
@@ -424,15 +410,12 @@ export class LastMileDeliveryOutService {
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
     q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
     q.innerJoin(e => e.doPodDeliverDetails.awbStatus, 't5', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
     q.innerJoin(e => e.doPodDeliverDetails.awb, 't6', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -450,7 +433,6 @@ export class LastMileDeliveryOutService {
         'totalErrorAwb',
       ],
       );
-    q1.groupByRaw(`t1.do_pod_deliver_code, t3.awb_number`);
     const dataTotal = await q1.exec();
     result.totalSuccessAwb = 0;
     result.totalErrorAwb = 0;
@@ -461,7 +443,25 @@ export class LastMileDeliveryOutService {
       result.totalErrorAwb = temp.totalErrorAwb;
     }
 
-    // GET SELECTED FIELD
+    // mapping field
+    payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
+    payload.fieldResolverMap['awbNumber'] = 't3.awb_number';
+    payload.fieldResolverMap['doPodDeliverDateTime'] =
+      't1.do_pod_deliver_date_time';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'doPodDeliverDateTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDeliverCode',
+      },
+      {
+        field: 'awbNumber',
+      },
+    ];
+    // GET SELECTED QUERY
     const q2 = q;
     payload.applyToOrionRepositoryQuery(q, true);
     q2.selectRaw(
@@ -478,7 +478,7 @@ export class LastMileDeliveryOutService {
       [`COALESCE(t6.consignee_address, '')`, 'consigneeAddress'],
     );
     q2.groupByRaw(`t1.do_pod_deliver_code, t3.awb_number, t2.nik, t2.fullname, t3.awb_status_date_time_last, t1.do_pod_deliver_id, t3.awb_status_id_last,
-                t3.consignee_name, t6.consignee_name, t6.consignee_address, t5.awb_status_name, t5.awb_status_title`);
+                t3.consignee_name, t6.consignee_name, t6.consignee_address, t5.awb_status_name, t5.awb_status_title, t1.do_pod_deliver_date_time`);
     const data = await q2.exec();
     const total = await q2.countWithoutTakeAndSkip();
 
