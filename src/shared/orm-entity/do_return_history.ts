@@ -1,6 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, ManyToOne } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { DoReturnMaster } from './do_return_master';
+import { User } from './user';
 
 @Entity('do_return_history', { schema: 'public' })
 export class DoReturnHistory extends TmsBaseEntity {
@@ -30,4 +31,8 @@ export class DoReturnHistory extends TmsBaseEntity {
   @ManyToOne(() => DoReturnMaster)
   @JoinColumn({ name: 'do_return_master_id' })
   doReturnMaster: DoReturnMaster;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_driver' })
+  user: User;
 }

@@ -45,6 +45,9 @@ export class DoReturnResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty()
   doCode: string;
+
+  @ApiModelProperty()
+  userDriver: string;
 }
 export class DoReturnAdminResponseVm extends BaseMetaResponseVm {
 
