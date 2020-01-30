@@ -14,6 +14,12 @@ import moment = require('moment');
 import { DoReturnDeliveryOrderCreateVm } from '../../models/do-return-surat-jalan-create.vm';
 import { DoReturnAdmintoCt } from '../../../../shared/orm-entity/do_return_admin_to_ct';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { DoReturnCtToCollection } from '../../../../shared/orm-entity/do_return_ct_to_collection';
+import { DoReturnCollectionToCust } from '../../../../shared/orm-entity/do_return_collection_to_cust';
+import { DoReturnDeliveryOrderCtCreateVm, DoReturnDeliveryOrderCustCreateVm } from '../../models/do-return-surat-jalan-ct-create.vm';
+import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { file } from '@babel/types';
 
 @Injectable()
 export class DoReturnService {
@@ -48,7 +54,7 @@ export class DoReturnService {
       ['return.do_return_collection_to_cust_id', 'doReturnCollectionToCustId'],
       ['do_return_master.do_return_master_desc', 'doReturnMasterDesc'],
       ['do_return_master.do_return_master_code', 'doReturnMasterCode'],
-      ['do_return_admin.', 'do_return_admin_to_ct', 'doCode'],
+      ['do_return_admin.do_return_admin_to_ct', 'doCode'],
     );
     q.innerJoin(e => e.branchTo, 'branch', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -212,20 +218,32 @@ export class DoReturnService {
 
   static async deliveryOrderCreate(
     payload: DoReturnDeliveryOrderCreateVm,
+    file,
   ): Promise<ReturnUpdateFindAllResponseVm> {
     const result = new ReturnUpdateFindAllResponseVm();
     const authMeta         = AuthService.getAuthData();
     // const permissonPayload = AuthService.getPermissionTokenPayload();
     const status = 'ok';
     const message = 'success';
+    let attachmentId = null;
     const timeNow = moment().toDate();
+
+    const attachment = await AttachmentService.uploadFileBufferToS3(
+      file.buffer,
+      file.originalname,
+      file.mimetype,
+      'DO-Balik',
+    );
+    if (attachment) {
+      attachmentId = attachment.attachmentTmsId;
+    }
     // insert to DoReturnAdmintoCt
     const generateCode = await CustomCounterCode.doReturn(timeNow);
     const adminCt = DoReturnAdmintoCt.create();
-    adminCt.partnerLogisticId = payload.partnerLogisticId;
+    adminCt.partnerLogisticId = payload.partnerLogisticId === 0 ? null : payload.partnerLogisticId;
     adminCt.isPartnerLogistic = payload.isPartnerLogistic;
     adminCt.awbNumberNew = payload.awbNumberNew;
-
+    adminCt.attachmentId = attachmentId;
     adminCt.doReturnAdminToCt = generateCode;
     adminCt.countAwb = payload.countAwb;
     adminCt.userIdCreated = 3;
@@ -257,6 +275,117 @@ export class DoReturnService {
         returnAwbId, {
           doReturnHistoryIdLast : historyId,
           doReturnAdminToCtId : adminCt.doReturnAdminToCtId,
+          userIdUpdated : 3,
+          updatedTime : timeNow,
+        },
+      );
+    }
+  }
+    result.status = status;
+    result.message = message;
+
+    return result;
+  }
+
+  static async deliveryOrderCtCreate(
+    payload: DoReturnDeliveryOrderCtCreateVm,
+  ): Promise<ReturnUpdateFindAllResponseVm> {
+    const result = new ReturnUpdateFindAllResponseVm();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
+    const status = 'ok';
+    const message = 'success';
+    const timeNow = moment().toDate();
+    // insert to DoReturnAdmintoCt
+    const generateCode = await CustomCounterCode.doReturnToCollection(timeNow);
+    const ctToCollection = DoReturnCtToCollection.create();
+
+    ctToCollection.doReturnCtToCollection = generateCode;
+    ctToCollection.countAwb = payload.countAwb;
+    ctToCollection.userIdCreated = 3;
+    ctToCollection.userIdUpdated = 3;
+    ctToCollection.createdTime = timeNow;
+    ctToCollection.updatedTime = timeNow;
+
+    const admin = await DoReturnCtToCollection.save(ctToCollection);
+
+    const doReturnMaster = await DoReturnMaster.findOne({
+      where: {
+        doReturnMasterCode : 9003,
+      },
+    });
+
+  //  insert to do return awb history
+    if (doReturnMaster) {
+    for (const returnAwbId of payload.doReturnAwbId) {
+      const returnHist = DoReturnHistory.create();
+      returnHist.userIdCreated = 3;
+      returnHist.userIdUpdated = 3;
+      returnHist.createdTime = timeNow;
+      returnHist.doReturnMasterId =  doReturnMaster.doReturnMasterId;
+      returnHist.doReturnAwbId = returnAwbId;
+      const history = await DoReturnHistory.save(returnHist);
+
+      const historyId = history.doReturnHistoryId;
+  // Update do return awb
+      await DoReturnAwb.update(
+        returnAwbId, {
+          doReturnHistoryIdLast : historyId,
+          doReturnCtToCollectionId : ctToCollection.doReturnCtToCollectionId,
+          userIdUpdated : 3,
+          updatedTime : timeNow,
+        },
+      );
+    }
+  }
+    result.status = status;
+    result.message = message;
+
+    return result;
+  }
+
+  static async deliveryOrderCustCreate(
+    payload: DoReturnDeliveryOrderCustCreateVm,
+  ): Promise<ReturnUpdateFindAllResponseVm> {
+    const result = new ReturnUpdateFindAllResponseVm();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
+    const status = 'ok';
+    const message = 'success';
+    const timeNow = moment().toDate();
+    // insert to DoReturnAdmintoCt
+    const generateCode = await CustomCounterCode.doReturnToCust(timeNow);
+    const collectionToCust = DoReturnCollectionToCust.create();
+
+    collectionToCust.doReturnCollectionToCust = generateCode;
+    collectionToCust.countAwb = payload.countAwb;
+    collectionToCust.userIdCreated = 3;
+    collectionToCust.userIdUpdated = 3;
+    collectionToCust.createdTime = timeNow;
+
+    const admin = await DoReturnCollectionToCust.save(collectionToCust);
+
+    const doReturnMaster = await DoReturnMaster.findOne({
+      where: {
+        doReturnMasterCode : 9005,
+      },
+    });
+
+  //  insert to do return awb history
+    if (doReturnMaster) {
+    for (const returnAwbId of payload.doReturnAwbId) {
+      const returnHist = DoReturnHistory.create();
+      returnHist.userIdCreated = 3;
+      returnHist.userIdUpdated = 3;
+      returnHist.createdTime = timeNow;
+      returnHist.doReturnMasterId =  doReturnMaster.doReturnMasterId;
+      returnHist.doReturnAwbId = returnAwbId;
+      const history = await DoReturnHistory.save(returnHist);
+
+      const historyId = history.doReturnHistoryId;
+  // Update do return awb
+      await DoReturnAwb.update(
+        returnAwbId, {
+          doReturnHistoryIdLast : historyId,
+          doReturnCollectionToCustId : collectionToCust.doReturnCollectionToCustId,
           userIdUpdated : 3,
           updatedTime : timeNow,
         },

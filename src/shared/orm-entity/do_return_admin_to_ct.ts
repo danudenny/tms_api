@@ -21,6 +21,12 @@ export class DoReturnAdmintoCt extends TmsBaseEntity {
   })
   countAwb: number;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'attachment_id',
+  })
+  attachmentId: number;
+
   @Column('boolean', {
     nullable: false,
     default: () => 'false',

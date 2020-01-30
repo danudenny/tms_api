@@ -1,19 +1,16 @@
-import { ApiModelProperty} from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional} from '../../../shared/external/nestjs-swagger';
 import { bool } from 'aws-sdk/clients/signer';
 
 // Create DO DO RETURN SURAT JALAN
 export class DoReturnDeliveryOrderCreateVm {
   @ApiModelProperty()
-   isPartnerLogistic: bool;
+   isPartnerLogistic: boolean;
 
-   @ApiModelProperty()
+   @ApiModelPropertyOptional()
    partnerLogisticId: number;
 
    @ApiModelProperty()
    countAwb: number;
-
-   @ApiModelProperty()
-   attachmentId: number;
 
    @ApiModelProperty()
    awbNumberNew: string;
