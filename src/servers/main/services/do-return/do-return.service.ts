@@ -55,6 +55,10 @@ export class DoReturnService {
       ['do_return_master.do_return_master_desc', 'doReturnMasterDesc'],
       ['do_return_master.do_return_master_code', 'doReturnMasterCode'],
       ['do_return_admin.do_return_admin_to_ct', 'doCode'],
+<<<<<<< HEAD
+=======
+      [`CONCAT(user_driver.first_name, ' ', user_driver.last_name)`, 'userDriver'],
+>>>>>>> 169fd8ee412e535519c256a4bcbf1eb9650c9f1b
     );
     q.innerJoin(e => e.branchTo, 'branch', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -66,6 +70,9 @@ export class DoReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.doReturnHistory.doReturnMaster, 'do_return_master', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doReturnHistory.user, 'user_driver', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.doReturnAdmin, 'do_return_admin', j =>
