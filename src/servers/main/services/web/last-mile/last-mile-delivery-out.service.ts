@@ -469,7 +469,7 @@ export class LastMileDeliveryOutService {
       ['t2.nik', 'driverNik'],
       ['t2.fullname', 'driverFullName'],
       ['t3.awb_number', 'awbNumber'],
-      ['t3.awb_status_date_time_last', 'awbStatusDateLast'],
+      [`COALESCE(t3.awb_status_date_time_last, t1.do_pod_deliver_date_time)`, 'awbStatusDateLast'],
       [`COALESCE(t3.consignee_name, '')`, 'refConsigneeName'],
       ['t5.awb_status_name', 'awbStatusCode'],
       ['t5.awb_status_title', 'awbStatusName'],
