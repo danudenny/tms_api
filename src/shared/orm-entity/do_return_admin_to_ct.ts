@@ -1,5 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import { AttachmentTms } from './attachment-tms';
+import { PartnerLogistic } from './partner-logistic';
+import { Branch } from './branch';
 
 @Entity('do_return_admin_to_ct', { schema: 'public' })
 export class DoReturnAdmintoCt extends TmsBaseEntity {
@@ -34,11 +37,17 @@ export class DoReturnAdmintoCt extends TmsBaseEntity {
   })
   isPartnerLogistic: boolean;
 
-  @Column('bigint', {
+  @Column('uuid', {
     nullable: true,
     name: 'partner_logistic_id',
   })
-  partnerLogisticId: number;
+  partnerLogisticId: string;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id',
+  })
+  branchId: number;
 
   @Column('character varying', {
     nullable: true,
@@ -46,4 +55,17 @@ export class DoReturnAdmintoCt extends TmsBaseEntity {
     name: 'awb_number_new',
   })
   awbNumberNew: string;
+
+  @OneToOne(() => AttachmentTms)
+  @JoinColumn({ name: 'attachment_id' })
+  attDetail: AttachmentTms;
+
+  @ManyToOne(() => PartnerLogistic)
+  @JoinColumn({ name: 'partner_logistic_id' })
+  partnerLogistic: PartnerLogistic;
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
+
 }

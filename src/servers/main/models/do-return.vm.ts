@@ -55,7 +55,7 @@ export class DoReturnAdminResponseVm extends BaseMetaResponseVm {
   doReturnAdminId: string;
 
   @ApiModelProperty()
-  doReturnAdminCode: string;
+  doCode: string;
 
   @ApiModelProperty()
   countAwb: number;
@@ -64,7 +64,19 @@ export class DoReturnAdminResponseVm extends BaseMetaResponseVm {
   branchName: string;
 
   @ApiModelProperty()
-  newAwbNumber: string;
+  awbNumberNew: string;
+
+  @ApiModelProperty()
+  partnerLogisticName: string;
+
+  @ApiModelProperty()
+  attachUrl: string;
+
+  @ApiModelProperty()
+  isPartnerLogistic: boolean;
+
+  @ApiModelProperty()
+  createdTime: string;
 }
 
 export class ReturnSearchVm {
