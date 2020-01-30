@@ -17,6 +17,12 @@ export class DoReturnHistory extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: true,
+    name: 'user_id_driver',
+  })
+  userIdDriver: number;
+
+  @Column('bigint', {
+    nullable: true,
     name: 'do_return_master_id',
   })
   doReturnMasterId: number;

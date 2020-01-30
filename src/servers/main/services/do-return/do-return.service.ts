@@ -183,7 +183,8 @@ export class DoReturnService {
     const result = new ReturnUpdateFindAllResponseVm();
     const status = 'ok';
     const message = 'success';
-
+    const timeNow = moment().toDate();
+    const authMeta = AuthService.getAuthData();
     // create do_pod (Surat Jalan)
     for (const history of payload.data) {
       const doReturn = DoReturnAwb.create();
@@ -194,8 +195,10 @@ export class DoReturnService {
       doReturn.awbStatusIdLast = history.lastStatusAwb;
       doReturn.branchIdLast = history.branchIdLast;
       doReturn.podDatetime = history.podDatetime;
-      doReturn.userIdCreated = 3;
-      doReturn.userIdUpdated = 3;
+      doReturn.userIdCreated = authMeta.userId;
+      doReturn.userIdUpdated = authMeta.userId;
+      doReturn.createdTime = timeNow;
+      doReturn.updatedTime = timeNow;
 
       const insert = await DoReturnAwb.save(doReturn);
     }

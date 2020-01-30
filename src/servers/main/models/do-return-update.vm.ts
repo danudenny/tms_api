@@ -6,4 +6,7 @@ export class DoReturnPayloadVm {
 
   @ApiModelProperty()
   returnStatus: number;
+
+  @ApiModelProperty()
+  userIdDriver: number;
 }
