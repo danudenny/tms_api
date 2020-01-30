@@ -111,6 +111,7 @@ export class PartnerGojekService {
                 payload.workOrderId,
                 requestGojek.orderNo,
                 payload.userId,
+                payload.branchId,
               );
               result.data = data;
               result.response = requestGojek;
@@ -176,6 +177,7 @@ export class PartnerGojekService {
     workOrderId: number,
     orderNumber: string,
     userId: number,
+    branchId: number,
   ) {
     const timeNow = moment().toDate();
     // TODO: find WorkOrderAttr
@@ -194,6 +196,8 @@ export class PartnerGojekService {
             refBookingType: 'CREATED',
             refOrderNo: orderNumber,
             refOrderCreatedTime: timeNow,
+            branchId,
+            userIdUpdated: userId,
           },
         );
       } else {
@@ -203,6 +207,7 @@ export class PartnerGojekService {
           refOrderNo: orderNumber,
           refOrderCreatedTime: timeNow,
           partnerId: 1,
+          branchId,
           userIdCreated: userId,
           userIdUpdated: userId,
           createdTime: timeNow,
@@ -220,7 +225,13 @@ export class PartnerGojekService {
   private static async updateStatusOrder(params: any, workOrderStatusId: number) {
     const timeNow = moment().toDate();
     const order = await WorkOrderAttr.findOne({
-      select: ['workOrderAttrId', 'workOrderId', 'userIdCreated'],
+      select: [
+        'workOrderAttrId',
+        'workOrderId',
+        'refOrderCreatedTime',
+        'branchId',
+        'userIdCreated',
+      ],
       where: {
         refOrderNo: params.booking_id,
         isDeleted: false,
@@ -251,10 +262,9 @@ export class PartnerGojekService {
       const woh = await WorkOrderHistory.create({
         workOrderId: order.workOrderId,
         workOrderStatusId,
-        userId: params['user_id'],
-        branchId: params['branch_id'],
-        isFinal: params['is_final'],
-        historyDateTime: params['updated_time'],
+        userId: order.userIdCreated,
+        branchId: order.branchId,
+        historyDateTime: order.refOrderCreatedTime,
         userIdCreated: order.userIdCreated,
         createdTime: timeNow,
         userIdUpdated: order.userIdCreated,

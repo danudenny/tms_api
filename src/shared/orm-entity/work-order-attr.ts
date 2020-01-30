@@ -30,6 +30,12 @@ export class WorkOrderAttr extends TmsBaseEntity {
   })
   partnerId: number;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'branch_id',
+  })
+  branchId: number;
+
   @Column('character varying', {
     nullable: false,
     name: 'ref_order_no',
