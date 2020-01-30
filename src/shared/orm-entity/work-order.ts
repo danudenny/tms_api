@@ -339,4 +339,16 @@ export class WorkOrder extends BaseEntity {
 
   })
   is_final: boolean | null;
+
+  @Column('bigint', {
+    nullable: true,
+
+  })
+  branch_partner_id: string | null;
+
+  @Column('bigint', {
+    nullable: true,
+
+  })
+  partner_id_assigned: string | null;
 }

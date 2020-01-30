@@ -1,5 +1,13 @@
 import { snakeCase } from 'lodash';
-import { DeepPartial, EntityManager, EntityMetadata, ObjectID, SaveOptions, SelectQueryBuilder } from 'typeorm';
+import {
+  DeepPartial,
+  EntityManager,
+  EntityMetadata,
+  ObjectID,
+  QueryRunner,
+  SaveOptions,
+  SelectQueryBuilder,
+} from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 
 import { getEntityManagerOrTransactionManager } from '../external/typeorm-transactional-cls-hooked';
@@ -44,20 +52,30 @@ export class OrionRepositoryService<T> {
     return this.manager.create(this.entityType, entityLikeArray);
   }
 
-  public createQueryBuilder(): SelectQueryBuilder<T> {
-    return this.manager.createQueryBuilder(this.entityType, this.entityAlias);
+  public createQueryBuilder(queryRunner?: QueryRunner): SelectQueryBuilder<T> {
+    return this.manager.createQueryBuilder(this.entityType, this.entityAlias, queryRunner);
+  }
+
+  public createSelectQueryRunner(dbMode: 'master' | 'slave' = 'slave'): QueryRunner {
+    return this.manager.connection.createQueryRunner(dbMode);
   }
 
   public deleteById(id: string | number | Date | ObjectID) {
     return this.manager.delete(this.entityType, id);
   }
 
-  public findAll() {
-    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
+  public findAll(dbMode?: 'master' | 'slave') {
+    let queryRunner: QueryRunner;
+    if (dbMode) {
+      queryRunner = this.createSelectQueryRunner(dbMode);
+    }
+
+    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder(queryRunner);
 
     const query = new OrionRepositoryQueryService<T, T[]>(
       this.manager,
       this.entityMetadata,
+      queryRunner,
       queryBuilder,
       queryBuilder.getMany,
       queryBuilder.alias,
@@ -66,12 +84,18 @@ export class OrionRepositoryService<T> {
     return query;
   }
 
-  public findAllRaw() {
-    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
+  public findAllRaw(dbMode?: 'master' | 'slave') {
+    let queryRunner: QueryRunner;
+    if (dbMode) {
+      queryRunner = this.createSelectQueryRunner(dbMode);
+    }
+
+    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder(queryRunner);
 
     const query = new OrionRepositoryQueryService<T, any>(
       this.manager,
       this.entityMetadata,
+      queryRunner,
       queryBuilder,
       queryBuilder.getRawMany,
       queryBuilder.alias,
@@ -80,12 +104,18 @@ export class OrionRepositoryService<T> {
     return query;
   }
 
-  public findOne() {
-    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
+  public findOne(dbMode?: 'master' | 'slave') {
+    let queryRunner: QueryRunner;
+    if (dbMode) {
+      queryRunner = this.createSelectQueryRunner(dbMode);
+    }
+
+    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder(queryRunner);
 
     const query = new OrionRepositoryQueryService<T, T>(
       this.manager,
       this.entityMetadata,
+      queryRunner,
       queryBuilder,
       queryBuilder.getOne,
       queryBuilder.alias,
@@ -94,12 +124,18 @@ export class OrionRepositoryService<T> {
     return query;
   }
 
-  public findOneRaw() {
-    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
+  public findOneRaw(dbMode?: 'master' | 'slave') {
+    let queryRunner: QueryRunner;
+    if (dbMode) {
+      queryRunner = this.createSelectQueryRunner(dbMode);
+    }
+
+    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder(queryRunner);
 
     const query = new OrionRepositoryQueryService<T, any>(
       this.manager,
       this.entityMetadata,
+      queryRunner,
       queryBuilder,
       queryBuilder.getRawOne,
       queryBuilder.alias,
@@ -108,12 +144,18 @@ export class OrionRepositoryService<T> {
     return query;
   }
 
-  public loadById(id: string | number | Date | ObjectID) {
-    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
+  public loadById(id: string | number | Date | ObjectID, dbMode?: 'master' | 'slave') {
+    let queryRunner: QueryRunner;
+    if (dbMode) {
+      queryRunner = this.createSelectQueryRunner(dbMode);
+    }
+
+    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder(queryRunner);
 
     const query = new OrionRepositoryQueryService<T, T>(
       this.manager,
       this.entityMetadata,
+      queryRunner,
       queryBuilder,
       queryBuilder.getOne,
       queryBuilder.alias,
@@ -124,12 +166,18 @@ export class OrionRepositoryService<T> {
     return query;
   }
 
-  public loadByMultipleId(ids: Array<string | number | Date | ObjectID>) {
-    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder();
+  public loadByMultipleId(ids: Array<string | number | Date | ObjectID>, dbMode?: 'master' | 'slave') {
+    let queryRunner: QueryRunner;
+    if (dbMode) {
+      queryRunner = this.createSelectQueryRunner(dbMode);
+    }
+
+    const queryBuilder: SelectQueryBuilder<T> = this.createQueryBuilder(queryRunner);
 
     const query = new OrionRepositoryQueryService<T, T[]>(
       this.manager,
       this.entityMetadata,
+      queryRunner,
       queryBuilder,
       queryBuilder.getMany,
       queryBuilder.alias,
@@ -156,6 +204,7 @@ export class OrionRepositoryService<T> {
     const query = new OrionRepositoryQueryService<T, T>(
       this.manager,
       this.entityMetadata,
+      (queryBuilder as any).queryRunner,
       queryBuilder,
       null,
       queryBuilder.alias,
