@@ -19,10 +19,12 @@ export class RawQueryService {
   }
 
   public static async query(sql: string, parameters?: any[], dbMode?: 'master' | 'slave') {
-    let queryRunner = this.manager.queryRunner;
+    let queryRunner;
 
     if (dbMode) {
       queryRunner = this.manager.connection.createQueryRunner(dbMode);
+    } else {
+      queryRunner = this.manager;
     }
 
     try {
@@ -35,10 +37,12 @@ export class RawQueryService {
   }
 
   public static async queryWithParams(sql: string, parameters: Object, dbMode?: 'master' | 'slave') {
-    let queryRunner = this.manager.queryRunner;
+    let queryRunner;
 
     if (dbMode) {
       queryRunner = this.manager.connection.createQueryRunner(dbMode);
+    } else {
+      queryRunner = this.manager;
     }
 
     try {
@@ -52,10 +56,12 @@ export class RawQueryService {
   }
 
   public static async queryCount(sql: string, sqlParamters?: any[], dbMode?: 'master' | 'slave') {
-    let queryRunner = this.manager.queryRunner;
+    let queryRunner;
 
     if (dbMode) {
       queryRunner = this.manager.connection.createQueryRunner(dbMode);
+    } else {
+      queryRunner = this.manager;
     }
 
     try {
@@ -78,10 +84,12 @@ export class RawQueryService {
     distinct: boolean = false,
     dbMode?: 'master' | 'slave',
   ) {
-    let queryRunner = this.manager.queryRunner;
+    let queryRunner;
 
     if (dbMode) {
       queryRunner = this.manager.connection.createQueryRunner(dbMode);
+    } else {
+      queryRunner = this.manager;
     }
 
     try {
@@ -110,10 +118,12 @@ export class RawQueryService {
   }
 
   public static async exec(sql: string, parameters: Object = {}, dbMode?: 'master' | 'slave') {
-    let queryRunner = this.manager.queryRunner;
+    let queryRunner;
 
     if (dbMode) {
       queryRunner = this.manager.connection.createQueryRunner(dbMode);
+    } else {
+      queryRunner = this.manager;
     }
 
     try {
