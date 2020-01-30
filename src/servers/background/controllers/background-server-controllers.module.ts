@@ -5,6 +5,7 @@ import { BackgroundServerServicesModule } from '../services/background-server-se
 import { TrackingNoteController } from './integration/trackingnote.controller';
 import { CpsController } from './integration/cps.controller';
 import { PartnerController } from './integration/partner.controller';
+import { PartnerGojekController } from './integration/partner.gojek.controller';
 
 @Module({
   imports: [SharedModule, BackgroundServerServicesModule],
@@ -12,6 +13,7 @@ import { PartnerController } from './integration/partner.controller';
     TrackingNoteController,
     CpsController,
     PartnerController,
+    PartnerGojekController,
   ],
 })
 export class BackgroundServerControllersModule {}
