@@ -168,7 +168,7 @@ export class PartnerService {
     token: string,
   ): Promise<any> {
     const arrAwb = [];
-    const partnerId = 0;
+    const partnerId = 74;
 
     await RedisService.setex(`posindonesia:status`, '1', 180);
 
@@ -499,7 +499,7 @@ export class PartnerService {
               pickup_request_id: pickupRequestId,
               work_order_status_id_last: '7050',
               work_order_status_id_pick: null,
-              branch_id: '0',
+              branch_id: '1481',
               is_final: true,
               user_id: '1',
               created_time: timeNow,
@@ -566,7 +566,7 @@ export class PartnerService {
               pickup_request_id: pickupRequestId,
               work_order_status_id_last: '7050',
               work_order_status_id_pick: null,
-              branch_id: '0',
+              branch_id: '1481',
               is_final: true,
               user_id: '1',
               created_time: timeNow,
