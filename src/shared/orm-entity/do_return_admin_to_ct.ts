@@ -17,7 +17,7 @@ export class DoReturnAdmintoCt extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: true,
-    name: 'count_awb_do_return_admin_to_ct',
+    name: 'count_awb',
   })
   countAwb: number;
 
@@ -32,7 +32,7 @@ export class DoReturnAdmintoCt extends TmsBaseEntity {
     nullable: true,
     name: 'partner_logistic_id',
   })
-  partnerLogisticId: string;
+  partnerLogisticId: number;
 
   @Column('character varying', {
     nullable: true,

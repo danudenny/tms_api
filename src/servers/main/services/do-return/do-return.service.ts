@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { RepositoryService } from '../../../../shared/services/repository.service';
 import { ReturnFindAllResponseVm } from '../../models/do-return.response.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoReturnAwb } from '../../../../shared/orm-entity/do_return_awb';
@@ -10,8 +9,11 @@ import { DoReturnHistory } from '../../../../shared/orm-entity/do_return_history
 import { DoReturnMaster } from '../../../../shared/orm-entity/do_return_master';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { ReturnUpdateFindAllResponseVm } from '../../models/do-return-update.response.vm';
-import { DoReturnCreateVm, ReturnCreateVm } from '../../models/do-return-create.vm';
+import { ReturnCreateVm } from '../../models/do-return-create.vm';
 import moment = require('moment');
+import { DoReturnDeliveryOrderCreateVm } from '../../models/do-return-surat-jalan-create.vm';
+import { DoReturnAdmintoCt } from '../../../../shared/orm-entity/do_return_admin_to_ct';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 
 @Injectable()
 export class DoReturnService {
@@ -80,6 +82,7 @@ export class DoReturnService {
     // const permissonPayload = AuthService.getPermissionTokenPayload();
     let status = 'ok';
     let message = 'success';
+    const timeNow = moment().toDate();
     const doReturnMaster = await DoReturnMaster.findOne({
       where: {
         doReturnMasterCode : payload.returnStatus,
@@ -89,6 +92,7 @@ export class DoReturnService {
       for (const history of payload.returnAwbId) {
        const hist = DoReturnHistory.create({
           doReturnAwbId : history,
+          createdTime : timeNow,
           doReturnMasterId : doReturnMaster.doReturnMasterId,
 
         });
@@ -100,7 +104,7 @@ export class DoReturnService {
          {
            doReturnHistoryIdLast : returnHistId,
            userIdUpdated : authMeta.userId,
-           updatedTime :  new Date(Date.now()).toLocaleString(),
+           updatedTime :  timeNow,
          });
       }
       status = 'ok';
@@ -196,6 +200,65 @@ export class DoReturnService {
       const insert = await DoReturnAwb.save(doReturn);
     }
 
+    result.status = status;
+    result.message = message;
+
+    return result;
+  }
+
+  static async deliveryOrderCreate(
+    payload: DoReturnDeliveryOrderCreateVm,
+  ): Promise<ReturnUpdateFindAllResponseVm> {
+    const result = new ReturnUpdateFindAllResponseVm();
+    const authMeta         = AuthService.getAuthData();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
+    const status = 'ok';
+    const message = 'success';
+    const timeNow = moment().toDate();
+    // insert to DoReturnAdmintoCt
+    const generateCode = await CustomCounterCode.doReturn(timeNow);
+    const adminCt = DoReturnAdmintoCt.create();
+    adminCt.partnerLogisticId = payload.partnerLogisticId;
+    adminCt.isPartnerLogistic = payload.isPartnerLogistic;
+    adminCt.awbNumberNew = payload.awbNumberNew;
+
+    adminCt.doReturnAdminToCt = generateCode;
+    adminCt.countAwb = payload.countAwb;
+    adminCt.userIdCreated = authMeta.userId;
+    adminCt.userIdUpdated = authMeta.userId;
+    adminCt.createdTime = timeNow;
+
+    const admin = await DoReturnAdmintoCt.save(adminCt);
+
+    const doReturnMaster = await DoReturnMaster.findOne({
+      where: {
+        doReturnMasterCode : 9001,
+      },
+    });
+
+  //  insert to do return awb history
+    if (doReturnMaster) {
+    for (const returnAwbId of payload.doReturnAwbId) {
+      const returnHist = DoReturnHistory.create();
+      returnHist.userIdCreated = authMeta.userId;
+      returnHist.userIdUpdated = authMeta.userId;
+      returnHist.createdTime = timeNow;
+      returnHist.doReturnMasterId =  doReturnMaster.doReturnMasterId;
+      returnHist.doReturnAwbId = returnAwbId;
+      const history = await DoReturnHistory.save(returnHist);
+
+      const historyId = history.doReturnHistoryId;
+  // Update do return awb
+      await DoReturnAwb.update(
+        returnAwbId, {
+          doReturnHistoryIdLast : historyId,
+          doReturnAdminToCtId : adminCt.doReturnAdminToCtId,
+          userIdUpdated : authMeta.userId,
+          updatedTime : timeNow,
+        },
+      );
+    }
+  }
     result.status = status;
     result.message = message;
 

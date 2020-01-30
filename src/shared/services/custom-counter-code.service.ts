@@ -48,6 +48,12 @@ export class CustomCounterCode {
     return prefix + randomCode;
   }
 
+  public static async doReturn(dateTime: Date, digit: number = 8) {
+    const prefix = `DOR/${moment(dateTime).format('YYYY/MM/')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode;
+  }
+
   public static async podFilter(dateTime: Date, digit: number = 8) {
     // Format Code: FLT/1907/13/XYZA1234
     const prefix = `FLT/${moment(dateTime).format('YYMM/DD')}/`;

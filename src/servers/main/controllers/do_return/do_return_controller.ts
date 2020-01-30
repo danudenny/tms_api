@@ -8,6 +8,7 @@ import { DoReturnPayloadVm } from '../../models/do-return-update.vm';
 import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm } from '../../models/do-return.response.vm';
 import { ReturnUpdateFindAllResponseVm } from '../../models/do-return-update.response.vm';
 import { DoReturnCreateVm, ReturnCreateVm } from '../../models/do-return-create.vm';
+import { DoReturnDeliveryOrderCreateVm } from '../../models/do-return-surat-jalan-create.vm';
 
 @ApiUseTags('Do Return')
 @Controller('doReturn')
@@ -41,9 +42,17 @@ export class DoReturnController {
   // @ApiBearerAuth()
   // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
-  // @Transactional()
   public async returnCreate(@Body() payload: ReturnCreateVm) {
     return DoReturnService.returnCreate(payload);
+  }
+
+  @Post('deliveryOrder/create')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
+  public async deliveryOrderCreate(@Body() payload: DoReturnDeliveryOrderCreateVm) {
+    return DoReturnService.deliveryOrderCreate(payload);
   }
 
 }
