@@ -93,6 +93,7 @@ export class DoReturnService {
        const hist = DoReturnHistory.create({
           doReturnAwbId : history,
           createdTime : timeNow,
+          userIdDriver : payload.userIdDriver,
           doReturnMasterId : doReturnMaster.doReturnMasterId,
 
         });
@@ -103,7 +104,7 @@ export class DoReturnService {
          history,
          {
            doReturnHistoryIdLast : returnHistId,
-           userIdUpdated : authMeta.userId,
+           userIdUpdated : 3,
            updatedTime :  timeNow,
          });
       }
@@ -184,7 +185,7 @@ export class DoReturnService {
     const status = 'ok';
     const message = 'success';
     const timeNow = moment().toDate();
-    const authMeta = AuthService.getAuthData();
+    // const authMeta = AuthService.getAuthData();
     // create do_pod (Surat Jalan)
     for (const history of payload.data) {
       const doReturn = DoReturnAwb.create();
@@ -195,8 +196,8 @@ export class DoReturnService {
       doReturn.awbStatusIdLast = history.lastStatusAwb;
       doReturn.branchIdLast = history.branchIdLast;
       doReturn.podDatetime = history.podDatetime;
-      doReturn.userIdCreated = authMeta.userId;
-      doReturn.userIdUpdated = authMeta.userId;
+      doReturn.userIdCreated = 3;
+      doReturn.userIdUpdated = 3;
       doReturn.createdTime = timeNow;
       doReturn.updatedTime = timeNow;
 
@@ -227,8 +228,8 @@ export class DoReturnService {
 
     adminCt.doReturnAdminToCt = generateCode;
     adminCt.countAwb = payload.countAwb;
-    adminCt.userIdCreated = authMeta.userId;
-    adminCt.userIdUpdated = authMeta.userId;
+    adminCt.userIdCreated = 3;
+    adminCt.userIdUpdated = 3;
     adminCt.createdTime = timeNow;
 
     const admin = await DoReturnAdmintoCt.save(adminCt);
@@ -243,8 +244,8 @@ export class DoReturnService {
     if (doReturnMaster) {
     for (const returnAwbId of payload.doReturnAwbId) {
       const returnHist = DoReturnHistory.create();
-      returnHist.userIdCreated = authMeta.userId;
-      returnHist.userIdUpdated = authMeta.userId;
+      returnHist.userIdCreated = 3;
+      returnHist.userIdUpdated = 3;
       returnHist.createdTime = timeNow;
       returnHist.doReturnMasterId =  doReturnMaster.doReturnMasterId;
       returnHist.doReturnAwbId = returnAwbId;
@@ -256,7 +257,7 @@ export class DoReturnService {
         returnAwbId, {
           doReturnHistoryIdLast : historyId,
           doReturnAdminToCtId : adminCt.doReturnAdminToCtId,
-          userIdUpdated : authMeta.userId,
+          userIdUpdated : 3,
           updatedTime : timeNow,
         },
       );
