@@ -15,12 +15,11 @@ export class DoReturnMaster extends TmsBaseEntity {
   })
   is_deleted: boolean;
 
-  @Column('character varying', {
+  @Column('bigint', {
     nullable: true,
-    length: 255,
     name: 'do_return_master_code',
   })
-  doReturnMasterCode: string;
+  doReturnMasterCode: number;
 
   @Column('character varying', {
     nullable: true,

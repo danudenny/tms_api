@@ -1,6 +1,6 @@
 import { Body, Controller, HttpCode, Post, UseGuards, HttpStatus, UploadedFile, UseInterceptors } from '@nestjs/common';
 
-import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import { DoReturnService } from '../../services/do-return/do-return.service';
 import { ReturnPayloadVm, DoReturnResponseVm } from '../../models/do-return.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -69,8 +69,8 @@ export class DoReturnController {
 
   @Post('create')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
   public async returnCreate(@Body() payload: ReturnCreateVm) {
     return DoReturnService.returnCreate(payload);
@@ -79,8 +79,8 @@ export class DoReturnController {
   @Post('deliveryOrder/create')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
   public async deliveryOrderCreate(
     @Body() payload: DoReturnDeliveryOrderCreateVm,
@@ -91,8 +91,8 @@ export class DoReturnController {
 
   @Post('deliveryOrder/ct/create')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
   public async deliveryOrderCtCreate(@Body() payload: DoReturnDeliveryOrderCtCreateVm) {
     return DoReturnService.deliveryOrderCtCreate(payload);
@@ -100,8 +100,8 @@ export class DoReturnController {
 
   @Post('deliveryOrder/cust/create')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
   public async deliveryOrderCustCreate(@Body() payload: DoReturnDeliveryOrderCustCreateVm) {
     return DoReturnService.deliveryOrderCustCreate(payload);
@@ -109,8 +109,8 @@ export class DoReturnController {
 
   @Post('deliveryOrder/cust/received/create')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
   public async deliveryOrderCustReceivedCreate(@Body() payload: DoReturnDeliveryOrderCustReceivedCreateVm) {
     return DoReturnService.deliveryOrderCustReceivedCreate(payload);

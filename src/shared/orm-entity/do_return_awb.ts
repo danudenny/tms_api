@@ -5,6 +5,8 @@ import { Customer } from './customer';
 import { AwbStatus } from './awb-status';
 import { DoReturnHistory } from './do_return_history';
 import { DoReturnAdmintoCt } from './do_return_admin_to_ct';
+import { DoReturnCtToCollection } from './do_return_ct_to_collection';
+import { DoReturnCollectionToCust } from './do_return_collection_to_cust';
 
 @Entity('do_return_awb', { schema: 'public' })
 export class DoReturnAwb extends TmsBaseEntity {
@@ -93,4 +95,12 @@ export class DoReturnAwb extends TmsBaseEntity {
   @OneToOne(() => DoReturnAdmintoCt)
   @JoinColumn({ name: 'do_return_admin_to_ct_id' })
   doReturnAdmin: DoReturnAdmintoCt;
+
+  @OneToOne(() => DoReturnCtToCollection)
+  @JoinColumn({ name: 'do_return_ct_to_collection_id' })
+  doReturnCt: DoReturnCtToCollection;
+
+  @OneToOne(() => DoReturnCollectionToCust)
+  @JoinColumn({ name: 'do_return_collection_to_cust_id' })
+  doReturnCollection: DoReturnCollectionToCust;
 }

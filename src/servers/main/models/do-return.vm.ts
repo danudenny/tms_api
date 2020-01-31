@@ -2,7 +2,7 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 import { take } from 'rxjs/operators';
 import { BaseMetaResponseVm } from 'src/shared/models/base-meta-response.vm';
 
-export class DoReturnResponseVm extends BaseMetaResponseVm {
+export class DoReturnResponseVm {
 
   @ApiModelProperty()
   doReturnAwbId: string;
@@ -47,9 +47,15 @@ export class DoReturnResponseVm extends BaseMetaResponseVm {
   doCode: string;
 
   @ApiModelProperty()
+  doCodeCt: string;
+
+  @ApiModelProperty()
+  doCodeCollection: string;
+
+  @ApiModelProperty()
   userDriver: string;
 }
-export class DoReturnAdminResponseVm extends BaseMetaResponseVm {
+export class DoReturnAdminResponseVm {
 
   @ApiModelProperty()
   doReturnAdminId: string;
@@ -78,7 +84,7 @@ export class DoReturnAdminResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty()
   createdTime: string;
 }
-export class DoReturnCtResponseVm extends BaseMetaResponseVm {
+export class DoReturnCtResponseVm {
 
   @ApiModelProperty()
   doReturnCtId: string;
@@ -95,7 +101,7 @@ export class DoReturnCtResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty()
   userCreated: string;
 }
-export class DoReturnCollectionResponseVm extends BaseMetaResponseVm {
+export class DoReturnCollectionResponseVm {
 
   @ApiModelProperty()
   doReturnCollectionId: string;

@@ -39,7 +39,6 @@ export class DoReturnService {
     payload.fieldResolverMap['doReturnMasterCode'] = 'do_return_master.do_return_master_code';
     const repo = new OrionRepositoryService(DoReturnAwb, 'return');
 
-    // const q = repo.findAllRaw();
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
@@ -59,6 +58,8 @@ export class DoReturnService {
       ['do_return_master.do_return_master_desc', 'doReturnMasterDesc'],
       ['do_return_master.do_return_master_code', 'doReturnMasterCode'],
       ['do_return_admin.do_return_admin_to_ct', 'doCode'],
+      ['do_return_ct.do_return_ct_to_collection', 'doCodeCt'],
+      ['do_return_collection.do_return_collection_to_cust', 'doCodeCollection'],
       [`CONCAT(user_driver.first_name, ' ', user_driver.last_name)`, 'userDriver'],
     );
     q.innerJoin(e => e.branchTo, 'branch', j =>
@@ -77,6 +78,12 @@ export class DoReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.doReturnAdmin, 'do_return_admin', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doReturnCt, 'do_return_ct', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doReturnCollection, 'do_return_collection', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     const data = await q.exec();
@@ -183,7 +190,7 @@ export class DoReturnService {
   ): Promise<DoReturnCtFindAllResponseVm> {
     // mapping search field and operator default ilike
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['doCode'] = 't1.do_return_admin_to_ct';
+    payload.fieldResolverMap['doCode'] = 't1.do_return_ct_to_collection';
     const repo = new OrionRepositoryService(DoReturnCtToCollection, 't1');
 
     const q = repo.findAllRaw();
@@ -214,7 +221,7 @@ export class DoReturnService {
   ): Promise<DoReturnCollectionFindAllResponseVm> {
     // mapping search field and operator default ilike
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['doCode'] = 't1.do_return_admin_to_ct';
+    payload.fieldResolverMap['doCode'] = 't1.do_return_collection_to_cust';
     const repo = new OrionRepositoryService(DoReturnCollectionToCust, 't1');
 
     const q = repo.findAllRaw();
