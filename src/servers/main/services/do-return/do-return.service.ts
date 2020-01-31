@@ -100,7 +100,7 @@ export class DoReturnService {
   ): Promise<ReturnUpdateFindAllResponseVm> {
     const authMeta = AuthService.getAuthData();
     const result = new ReturnUpdateFindAllResponseVm();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     let status = 'ok';
     let message = 'success';
     const timeNow = moment().toDate();
@@ -405,7 +405,7 @@ export class DoReturnService {
     payload: DoReturnDeliveryOrderCtCreateVm,
   ): Promise<ReturnUpdateFindAllResponseVm> {
     const result = new ReturnUpdateFindAllResponseVm();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
     const status = 'ok';
     const message = 'success';
@@ -417,6 +417,7 @@ export class DoReturnService {
     ctToCollection.doReturnCtToCollection = generateCode;
     ctToCollection.countAwb = payload.countAwb;
     ctToCollection.userIdCreated = authMeta.userId;
+    ctToCollection.branchId = permissonPayload.branchId;
     ctToCollection.userIdUpdated = authMeta.userId;
     ctToCollection.createdTime = timeNow;
     ctToCollection.updatedTime = timeNow;
@@ -463,7 +464,7 @@ export class DoReturnService {
     payload: DoReturnDeliveryOrderCustCreateVm,
   ): Promise<ReturnUpdateFindAllResponseVm> {
     const result = new ReturnUpdateFindAllResponseVm();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const status = 'ok';
     const authMeta = AuthService.getAuthData();
     const message = 'success';
@@ -475,6 +476,7 @@ export class DoReturnService {
     collectionToCust.doReturnCollectionToCust = generateCode;
     collectionToCust.countAwb = payload.countAwb;
     collectionToCust.userIdCreated = authMeta.userId;
+    collectionToCust.branchId = permissonPayload.branchId,
     collectionToCust.userIdUpdated = authMeta.userId;
     collectionToCust.createdTime = timeNow;
 
@@ -528,7 +530,7 @@ export class DoReturnService {
 
     const doReturnMaster = await DoReturnMaster.findOne({
       where: {
-        doReturnMasterCode : 9006,
+        doReturnMasterCode : 9005,
       },
     });
     const returnAwb = await DoReturnAwb.find({
@@ -563,7 +565,6 @@ export class DoReturnService {
   }
     result.status = status;
     result.message = message;
-    // result.doReturnCollectionToCustId = admin.doReturnCollectionToCustId;
 
     return result;
   }
