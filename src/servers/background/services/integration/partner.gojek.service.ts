@@ -1,15 +1,18 @@
 import axios from 'axios';
-import { GojekBookingPickupVm, GojekBookingPickupResponseVm, GojekBookingPayloadVm, GojekBookingResponseVm, GojekCancelBookingVm } from '../../models/partner/gojek-booking-pickup.vm';
-import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
+import { IsNull, Not } from 'typeorm';
 import { Branch } from '../../../../shared/orm-entity/branch';
-import { Not, IsNull } from 'typeorm';
-import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
-import { ConfigService } from '../../../../shared/services/config.service';
-import { WorkOrderAttr } from '../../../../shared/orm-entity/work-order-attr';
-import moment = require('moment');
-import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { WorkOrder } from '../../../../shared/orm-entity/work-order';
+import { WorkOrderAttr } from '../../../../shared/orm-entity/work-order-attr';
 import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
+import { ConfigService } from '../../../../shared/services/config.service';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import {
+    GojekBookingPayloadVm, GojekBookingPickupResponseVm, GojekBookingPickupVm,
+    GojekBookingResponseVm,
+} from '../../models/partner/gojek-booking-pickup.vm';
+import moment = require('moment');
 
 export class PartnerGojekService {
 
@@ -48,14 +51,16 @@ export class PartnerGojekService {
     payload: GojekBookingPickupVm,
   ): Promise<GojekBookingPickupResponseVm> {
     const result = new GojekBookingPickupResponseVm();
-    result.status = 'ok';
-    result.message = 'success';
+    result.status = 'failed';
+    result.message = `Layanan tidak bisa digunakan saat ini`;
     result.data = null;
     result.response = null;
 
     const pickupDetail = await PickupRequestDetail.findOne({
       where: {
         workOrderIdLast: payload.workOrderId,
+        shipperLongitude: Not(IsNull()),
+        shipperLatitude: Not(IsNull()),
         isDeleted: false,
       },
     });
@@ -72,31 +77,42 @@ export class PartnerGojekService {
 
       if (branch) {
         // NOTE: sample data for TEST ONLY
-        const data = {
-          originContactName: 'SiCepat Ekspres Indonesia Pusat',
-          originContactPhone: '6285860708711',
-          originLatLong: '-6.16496,106.823236',
-          originAddress: 'Jl. Ir. H. Juanda 3 No.17 - 19, RT.8/RW.2, Kb. Klp., Kecamatan Gambir, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10120',
-          destinationContactName: 'SiCepat Ekspres Daan Mogot',
-          destinationContactPhone: '6285860708711',
-          destinationLatLong: '-6.166001,106.7766058',
-          destinationAddress: 'Jalan Daan Mogot II No. 100, M-NN No.RT.6, RW.5, Duri Kepa, Kec. Kb. Jeruk, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11510',
-          item: 'Paket Test Sicepat',
-        };
+        // const data = {
+        //   originContactName: 'SiCepat Ekspres Indonesia Pusat',
+        //   originContactPhone: '6285860708711',
+        //   originLatLong: '-6.16496,106.823236',
+        //   originAddress: 'Jl. Ir. H. Juanda 3 No.17 - 19, RT.8/RW.2, Kb. Klp., Kecamatan Gambir, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10120',
+        //   destinationContactName: 'SiCepat Ekspres Daan Mogot',
+        //   destinationContactPhone: '6285860708711',
+        //   destinationLatLong: '-6.166001,106.7766058',
+        //   destinationAddress: 'Jalan Daan Mogot II No. 100, M-NN No.RT.6, RW.5, Duri Kepa, Kec. Kb. Jeruk, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11510',
+        //   item: 'Paket Test Sicepat',
+        // };
 
-        const data2 = new GojekBookingPayloadVm();
+        const data = new GojekBookingPayloadVm();
         // TODO: handle phone number??
-        // .replace(/[^0-9]/g,'')
-        // data2.originContactName = pickupDetail.shipperName;
-        // data2.originContactPhone = pickupDetail.shipperPhone;
-        // data2.originLatLong = `${pickupDetail.shipperLatitude},${pickupDetail.shipperLongitude}`;
-        // data2.originAddress = pickupDetail.shipperAddress;
+        // .replace(/[^0-9]/g,''); digit only
+        // .replace(/^0/, '62'); replace zero to 62
+        let shipperPhone = pickupDetail.shipperPhone;
+        shipperPhone = shipperPhone.replace(/[^0-9]/g, '');
+        shipperPhone = shipperPhone.replace(/^0/, '62');
 
-        // data2.destinationContactName = branch.branchName;
-        // data2.destinationContactPhone = branch.mobile1;
-        // data2.destinationLatLong = `${branch.latitude},${branch.longitude}`;
-        // data2.destinationAddress = branch.address;
-        // data2.item = pickupDetail.parcelContent || 'Paket Sicepat';
+        let branchPhone = branch.mobile1;
+        branchPhone = branchPhone.replace(/[^0-9]/g, '');
+        branchPhone = branchPhone.replace(/^0/, '62');
+
+        // data shipper
+        data.originContactName = pickupDetail.shipperName;
+        data.originContactPhone = shipperPhone;
+        data.originLatLong = `${pickupDetail.shipperLatitude},${pickupDetail.shipperLongitude}`;
+        data.originAddress = pickupDetail.shipperAddress;
+
+        // data branch
+        data.destinationContactName = branch.branchName;
+        data.destinationContactPhone = branchPhone;
+        data.destinationLatLong = `${branch.latitude},${branch.longitude}`;
+        data.destinationAddress = branch.address;
+        data.item = pickupDetail.parcelContent || 'Paket Sicepat';
 
         // NOTE: estimate price and calculate distance
         const calculate = await this.getEstimatePrice(data.originLatLong, data.destinationLatLong);
@@ -111,12 +127,12 @@ export class PartnerGojekService {
                 payload.workOrderId,
                 requestGojek.orderNo,
                 payload.userId,
+                payload.branchId,
               );
               result.data = data;
               result.response = requestGojek;
-            } else {
-              result.status = 'failed';
-              result.message = `Layanan tidak bisa digunakan saat ini`;
+              result.status = 'ok';
+              result.message = 'success';
             }
           } else {
             result.status = 'failed';
@@ -125,12 +141,12 @@ export class PartnerGojekService {
         }
       } else {
         result.status = 'failed';
-        result.message = 'Gerai tidak ditemukan atau tidak memiliki data lengkap';
+        result.message = 'Gerai tidak ditemukan atau data tidak lengkap';
       }
     } else {
       // pickup request not found
       result.status = 'failed';
-      result.message = 'Data tidak ditemukan';
+      result.message = 'Data tidak ditemukan atau data tidak lengkap';
     }
 
     return result;
@@ -176,6 +192,7 @@ export class PartnerGojekService {
     workOrderId: number,
     orderNumber: string,
     userId: number,
+    branchId: number,
   ) {
     const timeNow = moment().toDate();
     // TODO: find WorkOrderAttr
@@ -194,6 +211,8 @@ export class PartnerGojekService {
             refBookingType: 'CREATED',
             refOrderNo: orderNumber,
             refOrderCreatedTime: timeNow,
+            branchId,
+            userIdUpdated: userId,
           },
         );
       } else {
@@ -203,6 +222,7 @@ export class PartnerGojekService {
           refOrderNo: orderNumber,
           refOrderCreatedTime: timeNow,
           partnerId: 1,
+          branchId,
           userIdCreated: userId,
           userIdUpdated: userId,
           createdTime: timeNow,
@@ -218,9 +238,15 @@ export class PartnerGojekService {
   }
 
   private static async updateStatusOrder(params: any, workOrderStatusId: number) {
-
+    const timeNow = moment().toDate();
     const order = await WorkOrderAttr.findOne({
-      select: ['workOrderAttrId', 'workOrderId'],
+      select: [
+        'workOrderAttrId',
+        'workOrderId',
+        'refOrderCreatedTime',
+        'branchId',
+        'userIdCreated',
+      ],
       where: {
         refOrderNo: params.booking_id,
         isDeleted: false,
@@ -230,7 +256,7 @@ export class PartnerGojekService {
     if (order) {
 
       await WorkOrder.update(order.workOrderId, {
-        work_order_status_id_last: workOrderStatusId.toString(),
+        workOrderStatusIdLast: workOrderStatusId,
       });
 
       await WorkOrderAttr.update(order.workOrderAttrId, {
@@ -248,18 +274,18 @@ export class PartnerGojekService {
       });
 
       // TODO: add awb history
-      // const woh = await WorkOrderHistory.create({
-      //   work_order_id: params['work_order_id'],
-      //   work_order_status_id: params['work_order_status_id_last'],
-      //   user_id: params['user_id'],
-      //   branch_id: params['branch_id'],
-      //   is_final: params['is_final'],
-      //   history_date_time: params['updated_time'],
-      //   user_id_created: params['user_id'],
-      //   created_time: params['created_time'],
-      //   user_id_updated: params['user_id'],
-      //   updated_time: params['updated_time'],
-      // });
+      const woh = await WorkOrderHistory.create({
+        workOrderId: order.workOrderId,
+        workOrderStatusId,
+        userId: order.userIdCreated,
+        branchId: order.branchId,
+        historyDateTime: order.refOrderCreatedTime,
+        userIdCreated: order.userIdCreated,
+        createdTime: timeNow,
+        userIdUpdated: order.userIdCreated,
+        updatedTime: timeNow,
+      });
+      await WorkOrderHistory.insert(woh);
 
     } else {
       PinoLoggerService.log('#### Not Found!!!');
