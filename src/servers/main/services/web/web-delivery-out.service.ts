@@ -865,8 +865,8 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['nickname'] = 't2.nickname';
-    payload.fieldResolverMap['fullname'] = 't2.fullname';
+    payload.fieldResolverMap['totalAwb'] = 'totalAwb';
+    payload.fieldResolverMap['employeeName'] = 't2.fullname';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
     if (payload.sortBy === '') {
