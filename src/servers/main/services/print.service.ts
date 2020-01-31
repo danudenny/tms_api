@@ -886,6 +886,7 @@ export class PrintService {
     const q = RepositoryService.doReturnHistory.findOne();
     q.leftJoin(e => e.doReturnAwb);
     q.leftJoin(e => e.user);
+    q.leftJoin(e => e.userAdmin);
     q.leftJoin(e => e.doReturnAwb.branchTo);
 
     const doPodDoReturn = await q
@@ -921,6 +922,7 @@ export class PrintService {
       meta: {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
+        totalData: '0',
       },
     };
 
