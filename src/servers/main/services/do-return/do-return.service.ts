@@ -231,7 +231,7 @@ export class DoReturnService {
     // insert to DoReturnAdmintoCt
     const generateCode = await CustomCounterCode.doReturn(timeNow);
     const adminCt = DoReturnAdmintoCt.create();
-    adminCt.partnerLogisticId = payload.partnerLogisticId === 0 ? null : payload.partnerLogisticId;
+    adminCt.partnerLogisticId = payload.partnerLogisticId === '' ? null : payload.partnerLogisticId;
     adminCt.isPartnerLogistic = payload.isPartnerLogistic;
     adminCt.awbNumberNew = payload.awbNumberNew;
     adminCt.attachmentId = attachmentId;
