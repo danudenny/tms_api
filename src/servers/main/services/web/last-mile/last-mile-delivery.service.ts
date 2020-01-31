@@ -90,6 +90,12 @@ export class LastMileDeliveryService {
     payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
+    payload.fieldResolverMap['totalAssigned'] = 'totalAssigned';
+    payload.fieldResolverMap['totalAwb'] = 'totalAwb';
+    payload.fieldResolverMap['totalDelivery'] = 'totalDelivery';
+    payload.fieldResolverMap['totalProblem'] = 'totalProblem';
+    payload.fieldResolverMap['totalCodValue'] = 'totalCodValue';
+
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDeliverDateTime';
     }
