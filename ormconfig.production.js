@@ -1,7 +1,10 @@
 // ENV: STAGING
 // MASTER : sicepat-tmspod-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com
 // REPLICA :
+  // front end: sicepat-tmspod-frontend-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com
   // api: sicepat-tmspod-api-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com
+  // background: sicepat-tmspod-background-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com
+  // process: sicepat-tmspod-process-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com
 
 module.exports = {
   type: 'postgres',
