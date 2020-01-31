@@ -197,7 +197,7 @@ export class DoReturnService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.do_return_ct_to_collection_id', 'doReturnAdminId'],
+      ['t1.do_return_ct_to_collection_id', 'doReturnCtId'],
       ['t1.do_return_ct_to_collection', 'doCode'],
       ['t1.count_awb', 'countAwb'],
       ['t1.created_time', 'createdTime'],
@@ -228,7 +228,7 @@ export class DoReturnService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.do_return_collection_to_cust_id', 'doReturnAdminId'],
+      ['t1.do_return_collection_to_cust_id', 'doReturnCollectionId'],
       ['t1.do_return_collection_to_cust', 'doCode'],
       ['t1.count_awb', 'countAwb'],
       ['t1.created_time', 'createdTime'],
