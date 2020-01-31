@@ -25,6 +25,10 @@ import { City } from '../orm-entity/city';
 import { District } from '../orm-entity/district';
 import { DoReturnMaster } from '../orm-entity/do_return_master';
 import { DoReturnAwb } from '../orm-entity/do_return_awb';
+import { DoReturnAdmintoCt } from '../orm-entity/do_return_admin_to_ct';
+import { DoReturnHistory } from '../orm-entity/do_return_history';
+import { DoReturnCtToCollection } from '../orm-entity/do_return_ct_to_collection';
+import { DoReturnCollectionToCust } from '../orm-entity/do_return_collection_to_cust';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -106,8 +110,19 @@ export class RepositoryService {
   static get doReturnMaster() {
     return new OrionRepositoryService(DoReturnMaster);
   }
-
   static get doReturnAwb() {
     return new OrionRepositoryService(DoReturnAwb);
+  }
+  static get doReturnAdmintoCt() {
+    return new OrionRepositoryService(DoReturnAdmintoCt);
+  }
+  static get doReturnHistory() {
+    return new OrionRepositoryService(DoReturnHistory);
+  }
+  static get doReturnCttoCollection() {
+    return new OrionRepositoryService(DoReturnCtToCollection);
+  }
+  static get doReturnCollectiontoCust() {
+    return new OrionRepositoryService(DoReturnCollectionToCust);
   }
 }

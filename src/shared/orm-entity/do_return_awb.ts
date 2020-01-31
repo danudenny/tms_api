@@ -5,8 +5,15 @@ import { Customer } from './customer';
 import { AwbStatus } from './awb-status';
 import { DoReturnHistory } from './do_return_history';
 import { DoReturnAdmintoCt } from './do_return_admin_to_ct';
+<<<<<<< HEAD
 import { DoReturnCtToCollection } from './do_return_ct_to_collection';
 import { DoReturnCollectionToCust } from './do_return_collection_to_cust';
+import { CustomerAddress } from './customer-address';
+import { CustomerAccount } from './customer-account';
+=======
+import { CustomerAddress } from './customer-address';
+import { CustomerAccount } from './customer-account';
+>>>>>>> 7bb8b2fbef81f77c536fc9d0d90d5f5772b18469
 
 @Entity('do_return_awb', { schema: 'public' })
 export class DoReturnAwb extends TmsBaseEntity {
@@ -70,6 +77,12 @@ export class DoReturnAwb extends TmsBaseEntity {
   })
   customerId: number | null;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'customer_address_id',
+  })
+  customerAddressId: number | null;
+
   @Column('timestamp without time zone', {
     nullable: false,
     name: 'pod_datetime',
@@ -83,6 +96,14 @@ export class DoReturnAwb extends TmsBaseEntity {
   @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })
   customer: Customer;
+
+  @ManyToOne(() => CustomerAccount)
+  @JoinColumn({ name: 'customer_id', referencedColumnName: 'customerId' })
+  customerAccount: CustomerAccount;
+
+  @ManyToOne(() => CustomerAddress)
+  @JoinColumn({ name: 'customer_address_id' })
+  customerAddress: CustomerAddress;
 
   @ManyToOne(() => AwbStatus)
   @JoinColumn({ name: 'awb_status_id_last' })
