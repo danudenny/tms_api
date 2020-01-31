@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { Branch } from './branch';
 import { DoReturnAwb } from './do_return_awb';
@@ -24,10 +24,10 @@ export class DoReturnCtToCollection extends TmsBaseEntity {
   })
   countAwb: number;
 
-  @OneToMany(() => DoReturnAwb, e => e.doReturnCtToCollectionId)
-  doReturnAwbs: DoReturnAwb[];
-
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_created' })
   user: User;
+
+  @OneToMany(() => DoReturnAwb, e => e.doReturnCtToCollectionId)
+  doReturnAwbs: DoReturnAwb[];
 }

@@ -7,7 +7,7 @@ export class DoReturnDeliveryOrderCreateVm {
    isPartnerLogistic: boolean;
 
    @ApiModelPropertyOptional()
-   partnerLogisticId: number;
+   partnerLogisticId: string;
 
    @ApiModelProperty()
    countAwb: number;
