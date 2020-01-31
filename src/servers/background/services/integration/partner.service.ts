@@ -294,7 +294,7 @@ export class PartnerService {
       paymentvalues: [
         {
           name: 'fee',
-          value: 1500,
+          value: 1000,
         },
         {
           name: 'insurance',
@@ -304,7 +304,7 @@ export class PartnerService {
       taxes: [
         {
           name: 'fee',
-          value: 15,
+          value: 10,
         },
         {
           name: 'insurance',
