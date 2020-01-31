@@ -161,23 +161,18 @@ export class MobileAttendanceService {
       ['t7.branch_name', 'branchAsalDriver'],
     );
 
-    q.leftJoin(e => e.branchCheckIn, 't4',
-    );
+    q.leftJoin(e => e.branchCheckIn, 't4');
 
-    q.leftJoin(e => e.branchCheckOut, 't6',
-    );
+    q.leftJoin(e => e.branchCheckOut, 't6');
 
-    q.leftJoin(e => e.employee, 't3',
-    );
+    q.leftJoin(e => e.employee, 't3');
 
-    q.leftJoin(e => e.employee.branch, 't7',
-    );
+    q.leftJoin(e => e.employee.branch, 't7');
 
-    q.leftJoin(e => e.attachmentCheckIn, 't2',
-    );
+    q.leftJoin(e => e.attachmentCheckIn, 't2');
 
     q.leftJoin(e => e.attachmentCheckOut, 't5', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     const data = await q.exec();
@@ -205,17 +200,15 @@ export class MobileAttendanceService {
 
       const timeNow = moment().toDate();
 
-      const employeeJourney = await this.employeeJourneyRepository.findOne(
-        {
-          where: {
-            employeeId: authMeta.employeeId,
-            checkOutDate: IsNull(),
-          },
-          order: {
-            checkInDate: 'DESC',
-          },
+      const employeeJourney = await this.employeeJourneyRepository.findOne({
+        where: {
+          employeeId: authMeta.employeeId,
+          checkOutDate: IsNull(),
         },
-      );
+        order: {
+          checkInDate: 'DESC',
+        },
+      });
       if (employeeJourney) {
         // upload image
         const attachment = await AttachmentService.uploadFileBufferToS3(
@@ -231,8 +224,8 @@ export class MobileAttendanceService {
           where: { branchCode: payload.branchCode },
         });
         employeeJourney.branchIdCheckOut = branchOut.branchId;
-        employeeJourney.latitudeCheckOut =  payload.latitudeCheckOut;
-        employeeJourney.longitudeCheckOut =  payload.longitudeCheckOut;
+        employeeJourney.latitudeCheckOut = payload.latitudeCheckOut;
+        employeeJourney.longitudeCheckOut = payload.longitudeCheckOut;
         employeeJourney.attachmentIdCheckOut = attachmentId;
         employeeJourney.checkOutDate = timeNow;
 
