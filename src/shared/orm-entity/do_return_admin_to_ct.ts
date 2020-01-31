@@ -3,6 +3,8 @@ import { TmsBaseEntity } from './tms-base';
 import { AttachmentTms } from './attachment-tms';
 import { PartnerLogistic } from './partner-logistic';
 import { Branch } from './branch';
+import { DoReturnAwb } from './do_return_awb';
+import { User } from './user';
 
 @Entity('do_return_admin_to_ct', { schema: 'public' })
 export class DoReturnAdmintoCt extends TmsBaseEntity {
@@ -67,5 +69,12 @@ export class DoReturnAdmintoCt extends TmsBaseEntity {
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
+
+  @OneToMany(() => DoReturnAwb, e => e.doReturnAdminToCtId)
+  doReturnAwbs: DoReturnAwb[];
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'user_id_created' })
+  user: User;
 
 }

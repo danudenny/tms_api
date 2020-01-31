@@ -2,6 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, ManyToOne } from 't
 import { TmsBaseEntity } from './tms-base';
 import { DoReturnMaster } from './do_return_master';
 import { User } from './user';
+import { DoReturnAwb } from './do_return_awb';
 
 @Entity('do_return_history', { schema: 'public' })
 export class DoReturnHistory extends TmsBaseEntity {
@@ -24,6 +25,12 @@ export class DoReturnHistory extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: true,
+    name: 'user_id_created',
+  })
+  userIdCreated: number;
+
+  @Column('bigint', {
+    nullable: true,
     name: 'do_return_master_id',
   })
   doReturnMasterId: number;
@@ -35,4 +42,12 @@ export class DoReturnHistory extends TmsBaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_driver' })
   user: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_created' })
+  userAdmin: User;
+
+  @ManyToOne(() => DoReturnAwb)
+  @JoinColumn({ name: 'do_return_awb_id' })
+  doReturnAwb: DoReturnAwb;
 }
