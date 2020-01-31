@@ -11,6 +11,10 @@ import { DoReturnCreateVm, ReturnCreateVm } from '../../models/do-return-create.
 import { DoReturnDeliveryOrderCreateVm } from '../../models/do-return-surat-jalan-create.vm';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DoReturnDeliveryOrderCtCreateVm, DoReturnDeliveryOrderCustCreateVm } from '../../models/do-return-surat-jalan-ct-create.vm';
+import { ReturnHistoryResponseVm } from '../../models/do-return-history-response.vm';
+import { ReturnHistoryPayloadVm } from '../../models/do-return-history-payload.vm';
+import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
+import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('Do Return')
 @Controller('doReturn')
@@ -33,7 +37,7 @@ export class DoReturnController {
 
   @Post('dolist/admin')
   @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: DoReturnAdminFindAllResponseVm })
   public async findAllDoListAdmin(@Body() payload: BaseMetaPayloadVm ) {
     return DoReturnService.findAllDoListAdmin(payload);
@@ -41,7 +45,7 @@ export class DoReturnController {
 
   @Post('dolist/ct')
   @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: DoReturnCtFindAllResponseVm })
   public async findAllDoListCt(@Body() payload: BaseMetaPayloadVm ) {
     return DoReturnService.findAllDoListCt(payload);
@@ -49,10 +53,18 @@ export class DoReturnController {
 
   @Post('dolist/collection')
   @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: DoReturnCollectionFindAllResponseVm })
   public async findAllDoListCollection(@Body() payload: BaseMetaPayloadVm ) {
     return DoReturnService.findAllDoListCollection(payload);
+  }
+
+  @Post('history')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: ReturnHistoryResponseVm })
+  public async historyStatus(@Body() payload: ReturnHistoryPayloadVm ) {
+    return DoReturnService.historyStatus(payload);
   }
 
   @Post('create')

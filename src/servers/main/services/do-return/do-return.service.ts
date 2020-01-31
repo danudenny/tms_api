@@ -20,6 +20,9 @@ import { DoReturnDeliveryOrderCtCreateVm, DoReturnDeliveryOrderCustCreateVm } fr
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { file } from '@babel/types';
+import { ReturnHistoryPayloadVm } from '../../models/do-return-history-payload.vm';
+import { ReturnHistoryResponseVm } from '../../models/do-return-history-response.vm';
+import { createQueryBuilder } from 'typeorm';
 
 @Injectable()
 export class DoReturnService {
@@ -265,6 +268,54 @@ export class DoReturnService {
 
     result.status = status;
     result.message = message;
+
+    return result;
+  }
+
+  static async historyStatus(
+    payload: ReturnHistoryPayloadVm,
+  ): Promise<ReturnHistoryResponseVm> {
+    const result = new ReturnHistoryResponseVm();
+    result.awbNumber = '';
+    result.awbNumberNew = '';
+    result.customerName = '';
+    result.doReturnNumber = '';
+
+    const qb = createQueryBuilder();
+    qb.addSelect('b.awb_number', 'awbNumber');
+    qb.addSelect('b.do_return_awb_number', 'doReturnNumber');
+    qb.addSelect('d.awb_number_new', 'awbNumberNew');
+    qb.addSelect('g.customer_name', 'customerName');
+    qb.addSelect('a.created_time', 'dateTime');
+    qb.addSelect('c.do_return_master_code', 'statusCode');
+    qb.addSelect('c.do_return_master_desc', 'status');
+    qb.addSelect(`CONCAT(h.first_name, ' ', h.last_name, ' (', i.nik, ')')`, 'userName');
+    qb.addSelect(`(CASE
+      WHEN c.do_return_master_code = '9005' THEN f.do_return_collection_to_cust
+      WHEN c.do_return_master_code = '9003' THEN e.do_return_ct_to_collection
+      WHEN c.do_return_master_code = '9001' THEN d.do_return_admin_to_ct
+      ELSE '-'
+    END)`, 'doCode');
+    qb.from('do_return_history', 'a');
+    qb.innerJoin('do_return_awb', 'b', 'a.do_return_awb_id = b.do_return_awb_id AND a.is_deleted = false');
+    qb.innerJoin('do_return_master', 'c', 'c.is_deleted = false AND c.do_return_master_id = a.do_return_master_id');
+    qb.leftJoin('do_return_admin_to_ct', 'd', 'd.do_return_admin_to_ct_id = b.do_return_admin_to_ct_id AND d.is_deleted = false');
+    qb.leftJoin('do_return_ct_to_collection', 'e', 'e.do_return_ct_to_collection_id = b.do_return_ct_to_collection_id AND e.is_deleted = false');
+    qb.leftJoin('do_return_collection_to_cust', 'f', 'f.do_return_collection_to_cust_id = b.do_return_collection_to_cust_id AND f.is_deleted = false');
+    qb.leftJoin('customer', 'g', 'g.customer_id = b.customer_id AND g.is_deleted = false');
+    qb.leftJoin('users', 'h', 'h.user_id = a.user_id_created AND h.is_deleted = false');
+    qb.leftJoin('employee', 'i', 'i.employee_id = h.employee_id AND i.is_deleted = false');
+    qb.where('a.deleted = false');
+    qb.andWhere('a.do_return_awb_id = :doReturnAwbId', { doReturnAwbId: payload.doReturnAwbId });
+    qb.addOrderBy('a.created_time', 'DESC');
+    const data = await qb.getRawMany();
+    result.data = data;
+    if (data) {
+      result.awbNumber = data[0].awbNumber;
+      result.awbNumberNew = data[0].awbNumberNew;
+      result.customerName = data[0].customerName;
+      result.doReturnNumber = data[0].doReturnNumber;
+    }
 
     return result;
   }
