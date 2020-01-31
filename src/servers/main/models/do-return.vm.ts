@@ -78,6 +78,40 @@ export class DoReturnAdminResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty()
   createdTime: string;
 }
+export class DoReturnCtResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty()
+  doReturnCtId: string;
+
+  @ApiModelProperty()
+  doCode: string;
+
+  @ApiModelProperty()
+  countAwb: number;
+
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  userCreated: string;
+}
+export class DoReturnCollectionResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty()
+  doReturnCollectionId: string;
+
+  @ApiModelProperty()
+  doCode: string;
+
+  @ApiModelProperty()
+  countAwb: number;
+
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  userCreated: string;
+}
 
 export class ReturnSearchVm {
   @ApiModelProperty()

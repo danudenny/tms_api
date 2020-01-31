@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm } from '../../models/do-return.response.vm';
+import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm } from '../../models/do-return.response.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoReturnAwb } from '../../../../shared/orm-entity/do_return_awb';
 import { MetaService } from '../../../../shared/services/meta.service';
@@ -168,6 +168,68 @@ export class DoReturnService {
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new DoReturnAdminFindAllResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findAllDoListCt(
+    payload: BaseMetaPayloadVm,
+  ): Promise<DoReturnCtFindAllResponseVm> {
+    // mapping search field and operator default ilike
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['doCode'] = 't1.do_return_admin_to_ct';
+    const repo = new OrionRepositoryService(DoReturnCtToCollection, 't1');
+
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_return_ct_to_collection_id', 'doReturnAdminId'],
+      ['t1.do_return_ct_to_collection', 'doCode'],
+      ['t1.count_awb', 'countAwb'],
+      ['t1.created_time', 'createdTime'],
+      [`CONCAT(t2.first_name, ' ', t2.last_name)`, 'userCreated'],
+    );
+    q.innerJoin(e => e.user, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new DoReturnCtFindAllResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findAllDoListCollection(
+    payload: BaseMetaPayloadVm,
+  ): Promise<DoReturnCollectionFindAllResponseVm> {
+    // mapping search field and operator default ilike
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['doCode'] = 't1.do_return_admin_to_ct';
+    const repo = new OrionRepositoryService(DoReturnCollectionToCust, 't1');
+
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_return_collection_to_cust_id', 'doReturnAdminId'],
+      ['t1.do_return_collection_to_cust', 'doCode'],
+      ['t1.count_awb', 'countAwb'],
+      ['t1.created_time', 'createdTime'],
+      [`CONCAT(t2.first_name, ' ', t2.last_name)`, 'userCreated'],
+    );
+    q.innerJoin(e => e.user, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new DoReturnCollectionFindAllResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 

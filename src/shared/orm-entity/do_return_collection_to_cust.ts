@@ -1,5 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import { User } from './user';
 
 @Entity('do_return_collection_to_cust', { schema: 'public' })
 export class DoReturnCollectionToCust extends TmsBaseEntity {
@@ -21,4 +22,7 @@ export class DoReturnCollectionToCust extends TmsBaseEntity {
   })
   countAwb: number;
 
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_created' })
+  user: User;
 }
