@@ -5,15 +5,10 @@ import { Customer } from './customer';
 import { AwbStatus } from './awb-status';
 import { DoReturnHistory } from './do_return_history';
 import { DoReturnAdmintoCt } from './do_return_admin_to_ct';
-<<<<<<< HEAD
 import { DoReturnCtToCollection } from './do_return_ct_to_collection';
 import { DoReturnCollectionToCust } from './do_return_collection_to_cust';
 import { CustomerAddress } from './customer-address';
 import { CustomerAccount } from './customer-account';
-=======
-import { CustomerAddress } from './customer-address';
-import { CustomerAccount } from './customer-account';
->>>>>>> 7bb8b2fbef81f77c536fc9d0d90d5f5772b18469
 
 @Entity('do_return_awb', { schema: 'public' })
 export class DoReturnAwb extends TmsBaseEntity {
