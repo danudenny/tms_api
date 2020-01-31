@@ -16,13 +16,14 @@ import { DoReturnAdmintoCt } from '../../../../shared/orm-entity/do_return_admin
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { DoReturnCtToCollection } from '../../../../shared/orm-entity/do_return_ct_to_collection';
 import { DoReturnCollectionToCust } from '../../../../shared/orm-entity/do_return_collection_to_cust';
-import { DoReturnDeliveryOrderCtCreateVm, DoReturnDeliveryOrderCustCreateVm } from '../../models/do-return-surat-jalan-ct-create.vm';
+import { DoReturnDeliveryOrderCtCreateVm, DoReturnDeliveryOrderCustCreateVm, DoReturnDeliveryOrderCustReceivedCreateVm } from '../../models/do-return-surat-jalan-ct-create.vm';
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { file } from '@babel/types';
 import { ReturnHistoryPayloadVm } from '../../models/do-return-history-payload.vm';
 import { ReturnHistoryResponseVm } from '../../models/do-return-history-response.vm';
 import { createQueryBuilder } from 'typeorm';
+import { AuthMetadata } from '../../../auth/models/auth-metadata.model';
 
 @Injectable()
 export class DoReturnService {
@@ -117,7 +118,7 @@ export class DoReturnService {
          history,
          {
            doReturnHistoryIdLast : returnHistId,
-           userIdUpdated : 3,
+           userIdUpdated : authMeta.userId,
            updatedTime :  timeNow,
          });
       }
@@ -247,7 +248,7 @@ export class DoReturnService {
     const status = 'ok';
     const message = 'success';
     const timeNow = moment().toDate();
-    // const authMeta = AuthService.getAuthData();
+    const authMeta = AuthService.getAuthData();
     // create do_pod (Surat Jalan)
     for (const history of payload.data) {
       const doReturn = DoReturnAwb.create();
@@ -258,8 +259,8 @@ export class DoReturnService {
       doReturn.awbStatusIdLast = history.lastStatusAwb;
       doReturn.branchIdLast = history.branchIdLast;
       doReturn.podDatetime = history.podDatetime;
-      doReturn.userIdCreated = 3;
-      doReturn.userIdUpdated = 3;
+      doReturn.userIdCreated = authMeta.userId;
+      doReturn.userIdUpdated = authMeta.userId;
       doReturn.createdTime = timeNow;
       doReturn.updatedTime = timeNow;
 
@@ -367,8 +368,8 @@ export class DoReturnService {
     if (doReturnMaster) {
     for (const returnAwbId of payload.doReturnAwbId) {
       const returnHist = DoReturnHistory.create();
-      returnHist.userIdCreated = 3;
-      returnHist.userIdUpdated = 3;
+      returnHist.userIdCreated = authMeta.userId;
+      returnHist.userIdUpdated = authMeta.userId;
       returnHist.createdTime = timeNow;
       returnHist.doReturnMasterId =  doReturnMaster.doReturnMasterId;
       returnHist.doReturnAwbId = returnAwbId;
@@ -380,7 +381,7 @@ export class DoReturnService {
         returnAwbId, {
           doReturnHistoryIdLast : historyId,
           doReturnAdminToCtId : adminCt.doReturnAdminToCtId,
-          userIdUpdated : 3,
+          userIdUpdated : authMeta.userId,
           updatedTime : timeNow,
         },
       );
@@ -398,6 +399,7 @@ export class DoReturnService {
   ): Promise<ReturnUpdateFindAllResponseVm> {
     const result = new ReturnUpdateFindAllResponseVm();
     // const permissonPayload = AuthService.getPermissionTokenPayload();
+    const authMeta = AuthService.getAuthData();
     const status = 'ok';
     const message = 'success';
     const timeNow = moment().toDate();
@@ -407,8 +409,8 @@ export class DoReturnService {
 
     ctToCollection.doReturnCtToCollection = generateCode;
     ctToCollection.countAwb = payload.countAwb;
-    ctToCollection.userIdCreated = 3;
-    ctToCollection.userIdUpdated = 3;
+    ctToCollection.userIdCreated = authMeta.userId;
+    ctToCollection.userIdUpdated = authMeta.userId;
     ctToCollection.createdTime = timeNow;
     ctToCollection.updatedTime = timeNow;
 
@@ -424,8 +426,8 @@ export class DoReturnService {
     if (doReturnMaster) {
     for (const returnAwbId of payload.doReturnAwbId) {
       const returnHist = DoReturnHistory.create();
-      returnHist.userIdCreated = 3;
-      returnHist.userIdUpdated = 3;
+      returnHist.userIdCreated = authMeta.userId;
+      returnHist.userIdUpdated = authMeta.userId;
       returnHist.createdTime = timeNow;
       returnHist.doReturnMasterId =  doReturnMaster.doReturnMasterId;
       returnHist.doReturnAwbId = returnAwbId;
@@ -437,7 +439,7 @@ export class DoReturnService {
         returnAwbId, {
           doReturnHistoryIdLast : historyId,
           doReturnCtToCollectionId : ctToCollection.doReturnCtToCollectionId,
-          userIdUpdated : 3,
+          userIdUpdated : authMeta.userId,
           updatedTime : timeNow,
         },
       );
@@ -456,6 +458,7 @@ export class DoReturnService {
     const result = new ReturnUpdateFindAllResponseVm();
     // const permissonPayload = AuthService.getPermissionTokenPayload();
     const status = 'ok';
+    const authMeta = AuthService.getAuthData();
     const message = 'success';
     const timeNow = moment().toDate();
     // insert to DoReturnAdmintoCt
@@ -464,8 +467,8 @@ export class DoReturnService {
 
     collectionToCust.doReturnCollectionToCust = generateCode;
     collectionToCust.countAwb = payload.countAwb;
-    collectionToCust.userIdCreated = 3;
-    collectionToCust.userIdUpdated = 3;
+    collectionToCust.userIdCreated = authMeta.userId;
+    collectionToCust.userIdUpdated = authMeta.userId;
     collectionToCust.createdTime = timeNow;
 
     const admin = await DoReturnCollectionToCust.save(collectionToCust);
@@ -480,8 +483,8 @@ export class DoReturnService {
     if (doReturnMaster) {
     for (const returnAwbId of payload.doReturnAwbId) {
       const returnHist = DoReturnHistory.create();
-      returnHist.userIdCreated = 3;
-      returnHist.userIdUpdated = 3;
+      returnHist.userIdCreated = authMeta.userId;
+      returnHist.userIdUpdated = authMeta.userId;
       returnHist.createdTime = timeNow;
       returnHist.doReturnMasterId =  doReturnMaster.doReturnMasterId;
       returnHist.doReturnAwbId = returnAwbId;
@@ -493,7 +496,7 @@ export class DoReturnService {
         returnAwbId, {
           doReturnHistoryIdLast : historyId,
           doReturnCollectionToCustId : collectionToCust.doReturnCollectionToCustId,
-          userIdUpdated : 3,
+          userIdUpdated : authMeta.userId,
           updatedTime : timeNow,
         },
       );
@@ -502,6 +505,58 @@ export class DoReturnService {
     result.status = status;
     result.message = message;
     result.doId = admin.doReturnCollectionToCustId;
+
+    return result;
+  }
+
+  static async deliveryOrderCustReceivedCreate(
+    payload: DoReturnDeliveryOrderCustReceivedCreateVm,
+  ): Promise<ReturnUpdateFindAllResponseVm> {
+    const result = new ReturnUpdateFindAllResponseVm();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const status = 'ok';
+    const message = 'success';
+    const timeNow = moment().toDate();
+    const authMeta = AuthService.getAuthData();
+
+    const doReturnMaster = await DoReturnMaster.findOne({
+      where: {
+        doReturnMasterCode : 9006,
+      },
+    });
+    const returnAwb = await DoReturnAwb.find({
+      where: {
+        doReturnCollectionToCustId: payload.doReturnCollectionToCust,
+      },
+    });
+  //  insert to do return awb history
+    if (doReturnMaster) {
+    for (const returnAwbId of payload.doReturnCollectionToCust) {
+      const returnHist = DoReturnHistory.create();
+      returnHist.userIdCreated = authMeta.userId;
+      returnHist.userIdUpdated = authMeta.userId;
+      returnHist.createdTime = timeNow;
+      returnHist.doReturnMasterId =  doReturnMaster.doReturnMasterId;
+      returnHist.doReturnAwbId = returnAwbId;
+      const history = await DoReturnHistory.save(returnHist);
+
+      const historyId = history.doReturnHistoryId;
+
+      if (returnAwb) {
+    // Update do return awb
+        await DoReturnAwb.update(
+          returnAwbId, {
+            doReturnHistoryIdLast : historyId,
+            userIdUpdated : authMeta.userId,
+            updatedTime : timeNow,
+          },
+        );
+      }
+    }
+  }
+    result.status = status;
+    result.message = message;
+    // result.doReturnCollectionToCustId = admin.doReturnCollectionToCustId;
 
     return result;
   }

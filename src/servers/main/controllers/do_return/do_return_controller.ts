@@ -10,11 +10,11 @@ import { ReturnUpdateFindAllResponseVm } from '../../models/do-return-update.res
 import { DoReturnCreateVm, ReturnCreateVm } from '../../models/do-return-create.vm';
 import { DoReturnDeliveryOrderCreateVm } from '../../models/do-return-surat-jalan-create.vm';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { DoReturnDeliveryOrderCtCreateVm, DoReturnDeliveryOrderCustCreateVm } from '../../models/do-return-surat-jalan-ct-create.vm';
 import { ReturnHistoryResponseVm } from '../../models/do-return-history-response.vm';
 import { ReturnHistoryPayloadVm } from '../../models/do-return-history-payload.vm';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
+import { DoReturnDeliveryOrderCtCreateVm, DoReturnDeliveryOrderCustCreateVm, DoReturnDeliveryOrderCustReceivedCreateVm } from '../../models/do-return-surat-jalan-ct-create.vm';
 
 @ApiUseTags('Do Return')
 @Controller('doReturn')
@@ -105,6 +105,14 @@ export class DoReturnController {
   @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
   public async deliveryOrderCustCreate(@Body() payload: DoReturnDeliveryOrderCustCreateVm) {
     return DoReturnService.deliveryOrderCustCreate(payload);
+  }
 
+  @Post('deliveryOrder/cust/received/create')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
+  public async deliveryOrderCustReceivedCreate(@Body() payload: DoReturnDeliveryOrderCustReceivedCreateVm) {
+    return DoReturnService.deliveryOrderCustReceivedCreate(payload);
   }
 }
