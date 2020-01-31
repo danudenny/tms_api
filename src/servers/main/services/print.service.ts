@@ -16,7 +16,7 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodPayloadQueryVm,
   ) {
-    const q = RepositoryService.doPod.findOne();
+    const q = RepositoryService.doPod.findOne('master');
     q.leftJoin(e => e.doPodDetails);
     q.leftJoin(e => e.userDriver.employee);
 
@@ -109,7 +109,7 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodBagPayloadQueryVm,
   ) {
-    const q = RepositoryService.doPod.findOne();
+    const q = RepositoryService.doPod.findOne('master');
     q.leftJoin(e => e.doPodDetailBag);
     q.leftJoin(e => e.userDriver.employee);
 
@@ -151,7 +151,7 @@ export class PrintService {
     }
 
     const bagItemIds = map(doPod.doPodDetailBag, doPodDetail => doPodDetail.bagItem.bagItemId);
-    const result = await RawQueryService.query(`SELECT COUNT(1) as cnt FROM bag_item WHERE bag_item_id IN (${bagItemIds.join(',')})`);
+    const result = await RawQueryService.query(`SELECT COUNT(1) as cnt FROM bag_item WHERE bag_item_id IN (${bagItemIds.join(',')})`, undefined, 'master');
     const totalBagItem = result[0].cnt;
 
     const currentUser = await RepositoryService.user
@@ -223,7 +223,7 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodDeliverPayloadQueryVm,
   ) {
-    const q = RepositoryService.doPodDeliver.findOne();
+    const q = RepositoryService.doPodDeliver.findOne('master');
     q.leftJoin(e => e.doPodDeliverDetails);
     q.leftJoin(e => e.userDriver.employee);
 
@@ -241,6 +241,127 @@ export class PrintService {
         },
         doPodDeliverDetails: {
           doPodDeliverDetailId: true, // needs to be selected due to do_pod_deliver_detail relations are being included
+          awbItem: {
+            awbItemId: true, // needs to be selected due to awb_item relations are being included
+            awb: {
+              awbId: true,
+              awbNumber: true,
+              consigneeName: true,
+              consigneeNumber: true,
+              consigneeAddress: true,
+              consigneeZip: true,
+              totalCodValue: true,
+              isCod: true,
+            },
+          },
+        },
+      })
+      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id));
+
+    if (!doPodDeliver) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    const awbIds = map(doPodDeliver.doPodDeliverDetails, doPodDeliverDetail => doPodDeliverDetail.awbItem.awb.awbId);
+    const result = await RawQueryService.query(`SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(',')})`, undefined, 'master');
+    let totalAllCod = result[0].total;
+
+    if (totalAllCod < 1) {
+      totalAllCod = 0;
+    }
+
+    const currentUser = await RepositoryService.user
+      .loadById(queryParams.userId)
+      .select({
+        userId: true, // needs to be selected due to users relations are being included
+        employee: {
+          nickname: true,
+        },
+      })
+      .exec();
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
+    const currentBranch = await RepositoryService.branch
+      .loadById(queryParams.branchId)
+      .select({
+        branchName: true,
+      });
+
+    if (!currentBranch) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPodDeliver,
+      meta: {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        totalItems: doPodDeliver.doPodDeliverDetails.length,
+        totalCod: totalAllCod,
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [
+        {
+          templateName: 'surat-jalan-antar',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+        {
+          templateName: 'surat-jalan-antar-admin',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+      ],
+    });
+  }
+
+  public static async printDoPodReturnByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodDeliverPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doPodDeliver.findOne();
+    q.leftJoin(e => e.doPodDeliverDetails);
+    q.leftJoin(e => e.userDriver.employee);
+    q.leftJoin(e => e.doPodDeliverDetails.reasonLast);
+    q.leftJoin(e => e.doPodDeliverDetails.awbStatus);
+
+    const doPodDeliver = await q
+      .select({
+        doPodDeliverId: true, // needs to be selected due to do_pod_deliver relations are being included
+        doPodDeliverCode: true,
+        description: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
+        },
+        doPodDeliverDetails: {
+          doPodDeliverDetailId: true, // needs to be selected due to do_pod_deliver_detail relations are being included
+          reasonLast: {
+            reasonCode: true,
+          },
+          consigneeName: true,
+          awbStatus: {
+            awbStatusName: true,
+          },
           awbItem: {
             awbItemId: true, // needs to be selected due to awb_item relations are being included
             awb: {
@@ -318,12 +439,7 @@ export class PrintService {
       printerName: 'StrukPrinter',
       templates: [
         {
-          templateName: 'surat-jalan-antar',
-          templateData: jsreportParams,
-          printCopy: queryParams.printCopy,
-        },
-        {
-          templateName: 'surat-jalan-antar-admin',
+          templateName: 'surat-jalan-balik',
           templateData: jsreportParams,
           printCopy: queryParams.printCopy,
         },
@@ -335,7 +451,7 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintBagItemPayloadQueryVm,
   ) {
-    const q = RepositoryService.bagItem.findOne();
+    const q = RepositoryService.bagItem.findOne('master');
     q.innerJoin(e => e.bag);
     q.leftJoin(e => e.bag.district);
 
@@ -366,6 +482,7 @@ export class PrintService {
     const [{ cnt: bagItemsTotal }] = await RawQueryService.exec(
       `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
       { bagItemId: bagItem.bagItemId },
+      'master',
     );
 
     const currentUser = await RepositoryService.user
@@ -395,18 +512,6 @@ export class PrintService {
         message: 'Gerai asal tidak ditemukan',
       });
     }
-
-    const m = moment();
-    const jsreportParams = {
-      data: bagItem,
-      meta: {
-        currentUserName: currentUser.employee.nickname,
-        currentBranchName: currentBranch.branchName,
-        date: m.format('DD/MM/YY'),
-        time: m.format('HH:mm'),
-        bagItemsTotal,
-      },
-    };
 
     const weightNumberOnly = `${bagItem.weight}`.replace(/\D/gm, '').substring(0, 5);
     const finalWeightRounded2Decimal = parseFloat(`${bagItem.weight}`).toFixed(
@@ -447,7 +552,7 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintBagItemPayloadQueryVm,
   ) {
-    const q = RepositoryService.bagItem.findOne();
+    const q = RepositoryService.bagItem.findOne('master');
     q.innerJoin(e => e.bag);
     q.leftJoin(e => e.bag.district);
 
@@ -548,7 +653,7 @@ export class PrintService {
     queryParams: PrintAwbPayloadQueryVm,
   ) {
     if (queryParams.isPartnerLogistic === '1') {
-      const q = RepositoryService.awb.findOne();
+      const q = RepositoryService.awb.findOne('master');
       q.innerJoin(e => e.branch);
 
       const awbItem = await q
@@ -599,17 +704,6 @@ export class PrintService {
           message: 'Gerai asal tidak ditemukan',
         });
       }
-
-      const m = moment();
-      const jsreportParams = {
-        data: awbItem,
-        meta: {
-          currentUserName: currentUser.employee.nickname,
-          currentBranchName: currentBranch.branchName,
-          date: m.format('DD/MM/YY'),
-          time: m.format('HH:mm'),
-        },
-      };
 
       let data1 = `TEXT 30,100,"3",0,1,1,"Pengirim : ${awbItem.branch.branchName}"\n` +
       `TEXT 30,135,"3",0,1,1,"Telp : ${awbItem.branch.phone1}"\n`;
@@ -675,7 +769,7 @@ export class PrintService {
         printerName: 'BarcodePrinter',
       });
     } else {
-      const q = RepositoryService.awb.findOne();
+      const q = RepositoryService.awb.findOne('master');
       q.innerJoin(e => e.branch);
       q.leftJoin(e => e.representative.branch.district);
 
@@ -733,17 +827,6 @@ export class PrintService {
           message: 'Gerai asal tidak ditemukan',
         });
       }
-
-      const m = moment();
-      const jsreportParams = {
-        data: awbItem,
-        meta: {
-          currentUserName: currentUser.employee.nickname,
-          currentBranchName: currentBranch.branchName,
-          date: m.format('DD/MM/YY'),
-          time: m.format('HH:mm'),
-        },
-      };
 
       const consZip = awbItem.consigneeZip.substring((awbItem.consigneeZip.length - 3), awbItem.consigneeZip.length);
       let data1 = '';
