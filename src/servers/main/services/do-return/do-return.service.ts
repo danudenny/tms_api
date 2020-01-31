@@ -530,7 +530,7 @@ export class DoReturnService {
 
     const doReturnMaster = await DoReturnMaster.findOne({
       where: {
-        doReturnMasterCode : 9005,
+        doReturnMasterCode : 9006,
       },
     });
     const returnAwb = await DoReturnAwb.find({
