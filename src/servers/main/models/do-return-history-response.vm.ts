@@ -2,7 +2,7 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 
 export class DoReturnHistory {
   @ApiModelProperty()
-   createdDate: string;
+   dateTime: string;
 
    @ApiModelProperty()
    status: string;
@@ -11,7 +11,10 @@ export class DoReturnHistory {
    doCode: string;
 
    @ApiModelProperty()
-   userCreated: string;
+   userName: string;
+
+   @ApiModelProperty()
+   employeeNik: string;
 }
 export class ReturnHistoryResponseVm {
   @ApiModelProperty()

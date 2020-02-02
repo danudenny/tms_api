@@ -84,6 +84,19 @@ export class DoReturnAdminResponseVm {
   @ApiModelProperty()
   createdTime: string;
 }
+export class DoReturnAwbListResponseVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  doReturnAdminId: string;
+
+  @ApiModelProperty()
+  doReturnCtId: string;
+
+  @ApiModelProperty()
+  doReturnCollectionId: string;
+}
 export class DoReturnCtResponseVm {
 
   @ApiModelProperty()
@@ -100,6 +113,9 @@ export class DoReturnCtResponseVm {
 
   @ApiModelProperty()
   userCreated: string;
+
+  @ApiModelProperty()
+  employeeNik: string;
 }
 export class DoReturnCollectionResponseVm {
 
@@ -117,6 +133,12 @@ export class DoReturnCollectionResponseVm {
 
   @ApiModelProperty()
   userCreated: string;
+
+  @ApiModelProperty()
+  employeeNik: string;
+
+  @ApiModelProperty()
+  isReceiptCust: boolean;
 }
 
 export class ReturnSearchVm {

@@ -5,7 +5,7 @@ import { DoReturnService } from '../../services/do-return/do-return.service';
 import { ReturnPayloadVm, DoReturnResponseVm } from '../../models/do-return.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { DoReturnPayloadVm } from '../../models/do-return-update.vm';
-import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm } from '../../models/do-return.response.vm';
+import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm, DoReturnAwbListFindAllResponseVm } from '../../models/do-return.response.vm';
 import { ReturnUpdateFindAllResponseVm } from '../../models/do-return-update.response.vm';
 import { DoReturnCreateVm, ReturnCreateVm } from '../../models/do-return-create.vm';
 import { DoReturnDeliveryOrderCreateVm } from '../../models/do-return-surat-jalan-create.vm';
@@ -41,6 +41,14 @@ export class DoReturnController {
   @ApiOkResponse({ type: DoReturnAdminFindAllResponseVm })
   public async findAllDoListAdmin(@Body() payload: BaseMetaPayloadVm ) {
     return DoReturnService.findAllDoListAdmin(payload);
+  }
+
+  @Post('dolist/awb')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: DoReturnAwbListFindAllResponseVm })
+  public async findAllDoListAwbAdmin(@Body() payload: BaseMetaPayloadVm ) {
+    return DoReturnService.findAllDoListAwb(payload);
   }
 
   @Post('dolist/ct')

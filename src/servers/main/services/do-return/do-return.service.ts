@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm } from '../../models/do-return.response.vm';
+import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm, DoReturnAwbListFindAllResponseVm } from '../../models/do-return.response.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoReturnAwb } from '../../../../shared/orm-entity/do_return_awb';
 import { MetaService } from '../../../../shared/services/meta.service';
@@ -86,6 +86,7 @@ export class DoReturnService {
     q.leftJoin(e => e.doReturnCollection, 'do_return_collection', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.orderBy({ podDatetime: 'DESC' });
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -175,10 +176,41 @@ export class DoReturnService {
     q.innerJoin(e => e.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.orderBy({ createdTime: 'DESC' });
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new DoReturnAdminFindAllResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findAllDoListAwb(
+    payload: BaseMetaPayloadVm,
+  ): Promise<DoReturnAwbListFindAllResponseVm> {
+    // mapping search field and operator default ilike
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['doReturnAdminId'] = 't1.do_return_admin_to_ct_id';
+    payload.fieldResolverMap['doReturnCtId'] = 't1.do_return_ct_to_collection_id';
+    payload.fieldResolverMap['doReturnCollectionId'] = 't1.do_return_collection_to_cust_id';
+    const repo = new OrionRepositoryService(DoReturnAwb, 't1');
+
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_number', 'awbNumber'],
+      ['t1.do_return_admin_to_ct_id', 'doReturnAdminId'],
+      ['t1.do_return_ct_to_collection_id', 'doRedoReturnCtId'],
+      ['t1.do_return_collection_to_cust_id', 'doReturnCollectionId'],
+    );
+    q.orderBy({ createdTime: 'DESC' });
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new DoReturnAwbListFindAllResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
@@ -191,6 +223,7 @@ export class DoReturnService {
     // mapping search field and operator default ilike
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['doCode'] = 't1.do_return_ct_to_collection';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
     const repo = new OrionRepositoryService(DoReturnCtToCollection, 't1');
 
     const q = repo.findAllRaw();
@@ -202,10 +235,15 @@ export class DoReturnService {
       ['t1.count_awb', 'countAwb'],
       ['t1.created_time', 'createdTime'],
       [`CONCAT(t2.first_name, ' ', t2.last_name)`, 'userCreated'],
+      ['t3.nik', 'employeeNik'],
     );
     q.innerJoin(e => e.user, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoin(e => e.user.employee, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.orderBy({ createdTime: 'DESC' });
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -233,10 +271,16 @@ export class DoReturnService {
       ['t1.count_awb', 'countAwb'],
       ['t1.created_time', 'createdTime'],
       [`CONCAT(t2.first_name, ' ', t2.last_name)`, 'userCreated'],
+      ['t3.nik', 'employeeNik'],
+      ['t1.is_receipt_cust', 'isReceiptCust'],
     );
     q.innerJoin(e => e.user, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoin(e => e.user.employee, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.orderBy({ createdTime: 'DESC' });
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -297,7 +341,8 @@ export class DoReturnService {
     qb.addSelect('a.created_time', 'dateTime');
     qb.addSelect('c.do_return_master_code', 'statusCode');
     qb.addSelect('c.do_return_master_desc', 'status');
-    qb.addSelect(`CONCAT(h.first_name, ' ', h.last_name, ' (', i.nik, ')')`, 'userName');
+    qb.addSelect(`CONCAT(h.first_name, ' ', h.last_name)`, 'userName');
+    qb.addSelect('i.nik', 'employeeNik');
     qb.addSelect(`(CASE
       WHEN c.do_return_master_code = '9005' THEN f.do_return_collection_to_cust
       WHEN c.do_return_master_code = '9003' THEN e.do_return_ct_to_collection
@@ -313,16 +358,21 @@ export class DoReturnService {
     qb.leftJoin('customer', 'g', 'g.customer_id = b.customer_id AND g.is_deleted = false');
     qb.leftJoin('users', 'h', 'h.user_id = a.user_id_created AND h.is_deleted = false');
     qb.leftJoin('employee', 'i', 'i.employee_id = h.employee_id AND i.is_deleted = false');
-    qb.where('a.deleted = false');
+    qb.where('a.is_deleted = false');
     qb.andWhere('a.do_return_awb_id = :doReturnAwbId', { doReturnAwbId: payload.doReturnAwbId });
     qb.addOrderBy('a.created_time', 'DESC');
     const data = await qb.getRawMany();
     result.data = data;
-    if (data) {
+    if (result.data.length > 0) {
       result.awbNumber = data[0].awbNumber;
       result.awbNumberNew = data[0].awbNumberNew;
       result.customerName = data[0].customerName;
       result.doReturnNumber = data[0].doReturnNumber;
+    } else {
+      const doReturnAwb = await DoReturnAwb.findOne({ where: {doReturnAwbId: payload.doReturnAwbId }, relations: ['customer']});
+      result.awbNumber = doReturnAwb.awbNumber;
+      result.customerName = doReturnAwb.customer.customerName;
+      result.doReturnNumber = doReturnAwb.doReturnAwbNumber;
     }
 
     return result;
@@ -533,28 +583,28 @@ export class DoReturnService {
         doReturnMasterCode : 9006,
       },
     });
-    const returnAwb = await DoReturnAwb.find({
-      where: {
-        doReturnCollectionToCustId: payload.doReturnCollectionToCust,
-      },
-    });
+
+    const returnAwb = await createQueryBuilder()
+                      .addSelect('t1.do_return_awb_id', 'doReturnAwbId')
+                      .where('t1.do_return_collection_to_cust_id IN (:...doReturnCollectionId)', { doReturnCollectionId: payload.doReturnCollectionToCust })
+                      .from('do_return_awb', 't1')
+                      .getRawMany();
   //  insert to do return awb history
     if (doReturnMaster) {
-    for (const returnAwbId of payload.doReturnCollectionToCust) {
-      const returnHist = DoReturnHistory.create();
-      returnHist.userIdCreated = authMeta.userId;
-      returnHist.userIdUpdated = authMeta.userId;
-      returnHist.createdTime = timeNow;
-      returnHist.doReturnMasterId =  doReturnMaster.doReturnMasterId;
-      returnHist.doReturnAwbId = returnAwbId;
-      const history = await DoReturnHistory.save(returnHist);
+      for (const returnAwbDetail of returnAwb) {
+        const returnHist = DoReturnHistory.create();
+        returnHist.userIdCreated = authMeta.userId;
+        returnHist.userIdUpdated = authMeta.userId;
+        returnHist.createdTime = timeNow;
+        returnHist.doReturnMasterId =  doReturnMaster.doReturnMasterId;
+        returnHist.doReturnAwbId = returnAwbDetail.doReturnAwbId;
+        const history = await DoReturnHistory.save(returnHist);
 
-      const historyId = history.doReturnHistoryId;
+        const historyId = history.doReturnHistoryId;
 
-      if (returnAwb) {
-    // Update do return awb
+      // Update do return awb
         await DoReturnAwb.update(
-          returnAwbId, {
+          returnAwbDetail.doReturnAwbId, {
             doReturnHistoryIdLast : historyId,
             userIdUpdated : authMeta.userId,
             updatedTime : timeNow,
@@ -562,7 +612,13 @@ export class DoReturnService {
         );
       }
     }
-  }
+    for (const doReturnCollectionId of payload.doReturnCollectionToCust) {
+      await DoReturnCollectionToCust.update(doReturnCollectionId, {
+        isReceiptCust: true,
+        updatedTime: timeNow,
+        userIdUpdated: authMeta.userId,
+      });
+    }
     result.status = status;
     result.message = message;
 

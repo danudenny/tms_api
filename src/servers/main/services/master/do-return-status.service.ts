@@ -10,14 +10,12 @@ export class DoReturnStatusService {
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
-        field: 'doReturnMasterCode',
-      },
-      {
         field: 'doReturnMasterDesc',
       },
     ];
     // mapping field
     payload.fieldResolverMap['doReturnMasterCode'] = 'do_return_master_code';
+    payload.fieldResolverMap['doReturnMasterDesc'] = 'do_return_master_desc';
 
     const q = RepositoryService.doReturnMaster.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);

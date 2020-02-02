@@ -36,4 +36,8 @@ export class DoReturnCtToCollection extends TmsBaseEntity {
 
   @OneToMany(() => DoReturnAwb, e => e.doReturnCtToCollectionId)
   doReturnAwbs: DoReturnAwb[];
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 }

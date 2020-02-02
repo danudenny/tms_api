@@ -2,6 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMan
 import { DoReturnAwb } from './do_return_awb';
 import { TmsBaseEntity } from './tms-base';
 import { User } from './user';
+import { Branch } from './branch';
 
 @Entity('do_return_collection_to_cust', { schema: 'public' })
 export class DoReturnCollectionToCust extends TmsBaseEntity {
@@ -29,10 +30,21 @@ export class DoReturnCollectionToCust extends TmsBaseEntity {
   })
   branchId: number;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_receipt_cust',
+  })
+  isReceiptCust: boolean;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_created' })
   user: User;
 
   @OneToMany(() => DoReturnAwb, e => e.doReturnCollectionToCustId)
   doReturnAwbs: DoReturnAwb[];
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 }
