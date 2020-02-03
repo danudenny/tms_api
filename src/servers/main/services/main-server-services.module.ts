@@ -21,6 +21,7 @@ import { MobileAttendanceService } from './mobile/mobile-attendance.service';
 import { LastMileDeliveryInService } from './mobile/mobile-last-mile-delivery-in.service';
 import { LastMileDeliveryOutService } from './mobile/mobile-last-mile-delivery-out.service';
 import { MobileAwbFilterService } from './mobile/mobile-awb-filter.service';
+import { DoReturnService } from './do-return/do-return.service';
 
 @Module({
   imports: [SharedModule],
@@ -46,6 +47,7 @@ import { MobileAwbFilterService } from './mobile/mobile-awb-filter.service';
     LastMileDeliveryInService,
     LastMileDeliveryOutService,
     MobileAwbFilterService,
+    DoReturnService,
   ],
   exports: [
     AwbStatusService,
@@ -69,6 +71,7 @@ import { MobileAwbFilterService } from './mobile/mobile-awb-filter.service';
     LastMileDeliveryInService,
     LastMileDeliveryOutService,
     MobileAwbFilterService,
+    DoReturnService,
   ],
 })
 export class MainServerServicesModule {}

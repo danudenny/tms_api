@@ -225,7 +225,7 @@ export class PartnerService {
 
     const headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token,
+      Authorization: 'Bearer ' + token,
     };
 
     const config = {
@@ -294,7 +294,7 @@ export class PartnerService {
       paymentvalues: [
         {
           name: 'fee',
-          value: 1500,
+          value: 1000,
         },
         {
           name: 'insurance',
@@ -304,7 +304,7 @@ export class PartnerService {
       taxes: [
         {
           name: 'fee',
-          value: 15,
+          value: 10,
         },
         {
           name: 'insurance',
@@ -428,8 +428,12 @@ export class PartnerService {
           created_time: timeNow,
           updated_time: timeNow,
         };
-        const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-        const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+        const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+          paramsAwbPartnerLog,
+        );
+        const awb_partner_log = await AwbPartnerLog.insert(
+          dataParamsAwbPartnerLog,
+        );
         return result;
       } else {
         if (branchPartnerId == null) {
@@ -447,8 +451,12 @@ export class PartnerService {
             created_time: timeNow,
             updated_time: timeNow,
           };
-          const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-          const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+          const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+            paramsAwbPartnerLog,
+          );
+          const awb_partner_log = await AwbPartnerLog.insert(
+            dataParamsAwbPartnerLog,
+          );
           return result;
         } else {
           if (workOrderIdLast === null) {
@@ -534,10 +542,13 @@ export class PartnerService {
               created_time: timeNow,
               updated_time: timeNow,
             };
-            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-            const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+              paramsAwbPartnerLog,
+            );
+            const awb_partner_log = await AwbPartnerLog.insert(
+              dataParamsAwbPartnerLog,
+            );
             return result;
-
           } else {
             await WorkOrder.update(workOrderIdLast, {
               work_order_status_id_last: '7050',
@@ -602,8 +613,12 @@ export class PartnerService {
               created_time: timeNow,
               updated_time: timeNow,
             };
-            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-            const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+              paramsAwbPartnerLog,
+            );
+            const awb_partner_log = await AwbPartnerLog.insert(
+              dataParamsAwbPartnerLog,
+            );
             return result;
           }
         }
@@ -623,8 +638,12 @@ export class PartnerService {
         created_time: timeNow,
         updated_time: timeNow,
       };
-      const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-      const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+      const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+        paramsAwbPartnerLog,
+      );
+      const awb_partner_log = await AwbPartnerLog.insert(
+        dataParamsAwbPartnerLog,
+      );
       return result;
     }
 
