@@ -1,6 +1,6 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 import { take } from 'rxjs/operators';
-import { BaseMetaResponseVm } from 'src/shared/models/base-meta-response.vm';
+import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 export class DoReturnResponseVm {
 
