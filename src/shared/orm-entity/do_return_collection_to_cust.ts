@@ -44,6 +44,12 @@ export class DoReturnCollectionToCust extends TmsBaseEntity {
   })
   notes: string;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'customer_id',
+  })
+  customerId: number;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_created' })
   user: User;
