@@ -99,12 +99,19 @@ export class DoPodDetailPostMetaQueueService {
   ) {
     // TODO: ONLY AWB OUT_BRANCH
     let branchName = 'Kantor Pusat';
+    let branchNameNext = 'Pluit';
     let cityName = 'Jakarta';
     const branch = await this.getDataBranchCity(branchId);
     if (branch) {
       branchName = branch.branchName;
       cityName = branch.district.city.cityName;
     }
+    // branch next
+    const branchNext = await this.getDataBranchCity(branchIdNext);
+    if (branchNext) {
+      branchNameNext = branchNext.branchName;
+    }
+
     let employeeIdDriver = null;
     let employeeNameDriver = '';
     const userDriverRepo = await this.getDataUserEmployee(userIdDriver);
@@ -112,7 +119,7 @@ export class DoPodDetailPostMetaQueueService {
       employeeIdDriver = userDriverRepo.employeeId;
       employeeNameDriver = userDriverRepo.employee.employeeName;
     }
-    const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver}`;
+    const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver}  ke ${branchNameNext}`;
     const notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
     // provide data
     const obj = {
@@ -145,9 +152,10 @@ export class DoPodDetailPostMetaQueueService {
     branchName: string,
     cityName: string,
     branchIdNext: number,
+    branchNameNext: string,
   ) {
     // TODO: ONLY OUT_HUB, OUT_BRANCH
-    const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver}`;
+    const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver} ke ${branchNameNext}`;
     const notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
 
     // provide data
