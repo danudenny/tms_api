@@ -24,6 +24,7 @@ import { ReturnHistoryPayloadVm } from '../../models/do-return-history-payload.v
 import { ReturnHistoryResponseVm } from '../../models/do-return-history-response.vm';
 import { createQueryBuilder } from 'typeorm';
 import { AuthMetadata } from '../../../auth/models/auth-metadata.model';
+import { ReturnReceivedCustFindAllResponseVm } from '../../models/do-return-received-cust.response.vm';
 
 @Injectable()
 export class DoReturnService {
@@ -577,8 +578,8 @@ export class DoReturnService {
 
   static async deliveryOrderCustReceivedCreate(
     payload: DoReturnDeliveryOrderCustReceivedCreateVm,
-  ): Promise<ReturnUpdateFindAllResponseVm> {
-    const result = new ReturnUpdateFindAllResponseVm();
+  ): Promise<ReturnReceivedCustFindAllResponseVm> {
+    const result = new ReturnReceivedCustFindAllResponseVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const status = 'ok';
     const message = 'success';

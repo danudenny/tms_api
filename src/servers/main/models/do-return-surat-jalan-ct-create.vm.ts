@@ -26,4 +26,8 @@ export class DoReturnDeliveryOrderCustReceivedCreateVm {
   @ApiModelProperty()
   doReturnCollectionToCust: string[];
 
+  @ApiModelProperty()
+  notes: string;
+
+
 }
