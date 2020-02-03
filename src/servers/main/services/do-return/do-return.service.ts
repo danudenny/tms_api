@@ -571,7 +571,7 @@ export class DoReturnService {
   }
     result.status = status;
     result.message = message;
-
+    result.doId = admin.doReturnCollectionToCustId;
     return result;
   }
 
