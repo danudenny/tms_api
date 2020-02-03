@@ -529,6 +529,7 @@ export class DoReturnService {
     collectionToCust.branchId = permissonPayload.branchId,
     collectionToCust.userIdUpdated = authMeta.userId;
     collectionToCust.createdTime = timeNow;
+    collectionToCust.notes = payload.notes;
 
     const admin = await DoReturnCollectionToCust.save(collectionToCust);
 

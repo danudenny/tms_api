@@ -17,6 +17,9 @@ export class DoReturnDeliveryOrderCustCreateVm {
   @ApiModelProperty()
   doReturnAwbId: string[];
 
+  @ApiModelProperty()
+  notes: string;
+
 }
 
 export class DoReturnDeliveryOrderCustReceivedCreateVm {
