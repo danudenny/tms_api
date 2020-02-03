@@ -916,13 +916,35 @@ export class PrintService {
       });
     }
 
+    q.select({
+        doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
+        doReturnAwb: {
+          branchTo: {
+            branchName: true,
+          },
+          awbNumber: true,
+          doReturnAwbNumber: true,
+        },
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        userAdmin: {
+          firstName: true,
+          lastName: true,
+        },
+      })
+      .where(e => e.userIdDriver, w => w.equals(queryParams.userIdDriver));
+
+    const dataCount = q.countWithoutTakeAndSkip();
+
     const m = moment();
     const jsreportParams = {
       data: doPodDoReturn,
       meta: {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
-        totalData: '0',
+        totalData: dataCount,
       },
     };
 
