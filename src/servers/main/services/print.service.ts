@@ -16,7 +16,7 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodPayloadQueryVm,
   ) {
-    const q = RepositoryService.doPod.findOne('master');
+    const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetails);
     q.leftJoin(e => e.userDriver.employee);
 
@@ -109,7 +109,7 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodBagPayloadQueryVm,
   ) {
-    const q = RepositoryService.doPod.findOne('master');
+    const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetailBag);
     q.leftJoin(e => e.userDriver.employee);
 
@@ -151,7 +151,7 @@ export class PrintService {
     }
 
     const bagItemIds = map(doPod.doPodDetailBag, doPodDetail => doPodDetail.bagItem.bagItemId);
-    const result = await RawQueryService.query(`SELECT COUNT(1) as cnt FROM bag_item WHERE bag_item_id IN (${bagItemIds.join(',')})`, undefined, 'master');
+    const result = await RawQueryService.query(`SELECT COUNT(1) as cnt FROM bag_item WHERE bag_item_id IN (${bagItemIds.join(',')})`);
     const totalBagItem = result[0].cnt;
 
     const currentUser = await RepositoryService.user
@@ -223,7 +223,7 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintDoPodDeliverPayloadQueryVm,
   ) {
-    const q = RepositoryService.doPodDeliver.findOne('master');
+    const q = RepositoryService.doPodDeliver.findOne();
     q.leftJoin(e => e.doPodDeliverDetails);
     q.leftJoin(e => e.userDriver.employee);
 
@@ -265,7 +265,7 @@ export class PrintService {
     }
 
     const awbIds = map(doPodDeliver.doPodDeliverDetails, doPodDeliverDetail => doPodDeliverDetail.awbItem.awb.awbId);
-    const result = await RawQueryService.query(`SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(',')})`, undefined, 'master');
+    const result = await RawQueryService.query(`SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(',')})`);
     let totalAllCod = result[0].total;
 
     if (totalAllCod < 1) {
@@ -451,7 +451,7 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintBagItemPayloadQueryVm,
   ) {
-    const q = RepositoryService.bagItem.findOne('master');
+    const q = RepositoryService.bagItem.findOne();
     q.innerJoin(e => e.bag);
     q.leftJoin(e => e.bag.district);
 
@@ -482,7 +482,6 @@ export class PrintService {
     const [{ cnt: bagItemsTotal }] = await RawQueryService.exec(
       `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
       { bagItemId: bagItem.bagItemId },
-      'master',
     );
 
     const currentUser = await RepositoryService.user
@@ -512,6 +511,18 @@ export class PrintService {
         message: 'Gerai asal tidak ditemukan',
       });
     }
+
+    const m = moment();
+    const jsreportParams = {
+      data: bagItem,
+      meta: {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        bagItemsTotal,
+      },
+    };
 
     const weightNumberOnly = `${bagItem.weight}`.replace(/\D/gm, '').substring(0, 5);
     const finalWeightRounded2Decimal = parseFloat(`${bagItem.weight}`).toFixed(
@@ -552,7 +563,7 @@ export class PrintService {
     res: express.Response,
     queryParams: PrintBagItemPayloadQueryVm,
   ) {
-    const q = RepositoryService.bagItem.findOne('master');
+    const q = RepositoryService.bagItem.findOne();
     q.innerJoin(e => e.bag);
     q.leftJoin(e => e.bag.district);
 
@@ -653,7 +664,7 @@ export class PrintService {
     queryParams: PrintAwbPayloadQueryVm,
   ) {
     if (queryParams.isPartnerLogistic === '1') {
-      const q = RepositoryService.awb.findOne('master');
+      const q = RepositoryService.awb.findOne();
       q.innerJoin(e => e.branch);
 
       const awbItem = await q
@@ -704,6 +715,17 @@ export class PrintService {
           message: 'Gerai asal tidak ditemukan',
         });
       }
+
+      const m = moment();
+      const jsreportParams = {
+        data: awbItem,
+        meta: {
+          currentUserName: currentUser.employee.nickname,
+          currentBranchName: currentBranch.branchName,
+          date: m.format('DD/MM/YY'),
+          time: m.format('HH:mm'),
+        },
+      };
 
       let data1 = `TEXT 30,100,"3",0,1,1,"Pengirim : ${awbItem.branch.branchName}"\n` +
       `TEXT 30,135,"3",0,1,1,"Telp : ${awbItem.branch.phone1}"\n`;
@@ -769,7 +791,7 @@ export class PrintService {
         printerName: 'BarcodePrinter',
       });
     } else {
-      const q = RepositoryService.awb.findOne('master');
+      const q = RepositoryService.awb.findOne();
       q.innerJoin(e => e.branch);
       q.leftJoin(e => e.representative.branch.district);
 
@@ -827,6 +849,17 @@ export class PrintService {
           message: 'Gerai asal tidak ditemukan',
         });
       }
+
+      const m = moment();
+      const jsreportParams = {
+        data: awbItem,
+        meta: {
+          currentUserName: currentUser.employee.nickname,
+          currentBranchName: currentBranch.branchName,
+          date: m.format('DD/MM/YY'),
+          time: m.format('HH:mm'),
+        },
+      };
 
       const consZip = awbItem.consigneeZip.substring((awbItem.consigneeZip.length - 3), awbItem.consigneeZip.length);
       let data1 = '';
