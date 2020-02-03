@@ -623,6 +623,8 @@ export class LastMileDeliveryOutService {
     payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
     payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
+    payload.fieldResolverMap['branchTo'] = 't1.branch_id_to';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
