@@ -20,6 +20,9 @@ export class DoReturnDeliveryOrderCustCreateVm {
   @ApiModelProperty()
   notes: string;
 
+  @ApiModelProperty()
+  customerId: number;
+
 }
 
 export class DoReturnDeliveryOrderCustReceivedCreateVm {
