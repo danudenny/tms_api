@@ -270,14 +270,21 @@ export class DoReturnService {
       ['t1.do_return_collection_to_cust', 'doCode'],
       ['t1.count_awb', 'countAwb'],
       ['t1.created_time', 'createdTime'],
+      ['t1.updated_time', 'updatedTime'],
+      ['t1.notes', 'notes'],
       [`CONCAT(t2.first_name, ' ', t2.last_name)`, 'userCreated'],
       ['t3.nik', 'employeeNik'],
       ['t1.is_receipt_cust', 'isReceiptCust'],
+      ['t1.customer_id', 'customerId'],
+      ['t4.customer_name', 'customerName'],
     );
     q.innerJoin(e => e.user, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.user.employee, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.customer, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.orderBy({ createdTime: 'DESC' });
@@ -565,7 +572,6 @@ export class DoReturnService {
   }
     result.status = status;
     result.message = message;
-    result.doId = admin.doReturnCollectionToCustId;
 
     return result;
   }
