@@ -623,6 +623,7 @@ export class DoReturnService {
     for (const doReturnCollectionId of payload.doReturnCollectionToCust) {
       await DoReturnCollectionToCust.update(doReturnCollectionId, {
         isReceiptCust: true,
+        notes: payload.notes,
         updatedTime: timeNow,
         userIdUpdated: authMeta.userId,
       });
