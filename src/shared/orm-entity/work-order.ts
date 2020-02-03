@@ -7,9 +7,9 @@ import {
 import { TmsBaseEntity } from './tms-base';
 
 @Entity('work_order', { schema: 'public' })
-@Index('work_order_branch_id_assigned_idx', ['branch_id_assigned'])
-@Index('work_order_customer_account_id_idx', ['customer_account_id'])
-@Index('work_order_is_deleted_idx', ['is_deleted'])
+// @Index('work_order_branch_id_assigned_idx', ['branch_id_assigned'])
+// @Index('work_order_customer_account_id_idx', ['customer_account_id'])
+// @Index('work_order_is_deleted_idx', ['is_deleted'])
 export class WorkOrder extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
