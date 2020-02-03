@@ -18,9 +18,6 @@ export class DoReturnDeliveryOrderCustCreateVm {
   doReturnAwbId: string[];
 
   @ApiModelProperty()
-  notes: string;
-
-  @ApiModelProperty()
   customerId: number;
 
 }
