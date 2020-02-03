@@ -37,6 +37,13 @@ export class DoReturnCollectionToCust extends TmsBaseEntity {
   })
   isReceiptCust: boolean;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'notes',
+  })
+  notes: string;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_created' })
   user: User;
