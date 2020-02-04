@@ -1031,7 +1031,7 @@ export class PrintService {
           lastName: true,
         },
       })
-      .where(e => e.userIdDriver, w => w.equals(queryParams.userIdDriver));
+      .where(e => e.userIdDriver, w => w.equals(queryParams.id));
 
     if (!doPodDoReturn) {
       RequestErrorService.throwObj({
@@ -1057,7 +1057,7 @@ export class PrintService {
           lastName: true,
         },
       })
-      .where(e => e.userIdDriver, w => w.equals(queryParams.userIdDriver));
+      .where(e => e.userIdDriver, w => w.equals(queryParams.id));
 
     const dataCount = q.countWithoutTakeAndSkip();
 
