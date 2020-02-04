@@ -17,10 +17,17 @@ export class DoReturnDeliveryOrderCustCreateVm {
   @ApiModelProperty()
   doReturnAwbId: string[];
 
+  @ApiModelProperty()
+  customerId: number;
+
 }
 
 export class DoReturnDeliveryOrderCustReceivedCreateVm {
   @ApiModelProperty()
   doReturnCollectionToCust: string[];
+
+  @ApiModelProperty()
+  notes: string;
+
 
 }

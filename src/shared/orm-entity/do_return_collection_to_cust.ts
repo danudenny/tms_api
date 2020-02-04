@@ -3,6 +3,7 @@ import { DoReturnAwb } from './do_return_awb';
 import { TmsBaseEntity } from './tms-base';
 import { User } from './user';
 import { Branch } from './branch';
+import { Customer } from './customer';
 
 @Entity('do_return_collection_to_cust', { schema: 'public' })
 export class DoReturnCollectionToCust extends TmsBaseEntity {
@@ -37,9 +38,26 @@ export class DoReturnCollectionToCust extends TmsBaseEntity {
   })
   isReceiptCust: boolean;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'notes',
+  })
+  notes: string;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'customer_id',
+  })
+  customerId: number;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_created' })
   user: User;
+
+  @ManyToOne(() => Customer)
+  @JoinColumn({ name: 'customer_id' })
+  customer: Customer;
 
   @OneToMany(() => DoReturnAwb, e => e.doReturnCollectionToCustId)
   doReturnAwbs: DoReturnAwb[];
