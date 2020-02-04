@@ -368,7 +368,7 @@ export class DoReturnService {
     qb.leftJoin('employee', 'i', 'i.employee_id = h.employee_id AND i.is_deleted = false');
     qb.where('a.is_deleted = false');
     qb.andWhere('a.do_return_awb_id = :doReturnAwbId', { doReturnAwbId: payload.doReturnAwbId });
-    qb.addOrderBy('a.created_time', 'DESC');
+    qb.addOrderBy('a.created_time', 'ASC');
     const data = await qb.getRawMany();
     result.data = data;
     if (result.data.length > 0) {
