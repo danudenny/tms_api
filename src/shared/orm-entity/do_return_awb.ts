@@ -9,6 +9,7 @@ import { DoReturnCtToCollection } from './do_return_ct_to_collection';
 import { DoReturnCollectionToCust } from './do_return_collection_to_cust';
 import { CustomerAddress } from './customer-address';
 import { CustomerAccount } from './customer-account';
+import { User } from './user';
 
 @Entity('do_return_awb', { schema: 'public' })
 export class DoReturnAwb extends TmsBaseEntity {
@@ -84,6 +85,12 @@ export class DoReturnAwb extends TmsBaseEntity {
   })
   podDatetime: string;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'user_id_driver',
+  })
+  userIdDriver: number | null;
+
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_last' })
   branchTo: Branch;
@@ -119,4 +126,8 @@ export class DoReturnAwb extends TmsBaseEntity {
   @ManyToOne(() => DoReturnCollectionToCust)
   @JoinColumn({ name: 'do_return_collection_to_cust_id' })
   doReturnCollection: DoReturnCollectionToCust;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_driver' })
+  user: User;
 }
