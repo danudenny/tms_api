@@ -276,6 +276,15 @@ export class LastMileDeliveryOutService {
     let totalSuccess = 0;
     let totalError = 0;
 
+    // find data doPod Deliver
+    // const doPodDeliver = await DoPodDeliver.findOne({
+    //   where: {
+    //     doPodDeliverId: payload.doPodId,
+    //     isDeleted: false,
+    //   },
+    //   lock: { mode: 'pessimistic_write' },
+    // });
+
     for (const awbNumber of payload.awbNumber) {
       const response = {
         status: 'ok',
@@ -347,16 +356,12 @@ export class LastMileDeliveryOutService {
                 doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
                 await DoPodDeliverDetail.insert(doPodDeliverDetail);
 
-                // counter total scan out
+                // TODO: need improvement counter total scan out
                 const totalAwb = doPodDeliver.totalAwb + 1;
                 await DoPodDeliver.update(doPodDeliver.doPodDeliverId, {
                   totalAwb,
                 });
-                await AwbService.updateAwbAttr(
-                  awb.awbItemId,
-                  AWB_STATUS.ANT,
-                  null,
-                );
+
                 // NOTE: queue by Bull ANT
                 DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
                   awb.awbItemId,
@@ -398,6 +403,14 @@ export class LastMileDeliveryOutService {
         ...response,
       });
     } // end of loop
+
+    // TODO: need improvement
+    // if (doPodDeliver && totalSuccess > 0) {
+    //   const totalAwb = doPodDeliver.totalAwb + totalSuccess;
+    //   await DoPodDeliver.update(doPod.doPodId, {
+    //     totalAwb,
+    //   });
+    // }
 
     // Populate return value
     result.totalData = payload.awbNumber.length;
