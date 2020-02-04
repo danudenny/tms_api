@@ -27,6 +27,7 @@ export class PartnerGojekService {
       where: {
         workOrderId: payload.workOrderId,
         isDeleted: false,
+        refBookingType: Not('CUSTOMER_CANCELLED'),
       },
     });
     if (order) {
@@ -41,9 +42,11 @@ export class PartnerGojekService {
       // TODO: handle success cancel Booking ??
       return response;
     } else {
-      RequestErrorService.throwObj({
-        message: 'Surat jalan tidak ditemukan',
-      });
+      const response = {
+          statusCode: 400,
+          message: "Surat jalan tidak ditemukan",
+      }
+      return response;
     }
   }
 
@@ -71,6 +74,7 @@ export class PartnerGojekService {
           branchId: payload.branchId,
           longitude: Not(IsNull()),
           latitude: Not(IsNull()),
+          mobile1: Not(IsNull()),
           isDeleted: false,
         },
       });
@@ -90,7 +94,7 @@ export class PartnerGojekService {
         // };
 
         const data = new GojekBookingPayloadVm();
-        // TODO: handle phone number??
+        // TODO: handle phone number??  
         // .replace(/[^0-9]/g,''); digit only
         // .replace(/^0/, '62'); replace zero to 62
         let shipperPhone = pickupDetail.shipperPhone;
