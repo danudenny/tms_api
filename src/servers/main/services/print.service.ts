@@ -49,7 +49,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.doPodId, w => w.equals(queryParams.id));
+      .where(e => e.doPodId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDetails.isDeleted, w => w.isFalse());
 
     if (!doPod) {
       RequestErrorService.throwObj({
@@ -144,7 +145,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.doPodId, w => w.equals(queryParams.id));
+      .where(e => e.doPodId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDetailBag.isDeleted, w => w.isFalse());
 
     if (!doPod) {
       RequestErrorService.throwObj({
@@ -258,7 +260,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id));
+      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDeliverDetails.isDeleted, w => w.isFalse());
 
     if (!doPodDeliver) {
       RequestErrorService.throwObj({
@@ -379,7 +382,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id));
+      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDeliverDetails.isDeleted, w => w.isFalse());
 
     if (!doPodDeliver) {
       RequestErrorService.throwObj({
@@ -473,7 +477,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.bagItemId, w => w.equals(queryParams.id));
+      .where(e => e.bagItemId, w => w.equals(queryParams.id))
+      .andWhere(e => e.bag.isDeleted, w => w.isFalse());
 
     if (!bagItem) {
       RequestErrorService.throwObj({
@@ -596,7 +601,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.bagItemId, w => w.equals(queryParams.id));
+      .where(e => e.bagItemId, w => w.equals(queryParams.id))
+      .andWhere(e => e.bagItemAwbs.isDeleted, w => w.isFalse());
 
     if (!bagItem) {
       RequestErrorService.throwObj({
@@ -682,7 +688,8 @@ export class PrintService {
             address: true,
           },
         })
-        .where(e => e.awbNumber, w => w.equals(queryParams.id));
+        .where(e => e.awbNumber, w => w.equals(queryParams.id))
+        .andWhere(e => e.isDeleted, w => w.isFalse());
 
       if (!awbItem) {
         RequestErrorService.throwObj({
