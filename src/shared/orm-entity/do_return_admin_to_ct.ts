@@ -70,7 +70,7 @@ export class DoReturnAdmintoCt extends TmsBaseEntity {
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
 
-  @OneToMany(() => DoReturnAwb, e => e.doReturnAdminToCtId)
+  @OneToMany(() => DoReturnAwb, e => e.doReturnAdmin)
   doReturnAwbs: DoReturnAwb[];
 
   @OneToOne(() => User)
