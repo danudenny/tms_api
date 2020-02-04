@@ -2,7 +2,7 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class PrintDoPodDoReturnPayloadQueryVm {
   @ApiModelProperty()
-  userIdDriver: number;
+  id: number;
 
   @ApiModelProperty()
   printCopy: number;

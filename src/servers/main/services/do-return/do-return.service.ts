@@ -75,7 +75,7 @@ export class DoReturnService {
     q.leftJoin(e => e.doReturnHistory.doReturnMaster, 'do_return_master', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.doReturnHistory.user, 'user_driver', j =>
+    q.leftJoin(e => e.user, 'user_driver', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.doReturnAdmin, 'do_return_admin', j =>
@@ -127,6 +127,7 @@ export class DoReturnService {
          history,
          {
            doReturnHistoryIdLast : returnHistId,
+           userIdDriver: payload.userIdDriver,
            userIdUpdated : authMeta.userId,
            updatedTime :  timeNow,
          });
