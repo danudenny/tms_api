@@ -1031,7 +1031,7 @@ export class PrintService {
           lastName: true,
         },
       })
-      .where(e => e.userIdDriver, w => w.equals(queryParams.userIdDriver));
+      .where(e => e.userIdDriver, w => w.equals(queryParams.id));
 
     if (!doPodDoReturn) {
       RequestErrorService.throwObj({
@@ -1057,7 +1057,7 @@ export class PrintService {
           lastName: true,
         },
       })
-      .where(e => e.userIdDriver, w => w.equals(queryParams.userIdDriver));
+      .where(e => e.userIdDriver, w => w.equals(queryParams.id));
 
     const dataCount = q.countWithoutTakeAndSkip();
 
@@ -1141,7 +1141,7 @@ export class PrintService {
     const q = RepositoryService.doReturnCollectiontoCust.findOne();
     q.leftJoin(e => e.doReturnAwbs);
     q.leftJoin(e => e.doReturnAwbs.customerAccount);
-    q.leftJoin(e => e.doReturnAwbs.customerAddress);
+    q.leftJoin(e => e.doReturnAwbs.customerAccount.customerAddress);
     q.leftJoin(e => e.user);
 
     const doPodDoReturn = await q
@@ -1159,9 +1159,9 @@ export class PrintService {
           customerAccount: {
             customerAccountName: true,
             phone1: true,
-          },
-          customerAddress: {
-            address: true,
+            customerAddress: {
+              address: true,
+            },
           },
         },
       })
