@@ -139,6 +139,16 @@ export class DoReturnCollectionResponseVm {
 
   @ApiModelProperty()
   isReceiptCust: boolean;
+
+  @ApiModelProperty()
+  notes: string;
+
+  @ApiModelProperty()
+  customerName: string;
+
+  @ApiModelProperty()
+  updatedTime: string;
+
 }
 
 export class ReturnSearchVm {

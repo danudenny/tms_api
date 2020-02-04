@@ -24,6 +24,7 @@ import { ReturnHistoryPayloadVm } from '../../models/do-return-history-payload.v
 import { ReturnHistoryResponseVm } from '../../models/do-return-history-response.vm';
 import { createQueryBuilder } from 'typeorm';
 import { AuthMetadata } from '../../../auth/models/auth-metadata.model';
+import { ReturnReceivedCustFindAllResponseVm } from '../../models/do-return-received-cust.response.vm';
 
 @Injectable()
 export class DoReturnService {
@@ -270,14 +271,21 @@ export class DoReturnService {
       ['t1.do_return_collection_to_cust', 'doCode'],
       ['t1.count_awb', 'countAwb'],
       ['t1.created_time', 'createdTime'],
+      ['t1.updated_time', 'updatedTime'],
+      ['t1.notes', 'notes'],
       [`CONCAT(t2.first_name, ' ', t2.last_name)`, 'userCreated'],
       ['t3.nik', 'employeeNik'],
       ['t1.is_receipt_cust', 'isReceiptCust'],
+      ['t1.customer_id', 'customerId'],
+      ['t4.customer_name', 'customerName'],
     );
     q.innerJoin(e => e.user, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.user.employee, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.customer, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.orderBy({ createdTime: 'DESC' });
@@ -360,7 +368,7 @@ export class DoReturnService {
     qb.leftJoin('employee', 'i', 'i.employee_id = h.employee_id AND i.is_deleted = false');
     qb.where('a.is_deleted = false');
     qb.andWhere('a.do_return_awb_id = :doReturnAwbId', { doReturnAwbId: payload.doReturnAwbId });
-    qb.addOrderBy('a.created_time', 'DESC');
+    qb.addOrderBy('a.created_time', 'ASC');
     const data = await qb.getRawMany();
     result.data = data;
     if (result.data.length > 0) {
@@ -529,6 +537,7 @@ export class DoReturnService {
     collectionToCust.branchId = permissonPayload.branchId,
     collectionToCust.userIdUpdated = authMeta.userId;
     collectionToCust.createdTime = timeNow;
+    collectionToCust.customerId = payload.customerId;
 
     const admin = await DoReturnCollectionToCust.save(collectionToCust);
 
@@ -564,14 +573,13 @@ export class DoReturnService {
     result.status = status;
     result.message = message;
     result.doId = admin.doReturnCollectionToCustId;
-
     return result;
   }
 
   static async deliveryOrderCustReceivedCreate(
     payload: DoReturnDeliveryOrderCustReceivedCreateVm,
-  ): Promise<ReturnUpdateFindAllResponseVm> {
-    const result = new ReturnUpdateFindAllResponseVm();
+  ): Promise<ReturnReceivedCustFindAllResponseVm> {
+    const result = new ReturnReceivedCustFindAllResponseVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const status = 'ok';
     const message = 'success';
@@ -615,6 +623,7 @@ export class DoReturnService {
     for (const doReturnCollectionId of payload.doReturnCollectionToCust) {
       await DoReturnCollectionToCust.update(doReturnCollectionId, {
         isReceiptCust: true,
+        notes: payload.notes,
         updatedTime: timeNow,
         userIdUpdated: authMeta.userId,
       });
