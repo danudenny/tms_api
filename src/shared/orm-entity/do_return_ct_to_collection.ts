@@ -34,7 +34,7 @@ export class DoReturnCtToCollection extends TmsBaseEntity {
   @JoinColumn({ name: 'user_id_created' })
   user: User;
 
-  @OneToMany(() => DoReturnAwb, e => e.doReturnCtToCollectionId)
+  @OneToMany(() => DoReturnAwb, e => e.doReturnCt)
   doReturnAwbs: DoReturnAwb[];
 
   @ManyToOne(() => Branch)
