@@ -141,6 +141,7 @@ export class WebAwbDeliverService {
 
   private static async syncDeliver(delivery: WebDeliveryVm) {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     // Generate History by Status input pod manual
     const doPodDeliverHistory = DoPodDeliverHistory.create({
       doPodDeliverDetailId: delivery.doPodDeliverDetailId,
@@ -162,6 +163,9 @@ export class WebAwbDeliverService {
     });
     const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
     if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
+      const awbStatus = await AwbStatus.findOne(
+        doPodDeliverHistory.awbStatusId,
+      );
       // #region transaction data
       await getManager().transaction(async transactionEntityManager => {
         // insert data deliver history
@@ -170,9 +174,6 @@ export class WebAwbDeliverService {
           doPodDeliverHistory,
         );
 
-        const awbStatus = await AwbStatus.findOne(
-          doPodDeliverHistory.awbStatusId,
-        );
         // Update data DoPodDeliverDetail
         await transactionEntityManager.update(
           DoPodDeliverDetail,
@@ -230,19 +231,20 @@ export class WebAwbDeliverService {
       });
       // #endregion of transaction
 
-      // Update status awb item attr
-      // await AwbService.updateAwbAttr(
-      //   delivery.awbItemId,
-      //   doPodDeliverHistory.awbStatusId,
-      //   null,
-      // );
-
-      // TODO: queue by Bull need refactoring
-      DoPodDetailPostMetaQueueService.createJobByManualPodSync(
-        delivery.doPodDeliverDetailId,
-        authMeta.userId,
+      // NOTE: queue by Bull need refactoring
+      DoPodDetailPostMetaQueueService.createJobByManualSync(
+        delivery.awbItemId,
         delivery.awbStatusId,
+        authMeta.userId,
+        permissonPayload.branchId,
+        authMeta.userId,
+        delivery.reasonId,
+        delivery.reasonNotes,
+        delivery.consigneeNameNote,
+        awbStatus.awbStatusName,
+        awbStatus.awbStatusTitle,
       );
+
     } else {
       console.log('##### Data Not Valid', delivery);
     }
@@ -328,7 +330,7 @@ export class WebAwbDeliverService {
       w => w.equals(awbNumber),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.orderBy({ awbStatusDateTimeLast: 'DESC' });
+    q.orderBy({ updatedTime: 'DESC' });
     q.take(1);
     return await q.exec();
   }
