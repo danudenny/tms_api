@@ -19,7 +19,7 @@ export class PartnerService {
     let result = {};
 
     const redisStatus = await RedisService.get(`posindonesia:status`);
-    console.log('Status ' + redisStatus);
+    // console.log('Status ' + redisStatus);
     if (redisStatus == '1') {
       return (result = {
         code: '422',
@@ -381,6 +381,7 @@ export class PartnerService {
     let paramBranchCode = '';
     let paramPartnerId = '';
     paramAwb = payload.awb;
+    paramAwb = paramAwb.substring(3, 15);
     paramBranchCode = payload.branch_code;
     paramPartnerId = payload.partner_id;
 
