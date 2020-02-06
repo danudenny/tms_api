@@ -7,8 +7,8 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { DoReturnPayloadVm } from '../../models/do-return-update.vm';
 import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm, DoReturnAwbListFindAllResponseVm } from '../../models/do-return.response.vm';
 import { ReturnUpdateFindAllResponseVm } from '../../models/do-return-update.response.vm';
-import { DoReturnCreateVm, ReturnCreateVm } from '../../models/do-return-create.vm';
-import { DoReturnDeliveryOrderCreateVm } from '../../models/do-return-surat-jalan-create.vm';
+import { ReturnCreateVm } from '../../models/do-return-create.vm';
+import { DoReturnDeliveryOrderCreateVm, DoReturnUpdate } from '../../models/do-return-surat-jalan-create.vm';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ReturnHistoryResponseVm } from '../../models/do-return-history-response.vm';
 import { ReturnHistoryPayloadVm } from '../../models/do-return-history-payload.vm';
@@ -82,6 +82,19 @@ export class DoReturnController {
   @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
   public async returnCreate(@Body() payload: ReturnCreateVm) {
     return DoReturnService.returnCreate(payload);
+  }
+
+  @Post('update')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
+  public async deliveryOrderUpdate(
+    @Body() payload: DoReturnUpdate,
+    @UploadedFile() file,
+  ) {
+    return DoReturnService.deliveryOrderUpdate(payload, file);
   }
 
   @Post('deliveryOrder/create')
