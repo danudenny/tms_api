@@ -1,122 +1,82 @@
 import {
-  BaseEntity,
   Column,
   Entity,
-  Index,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
-  RelationId,
 } from 'typeorm';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('work_order_detail', { schema: 'public' })
-export class WorkOrderDetail extends BaseEntity {
+export class WorkOrderDetail extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'work_order_detail_id',
   })
-  work_order_detail_id: string;
+  workOrderDetailId: number;
 
   @Column('bigint', {
     nullable: false,
-
+    name: 'work_order_id',
   })
-  work_order_id: string;
+  workOrderId: number;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'pickup_request_id',
   })
-  pickup_request_id: string | null;
+  pickupRequestId: number | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'awb_item_id',
   })
-  awb_item_id: string | null;
+  awbItemId: number | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'work_order_status_id_last',
   })
-  work_order_status_id_last: string | null;
+  workOrderStatusIdLast: number | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'reason_id',
   })
-  reason_id: string | null;
-
-  @Column('bigint', {
-    nullable: false,
-
-  })
-  user_id_created: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-
-  })
-  created_time: Date;
-
-  @Column('bigint', {
-    nullable: false,
-
-  })
-  user_id_updated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-
-  })
-  updated_time: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-
-  })
-  is_deleted: boolean;
+  reasonId: number | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'pickup_date_time',
   })
-  pickup_date_time: Date | null;
+  pickupDateTime: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'check_in_date_time',
   })
-  check_in_date_time: Date | null;
+  checkInDateTime: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'check_out_date_time',
   })
-  check_out_date_time: Date | null;
+  checkOutDateTime: Date | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'work_order_status_id_pick',
   })
-  work_order_status_id_pick: string | null;
+  workOrderStatusIdPick: number | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'drop_date_time',
   })
-  drop_date_time: Date | null;
+  dropDateTime: Date | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-
+    name: 'ref_awb_number',
   })
-  ref_awb_number: string | null;
+  refAwbNumber: string | null;
 }
