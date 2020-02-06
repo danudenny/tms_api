@@ -22,7 +22,7 @@ export class PartnerGojekController {
   @Put('gojek/cancelBooking')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
-  public async cancelBooking(@Body() payload: GojekCancelBookingVm) {
+  public async cancelBooking(@Body() payload: GojekBookingPickupVm) {
     return PartnerGojekService.cancelBooking(payload);
   }
 
@@ -45,6 +45,7 @@ export class PartnerGojekController {
   @UseGuards(AuthGojekGuard)
   @ResponseSerializerOptions({ disable: true })
   public async webHookCallback(@Body() payload: any) {
+    console.log(payload);
     PartnerGojekService.callbackOrder(payload);
     return { status: 'ok', message: 'success' };
   }
