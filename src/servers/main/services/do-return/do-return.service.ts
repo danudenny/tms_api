@@ -11,15 +11,13 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { ReturnUpdateFindAllResponseVm } from '../../models/do-return-update.response.vm';
 import { ReturnCreateVm } from '../../models/do-return-create.vm';
 import moment = require('moment');
-import { DoReturnDeliveryOrderCreateVm } from '../../models/do-return-surat-jalan-create.vm';
+import { DoReturnDeliveryOrderCreateVm, DoReturnUpdate } from '../../models/do-return-surat-jalan-create.vm';
 import { DoReturnAdmintoCt } from '../../../../shared/orm-entity/do_return_admin_to_ct';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { DoReturnCtToCollection } from '../../../../shared/orm-entity/do_return_ct_to_collection';
 import { DoReturnCollectionToCust } from '../../../../shared/orm-entity/do_return_collection_to_cust';
 import { DoReturnDeliveryOrderCtCreateVm, DoReturnDeliveryOrderCustCreateVm, DoReturnDeliveryOrderCustReceivedCreateVm } from '../../models/do-return-surat-jalan-ct-create.vm';
-import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
-import { file } from '@babel/types';
 import { ReturnHistoryPayloadVm } from '../../models/do-return-history-payload.vm';
 import { ReturnHistoryResponseVm } from '../../models/do-return-history-response.vm';
 import { createQueryBuilder } from 'typeorm';
@@ -32,11 +30,31 @@ export class DoReturnService {
     payload: BaseMetaPayloadVm,
   ): Promise<ReturnFindAllResponseVm> {
     // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doCode',
+      },
+      {
+        field: 'awbNumber',
+      },
+      {
+        field: 'doReturnAwbNumber',
+      },
+      {
+        field: 'doCodeCollection',
+      },
+      {
+        field: 'doCodeCt',
+      },
+    ];
     payload.fieldResolverMap['podDatetime'] = 'return.pod_datetime';
     payload.fieldResolverMap['branchIdLast'] = 'return.branch_id_last';
     payload.fieldResolverMap['customerId'] = 'return.customer_id';
     payload.fieldResolverMap['doReturnAwbNumber'] = 'return.do_return_awb_number';
     payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
+    payload.fieldResolverMap['doCodeCt'] = 'do_return_ct.do_return_ct_to_collection';
+    payload.fieldResolverMap['doCodeCollection'] = 'do_return_collection.do_return_collection_to_cust';
+    payload.fieldResolverMap['doCode'] = 'do_return_admin.do_return_admin_to_ct';
     payload.fieldResolverMap['doReturnMasterCode'] = 'do_return_master.do_return_master_code';
     const repo = new OrionRepositoryService(DoReturnAwb, 'return');
 
@@ -146,10 +164,12 @@ export class DoReturnService {
   static async findAllDoListAdmin(
     payload: BaseMetaPayloadVm,
   ): Promise<DoReturnAdminFindAllResponseVm> {
-    // mapping search field and operator default ilike
+  // mapping search field and operator default ilike
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['doCode'] = 't1.do_return_admin_to_ct';
     payload.fieldResolverMap['awbNumberNew'] = 't1.awb_number_new';
+    payload.fieldResolverMap['awbNumber'] = 't5.awb_number';
+    payload.fieldResolverMap['doReturnAwbNumber'] = 't5.do_return_awb_number';
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
     const repo = new OrionRepositoryService(DoReturnAdmintoCt, 't1');
 
@@ -168,6 +188,8 @@ export class DoReturnService {
       ['t3.partner_logistic_name', 'partnerLogisticName'],
       ['t4.branch_name', 'branchName'],
       ['t1.branch_id', 'branchId'],
+      ['t5.awb_number', 'awbNumber'],
+      ['t5.do_return_awb_number', 'doReturnAwbNumber'],
     );
     q.leftJoin(e => e.attDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -176,6 +198,9 @@ export class DoReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doReturnAwbs, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.orderBy({ createdTime: 'DESC' });
@@ -194,6 +219,7 @@ export class DoReturnService {
   ): Promise<DoReturnAwbListFindAllResponseVm> {
     // mapping search field and operator default ilike
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['doReturnAwbNumber'] = 't1.do_return_awb_number';
     payload.fieldResolverMap['doReturnAdminId'] = 't1.do_return_admin_to_ct_id';
     payload.fieldResolverMap['doReturnCtId'] = 't1.do_return_ct_to_collection_id';
     payload.fieldResolverMap['doReturnCollectionId'] = 't1.do_return_collection_to_cust_id';
@@ -204,6 +230,7 @@ export class DoReturnService {
 
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
+      ['t1.do_return_awb_number', 'doReturnAwbNumber'],
       ['t1.do_return_admin_to_ct_id', 'doReturnAdminId'],
       ['t1.do_return_ct_to_collection_id', 'doRedoReturnCtId'],
       ['t1.do_return_collection_to_cust_id', 'doReturnCollectionId'],
@@ -261,7 +288,10 @@ export class DoReturnService {
   ): Promise<DoReturnCollectionFindAllResponseVm> {
     // mapping search field and operator default ilike
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['awbNumber'] = 't5.awb_number';
     payload.fieldResolverMap['doCode'] = 't1.do_return_collection_to_cust';
+    payload.fieldResolverMap['awbNumber'] = 't5.awb_number';
+    payload.fieldResolverMap['doReturnAwbNumber'] = 't5.do_return_awb_number';
     const repo = new OrionRepositoryService(DoReturnCollectionToCust, 't1');
 
     const q = repo.findAllRaw();
@@ -387,6 +417,50 @@ export class DoReturnService {
     return result;
   }
 
+  static async deliveryOrderUpdate(
+    payload: DoReturnUpdate,
+    file,
+  ): Promise<ReturnUpdateFindAllResponseVm> {
+    const result = new ReturnUpdateFindAllResponseVm();
+    const authMeta         = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const status = 'ok';
+    const message = 'success';
+    let attachmentId = null;
+    const timeNow = moment().toDate();
+
+    const attachment = await AttachmentService.uploadFileBufferToS3(
+      file.buffer,
+      file.originalname,
+      file.mimetype,
+      'DO-Balik',
+    );
+    if (attachment) {
+      attachmentId = attachment.attachmentTmsId;
+    }
+
+    const returnCt = await DoReturnAdmintoCt.findOne({
+      where: {
+        doReturnAdminToCtId : payload.doReturnAdminToCtId,
+      },
+    });
+
+  //  insert to do return awb history
+
+    await DoReturnAdmintoCt.update(
+      returnCt, {
+        attachmentId: attachment.attachmentTmsId,
+        awbNumberNew : payload.awbNumberNew,
+        partnerLogisticId : payload.partnerLogisticId,
+        updatedTime : timeNow,
+      },
+    );
+    result.status = status;
+    result.message = message;
+    // result.doId = admin.doReturnAdminToCtId;
+
+    return result;
+  }
   static async deliveryOrderCreate(
     payload: DoReturnDeliveryOrderCreateVm,
     file,

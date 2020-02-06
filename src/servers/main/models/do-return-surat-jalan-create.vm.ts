@@ -19,3 +19,18 @@ export class DoReturnDeliveryOrderCreateVm {
    doReturnAwbId: string[];
 
 }
+// update surat jalan
+
+export class DoReturnUpdate {
+  @ApiModelPropertyOptional()
+  isPartnerLogistic: number;
+
+  @ApiModelPropertyOptional()
+  partnerLogisticId: string;
+
+  @ApiModelPropertyOptional()
+  awbNumberNew: string;
+
+  @ApiModelPropertyOptional()
+  doReturnAdminToCtId: string;
+}
