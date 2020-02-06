@@ -1,6 +1,6 @@
 import { castArray, find, findIndex, forEach, isArray, isBoolean, isFunction, isString, toNumber, transform } from 'lodash';
 import { from } from 'rxjs';
-import { Brackets, EntityManager, EntityMetadata, ObjectLiteral, QueryRunner, SelectQueryBuilder } from 'typeorm';
+import { Brackets, EntityManager, EntityMetadata, ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import { EmbeddedMetadata } from 'typeorm/metadata/EmbeddedMetadata';
 import { RelationMetadata } from 'typeorm/metadata/RelationMetadata';
@@ -49,7 +49,6 @@ export class OrionRepositoryQueryService<
   public constructor(
     public readonly entityManager: EntityManager,
     public readonly entityMetadata: EntityMetadata,
-    public queryRunner: QueryRunner = null, // use queryRunner only if needed, every newly created query runner will use new connection
     public queryBuilder: SelectQueryBuilder<T>,
     public execAction: () => Promise<R>,
     public targetAlias: string,
@@ -186,22 +185,16 @@ export class OrionRepositoryQueryService<
     return this.escapeCommaSeparatedAliases(str);
   }
 
-  public async exec(releaseQueryRunner: boolean = true): Promise<R> {
+  public exec(): Promise<R> {
     if (!this.execAction) {
       throw new Error(
         `calling exec requires execAction to be defined, you can't call exec for subQuery or inside join`,
       );
     }
 
-    try {
-      const compiledQueryBuilder = this.compileQueryParts();
+    const compiledQueryBuilder = this.compileQueryParts();
 
-      return this.execAction.call(compiledQueryBuilder);
-    } finally {
-      if (releaseQueryRunner && this.queryRunner && !this.queryRunner.isReleased) {
-        await this.queryRunner.release();
-      }
-    }
+    return this.execAction.call(compiledQueryBuilder);
   }
 
   public fromSubQuery(
@@ -670,7 +663,6 @@ export class OrionRepositoryQueryService<
     const query = new OrionRepositoryQueryService<T, T>(
       this.entityManager,
       this.entityMetadata,
-      (queryBuilder as any).queryRunner,
       queryBuilder,
       null,
       queryBuilder.alias,
@@ -937,7 +929,6 @@ export class OrionRepositoryQueryService<
         const orionRepositoryQuery = new OrionRepositoryQueryService<any>(
           this.entityManager,
           targetEntityMetadata,
-          (queryBuilder as any).queryRunner,
           queryBuilder,
           null,
           relationAlias,
