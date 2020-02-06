@@ -557,37 +557,37 @@ export class PartnerService {
                 updatedTime: timeNow,
               },
             );
-            console.log(workOrderIdLast);
+            // console.log(workOrderIdLast);
             const workOrder = await WorkOrder.findOne({
               workOrderId: workOrderIdLast,
             });
-            console.log('anjing');
-            console.log(workOrder);
+            // console.log('anjing');
+            // console.log(workOrder);
             if (workOrder == undefined) {
-              const paramsWorkOrderHistory = {
-                work_order_id: workOrderIdLast,
-                work_order_date: timeNow,
-                pickup_request_id: pickupRequestId,
-                work_order_status_id_last: '7050',
-                work_order_status_id_pick: null,
-                branch_id: '1481',
-                is_final: true,
-                user_id: '1',
-                created_time: timeNow,
-                updated_time: timeNow,
-              };
-              const dataWorkOrderHistory = await this.getDataWorkOrderHistory(
-                paramsWorkOrderHistory,
-              );
-              const work_order_history = await WorkOrderHistory.insert(
-                dataWorkOrderHistory,
-              );
-              await WorkOrder.update(workOrderIdLast, {
-                workOrderHistoryIdLast:
-                  work_order_history.raw[0].work_order_history_id,
-                userIdUpdated: 1,
-                updatedTime: timeNow,
-              });
+              // const paramsWorkOrderHistory = {
+              //   work_order_id: workOrderIdLast,
+              //   work_order_date: timeNow,
+              //   pickup_request_id: pickupRequestId,
+              //   work_order_status_id_last: '7050',
+              //   work_order_status_id_pick: null,
+              //   branch_id: '1481',
+              //   is_final: true,
+              //   user_id: '1',
+              //   created_time: timeNow,
+              //   updated_time: timeNow,
+              // };
+              // const dataWorkOrderHistory = await this.getDataWorkOrderHistory(
+              //   paramsWorkOrderHistory,
+              // );
+              // const work_order_history = await WorkOrderHistory.insert(
+              //   dataWorkOrderHistory,
+              // );
+              // await WorkOrder.update(workOrderIdLast, {
+              //   workOrderHistoryIdLast:
+              //     work_order_history.raw[0].work_order_history_id,
+              //   userIdUpdated: 1,
+              //   updatedTime: timeNow,
+              // });
 
             } else {
               const paramsWorkOrderHistory = {
