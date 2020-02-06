@@ -28,9 +28,11 @@ import { ProofDeliveryResponseVm, ProofDeliveryPayloadVm } from '../../../models
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../../shared/services/meta.service';
+import { QueryBuilderService } from '../../../../../shared/services/query-builder.service';
 import { DoPod } from '../../../../../shared/orm-entity/do-pod';
 import { POD_TYPE } from '../../../../../shared/constants/pod-type.constant';
 import { AwbThirdPartyVm, AwbThirdPartyUpdateResponseVm } from '../../../models/last-mile/awb-third-party.vm';
+import { PodScanIn } from '../../../../../shared/orm-entity/pod-scan-in';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -398,39 +400,102 @@ export class LastMileDeliveryOutService {
     return result;
   }
 
-  static async listProofDelivery(payload: ProofDeliveryPayloadVm) {
-    // TODO:
-    // find data do_pod
-    const qb = createQueryBuilder();
-    qb.addSelect('dpdd.awb_number', 'awbNumber');
-    qb.addSelect(`COALESCE(dpdd.consignee_name, '')`, 'refConsigneeName');
-    qb.addSelect(`COALESCE(awb.consignee_name, '')`, 'consigneeName');
-    qb.addSelect(
-      `COALESCE(awb.consignee_address, '')`,
-      'consigneeAddress',
+  static async listProofDelivery(payload: BaseMetaPayloadVm)
+  : Promise<ProofDeliveryResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't3.awb_number';
+    payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
+    payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_deliver_date_time';
+
+    const repo = new OrionRepositoryService(DoPodDeliver, 't1');
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    qb.addSelect('awb_status.awb_status_name', 'awbStatusCode');
-    qb.addSelect('awb_status.awb_status_title', 'awbStatusName');
-    qb.from('do_pod_deliver', 'dpd');
-    qb.innerJoin(
-      'do_pod_deliver_detail',
-      'dpdd',
-      'dpd.do_pod_deliver_id = dpdd.do_pod_deliver_id AND dpdd.is_deleted = false',
+    q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    qb.innerJoin('awb', 'awb', 'dpdd.awb_id = awb.awb_id AND awb.is_deleted = false');
-    qb.innerJoin(
-      'awb_status',
-      'awb_status',
-      'awb_status.awb_status_id = dpdd.awb_status_id_last AND awb_status.is_deleted = false',
+    q.innerJoin(e => e.doPodDeliverDetails.awbStatus, 't5', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    qb.andWhere(
-      'dpd.do_pod_deliver_code = :doPodDeliverCode AND dpd.is_deleted = false',
-      {
-        doPodDeliverCode: payload.doPodDeliverCode,
-      },
+    q.innerJoin(e => e.doPodDeliverDetails.awb, 't6', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     const result = new ProofDeliveryResponseVm();
-    result.data = await qb.getRawMany();
+
+    // GET TOTAL STATUS AWB
+    const q1 = q;
+    q1.selectRaw(
+      [
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 30000)',
+        'totalSuccessAwb',
+      ],
+      [
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000)',
+        'totalErrorAwb',
+      ],
+      );
+    const dataTotal = await q1.exec();
+    result.totalSuccessAwb = 0;
+    result.totalErrorAwb = 0;
+
+    if(dataTotal.length != 0){
+      const temp = dataTotal[0];
+      result.totalSuccessAwb = temp.totalSuccessAwb;
+      result.totalErrorAwb = temp.totalErrorAwb;
+    }
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'doPodDeliverDateTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDeliverCode',
+      },
+      {
+        field: 'awbNumber',
+      },
+    ];
+    // GET SELECTED QUERY
+    const q2 = q;
+    payload.applyToOrionRepositoryQuery(q, true);
+    q2.selectRaw(
+      ['t1.do_pod_deliver_code', 'doPodDeliverCode'],
+      ['t1.do_pod_deliver_id', 'doPodDeliverId'],
+      ['t2.nik', 'driverNik'],
+      ['t2.fullname', 'driverFullName'],
+      ['t3.awb_number', 'awbNumber'],
+      [`COALESCE(t3.awb_status_date_time_last, t1.do_pod_deliver_date_time)`, 'awbStatusDateLast'],
+      [`COALESCE(t3.consignee_name, '')`, 'refConsigneeName'],
+      ['t5.awb_status_name', 'awbStatusCode'],
+      ['t5.awb_status_title', 'awbStatusName'],
+      [`COALESCE(t6.consignee_name, '')`, 'consigneeName'],
+      [`COALESCE(t6.consignee_address, '')`, 'consigneeAddress'],
+    );
+    q2.groupByRaw(`t1.do_pod_deliver_code, t3.awb_number, t2.nik, t2.fullname, t3.awb_status_date_time_last, t1.do_pod_deliver_id, t3.awb_status_id_last,
+                t3.consignee_name, t6.consignee_name, t6.consignee_address, t5.awb_status_name, t5.awb_status_title, t1.do_pod_deliver_date_time`);
+    const data = await q2.exec();
+    const total = await q2.countWithoutTakeAndSkip();
+
+    result.doPodDeliverCode = '';
+    result.driverNik = '';
+    result.driverFullName = '';
+    result.doPodDeliverId = '';
+
+    if(data.length != 0){
+      const temp = data[0];
+      result.doPodDeliverCode = temp.doPodDeliverCode;
+      result.driverNik        = temp.driverNik;
+      result.driverFullName   = temp.driverFullName;
+      result.doPodDeliverId   = temp.doPodDeliverId;
+    }
+
+    result.data = data;
+    result.buildPaging(payload.page, payload.limit, total);
 
     return result;
   }

@@ -1,6 +1,8 @@
 import { ApiModelProperty } from '../../../../shared/external/nestjs-swagger';
+import { BaseMetaResponseVm } from '../../../../shared/models/base-meta-response.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
-export class ProofDeliveryPayloadVm {
+export class ProofDeliveryPayloadVm extends BaseMetaPayloadVm{
   @ApiModelProperty()
   doPodDeliverCode: string;
 }
@@ -23,9 +25,31 @@ export class ProofDeliverDataVm {
 
   @ApiModelProperty()
   awbStatusName: string;
+
+  @ApiModelProperty()
+  awbStatusDateLast: Date;
 }
 
-export class ProofDeliveryResponseVm {
-  @ApiModelProperty({ type: [ProofDeliverDataVm] })
+export class ProofDeliveryResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [ProofDeliverDataVm] })
   data: ProofDeliverDataVm[];
+
+  @ApiModelProperty()
+  driverNik: string;
+
+  @ApiModelProperty()
+  driverFullName: string;
+
+  @ApiModelProperty()
+  doPodDeliverId: string;
+
+  @ApiModelProperty()
+  doPodDeliverCode: string;
+
+  @ApiModelProperty()
+  totalSuccessAwb: number;
+
+  @ApiModelProperty()
+  totalErrorAwb: number;
 }
