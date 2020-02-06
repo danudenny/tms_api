@@ -37,6 +37,8 @@ import { MobileAttendanceController } from './mobile/mobile-attendance.controlle
 import { ReportPODController } from './report/report-pod.controller';
 import { WebLastMileController } from './web/web-last-mile.controller';
 import { WebAwbReturnController } from './web/web-awb-return.controller';
+import { MobileKorwilController } from './mobile/mobile-korwil.controller';
+
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -79,6 +81,7 @@ import { WebAwbReturnController } from './web/web-awb-return.controller';
     MobileAttendanceController,
     ReportPODController,
     WebLastMileController,
+    MobileKorwilController,
   ],
 })
 export class MainServerControllersModule {}
