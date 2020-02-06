@@ -1,16 +1,14 @@
-import { EntityManager, getManager, LessThan, MoreThan } from 'typeorm';
+import { getManager, LessThan, MoreThan } from 'typeorm';
 
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 import { DoPodDeliverHistory } from '../../../../shared/orm-entity/do-pod-deliver-history';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { DeliveryService } from '../../../../shared/services/delivery.service';
 import {
     DoPodDetailPostMetaQueueService,
 } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
-    AwbDeliverManualResponseVm, WebAwbDeliverGetPayloadVm, WebAwbDeliverGetResponseVm,
     WebAwbDeliverSyncPayloadVm, WebDeliveryVm, WebAwbDeliverSyncResponseVm, AwbDeliverManualSync,
 } from '../../models/web-awb-deliver.vm';
 import { AwbService } from '../v1/awb.service';
@@ -31,6 +29,7 @@ export class WebAwbDeliverService {
     const response = new AwbDeliverManualSync();
     const result = new WebAwbDeliverSyncResponseVm();
     const dataItem = [];
+    let onlyDriver = false;
     try {
       for (const delivery of payload.deliveries) {
         // TODO: check awb number
@@ -38,36 +37,33 @@ export class WebAwbDeliverService {
         let syncManualDelivery = false;
         const awb = await AwbService.validAwbNumber(delivery.awbNumber);
         if (awb) {
-          const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
+          // const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
           const awbDeliver = await this.getDeliverDetail(delivery.awbNumber);
           if (awbDeliver) {
-            // NOTE: check validate role and status last
-            if ((awbDeliver.awbStatusIdLast == AWB_STATUS.ANT) && (delivery.awbStatusId == AWB_STATUS.DLV)) {
-              syncManualDelivery = true;
-            } else {
-              // check role
-              // role palkur => CODA, BA, RETUR tidak perlu ANT
-              switch (payload.role) {
-                case 'ct':
+            // check role
+            // role palkur => CODA, BA, RETUR tidak perlu ANT
+            switch (payload.role) {
+              case 'ct':
+                syncManualDelivery = true;
+                break;
+              case 'palkur':
+                // if (statusProblem.includes(delivery.awbStatusId)) {
+                // }
+                syncManualDelivery = true;
+                break;
+              case 'sigesit':
+                // check only own awb number
+                if (
+                  awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&
+                  awbDeliver.doPodDeliver.userIdDriver == authMeta.userId
+                ) {
                   syncManualDelivery = true;
-                  break;
-                case 'palkur':
-                  // if (statusProblem.includes(delivery.awbStatusId)) {
-                  // }
-                  syncManualDelivery = true;
-                  break;
-                case 'sigesit':
-                  // check only own awb number
-                  if (
-                    awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&
-                    awbDeliver.doPodDeliver.userIdDriver == authMeta.userId
-                  ) {
-                    syncManualDelivery = true;
-                  }
-                  break;
-                default:
-                  break;
-              }
+                } else {
+                  onlyDriver = true;
+                }
+                break;
+              default:
+                break;
             }
 
             if (syncManualDelivery) {
@@ -88,12 +84,19 @@ export class WebAwbDeliverService {
                   authMeta.userId,
                 );
               }
-
               response.status = 'ok';
               response.message = 'success';
             } else {
               response.status = 'error';
-              response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan antar terlebih dahulu`;
+              if (onlyDriver) {
+                response.message = `Resi ${
+                  delivery.awbNumber
+                }, bukan milik user sigesit login`;
+              } else {
+                response.message = `Resi ${
+                  delivery.awbNumber
+                }, bermasalah harap scan antar terlebih dahulu`;
+              }
             }
           } else {
             // NOTE: Manual Status not POD only status problem
