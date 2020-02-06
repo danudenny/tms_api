@@ -177,6 +177,8 @@ export class V1MobileInitDataService {
     qb.addSelect('package_type.package_type_name', 'packageTypeName');
     qb.addSelect('awb.total_cod_value', 'totalCodValue');
     qb.addSelect('awb.is_cod', 'isCOD');
+    qb.addSelect('reason.reason_code', 'reasonCode');
+    qb.addSelect('reason.reason_name', 'reasonName');
     qb.addSelect('do_pod_deliver_detail.consignee_name', 'consigneeNameNote');
     qb.addSelect('do_pod_deliver_detail.is_deleted', 'isDeleted');
     qb.addSelect(
@@ -207,6 +209,11 @@ export class V1MobileInitDataService {
       'pickup_request_detail',
       'pickup_request_detail',
       'pickup_request_detail.awb_item_id = do_pod_deliver_detail.awb_item_id',
+    );
+    qb.leftJoin(
+      'reason',
+      'reason',
+      'reason.reason_id = do_pod_deliver_detail.reason_id_last',
     );
     qb.innerJoin(
       'awb_status',
