@@ -3,8 +3,8 @@ import { bool } from 'aws-sdk/clients/signer';
 
 // Create DO DO RETURN SURAT JALAN
 export class DoReturnDeliveryOrderCreateVm {
-  @ApiModelProperty()
-   isPartnerLogistic: boolean;
+  @ApiModelPropertyOptional()
+   isPartnerLogistic: bool;
 
    @ApiModelPropertyOptional()
    partnerLogisticId: string;
@@ -12,7 +12,7 @@ export class DoReturnDeliveryOrderCreateVm {
    @ApiModelProperty()
    countAwb: number;
 
-   @ApiModelProperty()
+   @ApiModelPropertyOptional()
    awbNumberNew: string;
 
    @ApiModelProperty()
@@ -23,7 +23,7 @@ export class DoReturnDeliveryOrderCreateVm {
 
 export class DoReturnUpdate {
   @ApiModelPropertyOptional()
-  isPartnerLogistic: number;
+  isPartnerLogistic: bool;
 
   @ApiModelPropertyOptional()
   partnerLogisticId: string;
