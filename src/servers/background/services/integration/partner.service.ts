@@ -682,6 +682,7 @@ export class PartnerService {
     const timeNow = moment().toDate();
     // $prefix = $prefix = 'SPK' .; '/' . date('ym', strtotime($work_order_time)) .; '/';
     prefix = `SPK/${moment(workOrderTime).format('YYMM')}/`;
+    console.log(prefix);
     const code = await SysCounter.findOne({
       where: {
         key: prefix,
@@ -689,16 +690,25 @@ export class PartnerService {
       },
     });
     // console.log(code);
-    // console.log(code.counter);
-    if (code.counter == 0 || code.counter == null) {
+    if (code == undefined) {
       lastNumber = 1;
+      const paramsSysCounter = {
+        key: prefix,
+        counter : lastNumber,
+        created_time: timeNow,
+        updated_time: timeNow,
+      };
+      const dataParamsSysCounter = await this.getDataSysCounter(paramsSysCounter);
+      const sys_counter = await SysCounter.insert(dataParamsSysCounter);
+
     } else {
       lastNumber = Math.floor(code.counter) + 1;
+      await SysCounter.update(code.sysCounterId, {
+        counter: lastNumber,
+        updatedTime: timeNow,
+      });
     }
-    await SysCounter.update(code.sysCounterId, {
-      counter: lastNumber,
-      updatedTime: timeNow,
-    });
+
     workOrderCode = prefix + lastNumber.toString().padStart(5, '0');
     // console.log(workOrderCode);
     return workOrderCode;
@@ -779,5 +789,16 @@ export class PartnerService {
     });
 
     return apl;
+  }
+
+  public static async getDataSysCounter(params: {}): Promise<any> {
+    const syscount = await SysCounter.create({
+      key: params['key'],
+      counter: params['counter'],
+      createdTime: params['created_time'],
+      updatedTime: params['updated_time'],
+    });
+
+    return syscount;
   }
 }
