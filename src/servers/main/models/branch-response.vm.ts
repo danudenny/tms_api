@@ -1,6 +1,6 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
-export class ValidateBranchKoordinateResponseVm {
+export class ValidateBranchCoordinateResponseVm {
   @ApiModelProperty()
   status: boolean;
 

@@ -32,6 +32,13 @@ export class KorwilTransaction extends TmsBaseEntity {
   })
   employeeJourneyId: string | null;
 
+  @Column('integer', {
+    nullable: true,
+    default: () => '0',
+    name: 'total_task',
+  })
+  totalTask: number | null;
+
   @Column('bigint', {
     nullable: true,
     name: 'user_id',

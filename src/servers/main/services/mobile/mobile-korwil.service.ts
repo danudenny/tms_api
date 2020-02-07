@@ -3,7 +3,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm } from '../../models/mobile-korwil-response.vm';
 import { MobilePostKorwilTransactionPayloadVm } from '../../models/mobile-korwil-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { ValidateBranchKoordinateResponseVm } from '../../models/branch-response.vm';
+import { ValidateBranchCoordinateResponseVm } from '../../models/branch-response.vm';
 import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
 import { KorwilTransactionDetail } from '../../../../shared/orm-entity/korwil-transaction-detail';
 
@@ -52,28 +52,28 @@ export class MobileKorwilService {
     return result;
   }
 
-  public static async validateBranchByCoordinate(lat, long, branchId): Promise<ValidateBranchKoordinateResponseVm>{
+  public static async validateBranchByCoordinate(lat, long, branchId): Promise<ValidateBranchCoordinateResponseVm>{
     const lata = parseFloat(lat);
-        const longa = parseFloat(long);
-        const radius = [5, 10]; // in kilometer
-        const data = [];
-        const response = new ValidateBranchKoordinateResponseVm();
-        let nearby_branch = await this.getNearby(lata, longa, radius[0])
+      const longa = parseFloat(long);
+      const radius = [5, 10]; // in kilometer
+      const data = [];
+      const response = new ValidateBranchCoordinateResponseVm;
+      let nearby_branch = await this.getNearby(lata, longa, radius[0])
 
-        response.status= false;
-        response.message= "lokasi branch tidak valid";
+      response.status= false;
+      response.message= "lokasi branch tidak valid";
 
-        const res = await RawQueryService.query(`SELECT branch_id FROM branch WHERE is_deleted = false
-        AND address IS NOT NULL AND longitude IS NOT NULL AND latitude IS NOT NULL
-        AND latitude::float >= ${nearby_branch[0]} AND latitude::float <= ${nearby_branch[2]}
-        AND longitude::float >= ${nearby_branch[1]} AND longitude::float <= ${nearby_branch[3]}
-        AND branch_id = ${branchId}`);
+      const res = await RawQueryService.query(`SELECT branch_id FROM branch WHERE is_deleted = false
+      AND address IS NOT NULL AND longitude IS NOT NULL AND latitude IS NOT NULL
+      AND latitude::float >= ${nearby_branch[0]} AND latitude::float <= ${nearby_branch[2]}
+      AND longitude::float >= ${nearby_branch[1]} AND longitude::float <= ${nearby_branch[3]}
+      AND branch_id = ${branchId}`);
 
-        if (res.length != 0) {
-          response.message = "Lokasi branch valid";
-          response.status = true;
-        }
-        return response;
+      if (res.length != 0) {
+        response.message = "Lokasi branch valid";
+        response.status = true;
+      }
+      return response;
   }
 
   static async getNearby(lat, long, radius) {
@@ -119,7 +119,7 @@ export class MobileKorwilService {
     return degree * Math.PI / 180;
   }
 
-  public static async createTransactionItem(
+  public async createTransactionItem(
     korwilTransactionId: number,
   ){
     const qb = createQueryBuilder();
