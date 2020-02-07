@@ -241,6 +241,18 @@ export class WebScanOutDeliverGroupListResponseVm extends BaseMetaResponseVm {
   data: WebScanInDeliverGroupResponseVm[];
 }
 
+export class WebScanOutCreateResponsePrintDeliverMetadataVm {
+
+}
+
+export class WebScanOutCreateResponsePrintBagMetadataVm {
+
+}
+
+export class WebScanOutCreateResponsePrintMetadataVm {
+
+}
+
 // Create DO POD
 export class WebScanOutCreateResponseVm {
   @ApiModelProperty()

@@ -40,6 +40,7 @@ import { WebAwbReturnController } from './web/web-awb-return.controller';
 import { MobileDeliveryInController } from './mobile/mobile-delivery-in.controller';
 import { MobileDeliveryOutController } from './mobile/mobile-delivery-out.controller';
 import { MobileAwbFilterController } from './mobile/mobile-awb-filter.controller';
+import { PrintByStoreController } from './print-by-store.controller';
 
 // #endregion
 @Module({
@@ -58,6 +59,7 @@ import { MobileAwbFilterController } from './mobile/mobile-awb-filter.controller
     MobileDashboardController,
     PartnerLogisticController,
     PrintController,
+    PrintByStoreController,
     ReasonController,
     RepresentativeController,
     RoleController,
