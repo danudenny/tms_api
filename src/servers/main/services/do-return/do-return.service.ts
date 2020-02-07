@@ -473,14 +473,16 @@ export class DoReturnService {
     let attachmentId = null;
     const timeNow = moment().toDate();
 
-    const attachment = await AttachmentService.uploadFileBufferToS3(
-      file.buffer,
-      file.originalname,
-      file.mimetype,
-      'DO-Balik',
-    );
-    if (attachment) {
-      attachmentId = attachment.attachmentTmsId;
+    if (file) {
+      const attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        'DO-Balik',
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+      }
     }
     // insert to DoReturnAdmintoCt
     const generateCode = await CustomCounterCode.doReturn(timeNow);
