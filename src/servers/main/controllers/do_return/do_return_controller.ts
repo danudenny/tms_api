@@ -77,8 +77,8 @@ export class DoReturnController {
 
   @Post('create')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
   public async returnCreate(@Body() payload: ReturnCreateVm) {
     return DoReturnService.returnCreate(payload);
