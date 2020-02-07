@@ -4,6 +4,8 @@ import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm } fro
 import { MobilePostKorwilTransactionPayloadVm } from '../../models/mobile-korwil-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { ValidateBranchKoordinateResponseVm } from '../../models/branch-response.vm';
+import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
+import { KorwilTransactionDetail } from '../../../../shared/orm-entity/korwil-transaction-detail';
 
 export class MobileKorwilService {
   constructor() {}
@@ -118,21 +120,24 @@ export class MobileKorwilService {
   }
 
   public static async createTransactionItem(
-    payload: MobilePostKorwilTransactionPayloadVm,
-    file,
-  ): Promise<MobilePostKorwilTransactionResponseVm> {
-    const result = new MobilePostKorwilTransactionResponseVm();
-    const authMeta = AuthService.getAuthMetadata();
+    korwilTransactionId: number,
+  ){
+    const qb = createQueryBuilder();
+    qb.addSelect('ki.korwil_item_name', 'korwilItemName');
+    qb.addSelect('ki.korwil_item_id', 'korwilItemId');
+    qb.from('korwil_item', 'ki');
 
-    result.korwilTransactionDetailId = "";
-    result.korwilTransactionDetailPhotoId = "";
-    result.korwilTransactionId = "";
+    const res = await qb.getRawMany();
 
-    const responseCheckBranch = await this.validateBranchByCoordinate(payload.latitude, payload.longitude, payload.branchId);
-    if (responseCheckBranch.status == false){
-      result.coordinate = responseCheckBranch;
-    }
-
-    return result;
+    res.forEach(async(item) => {
+      const korwilTransactionDetail = KorwilTransactionDetail.create();
+      korwilTransactionDetail.korwilItemId = item.korwilItemId;
+      korwilTransactionDetail.korwilTransactionId = korwilTransactionId;
+      korwilTransactionDetail.latChecklist = "";
+      korwilTransactionDetail.longChecklist = "";
+      korwilTransactionDetail.note = "";
+      korwilTransactionDetail.photoCount = res.length;
+      await KorwilTransactionDetail.save(korwilTransactionDetail);
+    });
   }
 }

@@ -172,6 +172,8 @@ export class MobileCheckInService {
       korwilTransaction.employeeJourneyId = employeeJourneyId;
       await KorwilTransaction.save(korwilTransaction);
 
+      await MobileKorwilService.createTransactionItem(korwilTransaction.korwilTransactionId);
+
       const branch = await this.branchRepository.findOne({
         select: ['branchName'],
         where: { branchId: branchIdTemp },
