@@ -7,6 +7,7 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { ValidateBranchCoordinateResponseVm } from '../../models/branch-response.vm';
 import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
 import { KorwilTransactionDetail } from '../../../../shared/orm-entity/korwil-transaction-detail';
+import moment = require('moment');
 
 export class MobileKorwilService {
   constructor() {}
@@ -56,7 +57,7 @@ export class MobileKorwilService {
   public static async validateBranchByCoordinate(lat, long, branchId): Promise<ValidateBranchCoordinateResponseVm>{
     const lata = parseFloat(lat);
       const longa = parseFloat(long);
-      const radius = [5, 10]; // in kilometer
+      const radius = [0.5, 0.5]; // in kilometer
       const data = [];
       const response = new ValidateBranchCoordinateResponseVm();
       let nearby_branch = await this.getNearby(lata, longa, radius[0])
@@ -136,6 +137,7 @@ export class MobileKorwilService {
       korwilTransactionDetail.latChecklist = "";
       korwilTransactionDetail.longChecklist = "";
       korwilTransactionDetail.note = "";
+      korwilTransactionDetail.date = moment().toDate();;
       korwilTransactionDetail.photoCount = res.length;
       await KorwilTransactionDetail.save(korwilTransactionDetail);
     });

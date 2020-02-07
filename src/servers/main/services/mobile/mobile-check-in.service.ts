@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
-import { IsNull } from 'typeorm';
+import { IsNull, createQueryBuilder } from 'typeorm';
 
 import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
 import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
@@ -110,6 +110,7 @@ export class MobileCheckInService {
         result.branchName = branchName;
         result.checkInDate = checkInDate;
         result.attachmentId = attachmentId;
+        return result;
       }
     }
 
@@ -127,9 +128,30 @@ export class MobileCheckInService {
       },
     );
     if (employeeJourneyCheckOutExist) {
-      status = 'error';
-      message = 'Check In sedang aktif, Harap CheckOut terlebih dahulu';
+      result.status = "error";
+      result.message = 'Check In sedang aktif, Harap Check Out terlebih dahulu';
+      result.branchName = branchName;
+      result.checkInDate = checkInDate;
+      result.attachmentId = attachmentId;
+      return result;
     } else {
+      const qb = createQueryBuilder();
+      qb.addSelect('utb.user_to_branch_id', 'userToBranchId');
+      qb.from('user_to_branch', 'utb');
+      qb.where('utb.is_deleted = false');
+      qb.andWhere('utb.ref_branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
+      qb.andWhere('utb.ref_user_id = :idUserLogin', { idUserLogin: authMeta.userId });
+      const res = await qb.getRawOne();
+
+      if(!res){
+        result.status = "error";
+        result.message = 'Branch Check In tidak valid!';
+        result.branchName = branchName;
+        result.checkInDate = checkInDate;
+        result.attachmentId = attachmentId;
+        return result;
+      }
+
       // upload image
       const attachment = await AttachmentService.uploadFileBufferToS3(
         file.buffer,
@@ -171,6 +193,7 @@ export class MobileCheckInService {
       korwilTransaction.createdTime = timeNow;
       korwilTransaction.isDeleted = false;
       korwilTransaction.employeeJourneyId = employeeJourneyId;
+      korwilTransaction.userToBranchId = res.userToBranchId;
       await KorwilTransaction.save(korwilTransaction);
 
       const service = new MobileKorwilService();

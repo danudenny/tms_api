@@ -42,13 +42,6 @@ export class KorwilTransactionDetail extends BaseEntity {
   })
   isDone: boolean;
 
-  @Column('integer', {
-    nullable: true,
-    default: () => '0',
-    name: 'photo_id',
-  })
-  photoId: number | null;
-
   @Column('character varying', {
     nullable: true,
     length: 500,

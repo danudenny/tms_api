@@ -28,6 +28,13 @@ export class KorwilTransaction extends TmsBaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 500,
+    name: 'user_to_branch_id',
+  })
+  userToBranchId: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
     name: 'employee_journey_id',
   })
   employeeJourneyId: string | null;
