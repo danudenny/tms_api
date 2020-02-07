@@ -7,9 +7,10 @@ import { BranchRepository } from '../../../../shared/orm-repository/branch.repos
 import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
-import { MobileCheckInPayloadVm } from '../../models/mobile-check-in-payload.vm';
+import { MobileCheckInPayloadVm, MobileCheckInFormPayloadVm } from '../../models/mobile-check-in-payload.vm';
 import { MobileCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
 
 @Injectable()
 export class MobileCheckInService {
@@ -89,7 +90,7 @@ export class MobileCheckInService {
   }
 
   async checkInForm(
-    payload: MobileCheckInPayloadVm,
+    payload: MobileCheckInFormPayloadVm,
     file,
   ): Promise<MobileCheckInResponseVm> {
     const authMeta = AuthService.getAuthData();
@@ -101,7 +102,7 @@ export class MobileCheckInService {
     let attachmentId = null;
 
     const timeNow = moment().toDate();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
     const employeeJourneyCheckOutExist = await this.employeeJourneyRepository.findOne(
       {
         where: {
@@ -141,9 +142,19 @@ export class MobileCheckInService {
       });
       await this.employeeJourneyRepository.save(employeeJourney);
 
+      // insert pending status korwil
+      const korwilTransaction = KorwilTransaction.create();
+      korwilTransaction.date = timeNow;
+      korwilTransaction.branchId = payload.branchId;
+      korwilTransaction.userId = authMeta.userId;
+      korwilTransaction.status = 0;
+      korwilTransaction.createdTime = timeNow;
+      korwilTransaction.isDeleted = false;
+      await KorwilTransaction.save(korwilTransaction);
+
       const branch = await this.branchRepository.findOne({
         select: ['branchName'],
-        where: { branchId: permissonPayload.branchId },
+        where: { branchId: payload.branchId },
       });
       branchName = branch.branchName;
       checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
