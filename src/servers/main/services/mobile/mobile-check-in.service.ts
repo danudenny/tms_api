@@ -11,6 +11,7 @@ import { MobileCheckInPayloadVm, MobileCheckInFormPayloadVm } from '../../models
 import { MobileCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
+import { MobileKorwilService } from './mobile-korwil.service';
 
 @Injectable()
 export class MobileCheckInService {
@@ -101,8 +102,18 @@ export class MobileCheckInService {
     let checkInDate = '';
     let attachmentId = null;
 
+    const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(payload.latitudeCheckIn, payload.longitudeCheckIn, payload.branchId);
+    if (responseCheckBranch.status == false){
+      result.status = "error";
+      result.message = message;
+      result.branchName = branchName;
+      result.checkInDate = checkInDate;
+      result.attachmentId = attachmentId;
+      return result;
+    }
+
     const timeNow = moment().toDate();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const employeeJourneyCheckOutExist = await this.employeeJourneyRepository.findOne(
       {
         where: {
@@ -142,10 +153,12 @@ export class MobileCheckInService {
       });
       await this.employeeJourneyRepository.save(employeeJourney);
 
+      const branchIdTemp = payload.branchId ? payload.branchId : permissonPayload.branchId.toString();
+
       // insert pending status korwil
       const korwilTransaction = KorwilTransaction.create();
       korwilTransaction.date = timeNow;
-      korwilTransaction.branchId = payload.branchId;
+      korwilTransaction.branchId = branchIdTemp;
       korwilTransaction.userId = authMeta.userId;
       korwilTransaction.status = 0;
       korwilTransaction.createdTime = timeNow;
@@ -154,7 +167,7 @@ export class MobileCheckInService {
 
       const branch = await this.branchRepository.findOne({
         select: ['branchName'],
-        where: { branchId: payload.branchId },
+        where: { branchId: branchIdTemp },
       });
       branchName = branch.branchName;
       checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
