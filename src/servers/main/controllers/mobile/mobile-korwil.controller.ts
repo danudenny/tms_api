@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get, Param, Us
 
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { BranchListKorwilResponseVm, MobilePostKorwilTransactionPayloadVm } from '../../models/mobile-korwil-response.vm';
+import { BranchListKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
 import { MobileKorwilService } from '../../services/mobile/mobile-korwil.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
