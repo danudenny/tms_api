@@ -1,5 +1,5 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
-import { ValidateBranchKoordinateResponseVm } from './branch-response.vm';
+import { ValidateBranchCoordinateResponseVm } from './branch-response.vm';
 
 export class DetailBranchListKorwilResponseVm {
   @ApiModelProperty()
@@ -19,8 +19,8 @@ export class MobilePostKorwilTransactionResponseVm {
   @ApiModelProperty()
   korwilTransactionId: string;
 
-  @ApiModelProperty({ type:ValidateBranchKoordinateResponseVm })
-  coordinate: ValidateBranchKoordinateResponseVm;
+  @ApiModelProperty({ type:ValidateBranchCoordinateResponseVm })
+  coordinate: ValidateBranchCoordinateResponseVm;
 }
 
 export class BranchListKorwilResponseVm {
