@@ -57,7 +57,7 @@ export class MobileKorwilService {
       const longa = parseFloat(long);
       const radius = [5, 10]; // in kilometer
       const data = [];
-      const response = new ValidateBranchCoordinateResponseVm;
+      const response = new ValidateBranchCoordinateResponseVm();
       let nearby_branch = await this.getNearby(lata, longa, radius[0])
 
       response.status= false;

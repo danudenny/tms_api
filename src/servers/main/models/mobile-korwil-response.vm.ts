@@ -19,7 +19,7 @@ export class MobilePostKorwilTransactionResponseVm {
   @ApiModelProperty()
   korwilTransactionId: string;
 
-  @ApiModelProperty({ type:ValidateBranchCoordinateResponseVm })
+  @ApiModelProperty({ type:[ValidateBranchCoordinateResponseVm] })
   coordinate: ValidateBranchCoordinateResponseVm;
 }
 
