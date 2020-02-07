@@ -102,14 +102,16 @@ export class MobileCheckInService {
     let checkInDate = '';
     let attachmentId = null;
 
-    const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(payload.latitudeCheckIn, payload.longitudeCheckIn, payload.branchId);
-    if (responseCheckBranch.status == false){
-      result.status = "error";
-      result.message = message;
-      result.branchName = branchName;
-      result.checkInDate = checkInDate;
-      result.attachmentId = attachmentId;
-      return result;
+    if(payload.branchId){
+      const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(payload.latitudeCheckIn, payload.longitudeCheckIn, payload.branchId);
+      if (responseCheckBranch.status == false){
+        result.status = "error";
+        result.message = message;
+        result.branchName = branchName;
+        result.checkInDate = checkInDate;
+        result.attachmentId = attachmentId;
+        return result;
+      }
     }
 
     const timeNow = moment().toDate();

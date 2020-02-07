@@ -10,6 +10,7 @@ import { RequestErrorService } from '../../../../shared/services/request-error.s
 import { MobileCheckOutPayloadVm } from '../../models/mobile-check-out-payload.vm';
 import { MobileCheckOutResponseVm } from '../../models/mobile-check-out-response.vm';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { MobileKorwilService } from './mobile-korwil.service';
 
 @Injectable()
 export class MobileCheckOutService {
@@ -97,6 +98,19 @@ export class MobileCheckOutService {
     let attachmentId = null;
 
     const timeNow = moment().toDate();
+
+    if(payload.branchId){
+      const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(payload.latitudeCheckOut, payload.longitudeCheckOut, payload.branchId);
+      if (responseCheckBranch.status == false){
+        result.status = "error";
+        result.message = message;
+        result.branchName = branchName;
+        result.checkOutDate = checkOutDate;
+        result.attachmentId = attachmentId;
+        return result;
+      }
+    }
+
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const employeeJourney = await this.employeeJourneyRepository.findOne({
       where: {
