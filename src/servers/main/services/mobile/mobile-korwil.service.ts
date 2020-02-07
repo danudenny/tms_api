@@ -121,7 +121,7 @@ export class MobileKorwilService {
   }
 
   public async createTransactionItem(
-    korwilTransactionId: number,
+    korwilTransactionId: string,
   ){
     const qb = createQueryBuilder();
     qb.addSelect('ki.korwil_item_name', 'korwilItemName');
