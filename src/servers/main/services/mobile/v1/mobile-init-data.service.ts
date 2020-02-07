@@ -229,9 +229,6 @@ export class V1MobileInitDataService {
       },
     );
 
-    qb.take(0);
-    qb.skip(200);
-
     qb.andWhere('do_pod_deliver.user_id_driver = :userIdDriver', {
       userIdDriver: authMeta.userId,
     });
@@ -243,16 +240,14 @@ export class V1MobileInitDataService {
     // });
 
     const currentMoment = moment();
-    const threeDaysAgo = moment().subtract(3, 'd');
+    const oneDaysAgo = moment().subtract(1, 'd');
     qb.andWhere(
       'do_pod_deliver.do_pod_deliver_date_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
       {
-        currentDateTimeStart: threeDaysAgo.format('YYYY-MM-DD 00:00:00'),
+        currentDateTimeStart: oneDaysAgo.format('YYYY-MM-DD 00:00:00'),
         currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
       },
     );
-
-    // qb.andWhere('do_pod_deliver_detail.is_deleted = false');
 
     if (fromDate) {
       // TODO: andWhereIsolated condition
