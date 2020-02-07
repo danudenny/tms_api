@@ -188,8 +188,6 @@ export class DoReturnService {
       ['t3.partner_logistic_name', 'partnerLogisticName'],
       ['t4.branch_name', 'branchName'],
       ['t1.branch_id', 'branchId'],
-      ['t5.awb_number', 'awbNumber'],
-      ['t5.do_return_awb_number', 'doReturnAwbNumber'],
     );
     q.leftJoin(e => e.attDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -198,9 +196,6 @@ export class DoReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.doReturnAwbs, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.orderBy({ createdTime: 'DESC' });
