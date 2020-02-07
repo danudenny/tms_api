@@ -4,24 +4,27 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToOne,
 } from 'typeorm';
 
 import { Branch } from './branch';
 import { User } from './user';
+import { KorwilTransaction } from './korwil-transaction';
 
 @Entity('korwil_transaction_detail', { schema: 'public' })
 export class KorwilTransactionDetail extends BaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'korwil_transaction_detail_id',
   })
-  korwilTransactionDetailId: number;
+  korwilTransactionDetailId: string;
 
-  @Column('bigint', {
-    nullable: true,
+  @Column('uuid', {
+    nullable: false,
     name: 'korwil_transaction_id',
   })
-  korwilTransactionId: number | null;
+  korwilTransactionId: string | null;
 
   @Column('bigint', {
     nullable: true,
@@ -89,4 +92,8 @@ export class KorwilTransactionDetail extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @ManyToOne(() => KorwilTransaction, e => e.korwilTransactionDetail)
+  @JoinColumn({ name: 'korwil_transaction_id', referencedColumnName: 'korwilTransactionId' })
+    korwilTransaction: KorwilTransaction;
 }

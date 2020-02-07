@@ -4,24 +4,26 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
 import { Branch } from './branch';
 import { User } from './user';
+import { AttachmentTms } from './attachment-tms';
 
 @Entity('korwil_transaction_detail_photo', { schema: 'public' })
 export class KorwilTransactionDetailPhoto extends BaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'korwil_transaction_detail_photo_id',
   })
-  korwilTransactionDetailPhotoId: number;
+  korwilTransactionDetailPhotoId: string;
 
-  @Column('bigint', {
+  @Column('uuid', {
     nullable: true,
-    name: 'korwil_transaction_id',
+    name: 'korwil_transaction_detail_id',
   })
-  korwilTransactionId: number | null;
+  korwilTransactionDetailId: string | null;
 
   @Column('integer', {
     nullable: true,

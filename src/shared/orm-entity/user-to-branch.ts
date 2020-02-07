@@ -5,15 +5,17 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   JoinColumn,
+  ManyToMany,
 } from 'typeorm';
 
 import { Branch } from './branch';
 import { User } from './user';
+import { TmsBaseEntity } from './tms-base';
+import { KorwilTransaction } from './korwil-transaction';
 
 @Entity('user_to_branch', { schema: 'public' })
-export class UserToBranch extends BaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+export class UserToBranch extends TmsBaseEntity {
+  @PrimaryGeneratedColumn('uuid', {
     name: 'user_to_branch_id',
   })
   userToBranchId: number;
@@ -30,19 +32,6 @@ export class UserToBranch extends BaseEntity {
   })
   refBranchId: number | null;
 
-  @Column('timestamp without time zone', {
-    nullable: true,
-    name: 'created_time',
-  })
-  createdTime: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
-
   // @OneToMany(() => Branch, e => e.branchId, { cascade: ['insert'] })
   // @JoinColumn({
   //   name: 'ref_branch_id',
@@ -53,6 +42,10 @@ export class UserToBranch extends BaseEntity {
   // @OneToMany(() => Branch, e => e.branchId)
   // branches: Branch[];
 
-  // @OneToMany(() => User, e => e.userId)
-  // users: User[];
+  @OneToMany(() => User, e => e.userId)
+  users: User[];
+
+  @OneToMany(() => KorwilTransaction, e => e.userToBranch)
+  @JoinColumn({ name: 'user_to_branch_id' })
+  korwilTransaction: KorwilTransaction[];
 }

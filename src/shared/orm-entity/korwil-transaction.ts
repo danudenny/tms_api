@@ -1,16 +1,18 @@
-import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany, JoinColumn, OneToOne, ManyToOne } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
 import { Branch } from './branch';
 import { User } from './user';
+import { EmployeeJourney } from './employee-journey';
+import { KorwilTransactionDetail } from './korwil-transaction-detail';
+import { UserToBranch } from './user-to-branch';
 
 @Entity('korwil_transaction', { schema: 'public' })
 export class KorwilTransaction extends TmsBaseEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'korwil_transaction_id',
   })
-  korwilTransactionId: number;
+  korwilTransactionId: string;
 
   @Column('timestamp with time zone', {
     nullable: true,
@@ -18,26 +20,23 @@ export class KorwilTransaction extends TmsBaseEntity {
   })
   date: Date;
 
-  @Column('character varying', {
-    nullable: true,
-    length: 500,
-    name: 'branch_id',
+  @Column('uuid', {
+    nullable: false,
+    name: 'employee_journey_id',
   })
-  branchId: string | null;
+  employeeJourneyId: string | null;
 
-  @Column('character varying', {
-    nullable: true,
-    length: 500,
+  @Column('uuid', {
+    nullable: false,
     name: 'user_to_branch_id',
   })
   userToBranchId: string | null;
 
-  @Column('character varying', {
+  @Column('bigint', {
     nullable: true,
-    length: 500,
-    name: 'employee_journey_id',
+    name: 'branch_id',
   })
-  employeeJourneyId: string | null;
+  branchId: string | null;
 
   @Column('integer', {
     nullable: true,
@@ -72,9 +71,23 @@ export class KorwilTransaction extends TmsBaseEntity {
   })
   isDeleted: boolean;
 
-  @OneToMany(() => Branch, e => e.branchId)
-  branches: Branch[];
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branches: Branch;
 
-  @OneToMany(() => User, e => e.userId)
-  users: User[];
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  users: User;
+
+  @ManyToOne(() => UserToBranch)
+  @JoinColumn({ name: 'user_to_branch_id' })
+  userToBranch: UserToBranch;
+
+  @OneToMany(() => KorwilTransactionDetail, e => e.korwilTransaction)
+  @JoinColumn({ name: 'korwil_transaction_id', referencedColumnName: 'korwilTransactionId' })
+  korwilTransactionDetail: KorwilTransactionDetail[];
+
+  @OneToOne(() => EmployeeJourney)
+  @JoinColumn({ name: 'employee_journey_id' })
+  employeeJourney: EmployeeJourney;
 }
