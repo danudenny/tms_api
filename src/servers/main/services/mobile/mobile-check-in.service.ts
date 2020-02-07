@@ -7,9 +7,11 @@ import { BranchRepository } from '../../../../shared/orm-repository/branch.repos
 import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
-import { MobileCheckInPayloadVm } from '../../models/mobile-check-in-payload.vm';
+import { MobileCheckInPayloadVm, MobileCheckInFormPayloadVm } from '../../models/mobile-check-in-payload.vm';
 import { MobileCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
+import { MobileKorwilService } from './mobile-korwil.service';
 
 @Injectable()
 export class MobileCheckInService {
@@ -89,7 +91,7 @@ export class MobileCheckInService {
   }
 
   async checkInForm(
-    payload: MobileCheckInPayloadVm,
+    payload: MobileCheckInFormPayloadVm,
     file,
   ): Promise<MobileCheckInResponseVm> {
     const authMeta = AuthService.getAuthData();
@@ -99,6 +101,17 @@ export class MobileCheckInService {
     let branchName = '';
     let checkInDate = '';
     let attachmentId = null;
+
+    if(payload.branchId){
+      const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(payload.latitudeCheckIn, payload.longitudeCheckIn, payload.branchId);
+      if (responseCheckBranch.status == false){
+        result.status = "error";
+        result.message = responseCheckBranch.message;
+        result.branchName = branchName;
+        result.checkInDate = checkInDate;
+        result.attachmentId = attachmentId;
+      }
+    }
 
     const timeNow = moment().toDate();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -141,9 +154,31 @@ export class MobileCheckInService {
       });
       await this.employeeJourneyRepository.save(employeeJourney);
 
+      let branchIdTemp = "";
+      if(payload.branchId != ""){
+        branchIdTemp = payload.branchId;
+      }else{
+        branchIdTemp = permissonPayload.branchId.toString();
+      }
+      const employeeJourneyId = employeeJourney.employeeJourneyId;
+
+      // insert pending status korwil
+      const korwilTransaction = KorwilTransaction.create();
+      korwilTransaction.date = timeNow;
+      korwilTransaction.branchId = branchIdTemp;
+      korwilTransaction.userId = authMeta.userId;
+      korwilTransaction.status = 0;
+      korwilTransaction.createdTime = timeNow;
+      korwilTransaction.isDeleted = false;
+      korwilTransaction.employeeJourneyId = employeeJourneyId;
+      await KorwilTransaction.save(korwilTransaction);
+
+      const service = new MobileKorwilService();
+      await service.createTransactionItem(korwilTransaction.korwilTransactionId);
+
       const branch = await this.branchRepository.findOne({
         select: ['branchName'],
-        where: { branchId: permissonPayload.branchId },
+        where: { branchId: branchIdTemp },
       });
       branchName = branch.branchName;
       checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
