@@ -1,4 +1,5 @@
 import { createQueryBuilder } from 'typeorm';
+import { isEmpty } from 'lodash';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm } from '../../models/mobile-korwil-response.vm';
 import { MobilePostKorwilTransactionPayloadVm } from '../../models/mobile-korwil-payload.vm';
@@ -64,11 +65,10 @@ export class MobileKorwilService {
       response.message= "lokasi branch tidak valid";
 
       const res = await RawQueryService.query(`SELECT branch_id FROM branch WHERE is_deleted = false
-      AND address IS NOT NULL AND longitude IS NOT NULL AND latitude IS NOT NULL
+      AND longitude IS NOT NULL AND latitude IS NOT NULL
       AND latitude::float >= ${nearby_branch[0]} AND latitude::float <= ${nearby_branch[2]}
       AND longitude::float >= ${nearby_branch[1]} AND longitude::float <= ${nearby_branch[3]}
       AND branch_id = ${branchId}`);
-
       if (res.length != 0) {
         response.message = "Lokasi branch valid";
         response.status = true;
