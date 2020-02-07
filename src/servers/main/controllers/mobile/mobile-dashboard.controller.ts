@@ -45,7 +45,7 @@ export class MobileDashboardController {
     return MobileInitDataService.getInitDataByRequest(payload.lastSyncDateTime);
   }
 
-  @Post('initCheckin')
+  @Get('initCheckin')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
