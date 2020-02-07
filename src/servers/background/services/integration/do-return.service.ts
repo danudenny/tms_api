@@ -48,35 +48,6 @@ export class DoReturnService {
       );
     `);
 
-    // const query = `
-    //     INSERT INTO do_return_awb
-    //     (                        branch_id_last,
-    //                               awb_number,
-    //                               awb_status_id_last,
-    //                               customer_id,
-    //                               pod_datetime,
-    //                               user_id_created,
-    //                               user_id_updated,
-    //                               created_time,
-    //                               updated_time
-    //       )
-    //       (
-    //   SELECT aia.branch_id_last,
-    //   aia.awb_number,
-    //   aia.awb_status_id_last,
-    //   a.customer_account_id AS "customer_id",
-    //   a.history_date_last AS "pod_datetime",
-    //   a.user_id_created,
-    //   a.user_id_updated,
-    //   a.created_time,
-    //   a.updated_time
-    //   from temp_stt t
-    //   inner join awb_item_attr aia on t.nostt=aia.awb_number and aia.is_deleted=false
-    //   inner join awb a on aia.awb_id=a.awb_id and a.is_deleted=false
-    //   left join customer_account ca on a.customer_account_id=ca.customer_account_id and ca.is_deleted=false
-    //   where t.dokembali = true and t.is_sync_dokembali = false
-    //   );
-    // `;
     return true;
   }
 
@@ -86,13 +57,6 @@ export class DoReturnService {
     FROM do_return_awb p2
     WHERE p1.nostt = p2.awb_number
     AND p1.is_sync_dokembali = false ;`);
-    // const query = `
-    // UPDATE temp_stt p1
-    //   SET is_sync_dokembali = true
-    //   FROM do_return_awb p2
-    //   WHERE p1.nostt = p2.awb_number
-    //   AND p1.is_sync_dokembali = false ;
-    // `;
     return true;
   }
 
@@ -104,6 +68,25 @@ export class DoReturnService {
     if (insertReturn) {
       const updateReturn = await this.updateTempStt();
     }
+    result.message = message;
+    result.status = status;
+    return result;
+  }
+
+  private static async updateStatus(): Promise<any> {
+    await RawQueryService.query(` update do_return_awb as dra
+    set awb_status_id_last = aia.awb_status_id_last
+    from awb_item_attr as aia
+    where dra.awb_number = aia.awb_number
+    and aia.awb_status_id_last NOT IN ('24500','25000','30000');`);
+    return true;
+  }
+
+  static async syncUpdateStatus(): Promise<DoReturnSyncResponseVm> {
+    const updateStatus = await this.updateStatus();
+    const status = '200';
+    const message = 'Success Updated';
+    const result = new DoReturnSyncResponseVm();
     result.message = message;
     result.status = status;
     return result;

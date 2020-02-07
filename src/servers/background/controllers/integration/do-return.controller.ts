@@ -20,4 +20,10 @@ export class DoReturnController {
   public async findAllDoKembali(@Body() payload: BaseMetaPayloadVm) {
     return DoReturnService.syncDoReturn();
   }
+
+  @Get('updateStatus')
+  @ApiOkResponse({ type: DoReturnSyncResponseVm })
+  public async updateStatus(@Body() payload: BaseMetaPayloadVm) {
+    return DoReturnService.syncDoReturn();
+  }
 }
