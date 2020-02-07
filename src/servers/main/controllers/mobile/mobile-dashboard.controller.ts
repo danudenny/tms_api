@@ -18,6 +18,8 @@ import { MobileComplaintListResponseAllVm } from '../../models/mobile-complaint-
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import moment = require('moment');
 import { RedisService } from '../../../../shared/services/redis.service';
+import { MobileInitCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
+import { MobileInitCheckInService } from '../../services/mobile/mobile-init-check-in.service';
 
 @ApiUseTags('Dashboard')
 @Controller('mobile')
@@ -41,6 +43,16 @@ export class MobileDashboardController {
   @ApiOkResponse({ type: MobileInitDataResponseVm })
   public async initData(@Body() payload: MobileInitDataPayloadVm) {
     return MobileInitDataService.getInitDataByRequest(payload.lastSyncDateTime);
+  }
+
+  @Post('initCheckin')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  @ApiOkResponse({ type: MobileInitCheckInResponseVm })
+  public async initCheckin() {
+    return MobileInitCheckInService.getInitCheckInByRequest();
   }
 
   @Get('employee/:employeeId')
