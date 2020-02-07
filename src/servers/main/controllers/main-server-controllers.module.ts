@@ -43,6 +43,7 @@ import { MobileDeliveryOutController } from './mobile/mobile-delivery-out.contro
 import { MobileAwbFilterController } from './mobile/mobile-awb-filter.controller';
 
 import { DoReturnController } from './do_return/do_return_controller';
+import { V1MobileInitController } from './mobile/v1/mobile-init.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -90,6 +91,7 @@ import { DoReturnController } from './do_return/do_return_controller';
     MobileAwbFilterController,
     DoReturnStatusController,
     DoReturnController,
+    V1MobileInitController,
   ],
 })
 export class MainServerControllersModule {}
