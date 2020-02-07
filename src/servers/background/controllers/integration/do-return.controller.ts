@@ -22,9 +22,6 @@ export class DoReturnController {
   }
 
   @Get('updateStatus')
-  // @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: DoReturnSyncResponseVm })
   public async updateStatus(@Body() payload: BaseMetaPayloadVm) {
     return DoReturnService.syncDoReturn();

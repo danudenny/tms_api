@@ -85,7 +85,7 @@ export class DoReturnService {
   static async syncUpdateStatus(): Promise<DoReturnSyncResponseVm> {
     const updateStatus = await this.updateStatus();
     const status = '200';
-    const message = 'Success';
+    const message = 'Success Updated';
     const result = new DoReturnSyncResponseVm();
     result.message = message;
     result.status = status;
