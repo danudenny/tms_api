@@ -477,8 +477,8 @@ export class DoReturnService {
       );
       if (attachment) {
         attachmentId = attachment.attachmentTmsId;
-      }
     }
+  }
     // insert to DoReturnAdmintoCt
     const generateCode = await CustomCounterCode.doReturn(timeNow);
     const adminCt = DoReturnAdmintoCt.create();
