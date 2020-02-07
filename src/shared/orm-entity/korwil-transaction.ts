@@ -18,11 +18,19 @@ export class KorwilTransaction extends TmsBaseEntity {
   })
   date: Date;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: true,
-    name: 'branch_id',
+    length: 500,
+    name: 'branchId',
   })
-  branchId: number | null;
+  branchId: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+    name: 'employee_journey_id',
+  })
+  employeeJourneyId: string | null;
 
   @Column('bigint', {
     nullable: true,

@@ -116,4 +116,23 @@ export class MobileKorwilService {
     // degrees to radians
     return degree * Math.PI / 180;
   }
+
+  public static async createTransactionItem(
+    payload: MobilePostKorwilTransactionPayloadVm,
+    file,
+  ): Promise<MobilePostKorwilTransactionResponseVm> {
+    const result = new MobilePostKorwilTransactionResponseVm();
+    const authMeta = AuthService.getAuthMetadata();
+
+    result.korwilTransactionDetailId = "";
+    result.korwilTransactionDetailPhotoId = "";
+    result.korwilTransactionId = "";
+
+    const responseCheckBranch = await this.validateBranchByCoordinate(payload.latitude, payload.longitude, payload.branchId);
+    if (responseCheckBranch.status == false){
+      result.coordinate = responseCheckBranch;
+    }
+
+    return result;
+  }
 }

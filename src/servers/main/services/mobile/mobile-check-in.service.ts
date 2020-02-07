@@ -153,7 +153,13 @@ export class MobileCheckInService {
       });
       await this.employeeJourneyRepository.save(employeeJourney);
 
-      const branchIdTemp = payload.branchId ? payload.branchId : permissonPayload.branchId.toString();
+      let branchIdTemp = "";
+      if(payload.branchId != ""){
+        branchIdTemp = payload.branchId;
+      }else{
+        branchIdTemp = permissonPayload.branchId.toString();
+      }
+      const employeeJourneyId = employeeJourney.employeeJourneyId;
 
       // insert pending status korwil
       const korwilTransaction = KorwilTransaction.create();
@@ -163,6 +169,7 @@ export class MobileCheckInService {
       korwilTransaction.status = 0;
       korwilTransaction.createdTime = timeNow;
       korwilTransaction.isDeleted = false;
+      korwilTransaction.employeeJourneyId = employeeJourneyId;
       await KorwilTransaction.save(korwilTransaction);
 
       const branch = await this.branchRepository.findOne({

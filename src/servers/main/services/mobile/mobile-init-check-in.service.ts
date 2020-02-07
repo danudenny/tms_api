@@ -1,11 +1,17 @@
 import moment = require('moment');
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { createQueryBuilder, IsNull } from 'typeorm';
 
 import { AuthService } from '../../../../shared/services/auth.service';
 import { EmployeeJourney } from '../../../../shared/orm-entity/employee-journey';
 import { MobileCheckInResponseVm, MobileInitCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
 
+
+
 export class MobileInitCheckInService {
+  constructor(){}
+
   public static async getInitCheckInByRequest(): Promise<MobileInitCheckInResponseVm> {
     const authMeta = AuthService.getAuthData();
     const result = new MobileInitCheckInResponseVm();
@@ -48,19 +54,30 @@ export class MobileInitCheckInService {
       result.checkInDate = moment(employeeJourneyCheck.checkInDate)
         .format('YYYY-MM-DD HH:mm:ss');
 
-      // get last check in transaction branch
-      const qb = createQueryBuilder();
-      qb.addSelect('kt.branch_id', 'checkinIdBranch');
-      qb.from('korwil_transaction', 'kt');
-      qb.where('kt.is_deleted = false');
-      qb.andWhere('kt.user_id = :userId', { userId: authMeta.userId })
-      qb.andWhere('kt.status = :statusPending', { statusPending: 0 })
-      qb.orderBy('created_time', 'DESC');
+      const employeeJourney = await EmployeeJourney.findOne({
+        where: {
+          employeeId: authMeta.employeeId,
+          checkOutDate: IsNull(),
+        },
+        order: {
+          checkInDate: 'DESC',
+        },
+      });
+      if (employeeJourney) {
+        const qb = createQueryBuilder();
+        qb.addSelect('kt.branch_id', 'checkinIdBranch');
+        qb.from('korwil_transaction', 'kt');
+        qb.where('kt.is_deleted = false');
+        qb.andWhere('kt.user_id = :userId', { userId: authMeta.userId })
+        qb.andWhere('kt.employee_journey_id = :employeeJourneyId', { employeeJourneyId: employeeJourney.employeeJourneyId })
+        qb.orderBy('created_time', 'DESC');
 
-      const res = await qb.getRawOne();
+        const res = await qb.getRawOne();
 
-      if(res){
-        result.checkinIdBranch = res.checkinIdBranch;
+        // get last check in transaction branch
+        if(res){
+          result.checkinIdBranch = res.checkinIdBranch;
+        }
       }
     }
 
