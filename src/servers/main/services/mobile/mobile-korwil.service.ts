@@ -123,7 +123,7 @@ export class MobileKorwilService {
 
   public static async createTransaction(
     payload: MobilePostKorwilTransactionPayloadVm,
-    file1, file2, file3, file4, file5
+    files
   ): Promise<MobilePostKorwilTransactionResponseVm> {
     const result = new MobilePostKorwilTransactionResponseVm();
     const authMeta = AuthService.getAuthMetadata();
@@ -131,7 +131,6 @@ export class MobileKorwilService {
 
     result.message = "success";
     result.status = "ok";
-    result.korwilTransactionDetailPhotoId = "";
 
     const responseCheckBranch = await this.validateBranchByCoordinate(payload.latitude, payload.longitude, payload.branchId);
     if (responseCheckBranch.status == false){
@@ -140,34 +139,30 @@ export class MobileKorwilService {
       return result;
     }
 
-    try {
-      const korwilTransactionDetail = await KorwilTransactionDetail.findOne({
-        where: {
-          korwilItemId: payload.korwilTransactionDetailId,
-        }
-      });
-      korwilTransactionDetail.latChecklist = payload.latitude;
-      korwilTransactionDetail.longChecklist = payload.longitude;
-      korwilTransactionDetail.note = payload.note;
-      korwilTransactionDetail.isDone = true;
-      korwilTransactionDetail.status = 2;
-      korwilTransactionDetail.userIdUpdated = authMeta.userId;
-      korwilTransactionDetail.updatedTime = timeNow;
-      KorwilTransactionDetail.save(korwilTransactionDetail);
+    const korwilTransactionDetail = await KorwilTransactionDetail.findOne({
+      where: {
+        korwilTransactionDetailId: payload.korwilTransactionDetailId,
+      }
+    });
 
-      // upload image
-      this.uploadImage(file1, korwilTransactionDetail.korwilTransactionDetailId);
-      this.uploadImage(file2, korwilTransactionDetail.korwilTransactionDetailId);
-      this.uploadImage(file3, korwilTransactionDetail.korwilTransactionDetailId);
-      this.uploadImage(file4, korwilTransactionDetail.korwilTransactionDetailId);
-      this.uploadImage(file5, korwilTransactionDetail.korwilTransactionDetailId);
+    korwilTransactionDetail.latChecklist = payload.latitude;
+    korwilTransactionDetail.longChecklist = payload.longitude;
+    korwilTransactionDetail.note = payload.note;
+    korwilTransactionDetail.isDone = true;
+    korwilTransactionDetail.status = 2;
+    korwilTransactionDetail.userIdUpdated = authMeta.userId;
+    korwilTransactionDetail.updatedTime = timeNow;
+    KorwilTransactionDetail.save(korwilTransactionDetail);
 
+    // upload image
+    files.forEach(file => {
+      this.uploadImage(file, korwilTransactionDetail.korwilTransactionDetailId);
+    });
+
+    if(payload.deletedPhotos){
       payload.deletedPhotos.forEach(id => {
         this.deletePhotoKorwil(id);
       });
-    } catch (error) {
-      result.message = "gagal upload image";
-      result.status = "error";
     }
     return result;
   }
@@ -194,6 +189,7 @@ export class MobileKorwilService {
       korwilTransactionDetailPhoto.updatedTime    = timeNow;
       korwilTransactionDetailPhoto.createdTime    = timeNow;
       korwilTransactionDetailPhoto.userIdCreated  = authMeta.userId;
+      korwilTransactionDetailPhoto.userIdUpdated  = authMeta.userId;
       KorwilTransactionDetailPhoto.save(korwilTransactionDetailPhoto);
     }
   }

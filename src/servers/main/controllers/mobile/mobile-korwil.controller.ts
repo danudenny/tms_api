@@ -1,9 +1,9 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get, Param, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get, Param, UseInterceptors, UploadedFile, UploadedFiles } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { MobileKorwilService } from '../../services/mobile/mobile-korwil.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm, ItemListKorwilResponseVm, DetailPhotoKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
 import { MobilePostKorwilTransactionPayloadVm } from '../../models/mobile-korwil-payload.vm';
@@ -44,26 +44,18 @@ export class MobileKorwilController {
   ) {
     return MobileKorwilService.getDetailPhoto(korwilTransactionDetailId);
   }
-  
+
   @Post('createItem')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('file1'))
-  @UseInterceptors(FileInterceptor('file2'))
-  @UseInterceptors(FileInterceptor('file3'))
-  @UseInterceptors(FileInterceptor('file4'))
-  @UseInterceptors(FileInterceptor('file5'))
+  @UseInterceptors(FilesInterceptor('files'))
   @ApiBearerAuth()
-  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobilePostKorwilTransactionResponseVm })
-  public async checkInForm(
+  public async createItem(
     @Body() payload: MobilePostKorwilTransactionPayloadVm,
-    @UploadedFile() file1,
-    @UploadedFile() file2,
-    @UploadedFile() file3,
-    @UploadedFile() file4,
-    @UploadedFile() file5,
+    @UploadedFiles() files,
+
   ) {
-    return MobileKorwilService.createTransaction(payload, file1, file2, file3, file4, file5);
+    return MobileKorwilService.createTransaction(payload, files);
   }
 }

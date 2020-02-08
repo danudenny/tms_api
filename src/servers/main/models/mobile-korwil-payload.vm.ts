@@ -4,9 +4,6 @@ export class MobilePostKorwilTransactionPayloadVm {
   @ApiModelPropertyOptional()
   deletedPhotos: string[];
 
-  @ApiModelPropertyOptional()
-  insertedPhotos: string[];
-
   @ApiModelProperty()
   korwilTransactionDetailId: string;
 
