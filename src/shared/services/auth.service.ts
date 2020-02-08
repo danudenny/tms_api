@@ -209,8 +209,13 @@ export class AuthService {
         {},
       );
 
-      // Populate return value
       const result = new PermissionAccessResponseVM();
+      result.isKorwil = false;
+      // Role Id Korwil
+      if(roleId == 38){
+        result.isKorwil = true;
+      }
+      // Populate return value
       result.userId = authMeta.userId;
       result.clientId = authMeta.clientId;
       result.username = authMeta.username;
@@ -223,7 +228,6 @@ export class AuthService {
         result.branchCode = branch.branchCode;
         result.isHeadOffice = branch.isHeadOffice;
       }
-
       // FIXME: populate rolesAccessPermissions from user.userRoles[0].role.role_permissions
       result.rolesAccessPermissions = map(
         user.userRoles[0].role.rolePermissions,

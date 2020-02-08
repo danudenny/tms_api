@@ -142,6 +142,8 @@ export class PermissionAccessResponseVM {
   @ApiModelProperty()
   rolesAccessPermissions: string[];
 
+  @ApiModelProperty()
+  isKorwil: boolean;
 }
 
 // #endregion
