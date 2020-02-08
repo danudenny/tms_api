@@ -75,7 +75,7 @@ export class MobileKorwilService {
 
     if(data){
       result.itemList = data;
-      result.korwilTransactionid = data[0].korwilTransactionId;
+      result.korwilTransactionId = data[0].korwilTransactionId;
       result.isDone = data[0].isDone;
     }
     return result;

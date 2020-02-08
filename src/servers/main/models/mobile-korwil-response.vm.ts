@@ -53,7 +53,7 @@ export class ItemListKorwilResponseVm {
   itemList: DetailItemListKorwilResponseVm[];
 
   @ApiModelProperty()
-  korwilTransactionid: string;
+  korwilTransactionId: string;
 
   @ApiModelProperty()
   isDone: string;
