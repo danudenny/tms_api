@@ -12,7 +12,7 @@ export class MobileCheckInResponseVm {
   branchName: string;
 
   @ApiModelProperty()
-  checkInDate: string;
+  checkInDate: String;
 
   @ApiModelProperty()
   attachmentId: number;

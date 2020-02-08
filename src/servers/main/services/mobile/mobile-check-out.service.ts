@@ -97,6 +97,7 @@ export class MobileCheckOutService {
     let branchName = '';
     let checkOutDate = '';
     let attachmentId = null;
+    let branchId = payload.branchId;
 
     const timeNow = moment().toDate();
 
@@ -117,6 +118,7 @@ export class MobileCheckOutService {
           result.branchName = branchName;
           result.checkOutDate = checkOutDate;
           result.attachmentId = attachmentId;
+          result.checkoutIdBranch = null;
           return result;
         }else{
           message = "Checkout berhasil, Check Out diluar wilayah gerai Check In";
@@ -156,15 +158,17 @@ export class MobileCheckOutService {
       await this.employeeJourneyRepository.save(employeeJourney);
 
       const branch = await this.branchRepository.findOne({
-        select: ['branchName'],
+        select: ['branchName', 'branchId'],
         where: { branchId: payload.branchId ? payload.branchId : permissonPayload.branchId },
       });
 
       branchName = branch.branchName;
+      branchId = branch.branchId.toString();
       checkOutDate = moment().format('YYYY-MM-DD HH:mm:ss');
     } else {
       status = 'error';
       message = 'Anda belum melakukan Check In sebelumnya';
+      branchId = null;
     }
 
     result.status = status;
@@ -172,6 +176,7 @@ export class MobileCheckOutService {
     result.branchName = branchName;
     result.checkOutDate = checkOutDate;
     result.attachmentId = attachmentId;
+    result.checkoutIdBranch = branchId;
     return result;
   }
 }

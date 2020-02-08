@@ -110,6 +110,7 @@ export class MobileCheckInService {
         result.branchName = branchName;
         result.checkInDate = checkInDate;
         result.attachmentId = attachmentId;
+        result.checkinIdBranch = null;
         return result;
       }
     }
@@ -127,12 +128,18 @@ export class MobileCheckInService {
         },
       },
     );
+    let branchIdTemp = payload.branchId ? payload.branchId : permissonPayload.branchId.toString();
+    const branch = await this.branchRepository.findOne({
+      select: [`branchName`, `branchId`, `updatedTime`],
+      where: { branchId: branchIdTemp },
+    });
     if (employeeJourneyCheckOutExist) {
       result.status = "error";
       result.message = 'Check In sedang aktif, Harap Check Out terlebih dahulu';
-      result.branchName = branchName;
-      result.checkInDate = checkInDate;
+      result.branchName = branch.branchName ? branch.branchName : branchName;
+      result.checkInDate = moment(employeeJourneyCheckOutExist.checkInDate).format('YYYY-MM-DD HH:mm:ss');
       result.attachmentId = attachmentId;
+      result.checkinIdBranch = branch.branchId ? branch.branchId.toString() : payload.branchId;
       return result;
     } else {
       const qb = createQueryBuilder();
@@ -149,6 +156,7 @@ export class MobileCheckInService {
         result.branchName = branchName;
         result.checkInDate = checkInDate;
         result.attachmentId = attachmentId;
+        result.checkinIdBranch = null;
         return result;
       }
 
@@ -173,15 +181,10 @@ export class MobileCheckInService {
         userIdUpdated: authMeta.userId,
         updatedTime: timeNow,
         attachmentIdCheckIn: attachmentId,
+        branchIdCheckIn: Number(payload.branchId),
       });
       await this.employeeJourneyRepository.save(employeeJourney);
-
-      let branchIdTemp = "";
-      if(payload.branchId != ""){
-        branchIdTemp = payload.branchId;
-      }else{
-        branchIdTemp = permissonPayload.branchId.toString();
-      }
+      console.log(employeeJourney);
       const employeeJourneyId = employeeJourney.employeeJourneyId;
 
       const qb1 = createQueryBuilder();
@@ -208,10 +211,6 @@ export class MobileCheckInService {
         const service = new MobileKorwilService();
         await service.createTransactionItem(korwilTransaction.korwilTransactionId);
       }
-      const branch = await this.branchRepository.findOne({
-        select: ['branchName'],
-        where: { branchId: branchIdTemp },
-      });
       branchName = branch.branchName;
       checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
     }
