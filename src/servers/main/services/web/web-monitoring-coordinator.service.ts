@@ -13,7 +13,7 @@ import { UserToBranch } from '../../../../shared/orm-entity/user-to-branch';
 export class WebMonitoringCoordinatorService {
   constructor() {}
 
-  static async findListAll(
+  static async findListAllBranch(
     payload: BaseMetaPayloadVm,
   ): Promise<WebMonitoringCoordinatorResponse> {
     // mapping field
@@ -41,6 +41,7 @@ export class WebMonitoringCoordinatorService {
       ['t4.check_out_date', 'checkOutDatetime'],
       [`CONCAT(t5.first_name, ' ', t5.last_name)`, 'coordinatorName'],
       ['t1.user_id', 'userId'],
+      ['t1.status', 'statusTransaction'],
     );
     q.innerJoin(e => e.branches, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -55,7 +56,7 @@ export class WebMonitoringCoordinatorService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.where(e => e.status, w => w.equals(1));
-    q.groupByRaw('t2.branch_id, t2.branch_name, t3.is_done, t1.total_task, t4.check_in_date, t4.check_out_date, t1.date, t3.korwil_transaction_id, "coordinatorName", t1.user_id');
+    q.groupByRaw('t2.branch_id, t2.branch_name, t3.is_done, t1.total_task, t4.check_in_date, t4.check_out_date, t1.date, t3.korwil_transaction_id, "coordinatorName", t1.user_id, t1.status');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
     const result = new WebMonitoringCoordinatorResponse();

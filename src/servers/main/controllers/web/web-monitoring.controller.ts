@@ -29,7 +29,7 @@ export class WebMonitoringController {
   // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebMonitoringCoordinatorResponse })
   public async monitoringCoordinatorList(@Body() payload: BaseMetaPayloadVm) {
-    return WebMonitoringCoordinatorService.findListAll(payload);
+    return WebMonitoringCoordinatorService.findListAllBranch(payload);
   }
 
   @Post('coordinator')
