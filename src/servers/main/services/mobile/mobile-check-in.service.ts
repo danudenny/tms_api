@@ -137,7 +137,7 @@ export class MobileCheckInService {
       result.status = "error";
       result.message = 'Check In sedang aktif, Harap Check Out terlebih dahulu';
       result.branchName = branch.branchName ? branch.branchName : branchName;
-      result.checkInDate = branch.updatedTime ? branch.updatedTime.toString() : checkInDate;
+      result.checkInDate = moment(employeeJourneyCheckOutExist.checkInDate).format('YYYY-MM-DD H:mm:SS');
       result.attachmentId = attachmentId;
       result.checkinIdBranch = branch.branchId ? branch.branchId.toString() : payload.branchId;
       return result;
