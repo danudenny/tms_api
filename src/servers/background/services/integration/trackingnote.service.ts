@@ -116,7 +116,7 @@ export class TrackingNoteService {
       for (const item of data) {
         lastSyncId = item.awbHistoryId;
         const timeNow = new Date(moment().add(7, 'hours').format('YYYY-MM-DD HH:mm:ss'));
-        const trackDateTime = new Date(moment(item.trackingDateTime).format('YYYY-MM-DD HH:mm:ss'));
+        const trackDateTime = new Date(moment(item.trackingDateTime).add(7, 'hours').format('YYYY-MM-DD HH:mm:ss'));
 
         // table.rows.add(lastSyncId, item.receiptNumber, item.trackingDateTime, item.awbStatusId, item.trackingType,
         //   item.courierName, item.nik, item.branchCode,
