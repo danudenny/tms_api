@@ -53,19 +53,13 @@ export class ItemListKorwilResponseVm {
   isDone: string;
 }
 
-// export class DetailPhotoResponseVm {
-//   @ApiModelProperty()
-//   url: string;
+export class DetailPhotoResponseVm {
+  @ApiModelProperty()
+  urlPhoto: string;
 
-//   @ApiModelProperty()
-//   note: string;
-
-//   @ApiModelProperty()
-//   isDone: boolean;
-
-//   @ApiModelProperty()
-//   status: number;
-// }
+  @ApiModelProperty()
+  photoId: string;
+}
 
 export class DetailPhotoKorwilResponseVm {
   @ApiModelProperty()
@@ -77,6 +71,6 @@ export class DetailPhotoKorwilResponseVm {
   @ApiModelProperty()
   status: number;
 
-  @ApiModelProperty()
-  urlPhotos: string[];
+  @ApiModelProperty({ type: () => [DetailPhotoResponseVm] })
+  photo: DetailPhotoResponseVm[];
 }

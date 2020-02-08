@@ -52,7 +52,7 @@ export class MobileKorwilService {
     qb.addSelect('ktd.korwil_transaction_detail_id', 'korwilTransactionDetailId');
     qb.addSelect('ktd.status', 'status');
     qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
-    qb.addSelect('ktd.is_done', 'isDone');
+    qb.addSelect('kt.is_done', 'isDone');
     qb.addSelect('ktd.note', 'note');
     qb.from('korwil_transaction', 'kt');
     qb.innerJoin('korwil_transaction_detail',
@@ -67,7 +67,7 @@ export class MobileKorwilService {
     'utb',
     'utb.ref_branch_id = kt.branch_id AND utb.is_deleted = false'
     );
-    qb.where('ktd.is_deleted = false');
+    qb.where('kt.is_deleted = false');
     qb.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
     qb.andWhere('utb.ref_user_id = :userId', { userId: authMeta.userId });
 
@@ -94,6 +94,7 @@ export class MobileKorwilService {
     qb.addSelect('ktd.is_done', 'isDone');
     qb.addSelect('ktd.status', 'status');
     qb.from('korwil_transaction_detail', 'ktd');
+    qb.where('ktd.is_deleted = false');
     qb.andWhere('ktd.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: korwilTransactionDetailId });
 
     const data = await qb.getRawOne();
@@ -103,21 +104,18 @@ export class MobileKorwilService {
     result.status = data.status;
 
     qb = createQueryBuilder();
-    qb.addSelect('at.url', 'url');
+    qb.addSelect('at.url', 'urlPhoto');
+    qb.addSelect('ktdp.photo_id', 'photoId');
     qb.from('korwil_transaction_detail_photo', 'ktdp');
     qb.innerJoin('attachment_tms',
     'at',
     'at.attachment_tms_id = ktdp.photo_id AND at.is_deleted = false'
     );
     qb.andWhere('ktdp.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: korwilTransactionDetailId });
+    qb.where('ktdp.is_deleted = false');
     const dataUrl = await qb.getRawMany();
-    let urls = [];
 
-    dataUrl.forEach(elem => {
-      urls.push(elem.url);
-    });
-
-    result.urlPhotos = urls;
+    result.photo = dataUrl;
     return result;
   }
 
@@ -198,6 +196,7 @@ export class MobileKorwilService {
     const attachmentTms = await AttachmentTms.findOne({
       where: {
         attachmentTmsId: Number(id),
+        isDeleted: false,
       }
     });
     AttachmentService.deleteAttachment(attachmentTms.attachmentTmsId);
@@ -205,6 +204,7 @@ export class MobileKorwilService {
     const deleteKorwilPhoto = await KorwilTransactionDetailPhoto.findOne({
       where: {
         photoId: Number(attachmentTms.attachmentTmsId),
+        isDeleted: false,
       }
     });
     deleteKorwilPhoto.isDeleted = true;
