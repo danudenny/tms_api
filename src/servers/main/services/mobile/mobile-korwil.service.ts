@@ -11,6 +11,7 @@ import moment = require('moment');
 import { PayloadTooLargeException } from '@nestjs/common';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { KorwilTransactionDetailPhoto } from '../../../../shared/orm-entity/korwil-transaction-detail-photo';
+import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 
 export class MobileKorwilService {
   constructor() {}
@@ -118,6 +119,100 @@ export class MobileKorwilService {
 
     result.urlPhotos = urls;
     return result;
+  }
+
+  public static async createTransaction(
+    payload: MobilePostKorwilTransactionPayloadVm,
+    file1, file2, file3, file4, file5
+  ): Promise<MobilePostKorwilTransactionResponseVm> {
+    const result = new MobilePostKorwilTransactionResponseVm();
+    const authMeta = AuthService.getAuthMetadata();
+    const timeNow = moment().toDate();
+
+    result.message = "success";
+    result.status = "ok";
+    result.korwilTransactionDetailPhotoId = "";
+
+    const responseCheckBranch = await this.validateBranchByCoordinate(payload.latitude, payload.longitude, payload.branchId);
+    if (responseCheckBranch.status == false){
+      result.status = "error";
+      result.message = responseCheckBranch.message;
+      return result;
+    }
+
+    try {
+      const korwilTransactionDetail = await KorwilTransactionDetail.findOne({
+        where: {
+          korwilItemId: payload.korwilTransactionDetailId,
+        }
+      });
+      korwilTransactionDetail.latChecklist = payload.latitude;
+      korwilTransactionDetail.longChecklist = payload.longitude;
+      korwilTransactionDetail.note = payload.note;
+      korwilTransactionDetail.isDone = true;
+      korwilTransactionDetail.status = 2;
+      korwilTransactionDetail.userIdUpdated = authMeta.userId;
+      korwilTransactionDetail.updatedTime = timeNow;
+      KorwilTransactionDetail.save(korwilTransactionDetail);
+
+      // upload image
+      this.uploadImage(file1, korwilTransactionDetail.korwilTransactionDetailId);
+      this.uploadImage(file2, korwilTransactionDetail.korwilTransactionDetailId);
+      this.uploadImage(file3, korwilTransactionDetail.korwilTransactionDetailId);
+      this.uploadImage(file4, korwilTransactionDetail.korwilTransactionDetailId);
+      this.uploadImage(file5, korwilTransactionDetail.korwilTransactionDetailId);
+
+      payload.deletedPhotos.forEach(id => {
+        this.deletePhotoKorwil(id);
+      });
+    } catch (error) {
+      result.message = "gagal upload image";
+      result.status = "error";
+    }
+    return result;
+  }
+
+  private static async uploadImage(file, korwilTransactionDetailId){
+    if(file){
+      const timeNow = moment().toDate();
+      const authMeta = AuthService.getAuthMetadata();
+      let attachmentId = null;
+      const attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        'tms-korwil',
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+      }
+
+      const korwilTransactionDetailPhoto          = KorwilTransactionDetailPhoto.create();
+      korwilTransactionDetailPhoto.photoId        = attachmentId;
+      korwilTransactionDetailPhoto.korwilTransactionDetailId = korwilTransactionDetailId;
+      korwilTransactionDetailPhoto.isDeleted      = false;
+      korwilTransactionDetailPhoto.updatedTime    = timeNow;
+      korwilTransactionDetailPhoto.createdTime    = timeNow;
+      korwilTransactionDetailPhoto.userIdCreated  = authMeta.userId;
+      KorwilTransactionDetailPhoto.save(korwilTransactionDetailPhoto);
+    }
+  }
+
+  private static async deletePhotoKorwil(id){
+    const attachmentTms = await AttachmentTms.findOne({
+      where: {
+        attachmentTmsId: Number(id),
+      }
+    });
+    AttachmentService.deleteAttachment(attachmentTms.attachmentTmsId);
+
+    const deleteKorwilPhoto = await KorwilTransactionDetailPhoto.findOne({
+      where: {
+        photoId: Number(attachmentTms.attachmentTmsId),
+      }
+    });
+    deleteKorwilPhoto.isDeleted = true;
+    KorwilTransactionDetailPhoto.save(deleteKorwilPhoto);
   }
 
   public static async validateBranchByCoordinate(lat, long, branchId): Promise<ValidateBranchCoordinateResponseVm>{

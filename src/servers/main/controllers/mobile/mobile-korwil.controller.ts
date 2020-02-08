@@ -44,4 +44,26 @@ export class MobileKorwilController {
   ) {
     return MobileKorwilService.getDetailPhoto(korwilTransactionDetailId);
   }
+  
+  @Post('createItem')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file1'))
+  @UseInterceptors(FileInterceptor('file2'))
+  @UseInterceptors(FileInterceptor('file3'))
+  @UseInterceptors(FileInterceptor('file4'))
+  @UseInterceptors(FileInterceptor('file5'))
+  @ApiBearerAuth()
+  @Transactional()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: MobilePostKorwilTransactionResponseVm })
+  public async checkInForm(
+    @Body() payload: MobilePostKorwilTransactionPayloadVm,
+    @UploadedFile() file1,
+    @UploadedFile() file2,
+    @UploadedFile() file3,
+    @UploadedFile() file4,
+    @UploadedFile() file5,
+  ) {
+    return MobileKorwilService.createTransaction(payload, file1, file2, file3, file4, file5);
+  }
 }

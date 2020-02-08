@@ -11,16 +11,10 @@ export class DetailBranchListKorwilResponseVm {
 
 export class MobilePostKorwilTransactionResponseVm {
   @ApiModelProperty()
-  korwilTransactionDetailPhotoId: string;
+  message: string;
 
   @ApiModelProperty()
-  korwilTransactionDetailId: string;
-
-  @ApiModelProperty()
-  korwilTransactionId: string;
-
-  @ApiModelProperty({ type:[ValidateBranchCoordinateResponseVm] })
-  coordinate: ValidateBranchCoordinateResponseVm;
+  status: string;
 }
 
 export class BranchListKorwilResponseVm {

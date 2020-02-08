@@ -38,6 +38,24 @@ export class KorwilTransactionDetailPhoto extends BaseEntity {
   })
   createdTime: Date;
 
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'updated_time',
+  })
+  updatedTime: Date;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'user_id_created',
+  })
+  userIdCreated: number | null;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'user_id_updated',
+  })
+  userIdUpdated: number | null;
+
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
