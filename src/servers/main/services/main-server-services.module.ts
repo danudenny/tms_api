@@ -18,6 +18,10 @@ import { WebDeliveryOutService } from './web/web-delivery-out.service';
 import { WebMonitoringService } from './web/web-monitoring.service';
 import { WebAwbCountService } from './web/web-awb-count.service';
 import { MobileAttendanceService } from './mobile/mobile-attendance.service';
+import { LastMileDeliveryInService } from './mobile/mobile-last-mile-delivery-in.service';
+import { LastMileDeliveryOutService } from './mobile/mobile-last-mile-delivery-out.service';
+import { MobileAwbFilterService } from './mobile/mobile-awb-filter.service';
+import { DoReturnService } from './do-return/do-return.service';
 
 @Module({
   imports: [SharedModule],
@@ -40,6 +44,10 @@ import { MobileAttendanceService } from './mobile/mobile-attendance.service';
     WebMonitoringService,
     WebAwbCountService,
     MobileAttendanceService,
+    LastMileDeliveryInService,
+    LastMileDeliveryOutService,
+    MobileAwbFilterService,
+    DoReturnService,
   ],
   exports: [
     AwbStatusService,
@@ -60,6 +68,10 @@ import { MobileAttendanceService } from './mobile/mobile-attendance.service';
     WebMonitoringService,
     WebAwbCountService,
     MobileAttendanceService,
+    LastMileDeliveryInService,
+    LastMileDeliveryOutService,
+    MobileAwbFilterService,
+    DoReturnService,
   ],
 })
 export class MainServerServicesModule {}

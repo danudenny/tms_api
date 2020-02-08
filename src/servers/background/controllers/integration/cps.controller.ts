@@ -9,11 +9,13 @@ export class CpsController {
   constructor() {}
 
   @Post('bag')
-  // @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: TrackingNoteResponseVm })
-  public async postBag(@Body() payload: any) {
-    return CpsService.postBag(payload);
+  public async bag(@Body() payload: any) {
+    return CpsService.bag(payload);
   }
+
+  @Post('stt/mysql')
+  public async sttMysql(@Body() payload: any) {
+    return CpsService.sttMysql(payload);
+  }
+
 }

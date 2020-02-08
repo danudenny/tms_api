@@ -1,7 +1,7 @@
 // #region import
 import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Param } from '@nestjs/common';
 import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
-import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { WebDeliveryOutService } from '../../services/web/web-delivery-out.service';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
@@ -129,6 +129,7 @@ export class WebDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutBagResponseVm })
+  @Transactional()
   public async findAllBag(@Body() payload: WebScanOutBagVm) {
     // TODO: open bag and loop awb for update awb history
     return this.webDeliveryOutService.scanOutBag(payload);

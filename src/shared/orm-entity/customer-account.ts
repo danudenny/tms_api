@@ -1,6 +1,7 @@
-import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 
 import { PackagePriceSpecial } from './package-price-special';
+import { CustomerAddress } from './customer-address';
 
 @Entity('customer_account', { schema: 'public' })
 @Index('code_rds_idx', ['codeRds'])
@@ -451,4 +452,8 @@ export class CustomerAccount extends BaseEntity {
     package_price_special => package_price_special.customerAccount,
   )
   packagePriceSpecials: PackagePriceSpecial[];
+
+  @OneToOne(() => CustomerAddress)
+  @JoinColumn({ name: 'customer_account_id', referencedColumnName: 'customerAccountId' })
+  customerAddress: CustomerAddress;
 }

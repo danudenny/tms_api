@@ -9,8 +9,7 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
-import { User } from '../../../../shared/orm-entity/user';
-import { Branch } from '../../../../shared/orm-entity/branch';
+import { SharedService } from '../../../../shared/services/shared.service';
 
 export class BagService {
 
@@ -156,17 +155,23 @@ export class BagService {
     if (bagItemsAwb && bagItemsAwb.length) {
       let employeeIdDriver = null;
       let employeeNameDriver = '';
-      const userDriverRepo = await this.getDataUserEmployee(userIdDriver);
+      const userDriverRepo = await SharedService.getDataUserEmployee(userIdDriver);
       if (userDriverRepo) {
         employeeIdDriver = userDriverRepo.employeeId;
         employeeNameDriver = userDriverRepo.employee.employeeName;
       }
       let branchName = 'Kantor Pusat';
+      let branchNameNext = 'Pluit';
       let cityName = 'Jakarta';
-      const branch = await this.getDataBranchCity(permissonPayload.branchId);
+      const branch = await SharedService.getDataBranchCity(permissonPayload.branchId);
       if (branch) {
         branchName = branch.branchName;
         cityName = branch.district.city.cityName;
+      }
+      // branch next
+      const branchNext = await SharedService.getDataBranchCity(branchIdNext);
+      if (branchNext) {
+        branchNameNext = branchNext.branchName;
       }
       for (const itemAwb of bagItemsAwb) {
         if (itemAwb.awbItemId) {
@@ -218,6 +223,7 @@ export class BagService {
               branchName,
               cityName,
               branchIdNext,
+              branchNameNext,
             );
           } else {
             // BRANCH
@@ -238,177 +244,9 @@ export class BagService {
               branchName,
               cityName,
               branchIdNext,
+              branchNameNext,
             );
           }
-        }
-      }
-    } else {
-      Logger.log('### Data Bag Item Awb :: Not Found!!');
-    }
-    return true;
-  }
-
-  // NOTE: not used now ==================================
-  // TODO: create background job
-  static async scanOutBagBranch(
-    bagId: number,
-    bagItemId: number,
-    doPodId: string,
-    branchIdNext: number,
-    userIdDriver: number,
-    bagNumber: string,
-  ) {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    const bagItemsAwb = await BagItemAwb.find({
-      where: {
-        bagItemId,
-        isDeleted: false,
-      },
-    });
-    // TODO: raw query select insert into
-    // 1. insert table doPOdDetail ??
-    // 2. update table awbItemAttr ??
-    // 3. insert table AwbHistory ??
-    if (bagItemsAwb && bagItemsAwb.length) {
-      let employeeIdDriver = null;
-      let employeeNameDriver = '';
-      const userDriverRepo = await this.getDataUserEmployee(userIdDriver);
-      if (userDriverRepo) {
-        employeeIdDriver = userDriverRepo.employeeId;
-        employeeNameDriver = userDriverRepo.employee.employeeName;
-      }
-      let branchName = 'Kantor Pusat';
-      let cityName = 'Jakarta';
-      const branch = await this.getDataBranchCity(permissonPayload.branchId);
-      if (branch) {
-        branchName = branch.branchName;
-        cityName = branch.district.city.cityName;
-      }
-      for (const itemAwb of bagItemsAwb) {
-        if (itemAwb.awbItemId) {
-          const doPodDetail = DoPodDetail.create();
-          doPodDetail.doPodId = doPodId;
-          doPodDetail.awbItemId = itemAwb.awbItemId;
-          doPodDetail.awbNumber = itemAwb.awbNumber;
-          doPodDetail.bagNumber = bagNumber;
-          doPodDetail.bagId = bagId;
-          doPodDetail.bagItemId = bagItemId;
-          doPodDetail.isScanOut = true;
-          doPodDetail.scanOutType = 'bag';
-          doPodDetail.transactionStatusIdLast = 800; // OUT_BRANCH
-          await DoPodDetail.save(doPodDetail);
-
-          // NOTE: update status on awb item attr
-          // last awb status OUT_BRANCH
-          await AwbService.updateAwbAttr(
-            itemAwb.awbItemId,
-            AWB_STATUS.OUT_BRANCH,
-            branchIdNext,
-          );
-
-          // NOTE: queue bull
-          DoPodDetailPostMetaQueueService.createJobByScanOutBag(
-            itemAwb.awbItemId,
-            permissonPayload.branchId,
-            authMeta.userId,
-            employeeIdDriver,
-            employeeNameDriver,
-            AWB_STATUS.OUT_BRANCH,
-            branchName,
-            cityName,
-            branchIdNext,
-          );
-        }
-      }
-    } else {
-      Logger.log('### Data Bag Item Awb :: Not Found!!');
-    }
-    return true;
-  }
-
-  // NOTE: not used now ==================================
-  // TODO: create background job
-  static async scanOutBagHub(
-    bagId: number,
-    bagItemId: number,
-    doPodId: string,
-    branchIdNext: number,
-    userIdDriver: number,
-    doPodType: number,
-  ) {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    const bagItemsAwb = await BagItemAwb.find({
-      where: {
-        bagItemId,
-        isDeleted: false,
-      },
-    });
-    // TODO: raw query select insert into
-    // 1. insert table doPOdDetail ??
-    // 2. update table awbItemAttr ??
-    // 3. insert table AwbHistory ??
-    if (bagItemsAwb && bagItemsAwb.length) {
-      let employeeIdDriver = null;
-      let employeeNameDriver = '';
-      const userDriverRepo = await this.getDataUserEmployee(userIdDriver);
-      if (userDriverRepo) {
-        employeeIdDriver = userDriverRepo.employeeId;
-        employeeNameDriver = userDriverRepo.employee.employeeName;
-      }
-      let branchName = 'Kantor Pusat';
-      let cityName = 'Jakarta';
-      const branch = await this.getDataBranchCity(permissonPayload.branchId);
-      if (branch) {
-        branchName = branch.branchName;
-        cityName = branch.district.city.cityName;
-      }
-      for (const itemAwb of bagItemsAwb) {
-        if (itemAwb.awbItemId) {
-          const doPodDetail = DoPodDetail.create();
-          doPodDetail.doPodId = doPodId;
-          doPodDetail.awbItemId = itemAwb.awbItemId;
-          doPodDetail.awbNumber = itemAwb.awbNumber;
-          // doPodDetail.bagNumber = bagNumber
-          doPodDetail.bagId = bagId;
-          doPodDetail.bagItemId = bagItemId;
-          doPodDetail.isScanOut = true;
-          doPodDetail.scanOutType = 'bag';
-          doPodDetail.transactionStatusIdLast = 300; // OUT_HUB
-          await DoPodDetail.save(doPodDetail);
-
-          // NOTE: update status on awb item attr
-          // last awb status
-          // HUB
-          await AwbService.updateAwbAttr(
-            itemAwb.awbItemId,
-            AWB_STATUS.OUT_HUB,
-            branchIdNext,
-          );
-
-          // TODO: if isTransit auto IN
-          if (doPodType == 3020) {
-            // queue bull IN HUB
-            DoPodDetailPostMetaQueueService.createJobByAwbFilter(
-              itemAwb.awbItemId,
-              permissonPayload.branchId,
-              authMeta.userId,
-            );
-          }
-
-          // queue bull OUT HUB
-          DoPodDetailPostMetaQueueService.createJobByScanOutBag(
-            itemAwb.awbItemId,
-            permissonPayload.branchId,
-            authMeta.userId,
-            employeeIdDriver,
-            employeeNameDriver,
-            AWB_STATUS.OUT_HUB,
-            branchName,
-            cityName,
-            branchIdNext,
-          );
         }
       }
     } else {
@@ -470,47 +308,5 @@ export class BagService {
       Logger.log('### Data Bag Item Awb :: Not Found!!');
     }
     return true;
-  }
-
-  // TODO: need refactoring
-  private static async getDataUserEmployee(userId: number): Promise<User> {
-    const userhRepository = new OrionRepositoryService(User);
-    const q = userhRepository.findOne();
-    // Manage relation (default inner join)
-    q.leftJoin(e => e.employee);
-    q.select({
-      userId: true,
-      username: true,
-      employee: {
-        employeeId: true,
-        employeeName: true,
-      },
-    });
-    q.where(e => e.userId, w => w.equals(userId));
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-    return await q.exec();
-  }
-  // TODO: need refactoring
-  private static async getDataBranchCity(branchId: number): Promise<Branch> {
-    const branchRepository = new OrionRepositoryService(Branch);
-    const q = branchRepository.findOne();
-    // Manage relation (default inner join)
-    q.leftJoin(e => e.district);
-
-    q.select({
-      branchId: true,
-      branchCode: true,
-      branchName: true,
-      districtId: true,
-      district: {
-        cityId: true,
-        city: {
-          cityName: true,
-        },
-      },
-    });
-    q.where(e => e.branchId, w => w.equals(branchId));
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-    return await q.exec();
   }
 }
