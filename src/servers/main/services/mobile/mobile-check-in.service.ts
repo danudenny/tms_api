@@ -145,7 +145,7 @@ export class MobileCheckInService {
 
       if(!res){
         result.status = "error";
-        result.message = 'Branch Check In tidak valid!';
+        result.message = 'Branch Check In tidak valid';
         result.branchName = branchName;
         result.checkInDate = checkInDate;
         result.attachmentId = attachmentId;
@@ -184,21 +184,30 @@ export class MobileCheckInService {
       }
       const employeeJourneyId = employeeJourney.employeeJourneyId;
 
-      // insert pending status korwil
-      const korwilTransaction = KorwilTransaction.create();
-      korwilTransaction.date = timeNow;
-      korwilTransaction.branchId = branchIdTemp;
-      korwilTransaction.userId = authMeta.userId;
-      korwilTransaction.status = 0;
-      korwilTransaction.createdTime = timeNow;
-      korwilTransaction.isDeleted = false;
-      korwilTransaction.employeeJourneyId = employeeJourneyId;
-      korwilTransaction.userToBranchId = res.userToBranchId;
-      await KorwilTransaction.save(korwilTransaction);
+      const qb1 = createQueryBuilder();
+      qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
+      qb.from('korwil_transaction', 'kt');
+      qb.where('kt.is_deleted = false');
+      qb.andWhere('kt.branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
+      qb.andWhere('kt.user_id = :idUserLogin', { idUserLogin: authMeta.userId });
+      const res1 = await qb.getRawOne();
 
-      const service = new MobileKorwilService();
-      await service.createTransactionItem(korwilTransaction.korwilTransactionId);
+      if(!res1){
+        // insert pending status korwil
+        const korwilTransaction = KorwilTransaction.create();
+        korwilTransaction.date = timeNow;
+        korwilTransaction.branchId = branchIdTemp;
+        korwilTransaction.userId = authMeta.userId;
+        korwilTransaction.status = 0;
+        korwilTransaction.createdTime = timeNow;
+        korwilTransaction.isDeleted = false;
+        korwilTransaction.employeeJourneyId = employeeJourneyId;
+        korwilTransaction.userToBranchId = res.userToBranchId;
+        await KorwilTransaction.save(korwilTransaction);
 
+        const service = new MobileKorwilService();
+        await service.createTransactionItem(korwilTransaction.korwilTransactionId);
+      }
       const branch = await this.branchRepository.findOne({
         select: ['branchName'],
         where: { branchId: branchIdTemp },

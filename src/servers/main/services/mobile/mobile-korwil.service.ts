@@ -1,13 +1,14 @@
 import { createQueryBuilder } from 'typeorm';
 import { isEmpty } from 'lodash';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm } from '../../models/mobile-korwil-response.vm';
-import { MobilePostKorwilTransactionPayloadVm } from '../../models/mobile-korwil-payload.vm';
+import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm, ItemListKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
+import { MobilePostKorwilTransactionPayloadVm, MobileKorwilListItemPayloadVm } from '../../models/mobile-korwil-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { ValidateBranchCoordinateResponseVm } from '../../models/branch-response.vm';
 import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
 import { KorwilTransactionDetail } from '../../../../shared/orm-entity/korwil-transaction-detail';
 import moment = require('moment');
+import { PayloadTooLargeException } from '@nestjs/common';
 
 export class MobileKorwilService {
   constructor() {}
@@ -32,6 +33,53 @@ export class MobileKorwilService {
     const result = new BranchListKorwilResponseVm();
     result.branchList = await qb.getRawMany();
 
+    return result;
+  }
+
+  public static async getItemList(
+    payload: MobileKorwilListItemPayloadVm,
+  )
+  : Promise <ItemListKorwilResponseVm> {
+    const authMeta = AuthService.getAuthMetadata();
+
+    // item list korwil
+    const qb = createQueryBuilder();
+    qb.addSelect('ki.korwil_item_name', 'korwilItemName');
+    qb.addSelect('ktd.korwil_item_id', 'korwilItemId');
+    qb.addSelect('ktdp.photo_id', 'photoId');
+    qb.addSelect('ktd.status', 'status');
+    qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
+    qb.addSelect('ktd.is_done', 'isDone');
+    qb.addSelect('ktd.note', 'note');
+    qb.from('korwil_transaction', 'kt');
+    qb.innerJoin('korwil_transaction_detail',
+    'ktd',
+    'ktd.korwil_transaction_id = ktd.korwil_transaction_id AND ktd.is_deleted = false'
+    );
+    qb.innerJoin('korwil_item',
+    'ki',
+    'ki.korwil_item_id = ktd.korwil_item_id AND ki.is_deleted = false'
+    );
+    qb.innerJoin('user_to_branch',
+    'utb',
+    'utb.ref_branch_id = kt.branch_id AND utb.is_deleted = false'
+    );
+    qb.leftJoin('korwil_transaction_detail_photo',
+      'ktdp',
+      'ktdp.korwil_transaction_detail_id = ktd.korwil_transaction_detail_id AND ktdp.is_deleted = false'
+    );
+    qb.where('ktd.is_deleted = false');
+    qb.andWhere('kt.branch_id = :branchId',{ branchId: payload.branchId});
+    qb.andWhere('utb.ref_user_id = :userId', { userId: authMeta.userId });
+
+    const result = new ItemListKorwilResponseVm();
+    const data = await qb.getRawMany();
+
+    if(data){
+      result.itemList = data;
+      result.korwilTransactionid = data[0].korwilTransactionId;
+      result.isDone = data[0].isDone;
+    }
     return result;
   }
 
@@ -123,6 +171,7 @@ export class MobileKorwilService {
   public async createTransactionItem(
     korwilTransactionId: string,
   ){
+    const authMeta = AuthService.getAuthMetadata();
     const qb = createQueryBuilder();
     qb.addSelect('ki.korwil_item_name', 'korwilItemName');
     qb.addSelect('ki.korwil_item_id', 'korwilItemId');
@@ -137,8 +186,12 @@ export class MobileKorwilService {
       korwilTransactionDetail.latChecklist = "";
       korwilTransactionDetail.longChecklist = "";
       korwilTransactionDetail.note = "";
-      korwilTransactionDetail.date = moment().toDate();;
+      korwilTransactionDetail.date = moment().toDate();
       korwilTransactionDetail.photoCount = res.length;
+      korwilTransactionDetail.userIdCreated = authMeta.userId;
+      korwilTransactionDetail.createdTime = moment().toDate();
+      korwilTransactionDetail.updatedTime = moment().toDate();
+      korwilTransactionDetail.userIdUpdated = authMeta.userId;
       await KorwilTransactionDetail.save(korwilTransactionDetail);
     });
   }

@@ -59,6 +59,18 @@ export class KorwilTransactionDetail extends BaseEntity {
   })
   status: number | null;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'user_id_created',
+  })
+  userIdCreated: number | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'user_id_updated',
+  })
+  userIdUpdated: number | null;
+
   @Column('integer', {
     nullable: true,
     default: () => '0',
@@ -85,6 +97,12 @@ export class KorwilTransactionDetail extends BaseEntity {
     name: 'created_time',
   })
   createdTime: Date;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'updated_time',
+  })
+  updatedTime: Date;
 
   @Column('boolean', {
     nullable: false,
