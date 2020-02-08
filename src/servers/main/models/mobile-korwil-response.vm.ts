@@ -43,6 +43,9 @@ export class DetailItemListKorwilResponseVm {
 
   @ApiModelProperty()
   note: string;
+
+  @ApiModelProperty()
+  korwilTransactionDetailId: string;
 }
 
 export class ItemListKorwilResponseVm {
@@ -54,4 +57,32 @@ export class ItemListKorwilResponseVm {
 
   @ApiModelProperty()
   isDone: string;
+}
+
+// export class DetailPhotoResponseVm {
+//   @ApiModelProperty()
+//   url: string;
+
+//   @ApiModelProperty()
+//   note: string;
+
+//   @ApiModelProperty()
+//   isDone: boolean;
+
+//   @ApiModelProperty()
+//   status: number;
+// }
+
+export class DetailPhotoKorwilResponseVm {
+  @ApiModelProperty()
+  note: string;
+
+  @ApiModelProperty()
+  isDone: boolean;
+
+  @ApiModelProperty()
+  status: number;
+
+  @ApiModelProperty()
+  urlPhotos: string[];
 }

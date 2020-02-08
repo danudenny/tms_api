@@ -5,7 +5,7 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { MobileKorwilService } from '../../services/mobile/mobile-korwil.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm, ItemListKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
+import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm, ItemListKorwilResponseVm, DetailPhotoKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
 import { MobilePostKorwilTransactionPayloadVm } from '../../models/mobile-korwil-payload.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
@@ -34,19 +34,14 @@ export class MobileKorwilController {
     return MobileKorwilService.getItemList(branchId);
   }
 
-  // @Post('createItem')
-  // @HttpCode(HttpStatus.OK)
-  // @UseInterceptors(FileInterceptor('file'))
-  // @ApiBearerAuth()
-  // @Transactional()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  // @ApiOkResponse({ type: MobilePostKorwilTransactionResponseVm })
-  // public async checkInForm(
-  //   @Body() payload: MobilePostKorwilTransactionPayloadVm,
-  //   @UploadedFile() file,
-  // ) {
-  //   return MobileKorwilService.createTransaction(payload, file);
-  // }
-
-
+  @Get('detailPhoto/:korwilTransactionDetailId')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: DetailPhotoKorwilResponseVm })
+  public async detailPhoto(
+    @Param('korwilTransactionDetailId') korwilTransactionDetailId: string,
+  ) {
+    return MobileKorwilService.getDetailPhoto(korwilTransactionDetailId);
+  }
 }

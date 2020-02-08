@@ -1,7 +1,7 @@
 import { createQueryBuilder } from 'typeorm';
 import { isEmpty } from 'lodash';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm, ItemListKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
+import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm, ItemListKorwilResponseVm, DetailPhotoKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
 import { MobilePostKorwilTransactionPayloadVm } from '../../models/mobile-korwil-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { ValidateBranchCoordinateResponseVm, BranchMessageResponseVm } from '../../models/branch-response.vm';
@@ -48,7 +48,7 @@ export class MobileKorwilService {
     const qb = createQueryBuilder();
     qb.addSelect('ki.korwil_item_name', 'korwilItemName');
     qb.addSelect('ktd.korwil_item_id', 'korwilItemId');
-    qb.addSelect('ktdp.photo_id', 'photoId');
+    qb.addSelect('ktd.korwil_transaction_detail_id', 'korwilTransactionDetailId');
     qb.addSelect('ktd.status', 'status');
     qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
     qb.addSelect('ktd.is_done', 'isDone');
@@ -66,10 +66,6 @@ export class MobileKorwilService {
     'utb',
     'utb.ref_branch_id = kt.branch_id AND utb.is_deleted = false'
     );
-    qb.leftJoin('korwil_transaction_detail_photo',
-      'ktdp',
-      'ktdp.korwil_transaction_detail_id = ktd.korwil_transaction_detail_id AND ktdp.is_deleted = false'
-    );
     qb.where('ktd.is_deleted = false');
     qb.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
     qb.andWhere('utb.ref_user_id = :userId', { userId: authMeta.userId });
@@ -85,107 +81,44 @@ export class MobileKorwilService {
     return result;
   }
 
-  // public static async createTransaction(
-  //   payload: MobilePostKorwilTransactionPayloadVm,
-  //   file,
-  // ): Promise<MobilePostKorwilTransactionResponseVm> {
-  //   const result = new MobilePostKorwilTransactionResponseVm();
-  //   const authMeta = AuthService.getAuthMetadata();
-  //   const validation = new BranchMessageResponseVm();
-  //   let attachmentId = null;
-  //   const timeNow = moment().toDate();
+  public static async getDetailPhoto(
+    korwilTransactionDetailId: string,
+  )
+  : Promise <DetailPhotoKorwilResponseVm> {
+    const authMeta = AuthService.getAuthMetadata();
 
-  //   result.korwilTransactionDetailId = "";
-  //   result.korwilTransactionDetailPhotoId = "";
-  //   result.korwilTransactionId = "";
-  //   validation.status = "ok";
-  //   validation.message = "success";
+    // detail photo
+    let qb = createQueryBuilder();
+    qb.addSelect('ktd.note', 'note');
+    qb.addSelect('ktd.is_done', 'isDone');
+    qb.addSelect('ktd.status', 'status');
+    qb.from('korwil_transaction_detail', 'ktd');
+    qb.andWhere('ktd.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: korwilTransactionDetailId });
 
-  //   if(payload.branchId){
-  //     const responseCheckBranch = await this.validateBranchByCoordinate(payload.latitude, payload.longitude, payload.branchId);
-  //     if (responseCheckBranch.status == false){
-  //       validation.status = "error";
-  //       validation.message = responseCheckBranch.message;
-  //       validation.branchId = payload.branchId;
-  //       result.coordinate = validation;
-  //       return result;
-  //     }
-  //   }
+    const data = await qb.getRawOne();
+    const result = new DetailPhotoKorwilResponseVm();
+    result.isDone = data.isDone;
+    result.note = data.note;
+    result.status = data.status;
 
-  //   // if(!res){
-  //   //   result.status = "error";
-  //   //   result.message = 'Branch Check In tidak valid';
-  //   //   result.branchName = branchName;
-  //   //   result.checkInDate = checkInDate;
-  //   //   result.attachmentId = attachmentId;
-  //   //   return result;
-  //   // }
+    qb = createQueryBuilder();
+    qb.addSelect('at.url', 'url');
+    qb.from('korwil_transaction_detail_photo', 'ktdp');
+    qb.innerJoin('attachment_tms',
+    'at',
+    'at.attachment_tms_id = ktdp.photo_id AND at.is_deleted = false'
+    );
+    qb.andWhere('ktdp.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: korwilTransactionDetailId });
+    const dataUrl = await qb.getRawMany();
+    let urls = [];
 
-  //   // payload.itemList.forEach(async(item) => {
-  //   // upload image
-  //   const attachment = await AttachmentService.uploadFileBufferToS3(
-  //     file.buffer,
-  //     file.originalname,
-  //     file.mimetype,
-  //     `tms-korwil ${payload.imageType}`,
-  //   );
-  //   if (attachment) {
-  //     attachmentId = attachment.attachmentTmsId;
-  //   }
+    dataUrl.forEach(elem => {
+      urls.push(elem.url);
+    });
 
-  //   const qb = createQueryBuilder();
-  //   qb.addSelect('ktd.korwil_transaction_detail_id', 'korwilTransactionDetailId');
-  //   qb.addSelect('ktd.korwil_transaction_detail_photo_id', 'korwilTransactionDetailPhotoId');
-  //   qb.addSelect('ktd.korwil_transaction_id', 'korwilTransactionid');
-  //   qb.from('korwil_transaction_detail', 'ktd');
-  //   qb.innerJoin('korwil_transaction_detail_photo',
-  //   'ktdp',
-  //   'ktdp.korwil_transaction_detail_id = ktd.korwil_transaction_detail_id AND ktdp.is_deleted = false'
-  //   );
-  //   qb.where('ktd.is_deleted = false');
-  //   qb.andWhere('ktd.korwil_item_id = :korwilItemId', {korwilItemId: payload.korwilItemId});
-  //   let res = qb.getRawMany();
-
-  //   if(!res){
-  //     const korwilTransactionDetailPhoto = KorwilTransactionDetailPhoto.create();
-  //     korwilTransactionDetailPhoto.photoId = attachmentId;
-  //     korwilTransactionDetailPhoto.korwilTransactionDetailId;
-  //     korwilTransactionDetailPhoto.isDeleted = false;
-  //     korwilTransactionDetailPhoto.createdTime = timeNow;
-  //     korwilTransactionDetailPhoto.updatedTime = timeNow;
-  //     korwilTransactionDetailPhoto.userIdCreated = authMeta.userId;
-  //     KorwilTransactionDetailPhoto.save(korwilTransactionDetailPhoto);
-  //   }
-
-  //   const korwilTransactionDetail = await KorwilTransactionDetail.findOne({
-  //      where: {
-  //         korwilItemId: payload.korwilItemId,
-  //         korwilTransactionId: payload.korwilTransactionId
-  //       }
-  //   });
-  //   korwilTransactionDetail.latChecklist = payload.latitude;
-  //   korwilTransactionDetail.longChecklist = payload.longitude;
-  //   korwilTransactionDetail.note = payload.note ? payload.note : korwilTransactionDetail.note;
-  //   korwilTransactionDetail.isDone = payload.isDone ? payload.isDone : korwilTransactionDetail.isDone;
-  //   korwilTransactionDetail.photoCount = korwilTransactionDetail.photoCount+1;
-  //   korwilTransactionDetail.userIdUpdated = authMeta.userId;
-  //   korwilTransactionDetail.updatedTime = timeNow;
-  //   KorwilTransactionDetail.save(korwilTransactionDetail);
-  //   // podScanInHub.transactionStatusId = 200;
-  //   // podScanInHub.updatedTime         = moment().toDate();
-  //   // podScanInHub.userIdUpdated       = authMeta.userId;
-  //   // podScanInHub.save();
-  
-  //   // const korwilTransactionDetail = KorwilTransactionDetail.create();
-  //   // });
-
-  //   // const responseCheckBranch = await this.validateBranchByCoordinate(payload.latitude, payload.longitude, payload.branchId);
-  //   // if (responseCheckBranch.status == false){
-  //   //   result.coordinate = responseCheckBranch;
-  //   // }
-
-  //   return result;
-  // }
+    result.urlPhotos = urls;
+    return result;
+  }
 
   public static async validateBranchByCoordinate(lat, long, branchId): Promise<ValidateBranchCoordinateResponseVm>{
     const lata = parseFloat(lat);
@@ -271,6 +204,7 @@ export class MobileKorwilService {
       korwilTransactionDetail.latChecklist = "";
       korwilTransactionDetail.longChecklist = "";
       korwilTransactionDetail.note = "";
+      korwilTransactionDetail.status = 0;
       korwilTransactionDetail.date = moment().toDate();
       korwilTransactionDetail.photoCount = res.length;
       korwilTransactionDetail.userIdCreated = authMeta.userId;
