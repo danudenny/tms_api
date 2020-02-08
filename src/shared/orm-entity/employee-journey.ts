@@ -32,6 +32,12 @@ export class EmployeeJourney extends BaseEntity {
 
   @Column('timestamp without time zone', {
     nullable: true,
+    name: 'start_date',
+  })
+  startDate: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
     name: 'check_out_date',
   })
   checkOutDate: Date | null;
@@ -44,9 +50,21 @@ export class EmployeeJourney extends BaseEntity {
 
   @Column('character varying', {
     nullable: false,
+    name: 'longitude_start',
+  })
+  longitudeStart: string;
+
+  @Column('character varying', {
+    nullable: false,
     name: 'latitude_check_in',
   })
   latitudeCheckIn: string;
+
+  @Column('character varying', {
+    nullable: false,
+    name: 'latitude_start',
+  })
+  latitudeStart: string;
 
   @Column('character varying', {
     nullable: false,
@@ -105,6 +123,12 @@ export class EmployeeJourney extends BaseEntity {
 
   @Column('bigint', {
     nullable: true,
+    name: 'branch_id_start',
+  })
+  branchIdStart: number;
+
+  @Column('bigint', {
+    nullable: true,
     name: 'branch_id_check_out',
   })
   branchIdCheckOut: number;
@@ -136,6 +160,10 @@ export class EmployeeJourney extends BaseEntity {
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_check_in', referencedColumnName: 'branchId' })
   branchCheckIn: Branch;
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_start', referencedColumnName: 'branchId' })
+  branchStart: Branch;
 
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_check_out', referencedColumnName: 'branchId' })

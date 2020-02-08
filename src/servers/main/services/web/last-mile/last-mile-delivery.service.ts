@@ -18,6 +18,12 @@ export class LastMileDeliveryService {
     payload.fieldResolverMap['branchName'] = 't5.branch_name';
     payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
     payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
+    payload.fieldResolverMap['totalSuratJalan'] = 'totalSuratJalan';
+    payload.fieldResolverMap['totalAwb'] = 'totalAwb';
+    payload.fieldResolverMap['totalAntar'] = 'totalAntar';
+    payload.fieldResolverMap['totalDelivery'] = 'totalDelivery';
+    payload.fieldResolverMap['totalProblem'] = 'totalProblem';
+
     // payload.fieldResolverMap['totalAssigned'] = 't4.awb_number';
     if (payload.sortBy === '') {
       payload.sortBy = 'datePOD';
@@ -84,6 +90,12 @@ export class LastMileDeliveryService {
     payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
+    payload.fieldResolverMap['totalAssigned'] = 'totalAssigned';
+    payload.fieldResolverMap['totalAwb'] = 'totalAwb';
+    payload.fieldResolverMap['totalDelivery'] = 'totalDelivery';
+    payload.fieldResolverMap['totalProblem'] = 'totalProblem';
+    payload.fieldResolverMap['totalCodValue'] = 'totalCodValue';
+
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDeliverDateTime';
     }

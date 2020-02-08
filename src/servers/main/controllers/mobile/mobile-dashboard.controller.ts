@@ -4,7 +4,7 @@ import { ResponseSerializerOptions } from '../../../../shared/decorators/respons
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { MobileDashboardFindAllResponseVm } from '../../models/mobile-dashboard.response.vm';
+import { MobileDashboardFindAllResponseVm, MobileDetailTransitResponseVm } from '../../models/mobile-dashboard.response.vm';
 import { MobileInitDataPayloadVm } from '../../models/mobile-init-data-payload.vm';
 import { MobileInitDataResponseVm } from '../../models/mobile-init-data-response.vm';
 import { MobileDashboardService } from '../../services/mobile/mobile-dashboard.service';
@@ -110,5 +110,14 @@ export class MobileDashboardController {
       timeNow: moment().toDate(),
       timeString: moment().format('YYYY-MM-DD HH:mm:ss'),
     };
+  }
+
+  @Get('detail/transit')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: MobileDetailTransitResponseVm })
+  public async detailTransit() {
+    return MobileDashboardService.getTransitDetail();
   }
 }

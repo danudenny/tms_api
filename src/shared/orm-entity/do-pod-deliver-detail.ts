@@ -7,6 +7,7 @@ import { TmsBaseEntity } from './tms-base';
 import { AwbStatus } from './awb-status';
 import { Reason } from './reason';
 import { Awb } from './awb';
+import { DoPodDetail } from './do-pod-detail';
 
 @Entity('do_pod_deliver_detail', { schema: 'public' })
 export class DoPodDeliverDetail extends TmsBaseEntity {
@@ -116,4 +117,7 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
   @JoinColumn({ name: 'reason_id_last', referencedColumnName: 'reasonId' })
   reasonLast: Reason;
 
+  @OneToOne(() => DoPodDetail)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  doPodDetails: DoPodDetail;
 }
