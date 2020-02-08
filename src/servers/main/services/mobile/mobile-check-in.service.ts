@@ -199,6 +199,11 @@ export class MobileCheckInService {
         const korwilTransactionUser = await qb.getRawOne();
 
         if(!korwilTransactionUser){
+          qb.addSelect('ki.korwil_item_id', 'korwilItemId');
+          qb.from('korwil_item', 'ki');
+          qb.where('ki.is_deleted = false');
+          const countTask = await qb.getCount();
+
           // insert pending status korwil
           const korwilTransaction = KorwilTransaction.create();
           korwilTransaction.date = timeNow;
@@ -207,6 +212,7 @@ export class MobileCheckInService {
           korwilTransaction.status = 0;
           korwilTransaction.createdTime = timeNow;
           korwilTransaction.isDeleted = false;
+          korwilTransaction.totalTask = countTask;
           korwilTransaction.employeeJourneyId = employeeJourneyId;
           korwilTransaction.userToBranchId = res.userToBranchId;
           await KorwilTransaction.save(korwilTransaction);
