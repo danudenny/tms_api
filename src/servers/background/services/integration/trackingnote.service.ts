@@ -115,6 +115,9 @@ export class TrackingNoteService {
 
       for (const item of data) {
         lastSyncId = item.awbHistoryId;
+        const timeNow = new Date(moment().add(7, 'hours').format('YYYY-MM-DD HH:mm:ss'));
+        const trackDateTime = new Date(moment(item.trackingDateTime).format('YYYY-MM-DD HH:mm:ss'));
+
         // table.rows.add(lastSyncId, item.receiptNumber, item.trackingDateTime, item.awbStatusId, item.trackingType,
         //   item.courierName, item.nik, item.branchCode,
         //   // item.noteInternal, // item.notePublic, item.noteTms,
@@ -123,7 +126,7 @@ export class TrackingNoteService {
         const request = conn.request();
         request.input('AwbHistoryId', sql.Int, item.awbHistoryId);
         request.input('ReceiptNumber', sql.VarChar, item.receiptNumber);
-        request.input('TrackingDateTime', sql.DateTime, moment(item.trackingDateTime).add(7, 'hours').toDate());
+        request.input('TrackingDateTime', sql.DateTime, trackDateTime);
         request.input('AwbStatusId', sql.Int, item.awbStatusId);
         request.input('TrackingType', sql.VarChar, item.trackingType);
         request.input('CourierName', sql.VarChar, item.courierName);
@@ -134,8 +137,8 @@ export class TrackingNoteService {
         request.input('NoteTms', sql.VarChar, item.noteTms);
         request.input('UsrCrt', sql.VarChar, 'TMS');
         request.input('UsrUpd', sql.VarChar, 'TMS');
-        request.input('DtmCrt', sql.DateTime, moment().add(7, 'hours').toDate());
-        request.input('DtmUpd', sql.DateTime, moment().add(7, 'hours').toDate());
+        request.input('DtmCrt', sql.DateTime, timeNow);
+        request.input('DtmUpd', sql.DateTime, timeNow);
         request.input('ReceiverName', sql.VarChar, item.receiverName);
         let isPublic = 0;
         if (item.isPublic === 20) {
