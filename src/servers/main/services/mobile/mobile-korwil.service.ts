@@ -85,107 +85,107 @@ export class MobileKorwilService {
     return result;
   }
 
-  public static async createTransaction(
-    payload: MobilePostKorwilTransactionPayloadVm,
-    file,
-  ): Promise<MobilePostKorwilTransactionResponseVm> {
-    const result = new MobilePostKorwilTransactionResponseVm();
-    const authMeta = AuthService.getAuthMetadata();
-    const validation = new BranchMessageResponseVm();
-    let attachmentId = null;
-    const timeNow = moment().toDate();
+  // public static async createTransaction(
+  //   payload: MobilePostKorwilTransactionPayloadVm,
+  //   file,
+  // ): Promise<MobilePostKorwilTransactionResponseVm> {
+  //   const result = new MobilePostKorwilTransactionResponseVm();
+  //   const authMeta = AuthService.getAuthMetadata();
+  //   const validation = new BranchMessageResponseVm();
+  //   let attachmentId = null;
+  //   const timeNow = moment().toDate();
 
-    result.korwilTransactionDetailId = "";
-    result.korwilTransactionDetailPhotoId = "";
-    result.korwilTransactionId = "";
-    validation.status = "ok";
-    validation.message = "success";
+  //   result.korwilTransactionDetailId = "";
+  //   result.korwilTransactionDetailPhotoId = "";
+  //   result.korwilTransactionId = "";
+  //   validation.status = "ok";
+  //   validation.message = "success";
 
-    if(payload.branchId){
-      const responseCheckBranch = await this.validateBranchByCoordinate(payload.latitude, payload.longitude, payload.branchId);
-      if (responseCheckBranch.status == false){
-        validation.status = "error";
-        validation.message = responseCheckBranch.message;
-        validation.branchId = payload.branchId;
-        result.coordinate = validation;
-        return result;
-      }
-    }
+  //   if(payload.branchId){
+  //     const responseCheckBranch = await this.validateBranchByCoordinate(payload.latitude, payload.longitude, payload.branchId);
+  //     if (responseCheckBranch.status == false){
+  //       validation.status = "error";
+  //       validation.message = responseCheckBranch.message;
+  //       validation.branchId = payload.branchId;
+  //       result.coordinate = validation;
+  //       return result;
+  //     }
+  //   }
 
-    // if(!res){
-    //   result.status = "error";
-    //   result.message = 'Branch Check In tidak valid';
-    //   result.branchName = branchName;
-    //   result.checkInDate = checkInDate;
-    //   result.attachmentId = attachmentId;
-    //   return result;
-    // }
+  //   // if(!res){
+  //   //   result.status = "error";
+  //   //   result.message = 'Branch Check In tidak valid';
+  //   //   result.branchName = branchName;
+  //   //   result.checkInDate = checkInDate;
+  //   //   result.attachmentId = attachmentId;
+  //   //   return result;
+  //   // }
 
-    // payload.itemList.forEach(async(item) => {
-    // upload image
-    const attachment = await AttachmentService.uploadFileBufferToS3(
-      file.buffer,
-      file.originalname,
-      file.mimetype,
-      `tms-korwil ${payload.imageType}`,
-    );
-    if (attachment) {
-      attachmentId = attachment.attachmentTmsId;
-    }
+  //   // payload.itemList.forEach(async(item) => {
+  //   // upload image
+  //   const attachment = await AttachmentService.uploadFileBufferToS3(
+  //     file.buffer,
+  //     file.originalname,
+  //     file.mimetype,
+  //     `tms-korwil ${payload.imageType}`,
+  //   );
+  //   if (attachment) {
+  //     attachmentId = attachment.attachmentTmsId;
+  //   }
 
-    const qb = createQueryBuilder();
-    qb.addSelect('ktd.korwil_transaction_detail_id', 'korwilTransactionDetailId');
-    qb.addSelect('ktd.korwil_transaction_detail_photo_id', 'korwilTransactionDetailPhotoId');
-    qb.addSelect('ktd.korwil_transaction_id', 'korwilTransactionid');
-    qb.from('korwil_transaction_detail', 'ktd');
-    qb.innerJoin('korwil_transaction_detail_photo',
-    'ktdp',
-    'ktdp.korwil_transaction_detail_id = ktd.korwil_transaction_detail_id AND ktdp.is_deleted = false'
-    );
-    qb.where('ktd.is_deleted = false');
-    qb.andWhere('ktd.korwil_item_id = :korwilItemId', {korwilItemId: payload.korwilItemId});
-    let res = qb.getRawMany();
+  //   const qb = createQueryBuilder();
+  //   qb.addSelect('ktd.korwil_transaction_detail_id', 'korwilTransactionDetailId');
+  //   qb.addSelect('ktd.korwil_transaction_detail_photo_id', 'korwilTransactionDetailPhotoId');
+  //   qb.addSelect('ktd.korwil_transaction_id', 'korwilTransactionid');
+  //   qb.from('korwil_transaction_detail', 'ktd');
+  //   qb.innerJoin('korwil_transaction_detail_photo',
+  //   'ktdp',
+  //   'ktdp.korwil_transaction_detail_id = ktd.korwil_transaction_detail_id AND ktdp.is_deleted = false'
+  //   );
+  //   qb.where('ktd.is_deleted = false');
+  //   qb.andWhere('ktd.korwil_item_id = :korwilItemId', {korwilItemId: payload.korwilItemId});
+  //   let res = qb.getRawMany();
 
-    if(!res){
-      const korwilTransactionDetailPhoto = KorwilTransactionDetailPhoto.create();
-      korwilTransactionDetailPhoto.photoId = attachmentId;
-      korwilTransactionDetailPhoto.korwilTransactionDetailId;
-      korwilTransactionDetailPhoto.isDeleted = false;
-      korwilTransactionDetailPhoto.createdTime = timeNow;
-      korwilTransactionDetailPhoto.updatedTime = timeNow;
-      korwilTransactionDetailPhoto.userIdCreated = authMeta.userId;
-      KorwilTransactionDetailPhoto.save(korwilTransactionDetailPhoto);
-    }
+  //   if(!res){
+  //     const korwilTransactionDetailPhoto = KorwilTransactionDetailPhoto.create();
+  //     korwilTransactionDetailPhoto.photoId = attachmentId;
+  //     korwilTransactionDetailPhoto.korwilTransactionDetailId;
+  //     korwilTransactionDetailPhoto.isDeleted = false;
+  //     korwilTransactionDetailPhoto.createdTime = timeNow;
+  //     korwilTransactionDetailPhoto.updatedTime = timeNow;
+  //     korwilTransactionDetailPhoto.userIdCreated = authMeta.userId;
+  //     KorwilTransactionDetailPhoto.save(korwilTransactionDetailPhoto);
+  //   }
 
-    const korwilTransactionDetail = await KorwilTransactionDetail.findOne({
-       where: {
-          korwilItemId: payload.korwilItemId,
-          korwilTransactionId: payload.korwilTransactionId
-        }
-    });
-    korwilTransactionDetail.latChecklist = payload.latitude;
-    korwilTransactionDetail.longChecklist = payload.longitude;
-    korwilTransactionDetail.note = payload.note ? payload.note : korwilTransactionDetail.note;
-    korwilTransactionDetail.isDone = payload.isDone ? payload.isDone : korwilTransactionDetail.isDone;
-    korwilTransactionDetail.photoCount = korwilTransactionDetail.photoCount+1;
-    korwilTransactionDetail.userIdUpdated = authMeta.userId;
-    korwilTransactionDetail.updatedTime = timeNow;
-    KorwilTransactionDetail.save(korwilTransactionDetail);
-    // podScanInHub.transactionStatusId = 200;
-    // podScanInHub.updatedTime         = moment().toDate();
-    // podScanInHub.userIdUpdated       = authMeta.userId;
-    // podScanInHub.save();
+  //   const korwilTransactionDetail = await KorwilTransactionDetail.findOne({
+  //      where: {
+  //         korwilItemId: payload.korwilItemId,
+  //         korwilTransactionId: payload.korwilTransactionId
+  //       }
+  //   });
+  //   korwilTransactionDetail.latChecklist = payload.latitude;
+  //   korwilTransactionDetail.longChecklist = payload.longitude;
+  //   korwilTransactionDetail.note = payload.note ? payload.note : korwilTransactionDetail.note;
+  //   korwilTransactionDetail.isDone = payload.isDone ? payload.isDone : korwilTransactionDetail.isDone;
+  //   korwilTransactionDetail.photoCount = korwilTransactionDetail.photoCount+1;
+  //   korwilTransactionDetail.userIdUpdated = authMeta.userId;
+  //   korwilTransactionDetail.updatedTime = timeNow;
+  //   KorwilTransactionDetail.save(korwilTransactionDetail);
+  //   // podScanInHub.transactionStatusId = 200;
+  //   // podScanInHub.updatedTime         = moment().toDate();
+  //   // podScanInHub.userIdUpdated       = authMeta.userId;
+  //   // podScanInHub.save();
   
-    // const korwilTransactionDetail = KorwilTransactionDetail.create();
-    // });
+  //   // const korwilTransactionDetail = KorwilTransactionDetail.create();
+  //   // });
 
-    // const responseCheckBranch = await this.validateBranchByCoordinate(payload.latitude, payload.longitude, payload.branchId);
-    // if (responseCheckBranch.status == false){
-    //   result.coordinate = responseCheckBranch;
-    // }
+  //   // const responseCheckBranch = await this.validateBranchByCoordinate(payload.latitude, payload.longitude, payload.branchId);
+  //   // if (responseCheckBranch.status == false){
+  //   //   result.coordinate = responseCheckBranch;
+  //   // }
 
-    return result;
-  }
+  //   return result;
+  // }
 
   public static async validateBranchByCoordinate(lat, long, branchId): Promise<ValidateBranchCoordinateResponseVm>{
     const lata = parseFloat(lat);
