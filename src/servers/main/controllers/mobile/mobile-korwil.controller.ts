@@ -6,7 +6,7 @@ import { MobileKorwilService } from '../../services/mobile/mobile-korwil.service
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm, ItemListKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
-import { MobilePostKorwilTransactionPayloadVm, MobileKorwilListItemPayloadVm } from '../../models/mobile-korwil-payload.vm';
+import { MobilePostKorwilTransactionPayloadVm } from '../../models/mobile-korwil-payload.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('Korwil')
@@ -23,13 +23,15 @@ export class MobileKorwilController {
     return MobileKorwilService.getBranchList();
   }
 
-  @Get('itemList')
+  @Get('itemList/:branchId')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: ItemListKorwilResponseVm })
-  public async itemList(@Body() payload: MobileKorwilListItemPayloadVm) {
-    return MobileKorwilService.getItemList(payload);
+  public async itemList(
+    @Param('branchId') branchId: string,
+  ) {
+    return MobileKorwilService.getItemList(branchId);
   }
 
   @Post('createItem')
