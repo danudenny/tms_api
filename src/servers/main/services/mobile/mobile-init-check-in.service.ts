@@ -65,20 +65,15 @@ export class MobileInitCheckInService {
       });
       if (employeeJourney) {
         const qb = createQueryBuilder();
-        qb.addSelect('kt.branch_id', 'checkinIdBranch');
         qb.addSelect('b.branch_name', 'branchName');
-        qb.from('korwil_transaction', 'kt');
-        qb.innerJoin('branch', 'b', 'b.branch_id = kt.branch_id');
-        qb.where('kt.is_deleted = false');
-        qb.andWhere('kt.user_id = :userId', { userId: authMeta.userId })
-        qb.andWhere('kt.employee_journey_id = :employeeJourneyId', { employeeJourneyId: employeeJourney.employeeJourneyId })
-        qb.orderBy('kt.created_time', 'DESC');
+        qb.from('branch', 'b');
+        qb.where('b.is_deleted = false');
+        qb.andWhere('b.branch_id = :branchIdTemp', { branchIdTemp: employeeJourney.branchIdCheckIn })
 
         const res = await qb.getRawOne();
-
         // get last check in transaction branch
         if(res){
-          result.checkinIdBranch = res.checkinIdBranch;
+          result.checkinIdBranch = employeeJourney.branchIdCheckIn.toString();
           result.branchName = res.branchName;
         }
       }

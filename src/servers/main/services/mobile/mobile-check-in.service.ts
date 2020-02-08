@@ -137,7 +137,7 @@ export class MobileCheckInService {
       result.status = "error";
       result.message = 'Check In sedang aktif, Harap Check Out terlebih dahulu';
       result.branchName = branch.branchName ? branch.branchName : branchName;
-      result.checkInDate = moment(employeeJourneyCheckOutExist.checkInDate).format('YYYY-MM-DD H:mm:SS');
+      result.checkInDate = moment(employeeJourneyCheckOutExist.checkInDate).format('YYYY-MM-DD HH:mm:ss');
       result.attachmentId = attachmentId;
       result.checkinIdBranch = branch.branchId ? branch.branchId.toString() : payload.branchId;
       return result;
@@ -181,9 +181,10 @@ export class MobileCheckInService {
         userIdUpdated: authMeta.userId,
         updatedTime: timeNow,
         attachmentIdCheckIn: attachmentId,
+        branchIdCheckIn: Number(payload.branchId),
       });
       await this.employeeJourneyRepository.save(employeeJourney);
-
+      console.log(employeeJourney);
       const employeeJourneyId = employeeJourney.employeeJourneyId;
 
       const qb1 = createQueryBuilder();
