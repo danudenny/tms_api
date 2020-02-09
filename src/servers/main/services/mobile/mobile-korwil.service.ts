@@ -210,6 +210,24 @@ export class MobileKorwilService {
       return result;
     }
 
+    let qb = createQueryBuilder();
+    qb.addSelect('ktd.korwil_transaction_detail_id', 'korwilTransactionDetailId');
+    qb.from('korwil_transaction_detail', 'ktd');
+    qb.innerJoin('korwil_transaction',
+    'kt',
+    'kt.korwil_transaction_id = ktd.korwil_transaction_id AND ktd.is_deleted = false'
+    );
+    qb.where('ktd.is_deleted = false');
+    qb.andWhere('ktd.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: payload.korwilTransactionDetailId });
+    qb.andWhere('kt.korwil_transaction_id = :korwilTransactionId', { korwilTransactionId: payload.korwilTransactionId });
+    const checkData = await qb.getRawOne();
+
+    if(!checkData){
+      result.message = "Data korwil tidak ditemukan";
+      result.status = "error";
+      return result;
+    }
+
     let countInsertedImage = 0;
     // upload image
     files.forEach(file => {
@@ -226,16 +244,16 @@ export class MobileKorwilService {
     }
 
     // GET total photo after delete and upload
-    let qb = createQueryBuilder();
-    qb.addSelect('ktdp.korwil_transaction_detail_photo_id', 'korwilTransactionDetailPhotoId');
-    qb.from('korwil_transaction_detail', 'ktd');
-    qb.innerJoin('korwil_transaction_detail_photo',
+    let qb1 = createQueryBuilder();
+    qb1.addSelect('ktdp.korwil_transaction_detail_photo_id', 'korwilTransactionDetailPhotoId');
+    qb1.from('korwil_transaction_detail', 'ktd');
+    qb1.innerJoin('korwil_transaction_detail_photo',
     'ktdp',
     'ktdp.korwil_transaction_detail_id = ktd.korwil_transaction_detail_id AND ktdp.is_deleted = false'
     );
-    qb.where('ktd.is_deleted = false');
-    qb.andWhere('ktdp.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: payload.korwilTransactionDetailId });
-    const photos = await qb.getRawMany();
+    qb1.where('ktd.is_deleted = false');
+    qb1.andWhere('ktdp.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: payload.korwilTransactionDetailId });
+    const photos = await qb1.getRawMany();
     const temp = photos.length;
 
     const deletedPhotoLength = payload.deletedPhotos ? payload.deletedPhotos.length : 0;
