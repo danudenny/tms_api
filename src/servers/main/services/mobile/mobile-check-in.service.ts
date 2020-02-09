@@ -196,6 +196,7 @@ export class MobileCheckInService {
         qb.where('kt.is_deleted = false');
         qb.andWhere('kt.branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
         qb.andWhere('kt.user_id = :idUserLogin', { idUserLogin: authMeta.userId });
+        qb.andWhere('kt.status = :statusPending', { statusPending: 0 });
         const korwilTransactionUser = await qb.getRawOne();
 
         if(!korwilTransactionUser){
