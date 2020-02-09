@@ -135,7 +135,6 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.korwilTransaction.employeeJourney, 'd', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.where(e => e.korwilTransaction.status, w => w.equals(1));
     q.groupByRaw('a.ref_user_id, "coordinatorName", c.date');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
