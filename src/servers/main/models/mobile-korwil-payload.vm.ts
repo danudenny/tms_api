@@ -2,19 +2,22 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 
 export class MobilePostKorwilTransactionPayloadVm {
   @ApiModelPropertyOptional()
-  isDone?: number;
-
-  @ApiModelPropertyOptional()
-  status?: string;
+  deletedPhotos: string[];
 
   @ApiModelProperty()
-  note: number;
+  korwilTransactionDetailId: string;
 
   @ApiModelProperty()
-  longitude: number;
+  longitude: string;
 
   @ApiModelProperty()
-  latitude: number;
+  latitude: string;
+
+  @ApiModelProperty()
+  korwilTransactionId: string;
+
+  @ApiModelProperty()
+  note: string;
 
   @ApiModelProperty()
   branchId: string;
@@ -23,4 +26,9 @@ export class MobilePostKorwilTransactionPayloadVm {
 export class MobileKorwilListItemPayloadVm {
   @ApiModelProperty()
   branchId: string;
+}
+
+export class MobileUpdateProcessKorwilPayloadVm {
+  @ApiModelProperty()
+  korwilTransactionId: string;
 }
