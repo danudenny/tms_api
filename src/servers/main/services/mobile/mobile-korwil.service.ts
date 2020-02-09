@@ -53,6 +53,7 @@ export class MobileKorwilService {
       korwilTransactionId: payload.korwilTransactionId,
       status: 2,
       isDeleted: false,
+      date: timeNow,
     },
     {
       status: 3,
@@ -306,16 +307,18 @@ export class MobileKorwilService {
         isDeleted: false,
       }
     });
-    AttachmentService.deleteAttachment(attachmentTms.attachmentTmsId);
+    if(attachmentTms){AttachmentService.deleteAttachment(attachmentTms.attachmentTmsId);}
 
     const deleteKorwilPhoto = await KorwilTransactionDetailPhoto.findOne({
       where: {
-        photoId: Number(attachmentTms.attachmentTmsId),
+        photoId: Number(id),
         isDeleted: false,
       }
     });
-    deleteKorwilPhoto.isDeleted = true;
-    await KorwilTransactionDetailPhoto.save(deleteKorwilPhoto);
+    if(deleteKorwilPhoto){
+      deleteKorwilPhoto.isDeleted = true;
+      await KorwilTransactionDetailPhoto.save(deleteKorwilPhoto);
+    }
   }
 
   public static async validateBranchByCoordinate(lat, long, branchId): Promise<ValidateBranchCoordinateResponseVm>{
