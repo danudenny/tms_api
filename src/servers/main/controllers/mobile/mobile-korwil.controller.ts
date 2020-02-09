@@ -55,12 +55,12 @@ export class MobileKorwilController {
     return MobileKorwilService.getItemList(branchId);
   }
 
-  @Get('detailPhoto/:korwilTransactionDetailId')
+  @Get('itemDetail/:korwilTransactionDetailId')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: DetailPhotoKorwilResponseVm })
-  public async detailPhoto(
+  public async itemDetail(
     @Param('korwilTransactionDetailId') korwilTransactionDetailId: string,
   ) {
     return MobileKorwilService.getDetailPhoto(korwilTransactionDetailId);
