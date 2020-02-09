@@ -2,7 +2,7 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 
 export class MobilePostKorwilTransactionPayloadVm {
   @ApiModelPropertyOptional()
-  deletedPhotos: string[];
+  deletedPhotos: string;
 
   @ApiModelProperty()
   korwilTransactionDetailId: string;
