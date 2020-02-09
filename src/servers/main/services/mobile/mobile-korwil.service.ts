@@ -226,10 +226,6 @@ export class MobileKorwilService {
       result.message = "Data korwil tidak ditemukan";
       result.status = "error";
       return result;
-    }else if(files.length == 0) {
-      result.message = "Image tidak boleh kosong!";
-      result.status = "error";
-      return result;
     }
 
     let countInsertedImage = 0;
