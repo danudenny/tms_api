@@ -54,10 +54,10 @@ export class MobileKorwilService {
       korwilTransactionId: payload.korwilTransactionId,
       status: 2,
       isDeleted: false,
-      date: timeNow,
     },
     {
       status: 3,
+      date: timeNow,
     });
 
     let korwilTransaction = await KorwilTransaction.findOne({
