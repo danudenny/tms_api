@@ -58,12 +58,6 @@ export class MobileKorwilService {
       status: 3,
     });
 
-    const qb = createQueryBuilder();
-    qb.addSelect('ki.korwil_item_id', 'korwilItemId');
-    qb.from('korwil_item', 'ki');
-    qb.where('ki.is_deleted = false');
-    const totalTask = await qb.getCount();
-
     let korwilTransaction = await KorwilTransaction.findOne({
       where: {
         korwilTransactionId: payload.korwilTransactionId,
@@ -74,7 +68,7 @@ export class MobileKorwilService {
       result.status = "Korwil tidak ditemukan";
       return result;
     }
-    korwilTransaction.totalTask = totalTask;
+    korwilTransaction.totalTask = await this.getTotalTask(payload.korwilTransactionId);
     korwilTransaction.userIdUpdated = authMeta.userId;
     korwilTransaction.updatedTime = timeNow;
     korwilTransaction.date = timeNow;
@@ -94,23 +88,18 @@ export class MobileKorwilService {
     result.message = "success";
     result.status = "ok";
 
-    const qb = createQueryBuilder();
-    qb.addSelect('ki.korwil_item_id', 'korwilItemId');
-    qb.from('korwil_item', 'ki');
-    qb.where('ki.is_deleted = false');
-    const totalTask = await qb.getCount();
-
     let korwilTransaction = await KorwilTransaction.findOne({
       where: {
         korwilTransactionId: payload.korwilTransactionId,
+        status: 0,
       }
     });
     if(!korwilTransaction){
       result.message = "error";
-      result.status = "Korwil tidak ditemukan";
+      result.status = "Korwil tidak ditemukan atau sudah di submit";
       return result;
     }
-    korwilTransaction.totalTask = totalTask;
+    korwilTransaction.totalTask = await this.getTotalTask(payload.korwilTransactionId);
     korwilTransaction.userIdUpdated = authMeta.userId;
     korwilTransaction.updatedTime = timeNow;
     korwilTransaction.date = timeNow;
@@ -219,8 +208,10 @@ export class MobileKorwilService {
       return result;
     }
 
+    let countInsertedImage = 0;
     // upload image
     files.forEach(file => {
+      countInsertedImage++;
       this.uploadImage(file, payload.korwilTransactionDetailId);
     });
 
@@ -241,8 +232,12 @@ export class MobileKorwilService {
     );
     qb.where('ktd.is_deleted = false');
     qb.andWhere('ktdp.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: payload.korwilTransactionDetailId });
-    const countPhoto = await qb.getCount();
+    const photos = await qb.getRawMany();
+    const temp = photos.length;
 
+    const deletedPhotoLength = payload.deletedPhotos ? payload.deletedPhotos.length : 0;
+    const countPhoto = temp - deletedPhotoLength + countInsertedImage;
+    console.log(temp,deletedPhotoLength,countInsertedImage)
     // update count photo in korwil
     let korwilTransactionDetail = await KorwilTransactionDetail.findOne({
       where: {
@@ -288,6 +283,20 @@ export class MobileKorwilService {
       korwilTransactionDetailPhoto.userIdUpdated  = authMeta.userId;
       await KorwilTransactionDetailPhoto.save(korwilTransactionDetailPhoto);
     }
+  }
+
+  private static async getTotalTask(korwilTransactionId){
+    const qb = createQueryBuilder();
+    qb.addSelect('ki.korwil_item_id', 'korwilItemId');
+    qb.from('korwil_item', 'ki');
+    qb.innerJoin('korwil_transaction_detail',
+    'ktd',
+    'ktd.korwil_item_id = ki.korwil_item_id AND ktd.is_deleted = false'
+    );
+    qb.where('ki.is_deleted = false');
+    qb.where('ktd.korwil_transaction_id = :korwilTransactionIdTemp',{korwilTransactionIdTemp: korwilTransactionId});
+    const result = await qb.getCount();
+    return result;
   }
 
   private static async deletePhotoKorwil(id){
