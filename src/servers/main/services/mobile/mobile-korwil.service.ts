@@ -125,6 +125,7 @@ export class MobileKorwilService {
     qb.addSelect('ktd.korwil_transaction_detail_id', 'korwilTransactionDetailId');
     qb.addSelect('ktd.status', 'status');
     qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
+    qb.addSelect('kt.status', 'statusTransaction');
     qb.addSelect('ktd.note', 'note');
     qb.from('korwil_transaction', 'kt');
     qb.innerJoin('korwil_transaction_detail',
@@ -149,7 +150,7 @@ export class MobileKorwilService {
     if(data){
       result.itemList = data;
       result.korwilTransactionId = data[0].korwilTransactionId;
-      result.isDone = data[0].isDone;
+      result.status = data[0].statusTransaction;
     }
     return result;
   }

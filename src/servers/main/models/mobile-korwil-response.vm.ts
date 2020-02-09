@@ -50,7 +50,7 @@ export class ItemListKorwilResponseVm {
   korwilTransactionId: string;
 
   @ApiModelProperty()
-  isDone: string;
+  status: string;
 }
 
 export class DetailPhotoResponseVm {
