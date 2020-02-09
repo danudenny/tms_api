@@ -92,9 +92,9 @@ export class WebMonitoringCoordinatorService {
     const result = new WebMonitoringCoordinatorPhotoResponse();
     const url = [];
     const qb = createQueryBuilder();
-    qb.addSelect('b.url');
+    qb.addSelect('url');
     qb.addFrom('korwil_transaction_detail_photo', 'a');
-    qb.innerJoin('attachment_tms', 'b', 'a.photo_id = b.attachment_id AND b.is_deleted = false');
+    qb.innerJoin('attachment_tms', 'b', 'a.photo_id = b.attachment_tms_id AND b.is_deleted = false');
     qb.where('a.is_deleted = false');
     qb.andWhere('a.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: payload.korwilTransactionDetailId });
     const data = await qb.getRawMany();
