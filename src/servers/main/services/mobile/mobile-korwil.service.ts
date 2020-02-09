@@ -11,6 +11,7 @@ import moment = require('moment');
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { KorwilTransactionDetailPhoto } from '../../../../shared/orm-entity/korwil-transaction-detail-photo';
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
+import { getType } from 'mime';
 
 export class MobileKorwilService {
   constructor() {}
@@ -217,8 +218,9 @@ export class MobileKorwilService {
     });
 
     // Delete unused photo
-    if(payload.deletedPhotos){
-      payload.deletedPhotos.forEach(id => {
+    const deletedPhotos = JSON.parse(payload.deletedPhotos);
+    if(deletedPhotos){
+      deletedPhotos.forEach(id => {
         this.deletePhotoKorwil(id);
       });
     }
