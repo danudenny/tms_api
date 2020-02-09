@@ -78,7 +78,7 @@ export class KorwilTransaction extends TmsBaseEntity {
   @JoinColumn({ name: 'user_id' })
   users: User;
 
-  @ManyToOne(() => UserToBranch)
+  @ManyToOne(() => UserToBranch, e => e.korwilTransaction)
   @JoinColumn({ name: 'user_to_branch_id' })
   userToBranch: UserToBranch;
 
