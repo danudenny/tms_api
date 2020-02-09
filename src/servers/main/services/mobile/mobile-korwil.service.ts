@@ -54,10 +54,10 @@ export class MobileKorwilService {
       korwilTransactionId: payload.korwilTransactionId,
       status: 2,
       isDeleted: false,
-      date: timeNow,
     },
     {
       status: 3,
+      date: timeNow,
     });
 
     let korwilTransaction = await KorwilTransaction.findOne({
@@ -142,7 +142,7 @@ export class MobileKorwilService {
     qb.where('kt.is_deleted = false');
     qb.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
     qb.andWhere('utb.ref_user_id = :userId', { userId: authMeta.userId });
-
+    qb.orderBy('ki.sort_order', 'ASC');
     const result = new ItemListKorwilResponseVm();
     const data = await qb.getRawMany();
 
