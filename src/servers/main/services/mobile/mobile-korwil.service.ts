@@ -190,7 +190,7 @@ export class MobileKorwilService {
     return result;
   }
 
-  public static async createTransaction(
+  public static async updateTransaction(
     payload: MobilePostKorwilTransactionPayloadVm,
     files
   ): Promise<MobilePostKorwilTransactionResponseVm> {
@@ -406,6 +406,7 @@ export class MobileKorwilService {
       korwilTransactionDetail.longChecklist = "";
       korwilTransactionDetail.note = "";
       korwilTransactionDetail.status = 1;
+      korwilTransactionDetail.isDone = false;
       korwilTransactionDetail.date = moment().toDate();
       korwilTransactionDetail.photoCount = 0;
       korwilTransactionDetail.userIdCreated = authMeta.userId;

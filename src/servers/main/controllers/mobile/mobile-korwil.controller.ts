@@ -77,6 +77,6 @@ export class MobileKorwilController {
     @UploadedFiles() files,
 
   ) {
-    return MobileKorwilService.createTransaction(payload, files);
+    return MobileKorwilService.updateTransaction(payload, files);
   }
 }
