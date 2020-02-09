@@ -118,6 +118,13 @@ export class MobileKorwilService {
   : Promise <ItemListKorwilResponseVm> {
     const authMeta = AuthService.getAuthMetadata();
 
+    const qb1 = createQueryBuilder();
+    qb1.addSelect('kt.korwil_transaction_id', 'id');
+    qb1.from('korwil_transaction', 'kt');
+    qb1.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
+    qb1.andWhere('kt.user_id = :userId', { userId: authMeta.userId });
+    const dataKorwil = await qb1.getRawOne();
+
     // item list korwil
     const qb = createQueryBuilder();
     qb.addSelect('ki.korwil_item_name', 'korwilItemName');
@@ -143,11 +150,12 @@ export class MobileKorwilService {
     qb.where('kt.is_deleted = false');
     qb.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
     qb.andWhere('utb.ref_user_id = :userId', { userId: authMeta.userId });
+    qb.andWhere('ktd.korwil_transaction_id = :korwilId', { korwilId: dataKorwil.id });
     qb.orderBy('ki.sort_order', 'ASC');
+    // qb.groupBy('ki.korwil_item_id');
     const result = new ItemListKorwilResponseVm();
     const data = await qb.getRawMany();
-
-    if(data){
+    if(data.length != 0){
       result.itemList = data;
       result.korwilTransactionId = data[0].korwilTransactionId;
       result.status = data[0].statusTransaction;
