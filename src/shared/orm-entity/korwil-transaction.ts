@@ -40,7 +40,6 @@ export class KorwilTransaction extends TmsBaseEntity {
 
   @Column('integer', {
     nullable: true,
-    default: () => '0',
     name: 'total_task',
   })
   totalTask: number | null;
@@ -79,7 +78,7 @@ export class KorwilTransaction extends TmsBaseEntity {
   @JoinColumn({ name: 'user_id' })
   users: User;
 
-  @ManyToOne(() => UserToBranch)
+  @ManyToOne(() => UserToBranch, e => e.korwilTransaction)
   @JoinColumn({ name: 'user_to_branch_id' })
   userToBranch: UserToBranch;
 

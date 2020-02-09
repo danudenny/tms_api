@@ -142,22 +142,25 @@ export class MobileCheckInService {
       result.checkinIdBranch = branch.branchId ? branch.branchId.toString() : payload.branchId;
       return result;
     } else {
-      const qb = createQueryBuilder();
-      qb.addSelect('utb.user_to_branch_id', 'userToBranchId');
-      qb.from('user_to_branch', 'utb');
-      qb.where('utb.is_deleted = false');
-      qb.andWhere('utb.ref_branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
-      qb.andWhere('utb.ref_user_id = :idUserLogin', { idUserLogin: authMeta.userId });
-      const res = await qb.getRawOne();
+      let res = null;
+      if(payload.branchId){
+        const qb = createQueryBuilder();
+        qb.addSelect('utb.user_to_branch_id', 'userToBranchId');
+        qb.from('user_to_branch', 'utb');
+        qb.where('utb.is_deleted = false');
+        qb.andWhere('utb.ref_branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
+        qb.andWhere('utb.ref_user_id = :idUserLogin', { idUserLogin: authMeta.userId });
+        res = await qb.getRawOne();
 
-      if(!res){
-        result.status = "error";
-        result.message = 'Branch Check In tidak valid';
-        result.branchName = branchName;
-        result.checkInDate = checkInDate;
-        result.attachmentId = attachmentId;
-        result.checkinIdBranch = null;
-        return result;
+        if(!res){
+          result.status = "error";
+          result.message = 'Branch Check In tidak valid';
+          result.branchName = branchName;
+          result.checkInDate = checkInDate;
+          result.attachmentId = attachmentId;
+          result.checkinIdBranch = null;
+          return result;
+        }
       }
 
       // upload image
@@ -184,34 +187,42 @@ export class MobileCheckInService {
         branchIdCheckIn: Number(payload.branchId),
       });
       await this.employeeJourneyRepository.save(employeeJourney);
-      console.log(employeeJourney);
       const employeeJourneyId = employeeJourney.employeeJourneyId;
 
-      const qb1 = createQueryBuilder();
-      qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
-      qb.from('korwil_transaction', 'kt');
-      qb.where('kt.is_deleted = false');
-      qb.andWhere('kt.branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
-      qb.andWhere('kt.user_id = :idUserLogin', { idUserLogin: authMeta.userId });
-      const res1 = await qb.getRawOne();
+      if(payload.branchId){
+        const qb = createQueryBuilder();
+        qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
+        qb.from('korwil_transaction', 'kt');
+        qb.where('kt.is_deleted = false');
+        qb.andWhere('kt.branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
+        qb.andWhere('kt.user_id = :idUserLogin', { idUserLogin: authMeta.userId });
+        qb.andWhere('kt.status = :statusPending', { statusPending: 0 });
+        const korwilTransactionUser = await qb.getRawOne();
 
-      if(!res1){
-        // insert pending status korwil
-        const korwilTransaction = KorwilTransaction.create();
-        korwilTransaction.date = timeNow;
-        korwilTransaction.branchId = branchIdTemp;
-        korwilTransaction.userId = authMeta.userId;
-        korwilTransaction.status = 0;
-        korwilTransaction.createdTime = timeNow;
-        korwilTransaction.isDeleted = false;
-        korwilTransaction.employeeJourneyId = employeeJourneyId;
-        korwilTransaction.userToBranchId = res.userToBranchId;
-        await KorwilTransaction.save(korwilTransaction);
+        if(!korwilTransactionUser){
+          qb.addSelect('ki.korwil_item_id', 'korwilItemId');
+          qb.from('korwil_item', 'ki');
+          qb.where('ki.is_deleted = false');
+          const countTask = await qb.getCount();
 
-        const service = new MobileKorwilService();
-        await service.createTransactionItem(korwilTransaction.korwilTransactionId);
+          // insert pending status korwil
+          const korwilTransaction = KorwilTransaction.create();
+          korwilTransaction.date = timeNow;
+          korwilTransaction.branchId = branchIdTemp;
+          korwilTransaction.userId = authMeta.userId;
+          korwilTransaction.status = 0;
+          korwilTransaction.createdTime = timeNow;
+          korwilTransaction.isDeleted = false;
+          korwilTransaction.totalTask = countTask;
+          korwilTransaction.employeeJourneyId = employeeJourneyId;
+          korwilTransaction.userToBranchId = res.userToBranchId;
+          await KorwilTransaction.save(korwilTransaction);
+
+          const service = new MobileKorwilService();
+          await service.createTransactionItem(korwilTransaction.korwilTransactionId);
+        }
+        branchName = branch.branchName;
       }
-      branchName = branch.branchName;
       checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
     }
     result.status = status;

@@ -65,7 +65,7 @@ export class MobileCheckOutService {
         });
 
         branchName = branch.branchName;
-        checkOutDate = moment().format('YYYY-MM-DD HH:mm:ss');
+        checkOutDate = moment(timeNow).format('YYYY-MM-DD HH:mm:ss');
       } else {
         status = 'error';
         message = 'Anda belum melakukan Check In sebelumnya';
@@ -164,7 +164,7 @@ export class MobileCheckOutService {
 
       branchName = branch.branchName;
       branchId = branch.branchId.toString();
-      checkOutDate = moment().format('YYYY-MM-DD HH:mm:ss');
+      checkOutDate = moment(timeNow).format('YYYY-MM-DD HH:mm:ss');
     } else {
       status = 'error';
       message = 'Anda belum melakukan Check In sebelumnya';

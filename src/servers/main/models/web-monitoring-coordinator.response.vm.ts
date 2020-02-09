@@ -6,6 +6,9 @@ export class WebMonitoringCoordinatorData {
   branchName: string;
 
   @ApiModelProperty()
+  coordinatorName: string;
+
+  @ApiModelProperty()
   countTask: number;
 
   @ApiModelProperty()
@@ -16,6 +19,18 @@ export class WebMonitoringCoordinatorData {
 
   @ApiModelProperty()
   checkOutDatetime: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  korwilTransactionId: string;
+
+  @ApiModelProperty()
+  date: string;
+
+  @ApiModelProperty()
+  statusTransaction: string;
 }
 
 export class WebMonitoringCoordinatorResponse extends BaseMetaResponseVm {

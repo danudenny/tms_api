@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   JoinColumn,
   ManyToMany,
+  ManyToOne,
 } from 'typeorm';
 
 import { Branch } from './branch';
@@ -42,8 +43,9 @@ export class UserToBranch extends TmsBaseEntity {
   // @OneToMany(() => Branch, e => e.branchId)
   // branches: Branch[];
 
-  @OneToMany(() => User, e => e.userId)
-  users: User[];
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'ref_user_id', referencedColumnName: 'userId' })
+  users: User;
 
   @OneToMany(() => KorwilTransaction, e => e.userToBranch)
   @JoinColumn({ name: 'user_to_branch_id' })

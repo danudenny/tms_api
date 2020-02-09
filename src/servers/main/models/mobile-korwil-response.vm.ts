@@ -11,16 +11,10 @@ export class DetailBranchListKorwilResponseVm {
 
 export class MobilePostKorwilTransactionResponseVm {
   @ApiModelProperty()
-  korwilTransactionDetailPhotoId: string;
+  message: string;
 
   @ApiModelProperty()
-  korwilTransactionDetailId: string;
-
-  @ApiModelProperty()
-  korwilTransactionId: string;
-
-  @ApiModelProperty({ type:[ValidateBranchCoordinateResponseVm] })
-  coordinate: ValidateBranchCoordinateResponseVm;
+  status: string;
 }
 
 export class BranchListKorwilResponseVm {
@@ -43,6 +37,9 @@ export class DetailItemListKorwilResponseVm {
 
   @ApiModelProperty()
   note: string;
+
+  @ApiModelProperty()
+  korwilTransactionDetailId: string;
 }
 
 export class ItemListKorwilResponseVm {
@@ -50,8 +47,41 @@ export class ItemListKorwilResponseVm {
   itemList: DetailItemListKorwilResponseVm[];
 
   @ApiModelProperty()
-  korwilTransactionid: string;
+  korwilTransactionId: string;
 
   @ApiModelProperty()
   isDone: string;
+}
+
+export class DetailPhotoResponseVm {
+  @ApiModelProperty()
+  url: string;
+
+  @ApiModelProperty()
+  id: string;
+}
+
+export class DetailPhotoKorwilResponseVm {
+  @ApiModelProperty()
+  note: string;
+
+  @ApiModelProperty()
+  isDone: boolean;
+
+  @ApiModelProperty()
+  status: number;
+
+  @ApiModelProperty({ type: () => [DetailPhotoResponseVm] })
+  photo: DetailPhotoResponseVm[];
+}
+
+export class MobileUpdateProcessKorwilResponseVm {
+  @ApiModelProperty()
+  statusKorwilTransaction: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  status: string;
 }
