@@ -123,7 +123,9 @@ export class MobileKorwilService {
     qb1.from('korwil_transaction', 'kt');
     qb1.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
     qb1.andWhere('kt.user_id = :userId', { userId: authMeta.userId });
+    qb1.andWhere('kt.status = :statusPending', { statusPending: 0 });
     const dataKorwil = await qb1.getRawOne();
+    let id = dataKorwil ? dataKorwil.id : null;
 
     // item list korwil
     const qb = createQueryBuilder();
@@ -137,7 +139,7 @@ export class MobileKorwilService {
     qb.from('korwil_transaction', 'kt');
     qb.innerJoin('korwil_transaction_detail',
     'ktd',
-    'ktd.korwil_transaction_id = ktd.korwil_transaction_id AND ktd.is_deleted = false'
+    'ktd.korwil_transaction_id = kt.korwil_transaction_id AND ktd.is_deleted = false'
     );
     qb.innerJoin('korwil_item',
     'ki',
@@ -150,11 +152,16 @@ export class MobileKorwilService {
     qb.where('kt.is_deleted = false');
     qb.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
     qb.andWhere('utb.ref_user_id = :userId', { userId: authMeta.userId });
-    qb.andWhere('ktd.korwil_transaction_id = :korwilId', { korwilId: dataKorwil.id });
+    qb.andWhere('kt.korwil_transaction_id = :korwilId', { korwilId: id });
     qb.orderBy('ki.sort_order', 'ASC');
-    // qb.groupBy('ki.korwil_item_id');
-    const result = new ItemListKorwilResponseVm();
+
     const data = await qb.getRawMany();
+    console.log(data);
+    const result = new ItemListKorwilResponseVm();
+    result.itemList = [];
+    result.korwilTransactionId = "";
+    result.status = null;
+
     if(data.length != 0){
       result.itemList = data;
       result.korwilTransactionId = data[0].korwilTransactionId;
