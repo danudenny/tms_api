@@ -6,6 +6,9 @@ export class WebMonitoringCoordinatorData {
   branchName: string;
 
   @ApiModelProperty()
+  coordinatorName: string;
+
+  @ApiModelProperty()
   countTask: number;
 
   @ApiModelProperty()
