@@ -55,10 +55,10 @@ export class ItemListKorwilResponseVm {
 
 export class DetailPhotoResponseVm {
   @ApiModelProperty()
-  urlPhoto: string;
+  url: string;
 
   @ApiModelProperty()
-  photoId: string;
+  id: string;
 }
 
 export class DetailPhotoKorwilResponseVm {
@@ -73,4 +73,15 @@ export class DetailPhotoKorwilResponseVm {
 
   @ApiModelProperty({ type: () => [DetailPhotoResponseVm] })
   photo: DetailPhotoResponseVm[];
+}
+
+export class MobileUpdateProcessKorwilResponseVm {
+  @ApiModelProperty()
+  statusKorwilTransaction: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  status: string;
 }

@@ -40,7 +40,6 @@ export class KorwilTransaction extends TmsBaseEntity {
 
   @Column('integer', {
     nullable: true,
-    default: () => '0',
     name: 'total_task',
   })
   totalTask: number | null;

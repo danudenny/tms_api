@@ -27,3 +27,8 @@ export class MobileKorwilListItemPayloadVm {
   @ApiModelProperty()
   branchId: string;
 }
+
+export class MobileUpdateProcessKorwilPayloadVm {
+  @ApiModelProperty()
+  korwilTransactionId: string;
+}
