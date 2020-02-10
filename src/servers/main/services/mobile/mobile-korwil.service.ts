@@ -94,9 +94,35 @@ export class MobileKorwilService {
         status: 0,
       }
     });
-    if(!korwilTransaction){
+
+    const qb = createQueryBuilder();
+    qb.addSelect('kt.status', 'status');
+    qb.addSelect('ktd.is_done', 'isDone');
+    qb.from('korwil_transaction', 'kt');
+    qb.innerJoin('korwil_transaction_detail',
+    'ktd',
+    'ktd.korwil_transaction_id = kt.korwil_transaction_id AND ktd.is_deleted = false'
+    );
+    qb.andWhere('kt.korwil_transaction_id = :korwilTransactionId', { korwilTransactionId: payload.korwilTransactionId });
+    const dataKorwil = await qb.getRawOne();
+
+    qb.andWhere('ktd.is_done = false');
+    const unfinishItem = await qb.getRawOne();
+
+    if(unfinishItem){
+      if(unfinishItem.status == 1){
+        result.message = "error";
+        result.status = "Korwil sudah di submit";
+        return result;
+      }else {
+        result.message = "error";
+        result.status = "Item Korwil belum semua di selesaikan";
+        return result;
+      }
+    }
+    else if(!dataKorwil){
       result.message = "error";
-      result.status = "Korwil tidak ditemukan atau sudah di submit";
+      result.status = "Korwil tidak ditemukan";
       return result;
     }
     korwilTransaction.totalTask = await this.getTotalTask(payload.korwilTransactionId);
