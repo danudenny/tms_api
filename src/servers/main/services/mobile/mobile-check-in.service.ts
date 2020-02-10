@@ -196,12 +196,11 @@ export class MobileCheckInService {
         qb.where('kt.is_deleted = false');
         qb.andWhere('kt.branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
         qb.andWhere('kt.user_id = :idUserLogin', { idUserLogin: authMeta.userId });
-        // qb.andWhere('kt.status = :statusPending', { statusPending: 0 });
-        qb.andWhere('kt.created_time >= :startTransactionKorwil', { startTransactionKorwil: moment().format('YYYY-MM-DD 00:00:00') });
-        qb.andWhere('kt.created_time <= :endTransactionKorwil', { endTransactionKorwil: moment().format('YYYY-MM-DD 23:59:59') });
+        qb.andWhere('kt.status = :statusPending', { statusPending: 0 });
+        // qb.andWhere('kt.created_time >= :startTransactionKorwil', { startTransactionKorwil: moment().format('YYYY-MM-DD 00:00:00') });
+        // qb.andWhere('kt.created_time <= :endTransactionKorwil', { endTransactionKorwil: moment().format('YYYY-MM-DD 23:59:59') });
         const korwilTransactionUser = await qb.getRawOne();
 
-        // if korwil transaction not exists today
         if(!korwilTransactionUser){
           qb.addSelect('ki.korwil_item_id', 'korwilItemId');
           qb.from('korwil_item', 'ki');
@@ -213,7 +212,7 @@ export class MobileCheckInService {
           korwilTransaction.date = timeNow;
           korwilTransaction.branchId = branchIdTemp;
           korwilTransaction.userId = authMeta.userId;
-          korwilTransaction.status = 1;
+          korwilTransaction.status = 0;
           korwilTransaction.createdTime = timeNow;
           korwilTransaction.isDeleted = false;
           korwilTransaction.totalTask = countTask;
