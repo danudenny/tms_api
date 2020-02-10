@@ -25,8 +25,8 @@ export class WebMonitoringController {
 
   @Post('coordinator/branch')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebMonitoringCoordinatorResponse })
   public async monitoringCoordinatorList(@Body() payload: BaseMetaPayloadVm) {
     return WebMonitoringCoordinatorService.findListAllBranch(payload);
@@ -34,8 +34,8 @@ export class WebMonitoringController {
 
   @Post('coordinator')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebMonitoringCoordinatorListResponse })
   public async monitoringCoordinator(@Body() payload: BaseMetaPayloadVm) {
     return WebMonitoringCoordinatorService.findListCoordinator(payload);
@@ -43,8 +43,8 @@ export class WebMonitoringController {
 
   @Post('coordinator/task')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebMonitoringCoordinatorTaskResponse })
   public async monitoringCoordinatorListTask(@Body() payload: WebMonitoringCoordinatorTaskPayload) {
     return WebMonitoringCoordinatorService.listTask(payload);
@@ -52,8 +52,8 @@ export class WebMonitoringController {
 
   @Post('coordinator/task/photo')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebMonitoringCoordinatorPhotoResponse })
   public async monitoringCoordinatorTaskPhoto(@Body() payload: WebMonitoringCoordinatorPhotoPayload) {
     return WebMonitoringCoordinatorService.taskPhoto(payload);
