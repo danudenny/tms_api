@@ -132,6 +132,7 @@ export class MobileKorwilService {
     qb.addSelect('ki.korwil_item_name', 'korwilItemName');
     qb.addSelect('ktd.korwil_item_id', 'korwilItemId');
     qb.addSelect('ktd.korwil_transaction_detail_id', 'korwilTransactionDetailId');
+    qb.addSelect('ktd.is_done', 'isDone');
     qb.addSelect('ktd.status', 'status');
     qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
     qb.addSelect('kt.status', 'statusTransaction');
@@ -156,7 +157,7 @@ export class MobileKorwilService {
     qb.orderBy('ki.sort_order', 'ASC');
 
     const data = await qb.getRawMany();
-    console.log(data);
+    // console.log(data);
     const result = new ItemListKorwilResponseVm();
     result.itemList = [];
     result.korwilTransactionId = "";
@@ -239,6 +240,10 @@ export class MobileKorwilService {
       result.status = "error";
       result.message = responseCheckBranch.message;
       return result;
+    }else if(payload.status < 2 || payload.status > 3){
+      result.status = "error";
+      result.message = "Status yang dikirim hanya boleh 2 atau 3";
+      return result;
     }
 
     let qb = createQueryBuilder();
@@ -289,7 +294,7 @@ export class MobileKorwilService {
 
     const deletedPhotoLength = payload.deletedPhotos ? payload.deletedPhotos.length : 0;
     const countPhoto = temp - deletedPhotoLength + countInsertedImage;
-    console.log(temp,deletedPhotoLength,countInsertedImage)
+    // console.log(temp,deletedPhotoLength,countInsertedImage)
     // update count photo in korwil
     let korwilTransactionDetail = await KorwilTransactionDetail.findOne({
       where: {
@@ -299,8 +304,8 @@ export class MobileKorwilService {
     korwilTransactionDetail.latChecklist = payload.latitude;
     korwilTransactionDetail.longChecklist = payload.longitude;
     korwilTransactionDetail.note = payload.note;
-    korwilTransactionDetail.isDone = payload.isDone;
-    korwilTransactionDetail.status = 2;
+    // korwilTransactionDetail.isDone = payload.isDone;
+    korwilTransactionDetail.status = payload.status;
     korwilTransactionDetail.date = timeNow;
     korwilTransactionDetail.userIdUpdated = authMeta.userId;
     korwilTransactionDetail.updatedTime = timeNow;

@@ -40,6 +40,9 @@ export class DetailItemListKorwilResponseVm {
 
   @ApiModelProperty()
   korwilTransactionDetailId: string;
+
+  @ApiModelProperty()
+  isDone: boolean;
 }
 
 export class ItemListKorwilResponseVm {
