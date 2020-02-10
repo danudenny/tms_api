@@ -123,7 +123,7 @@ export class WebMonitoringCoordinatorService {
       [`COUNT(c.user_id)`, 'countVisit'],
       [`MIN(d.check_in_date)`, 'checkInDatetime'],
       [`MAX(d.check_out_date)`, 'checkOutDatetime'],
-      ['c.date', 'date'],
+      // ['c.date', 'date'],
       ['a.ref_user_id', 'userId'],
     );
     q.innerJoin(e => e.users, 'b', j =>
@@ -135,7 +135,7 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.korwilTransaction.employeeJourney, 'd', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('a.ref_user_id, "coordinatorName", c.date');
+    q.groupByRaw('a.ref_user_id, "coordinatorName"');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
     const result = new WebMonitoringCoordinatorListResponse();
