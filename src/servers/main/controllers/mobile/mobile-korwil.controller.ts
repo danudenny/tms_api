@@ -5,8 +5,8 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { MobileKorwilService } from '../../services/mobile/mobile-korwil.service';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm, ItemListKorwilResponseVm, DetailPhotoKorwilResponseVm, MobileUpdateProcessKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
-import { MobilePostKorwilTransactionPayloadVm, MobileUpdateProcessKorwilPayloadVm } from '../../models/mobile-korwil-payload.vm';
+import { BranchListKorwilResponseVm, MobileKorwilTransactionResponseVm, ItemListKorwilResponseVm, DetailPhotoKorwilResponseVm, MobileUpdateProcessKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
+import { MobilePostKorwilTransactionPayloadVm, MobileUpdateProcessKorwilPayloadVm, MobileValidateCoordinateKorwilTransactionPayloadVm } from '../../models/mobile-korwil-payload.vm';
 
 @ApiUseTags('Korwil')
 @Controller('mobile/korwil')
@@ -71,12 +71,23 @@ export class MobileKorwilController {
   @UseInterceptors(FilesInterceptor('files'))
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: MobilePostKorwilTransactionResponseVm })
+  @ApiOkResponse({ type: MobileKorwilTransactionResponseVm })
   public async createItem(
     @Body() payload: MobilePostKorwilTransactionPayloadVm,
     @UploadedFiles() files,
 
   ) {
     return MobileKorwilService.updateTransaction(payload, files);
+  }
+
+  @Post('validate/coordinateBranch')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: MobileKorwilTransactionResponseVm })
+  public async validateBranchByCoordinate(
+    @Body() payload: MobileValidateCoordinateKorwilTransactionPayloadVm,
+  ) {
+    return MobileKorwilService.validateBranchCoordinate(payload);
   }
 }

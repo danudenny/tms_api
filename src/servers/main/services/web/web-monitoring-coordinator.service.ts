@@ -113,6 +113,7 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['userId'] = 'a.ref_user_id';
     payload.fieldResolverMap['checkInDatetime'] = '"checkInDatetime"';
     payload.fieldResolverMap['checkOutDatetime'] = '"checkOutDatetime"';
+    payload.fieldResolverMap['branchId'] = 'a.ref_branch_id';
 
     const repo = new OrionRepositoryService(UserToBranch, 'a');
     const q = repo.findAllRaw();

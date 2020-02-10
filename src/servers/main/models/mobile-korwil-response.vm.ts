@@ -9,7 +9,7 @@ export class DetailBranchListKorwilResponseVm {
   branchName: string;
 }
 
-export class MobilePostKorwilTransactionResponseVm {
+export class MobileKorwilTransactionResponseVm {
   @ApiModelProperty()
   message: string;
 
@@ -40,6 +40,9 @@ export class DetailItemListKorwilResponseVm {
 
   @ApiModelProperty()
   korwilTransactionDetailId: string;
+
+  @ApiModelProperty()
+  isDone: boolean;
 }
 
 export class ItemListKorwilResponseVm {

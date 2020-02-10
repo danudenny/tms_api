@@ -197,6 +197,8 @@ export class MobileCheckInService {
         qb.andWhere('kt.branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
         qb.andWhere('kt.user_id = :idUserLogin', { idUserLogin: authMeta.userId });
         qb.andWhere('kt.status = :statusPending', { statusPending: 0 });
+        // qb.andWhere('kt.created_time >= :startTransactionKorwil', { startTransactionKorwil: moment().format('YYYY-MM-DD 00:00:00') });
+        // qb.andWhere('kt.created_time <= :endTransactionKorwil', { endTransactionKorwil: moment().format('YYYY-MM-DD 23:59:59') });
         const korwilTransactionUser = await qb.getRawOne();
 
         if(!korwilTransactionUser){
@@ -205,7 +207,7 @@ export class MobileCheckInService {
           qb.where('ki.is_deleted = false');
           const countTask = await qb.getCount();
 
-          // insert pending status korwil
+          // create new korwil transaction
           const korwilTransaction = KorwilTransaction.create();
           korwilTransaction.date = timeNow;
           korwilTransaction.branchId = branchIdTemp;
