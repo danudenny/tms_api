@@ -174,6 +174,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['totalBagScan'] = 't1.total_bag_scan';
     payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
+    payload.fieldResolverMap['totalAwbScan'] = 'totalAwbScan';
     // payload.fieldResolverMap['totalAwbScan'] = 't2.total_awb_scan';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -331,7 +332,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.Awb, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.Awb.branch, 't4', j =>
+    q.leftJoin(e => e.Awb.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());

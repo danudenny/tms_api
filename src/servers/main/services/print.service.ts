@@ -10,6 +10,8 @@ import { PrintBagItemPayloadQueryVm, PrintAwbPayloadQueryVm } from '../models/pr
 import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
+import { PrintDoPodReturnPayloadQueryVm } from '../models/print-do-pod-return.vm';
+import { PrintDoPodDoReturnPayloadQueryVm } from '../models/print-do-pod-do-return.vm';
 
 export class PrintService {
   public static async printDoPodByRequest(
@@ -47,7 +49,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.doPodId, w => w.equals(queryParams.id));
+      .where(e => e.doPodId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDetails.isDeleted, w => w.isFalse());
 
     if (!doPod) {
       RequestErrorService.throwObj({
@@ -142,7 +145,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.doPodId, w => w.equals(queryParams.id));
+      .where(e => e.doPodId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDetailBag.isDeleted, w => w.isFalse());
 
     if (!doPod) {
       RequestErrorService.throwObj({
@@ -256,7 +260,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id));
+      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDeliverDetails.isDeleted, w => w.isFalse());
 
     if (!doPodDeliver) {
       RequestErrorService.throwObj({
@@ -377,7 +382,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id));
+      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDeliverDetails.isDeleted, w => w.isFalse());
 
     if (!doPodDeliver) {
       RequestErrorService.throwObj({
@@ -471,7 +477,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.bagItemId, w => w.equals(queryParams.id));
+      .where(e => e.bagItemId, w => w.equals(queryParams.id))
+      .andWhere(e => e.bag.isDeleted, w => w.isFalse());
 
     if (!bagItem) {
       RequestErrorService.throwObj({
@@ -594,7 +601,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.bagItemId, w => w.equals(queryParams.id));
+      .where(e => e.bagItemId, w => w.equals(queryParams.id))
+      .andWhere(e => e.bagItemAwbs.isDeleted, w => w.isFalse());
 
     if (!bagItem) {
       RequestErrorService.throwObj({
@@ -680,7 +688,8 @@ export class PrintService {
             address: true,
           },
         })
-        .where(e => e.awbNumber, w => w.equals(queryParams.id));
+        .where(e => e.awbNumber, w => w.equals(queryParams.id))
+        .andWhere(e => e.isDeleted, w => w.isFalse());
 
       if (!awbItem) {
         RequestErrorService.throwObj({
@@ -935,5 +944,252 @@ export class PrintService {
         printerName: 'BarcodePrinter',
       });
     }
+  }
+
+  // print untuk SURAT JALAN DO BALIK
+  public static async printDoPodDoReturnByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doReturnAdmintoCt.findOne();
+    q.leftJoin(e => e.doReturnAwbs);
+    q.leftJoin(e => e.user);
+    q.leftJoin(e => e.branch);
+
+    const doPodDoReturn = await q
+      .select({
+        doReturnAdminToCtId: true, // needs to be selected due to do_pod relations are being included
+        doReturnAdminToCt: true,
+        countAwb: true,
+        branch: {
+          branchName: true,
+        },
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        doReturnAwbs: {
+          awbNumber: true,
+          doReturnAwbNumber: true,
+        },
+      })
+      .where(e => e.doReturnAdminToCtId, w => w.equals(queryParams.id));
+
+    if (!doPodDoReturn) {
+      RequestErrorService.throwObj({
+        message: 'Surat Jalan tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPodDoReturn,
+      meta: {
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'surat-jalan-do-balik',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
+    });
+  }
+
+  // print untuk TANDA TERIMA DO BALIK ADMIN
+  public static async printDoPodDoReturnAdminByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodDoReturnPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doReturnHistory.findOne();
+    q.leftJoin(e => e.doReturnAwb);
+    q.leftJoin(e => e.user);
+    q.leftJoin(e => e.userAdmin);
+    q.leftJoin(e => e.doReturnAwb.branchTo);
+
+    const doPodDoReturn = await q
+      .select({
+        doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
+        doReturnAwb: {
+          branchTo: {
+            branchName: true,
+          },
+          awbNumber: true,
+          doReturnAwbNumber: true,
+        },
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        userAdmin: {
+          firstName: true,
+          lastName: true,
+        },
+      })
+      .where(e => e.userIdDriver, w => w.equals(queryParams.id));
+
+    if (!doPodDoReturn) {
+      RequestErrorService.throwObj({
+        message: 'Tanda Terima tidak ditemukan',
+      });
+    }
+
+    q.select({
+        doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
+        doReturnAwb: {
+          branchTo: {
+            branchName: true,
+          },
+          awbNumber: true,
+          doReturnAwbNumber: true,
+        },
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        userAdmin: {
+          firstName: true,
+          lastName: true,
+        },
+      })
+      .where(e => e.userIdDriver, w => w.equals(queryParams.id));
+
+    const dataCount = q.countWithoutTakeAndSkip();
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPodDoReturn,
+      meta: {
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        totalData: dataCount,
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'tanda-terima-do-balik',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
+    });
+  }
+
+  // print untuk TANDA TERIMA DO BALIK CT
+  public static async printDoPodDoReturnCtByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doReturnCttoCollection.findOne();
+    q.leftJoin(e => e.doReturnAwbs);
+    q.leftJoin(e => e.user);
+
+    const doPodDoReturn = await q
+      .select({
+        doReturnCtToCollectionId: true, // needs to be selected due to do_pod relations are being included
+        doReturnCtToCollection: true,
+        countAwb: true,
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        doReturnAwbs: {
+          awbNumber: true,
+          doReturnAwbNumber: true,
+        },
+      })
+      .where(e => e.doReturnCtToCollectionId, w => w.equals(queryParams.id));
+
+    if (!doPodDoReturn) {
+      RequestErrorService.throwObj({
+        message: 'Tanda Terima tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPodDoReturn,
+      meta: {
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'tanda-terima-do-balik-ct',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
+    });
+  }
+
+  // print untuk TANDA TERIMA DO BALIK COLLECTION
+  public static async printDoPodDoReturnCollectionByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doReturnCollectiontoCust.findOne();
+    q.leftJoin(e => e.doReturnAwbs);
+    q.leftJoin(e => e.doReturnAwbs.customerAccount);
+    q.leftJoin(e => e.doReturnAwbs.customerAccount.customerAddress);
+    q.leftJoin(e => e.user);
+
+    const doPodDoReturn = await q
+      .select({
+        doReturnCollectionToCustId: true, // needs to be selected due to do_pod relations are being included
+        doReturnCollectionToCust: true,
+        countAwb: true,
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        doReturnAwbs: {
+          awbNumber: true,
+          doReturnAwbNumber: true,
+          customerAccount: {
+            customerAccountName: true,
+            phone1: true,
+            customerAddress: {
+              address: true,
+            },
+          },
+        },
+      })
+      .where(e => e.doReturnCollectionToCustId, w => w.equals(queryParams.id));
+
+    if (!doPodDoReturn) {
+      RequestErrorService.throwObj({
+        message: 'Tanda Terima tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPodDoReturn,
+      meta: {
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'tanda-terima-do-balik-collection',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
+    });
   }
 }
