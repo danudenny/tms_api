@@ -43,6 +43,9 @@ export class WebMonitoringCoordinatorListData {
   coordinatorName: string;
 
   @ApiModelProperty()
+  userId: string;
+
+  @ApiModelProperty()
   countBranch: number;
 
   @ApiModelProperty()
