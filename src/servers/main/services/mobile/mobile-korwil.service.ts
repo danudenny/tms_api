@@ -299,7 +299,7 @@ export class MobileKorwilService {
     korwilTransactionDetail.latChecklist = payload.latitude;
     korwilTransactionDetail.longChecklist = payload.longitude;
     korwilTransactionDetail.note = payload.note;
-    korwilTransactionDetail.isDone = true;
+    korwilTransactionDetail.isDone = payload.isDone;
     korwilTransactionDetail.status = 2;
     korwilTransactionDetail.date = timeNow;
     korwilTransactionDetail.userIdUpdated = authMeta.userId;

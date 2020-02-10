@@ -21,6 +21,9 @@ export class MobilePostKorwilTransactionPayloadVm {
 
   @ApiModelProperty()
   branchId: string;
+
+  @ApiModelProperty()
+  isDone: boolean;
 }
 
 export class MobileValidateCoordinateKorwilTransactionPayloadVm {
