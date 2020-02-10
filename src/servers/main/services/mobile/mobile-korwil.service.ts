@@ -1,4 +1,4 @@
-import { createQueryBuilder } from 'typeorm';
+import { createQueryBuilder, Not } from 'typeorm';
 import { isEmpty } from 'lodash';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BranchListKorwilResponseVm, MobileKorwilTransactionResponseVm, ItemListKorwilResponseVm, DetailPhotoKorwilResponseVm, MobileUpdateProcessKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
@@ -52,11 +52,11 @@ export class MobileKorwilService {
     // update status sedang dikerjakan(2) jadi status selesai(3)
     await KorwilTransactionDetail.update({
       korwilTransactionId: payload.korwilTransactionId,
-      status: 2,
+      status: Not(0),
       isDeleted: false,
     },
     {
-      status: 3,
+      isDone: true,
     });
 
     let korwilTransaction = await KorwilTransaction.findOne({
