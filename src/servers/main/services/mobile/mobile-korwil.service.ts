@@ -240,9 +240,9 @@ export class MobileKorwilService {
       result.status = "error";
       result.message = responseCheckBranch.message;
       return result;
-    }else if(payload.status < 2 || payload.status > 3){
+    }else if(payload.status < 1 || payload.status > 2){
       result.status = "error";
-      result.message = "Status yang dikirim hanya boleh 2 atau 3";
+      result.message = "Status yang dikirim hanya boleh 1 atau 2";
       return result;
     }
 
