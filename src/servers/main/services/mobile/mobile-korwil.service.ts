@@ -461,7 +461,7 @@ export class MobileKorwilService {
       korwilTransactionDetail.latChecklist = "";
       korwilTransactionDetail.longChecklist = "";
       korwilTransactionDetail.note = "";
-      korwilTransactionDetail.status = 1;
+      korwilTransactionDetail.status = 0;
       korwilTransactionDetail.isDone = false;
       korwilTransactionDetail.date = moment().toDate();
       korwilTransactionDetail.photoCount = 0;
