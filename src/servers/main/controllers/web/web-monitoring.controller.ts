@@ -8,8 +8,8 @@ import { WebMonitoringService } from '../../services/web/web-monitoring.service'
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { WebMonitoringCoordinatorService } from '../../services/web/web-monitoring-coordinator.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse } from '../../models/web-monitoring-coordinator.response.vm';
-import { WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload } from '../../models/web-monitoring-coordinator-payload.vm';
+import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse } from '../../models/web-monitoring-coordinator.response.vm';
+import { WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload, WebMonitoringCoordinatorDetailPayload } from '../../models/web-monitoring-coordinator-payload.vm';
 
 @ApiUseTags('Web Monitoring')
 @Controller('web/monitoring')
@@ -57,5 +57,14 @@ export class WebMonitoringController {
   @ApiOkResponse({ type: WebMonitoringCoordinatorPhotoResponse })
   public async monitoringCoordinatorTaskPhoto(@Body() payload: WebMonitoringCoordinatorPhotoPayload) {
     return WebMonitoringCoordinatorService.taskPhoto(payload);
+  }
+
+  @Post('coordinator/detail')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebMonitoringCoordinatorDetailResponse })
+  public async monitoringCoordinatorDetail(@Body() payload: WebMonitoringCoordinatorDetailPayload) {
+    return WebMonitoringCoordinatorService.detailCoordinator(payload);
   }
 }

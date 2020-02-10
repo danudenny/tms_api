@@ -81,6 +81,17 @@ export class WebMonitoringCoordinatorTaskResponse {
   data: WebMonitoringCoordinatorTaskData[];
 }
 
+export class WebMonitoringCoordinatorDetailResponse {
+  @ApiModelProperty()
+  userId: string;
+
+  @ApiModelProperty()
+  coordinatorName: string;
+
+  @ApiModelProperty()
+  branch: number[];
+}
+
 export class WebMonitoringCoordinatorPhotoResponse {
   @ApiModelProperty()
   url: string[];
