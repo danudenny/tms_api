@@ -57,7 +57,6 @@ export class MobileKorwilService {
     },
     {
       status: 3,
-      date: timeNow,
     });
 
     let korwilTransaction = await KorwilTransaction.findOne({
@@ -73,7 +72,6 @@ export class MobileKorwilService {
     korwilTransaction.totalTask = await this.getTotalTask(payload.korwilTransactionId);
     korwilTransaction.userIdUpdated = authMeta.userId;
     korwilTransaction.updatedTime = timeNow;
-    korwilTransaction.date = timeNow;
     await KorwilTransaction.save(korwilTransaction);
 
     result.statusKorwilTransaction = korwilTransaction.status;
@@ -104,7 +102,6 @@ export class MobileKorwilService {
     korwilTransaction.totalTask = await this.getTotalTask(payload.korwilTransactionId);
     korwilTransaction.userIdUpdated = authMeta.userId;
     korwilTransaction.updatedTime = timeNow;
-    korwilTransaction.date = timeNow;
     korwilTransaction.status = 1;
     await KorwilTransaction.save(korwilTransaction);
 
@@ -306,7 +303,6 @@ export class MobileKorwilService {
     korwilTransactionDetail.note = payload.note;
     // korwilTransactionDetail.isDone = payload.isDone;
     korwilTransactionDetail.status = payload.status;
-    korwilTransactionDetail.date = timeNow;
     korwilTransactionDetail.userIdUpdated = authMeta.userId;
     korwilTransactionDetail.updatedTime = timeNow;
     korwilTransactionDetail.photoCount = countPhoto;
@@ -447,11 +443,11 @@ export class MobileKorwilService {
     korwilTransactionId: string,
   ){
     const authMeta = AuthService.getAuthMetadata();
+    const dateNow = moment().toDate();
     const qb = createQueryBuilder();
     qb.addSelect('ki.korwil_item_name', 'korwilItemName');
     qb.addSelect('ki.korwil_item_id', 'korwilItemId');
     qb.from('korwil_item', 'ki');
-
     const res = await qb.getRawMany();
 
     res.forEach(async(item) => {
@@ -463,11 +459,11 @@ export class MobileKorwilService {
       korwilTransactionDetail.note = "";
       korwilTransactionDetail.status = 0;
       korwilTransactionDetail.isDone = false;
-      korwilTransactionDetail.date = moment().toDate();
+      korwilTransactionDetail.date = dateNow;
       korwilTransactionDetail.photoCount = 0;
       korwilTransactionDetail.userIdCreated = authMeta.userId;
-      korwilTransactionDetail.createdTime = moment().toDate();
-      korwilTransactionDetail.updatedTime = moment().toDate();
+      korwilTransactionDetail.createdTime = dateNow;
+      korwilTransactionDetail.updatedTime = dateNow;
       korwilTransactionDetail.userIdUpdated = authMeta.userId;
       await KorwilTransactionDetail.save(korwilTransactionDetail);
     });
