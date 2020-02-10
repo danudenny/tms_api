@@ -9,7 +9,7 @@ export class DetailBranchListKorwilResponseVm {
   branchName: string;
 }
 
-export class MobilePostKorwilTransactionResponseVm {
+export class MobileKorwilTransactionResponseVm {
   @ApiModelProperty()
   message: string;
 

@@ -23,6 +23,17 @@ export class MobilePostKorwilTransactionPayloadVm {
   branchId: string;
 }
 
+export class MobileValidateCoordinateKorwilTransactionPayloadVm {
+  @ApiModelProperty()
+  longitude: string;
+
+  @ApiModelProperty()
+  latitude: string;
+
+  @ApiModelProperty()
+  branchId: string;
+}
+
 export class MobileKorwilListItemPayloadVm {
   @ApiModelProperty()
   branchId: string;
