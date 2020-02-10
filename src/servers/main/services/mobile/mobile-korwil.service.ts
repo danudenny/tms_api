@@ -1,8 +1,8 @@
 import { createQueryBuilder } from 'typeorm';
 import { isEmpty } from 'lodash';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { BranchListKorwilResponseVm, MobilePostKorwilTransactionResponseVm, ItemListKorwilResponseVm, DetailPhotoKorwilResponseVm, MobileUpdateProcessKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
-import { MobilePostKorwilTransactionPayloadVm, MobileUpdateProcessKorwilPayloadVm } from '../../models/mobile-korwil-payload.vm';
+import { BranchListKorwilResponseVm, MobileKorwilTransactionResponseVm, ItemListKorwilResponseVm, DetailPhotoKorwilResponseVm, MobileUpdateProcessKorwilResponseVm } from '../../models/mobile-korwil-response.vm';
+import { MobilePostKorwilTransactionPayloadVm, MobileUpdateProcessKorwilPayloadVm, MobileValidateCoordinateKorwilTransactionPayloadVm } from '../../models/mobile-korwil-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { ValidateBranchCoordinateResponseVm } from '../../models/branch-response.vm';
 import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
@@ -132,6 +132,7 @@ export class MobileKorwilService {
     qb.addSelect('ki.korwil_item_name', 'korwilItemName');
     qb.addSelect('ktd.korwil_item_id', 'korwilItemId');
     qb.addSelect('ktd.korwil_transaction_detail_id', 'korwilTransactionDetailId');
+    qb.addSelect('ktd.is_done', 'isDone');
     qb.addSelect('ktd.status', 'status');
     qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
     qb.addSelect('kt.status', 'statusTransaction');
@@ -156,7 +157,7 @@ export class MobileKorwilService {
     qb.orderBy('ki.sort_order', 'ASC');
 
     const data = await qb.getRawMany();
-    console.log(data);
+    // console.log(data);
     const result = new ItemListKorwilResponseVm();
     result.itemList = [];
     result.korwilTransactionId = "";
@@ -207,11 +208,26 @@ export class MobileKorwilService {
     return result;
   }
 
+  public static async validateBranchCoordinate(
+    payload: MobileValidateCoordinateKorwilTransactionPayloadVm
+  ): Promise<MobileKorwilTransactionResponseVm>{
+    const result = new MobileKorwilTransactionResponseVm();
+    result.message = "success";
+    result.status = "ok";
+
+    const responseCheckBranch = await this.validateBranchByCoordinate(payload.latitude, payload.longitude, payload.branchId);
+    if (responseCheckBranch.status == false){
+      result.status = "error";
+      result.message = responseCheckBranch.message;
+    }
+
+    return result;
+  }
   public static async updateTransaction(
     payload: MobilePostKorwilTransactionPayloadVm,
     files
-  ): Promise<MobilePostKorwilTransactionResponseVm> {
-    const result = new MobilePostKorwilTransactionResponseVm();
+  ): Promise<MobileKorwilTransactionResponseVm> {
+    const result = new MobileKorwilTransactionResponseVm();
     const authMeta = AuthService.getAuthMetadata();
     const timeNow = moment().toDate();
 
@@ -223,6 +239,10 @@ export class MobileKorwilService {
     if (responseCheckBranch.status == false){
       result.status = "error";
       result.message = responseCheckBranch.message;
+      return result;
+    }else if(payload.status < 1 || payload.status > 2){
+      result.status = "error";
+      result.message = "Status yang dikirim hanya boleh 1 atau 2";
       return result;
     }
 
@@ -274,7 +294,7 @@ export class MobileKorwilService {
 
     const deletedPhotoLength = payload.deletedPhotos ? payload.deletedPhotos.length : 0;
     const countPhoto = temp - deletedPhotoLength + countInsertedImage;
-    console.log(temp,deletedPhotoLength,countInsertedImage)
+    // console.log(temp,deletedPhotoLength,countInsertedImage)
     // update count photo in korwil
     let korwilTransactionDetail = await KorwilTransactionDetail.findOne({
       where: {
@@ -284,8 +304,8 @@ export class MobileKorwilService {
     korwilTransactionDetail.latChecklist = payload.latitude;
     korwilTransactionDetail.longChecklist = payload.longitude;
     korwilTransactionDetail.note = payload.note;
-    korwilTransactionDetail.isDone = true;
-    korwilTransactionDetail.status = 2;
+    // korwilTransactionDetail.isDone = payload.isDone;
+    korwilTransactionDetail.status = payload.status;
     korwilTransactionDetail.date = timeNow;
     korwilTransactionDetail.userIdUpdated = authMeta.userId;
     korwilTransactionDetail.updatedTime = timeNow;
@@ -366,7 +386,7 @@ export class MobileKorwilService {
       let nearby_branch = await this.getNearby(lata, longa, radius[0])
 
       response.status= false;
-      response.message= "lokasi branch tidak valid";
+      response.message= "Lokasi branch tidak valid";
 
       const res = await RawQueryService.query(`SELECT branch_id FROM branch WHERE is_deleted = false
       AND longitude IS NOT NULL AND latitude IS NOT NULL
