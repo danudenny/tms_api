@@ -12,6 +12,7 @@ import { AttachmentService } from '../../../../shared/services/attachment.servic
 import { KorwilTransactionDetailPhoto } from '../../../../shared/orm-entity/korwil-transaction-detail-photo';
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { getType } from 'mime';
+import { ConfigService } from '../../../../shared/services/config.service';
 
 export class MobileKorwilService {
   constructor() {}
@@ -463,35 +464,5 @@ export class MobileKorwilService {
   static radians(degree: number) {
     // degrees to radians
     return degree * Math.PI / 180;
-  }
-
-  public async createTransactionItem(
-    korwilTransactionId: string,
-  ){
-    const authMeta = AuthService.getAuthMetadata();
-    const dateNow = moment().toDate();
-    const qb = createQueryBuilder();
-    qb.addSelect('ki.korwil_item_name', 'korwilItemName');
-    qb.addSelect('ki.korwil_item_id', 'korwilItemId');
-    qb.from('korwil_item', 'ki');
-    const res = await qb.getRawMany();
-
-    res.forEach(async(item) => {
-      const korwilTransactionDetail = KorwilTransactionDetail.create();
-      korwilTransactionDetail.korwilItemId = item.korwilItemId;
-      korwilTransactionDetail.korwilTransactionId = korwilTransactionId;
-      korwilTransactionDetail.latChecklist = "";
-      korwilTransactionDetail.longChecklist = "";
-      korwilTransactionDetail.note = "";
-      korwilTransactionDetail.status = 0;
-      korwilTransactionDetail.isDone = false;
-      korwilTransactionDetail.date = dateNow;
-      korwilTransactionDetail.photoCount = 0;
-      korwilTransactionDetail.userIdCreated = authMeta.userId;
-      korwilTransactionDetail.createdTime = dateNow;
-      korwilTransactionDetail.updatedTime = dateNow;
-      korwilTransactionDetail.userIdUpdated = authMeta.userId;
-      await KorwilTransactionDetail.save(korwilTransactionDetail);
-    });
   }
 }
