@@ -1039,7 +1039,7 @@ export class PrintService {
       });
     }
 
-    q.select({
+    await q.select({
         doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
         doReturnAwb: {
           branchTo: {
@@ -1059,7 +1059,7 @@ export class PrintService {
       })
       .where(e => e.userIdDriver, w => w.equals(queryParams.id));
 
-    const dataCount = q.countWithoutTakeAndSkip();
+    const dataCount = await q.countWithoutTakeAndSkip();
 
     const m = moment();
     const jsreportParams = {
