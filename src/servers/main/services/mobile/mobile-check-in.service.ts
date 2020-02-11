@@ -107,19 +107,6 @@ export class MobileCheckInService {
     let checkInDate = '';
     let attachmentId = null;
 
-    if(payload.branchId){
-      const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(payload.latitudeCheckIn, payload.longitudeCheckIn, payload.branchId);
-      if (responseCheckBranch.status == false){
-        result.status = "error";
-        result.message = responseCheckBranch.message;
-        result.branchName = branchName;
-        result.checkInDate = checkInDate;
-        result.attachmentId = attachmentId;
-        result.checkinIdBranch = null;
-        return result;
-      }
-    }
-
     const timeNow = moment().toDate();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const employeeJourneyCheckOutExist = await this.employeeJourneyRepository.findOne(
@@ -150,6 +137,19 @@ export class MobileCheckInService {
     } else {
       let res = null;
       if(payload.branchId){
+        // Check coordinate user to branch
+        const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(payload.latitudeCheckIn, payload.longitudeCheckIn, payload.branchId);
+        if (responseCheckBranch.status == false){
+          result.status = "error";
+          result.message = responseCheckBranch.message;
+          result.branchName = branchName;
+          result.checkInDate = checkInDate;
+          result.attachmentId = attachmentId;
+          result.checkinIdBranch = null;
+          return result;
+        }
+
+        // Check existing branch korwil user
         const qb = createQueryBuilder();
         qb.addSelect('utb.user_to_branch_id', 'userToBranchId');
         qb.from('user_to_branch', 'utb');
@@ -157,7 +157,6 @@ export class MobileCheckInService {
         qb.andWhere('utb.ref_branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
         qb.andWhere('utb.ref_user_id = :idUserLogin', { idUserLogin: authMeta.userId });
         res = await qb.getRawOne();
-
         if(!res){
           result.status = "error";
           result.message = 'Branch Check In tidak valid';
@@ -180,6 +179,7 @@ export class MobileCheckInService {
         attachmentId = attachment.attachmentTmsId;
       }
 
+      // Create Employee Journey
       const employeeJourney = this.employeeJourneyRepository.create({
         employeeId: authMeta.employeeId,
         checkInDate: timeNow,
@@ -195,20 +195,23 @@ export class MobileCheckInService {
       await this.employeeJourneyRepository.save(employeeJourney);
       const employeeJourneyId = employeeJourney.employeeJourneyId;
 
-      if(payload.branchId){
-        const qb = createQueryBuilder();
-        qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
-        qb.from('korwil_transaction', 'kt');
-        qb.where('kt.is_deleted = false');
-        qb.andWhere('kt.branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
-        qb.andWhere('kt.user_id = :idUserLogin', { idUserLogin: authMeta.userId });
-        qb.andWhere('kt.status = :statusPending', { statusPending: 0 });
-        qb.andWhere('kt.role_id = :roleId', { roleId: permission.roleId });
-        // qb.andWhere('kt.created_time >= :startTransactionKorwil', { startTransactionKorwil: moment().format('YYYY-MM-DD 00:00:00') });
-        // qb.andWhere('kt.created_time <= :endTransactionKorwil', { endTransactionKorwil: moment().format('YYYY-MM-DD 23:59:59') });
-        const korwilTransactionUser = await qb.getRawOne();
 
-        if(!korwilTransactionUser){
+      // Create Korwil Detail Item if branchId exists
+      if(payload.branchId){
+        // Find Korwil Transaction user role where employee journey id is null
+        let korwilTransactionUser = await KorwilTransaction.findOne({
+          where: {
+            isDeleted: false,
+            branchId: payload.branchId,
+            userId: authMeta.userId,
+            // status: 0,
+            roleId: permission.roleId,
+            employeeJourneyId: IsNull()
+            // createdTime: Between(moment().format('YYYY-MM-DD 00:00:00'), moment().format('YYYY-MM-DD 23:59:59')),
+          },
+        });
+
+        if(korwilTransactionUser){
           const qb = createQueryBuilder();
           const fromDate = moment().format('YYYY-MM-DD 00:00:00');
           const toDate = moment().format('YYYY-MM-DD 23:59:59');
@@ -242,6 +245,7 @@ export class MobileCheckInService {
           korwilTransaction.employeeJourneyId = employeeJourneyId;
           await KorwilTransaction.save(korwilTransaction);
 
+          // Create Korwil Item
           res.forEach(async(item) => {
             const korwilTransactionDetail = KorwilTransactionDetail.create();
             korwilTransactionDetail.korwilItemId = item.korwilItemId;
