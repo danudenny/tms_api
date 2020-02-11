@@ -10,6 +10,7 @@ import { DoReturnCollectionToCust } from './do_return_collection_to_cust';
 import { CustomerAddress } from './customer-address';
 import { CustomerAccount } from './customer-account';
 import { User } from './user';
+import { AwbItemAttr } from './awb-item-attr';
 
 @Entity('do_return_awb', { schema: 'public' })
 export class DoReturnAwb extends TmsBaseEntity {
@@ -94,6 +95,10 @@ export class DoReturnAwb extends TmsBaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_last' })
   branchTo: Branch;
+
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_number', referencedColumnName: 'awbNumber' })
+  awbLast: AwbItemAttr;
 
   @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })

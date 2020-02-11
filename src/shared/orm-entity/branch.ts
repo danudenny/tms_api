@@ -149,6 +149,12 @@ export class Branch extends TmsBaseEntity {
   })
   branchTypeId: number | null;
 
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'updated_time',
+  })
+  updatedTime: Date;
+
   @OneToOne(() => District)
   @JoinColumn({ name: 'district_id' })
   district: District;
