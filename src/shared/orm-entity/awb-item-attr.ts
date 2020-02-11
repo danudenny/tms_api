@@ -161,7 +161,7 @@ export class AwbItemAttr extends BaseEntity {
   bagItemLast: BagItem;
 
   @OneToOne(() => DoReturnAwb)
-  @JoinColumn({ name: 'bag_item_id_last', referencedColumnName: 'awbNumber'})
+  @JoinColumn({ name: 'awb_status_id_last', referencedColumnName: 'awbNumber'})
   doReturnAwb: DoReturnAwb;
 
   @OneToOne(() => AwbItem)
