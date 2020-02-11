@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse } from '../../models/web-monitoring-coordinator.response.vm';
+import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse } from '../../models/web-monitoring-coordinator.response.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
-import { WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload } from '../../models/web-monitoring-coordinator-payload.vm';
+import { WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload, WebMonitoringCoordinatorDetailPayload } from '../../models/web-monitoring-coordinator-payload.vm';
 import { createQueryBuilder } from 'typeorm';
 import { KorwilTransactionDetailPhoto } from '../../../../shared/orm-entity/korwil-transaction-detail-photo';
 import { UserToBranch } from '../../../../shared/orm-entity/user-to-branch';
@@ -33,10 +33,7 @@ export class WebMonitoringCoordinatorService {
       ['t2.branch_name', 'branchName'],
       ['t2.branch_id', 'branchId'],
       ['t1.date', 'date'],
-      [`CASE
-          WHEN t3.is_done = true THEN 1
-          ELSE 0
-      END`, 'countChecklist'],
+      [`COUNT(t3.korwil_transaction_detail_id)`, 'countChecklist'],
       ['t4.check_in_date', 'checkInDatetime'],
       ['t4.check_out_date', 'checkOutDatetime'],
       [`CONCAT(t5.first_name, ' ', t5.last_name)`, 'coordinatorName'],
@@ -55,6 +52,7 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.users, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    // q.andWhere(e => e.korwilTransactionDetail.isDone, w => w.equals(true));
     q.groupByRaw('t2.branch_id, t2.branch_name, t3.is_done, t1.total_task, t4.check_in_date, t4.check_out_date, t1.date, t3.korwil_transaction_id, "coordinatorName", t1.user_id, t1.status');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -78,6 +76,7 @@ export class WebMonitoringCoordinatorService {
     qb.innerJoin('korwil_item', 'b', 'b.korwil_item_id = a.korwil_item_id AND b.is_deleted = false');
     qb.addOrderBy('b.sort_order', 'ASC');
     qb.where('a.korwil_transaction_id = :korwilTransactionId', { korwilTransactionId: payload.korwilTransactionId });
+    qb.andWhere('a.is_done = true');
     qb.andWhere('a.is_deleted = false');
 
     const data = await qb.getRawMany();
@@ -122,11 +121,10 @@ export class WebMonitoringCoordinatorService {
 
     q.selectRaw(
       [`CONCAT(b.first_name, ' ', b.last_name)`, 'coordinatorName'],
-      [`COUNT(a.ref_user_id)`, 'countBranch'],
-      [`COUNT(c.user_id)`, 'countVisit'],
+      [`(SELECT COUNT(ref_user_id) as total FROM user_to_branch WHERE ref_user_id = a.ref_user_id GROUP BY ref_user_id)`, 'countBranch'],
+      [`COUNT(c.korwil_transaction_id)`, 'countVisit'],
       [`MIN(d.check_in_date)`, 'checkInDatetime'],
       [`MAX(d.check_out_date)`, 'checkOutDatetime'],
-      // ['c.date', 'date'],
       ['a.ref_user_id', 'userId'],
     );
     q.innerJoin(e => e.users, 'b', j =>
@@ -146,6 +144,35 @@ export class WebMonitoringCoordinatorService {
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
+    return result;
+  }
+
+  static async detailCoordinator(
+    payload: WebMonitoringCoordinatorDetailPayload,
+  ): Promise<WebMonitoringCoordinatorDetailResponse> {
+
+    const qb = createQueryBuilder();
+    qb.addSelect('b.user_id', 'userId');
+    qb.addSelect(`CONCAT(b.first_name, ' ', b.last_name)`, 'coordinatorName');
+    qb.addSelect('a.ref_branch_id', 'branchId');
+    qb.from('user_to_branch', 'a');
+    qb.innerJoin('users', 'b', 'a.ref_user_id = b.user_id AND b.is_deleted = false');
+    qb.where('a.ref_user_id = :userId', { userId: payload.userId });
+    qb.andWhere('a.is_deleted = false');
+
+    const data = await qb.getRawMany();
+    const result = new WebMonitoringCoordinatorDetailResponse();
+    result.branch = [];
+    result.coordinatorName = '';
+    result.userId = payload.userId;
+
+    const branch = [];
+    for (const dataDetail of data) {
+        branch.push(Number(dataDetail.branchId));
+    }
+    result.branch = branch;
+    result.userId = payload.userId;
+    result.coordinatorName = data[0].coordinatorName;
     return result;
   }
 }
