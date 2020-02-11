@@ -27,6 +27,7 @@ export class DoReturnService {
                                   pod_datetime,
                                   user_id_created,
                                   user_id_updated,
+                                  do_return_awb_number,
                                   created_time,
                                   updated_time
           )
@@ -38,6 +39,7 @@ export class DoReturnService {
       a.history_date_last AS "pod_datetime",
       a.user_id_created,
       a.user_id_updated,
+      t.nokonfirmasi,
       a.created_time,
       a.updated_time
       from temp_stt t
@@ -72,23 +74,4 @@ export class DoReturnService {
     result.status = status;
     return result;
   }
-
-  // private static async updateStatus(): Promise<any> {
-  //   await RawQueryService.query(` update do_return_awb as dra
-  //   set awb_status_id_last = aia.awb_status_id_last
-  //   from awb_item_attr as aia
-  //   where dra.awb_number = aia.awb_number
-  //   and aia.awb_status_id_last NOT IN ('24500','25000','30000');`);
-  //   return true;
-  // }
-
-  // static async syncUpdateStatus(): Promise<DoReturnSyncResponseVm> {
-  //   const updateStatus = await this.updateStatus();
-  //   const status = '200';
-  //   const message = 'Success Updated';
-  //   const result = new DoReturnSyncResponseVm();
-  //   result.message = message;
-  //   result.status = status;
-  //   return result;
-  // }
 }
