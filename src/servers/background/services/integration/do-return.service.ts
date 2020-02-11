@@ -73,22 +73,22 @@ export class DoReturnService {
     return result;
   }
 
-  private static async updateStatus(): Promise<any> {
-    await RawQueryService.query(` update do_return_awb as dra
-    set awb_status_id_last = aia.awb_status_id_last
-    from awb_item_attr as aia
-    where dra.awb_number = aia.awb_number
-    and aia.awb_status_id_last NOT IN ('24500','25000','30000');`);
-    return true;
-  }
+  // private static async updateStatus(): Promise<any> {
+  //   await RawQueryService.query(` update do_return_awb as dra
+  //   set awb_status_id_last = aia.awb_status_id_last
+  //   from awb_item_attr as aia
+  //   where dra.awb_number = aia.awb_number
+  //   and aia.awb_status_id_last NOT IN ('24500','25000','30000');`);
+  //   return true;
+  // }
 
-  static async syncUpdateStatus(): Promise<DoReturnSyncResponseVm> {
-    const updateStatus = await this.updateStatus();
-    const status = '200';
-    const message = 'Success Updated';
-    const result = new DoReturnSyncResponseVm();
-    result.message = message;
-    result.status = status;
-    return result;
-  }
+  // static async syncUpdateStatus(): Promise<DoReturnSyncResponseVm> {
+  //   const updateStatus = await this.updateStatus();
+  //   const status = '200';
+  //   const message = 'Success Updated';
+  //   const result = new DoReturnSyncResponseVm();
+  //   result.message = message;
+  //   result.status = status;
+  //   return result;
+  // }
 }

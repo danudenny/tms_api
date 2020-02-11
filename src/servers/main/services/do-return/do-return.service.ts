@@ -87,9 +87,6 @@ export class DoReturnService {
     q.innerJoin(e => e.customer, 'customer', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awbStatusDetail, 'awb_status', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
     q.leftJoin(e => e.doReturnHistory.doReturnMaster, 'do_return_master', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -105,6 +102,9 @@ export class DoReturnService {
     q.leftJoin(e => e.doReturnCollection, 'do_return_collection', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.awbLast.awbStatus, 'awb_status', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
     q.orderBy({ podDatetime: 'DESC' });
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -344,11 +344,10 @@ export class DoReturnService {
       doReturn.awbStatusIdLast = history.lastStatusAwb;
       doReturn.branchIdLast = history.branchIdLast;
       doReturn.podDatetime = history.podDatetime;
-      doReturn.userIdCreated = authMeta.userId;
-      doReturn.userIdUpdated = authMeta.userId;
+      doReturn.userIdCreated = authMeta.userId ;
+      doReturn.userIdUpdated = authMeta.userId ;
       doReturn.createdTime = timeNow;
       doReturn.updatedTime = timeNow;
-
       const insert = await DoReturnAwb.save(doReturn);
     }
 
