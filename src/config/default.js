@@ -60,4 +60,8 @@ module.exports = {
     passKey: '2e8a7f4d5ef4b746a503ef270ce2a98e562bc77e2dd6c19bf10e3d95e3390393',
     shipmentMethod: 'Instant',
   },
+  korwil: {
+    korwilRoleId: 38,
+    palkurRoleId: 40
+  }
 };
