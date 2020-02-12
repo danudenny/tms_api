@@ -1004,7 +1004,7 @@ export class PrintService {
   // print untuk TANDA TERIMA DO BALIK ADMIN
   public static async printDoPodDoReturnAdminByRequest(
     res: express.Response,
-    queryParams: PrintDoPodDoReturnPayloadQueryVm,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
   ) {
     const q = RepositoryService.doReturnHistory.findOne();
     q.leftJoin(e => e.doReturnAwb);
@@ -1067,7 +1067,7 @@ export class PrintService {
       meta: {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
-        totalData: 2,
+        totalData: '2',
       },
     };
 
