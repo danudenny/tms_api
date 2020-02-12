@@ -1039,28 +1039,6 @@ export class PrintService {
       });
     }
 
-    // await q.select({
-    //     doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
-    //     doReturnAwb: {
-    //       branchTo: {
-    //         branchName: true,
-    //       },
-    //       awbNumber: true,
-    //       doReturnAwbNumber: true,
-    //     },
-    //     user: {
-    //       firstName: true,
-    //       lastName: true,
-    //     },
-    //     userAdmin: {
-    //       firstName: true,
-    //       lastName: true,
-    //     },
-    //   })
-    //   .where(e => e.userIdDriver, w => w.equals(queryParams.id));
-
-    // const dataCount = await q.countWithoutTakeAndSkip();
-
     const m = moment();
     const jsreportParams = {
       data: doPodDoReturn,
@@ -1069,8 +1047,6 @@ export class PrintService {
         time: m.format('HH:mm'),
       },
     };
-
-    console.log(jsreportParams);
 
     PrinterService.responseForJsReport({
       res,
