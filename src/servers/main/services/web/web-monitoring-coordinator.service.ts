@@ -184,7 +184,10 @@ export class WebMonitoringCoordinatorService {
 
       if (taskDetail) {
         for (const task of taskDetail) {
-          const photoUrl = await this.taskPhoto(task.korwilTransactionDetailId);
+          const params = {
+            korwilTransactionDetailId: task.korwilTransactionDetailId,
+          };
+          const photoUrl = await this.taskPhoto(params);
           task.url = photoUrl;
         }
       }
