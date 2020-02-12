@@ -5,7 +5,7 @@ import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/ext
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { MobileCheckInPayloadVm } from '../../models/mobile-check-in-payload.vm';
+import { MobileCheckInPayloadVm, MobileCheckInFormPayloadVm } from '../../models/mobile-check-in-payload.vm';
 import { MobileCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
 import { MobileCheckInService } from '../../services/mobile/mobile-check-in.service';
 
@@ -31,7 +31,7 @@ export class MobileCheckInController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileCheckInResponseVm })
   public async checkInForm(
-    @Body() payload: MobileCheckInPayloadVm,
+    @Body() payload: MobileCheckInFormPayloadVm,
     @UploadedFile() file,
   ) {
     return await this.mobileCheckInService.checkInForm(payload, file);
