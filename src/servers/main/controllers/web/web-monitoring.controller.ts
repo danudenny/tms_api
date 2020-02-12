@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
@@ -8,7 +8,7 @@ import { WebMonitoringService } from '../../services/web/web-monitoring.service'
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { WebMonitoringCoordinatorService } from '../../services/web/web-monitoring-coordinator.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse } from '../../models/web-monitoring-coordinator.response.vm';
+import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse, CreateTransactionCoordinatorResponse, WebMonitoringCoordinatorTaskReportResponse } from '../../models/web-monitoring-coordinator.response.vm';
 import { WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload, WebMonitoringCoordinatorDetailPayload } from '../../models/web-monitoring-coordinator-payload.vm';
 
 @ApiUseTags('Web Monitoring')
@@ -50,6 +50,15 @@ export class WebMonitoringController {
     return WebMonitoringCoordinatorService.listTask(payload);
   }
 
+  @Post('coordinator/taskReport')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebMonitoringCoordinatorTaskReportResponse })
+  public async monitoringCoordinatorTaskReport(@Body() payload: WebMonitoringCoordinatorTaskPayload) {
+    return WebMonitoringCoordinatorService.taskReport(payload);
+  }
+
   @Post('coordinator/task/photo')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -66,5 +75,11 @@ export class WebMonitoringController {
   @ApiOkResponse({ type: WebMonitoringCoordinatorDetailResponse })
   public async monitoringCoordinatorDetail(@Body() payload: WebMonitoringCoordinatorDetailPayload) {
     return WebMonitoringCoordinatorService.detailCoordinator(payload);
+  }
+
+  @Get('createTransaction/korwil')
+  @ApiOkResponse({ type: CreateTransactionCoordinatorResponse })
+  public async createTransaction() {
+    return WebMonitoringCoordinatorService.createCoordinatorTrans();
   }
 }

@@ -144,6 +144,9 @@ export class PermissionAccessResponseVM {
 
   @ApiModelProperty()
   isKorwil: boolean;
+
+  @ApiModelProperty()
+  isPalkur: boolean;
 }
 
 // #endregion
