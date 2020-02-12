@@ -75,6 +75,11 @@ export class WebMonitoringCoordinatorService {
     qb.addSelect('b.korwil_item_name', 'task');
     qb.addSelect('a.note', 'note');
     qb.addSelect('a.photo_count', 'countPhoto');
+    qb.addSelect(`CASE
+                    WHEN a.status = 1 THEN 'Belum Dikerjakan'
+                    WHEN a.status = 2 THEN 'Sudah Dikerjakan' 
+                    ELSE ''
+                  END`, 'status');
     qb.from('korwil_transaction_detail', 'a');
     qb.innerJoin('korwil_item', 'b', 'b.korwil_item_id = a.korwil_item_id AND b.is_deleted = false');
     qb.addOrderBy('b.sort_order', 'ASC');

@@ -75,6 +75,9 @@ export class WebMonitoringCoordinatorTaskData {
 
   @ApiModelProperty()
   note: string;
+
+  @ApiModelProperty()
+  status: string;
 }
 export class WebMonitoringCoordinatorTaskResponse {
   @ApiModelProperty({ type: () => [WebMonitoringCoordinatorTaskData] })
