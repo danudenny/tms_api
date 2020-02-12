@@ -13,6 +13,7 @@ import {
 import { Employee } from './employee';
 import { Role } from './role';
 import { UserRole } from './user-role';
+import { UserToBranch } from './user-to-branch';
 
 @Entity('users', { schema: 'public' })
 export class User extends BaseEntity {

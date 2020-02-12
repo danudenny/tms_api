@@ -4,7 +4,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { MobileCheckOutPayloadVm } from '../../models/mobile-check-out-payload.vm';
+import { MobileCheckOutPayloadVm, MobileCheckOutFormPayloadVm } from '../../models/mobile-check-out-payload.vm';
 import { MobileCheckOutResponseVm } from '../../models/mobile-check-out-response.vm';
 import { MobileCheckOutService } from '../../services/mobile/mobile-check-out.service';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
@@ -31,7 +31,7 @@ export class MobileCheckOutController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileCheckOutResponseVm })
   public async checkInForm(
-    @Body() payload: MobileCheckOutPayloadVm,
+    @Body() payload: MobileCheckOutFormPayloadVm,
     @UploadedFile() file,
   ) {
     return await this.mobileCheckOutService.checkOutForm(payload, file);

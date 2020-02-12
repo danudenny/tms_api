@@ -431,8 +431,12 @@ export class PartnerService {
           created_time: timeNow,
           updated_time: timeNow,
         };
-        const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-        const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+        const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+          paramsAwbPartnerLog,
+        );
+        const awb_partner_log = await AwbPartnerLog.insert(
+          dataParamsAwbPartnerLog,
+        );
         return result;
       } else {
         if (branchPartnerId == null) {
@@ -450,8 +454,12 @@ export class PartnerService {
             created_time: timeNow,
             updated_time: timeNow,
           };
-          const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-          const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+          const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+            paramsAwbPartnerLog,
+          );
+          const awb_partner_log = await AwbPartnerLog.insert(
+            dataParamsAwbPartnerLog,
+          );
           return result;
         } else {
           if (workOrderIdLast === null) {
@@ -537,10 +545,13 @@ export class PartnerService {
               created_time: timeNow,
               updated_time: timeNow,
             };
-            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-            const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+              paramsAwbPartnerLog,
+            );
+            const awb_partner_log = await AwbPartnerLog.insert(
+              dataParamsAwbPartnerLog,
+            );
             return result;
-
           } else {
             await WorkOrder.update(workOrderIdLast, {
               workOrderStatusIdLast: 7050,
@@ -590,7 +601,6 @@ export class PartnerService {
               //   userIdUpdated: 1,
               //   updatedTime: timeNow,
               // });
-
             } else {
               const paramsWorkOrderHistory = {
                 work_order_id: workOrder.workOrderId,
@@ -633,8 +643,12 @@ export class PartnerService {
               created_time: timeNow,
               updated_time: timeNow,
             };
-            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-            const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+              paramsAwbPartnerLog,
+            );
+            const awb_partner_log = await AwbPartnerLog.insert(
+              dataParamsAwbPartnerLog,
+            );
             return result;
           }
         }
@@ -654,8 +668,12 @@ export class PartnerService {
         created_time: timeNow,
         updated_time: timeNow,
       };
-      const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-      const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+      const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+        paramsAwbPartnerLog,
+      );
+      const awb_partner_log = await AwbPartnerLog.insert(
+        dataParamsAwbPartnerLog,
+      );
       return result;
     }
 
@@ -725,13 +743,14 @@ export class PartnerService {
       lastNumber = 1;
       const paramsSysCounter = {
         key: prefix,
-        counter : lastNumber,
+        counter: lastNumber,
         created_time: timeNow,
         updated_time: timeNow,
       };
-      const dataParamsSysCounter = await this.getDataSysCounter(paramsSysCounter);
+      const dataParamsSysCounter = await this.getDataSysCounter(
+        paramsSysCounter,
+      );
       const sys_counter = await SysCounter.insert(dataParamsSysCounter);
-
     } else {
       lastNumber = Math.floor(code.counter) + 1;
       await SysCounter.update(code.sysCounterId, {

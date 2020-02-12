@@ -1,16 +1,14 @@
-import { EntityManager, getManager, LessThan, MoreThan } from 'typeorm';
+import { getManager, LessThan, MoreThan } from 'typeorm';
 
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 import { DoPodDeliverHistory } from '../../../../shared/orm-entity/do-pod-deliver-history';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { DeliveryService } from '../../../../shared/services/delivery.service';
 import {
     DoPodDetailPostMetaQueueService,
 } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
-    AwbDeliverManualResponseVm, WebAwbDeliverGetPayloadVm, WebAwbDeliverGetResponseVm,
     WebAwbDeliverSyncPayloadVm, WebDeliveryVm, WebAwbDeliverSyncResponseVm, AwbDeliverManualSync,
 } from '../../models/web-awb-deliver.vm';
 import { AwbService } from '../v1/awb.service';
@@ -31,6 +29,7 @@ export class WebAwbDeliverService {
     const response = new AwbDeliverManualSync();
     const result = new WebAwbDeliverSyncResponseVm();
     const dataItem = [];
+    let onlyDriver = false;
     try {
       for (const delivery of payload.deliveries) {
         // TODO: check awb number
@@ -38,62 +37,75 @@ export class WebAwbDeliverService {
         let syncManualDelivery = false;
         const awb = await AwbService.validAwbNumber(delivery.awbNumber);
         if (awb) {
-          const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
+          // const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
           const awbDeliver = await this.getDeliverDetail(delivery.awbNumber);
           if (awbDeliver) {
-            // NOTE: check validate role and status last
-            if ((awbDeliver.awbStatusIdLast == AWB_STATUS.ANT) && (delivery.awbStatusId == AWB_STATUS.DLV)) {
-              syncManualDelivery = true;
-            } else {
-              // check role
-              // role palkur => CODA, BA, RETUR tidak perlu ANT
-              switch (payload.role) {
-                case 'ct':
+            // check role
+            // role palkur => CODA, BA, RETUR tidak perlu ANT
+            switch (payload.role) {
+              case 'ct':
+                syncManualDelivery = true;
+                break;
+              case 'palkur':
+                // if (statusProblem.includes(delivery.awbStatusId)) {
+                // }
+                syncManualDelivery = true;
+                break;
+              case 'sigesit':
+                // check only own awb number
+                if (
+                  awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&
+                  awbDeliver.doPodDeliver.userIdDriver == authMeta.userId
+                ) {
                   syncManualDelivery = true;
-                  break;
-                case 'palkur':
-                  // if (statusProblem.includes(delivery.awbStatusId)) {
-                  // }
-                  syncManualDelivery = true;
-                  break;
-                case 'sigesit':
-                  // check only own awb number
-                  if (
-                    awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&
-                    awbDeliver.doPodDeliver.userIdDriver == authMeta.userId
-                  ) {
-                    syncManualDelivery = true;
-                  }
-                  break;
-                default:
-                  break;
-              }
+                } else {
+                  onlyDriver = true;
+                }
+                break;
+              default:
+                break;
             }
 
             if (syncManualDelivery) {
-              // set data deliver
-              delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
-              delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
-              delivery.awbItemId = awbDeliver.awbItemId;
-              // delivery.employeeId = authMeta.employeeId;
-              await this.syncDeliver(delivery);
+              // add handel final status
+              const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.RTN, AWB_STATUS.RTS];
+              if (statusFinal.includes(awb.awbStatusIdLast)) {
+                response.status = 'error';
+                response.message = `Resi ${
+                  delivery.awbNumber
+                } sudah Final Status !`;
+              } else {
+                // set data deliver
+                delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
+                delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
+                delivery.awbItemId = awbDeliver.awbItemId;
+                // delivery.employeeId = authMeta.employeeId;
+                await this.syncDeliver(delivery);
 
-              // is return insert into awb return
-              // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
-              if (payload.isReturn) {
-                await this.createAwbReturn(
-                  delivery.awbNumber,
-                  awb.awbId,
-                  permissonPayload.branchId,
-                  authMeta.userId,
-                );
+                // is return insert into awb return
+                // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
+                if (payload.isReturn) {
+                  await this.createAwbReturn(
+                    delivery.awbNumber,
+                    awb.awbId,
+                    permissonPayload.branchId,
+                    authMeta.userId,
+                  );
+                }
+                response.status = 'ok';
+                response.message = 'success';
               }
-
-              response.status = 'ok';
-              response.message = 'success';
             } else {
               response.status = 'error';
-              response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan antar terlebih dahulu`;
+              if (onlyDriver) {
+                response.message = `Resi ${
+                  delivery.awbNumber
+                }, bukan milik user sigesit login`;
+              } else {
+                response.message = `Resi ${
+                  delivery.awbNumber
+                }, bermasalah harap scan antar terlebih dahulu`;
+              }
             }
           } else {
             // NOTE: Manual Status not POD only status problem
@@ -141,6 +153,7 @@ export class WebAwbDeliverService {
 
   private static async syncDeliver(delivery: WebDeliveryVm) {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     // Generate History by Status input pod manual
     const doPodDeliverHistory = DoPodDeliverHistory.create({
       doPodDeliverDetailId: delivery.doPodDeliverDetailId,
@@ -162,6 +175,9 @@ export class WebAwbDeliverService {
     });
     const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
     if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
+      const awbStatus = await AwbStatus.findOne(
+        doPodDeliverHistory.awbStatusId,
+      );
       // #region transaction data
       await getManager().transaction(async transactionEntityManager => {
         // insert data deliver history
@@ -170,9 +186,6 @@ export class WebAwbDeliverService {
           doPodDeliverHistory,
         );
 
-        const awbStatus = await AwbStatus.findOne(
-          doPodDeliverHistory.awbStatusId,
-        );
         // Update data DoPodDeliverDetail
         await transactionEntityManager.update(
           DoPodDeliverDetail,
@@ -230,19 +243,20 @@ export class WebAwbDeliverService {
       });
       // #endregion of transaction
 
-      // Update status awb item attr
-      // await AwbService.updateAwbAttr(
-      //   delivery.awbItemId,
-      //   doPodDeliverHistory.awbStatusId,
-      //   null,
-      // );
-
-      // TODO: queue by Bull need refactoring
-      DoPodDetailPostMetaQueueService.createJobByManualPodSync(
-        delivery.doPodDeliverDetailId,
-        authMeta.userId,
+      // NOTE: queue by Bull need refactoring
+      DoPodDetailPostMetaQueueService.createJobByManualSync(
+        delivery.awbItemId,
         delivery.awbStatusId,
+        authMeta.userId,
+        permissonPayload.branchId,
+        authMeta.userId,
+        delivery.reasonId,
+        delivery.reasonNotes,
+        delivery.consigneeNameNote,
+        awbStatus.awbStatusName,
+        awbStatus.awbStatusTitle,
       );
+
     } else {
       console.log('##### Data Not Valid', delivery);
     }
@@ -328,7 +342,7 @@ export class WebAwbDeliverService {
       w => w.equals(awbNumber),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.orderBy({ awbStatusDateTimeLast: 'DESC' });
+    q.orderBy({ updatedTime: 'DESC' });
     q.take(1);
     return await q.exec();
   }

@@ -26,6 +26,22 @@ module.exports = {
         database: 'sicepattms',
         schema: 'public',
       },
+      {
+        host: 'sicepat-tms-mobile-api-rep.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+        port: 5432,
+        username: 'sicepattmsuser',
+        password: 's1c3p4Ttm$us3R3ncrypT3dbo05$',
+        database: 'sicepattms',
+        schema: 'public',
+      },
+      {
+        host: 'sicepat-tms-back-proc-rep.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+        port: 5432,
+        username: 'sicepattmsuser',
+        password: 's1c3p4Ttm$us3R3ncrypT3dbo05$',
+        database: 'sicepattms',
+        schema: 'public',
+      },
     ],
     /**
      * Determines how slaves are selected:
@@ -33,7 +49,7 @@ module.exports = {
      * RANDOM: Select the node by random function.
      * ORDER: Select the first node available unconditionally.
      */
-    selector: 'ORDER',
+    selector: 'RR',
   },
   entities: ['dist/shared/orm-entity/*.js'],
   migrations: ['dist/shared/orm-migration/*.js'],
