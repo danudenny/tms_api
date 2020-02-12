@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse } from '../../models/web-monitoring-coordinator.response.vm';
+import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse, CreateTransactionCoordinatorResponse } from '../../models/web-monitoring-coordinator.response.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
 import { WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload, WebMonitoringCoordinatorDetailPayload } from '../../models/web-monitoring-coordinator-payload.vm';
-import { createQueryBuilder } from 'typeorm';
+import { createQueryBuilder, Raw } from 'typeorm';
 import { KorwilTransactionDetailPhoto } from '../../../../shared/orm-entity/korwil-transaction-detail-photo';
 import { UserToBranch } from '../../../../shared/orm-entity/user-to-branch';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import moment = require('moment');
 
 @Injectable()
 export class WebMonitoringCoordinatorService {
@@ -33,7 +35,7 @@ export class WebMonitoringCoordinatorService {
       ['t2.branch_name', 'branchName'],
       ['t2.branch_id', 'branchId'],
       ['t1.date', 'date'],
-      [`COUNT(t3.korwil_transaction_detail_id)`, 'countChecklist'],
+      [`COUNT(t3.is_done = true OR NULL)`, 'countChecklist'],
       ['t4.check_in_date', 'checkInDatetime'],
       ['t4.check_out_date', 'checkOutDatetime'],
       [`CONCAT(t5.first_name, ' ', t5.last_name)`, 'coordinatorName'],
@@ -43,7 +45,7 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.branches, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.korwilTransactionDetail, 't3', j =>
+    q.leftJoin(e => e.korwilTransactionDetail, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.employeeJourney, 't4', j =>
@@ -52,7 +54,6 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.users, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // q.andWhere(e => e.korwilTransactionDetail.isDone, w => w.equals(true));
     q.groupByRaw('t2.branch_id, t2.branch_name, t3.is_done, t1.total_task, t4.check_in_date, t4.check_out_date, t1.date, t3.korwil_transaction_id, "coordinatorName", t1.user_id, t1.status');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -174,5 +175,53 @@ export class WebMonitoringCoordinatorService {
     result.userId = payload.userId;
     result.coordinatorName = data[0].coordinatorName;
     return result;
+  }
+
+  static async createCoordinatorTrans(): Promise<CreateTransactionCoordinatorResponse> {
+      const timeNow = moment().format();
+      const userId = 3; // super admin;
+      const execute = await RawQueryService.query(`INSERT INTO korwil_transaction
+        (
+          date,
+          branch_id,
+          user_id,
+          status,
+          created_time,
+          user_id_created,
+          updated_time,
+          user_id_updated,
+          user_to_branch_id
+
+        )
+        (
+          SELECT
+            '${timeNow}' AS date,
+            ref_branch_id,
+            ref_user_id,
+            0 as status,
+            '${timeNow}' AS created_time,
+             '${userId}' as user_id_created,
+            '${timeNow}' AS updated_time,
+            '${userId}' as user_id_updated,
+            user_to_branch_id
+            FROM user_to_branch
+            WHERE is_deleted = false
+        )`,
+      );
+
+      const qb = createQueryBuilder();
+      qb.from('user_to_branch', 'utb');
+      qb.where('is_deleted = false');
+      const count = await qb.getCount();
+
+      const result = new CreateTransactionCoordinatorResponse();
+      if (execute) {
+        result.status = true;
+        result.message = `${count} Data has been inserted at ${timeNow}`;
+      } else {
+        result.status = false;
+        result.message = 'Data failed inserted';
+      }
+      return result;
   }
 }

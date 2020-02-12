@@ -96,3 +96,11 @@ export class WebMonitoringCoordinatorPhotoResponse {
   @ApiModelProperty()
   url: string[];
 }
+
+export class CreateTransactionCoordinatorResponse {
+  @ApiModelProperty()
+  status: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
