@@ -1007,15 +1007,15 @@ export class PrintService {
     queryParams: PrintDoPodReturnPayloadQueryVm,
   ) {
     const q = RepositoryService.doReturnHistory.findOne();
-    q.leftJoin(e => e.doReturnAwb);
+    q.leftJoin(e => e.doReturnAwbs);
     q.leftJoin(e => e.user);
     q.leftJoin(e => e.userAdmin);
-    q.leftJoin(e => e.doReturnAwb.branchTo);
+    q.leftJoin(e => e.doReturnAwbs.branchTo);
 
     const doPodDoReturn = await q
       .select({
         doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
-        doReturnAwb: {
+        doReturnAwbs: {
           branchTo: {
             branchName: true,
           },
@@ -1039,12 +1039,35 @@ export class PrintService {
       });
     }
 
+    await q.select({
+        doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
+        doReturnAwbs: {
+          branchTo: {
+            branchName: true,
+          },
+          awbNumber: true,
+          doReturnAwbNumber: true,
+        },
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        userAdmin: {
+          firstName: true,
+          lastName: true,
+        },
+      })
+      .where(e => e.userIdDriver, w => w.equals(queryParams.id));
+
+    const dataCount = await q.countWithoutTakeAndSkip();
+
     const m = moment();
     const jsreportParams = {
       data: doPodDoReturn,
       meta: {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
+        totalData: (await dataCount),
       },
     };
 
