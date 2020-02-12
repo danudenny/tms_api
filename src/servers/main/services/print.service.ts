@@ -1039,27 +1039,27 @@ export class PrintService {
       });
     }
 
-    await q.select({
-        doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
-        doReturnAwb: {
-          branchTo: {
-            branchName: true,
-          },
-          awbNumber: true,
-          doReturnAwbNumber: true,
-        },
-        user: {
-          firstName: true,
-          lastName: true,
-        },
-        userAdmin: {
-          firstName: true,
-          lastName: true,
-        },
-      })
-      .where(e => e.userIdDriver, w => w.equals(queryParams.id));
+    // await q.select({
+    //     doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
+    //     doReturnAwb: {
+    //       branchTo: {
+    //         branchName: true,
+    //       },
+    //       awbNumber: true,
+    //       doReturnAwbNumber: true,
+    //     },
+    //     user: {
+    //       firstName: true,
+    //       lastName: true,
+    //     },
+    //     userAdmin: {
+    //       firstName: true,
+    //       lastName: true,
+    //     },
+    //   })
+    //   .where(e => e.userIdDriver, w => w.equals(queryParams.id));
 
-    const dataCount = await q.countWithoutTakeAndSkip();
+    // const dataCount = await q.countWithoutTakeAndSkip();
 
     const m = moment();
     const jsreportParams = {
@@ -1067,9 +1067,11 @@ export class PrintService {
       meta: {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
-        totalData: (await dataCount),
+        totalData: 2,
       },
     };
+
+    console.log(jsreportParams);
 
     PrinterService.responseForJsReport({
       res,
