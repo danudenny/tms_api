@@ -206,9 +206,8 @@ export class MobileCheckInService {
         qb.addSelect('ki.korwil_item_id', 'korwilItemId');
         qb.from('korwil_item', 'ki');
         qb.where('ki.is_deleted = false');
-        if(configKorwil.korwilRoleId != permission.roleId){
-          qb.where('ki.role_id = :roleId',{roleId: configKorwil.korwilRoleId});
-        }
+        qb.where('ki.role_id = :roleId',{ roleId: permission.roleId });
+
         const korwilItem = await qb.getRawMany();
         let isCreateKorwilDetail = false;
 
