@@ -119,16 +119,16 @@ export class TaskHeader {
   date: string;
 
   @ApiModelProperty()
-  checkInDateTime: string;
+  checkInDatetime: string;
 
   @ApiModelProperty()
-  checkOutDateTime: string;
+  checkOutDatetime: string;
 
   @ApiModelProperty()
   branchName: string;
 
   @ApiModelProperty()
-  countCheklist: string;
+  countChecklist: string;
 }
 export class TaskDetail {
   @ApiModelProperty()
