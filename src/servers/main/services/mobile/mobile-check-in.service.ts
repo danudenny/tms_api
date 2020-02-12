@@ -103,12 +103,12 @@ export class MobileCheckInService {
     const permission = AuthService.getPermissionTokenPayload();
     const fromDate = moment().format('YYYY-MM-DD 00:00:00');
     const toDate = moment().format('YYYY-MM-DD 23:59:59');
-    let status = 'ok';
-    let message = 'success';
+    const status = 'ok';
+    const message = 'success';
     let branchName = '';
     let checkInDate = '';
     let attachmentId = null;
-    let userToBranchId = "";
+    let userToBranchId = '';
 
     const timeNow = moment().toDate();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -123,7 +123,7 @@ export class MobileCheckInService {
         },
       },
     );
-    let branchIdTemp = payload.branchId ? payload.branchId : permissonPayload.branchId.toString();
+    const branchIdTemp = payload.branchId ? payload.branchId : permissonPayload.branchId.toString();
     const branch = await this.branchRepository.findOne({
       select: [`branchName`, `branchId`, `updatedTime`],
       where: { branchId: branchIdTemp },
@@ -131,7 +131,7 @@ export class MobileCheckInService {
     branchName = branch.branchName;
 
     if (employeeJourneyCheckOutExist) {
-      result.status = "error";
+      result.status = 'error';
       result.message = 'Check In sedang aktif, Harap Check Out terlebih dahulu';
       result.checkInDate = moment(employeeJourneyCheckOutExist.checkInDate).format('YYYY-MM-DD HH:mm:ss');
       result.attachmentId = attachmentId;
@@ -139,11 +139,11 @@ export class MobileCheckInService {
       return result;
     } else {
       let res = null;
-      if(payload.branchId){
+      if (payload.branchId) {
         // Check coordinate user to branch
         const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(payload.latitudeCheckIn, payload.longitudeCheckIn, payload.branchId);
-        if (responseCheckBranch.status == false){
-          result.status = "error";
+        if (responseCheckBranch.status == false) {
+          result.status = 'error';
           result.message = responseCheckBranch.message;
           result.branchName = branchName;
           result.checkInDate = checkInDate;
@@ -160,8 +160,8 @@ export class MobileCheckInService {
         qb.andWhere('utb.ref_branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
         qb.andWhere('utb.ref_user_id = :idUserLogin', { idUserLogin: authMeta.userId });
         res = await qb.getRawOne();
-        if(!res){
-          result.status = "error";
+        if (!res) {
+          result.status = 'error';
           result.message = 'Lokasi gerai tidak ditemukan, silahkan hubungi administrator';
           result.branchName = branchName;
           result.checkInDate = checkInDate;
@@ -183,6 +183,9 @@ export class MobileCheckInService {
         attachmentId = attachment.attachmentTmsId;
       }
 
+      const branchIdCheckIn = payload.branchId
+        ? Number(payload.branchId)
+        : permissonPayload.branchId;
       // Create Employee Journey
       const employeeJourney = this.employeeJourneyRepository.create({
         employeeId: authMeta.employeeId,
@@ -194,19 +197,19 @@ export class MobileCheckInService {
         userIdUpdated: authMeta.userId,
         updatedTime: timeNow,
         attachmentIdCheckIn: attachmentId,
-        branchIdCheckIn: Number(payload.branchId),
+        branchIdCheckIn,
       });
       await this.employeeJourneyRepository.save(employeeJourney);
       const employeeJourneyId = employeeJourney.employeeJourneyId;
 
       // Create Korwil Detail Item if branchId exists
-      if(payload.branchId){
+      if (payload.branchId) {
         const qb = createQueryBuilder();
         // GET task item
         qb.addSelect('ki.korwil_item_id', 'korwilItemId');
         qb.from('korwil_item', 'ki');
         qb.where('ki.is_deleted = false');
-        qb.where('ki.role_id = :roleId',{ roleId: permission.roleId });
+        qb.where('ki.role_id = :roleId', { roleId: permission.roleId });
 
         const korwilItem = await qb.getRawMany();
         let isCreateKorwilDetail = false;
@@ -222,15 +225,14 @@ export class MobileCheckInService {
           },
         });
 
-        if(korwilTransactionUser){
+        if (korwilTransactionUser) {
           isCreateKorwilDetail = true;
 
           // Update korwil employee id and total task
           korwilTransactionUser.totalTask = korwilItem.length;
           korwilTransactionUser.employeeJourneyId = employeeJourneyId;
           await KorwilTransaction.save(korwilTransactionUser);
-        }
-        else{
+        } else {
           korwilTransactionUser = await KorwilTransaction.findOne({
             where: {
               isDeleted: false,
@@ -239,7 +241,7 @@ export class MobileCheckInService {
               createdTime: Between(fromDate, toDate),
             },
           });
-          if(!korwilTransactionUser){
+          if (!korwilTransactionUser) {
             isCreateKorwilDetail = true;
 
             // Insert Korwil Transaction
@@ -260,15 +262,15 @@ export class MobileCheckInService {
           }
         }
 
-        if(isCreateKorwilDetail){
+        if (isCreateKorwilDetail) {
           // Create Korwil Item
-          korwilItem.forEach(async(item) => {
+          korwilItem.forEach(async (item) => {
             const korwilTransactionDetail = KorwilTransactionDetail.create();
             korwilTransactionDetail.korwilItemId = item.korwilItemId;
             korwilTransactionDetail.korwilTransactionId = korwilTransactionUser.korwilTransactionId;
-            korwilTransactionDetail.latChecklist = "";
-            korwilTransactionDetail.longChecklist = "";
-            korwilTransactionDetail.note = "";
+            korwilTransactionDetail.latChecklist = '';
+            korwilTransactionDetail.longChecklist = '';
+            korwilTransactionDetail.note = '';
             korwilTransactionDetail.status = 0;
             korwilTransactionDetail.isDone = false;
             korwilTransactionDetail.date = dateNow;
