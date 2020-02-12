@@ -205,12 +205,10 @@ export class MobileCheckInService {
             branchId: payload.branchId,
             userId: authMeta.userId,
             // status: 0,
-            roleId: permission.roleId,
-            employeeJourneyId: IsNull()
-            // createdTime: Between(moment().format('YYYY-MM-DD 00:00:00'), moment().format('YYYY-MM-DD 23:59:59')),
+            employeeJourneyId: IsNull(),
+            createdTime: Between(moment().format('YYYY-MM-DD 00:00:00'), moment().format('YYYY-MM-DD 23:59:59')),
           },
         });
-
         if(korwilTransactionUser){
           const qb = createQueryBuilder();
           const fromDate = moment().format('YYYY-MM-DD 00:00:00');
@@ -246,7 +244,7 @@ export class MobileCheckInService {
           await KorwilTransaction.save(korwilTransaction);
 
           // Create Korwil Item
-          res.forEach(async(item) => {
+          korwilItem.forEach(async(item) => {
             const korwilTransactionDetail = KorwilTransactionDetail.create();
             korwilTransactionDetail.korwilItemId = item.korwilItemId;
             korwilTransactionDetail.korwilTransactionId = korwilTransaction.korwilTransactionId;
