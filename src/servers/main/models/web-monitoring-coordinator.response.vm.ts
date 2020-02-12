@@ -75,6 +75,9 @@ export class WebMonitoringCoordinatorTaskData {
 
   @ApiModelProperty()
   note: string;
+
+  @ApiModelProperty()
+  status: string;
 }
 export class WebMonitoringCoordinatorTaskResponse {
   @ApiModelProperty({ type: () => [WebMonitoringCoordinatorTaskData] })
@@ -116,16 +119,16 @@ export class TaskHeader {
   date: string;
 
   @ApiModelProperty()
-  checkInDateTime: string;
+  checkInDatetime: string;
 
   @ApiModelProperty()
-  checkOutDateTime: string;
+  checkOutDatetime: string;
 
   @ApiModelProperty()
   branchName: string;
 
   @ApiModelProperty()
-  countCheklist: string;
+  countChecklist: string;
 }
 export class TaskDetail {
   @ApiModelProperty()
