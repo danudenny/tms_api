@@ -256,8 +256,8 @@ export class MobileInitDataService {
       'true',
     );
 
-    qb.take(0);
-    qb.skip(200);
+    // qb.take(0);
+    // qb.skip(200);
 
     qb.andWhere('do_pod_deliver.user_id_driver = :userIdDriver', {
       userIdDriver: authMeta.userId,
@@ -270,11 +270,11 @@ export class MobileInitDataService {
     // });
 
     const currentMoment = moment();
-    const threeDaysAgo = moment().subtract(3, 'd');
+    const oneDaysAgo = moment().subtract(3, 'd');
     qb.andWhere(
       'do_pod_deliver.do_pod_deliver_date_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
       {
-        currentDateTimeStart: threeDaysAgo.format('YYYY-MM-DD 00:00:00'),
+        currentDateTimeStart: oneDaysAgo.format('YYYY-MM-DD 06:00:00'),
         currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
       },
     );

@@ -3,4 +3,7 @@ import { ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagge
 export class MobileInitDataPayloadVm {
   @ApiModelPropertyOptional({ format: 'date-time' })
   lastSyncDateTime: string;
+
+  @ApiModelPropertyOptional()
+  doPodDeliverDetailId: string;
 }

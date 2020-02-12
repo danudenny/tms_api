@@ -20,4 +20,11 @@ export class MobileCheckInResponseVm {
   @ApiModelPropertyOptional()
   isCheckIn?: boolean;
 
+  @ApiModelPropertyOptional()
+  checkinIdBranch?: string;
+}
+
+export class MobileInitCheckInResponseVm {
+  @ApiModelProperty()
+  checkIn: MobileCheckInResponseVm;
 }
