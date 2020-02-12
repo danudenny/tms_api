@@ -1067,7 +1067,6 @@ export class PrintService {
       meta: {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
-        totalData: '2',
       },
     };
 
