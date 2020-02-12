@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { DoReturnMaster } from './do_return_master';
 import { User } from './user';
@@ -47,7 +47,6 @@ export class DoReturnHistory extends TmsBaseEntity {
   @JoinColumn({ name: 'user_id_created' })
   userAdmin: User;
 
-  @ManyToOne(() => DoReturnAwb)
-  @JoinColumn({ name: 'do_return_awb_id' })
-  doReturnAwb: DoReturnAwb;
+  @OneToMany(() => DoReturnAwb, e => e.doReturnHistory)
+  doReturnAwbs: DoReturnAwb[];
 }

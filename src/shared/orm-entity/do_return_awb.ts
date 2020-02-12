@@ -116,13 +116,13 @@ export class DoReturnAwb extends TmsBaseEntity {
   @JoinColumn({ name: 'awb_status_id_last' })
   awbStatusDetail: AwbStatus;
 
-  @OneToOne(() => DoReturnHistory)
-  @JoinColumn({ name: 'do_return_history_id_last' })
-  doReturnHistory: DoReturnHistory;
-
   @ManyToOne(() => DoReturnAdmintoCt)
   @JoinColumn({ name: 'do_return_admin_to_ct_id' })
   doReturnAdmin: DoReturnAdmintoCt;
+
+  @ManyToOne(() => DoReturnHistory)
+  @JoinColumn({ name: 'do_return_history_id_last' })
+  doReturnHistory: DoReturnHistory;
 
   @ManyToOne(() => DoReturnCtToCollection)
   @JoinColumn({ name: 'do_return_ct_to_collection_id' })
