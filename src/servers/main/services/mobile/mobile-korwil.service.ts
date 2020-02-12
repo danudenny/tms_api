@@ -147,6 +147,7 @@ export class MobileKorwilService {
     qb1.from('korwil_transaction', 'kt');
     qb1.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
     qb1.andWhere('kt.user_id = :userId', { userId: authMeta.userId });
+    qb1.andWhere('kt.is_deleted = false');
     qb1.orderBy('created_time', 'DESC');
     const dataKorwil = await qb1.getRawOne();
     let id = dataKorwil ? dataKorwil.id : null;
