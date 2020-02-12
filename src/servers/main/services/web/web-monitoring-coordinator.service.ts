@@ -24,6 +24,7 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['branchId'] = 't2.branch_id';
     payload.fieldResolverMap['date'] = 't1.date';
     payload.fieldResolverMap['userId'] = 't1.user_id';
+    payload.fieldResolverMap['employeeJourneyId'] = 't1.employee_journey_id';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 't1');
     const q = repo.findAllRaw();
@@ -49,7 +50,7 @@ export class WebMonitoringCoordinatorService {
     q.leftJoin(e => e.korwilTransactionDetail, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.employeeJourney, 't4', j =>
+    q.leftJoin(e => e.employeeJourney, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.users, 't5', j =>
@@ -110,35 +111,36 @@ export class WebMonitoringCoordinatorService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebMonitoringCoordinatorListResponse> {
     // mapping field
-    payload.fieldResolverMap['date'] = 'c.date';
+    payload.fieldResolverMap['date'] = 'a.date';
     payload.fieldResolverMap['userId'] = 'a.ref_user_id';
     payload.fieldResolverMap['checkInDatetime'] = '"checkInDatetime"';
     payload.fieldResolverMap['checkOutDatetime'] = '"checkOutDatetime"';
-    payload.fieldResolverMap['branchId'] = 'a.ref_branch_id';
+    payload.fieldResolverMap['branchId'] = 'b.ref_branch_id';
 
-    const repo = new OrionRepositoryService(UserToBranch, 'a');
+    const repo = new OrionRepositoryService(KorwilTransaction, 'a');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      [`CONCAT(b.first_name, ' ', b.last_name)`, 'coordinatorName'],
-      [`(SELECT COUNT(ref_user_id) as total FROM user_to_branch WHERE ref_user_id = a.ref_user_id GROUP BY ref_user_id)`, 'countBranch'],
-      [`COUNT(c.korwil_transaction_id)`, 'countVisit'],
+      [`CONCAT(c.first_name, ' ', c.last_name)`, 'coordinatorName'],
+      [`COUNT(a.korwil_transaction_id)`, 'countBranch'],
+      [`COUNT(*) FILTER (WHERE a.employee_journey_id IS NOT NULL)`, 'countVisit'],
       [`MIN(d.check_in_date)`, 'checkInDatetime'],
       [`MAX(d.check_out_date)`, 'checkOutDatetime'],
-      ['a.ref_user_id', 'userId'],
+      ['b.ref_user_id', 'userId'],
     );
-    q.innerJoin(e => e.users, 'b', j =>
+    q.innerJoin(e => e.userToBranch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.korwilTransaction, 'c', j =>
+    q.innerJoin(e => e.users, 'c', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.korwilTransaction.employeeJourney, 'd', j =>
+    q.leftJoin(e => e.employeeJourney, 'd', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('a.ref_user_id, "coordinatorName"');
+    q.groupByRaw('b.ref_user_id, "coordinatorName"');
+    q.orderByRaw('"checkInDatetime"', 'ASC');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
     const result = new WebMonitoringCoordinatorListResponse();

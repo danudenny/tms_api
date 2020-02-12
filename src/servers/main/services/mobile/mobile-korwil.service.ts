@@ -409,7 +409,7 @@ export class MobileKorwilService {
       let nearby_branch = await this.getNearby(lata, longa, radius[0])
 
       response.status= false;
-      response.message= "Lokasi branch tidak valid";
+      response.message= "Lokasi anda tidak sesuai dengan lokasi gerai";
 
       const res = await RawQueryService.query(`SELECT branch_id FROM branch WHERE is_deleted = false
       AND longitude IS NOT NULL AND latitude IS NOT NULL
