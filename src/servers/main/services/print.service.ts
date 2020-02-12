@@ -1077,7 +1077,7 @@ export class PrintService {
       res,
       printerName: 'StrukPrinter',
       templates: [{
-        templateName: 'tanda-terima-do-balik',
+        templateName: 'ttd-do-balik',
         templateData: jsreportParams,
         printCopy: queryParams.printCopy,
       }],
