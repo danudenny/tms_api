@@ -162,7 +162,7 @@ export class MobileCheckInService {
         res = await qb.getRawOne();
         if(!res){
           result.status = "error";
-          result.message = 'Branch Check In tidak valid';
+          result.message = 'Lokasi gerai tidak ditemukan, silahkan hubungi administrator';
           result.branchName = branchName;
           result.checkInDate = checkInDate;
           result.attachmentId = attachmentId;
