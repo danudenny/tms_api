@@ -101,11 +101,14 @@ export class MobileCheckInService {
     const authMeta = AuthService.getAuthMetadata();
     const dateNow = moment().toDate();
     const permission = AuthService.getPermissionTokenPayload();
+    const fromDate = moment().format('YYYY-MM-DD 00:00:00');
+    const toDate = moment().format('YYYY-MM-DD 23:59:59');
     let status = 'ok';
     let message = 'success';
     let branchName = '';
     let checkInDate = '';
     let attachmentId = null;
+    let userToBranchId = "";
 
     const timeNow = moment().toDate();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -166,6 +169,7 @@ export class MobileCheckInService {
           result.checkinIdBranch = null;
           return result;
         }
+        userToBranchId = res.userToBranchId;
       }
 
       // upload image
@@ -195,59 +199,74 @@ export class MobileCheckInService {
       await this.employeeJourneyRepository.save(employeeJourney);
       const employeeJourneyId = employeeJourney.employeeJourneyId;
 
-
       // Create Korwil Detail Item if branchId exists
       if(payload.branchId){
+        const qb = createQueryBuilder();
+        // GET task item
+        qb.addSelect('ki.korwil_item_id', 'korwilItemId');
+        qb.from('korwil_item', 'ki');
+        qb.where('ki.is_deleted = false');
+        if(configKorwil.korwilRoleId != permission.roleId){
+          qb.where('ki.role_id = :roleId',{roleId: configKorwil.korwilRoleId});
+        }
+        const korwilItem = await qb.getRawMany();
+        let isCreateKorwilDetail = false;
+
         // Find Korwil Transaction user role where employee journey id is null
         let korwilTransactionUser = await KorwilTransaction.findOne({
           where: {
             isDeleted: false,
             branchId: payload.branchId,
             userId: authMeta.userId,
-            // status: 0,
             employeeJourneyId: IsNull(),
-            createdTime: Between(moment().format('YYYY-MM-DD 00:00:00'), moment().format('YYYY-MM-DD 23:59:59')),
+            createdTime: Between(fromDate, toDate),
           },
         });
+
         if(korwilTransactionUser){
-          const qb = createQueryBuilder();
-          const fromDate = moment().format('YYYY-MM-DD 00:00:00');
-          const toDate = moment().format('YYYY-MM-DD 23:59:59');
+          isCreateKorwilDetail = true;
 
-          // GET task item
-          qb.addSelect('ki.korwil_item_id', 'korwilItemId');
-          qb.from('korwil_item', 'ki');
-          qb.where('ki.is_deleted = false');
-          if(configKorwil.korwilRoleId != permission.roleId){
-            qb.where('ki.role_id = :roleId',{roleId: configKorwil.korwilRoleId});
-          }
-          const korwilItem = await qb.getRawMany();
-
-          // GET transaction korwil, created from cron
-          let korwilTransaction = await KorwilTransaction.findOne({
+          // Update korwil employee id and total task
+          korwilTransactionUser.totalTask = korwilItem.length;
+          korwilTransactionUser.employeeJourneyId = employeeJourneyId;
+          await KorwilTransaction.save(korwilTransactionUser);
+        }
+        else{
+          korwilTransactionUser = await KorwilTransaction.findOne({
             where: {
+              isDeleted: false,
               branchId: payload.branchId,
               userId: authMeta.userId,
               createdTime: Between(fromDate, toDate),
             },
           });
+          if(!korwilTransactionUser){
+            isCreateKorwilDetail = true;
 
-          if(!korwilTransaction){
-            result.message = "Korwil Transaction tidak ditemukan";
-            result.status = "error";
-            return result;
+            // Insert Korwil Transaction
+            korwilTransactionUser                   = KorwilTransaction.create();
+            korwilTransactionUser.branchId          = payload.branchId;
+            korwilTransactionUser.createdTime       = timeNow;
+            korwilTransactionUser.date              = timeNow;
+            korwilTransactionUser.employeeJourneyId = employeeJourney.employeeJourneyId;
+            korwilTransactionUser.isDeleted         = false;
+            korwilTransactionUser.status            = 0;
+            korwilTransactionUser.totalTask         = korwilItem.length;
+            korwilTransactionUser.updatedTime       = timeNow;
+            korwilTransactionUser.userId            = authMeta.userId;
+            korwilTransactionUser.userIdCreated     = authMeta.userId;
+            korwilTransactionUser.userIdUpdated     = authMeta.userId;
+            korwilTransactionUser.userToBranchId    = userToBranchId;
+            await KorwilTransaction.save(korwilTransactionUser);
           }
+        }
 
-          // Update korwil employee id and total task
-          korwilTransaction.totalTask = korwilItem.length;
-          korwilTransaction.employeeJourneyId = employeeJourneyId;
-          await KorwilTransaction.save(korwilTransaction);
-
+        if(isCreateKorwilDetail){
           // Create Korwil Item
           korwilItem.forEach(async(item) => {
             const korwilTransactionDetail = KorwilTransactionDetail.create();
             korwilTransactionDetail.korwilItemId = item.korwilItemId;
-            korwilTransactionDetail.korwilTransactionId = korwilTransaction.korwilTransactionId;
+            korwilTransactionDetail.korwilTransactionId = korwilTransactionUser.korwilTransactionId;
             korwilTransactionDetail.latChecklist = "";
             korwilTransactionDetail.longChecklist = "";
             korwilTransactionDetail.note = "";
