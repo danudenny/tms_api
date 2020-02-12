@@ -210,6 +210,7 @@ export class MobileCheckInService {
           qb.where('ki.role_id = :roleId',{roleId: configKorwil.korwilRoleId});
         }
         const korwilItem = await qb.getRawMany();
+        let isCreateKorwilDetail = false;
 
         // Find Korwil Transaction user role where employee journey id is null
         let korwilTransactionUser = await KorwilTransaction.findOne({
@@ -223,46 +224,63 @@ export class MobileCheckInService {
         });
 
         if(korwilTransactionUser){
+          isCreateKorwilDetail = true;
+
           // Update korwil employee id and total task
           korwilTransactionUser.totalTask = korwilItem.length;
           korwilTransactionUser.employeeJourneyId = employeeJourneyId;
           await KorwilTransaction.save(korwilTransactionUser);
         }
         else{
-          // Insert Korwil Transaction
-          korwilTransactionUser                   = KorwilTransaction.create();
-          korwilTransactionUser.branchId          = payload.branchId;
-          korwilTransactionUser.createdTime       = timeNow;
-          korwilTransactionUser.date              = timeNow;
-          korwilTransactionUser.employeeJourneyId = employeeJourney.employeeJourneyId;
-          korwilTransactionUser.isDeleted         = false;
-          korwilTransactionUser.status            = 0;
-          korwilTransactionUser.totalTask         = korwilItem.length;
-          korwilTransactionUser.updatedTime       = timeNow;
-          korwilTransactionUser.userId            = authMeta.userId;
-          korwilTransactionUser.userIdCreated     = authMeta.userId;
-          korwilTransactionUser.userIdUpdated     = authMeta.userId;
-          korwilTransactionUser.userToBranchId    = userToBranchId;
-          await KorwilTransaction.save(korwilTransactionUser);
+          korwilTransactionUser = await KorwilTransaction.findOne({
+            where: {
+              isDeleted: false,
+              branchId: payload.branchId,
+              userId: authMeta.userId,
+              createdTime: Between(fromDate, toDate),
+            },
+          });
+          if(!korwilTransactionUser){
+            isCreateKorwilDetail = true;
+
+            // Insert Korwil Transaction
+            korwilTransactionUser                   = KorwilTransaction.create();
+            korwilTransactionUser.branchId          = payload.branchId;
+            korwilTransactionUser.createdTime       = timeNow;
+            korwilTransactionUser.date              = timeNow;
+            korwilTransactionUser.employeeJourneyId = employeeJourney.employeeJourneyId;
+            korwilTransactionUser.isDeleted         = false;
+            korwilTransactionUser.status            = 0;
+            korwilTransactionUser.totalTask         = korwilItem.length;
+            korwilTransactionUser.updatedTime       = timeNow;
+            korwilTransactionUser.userId            = authMeta.userId;
+            korwilTransactionUser.userIdCreated     = authMeta.userId;
+            korwilTransactionUser.userIdUpdated     = authMeta.userId;
+            korwilTransactionUser.userToBranchId    = userToBranchId;
+            await KorwilTransaction.save(korwilTransactionUser);
+          }
         }
-        // Create Korwil Item
-        korwilItem.forEach(async(item) => {
-          const korwilTransactionDetail = KorwilTransactionDetail.create();
-          korwilTransactionDetail.korwilItemId = item.korwilItemId;
-          korwilTransactionDetail.korwilTransactionId = korwilTransactionUser.korwilTransactionId;
-          korwilTransactionDetail.latChecklist = "";
-          korwilTransactionDetail.longChecklist = "";
-          korwilTransactionDetail.note = "";
-          korwilTransactionDetail.status = 0;
-          korwilTransactionDetail.isDone = false;
-          korwilTransactionDetail.date = dateNow;
-          korwilTransactionDetail.photoCount = 0;
-          korwilTransactionDetail.userIdCreated = authMeta.userId;
-          korwilTransactionDetail.createdTime = dateNow;
-          korwilTransactionDetail.updatedTime = dateNow;
-          korwilTransactionDetail.userIdUpdated = authMeta.userId;
-          await KorwilTransactionDetail.save(korwilTransactionDetail);
-        });
+
+        if(isCreateKorwilDetail){
+          // Create Korwil Item
+          korwilItem.forEach(async(item) => {
+            const korwilTransactionDetail = KorwilTransactionDetail.create();
+            korwilTransactionDetail.korwilItemId = item.korwilItemId;
+            korwilTransactionDetail.korwilTransactionId = korwilTransactionUser.korwilTransactionId;
+            korwilTransactionDetail.latChecklist = "";
+            korwilTransactionDetail.longChecklist = "";
+            korwilTransactionDetail.note = "";
+            korwilTransactionDetail.status = 0;
+            korwilTransactionDetail.isDone = false;
+            korwilTransactionDetail.date = dateNow;
+            korwilTransactionDetail.photoCount = 0;
+            korwilTransactionDetail.userIdCreated = authMeta.userId;
+            korwilTransactionDetail.createdTime = dateNow;
+            korwilTransactionDetail.updatedTime = dateNow;
+            korwilTransactionDetail.userIdUpdated = authMeta.userId;
+            await KorwilTransactionDetail.save(korwilTransactionDetail);
+          });
+        }
       }
       checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
     }
