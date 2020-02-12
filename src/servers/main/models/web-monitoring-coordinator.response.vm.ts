@@ -110,6 +110,9 @@ export class TaskHeader {
   representative: string;
 
   @ApiModelProperty()
+  representativeCode: string;
+
+  @ApiModelProperty()
   date: string;
 
   @ApiModelProperty()
@@ -132,7 +135,7 @@ export class TaskDetail {
   note: string;
 
   @ApiModelProperty()
-  photoUrl: string[];
+  url: string[];
 }
 export class WebMonitoringCoordinatorTaskReportResponse {
   @ApiModelProperty({ type: () => TaskHeader })
