@@ -194,7 +194,7 @@ export class MobileCheckInService {
         userIdUpdated: authMeta.userId,
         updatedTime: timeNow,
         attachmentIdCheckIn: attachmentId,
-        branchIdCheckIn: Number(payload.branchId),
+        branchIdCheckIn: Number(branchIdTemp),
       });
       await this.employeeJourneyRepository.save(employeeJourney);
       const employeeJourneyId = employeeJourney.employeeJourneyId;
