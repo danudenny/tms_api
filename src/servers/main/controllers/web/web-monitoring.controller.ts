@@ -8,7 +8,7 @@ import { WebMonitoringService } from '../../services/web/web-monitoring.service'
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { WebMonitoringCoordinatorService } from '../../services/web/web-monitoring-coordinator.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse, CreateTransactionCoordinatorResponse, WebMonitoringCoordinatorTaskReportResponse } from '../../models/web-monitoring-coordinator.response.vm';
+import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse, CreateTransactionCoordinatorResponse, WebMonitoringCoordinatorTaskReportResponse, WebMonitoringCoordinatorBranchResponse } from '../../models/web-monitoring-coordinator.response.vm';
 import { WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload, WebMonitoringCoordinatorDetailPayload } from '../../models/web-monitoring-coordinator-payload.vm';
 
 @ApiUseTags('Web Monitoring')
@@ -30,6 +30,15 @@ export class WebMonitoringController {
   @ApiOkResponse({ type: WebMonitoringCoordinatorResponse })
   public async monitoringCoordinatorList(@Body() payload: BaseMetaPayloadVm) {
     return WebMonitoringCoordinatorService.findListAllBranch(payload);
+  }
+
+  @Post('coordinator/branch/list')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebMonitoringCoordinatorBranchResponse })
+  public async monitoringBranchCoordinatorList(@Body() payload: BaseMetaPayloadVm) {
+    return WebMonitoringCoordinatorService.findListBranchCoordinator(payload);
   }
 
   @Post('coordinator')

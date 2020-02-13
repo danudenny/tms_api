@@ -227,7 +227,7 @@ export class PartnerService {
 
     const headers = {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + token,
+      'Authorization': 'Bearer ' + token,
     };
 
     const config = {

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse, CreateTransactionCoordinatorResponse, WebMonitoringCoordinatorTaskReportResponse } from '../../models/web-monitoring-coordinator.response.vm';
+import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse, CreateTransactionCoordinatorResponse, WebMonitoringCoordinatorTaskReportResponse, WebMonitoringCoordinatorBranchResponse } from '../../models/web-monitoring-coordinator.response.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
@@ -129,7 +129,7 @@ export class WebMonitoringCoordinatorService {
 
     q.selectRaw(
       [`CONCAT(c.first_name, ' ', c.last_name)`, 'coordinatorName'],
-      [`COUNT(a.korwil_transaction_id)`, 'countBranch'],
+      [`COUNT(DISTINCT a.branch_id)`, 'countBranch'],
       [`COUNT(*) FILTER (WHERE a.employee_journey_id IS NOT NULL)`, 'countVisit'],
       [`MIN(d.check_in_date)`, 'checkInDatetime'],
       [`MAX(d.check_out_date)`, 'checkOutDatetime'],
@@ -205,6 +205,7 @@ export class WebMonitoringCoordinatorService {
     }
     return result;
   }
+
   static async detailCoordinator(
     payload: WebMonitoringCoordinatorDetailPayload,
   ): Promise<WebMonitoringCoordinatorDetailResponse> {
@@ -231,6 +232,40 @@ export class WebMonitoringCoordinatorService {
     result.branch = branch;
     result.userId = payload.userId;
     result.coordinatorName = data[0].coordinatorName;
+    return result;
+  }
+
+  static async findListBranchCoordinator(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebMonitoringCoordinatorBranchResponse> {
+    // mapping field
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
+    payload.fieldResolverMap['date'] = 't1.date';
+    payload.fieldResolverMap['userId'] = 't1.user_id';
+
+    const repo = new OrionRepositoryService(KorwilTransaction, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+    q.selectRaw(`
+      DISTINCT (t1.branch_id) AS "branchId",
+      t1.user_id AS "userId",
+      t2.branch_name AS "branchName"
+    `
+    );
+    q.innerJoin(e => e.branches, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.users, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new WebMonitoringCoordinatorBranchResponse();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
     return result;
   }
 

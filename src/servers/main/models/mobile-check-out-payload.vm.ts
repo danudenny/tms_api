@@ -24,6 +24,6 @@ export class MobileCheckOutFormPayloadVm {
   @ApiModelProperty()
   latitudeCheckOut: string;
 
-  @ApiModelProperty()
-  branchId: string;
+  @ApiModelPropertyOptional()
+  branchId?: string;
 }
