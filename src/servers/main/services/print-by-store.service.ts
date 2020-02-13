@@ -1,7 +1,7 @@
 import { RedisService } from '../../../shared/services/redis.service';
-import { PrintDoPodStorePayloadBodyVm } from '../models/print-do-pod-store-payload.vm';
-import { PrintDoPodBagStorePayloadBodyVm } from '../models/print-do-pod-bag-store-payload.vm';
-import { PrintDoPodDeliverStorePayloadBodyVM } from '../models/print-do-pod-deliver-store-payload.vm';
+import { PrintDoPodVm } from '../models/print-do-pod.vm';
+import { PrintDoPodBagVm } from '../models/print-do-pod-bag.vm';
+import { PrintDoPodDeliverVm } from '../models/print-do-pod-deliver.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
 import express = require('express');
@@ -20,7 +20,7 @@ export class PrintByStoreService {
     return RedisService.setex(`print-store-${prefix}-${identifier}`, genericData, 10 * 60, true);
   }
 
-  static async storePrintDoPod(payloadBody: PrintDoPodStorePayloadBodyVm) {
+  static async storePrintDoPod(payloadBody: PrintDoPodVm) {
     return this.storeGenericPrintData('do-pod', payloadBody.data.doPodId, payloadBody);
   }
 
@@ -28,7 +28,7 @@ export class PrintByStoreService {
     res: express.Response,
     queryParams: PrintDoPodPayloadQueryVm,
   ) {
-    const printPayload = await this.retrieveGenericPrintData<PrintDoPodStorePayloadBodyVm>('do-pod', queryParams.id);
+    const printPayload = await this.retrieveGenericPrintData<PrintDoPodVm>('do-pod', queryParams.id);
 
     if (!printPayload) {
       RequestErrorService.throwObj({
@@ -44,7 +44,7 @@ export class PrintByStoreService {
     });
   }
 
-  static async storePrintDoPodBag(payloadBody: PrintDoPodBagStorePayloadBodyVm) {
+  static async storePrintDoPodBag(payloadBody: PrintDoPodBagVm) {
     return this.storeGenericPrintData('do-pod-bag', payloadBody.data.doPodId, payloadBody);
   }
 
@@ -52,7 +52,7 @@ export class PrintByStoreService {
     res: express.Response,
     queryParams: PrintDoPodBagPayloadQueryVm,
   ) {
-    const printPayload = await this.retrieveGenericPrintData<PrintDoPodBagStorePayloadBodyVm>('do-pod-bag', queryParams.id);
+    const printPayload = await this.retrieveGenericPrintData<PrintDoPodBagVm>('do-pod-bag', queryParams.id);
 
     if (!printPayload.data) {
       RequestErrorService.throwObj({
@@ -69,7 +69,7 @@ export class PrintByStoreService {
     });
   }
 
-  static async storePrintDoPodDeliver(payloadBody: PrintDoPodDeliverStorePayloadBodyVM) {
+  static async storePrintDoPodDeliver(payloadBody: PrintDoPodDeliverVm) {
     return this.storeGenericPrintData('do-pod-deliver', payloadBody.data.doPodDeliverId, payloadBody);
   }
 
@@ -77,7 +77,7 @@ export class PrintByStoreService {
     res: express.Response,
     queryParams: PrintDoPodDeliverPayloadQueryVm,
   ) {
-    const printPayload = await this.retrieveGenericPrintData<PrintDoPodDeliverStorePayloadBodyVM>('do-pod-deliver', queryParams.id);
+    const printPayload = await this.retrieveGenericPrintData<PrintDoPodDeliverVm>('do-pod-deliver', queryParams.id);
 
     if (!printPayload.data) {
       RequestErrorService.throwObj({

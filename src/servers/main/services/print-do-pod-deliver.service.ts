@@ -1,7 +1,7 @@
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
-import { PrintDoPodDeliverStorePayloadBodyDataVm } from '../models/print-do-pod-deliver-store-payload.vm';
+import { PrintDoPodDeliverDataVm } from '../models/print-do-pod-deliver.vm';
 import { map } from 'lodash';
 import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { PrinterService } from '../../../shared/services/printer.service';
@@ -64,7 +64,7 @@ export class PrintDoPodDeliverService {
 
   public static async printDoPodDeliverAndQueryMeta(
     res: express.Response,
-    data: Partial<PrintDoPodDeliverStorePayloadBodyDataVm>,
+    data: Partial<PrintDoPodDeliverDataVm>,
     metaQuery: {
       userId: number;
       branchId: number;
@@ -125,7 +125,7 @@ export class PrintDoPodDeliverService {
 
   public static async printDoPodDeliver(
     res: express.Response,
-    data: Partial<PrintDoPodDeliverStorePayloadBodyDataVm>,
+    data: Partial<PrintDoPodDeliverDataVm>,
     meta: {
       currentUserName: string;
       currentBranchName: string;

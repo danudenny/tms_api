@@ -37,6 +37,7 @@ export class BagService {
           bagId: true,
           bagNumber: true,
         },
+        weight: true,
       });
       q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
       q.andWhere(e => e.bagSeq, w => w.equals(seqNumber));

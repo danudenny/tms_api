@@ -6,9 +6,9 @@ import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
 import { ApiUseTags, ApiBearerAuth } from '../../../shared/external/nestjs-swagger';
-import { PrintDoPodStorePayloadBodyVm } from '../models/print-do-pod-store-payload.vm';
-import { PrintDoPodBagStorePayloadBodyVm } from '../models/print-do-pod-bag-store-payload.vm';
-import { PrintDoPodDeliverStorePayloadBodyVM } from '../models/print-do-pod-deliver-store-payload.vm';
+import { PrintDoPodVm } from '../models/print-do-pod.vm';
+import { PrintDoPodBagVm } from '../models/print-do-pod-bag.vm';
+import { PrintDoPodDeliverVm } from '../models/print-do-pod-deliver.vm';
 import { PrintByStoreService } from '../services/print-by-store.service';
 
 @ApiUseTags('General')
@@ -17,7 +17,7 @@ export class PrintByStoreController {
   @Post('do-pod/store')
   @ApiBearerAuth()
   public async storePrintDoPod(
-    @Body() payloadBody: PrintDoPodStorePayloadBodyVm,
+    @Body() payloadBody: PrintDoPodVm,
   ) {
     return PrintByStoreService.storePrintDoPod(payloadBody);
   }
@@ -35,7 +35,7 @@ export class PrintByStoreController {
   @Post('do-pod-bag/store')
   @ApiBearerAuth()
   public async storePrintDoPodBag(
-    @Body() payloadBody: PrintDoPodBagStorePayloadBodyVm,
+    @Body() payloadBody: PrintDoPodBagVm,
   ) {
     return PrintByStoreService.storePrintDoPodBag(payloadBody);
   }
@@ -53,7 +53,7 @@ export class PrintByStoreController {
   @Post('do-pod-deliver/store')
   @ApiBearerAuth()
   public async storePrintDoPodDeliver(
-    @Body() payloadBody: PrintDoPodDeliverStorePayloadBodyVM,
+    @Body() payloadBody: PrintDoPodDeliverVm,
   ) {
     return PrintByStoreService.storePrintDoPodDeliver(payloadBody);
   }

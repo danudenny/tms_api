@@ -1,7 +1,7 @@
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
 import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
-import { PrintDoPodStorePayloadBodyDataVm } from '../models/print-do-pod-store-payload.vm';
+import { PrintDoPodDataVm } from '../models/print-do-pod.vm';
 import { PrinterService } from '../../../shared/services/printer.service';
 import express = require('express');
 import moment = require('moment');
@@ -60,7 +60,7 @@ export class PrintDoPodService {
 
   public static async printDoPodAndQueryMeta(
     res: express.Response,
-    data: Partial<PrintDoPodStorePayloadBodyDataVm>,
+    data: Partial<PrintDoPodDataVm>,
     metaQuery: {
       userId: number;
       branchId: number;
@@ -111,7 +111,7 @@ export class PrintDoPodService {
 
   public static async printDoPod(
     res: express.Response,
-    data: Partial<PrintDoPodStorePayloadBodyDataVm>,
+    data: Partial<PrintDoPodDataVm>,
     meta: {
       currentUserName: string;
       currentBranchName: string;

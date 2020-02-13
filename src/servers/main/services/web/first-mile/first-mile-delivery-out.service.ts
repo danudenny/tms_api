@@ -17,6 +17,7 @@ import { RedisService } from '../../../../../shared/services/redis.service';
 import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
 import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
+  ScanAwbVm,
   WebScanOutAwbResponseVm,
   WebScanOutBagResponseVm,
   WebScanOutCreateResponseVm,
@@ -80,6 +81,8 @@ export class FirstMileDeliveryOutService {
     result.status = 'ok';
     result.message = 'success';
     result.doPodId = doPod.doPodId;
+
+    // TODO: Query and populate result printDoPodMetadata, printDoPodBagMetadata, and printDoPodDeliverMetadata based on do pod type
 
     return result;
   }
@@ -395,10 +398,9 @@ export class FirstMileDeliveryOutService {
     });
 
     for (const awbNumber of payload.awbNumber) {
-      const response = {
-        status: 'ok',
-        message: 'Success',
-      };
+      const response = new ScanAwbVm();
+      response.status = 'ok';
+      response.message = 'success';
 
       const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
@@ -440,6 +442,17 @@ export class FirstMileDeliveryOutService {
             doPodDetail.isScanOut = true;
             doPodDetail.scanOutType = 'awb';
             await DoPodDetail.save(doPodDetail);
+
+            // Assign print metadata - Scan Out & Deliver
+            response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
+
+            // Assign print metadata - Deliver
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber = awb.awbItem.awb.consigneeNumber;
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
+            response.printDoPodDetailMetadata.awbItem.awb.isCod = awb.awbItem.awb.isCod;
+            response.printDoPodDetailMetadata.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
 
             // AFTER Scan OUT ===============================================
             // #region after scanout
