@@ -108,7 +108,7 @@ export class PrintController {
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
   public async printDoPodDoReturnAdmin(
-    @Query() queryParams: PrintDoPodDoReturnPayloadQueryVm,
+    @Query() queryParams: PrintDoPodReturnPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
     return PrintService.printDoPodDoReturnAdminByRequest(serverResponse, queryParams);

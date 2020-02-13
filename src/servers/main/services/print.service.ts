@@ -1004,18 +1004,18 @@ export class PrintService {
   // print untuk TANDA TERIMA DO BALIK ADMIN
   public static async printDoPodDoReturnAdminByRequest(
     res: express.Response,
-    queryParams: PrintDoPodDoReturnPayloadQueryVm,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
   ) {
     const q = RepositoryService.doReturnHistory.findOne();
-    q.leftJoin(e => e.doReturnAwb);
+    q.leftJoin(e => e.doReturnAwbs);
     q.leftJoin(e => e.user);
     q.leftJoin(e => e.userAdmin);
-    q.leftJoin(e => e.doReturnAwb.branchTo);
+    q.leftJoin(e => e.doReturnAwbs.branchTo);
 
     const doPodDoReturn = await q
       .select({
         doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
-        doReturnAwb: {
+        doReturnAwbs: {
           branchTo: {
             branchName: true,
           },
@@ -1039,9 +1039,9 @@ export class PrintService {
       });
     }
 
-    q.select({
+    await q.select({
         doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
-        doReturnAwb: {
+        doReturnAwbs: {
           branchTo: {
             branchName: true,
           },
@@ -1059,7 +1059,7 @@ export class PrintService {
       })
       .where(e => e.userIdDriver, w => w.equals(queryParams.id));
 
-    const dataCount = q.countWithoutTakeAndSkip();
+    const dataCount = await q.countWithoutTakeAndSkip();
 
     const m = moment();
     const jsreportParams = {
@@ -1067,7 +1067,7 @@ export class PrintService {
       meta: {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
-        totalData: dataCount,
+        totalData: (await dataCount),
       },
     };
 
@@ -1075,7 +1075,7 @@ export class PrintService {
       res,
       printerName: 'StrukPrinter',
       templates: [{
-        templateName: 'tanda-terima-do-balik',
+        templateName: 'ttd-do-balik',
         templateData: jsreportParams,
         printCopy: queryParams.printCopy,
       }],
