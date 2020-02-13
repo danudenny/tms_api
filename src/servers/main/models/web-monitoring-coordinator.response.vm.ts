@@ -38,6 +38,21 @@ export class WebMonitoringCoordinatorResponse extends BaseMetaResponseVm {
   data: WebMonitoringCoordinatorData[];
 }
 
+export class WebMonitoringCoordinatorBranchData {
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  branchId: string;
+
+  @ApiModelProperty()
+  userId: number;
+}
+export class WebMonitoringCoordinatorBranchResponse extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebMonitoringCoordinatorBranchData] })
+  data: WebMonitoringCoordinatorBranchData[];
+}
+
 export class WebMonitoringCoordinatorListData {
   @ApiModelProperty()
   coordinatorName: string;
