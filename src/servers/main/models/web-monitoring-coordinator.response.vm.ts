@@ -75,6 +75,9 @@ export class WebMonitoringCoordinatorTaskData {
 
   @ApiModelProperty()
   note: string;
+
+  @ApiModelProperty()
+  status: string;
 }
 export class WebMonitoringCoordinatorTaskResponse {
   @ApiModelProperty({ type: () => [WebMonitoringCoordinatorTaskData] })
@@ -95,4 +98,52 @@ export class WebMonitoringCoordinatorDetailResponse {
 export class WebMonitoringCoordinatorPhotoResponse {
   @ApiModelProperty()
   url: string[];
+}
+
+export class CreateTransactionCoordinatorResponse {
+  @ApiModelProperty()
+  status: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class TaskHeader {
+  @ApiModelProperty()
+  representative: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
+
+  @ApiModelProperty()
+  date: string;
+
+  @ApiModelProperty()
+  checkInDatetime: string;
+
+  @ApiModelProperty()
+  checkOutDatetime: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  countChecklist: string;
+}
+export class TaskDetail {
+  @ApiModelProperty()
+  task: string;
+
+  @ApiModelProperty()
+  note: string;
+
+  @ApiModelProperty()
+  url: string[];
+}
+export class WebMonitoringCoordinatorTaskReportResponse {
+  @ApiModelProperty({ type: () => TaskHeader })
+  transactionHeader: TaskHeader;
+
+  @ApiModelProperty({ type: () => [TaskDetail] })
+  transactionDetail: TaskDetail[];
 }

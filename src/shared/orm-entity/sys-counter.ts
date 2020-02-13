@@ -27,6 +27,7 @@ export class SysCounter extends BaseEntity {
     nullable: false,
     unique: true,
     length: 20,
+    name: 'key',
 
   })
   key: string;
@@ -34,6 +35,7 @@ export class SysCounter extends BaseEntity {
   @Column('bigint', {
     nullable: false,
     default: () => 1,
+    name: 'counter',
 
   })
   counter: number;
