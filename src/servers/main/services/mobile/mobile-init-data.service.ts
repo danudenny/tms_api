@@ -270,11 +270,11 @@ export class MobileInitDataService {
     // });
 
     const currentMoment = moment();
-    const oneDaysAgo = moment().subtract(3, 'd');
+    // const oneDaysAgo = moment().subtract(1, 'd');
     qb.andWhere(
       'do_pod_deliver.do_pod_deliver_date_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
       {
-        currentDateTimeStart: oneDaysAgo.format('YYYY-MM-DD 06:00:00'),
+        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 06:00:00'),
         currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
       },
     );
