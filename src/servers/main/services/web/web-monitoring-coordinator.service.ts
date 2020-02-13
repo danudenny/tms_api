@@ -24,6 +24,7 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['branchId'] = 't2.branch_id';
     payload.fieldResolverMap['date'] = 't1.date';
     payload.fieldResolverMap['userId'] = 't1.user_id';
+    payload.fieldResolverMap['coordinatorName'] = '"coordinatorName"';
     payload.fieldResolverMap['employeeJourneyId'] = 't1.employee_journey_id';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 't1');
@@ -76,8 +77,8 @@ export class WebMonitoringCoordinatorService {
     qb.addSelect('a.note', 'note');
     qb.addSelect('a.photo_count', 'countPhoto');
     qb.addSelect(`CASE
-                    WHEN a.status = 1 THEN 'Belum Dikerjakan'
-                    WHEN a.status = 2 THEN 'Sudah Dikerjakan' 
+                    WHEN a.status = 1 THEN 'Belum dikerjakan'
+                    WHEN a.status = 2 THEN 'Sudah dikerjakan'
                     ELSE ''
                   END`, 'status');
     qb.from('korwil_transaction_detail', 'a');
@@ -121,6 +122,7 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['checkInDatetime'] = '"checkInDatetime"';
     payload.fieldResolverMap['checkOutDatetime'] = '"checkOutDatetime"';
     payload.fieldResolverMap['branchId'] = 'b.ref_branch_id';
+    payload.fieldResolverMap['coordinatorName'] = '"coordinatorName"';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 'a');
     const q = repo.findAllRaw();
@@ -242,6 +244,7 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
     payload.fieldResolverMap['date'] = 't1.date';
     payload.fieldResolverMap['userId'] = 't1.user_id';
+    payload.fieldResolverMap['branchName'] = '"branchName"';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 't1');
     const q = repo.findAllRaw();
