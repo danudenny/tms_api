@@ -61,8 +61,8 @@ export class WebMonitoringController {
 
   @Post('coordinator/taskReport')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebMonitoringCoordinatorTaskReportResponse })
   public async monitoringCoordinatorTaskReport(@Body() payload: WebMonitoringCoordinatorTaskPayload) {
     return WebMonitoringCoordinatorService.taskReport(payload);
