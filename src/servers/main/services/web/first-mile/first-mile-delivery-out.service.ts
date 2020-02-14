@@ -21,6 +21,7 @@ import {
   WebScanOutAwbResponseVm,
   WebScanOutBagResponseVm,
   WebScanOutCreateResponseVm,
+  ScanBagVm,
 } from '../../../models/web-scan-out-response.vm';
 import {
   WebScanOutAwbVm,
@@ -444,6 +445,7 @@ export class FirstMileDeliveryOutService {
             await DoPodDetail.save(doPodDetail);
 
             // Assign print metadata - Scan Out & Deliver
+            response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
             response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
             response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
 
@@ -552,10 +554,10 @@ export class FirstMileDeliveryOutService {
     });
 
     for (const bagNumber of payload.bagNumber) {
-      const response = {
-        status: 'ok',
-        message: 'Success',
-      };
+      const response = new ScanBagVm();
+      response.status = 'ok';
+      response.message = 'success';
+
       const bagData = await BagService.validBagNumber(bagNumber);
       if (bagData) {
         // NOTE: validate bag branch id last
@@ -603,6 +605,13 @@ export class FirstMileDeliveryOutService {
             doPodDetailBag.bagItemId = bagData.bagItemId;
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
             await DoPodDetailBag.insert(doPodDetailBag);
+
+            // Assign print metadata
+            response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
+            response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
+            response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
+            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagNumber;
+            response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
 
             // AFTER Scan OUT ===============================================
             // #region after scanout

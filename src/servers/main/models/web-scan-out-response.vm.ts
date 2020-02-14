@@ -283,8 +283,8 @@ export class ScanAwbVm {
   message: string;
 
   // Use PrintDoPodDeliverDataVm rather than PrintDoPodDataVm, the current implementation of create scan out & create scan out deliver is on the same source
-  @ApiModelProperty({ type: () => PrintDoPodDeliverDataDoPodDeliverDetailVm })
-  printDoPodDetailMetadata: PrintDoPodDeliverDataDoPodDeliverDetailVm = new PrintDoPodDeliverDataDoPodDeliverDetailVm();
+  @ApiModelPropertyOptional({ type: () => PrintDoPodDeliverDataDoPodDeliverDetailVm })
+  printDoPodDetailMetadata?: PrintDoPodDeliverDataDoPodDeliverDetailVm = new PrintDoPodDeliverDataDoPodDeliverDetailVm();
 }
 
 export class WebScanOutAwbResponseVm {
@@ -317,8 +317,8 @@ export class ScanBagVm {
   @ApiModelProperty()
   message: string;
 
-  @ApiModelProperty({ type: () => PrintDoPodBagDataDoPodDetailBagVm })
-  printDoPodDetailBagMetadata: PrintDoPodBagDataDoPodDetailBagVm = new PrintDoPodBagDataDoPodDetailBagVm();
+  @ApiModelPropertyOptional({ type: () => PrintDoPodBagDataDoPodDetailBagVm })
+  printDoPodDetailBagMetadata?: PrintDoPodBagDataDoPodDetailBagVm = new PrintDoPodBagDataDoPodDetailBagVm();
 }
 
 export class WebScanOutBagResponseVm {

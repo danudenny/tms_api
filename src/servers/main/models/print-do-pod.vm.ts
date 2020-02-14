@@ -38,6 +38,9 @@ export class PrintDoPodDataUserDriverVm {
 
 export class PrintDoPodDataVm {
   @ApiModelProperty()
+  doPodId: number;
+
+  @ApiModelProperty()
   doPodCode: string;
 
   @ApiModelProperty()

@@ -10,6 +10,9 @@ export class PrintDoPodBagDataDoPodDetailBagBagItemBagVm {
 
 export class PrintDoPodBagDataDoPodDetailBagBagItemVm {
   @ApiModelProperty()
+  bagItemId: number;
+
+  @ApiModelProperty()
   bagSeq: number;
 
   @ApiModelProperty()
@@ -43,6 +46,9 @@ export class PrintDoPodBagDataBranchToVm {
 }
 
 export class PrintDoPodBagDataVm {
+  @ApiModelProperty()
+  doPodId: number;
+
   @ApiModelProperty()
   doPodCode: string;
 

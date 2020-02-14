@@ -15,6 +15,9 @@ export class PrintDoPodDeliverDataUserDriverVm {
 
 export class PrintDoPodDeliverDataDoPodDeliverDetailAwbItemAwbVm {
   @ApiModelProperty()
+  awbId: number;
+
+  @ApiModelProperty()
   awbNumber: string;
 
   @ApiModelProperty()
@@ -47,6 +50,9 @@ export class PrintDoPodDeliverDataDoPodDeliverDetailVm {
 }
 
 export class PrintDoPodDeliverDataVm {
+  @ApiModelProperty()
+  doPodDeliverId: number;
+
   @ApiModelProperty()
   doPodDeliverCode: string;
 
