@@ -179,8 +179,8 @@ export class MobileKorwilService {
     qb.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
     qb.andWhere('kt.employee_journey_id Is Not Null');
     qb.andWhere('kt.created_time >= :startDate and kt.created_time <= :endDate',
-      {startDate: moment().add(7, "hours").format('YYYY-MM-DD 00:00:00'),
-      endDate: moment().add(7, "hours").format('YYYY-MM-DD 23:59:59')
+      {startDate: moment().format('YYYY-MM-DD 00:00:00'),
+      endDate: moment().format('YYYY-MM-DD 23:59:59')
     });
     qb.andWhere('utb.ref_user_id = :userId', { userId: authMeta.userId });
     qb.andWhere('kt.korwil_transaction_id = :korwilId', { korwilId: id });
