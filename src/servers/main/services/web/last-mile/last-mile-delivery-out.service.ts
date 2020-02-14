@@ -540,77 +540,85 @@ export class LastMileDeliveryOutService {
 
       const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
-        // NOTE: TRANSFER AWB NUMBER
-        const awbDeliver = await DoPodDeliverDetail.findOne({
-          where: {
-            awbNumber,
-            awbStatusIdLast: AWB_STATUS.ANT,
-            isDeleted: false,
-          },
-        });
-        // handle only status ANT
-        if (awbDeliver) {
-          // Add Locking setnx redis
-          const holdRedis = await RedisService.locking(
-            `hold:scanout-transfer:${awbDeliver.awbItemId}`,
-            'locking',
-          );
-          if (holdRedis) {
-            // Update data do pod detail per awb number
-            // doPodDeliverId;
-            await DoPodDeliverDetail.update(
-              awbDeliver.doPodDeliverDetailId,
-              {
-                isDeleted: true,
-                userIdUpdated: authMeta.userId,
-                updatedTime: moment().toDate(),
-              },
+        // add handel final status
+        const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.RTN, AWB_STATUS.RTS];
+        if (statusFinal.includes(awb.awbStatusIdLast)) {
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Resi ${awbNumber} sudah Final Status !`;
+        } else {
+          // NOTE: TRANSFER AWB NUMBER
+          const awbDeliver = await DoPodDeliverDetail.findOne({
+            where: {
+              awbNumber,
+              awbStatusIdLast: AWB_STATUS.ANT,
+              isDeleted: false,
+            },
+          });
+          // handle only status ANT
+          if (awbDeliver) {
+            // Add Locking setnx redis
+            const holdRedis = await RedisService.locking(
+              `hold:scanout-transfer:${awbDeliver.awbItemId}`,
+              'locking',
             );
+            if (holdRedis) {
+              // Update data do pod detail per awb number
+              // doPodDeliverId;
+              await DoPodDeliverDetail.update(
+                awbDeliver.doPodDeliverDetailId,
+                {
+                  isDeleted: true,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: moment().toDate(),
+                },
+              );
 
-            // balance total awb
-            await getManager().transaction(
-              async transactionEntityManager => {
-                const awbItemAttr = await AwbItemAttr.findOne({
-                  where: {
-                    awbItemId: awbDeliver.awbItemId,
-                    isDeleted: false,
-                  },
-                });
-                if (awbItemAttr) {
-                  await transactionEntityManager.update(
-                    AwbItemAttr,
-                    awbItemAttr.awbItemAttrId,
-                    {
-                      awbStatusIdLast: AWB_STATUS.IN_BRANCH,
-                      updatedTime: moment().toDate(),
+              // balance total awb
+              await getManager().transaction(
+                async transactionEntityManager => {
+                  const awbItemAttr = await AwbItemAttr.findOne({
+                    where: {
+                      awbItemId: awbDeliver.awbItemId,
+                      isDeleted: false,
                     },
+                  });
+                  if (awbItemAttr) {
+                    await transactionEntityManager.update(
+                      AwbItemAttr,
+                      awbItemAttr.awbItemAttrId,
+                      {
+                        awbStatusIdLast: AWB_STATUS.IN_BRANCH,
+                        updatedTime: moment().toDate(),
+                      },
+                    );
+                  }
+
+                  await transactionEntityManager.decrement(
+                    DoPodDeliver,
+                    {
+                      doPodDeliverId: awbDeliver.doPodDeliverId,
+                      totalAwb: MoreThan(0),
+                    },
+                    'totalAwb',
+                    1,
                   );
-                }
+                },
+              );
 
-                await transactionEntityManager.decrement(
-                  DoPodDeliver,
-                  {
-                    doPodDeliverId: awbDeliver.doPodDeliverId,
-                    totalAwb: MoreThan(0),
-                  },
-                  'totalAwb',
-                  1,
-                );
-              },
-            );
-
-            totalSuccess += 1;
-            // remove key holdRedis
-            RedisService.del(`hold:scanout-transfer:${awbDeliver.awbItemId}`);
+              totalSuccess += 1;
+              // remove key holdRedis
+              RedisService.del(`hold:scanout-transfer:${awbDeliver.awbItemId}`);
+            } else {
+              totalError += 1;
+              response.status = 'error';
+              response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+            }
           } else {
             totalError += 1;
             response.status = 'error';
-            response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+            response.message = `Resi ${awbNumber}, bermasalah harap scan in terlebih dahulu`;
           }
-        } else {
-          totalError += 1;
-          response.status = 'error';
-          response.message = `Resi ${awbNumber}, bermasalah harap scan in terlebih dahulu`;
         }
       } else {
         totalError += 1;
