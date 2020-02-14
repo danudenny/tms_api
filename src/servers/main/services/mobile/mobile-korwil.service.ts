@@ -147,6 +147,11 @@ export class MobileKorwilService {
     qb1.from('korwil_transaction', 'kt');
     qb1.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
     qb1.andWhere('kt.user_id = :userId', { userId: authMeta.userId });
+    qb1.andWhere('kt.employee_journey_id Is Not Null');
+    qb1.andWhere('kt.created_time >= :startDate and kt.created_time <= :endDate',
+      {startDate: moment().add(7, "hours").format('YYYY-MM-DD 00:00:00'),
+      endDate: moment().add(7, "hours").format('YYYY-MM-DD 23:59:59')
+    });
     qb1.andWhere('kt.is_deleted = false');
     qb1.orderBy('created_time', 'DESC');
     const dataKorwil = await qb1.getRawOne();
@@ -177,11 +182,6 @@ export class MobileKorwilService {
     );
     qb.where('kt.is_deleted = false');
     qb.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
-    qb.andWhere('kt.employee_journey_id Is Not Null');
-    qb.andWhere('kt.created_time >= :startDate and kt.created_time <= :endDate',
-      {startDate: moment().add(7, "hours").format('YYYY-MM-DD 00:00:00'),
-      endDate: moment().add(7, "hours").format('YYYY-MM-DD 23:59:59')
-    });
     qb.andWhere('utb.ref_user_id = :userId', { userId: authMeta.userId });
     qb.andWhere('kt.korwil_transaction_id = :korwilId', { korwilId: id });
     qb.orderBy('ki.sort_order', 'ASC');
