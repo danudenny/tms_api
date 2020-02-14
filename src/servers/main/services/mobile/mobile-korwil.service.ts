@@ -311,19 +311,14 @@ export class MobileKorwilService {
     // GET total photo after delete and upload
     let qb1 = createQueryBuilder();
     qb1.addSelect('ktdp.korwil_transaction_detail_photo_id', 'korwilTransactionDetailPhotoId');
-    qb1.from('korwil_transaction_detail', 'ktd');
-    qb1.innerJoin('korwil_transaction_detail_photo',
-    'ktdp',
-    'ktdp.korwil_transaction_detail_id = ktd.korwil_transaction_detail_id AND ktdp.is_deleted = false'
-    );
-    qb1.where('ktd.is_deleted = false');
+    qb1.from('korwil_transaction_detail_photo', 'ktdp');
+    qb1.where('ktdp.is_deleted = false');
     qb1.andWhere('ktdp.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: payload.korwilTransactionDetailId });
     const photos = await qb1.getRawMany();
     const temp = photos.length;
 
-    const deletedPhotoLength = payload.deletedPhotos ? payload.deletedPhotos.length : 0;
+    const deletedPhotoLength = deletedPhotos ? deletedPhotos.length : 0;
     const countPhoto = temp - deletedPhotoLength + countInsertedImage;
-    // console.log(temp,deletedPhotoLength,countInsertedImage)
     // update count photo in korwil
     let korwilTransactionDetail = await KorwilTransactionDetail.findOne({
       where: {
