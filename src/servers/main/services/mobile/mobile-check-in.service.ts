@@ -101,8 +101,8 @@ export class MobileCheckInService {
     const authMeta = AuthService.getAuthMetadata();
     const dateNow = moment().toDate();
     const permission = AuthService.getPermissionTokenPayload();
-    const fromDate = moment().add(7, "hours").format('YYYY-MM-DD 00:00:00');
-    const toDate = moment().add(7, "hours").format('YYYY-MM-DD 23:59:59');
+    const fromDate = moment().format('YYYY-MM-DD 00:00:00');
+    const toDate = moment().format('YYYY-MM-DD 23:59:59');
     let status = 'ok';
     let message = 'success';
     let branchName = '';
@@ -283,7 +283,7 @@ export class MobileCheckInService {
           });
         }
       }
-      checkInDate = moment().add(7, "hours").format('YYYY-MM-DD HH:mm:ss');
+      checkInDate = moment().format('YYYY-MM-DD HH:mm:ss');
     }
     result.status = status;
     result.message = message;
