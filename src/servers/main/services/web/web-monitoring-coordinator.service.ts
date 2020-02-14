@@ -118,10 +118,10 @@ export class WebMonitoringCoordinatorService {
   ): Promise<WebMonitoringCoordinatorListResponse> {
     // mapping field
     payload.fieldResolverMap['date'] = 'a.date';
-    payload.fieldResolverMap['userId'] = 'a.ref_user_id';
+    payload.fieldResolverMap['userId'] = 'b.ref_user_id';
     payload.fieldResolverMap['checkInDatetime'] = '"checkInDatetime"';
     payload.fieldResolverMap['checkOutDatetime'] = '"checkOutDatetime"';
-    payload.fieldResolverMap['branchId'] = 'b.ref_branch_id';
+    payload.fieldResolverMap['branchId'] = 'a.branch_id';
     payload.fieldResolverMap['coordinatorName'] = '"coordinatorName"';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 'a');
