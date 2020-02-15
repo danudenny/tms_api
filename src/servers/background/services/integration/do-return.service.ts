@@ -3,6 +3,7 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { AwbHistoryLastSyncPod } from '../../../../shared/orm-entity/awb-history-last-sync-pod';
 import { DoReturnResponseVm } from '../../../main/models/do-return.vm';
 import { DoReturnSyncResponseVm } from '../../models/return-do.response.vm';
+import moment = require('moment');
 
 export class DoReturnService {
   static async findAllDoKembali(
@@ -66,12 +67,14 @@ export class DoReturnService {
     const insertReturn = await this.searchDoKembali();
     const status = '200';
     const message = 'Success';
+    const time = moment().format('DD/MM/YYYY, h:mm:ss a');
     const result = new DoReturnSyncResponseVm();
     if (insertReturn) {
       const updateReturn = await this.updateTempStt();
     }
     result.message = message;
     result.status = status;
+    result.date = time;
     return result;
   }
 }
