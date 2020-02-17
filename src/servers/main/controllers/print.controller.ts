@@ -11,6 +11,8 @@ import { ApiUseTags, ApiBearerAuth } from '../../../shared/external/nestjs-swagg
 import { PrintDoPodService } from '../services/print-do-pod.service';
 import { PrintDoPodBagService } from '../services/print-do-pod-bag.service';
 import { PrintDoPodDeliverService } from '../services/print-do-pod-deliver.service';
+import { PrintDoPodReturnPayloadQueryVm } from '../models/print-do-pod-return.vm';
+import { PrintDoPodDoReturnPayloadQueryVm } from '../models/print-do-pod-do-return.vm';
 
 @ApiUseTags('General')
 @Controller('print')
@@ -93,5 +95,45 @@ export class PrintController {
     @Response() serverResponse: express.Response,
   ) {
     return PrintService.printAwbForStickerByRequest(serverResponse, queryParams);
+  }
+
+  @Get('do-pod-do-return')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printDoPodDoReturn(
+    @Query() queryParams: PrintDoPodReturnPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintService.printDoPodDoReturnByRequest(serverResponse, queryParams);
+  }
+
+  @Get('do-pod-do-return-admin')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printDoPodDoReturnAdmin(
+    @Query() queryParams: PrintDoPodReturnPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintService.printDoPodDoReturnAdminByRequest(serverResponse, queryParams);
+  }
+
+  @Get('do-pod-do-return-ct')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printDoPodDoReturnCt(
+    @Query() queryParams: PrintDoPodReturnPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintService.printDoPodDoReturnCtByRequest(serverResponse, queryParams);
+  }
+
+  @Get('do-pod-do-return-collection')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printDoPodDoReturnCollection(
+    @Query() queryParams: PrintDoPodReturnPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintService.printDoPodDoReturnCollectionByRequest(serverResponse, queryParams);
   }
 }

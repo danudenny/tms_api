@@ -8,8 +8,334 @@ import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
 import { PrintBagItemPayloadQueryVm, PrintAwbPayloadQueryVm } from '../models/print-bag-item-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
+import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
+import { PrintDoPodReturnPayloadQueryVm } from '../models/print-do-pod-return.vm';
+import { PrintDoPodDoReturnPayloadQueryVm } from '../models/print-do-pod-do-return.vm';
+import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.vm';
 
 export class PrintService {
+  public static async printDoPodByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doPod.findOne();
+    q.leftJoin(e => e.doPodDetails);
+    q.leftJoin(e => e.userDriver.employee);
+
+    const doPod = await q
+      .select({
+        doPodId: true, // needs to be selected due to do_pod relations are being included
+        doPodCode: true,
+        description: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
+        },
+        branchTo: {
+          branchName: true,
+        },
+        vehicleNumber: true,
+        doPodDetails: {
+          doPodDetailId: true, // needs to be selected due to do_pod_detail relations are being included
+          awbItem: {
+            awbItemId: true, // needs to be selected due to awb_item relations are being included
+            awb: {
+              awbNumber: true,
+              consigneeName: true,
+            },
+          },
+        },
+      })
+      .where(e => e.doPodId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDetails.isDeleted, w => w.isFalse());
+
+    if (!doPod) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    const currentUser = await RepositoryService.user
+      .loadById(queryParams.userId)
+      .select({
+        userId: true, // needs to be selected due to users relations are being included
+        employee: {
+          nickname: true,
+        },
+      });
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
+    const currentBranch = await RepositoryService.branch
+      .loadById(queryParams.branchId)
+      .select({
+        branchName: true,
+      });
+
+    if (!currentBranch) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPod,
+      meta: {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        totalItems: doPod.doPodDetails.length,
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'surat-jalan',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
+    });
+  }
+
+  public static async printDoPodBagByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodBagPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doPod.findOne();
+    q.leftJoin(e => e.doPodDetailBag);
+    q.leftJoin(e => e.userDriver.employee);
+
+    const doPod = await q
+      .select({
+        doPodId: true, // needs to be selected due to do_pod relations are being included
+        doPodCode: true,
+        description: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
+        },
+        branchTo: {
+          branchName: true,
+        },
+        vehicleNumber: true,
+        doPodDetailBag: {
+          doPodDetailBagId: true, // needs to be selected due to do_pod_detail relations are being included
+          bagItem: {
+            bagItemId: true, // needs to be selected due to bag_item relations are being included
+            bagSeq: true,
+            weight: true,
+            bag: {
+              bagNumber: true,
+              refRepresentativeCode: true,
+            },
+          },
+        },
+      })
+      .where(e => e.doPodId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDetailBag.isDeleted, w => w.isFalse());
+
+    if (!doPod) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    const bagItemIds = map(doPod.doPodDetailBag, doPodDetail => doPodDetail.bagItem.bagItemId);
+    const result = await RawQueryService.query(`SELECT COUNT(1) as cnt FROM bag_item WHERE bag_item_id IN (${bagItemIds.join(',')})`);
+    const totalBagItem = result[0].cnt;
+
+    const currentUser = await RepositoryService.user
+      .loadById(queryParams.userId)
+      .select({
+        userId: true, // needs to be selected due to users relations are being included
+        employee: {
+          nickname: true,
+        },
+      });
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
+    const currentBranch = await RepositoryService.branch
+      .loadById(queryParams.branchId)
+      .select({
+        branchName: true,
+      });
+
+    if (!currentBranch) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
+
+    let printName = '';
+    let printColumn = '';
+    if (queryParams.type === '1') {
+      printName = 'GABUNGAN SORTIR';
+      printColumn = 'Gabung Sortir';
+    } else if (queryParams.type === '2') {
+      printName = 'HUB';
+      printColumn = 'Gabung Paket';
+    } else {
+      printName = 'GERAI';
+      printColumn = 'Gabung Paket';
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPod,
+      meta: {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        totalItems: totalBagItem,
+        printType: printName,
+        printCol: printColumn,
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'surat-jalan-gabung-paket',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
+    });
+  }
+
+  public static async printDoPodDeliverByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodDeliverPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doPodDeliver.findOne();
+    q.leftJoin(e => e.doPodDeliverDetails);
+    q.leftJoin(e => e.userDriver.employee);
+
+    const doPodDeliver = await q
+      .select({
+        doPodDeliverId: true, // needs to be selected due to do_pod_deliver relations are being included
+        doPodDeliverCode: true,
+        description: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
+        },
+        doPodDeliverDetails: {
+          doPodDeliverDetailId: true, // needs to be selected due to do_pod_deliver_detail relations are being included
+          awbItem: {
+            awbItemId: true, // needs to be selected due to awb_item relations are being included
+            awb: {
+              awbId: true,
+              awbNumber: true,
+              consigneeName: true,
+              consigneeNumber: true,
+              consigneeAddress: true,
+              consigneeZip: true,
+              totalCodValue: true,
+              isCod: true,
+            },
+          },
+        },
+      })
+      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDeliverDetails.isDeleted, w => w.isFalse());
+
+    if (!doPodDeliver) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    const awbIds = map(doPodDeliver.doPodDeliverDetails, doPodDeliverDetail => doPodDeliverDetail.awbItem.awb.awbId);
+    const result = await RawQueryService.query(`SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(',')})`);
+    let totalAllCod = result[0].total;
+
+    if (totalAllCod < 1) {
+      totalAllCod = 0;
+    }
+
+    const currentUser = await RepositoryService.user
+      .loadById(queryParams.userId)
+      .select({
+        userId: true, // needs to be selected due to users relations are being included
+        employee: {
+          nickname: true,
+        },
+      })
+      .exec();
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
+    const currentBranch = await RepositoryService.branch
+      .loadById(queryParams.branchId)
+      .select({
+        branchName: true,
+      });
+
+    if (!currentBranch) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPodDeliver,
+      meta: {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        totalItems: doPodDeliver.doPodDeliverDetails.length,
+        totalCod: totalAllCod,
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [
+        {
+          templateName: 'surat-jalan-antar',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+        {
+          templateName: 'surat-jalan-antar-admin',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+      ],
+    });
+  }
+
   public static async printDoPodReturnByRequest(
     res: express.Response,
     queryParams: PrintDoPodDeliverPayloadQueryVm,
@@ -56,7 +382,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id));
+      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDeliverDetails.isDeleted, w => w.isFalse());
 
     if (!doPodDeliver) {
       RequestErrorService.throwObj({
@@ -150,7 +477,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.bagItemId, w => w.equals(queryParams.id));
+      .where(e => e.bagItemId, w => w.equals(queryParams.id))
+      .andWhere(e => e.bag.isDeleted, w => w.isFalse());
 
     if (!bagItem) {
       RequestErrorService.throwObj({
@@ -273,7 +601,8 @@ export class PrintService {
           },
         },
       })
-      .where(e => e.bagItemId, w => w.equals(queryParams.id));
+      .where(e => e.bagItemId, w => w.equals(queryParams.id))
+      .andWhere(e => e.bagItemAwbs.isDeleted, w => w.isFalse());
 
     if (!bagItem) {
       RequestErrorService.throwObj({
@@ -359,7 +688,8 @@ export class PrintService {
             address: true,
           },
         })
-        .where(e => e.awbNumber, w => w.equals(queryParams.id));
+        .where(e => e.awbNumber, w => w.equals(queryParams.id))
+        .andWhere(e => e.isDeleted, w => w.isFalse());
 
       if (!awbItem) {
         RequestErrorService.throwObj({
@@ -592,5 +922,252 @@ export class PrintService {
         printerName: 'BarcodePrinter',
       });
     }
+  }
+
+  // print untuk SURAT JALAN DO BALIK
+  public static async printDoPodDoReturnByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doReturnAdmintoCt.findOne();
+    q.leftJoin(e => e.doReturnAwbs);
+    q.leftJoin(e => e.user);
+    q.leftJoin(e => e.branch);
+
+    const doPodDoReturn = await q
+      .select({
+        doReturnAdminToCtId: true, // needs to be selected due to do_pod relations are being included
+        doReturnAdminToCt: true,
+        countAwb: true,
+        branch: {
+          branchName: true,
+        },
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        doReturnAwbs: {
+          awbNumber: true,
+          doReturnAwbNumber: true,
+        },
+      })
+      .where(e => e.doReturnAdminToCtId, w => w.equals(queryParams.id));
+
+    if (!doPodDoReturn) {
+      RequestErrorService.throwObj({
+        message: 'Surat Jalan tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPodDoReturn,
+      meta: {
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'surat-jalan-do-balik',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
+    });
+  }
+
+  // print untuk TANDA TERIMA DO BALIK ADMIN
+  public static async printDoPodDoReturnAdminByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doReturnHistory.findOne();
+    q.leftJoin(e => e.doReturnAwbs);
+    q.leftJoin(e => e.user);
+    q.leftJoin(e => e.userAdmin);
+    q.leftJoin(e => e.doReturnAwbs.branchTo);
+
+    const doPodDoReturn = await q
+      .select({
+        doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
+        doReturnAwbs: {
+          branchTo: {
+            branchName: true,
+          },
+          awbNumber: true,
+          doReturnAwbNumber: true,
+        },
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        userAdmin: {
+          firstName: true,
+          lastName: true,
+        },
+      })
+      .where(e => e.userIdDriver, w => w.equals(queryParams.id));
+
+    if (!doPodDoReturn) {
+      RequestErrorService.throwObj({
+        message: 'Tanda Terima tidak ditemukan',
+      });
+    }
+
+    await q.select({
+        doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
+        doReturnAwbs: {
+          branchTo: {
+            branchName: true,
+          },
+          awbNumber: true,
+          doReturnAwbNumber: true,
+        },
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        userAdmin: {
+          firstName: true,
+          lastName: true,
+        },
+      })
+      .where(e => e.userIdDriver, w => w.equals(queryParams.id));
+
+    const dataCount = await q.countWithoutTakeAndSkip();
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPodDoReturn,
+      meta: {
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        totalData: (await dataCount),
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'ttd-do-balik',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
+    });
+  }
+
+  // print untuk TANDA TERIMA DO BALIK CT
+  public static async printDoPodDoReturnCtByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doReturnCttoCollection.findOne();
+    q.leftJoin(e => e.doReturnAwbs);
+    q.leftJoin(e => e.user);
+
+    const doPodDoReturn = await q
+      .select({
+        doReturnCtToCollectionId: true, // needs to be selected due to do_pod relations are being included
+        doReturnCtToCollection: true,
+        countAwb: true,
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        doReturnAwbs: {
+          awbNumber: true,
+          doReturnAwbNumber: true,
+        },
+      })
+      .where(e => e.doReturnCtToCollectionId, w => w.equals(queryParams.id));
+
+    if (!doPodDoReturn) {
+      RequestErrorService.throwObj({
+        message: 'Tanda Terima tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPodDoReturn,
+      meta: {
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'tanda-terima-do-balik-ct',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
+    });
+  }
+
+  // print untuk TANDA TERIMA DO BALIK COLLECTION
+  public static async printDoPodDoReturnCollectionByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doReturnCollectiontoCust.findOne();
+    q.leftJoin(e => e.doReturnAwbs);
+    q.leftJoin(e => e.doReturnAwbs.customerAccount);
+    q.leftJoin(e => e.doReturnAwbs.customerAccount.customerAddress);
+    q.leftJoin(e => e.user);
+
+    const doPodDoReturn = await q
+      .select({
+        doReturnCollectionToCustId: true, // needs to be selected due to do_pod relations are being included
+        doReturnCollectionToCust: true,
+        countAwb: true,
+        user: {
+          firstName: true,
+          lastName: true,
+        },
+        doReturnAwbs: {
+          awbNumber: true,
+          doReturnAwbNumber: true,
+          customerAccount: {
+            customerAccountName: true,
+            phone1: true,
+            customerAddress: {
+              address: true,
+            },
+          },
+        },
+      })
+      .where(e => e.doReturnCollectionToCustId, w => w.equals(queryParams.id));
+
+    if (!doPodDoReturn) {
+      RequestErrorService.throwObj({
+        message: 'Tanda Terima tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPodDoReturn,
+      meta: {
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [{
+        templateName: 'tanda-terima-do-balik-collection',
+        templateData: jsreportParams,
+        printCopy: queryParams.printCopy,
+      }],
+    });
   }
 }

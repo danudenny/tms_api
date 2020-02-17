@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
-import { IsNull } from 'typeorm';
+import { IsNull, createQueryBuilder } from 'typeorm';
 
 import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
 import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
@@ -10,6 +10,8 @@ import { RequestErrorService } from '../../../../shared/services/request-error.s
 import { MobileCheckOutPayloadVm } from '../../models/mobile-check-out-payload.vm';
 import { MobileCheckOutResponseVm } from '../../models/mobile-check-out-response.vm';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { MobileKorwilService } from './mobile-korwil.service';
+import { error } from 'winston';
 
 @Injectable()
 export class MobileCheckOutService {
@@ -63,7 +65,7 @@ export class MobileCheckOutService {
         });
 
         branchName = branch.branchName;
-        checkOutDate = moment().format('YYYY-MM-DD HH:mm:ss');
+        checkOutDate = moment(timeNow).format('YYYY-MM-DD HH:mm:ss');
       } else {
         status = 'error';
         message = 'Anda belum melakukan Check In sebelumnya';
@@ -95,8 +97,35 @@ export class MobileCheckOutService {
     let branchName = '';
     let checkOutDate = '';
     let attachmentId = null;
+    let branchId = payload.branchId;
 
     const timeNow = moment().toDate();
+
+    if(payload.branchId){
+      const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(payload.latitudeCheckOut, payload.longitudeCheckOut, payload.branchId);
+      if (responseCheckBranch.status == false){
+        const qb = createQueryBuilder();
+        qb.addSelect('utb.user_to_branch_id', 'userToBranchId');
+        qb.from('user_to_branch', 'utb');
+        qb.where('utb.is_deleted = false');
+        qb.andWhere('utb.ref_branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
+        qb.andWhere('utb.ref_user_id = :idUserLogin', { idUserLogin: authMeta.userId });
+        const res = await qb.getRawOne();
+
+        if(!res){
+          result.status = "error";
+          result.message = 'Branch Check In tidak valid!';
+          result.branchName = branchName;
+          result.checkOutDate = checkOutDate;
+          result.attachmentId = attachmentId;
+          result.checkoutIdBranch = null;
+          return result;
+        }else{
+          message = "Checkout berhasil, Check Out diluar wilayah gerai Check In";
+        }
+      }
+    }
+
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const employeeJourney = await this.employeeJourneyRepository.findOne({
       where: {
@@ -129,15 +158,17 @@ export class MobileCheckOutService {
       await this.employeeJourneyRepository.save(employeeJourney);
 
       const branch = await this.branchRepository.findOne({
-        select: ['branchName'],
-        where: { branchId: permissonPayload.branchId },
+        select: ['branchName', 'branchId'],
+        where: { branchId: payload.branchId ? payload.branchId : permissonPayload.branchId },
       });
 
       branchName = branch.branchName;
-      checkOutDate = moment().format('YYYY-MM-DD HH:mm:ss');
+      branchId = branch.branchId.toString();
+      checkOutDate = moment(timeNow).format('YYYY-MM-DD HH:mm:ss');
     } else {
       status = 'error';
       message = 'Anda belum melakukan Check In sebelumnya';
+      branchId = null;
     }
 
     result.status = status;
@@ -145,6 +176,7 @@ export class MobileCheckOutService {
     result.branchName = branchName;
     result.checkOutDate = checkOutDate;
     result.attachmentId = attachmentId;
+    result.checkoutIdBranch = branchId;
     return result;
   }
 }
