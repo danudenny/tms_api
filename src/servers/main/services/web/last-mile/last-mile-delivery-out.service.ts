@@ -16,7 +16,7 @@ import {
     DoPodDetailPostMetaQueueService,
 } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
-    WebScanOutAwbResponseVm, WebScanOutCreateResponseVm, WebScanOutResponseForEditVm, WebAwbThirdPartyListResponseVm,
+    WebScanOutAwbResponseVm, WebScanOutCreateResponseVm, WebScanOutResponseForEditVm, WebAwbThirdPartyListResponseVm, ScanAwbVm,
 } from '../../../models/web-scan-out-response.vm';
 import {
     WebScanOutAwbVm, WebScanOutCreateDeliveryVm, WebScanOutDeliverEditVm, WebScanOutLoadForEditVm, TransferAwbDeliverVm,
@@ -33,6 +33,7 @@ import { DoPod } from '../../../../../shared/orm-entity/do-pod';
 import { POD_TYPE } from '../../../../../shared/constants/pod-type.constant';
 import { AwbThirdPartyVm, AwbThirdPartyUpdateResponseVm } from '../../../models/last-mile/awb-third-party.vm';
 import { PodScanIn } from '../../../../../shared/orm-entity/pod-scan-in';
+import { Employee } from '../../../../../shared/orm-entity/employee';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -81,6 +82,31 @@ export class LastMileDeliveryOutService {
     result.status = 'ok';
     result.message = 'success';
     result.doPodId = doPod.doPodDeliverId;
+
+    // query for get Employee
+    const repo = new OrionRepositoryService(Employee, 't1');
+    const q = repo.findAllRaw();
+
+    q.selectRaw(
+      [
+        't1.nik',
+        'nik',
+      ],
+      ['t1.nickname', 'nickname'],
+    );
+
+    q.innerJoin(e => e.user, 't2');
+    q.where(
+      e => e.user.userId,
+      w => w.equals(payload.userIdDriver),
+    );
+    const dataUser = await q.exec();
+
+    // For printDoPodDeliverMetadata
+    result.printDoPodDeliverMetadata.doPodDeliverCode = doPod.doPodDeliverCode;
+    result.printDoPodDeliverMetadata.description = payload.desc;
+    result.printDoPodDeliverMetadata.userDriver.employee.nik = dataUser[0].nik;
+    result.printDoPodDeliverMetadata.userDriver.employee.nickname = dataUser[0].nickname;
 
     return result;
   }
@@ -277,10 +303,9 @@ export class LastMileDeliveryOutService {
     let totalError = 0;
 
     for (const awbNumber of payload.awbNumber) {
-      const response = {
-        status: 'ok',
-        message: 'Success',
-      };
+      const response = new ScanAwbVm();
+      response.status = 'ok';
+      response.message = 'success';
 
       const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
@@ -339,6 +364,18 @@ export class LastMileDeliveryOutService {
               doPodDeliverDetail.awbNumber = awbNumber;
               doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
               await DoPodDeliverDetail.insert(doPodDeliverDetail);
+
+              // Assign print metadata - Scan Out & Deliver
+              response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
+              response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
+              response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
+
+              // Assign print metadata - Deliver
+              response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
+              response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber = awb.awbItem.awb.consigneeNumber;
+              response.printDoPodDetailMetadata.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
+              response.printDoPodDetailMetadata.awbItem.awb.isCod = awb.awbItem.awb.isCod;
+              response.printDoPodDetailMetadata.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
 
               // counter total scan out
               const totalAwb = doPodDeliver.totalAwb + 1;
@@ -441,7 +478,7 @@ export class LastMileDeliveryOutService {
     result.totalSuccessAwb = 0;
     result.totalErrorAwb = 0;
 
-    if(dataTotal.length != 0){
+    if (dataTotal.length != 0) {
       const temp = dataTotal[0];
       result.totalSuccessAwb = temp.totalSuccessAwb;
       result.totalErrorAwb = temp.totalErrorAwb;
@@ -486,7 +523,7 @@ export class LastMileDeliveryOutService {
     result.driverFullName = '';
     result.doPodDeliverId = '';
 
-    if(data.length != 0){
+    if (data.length != 0) {
       const temp = data[0];
       result.doPodDeliverCode = temp.doPodDeliverCode;
       result.driverNik        = temp.driverNik;
