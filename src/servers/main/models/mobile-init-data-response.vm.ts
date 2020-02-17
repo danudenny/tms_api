@@ -20,3 +20,11 @@ export class MobileInitDataResponseVm {
   @ApiModelProperty()
   checkIn: MobileCheckInResponseVm;
 }
+
+export class MobileInitDataDeliveryResponseVm {
+  @ApiModelProperty({ type: [MobileDeliveryVm] })
+  delivery: MobileDeliveryVm[];
+
+  @ApiModelProperty({ format: 'date-time' })
+  serverDateTime: string;
+}

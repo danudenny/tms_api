@@ -172,9 +172,11 @@ export class AuthService {
     clientId: string,
     roleId: number,
     branchId: number,
-  ): Promise<PermissionAccessResponseVM> {
-    const authMeta = AuthService.getAuthMetadata();
-    if (authMeta) {
+    ): Promise<PermissionAccessResponseVM> {
+      const authMeta = AuthService.getAuthMetadata();
+      const configKorwil = ConfigService.get('korwil');
+
+      if (authMeta) {
       const user = await RepositoryService.user
         .loadById(authMeta.userId)
         .innerJoinAndSelect(e => e.userRoles.role.rolePermissions)
@@ -209,8 +211,17 @@ export class AuthService {
         {},
       );
 
-      // Populate return value
       const result = new PermissionAccessResponseVM();
+      result.isKorwil = false;
+      result.isPalkur = false;
+
+      // Role Id Korwil 38, role Id palkur 40
+      if(roleId == configKorwil.korwilRoleId){
+        result.isKorwil = true;
+      }else if(roleId == configKorwil.palkurRoleId){
+        result.isPalkur = true;
+      }
+      // Populate return value
       result.userId = authMeta.userId;
       result.clientId = authMeta.clientId;
       result.username = authMeta.username;
@@ -223,7 +234,6 @@ export class AuthService {
         result.branchCode = branch.branchCode;
         result.isHeadOffice = branch.isHeadOffice;
       }
-
       // FIXME: populate rolesAccessPermissions from user.userRoles[0].role.role_permissions
       result.rolesAccessPermissions = map(
         user.userRoles[0].role.rolePermissions,

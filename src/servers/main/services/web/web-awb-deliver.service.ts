@@ -67,25 +67,34 @@ export class WebAwbDeliverService {
             }
 
             if (syncManualDelivery) {
-              // set data deliver
-              delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
-              delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
-              delivery.awbItemId = awbDeliver.awbItemId;
-              // delivery.employeeId = authMeta.employeeId;
-              await this.syncDeliver(delivery);
+              // add handel final status
+              const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.RTN, AWB_STATUS.RTS];
+              if (statusFinal.includes(awb.awbStatusIdLast)) {
+                response.status = 'error';
+                response.message = `Resi ${
+                  delivery.awbNumber
+                } sudah Final Status !`;
+              } else {
+                // set data deliver
+                delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
+                delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
+                delivery.awbItemId = awbDeliver.awbItemId;
+                // delivery.employeeId = authMeta.employeeId;
+                await this.syncDeliver(delivery);
 
-              // is return insert into awb return
-              // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
-              if (payload.isReturn) {
-                await this.createAwbReturn(
-                  delivery.awbNumber,
-                  awb.awbId,
-                  permissonPayload.branchId,
-                  authMeta.userId,
-                );
+                // is return insert into awb return
+                // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
+                if (payload.isReturn) {
+                  await this.createAwbReturn(
+                    delivery.awbNumber,
+                    awb.awbId,
+                    permissonPayload.branchId,
+                    authMeta.userId,
+                  );
+                }
+                response.status = 'ok';
+                response.message = 'success';
               }
-              response.status = 'ok';
-              response.message = 'success';
             } else {
               response.status = 'error';
               if (onlyDriver) {

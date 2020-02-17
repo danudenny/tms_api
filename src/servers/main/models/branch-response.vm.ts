@@ -1,7 +1,20 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
-export class MobileCheckOutResponseVm {
+export class ValidateBranchCoordinateResponseVm {
+  @ApiModelProperty()
+  status: boolean;
 
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  error: string;
+
+  @ApiModelProperty()
+  branchId: string;
+}
+
+export class BranchMessageResponseVm {
   @ApiModelProperty()
   status: string;
 
@@ -9,14 +22,5 @@ export class MobileCheckOutResponseVm {
   message: string;
 
   @ApiModelProperty()
-  branchName: string;
-
-  @ApiModelProperty()
-  checkOutDate: string;
-
-  @ApiModelProperty()
-  attachmentId: number;
-
-  @ApiModelProperty()
-  checkoutIdBranch: string;
+  branchId: string;
 }
