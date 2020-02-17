@@ -56,8 +56,11 @@ export class PartnerMerchantService {
 
       if (maxPid > -1) {
         PinoLoggerService.debug('##### MAX PID : ' + maxPid  + ' =======================================================');
+
+        const timeNow = moment().toDate();
         await SchedulerConfig.update(configId, {
           workOrderHistoryIdLast: maxPid,
+          updatedTime: timeNow,
         });
       }
     }
