@@ -9,4 +9,7 @@ export class DoReturnSyncResponseVm  {
   @ApiModelProperty()
   message: string;
 
+  @ApiModelProperty()
+  date: string;
+
 }
