@@ -16,6 +16,12 @@ export class PartnerMerchant extends TmsBaseEntity {
   })
   partnerId: number;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'branch_id',
+  })
+  branchId: number;
+
   @Column('character varying', {
     length: 255,
     name: 'partner_merchant_code',
