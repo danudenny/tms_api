@@ -654,7 +654,7 @@ export class LastMileDeliveryOutService {
           } else {
             totalError += 1;
             response.status = 'error';
-            response.message = `Resi ${awbNumber}, bermasalah harap scan in terlebih dahulu`;
+            response.message = `Resi ${awbNumber}, bermasalah harap scan Antar terlebih dahulu`;
           }
         }
       } else {
