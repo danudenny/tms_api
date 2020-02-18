@@ -44,6 +44,7 @@ export class PartnerMerchantService {
         partnerMerchant.merchantPhone = p.pickup_request_contact_no;
         partnerMerchant.pickupTime = '08:00';
         partnerMerchant.pickupType = 'TIME WINDOW';
+        partnerMerchant.branchId = p.branch_id_assigned;
 
         partnerMerchant.userIdCreated = 0;
         partnerMerchant.userIdUpdated = 0;
@@ -73,17 +74,25 @@ export class PartnerMerchantService {
 
     const query = `
       SELECT
-        MAX(pr.pickup_request_id) as max_pid, ` + select + ` ,
-        MD5(CONCAT(` + select + `)) as partner_merchant_code
+        MAX(pr.pickup_request_id) as max_pid, ` + select + `,
+        pr.branch_id_assigned,
+        MD5(CONCAT(` + select + `, pr.branch_id_assigned)) as partner_merchant_code
       FROM (
-        SELECT pr.pickup_request_id, ` + select + `
+        SELECT pr.pickup_request_id, ` + select + `, w.branch_id_assigned
         FROM pickup_request pr
+        INNER JOIN pickup_request_detail prd on pr.pickup_request_id=prd.pickup_request_id and prd.is_deleted=false
+        INNER JOIN work_order w on w.work_order_id=prd.work_order_id_last and w.is_deleted=false
         LEFT JOIN partner_merchant pm on pm.partner_merchant_code= MD5(CONCAT(pr.merchant_code, pr.pickup_request_name, pr.pickup_request_address, pr.pickup_request_email, pr.pickup_request_contact_no, pr.partner_id))  and pm.is_deleted=false
-        LEFT JOIN pickup_request_detail prd on pr.pickup_request_id=prd.pickup_request_id and prd.is_deleted=false
-        WHERE pm.partner_merchant_id is null and pr.pickup_request_id > :pid and pr.pickup_request_name<>'' and pr.pickup_request_address<>'' and pr.is_deleted=false
+        WHERE
+          pm.partner_merchant_id is null
+          and pr.pickup_request_id > :pid
+          and pr.pickup_request_name <> ''
+          and pr.pickup_request_address <> ''
+          and pr.is_deleted = false
+          and (w.work_order_status_id_pick >= 4200 or w.work_order_status_id_last >= 7000 )
         LIMIT 2500
       ) pr
-      GROUP BY ` + select + `
+      GROUP BY ` + select + `, pr.branch_id_assigned
     `;
 
     return await RawQueryService.queryWithParams(query, {
