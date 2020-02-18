@@ -12,7 +12,7 @@ import { DetailTransitPayloadVm } from '../../models/mobile-dashboard.vm';
 export class MobileAwbFilterController {
   constructor(private readonly mobileAwbFilterService: MobileAwbFilterService) {}
 
-  @Get('pod/scanIn/list')
+  @Post('pod/scanIn/list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
@@ -21,7 +21,7 @@ export class MobileAwbFilterController {
     return this.mobileAwbFilterService.findAllScanInFilterList(payload);
   }
 
-  @Get('pod/notScanIn/list')
+  @Post('pod/notScanIn/list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
@@ -30,7 +30,7 @@ export class MobileAwbFilterController {
     return this.mobileAwbFilterService.findAllNotScanInFilterList(payload);
   }
 
-  @Get('pod/notScanOut/list')
+  @Post('pod/notScanOut/list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
