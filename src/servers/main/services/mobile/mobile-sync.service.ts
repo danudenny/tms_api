@@ -19,13 +19,14 @@ import { MobileInitDataService } from './mobile-init-data.service';
 import moment = require('moment');
 import { AwbService } from '../v1/awb.service';
 import { RedisService } from '../../../../shared/services/redis.service';
+import { V1MobileInitDataService } from './v1/mobile-init-data.service';
 
 export class MobileSyncService {
   public static async syncByRequest(payload: MobileSyncPayloadVm) {
     for (const delivery of payload.deliveries) {
       await this.syncDeliver(delivery);
     }
-    return MobileInitDataService.getInitDataByRequest(payload.lastSyncDateTime);
+    return V1MobileInitDataService.getInitDataByRequest(payload.lastSyncDateTime);
   }
 
   public static async syncDeliver(delivery: MobileDeliveryVm) {
