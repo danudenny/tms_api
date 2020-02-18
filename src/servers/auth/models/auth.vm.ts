@@ -142,6 +142,11 @@ export class PermissionAccessResponseVM {
   @ApiModelProperty()
   rolesAccessPermissions: string[];
 
+  @ApiModelProperty()
+  isKorwil: boolean;
+
+  @ApiModelProperty()
+  isPalkur: boolean;
 }
 
 // #endregion

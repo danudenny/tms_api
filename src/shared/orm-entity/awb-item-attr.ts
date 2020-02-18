@@ -4,6 +4,7 @@ import { AwbItem } from './awb-item';
 import { BagItem } from './bag-item';
 import { Branch } from './branch';
 import { AwbStatus } from './awb-status';
+import { DoReturnAwb } from './do_return_awb';
 
 @Entity('awb_item_attr', { schema: 'public' })
 export class AwbItemAttr extends BaseEntity {
@@ -158,6 +159,10 @@ export class AwbItemAttr extends BaseEntity {
   @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id_last'})
   bagItemLast: BagItem;
+
+  @OneToOne(() => DoReturnAwb)
+  @JoinColumn({ name: 'awb_status_id_last', referencedColumnName: 'awbNumber'})
+  doReturnAwb: DoReturnAwb;
 
   @OneToOne(() => AwbItem)
   @JoinColumn({ name: 'awb_item_id'})

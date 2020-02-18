@@ -70,9 +70,19 @@ export class RedisService {
     });
   }
 
-  public static setex(key: string, value: string, seconds: number = 10) {
+  public static setex(key: string, value: string, seconds: number = 10, serialize: boolean = false) {
     return new Promise((resolve, reject) => {
-      this.client.setex(key, seconds, value, (err, val) => {
+      let targetValue = value;
+
+      if (serialize) {
+        try {
+          targetValue = JSON.stringify(value, null, 2);
+        } catch (err) {
+          reject(err);
+        }
+      }
+
+      this.client.setex(key, seconds, targetValue, (err, val) => {
         if (err) {
           reject(err);
         } else {

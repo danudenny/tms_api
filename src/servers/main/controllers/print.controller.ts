@@ -8,6 +8,9 @@ import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
 import { PrintService } from '../services/print.service';
 import { ApiUseTags, ApiBearerAuth } from '../../../shared/external/nestjs-swagger';
+import { PrintDoPodService } from '../services/print-do-pod.service';
+import { PrintDoPodBagService } from '../services/print-do-pod-bag.service';
+import { PrintDoPodDeliverService } from '../services/print-do-pod-deliver.service';
 import { PrintDoPodReturnPayloadQueryVm } from '../models/print-do-pod-return.vm';
 import { PrintDoPodDoReturnPayloadQueryVm } from '../models/print-do-pod-do-return.vm';
 
@@ -21,7 +24,7 @@ export class PrintController {
     @Query() queryParams: PrintDoPodPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintService.printDoPodByRequest(serverResponse, queryParams);
+    return PrintDoPodService.printDoPodByRequest(serverResponse, queryParams);
   }
 
   @Get('do-pod-bag')
@@ -31,7 +34,7 @@ export class PrintController {
     @Query() queryParams: PrintDoPodBagPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintService.printDoPodBagByRequest(serverResponse, queryParams);
+    return PrintDoPodBagService.printDoPodBagByRequest(serverResponse, queryParams);
   }
 
   @Get('do-pod-deliver')
@@ -41,7 +44,7 @@ export class PrintController {
     @Query() queryParams: PrintDoPodDeliverPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintService.printDoPodDeliverByRequest(serverResponse, queryParams);
+    return PrintDoPodDeliverService.printDoPodDeliverByRequest(serverResponse, queryParams);
   }
 
   @Get('do-pod-return')
@@ -108,7 +111,7 @@ export class PrintController {
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
   public async printDoPodDoReturnAdmin(
-    @Query() queryParams: PrintDoPodDoReturnPayloadQueryVm,
+    @Query() queryParams: PrintDoPodReturnPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
     return PrintService.printDoPodDoReturnAdminByRequest(serverResponse, queryParams);

@@ -2,12 +2,14 @@ import moment = require('moment');
 import { createQueryBuilder, IsNull } from 'typeorm';
 
 import { AwbStatus } from '../../../../../shared/orm-entity/awb-status';
+import { EmployeeJourney } from '../../../../../shared/orm-entity/employee-journey';
 import { Reason } from '../../../../../shared/orm-entity/reason';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { MobileInitDataResponseVm } from '../../../models/mobile-init-data-response.vm';
-import { EmployeeJourney } from '../../../../../shared/orm-entity/employee-journey';
 import { MobileCheckInResponseVm } from '../../../models/mobile-check-in-response.vm';
+import {
+    MobileInitDataDeliveryResponseVm, MobileInitDataResponseVm,
+} from '../../../models/mobile-init-data-response.vm';
 
 export class V1MobileInitDataService {
 
@@ -23,6 +25,29 @@ export class V1MobileInitDataService {
     result.serverDateTime = new Date().toISOString();
     result.checkIn = await this.getStatusCheckIn(authMeta.employeeId);
 
+    return result;
+  }
+
+  public static async getInitData(
+    fromDate?: string,
+  ): Promise<MobileInitDataResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const result = new MobileInitDataResponseVm();
+
+    result.reason = await this.getReason(fromDate);
+    result.awbStatus = await this.getAwbStatus(fromDate);
+    result.serverDateTime = moment().format();
+    result.checkIn = await this.getStatusCheckIn(authMeta.employeeId);
+
+    return result;
+  }
+
+  public static async getInitDataDelivery(
+    fromDate?: string,
+  ): Promise<MobileInitDataDeliveryResponseVm> {
+    const result = new MobileInitDataResponseVm();
+    result.delivery = await this.getDelivery(fromDate);
+    result.serverDateTime = moment().format();
     return result;
   }
 
@@ -87,6 +112,7 @@ export class V1MobileInitDataService {
     return await qb.getRawMany();
   }
 
+  // private
   private static async getReason(fromDate?: string) {
     const repository = new OrionRepositoryService(Reason);
     const q = repository.findAllRaw();
