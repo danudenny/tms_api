@@ -367,6 +367,67 @@ export class DoPodDetailPostMetaQueueService {
 
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
+
+  public static async createJobV1MobileSync(
+    awbItemId: number,
+    awbStatusId: number,
+    userId: number,
+    branchId: number,
+    userIdCreated: number,
+    employeeIdDriver: number,
+    reasonId: number,
+    descLast: string,
+    consigneeName: string,
+    awbStatusName: string,
+    awbStatusCode: string,
+    historyDate: Date,
+  ) {
+    // TODO: find awbStatusIdLastPublic on awb_status
+    const awbStatusIdLastPublic = AWB_STATUS.ON_PROGRESS;
+    const awbNote = descLast;
+    // TODO: create note internal and note public ??
+    let noteInternal = '';
+    let notePublic = '';
+    let receiverName = '';
+
+    if (awbStatusId == AWB_STATUS.DLV) {
+      // TODO: title case consigneeName
+      receiverName = consigneeName;
+      const reason = await Reason.findOne(reasonId);
+
+      noteInternal = `Paket diterima oleh [${consigneeName} - (${reason.reasonCode}) ${reason.reasonName}]; catatan: ${descLast}`;
+      notePublic = `Paket diterima oleh [${consigneeName} - (${reason.reasonCode}) ${reason.reasonName}]`;
+    } else {
+      let branchName = 'Kantor Pusat';
+      let cityName = 'Jakarta';
+      const branch = await this.getDataBranchCity(branchId);
+      if (branch) {
+        branchName = branch.branchName;
+        cityName = branch.district.city.cityName;
+      }
+      noteInternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${awbStatusName}) ${awbStatusCode}; catatan: ${descLast}`;
+      notePublic = `Paket di kembalikan di ${cityName} [${branchName}] - (${awbStatusName}) ${awbStatusCode}`;
+    }
+
+    // provide data
+    const obj = {
+      awbStatusId,
+      awbStatusIdLastPublic,
+      awbItemId,
+      userId,
+      branchId,
+      userIdCreated,
+      userIdUpdated: userIdCreated,
+      employeeIdDriver,
+      timestamp: moment(historyDate).toDate(),
+      noteInternal,
+      notePublic,
+      receiverName,
+      awbNote,
+    };
+
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
   // #endregion mobile sync data ===============================================
 
   // TODO: need refactoring
