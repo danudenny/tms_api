@@ -131,7 +131,7 @@ export class TrackingAwbResponseVm {
   partnerLogisticAwb: string;
 
   @ApiModelProperty()
-  url: string;
+  recieverPhotoUrl: string;
 
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];

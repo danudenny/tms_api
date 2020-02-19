@@ -38,7 +38,7 @@ export class WebTrackingService {
       result.refRepresentativeCode = data.refRepresentativeCode;
       result.parcelValue = data.parcelValue;
       result.partnerLogisticAwb = data.partnerLogisticAwb;
-      result.url = data.url;
+      result.recieverPhotoUrl = data.recieverPhotoUrl;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -106,7 +106,7 @@ export class WebTrackingService {
         CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
         COALESCE(bg.bagging_code, '') as "baggingCode",
         COALESCE(s.smu_code, '') as "smuCode",
-        at.url as "url"
+        at.url as "recieverPhotoUrl"
       FROM awb a
         INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
