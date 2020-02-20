@@ -38,6 +38,8 @@ export class WebTrackingService {
       result.refRepresentativeCode = data.refRepresentativeCode;
       result.parcelValue = data.parcelValue;
       result.partnerLogisticAwb = data.partnerLogisticAwb;
+      result.doPodDeliverDetailId = data.doPodDeliverDetailId;
+      result.isHasPhotoReceiver = data.doPodDeliverAttachmentId ? true : false;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -104,7 +106,9 @@ export class WebTrackingService {
         a.total_cod_value as "totalCodValue",
         CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
         COALESCE(bg.bagging_code, '') as "baggingCode",
-        COALESCE(s.smu_code, '') as "smuCode"
+        COALESCE(s.smu_code, '') as "smuCode",
+        dpd.do_pod_deliver_detail_id as "doPodDeliverDetailId",
+        dpa.do_pod_deliver_attachment_id as "doPodDeliverAttachmentId"
       FROM awb a
         INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
@@ -125,6 +129,8 @@ export class WebTrackingService {
         LEFT JOIN bag ba ON ba.bag_id = bi.bag_id AND ba.is_deleted = false
         LEFT JOIN bagging bg ON bg.bagging_id = bi.bagging_id_last AND bg.is_deleted = false
         LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
+        LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false
+        LEFT JOIN do_pod_deliver_attachment dpa ON dpa.do_pod_deliver_detail_id = dpd.do_pod_deliver_detail_id AND dpa.is_deleted = false
       WHERE a.awb_number = :awbNumber
       AND a.is_deleted = false LIMIT 1;
     `;
