@@ -13,6 +13,7 @@ import { QueueBullBoard } from './queue-bull-board';
 import { Branch } from '../../../shared/orm-entity/branch';
 import { User } from '../../../shared/orm-entity/user';
 import { Reason } from '../../../shared/orm-entity/reason';
+import { SharedService } from '../../../shared/services/shared.service';
 
 export class DoPodDetailPostMetaQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-history-post-meta', {
@@ -101,13 +102,13 @@ export class DoPodDetailPostMetaQueueService {
     let branchName = 'Kantor Pusat';
     let branchNameNext = 'Pluit';
     let cityName = 'Jakarta';
-    const branch = await this.getDataBranchCity(branchId);
+    const branch = await SharedService.getDataBranchCity(branchId);
     if (branch) {
       branchName = branch.branchName;
-      cityName = branch.district.city.cityName;
+      cityName = branch.district ? branch.district.city.cityName : '';
     }
     // branch next
-    const branchNext = await this.getDataBranchCity(branchIdNext);
+    const branchNext = await SharedService.getDataBranchCity(branchIdNext);
     if (branchNext) {
       branchNameNext = branchNext.branchName;
     }
@@ -281,10 +282,10 @@ export class DoPodDetailPostMetaQueueService {
     // TODO: ONLY IN_HUB IN_BRANCH
     let branchName = 'Kantor Pusat';
     let cityName = 'Jakarta';
-    const branch = await this.getDataBranchCity(branchId);
+    const branch = await SharedService.getDataBranchCity(branchId);
     if (branch) {
       branchName = branch.branchName;
-      cityName = branch.district.city.cityName;
+      cityName = branch.district ? branch.district.city.cityName : '';
     }
     const noteInternal = `Paket telah di terima di ${cityName} [${branchName}]`;
     const notePublic = `Paket telah di terima di ${cityName} [${branchName}]`;
@@ -339,10 +340,10 @@ export class DoPodDetailPostMetaQueueService {
     } else {
       let branchName = 'Kantor Pusat';
       let cityName = 'Jakarta';
-      const branch = await this.getDataBranchCity(branchId);
+      const branch = await SharedService.getDataBranchCity(branchId);
       if (branch) {
         branchName = branch.branchName;
-        cityName = branch.district.city.cityName;
+        cityName = branch.district ? branch.district.city.cityName : '';
       }
       noteInternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${awbStatusName}) ${awbStatusCode}; catatan: ${descLast}`;
       notePublic = `Paket di kembalikan di ${cityName} [${branchName}] - (${awbStatusName}) ${awbStatusCode}`;
@@ -400,10 +401,10 @@ export class DoPodDetailPostMetaQueueService {
     } else {
       let branchName = 'Kantor Pusat';
       let cityName = 'Jakarta';
-      const branch = await this.getDataBranchCity(branchId);
+      const branch = await SharedService.getDataBranchCity(branchId);
       if (branch) {
         branchName = branch.branchName;
-        cityName = branch.district.city.cityName;
+        cityName = branch.district ? branch.district.city.cityName : '';
       }
       noteInternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${awbStatusName}) ${awbStatusCode}; catatan: ${descLast}`;
       notePublic = `Paket di kembalikan di ${cityName} [${branchName}] - (${awbStatusName}) ${awbStatusCode}`;
@@ -500,12 +501,12 @@ export class DoPodDetailPostMetaQueueService {
       } else {
         let branchName = 'Kantor Pusat';
         let cityName = 'Jakarta';
-        const branch = await this.getDataBranchCity(
+        const branch = await SharedService.getDataBranchCity(
           doPodDetailDeliver.doPodDeliver.branchId,
         );
         if (branch) {
           branchName = branch.branchName;
-          cityName = branch.district.city.cityName;
+          cityName = branch.district ? branch.district.city.cityName : '';
         }
         noteInternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${doPodDetailDeliver.awbStatus.awbStatusName}) ${doPodDetailDeliver.awbStatus.awbStatusTitle}; catatan: ${desc}`;
         notePublic = `Paket di kembalikan di ${cityName} [${branchName}] - (${doPodDetailDeliver.awbStatus.awbStatusName}) ${doPodDetailDeliver.awbStatus.awbStatusTitle}`;
@@ -573,10 +574,10 @@ export class DoPodDetailPostMetaQueueService {
       } else {
         let branchName = 'Kantor Pusat';
         let cityName = 'Jakarta';
-        const branch = await this.getDataBranchCity(branchId);
+        const branch = await SharedService.getDataBranchCity(branchId);
         if (branch) {
           branchName = branch.branchName;
-          cityName = branch.district.city.cityName;
+          cityName = branch.district ? branch.district.city.cityName : '';
         }
         noteInternal = `Paket di kembalikan di ${cityName} [${branchName}] - (${
           awbStatusName
@@ -631,12 +632,12 @@ export class DoPodDetailPostMetaQueueService {
 
     let branchName = 'Kantor Pusat';
     let cityName = 'Jakarta';
-    const branch = await this.getDataBranchCity(
+    const branch = await SharedService.getDataBranchCity(
       branchId,
     );
     if (branch) {
       branchName = branch.branchName;
-      cityName = branch.district.city.cityName;
+      cityName = branch.district ? branch.district.city.cityName : '';
     }
     const awbStatus = await this.getDataAwbStatus(awbStatusId);
     if (awbStatus) {
@@ -728,10 +729,10 @@ export class DoPodDetailPostMetaQueueService {
   ) {
     let branchName = 'Kantor Pusat';
     let cityName = 'Jakarta';
-    const branch = await this.getDataBranchCity(branchId);
+    const branch = await SharedService.getDataBranchCity(branchId);
     if (branch) {
       branchName = branch.branchName;
-      cityName = branch.district.city.cityName;
+      cityName = branch.district ? branch.district.city.cityName : '';
     }
     const noteInternal = `Paket telah di terima di ${cityName} [${branchName}]`;
     const notePublic = `Paket telah di terima di ${cityName} [${branchName}]`;
@@ -781,26 +782,4 @@ export class DoPodDetailPostMetaQueueService {
     return awbStatus;
   }
 
-  private static async getDataBranchCity(branchId: number): Promise<Branch> {
-    const branchRepository = new OrionRepositoryService(Branch);
-    const q = branchRepository.findOne();
-    // Manage relation (default inner join)
-    q.leftJoin(e => e.district);
-
-    q.select({
-      branchId: true,
-      branchCode: true,
-      branchName: true,
-      districtId: true,
-      district: {
-        cityId: true,
-        city: {
-          cityName: true,
-        },
-      },
-    });
-    q.where(e => e.branchId, w => w.equals(branchId));
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-    return await q.exec();
-  }
 }

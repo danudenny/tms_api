@@ -69,7 +69,7 @@ export class BagScanOutBranchQueueService {
         const branch = await SharedService.getDataBranchCity(data.branchId);
         if (branch) {
           branchName = branch.branchName;
-          cityName = branch.district.city.cityName;
+          cityName = branch.district ? branch.district.city.cityName : '';
         }
         // branch next
         const branchNext = await SharedService.getDataBranchCity(
