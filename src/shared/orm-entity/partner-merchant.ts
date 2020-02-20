@@ -48,6 +48,12 @@ export class PartnerMerchant extends TmsBaseEntity {
 
   @Column('character varying', {
     length: 255,
+    name: 'encrypt_address',
+  })
+  encryptAddress: string;
+
+  @Column('character varying', {
+    length: 255,
     name: 'merchant_email',
   })
   merchantEmail: string;
