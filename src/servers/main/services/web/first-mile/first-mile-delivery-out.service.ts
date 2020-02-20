@@ -89,39 +89,39 @@ export class FirstMileDeliveryOutService {
 
     // TODO: Query and populate result printDoPodMetadata, printDoPodBagMetadata, and printDoPodDeliverMetadata based on do pod type
 
-    // query for get Employee
-    const repo = new OrionRepositoryService(Employee, 't1');
-    const q = repo.findAllRaw();
+    // // query for get Employee
+    // const repo = new OrionRepositoryService(Employee, 't1');
+    // const q = repo.findAllRaw();
 
-    q.selectRaw(
-      [
-        't1.nik',
-        'nik',
-      ],
-      ['t1.nickname', 'nickname'],
-    );
+    // q.selectRaw(
+    //   [
+    //     't1.nik',
+    //     'nik',
+    //   ],
+    //   ['t1.nickname', 'nickname'],
+    // );
 
-    q.innerJoin(e => e.user, 't2');
-    q.where(
-      e => e.user.userId,
-      w => w.equals(payload.userIdDriver),
-    );
-    const dataUser = await q.exec();
+    // q.innerJoin(e => e.user, 't2');
+    // q.where(
+    //   e => e.user.userId,
+    //   w => w.equals(payload.userIdDriver),
+    // );
+    // const dataUser = await q.exec();
 
-    // query for get BranchTo
-    const branchData = await Branch.findOne({
-      where: {
-        branchId: payload.branchIdTo,
-      },
-    });
+    // // query for get BranchTo
+    // const branchData = await Branch.findOne({
+    //   where: {
+    //     branchId: payload.branchIdTo,
+    //   },
+    // });
 
-    // For printDoPodBagMetadata and printDoPodMetadata
-    result.printDoPodBagMetadata.doPodCode = doPod.doPodCode;
-    result.printDoPodBagMetadata.description = payload.desc;
-    result.printDoPodBagMetadata.userDriver.employee.nik = dataUser[0].nik;
-    result.printDoPodBagMetadata.userDriver.employee.nickname = dataUser[0].nickname;
-    result.printDoPodBagMetadata.vehicleNumber = payload.vehicleNumber;
-    result.printDoPodBagMetadata.branchTo.branchName = branchData.branchName;
+    // // For printDoPodBagMetadata and printDoPodMetadata
+    // result.printDoPodBagMetadata.doPodCode = doPod.doPodCode;
+    // result.printDoPodBagMetadata.description = payload.desc;
+    // result.printDoPodBagMetadata.userDriver.employee.nik = dataUser[0].nik;
+    // result.printDoPodBagMetadata.userDriver.employee.nickname = dataUser[0].nickname;
+    // result.printDoPodBagMetadata.vehicleNumber = payload.vehicleNumber;
+    // result.printDoPodBagMetadata.branchTo.branchName = branchData.branchName;
 
     return result;
   }
@@ -482,17 +482,17 @@ export class FirstMileDeliveryOutService {
             doPodDetail.scanOutType = 'awb';
             await DoPodDetail.save(doPodDetail);
 
-            // Assign print metadata - Scan Out & Deliver
-            response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
-            response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
+            // // Assign print metadata - Scan Out & Deliver
+            // response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
+            // response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
+            // response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
 
-            // Assign print metadata - Deliver
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber = awb.awbItem.awb.consigneeNumber;
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
-            response.printDoPodDetailMetadata.awbItem.awb.isCod = awb.awbItem.awb.isCod;
-            response.printDoPodDetailMetadata.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
+            // // Assign print metadata - Deliver
+            // response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
+            // response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber = awb.awbItem.awb.consigneeNumber;
+            // response.printDoPodDetailMetadata.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
+            // response.printDoPodDetailMetadata.awbItem.awb.isCod = awb.awbItem.awb.isCod;
+            // response.printDoPodDetailMetadata.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
 
             // AFTER Scan OUT ===============================================
             // #region after scanout
@@ -644,12 +644,12 @@ export class FirstMileDeliveryOutService {
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
             await DoPodDetailBag.insert(doPodDetailBag);
 
-            // Assign print metadata
-            response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
-            response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
-            response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
-            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagNumber;
-            response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
+            // // Assign print metadata
+            // response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
+            // response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
+            // response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
+            // response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagNumber;
+            // response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
 
             // AFTER Scan OUT ===============================================
             // #region after scanout

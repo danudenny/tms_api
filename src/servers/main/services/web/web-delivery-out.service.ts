@@ -131,39 +131,39 @@ export class WebDeliveryOutService {
     result.message = 'success';
     result.doPodId = doPod.doPodId;
 
-    // query for get Employee
-    const repo = new OrionRepositoryService(Employee, 't1');
-    const q = repo.findAllRaw();
+    // // query for get Employee
+    // const repo = new OrionRepositoryService(Employee, 't1');
+    // const q = repo.findAllRaw();
 
-    q.selectRaw(
-      [
-        't1.nik',
-        'nik',
-      ],
-      ['t1.nickname', 'nickname'],
-    );
+    // q.selectRaw(
+    //   [
+    //     't1.nik',
+    //     'nik',
+    //   ],
+    //   ['t1.nickname', 'nickname'],
+    // );
 
-    q.innerJoin(e => e.user, 't2');
-    q.where(
-      e => e.user.userId,
-      w => w.equals(payload.userIdDriver),
-    );
-    const dataUser = await q.exec();
+    // q.innerJoin(e => e.user, 't2');
+    // q.where(
+    //   e => e.user.userId,
+    //   w => w.equals(payload.userIdDriver),
+    // );
+    // const dataUser = await q.exec();
 
-    // query for get BranchTo
-    const branchData = await Branch.findOne({
-      where: {
-        branchId: payload.branchIdTo,
-      },
-    });
+    // // query for get BranchTo
+    // const branchData = await Branch.findOne({
+    //   where: {
+    //     branchId: payload.branchIdTo,
+    //   },
+    // });
 
-    // For printDoPodBagMetadata and printDoPodMetadata
-    result.printDoPodBagMetadata.doPodCode = doPod.doPodCode;
-    result.printDoPodBagMetadata.description = payload.desc;
-    result.printDoPodBagMetadata.userDriver.employee.nik = dataUser[0].nik;
-    result.printDoPodBagMetadata.userDriver.employee.nickname = dataUser[0].nickname;
-    result.printDoPodBagMetadata.vehicleNumber = payload.vehicleNumber;
-    result.printDoPodBagMetadata.branchTo.branchName = branchData.branchName;
+    // // For printDoPodBagMetadata and printDoPodMetadata
+    // result.printDoPodBagMetadata.doPodCode = doPod.doPodCode;
+    // result.printDoPodBagMetadata.description = payload.desc;
+    // result.printDoPodBagMetadata.userDriver.employee.nik = dataUser[0].nik;
+    // result.printDoPodBagMetadata.userDriver.employee.nickname = dataUser[0].nickname;
+    // result.printDoPodBagMetadata.vehicleNumber = payload.vehicleNumber;
+    // result.printDoPodBagMetadata.branchTo.branchName = branchData.branchName;
 
     return result;
   }
