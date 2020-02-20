@@ -813,6 +813,10 @@ export class FirstMileDeliveryOutService {
             // TODO: Update Status awb on bag(In Branch) ??
 
             totalSuccess += 1;
+          } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Gabung paket ${bagNumber} belum dibuatkan Surat Jalan`;
           }
         }
 
