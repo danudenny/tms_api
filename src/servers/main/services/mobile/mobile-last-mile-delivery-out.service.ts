@@ -55,30 +55,46 @@ export class LastMileDeliveryOutService {
     qb.addSelect( 'awb.consignee_phone', 'consigneePhone');
     qb.addSelect( 'awb.total_cod_value', 'totalCodValue');
     qb.addSelect( 'pt.package_type_code', 'service');
+    qb.addSelect( 'aia.awb_status_id_last', 'awbLastStatus');
 
     qb.from('awb', 'awb');
     qb.innerJoin(
       'package_type',
       'pt',
-      'pt.package_type_id = awb.package_type_id'
+      'pt.package_type_id = awb.package_type_id AND pt.is_deleted = false'
       );
     qb.innerJoin('do_pod_detail',
       'dpd',
-      'dpd.awb_number = awb.awb_number'
+      'dpd.awb_number = awb.awb_number AND dpd.is_deleted = false'
       );
     qb.innerJoin(
-        'do_pod',
-        'dp',
-        'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
-      );
+      'do_pod',
+      'dp',
+      'dp.do_pod_id = dpd.do_pod_id AND AND dp.is_deleted = false AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+    );
+    qb.leftJoin(
+      'awb_item_attr',
+      'aia',
+      'aia.awb_id = awb.awb_id AND AND aia.is_deleted = false'
+    );
+    qb.andWhere('awb.is_deleted = false');
     qb.andWhere('awb.awb_number = :awbNumber',
     {
       awbNumber: payload.scanValue
     });
     const resultQuery = await qb.getRawOne();
+
     const response = new ScanAwbVm();
 
     if(resultQuery){
+      if(resultQuery.awbLastStatus != AWB_STATUS.IN_BRANCH){
+        response.awbNumber = payload.scanValue;
+        response.status = 'error';
+        response.message = 'Silahkan Scan masuk terlebih dahulu';
+        response.trouble = true;
+        result.data = response;
+        return result;
+      }
       // Create Delivery Do POD (surat jalan antar)
       const res = await this.createDeliveryDoPod(payload);
 
