@@ -88,11 +88,16 @@ export class LastMileDeliveryOutService {
     const response = new ScanAwbVm();
 
     if(resultQuery){
-      if(resultQuery.awbLastStatus != AWB_STATUS.IN_BRANCH){
-        response.awbNumber = payload.scanValue;
-        response.status = 'error';
+      response.status = 'error';
+      response.awbNumber = payload.scanValue;
+      response.trouble = true;
+
+      if(resultQuery.awbLastStatus == AWB_STATUS.ANT){
+        response.message = `Resi ${awbNumber} sudah di proses.`;
+        result.data = response;
+        return result;
+      }else if(resultQuery.awbLastStatus != AWB_STATUS.IN_BRANCH){
         response.message = `Resi ${awbNumber} belum di Scan In`;
-        response.trouble = true;
         result.data = response;
         return result;
       }
