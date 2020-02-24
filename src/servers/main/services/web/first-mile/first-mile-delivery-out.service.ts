@@ -115,13 +115,22 @@ export class FirstMileDeliveryOutService {
       },
     });
 
-    // For printDoPodBagMetadata and printDoPodMetadata
-    result.printDoPodBagMetadata.doPodCode = doPod.doPodCode;
-    result.printDoPodBagMetadata.description = payload.desc;
-    result.printDoPodBagMetadata.userDriver.employee.nik = dataUser[0].nik;
-    result.printDoPodBagMetadata.userDriver.employee.nickname = dataUser[0].nickname;
-    result.printDoPodBagMetadata.vehicleNumber = payload.vehicleNumber;
-    result.printDoPodBagMetadata.branchTo.branchName = branchData.branchName;
+    if (payload.doPodType === 3015) {
+      result.printDoPodMetadata.doPodCode = '' + payload.doPodType;
+      result.printDoPodMetadata.branchTo.branchName = branchData.branchName;
+      result.printDoPodMetadata.description = payload.desc;
+      result.printDoPodMetadata.vehicleNumber = payload.vehicleNumber;
+      result.printDoPodMetadata.userDriver.employee.nik = dataUser[0].nik;
+      result.printDoPodMetadata.userDriver.employee.nickname = dataUser[0].nickname;
+    } else {
+      // For printDoPodBagMetadata and printDoPodMetadata
+      result.printDoPodBagMetadata.doPodCode = doPod.doPodCode;
+      result.printDoPodBagMetadata.description = payload.desc;
+      result.printDoPodBagMetadata.userDriver.employee.nik = dataUser[0].nik;
+      result.printDoPodBagMetadata.userDriver.employee.nickname = dataUser[0].nickname;
+      result.printDoPodBagMetadata.vehicleNumber = payload.vehicleNumber;
+      result.printDoPodBagMetadata.branchTo.branchName = branchData.branchName;
+    }
 
     return result;
   }
