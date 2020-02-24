@@ -83,30 +83,30 @@ export class LastMileDeliveryOutService {
     result.message = 'success';
     result.doPodId = doPod.doPodDeliverId;
 
-    // // query for get Employee
-    // const repo = new OrionRepositoryService(Employee, 't1');
-    // const q = repo.findAllRaw();
+    // query for get Employee
+    const repo = new OrionRepositoryService(Employee, 't1');
+    const q = repo.findAllRaw();
 
-    // q.selectRaw(
-    //   [
-    //     't1.nik',
-    //     'nik',
-    //   ],
-    //   ['t1.nickname', 'nickname'],
-    // );
+    q.selectRaw(
+      [
+        't1.nik',
+        'nik',
+      ],
+      ['t1.nickname', 'nickname'],
+    );
 
-    // q.innerJoin(e => e.user, 't2');
-    // q.where(
-    //   e => e.user.userId,
-    //   w => w.equals(payload.userIdDriver),
-    // );
-    // const dataUser = await q.exec();
+    q.innerJoin(e => e.user, 't2');
+    q.where(
+      e => e.user.userId,
+      w => w.equals(payload.userIdDriver),
+    );
+    const dataUser = await q.exec();
 
-    // // For printDoPodDeliverMetadata
-    // result.printDoPodDeliverMetadata.doPodDeliverCode = doPod.doPodDeliverCode;
-    // result.printDoPodDeliverMetadata.description = payload.desc;
-    // result.printDoPodDeliverMetadata.userDriver.employee.nik = dataUser[0].nik;
-    // result.printDoPodDeliverMetadata.userDriver.employee.nickname = dataUser[0].nickname;
+    // For printDoPodDeliverMetadata
+    result.printDoPodDeliverMetadata.doPodDeliverCode = doPod.doPodDeliverCode;
+    result.printDoPodDeliverMetadata.description = payload.desc;
+    result.printDoPodDeliverMetadata.userDriver.employee.nik = dataUser[0].nik;
+    result.printDoPodDeliverMetadata.userDriver.employee.nickname = dataUser[0].nickname;
 
     return result;
   }
