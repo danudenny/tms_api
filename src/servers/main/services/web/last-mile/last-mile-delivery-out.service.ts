@@ -381,17 +381,17 @@ export class LastMileDeliveryOutService {
                 doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
                 await DoPodDeliverDetail.insert(doPodDeliverDetail);
 
-                // // Assign print metadata - Scan Out & Deliver
-                // response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
-                // response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
-                // response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
+                // Assign print metadata - Scan Out & Deliver
+                response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
+                response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
+                response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
 
-                // // Assign print metadata - Deliver
-                // response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
-                // response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber = awb.awbItem.awb.consigneeNumber;
-                // response.printDoPodDetailMetadata.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
-                // response.printDoPodDetailMetadata.awbItem.awb.isCod = awb.awbItem.awb.isCod;
-                // response.printDoPodDetailMetadata.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
+                // Assign print metadata - Deliver
+                response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
+                response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber = awb.awbItem.awb.consigneeNumber;
+                response.printDoPodDetailMetadata.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
+                response.printDoPodDetailMetadata.awbItem.awb.isCod = awb.awbItem.awb.isCod;
+                response.printDoPodDetailMetadata.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
 
                 // TODO: need improvement counter total scan out
                 const totalAwb = doPodDeliver.totalAwb + 1;
