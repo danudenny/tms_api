@@ -38,6 +38,7 @@ export class PrintDoPodService {
             awb: {
               awbNumber: true,
               consigneeName: true,
+              totalWeight: true,
             },
           },
         },

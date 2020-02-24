@@ -6,6 +6,9 @@ export class PrintDoPodDataDoPodDetailAwbItemAwbVm {
 
   @ApiModelProperty()
   consigneeName: string;
+
+  @ApiModelProperty()
+  totalWeight: string;
 }
 
 export class PrintDoPodDataDoPodDetailAwbItemVm {
