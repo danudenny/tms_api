@@ -116,7 +116,7 @@ export class FirstMileDeliveryOutService {
     });
 
     if (payload.doPodType === 3015) {
-      result.printDoPodMetadata.doPodCode = '' + payload.doPodType;
+      result.printDoPodMetadata.doPodCode = doPod.doPodCode;
       result.printDoPodMetadata.branchTo.branchName = branchData.branchName;
       result.printDoPodMetadata.description = payload.desc;
       result.printDoPodMetadata.vehicleNumber = payload.vehicleNumber;
