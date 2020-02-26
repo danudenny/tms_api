@@ -653,12 +653,12 @@ export class FirstMileDeliveryOutService {
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
             await DoPodDetailBag.insert(doPodDetailBag);
 
-            // // Assign print metadata
-            // response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
-            // response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
-            // response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
-            // response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagNumber;
-            // response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
+            // Assign print metadata
+            response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
+            response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
+            response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
+            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagNumber;
+            response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
 
             // AFTER Scan OUT ===============================================
             // #region after scanout
