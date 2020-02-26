@@ -46,7 +46,8 @@ export class PrintDoPodDeliverService {
           },
         },
       })
-      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id));
+      .where(e => e.doPodDeliverId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDeliverDetails.isDeleted, w => w.isFalse());
 
     if (!doPodDeliver) {
       RequestErrorService.throwObj({
