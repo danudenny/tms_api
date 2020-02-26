@@ -77,9 +77,10 @@ export class PrintDoPodBagService {
       printCopy: 1,
     },
   ) {
-    const bagItemIds = map(data.doPodDetailBag, doPodDetail => doPodDetail.bagItem.bagItemId);
-    const result = await RawQueryService.query(`SELECT COUNT(1) as cnt FROM bag_item WHERE bag_item_id IN (${bagItemIds.join(',')})`);
-    const totalBagItem = result[0].cnt;
+    // const bagItemIds = map(data.doPodDetailBag, doPodDetail => doPodDetail.bagItem.bagItemId);
+    // const result = await RawQueryService.query(`SELECT COUNT(1) as cnt FROM bag_item WHERE bag_item_id IN (${bagItemIds.join(',')})`);
+    // const totalBagItem = result[0].cnt;
+    const totalBagItem = data.doPodDetailBag.length;
 
     const currentUser = await RepositoryService.user
       .loadById(metaQuery.userId)
