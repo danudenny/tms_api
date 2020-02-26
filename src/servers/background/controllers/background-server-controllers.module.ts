@@ -8,6 +8,7 @@ import { PartnerController } from './integration/partner.controller';
 import { PartnerGojekController } from './integration/partner.gojek.controller';
 import { DoReturnController } from './integration/do-return.controller';
 import { PartnerMerchantController } from './integration/partner-merchant.controller';
+import { MasterDataController } from './integration/masterdata.controller';
 
 @Module({
   imports: [SharedModule, BackgroundServerServicesModule],
@@ -18,6 +19,7 @@ import { PartnerMerchantController } from './integration/partner-merchant.contro
     PartnerGojekController,
     DoReturnController,
     PartnerMerchantController,
+    MasterDataController,
   ],
 })
 export class BackgroundServerControllersModule {}
