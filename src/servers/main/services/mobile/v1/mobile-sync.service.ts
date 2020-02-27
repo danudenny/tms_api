@@ -1,37 +1,60 @@
+// #region import
 import { last } from 'lodash';
-import { EntityManager, getManager, LessThan, MoreThan } from 'typeorm';
-import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
-import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
-import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
-import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
-import { DoPodDeliverHistory } from '../../../../shared/orm-entity/do-pod-deliver-history';
-import { DoPodDeliverAttachment } from '../../../../shared/orm-entity/do_pod_deliver_attachment';
-import { AttachmentService } from '../../../../shared/services/attachment.service';
-import { DeliveryService } from '../../../../shared/services/delivery.service';
+import { getManager, LessThan, MoreThan } from 'typeorm';
+
+import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
+import { AttachmentTms } from '../../../../../shared/orm-entity/attachment-tms';
+import { AwbStatus } from '../../../../../shared/orm-entity/awb-status';
+import { DoPodDeliver } from '../../../../../shared/orm-entity/do-pod-deliver';
+import { DoPodDeliverDetail } from '../../../../../shared/orm-entity/do-pod-deliver-detail';
+import { DoPodDeliverHistory } from '../../../../../shared/orm-entity/do-pod-deliver-history';
+import { DoPodDeliverAttachment } from '../../../../../shared/orm-entity/do_pod_deliver_attachment';
+import { AttachmentService } from '../../../../../shared/services/attachment.service';
 import {
     DoPodDetailPostMetaQueueService,
-} from '../../../queue/services/do-pod-detail-post-meta-queue.service';
-import { MobileDeliveryVm } from '../../models/mobile-delivery.vm';
-import { MobileSyncImagePayloadVm, MobileSyncPayloadVm } from '../../models/mobile-sync-payload.vm';
-import { MobileSyncImageResponseVm } from '../../models/mobile-sync-response.vm';
-import { MobileInitDataService } from './mobile-init-data.service';
-import moment = require('moment');
-import { AwbService } from '../v1/awb.service';
-import { RedisService } from '../../../../shared/services/redis.service';
-import { V1MobileInitDataService } from './v1/mobile-init-data.service';
+} from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { MobileDeliveryVm } from '../../../models/mobile-delivery.vm';
+import {
+    MobileSyncImagePayloadVm, MobileSyncPayloadVm,
+} from '../../../models/mobile-sync-payload.vm';
+import { MobileSyncImageResponseVm, MobileSyncDataResponseVm, MobileSyncAwbVm } from '../../../models/mobile-sync-response.vm';
 
-export class MobileSyncService {
-  public static async syncByRequest(payload: MobileSyncPayloadVm) {
+import moment = require('moment');
+import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
+// #endregion
+
+export class V1MobileSyncService {
+
+  public static async syncByRequest(
+    payload: MobileSyncPayloadVm,
+  ): Promise<MobileSyncDataResponseVm> {
+    const result = new MobileSyncDataResponseVm();
+    const dataItem: MobileSyncAwbVm [] = [];
     for (const delivery of payload.deliveries) {
-      await this.syncDeliver(delivery);
+      const response = {
+        process: false,
+        message: 'Data Not Valid',
+      };
+      const process = await this.syncDeliver(delivery);
+      if (process) {
+        response.process = process;
+        response.message = 'Success';
+      }
+
+      // push item
+      dataItem.push({
+        awbNumber: delivery.awbNumber,
+        ...response,
+      });
     }
-    return V1MobileInitDataService.getInitDataByRequest(payload.lastSyncDateTime);
+
+    result.data = dataItem;
+    return result;
   }
 
   public static async syncDeliver(delivery: MobileDeliveryVm) {
     const doPodDeliverHistories: DoPodDeliverHistory[] = [];
-
+    let process = false;
     for (const deliveryHistory of delivery.deliveryHistory) {
       if (!deliveryHistory.doPodDeliverHistoryId) {
         const doPodDeliverHistory = DoPodDeliverHistory.create({
@@ -52,8 +75,14 @@ export class MobileSyncService {
 
     if (doPodDeliverHistories.length) {
       const lastDoPodDeliverHistory = last(doPodDeliverHistories);
+      // NOTE: check data timestamp and time server
+      // handle time status offline
+      const historyDateTime =
+        lastDoPodDeliverHistory.awbStatusDateTime <
+        lastDoPodDeliverHistory.syncDateTime
+          ? lastDoPodDeliverHistory.awbStatusDateTime
+          : lastDoPodDeliverHistory.syncDateTime;
 
-      // TODO: validation check final status last
       const awbdDelivery = await DoPodDeliverDetail.findOne({
         relations: ['doPodDeliver'],
         where: {
@@ -90,7 +119,7 @@ export class MobileSyncService {
               updatedTime: moment().toDate(),
             },
           );
-          // TODO: validation DoPodDeliver
+
           const doPodDeliver = await DoPodDeliver.findOne({
             where: {
               doPodDeliverId: delivery.doPodDeliverId,
@@ -98,7 +127,7 @@ export class MobileSyncService {
             },
           });
           if (doPodDeliver) {
-            // TODO: check current awb status only ANT and problem increment totalProblem
+
             if (awbStatus.isProblem) {
               await transactionEntityManager.increment(
                 DoPodDeliver,
@@ -134,8 +163,8 @@ export class MobileSyncService {
         });
         // #endregion of transaction
 
-        // TODO: queue by Bull need refactoring
-        DoPodDetailPostMetaQueueService.createJobByMobileSync(
+        // NOTE: queue by Bull
+        DoPodDetailPostMetaQueueService.createJobV1MobileSync(
           awbdDelivery.awbItemId,
           delivery.awbStatusId,
           awbdDelivery.doPodDeliver.userId,
@@ -147,11 +176,14 @@ export class MobileSyncService {
           delivery.consigneeNameNote,
           awbStatus.awbStatusName,
           awbStatus.awbStatusTitle,
+          historyDateTime,
         );
+        process = true;
       } else {
-        console.log('##### Data Not Valid', delivery);
+        PinoLoggerService.log('##### Data Not Valid', delivery);
       }
     } // end of doPodDeliverHistories.length
+    return process;
   }
 
   public static async syncImage(

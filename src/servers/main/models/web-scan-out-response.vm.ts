@@ -1,6 +1,12 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 import { ItemDeliveryResponseVm } from './web-delivery-list-response.vm';
+import {
+  PrintDoPodDataBranchToVm, PrintDoPodDataDoPodDetailVm, PrintDoPodDataUserDriverEmployeeVm,
+  PrintDoPodDataUserDriverVm, PrintDoPodDataVm,
+} from './print-do-pod.vm';
+import { PrintDoPodBagDataDoPodDetailBagVm, PrintDoPodBagDataVm } from './print-do-pod-bag.vm';
+import { PrintDoPodDeliverDataDoPodDeliverDetailVm, PrintDoPodDeliverDataVm } from './print-do-pod-deliver.vm';
 
 // Scan Out Awb List
 export class WebScanInResponseVm {
@@ -251,6 +257,15 @@ export class WebScanOutCreateResponseVm {
 
   @ApiModelProperty()
   doPodId: string;
+
+  @ApiModelProperty({ type: () => PrintDoPodDataVm })
+  printDoPodMetadata: PrintDoPodDataVm = new PrintDoPodDataVm();
+
+  @ApiModelProperty({ type: () => PrintDoPodBagDataVm })
+  printDoPodBagMetadata: PrintDoPodBagDataVm = new PrintDoPodBagDataVm();
+
+  @ApiModelProperty({ type: () => PrintDoPodDeliverDataVm })
+  printDoPodDeliverMetadata: PrintDoPodDeliverDataVm = new PrintDoPodDeliverDataVm();
 }
 
 // Scan Out Awb
@@ -266,6 +281,10 @@ export class ScanAwbVm {
 
   @ApiModelProperty()
   message: string;
+
+  // Use PrintDoPodDeliverDataVm rather than PrintDoPodDataVm, the current implementation of create scan out & create scan out deliver is on the same source
+  @ApiModelPropertyOptional({ type: () => PrintDoPodDeliverDataDoPodDeliverDetailVm })
+  printDoPodDetailMetadata?: PrintDoPodDeliverDataDoPodDeliverDetailVm = new PrintDoPodDeliverDataDoPodDeliverDetailVm();
 }
 
 export class WebScanOutAwbResponseVm {
@@ -297,6 +316,9 @@ export class ScanBagVm {
 
   @ApiModelProperty()
   message: string;
+
+  @ApiModelPropertyOptional({ type: () => PrintDoPodBagDataDoPodDetailBagVm })
+  printDoPodDetailBagMetadata?: PrintDoPodBagDataDoPodDetailBagVm = new PrintDoPodBagDataDoPodDetailBagVm();
 }
 
 export class WebScanOutBagResponseVm {

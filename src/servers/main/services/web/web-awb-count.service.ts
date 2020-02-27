@@ -408,38 +408,41 @@ export class WebAwbCountService {
               },
             });
 
-            // insert DropOffSortationDetail
-            const dropoffSortationDetail = DropoffSortationDetail.create();
-            dropoffSortationDetail.dropoffSortationId = dropOffId;
-            dropoffSortationDetail.awbId = awbAttr.awbId;
-            dropoffSortationDetail.awbItemId = data.awbItemId;
-            dropoffSortationDetail.awbNumber = data.awbNumber;
-            dropoffSortationDetail.userIdUpdated = authMeta.userId;
-            dropoffSortationDetail.updatedTime = timeNow;
-            dropoffSortationDetail.userIdCreated = authMeta.userId;
-            dropoffSortationDetail.createdTime = timeNow;
-            dropoffSortationDetail.isDeleted = false;
-            await DropoffSortationDetail.save(dropoffSortationDetail);
+            if (awbAttr) {
+              // insert DropOffSortationDetail
+              const dropoffSortationDetail = DropoffSortationDetail.create();
+              dropoffSortationDetail.dropoffSortationId = dropOffId;
+              dropoffSortationDetail.awbId = awbAttr.awbId;
+              dropoffSortationDetail.awbItemId = data.awbItemId;
+              dropoffSortationDetail.awbNumber = data.awbNumber;
+              dropoffSortationDetail.userIdUpdated = authMeta.userId;
+              dropoffSortationDetail.updatedTime = timeNow;
+              dropoffSortationDetail.userIdCreated = authMeta.userId;
+              dropoffSortationDetail.createdTime = timeNow;
+              dropoffSortationDetail.isDeleted = false;
+              await DropoffSortationDetail.save(dropoffSortationDetail);
+              // TODO: to be fix
+              // const awbItemAttr = await AwbItemAttr.findOne({
+              //   where: {
+              //     awbItemId: data.awbItemId,
+              //   },
+              // });
+              // // update status AwbItemAttr
+              // awbItemAttr.awbStatusIdLast = 2600;
+              // awbItemAttr.updatedTime = timeNow;
+              // await AwbItemAttr.save(awbItemAttr);
 
-            // TODO: to be fix
-            // const awbItemAttr = await AwbItemAttr.findOne({
-            //   where: {
-            //     awbItemId: data.awbItemId,
-            //   },
-            // });
-            // // update status AwbItemAttr
-            // awbItemAttr.awbStatusIdLast = 2600;
-            // awbItemAttr.updatedTime = timeNow;
-            // await AwbItemAttr.save(awbItemAttr);
-
-            // add awb history with background process
-            DoPodDetailPostMetaQueueService.createJobByDoSortBag(
-              data.awbItemId,
-              permissonPayload.branchId,
-              authMeta.userId,
-            );
+              // add awb history with background process
+              DoPodDetailPostMetaQueueService.createJobByDoSortBag(
+                data.awbItemId,
+                permissonPayload.branchId,
+                authMeta.userId,
+              );
+            } else {
+              response.status = 'error';
+              response.message = `Resi "${data.awbNumber}" Tidak Ditemukan !`;
+            }
           });
-
           // #endregion after scanin
 
           // remove key holdRedis

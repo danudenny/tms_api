@@ -7,11 +7,11 @@ import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
 import { PrintBagItemPayloadQueryVm, PrintAwbPayloadQueryVm } from '../models/print-bag-item-payload.vm';
-import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
 import { PrintDoPodReturnPayloadQueryVm } from '../models/print-do-pod-return.vm';
 import { PrintDoPodDoReturnPayloadQueryVm } from '../models/print-do-pod-do-return.vm';
+import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.vm';
 
 export class PrintService {
   public static async printDoPodByRequest(
@@ -725,17 +725,6 @@ export class PrintService {
         });
       }
 
-      const m = moment();
-      const jsreportParams = {
-        data: awbItem,
-        meta: {
-          currentUserName: currentUser.employee.nickname,
-          currentBranchName: currentBranch.branchName,
-          date: m.format('DD/MM/YY'),
-          time: m.format('HH:mm'),
-        },
-      };
-
       let data1 = `TEXT 30,100,"3",0,1,1,"Pengirim : ${awbItem.branch.branchName}"\n` +
       `TEXT 30,135,"3",0,1,1,"Telp : ${awbItem.branch.phone1}"\n`;
       let addX = 170;
@@ -858,17 +847,6 @@ export class PrintService {
           message: 'Gerai asal tidak ditemukan',
         });
       }
-
-      const m = moment();
-      const jsreportParams = {
-        data: awbItem,
-        meta: {
-          currentUserName: currentUser.employee.nickname,
-          currentBranchName: currentBranch.branchName,
-          date: m.format('DD/MM/YY'),
-          time: m.format('HH:mm'),
-        },
-      };
 
       const consZip = awbItem.consigneeZip.substring((awbItem.consigneeZip.length - 3), awbItem.consigneeZip.length);
       let data1 = '';
