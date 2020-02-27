@@ -36,6 +36,7 @@ export class BagService {
           bagId: true,
           bagNumber: true,
         },
+        weight: true,
       });
       q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
       q.andWhere(e => e.bagSeq, w => w.equals(seqNumber));
@@ -166,7 +167,7 @@ export class BagService {
       const branch = await SharedService.getDataBranchCity(permissonPayload.branchId);
       if (branch) {
         branchName = branch.branchName;
-        cityName = branch.district.city.cityName;
+        cityName = branch.district ? branch.district.city.cityName : '';
       }
       // branch next
       const branchNext = await SharedService.getDataBranchCity(branchIdNext);

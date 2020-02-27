@@ -130,6 +130,12 @@ export class TrackingAwbResponseVm {
   @ApiModelProperty()
   partnerLogisticAwb: string;
 
+  @ApiModelProperty()
+  doPodDeliverDetailId: string;
+
+  @ApiModelProperty()
+  isHasPhotoReceiver: boolean;
+
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];
 }
