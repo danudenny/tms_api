@@ -109,10 +109,9 @@ export class MasterDataService {
   public static async insertUserRole(userId: number, branchId: number, payload: any) {
     const logTitle = '[INTEGRATION MASTER DATA] ';
 
-    //#region Process For Tms
-    const arrRoleIdTms = payload.roleIdTms;
-    const arrUserRoleNew: UserRole[] = [];
+    const arrRoleId = payload.roleIds;
 
+    //#region Process For Tms
     let timeNow = moment().toDate();
     await UserRole.update(
       {
@@ -126,13 +125,14 @@ export class MasterDataService {
       },
     );
 
-    for (const roleId of arrRoleIdTms) {
-      if (roleId != null) {
+    const arrUserRoleNew: UserRole[] = [];
+    for (const rr of arrRoleId) {
+      if (rr.roleId != null) {
         timeNow = moment().toDate();
         const userRole = UserRole.create(
           {
             userId,
-            roleId,
+            roleId: rr.roleId,
             branchId,
             createdTime: timeNow,
             updatedTime: timeNow,
@@ -144,11 +144,12 @@ export class MasterDataService {
       }
     }
 
-    await UserRole.insert(arrUserRoleNew);
+    if (arrUserRoleNew.length > 0) {
+      await UserRole.insert(arrUserRoleNew);
+    }
     //#endregion
 
     //#region Process For Master Data
-    const arrRoleId = payload.roleId;
     const pool: any = DatabaseConfig.getMasterDataDbPool();
     const client = await pool.connect();
     try {
@@ -164,15 +165,15 @@ export class MasterDataService {
         }
       });
 
-      for (const roleId of arrRoleId) {
-        if (roleId != null) {
+      for (const rr of arrRoleId) {
+        if (rr.roleIdTms != null) {
           timeNow = moment().toDate();
           const queryInsert = `
             INSERT INTO user_role (
               user_id, role_id, branch_id, created_time, updated_time, user_id_created, user_id_updated
             ) VALUES ($1, $2, $3, $4, $5, $6, $7)
           `;
-          await client.query(queryInsert, [userId, roleId, branchId, timeNow, timeNow, userId, userId], async function(err) {
+          await client.query(queryInsert, [userId, rr.roleIdTms, branchId, timeNow, timeNow, userId, userId], async function(err) {
             PinoLoggerService.debug(logTitle, this.sql);
             if (err) {
               PinoLoggerService.error(logTitle, err.message);
@@ -190,7 +191,6 @@ export class MasterDataService {
     let temp = {};
     try {
       const arrRoleId = [];
-      const arrRoleIdTms = [];
       const pool: any = DatabaseConfig.getMasterDataDbPool();
       const client = await pool.connect();
       try {
@@ -202,15 +202,18 @@ export class MasterDataService {
 
         if (res && res.rows && res.rows.length && res.rows.length > 0) {
           for (const r of res.rows) {
-            arrRoleId.push(r.role_id);
-            arrRoleIdTms.push(r.role_id_tms);
+            arrRoleId.push(
+              {
+                roleId: r.role_id,
+                roleIdTms: r.role_id_tms,
+              },
+            );
           }
           temp = {
             employeeId: payload.employeeId,
             employeeRoleId: payload.employeeRoleId,
             userIdUpdated: payload.userIdUpdated,
-            roleId: arrRoleId,
-            roleIdTms: arrRoleIdTms,
+            roleIds: arrRoleId,
           };
         }
 
