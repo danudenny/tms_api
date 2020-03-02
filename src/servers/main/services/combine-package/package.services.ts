@@ -419,7 +419,7 @@ export class PackageService {
     let podScanInHubId: string  = payload.podScanInHubId;
     let bagItemId: string       = payload.bagItemId;
     let isTrouble: boolean      = false;
-    const isAllow: boolean        = true;
+    let isAllow: boolean        = true;
     const troubleDesc: String[] = [];
 
     if (!awbItemAttr) {
@@ -448,8 +448,8 @@ export class PackageService {
     if (awb.toId) {
       // NOTES: WILL BE USE IN NEXT FUTURE
       if (awb.toId !== districtId) {
-        troubleDesc.push('Tujuan tidak sesuai');
-        // isAllow = false;
+        // troubleDesc.push('Tujuan tidak sesuai');
+        isAllow = false;
       }
     } else {
       isTrouble = true;
