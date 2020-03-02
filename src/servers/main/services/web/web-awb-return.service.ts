@@ -278,7 +278,7 @@ export class WebAwbReturnService {
     });
 
     let returnAwbId = null;
-    if (awbReturn) {
+    if (awb) {
       returnAwbId = awb.awbId;
     }
     // NOTE: If via internal
@@ -289,7 +289,7 @@ export class WebAwbReturnService {
       // } else {
       AwbReturn.update(awbReturn.awbReturnId, {
         returnAwbId,
-        returnAwbNumber: awb.awbNumber,
+        returnAwbNumber: payload.awbReturnNumber,
         userIdUpdated: authMeta.userId,
         updatedTime: moment().toDate(),
       });
