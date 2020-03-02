@@ -166,7 +166,7 @@ export class V1MobileSyncService {
         // NOTE: queue by Bull
         DoPodDetailPostMetaQueueService.createJobV1MobileSync(
           awbdDelivery.awbItemId,
-          delivery.awbStatusId,
+          lastDoPodDeliverHistory.awbStatusId,
           awbdDelivery.doPodDeliver.userId,
           awbdDelivery.doPodDeliver.branchId,
           awbdDelivery.userIdCreated,
