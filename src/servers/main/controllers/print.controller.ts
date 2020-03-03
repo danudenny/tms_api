@@ -13,6 +13,7 @@ import { PrintDoPodBagService } from '../services/print-do-pod-bag.service';
 import { PrintDoPodDeliverService } from '../services/print-do-pod-deliver.service';
 import { PrintDoPodReturnPayloadQueryVm } from '../models/print-do-pod-return.vm';
 import { PrintBagItemPaperService } from '../services/print-bag-item-paper.service';
+import { PrintBagItemStickerService } from '../services/print-bag-item-sticker.service';
 
 @ApiUseTags('General')
 @Controller('print')
@@ -64,7 +65,7 @@ export class PrintController {
     @Query() queryParams: PrintBagItemPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintService.printBagItemForStickerByRequest(serverResponse, queryParams);
+    return PrintBagItemStickerService.printBagItemStickerByRequest(serverResponse, queryParams);
   }
 
   @Get('bag-item-for-paper')

@@ -1,8 +1,55 @@
 import { PrinterService } from '../../../shared/services/printer.service';
 import express = require('express');
 import { PrintBagItemStickerDataVm } from '../models/print-bag-item-sticker.vm';
+import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm';
+import { RepositoryService } from '../../../shared/services/repository.service';
+import { RequestErrorService } from '../../../shared/services/request-error.service';
+import { RawQueryService } from '../../../shared/services/raw-query.service';
 
 export class PrintBagItemStickerService {
+  public static async printBagItemStickerByRequest(
+    res: express.Response,
+    queryParams: PrintBagItemPayloadQueryVm,
+  ) {
+    const q = RepositoryService.bagItem.findOne();
+    q.innerJoin(e => e.bag);
+    q.leftJoin(e => e.bag.district);
+
+    const data = await q
+      .select({
+        bagItemId: true,
+        bagId: true,
+        bagSeq: true,
+        weight: true,
+        createdTime: true,
+        bag: {
+          bagId: true,
+          bagNumber: true,
+          district: {
+            districtName: true,
+            districtCode: true,
+          },
+        },
+      })
+      .where(e => e.bagItemId, w => w.equals(queryParams.id))
+      .andWhere(e => e.bag.isDeleted, w => w.isFalse());
+
+    if (!data) {
+      RequestErrorService.throwObj({
+        message: 'Gabung paket tidak ditemukan',
+      });
+    }
+
+    const [{ cnt: bagItemsTotal }] = await RawQueryService.exec(
+      `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
+      { bagItemId: data.bagItemId },
+    );
+
+    return this.printBagItemSticker(res, data as any, {
+      bagItemsTotal,
+    });
+  }
+
   public static async printBagItemSticker(
     res: express.Response,
     data: Partial<PrintBagItemStickerDataVm>,
