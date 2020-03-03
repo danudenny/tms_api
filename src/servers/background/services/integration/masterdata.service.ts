@@ -64,13 +64,6 @@ export class MasterDataService {
           HttpStatus.UNPROCESSABLE_ENTITY,
         );
       }
-    } else {
-      RequestErrorService.throwObj(
-        {
-          message: 'Employee Id Not Found',
-        },
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
     }
 
     return result;
@@ -150,12 +143,12 @@ export class MasterDataService {
 
     const arrUserRoleNew: UserRole[] = [];
     for (const rr of arrRoleId) {
-      if (rr.roleId != null) {
+      if (rr.roleIdTms != null) {
         timeNow = moment().toDate();
         const userRole = UserRole.create(
           {
             userId,
-            roleId: rr.roleId,
+            roleId: rr.roleIdTms,
             branchId: branchIdNew,
             createdTime: timeNow,
             updatedTime: timeNow,
@@ -200,14 +193,14 @@ export class MasterDataService {
       });
 
       for (const rr of arrRoleId) {
-        if (rr.roleIdTms != null) {
+        if (rr.roleId != null) {
           timeNow = moment().toDate();
           const queryInsert = `
             INSERT INTO user_role (
               user_id, role_id, branch_id, created_time, updated_time, user_id_created, user_id_updated
             ) VALUES ($1, $2, $3, $4, $5, $6, $7)
           `;
-          await client.query(queryInsert, [userId, rr.roleIdTms, branchIdNew, timeNow, timeNow, userId, userId], async function(err) {
+          await client.query(queryInsert, [userId, rr.roleId, branchIdNew, timeNow, timeNow, userId, userId], async function(err) {
             PinoLoggerService.debug(this.logTitle, this.sql);
             if (err) {
               PinoLoggerService.error(this.logTitle, err.message);
@@ -231,7 +224,7 @@ export class MasterDataService {
         const res = await client.query(`
           SELECT role_id, role_id_tms
           FROM role_mapping
-          WHERE employee_role_id =$1
+          WHERE employee_role_id =$1 and is_deleted=false
         `, [payload.employeeRoleId]);
 
         if (res && res.rows && res.rows.length && res.rows.length > 0) {
