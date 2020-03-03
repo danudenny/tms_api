@@ -25,6 +25,14 @@ export class AwbService {
       awbItem: {
         awbItemId: true,
         awbId: true,
+        awb: {
+          consigneeName: true,
+          consigneeNumber: true,
+          consigneeAddress: true,
+          consigneeZip: true,
+          totalCodValue: true,
+          isCod: true,
+        },
       },
       awbId: true,
       awbNumber: true,

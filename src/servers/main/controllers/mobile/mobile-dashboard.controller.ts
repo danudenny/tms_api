@@ -4,7 +4,7 @@ import { ResponseSerializerOptions } from '../../../../shared/decorators/respons
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { MobileDashboardFindAllResponseVm } from '../../models/mobile-dashboard.response.vm';
+import { MobileDashboardFindAllResponseVm, MobileDetailTransitResponseVm } from '../../models/mobile-dashboard.response.vm';
 import { MobileInitDataPayloadVm } from '../../models/mobile-init-data-payload.vm';
 import { MobileInitDataResponseVm } from '../../models/mobile-init-data-response.vm';
 import { MobileDashboardService } from '../../services/mobile/mobile-dashboard.service';
@@ -18,6 +18,8 @@ import { MobileComplaintListResponseAllVm } from '../../models/mobile-complaint-
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import moment = require('moment');
 import { RedisService } from '../../../../shared/services/redis.service';
+import { MobileInitCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
+import { MobileInitCheckInService } from '../../services/mobile/mobile-init-check-in.service';
 
 @ApiUseTags('Dashboard')
 @Controller('mobile')
@@ -41,6 +43,16 @@ export class MobileDashboardController {
   @ApiOkResponse({ type: MobileInitDataResponseVm })
   public async initData(@Body() payload: MobileInitDataPayloadVm) {
     return MobileInitDataService.getInitDataByRequest(payload.lastSyncDateTime);
+  }
+
+  @Get('initCheckin')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  @ApiOkResponse({ type: MobileInitCheckInResponseVm })
+  public async initCheckin() {
+    return MobileInitCheckInService.getInitCheckInByRequest();
   }
 
   @Get('employee/:employeeId')
@@ -98,5 +110,14 @@ export class MobileDashboardController {
       timeNow: moment().toDate(),
       timeString: moment().format('YYYY-MM-DD HH:mm:ss'),
     };
+  }
+
+  @Get('detail/transit')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: MobileDetailTransitResponseVm })
+  public async detailTransit() {
+    return MobileDashboardService.getTransitDetail();
   }
 }

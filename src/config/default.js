@@ -32,6 +32,10 @@ module.exports = {
       retryDelayMs: 2 * 60 * 1000, // 2 minutes
       keepRetryInHours: 24, // keep retrying in 1 day
     },
+    masterDataMappingRole: {
+      retryDelayMs: 2 * 60 * 1000, // 2 minutes
+      keepRetryInHours: 24, // keep retrying in 1 day
+    },
   },
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent
@@ -60,4 +64,11 @@ module.exports = {
     passKey: '2e8a7f4d5ef4b746a503ef270ce2a98e562bc77e2dd6c19bf10e3d95e3390393',
     shipmentMethod: 'Instant',
   },
+  korwil: {
+    korwilRoleId: 38,
+    palkurRoleId: 40
+  },
+  masterData: {
+    apiKey: 'af8cf9bafac713ae8c6d5119346d783239e07552281e93c01785b1ed9611cec373cd7cbe24236c711512bf366e36b164ed27c874e85dfa7d97f4358df122b213'
+  }
 };

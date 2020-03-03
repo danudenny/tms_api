@@ -13,16 +13,28 @@ export class MobileAtendanceListResponseAllVm {
   checkInDate: string;
 
   @ApiModelProperty()
+  startDate: string;
+
+  @ApiModelProperty()
   checkOutDate: string;
 
   @ApiModelProperty()
   createdTime: string;
 
   @ApiModelProperty()
+  branchNameStart: string;
+
+  @ApiModelProperty()
   branchNameCheckIn: string;
 
   @ApiModelProperty()
   longitudeCheckIn: string;
+
+  @ApiModelProperty()
+  longitudeStart: string;
+
+  @ApiModelProperty()
+  latitudeStart: string;
 
   @ApiModelProperty()
   latitudeCheckIn: string;

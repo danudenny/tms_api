@@ -3,6 +3,22 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
 export class MobileSyncResponseVm extends MobileInitDataResponseVm {}
 
+export class MobileSyncAwbVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  process: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class MobileSyncDataResponseVm {
+  @ApiModelProperty({ type: [MobileSyncAwbVm] })
+  data: MobileSyncAwbVm[];
+}
+
 export class MobileSyncImageResponseVm {
 
   @ApiModelProperty()

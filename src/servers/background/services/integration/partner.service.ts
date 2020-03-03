@@ -19,7 +19,7 @@ export class PartnerService {
     let result = {};
 
     const redisStatus = await RedisService.get(`posindonesia:status`);
-    console.log('Status ' + redisStatus);
+    // console.log('Status ' + redisStatus);
     if (redisStatus == '1') {
       return (result = {
         code: '422',
@@ -128,12 +128,14 @@ export class PartnerService {
       SELECT
         prd.ref_awb_number as "refAwbNumber",
         prd.shipper_name as "shipperName",
+        prd.shipper_phone as "shipperPhone",
         prd.shipper_address as "shipperAddress",
         prd.shipper_district as "shipperDistrict",
         prd.shipper_city as "shipperCity",
         prd.shipper_province as "shipperProvince",
         prd.shipper_zip as "shipperZip",
         prd.recipient_name as "recipientName",
+        prd.recipient_phone as "recipientPhone",
         prd.recipient_address as "recipientAddress",
         prd.recipient_district as "recipientDistrict",
         prd.recipient_city as "recipientCity",
@@ -381,6 +383,7 @@ export class PartnerService {
     let paramBranchCode = '';
     let paramPartnerId = '';
     paramAwb = payload.awb;
+    paramAwb = paramAwb.substring(3, 15);
     paramBranchCode = payload.branch_code;
     paramPartnerId = payload.partner_id;
 
@@ -428,8 +431,12 @@ export class PartnerService {
           created_time: timeNow,
           updated_time: timeNow,
         };
-        const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-        const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+        const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+          paramsAwbPartnerLog,
+        );
+        const awb_partner_log = await AwbPartnerLog.insert(
+          dataParamsAwbPartnerLog,
+        );
         return result;
       } else {
         if (branchPartnerId == null) {
@@ -447,8 +454,12 @@ export class PartnerService {
             created_time: timeNow,
             updated_time: timeNow,
           };
-          const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-          const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+          const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+            paramsAwbPartnerLog,
+          );
+          const awb_partner_log = await AwbPartnerLog.insert(
+            dataParamsAwbPartnerLog,
+          );
           return result;
         } else {
           if (workOrderIdLast === null) {
@@ -534,10 +545,13 @@ export class PartnerService {
               created_time: timeNow,
               updated_time: timeNow,
             };
-            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-            const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+              paramsAwbPartnerLog,
+            );
+            const awb_partner_log = await AwbPartnerLog.insert(
+              dataParamsAwbPartnerLog,
+            );
             return result;
-
           } else {
             await WorkOrder.update(workOrderIdLast, {
               workOrderStatusIdLast: 7050,
@@ -556,36 +570,63 @@ export class PartnerService {
                 updatedTime: timeNow,
               },
             );
-
+            // console.log(workOrderIdLast);
             const workOrder = await WorkOrder.findOne({
               workOrderId: workOrderIdLast,
             });
-            const paramsWorkOrderHistory = {
-              work_order_id: workOrder.workOrderId,
-              work_order_date: workOrder.workOrderDate,
-              pickup_request_id: pickupRequestId,
-              work_order_status_id_last: '7050',
-              work_order_status_id_pick: null,
-              branch_id: '1481',
-              is_final: true,
-              user_id: '1',
-              created_time: timeNow,
-              updated_time: timeNow,
-            };
-
-            const dataWorkOrderHistory = await this.getDataWorkOrderHistory(
-              paramsWorkOrderHistory,
-            );
-            const work_order_history = await WorkOrderHistory.insert(
-              dataWorkOrderHistory,
-            );
-
-            await WorkOrder.update(workOrderIdLast, {
-              workOrderHistoryIdLast:
-                work_order_history.raw[0].work_order_history_id,
-              userIdUpdated: 1,
-              updatedTime: timeNow,
-            });
+            // console.log('anjing');
+            // console.log(workOrder);
+            if (workOrder == undefined) {
+              // const paramsWorkOrderHistory = {
+              //   work_order_id: workOrderIdLast,
+              //   work_order_date: timeNow,
+              //   pickup_request_id: pickupRequestId,
+              //   work_order_status_id_last: '7050',
+              //   work_order_status_id_pick: null,
+              //   branch_id: '1481',
+              //   is_final: true,
+              //   user_id: '1',
+              //   created_time: timeNow,
+              //   updated_time: timeNow,
+              // };
+              // const dataWorkOrderHistory = await this.getDataWorkOrderHistory(
+              //   paramsWorkOrderHistory,
+              // );
+              // const work_order_history = await WorkOrderHistory.insert(
+              //   dataWorkOrderHistory,
+              // );
+              // await WorkOrder.update(workOrderIdLast, {
+              //   workOrderHistoryIdLast:
+              //     work_order_history.raw[0].work_order_history_id,
+              //   userIdUpdated: 1,
+              //   updatedTime: timeNow,
+              // });
+            } else {
+              const paramsWorkOrderHistory = {
+                work_order_id: workOrder.workOrderId,
+                work_order_date: workOrder.workOrderDate,
+                pickup_request_id: pickupRequestId,
+                work_order_status_id_last: '7050',
+                work_order_status_id_pick: null,
+                branch_id: '1481',
+                is_final: true,
+                user_id: '1',
+                created_time: timeNow,
+                updated_time: timeNow,
+              };
+              const dataWorkOrderHistory = await this.getDataWorkOrderHistory(
+                paramsWorkOrderHistory,
+              );
+              const work_order_history = await WorkOrderHistory.insert(
+                dataWorkOrderHistory,
+              );
+              await WorkOrder.update(workOrderIdLast, {
+                workOrderHistoryIdLast:
+                  work_order_history.raw[0].work_order_history_id,
+                userIdUpdated: 1,
+                updatedTime: timeNow,
+              });
+            }
 
             result = {
               code: '200',
@@ -602,8 +643,12 @@ export class PartnerService {
               created_time: timeNow,
               updated_time: timeNow,
             };
-            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-            const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+              paramsAwbPartnerLog,
+            );
+            const awb_partner_log = await AwbPartnerLog.insert(
+              dataParamsAwbPartnerLog,
+            );
             return result;
           }
         }
@@ -623,8 +668,12 @@ export class PartnerService {
         created_time: timeNow,
         updated_time: timeNow,
       };
-      const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-      const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+      const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+        paramsAwbPartnerLog,
+      );
+      const awb_partner_log = await AwbPartnerLog.insert(
+        dataParamsAwbPartnerLog,
+      );
       return result;
     }
 
@@ -682,6 +731,7 @@ export class PartnerService {
     const timeNow = moment().toDate();
     // $prefix = $prefix = 'SPK' .; '/' . date('ym', strtotime($work_order_time)) .; '/';
     prefix = `SPK/${moment(workOrderTime).format('YYMM')}/`;
+    console.log(prefix);
     const code = await SysCounter.findOne({
       where: {
         key: prefix,
@@ -689,16 +739,26 @@ export class PartnerService {
       },
     });
     // console.log(code);
-    // console.log(code.counter);
-    if (code.counter == 0 || code.counter == null) {
+    if (code == undefined) {
       lastNumber = 1;
+      const paramsSysCounter = {
+        key: prefix,
+        counter: lastNumber,
+        created_time: timeNow,
+        updated_time: timeNow,
+      };
+      const dataParamsSysCounter = await this.getDataSysCounter(
+        paramsSysCounter,
+      );
+      const sys_counter = await SysCounter.insert(dataParamsSysCounter);
     } else {
       lastNumber = Math.floor(code.counter) + 1;
+      await SysCounter.update(code.sysCounterId, {
+        counter: lastNumber,
+        updatedTime: timeNow,
+      });
     }
-    await SysCounter.update(code.sysCounterId, {
-      counter: lastNumber,
-      updatedTime: timeNow,
-    });
+
     workOrderCode = prefix + lastNumber.toString().padStart(5, '0');
     // console.log(workOrderCode);
     return workOrderCode;
@@ -779,5 +839,16 @@ export class PartnerService {
     });
 
     return apl;
+  }
+
+  public static async getDataSysCounter(params: {}): Promise<any> {
+    const syscount = await SysCounter.create({
+      key: params['key'],
+      counter: params['counter'],
+      createdTime: params['created_time'],
+      updatedTime: params['updated_time'],
+    });
+
+    return syscount;
   }
 }
