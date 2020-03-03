@@ -10,6 +10,11 @@ import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-
 import { PrintDoPodService } from './print-do-pod.service';
 import { PrintDoPodBagService } from './print-do-pod-bag.service';
 import { PrintDoPodDeliverService } from './print-do-pod-deliver.service';
+import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm';
+import { PrintBagItemPaperVm } from '../models/print-bag-item-paper.vm';
+import { PrintBagItemPaperService } from './print-bag-item-paper.service';
+import { PrintBagItemStickerService } from './print-bag-item-sticker.service';
+import { PrintBagItemStickerVm } from '../models/print-bag-item-sticker.vm';
 
 export class PrintByStoreService {
   static async retrieveGenericPrintData<T = any>(prefix: string, identifier: string | number) {
@@ -90,6 +95,49 @@ export class PrintByStoreService {
       branchId: queryParams.branchId,
     }, {
       printCopy: queryParams.printCopy,
+    });
+  }
+
+  static async storePrintBagItemSticker(payloadBody: PrintBagItemStickerVm) {
+    return this.storeGenericPrintData('bag-item-for-sticker', payloadBody.data.bagItemId, payloadBody);
+  }
+
+  static async executePrintBagItemSticker(
+    res: express.Response,
+    queryParams: PrintBagItemPayloadQueryVm,
+  ) {
+    const printPayload = await this.retrieveGenericPrintData<PrintBagItemStickerVm>('bag-item-for-sticker', queryParams.id);
+
+    if (!printPayload.data) {
+      RequestErrorService.throwObj({
+        message: 'Gabungan paket tidak ditemukan',
+      });
+    }
+
+    return PrintBagItemStickerService.printBagItemSticker(res, printPayload.data, {
+      bagItemsTotal: printPayload.meta.bagItemsTotal,
+    });
+  }
+
+  static async storePrintBagItemPaper(payloadBody: PrintBagItemPaperVm) {
+    return this.storeGenericPrintData('bag-item-for-paper', payloadBody.data.bagItemId, payloadBody);
+  }
+
+  static async executePrintBagItemPaper(
+    res: express.Response,
+    queryParams: PrintBagItemPayloadQueryVm,
+  ) {
+    const printPayload = await this.retrieveGenericPrintData<PrintBagItemPaperVm>('bag-item-for-paper', queryParams.id);
+
+    if (!printPayload.data) {
+      RequestErrorService.throwObj({
+        message: 'Gabungan paket tidak ditemukan',
+      });
+    }
+
+    return PrintBagItemPaperService.printBagItemPaperAndQueryMeta(res, printPayload.data, {
+      userId: queryParams.userId,
+      branchId: queryParams.branchId,
     });
   }
 }
