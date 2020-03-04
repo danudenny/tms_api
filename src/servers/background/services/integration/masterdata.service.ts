@@ -15,7 +15,7 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { RoleMappingResponseVm } from '../../models/role-mapping.response.vm';
 
 import moment = require('moment');
-import { Role } from 'src/shared/orm-entity/role';
+import { Role } from '../../../../shared/orm-entity/role';
 
 @Injectable()
 export class MasterDataService {
