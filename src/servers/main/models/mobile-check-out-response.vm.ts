@@ -16,4 +16,7 @@ export class MobileCheckOutResponseVm {
 
   @ApiModelProperty()
   attachmentId: number;
+
+  @ApiModelProperty()
+  checkoutIdBranch: string;
 }

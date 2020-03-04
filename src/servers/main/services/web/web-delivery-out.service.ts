@@ -59,6 +59,8 @@ import { AwbService } from '../v1/awb.service';
 import { DoPodDeliverRepository } from '../../../../shared/orm-repository/do-pod-deliver.repository';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagTroubleService } from '../../../../shared/services/bag-trouble.service';
+import { Employee } from '../../../../shared/orm-entity/employee';
+import { Branch } from '../../../../shared/orm-entity/branch';
 // #endregion
 
 @Injectable()
@@ -128,6 +130,40 @@ export class WebDeliveryOutService {
     result.status = 'ok';
     result.message = 'success';
     result.doPodId = doPod.doPodId;
+
+    // query for get Employee
+    const repo = new OrionRepositoryService(Employee, 't1');
+    const q = repo.findAllRaw();
+
+    q.selectRaw(
+      [
+        't1.nik',
+        'nik',
+      ],
+      ['t1.nickname', 'nickname'],
+    );
+
+    q.innerJoin(e => e.user, 't2');
+    q.where(
+      e => e.user.userId,
+      w => w.equals(payload.userIdDriver),
+    );
+    const dataUser = await q.exec();
+
+    // query for get BranchTo
+    const branchData = await Branch.findOne({
+      where: {
+        branchId: payload.branchIdTo,
+      },
+    });
+
+    // For printDoPodBagMetadata and printDoPodMetadata
+    result.printDoPodBagMetadata.doPodCode = doPod.doPodCode;
+    result.printDoPodBagMetadata.description = payload.desc;
+    result.printDoPodBagMetadata.userDriver.employee.nik = dataUser[0].nik;
+    result.printDoPodBagMetadata.userDriver.employee.nickname = dataUser[0].nickname;
+    result.printDoPodBagMetadata.vehicleNumber = payload.vehicleNumber;
+    result.printDoPodBagMetadata.branchTo.branchName = branchData.branchName;
 
     return result;
   }
@@ -865,8 +901,8 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['nickname'] = 't2.nickname';
-    payload.fieldResolverMap['fullname'] = 't2.fullname';
+    payload.fieldResolverMap['totalAwb'] = 'totalAwb';
+    payload.fieldResolverMap['employeeName'] = 't2.fullname';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
     if (payload.sortBy === '') {

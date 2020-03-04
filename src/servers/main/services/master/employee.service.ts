@@ -25,6 +25,7 @@ export class EmployeeService {
     payload.fieldResolverMap['employeeName'] = 'employee.fullname';
     payload.fieldResolverMap['employeeRoleId'] = 'employee.employee_role_id';
     payload.fieldResolverMap['roleId'] = 'user_role.role_id';
+    payload.fieldResolverMap['branchId'] = 'user_role.branch_id';
 
     const q = RepositoryService.employee.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);

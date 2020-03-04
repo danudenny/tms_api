@@ -128,12 +128,14 @@ export class PartnerService {
       SELECT
         prd.ref_awb_number as "refAwbNumber",
         prd.shipper_name as "shipperName",
+        prd.shipper_phone as "shipperPhone",
         prd.shipper_address as "shipperAddress",
         prd.shipper_district as "shipperDistrict",
         prd.shipper_city as "shipperCity",
         prd.shipper_province as "shipperProvince",
         prd.shipper_zip as "shipperZip",
         prd.recipient_name as "recipientName",
+        prd.recipient_phone as "recipientPhone",
         prd.recipient_address as "recipientAddress",
         prd.recipient_district as "recipientDistrict",
         prd.recipient_city as "recipientCity",
@@ -383,7 +385,6 @@ export class PartnerService {
     let paramPartnerId = '';
     paramAwb = payload.awb;
     paramAwb = paramAwb.substring(5, 17);
-    console.log(paramAwb);
     paramBranchCode = payload.branch_code;
     paramPartnerId = payload.partner_id;
 
@@ -431,8 +432,12 @@ export class PartnerService {
           created_time: timeNow,
           updated_time: timeNow,
         };
-        const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-        const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+        const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+          paramsAwbPartnerLog,
+        );
+        const awb_partner_log = await AwbPartnerLog.insert(
+          dataParamsAwbPartnerLog,
+        );
         return result;
       } else {
         if (branchPartnerId == null) {
@@ -450,8 +455,12 @@ export class PartnerService {
             created_time: timeNow,
             updated_time: timeNow,
           };
-          const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-          const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+          const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+            paramsAwbPartnerLog,
+          );
+          const awb_partner_log = await AwbPartnerLog.insert(
+            dataParamsAwbPartnerLog,
+          );
           return result;
         } else {
           if (workOrderIdLast === null) {
@@ -537,10 +546,13 @@ export class PartnerService {
               created_time: timeNow,
               updated_time: timeNow,
             };
-            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-            const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+              paramsAwbPartnerLog,
+            );
+            const awb_partner_log = await AwbPartnerLog.insert(
+              dataParamsAwbPartnerLog,
+            );
             return result;
-
           } else {
             await WorkOrder.update(workOrderIdLast, {
               workOrderStatusIdLast: 7050,
@@ -590,7 +602,6 @@ export class PartnerService {
               //   userIdUpdated: 1,
               //   updatedTime: timeNow,
               // });
-
             } else {
               const paramsWorkOrderHistory = {
                 work_order_id: workOrder.workOrderId,
@@ -633,8 +644,12 @@ export class PartnerService {
               created_time: timeNow,
               updated_time: timeNow,
             };
-            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-            const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+              paramsAwbPartnerLog,
+            );
+            const awb_partner_log = await AwbPartnerLog.insert(
+              dataParamsAwbPartnerLog,
+            );
             return result;
           }
         }
@@ -654,8 +669,12 @@ export class PartnerService {
         created_time: timeNow,
         updated_time: timeNow,
       };
-      const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(paramsAwbPartnerLog);
-      const awb_partner_log = await AwbPartnerLog.insert(dataParamsAwbPartnerLog);
+      const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+        paramsAwbPartnerLog,
+      );
+      const awb_partner_log = await AwbPartnerLog.insert(
+        dataParamsAwbPartnerLog,
+      );
       return result;
     }
 
@@ -725,13 +744,14 @@ export class PartnerService {
       lastNumber = 1;
       const paramsSysCounter = {
         key: prefix,
-        counter : lastNumber,
+        counter: lastNumber,
         created_time: timeNow,
         updated_time: timeNow,
       };
-      const dataParamsSysCounter = await this.getDataSysCounter(paramsSysCounter);
+      const dataParamsSysCounter = await this.getDataSysCounter(
+        paramsSysCounter,
+      );
       const sys_counter = await SysCounter.insert(dataParamsSysCounter);
-
     } else {
       lastNumber = Math.floor(code.counter) + 1;
       await SysCounter.update(code.sysCounterId, {

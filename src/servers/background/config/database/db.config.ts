@@ -1,8 +1,11 @@
 import * as _ from 'lodash';
+import { Pool } from 'pg';
 import { mssqlService } from '../../config/database/mssql.service';
 import * as mysql from 'mysql';
 
 export abstract class DatabaseConfig {
+
+  private static masterDataDbPool: Pool;
 
   private static podDbConnectionString = {
     user: 'spartan',
@@ -52,6 +55,23 @@ export abstract class DatabaseConfig {
     });
 
     return conn;
+  }
+
+  public static getMasterDataDbPool() {
+    if (!this.masterDataDbPool) {
+      this.masterDataDbPool = new Pool({
+        host: 'sicepat-tms-masterdata-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+        port: 5432,
+        database: 'sicepatmasterdatastaging2',
+        user: 'sicepatstaging',
+        password: 's1c3p4T$t46Ingb05$sQu',
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 30000,
+      });
+    }
+
+    return this.masterDataDbPool;
   }
 
 }
