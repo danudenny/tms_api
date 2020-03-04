@@ -109,6 +109,19 @@ export class DoPodDeliver extends TmsBaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_partner',
+  })
+  isPartner: boolean;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'partner_id',
+  })
+  partnerId: number | null;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
     name: 'is_deleted',
   })
   isDeleted: boolean;

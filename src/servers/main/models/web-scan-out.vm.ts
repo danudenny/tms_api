@@ -246,6 +246,16 @@ export class WebScanOutCreateDeliveryVm {
     example: 'keterangan',
   })
   desc?: string;
+
+  @ApiModelProperty({
+    example: false,
+  })
+  isPartner: boolean;
+
+  @ApiModelPropertyOptional({
+    example: 123,
+  })
+  partnerId: number;
 }
 
 export class WebScanOutDeliverEditVm {
