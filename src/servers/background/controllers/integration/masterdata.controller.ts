@@ -33,4 +33,10 @@ export class MasterDataController {
     return MasterDataService.roleTms(payload);
   }
 
+  @Get('sync/role-tms')
+  @HttpCode(HttpStatus.OK)
+  public async syncRoleTms(@Body() payload: any) {
+    return MasterDataService.syncRoleTms(payload);
+  }
+
 }
