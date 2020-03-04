@@ -71,7 +71,7 @@ export class PrintByStoreController {
     return PrintByStoreService.executePrintDoPodDeliver(serverResponse, queryParams);
   }
 
-  @Get('bag-item-for-paper/store')
+  @Post('bag-item-for-paper/store')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
   public async storePrintBagItemPaper(
@@ -90,7 +90,7 @@ export class PrintByStoreController {
     return PrintByStoreService.executePrintBagItemPaper(serverResponse, queryParams);
   }
 
-  @Get('bag-item-for-sticker/store')
+  @Post('bag-item-for-sticker/store')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
   public async storePrintBagItemSticker(
