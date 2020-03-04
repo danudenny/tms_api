@@ -233,11 +233,12 @@ export class PartnerService {
     const config = {
       headers,
     };
+    const yearNow = moment().format('YY');
 
     const jsonData = {
       userid: 14,
       memberid: 'LOGSICEPAT04100A',
-      orderid: 'SCP' + data.refAwbNumber,
+      orderid: yearNow + 'SCP' + data.refAwbNumber,
       addresses: [
         {
           addresstype: 'senderlocation',
@@ -383,7 +384,7 @@ export class PartnerService {
     let paramBranchCode = '';
     let paramPartnerId = '';
     paramAwb = payload.awb;
-    paramAwb = paramAwb.substring(3, 15);
+    paramAwb = paramAwb.substring(5, 17);
     paramBranchCode = payload.branch_code;
     paramPartnerId = payload.partner_id;
 
@@ -396,7 +397,7 @@ export class PartnerService {
     let pickupRequestDetailId = null;
     let branchPartnerId = null;
     let awbItemId = null;
-    const arrDropStatus = [7050];
+    const arrDropStatus = [7050, 7100];
     const err = '';
 
     const dataBranch = await this.getBranchPartnerId(paramBranchCode);

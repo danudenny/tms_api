@@ -8,6 +8,12 @@ export class MappingRoleUserPayloadVm {
   employeeRoleId: number;
 
   @ApiModelProperty()
+  branchIdLast: number;
+
+  @ApiModelProperty()
+  branchIdNew: number;
+
+  @ApiModelProperty()
   userIdUpdated: number;
 
 }
