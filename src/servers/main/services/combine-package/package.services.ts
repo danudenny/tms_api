@@ -43,11 +43,14 @@ export class PackageService {
     if (value.includes('*BUKA')) {
       const dataResult      = await this.openSortirCombine(payload);
       result.bagNumber      = dataResult.bagNumber;
-      result.districtName   = dataResult.districtName;
       result.districtId     = dataResult.districtId;
+      result.districtName   = dataResult.districtName;
+      result.districtCode   = dataResult.districtCode;
       result.podScanInHubId = dataResult.podScanInHubId;
       result.dataBag        = dataResult.dataBag;
       result.bagItemId      = dataResult.bagItemId;
+      result.bagSeq         = dataResult.bagSeq;
+      result.bagItemWeight  = dataResult.bagItemWeight;
     } else if (regexNumber.test(value) && valueLength === 12) {
       //  scan resi
       if (!payload.districtId && !payload.bagNumber) {
@@ -62,6 +65,7 @@ export class PackageService {
       result.dataBag        = scanResult.dataBag;
       result.bagNumber      = scanResult.bagNumber;
       result.districtId     = scanResult.districtId;
+      result.districtCode   = scanResult.districtCode;
       result.districtName   = scanResult.districtName;
       result.data           = scanResult.data;
       result.bagItemId      = scanResult.bagItemId;
@@ -94,10 +98,13 @@ export class PackageService {
   private async openSortirCombine(payload): Promise<{
     bagNumber: string,
     districtId: number,
+    districtCode: string,
     districtName: string,
     podScanInHubId: string,
     dataBag: AwbPackageDetail[],
     bagItemId: number,
+    bagSeq: number,
+    bagItemWeight: number,
   }> {
     const value = payload.value;
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -125,6 +132,7 @@ export class PackageService {
     qb.addSelect('c.ref_reseller', 'refReseller');
     qb.addSelect('a.pod_scan_in_hub_id', 'podScanInHubId');
     qb.addSelect('e.district_id', 'districtId');
+    qb.addSelect('e.district_code', 'districtCode');
     qb.addSelect('e.district_name', 'districtName');
     qb.addSelect('false', 'isTrouble');
     qb.from('pod_scan_in_hub_bag', 'a');
@@ -149,10 +157,13 @@ export class PackageService {
     const dataResult = {
       bagNumber,
       districtId: data[0].districtId,
+      districtCode: data[0].districtCode,
       districtName: data[0].districtName,
       podScanInHubId: data[0].podScanInHubId,
       dataBag: data,
       bagItemId: bagDetail.bagItemId,
+      bagSeq: bagDetail.bagSeq,
+      bagItemWeight: bagDetail.weight,
     };
     return dataResult;
   }
@@ -462,6 +473,7 @@ export class PackageService {
       const detail = {
         awbNumber     : awb.awbNumber,
         weight        : awb.totalWeightRealRounded,
+        totalWeightFinalRounded : awb.totalWeightFinalRounded,
         consigneeName : awb.consigneeName,
         awbItemId     : awbItemAttr.awbItemId,
         customerId    : awb.customerAccountId,
