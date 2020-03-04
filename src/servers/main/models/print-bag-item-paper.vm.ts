@@ -42,9 +42,6 @@ export class PrintBagItemPaperDataBagVm {
 
 export class PrintBagItemPaperDataVm {
   @ApiModelProperty()
-  createdTime: string;
-
-  @ApiModelProperty()
   bagItemId: number;
 
   @ApiModelProperty()

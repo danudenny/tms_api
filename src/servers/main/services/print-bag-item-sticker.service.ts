@@ -21,7 +21,6 @@ export class PrintBagItemStickerService {
         bagId: true,
         bagSeq: true,
         weight: true,
-        createdTime: true,
         bag: {
           bagId: true,
           bagNumber: true,
@@ -40,13 +39,13 @@ export class PrintBagItemStickerService {
       });
     }
 
-    const [{ cnt: bagItemsTotal }] = await RawQueryService.exec(
+    const [{ cnt: bagItemAwbsTotal }] = await RawQueryService.exec(
       `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
       { bagItemId: data.bagItemId },
     );
 
     return this.printBagItemSticker(res, data as any, {
-      bagItemsTotal,
+      bagItemAwbsTotal,
     });
   }
 
@@ -54,7 +53,7 @@ export class PrintBagItemStickerService {
     res: express.Response,
     data: Partial<PrintBagItemStickerDataVm>,
     meta: {
-      bagItemsTotal: number,
+      bagItemAwbsTotal: number,
     },
   ) {
     const weightNumberOnly = `${data.weight}`.replace(/\D/gm, '').substring(0, 5);
@@ -75,7 +74,7 @@ export class PrintBagItemStickerService {
       `TEXT 30,120,"5",0,1,1,0,"GABUNGAN SORTIR"\n` +
       `BARCODE 30,200,"128",100,1,0,3,10,"${finalBagItemBarcodeNumber}"\n` +
       `TEXT 30,380,"3",0,1,1,"Koli ke : ${finalBagItemSeq}"\n` +
-      `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${meta.bagItemsTotal} resi"\n` +
+      `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${meta.bagItemAwbsTotal} resi"\n` +
       `TEXT 30,460,"4",0,1,1,0,"${
         data.bag.district.districtCode
       }"\n` +

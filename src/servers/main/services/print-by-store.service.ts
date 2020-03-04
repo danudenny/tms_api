@@ -115,7 +115,7 @@ export class PrintByStoreService {
     }
 
     return PrintBagItemStickerService.printBagItemSticker(res, printPayload.data, {
-      bagItemsTotal: printPayload.meta.bagItemsTotal,
+      bagItemAwbsTotal: printPayload.meta.bagItemAwbsTotal,
     });
   }
 

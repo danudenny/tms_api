@@ -20,7 +20,6 @@ export class PrintBagItemPaperService {
         bagItemId: true,
         bagSeq: true,
         weight: true,
-        createdTime: true,
         bag: {
           bagId: true,
           bagNumber: true,

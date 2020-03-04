@@ -10,9 +10,6 @@ export class PrintBagItemStickerDataBagDistrictVm {
 
 export class PrintBagItemStickerDataBagVm {
   @ApiModelProperty()
-  bagId: boolean;
-
-  @ApiModelProperty()
   bagNumber: boolean;
 
   @ApiModelProperty({ type: () => PrintBagItemStickerDataBagDistrictVm })
@@ -24,16 +21,10 @@ export class PrintBagItemStickerDataVm {
   bagItemId: number;
 
   @ApiModelProperty()
-  bagId: number;
-
-  @ApiModelProperty()
   bagSeq: number;
 
   @ApiModelProperty()
   weight: number;
-
-  @ApiModelProperty()
-  createdTime: string;
 
   @ApiModelProperty({ type: () => PrintBagItemStickerDataBagVm })
   bag: PrintBagItemStickerDataBagVm;
@@ -41,7 +32,7 @@ export class PrintBagItemStickerDataVm {
 
 export class PrintBagItemStickerMetaVm {
   @ApiModelProperty()
-  bagItemsTotal: number;
+  bagItemAwbsTotal: number;
 }
 
 export class PrintBagItemStickerVm {

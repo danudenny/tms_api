@@ -161,7 +161,7 @@ export class PrintService {
       });
     }
 
-    const [{ cnt: bagItemsTotal }] = await RawQueryService.exec(
+    const [{ cnt: bagItemAwbsTotal }] = await RawQueryService.exec(
       `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
       { bagItemId: bagItem.bagItemId },
     );
@@ -212,7 +212,7 @@ export class PrintService {
       `TEXT 30,120,"5",0,1,1,0,"GABUNGAN SORTIR"\n` +
       `BARCODE 30,200,"128",100,1,0,3,10,"${finalBagItemBarcodeNumber}"\n` +
       `TEXT 30,380,"3",0,1,1,"Koli ke : ${finalBagItemSeq}"\n` +
-      `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${bagItemsTotal} resi"\n` +
+      `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${bagItemAwbsTotal} resi"\n` +
       `TEXT 30,460,"4",0,1,1,0,"${
         bagItem.bag.district.districtCode
       }"\n` +
