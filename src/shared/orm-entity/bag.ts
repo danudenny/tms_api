@@ -118,6 +118,12 @@ export class Bag extends TmsBaseEntity {
   })
   districtIdTo: number;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id_to',
+  })
+  branchIdTo: number;
+
   @Column('boolean', {
     nullable: true,
     name: 'is_sortir',

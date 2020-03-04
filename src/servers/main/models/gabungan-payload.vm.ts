@@ -34,7 +34,7 @@ export class PackagePayloadVm {
   @ApiModelPropertyOptional({
     example: 12,
   })
-  districtId?: number;
+  branchId?: number;
 
   @ApiModelPropertyOptional({
     example: [1203483, 2390493, 9203920932],
