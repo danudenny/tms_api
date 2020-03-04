@@ -42,6 +42,8 @@ import { MobileKorwilController } from './mobile/mobile-korwil.controller';
 import { MobileDeliveryInController } from './mobile/mobile-delivery-in.controller';
 import { MobileDeliveryOutController } from './mobile/mobile-delivery-out.controller';
 import { MobileAwbFilterController } from './mobile/mobile-awb-filter.controller';
+import { PrintByStoreController } from './print-by-store.controller';
+
 import { DoReturnController } from './do_return/do_return_controller';
 import { V1MobileInitController } from './mobile/v1/mobile-init.controller';
 import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
@@ -62,6 +64,7 @@ import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
     MobileDashboardController,
     PartnerLogisticController,
     PrintController,
+    PrintByStoreController,
     ReasonController,
     RepresentativeController,
     RoleController,

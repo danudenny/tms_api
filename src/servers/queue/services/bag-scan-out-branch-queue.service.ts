@@ -64,19 +64,21 @@ export class BagScanOutBranchQueueService {
         }
         let branchName = 'Kantor Pusat';
         let cityName = 'Jakarta';
-        let branchNameNext = 'Pluit';
+        let branchNameNext = '';
 
         const branch = await SharedService.getDataBranchCity(data.branchId);
         if (branch) {
           branchName = branch.branchName;
-          cityName = branch.district.city.cityName;
+          cityName = branch.district ? branch.district.city.cityName : '';
         }
         // branch next
-        const branchNext = await SharedService.getDataBranchCity(
-          data.branchIdNext,
-        );
-        if (branchNext) {
-          branchNameNext = branchNext.branchName;
+        if (data.branchIdNext) {
+          const branchNext = await SharedService.getDataBranchCity(
+              data.branchIdNext,
+            );
+          if (branchNext) {
+            branchNameNext = branchNext.branchName;
+          }
         }
 
         for (const itemAwb of bagItemsAwb) {

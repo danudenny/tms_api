@@ -23,6 +23,7 @@ import { ReturnHistoryResponseVm } from '../../models/do-return-history-response
 import { createQueryBuilder } from 'typeorm';
 import { AuthMetadata } from '../../../auth/models/auth-metadata.model';
 import { ReturnReceivedCustFindAllResponseVm } from '../../models/do-return-received-cust.response.vm';
+import { TrackingNote } from '../../../../shared/orm-entity/tracking_note';
 
 @Injectable()
 export class DoReturnService {
@@ -69,7 +70,7 @@ export class DoReturnService {
       ['return.customer_id', 'customerId'],
       ['branch.branch_name', 'branchName'],
       ['customer.customer_name', 'customerName'],
-      ['awb_status.awb_status_title', 'awbStatus'],
+      ['tracking.trackingtype', 'awbStatus'],
       ['return.branch_id_last', 'branchIdLast'],
       ['return.do_return_admin_to_ct_id', 'doReturnAdminToCtId'],
       ['return.do_return_ct_to_collection_id', 'doReturnCtToCollectionId'],
@@ -104,7 +105,11 @@ export class DoReturnService {
     );
     q.leftJoin(e => e.awbLast.awbStatus, 'awb_status', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  );
+    );
+    q.leftJoin(e => e.trackingNote, 'tracking', j =>
+      j.andWhereRaw('tracking.id = (SELECT MAX(id) FROM tracking_note WHERE receiptnumber = return.awb_number)'),
+    );
+
     q.orderBy({ podDatetime: 'DESC' });
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

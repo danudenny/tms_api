@@ -103,8 +103,8 @@ export class MobileCheckInService {
     const permission = AuthService.getPermissionTokenPayload();
     const fromDate = moment().format('YYYY-MM-DD 00:00:00');
     const toDate = moment().format('YYYY-MM-DD 23:59:59');
-    const status = 'ok';
-    const message = 'success';
+    let status = 'ok';
+    let message = 'success';
     let branchName = '';
     let checkInDate = '';
     let attachmentId = null;

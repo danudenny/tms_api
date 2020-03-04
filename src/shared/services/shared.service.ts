@@ -28,6 +28,7 @@ export class SharedService {
     const q = branchRepository.findOne();
     // Manage relation (default inner join)
     q.leftJoin(e => e.district);
+    q.leftJoin(e => e.district.city);
 
     q.select({
       branchId: true,

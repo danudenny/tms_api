@@ -75,13 +75,13 @@ export class V1MobileSyncService {
 
     if (doPodDeliverHistories.length) {
       const lastDoPodDeliverHistory = last(doPodDeliverHistories);
-
-      // TODO: check data timestamp and time server ??
-      // lastDoPodDeliverHistory.awbStatusDateTime;
-      PinoLoggerService.log(
-        ' ############### awbStatusDateTime ',
-        lastDoPodDeliverHistory.awbStatusDateTime,
-      );
+      // NOTE: check data timestamp and time server
+      // handle time status offline
+      const historyDateTime =
+        lastDoPodDeliverHistory.awbStatusDateTime <
+        lastDoPodDeliverHistory.syncDateTime
+          ? lastDoPodDeliverHistory.awbStatusDateTime
+          : lastDoPodDeliverHistory.syncDateTime;
 
       const awbdDelivery = await DoPodDeliverDetail.findOne({
         relations: ['doPodDeliver'],
@@ -164,9 +164,9 @@ export class V1MobileSyncService {
         // #endregion of transaction
 
         // NOTE: queue by Bull
-        DoPodDetailPostMetaQueueService.createJobByMobileSync(
+        DoPodDetailPostMetaQueueService.createJobV1MobileSync(
           awbdDelivery.awbItemId,
-          delivery.awbStatusId,
+          lastDoPodDeliverHistory.awbStatusId,
           awbdDelivery.doPodDeliver.userId,
           awbdDelivery.doPodDeliver.branchId,
           awbdDelivery.userIdCreated,
@@ -176,6 +176,7 @@ export class V1MobileSyncService {
           delivery.consigneeNameNote,
           awbStatus.awbStatusName,
           awbStatus.awbStatusTitle,
+          historyDateTime,
         );
         process = true;
       } else {

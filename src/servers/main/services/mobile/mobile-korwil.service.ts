@@ -141,12 +141,17 @@ export class MobileKorwilService {
   )
   : Promise <ItemListKorwilResponseVm> {
     const authMeta = AuthService.getAuthMetadata();
-
+    const timeNow = moment().toDate();
     const qb1 = createQueryBuilder();
     qb1.addSelect('kt.korwil_transaction_id', 'id');
     qb1.from('korwil_transaction', 'kt');
     qb1.andWhere('kt.branch_id = :branchIdTemp',{ branchIdTemp: branchId});
     qb1.andWhere('kt.user_id = :userId', { userId: authMeta.userId });
+    qb1.andWhere('kt.employee_journey_id Is Not Null');
+    qb1.andWhere('kt.created_time >= :startDate and kt.created_time <= :endDate',
+      {startDate: moment().format('YYYY-MM-DD 00:00:00'),
+      endDate: moment().format('YYYY-MM-DD 23:59:59')
+    });
     qb1.andWhere('kt.is_deleted = false');
     qb1.orderBy('created_time', 'DESC');
     const dataKorwil = await qb1.getRawOne();
@@ -180,7 +185,6 @@ export class MobileKorwilService {
     qb.andWhere('utb.ref_user_id = :userId', { userId: authMeta.userId });
     qb.andWhere('kt.korwil_transaction_id = :korwilId', { korwilId: id });
     qb.orderBy('ki.sort_order', 'ASC');
-
     const data = await qb.getRawMany();
     // console.log(data);
     const result = new ItemListKorwilResponseVm();
@@ -307,19 +311,14 @@ export class MobileKorwilService {
     // GET total photo after delete and upload
     let qb1 = createQueryBuilder();
     qb1.addSelect('ktdp.korwil_transaction_detail_photo_id', 'korwilTransactionDetailPhotoId');
-    qb1.from('korwil_transaction_detail', 'ktd');
-    qb1.innerJoin('korwil_transaction_detail_photo',
-    'ktdp',
-    'ktdp.korwil_transaction_detail_id = ktd.korwil_transaction_detail_id AND ktdp.is_deleted = false'
-    );
-    qb1.where('ktd.is_deleted = false');
+    qb1.from('korwil_transaction_detail_photo', 'ktdp');
+    qb1.where('ktdp.is_deleted = false');
     qb1.andWhere('ktdp.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: payload.korwilTransactionDetailId });
     const photos = await qb1.getRawMany();
     const temp = photos.length;
 
-    const deletedPhotoLength = payload.deletedPhotos ? payload.deletedPhotos.length : 0;
+    const deletedPhotoLength = deletedPhotos ? deletedPhotos.length : 0;
     const countPhoto = temp - deletedPhotoLength + countInsertedImage;
-    // console.log(temp,deletedPhotoLength,countInsertedImage)
     // update count photo in korwil
     let korwilTransactionDetail = await KorwilTransactionDetail.findOne({
       where: {
