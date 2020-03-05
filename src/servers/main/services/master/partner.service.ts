@@ -16,6 +16,8 @@ export class PartnerService {
       },
     ];
 
+    payload.fieldResolverMap['partnerName'] = 'partner_name';
+
     const q = RepositoryService.partner.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 

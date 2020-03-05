@@ -70,6 +70,14 @@ export class LastMileDeliveryOutService {
     doPod.branchId = permissonPayload.branchId;
     doPod.userId = authMeta.userId;
 
+    // NOTE: check if delivery with partner
+    if (payload.isPartner) {
+      doPod.isPartner = true;
+      doPod.partnerId = payload.partnerId;
+    } else {
+      doPod.isPartner = false;
+    }
+
     // await for get do pod id
     await DoPodDeliver.save(doPod);
 
