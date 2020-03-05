@@ -41,12 +41,6 @@ export class PackageAwbResponseVm   {
   dataBag: AwbPackageDetail[];
 
   @ApiModelProperty()
-  districtName: string;
-
-  @ApiModelProperty()
-  districtId: number;
-
-  @ApiModelProperty()
   branchName: string;
 
   @ApiModelProperty()
