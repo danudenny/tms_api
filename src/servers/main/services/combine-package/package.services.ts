@@ -465,7 +465,7 @@ export class PackageService {
       // NOTES: WILL BE USE IN NEXT FUTURE
       if (!branch || (branch && awb.toId !== branch.districtId)) {
         troubleDesc.push('Tujuan tidak sesuai');
-        // isAllow = false;
+        isAllow = false;
       }else if (branch) {
         districtId = branch.districtId;
       }
