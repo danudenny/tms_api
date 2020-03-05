@@ -64,3 +64,30 @@ export class PackageAwbResponseVm   {
   @ApiModelProperty()
   isAllow: boolean;
 }
+
+export class PackageAwbBackupResponseVm   {
+
+  @ApiModelPropertyOptional({ type: () => AwbPackageDetail })
+  data: AwbPackageDetail;
+
+  @ApiModelPropertyOptional({ type: () => [AwbPackageDetail] })
+  dataBag: AwbPackageDetail[];
+
+  @ApiModelProperty()
+  districtName: string;
+
+  @ApiModelProperty()
+  districtId: number;
+
+  @ApiModelPropertyOptional()
+  bagNumber: string;
+
+  @ApiModelPropertyOptional()
+  bagItemId: number;
+
+  @ApiModelPropertyOptional()
+  podScanInHubId: string;
+
+  @ApiModelProperty()
+  isAllow: boolean;
+}
