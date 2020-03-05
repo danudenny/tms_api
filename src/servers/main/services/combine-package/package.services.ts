@@ -164,7 +164,7 @@ export class PackageService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const result           = new PackageAwbResponseVm();
 
-    result.districtId = 0;
+    result.branchId = 0;
 
     const podScanInHub = await PodScanInHub.findOne({ where: {
         branchId           : permissonPayload.branchId,
@@ -180,8 +180,8 @@ export class PackageService {
       qb.addSelect('b.bag_number', 'bagNumber');
       qb.addSelect('c.bag_seq', 'bagSeq');
       qb.addSelect('c.bag_item_id', 'bagItemId');
-      qb.addSelect('b.district_id_to', 'districtId');
-      qb.addSelect('f.district_name', 'districtName');
+      qb.addSelect('b.branch_id_to', 'branchId');
+      qb.addSelect('f.branch_name', 'branchName');
       qb.addSelect('d.consignee_name', 'consigneeName');
       qb.addSelect('d.consignee_address', 'consigneeAddress');
       qb.addSelect('a.awb_item_id', 'awbItemId');
@@ -195,24 +195,24 @@ export class PackageService {
       qb.innerJoin('bag_item', 'c', 'c.bag_item_id = a.bag_item_id');
       qb.innerJoin('awb', 'd', 'd.awb_id = a.awb_id');
       qb.innerJoin('awb_item', 'e', 'e.awb_item_id = a.awb_item_id');
-      qb.innerJoin('district', 'f', 'f.district_id = b.district_id_to');
+      qb.innerJoin('branch', 'f', 'f.branch_id = b.branch_id_to');
       qb.where('a.pod_scan_in_hub_id = :podScanInHubId', { podScanInHubId });
       qb.andWhere('a.is_deleted = false');
 
       const data = await qb.getRawMany();
       let bagNumber;
-      let districtId;
-      let districtName;
+      let branchId;
+      let branchName;
       let bagItemId;
 
       bagNumber = `${data[0].bagNumber}${data[0].bagSeq.toString().padStart(3, '0')}`;
-      districtId = data[0].districtId;
-      districtName = data[0].districtName;
+      branchId = data[0].branchId;
+      branchName = data[0].branchName;
       bagItemId = data[0].bagItemId;
 
       result.bagNumber      = bagNumber;
-      result.districtId     = districtId;
-      result.districtName   = districtName;
+      result.branchId       = branchId;
+      result.branchName     = branchName;
       result.podScanInHubId = podScanInHubId;
       result.bagItemId      = bagItemId;
       result.dataBag        = data;
