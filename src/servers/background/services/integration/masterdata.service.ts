@@ -64,6 +64,10 @@ export class MasterDataService {
           HttpStatus.UNPROCESSABLE_ENTITY,
         );
       }
+    } else {
+      result.data =  users;
+      result.code = HttpStatus.OK;
+      result.message = 'Success';
     }
 
     return result;
@@ -89,6 +93,33 @@ export class MasterDataService {
     return result;
   }
 
+  static async syncRoleTms(payload: any) {
+    const result = [];
+
+    const users = await this.getNotAvailableUserRole();
+
+    if (users.length > 0) {
+      for (const u of users) {
+        const customPayload = new MappingRoleUserPayloadVm();
+        customPayload.employeeId = u.employeeid;
+        customPayload.employeeRoleId = u.employeeroleid;
+        customPayload.branchIdLast = u.branchid;
+        customPayload.branchIdNew = u.branchid;
+        customPayload.userIdUpdated = 0;
+
+        const obj = await this.getMappingRole(customPayload);
+
+        if (Object.getOwnPropertyNames(obj).length > 0) {
+          MappingRoleQueueService.addDataUserTms(users, obj);
+        } else {
+          PinoLoggerService.error(this.logTitle, 'EmployeeId ' + customPayload.employeeId +  ' Not Processed');
+        }
+      }
+    }
+
+    return result;
+  }
+
   private static async getUsers(id: number, mode: number = 0, branchIdLast: number = 0, branchIdNew: number = 0): Promise<any> {
     let where = ' e.employee_role_id = :id ';
     let additionalSelect = ' , e.branch_id as branchIdLast, e.branch_id as branchIdNew ';
@@ -108,7 +139,7 @@ export class MasterDataService {
     });
   }
 
-  public static async insertUserRole(userId: number, branchIdLast: number, branchIdNew: number, payload: any) {
+  public static async insertUserRole(userId: number, branchIdLast: number, branchIdNew: number, payload: any, mode: number = 0) {
     const arrRoleId = payload.roleIds;
     let timeNow = moment().toDate();
 
@@ -165,53 +196,55 @@ export class MasterDataService {
     }
     //#endregion
 
-    //#region Process For Master Data
-    const pool: any = DatabaseConfig.getMasterDataDbPool();
-    const client = await pool.connect();
-    try {
-      timeNow = moment().toDate();
-      const queryDelete = `
-        UPDATE user_role
-        SET user_id_updated = $1, updated_time = $2, is_deleted = true
-        WHERE user_id = $3 and branch_id = $4 and is_deleted=false
-      `;
+    if (mode == 0) {
+      //#region Process For Master Data
+      const pool: any = DatabaseConfig.getMasterDataDbPool();
+      const client = await pool.connect();
+      try {
+        timeNow = moment().toDate();
+        const queryDelete = `
+          UPDATE user_role
+          SET user_id_updated = $1, updated_time = $2, is_deleted = true
+          WHERE user_id = $3 and branch_id = $4 and is_deleted=false
+        `;
 
-      // Delete Previous branch_id_last
-      await client.query(queryDelete, [payload.userIdUpdated, timeNow, userId, branchIdLast], async function(err) {
-        PinoLoggerService.debug(this.logTitle, this.sql);
-        if (err) {
-          PinoLoggerService.error(this.logTitle, err.message);
-        }
-      });
+        // Delete Previous branch_id_last
+        await client.query(queryDelete, [payload.userIdUpdated, timeNow, userId, branchIdLast], async function(err) {
+          PinoLoggerService.debug(this.logTitle, this.sql);
+          if (err) {
+            PinoLoggerService.error(this.logTitle, err.message);
+          }
+        });
 
-      // Delete Previous User Role By user_id and branch_id_new
-      await client.query(queryDelete, [payload.userIdUpdated, timeNow, userId, branchIdNew], async function(err) {
-        PinoLoggerService.debug(this.logTitle, this.sql);
-        if (err) {
-          PinoLoggerService.error(this.logTitle, err.message);
-        }
-      });
+        // Delete Previous User Role By user_id and branch_id_new
+        await client.query(queryDelete, [payload.userIdUpdated, timeNow, userId, branchIdNew], async function(err) {
+          PinoLoggerService.debug(this.logTitle, this.sql);
+          if (err) {
+            PinoLoggerService.error(this.logTitle, err.message);
+          }
+        });
 
-      for (const rr of arrRoleId) {
-        if (rr.roleId != null) {
-          timeNow = moment().toDate();
-          const queryInsert = `
-            INSERT INTO user_role (
-              user_id, role_id, branch_id, created_time, updated_time, user_id_created, user_id_updated
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-          `;
-          await client.query(queryInsert, [userId, rr.roleId, branchIdNew, timeNow, timeNow, userId, userId], async function(err) {
-            PinoLoggerService.debug(this.logTitle, this.sql);
-            if (err) {
-              PinoLoggerService.error(this.logTitle, err.message);
-            }
-          });
+        for (const rr of arrRoleId) {
+          if (rr.roleId != null) {
+            timeNow = moment().toDate();
+            const queryInsert = `
+              INSERT INTO user_role (
+                user_id, role_id, branch_id, created_time, updated_time, user_id_created, user_id_updated
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `;
+            await client.query(queryInsert, [userId, rr.roleId, branchIdNew, timeNow, timeNow, userId, userId], async function(err) {
+              PinoLoggerService.debug(this.logTitle, this.sql);
+              if (err) {
+                PinoLoggerService.error(this.logTitle, err.message);
+              }
+            });
+          }
         }
+      } finally {
+        client.release();
       }
-    } finally {
-      client.release();
+      //#endregion
     }
-    //#endregion
   }
 
   public static async getMappingRole(payload: MappingRoleUserPayloadVm) {
@@ -299,6 +332,23 @@ export class MasterDataService {
     } finally {
       client.release();
     }
+  }
+
+  public static async getNotAvailableUserRole() {
+    const backDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
+
+    const query = `
+      SELECT e.employee_role_id as employeeRoleId, e.employee_id as employeeId, e.branch_id as branchId
+      FROM users u
+      INNER JOIN employee e on u.employee_id=e.employee_id and e.is_deleted=false and e.employee_role_id is not null and e.branch_id is not null
+      LEFT JOIN user_role ur on u.user_id = ur.user_id and ur.is_deleted=false
+      WHERE u.employee_id is not null and e.updated_time >= :backDate and u.is_deleted=false and ur.user_id is null and e.nik=u.username
+      LIMIT 1000
+    `;
+
+    return await RawQueryService.queryWithParams(query, {
+      backDate,
+    });
   }
 
 }
