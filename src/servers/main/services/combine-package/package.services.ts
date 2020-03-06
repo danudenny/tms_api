@@ -49,6 +49,8 @@ export class PackageService {
       result.podScanInHubId = dataResult.podScanInHubId;
       result.dataBag        = dataResult.dataBag;
       result.bagItemId      = dataResult.bagItemId;
+      // result.bagSeq         = dataResult.bagSeq;
+      // result.bagItemWeight  = dataResult.bagItemWeight;
     } else if (regexNumber.test(value) && valueLength === 12) {
       //  scan resi
       if (!payload.branchId && !payload.bagNumber) {
@@ -74,8 +76,8 @@ export class PackageService {
       // search branch code
       const branch = await Branch.findOne({
         where: {
-          branchCode: value
-        }
+          branchCode: value,
+        },
       });
       if (!branch) {
         RequestErrorService.throwObj(
@@ -100,6 +102,8 @@ export class PackageService {
     podScanInHubId: string,
     dataBag: AwbPackageDetail[],
     bagItemId: number,
+    bagSeq: number,
+    bagItemWeight: number,
   }> {
     const value = payload.value;
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -155,6 +159,8 @@ export class PackageService {
       podScanInHubId: data[0].podScanInHubId,
       dataBag: data,
       bagItemId: bagDetail.bagItemId,
+      bagSeq: bagDetail.bagSeq,
+      bagItemWeight: bagDetail.weight,
     };
     return dataResult;
   }
@@ -247,8 +253,8 @@ export class PackageService {
     const branchId       = payload.branchId;
     const branch = await Branch.findOne({
       where: {
-        branchId: branchId
-      }
+        branchId,
+      },
     });
     const districtId = branch ? branch.branchId : null;
 
@@ -459,14 +465,14 @@ export class PackageService {
     if (awb.toId) {
       branch = await Branch.findOne({
         where: {
-          branchId: branchId
-        }
+          branchId,
+        },
       });
       // NOTES: WILL BE USE IN NEXT FUTURE
       if (!branch || (branch && awb.toId !== branch.districtId)) {
         troubleDesc.push('Tujuan tidak sesuai');
         isAllow = false;
-      }else if (branch) {
+      } else if (branch) {
         districtId = branch.districtId;
       }
     } else {
@@ -480,6 +486,7 @@ export class PackageService {
       const detail = {
         awbNumber     : awb.awbNumber,
         weight        : awb.totalWeightRealRounded,
+        totalWeightFinalRounded : awb.totalWeightFinalRounded,
         consigneeName : awb.consigneeName,
         awbItemId     : awbItemAttr.awbItemId,
         customerId    : awb.customerAccountId,

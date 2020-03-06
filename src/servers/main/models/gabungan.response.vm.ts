@@ -20,6 +20,9 @@ export class AwbPackageDetail {
   weight: number;
 
   @ApiModelProperty()
+  totalWeightFinalRounded: number;
+
+  @ApiModelProperty()
   shipperName: string;
 
   @ApiModelProperty()
@@ -68,16 +71,25 @@ export class PackageAwbBackupResponseVm   {
   dataBag: AwbPackageDetail[];
 
   @ApiModelProperty()
-  districtName: string;
+  districtId: number;
 
   @ApiModelProperty()
-  districtId: number;
+  districtCode: string;
+
+  @ApiModelProperty()
+  districtName: string;
+
+  @ApiModelPropertyOptional()
+  bagItemId: number;
 
   @ApiModelPropertyOptional()
   bagNumber: string;
 
   @ApiModelPropertyOptional()
-  bagItemId: number;
+  bagSeq: number;
+
+  @ApiModelPropertyOptional()
+  bagItemWeight: number;
 
   @ApiModelPropertyOptional()
   podScanInHubId: string;
