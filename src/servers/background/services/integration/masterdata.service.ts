@@ -12,7 +12,6 @@ import { PinoLoggerService } from '../../../../shared/services/pino-logger.servi
 import { RoleTmsResponseVm } from '../../models/role-tms.response.vm';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { RoleMappingResponseVm } from '../../models/role-mapping.response.vm';
 
 import moment = require('moment');
 import { Role } from '../../../../shared/orm-entity/role';
