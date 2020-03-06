@@ -1,12 +1,12 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger/decorators';
 
-export class PrintBagItemPaperDataBagDistrictVm {
-  @ApiModelProperty()
-  districtCode: string;
+// export class PrintBagItemPaperDataBagDistrictVm {
+//   @ApiModelProperty()
+//   districtCode: string;
 
-  @ApiModelProperty()
-  districtName: string;
-}
+//   @ApiModelProperty()
+//   districtName: string;
+// }
 
 export class PrintBagItemPaperDataBagBranchVm {
   @ApiModelProperty()
@@ -44,8 +44,8 @@ export class PrintBagItemPaperDataBagVm {
   @ApiModelProperty()
   bagNumber: string;
 
-  @ApiModelProperty({ type: () => PrintBagItemPaperDataBagDistrictVm })
-  district: PrintBagItemPaperDataBagDistrictVm;
+  // @ApiModelProperty({ type: () => PrintBagItemPaperDataBagDistrictVm })
+  // district: PrintBagItemPaperDataBagDistrictVm;
 
   @ApiModelProperty({ type: () => PrintBagItemPaperDataBagBranchVm })
   branch: PrintBagItemPaperDataBagBranchVm;
@@ -64,7 +64,7 @@ export class PrintBagItemPaperDataVm {
   @ApiModelProperty({ type: () => PrintBagItemPaperDataBagVm })
   bag: PrintBagItemPaperDataBagVm;
 
-  @ApiModelProperty({ type: () => PrintBagItemPaperDataBagItemAwbVm })
+  @ApiModelProperty({ type: () => [PrintBagItemPaperDataBagItemAwbVm] })
   bagItemAwbs: PrintBagItemPaperDataBagItemAwbVm[];
 }
 
