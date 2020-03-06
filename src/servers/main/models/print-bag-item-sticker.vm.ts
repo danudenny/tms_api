@@ -8,12 +8,23 @@ export class PrintBagItemStickerDataBagDistrictVm {
   districtCode: boolean;
 }
 
+export class PrintBagItemStickerDataBagBranchVm {
+  @ApiModelProperty()
+  branchName: boolean;
+
+  @ApiModelProperty()
+  branchCode: boolean;
+}
+
 export class PrintBagItemStickerDataBagVm {
   @ApiModelProperty()
   bagNumber: boolean;
 
   @ApiModelProperty({ type: () => PrintBagItemStickerDataBagDistrictVm })
   district: PrintBagItemStickerDataBagDistrictVm;
+
+  @ApiModelProperty({ type: () => PrintBagItemStickerDataBagBranchVm })
+  branch: PrintBagItemStickerDataBagBranchVm;
 }
 
 export class PrintBagItemStickerDataVm {

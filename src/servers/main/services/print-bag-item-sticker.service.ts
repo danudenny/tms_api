@@ -28,6 +28,10 @@ export class PrintBagItemStickerService {
             districtName: true,
             districtCode: true,
           },
+          branch: {
+            branchName: true,
+            branchCode: true,
+          },
         },
       })
       .where(e => e.bagItemId, w => w.equals(queryParams.id))
@@ -76,10 +80,10 @@ export class PrintBagItemStickerService {
       `TEXT 30,380,"3",0,1,1,"Koli ke : ${finalBagItemSeq}"\n` +
       `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${meta.bagItemAwbsTotal} resi"\n` +
       `TEXT 30,460,"4",0,1,1,0,"${
-        data.bag.district.districtCode
+        data.bag.branch.branchCode
       }"\n` +
       `TEXT 30,510,"5",0,1,1,0,"${
-        data.bag.district.districtName
+        data.bag.branch.branchName
       }"\n` +
       `PRINT 1\n` +
       `EOP`;

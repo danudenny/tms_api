@@ -8,6 +8,14 @@ export class PrintBagItemPaperDataBagDistrictVm {
   districtName: string;
 }
 
+export class PrintBagItemPaperDataBagBranchVm {
+  @ApiModelProperty()
+  branchCode: string;
+
+  @ApiModelProperty()
+  branchName: string;
+}
+
 export class PrintBagItemPaperDataBagItemAwbAwbItemAwbVm {
   @ApiModelProperty()
   awbNumber: string;
@@ -38,6 +46,9 @@ export class PrintBagItemPaperDataBagVm {
 
   @ApiModelProperty({ type: () => PrintBagItemPaperDataBagDistrictVm })
   district: PrintBagItemPaperDataBagDistrictVm;
+
+  @ApiModelProperty({ type: () => PrintBagItemPaperDataBagBranchVm })
+  branch: PrintBagItemPaperDataBagBranchVm;
 }
 
 export class PrintBagItemPaperDataVm {
