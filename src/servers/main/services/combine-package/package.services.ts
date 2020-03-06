@@ -46,9 +46,12 @@ export class PackageService {
       result.bagNumber      = dataResult.bagNumber;
       result.branchName   = dataResult.branchName;
       result.branchId     = dataResult.branchId;
+      result.branchCode   = dataResult.branchCode;
       result.podScanInHubId = dataResult.podScanInHubId;
       result.dataBag        = dataResult.dataBag;
       result.bagItemId      = dataResult.bagItemId;
+      result.bagSeq         = dataResult.bagSeq;
+      result.weight         = dataResult.weight;
     } else if (regexNumber.test(value) && valueLength === 12) {
       //  scan resi
       if (!payload.branchId && !payload.bagNumber) {
@@ -64,6 +67,7 @@ export class PackageService {
       result.bagNumber      = scanResult.bagNumber;
       result.branchId       = scanResult.branchId;
       result.branchName     = scanResult.branchName;
+      result.branchCode     = scanResult.branchCode;
       result.data           = scanResult.data;
       result.bagItemId      = scanResult.bagItemId;
       result.isAllow        = scanResult.isAllow;
@@ -100,6 +104,9 @@ export class PackageService {
     podScanInHubId: string,
     dataBag: AwbPackageDetail[],
     bagItemId: number,
+    branchCode: string,
+    bagSeq: number,
+    weight: number,
   }> {
     const value = payload.value;
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -128,6 +135,7 @@ export class PackageService {
     qb.addSelect('a.pod_scan_in_hub_id', 'podScanInHubId');
     qb.addSelect('e.branch_id', 'branchId');
     qb.addSelect('e.branch_name', 'branchName');
+    qb.addSelect('e.branch_code', 'branchCode');
     qb.addSelect('false', 'isTrouble');
     qb.from('pod_scan_in_hub_bag', 'a');
     qb.innerJoin('pod_scan_in_hub_detail', 'b', 'a.pod_scan_in_hub_id = b.pod_scan_in_hub_id AND b.is_deleted = false');
@@ -153,8 +161,11 @@ export class PackageService {
       branchId: data[0].branchId,
       branchName: data[0].branchName,
       podScanInHubId: data[0].podScanInHubId,
+      branchCode: data[0].branchCode,
       dataBag: data,
       bagItemId: bagDetail.bagItemId,
+      bagSeq: bagDetail.bagSeq,
+      weight: bagDetail.weight,
     };
     return dataResult;
   }
@@ -480,6 +491,7 @@ export class PackageService {
       const detail = {
         awbNumber     : awb.awbNumber,
         weight        : awb.totalWeightRealRounded,
+        totalWeightFinalRounded : awb.totalWeightFinalRounded,
         consigneeName : awb.consigneeName,
         awbItemId     : awbItemAttr.awbItemId,
         customerId    : awb.customerAccountId,

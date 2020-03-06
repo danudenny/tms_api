@@ -60,6 +60,15 @@ export class PackageAwbResponseVm   {
 
   @ApiModelProperty()
   isAllow: boolean;
+
+  @ApiModelProperty()
+  branchCode: string;
+
+  @ApiModelPropertyOptional()
+  bagSeq: number;
+
+  @ApiModelPropertyOptional()
+  weight: number;
 }
 
 export class PackageAwbBackupResponseVm   {
