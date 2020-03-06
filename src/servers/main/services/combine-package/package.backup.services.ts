@@ -2,8 +2,8 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { sampleSize, assign, join } from 'lodash';
 import moment = require('moment');
-import { PackageAwbResponseVm, AwbPackageDetail } from '../../models/gabungan.response.vm';
-import { PackagePayloadVm } from '../../models/gabungan-payload.vm';
+import { PackageAwbResponseVm, AwbPackageDetail, PackageAwbBackupResponseVm } from '../../models/gabungan.response.vm';
+import { PackagePayloadVm, PackageBackupPayloadVm } from '../../models/gabungan-payload.vm';
 import _ from 'lodash';
 import { District } from '../../../../shared/orm-entity/district';
 import { createQueryBuilder, In } from 'typeorm';
@@ -25,36 +25,35 @@ import { CustomCounterCode } from '../../../../shared/services/custom-counter-co
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { BagService } from '../v1/bag.service';
 import { Representative } from '../../../../shared/orm-entity/representative';
-import { Branch } from '../../../../shared/orm-entity/branch';
 
 @Injectable()
 export class PackageService {
   constructor() {}
 
-  async awbPackage(payload: PackagePayloadVm): Promise<PackageAwbResponseVm> {
+  async awbPackage(payload: PackageBackupPayloadVm): Promise<PackageAwbBackupResponseVm> {
 
     const regexNumber = /^[0-9]+$/;
     const value       = payload.value;
     const valueLength = value.length;
-    const result      = new PackageAwbResponseVm();
+    const result      = new PackageAwbBackupResponseVm();
 
-    result.branchId     = 0;
-    result.branchName   = null;
+    result.districtId   = 0;
+    result.districtName = null;
 
     if (value.includes('*BUKA')) {
       const dataResult      = await this.openSortirCombine(payload);
       result.bagNumber      = dataResult.bagNumber;
-      result.branchName   = dataResult.branchName;
-      result.branchId     = dataResult.branchId;
+      result.districtName   = dataResult.districtName;
+      result.districtId     = dataResult.districtId;
       result.podScanInHubId = dataResult.podScanInHubId;
       result.dataBag        = dataResult.dataBag;
       result.bagItemId      = dataResult.bagItemId;
     } else if (regexNumber.test(value) && valueLength === 12) {
       //  scan resi
-      if (!payload.branchId && !payload.bagNumber) {
+      if (!payload.districtId && !payload.bagNumber) {
           RequestErrorService.throwObj(
           {
-            message: 'Masukan kode branch terlebih dahulu',
+            message: 'Masukan kode kecamatan terlebih dahulu',
           },
           HttpStatus.BAD_REQUEST,
         );
@@ -62,8 +61,8 @@ export class PackageService {
       const scanResult = await this.awbScan(payload);
       result.dataBag        = scanResult.dataBag;
       result.bagNumber      = scanResult.bagNumber;
-      result.branchId       = scanResult.branchId;
-      result.branchName     = scanResult.branchName;
+      result.districtId     = scanResult.districtId;
+      result.districtName   = scanResult.districtName;
       result.data           = scanResult.data;
       result.bagItemId      = scanResult.bagItemId;
       result.isAllow        = scanResult.isAllow;
@@ -71,23 +70,22 @@ export class PackageService {
     } else if (value === '*SELESAI' || value === '*selesai' ) {
       await this.onFinish(payload);
     } else {
-      // search branch code
-      const branch = await Branch.findOne({
-        where: {
-          branchCode: value
-        }
+      // search district code
+      const district = await District.findOne({
+        where: { districtCode: value },
       });
-      if (!branch) {
+
+      if (!district) {
         RequestErrorService.throwObj(
           {
-            message: 'Kode Gerai tidak ditemukan',
+            message: 'Kode kecamatan tidak ditemukan',
           },
           HttpStatus.BAD_REQUEST,
         );
       }
 
-      result.branchId   = branch.branchId;
-      result.branchName = branch.branchName.trim();
+      result.districtId   = district.districtId;
+      result.districtName = district.districtName.trim();
     }
 
     return result;
@@ -95,8 +93,8 @@ export class PackageService {
 
   private async openSortirCombine(payload): Promise<{
     bagNumber: string,
-    branchId: number,
-    branchName: string,
+    districtId: number,
+    districtName: string,
     podScanInHubId: string,
     dataBag: AwbPackageDetail[],
     bagItemId: number,
@@ -126,14 +124,14 @@ export class PackageService {
     qb.addSelect('c.pickup_merchant', 'pickupMerchant');
     qb.addSelect('c.ref_reseller', 'refReseller');
     qb.addSelect('a.pod_scan_in_hub_id', 'podScanInHubId');
-    qb.addSelect('e.branch_id', 'branchId');
-    qb.addSelect('e.branch_name', 'branchName');
+    qb.addSelect('e.district_id', 'districtId');
+    qb.addSelect('e.district_name', 'districtName');
     qb.addSelect('false', 'isTrouble');
     qb.from('pod_scan_in_hub_bag', 'a');
     qb.innerJoin('pod_scan_in_hub_detail', 'b', 'a.pod_scan_in_hub_id = b.pod_scan_in_hub_id AND b.is_deleted = false');
     qb.innerJoin('awb', 'c', 'c.awb_id = b.awb_id AND c.is_deleted = false');
     qb.innerJoin('bag', 'd', 'd.bag_id = b.bag_id AND d.is_deleted = false');
-    qb.innerJoin('branch', 'e', 'e.branch_id = d.branch_id_to AND e.is_deleted = false');
+    qb.innerJoin('district', 'e', 'e.district_id = d.district_id_to AND e.is_deleted = false');
     qb.where('a.is_deleted = false');
     qb.andWhere('a.bag_id = :bagId', { bagId: bagDetail.bagId });
     qb.andWhere('a.bag_item_id = :bagItemId', { bagItemId: bagDetail.bagItemId });
@@ -150,8 +148,8 @@ export class PackageService {
 
     const dataResult = {
       bagNumber,
-      branchId: data[0].branchId,
-      branchName: data[0].branchName,
+      districtId: data[0].districtId,
+      districtName: data[0].districtName,
       podScanInHubId: data[0].podScanInHubId,
       dataBag: data,
       bagItemId: bagDetail.bagItemId,
@@ -159,12 +157,12 @@ export class PackageService {
     return dataResult;
   }
 
-  async loadAwbPackage(): Promise<PackageAwbResponseVm> {
+  async loadAwbPackage(): Promise<PackageAwbBackupResponseVm> {
     const authMeta         = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    const result           = new PackageAwbResponseVm();
+    const result           = new PackageAwbBackupResponseVm();
 
-    result.branchId = 0;
+    result.districtId = 0;
 
     const podScanInHub = await PodScanInHub.findOne({ where: {
         branchId           : permissonPayload.branchId,
@@ -180,8 +178,8 @@ export class PackageService {
       qb.addSelect('b.bag_number', 'bagNumber');
       qb.addSelect('c.bag_seq', 'bagSeq');
       qb.addSelect('c.bag_item_id', 'bagItemId');
-      qb.addSelect('b.branch_id_to', 'branchId');
-      qb.addSelect('f.branch_name', 'branchName');
+      qb.addSelect('b.district_id_to', 'districtId');
+      qb.addSelect('f.district_name', 'districtName');
       qb.addSelect('d.consignee_name', 'consigneeName');
       qb.addSelect('d.consignee_address', 'consigneeAddress');
       qb.addSelect('a.awb_item_id', 'awbItemId');
@@ -195,24 +193,24 @@ export class PackageService {
       qb.innerJoin('bag_item', 'c', 'c.bag_item_id = a.bag_item_id');
       qb.innerJoin('awb', 'd', 'd.awb_id = a.awb_id');
       qb.innerJoin('awb_item', 'e', 'e.awb_item_id = a.awb_item_id');
-      qb.innerJoin('branch', 'f', 'f.branch_id = b.branch_id_to');
+      qb.innerJoin('district', 'f', 'f.district_id = b.district_id_to');
       qb.where('a.pod_scan_in_hub_id = :podScanInHubId', { podScanInHubId });
       qb.andWhere('a.is_deleted = false');
 
       const data = await qb.getRawMany();
       let bagNumber;
-      let branchId;
-      let branchName;
+      let districtId;
+      let districtName;
       let bagItemId;
 
       bagNumber = `${data[0].bagNumber}${data[0].bagSeq.toString().padStart(3, '0')}`;
-      branchId = data[0].branchId;
-      branchName = data[0].branchName;
+      districtId = data[0].districtId;
+      districtName = data[0].districtName;
       bagItemId = data[0].bagItemId;
 
       result.bagNumber      = bagNumber;
-      result.branchId       = branchId;
-      result.branchName     = branchName;
+      result.districtId     = districtId;
+      result.districtName   = districtName;
       result.podScanInHubId = podScanInHubId;
       result.bagItemId      = bagItemId;
       result.dataBag        = data;
@@ -244,13 +242,7 @@ export class PackageService {
           HttpStatus.BAD_REQUEST,
         );
       }
-    const branchId       = payload.branchId;
-    const branch = await Branch.findOne({
-      where: {
-        branchId: branchId
-      }
-    });
-    const districtId = branch ? branch.branchId : null;
+    const districtId       = payload.districtId;
 
     const qb = createQueryBuilder();
     qb.addSelect('a.bag_id', 'bagId');
@@ -278,7 +270,6 @@ export class PackageService {
           const bagDetail = Bag.create({
             bagNumber            : randomBagNumber,
             districtIdTo         : districtId,
-            branchIdTo           : branchId,
             refRepresentativeCode: representative.representativeCode,
             representativeIdTo   : representative.representativeId,
             bagType              : 'district',
@@ -420,18 +411,16 @@ export class PackageService {
   }
 
   private async awbScan(payload): Promise<any> {
-    const value                 = payload.value;
-    const result                = new Object();
-    const awbItemAttr           = await AwbService.validAwbNumber(value);
-    const branchId: number      = payload.branchId;
+    const value            = payload.value;
+    const result           = new Object();
+    const awbItemAttr      = await AwbService.validAwbNumber(value);
+    const districtId: number    = payload.districtId;
     let bagNumber: number       = payload.bagNumber;
     let podScanInHubId: string  = payload.podScanInHubId;
     let bagItemId: string       = payload.bagItemId;
     let isTrouble: boolean      = false;
-    let isAllow: boolean        = true;
+    const isAllow: boolean        = true;
     const troubleDesc: String[] = [];
-    let districtId = null;
-    let branch = null;
 
     if (!awbItemAttr) {
       RequestErrorService.throwObj(
@@ -457,17 +446,10 @@ export class PackageService {
     const awb = await Awb.findOne({ where: { awbNumber: value, isDeleted: false } });
 
     if (awb.toId) {
-      branch = await Branch.findOne({
-        where: {
-          branchId: branchId
-        }
-      });
       // NOTES: WILL BE USE IN NEXT FUTURE
-      if (!branch || (branch && awb.toId !== branch.districtId)) {
+      if (awb.toId !== districtId) {
         troubleDesc.push('Tujuan tidak sesuai');
-        isAllow = false;
-      }else if (branch) {
-        districtId = branch.districtId;
+        // isAllow = false;
       }
     } else {
       isTrouble = true;
@@ -520,9 +502,9 @@ export class PackageService {
         isAllow,
         podScanInHubId,
         bagItemId,
-        branchId,
+        districtId,
         data        : detail,
-        branchName: branch.branchName,
+        districtName: districtDetail.districtName,
       });
     } else {
       assign(result, {
@@ -531,8 +513,8 @@ export class PackageService {
         podScanInHubId,
         bagItemId,
         data: [],
-        branchId,
-        branchName: branch ? branch.branchName : null,
+        districtId,
+        districtName: null,
       });
     }
 

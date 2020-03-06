@@ -44,6 +44,33 @@ export class PackageAwbResponseVm   {
   dataBag: AwbPackageDetail[];
 
   @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  branchId: number;
+
+  @ApiModelPropertyOptional()
+  bagNumber: string;
+
+  @ApiModelPropertyOptional()
+  bagItemId: number;
+
+  @ApiModelPropertyOptional()
+  podScanInHubId: string;
+
+  @ApiModelProperty()
+  isAllow: boolean;
+}
+
+export class PackageAwbBackupResponseVm   {
+
+  @ApiModelPropertyOptional({ type: () => AwbPackageDetail })
+  data: AwbPackageDetail;
+
+  @ApiModelPropertyOptional({ type: () => [AwbPackageDetail] })
+  dataBag: AwbPackageDetail[];
+
+  @ApiModelProperty()
   districtId: number;
 
   @ApiModelProperty()
