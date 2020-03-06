@@ -231,9 +231,7 @@ export class WebScanOutEditHubVm extends WebScanOutVm {
 export class WebScanOutCreateDeliveryVm {
   @ApiModelProperty({
     example: 123,
-    skipValidation: true,
   })
-  @IsDefined({message: 'Sigesit harus diisi'})
   userIdDriver: number;
 
   @ApiModelPropertyOptional({
