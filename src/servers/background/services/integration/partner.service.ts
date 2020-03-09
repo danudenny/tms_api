@@ -238,7 +238,7 @@ export class PartnerService {
     const jsonData = {
       userid: 14,
       memberid: 'LOGSICEPAT04100A',
-      orderid: yearNow + 'SCP' + data.refAwbNumber,
+      orderid: 'SCP' + data.refAwbNumber,
       addresses: [
         {
           addresstype: 'senderlocation',
@@ -384,7 +384,7 @@ export class PartnerService {
     let paramBranchCode = '';
     let paramPartnerId = '';
     paramAwb = payload.awb;
-    paramAwb = paramAwb.substring(5, 17);
+    paramAwb = paramAwb.substring(3, 15);
     paramBranchCode = payload.branch_code;
     paramPartnerId = payload.partner_id;
 
