@@ -71,6 +71,9 @@ export class PackageAwbResponseVm   {
   bagSeq: number;
 
   @ApiModelPropertyOptional()
+  bagWeight: number;
+
+  @ApiModelPropertyOptional()
   weight: number;
 }
 
