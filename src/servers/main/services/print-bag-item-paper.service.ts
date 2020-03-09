@@ -23,9 +23,9 @@ export class PrintBagItemPaperService {
         bag: {
           bagId: true,
           bagNumber: true,
-          district: {
-            districtName: true,
-            districtCode: true,
+          branch: {
+            branchName: true,
+            branchCode: true,
           },
         },
         bagItemAwbs: {

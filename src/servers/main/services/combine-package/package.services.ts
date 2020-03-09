@@ -46,9 +46,12 @@ export class PackageService {
       result.bagNumber      = dataResult.bagNumber;
       result.branchName   = dataResult.branchName;
       result.branchId     = dataResult.branchId;
+      result.branchCode   = dataResult.branchCode;
       result.podScanInHubId = dataResult.podScanInHubId;
       result.dataBag        = dataResult.dataBag;
       result.bagItemId      = dataResult.bagItemId;
+      result.bagSeq         = dataResult.bagSeq;
+      result.weight         = dataResult.weight;
     } else if (regexNumber.test(value) && valueLength === 12) {
       //  scan resi
       if (!payload.branchId && !payload.bagNumber) {
@@ -64,6 +67,7 @@ export class PackageService {
       result.bagNumber      = scanResult.bagNumber;
       result.branchId       = scanResult.branchId;
       result.branchName     = scanResult.branchName;
+      result.branchCode     = scanResult.branchCode;
       result.data           = scanResult.data;
       result.bagItemId      = scanResult.bagItemId;
       result.isAllow        = scanResult.isAllow;
@@ -88,6 +92,7 @@ export class PackageService {
 
       result.branchId   = branch.branchId;
       result.branchName = branch.branchName.trim();
+      result.branchCode = branch.branchCode.trim(); 
     }
 
     return result;
@@ -100,6 +105,9 @@ export class PackageService {
     podScanInHubId: string,
     dataBag: AwbPackageDetail[],
     bagItemId: number,
+    branchCode: string,
+    bagSeq: number,
+    weight: number,
   }> {
     const value = payload.value;
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -121,13 +129,16 @@ export class PackageService {
     qb.addSelect('c.awb_number', 'awbNumber');
     qb.addSelect('c.consignee_name', 'consigneeName');
     qb.addSelect('c.consignee_address', 'consigneeAddress');
+    qb.addSelect('c.consignee_phone', 'consigneeNumber');
     qb.addSelect('c.total_weight_real_rounded', 'weight');
+    qb.addSelect('c.total_weight_final_rounded', 'totalWeightFinalRounded');
     qb.addSelect('c.customer_account_id', 'customerId');
     qb.addSelect('c.pickup_merchant', 'pickupMerchant');
     qb.addSelect('c.ref_reseller', 'refReseller');
     qb.addSelect('a.pod_scan_in_hub_id', 'podScanInHubId');
     qb.addSelect('e.branch_id', 'branchId');
     qb.addSelect('e.branch_name', 'branchName');
+    qb.addSelect('e.branch_code', 'branchCode');
     qb.addSelect('false', 'isTrouble');
     qb.from('pod_scan_in_hub_bag', 'a');
     qb.innerJoin('pod_scan_in_hub_detail', 'b', 'a.pod_scan_in_hub_id = b.pod_scan_in_hub_id AND b.is_deleted = false');
@@ -153,8 +164,11 @@ export class PackageService {
       branchId: data[0].branchId,
       branchName: data[0].branchName,
       podScanInHubId: data[0].podScanInHubId,
+      branchCode: data[0].branchCode,
       dataBag: data,
       bagItemId: bagDetail.bagItemId,
+      bagSeq: bagDetail.bagSeq,
+      weight: bagDetail.weight,
     };
     return dataResult;
   }
@@ -180,16 +194,20 @@ export class PackageService {
       qb.addSelect('b.bag_number', 'bagNumber');
       qb.addSelect('c.bag_seq', 'bagSeq');
       qb.addSelect('c.bag_item_id', 'bagItemId');
+      qb.addSelect('c.weight', 'bagWeight');
       qb.addSelect('b.branch_id_to', 'branchId');
       qb.addSelect('f.branch_name', 'branchName');
+      qb.addSelect('f.branch_code', 'branchCode');
       qb.addSelect('d.consignee_name', 'consigneeName');
       qb.addSelect('d.consignee_address', 'consigneeAddress');
+      qb.addSelect('d.consignee_phone', 'consigneeNumber');
       qb.addSelect('a.awb_item_id', 'awbItemId');
       qb.addSelect('d.awb_number', 'awbNumber');
       qb.addSelect('d.customer_account_id', 'customerId');
       qb.addSelect('d.pickup_merchant', 'pickupMerchant');
       qb.addSelect('d.ref_reseller', 'shipperName');
       qb.addSelect('d.total_weight_real_rounded', 'weight');
+      qb.addSelect('d.total_weight_final_rounded', 'totalWeightFinalRounded');
       qb.from('pod_scan_in_hub_detail', 'a');
       qb.innerJoin('bag', 'b', 'a.bag_id = b.bag_id');
       qb.innerJoin('bag_item', 'c', 'c.bag_item_id = a.bag_item_id');
@@ -204,15 +222,24 @@ export class PackageService {
       let branchId;
       let branchName;
       let bagItemId;
+      let branchCode;
+      let bagSeq;
+      let bagWeight;
 
       bagNumber = `${data[0].bagNumber}${data[0].bagSeq.toString().padStart(3, '0')}`;
       branchId = data[0].branchId;
       branchName = data[0].branchName;
+      branchCode = data[0].branchCode;
       bagItemId = data[0].bagItemId;
+      bagWeight = data[0].bagWeight;
+      bagSeq = data[0].bagSeq;
 
       result.bagNumber      = bagNumber;
       result.branchId       = branchId;
       result.branchName     = branchName;
+      result.branchCode     = branchCode;
+      result.bagSeq         = bagSeq;
+      result.bagWeight      = bagWeight;
       result.podScanInHubId = podScanInHubId;
       result.bagItemId      = bagItemId;
       result.dataBag        = data;
@@ -479,12 +506,14 @@ export class PackageService {
 
       const detail = {
         awbNumber     : awb.awbNumber,
-        weight        : awb.totalWeightRealRounded,
-        consigneeName : awb.consigneeName,
-        awbItemId     : awbItemAttr.awbItemId,
-        customerId    : awb.customerAccountId,
-        pickupMerchant: awb.pickupMerchant,
-        shipperName   : awb.refReseller,
+        totalWeightRealRounded  : awb.totalWeightRealRounded,
+        totalWeightFinalRounded : awb.totalWeightFinalRounded,
+        consigneeName   : awb.consigneeName,
+        consigneeNumber : awb.consigneeNumber,
+        awbItemId       : awbItemAttr.awbItemId,
+        customerId      : awb.customerAccountId,
+        pickupMerchant  : awb.pickupMerchant,
+        shipperName     : awb.refReseller,
         consigneeAddress: awb.consigneeAddress,
         isTrouble,
       };
@@ -523,6 +552,7 @@ export class PackageService {
         branchId,
         data        : detail,
         branchName: branch.branchName,
+        branchCode: branch.branchCode,
       });
     } else {
       assign(result, {
@@ -533,6 +563,7 @@ export class PackageService {
         data: [],
         branchId,
         branchName: branch ? branch.branchName : null,
+        branchCode: branch ? branch.branchCode : null,
       });
     }
 

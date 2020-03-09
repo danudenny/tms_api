@@ -29,6 +29,9 @@ export class AwbPackageDetail {
   consigneeName: string;
 
   @ApiModelProperty()
+  consigneeNumber: string;
+
+  @ApiModelProperty()
   consigneeAddress: string;
 
   @ApiModelProperty()
@@ -60,6 +63,18 @@ export class PackageAwbResponseVm   {
 
   @ApiModelProperty()
   isAllow: boolean;
+
+  @ApiModelProperty()
+  branchCode: string;
+
+  @ApiModelPropertyOptional()
+  bagSeq: number;
+
+  @ApiModelPropertyOptional()
+  bagWeight: number;
+
+  @ApiModelPropertyOptional()
+  weight: number;
 }
 
 export class PackageAwbBackupResponseVm   {

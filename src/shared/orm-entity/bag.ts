@@ -155,6 +155,10 @@ export class Bag extends TmsBaseEntity {
   district: District;
 
   @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_to' })
+  branchTo: Branch;
+
+  @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
 }
