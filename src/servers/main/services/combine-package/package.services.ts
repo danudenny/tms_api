@@ -196,6 +196,7 @@ export class PackageService {
       qb.addSelect('c.bag_item_id', 'bagItemId');
       qb.addSelect('b.branch_id_to', 'branchId');
       qb.addSelect('f.branch_name', 'branchName');
+      qb.addSelect('f.branch_code', 'branchCode');
       qb.addSelect('d.consignee_name', 'consigneeName');
       qb.addSelect('d.consignee_address', 'consigneeAddress');
       qb.addSelect('d.consignee_phone', 'consigneeNumber');
@@ -220,17 +221,20 @@ export class PackageService {
       let branchId;
       let branchName;
       let bagItemId;
+      let branchCode;
       let bagSeq;
 
       bagNumber = `${data[0].bagNumber}${data[0].bagSeq.toString().padStart(3, '0')}`;
       branchId = data[0].branchId;
       branchName = data[0].branchName;
+      branchCode = data[0].branchCode;
       bagItemId = data[0].bagItemId;
       bagSeq = data[0].bagSeq;
 
       result.bagNumber      = bagNumber;
       result.branchId       = branchId;
       result.branchName     = branchName;
+      result.branchCode     = branchCode;
       result.bagSeq         = bagSeq;
       result.podScanInHubId = podScanInHubId;
       result.bagItemId      = bagItemId;
