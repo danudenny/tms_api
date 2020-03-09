@@ -400,6 +400,7 @@ export class LastMileDeliveryOutService {
                 response.printDoPodDetailMetadata.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
                 response.printDoPodDetailMetadata.awbItem.awb.isCod = awb.awbItem.awb.isCod;
                 response.printDoPodDetailMetadata.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
+                response.printDoPodDetailMetadata.awbItem.awb.awbItemId = awb.awbItemId;
 
                 // TODO: need improvement counter total scan out
                 const totalAwb = doPodDeliver.totalAwb + 1;

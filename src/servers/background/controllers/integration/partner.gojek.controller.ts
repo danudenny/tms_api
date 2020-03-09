@@ -5,6 +5,9 @@ import { PinoLoggerService } from '../../../../shared/services/pino-logger.servi
 import { PartnerGojekService } from '../../services/integration/partner.gojek.service';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { GojekBookingPickupVm, GojekBookingPickupResponseVm, GojekCancelBookingVm } from '../../models/partner/gojek-booking-pickup.vm';
+import { GojekBookingPodResponseVm, GojekBookingPodVm } from '../../models/partner/gojek-booking-pod.vm';
+import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
+import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('Partner Integration Gojek')
 @Controller('integration')
@@ -45,8 +48,27 @@ export class PartnerGojekController {
   @UseGuards(AuthGojekGuard)
   @ResponseSerializerOptions({ disable: true })
   public async webHookCallback(@Body() payload: any) {
-    console.log(payload);
     PartnerGojekService.callbackOrder(payload);
     return { status: 'ok', message: 'success' };
   }
+
+  // NOTE: Gojek Delivery
+  @Post('gojek/createBooking/delivery')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: GojekBookingPodResponseVm })
+  public async createBokingPod(@Body() payload: GojekBookingPodVm) {
+    return PartnerGojekService.createBookingPod(payload);
+  }
+
+  @Put('gojek/cancelBooking/delivery')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async cancelBookingDelivery(@Body() payload: GojekCancelBookingVm) {
+    return PartnerGojekService.cancelBookingDelivery(payload);
+  }
+
 }
