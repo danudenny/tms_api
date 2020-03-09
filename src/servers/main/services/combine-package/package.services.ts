@@ -92,6 +92,7 @@ export class PackageService {
 
       result.branchId   = branch.branchId;
       result.branchName = branch.branchName.trim();
+      result.branchCode = branch.branchCode.trim(); 
     }
 
     return result;
@@ -128,7 +129,9 @@ export class PackageService {
     qb.addSelect('c.awb_number', 'awbNumber');
     qb.addSelect('c.consignee_name', 'consigneeName');
     qb.addSelect('c.consignee_address', 'consigneeAddress');
+    qb.addSelect('c.consignee_phone', 'consigneeNumber');
     qb.addSelect('c.total_weight_real_rounded', 'weight');
+    qb.addSelect('c.total_weight_final_rounded', 'totalWeightFinalRounded');
     qb.addSelect('c.customer_account_id', 'customerId');
     qb.addSelect('c.pickup_merchant', 'pickupMerchant');
     qb.addSelect('c.ref_reseller', 'refReseller');
@@ -195,12 +198,14 @@ export class PackageService {
       qb.addSelect('f.branch_name', 'branchName');
       qb.addSelect('d.consignee_name', 'consigneeName');
       qb.addSelect('d.consignee_address', 'consigneeAddress');
+      qb.addSelect('d.consignee_phone', 'consigneeNumber');
       qb.addSelect('a.awb_item_id', 'awbItemId');
       qb.addSelect('d.awb_number', 'awbNumber');
       qb.addSelect('d.customer_account_id', 'customerId');
       qb.addSelect('d.pickup_merchant', 'pickupMerchant');
       qb.addSelect('d.ref_reseller', 'shipperName');
       qb.addSelect('d.total_weight_real_rounded', 'weight');
+      qb.addSelect('d.total_weight_final_rounded', 'totalWeightFinalRounded');
       qb.from('pod_scan_in_hub_detail', 'a');
       qb.innerJoin('bag', 'b', 'a.bag_id = b.bag_id');
       qb.innerJoin('bag_item', 'c', 'c.bag_item_id = a.bag_item_id');
@@ -215,15 +220,18 @@ export class PackageService {
       let branchId;
       let branchName;
       let bagItemId;
+      let bagSeq;
 
       bagNumber = `${data[0].bagNumber}${data[0].bagSeq.toString().padStart(3, '0')}`;
       branchId = data[0].branchId;
       branchName = data[0].branchName;
       bagItemId = data[0].bagItemId;
+      bagSeq = data[0].bagSeq;
 
       result.bagNumber      = bagNumber;
       result.branchId       = branchId;
       result.branchName     = branchName;
+      result.bagSeq         = bagSeq;
       result.podScanInHubId = podScanInHubId;
       result.bagItemId      = bagItemId;
       result.dataBag        = data;
@@ -490,13 +498,14 @@ export class PackageService {
 
       const detail = {
         awbNumber     : awb.awbNumber,
-        weight        : awb.totalWeightRealRounded,
+        totalWeightRealRounded  : awb.totalWeightRealRounded,
         totalWeightFinalRounded : awb.totalWeightFinalRounded,
-        consigneeName : awb.consigneeName,
-        awbItemId     : awbItemAttr.awbItemId,
-        customerId    : awb.customerAccountId,
-        pickupMerchant: awb.pickupMerchant,
-        shipperName   : awb.refReseller,
+        consigneeName   : awb.consigneeName,
+        consigneeNumber : awb.consigneeNumber,
+        awbItemId       : awbItemAttr.awbItemId,
+        customerId      : awb.customerAccountId,
+        pickupMerchant  : awb.pickupMerchant,
+        shipperName     : awb.refReseller,
         consigneeAddress: awb.consigneeAddress,
         isTrouble,
       };
@@ -535,6 +544,7 @@ export class PackageService {
         branchId,
         data        : detail,
         branchName: branch.branchName,
+        branchCode: branch.branchCode,
       });
     } else {
       assign(result, {
@@ -545,6 +555,7 @@ export class PackageService {
         data: [],
         branchId,
         branchName: branch ? branch.branchName : null,
+        branchCode: branch ? branch.branchCode : null,
       });
     }
 

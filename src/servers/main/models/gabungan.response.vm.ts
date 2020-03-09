@@ -29,6 +29,9 @@ export class AwbPackageDetail {
   consigneeName: string;
 
   @ApiModelProperty()
+  consigneeNumber: string;
+
+  @ApiModelProperty()
   consigneeAddress: string;
 
   @ApiModelProperty()
