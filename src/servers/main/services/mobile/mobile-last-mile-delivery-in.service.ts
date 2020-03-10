@@ -60,15 +60,19 @@ export class LastMileDeliveryInService {
       'pt',
       'pt.package_type_id = awb.package_type_id'
       );
-    qb.innerJoin('do_pod_detail',
-      'dpd',
-      'dpd.awb_number = awb.awb_number'
-      );
-    qb.innerJoin(
-        'do_pod',
-        'dp',
-        'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
-      );
+    // qb.innerJoin('do_pod_detail',
+    //   'dpd',
+    //   'dpd.awb_number = awb.awb_number'
+    // );
+    // qb.innerJoin(
+    //     'do_pod',
+    //     'dp',
+    //     'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+    // );
+    qb.innerJoin('awb_item_attr',
+      'aia',
+      'aia.awb_number = awb.awb_number'
+    );
     qb.andWhere('awb.awb_number = :awbNumber',
     {
       awbNumber: payload.scanValue
@@ -136,7 +140,7 @@ export class LastMileDeliveryInService {
     }
     data.awbNumber = payload.scanValue;
     data.status = 'error';
-    data.message = 'Nomor tidak valid atau tidak ditemukan';
+    data.message = `Resi ${payload.scanValue} tidak ditemukan`;
     data.trouble = true;
     const result = new MobileScanInBranchResponseVm();
     result.data = data;

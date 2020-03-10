@@ -97,12 +97,11 @@ export class LastMileDeliveryOutService {
         result.data = response;
         return result;
       }
-      // else if(resultQuery.awbLastStatus != AWB_STATUS.IN_BRANCH){
-      //   response.message = `Resi ${awbNumber} belum di Scan In`;
-      //   result.data = response;
-      //   return result;
-      // }
-      
+      else if(resultQuery.awbLastStatus != AWB_STATUS.IN_BRANCH){
+        response.message = `Resi ${awbNumber} belum di Scan In`;
+        result.data = response;
+        return result;
+      }
       // Create Delivery Do POD (surat jalan antar)
       const res = await this.createDeliveryDoPod(payload);
 
