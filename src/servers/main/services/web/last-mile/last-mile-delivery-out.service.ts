@@ -48,27 +48,27 @@ export class LastMileDeliveryOutService {
   static async scanOutCreateDelivery(
     payload: WebScanOutCreateDeliveryVm,
   ): Promise<WebScanOutCreateResponseVm> {
-    const authMeta = AuthService.getAuthData();
-    const result = new WebScanOutCreateResponseVm();
+    const authMeta             = AuthService.getAuthData();
+    const result               = new WebScanOutCreateResponseVm();
 
     // create do_pod_deliver (Surat Jalan Antar sigesit)
-    const doPod = DoPodDeliver.create();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    // NOTE: moment(payload.doPodDateTime).toDate();
-    const doPodDateTime = moment().toDate();
+    const doPod                = DoPodDeliver.create();
+    const permissonPayload     = AuthService.getPermissionTokenPayload();
+    // NOTE                    : moment(payload.doPodDateTime).toDate();
+    const doPodDateTime        = moment().toDate();
 
-    // NOTE: Tipe surat (jalan Antar Sigesit)
-    doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
+    // NOTE                    : Tipe surat (jalan Antar Sigesit)
+    doPod.doPodDeliverCode     = await CustomCounterCode.doPodDeliver(
       doPodDateTime,
     ); // generate code
 
-    // doPod.userIdDriver = payload.
-    doPod.userIdDriver = payload.userIdDriver || null;
+    // doPod.userIdDriver      = payload.
+    doPod.userIdDriver         = payload.userIdDriver || null;
     doPod.doPodDeliverDateTime = doPodDateTime;
-    doPod.description = payload.desc || null;
+    doPod.description          = payload.desc || null;
 
-    doPod.branchId = permissonPayload.branchId;
-    doPod.userId = authMeta.userId;
+    doPod.branchId             = permissonPayload.branchId;
+    doPod.userId               = authMeta.userId;
 
     // NOTE: check if delivery with partner
     if (payload.isPartner) {
@@ -92,29 +92,33 @@ export class LastMileDeliveryOutService {
     result.doPodId = doPod.doPodDeliverId;
 
     // query for get Employee
-    const repo = new OrionRepositoryService(Employee, 't1');
-    const q = repo.findAllRaw();
 
-    q.selectRaw(
-      [
-        't1.nik',
-        'nik',
-      ],
-      ['t1.nickname', 'nickname'],
-    );
+    if (!payload.isPartner) {
+        const repo = new OrionRepositoryService(Employee, 't1');
+        const q = repo.findAllRaw();
 
-    q.innerJoin(e => e.user, 't2');
-    q.where(
-      e => e.user.userId,
-      w => w.equals(payload.userIdDriver),
-    );
-    const dataUser = await q.exec();
+        q.selectRaw(
+          [
+            't1.nik',
+            'nik',
+          ],
+          ['t1.nickname', 'nickname'],
+        );
 
-    // For printDoPodDeliverMetadata
-    result.printDoPodDeliverMetadata.doPodDeliverCode = doPod.doPodDeliverCode;
-    result.printDoPodDeliverMetadata.description = payload.desc;
-    result.printDoPodDeliverMetadata.userDriver.employee.nik = dataUser[0].nik;
-    result.printDoPodDeliverMetadata.userDriver.employee.nickname = dataUser[0].nickname;
+        q.innerJoin(e => e.user, 't2');
+        q.where(
+          e => e.user.userId,
+          w => w.equals(payload.userIdDriver),
+        );
+        const dataUser = await q.exec();
+
+        // For printDoPodDeliverMetadata
+        result.printDoPodDeliverMetadata.doPodDeliverCode             = doPod.doPodDeliverCode;
+        result.printDoPodDeliverMetadata.description                  = payload.desc;
+        result.printDoPodDeliverMetadata.userDriver.employee.nik      = dataUser[0].nik;
+        result.printDoPodDeliverMetadata.userDriver.employee.nickname = dataUser[0].nickname;
+
+    }
 
     return result;
   }

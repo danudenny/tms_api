@@ -60,7 +60,7 @@ export class PartnerGojekService {
 
   static async cancelBookingDelivery(payload: GojekCancelBookingVm) {
     const doPodAttr = await DoPodAttr.findOne({ where: { refOrderNo: payload.orderNo } });
-    const authMeta  = AuthService.getAuthData();
+    // const authMeta  = AuthService.getAuthData();
     if (doPodAttr) {
       const response = await this.cancelBookingGojek(payload.orderNo);
       if (response.statusCode === 200) {
@@ -70,7 +70,8 @@ export class PartnerGojekService {
           {
             awbStatusIdLast      : 14900,
             awbStatusDateTimeLast: moment().toDate(),
-            userIdUpdated        : authMeta.userId,
+            // userIdUpdated        : authMeta.userId,
+            userIdUpdated        : 3,
             updatedTime          : moment().toDate(),
           });
       }
