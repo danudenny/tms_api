@@ -64,15 +64,15 @@ export class LastMileDeliveryOutService {
       'pt',
       'pt.package_type_id = awb.package_type_id AND pt.is_deleted = false'
       );
-    qb.innerJoin('do_pod_detail',
-    'dpd',
-      'dpd.awb_number = awb.awb_number AND dpd.is_deleted = false'
-      );
-    qb.innerJoin(
-      'do_pod',
-      'dp',
-      'dp.do_pod_id = dpd.do_pod_id AND dp.is_deleted = false AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
-    );
+    // qb.innerJoin('do_pod_detail',
+    // 'dpd',
+    //   'dpd.awb_number = awb.awb_number AND dpd.is_deleted = false'
+    //   );
+    // qb.innerJoin(
+    //   'do_pod',
+    //   'dp',
+    //   'dp.do_pod_id = dpd.do_pod_id AND dp.is_deleted = false AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+    // );
     qb.leftJoin(
       'awb_item_attr',
       'aia',
