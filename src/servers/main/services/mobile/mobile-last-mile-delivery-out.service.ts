@@ -38,13 +38,14 @@ export class LastMileDeliveryOutService {
    * @returns {Promise<MobileScanOutAwbResponseVm>}
    * @memberof LastMileDeliveryOutService
    */
-
+  
   static async scanOutDeliveryAwb(
-  payload: TransferAwbDeliverVm,
-  ): Promise<MobileScanOutAwbResponseVm> {
-    const authMeta = AuthService.getAuthData();
-    const result = new MobileScanOutAwbResponseVm();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    payload: TransferAwbDeliverVm,
+    ): Promise<MobileScanOutAwbResponseVm> {
+      const authMeta = AuthService.getAuthData();
+      const result = new MobileScanOutAwbResponseVm();
+      const permissonPayload = AuthService.getPermissionTokenPayload();
+      const awbNumber = payload.scanValue;
 
     // check if awb_number belongs to user
     const qb = createQueryBuilder();
@@ -55,30 +56,51 @@ export class LastMileDeliveryOutService {
     qb.addSelect( 'awb.consignee_phone', 'consigneePhone');
     qb.addSelect( 'awb.total_cod_value', 'totalCodValue');
     qb.addSelect( 'pt.package_type_code', 'service');
+    qb.addSelect( 'aia.awb_status_id_last', 'awbLastStatus');
 
     qb.from('awb', 'awb');
     qb.innerJoin(
       'package_type',
       'pt',
-      'pt.package_type_id = awb.package_type_id'
+      'pt.package_type_id = awb.package_type_id AND pt.is_deleted = false'
       );
     qb.innerJoin('do_pod_detail',
-      'dpd',
-      'dpd.awb_number = awb.awb_number'
+    'dpd',
+      'dpd.awb_number = awb.awb_number AND dpd.is_deleted = false'
       );
     qb.innerJoin(
-        'do_pod',
-        'dp',
-        'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
-      );
+      'do_pod',
+      'dp',
+      'dp.do_pod_id = dpd.do_pod_id AND dp.is_deleted = false AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+    );
+    qb.leftJoin(
+      'awb_item_attr',
+      'aia',
+      'aia.awb_id = awb.awb_id AND aia.is_deleted = false'
+    );
+    qb.andWhere('awb.is_deleted = false');
     qb.andWhere('awb.awb_number = :awbNumber',
     {
       awbNumber: payload.scanValue
     });
     const resultQuery = await qb.getRawOne();
+
     const response = new ScanAwbVm();
 
     if(resultQuery){
+      response.status = 'error';
+      response.awbNumber = payload.scanValue;
+      response.trouble = true;
+
+      if(resultQuery.awbLastStatus == AWB_STATUS.ANT){
+        response.message = `Resi ${awbNumber} sudah di proses.`;
+        result.data = response;
+        return result;
+      }else if(resultQuery.awbLastStatus != AWB_STATUS.IN_BRANCH){
+        response.message = `Resi ${awbNumber} belum di Scan In`;
+        result.data = response;
+        return result;
+      }
       // Create Delivery Do POD (surat jalan antar)
       const res = await this.createDeliveryDoPod(payload);
 
@@ -86,7 +108,6 @@ export class LastMileDeliveryOutService {
 
       let totalSuccess = 0;
       let totalError = 0;
-      const awbNumber = payload.scanValue;
       response.status = 'ok';
 
       const awb = await AwbService.validAwbNumber(awbNumber);
