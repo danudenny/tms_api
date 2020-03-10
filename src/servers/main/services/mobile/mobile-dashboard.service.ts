@@ -8,6 +8,7 @@ import { createQueryBuilder } from 'typeorm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
+import { DetailTransitPayloadVm } from '../../models/mobile-dashboard.vm';
 
 export class MobileDashboardService {
   public static async getDashboardDataByRequest(): Promise<
@@ -44,15 +45,25 @@ export class MobileDashboardService {
     return result;
   }
 
-  public static async getTransitDetail(): Promise<
+  public static async getTransitDetail(
+    payload: DetailTransitPayloadVm,
+  ): Promise<
     MobileDetailTransitResponseVm
   > {
+    const result = new MobileDetailTransitResponseVm();
     const authMeta = AuthService.getAuthMetadata();
     const currentMoment = moment();
     const mobileTransitResponseVm = new MobileTransitResponseVm();
     const mobileTransitResponseVm2 = new MobileTransitResponseVm();
     const mobileTransitResponseVm3 = new MobileTransitResponseVm();
+    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
 
+    if(moment(dateTo).isBefore(dateFrom)){
+      result.status = "error";
+      result.message = "Tanggal yang dipilih tidak valid";
+      return result;
+    }
     // Total barang belum scan masuk
     const qb = createQueryBuilder();
     qb.addSelect(
@@ -67,10 +78,10 @@ export class MobileDashboardService {
         'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
       );
     qb.where(
-      'dp.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      'dp.created_time BETWEEN :dateTimeStart AND :dateTimeEnd',
       {
-        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
-        currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
+        dateTimeStart: dateFrom,
+        dateTimeEnd: dateTo
       },
     );
     qb.andWhere('aia.awb_status_id_last = :outBranchCode', { outBranchCode: AWB_STATUS.OUT_BRANCH });
@@ -90,10 +101,10 @@ export class MobileDashboardService {
       'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
     );
     qb2.where(
-      'dp.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      'dp.created_time BETWEEN :dateTimeStart AND :dateTimeEnd',
       {
-        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
-        currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
+        dateTimeStart: dateFrom,
+        dateTimeEnd: dateTo
       },
     );
     qb2.andWhere('aia.awb_status_id_last = :inBranchCode', { inBranchCode: AWB_STATUS.IN_BRANCH });
@@ -109,17 +120,18 @@ export class MobileDashboardService {
         'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId ', { userId: authMeta.userId }
       );
     qb3.where(
-      'pcb.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      'pcb.created_time BETWEEN :dateTimeStart AND :dateTimeEnd',
       {
-        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
-        currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
+        dateTimeStart: dateFrom,
+        dateTimeEnd: dateTo
       },
     );
     mobileTransitResponseVm3.total = await qb3.getCount();
 
     mobileTransitResponseVm.dateTime = mobileTransitResponseVm2.dateTime = mobileTransitResponseVm3.dateTime = currentMoment.format('YYYY-MM-DD');
 
-    const result = new MobileDetailTransitResponseVm();
+    result.status = "ok";
+    result.message = "Success";
     result.notScanInAwb = mobileTransitResponseVm;
     result.notScanOutAwb = mobileTransitResponseVm2;
     result.scanInAwb = mobileTransitResponseVm3;
