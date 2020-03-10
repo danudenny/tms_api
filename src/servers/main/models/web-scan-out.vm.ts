@@ -229,7 +229,7 @@ export class WebScanOutEditHubVm extends WebScanOutVm {
 
 // Create DO POD Delivery
 export class WebScanOutCreateDeliveryVm {
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: 123,
   })
   userIdDriver: number;

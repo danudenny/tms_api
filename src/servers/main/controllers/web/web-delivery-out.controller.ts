@@ -174,6 +174,15 @@ export class WebDeliveryOutController {
     return LastMileDeliveryService.findAllScanOutDeliverGroupList(payload);
   }
 
+  @Post('deliverPartnerList')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutDeliverGroupListResponseVm })
+  public async deliverPartnerList(@Body() payload: BaseMetaPayloadVm) {
+    return LastMileDeliveryService.findAllDeliverPartner(payload);
+  }
+
   @Post('awbValidate')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
