@@ -59,24 +59,30 @@ export class PartnerGojekService {
   }
 
   static async cancelBookingDelivery(payload: GojekCancelBookingVm) {
-    const doPodAttr = await DoPodAttr.findOne({ where: { refOrderNo: payload.orderNo } });
-    // const authMeta  = AuthService.getAuthData();
+    const doPodAttr = await DoPodAttr.findOne({ where: { refOrderNo: payload.orderNo, refBookingType: Not('CUSTOMER_CANCELED') } });
+    const authMeta  = AuthService.getAuthData();
     if (doPodAttr) {
-      const response = await this.cancelBookingGojek(payload.orderNo);
-      if (response.statusCode === 200) {
+      let response = await this.cancelBookingGojek(payload.orderNo);
+      if (response) {
+        if (response.statusCode === 200) {
           await DoPodDeliverDetail.update({
             doPodDeliverId: doPodAttr.doPodDeliverId,
           },
           {
             awbStatusIdLast      : 14900,
             awbStatusDateTimeLast: moment().toDate(),
-            // userIdUpdated        : authMeta.userId,
-            userIdUpdated        : 3,
+            userIdUpdated        : authMeta.userId,
             updatedTime          : moment().toDate(),
           });
+        }
+        return response;
+      } else {
+        response = {
+          status: 'failed',
+          message: 'Saat ini sedang terjadi masalah pada partner, silakan coba beberapa saat lagi',
+        };
+        return response;
       }
-      // TODO: handle success cancel Booking ??
-      return response;
     } else {
       const response = {
         status: 'failed',

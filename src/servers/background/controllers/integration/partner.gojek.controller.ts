@@ -62,7 +62,7 @@ export class PartnerGojekController {
     return PartnerGojekService.createBookingPod(payload);
   }
 
-  @Put('gojek/cancelBooking/delivery')
+  @Post('gojek/cancelBooking/delivery')
   // @ApiBearerAuth()
   // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @HttpCode(HttpStatus.OK)
