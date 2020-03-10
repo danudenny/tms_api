@@ -72,6 +72,8 @@ export class PackageService {
       result.bagItemId      = scanResult.bagItemId;
       result.isAllow        = scanResult.isAllow;
       result.podScanInHubId = scanResult.podScanInHubId;
+      result.bagSeq         = scanResult.bagSeq;
+      result.bagWeight      = scanResult.bagWeight;
     } else if (value === '*SELESAI' || value === '*selesai' ) {
       await this.onFinish(payload);
     } else {
@@ -436,11 +438,13 @@ export class PackageService {
           userIdUpdated: authMeta.userId,
         });
     const podScanInHubBag = await PodScanInHubBag.save(podScanInHubBagData);
-
+    const bagSeq = sequence.toString().padStart(3, '0');
     assign(result,  {
       bagItemId     : bagItem.bagItemId,
       podScanInHubId: podScanInHub.podScanInHubId,
-      bagNumber     : `${randomBagNumber}${sequence.toString().padStart(3, '0')}`,
+      bagNumber     : `${randomBagNumber}${bagSeq}`,
+      weight     : bagItem.weight,
+      bagSeq,
     });
 
     return result;
@@ -452,6 +456,7 @@ export class PackageService {
     const awbItemAttr           = await AwbService.validAwbNumber(value);
     const branchId: number      = payload.branchId;
     let bagNumber: number       = payload.bagNumber;
+    let bag                     = null;
     let podScanInHubId: string  = payload.podScanInHubId;
     let bagItemId: string       = payload.bagItemId;
     let isTrouble: boolean      = false;
@@ -527,13 +532,14 @@ export class PackageService {
       });
 
       if (payload.bagNumber) {
-        await this.insertDetailAwb(payload);
+        bag = await this.insertDetailAwb(payload);
       } else {
         // Generate Bag Number
         const genBagNumber = await this.createBagNumber(payload);
         bagNumber          = genBagNumber.bagNumber;
         bagItemId          = genBagNumber.bagItemId;
         podScanInHubId     = genBagNumber.podScanInHubId;
+        bag = genBagNumber;
       }
 
       if (isTrouble) {
@@ -551,8 +557,10 @@ export class PackageService {
         bagItemId,
         branchId,
         data        : detail,
-        branchName: branch.branchName,
-        branchCode: branch.branchCode,
+        branchName  : branch.branchName,
+        branchCode  : branch.branchCode,
+        bagWeight   : bag.weight,
+        bagSeq      : bag.bagSeq,
       });
     } else {
       assign(result, {
@@ -564,6 +572,8 @@ export class PackageService {
         branchId,
         branchName: branch ? branch.branchName : null,
         branchCode: branch ? branch.branchCode : null,
+        bagWeight   : null,
+        bagSeq      : null,
       });
     }
 
@@ -629,6 +639,7 @@ export class PackageService {
           authMeta.userId,
         );
 
+    return bagItem;
   }
 
   private async getBagDetail(bagNumber: string): Promise<{
