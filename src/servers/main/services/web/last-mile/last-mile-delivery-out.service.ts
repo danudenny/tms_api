@@ -84,6 +84,7 @@ export class LastMileDeliveryOutService {
     await this.createAuditDeliveryHistory(
       doPod.doPodDeliverId,
       false,
+      payload.isPartner,
     );
 
     // Populate return value
@@ -819,6 +820,7 @@ export class LastMileDeliveryOutService {
   private static async createAuditDeliveryHistory(
     doPodDeliveryId: string,
     isUpdate: boolean = true,
+    isPartner: boolean = false,
   ) {
     // find doPodDeliver
     const doPodDeliver = await DoPodDeliverRepository.getDataById(
@@ -832,7 +834,7 @@ export class LastMileDeliveryOutService {
       const stage = isUpdate ? 'Updated' : 'Created';
       const note = `
         Data ${stage} \n
-        Nama Driver  : ${doPodDeliver.userDriver.employee.employeeName}
+        Nama Driver  : ${isPartner ? '' : doPodDeliver.userDriver.employee.employeeName}
         Gerai Assign : ${doPodDeliver.branch.branchName}
         Note         : ${description}
       `;
