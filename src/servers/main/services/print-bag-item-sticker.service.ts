@@ -39,10 +39,12 @@ export class PrintBagItemStickerService {
       });
     }
 
-    const [{ cnt: bagItemAwbsTotal }] = await RawQueryService.exec(
-      `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
-      { bagItemId: data.bagItemId },
-    );
+    // const [{ cnt: bagItemAwbsTotal }] = await RawQueryService.exec(
+    //   `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
+    //   { bagItemId: data.bagItemId },
+    // );
+
+    const bagItemAwbsTotal = await data.bagItemAwbs.length;
 
     return this.printBagItemSticker(res, data as any, {
       bagItemAwbsTotal,
