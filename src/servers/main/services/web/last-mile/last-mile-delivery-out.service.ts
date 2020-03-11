@@ -416,7 +416,7 @@ export class LastMileDeliveryOutService {
                 let employeeId   = doPodDeliver.userDriver.employeeId;
                 let employeeName = doPodDeliver.userDriver.employee.employeeName;
                 if (doPodDeliver.isPartner) {
-                  employeeId   = null;
+                  employeeId   = 0; // partner does'n have employee id
                   employeeName = null;
                 }
 
