@@ -336,6 +336,21 @@ export class WebScanOutBagResponseVm {
   data: ScanBagVm[];
 }
 
+export class WebHubScanOutBagResponseVm {
+
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({ type: [ScanBagVm] })
+  data: ScanBagVm[];
+}
+
 export class EditDataAwbVm {
   @ApiModelProperty()
   doPodId: number;
