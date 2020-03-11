@@ -12,6 +12,7 @@ export class DoPodDeliverRepository extends Repository<DoPodDeliver> {
     // Manage relation (default inner join)
     q.leftJoin(e => e.branch);
     q.leftJoin(e => e.userDriver);
+    q.leftJoin(e => e.userDriver.employee);
 
     q.select({
       doPodDeliverId: true,
