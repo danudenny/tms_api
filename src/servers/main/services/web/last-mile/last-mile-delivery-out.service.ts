@@ -413,11 +413,14 @@ export class LastMileDeliveryOutService {
                 });
 
                 // NOTE: queue by Bull ANT
-                let employeeId   = doPodDeliver.userDriver.employeeId;
-                let employeeName = doPodDeliver.userDriver.employee.employeeName;
+                let employeeIdDriver;
+                let employeeNameDriver;
                 if (doPodDeliver.isPartner) {
-                  employeeId   = 0; // partner does'n have employee id
-                  employeeName = null;
+                  employeeIdDriver   = 0; // partner does not have employee id
+                  employeeNameDriver = null;
+                } else {
+                  employeeIdDriver   = doPodDeliver.userDriver.employeeId;
+                  employeeNameDriver = doPodDeliver.userDriver.employee.employeeName;
                 }
 
                 DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
@@ -425,8 +428,8 @@ export class LastMileDeliveryOutService {
                   AWB_STATUS.ANT,
                   permissonPayload.branchId,
                   authMeta.userId,
-                  employeeId,
-                  employeeName,
+                  employeeIdDriver,
+                  employeeNameDriver,
                 );
                 totalSuccess += 1;
               } else {
