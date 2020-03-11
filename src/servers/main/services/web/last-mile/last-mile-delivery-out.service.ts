@@ -413,13 +413,20 @@ export class LastMileDeliveryOutService {
                 });
 
                 // NOTE: queue by Bull ANT
+                let employeeId   = doPodDeliver.userDriver.employeeId;
+                let employeeName = doPodDeliver.userDriver.employee.employeeName;
+                if (doPodDeliver.isPartner) {
+                  employeeId   = null;
+                  employeeName = null;
+                }
+
                 DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
                   awb.awbItemId,
                   AWB_STATUS.ANT,
                   permissonPayload.branchId,
                   authMeta.userId,
-                  doPodDeliver.userDriver.employeeId,
-                  doPodDeliver.userDriver.employee.employeeName,
+                  employeeId,
+                  employeeName,
                 );
                 totalSuccess += 1;
               } else {

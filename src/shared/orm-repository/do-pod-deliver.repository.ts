@@ -19,6 +19,8 @@ export class DoPodDeliverRepository extends Repository<DoPodDeliver> {
       doPodDeliverCode: true,
       totalAwb: true,
       description: true,
+      isPartner: true,
+      partnerId: true,
       branch: {
         branchId: true,
         branchCode: true,
