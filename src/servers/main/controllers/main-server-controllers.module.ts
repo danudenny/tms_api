@@ -47,6 +47,7 @@ import { PrintByStoreController } from './print-by-store.controller';
 import { DoReturnController } from './do_return/do_return_controller';
 import { V1MobileInitController } from './mobile/v1/mobile-init.controller';
 import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
+import { WebHubController } from './web/web-hub.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -98,6 +99,7 @@ import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
     DoReturnController,
     V1MobileInitController,
     V1MobileSyncController,
+    WebHubController
   ],
 })
 export class MainServerControllersModule {}
