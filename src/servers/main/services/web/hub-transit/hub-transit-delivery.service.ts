@@ -50,7 +50,7 @@ export class HubTransitDeliveryService {
             where: {
               bagId: bagData.bagId,
               bagItemId: bagData.bagItemId,
-              transactionStatusIdLast: 800,
+              transactionStatusIdLast: 300,
               isDeleted: false,
             },
           });

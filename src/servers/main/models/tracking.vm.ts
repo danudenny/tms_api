@@ -30,6 +30,9 @@ export class AwbHistoryResponseVm {
   username: string;
 
   @ApiModelProperty()
+  employeeNameScan: string;
+
+  @ApiModelProperty()
   branchName: string;
 
   @ApiModelProperty()
