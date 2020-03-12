@@ -149,6 +149,7 @@ export class WebTrackingService {
         ast.awb_visibility as "awbVisibility",
         ah.employee_id_driver as "employeeIdDriver",
         e.fullname as "employeeNameDriver",
+        e2.fullname as "employeeNameScan",
         u.username,
         b.branch_name as "branchName",
         ast.awb_status_name as "awbStatusName",
@@ -158,6 +159,7 @@ export class WebTrackingService {
       FROM awb_history ah
         LEFT JOIN branch b ON b.branch_id = ah.branch_id
         LEFT JOIN users u ON u.user_id = ah.user_id
+        LEFT JOIN employee e2 ON e2.employee_id = u.employee_id
         LEFT JOIN awb_status ast ON ast.awb_status_id = ah.awb_status_id
         LEFT JOIN employee e ON e.employee_id = ah.employee_id_driver
       WHERE ah.awb_item_id = :awbItemId
