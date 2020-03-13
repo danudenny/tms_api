@@ -137,6 +137,9 @@ export class TrackingAwbResponseVm {
   partnerLogisticAwb: string;
 
   @ApiModelProperty()
+  partnerLogisticName: string;
+
+  @ApiModelProperty()
   doPodDeliverDetailId: string;
 
   @ApiModelProperty()

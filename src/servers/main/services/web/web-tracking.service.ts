@@ -38,6 +38,7 @@ export class WebTrackingService {
       result.refRepresentativeCode = data.refRepresentativeCode;
       result.parcelValue = data.parcelValue;
       result.partnerLogisticAwb = data.partnerLogisticAwb;
+      result.partnerLogisticName = data.partnerLogisticName;
       result.doPodDeliverDetailId = data.doPodDeliverDetailId;
       result.isHasPhotoReceiver = data.doPodDeliverAttachmentId ? true : false;
       result.returnAwbNumber = data.returnAwbNumber;
@@ -106,6 +107,7 @@ export class WebTrackingService {
         COALESCE(p.payment_method_code, '') as "paymentMethodCode",
         COALESCE(ar.return_awb_number, '') as "returnAwbNumber",
         COALESCE(ar.partner_logistic_awb, '') as "partnerLogisticAwb",
+        COALESCE(ar.partner_logistic_name, '') as "partnerLogisticName",
         a.total_cod_value as "totalCodValue",
         CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
         COALESCE(bg.bagging_code, '') as "baggingCode",
