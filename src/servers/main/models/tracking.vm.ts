@@ -52,12 +52,6 @@ export class AwbHistoryResponseVm {
 
   @ApiModelProperty()
   notePublic: string;
-
-  @ApiModelProperty()
-  returnAwbNumber: string;
-
-  @ApiModelProperty()
-  partnerLogisticAwb: string;
 }
 
 export class TrackingAwbResponseVm {
@@ -147,6 +141,9 @@ export class TrackingAwbResponseVm {
 
   @ApiModelProperty()
   isHasPhotoReceiver: boolean;
+
+  @ApiModelProperty()
+  returnAwbNumber: string;
 
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];

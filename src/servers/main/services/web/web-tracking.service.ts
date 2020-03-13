@@ -40,6 +40,7 @@ export class WebTrackingService {
       result.partnerLogisticAwb = data.partnerLogisticAwb;
       result.doPodDeliverDetailId = data.doPodDeliverDetailId;
       result.isHasPhotoReceiver = data.doPodDeliverAttachmentId ? true : false;
+      result.returnAwbNumber = data.returnAwbNumber;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -103,6 +104,8 @@ export class WebTrackingService {
         COALESCE(pt.package_type_code, '') as "packageTypeCode",
         COALESCE(pt.package_type_name, '') as "packageTypeName",
         COALESCE(p.payment_method_code, '') as "paymentMethodCode",
+        COALESCE(ar.return_awb_number, '') as "returnAwbNumber",
+        COALESCE(ar.partner_logistic_awb, '') as "partnerLogisticAwb",
         a.total_cod_value as "totalCodValue",
         CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
         COALESCE(bg.bagging_code, '') as "baggingCode",
@@ -131,6 +134,7 @@ export class WebTrackingService {
         LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
         LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false
         LEFT JOIN do_pod_deliver_attachment dpa ON dpa.do_pod_deliver_detail_id = dpd.do_pod_deliver_detail_id AND dpa.is_deleted = false
+        LEFT JOIN awb_return ar ON ar.origin_awb_id = ait.awb_id AND ar.is_deleted = false
       WHERE a.awb_number = :awbNumber
       AND a.is_deleted = false LIMIT 1;
     `;
@@ -156,8 +160,6 @@ export class WebTrackingService {
         ast.awb_status_name as "awbStatusName",
         ah.note_internal as "noteInternal",
         ah.note_public as "notePublic",
-        r.return_awb_number as "returnAwbNumber",
-        r.partner_logistic_awb as "partnerLogisticAwb",
         case when is_direction_back = false then 'TIDAK' else 'YA' end as direction
       FROM awb_history ah
         LEFT JOIN branch b ON b.branch_id = ah.branch_id
@@ -165,7 +167,6 @@ export class WebTrackingService {
         LEFT JOIN employee e2 ON e2.employee_id = u.employee_id
         LEFT JOIN awb_status ast ON ast.awb_status_id = ah.awb_status_id
         LEFT JOIN employee e ON e.employee_id = ah.employee_id_driver
-        LEFT JOIN awb_return r ON r.origin_awb_id = ah.awb_id
       WHERE ah.awb_item_id = :awbItemId
       AND ah.is_deleted = false
       ORDER BY ah.history_date DESC
