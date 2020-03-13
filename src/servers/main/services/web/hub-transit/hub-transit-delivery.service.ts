@@ -82,7 +82,7 @@ export class HubTransitDeliveryService {
 
             // update status bag on bag item
             await BagItem.update(bagData.bagItemId, {
-              bagItemStatusIdLast: BAG_STATUS.OUT_HUB,
+              bagItemStatusIdLast: BAG_STATUS.IN_HUB,
               branchIdLast: permissonPayload.branchId,
               branchIdNext: null,
               updatedTime: timeNow,
