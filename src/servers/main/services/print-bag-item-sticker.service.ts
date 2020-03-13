@@ -63,7 +63,7 @@ export class PrintBagItemStickerService {
     const finalBagItemSeq = String(data.bagSeq).padStart(3, '0');
     const finalBagItemBarcodeNumber = `${
       data.bag.bagNumber
-    }${finalBagItemSeq}${weightNumberOnly}`;
+    }${weightNumberOnly}`;
     const rawTsplPrinterCommands =
       `SIZE 80 mm, 100 mm\n` +
       `SPEED 3\n` +
