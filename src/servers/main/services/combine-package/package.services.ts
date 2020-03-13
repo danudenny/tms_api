@@ -80,8 +80,8 @@ export class PackageService {
       // search branch code
       const branch = await Branch.findOne({
         where: {
-          branchCode: value
-        }
+          branchCode: value,
+        },
       });
       if (!branch) {
         RequestErrorService.throwObj(
@@ -94,7 +94,7 @@ export class PackageService {
 
       result.branchId   = branch.branchId;
       result.branchName = branch.branchName.trim();
-      result.branchCode = branch.branchCode.trim(); 
+      result.branchCode = branch.branchCode.trim();
     }
 
     return result;
@@ -276,8 +276,8 @@ export class PackageService {
     const branchId       = payload.branchId;
     const branch = await Branch.findOne({
       where: {
-        branchId: branchId
-      }
+        branchId,
+      },
     });
     const districtId = branch ? branch.branchId : null;
 
@@ -340,7 +340,7 @@ export class PackageService {
             branchIdLast       : permissonPayload.branchId,
             bagItemStatusIdLast: 3000,
             userIdCreated      : authMeta.userId,
-            weight             : parseFloat(awbDetail.totalWeightRealRounded),
+            weight             : awbDetail.totalWeightRealRounded,
             createdTime        : moment().toDate(),
             updatedTime        : moment().toDate(),
             userIdUpdated      : authMeta.userId,
@@ -491,14 +491,14 @@ export class PackageService {
     if (awb.toId) {
       branch = await Branch.findOne({
         where: {
-          branchId: branchId
-        }
+          branchId,
+        },
       });
       // NOTES: WILL BE USE IN NEXT FUTURE
       if (!branch || (branch && awb.toId !== branch.districtId)) {
         troubleDesc.push('Tujuan tidak sesuai');
         isAllow = false;
-      }else if (branch) {
+      } else if (branch) {
         districtId = branch.districtId;
       }
     } else {
@@ -589,7 +589,7 @@ export class PackageService {
     const bagItemAwbData = BagItemAwb.create({
       bagItemId    : bagDetail.bagItemId,
       awbNumber    : payload.awbDetail.awbNumber,
-      weight       : parseFloat(payload.awbDetail.totalWeightRealRounded),
+      weight       : payload.awbDetail.totalWeightRealRounded,
       awbItemId    : payload.awbItemId,
       userIdCreated: authMeta.userId,
       createdTime  : moment().toDate(),
@@ -600,7 +600,10 @@ export class PackageService {
 
     // update weight in bag item
     const bagItem = await BagItem.findOne({ where: { bagItemId: bagDetail.bagItemId } });
-    bagItem.weight += parseFloat(payload.awbDetail.totalWeightRealRounded);
+    const bagWeight = +bagItem.weight;
+    const totalWeightRealRounded = +payload.awbDetail.totalWeightRealRounded;
+    const bagWeightFinalFloat = (bagWeight + totalWeightRealRounded).toFixed(5);
+    bagItem.weight = bagWeightFinalFloat as any;
     bagItem.save();
 
     // Insert into table pod scan in hub detail
