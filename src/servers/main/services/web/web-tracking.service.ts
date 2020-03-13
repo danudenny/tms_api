@@ -164,7 +164,7 @@ export class WebTrackingService {
         LEFT JOIN users u ON u.user_id = ah.user_id
         LEFT JOIN employee e2 ON e2.employee_id = u.employee_id
         LEFT JOIN awb_status ast ON ast.awb_status_id = ah.awb_status_id
-        LEFT JOIN employee e ON e.employee_id = ah.employee_id_driver,
+        LEFT JOIN employee e ON e.employee_id = ah.employee_id_driver
         LEFT JOIN awb_return r ON r.origin_awb_id = ah.awb_id
       WHERE ah.awb_item_id = :awbItemId
       AND ah.is_deleted = false
