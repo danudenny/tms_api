@@ -52,6 +52,12 @@ export class AwbHistoryResponseVm {
 
   @ApiModelProperty()
   notePublic: string;
+
+  @ApiModelProperty()
+  returnAwbNumber: string;
+
+  @ApiModelProperty()
+  partnerLogisticAwb: string;
 }
 
 export class TrackingAwbResponseVm {
