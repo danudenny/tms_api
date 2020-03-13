@@ -38,8 +38,10 @@ export class WebTrackingService {
       result.refRepresentativeCode = data.refRepresentativeCode;
       result.parcelValue = data.parcelValue;
       result.partnerLogisticAwb = data.partnerLogisticAwb;
+      result.partnerLogisticName = data.partnerLogisticName;
       result.doPodDeliverDetailId = data.doPodDeliverDetailId;
       result.isHasPhotoReceiver = data.doPodDeliverAttachmentId ? true : false;
+      result.returnAwbNumber = data.returnAwbNumber;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -103,6 +105,9 @@ export class WebTrackingService {
         COALESCE(pt.package_type_code, '') as "packageTypeCode",
         COALESCE(pt.package_type_name, '') as "packageTypeName",
         COALESCE(p.payment_method_code, '') as "paymentMethodCode",
+        COALESCE(ar.return_awb_number, '') as "returnAwbNumber",
+        COALESCE(ar.partner_logistic_awb, '') as "partnerLogisticAwb",
+        COALESCE(ar.partner_logistic_name, '') as "partnerLogisticName",
         a.total_cod_value as "totalCodValue",
         CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
         COALESCE(bg.bagging_code, '') as "baggingCode",
@@ -131,6 +136,7 @@ export class WebTrackingService {
         LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
         LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false
         LEFT JOIN do_pod_deliver_attachment dpa ON dpa.do_pod_deliver_detail_id = dpd.do_pod_deliver_detail_id AND dpa.is_deleted = false
+        LEFT JOIN awb_return ar ON ar.origin_awb_id = ait.awb_id AND ar.is_deleted = false
       WHERE a.awb_number = :awbNumber
       AND a.is_deleted = false LIMIT 1;
     `;
@@ -150,6 +156,7 @@ export class WebTrackingService {
         ah.employee_id_driver as "employeeIdDriver",
         e.fullname as "employeeNameDriver",
         e2.fullname as "employeeNameScan",
+        e2.nik as "employeeNikScan",
         u.username,
         b.branch_name as "branchName",
         ast.awb_status_name as "awbStatusName",

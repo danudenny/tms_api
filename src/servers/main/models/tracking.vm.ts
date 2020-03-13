@@ -33,6 +33,9 @@ export class AwbHistoryResponseVm {
   employeeNameScan: string;
 
   @ApiModelProperty()
+  employeeNikScan: string;
+
+  @ApiModelProperty()
   branchName: string;
 
   @ApiModelProperty()
@@ -134,10 +137,16 @@ export class TrackingAwbResponseVm {
   partnerLogisticAwb: string;
 
   @ApiModelProperty()
+  partnerLogisticName: string;
+
+  @ApiModelProperty()
   doPodDeliverDetailId: string;
 
   @ApiModelProperty()
   isHasPhotoReceiver: boolean;
+
+  @ApiModelProperty()
+  returnAwbNumber: string;
 
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];
