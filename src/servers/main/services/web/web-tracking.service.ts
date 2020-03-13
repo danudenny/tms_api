@@ -150,6 +150,7 @@ export class WebTrackingService {
         ah.employee_id_driver as "employeeIdDriver",
         e.fullname as "employeeNameDriver",
         e2.fullname as "employeeNameScan",
+        e2.nik as "employeeNikScan",
         u.username,
         b.branch_name as "branchName",
         ast.awb_status_name as "awbStatusName",
