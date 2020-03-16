@@ -85,6 +85,7 @@ export class LastMileDeliveryInService {
           branchId: permissonPayload.branchId,
           transactionStatusId: 600,
           isDeleted: false,
+          userIdCreated: authMeta.userId
         },
       });
 
