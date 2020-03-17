@@ -119,6 +119,7 @@ export class BagScanOutHubQueueService {
               cityName,
               data.branchIdNext,
               branchNameNext,
+              1,
             );
           }
         }
