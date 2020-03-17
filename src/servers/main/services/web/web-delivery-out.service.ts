@@ -651,6 +651,7 @@ export class WebDeliveryOutService {
         // TODO: validation need improvement
         // bag status scan out by doPodType (3005 Branch/ 3010 and 3020 HUB)
         const bagStatus = BAG_STATUS.OUT_HUB;
+        let additionMinutes = 0;
         const transactionStatusId = 300; // OUT HUB
 
         const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
@@ -734,6 +735,12 @@ export class WebDeliveryOutService {
               );
             }
 
+            // NOTE: handle sorting status OUT AND IN HUB
+            // force OUT_HUB created after IN_HUB in history bag (queue)
+            if(bagStatus == BAG_STATUS.OUT_HUB){
+              additionMinutes = 1;
+            }
+
             // TODO: need refactoring
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
@@ -741,6 +748,7 @@ export class WebDeliveryOutService {
               bagStatus,
               permissonPayload.branchId,
               authMeta.userId,
+              additionMinutes,
             );
             // #endregion after scanout
 
