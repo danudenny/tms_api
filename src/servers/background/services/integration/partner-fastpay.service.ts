@@ -7,69 +7,89 @@ import { CustomCounterCode } from '../../../../shared/services/custom-counter-co
 import { WorkOrderDetail } from '../../../../shared/orm-entity/work-order-detail';
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
+import { BranchPartner } from '../../../../shared/orm-entity/branch-partner';
+import { Not } from 'typeorm';
 
 export class PartnerFastpayService {
   static async dropCashless(payload: DropCashlessVm) {
-    // NOTE: check pickup request with awb number
-    let pickupRequest = await this.getPickupRequestAwbNumber(payload.awbNumber);
-    // check pickup reqeust with referenceNo
-    if (!pickupRequest) {
-      pickupRequest = await this.getPickupRequestReferenceNo(
+    // check branch partner code
+    const branchPartner = await BranchPartner.findOne({
+      select: ['branchPartnerId', 'branchPartnerCode', 'branchId'],
+      where: { branchPartnerCode: payload.branchCode, isDeleted: false },
+    });
+    if (branchPartner) {
+      // NOTE: check pickup request with awb number
+      let pickupRequest = await this.getPickupRequestAwbNumber(
         payload.awbNumber,
       );
-    }
+      // check pickup reqeust with referenceNo
+      if (!pickupRequest) {
+        pickupRequest = await this.getPickupRequestReferenceNo(
+          payload.awbNumber,
+        );
+      }
 
-    if (pickupRequest) {
-      const timeNow = moment().toDate();
-      const branchPartnerId = 111;
-      const pickupRequestDetailId = pickupRequest.pickupRequestDetailId;
-      let workOrderId = pickupRequest.workOrderIdLast;
-      // TODO: check branch partner id ??
-      // const branchPartner = BranchPartner;
-      // check work order ?? <> 7050
-      if (workOrderId) {
-        // Update data
-        await WorkOrder.update({ workOrderId }, {
-          branchIdAssigned: 0,
-          branchId: 0,
-          workOrderStatusIdLast: 7050,
-          branchPartnerId,
-          updatedTime: timeNow,
-        });
-        console.log('Update Data Work Order !!!!');
-      } else {
-        // Create data work order
-        workOrderId = await this.createWorkOrder(branchPartnerId, timeNow);
+      if (pickupRequest) {
+        const timeNow = moment().toDate();
+        const branchPartnerId = branchPartner.branchPartnerId;
+        const pickupRequestDetailId = pickupRequest.pickupRequestDetailId;
+        let workOrderId = pickupRequest.workOrderIdLast;
+
         if (workOrderId) {
-          // create data work order detail
-          await this.createWorkOrderDetail(
-            workOrderId,
-            pickupRequest.pickupRequestId,
-            pickupRequest.awbItemId,
-            timeNow,
-          );
-          // update pickup request detail
-          await PickupRequestDetail.update(
-            { pickupRequestDetailId },
-            {
-              workOrderIdLast: workOrderId,
-              userIdUpdated: 1,
-              updatedTime: timeNow,
-            },
-          );
+          const workOrder = await WorkOrder.findOne({
+            select: ['workOrderId', 'workOrderStatusIdLast'],
+            where: { workOrderId, workOrderStatusIdLast: Not(7050), isDeleted: false },
+          });
+          if (workOrder) {
+            await WorkOrder.update(
+              { workOrderId },
+              {
+                branchIdAssigned: 0,
+                branchId: 0,
+                workOrderStatusIdLast: 7050,
+                branchPartnerId,
+                updatedTime: timeNow,
+              },
+            );
+            // with status drop partner
+            await this.createWorkOrderHistory(workOrderId, timeNow);
+          } else {
+            throw new BadRequestException('Data sudah di proses!');
+          }
         } else {
-          throw new BadRequestException('Gagal menyimpan data');
+          // Create data work order
+          workOrderId = await this.createWorkOrder(branchPartnerId, timeNow);
+          if (workOrderId) {
+            // create data work order detail
+            await this.createWorkOrderDetail(
+              workOrderId,
+              pickupRequest.pickupRequestId,
+              pickupRequest.awbItemId,
+              timeNow,
+            );
+            // update pickup request detail
+            await PickupRequestDetail.update(
+              { pickupRequestDetailId },
+              {
+                workOrderIdLast: workOrderId,
+                userIdUpdated: 1,
+                updatedTime: timeNow,
+              },
+            );
+            // with status drop partner
+            await this.createWorkOrderHistory(workOrderId, timeNow);
+          } else {
+            throw new BadRequestException('Gagal menyimpan data');
+          }
         }
-      }
 
-      if (workOrderId) {
-        // with status drop partner
-        await this.createWorkOrderHistory(workOrderId, timeNow);
+        // handle response request
+        return this.handleResult(pickupRequest);
+      } else {
+        throw new BadRequestException('Data resi tidak ditemukan!');
       }
-      // handle response request
-      return this.handleResult(pickupRequest);
     } else {
-      throw new BadRequestException('Data resi tidak ditemukan');
+      throw new BadRequestException('Data gerai tidak ditemukan!');
     }
   }
 
@@ -115,7 +135,9 @@ export class PartnerFastpayService {
       updatedTime: timeNow,
     });
     const workOrder = await WorkOrder.insert(dataWorkOrder);
-    return workOrder.identifiers.length ? workOrder.identifiers[0].workOrderId : null;
+    return workOrder.identifiers.length
+      ? workOrder.identifiers[0].workOrderId
+      : null;
   }
 
   private static async createWorkOrderDetail(
@@ -226,5 +248,4 @@ export class PartnerFastpayService {
     });
     return rawData.length ? rawData[0] : null;
   }
-
 }

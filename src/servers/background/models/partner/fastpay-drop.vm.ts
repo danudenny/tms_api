@@ -5,6 +5,6 @@ export class DropCashlessVm {
   awbNumber: string;
 
   @ApiModelProperty()
-  branchId: string;
+  branchCode: string;
 
 }
