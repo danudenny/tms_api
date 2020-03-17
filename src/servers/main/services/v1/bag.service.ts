@@ -10,6 +10,7 @@ import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-
 import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 import { SharedService } from '../../../../shared/services/shared.service';
+import moment from 'moment';
 
 export class BagService {
 
@@ -156,6 +157,7 @@ export class BagService {
     if (bagItemsAwb && bagItemsAwb.length) {
       let employeeIdDriver = null;
       let employeeNameDriver = '';
+      let time = moment();
       const userDriverRepo = await SharedService.getDataUserEmployee(userIdDriver);
       if (userDriverRepo) {
         employeeIdDriver = userDriverRepo.employeeId;
@@ -202,7 +204,7 @@ export class BagService {
               AWB_STATUS.OUT_HUB,
               branchIdNext,
             );
-
+            
             // TODO: if isTransit auto IN
             if (doPodType == 3020) {
               // queue bull IN HUB
@@ -211,6 +213,7 @@ export class BagService {
                 permissonPayload.branchId,
                 authMeta.userId,
               );
+              time = moment(time).add(2, 'seconds');
             }
 
             // queue bull OUT HUB
@@ -225,6 +228,7 @@ export class BagService {
               cityName,
               branchIdNext,
               branchNameNext,
+              time.toDate(),
             );
           } else {
             // BRANCH
