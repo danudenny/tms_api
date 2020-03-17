@@ -1689,7 +1689,7 @@ export class WebDeliveryOutService {
 
     let id = "";
     temp.map(function(item){
-      id = id ? "'"+item.doPodDeliverId+"'" : ",'"+item.doPodDeliverId+"'";
+      id += id ? ",'"+item.doPodDeliverId+"'" : "'"+item.doPodDeliverId+"'";
     });
     const qq = createQueryBuilder();
     qq.addSelect('attachments.url', 'url');

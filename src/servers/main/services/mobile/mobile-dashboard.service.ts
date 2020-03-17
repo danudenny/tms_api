@@ -45,6 +45,97 @@ export class MobileDashboardService {
     return result;
   }
 
+  public static async getTransitDetailScanIn(
+    payload: DetailTransitPayloadVm,
+  ): Promise<MobileDetailTransitResponseVm> {
+
+    const authMeta = AuthService.getAuthMetadata();
+    const currentMoment = moment();
+    const mobileTransitResponseVm = new MobileTransitResponseVm();
+    const result = new MobileDetailTransitResponseVm();
+    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
+    result.status = "ok";
+
+    if(moment(dateTo).isBefore(dateFrom)){
+      result.status = "error";
+      result.message = "Tanggal yang dipilih tidak valid";
+      return result;
+    }
+
+    // Total barang scan masuk
+    const qb = createQueryBuilder();
+    qb.addSelect('pcbd.awb_number)', 'totalScanInAwb');
+    qb.from('pod_scan_in_branch_detail', 'pcbd');
+    qb.innerJoin(
+        'pod_scan_in_branch',
+        'pcb',
+        'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId ', { userId: authMeta.userId }
+      );
+    qb.where(
+      'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',
+      {
+        dateTimeStart: dateFrom,
+        dateTimeEnd: dateTo
+      },
+    );
+    mobileTransitResponseVm.total = await qb.getCount();
+
+    mobileTransitResponseVm.dateTime = currentMoment.format('YYYY-MM-DD');
+
+    result.scanInAwb = mobileTransitResponseVm;
+
+    return result;
+  }
+
+  public static async getTransitDetailNotScanOut(
+    payload: DetailTransitPayloadVm,
+  ): Promise<MobileDetailTransitResponseVm> {
+
+    const authMeta = AuthService.getAuthMetadata();
+    const currentMoment = moment();
+    const mobileTransitResponseVm = new MobileTransitResponseVm();
+    const result = new MobileDetailTransitResponseVm();
+    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
+    result.status = "ok";
+
+    if(moment(dateTo).isBefore(dateFrom)){
+      result.status = "error";
+      result.message = "Tanggal yang dipilih tidak valid";
+      return result;
+    }
+
+    // Total barang belum scan keluar
+    const qb = createQueryBuilder();
+    qb.addSelect(
+      'aia.awb_number',
+      'awbNumber',
+    );
+    qb.from('awb_item_attr', 'aia');
+    qb.innerJoin('pod_scan_in_branch_detail', 'pcbd', 'pcbd.awb_number = aia.awb_number');
+    qb.innerJoin(
+      'pod_scan_in_branch',
+      'pcb',
+      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId ', { userId: authMeta.userId }
+    );
+    qb.where(
+      'pcbd.created_time >= :dateTimeStart AND pcbd.created_time <= :dateTimeEnd',
+      {
+        dateTimeStart: dateFrom,
+        dateTimeEnd: dateTo
+      },
+    );
+    qb.andWhere('aia.awb_status_id_last = :inBranchCode', { inBranchCode: AWB_STATUS.IN_BRANCH });
+    mobileTransitResponseVm.total = await qb.getCount();
+
+    mobileTransitResponseVm.dateTime = currentMoment.format('YYYY-MM-DD');
+
+    result.notScanOutAwb = mobileTransitResponseVm;
+
+    return result;
+  }
+
   public static async getTransitDetail(
     payload: DetailTransitPayloadVm,
   ): Promise<
@@ -59,83 +150,51 @@ export class MobileDashboardService {
     const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
     const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
 
-    if(moment(dateTo).isBefore(dateFrom)){
+    // ambil total barang belum scan keluar
+    const transitScanIn = await this.getTransitDetailScanIn(payload);
+    const transitNotScanOut = await this.getTransitDetailNotScanOut(payload);
+
+    if(transitScanIn.status=="error"){
       result.status = "error";
-      result.message = "Tanggal yang dipilih tidak valid";
+      result.message = transitScanIn.message;
+      return result;
+    }else if(transitNotScanOut.status=="error") {
+      result.status = "error";
+      result.message = transitNotScanOut.message;
       return result;
     }
-    // Total barang belum scan masuk
-    const qb = createQueryBuilder();
-    qb.addSelect(
-      'aia.awb_number',
-      'awbNumber',
-    );
-    qb.from('awb_item_attr', 'aia');
-    qb.innerJoin('pod_scan_in_branch_detail', 'pcbd', 'pcbd.awb_number = aia.awb_number');
-    qb.innerJoin(
-      'pod_scan_in_branch',
-      'pcb',
-      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId ', { userId: authMeta.userId }
-    );
-    qb.where(
-      'pcbd.created_time BETWEEN :dateTimeStart AND :dateTimeEnd',
-      {
-        dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo
-      },
-    );
-    qb.andWhere('aia.awb_status_id_last = :outBranchCode', { outBranchCode: AWB_STATUS.OUT_BRANCH });
-    mobileTransitResponseVm.total = await qb.getCount();
-
-    // Total barang belum scan keluar
-    const qb2 = createQueryBuilder();
-    qb2.addSelect(
-      'aia.awb_number',
-      'awbNumber',
-    );
-    qb2.from('awb_item_attr', 'aia');
-    qb2.innerJoin('pod_scan_in_branch_detail', 'pcbd', 'pcbd.awb_number = aia.awb_number');
-    qb2.innerJoin(
-      'pod_scan_in_branch',
-      'pcb',
-      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId ', { userId: authMeta.userId }
-    );
-    qb2.where(
-      'pcbd.created_time BETWEEN :dateTimeStart AND :dateTimeEnd',
-      {
-        dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo
-      },
-    );
-    qb2.andWhere('aia.awb_status_id_last = :inBranchCode', { inBranchCode: AWB_STATUS.IN_BRANCH });
-    mobileTransitResponseVm2.total = await qb2.getCount();
-
-    // Total barang scan masuk
-    const qb3 = createQueryBuilder();
-    qb3.addSelect('pcbd.awb_number)', 'totalScanInAwb');
-    qb3.from('pod_scan_in_branch_detail', 'pcbd');
-    qb3.innerJoin(
-        'pod_scan_in_branch',
-        'pcb',
-        'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId ', { userId: authMeta.userId }
-      );
-    qb3.where(
-      'pcb.created_time BETWEEN :dateTimeStart AND :dateTimeEnd',
-      {
-        dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo
-      },
-    );
-    mobileTransitResponseVm3.total = await qb3.getCount();
 
     mobileTransitResponseVm.dateTime = mobileTransitResponseVm2.dateTime = mobileTransitResponseVm3.dateTime = currentMoment.format('YYYY-MM-DD');
 
     result.status = "ok";
     result.message = "Success";
-    result.notScanInAwb = mobileTransitResponseVm;
-    result.notScanOutAwb = mobileTransitResponseVm2;
-    result.scanInAwb = mobileTransitResponseVm3;
+    result.notScanOutAwb = transitNotScanOut.notScanOutAwb;
+    result.scanInAwb = transitScanIn.scanInAwb;
 
     return result;
   }
 }
+
+  // NOTE: query total barang belum scan masuk dibawah di pakai jika diperlukan
+  // Total barang belum scan masuk
+  // const qb = createQueryBuilder();
+  // qb.addSelect(
+  //   'aia.awb_number',
+  //   'awbNumber',
+  // );
+  // qb.from('awb_item_attr', 'aia');
+  // qb.innerJoin('pod_scan_in_branch_detail', 'pcbd', 'pcbd.awb_number = aia.awb_number');
+  // qb.innerJoin(
+  //   'pod_scan_in_branch',
+  //   'pcb',
+  //   'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId ', { userId: authMeta.userId }
+  // );
+  // qb.where(
+  //   'pcbd.created_time BETWEEN :dateTimeStart AND :dateTimeEnd',
+  //   {
+  //     dateTimeStart: dateFrom,
+  //     dateTimeEnd: dateTo
+  //   },
+  // );
+  // qb.andWhere('aia.awb_status_id_last = :outBranchCode', { outBranchCode: AWB_STATUS.OUT_BRANCH });
+  // mobileTransitResponseVm.total = await qb.getCount();
