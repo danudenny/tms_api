@@ -8,15 +8,27 @@ import { MetaService } from '../../../../shared/services/meta.service';
 import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
 import { MobileAwbFilterListResponseVm } from '../../models/mobile-awb-filter-list.response.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { DetailTransitPayloadVm } from '../../models/mobile-dashboard.vm';
 // #endregion
 
 export class MobileAwbFilterService {
   constructor() {}
 
-  async findAllNotScanOutFilterList(): Promise<MobileAwbFilterListResponseVm> {
+  async findAllNotScanOutFilterList(
+    payload: DetailTransitPayloadVm,
+  ): Promise<MobileAwbFilterListResponseVm> {
     const authMeta = AuthService.getAuthData();
     const currentMoment = moment();
     const qb = createQueryBuilder();
+    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
+    const result = new MobileAwbFilterListResponseVm();
+
+    if(moment(dateTo).isBefore(dateFrom)){
+      result.status = "error";
+      result.message = "Tanggal yang dipilih tidak valid";
+      return result;
+    }
 
     // Total barang belum scan keluar
     qb.addSelect( 'awb.awb_number', 'awbNumber');
@@ -38,36 +50,45 @@ export class MobileAwbFilterService {
       'aia.awb_id = awb.awb_id'
     );
     qb.innerJoin(
-      'do_pod_detail',
-      'dpd',
-      'dpd.awb_item_id = aia.awb_item_id'
+      'pod_scan_in_branch_detail',
+      'pcbd',
+      'pcbd.awb_id = awb.awb_id'
     );
     qb.innerJoin(
-      'do_pod',
-      'dp',
-      'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+      'pod_scan_in_branch',
+      'pcb',
+      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId', { userId: authMeta.userId }
     );
     qb.where(
-      'dp.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',
       {
-        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
-        currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
+        dateTimeStart: dateFrom,
+        dateTimeEnd: dateTo
       },
     );
     qb.andWhere('aia.awb_status_id_last = :inBranchCode', { inBranchCode: AWB_STATUS.IN_BRANCH });
     const data = await qb.getRawMany();
 
-    const result = new MobileAwbFilterListResponseVm();
     result.data = data;
 
     return result;
   }
 
-  async findAllNotScanInFilterList(): Promise<MobileAwbFilterListResponseVm> {
+  async findAllNotScanInFilterList(
+    payload: DetailTransitPayloadVm,
+  ): Promise<MobileAwbFilterListResponseVm> {
     const authMeta = AuthService.getAuthData();
     const currentMoment = moment();
     const qb = createQueryBuilder();
+    const result = new MobileAwbFilterListResponseVm();
+    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
 
+    if(moment(dateTo).isBefore(dateFrom)){
+      result.status = "error";
+      result.message = "Tanggal yang dipilih tidak valid";
+      return result;
+    }
     // Total barang belum scan masuk
     qb.addSelect( 'awb.awb_number', 'awbNumber');
     qb.addSelect( 'awb.consignee_name', 'consigneeName');
@@ -88,36 +109,45 @@ export class MobileAwbFilterService {
       'aia.awb_id = awb.awb_id'
     );
     qb.innerJoin(
-      'do_pod_detail',
-      'dpd',
-      'dpd.awb_item_id = aia.awb_item_id'
+      'pod_scan_in_branch_detail',
+      'pcbd',
+      'pcbd.awb_id = awb.awb_id'
     );
     qb.innerJoin(
-      'do_pod',
-      'dp',
-      'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
+      'pod_scan_in_branch',
+      'pcb',
+      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId', { userId: authMeta.userId }
     );
     qb.where(
-      'dp.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',
       {
-        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
-        currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
+        dateTimeStart: dateFrom,
+        dateTimeEnd: dateTo
       },
     );
     qb.andWhere('aia.awb_status_id_last = :outBranchCode', { outBranchCode: AWB_STATUS.OUT_BRANCH });
     const data = await qb.getRawMany();
 
-    const result = new MobileAwbFilterListResponseVm();
     result.data = data;
 
     return result;
   }
 
-  async findAllScanInFilterList(): Promise<MobileAwbFilterListResponseVm> {
+  async findAllScanInFilterList(
+    payload: DetailTransitPayloadVm,
+  ): Promise<MobileAwbFilterListResponseVm> {
     const authMeta = AuthService.getAuthData();
     const currentMoment = moment();
     const qb = createQueryBuilder();
+    const result = new MobileAwbFilterListResponseVm();
+    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
 
+    if(moment(dateTo).isBefore(dateFrom)){
+      result.status = "error";
+      result.message = "Tanggal yang dipilih tidak valid";
+      return result;
+    }
     // Total barang scan masuk
     qb.addSelect( 'awb.awb_number', 'awbNumber');
     qb.addSelect( 'awb.consignee_name', 'consigneeName');
@@ -143,15 +173,14 @@ export class MobileAwbFilterService {
       'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId', { userId: authMeta.userId }
     );
     qb.where(
-      'pcb.created_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
+      'pcb.created_time BETWEEN :dateTimeStart AND :dateTimeEnd',
       {
-        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
-        currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
+        dateTimeStart: dateFrom,
+        dateTimeEnd: dateTo
       },
     );
     const data = await qb.getRawMany();
 
-    const result = new MobileAwbFilterListResponseVm();
     result.data = data;
 
     return result;

@@ -20,10 +20,16 @@ export class AwbPackageDetail {
   weight: number;
 
   @ApiModelProperty()
+  totalWeightFinalRounded: number;
+
+  @ApiModelProperty()
   shipperName: string;
 
   @ApiModelProperty()
   consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeNumber: string;
 
   @ApiModelProperty()
   consigneeAddress: string;
@@ -41,16 +47,64 @@ export class PackageAwbResponseVm   {
   dataBag: AwbPackageDetail[];
 
   @ApiModelProperty()
-  districtName: string;
+  branchName: string;
 
   @ApiModelProperty()
-  districtId: number;
+  branchId: number;
 
   @ApiModelPropertyOptional()
   bagNumber: string;
 
   @ApiModelPropertyOptional()
   bagItemId: number;
+
+  @ApiModelPropertyOptional()
+  podScanInHubId: string;
+
+  @ApiModelProperty()
+  isAllow: boolean;
+
+  @ApiModelProperty()
+  branchCode: string;
+
+  @ApiModelPropertyOptional()
+  bagSeq: number;
+
+  @ApiModelPropertyOptional()
+  bagWeight: number;
+
+  @ApiModelPropertyOptional()
+  weight: number;
+}
+
+export class PackageAwbBackupResponseVm   {
+
+  @ApiModelPropertyOptional({ type: () => AwbPackageDetail })
+  data: AwbPackageDetail;
+
+  @ApiModelPropertyOptional({ type: () => [AwbPackageDetail] })
+  dataBag: AwbPackageDetail[];
+
+  @ApiModelProperty()
+  districtId: number;
+
+  @ApiModelProperty()
+  districtCode: string;
+
+  @ApiModelProperty()
+  districtName: string;
+
+  @ApiModelPropertyOptional()
+  bagItemId: number;
+
+  @ApiModelPropertyOptional()
+  bagNumber: string;
+
+  @ApiModelPropertyOptional()
+  bagSeq: number;
+
+  @ApiModelPropertyOptional()
+  bagItemWeight: number;
 
   @ApiModelPropertyOptional()
   podScanInHubId: string;

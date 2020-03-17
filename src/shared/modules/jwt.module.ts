@@ -6,7 +6,7 @@ import { ConfigService } from '../services/config.service';
 @Module({
   imports: [
     NestJwtModule.register({
-      secretOrPrivateKey: ConfigService.get('jwt.secretKey'),
+      secret: ConfigService.get('jwt.secretKey'),
       signOptions: {
         algorithm: 'HS256',
       },
