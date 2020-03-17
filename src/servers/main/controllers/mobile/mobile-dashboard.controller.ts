@@ -20,6 +20,7 @@ import moment = require('moment');
 import { RedisService } from '../../../../shared/services/redis.service';
 import { MobileInitCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
 import { MobileInitCheckInService } from '../../services/mobile/mobile-init-check-in.service';
+import { DetailTransitPayloadVm } from '../../models/mobile-dashboard.vm';
 
 @ApiUseTags('Dashboard')
 @Controller('mobile')
@@ -112,12 +113,30 @@ export class MobileDashboardController {
     };
   }
 
-  @Get('detail/transit')
+  @Post('detail/transit')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: MobileDetailTransitResponseVm })
-  public async detailTransit() {
-    return MobileDashboardService.getTransitDetail();
+  public async detailTransit( @Body() payload: DetailTransitPayloadVm ) {
+    return MobileDashboardService.getTransitDetail(payload);
+  }
+
+  @Post('detail/transit/notScanOut')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: MobileDetailTransitResponseVm })
+  public async detailTransitNotScanOut( @Body() payload: DetailTransitPayloadVm ) {
+    return MobileDashboardService.getTransitDetailNotScanOut(payload);
+  }
+
+  @Post('detail/transit/scanIn')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: MobileDetailTransitResponseVm })
+  public async detailTransitScanIn( @Body() payload: DetailTransitPayloadVm ) {
+    return MobileDashboardService.getTransitDetailScanIn(payload);
   }
 }

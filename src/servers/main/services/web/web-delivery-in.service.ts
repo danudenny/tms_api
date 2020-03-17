@@ -353,7 +353,7 @@ export class WebDeliveryInService {
   ): Promise<WebScanInHubSortListResponseVm> {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't2.created_time';
-    payload.fieldResolverMap['districtId'] = 't3.district_id';
+    payload.fieldResolverMap['branchId'] = 't3.branch_id';
     payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
     payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
     if (payload.sortBy === '') {
@@ -390,7 +390,7 @@ export class WebDeliveryInService {
       ['t2.bag_seq', 'bagSeq'],
       ['t2.bag_item_id', 'bagItemId'],
       ['t2.created_time', 'createdTime'],
-      ['t3.district_name', 'districtName'],
+      ['t3.branch_name', 'branchName'],
       ['COUNT (t4.*)', 'totalAwb'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
@@ -398,20 +398,20 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItems, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.district, 't3', j =>
+    q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.bagItems.bagItemAwbs, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.andWhere(e => e.districtIdTo, w => w.isNotNull);
+    q.andWhere(e => e.branchIdTo, w => w.isNotNull);
     q.groupByRaw(`
       t2.created_time,
       t2.bag_seq,
       t2.bag_item_id,
       t1.bag_number,
       t2.weight,
-      t3.district_name
+      t3.branch_name
     `);
 
     const data = await q.exec();

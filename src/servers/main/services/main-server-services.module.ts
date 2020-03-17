@@ -22,6 +22,8 @@ import { LastMileDeliveryInService } from './mobile/mobile-last-mile-delivery-in
 import { LastMileDeliveryOutService } from './mobile/mobile-last-mile-delivery-out.service';
 import { MobileAwbFilterService } from './mobile/mobile-awb-filter.service';
 import { DoReturnService } from './do-return/do-return.service';
+import { HubTransitDeliveryService } from './web/hub-transit/hub-transit-delivery.service';
+import { MobileDeliveryInService } from './mobile/mobile-delivery-in.service';
 
 @Module({
   imports: [SharedModule],
@@ -48,6 +50,8 @@ import { DoReturnService } from './do-return/do-return.service';
     LastMileDeliveryOutService,
     MobileAwbFilterService,
     DoReturnService,
+    MobileDeliveryInService,
+    HubTransitDeliveryService,
   ],
   exports: [
     AwbStatusService,
@@ -72,6 +76,8 @@ import { DoReturnService } from './do-return/do-return.service';
     LastMileDeliveryOutService,
     MobileAwbFilterService,
     DoReturnService,
+    HubTransitDeliveryService,
+    MobileDeliveryInService,
   ],
 })
 export class MainServerServicesModule {}
