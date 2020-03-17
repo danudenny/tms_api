@@ -121,4 +121,22 @@ export class MobileDashboardController {
   public async detailTransit( @Body() payload: DetailTransitPayloadVm ) {
     return MobileDashboardService.getTransitDetail(payload);
   }
+
+  @Post('detail/transit/notScanOut')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: MobileDetailTransitResponseVm })
+  public async detailTransitNotScanOut( @Body() payload: DetailTransitPayloadVm ) {
+    return MobileDashboardService.getTransitDetailNotScanOut(payload);
+  }
+
+  @Post('detail/transit/scanIn')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: MobileDetailTransitResponseVm })
+  public async detailTransitScanIn( @Body() payload: DetailTransitPayloadVm ) {
+    return MobileDashboardService.getTransitDetailScanIn(payload);
+  }
 }
