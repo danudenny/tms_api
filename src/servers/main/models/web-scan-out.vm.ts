@@ -229,11 +229,9 @@ export class WebScanOutEditHubVm extends WebScanOutVm {
 
 // Create DO POD Delivery
 export class WebScanOutCreateDeliveryVm {
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: 123,
-    skipValidation: true,
   })
-  @IsDefined({message: 'Sigesit harus diisi'})
   userIdDriver: number;
 
   @ApiModelPropertyOptional({
@@ -246,6 +244,16 @@ export class WebScanOutCreateDeliveryVm {
     example: 'keterangan',
   })
   desc?: string;
+
+  @ApiModelProperty({
+    example: false,
+  })
+  isPartner: boolean;
+
+  @ApiModelPropertyOptional({
+    example: 123,
+  })
+  partnerId: number;
 }
 
 export class WebScanOutDeliverEditVm {
