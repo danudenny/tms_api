@@ -1671,6 +1671,26 @@ export class WebDeliveryOutService {
   }
 
   async photoDetail(payload: PhotoDetailVm): Promise<PhotoResponseVm> {
+    let q = createQueryBuilder();
+    q.addSelect("dpdd.awb_number", "awbNumber");
+    q.from('do_pod_deliver_detail', 'dpdd');
+    q.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
+      doPodDeliverDetailId: payload.doPodDeliverDetailId,
+    });
+    let temp = await q.getRawOne();
+
+    q = createQueryBuilder();
+    q.addSelect("dpdd.do_pod_deliver_id", "doPodDeliverId");
+    q.from('do_pod_deliver_detail', 'dpdd');
+    q.where('dpdd.awb_number = :awbNumber', {
+      awbNumber: temp.awbNumber,
+    });
+    temp = await q.getRawMany();
+
+    let id = "";
+    temp.map(function(item){
+      id = id ? "'"+item.doPodDeliverId+"'" : ",'"+item.doPodDeliverId+"'";
+    });
     const qq = createQueryBuilder();
     qq.addSelect('attachments.url', 'url');
     qq.addSelect('dpda.type', 'type');
@@ -1686,10 +1706,7 @@ export class WebDeliveryOutService {
       'attachments',
       'attachments.attachment_tms_id = dpda.attachment_tms_id',
     );
-    qq.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
-      doPodDeliverDetailId: payload.doPodDeliverDetailId,
-
-    });
+    qq.where(`dpdd.do_pod_deliver_id IN (${id})`);
 
     const result = new PhotoResponseVm();
     const data = await qq.getRawMany();
