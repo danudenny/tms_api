@@ -638,10 +638,10 @@ export class WebDeliveryOutService {
     });
 
     for (const bagNumber of payload.bagNumber) {
-      const response = {
-        status: 'ok',
-        message: 'Success',
-      };
+      const response = new ScanBagVm();
+      response.status = 'ok';
+      response.message = 'success';
+
       const bagData = await BagService.validBagNumber(bagNumber);
       if (bagData) {
         // NOTE: validate bag branch id last
@@ -692,11 +692,18 @@ export class WebDeliveryOutService {
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
             await DoPodDetailBag.insert(doPodDetailBag);
 
+            // Assign print metadata
+            response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
+            response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
+            response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
+            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagNumber;
+            response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
+
             // AFTER Scan OUT ===============================================
             // #region after scanout
             // Update bag_item set bag_item_status_id = 1000
 
-            BagItem.update(bagData.bagItemId, {
+            await BagItem.update(bagData.bagItemId, {
               bagItemStatusIdLast: bagStatus,
               branchIdLast: doPod.branchId,
               branchIdNext: doPod.branchIdTo,
