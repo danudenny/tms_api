@@ -61,6 +61,7 @@ import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagTroubleService } from '../../../../shared/services/bag-trouble.service';
 import { Employee } from '../../../../shared/orm-entity/employee';
 import { Branch } from '../../../../shared/orm-entity/branch';
+import { BagScanOutHubQueueService } from '../../../queue/services/bag-scan-out-hub-queue.service';
 // #endregion
 
 @Injectable()
@@ -611,13 +612,15 @@ export class WebDeliveryOutService {
 
   // TODO: need refactoring
   /**
-   * Create DO POD Detail
+   * Create DO POD Detail for Scan Out HUB
    * with scan bag number
    * @param {WebScanOutBagVm} payload
    * @returns {Promise<WebScanOutBagResponseVm>}
    * @memberof WebDeliveryOutService
    */
-  async scanOutBag(payload: WebScanOutBagVm): Promise<WebScanOutBagResponseVm> {
+  async scanOutBag(
+    payload: WebScanOutBagVm,
+  ): Promise<WebScanOutBagResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
@@ -649,12 +652,6 @@ export class WebDeliveryOutService {
         // bag status scan out by doPodType (3005 Branch/ 3010 and 3020 HUB)
         const bagStatus = BAG_STATUS.OUT_HUB;
         const transactionStatusId = 300; // OUT HUB
-
-        // Branch
-        // if (doPod.doPodType == 3005) {
-        //   bagStatus = BAG_STATUS.OUT_BRANCH;
-        //   transactionStatusId =  800;
-        // }
 
         const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
         const holdRedis = await RedisService.locking(
@@ -714,15 +711,16 @@ export class WebDeliveryOutService {
             // NOTE: Loop data bag_item_awb for update status awb
             // and create do_pod_detail (data awb on bag)
             // TODO: need to refactor send to background job
-            // BagScanOutBranchQueueService.perform
-            await BagService.statusOutBranchAwbBag(
+            BagScanOutHubQueueService.perform(
               bagData.bagId,
               bagData.bagItemId,
               doPod.doPodId,
               doPod.branchIdTo,
               doPod.userIdDriver,
-              doPod.doPodType,
               bagNumber,
+              authMeta.userId,
+              permissonPayload.branchId,
+              doPod.doPodType,
             );
 
             // TODO: if isTransit auto IN
