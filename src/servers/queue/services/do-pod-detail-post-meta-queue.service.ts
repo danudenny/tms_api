@@ -170,7 +170,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver,
-      timestamp: addTime ? moment().add(addTime, "seconds").toDate() : moment().toDate(),
+      timestamp: addTime ? moment().add(addTime, "minutes").toDate() : moment().toDate(),
       noteInternal,
       notePublic,
       branchIdNext,

@@ -156,7 +156,7 @@ export class BagService {
     if (bagItemsAwb && bagItemsAwb.length) {
       let employeeIdDriver = null;
       let employeeNameDriver = '';
-      let additionSec = 0;
+      let additionMinutes = 0;
       const userDriverRepo = await SharedService.getDataUserEmployee(userIdDriver);
       if (userDriverRepo) {
         employeeIdDriver = userDriverRepo.employeeId;
@@ -212,7 +212,7 @@ export class BagService {
                 permissonPayload.branchId,
                 authMeta.userId,
               );
-              additionSec = 2;
+              additionMinutes = 1;
             }
 
             // queue bull OUT HUB
@@ -227,7 +227,7 @@ export class BagService {
               cityName,
               branchIdNext,
               branchNameNext,
-              additionSec,
+              additionMinutes,
             );
           } else {
             // BRANCH
