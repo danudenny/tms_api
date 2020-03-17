@@ -55,6 +55,9 @@ export class V1MobileSyncService {
 
   public static async syncDeliver(delivery: MobileDeliveryVm) {
     const doPodDeliverHistories: DoPodDeliverHistory[] = [];
+    const authMeta         = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
     let process = false;
     for (const deliveryHistory of delivery.deliveryHistory) {
       if (!deliveryHistory.doPodDeliverHistoryId) {
@@ -164,21 +167,12 @@ export class V1MobileSyncService {
         });
         // #endregion of transaction
 
-        const authMeta         = AuthService.getAuthData();
-        const permissonPayload = AuthService.getPermissionTokenPayload();
         // NOTE: queue by Bull
         DoPodDetailPostMetaQueueService.createJobV1MobileSync(
           awbdDelivery.awbItemId,
           lastDoPodDeliverHistory.awbStatusId,
-
-          // Parameters changed to user login
           authMeta.userId,
-          permissonPayload.branchId,
-          // awbdDelivery.doPodDeliver.userId,
-          // awbdDelivery.doPodDeliver.branchId,
-
-          // END OF CHANGED ---------------------
-
+          awbdDelivery.doPodDeliver.branchId,
           awbdDelivery.userIdCreated,
           delivery.employeeId,
           lastDoPodDeliverHistory.reasonId,
