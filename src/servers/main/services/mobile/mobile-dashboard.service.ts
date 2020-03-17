@@ -47,16 +47,14 @@ export class MobileDashboardService {
 
   public static async getTransitDetailScanIn(
     payload: DetailTransitPayloadVm,
-    dateFrom?: string,
-    dateTo?: string
   ): Promise<MobileDetailTransitResponseVm> {
 
     const authMeta = AuthService.getAuthMetadata();
     const currentMoment = moment();
     const mobileTransitResponseVm = new MobileTransitResponseVm();
     const result = new MobileDetailTransitResponseVm();
-    dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
-    dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
+    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
     result.status = "ok";
 
     if(moment(dateTo).isBefore(dateFrom)){
@@ -92,16 +90,14 @@ export class MobileDashboardService {
 
   public static async getTransitDetailNotScanOut(
     payload: DetailTransitPayloadVm,
-    dateFrom?: string,
-    dateTo?: string
   ): Promise<MobileDetailTransitResponseVm> {
 
     const authMeta = AuthService.getAuthMetadata();
     const currentMoment = moment();
     const mobileTransitResponseVm = new MobileTransitResponseVm();
     const result = new MobileDetailTransitResponseVm();
-    dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
-    dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
+    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
     result.status = "ok";
 
     if(moment(dateTo).isBefore(dateFrom)){
@@ -153,12 +149,6 @@ export class MobileDashboardService {
     const mobileTransitResponseVm3 = new MobileTransitResponseVm();
     const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
     const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
-
-    if(moment(dateTo).isBefore(dateFrom)){
-      result.status = "error";
-      result.message = "Tanggal yang dipilih tidak valid";
-      return result;
-    }
 
     // ambil total barang belum scan keluar
     const transitScanIn = await this.getTransitDetailScanIn(payload);
