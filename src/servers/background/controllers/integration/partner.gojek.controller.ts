@@ -59,7 +59,7 @@ export class PartnerGojekController {
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: GojekBookingPodResponseVm })
   public async createBokingPod(@Body() payload: GojekBookingPodVm) {
-    return PartnerGojekService.createBookingPod(payload);
+    return PartnerGojekService.createBookingDelivery(payload);
   }
 
   @Post('gojek/cancelBooking/delivery')
