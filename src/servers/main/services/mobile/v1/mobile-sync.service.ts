@@ -21,6 +21,7 @@ import { MobileSyncImageResponseVm, MobileSyncDataResponseVm, MobileSyncAwbVm } 
 
 import moment = require('moment');
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
+import { AuthService } from '../../../../../shared/services/auth.service';
 // #endregion
 
 export class V1MobileSyncService {
@@ -163,12 +164,21 @@ export class V1MobileSyncService {
         });
         // #endregion of transaction
 
+        const authMeta         = AuthService.getAuthData();
+        const permissonPayload = AuthService.getPermissionTokenPayload();
         // NOTE: queue by Bull
         DoPodDetailPostMetaQueueService.createJobV1MobileSync(
           awbdDelivery.awbItemId,
           lastDoPodDeliverHistory.awbStatusId,
-          awbdDelivery.doPodDeliver.userId,
-          awbdDelivery.doPodDeliver.branchId,
+
+          // Parameters changed to user login
+          authMeta.userId,
+          permissonPayload.branchId,
+          // awbdDelivery.doPodDeliver.userId,
+          // awbdDelivery.doPodDeliver.branchId,
+
+          // END OF CHANGED ---------------------
+
           awbdDelivery.userIdCreated,
           delivery.employeeId,
           lastDoPodDeliverHistory.reasonId,
