@@ -222,6 +222,12 @@ export class WebScanOutDeliverPartnerDataResponseVm {
   doPodDeliverId: string;
 
   @ApiModelProperty()
+  doPodDeliverCode: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
   assignDate: string;
 
   @ApiModelProperty()
