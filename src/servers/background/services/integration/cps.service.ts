@@ -267,8 +267,9 @@ export class CpsService {
 
   private static async getStt(type: string): Promise < any > {
     let additionalWhere = ' and is_sync_mysql = false ';
-    if (type == 'odoo') {
-      additionalWhere = ' and is_sync_odoo = false ';
+    const limit = 3000;
+    if (type == 'pod') {
+      additionalWhere = ' and is_sync_pod = false ';
     }
 
     const startDate = moment().add(-7, 'days').format('YYYY-MM-DD 00:00:00');
@@ -279,7 +280,7 @@ export class CpsService {
         FROM temp_stt
         WHERE
             lastupdatedatetimeutc >= :startDate AND lastupdatedatetimeutc< :endDate ` + additionalWhere + `
-        LIMIT 1000
+        LIMIT ` + limit + `
     `;
 
     return await RawQueryService.queryWithParams(query, {
