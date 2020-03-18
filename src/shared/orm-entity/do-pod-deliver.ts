@@ -132,7 +132,7 @@ export class DoPodDeliver extends TmsBaseEntity {
   branch: Branch;
 
   @OneToOne(() => DoPodAttr)
-  @JoinColumn({ name: 'do_pod_deliver_id' })
+  @JoinColumn({ name: 'do_pod_deliver_id', referencedColumnName: 'doPodDeliverId' })
   doPodAttr: DoPodAttr;
 
   @OneToMany(() => DoPodDeliverDetail, e => e.doPodDeliver)
