@@ -40,7 +40,7 @@ export class MappingRoleQueueService {
       const data = job.data;
 
       for (const user of data.users) {
-        MasterDataService.insertUserRole(user.userid, user.branchidlast, user.branchidnew, data.payload);
+        MasterDataService.insertUserRole(user.userid, user.branchidlast, user.branchidnew, data.payload, data.mode);
       }
 
       return true;
@@ -61,6 +61,7 @@ export class MappingRoleQueueService {
     const obj = {
       users,
       payload,
+      mode: 0,
     };
 
     return MappingRoleQueueService.queue.add(obj);
@@ -70,6 +71,17 @@ export class MappingRoleQueueService {
     const obj = {
       users,
       payload,
+      mode: 0,
+    };
+
+    return MappingRoleQueueService.queue.add(obj);
+  }
+
+  public static async addDataUserTms(users: any, payload: any) {
+    const obj = {
+      users,
+      payload,
+      mode: 1,
     };
 
     return MappingRoleQueueService.queue.add(obj);

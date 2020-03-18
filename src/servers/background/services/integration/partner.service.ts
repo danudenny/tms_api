@@ -233,6 +233,7 @@ export class PartnerService {
     const config = {
       headers,
     };
+    const yearNow = moment().format('YY');
 
     const jsonData = {
       userid: 14,
@@ -396,7 +397,7 @@ export class PartnerService {
     let pickupRequestDetailId = null;
     let branchPartnerId = null;
     let awbItemId = null;
-    const arrDropStatus = [7050];
+    const arrDropStatus = [7050, 7100];
     const err = '';
 
     const dataBranch = await this.getBranchPartnerId(paramBranchCode);
