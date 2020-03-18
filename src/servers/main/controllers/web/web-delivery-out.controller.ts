@@ -34,6 +34,7 @@ import {
   WebScanOutTransitListResponseVm,
   WebScanOutTransitListAwbResponseVm,
   WebScanOutDeliverGroupListResponseVm,
+  WebScanOutDeliverPartnerListResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -178,7 +179,7 @@ export class WebDeliveryOutController {
   @HttpCode(HttpStatus.OK)
   // @ApiBearerAuth()
   // @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanOutDeliverGroupListResponseVm })
+  @ApiOkResponse({ type: WebScanOutDeliverPartnerListResponseVm })
   public async deliverPartnerList(@Body() payload: BaseMetaPayloadVm) {
     return LastMileDeliveryService.findAllDeliverPartner(payload);
   }
