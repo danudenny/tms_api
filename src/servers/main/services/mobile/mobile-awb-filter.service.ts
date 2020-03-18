@@ -2,10 +2,7 @@
 import { createQueryBuilder } from 'typeorm';
 import moment = require('moment');
 
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { MetaService } from '../../../../shared/services/meta.service';
-import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
 import { MobileAwbFilterListResponseVm } from '../../models/mobile-awb-filter-list.response.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { DetailTransitPayloadVm } from '../../models/mobile-dashboard.vm';
@@ -20,13 +17,17 @@ export class MobileAwbFilterService {
     const authMeta = AuthService.getAuthData();
     const currentMoment = moment();
     const qb = createQueryBuilder();
-    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
-    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
+    const dateFrom = payload.dateFrom
+      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 00:00:00'
+      : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo
+      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 23:59:59'
+      : currentMoment.format('YYYY-MM-DD 23:59:59');
     const result = new MobileAwbFilterListResponseVm();
 
-    if(moment(dateTo).isBefore(dateFrom)){
-      result.status = "error";
-      result.message = "Tanggal yang dipilih tidak valid";
+    if (moment(dateTo).isBefore(dateFrom)) {
+      result.status = 'error';
+      result.message = 'Tanggal yang dipilih tidak valid';
       return result;
     }
 
@@ -42,28 +43,28 @@ export class MobileAwbFilterService {
     qb.innerJoin(
       'package_type',
       'pt',
-      'pt.package_type_id = awb.package_type_id'
+      'pt.package_type_id = awb.package_type_id',
     );
     qb.innerJoin(
       'awb_item_attr',
       'aia',
-      'aia.awb_id = awb.awb_id'
+      'aia.awb_id = awb.awb_id',
     );
     qb.innerJoin(
       'pod_scan_in_branch_detail',
       'pcbd',
-      'pcbd.awb_id = awb.awb_id'
+      'pcbd.awb_id = awb.awb_id',
     );
     qb.innerJoin(
       'pod_scan_in_branch',
       'pcb',
-      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId', { userId: authMeta.userId }
+      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId', { userId: authMeta.userId },
     );
     qb.where(
       'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',
       {
         dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo
+        dateTimeEnd: dateTo,
       },
     );
     qb.andWhere('aia.awb_status_id_last = :inBranchCode', { inBranchCode: AWB_STATUS.IN_BRANCH });
@@ -81,12 +82,16 @@ export class MobileAwbFilterService {
     const currentMoment = moment();
     const qb = createQueryBuilder();
     const result = new MobileAwbFilterListResponseVm();
-    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
-    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
+    const dateFrom = payload.dateFrom
+      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 00:00:00'
+      : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo
+      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 23:59:59'
+      : currentMoment.format('YYYY-MM-DD 23:59:59');
 
-    if(moment(dateTo).isBefore(dateFrom)){
-      result.status = "error";
-      result.message = "Tanggal yang dipilih tidak valid";
+    if (moment(dateTo).isBefore(dateFrom)) {
+      result.status = 'error';
+      result.message = 'Tanggal yang dipilih tidak valid';
       return result;
     }
     // Total barang belum scan masuk
@@ -101,28 +106,28 @@ export class MobileAwbFilterService {
     qb.innerJoin(
       'package_type',
       'pt',
-      'pt.package_type_id = awb.package_type_id'
+      'pt.package_type_id = awb.package_type_id',
     );
     qb.innerJoin(
       'awb_item_attr',
       'aia',
-      'aia.awb_id = awb.awb_id'
+      'aia.awb_id = awb.awb_id',
     );
     qb.innerJoin(
       'pod_scan_in_branch_detail',
       'pcbd',
-      'pcbd.awb_id = awb.awb_id'
+      'pcbd.awb_id = awb.awb_id',
     );
     qb.innerJoin(
       'pod_scan_in_branch',
       'pcb',
-      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId', { userId: authMeta.userId }
+      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId', { userId: authMeta.userId },
     );
     qb.where(
       'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',
       {
         dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo
+        dateTimeEnd: dateTo,
       },
     );
     qb.andWhere('aia.awb_status_id_last = :outBranchCode', { outBranchCode: AWB_STATUS.OUT_BRANCH });
@@ -140,12 +145,16 @@ export class MobileAwbFilterService {
     const currentMoment = moment();
     const qb = createQueryBuilder();
     const result = new MobileAwbFilterListResponseVm();
-    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
-    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
+    const dateFrom = payload.dateFrom
+      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 00:00:00'
+      : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo
+      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 23:59:59'
+      : currentMoment.format('YYYY-MM-DD 23:59:59');
 
-    if(moment(dateTo).isBefore(dateFrom)){
-      result.status = "error";
-      result.message = "Tanggal yang dipilih tidak valid";
+    if (moment(dateTo).isBefore(dateFrom)) {
+      result.status = 'error';
+      result.message = 'Tanggal yang dipilih tidak valid';
       return result;
     }
     // Total barang scan masuk
@@ -160,23 +169,23 @@ export class MobileAwbFilterService {
     qb.innerJoin(
       'package_type',
       'pt',
-      'pt.package_type_id = awb.package_type_id'
+      'pt.package_type_id = awb.package_type_id',
     );
     qb.innerJoin(
       'pod_scan_in_branch_detail',
       'pcbd',
-      'pcbd.awb_id = awb.awb_id'
+      'pcbd.awb_id = awb.awb_id',
     );
     qb.innerJoin(
       'pod_scan_in_branch',
       'pcb',
-      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId', { userId: authMeta.userId }
+      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId', { userId: authMeta.userId },
     );
     qb.where(
       'pcb.created_time BETWEEN :dateTimeStart AND :dateTimeEnd',
       {
         dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo
+        dateTimeEnd: dateTo,
       },
     );
     const data = await qb.getRawMany();

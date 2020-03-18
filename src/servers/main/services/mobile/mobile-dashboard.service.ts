@@ -48,18 +48,21 @@ export class MobileDashboardService {
   public static async getTransitDetailScanIn(
     payload: DetailTransitPayloadVm,
   ): Promise<MobileDetailTransitResponseVm> {
-
     const authMeta = AuthService.getAuthMetadata();
     const currentMoment = moment();
     const mobileTransitResponseVm = new MobileTransitResponseVm();
     const result = new MobileDetailTransitResponseVm();
-    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
-    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
-    result.status = "ok";
+    const dateFrom = payload.dateFrom
+      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 00:00:00'
+      : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo
+      ? moment(payload.dateTo).format('YYYY-MM-DD') + ' 23:59:59'
+      : currentMoment.format('YYYY-MM-DD 23:59:59');
+    result.status = 'ok';
 
-    if(moment(dateTo).isBefore(dateFrom)){
-      result.status = "error";
-      result.message = "Tanggal yang dipilih tidak valid";
+    if (moment(dateTo).isBefore(dateFrom)) {
+      result.status = 'error';
+      result.message = 'Tanggal yang dipilih tidak valid';
       return result;
     }
 
@@ -68,15 +71,16 @@ export class MobileDashboardService {
     qb.addSelect('pcbd.awb_number)', 'totalScanInAwb');
     qb.from('pod_scan_in_branch_detail', 'pcbd');
     qb.innerJoin(
-        'pod_scan_in_branch',
-        'pcb',
-        'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId ', { userId: authMeta.userId }
-      );
+      'pod_scan_in_branch',
+      'pcb',
+      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId ',
+      { userId: authMeta.userId },
+    );
     qb.where(
       'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',
       {
         dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo
+        dateTimeEnd: dateTo,
       },
     );
     mobileTransitResponseVm.total = await qb.getCount();
@@ -91,42 +95,50 @@ export class MobileDashboardService {
   public static async getTransitDetailNotScanOut(
     payload: DetailTransitPayloadVm,
   ): Promise<MobileDetailTransitResponseVm> {
-
     const authMeta = AuthService.getAuthMetadata();
     const currentMoment = moment();
     const mobileTransitResponseVm = new MobileTransitResponseVm();
     const result = new MobileDetailTransitResponseVm();
-    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
-    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
-    result.status = "ok";
 
-    if(moment(dateTo).isBefore(dateFrom)){
-      result.status = "error";
-      result.message = "Tanggal yang dipilih tidak valid";
+    const dateFrom = payload.dateFrom
+      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 00:00:00'
+      : currentMoment.format('YYYY-MM-DD 00:00:00');
+    const dateTo = payload.dateTo
+      ? moment(payload.dateTo).format('YYYY-MM-DD') + ' 23:59:59'
+      : currentMoment.format('YYYY-MM-DD 23:59:59');
+    result.status = 'ok';
+
+    if (moment(dateTo).isBefore(dateFrom)) {
+      result.status = 'error';
+      result.message = 'Tanggal yang dipilih tidak valid';
       return result;
     }
 
     // Total barang belum scan keluar
     const qb = createQueryBuilder();
-    qb.addSelect(
-      'aia.awb_number',
-      'awbNumber',
-    );
+    qb.addSelect('aia.awb_number', 'awbNumber');
     qb.from('awb_item_attr', 'aia');
-    qb.innerJoin('pod_scan_in_branch_detail', 'pcbd', 'pcbd.awb_number = aia.awb_number');
+    qb.innerJoin(
+      'pod_scan_in_branch_detail',
+      'pcbd',
+      'pcbd.awb_number = aia.awb_number',
+    );
     qb.innerJoin(
       'pod_scan_in_branch',
       'pcb',
-      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId ', { userId: authMeta.userId }
+      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId ',
+      { userId: authMeta.userId },
     );
     qb.where(
       'pcbd.created_time >= :dateTimeStart AND pcbd.created_time <= :dateTimeEnd',
       {
         dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo
+        dateTimeEnd: dateTo,
       },
     );
-    qb.andWhere('aia.awb_status_id_last = :inBranchCode', { inBranchCode: AWB_STATUS.IN_BRANCH });
+    qb.andWhere('aia.awb_status_id_last = :inBranchCode', {
+      inBranchCode: AWB_STATUS.IN_BRANCH,
+    });
     mobileTransitResponseVm.total = await qb.getCount();
 
     mobileTransitResponseVm.dateTime = currentMoment.format('YYYY-MM-DD');
@@ -138,36 +150,25 @@ export class MobileDashboardService {
 
   public static async getTransitDetail(
     payload: DetailTransitPayloadVm,
-  ): Promise<
-    MobileDetailTransitResponseVm
-  > {
+  ): Promise<MobileDetailTransitResponseVm> {
     const result = new MobileDetailTransitResponseVm();
-    const authMeta = AuthService.getAuthMetadata();
-    const currentMoment = moment();
-    const mobileTransitResponseVm = new MobileTransitResponseVm();
-    const mobileTransitResponseVm2 = new MobileTransitResponseVm();
-    const mobileTransitResponseVm3 = new MobileTransitResponseVm();
-    const dateFrom = payload.dateFrom ? payload.dateFrom+" 00:00:00" : currentMoment.format('YYYY-MM-DD 00:00:00');
-    const dateTo = payload.dateTo ? payload.dateTo+" 23:59:59" : currentMoment.format('YYYY-MM-DD 23:59:59');
 
     // ambil total barang belum scan keluar
     const transitScanIn = await this.getTransitDetailScanIn(payload);
     const transitNotScanOut = await this.getTransitDetailNotScanOut(payload);
 
-    if(transitScanIn.status=="error"){
-      result.status = "error";
+    if (transitScanIn.status == 'error') {
+      result.status = 'error';
       result.message = transitScanIn.message;
       return result;
-    }else if(transitNotScanOut.status=="error") {
-      result.status = "error";
+    } else if (transitNotScanOut.status == 'error') {
+      result.status = 'error';
       result.message = transitNotScanOut.message;
       return result;
     }
 
-    mobileTransitResponseVm.dateTime = mobileTransitResponseVm2.dateTime = mobileTransitResponseVm3.dateTime = currentMoment.format('YYYY-MM-DD');
-
-    result.status = "ok";
-    result.message = "Success";
+    result.status = 'ok';
+    result.message = 'Success';
     result.notScanOutAwb = transitNotScanOut.notScanOutAwb;
     result.scanInAwb = transitScanIn.scanInAwb;
 
@@ -175,26 +176,26 @@ export class MobileDashboardService {
   }
 }
 
-  // NOTE: query total barang belum scan masuk dibawah di pakai jika diperlukan
-  // Total barang belum scan masuk
-  // const qb = createQueryBuilder();
-  // qb.addSelect(
-  //   'aia.awb_number',
-  //   'awbNumber',
-  // );
-  // qb.from('awb_item_attr', 'aia');
-  // qb.innerJoin('pod_scan_in_branch_detail', 'pcbd', 'pcbd.awb_number = aia.awb_number');
-  // qb.innerJoin(
-  //   'pod_scan_in_branch',
-  //   'pcb',
-  //   'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId ', { userId: authMeta.userId }
-  // );
-  // qb.where(
-  //   'pcbd.created_time BETWEEN :dateTimeStart AND :dateTimeEnd',
-  //   {
-  //     dateTimeStart: dateFrom,
-  //     dateTimeEnd: dateTo
-  //   },
-  // );
-  // qb.andWhere('aia.awb_status_id_last = :outBranchCode', { outBranchCode: AWB_STATUS.OUT_BRANCH });
-  // mobileTransitResponseVm.total = await qb.getCount();
+// NOTE: query total barang belum scan masuk dibawah di pakai jika diperlukan
+// Total barang belum scan masuk
+// const qb = createQueryBuilder();
+// qb.addSelect(
+//   'aia.awb_number',
+//   'awbNumber',
+// );
+// qb.from('awb_item_attr', 'aia');
+// qb.innerJoin('pod_scan_in_branch_detail', 'pcbd', 'pcbd.awb_number = aia.awb_number');
+// qb.innerJoin(
+//   'pod_scan_in_branch',
+//   'pcb',
+//   'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId ', { userId: authMeta.userId }
+// );
+// qb.where(
+//   'pcbd.created_time BETWEEN :dateTimeStart AND :dateTimeEnd',
+//   {
+//     dateTimeStart: dateFrom,
+//     dateTimeEnd: dateTo
+//   },
+// );
+// qb.andWhere('aia.awb_status_id_last = :outBranchCode', { outBranchCode: AWB_STATUS.OUT_BRANCH });
+// mobileTransitResponseVm.total = await qb.getCount();
