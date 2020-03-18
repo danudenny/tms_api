@@ -176,6 +176,7 @@ export class LastMileDeliveryService {
   ): Promise<WebScanOutDeliverPartnerListResponseVm> {
     // mapping field
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
 
     const repo = new OrionRepositoryService(DoPodDeliver, 't1');
     const q = repo.findAllRaw();

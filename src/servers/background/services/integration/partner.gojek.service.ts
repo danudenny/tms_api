@@ -315,6 +315,7 @@ export class PartnerGojekService {
       doPodAttr.refDriverName         = payload.driver_name;
       doPodAttr.refDriverPhone        = payload.driver_phone;
       doPodAttr.refDriverPhone2       = payload.driver_phone2;
+      doPodAttr.refType               = payload.type;
       doPodAttr.refDriverPhone3       = payload.driver_phone3;
       doPodAttr.refDriverPhotoUrl     = payload.driver_photo_url;
       doPodAttr.refDeliveryEta        = payload.delivery_eta;
