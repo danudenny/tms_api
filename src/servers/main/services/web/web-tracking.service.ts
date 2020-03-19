@@ -112,7 +112,7 @@ export class WebTrackingService {
         COALESCE(
           (
             CASE
-              WHEN ar.is_partner_logistic = true THEN ar.partner_logistic_awb
+              WHEN ar.is_partner_logistic = true THEN null
               ELSE ar.return_awb_number
             END
           ), ''
