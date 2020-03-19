@@ -173,12 +173,12 @@ export class PartnerGojekService {
     result.message         = `Layanan tidak bisa digunakan saat ini`;
     result.data            = null;
     result.response        = null;
-    // const authMeta         = AuthService.getAuthData();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
+    const authMeta         = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const branch = await Branch.findOne({ where: {
-        // branchId : permissonPayload.branchId,
-        branchId : 3,
+        branchId : permissonPayload.branchId,
+        // branchId : 3,
         isDeleted: false,
     }});
 
@@ -189,11 +189,11 @@ export class PartnerGojekService {
     }});
 
     // NOTE: Check if do pod deliver right data
-    // if (!doPodDeliver) {
-    //   result.status  = 'failed';
-    //   result.message = 'Data tidak sesuai';
-    //   return result;
-    // }
+    if (!doPodDeliver) {
+      result.status  = 'failed';
+      result.message = 'Data tidak sesuai';
+      return result;
+    }
 
     if (branch) {
       const data = new GojekBookingPayloadVm();
@@ -227,10 +227,10 @@ export class PartnerGojekService {
                 if (requestGojek) {
                   const detailData = {
                     response: requestGojek,
-                    // userId  : authMeta.userId,
-                    userId  : 3,
-                    // branchId: permissonPayload.branchId,
-                    branchId: 3,
+                    userId  : authMeta.userId,
+                    branchId: permissonPayload.branchId,
+                    // userId  : 3,
+                    // branchId: 3,
                     payload,
                   };
 
