@@ -75,6 +75,12 @@ export class DoPodAttr extends TmsBaseEntity {
   })
   refCancellationReason: string;
 
+  @Column('character varying', {
+    nullable: true,
+    name: 'ref_type',
+  })
+  refType: string;
+
   @Column('int', {
     nullable: true,
     name: 'ref_driver_id',

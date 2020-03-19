@@ -216,10 +216,16 @@ export class WebScanInDeliverGroupResponseVm {
   @ApiModelProperty()
   userIdDriver: number;
 }
-export class WebScanOutDeliverPartnerResponseVm {
+export class WebScanOutDeliverPartnerDataResponseVm {
 
   @ApiModelProperty()
   doPodDeliverId: string;
+
+  @ApiModelProperty()
+  doPodDeliverCode: string;
+
+  @ApiModelProperty()
+  branchName: string;
 
   @ApiModelProperty()
   assignDate: string;
@@ -284,9 +290,9 @@ export class WebScanOutDeliverGroupListResponseVm extends BaseMetaResponseVm {
 
 export class WebScanOutDeliverPartnerListResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({
-    type: () => [WebScanOutDeliverPartnerResponseVm],
+    type: () => [WebScanOutDeliverPartnerDataResponseVm],
   })
-  data: WebScanOutDeliverPartnerResponseVm[];
+  data: WebScanOutDeliverPartnerDataResponseVm[];
 }
 
 // Create DO POD

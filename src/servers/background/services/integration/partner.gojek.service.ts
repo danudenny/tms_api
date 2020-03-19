@@ -173,11 +173,12 @@ export class PartnerGojekService {
     result.message         = `Layanan tidak bisa digunakan saat ini`;
     result.data            = null;
     result.response        = null;
-    const authMeta         = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    // const authMeta         = AuthService.getAuthData();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const branch = await Branch.findOne({ where: {
-        branchId : permissonPayload.branchId,
+        // branchId : permissonPayload.branchId,
+        branchId : 3,
         isDeleted: false,
     }});
 
@@ -188,11 +189,11 @@ export class PartnerGojekService {
     }});
 
     // NOTE: Check if do pod deliver right data
-    if (!doPodDeliver) {
-      result.status  = 'failed';
-      result.message = 'Data tidak sesuai';
-      return result;
-    }
+    // if (!doPodDeliver) {
+    //   result.status  = 'failed';
+    //   result.message = 'Data tidak sesuai';
+    //   return result;
+    // }
 
     if (branch) {
       const data = new GojekBookingPayloadVm();
@@ -226,8 +227,10 @@ export class PartnerGojekService {
                 if (requestGojek) {
                   const detailData = {
                     response: requestGojek,
-                    userId  : authMeta.userId,
-                    branchId: permissonPayload.branchId,
+                    // userId  : authMeta.userId,
+                    userId  : 3,
+                    // branchId: permissonPayload.branchId,
+                    branchId: 3,
                     payload,
                   };
 
@@ -282,6 +285,13 @@ export class PartnerGojekService {
             userIdUpdated        : authMeta.userId,
             updatedTime          : moment().toDate(),
           });
+
+          doPodAttr.refType              = 'CUSTOMER_CANCELLED';
+          doPodAttr.updatedTime          = moment().toDate();
+          doPodAttr.userIdUpdated        = 3; // superadmin
+          doPodAttr.refOrderDispatchTime = moment().toDate();
+          doPodAttr.refStatus            = 'cancelled';
+          doPodAttr.save();
         }
         return response;
       } else {
@@ -315,6 +325,7 @@ export class PartnerGojekService {
       doPodAttr.refDriverName         = payload.driver_name;
       doPodAttr.refDriverPhone        = payload.driver_phone;
       doPodAttr.refDriverPhone2       = payload.driver_phone2;
+      doPodAttr.refType               = payload.type;
       doPodAttr.refDriverPhone3       = payload.driver_phone3;
       doPodAttr.refDriverPhotoUrl     = payload.driver_photo_url;
       doPodAttr.refDeliveryEta        = payload.delivery_eta;

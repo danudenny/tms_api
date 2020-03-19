@@ -176,6 +176,7 @@ export class LastMileDeliveryService {
   ): Promise<WebScanOutDeliverPartnerListResponseVm> {
     // mapping field
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
 
     const repo = new OrionRepositoryService(DoPodDeliver, 't1');
     const q = repo.findAllRaw();
@@ -184,6 +185,7 @@ export class LastMileDeliveryService {
 
     q.selectRaw(
       ['t1.do_pod_deliver_id', 'doPodDeliverId'],
+      ['t1.do_pod_deliver_code', 'doPodDeliverCode'],
       ['t1.do_pod_deliver_date_time', 'assignDate'],
       ['t3.ref_order_created_time', 'confirmDate'],
       ['t2.awb_number', 'awbNumber'],
@@ -194,6 +196,7 @@ export class LastMileDeliveryService {
       ['t3.ref_order_arrival_time', 'completedDate'],
       ['t3.ref_order_no', 'orderNo'],
       ['t3.ref_receiver_name', 'receiverName'],
+      ['t6.branch_name', 'branchName'],
     );
 
     q.innerJoin(e => e.doPodDeliverDetails, 't2', j =>
@@ -206,6 +209,9 @@ export class LastMileDeliveryService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.doPodDeliverDetails.awb, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
