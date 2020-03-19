@@ -5,7 +5,6 @@ import {
   TrackingAwbResponseVm,
   TrackingBagResponseVm,
 } from '../../models/tracking.vm';
-import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 
 export class WebTrackingService {
   static async awb(
@@ -15,18 +14,6 @@ export class WebTrackingService {
 
     const data = await this.getRawAwb(payload.awbNumber);
     if (data) {
-      // NOTE: handling awb RTN status
-      // check existing partner AWB (resi free) and awb_status == RTN,
-      // if yes, convert returnAwbNumber, partnerLogisticAwb, partnerLogisticName to ''
-      if (
-        data.awbStatusLast == AWB_STATUS.RTN &&
-        data.partnerLogisticName != ''
-      ) {
-        data.returnAwbNumber = '';
-        data.partnerLogisticAwb = '';
-        data.partnerLogisticName = '';
-      }
-
       // mapping data
       result.awbDate = data.awbDate;
       result.createdName = data.employeeName;
