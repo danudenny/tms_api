@@ -53,7 +53,7 @@ export class PartnerGojekService {
       const response = {
           statusCode: 400,
           message: 'Surat jalan tidak ditemukan',
-      }
+      };
       return response;
     }
   }
@@ -569,10 +569,6 @@ export class PartnerGojekService {
     return true;
   }
 
-  private static createWorkOrderHistory() {
-    return null;
-  }
-
   // Partner GOJEK ============================================================
   private static get gojekBaseUrl() {
     return ConfigService.get('gojek.baseUrl');
@@ -625,12 +621,17 @@ export class PartnerGojekService {
       headers: this.headerGojek,
     };
 
-    // TODO:
-    const response = await axios.post(url, jsonData, options);
-    // Created
-    PinoLoggerService.debug('## REQUEST GOJEK', jsonData);
-    PinoLoggerService.debug('## RESPONSE GOJEK', response.data);
-    return response && response.status == 201 ? response.data : null;
+    // Created Booking
+    try {
+      const response = await axios.post(url, jsonData, options);
+      return { status: response.status, ...response.data };
+    } catch (error) {
+      return {
+        status: error.response.status,
+        ...error.response.data,
+      };
+    }
+    // return response && response.status == 201 ? response.data : null;
   }
 
   private static async getStatusOrderGojek(orderNo: string) {
@@ -638,8 +639,15 @@ export class PartnerGojekService {
     const options = {
       headers: this.headerGojek,
     };
-    const result = await axios.get(url, options);
-    return result.data;
+    try {
+      const response = await axios.get(url, options);
+      return { status: response.status, ...response.data };
+    } catch (error) {
+      return {
+        status: error.response.status,
+        ...error.response.data,
+      };
+    }
   }
 
   private static async cancelBookingGojek(orderNo: string) {
@@ -651,8 +659,15 @@ export class PartnerGojekService {
       orderNo,
     };
 
-    const result = await axios.put(url, data, options);
-    return result.data;
+    try {
+      const response = await axios.get(url, options);
+      return { status: response.status, ...response.data };
+    } catch (error) {
+      return {
+        status: error.response.status,
+        ...error.response.data,
+      };
+    }
   }
 
   private static async getEstimatePrice(
@@ -669,7 +684,14 @@ export class PartnerGojekService {
       },
     };
     // shipment_method: 'Instant' or 'SameDay';
-    const response = await axios.get(urlPost, options);
-    return response.data;
+    try {
+      const response = await axios.get(urlPost, options);
+      return { status: response.status, ...response.data };
+    } catch (error) {
+      return {
+        status: error.response.status,
+        ...error.response.data,
+      };
+    }
   }
 }
