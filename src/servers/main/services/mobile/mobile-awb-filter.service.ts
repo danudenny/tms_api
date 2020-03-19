@@ -10,6 +10,31 @@ import { DetailTransitPayloadVm } from '../../models/mobile-dashboard.vm';
 
 export class MobileAwbFilterService {
   constructor() {}
+  public validateDate(df: string, dt: string) {
+    let dateFrom = null;
+    let dateTo = null;
+    if (df && dt) {
+      if (moment(df, 'ddd MMM DD YYYY', true).isValid()) {
+        dateFrom = moment(df, 'ddd MMM DD YYYY');
+        dateTo = moment(dt, 'ddd MMM DD YYYY');
+      } else if (moment(df, 'DD MMM YYYY', true).isValid()) {
+        dateFrom = moment(df, 'DD MMM YYYY');
+        dateTo = moment(dt, 'DD MMM YYYY');
+      } else {
+        dateFrom = moment(df);
+        dateTo = moment(dt);
+      }
+    }
+
+    dateFrom = dateFrom
+      ? dateFrom.format('YYYY-MM-DD 00:00:00')
+      : moment().format('YYYY-MM-DD 00:00:00');
+    dateTo = dateTo
+      ? dateTo.format('YYYY-MM-DD 23:59:59')
+      : moment().format('YYYY-MM-DD 23:59:59');
+
+    return [dateFrom, dateTo];
+  }
 
   async findAllNotScanOutFilterList(
     payload: DetailTransitPayloadVm,
@@ -17,17 +42,10 @@ export class MobileAwbFilterService {
     const authMeta = AuthService.getAuthData();
     const currentMoment = moment();
     const qb = createQueryBuilder();
-    const dateFrom = payload.dateFrom
-      ? moment(payload.dateFrom, 'DD MMM YYYY').format('YYYY-MM-DD') +
-        ' 00:00:00'
-      : currentMoment.format('YYYY-MM-DD 00:00:00');
-    const dateTo = payload.dateTo
-      ? moment(payload.dateFrom, 'DD MMM YYYY').format('YYYY-MM-DD') +
-        ' 23:59:59'
-      : currentMoment.format('YYYY-MM-DD 23:59:59');
+    const date = this.validateDate(payload.dateFrom, payload.dateTo);
     const result = new MobileAwbFilterListResponseVm();
 
-    if (moment(dateTo).isBefore(dateFrom)) {
+    if (moment(date[1]).isBefore(date[0])) {
       result.status = 'error';
       result.message = 'Tanggal yang dipilih tidak valid';
       return result;
@@ -62,8 +80,8 @@ export class MobileAwbFilterService {
     qb.where(
       'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',
       {
-        dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo,
+        dateTimeStart: date[0],
+        dateTimeEnd: date[1],
       },
     );
     qb.andWhere('aia.awb_status_id_last = :inBranchCode', {
@@ -83,16 +101,9 @@ export class MobileAwbFilterService {
     const currentMoment = moment();
     const qb = createQueryBuilder();
     const result = new MobileAwbFilterListResponseVm();
-    const dateFrom = payload.dateFrom
-      ? moment(payload.dateFrom, 'DD MMM YYYY').format('YYYY-MM-DD') +
-        ' 00:00:00'
-      : currentMoment.format('YYYY-MM-DD 00:00:00');
-    const dateTo = payload.dateTo
-      ? moment(payload.dateFrom, 'DD MMM YYYY').format('YYYY-MM-DD') +
-        ' 23:59:59'
-      : currentMoment.format('YYYY-MM-DD 23:59:59');
+    const date = this.validateDate(payload.dateFrom, payload.dateTo);
 
-    if (moment(dateTo).isBefore(dateFrom)) {
+    if (moment(date[1]).isBefore(date[0])) {
       result.status = 'error';
       result.message = 'Tanggal yang dipilih tidak valid';
       return result;
@@ -126,8 +137,8 @@ export class MobileAwbFilterService {
     qb.where(
       'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',
       {
-        dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo,
+        dateTimeStart: date[0],
+        dateTimeEnd: date[1],
       },
     );
     qb.andWhere('aia.awb_status_id_last = :outBranchCode', {
@@ -147,16 +158,9 @@ export class MobileAwbFilterService {
     const currentMoment = moment();
     const qb = createQueryBuilder();
     const result = new MobileAwbFilterListResponseVm();
-    const dateFrom = payload.dateFrom
-      ? moment(payload.dateFrom, 'DD MMM YYYY').format('YYYY-MM-DD') +
-        ' 00:00:00'
-      : currentMoment.format('YYYY-MM-DD 00:00:00');
-    const dateTo = payload.dateTo
-      ? moment(payload.dateFrom, 'DD MMM YYYY').format('YYYY-MM-DD') +
-        ' 23:59:59'
-      : currentMoment.format('YYYY-MM-DD 23:59:59');
+    const date = this.validateDate(payload.dateFrom, payload.dateTo);
 
-    if (moment(dateTo).isBefore(dateFrom)) {
+    if (moment(date[1]).isBefore(date[0])) {
       result.status = 'error';
       result.message = 'Tanggal yang dipilih tidak valid';
       return result;
@@ -187,8 +191,8 @@ export class MobileAwbFilterService {
       { userId: authMeta.userId },
     );
     qb.where('pcb.created_time BETWEEN :dateTimeStart AND :dateTimeEnd', {
-      dateTimeStart: dateFrom,
-      dateTimeEnd: dateTo,
+      dateTimeStart: date[0],
+      dateTimeEnd: date[1],
     });
     const data = await qb.getRawMany();
 
