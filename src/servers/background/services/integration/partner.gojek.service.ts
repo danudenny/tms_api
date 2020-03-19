@@ -283,12 +283,13 @@ export class PartnerGojekService {
             awbStatusIdLast      : 14900,
             awbStatusDateTimeLast: moment().toDate(),
             userIdUpdated        : authMeta.userId,
+            // userIdUpdated        : 3,
             updatedTime          : moment().toDate(),
           });
 
           doPodAttr.refType              = 'CUSTOMER_CANCELLED';
           doPodAttr.updatedTime          = moment().toDate();
-          doPodAttr.userIdUpdated        = 3; // superadmin
+          doPodAttr.userIdUpdated        = authMeta.userId;
           doPodAttr.refOrderDispatchTime = moment().toDate();
           doPodAttr.refStatus            = 'cancelled';
           doPodAttr.save();
@@ -660,7 +661,7 @@ export class PartnerGojekService {
     };
 
     try {
-      const response = await axios.get(url, options);
+      const response = await axios.put(url, options);
       return { status: response.status, ...response.data };
     } catch (error) {
       return {
