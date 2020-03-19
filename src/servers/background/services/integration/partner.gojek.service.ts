@@ -269,8 +269,19 @@ export class PartnerGojekService {
     return result;
   }
 
+  static async deleteDoPodDeliver(doPodDeliverId) {
+    await DoPodDeliver.update(
+      doPodDeliverId,
+      {
+        isDeleted: true,
+        updatedTime: moment().toDate(),
+      }
+    );
+
+  }
+
   static async cancelBookingDelivery(payload: GojekCancelBookingVm) {
-    const doPodAttr = await DoPodAttr.findOne({ where: { refOrderNo: payload.orderNo, refBookingType: Not('CUSTOMER_CANCELED') } });
+    const doPodAttr = await DoPodAttr.findOne({ where: { refOrderNo: payload.orderNo, refType: Not('CUSTOMER_CANCELED') } });
     const authMeta  = AuthService.getAuthData();
     if (doPodAttr) {
       let response = await this.cancelBookingGojek(payload.orderNo);
@@ -290,6 +301,7 @@ export class PartnerGojekService {
           doPodAttr.refType              = 'CUSTOMER_CANCELLED';
           doPodAttr.updatedTime          = moment().toDate();
           doPodAttr.userIdUpdated        = authMeta.userId;
+          // doPodAttr.userIdUpdated        = 3;
           doPodAttr.refOrderDispatchTime = moment().toDate();
           doPodAttr.refStatus            = 'cancelled';
           doPodAttr.save();
@@ -661,7 +673,7 @@ export class PartnerGojekService {
     };
 
     try {
-      const response = await axios.put(url, options);
+      const response = await axios.put(url, data, options);
       return { status: response.status, ...response.data };
     } catch (error) {
       return {
