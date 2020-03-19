@@ -6,15 +6,24 @@ import { MobileAttendanceInPayloadVm } from '../../../models/mobile-attendance-i
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import { MobileCheckOutResponseVm } from '../../../models/mobile-check-out-response.vm';
-import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
 import { MobileAttendanceOutPayloadVm } from '../../../models/mobile-attendance-out-payload.vm';
 import { V1MobileAttendanceService } from '../../../services/mobile/v1/mobile-attendance.service';
+import { MobileInitDataPayloadVm } from '../../../models/mobile-init-data-payload.vm';
+import { MobileAttendanceInitResponseVm } from '../../../models/mobile-attendance-in-response.vm';
 
 @ApiUseTags('Mobile Employee Attendance')
 @Controller('mobile/v1/employee')
 @ApiBearerAuth()
 export class V1MobileAttendanceController {
   constructor() {}
+
+  @Post('initDataAttendance')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: MobileAttendanceInitResponseVm })
+  public async initDataLogin(@Body() payload: MobileInitDataPayloadVm) {
+    return V1MobileAttendanceService.getInitData(payload.lastSyncDateTime);
+  }
 
   @Post('attendance/checkIn')
   @HttpCode(HttpStatus.OK)
@@ -33,7 +42,6 @@ export class V1MobileAttendanceController {
   @UseInterceptors(FileInterceptor('file'))
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileCheckOutResponseVm })
-  @Transactional()
   public async checkoutAttendance(
     @Body() payload: MobileAttendanceOutPayloadVm,
     @UploadedFile() file,
