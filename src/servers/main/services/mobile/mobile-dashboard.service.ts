@@ -48,15 +48,17 @@ export class MobileDashboardService {
   public static async getTransitDetailScanIn(
     payload: DetailTransitPayloadVm,
   ): Promise<MobileDetailTransitResponseVm> {
-    const authMeta = AuthService.getAuthMetadata();
+    // const authMeta = AuthService.getAuthMetadata();
     const currentMoment = moment();
     const mobileTransitResponseVm = new MobileTransitResponseVm();
     const result = new MobileDetailTransitResponseVm();
     const dateFrom = payload.dateFrom
-      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 00:00:00'
+      ? moment(payload.dateFrom, 'ddd MMM DD YYYY').format('YYYY-MM-DD') +
+        ' 00:00:00'
       : currentMoment.format('YYYY-MM-DD 00:00:00');
     const dateTo = payload.dateTo
-      ? moment(payload.dateTo).format('YYYY-MM-DD') + ' 23:59:59'
+      ? moment(payload.dateTo, 'ddd MMM DD YYYY').format('YYYY-MM-DD') +
+        ' 23:59:59'
       : currentMoment.format('YYYY-MM-DD 23:59:59');
     result.status = 'ok';
 
@@ -74,7 +76,7 @@ export class MobileDashboardService {
       'pod_scan_in_branch',
       'pcb',
       'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId ',
-      { userId: authMeta.userId },
+      { userId: 5240 },
     );
     qb.where(
       'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',
@@ -101,10 +103,12 @@ export class MobileDashboardService {
     const result = new MobileDetailTransitResponseVm();
 
     const dateFrom = payload.dateFrom
-      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 00:00:00'
+      ? moment(payload.dateFrom, 'ddd MMM DD YYYY').format('YYYY-MM-DD') +
+        ' 00:00:00'
       : currentMoment.format('YYYY-MM-DD 00:00:00');
     const dateTo = payload.dateTo
-      ? moment(payload.dateTo).format('YYYY-MM-DD') + ' 23:59:59'
+      ? moment(payload.dateTo, 'ddd MMM DD YYYY').format('YYYY-MM-DD') +
+        ' 23:59:59'
       : currentMoment.format('YYYY-MM-DD 23:59:59');
     result.status = 'ok';
 
