@@ -45,22 +45,42 @@ export class MobileDashboardService {
     return result;
   }
 
+  public static validateDate(df: string, dt: string) {
+    let dateFrom = null;
+    let dateTo = null;
+    if (df && dt) {
+      if (moment(df, 'ddd MMM DD YYYY', true).isValid()) {
+        dateFrom = moment(df, 'ddd MMM DD YYYY');
+        dateTo = moment(dt, 'ddd MMM DD YYYY');
+      } else if (moment(df, 'DD MMM YYYY', true).isValid()) {
+        dateFrom = moment(df, 'DD MMM YYYY');
+        dateTo = moment(dt, 'DD MMM YYYY');
+      } else {
+        dateFrom = moment(df);
+        dateTo = moment(dt);
+      }
+    }
+
+    dateFrom = dateFrom
+      ? dateFrom.format('YYYY-MM-DD 00:00:00')
+      : moment().format('YYYY-MM-DD 00:00:00');
+    dateTo = dateTo
+      ? dateTo.format('YYYY-MM-DD 23:59:59')
+      : moment().format('YYYY-MM-DD 23:59:59');
+
+    return [dateFrom, dateTo];
+  }
+
   public static async getTransitDetailScanIn(
     payload: DetailTransitPayloadVm,
   ): Promise<MobileDetailTransitResponseVm> {
-    const authMeta = AuthService.getAuthMetadata();
+    // const authMeta = AuthService.getAuthMetadata();
     const currentMoment = moment();
     const mobileTransitResponseVm = new MobileTransitResponseVm();
     const result = new MobileDetailTransitResponseVm();
-    const dateFrom = payload.dateFrom
-      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 00:00:00'
-      : currentMoment.format('YYYY-MM-DD 00:00:00');
-    const dateTo = payload.dateTo
-      ? moment(payload.dateTo).format('YYYY-MM-DD') + ' 23:59:59'
-      : currentMoment.format('YYYY-MM-DD 23:59:59');
-    result.status = 'ok';
+    const date = this.validateDate(payload.dateFrom, payload.dateTo);
 
-    if (moment(dateTo).isBefore(dateFrom)) {
+    if (moment(date[1]).isBefore(date[0])) {
       result.status = 'error';
       result.message = 'Tanggal yang dipilih tidak valid';
       return result;
@@ -74,13 +94,13 @@ export class MobileDashboardService {
       'pod_scan_in_branch',
       'pcb',
       'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId ',
-      { userId: authMeta.userId },
+      { userId: 5240 },
     );
     qb.where(
       'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',
       {
-        dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo,
+        dateTimeStart: date[0],
+        dateTimeEnd: date[1],
       },
     );
     mobileTransitResponseVm.total = await qb.getCount();
@@ -100,15 +120,10 @@ export class MobileDashboardService {
     const mobileTransitResponseVm = new MobileTransitResponseVm();
     const result = new MobileDetailTransitResponseVm();
 
-    const dateFrom = payload.dateFrom
-      ? moment(payload.dateFrom).format('YYYY-MM-DD') + ' 00:00:00'
-      : currentMoment.format('YYYY-MM-DD 00:00:00');
-    const dateTo = payload.dateTo
-      ? moment(payload.dateTo).format('YYYY-MM-DD') + ' 23:59:59'
-      : currentMoment.format('YYYY-MM-DD 23:59:59');
+    const date = this.validateDate(payload.dateFrom, payload.dateTo);
     result.status = 'ok';
 
-    if (moment(dateTo).isBefore(dateFrom)) {
+    if (moment(date[1]).isBefore(date[0])) {
       result.status = 'error';
       result.message = 'Tanggal yang dipilih tidak valid';
       return result;
@@ -132,8 +147,8 @@ export class MobileDashboardService {
     qb.where(
       'pcbd.created_time >= :dateTimeStart AND pcbd.created_time <= :dateTimeEnd',
       {
-        dateTimeStart: dateFrom,
-        dateTimeEnd: dateTo,
+        dateTimeStart: date[0],
+        dateTimeEnd: date[1],
       },
     );
     qb.andWhere('aia.awb_status_id_last = :inBranchCode', {
