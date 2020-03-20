@@ -7,7 +7,9 @@ import {
 } from '../../models/tracking.vm';
 
 export class WebTrackingService {
-  static async awb(payload: TrackingAwbPayloadVm): Promise<TrackingAwbResponseVm> {
+  static async awb(
+    payload: TrackingAwbPayloadVm,
+  ): Promise<TrackingAwbResponseVm> {
     const result = new TrackingAwbResponseVm();
 
     const data = await this.getRawAwb(payload.awbNumber);
@@ -53,7 +55,9 @@ export class WebTrackingService {
     return result;
   }
 
-  static async bag(payload: TrackingBagPayloadVm): Promise<TrackingBagResponseVm> {
+  static async bag(
+    payload: TrackingBagPayloadVm,
+  ): Promise<TrackingBagResponseVm> {
     const result = new TrackingBagResponseVm();
     const data = await this.getRawBag(payload.bagNumber);
     if (data) {
@@ -105,7 +109,14 @@ export class WebTrackingService {
         COALESCE(pt.package_type_code, '') as "packageTypeCode",
         COALESCE(pt.package_type_name, '') as "packageTypeName",
         COALESCE(p.payment_method_code, '') as "paymentMethodCode",
-        COALESCE(ar.return_awb_number, '') as "returnAwbNumber",
+        COALESCE(
+          (
+            CASE
+              WHEN ar.is_partner_logistic = true THEN null
+              ELSE ar.return_awb_number
+            END
+          ), ''
+        ) as "returnAwbNumber",
         COALESCE(ar.partner_logistic_awb, '') as "partnerLogisticAwb",
         COALESCE(ar.partner_logistic_name, '') as "partnerLogisticName",
         a.total_cod_value as "totalCodValue",
@@ -200,7 +211,8 @@ export class WebTrackingService {
         WHERE b.bag_number = :bagNumber AND bi.bag_seq = :seqNumber LIMIT 1
       `;
       const rawData = await RawQueryService.queryWithParams(query, {
-        bagNumber, seqNumber,
+        bagNumber,
+        seqNumber,
       });
       return rawData ? rawData[0] : null;
     } else {
