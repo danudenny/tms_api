@@ -53,7 +53,7 @@ export class PartnerGojekService {
       const response = {
           statusCode: 400,
           message: 'Surat jalan tidak ditemukan',
-      }
+      };
       return response;
     }
   }
@@ -173,12 +173,12 @@ export class PartnerGojekService {
     result.message         = `Layanan tidak bisa digunakan saat ini`;
     result.data            = null;
     result.response        = null;
-    // const authMeta         = AuthService.getAuthData();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
+    const authMeta         = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const branch = await Branch.findOne({ where: {
-        // branchId : permissonPayload.branchId,
-        branchId : 3,
+        branchId : permissonPayload.branchId,
+        // branchId : 3,
         isDeleted: false,
     }});
 
@@ -189,12 +189,14 @@ export class PartnerGojekService {
     }});
 
     // NOTE: Check if do pod deliver right data
-    // if (!doPodDeliver) {
-    //   result.status  = 'failed';
-    //   result.message = 'Data tidak sesuai';
-    //   return result;
-    // }
+    if (!doPodDeliver) {
+      result.status  = 'failed';
+      result.message = 'Data tidak sesuai';
+      await this.deleteDoPodDeliver(payload.doPodDeliverId, authMeta.userId);
+      return result;
+    }
 
+    let failed = true;
     if (branch) {
       const data = new GojekBookingPayloadVm();
       if (branch.latitude && branch.longitude) {
@@ -206,7 +208,8 @@ export class PartnerGojekService {
 
         if (!data.originContactPhone) {
           result.status = 'failed';
-          result.message = 'Data tidak lengkap, gerai tidak memiliki data no telpon';
+          result.message = 'Data gerai tidak lengkap, gerai tidak memiliki data no telpon';
+          await this.deleteDoPodDeliver(payload.doPodDeliverId, authMeta.userId);
           return result;
         }
 
@@ -227,13 +230,13 @@ export class PartnerGojekService {
                 if (requestGojek) {
                   const detailData = {
                     response: requestGojek,
-                    // userId  : authMeta.userId,
-                    userId  : 3,
-                    // branchId: permissonPayload.branchId,
-                    branchId: 3,
+                    userId  : authMeta.userId,
+                    branchId: permissonPayload.branchId,
+                    // userId  : 3,
+                    // branchId: 3,
                     payload,
                   };
-
+                  failed = false;
                   await this.responProcessForPod(detailData);
                   result.data     = data;
                   result.response = requestGojek;
@@ -266,11 +269,27 @@ export class PartnerGojekService {
       result.status  = 'failed';
       result.message = 'Gerai tidak ditemukan';
     }
+
+    // NOTE: Update is delete true if failed gojek service
+    if (failed) {
+      await this.deleteDoPodDeliver(payload.doPodDeliverId, authMeta.userId);
+    }
     return result;
   }
 
+  static async deleteDoPodDeliver(doPodDeliverId, userId) {
+    await DoPodDeliver.update(
+      doPodDeliverId,
+      {
+        isDeleted: true,
+        updatedTime: moment().toDate(),
+        userIdUpdated: userId,
+      },
+    );
+  }
+
   static async cancelBookingDelivery(payload: GojekCancelBookingVm) {
-    const doPodAttr = await DoPodAttr.findOne({ where: { refOrderNo: payload.orderNo, refBookingType: Not('CUSTOMER_CANCELED') } });
+    const doPodAttr = await DoPodAttr.findOne({ where: { refOrderNo: payload.orderNo, refType: Not('CUSTOMER_CANCELED') } });
     const authMeta  = AuthService.getAuthData();
     if (doPodAttr) {
       let response = await this.cancelBookingGojek(payload.orderNo);
@@ -283,12 +302,14 @@ export class PartnerGojekService {
             awbStatusIdLast      : 14900,
             awbStatusDateTimeLast: moment().toDate(),
             userIdUpdated        : authMeta.userId,
+            // userIdUpdated        : 3,
             updatedTime          : moment().toDate(),
           });
 
           doPodAttr.refType              = 'CUSTOMER_CANCELLED';
           doPodAttr.updatedTime          = moment().toDate();
-          doPodAttr.userIdUpdated        = 3; // superadmin
+          doPodAttr.userIdUpdated        = authMeta.userId;
+          // doPodAttr.userIdUpdated        = 3;
           doPodAttr.refOrderDispatchTime = moment().toDate();
           doPodAttr.refStatus            = 'cancelled';
           doPodAttr.save();
@@ -569,10 +590,6 @@ export class PartnerGojekService {
     return true;
   }
 
-  private static createWorkOrderHistory() {
-    return null;
-  }
-
   // Partner GOJEK ============================================================
   private static get gojekBaseUrl() {
     return ConfigService.get('gojek.baseUrl');
@@ -625,12 +642,17 @@ export class PartnerGojekService {
       headers: this.headerGojek,
     };
 
-    // TODO:
-    const response = await axios.post(url, jsonData, options);
-    // Created
-    PinoLoggerService.debug('## REQUEST GOJEK', jsonData);
-    PinoLoggerService.debug('## RESPONSE GOJEK', response.data);
-    return response && response.status == 201 ? response.data : null;
+    // Created Booking
+    try {
+      const response = await axios.post(url, jsonData, options);
+      return { status: response.status, ...response.data };
+    } catch (error) {
+      return {
+        status: error.response.status,
+        ...error.response.data,
+      };
+    }
+    // return response && response.status == 201 ? response.data : null;
   }
 
   private static async getStatusOrderGojek(orderNo: string) {
@@ -638,8 +660,15 @@ export class PartnerGojekService {
     const options = {
       headers: this.headerGojek,
     };
-    const result = await axios.get(url, options);
-    return result.data;
+    try {
+      const response = await axios.get(url, options);
+      return { status: response.status, ...response.data };
+    } catch (error) {
+      return {
+        status: error.response.status,
+        ...error.response.data,
+      };
+    }
   }
 
   private static async cancelBookingGojek(orderNo: string) {
@@ -651,8 +680,15 @@ export class PartnerGojekService {
       orderNo,
     };
 
-    const result = await axios.put(url, data, options);
-    return result.data;
+    try {
+      const response = await axios.put(url, data, options);
+      return { status: response.status, ...response.data };
+    } catch (error) {
+      return {
+        status: error.response.status,
+        ...error.response.data,
+      };
+    }
   }
 
   private static async getEstimatePrice(
@@ -669,7 +705,14 @@ export class PartnerGojekService {
       },
     };
     // shipment_method: 'Instant' or 'SameDay';
-    const response = await axios.get(urlPost, options);
-    return response.data;
+    try {
+      const response = await axios.get(urlPost, options);
+      return { status: response.status, ...response.data };
+    } catch (error) {
+      return {
+        status: error.response.status,
+        ...error.response.data,
+      };
+    }
   }
 }

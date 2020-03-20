@@ -54,8 +54,8 @@ export class PartnerGojekController {
 
   // NOTE: Gojek Delivery
   @Post('gojek/createBooking/delivery')
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: GojekBookingPodResponseVm })
   public async createBokingPod(@Body() payload: GojekBookingPodVm) {
@@ -63,8 +63,8 @@ export class PartnerGojekController {
   }
 
   @Post('gojek/cancelBooking/delivery')
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
   public async cancelBookingDelivery(@Body() payload: GojekCancelBookingVm) {
