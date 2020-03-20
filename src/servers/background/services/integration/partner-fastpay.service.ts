@@ -7,14 +7,14 @@ import { CustomCounterCode } from '../../../../shared/services/custom-counter-co
 import { WorkOrderDetail } from '../../../../shared/orm-entity/work-order-detail';
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
-import { BranchPartner } from '../../../../shared/orm-entity/branch-partner';
+import { BranchChildPartner } from '../../../../shared/orm-entity/branch-child-partner';
 import { Not } from 'typeorm';
 
 export class PartnerFastpayService {
   static async dropCashless(payload: DropCashlessVm) {
     // check branch partner code
-    const branchPartner = await BranchPartner.findOne({
-      select: ['branchPartnerId', 'branchPartnerCode', 'branchId'],
+    const branchPartner = await BranchChildPartner.findOne({
+      select: ['branchPartnerId', 'branchChildPartnerId'],
       where: { branchPartnerCode: payload.branchCode, isDeleted: false },
     });
     if (branchPartner) {
