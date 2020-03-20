@@ -284,7 +284,7 @@ export class PartnerGojekService {
         isDeleted: true,
         updatedTime: moment().toDate(),
         userIdUpdated: userId,
-      }
+      },
     );
   }
 
