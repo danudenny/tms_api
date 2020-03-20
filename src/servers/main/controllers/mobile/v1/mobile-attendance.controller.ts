@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseGuards, UseInterceptors, Param, Get } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiUseTags, ApiOkResponse, ApiBearerAuth } from '../../../../../shared/external/nestjs-swagger';
 import { MobileCheckInResponseVm } from '../../../models/mobile-check-in-response.vm';
@@ -10,6 +10,8 @@ import { MobileAttendanceOutPayloadVm } from '../../../models/mobile-attendance-
 import { V1MobileAttendanceService } from '../../../services/mobile/v1/mobile-attendance.service';
 import { MobileInitDataPayloadVm } from '../../../models/mobile-init-data-payload.vm';
 import { MobileAttendanceInitResponseVm } from '../../../models/mobile-attendance-in-response.vm';
+import { RedisService } from '../../../../../shared/services/redis.service';
+import moment = require('moment');
 
 @ApiUseTags('Mobile Employee Attendance')
 @Controller('mobile/v1/employee')
@@ -47,5 +49,21 @@ export class V1MobileAttendanceController {
     @UploadedFile() file,
   ) {
     return V1MobileAttendanceService.checkOutAttendance(payload, file);
+  }
+
+  @Get('attendance/version/:versionApp')
+  @HttpCode(HttpStatus.OK)
+  public async mobileVersion(@Param('versionApp') version: string) {
+    const versionRedis = await RedisService.get(`attendance:mobile:versionApp`);
+    const versionApp = versionRedis
+      ? versionRedis
+      : process.env.ATTENDANCE_APP_VERSION;
+    const valid = version == versionApp ? true : false;
+    return {
+      currentVersion: versionApp,
+      valid,
+      timeNow: moment().toDate(),
+      timeString: moment().format('YYYY-MM-DD HH:mm:ss'),
+    };
   }
 }
