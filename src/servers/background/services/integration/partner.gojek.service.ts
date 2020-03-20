@@ -192,9 +192,11 @@ export class PartnerGojekService {
     if (!doPodDeliver) {
       result.status  = 'failed';
       result.message = 'Data tidak sesuai';
+      await this.deleteDoPodDeliver(payload.doPodDeliverId, authMeta.userId);
       return result;
     }
 
+    let failed = true;
     if (branch) {
       const data = new GojekBookingPayloadVm();
       if (branch.latitude && branch.longitude) {
@@ -206,7 +208,8 @@ export class PartnerGojekService {
 
         if (!data.originContactPhone) {
           result.status = 'failed';
-          result.message = 'Data tidak lengkap, gerai tidak memiliki data no telpon';
+          result.message = 'Data gerai tidak lengkap, gerai tidak memiliki data no telpon';
+          await this.deleteDoPodDeliver(payload.doPodDeliverId, authMeta.userId);
           return result;
         }
 
@@ -233,7 +236,7 @@ export class PartnerGojekService {
                     // branchId: 3,
                     payload,
                   };
-
+                  failed = false;
                   await this.responProcessForPod(detailData);
                   result.data     = data;
                   result.response = requestGojek;
@@ -266,18 +269,23 @@ export class PartnerGojekService {
       result.status  = 'failed';
       result.message = 'Gerai tidak ditemukan';
     }
+
+    // NOTE: Update is delete true if failed gojek service
+    if (failed) {
+      await this.deleteDoPodDeliver(payload.doPodDeliverId, authMeta.userId);
+    }
     return result;
   }
 
-  static async deleteDoPodDeliver(doPodDeliverId) {
+  static async deleteDoPodDeliver(doPodDeliverId, userId) {
     await DoPodDeliver.update(
       doPodDeliverId,
       {
         isDeleted: true,
         updatedTime: moment().toDate(),
+        userIdUpdated: userId,
       }
     );
-
   }
 
   static async cancelBookingDelivery(payload: GojekCancelBookingVm) {
