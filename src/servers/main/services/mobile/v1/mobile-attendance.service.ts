@@ -68,9 +68,9 @@ export class V1MobileAttendanceService {
           attachmentIdCheckIn: attachmentId,
         });
         await EmployeeAttendance.insert(employeeJourney);
-        message = `Anda berhasil memperbarui status kehadiran anda \n Jam masuk Anda adalah \n (${moment(
+        message = `Anda berhasil memperbarui status kehadiran anda \n Jam masuk Anda adalah \n ${moment(
           timeNow,
-        ).format('DD MMM YYYY, HH:mm')})`;
+        ).format('DD MMM YYYY, HH:mm')}`;
       }
       result.status = status;
       result.message = message;
@@ -131,9 +131,9 @@ export class V1MobileAttendanceService {
             checkOutDate: timeNow,
           },
         );
-        message = `Anda berhasil memperbarui status kehadiran anda \n Jam pulang Anda adalah \n (${moment(timeNow).format(
+        message = `Anda berhasil memperbarui status kehadiran anda \n Jam pulang Anda adalah \n ${moment(timeNow).format(
           'DD MMM YYYY, HH:mm',
-        )})`;
+        )}`;
       } else {
         status = 'error';
         message =
