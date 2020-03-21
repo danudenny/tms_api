@@ -1,4 +1,4 @@
-import { DropCashlessVm } from '../../models/partner/fastpay-drop.vm';
+import { DropCashlessVm, DropCashLessResponseVM } from '../../models/partner/fastpay-drop.vm';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -11,11 +11,16 @@ import { BranchChildPartner } from '../../../../shared/orm-entity/branch-child-p
 import { Not } from 'typeorm';
 
 export class PartnerFastpayService {
-  static async dropCashless(payload: DropCashlessVm) {
+  static async dropCashless(
+    payload: DropCashlessVm,
+  ): Promise<DropCashLessResponseVM> {
     // check branch partner code
     const branchPartner = await BranchChildPartner.findOne({
       select: ['branchPartnerId', 'branchChildPartnerId'],
-      where: { branchPartnerCode: payload.branchCode, isDeleted: false },
+      where: {
+        branchChildPartnerCode: payload.branchCode,
+        isDeleted: false,
+      },
     });
     if (branchPartner) {
       // NOTE: check pickup request with awb number
@@ -93,7 +98,9 @@ export class PartnerFastpayService {
     }
   }
 
-  private static async handleResult(pickupRequest: any) {
+  private static async handleResult(
+    pickupRequest: any,
+  ): Promise<DropCashLessResponseVM> {
     return {
       noRef: pickupRequest.noRef,
       refAwbNumber: pickupRequest.refAwbNumber,
