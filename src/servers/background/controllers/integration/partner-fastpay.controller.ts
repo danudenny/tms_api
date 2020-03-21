@@ -1,7 +1,7 @@
 import { Body, Controller, Post, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
-import { ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
+import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { PartnerFastpayService } from '../../services/integration/partner-fastpay.service';
-import { DropCashlessVm } from '../../models/partner/fastpay-drop.vm';
+import { DropCashlessVm, DropCashLessResponseVM } from '../../models/partner/fastpay-drop.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { AuthFastpayGuard } from '../../../../shared/guards/auth-fastpay.guard';
 
@@ -11,10 +11,10 @@ import { AuthFastpayGuard } from '../../../../shared/guards/auth-fastpay.guard';
 export class PartnerFastpayController {
   constructor() {}
 
-  @Post('fastpay/drop/cashless')
+  @Post('fastpay/dropCashless')
   @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthFastpayGuard)
-  // @ApiOkResponse({ type: TrackingNoteResponseVm })
+  @UseGuards(AuthFastpayGuard)
+  @ApiOkResponse({ type: DropCashLessResponseVM })
   @ResponseSerializerOptions({ disable: true })
   public async dropCashless(@Body() payload: DropCashlessVm) {
     return PartnerFastpayService.dropCashless(payload);
