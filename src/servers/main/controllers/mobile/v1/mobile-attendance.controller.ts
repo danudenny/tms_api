@@ -54,11 +54,24 @@ export class V1MobileAttendanceController {
   @Get('attendance/version/:versionApp')
   @HttpCode(HttpStatus.OK)
   public async mobileVersion(@Param('versionApp') version: string) {
-    const versionRedis = await RedisService.get(`attendance:mobile:versionApp`);
-    const versionApp = versionRedis
-      ? versionRedis
-      : process.env.ATTENDANCE_APP_VERSION;
-    const valid = version == versionApp ? true : false;
+    const versionRedis = await RedisService.get(
+      `attendance:mobile:versionApp`,
+    ); // 1.1.1.1 (android)
+    const verIOSRedis = await RedisService.get(
+      `attendance:mobileIOS:versionApp`,
+    ); // 1.1.1 (ios)
+
+    let versionApp = process.env.ATTENDANCE_APP_VERSION;
+    let valid = false;
+    if (
+      (versionRedis && version == versionRedis) ||
+      (verIOSRedis && version == verIOSRedis) ||
+      (version == versionApp)
+    ) {
+      versionApp = versionRedis;
+      valid = true;
+    }
+
     return {
       currentVersion: versionApp,
       valid,
