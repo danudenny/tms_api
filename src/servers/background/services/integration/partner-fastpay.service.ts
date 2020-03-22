@@ -102,6 +102,7 @@ export class PartnerFastpayService {
     pickupRequest: any,
   ): Promise<DropCashLessResponseVM> {
     return {
+      partner: pickupRequest.partner,
       noRef: pickupRequest.noRef,
       refAwbNumber: pickupRequest.refAwbNumber,
       recipientCity: pickupRequest.recipientCity,
@@ -190,7 +191,8 @@ export class PartnerFastpayService {
 
   private static async getPickupRequestAwbNumber(awb: string): Promise<any> {
     const query = `
-      SELECT pr.reference_no as "noRef",
+      SELECT p.partner_name as "partner",
+            pr.reference_no as "noRef",
             prd.pickup_request_id as "pickupRequestId",
             prd.pickup_request_detail_id as "pickupRequestDetailId",
             prd.awb_item_id as "awbItemId",
@@ -214,6 +216,7 @@ export class PartnerFastpayService {
             prd.work_order_id_last as "workOrderIdLast"
       FROM pickup_request_detail prd
         JOIN pickup_request pr ON pr.pickup_request_id = prd.pickup_request_id
+        JOIN partner p ON pr.partner_id = p.partner_id
       WHERE prd.ref_awb_number = :awb AND prd.is_deleted = FALSE;
     `;
     const rawData = await RawQueryService.queryWithParams(query, { awb });
@@ -224,7 +227,8 @@ export class PartnerFastpayService {
     referenceNo: string,
   ): Promise<any> {
     const query = `
-      SELECT pr.reference_no as "noRef",
+      SELECT p.partner_name as "partner",
+            pr.reference_no as "noRef",
             prd.pickup_request_id as "pickupRequestId",
             prd.pickup_request_detail_id as "pickupRequestDetailId",
             prd.awb_item_id as "awbItemId",
@@ -248,6 +252,7 @@ export class PartnerFastpayService {
             prd.work_order_id_last as "workOrderIdLast"
       FROM pickup_request pr
         JOIN pickup_request_detail prd ON pr.pickup_request_id = prd.pickup_request_id
+        JOIN partner p ON pr.partner_id = p.partner_id
       WHERE pr.reference_no = :referenceNo AND pr.is_deleted = FALSE;
     `;
     const rawData = await RawQueryService.queryWithParams(query, {

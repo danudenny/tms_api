@@ -11,6 +11,9 @@ export class DropCashlessVm {
 
 export class DropCashLessResponseVM {
   @ApiModelProperty()
+  partner: string;
+
+  @ApiModelProperty()
   noRef: string;
 
   @ApiModelProperty()
