@@ -1,13 +1,22 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
-import { IsNull, createQueryBuilder, MoreThan, LessThan, Between } from 'typeorm';
+import {
+  IsNull,
+  createQueryBuilder,
+  MoreThan,
+  LessThan,
+  Between,
+} from 'typeorm';
 
 import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
 import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
-import { MobileCheckInPayloadVm, MobileCheckInFormPayloadVm } from '../../models/mobile-check-in-payload.vm';
+import {
+  MobileCheckInPayloadVm,
+  MobileCheckInFormPayloadVm,
+} from '../../models/mobile-check-in-payload.vm';
 import { MobileCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
@@ -101,17 +110,29 @@ export class MobileCheckInService {
     const authMeta = AuthService.getAuthMetadata();
     const dateNow = moment().toDate();
     const permission = AuthService.getPermissionTokenPayload();
-    const fromDate = moment().format('YYYY-MM-DD 00:00:00');
-    const toDate = moment().format('YYYY-MM-DD 23:59:59');
     let status = 'ok';
     let message = 'success';
     let branchName = '';
     let checkInDate = '';
     let attachmentId = null;
     let userToBranchId = '';
-
+    let now = moment();
     const timeNow = moment().toDate();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    // NOTE: configure dateFrom and dateTo
+    // 1. if time now LOWER THAN 06:00 o'clock, dateFrom = 06:00 yesterday and dateTo = 06:00 today
+    // 2. else if time now GREATER THAN EQUAL to 06:00 o'clock, dateFrom = 06:00 today and dateTo = 06:00 tomorrow
+
+    // Choose condition 1
+    let fromDate = now.subtract(1, 'days').format('YYYY-MM-DD 06:00:00');
+    let toDate = now.format('YYYY-MM-DD 06:00:00');
+
+    if (now.isSameOrAfter(now.format('YYYY-MM-DD 06:00:00'))) {
+      // choose condition 2
+      fromDate = now.format('YYYY-MM-DD 06:00:00');
+      toDate = now.add(1, 'days').format('YYYY-MM-DD 06:00:00');
+    }
     const employeeJourneyCheckOutExist = await this.employeeJourneyRepository.findOne(
       {
         where: {
@@ -123,7 +144,9 @@ export class MobileCheckInService {
         },
       },
     );
-    const branchIdTemp = payload.branchId ? payload.branchId : permissonPayload.branchId.toString();
+    const branchIdTemp = payload.branchId
+      ? payload.branchId
+      : permissonPayload.branchId.toString();
     const branch = await this.branchRepository.findOne({
       select: [`branchName`, `branchId`, `updatedTime`],
       where: { branchId: branchIdTemp },
@@ -133,15 +156,23 @@ export class MobileCheckInService {
     if (employeeJourneyCheckOutExist) {
       result.status = 'error';
       result.message = 'Check In sedang aktif, Harap Check Out terlebih dahulu';
-      result.checkInDate = moment(employeeJourneyCheckOutExist.checkInDate).format('YYYY-MM-DD HH:mm:ss');
+      result.checkInDate = moment(
+        employeeJourneyCheckOutExist.checkInDate,
+      ).format('YYYY-MM-DD HH:mm:ss');
       result.attachmentId = attachmentId;
-      result.checkinIdBranch = branch.branchId ? branch.branchId.toString() : payload.branchId;
+      result.checkinIdBranch = branch.branchId
+        ? branch.branchId.toString()
+        : payload.branchId;
       return result;
     } else {
       let res = null;
       if (payload.branchId) {
         // Check coordinate user to branch
-        const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(payload.latitudeCheckIn, payload.longitudeCheckIn, payload.branchId);
+        const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(
+          payload.latitudeCheckIn,
+          payload.longitudeCheckIn,
+          payload.branchId,
+        );
         if (responseCheckBranch.status == false) {
           result.status = 'error';
           result.message = responseCheckBranch.message;
@@ -157,12 +188,17 @@ export class MobileCheckInService {
         qb.addSelect('utb.user_to_branch_id', 'userToBranchId');
         qb.from('user_to_branch', 'utb');
         qb.where('utb.is_deleted = false');
-        qb.andWhere('utb.ref_branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
-        qb.andWhere('utb.ref_user_id = :idUserLogin', { idUserLogin: authMeta.userId });
+        qb.andWhere('utb.ref_branch_id = :branchIdTemp', {
+          branchIdTemp: payload.branchId,
+        });
+        qb.andWhere('utb.ref_user_id = :idUserLogin', {
+          idUserLogin: authMeta.userId,
+        });
         res = await qb.getRawOne();
         if (!res) {
           result.status = 'error';
-          result.message = 'Lokasi gerai tidak ditemukan, silahkan hubungi administrator';
+          result.message =
+            'Lokasi gerai tidak ditemukan, silahkan hubungi administrator';
           result.branchName = branchName;
           result.checkInDate = checkInDate;
           result.attachmentId = attachmentId;
@@ -245,29 +281,31 @@ export class MobileCheckInService {
             isCreateKorwilDetail = true;
 
             // Insert Korwil Transaction
-            korwilTransactionUser                   = KorwilTransaction.create();
-            korwilTransactionUser.branchId          = payload.branchId;
-            korwilTransactionUser.createdTime       = timeNow;
-            korwilTransactionUser.date              = timeNow;
-            korwilTransactionUser.employeeJourneyId = employeeJourney.employeeJourneyId;
-            korwilTransactionUser.isDeleted         = false;
-            korwilTransactionUser.status            = 0;
-            korwilTransactionUser.totalTask         = korwilItem.length;
-            korwilTransactionUser.updatedTime       = timeNow;
-            korwilTransactionUser.userId            = authMeta.userId;
-            korwilTransactionUser.userIdCreated     = authMeta.userId;
-            korwilTransactionUser.userIdUpdated     = authMeta.userId;
-            korwilTransactionUser.userToBranchId    = userToBranchId;
+            korwilTransactionUser = KorwilTransaction.create();
+            korwilTransactionUser.branchId = payload.branchId;
+            korwilTransactionUser.createdTime = timeNow;
+            korwilTransactionUser.date = timeNow;
+            korwilTransactionUser.employeeJourneyId =
+              employeeJourney.employeeJourneyId;
+            korwilTransactionUser.isDeleted = false;
+            korwilTransactionUser.status = 0;
+            korwilTransactionUser.totalTask = korwilItem.length;
+            korwilTransactionUser.updatedTime = timeNow;
+            korwilTransactionUser.userId = authMeta.userId;
+            korwilTransactionUser.userIdCreated = authMeta.userId;
+            korwilTransactionUser.userIdUpdated = authMeta.userId;
+            korwilTransactionUser.userToBranchId = userToBranchId;
             await KorwilTransaction.save(korwilTransactionUser);
           }
         }
 
         if (isCreateKorwilDetail) {
           // Create Korwil Item
-          korwilItem.forEach(async (item) => {
+          korwilItem.forEach(async item => {
             const korwilTransactionDetail = KorwilTransactionDetail.create();
             korwilTransactionDetail.korwilItemId = item.korwilItemId;
-            korwilTransactionDetail.korwilTransactionId = korwilTransactionUser.korwilTransactionId;
+            korwilTransactionDetail.korwilTransactionId =
+              korwilTransactionUser.korwilTransactionId;
             korwilTransactionDetail.latChecklist = '';
             korwilTransactionDetail.longChecklist = '';
             korwilTransactionDetail.note = '';
