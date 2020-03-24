@@ -1,5 +1,6 @@
 import axios from 'axios';
 import moment = require('moment');
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 export class PartnerLocusService {
   static async createBatchTask() {
@@ -24,77 +25,156 @@ export class PartnerLocusService {
         password: 'd099b20f-6a2a-49db-ac8a-2ea6359bfde2',
       },
     };
-    const jsonData = {
-      teamId: 'jakbar-sds',
-      tasksDate: '2020-03-24',
-      inputTasks: [
-        {
-          taskId: '000218059420',
+    // select pickup request partner
+    let result = {};
+    const tasks = [];
+    // TODO: set pickupSlot and dropSlot
+    const pickupSlot = {
+      start: moment('2020-03-24 16:00:00').toISOString(),
+      end: moment('2020-03-24 18:00:00').toISOString(),
+    };
+    const dropSlot = {
+      start: moment('2020-03-24 18:00:00').toISOString(),
+      end: moment('2020-03-24 20:00:00').toISOString(),
+    };
+
+    const pickupRequests = await this.getDataPickupRequest();
+    if (pickupRequests) {
+      for (const pickupRequest of pickupRequests) {
+        const objItem = {
+          taskId: pickupRequest.awbNumber,
           lineItems: [
             {
-              id: '000218059420',
-              name: 'Test Item',
+              id: pickupRequest.awbNumber,
+              name: pickupRequest.parcelContent,
               quantity: 1,
             },
           ],
           pickupContactPoint: {
-            name: 'Anisa Sabyan',
-            number: '628122041824',
+            name: pickupRequest.shipperName,
+            number: this.handlePhoneNumber(pickupRequest.shipperPhone),
           },
           pickupLocationAddress: {
-            formattedAddress:
-              '8, Jl. Ir. H. Juanda 3 No.17 - 19, RW.2, Kb. Klp., Kecamatan Gambir, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10120, Indonesia',
-            pincode: '10120',
-            city: 'Kota Jakarta Pusat',
-            state: 'Daerah Khusus Ibukota Jakarta',
+            formattedAddress: pickupRequest.shipperAddress,
+            pincode: pickupRequest.shipperZip,
+            city: pickupRequest.shipperCity,
+            state: pickupRequest.shipperProvince,
             countryCode: 'ID',
           },
-          pickupLatLng: {
-            lat: -6.16496,
-            lng: 106.823236,
-          },
-          pickupSlot: {
-            start: '2020-03-24T03:00:00.000Z',
-            end: '2020-03-24T04:00:00.000Z',
-          },
+          pickupSlot,
           pickupTransactionDuration: 1000,
           dropContactPoint: {
-            name: 'Anisa R',
-            number: '628122041824',
+            name: pickupRequest.recipientName,
+            number: this.handlePhoneNumber(pickupRequest.recipientPhone),
           },
           dropLocationAddress: {
-            formattedAddress:
-              'Jl. Kintamani Utara Blok Lb No.47, RT.8/RW.12, Kalideres, West Jakarta City, Jakarta 11840',
-            pincode: '11840',
-            city: 'Kota Jakarta Barat',
-            state: 'Daerah Khusus Ibukota Jakarta',
+            formattedAddress: pickupRequest.recipientAddress,
+            pincode: pickupRequest.recipientZip,
+            city: pickupRequest.recipientCity,
+            state: pickupRequest.recipientProvince,
             countryCode: 'ID',
           },
-          dropLatLng: {
-            lat: -6.1477812,
-            lng: 106.7089414,
-          },
-          dropSlot: {
-            start: '2020-03-24T05:00:00.000Z',
-            end: '2020-03-24T06:00:00.000Z',
-          },
+          dropSlot,
           dropTransactionDuration: 1000,
           volume: {
             value: 1,
             unit: 'ITEM_COUNT',
           },
-        },
-      ],
-    };
+        };
 
-    try {
-      const response = await axios.put(url, jsonData, options);
-      return { status: response.status, ...response.data };
-    } catch (error) {
-      return {
-        status: error.response.status,
-        ...error.response.data,
+        // TODO: check data have lat long??
+        const geolocation = false;
+        if (geolocation) {
+          // add lot lang
+          const geoloc = {
+            pickupLatLng: {
+              lat: -6.16496,
+              lng: 106.823236,
+            },
+            dropLatLng: {
+              lat: -6.1477812,
+              lng: 106.7089414,
+            },
+          };
+          tasks.push({ ...objItem, ...geoloc });
+        } else {
+            tasks.push(objItem);
+        }
+      }
+
+      const jsonData = {
+        teamId: 'jakbar-sds',
+        tasksDate: moment().format('YYYY-MM-DD'),
+        inputTasks: tasks,
       };
+      // result = jsonData;
+      // console.log('DATA : ', jsonData.inputTasks.length);
+      // send data to locus
+      try {
+        const response = await axios.put(url, jsonData, options);
+        result = { status: response.status, total: jsonData.inputTasks.length};
+      } catch (error) {
+        console.log(error.response);
+        result = {
+          status: error.response.status,
+          ...error.response.data,
+        };
+      }
     }
+
+    return result;
+  }
+
+  private static async getDataPickupRequest(partnerId: number = 0): Promise<any> {
+    const backDate = moment()
+      .add(-2, 'days')
+      .format('YYYY-MM-DD 00:00:00');
+
+    const query = `
+      SELECT
+        prd.ref_awb_number as "awbNumber",
+        prd.shipper_name as "shipperName",
+        prd.shipper_phone as "shipperPhone",
+        prd.shipper_address as "shipperAddress",
+        prd.shipper_district as "shipperDistrict",
+        prd.shipper_city as "shipperCity",
+        prd.shipper_province as "shipperProvince",
+        prd.shipper_zip as "shipperZip",
+        prd.recipient_name as "recipientName",
+        prd.recipient_phone as "recipientPhone",
+        prd.recipient_address as "recipientAddress",
+        prd.recipient_district as "recipientDistrict",
+        prd.recipient_city as "recipientCity",
+        prd.recipient_province as "recipientProvince",
+        prd.recipient_zip as "recipientZip",
+        prd.parcel_qty as "parcelQty",
+        prd.parcel_value as "parcelValue",
+        prd.parcel_content as "parcelContent",
+        prd.parcel_length as "parcelLength",
+        prd.parcel_width as "parcelWidth",
+        prd.parcel_height as "parcelHeight",
+        prd.total_weight as "totalWeight",
+        pr.pickup_request_email as "pickupRequestEmail",
+        a.send_count as "sendCount",
+        a.awb_send_partner_id as "awbSendPartnerId",
+        a.is_send as "isSend"
+      FROM pickup_request_detail prd
+      INNER JOIN pickup_request pr ON prd.pickup_request_id=pr.pickup_request_id and pr.is_deleted=false
+      LEFT JOIN awb_send_partner a ON prd.ref_awb_number=a.awb_number and a.is_deleted=false
+      WHERE prd.created_time >= :backDate and (a.awb_number IS NULL OR a.is_send=false) and prd.is_deleted=false and prd.ref_awb_number is not null
+      LIMIT 1000
+    `;
+
+    return await RawQueryService.queryWithParams(query, {
+      backDate,
+    });
+  }
+
+  private static handlePhoneNumber(phoneNumber: string) {
+    // TODO: handle phone number??
+    // .replace(/[^0-9]/g,''); digit only
+    // .replace(/^0/, '62'); replace zero to 62
+    phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+    return phoneNumber.replace(/^0/, '62');
   }
 }
