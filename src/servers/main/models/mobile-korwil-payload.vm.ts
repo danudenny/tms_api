@@ -1,4 +1,8 @@
-import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+import {
+  ApiModelProperty,
+  ApiModelPropertyOptional,
+} from '../../../shared/external/nestjs-swagger';
+import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
 
 export class MobilePostKorwilTransactionPayloadVm {
   @ApiModelPropertyOptional()
@@ -45,4 +49,24 @@ export class MobileKorwilListItemPayloadVm {
 export class MobileUpdateProcessKorwilPayloadVm {
   @ApiModelProperty()
   korwilTransactionId: string;
+}
+
+export class KorwilHistoryPayloadVm extends BaseMetaPayloadVm {
+  @ApiModelPropertyOptional({
+    example: ['2020-01-20'],
+    skipValidation: true,
+  })
+  dateFrom: string;
+
+  @ApiModelPropertyOptional()
+  dateTo: string;
+
+  @ApiModelPropertyOptional({
+    example: ['checkIn', 'checkOut'],
+    skipValidation: true,
+  })
+  status: string;
+
+  @ApiModelPropertyOptional()
+  branchId: string;
 }
