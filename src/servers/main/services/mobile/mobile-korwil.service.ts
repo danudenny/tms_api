@@ -1,5 +1,5 @@
 import { createQueryBuilder, Not } from 'typeorm';
-import { isEmpty } from 'lodash';
+import { isEmpty, clone } from 'lodash';
 import { AuthService } from '../../../../shared/services/auth.service';
 import {
   BranchListKorwilResponseVm,
@@ -7,11 +7,14 @@ import {
   ItemListKorwilResponseVm,
   DetailPhotoKorwilResponseVm,
   MobileUpdateProcessKorwilResponseVm,
+  KorwilHistoryResponseVm,
+  DetailHistoryKorwilResponseVm,
 } from '../../models/mobile-korwil-response.vm';
 import {
   MobilePostKorwilTransactionPayloadVm,
   MobileUpdateProcessKorwilPayloadVm,
   MobileValidateCoordinateKorwilTransactionPayloadVm,
+  KorwilHistoryPayloadVm,
 } from '../../models/mobile-korwil-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { ValidateBranchCoordinateResponseVm } from '../../models/branch-response.vm';
@@ -23,6 +26,8 @@ import { KorwilTransactionDetailPhoto } from '../../../../shared/orm-entity/korw
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { getType } from 'mime';
 import { ConfigService } from '../../../../shared/services/config.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { MetaService } from '../../../../shared/services/meta.service';
 
 export class MobileKorwilService {
   constructor() {}
@@ -42,7 +47,9 @@ export class MobileKorwilService {
       'b.branch_id = utb.ref_branch_id AND b.is_deleted = false',
     );
     qb.where('utb.is_deleted = false');
-    qb.andWhere('utb.ref_user_id = :userId', { userId: authMeta.userId });
+    qb.andWhere('utb.ref_user_id = :userId', {
+      userId: authMeta.userId,
+    });
 
     const result = new BranchListKorwilResponseVm();
     result.branchList = await qb.getRawMany();
@@ -175,8 +182,12 @@ export class MobileKorwilService {
     const qb1 = createQueryBuilder();
     qb1.addSelect('kt.korwil_transaction_id', 'id');
     qb1.from('korwil_transaction', 'kt');
-    qb1.andWhere('kt.branch_id = :branchIdTemp', { branchIdTemp: branchId });
-    qb1.andWhere('kt.user_id = :userId', { userId: authMeta.userId });
+    qb1.andWhere('kt.branch_id = :branchIdTemp', {
+      branchIdTemp: branchId,
+    });
+    qb1.andWhere('kt.user_id = :userId', {
+      userId: authMeta.userId,
+    });
     qb1.andWhere('kt.employee_journey_id Is Not Null');
     qb1.andWhere(
       'kt.created_time >= :startDate and kt.created_time <= :endDate',
@@ -220,9 +231,15 @@ export class MobileKorwilService {
       'utb.ref_branch_id = kt.branch_id AND utb.is_deleted = false',
     );
     qb.where('kt.is_deleted = false');
-    qb.andWhere('kt.branch_id = :branchIdTemp', { branchIdTemp: branchId });
-    qb.andWhere('utb.ref_user_id = :userId', { userId: authMeta.userId });
-    qb.andWhere('kt.korwil_transaction_id = :korwilId', { korwilId: id });
+    qb.andWhere('kt.branch_id = :branchIdTemp', {
+      branchIdTemp: branchId,
+    });
+    qb.andWhere('utb.ref_user_id = :userId', {
+      userId: authMeta.userId,
+    });
+    qb.andWhere('kt.korwil_transaction_id = :korwilId', {
+      korwilId: id,
+    });
     qb.orderBy('ki.sort_order', 'ASC');
     const data = await qb.getRawMany();
     // console.log(data);
@@ -236,6 +253,247 @@ export class MobileKorwilService {
       result.korwilTransactionId = data[0].korwilTransactionId;
       result.status = data[0].statusTransaction;
     }
+    return result;
+  }
+
+  public static validateHistory(
+    payload: KorwilHistoryPayloadVm,
+    df: string,
+    dt: string,
+  ) {
+    let dateFrom = null;
+    let dateTo = null;
+
+    if (
+      payload.status &&
+      payload.status != 'checkIn' &&
+      payload.status != 'checkOut'
+    ) {
+      return {
+        status: 'error',
+        message: 'status filter harus checkIN atau checkOut',
+        data: null,
+      };
+    }
+    if (
+      payload.sortDir &&
+      payload.sortDir != 'asc' &&
+      payload.sortDir != 'desc'
+    ) {
+      return {
+        status: 'error',
+        message: 'status filter harus asc atau desc',
+        data: null,
+      };
+    }
+
+    if (df && dt) {
+      if (moment(df, 'ddd MMM DD YYYY', true).isValid()) {
+        dateFrom = moment(df, 'ddd MMM DD YYYY');
+        dateTo = moment(dt, 'ddd MMM DD YYYY');
+      } else if (moment(df, 'DD MMM YYYY', true).isValid()) {
+        dateFrom = moment(df, 'DD MMM YYYY');
+        dateTo = moment(dt, 'DD MMM YYYY');
+      } else {
+        dateFrom = moment(df);
+        dateTo = moment(dt);
+      }
+    }
+
+    dateFrom = dateFrom
+      ? dateFrom.format('YYYY-MM-DD 00:00:00')
+      : moment().format('YYYY-MM-DD 00:00:00');
+    dateTo = dateTo
+      ? dateTo.format('YYYY-MM-DD 23:59:59')
+      : moment().format('YYYY-MM-DD 23:59:59');
+
+    if (moment(dateTo).isBefore(dateFrom)) {
+      return {
+        status: 'error',
+        message: 'Tanggal yang dipilih tidak valid',
+        data: null,
+      };
+    }
+    return {
+      status: 'ok',
+      message: '',
+      data: [dateFrom, dateTo],
+    };
+  }
+  public static async getListTransactionHistory(
+    payload: KorwilHistoryPayloadVm,
+  ): Promise<KorwilHistoryResponseVm> {
+    // mapping search field and operator default ilike
+    // payload.fieldResolverMap['korwilTransactionId'] = 't1.korwil_transaction_id';
+    const authMeta = AuthService.getAuthMetadata();
+    const repo = new OrionRepositoryService(KorwilTransaction, 't1');
+    const result = new KorwilHistoryResponseVm();
+
+    const res = this.validateHistory(payload, payload.dateFrom, payload.dateTo);
+
+    if (res.status == 'error') {
+      result.status = 'error';
+      result.message = res.message;
+      result.data = [];
+      return result;
+    }
+
+    const dateFrom = res.data[0];
+    const dateTo = res.data[1];
+    const sortDir = payload.sortDir ? payload.sortDir.toUpperCase() : 'DESC';
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.korwil_transaction_id', 'korwilTransactionId'],
+      ['t1.total_task', 'totalTask'],
+      ['t1.user_id', 'userId'],
+      ['t2.check_in_date', 'checkInDate'],
+      ['t2.check_out_date', 'checkOutDate'],
+      ['t3.branch_id', 'branchId'],
+      ['t3.branch_name', 'branchName'],
+    );
+    q.innerJoin(e => e.employeeJourney, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branches, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(dateFrom));
+    q.andWhere(e => e.createdTime, w => w.lessThanOrEqual(dateTo));
+    q.andWhere(e => e.employeeJourneyId, w => w.isNotNull());
+    q.andWhere(e => e.userId, w => w.equals(authMeta.userId));
+    if (payload.branchId) {
+      q.andWhere(e => e.branchId, w => w.equals(payload.branchId));
+    }
+    if (payload.status == 'checkIn') {
+      q.andWhere(e => e.employeeJourney.checkOutDate, w => w.isNull());
+    } else if (payload.status == 'checkOut') {
+      q.andWhere(e => e.employeeJourney.checkOutDate, w => w.isNotNull());
+    }
+    if (sortDir == 'DESC') {
+      q.orderBy({
+        createdTime: 'DESC',
+      });
+    } else {
+      q.orderBy({
+        createdTime: 'ASC',
+      });
+    }
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  public static async detailPDF(
+    korwilTransactionId: string,
+  ): Promise<DetailHistoryKorwilResponseVm> {
+    const result = {
+      items: [],
+      checkInDate: null,
+      checkOutDate: null,
+      korwilTransactionId: null,
+      statusKorwil: null,
+      status: 'ok',
+      message: '',
+    };
+    const initDetailItem = {
+      korwilItemName: null,
+      korwilItemId: null,
+      isDone: null,
+      statusItem: null,
+      note: null,
+      photo: null,
+    };
+    const authMeta = AuthService.getAuthMetadata();
+    var items = [];
+
+    // NOTE: get transaction and detail name
+    const qb = createQueryBuilder();
+    qb.addSelect('ki.korwil_item_name', 'korwilItemName');
+    qb.addSelect('ki.korwil_item_id', 'korwilItemId');
+    qb.addSelect(
+      'ktd.korwil_transaction_detail_id',
+      'korwilTransactionDetailId',
+    );
+    qb.addSelect('ktd.is_done', 'isDone');
+    qb.addSelect('ktd.status', 'statusItem');
+    qb.addSelect("COALESCE(ktd.note, '')", 'note');
+    qb.addSelect('COALESCE(ej.check_in_date, null)', 'checkInDate');
+    qb.addSelect('COALESCE(ej.check_out_date, null)', 'checkOutDate');
+    qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
+    qb.addSelect('kt.status', 'statusKorwil');
+    qb.from('korwil_transaction', 'kt');
+    qb.innerJoin(
+      'employee_journey',
+      'ej',
+      'ej.employee_journey_id = kt.employee_journey_id',
+    );
+    qb.innerJoin(
+      'korwil_transaction_detail',
+      'ktd',
+      'ktd.korwil_transaction_id = kt.korwil_transaction_id AND ktd.is_deleted = false',
+    );
+    qb.innerJoin(
+      'korwil_item',
+      'ki',
+      'ki.korwil_item_id = ktd.korwil_item_id AND ki.is_deleted = false',
+    );
+    qb.where('kt.is_deleted = false');
+    qb.andWhere('kt.user_id = :userId', {
+      userId: authMeta.userId,
+    });
+    qb.andWhere('kt.korwil_transaction_id = :korwilId', {
+      korwilId: korwilTransactionId,
+    });
+    qb.orderBy('ki.sort_order', 'ASC');
+    const data = await qb.getRawMany();
+
+    if (isEmpty(data)) {
+      result.status = 'error';
+      result.message = 'Data tidak ditemukan';
+      return result;
+    }
+
+    for (let i = 0; i < data.length; i++) {
+      // NOTE: each of item korwil get the detail photo
+      const q = createQueryBuilder();
+      q.addSelect('at.url', 'url');
+      q.addSelect('ktdp.photo_id', 'id');
+      q.from('korwil_transaction_detail_photo', 'ktdp');
+      q.innerJoin(
+        'attachment_tms',
+        'at',
+        'at.attachment_tms_id = ktdp.photo_id AND at.is_deleted = false',
+      );
+      q.where('ktdp.is_deleted = false');
+      q.andWhere(
+        'ktdp.korwil_transaction_detail_id = :korwilTransactionDetailId',
+        {
+          korwilTransactionDetailId: data[i].korwilTransactionDetailId,
+        },
+      );
+      const photos = await q.getRawMany();
+      const detailItem = initDetailItem;
+      detailItem.korwilItemName = data[i].korwilItemName;
+      detailItem.korwilItemId = data[i].korwilItemId;
+      detailItem.isDone = data[i].isDone;
+      detailItem.statusItem = data[i].statusItem;
+      detailItem.note = data[i].note;
+      detailItem.photo = photos;
+      let temp = clone(detailItem);
+      items.push(temp);
+    }
+    result.items = items;
+    result.checkInDate = data[0].checkInDate;
+    result.checkOutDate = data[0].checkOutDate;
+    result.korwilTransactionId = data[0].korwilTransactionId;
+    result.statusKorwil = data[0].statusKorwil;
+
     return result;
   }
 
@@ -342,7 +600,9 @@ export class MobileKorwilService {
     qb.where('ktd.is_deleted = false');
     qb.andWhere(
       'ktd.korwil_transaction_detail_id = :korwilTransactionDetailId',
-      { korwilTransactionDetailId: payload.korwilTransactionDetailId },
+      {
+        korwilTransactionDetailId: payload.korwilTransactionDetailId,
+      },
     );
     qb.andWhere('kt.korwil_transaction_id = :korwilTransactionId', {
       korwilTransactionId: payload.korwilTransactionId,
@@ -380,7 +640,9 @@ export class MobileKorwilService {
     qb1.where('ktdp.is_deleted = false');
     qb1.andWhere(
       'ktdp.korwil_transaction_detail_id = :korwilTransactionDetailId',
-      { korwilTransactionDetailId: payload.korwilTransactionDetailId },
+      {
+        korwilTransactionDetailId: payload.korwilTransactionDetailId,
+      },
     );
     const photos = await qb1.getRawMany();
     const temp = photos.length;
