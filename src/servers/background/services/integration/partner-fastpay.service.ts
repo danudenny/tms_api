@@ -11,6 +11,13 @@ import { BranchChildPartner } from '../../../../shared/orm-entity/branch-child-p
 import { Not } from 'typeorm';
 
 export class PartnerFastpayService {
+
+  static async dropCash(
+    payload: DropCashlessVm,
+  ): Promise<DropCashLessResponseVM> {
+    return await this.dropCashless(payload);
+  }
+
   static async dropCashless(
     payload: DropCashlessVm,
   ): Promise<DropCashLessResponseVM> {
