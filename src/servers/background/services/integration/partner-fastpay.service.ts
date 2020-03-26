@@ -59,7 +59,11 @@ export class PartnerFastpayService {
               },
             );
             // with status drop partner
-            await this.createWorkOrderHistory(workOrderId, timeNow);
+            await this.createWorkOrderHistory(
+              workOrderId,
+              branchPartner.branchId,
+              timeNow,
+            );
           } else {
             throw new BadRequestException('Data sudah di proses!');
           }
@@ -84,7 +88,11 @@ export class PartnerFastpayService {
               },
             );
             // with status drop partner
-            await this.createWorkOrderHistory(workOrderId, timeNow);
+            await this.createWorkOrderHistory(
+              workOrderId,
+              branchPartner.branchId,
+              timeNow,
+            );
           } else {
             throw new BadRequestException('Gagal menyimpan data');
           }
@@ -172,9 +180,9 @@ export class PartnerFastpayService {
 
   private static async createWorkOrderHistory(
     workOrderId: number,
+    branchId: number,
     timeNow: Date,
   ) {
-    const branchId = 111; // hardcode branch id (fastpay)
     const workOrderHistory = WorkOrderHistory.create({
       workOrderId,
       workOrderDate: timeNow,
@@ -264,25 +272,22 @@ export class PartnerFastpayService {
   }
 
   private static async getDataBranchChild(branchCode: string) {
-    // Branch Child Partner
-    let branchPartner = null;
-    branchPartner = await BranchChildPartner.findOne({
-      select: ['branchPartnerId'],
-      where: {
-        branchChildPartnerCode: branchCode,
-        isDeleted: false,
-      },
+    // find data Branch Child Partner and Branch Partner
+    const query = `
+      SELECT
+        bp.branch_id as "branchId",
+        bp.branch_partner_id as "branchPartnerId"
+      FROM branch_partner bp
+          INNER JOIN branch_child_partner bcp
+          ON bp.branch_partner_id = bcp.branch_partner_id AND bcp.is_deleted = false
+      WHERE (bp.branch_partner_code = :branchCode OR bcp.branch_child_partner_code = :branchCode)
+      AND bp.is_deleted = false
+      LIMIT 1`;
+
+    const branchPartner = await RawQueryService.queryWithParams(query, {
+      branchCode,
     });
-    // Branch Partner
-    if (!branchPartner) {
-      branchPartner = await BranchPartner.findOne({
-        select: ['branchPartnerId'],
-        where: {
-          branchPartnerCode: branchCode,
-          isDeleted: false,
-        },
-      });
-    }
-    return branchPartner;
+
+    return branchPartner.length ? branchPartner[0] : null;
   }
 }
