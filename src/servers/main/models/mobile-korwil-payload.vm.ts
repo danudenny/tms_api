@@ -53,13 +53,28 @@ export class MobileUpdateProcessKorwilPayloadVm {
 
 export class KorwilHistoryPayloadVm extends BaseMetaPayloadVm {
   @ApiModelPropertyOptional({
-    example: ['2020-01-20'],
+    example: '2020-01-20',
     skipValidation: true,
   })
-  dateFrom: string;
+  checkInDateFrom: string;
 
-  @ApiModelPropertyOptional()
-  dateTo: string;
+  @ApiModelPropertyOptional({
+    example: '2020-01-20',
+    skipValidation: true,
+  })
+  checkInDateTo: string;
+
+  @ApiModelPropertyOptional({
+    example: '2020-01-20',
+    skipValidation: true,
+  })
+  checkOutDateFrom: string;
+
+  @ApiModelPropertyOptional({
+    example: '2020-01-20',
+    skipValidation: true,
+  })
+  checkOutDateTo: string;
 
   @ApiModelPropertyOptional({
     example: ['checkIn', 'checkOut'],
