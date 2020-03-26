@@ -7,6 +7,7 @@ import { CustomCounterCode } from '../../../../shared/services/custom-counter-co
 import { WorkOrderDetail } from '../../../../shared/orm-entity/work-order-detail';
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
+import { BranchPartner } from '../../../../shared/orm-entity/branch-partner';
 import { BranchChildPartner } from '../../../../shared/orm-entity/branch-child-partner';
 import { Not } from 'typeorm';
 
@@ -22,13 +23,7 @@ export class PartnerFastpayService {
     payload: DropCashlessVm,
   ): Promise<DropCashLessResponseVM> {
     // check branch partner code
-    const branchPartner = await BranchChildPartner.findOne({
-      select: ['branchPartnerId', 'branchChildPartnerId'],
-      where: {
-        branchChildPartnerCode: payload.branchCode,
-        isDeleted: false,
-      },
-    });
+    const branchPartner = await this.getDataBranchChild(payload.branchCode);
     if (branchPartner) {
       // NOTE: check pickup request with awb number
       let pickupRequest = await this.getPickupRequestAwbNumber(
@@ -266,5 +261,28 @@ export class PartnerFastpayService {
       referenceNo,
     });
     return rawData.length ? rawData[0] : null;
+  }
+
+  private static async getDataBranchChild(branchCode: string) {
+    // Branch Child Partner
+    let branchPartner = null;
+    branchPartner = await BranchChildPartner.findOne({
+      select: ['branchPartnerId'],
+      where: {
+        branchChildPartnerCode: branchCode,
+        isDeleted: false,
+      },
+    });
+    // Branch Partner
+    if (!branchPartner) {
+      branchPartner = await BranchPartner.findOne({
+        select: ['branchPartnerId'],
+        where: {
+          branchPartnerCode: branchCode,
+          isDeleted: false,
+        },
+      });
+    }
+    return branchPartner;
   }
 }
