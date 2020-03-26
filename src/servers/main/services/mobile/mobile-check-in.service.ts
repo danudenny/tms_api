@@ -127,11 +127,12 @@ export class MobileCheckInService {
     // Choose condition 1
     let fromDate = now.subtract(1, 'days').format('YYYY-MM-DD 06:00:00');
     let toDate = now.format('YYYY-MM-DD 06:00:00');
-
-    if (now.isSameOrAfter(now.format('YYYY-MM-DD 06:00:00'))) {
+    if (moment().isSameOrAfter(moment().format('YYYY-MM-DD 06:00:00'))) {
       // choose condition 2
-      fromDate = now.format('YYYY-MM-DD 06:00:00');
-      toDate = now.add(1, 'days').format('YYYY-MM-DD 06:00:00');
+      fromDate = moment().format('YYYY-MM-DD 06:00:00');
+      toDate = moment()
+        .add(1, 'days')
+        .format('YYYY-MM-DD 06:00:00');
     }
     const employeeJourneyCheckOutExist = await this.employeeJourneyRepository.findOne(
       {
@@ -260,7 +261,6 @@ export class MobileCheckInService {
             createdTime: Between(fromDate, toDate),
           },
         });
-
         if (korwilTransactionUser) {
           isCreateKorwilDetail = true;
 
@@ -295,6 +295,10 @@ export class MobileCheckInService {
             korwilTransactionUser.userIdCreated = authMeta.userId;
             korwilTransactionUser.userIdUpdated = authMeta.userId;
             korwilTransactionUser.userToBranchId = userToBranchId;
+            await KorwilTransaction.save(korwilTransactionUser);
+          } else {
+            // update korwil transaction
+            korwilTransactionUser.employeeJourneyId = employeeJourneyId;
             await KorwilTransaction.save(korwilTransactionUser);
           }
         }
