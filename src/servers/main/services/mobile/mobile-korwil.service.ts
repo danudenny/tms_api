@@ -257,13 +257,11 @@ export class MobileKorwilService {
     return result;
   }
 
-  public static validateHistory(
-    payload: KorwilHistoryPayloadVm,
-    df: string,
-    dt: string,
-  ) {
-    let dateFrom = null;
-    let dateTo = null;
+  public static validateHistory(payload: KorwilHistoryPayloadVm) {
+    let checkInDateFrom = null;
+    let checkInDateTo = null;
+    let checkOutDateFrom = null;
+    let checkOutDateTo = null;
 
     if (
       payload.status &&
@@ -288,39 +286,73 @@ export class MobileKorwilService {
       };
     }
 
-    if (df && dt) {
-      if (moment(df, 'ddd MMM DD YYYY', true).isValid()) {
-        dateFrom = moment(df, 'ddd MMM DD YYYY');
-        dateTo = moment(dt, 'ddd MMM DD YYYY');
-      } else if (moment(df, 'DD MMM YYYY', true).isValid()) {
-        dateFrom = moment(df, 'DD MMM YYYY');
-        dateTo = moment(dt, 'DD MMM YYYY');
+    if (payload.checkInDateFrom && payload.checkInDateTo) {
+      if (moment(payload.checkInDateFrom, 'ddd MMM DD YYYY', true).isValid()) {
+        checkInDateFrom = moment(payload.checkInDateFrom, 'ddd MMM DD YYYY');
+        checkInDateTo = moment(payload.checkInDateTo, 'ddd MMM DD YYYY');
+      } else if (
+        moment(payload.checkInDateFrom, 'DD MMM YYYY', true).isValid()
+      ) {
+        checkInDateFrom = moment(payload.checkInDateFrom, 'DD MMM YYYY');
+        checkInDateTo = moment(payload.checkInDateTo, 'DD MMM YYYY');
       } else {
-        dateFrom = moment(df);
-        dateTo = moment(dt);
+        checkInDateFrom = moment(payload.checkInDateFrom);
+        checkInDateTo = moment(payload.checkInDateTo);
       }
     }
 
-    dateFrom = dateFrom
-      ? dateFrom.format('YYYY-MM-DD 00:00:00')
+    if (payload.checkOutDateFrom && payload.checkOutDateTo) {
+      if (moment(payload.checkOutDateFrom, 'ddd MMM DD YYYY', true).isValid()) {
+        checkOutDateFrom = moment(payload.checkOutDateFrom, 'ddd MMM DD YYYY');
+        checkOutDateTo = moment(payload.checkOutDateTo, 'ddd MMM DD YYYY');
+      } else if (
+        moment(payload.checkOutDateFrom, 'DD MMM YYYY', true).isValid()
+      ) {
+        checkOutDateFrom = moment(payload.checkOutDateFrom, 'DD MMM YYYY');
+        checkOutDateTo = moment(payload.checkOutDateTo, 'DD MMM YYYY');
+      } else {
+        checkOutDateFrom = moment(payload.checkOutDateFrom);
+        checkOutDateTo = moment(payload.checkOutDateTo);
+      }
+    }
+
+    checkInDateFrom = checkInDateFrom
+      ? checkInDateFrom.format('YYYY-MM-DD 00:00:00')
       : moment().format('YYYY-MM-DD 00:00:00');
-    dateTo = dateTo
-      ? dateTo.format('YYYY-MM-DD 23:59:59')
+    checkInDateTo = checkInDateTo
+      ? checkInDateTo.format('YYYY-MM-DD 23:59:59')
       : moment().format('YYYY-MM-DD 23:59:59');
 
-    if (moment(dateTo).isBefore(dateFrom)) {
+    if (moment(checkInDateTo).isBefore(checkInDateFrom)) {
       return {
         status: 'error',
-        message: 'Tanggal yang dipilih tidak valid',
+        message: 'Tanggal Check In yang dipilih tidak valid',
         data: null,
       };
     }
+
+    checkOutDateFrom = checkOutDateFrom
+      ? checkOutDateFrom.format('YYYY-MM-DD 00:00:00')
+      : moment().format('YYYY-MM-DD 00:00:00');
+    checkOutDateTo = checkOutDateTo
+      ? checkOutDateTo.format('YYYY-MM-DD 23:59:59')
+      : moment().format('YYYY-MM-DD 23:59:59');
+
+    if (moment(checkOutDateTo).isBefore(checkOutDateFrom)) {
+      return {
+        status: 'error',
+        message: 'Tanggal Check Out yang dipilih tidak valid',
+        data: null,
+      };
+    }
+
     return {
       status: 'ok',
       message: '',
-      data: [dateFrom, dateTo],
+      data: [checkInDateFrom, checkInDateTo, checkOutDateFrom, checkOutDateTo],
     };
   }
+
   public static async getListTransactionHistory(
     payload: KorwilHistoryPayloadVm,
   ): Promise<KorwilHistoryResponseVm> {
@@ -330,7 +362,7 @@ export class MobileKorwilService {
     const repo = new OrionRepositoryService(KorwilTransaction, 't1');
     const result = new KorwilHistoryResponseVm();
 
-    const res = this.validateHistory(payload, payload.dateFrom, payload.dateTo);
+    const res = this.validateHistory(payload);
 
     if (res.status == 'error') {
       result.status = 'error';
@@ -339,8 +371,10 @@ export class MobileKorwilService {
       return result;
     }
 
-    const dateFrom = res.data[0];
-    const dateTo = res.data[1];
+    const checkInDateFrom = res.data[0];
+    const checkInDateTo = res.data[1];
+    const checkOutDateFrom = res.data[2];
+    const checkOutDateTo = res.data[3];
     const sortDir = payload.sortDir ? payload.sortDir.toUpperCase() : 'DESC';
 
     // NOTE: get all korwil only status = 1 (done)
@@ -362,8 +396,22 @@ export class MobileKorwilService {
     q.innerJoin(e => e.branches, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(dateFrom));
-    q.andWhere(e => e.createdTime, w => w.lessThanOrEqual(dateTo));
+    q.andWhere(
+      e => e.employeeJourney.checkInDate,
+      w => w.greaterThanOrEqual(checkInDateFrom),
+    );
+    q.andWhere(
+      e => e.employeeJourney.checkInDate,
+      w => w.lessThanOrEqual(checkInDateTo),
+    );
+    q.andWhere(
+      e => e.employeeJourney.checkOutDate,
+      w => w.greaterThanOrEqual(checkOutDateFrom),
+    );
+    q.andWhere(
+      e => e.employeeJourney.checkOutDate,
+      w => w.lessThanOrEqual(checkOutDateTo),
+    );
     q.andWhere(e => e.employeeJourneyId, w => w.isNotNull());
     q.andWhere(e => e.userId, w => w.equals(authMeta.userId));
     q.andWhere(e => e.status, w => w.equals(1));
