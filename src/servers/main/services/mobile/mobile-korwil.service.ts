@@ -341,6 +341,8 @@ export class MobileKorwilService {
     const dateFrom = res.data[0];
     const dateTo = res.data[1];
     const sortDir = payload.sortDir ? payload.sortDir.toUpperCase() : 'DESC';
+
+    // NOTE: get all korwil only status = 1 (done)
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
@@ -363,6 +365,7 @@ export class MobileKorwilService {
     q.andWhere(e => e.createdTime, w => w.lessThanOrEqual(dateTo));
     q.andWhere(e => e.employeeJourneyId, w => w.isNotNull());
     q.andWhere(e => e.userId, w => w.equals(authMeta.userId));
+    q.andWhere(e => e.status, w => w.equals(1));
     if (payload.branchId) {
       q.andWhere(e => e.branchId, w => w.equals(payload.branchId));
     }
@@ -444,6 +447,7 @@ export class MobileKorwilService {
       'ki.korwil_item_id = ktd.korwil_item_id AND ki.is_deleted = false',
     );
     qb.where('kt.is_deleted = false');
+    qb.where('kt.status = 1');
     qb.andWhere('kt.user_id = :userId', {
       userId: authMeta.userId,
     });
