@@ -172,11 +172,12 @@ export class MobileKorwilService {
     // Choose condition 1
     let fromDate = now.subtract(1, 'days').format('YYYY-MM-DD 06:00:00');
     let toDate = now.format('YYYY-MM-DD 06:00:00');
-
-    if (now.isSameOrAfter(now.format('YYYY-MM-DD 06:00:00'))) {
+    if (moment().isSameOrAfter(moment().format('YYYY-MM-DD 06:00:00'))) {
       // choose condition 2
-      fromDate = now.format('YYYY-MM-DD 06:00:00');
-      toDate = now.add(1, 'days').format('YYYY-MM-DD 06:00:00');
+      fromDate = moment().format('YYYY-MM-DD 06:00:00');
+      toDate = moment()
+        .add(1, 'days')
+        .format('YYYY-MM-DD 06:00:00');
     }
 
     const qb1 = createQueryBuilder();
