@@ -289,9 +289,17 @@ export class PartnerGojekService {
   }
 
   static async cancelBookingDelivery(payload: GojekCancelBookingVm) {
-    const doPodAttr = await DoPodAttr.findOne({ where: { refOrderNo: payload.orderNo, refType: Not('CUSTOMER_CANCELED') } });
+    const doPodAttr = await DoPodAttr.findOne({ where: { refOrderNo: payload.orderNo } });
     const authMeta  = AuthService.getAuthData();
     if (doPodAttr) {
+      if (doPodAttr.refType === 'CUSTOMER_CANCELLED' || doPodAttr.refType === 'DRIVER_NOT_FOUND') {
+        const result = {
+          status: 'ok',
+          message: 'No order sudah dibatalkan',
+        };
+        return result;
+      }
+
       let response = await this.cancelBookingGojek(payload.orderNo);
       if (response) {
         if (response.statusCode === 200) {
