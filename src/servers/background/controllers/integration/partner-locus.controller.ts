@@ -10,6 +10,13 @@ import { PartnerLocusService } from '../../services/integration/partner-locus.se
 export class PartnerLocusController {
   constructor() {}
 
+  @Post('locus/createTask')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async createTask() {
+    return PartnerLocusService.createTask();
+  }
+
   @Post('locus/createBatchTask')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
@@ -17,11 +24,20 @@ export class PartnerLocusController {
     return PartnerLocusService.createBatchTask();
   }
 
-  @Post('locus/callback')
+  @Post('locus/taskCallback')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGojekGuard)
   @ResponseSerializerOptions({ disable: true })
-  public async webHookCallback(@Body() payload: any) {
+  public async webHookTaskCallback(@Body() payload: any) {
+    console.log(payload);
+    return { status: 'ok', message: 'success' };
+  }
+
+  @Post('locus/planCallback')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGojekGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async webHookPlanCallback(@Body() payload: any) {
     console.log(payload);
     return { status: 'ok', message: 'success' };
   }
