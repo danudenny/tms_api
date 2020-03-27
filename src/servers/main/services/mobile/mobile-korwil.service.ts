@@ -396,32 +396,58 @@ export class MobileKorwilService {
     q.innerJoin(e => e.branches, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.andWhere(
-      e => e.employeeJourney.checkInDate,
-      w => w.greaterThanOrEqual(checkInDateFrom),
-    );
-    q.andWhere(
-      e => e.employeeJourney.checkInDate,
-      w => w.lessThanOrEqual(checkInDateTo),
-    );
-    q.andWhere(
-      e => e.employeeJourney.checkOutDate,
-      w => w.greaterThanOrEqual(checkOutDateFrom),
-    );
-    q.andWhere(
-      e => e.employeeJourney.checkOutDate,
-      w => w.lessThanOrEqual(checkOutDateTo),
-    );
     q.andWhere(e => e.employeeJourneyId, w => w.isNotNull());
     q.andWhere(e => e.userId, w => w.equals(authMeta.userId));
     q.andWhere(e => e.status, w => w.equals(1));
     if (payload.branchId) {
       q.andWhere(e => e.branchId, w => w.equals(payload.branchId));
     }
-    if (payload.status == 'checkIn') {
+
+    // NOTE: if status checkIn filter checkIn date
+    // if status checkOut filter checkOut date
+    // else filter all checkIn and checkOut date
+    if (payload.status && payload.status == 'checkIn') {
       q.andWhere(e => e.employeeJourney.checkOutDate, w => w.isNull());
-    } else if (payload.status == 'checkOut') {
+      q.andWhere(
+        e => e.employeeJourney.checkInDate,
+        w => w.greaterThanOrEqual(checkInDateFrom),
+      );
+      q.andWhere(
+        e => e.employeeJourney.checkInDate,
+        w => w.lessThanOrEqual(checkInDateTo),
+      );
+    } else if (payload.status && payload.status == 'checkOut') {
       q.andWhere(e => e.employeeJourney.checkOutDate, w => w.isNotNull());
+      q.andWhere(
+        e => e.employeeJourney.checkOutDate,
+        w => w.greaterThanOrEqual(checkOutDateFrom),
+      );
+      q.andWhere(
+        e => e.employeeJourney.checkOutDate,
+        w => w.lessThanOrEqual(checkOutDateTo),
+      );
+    } else {
+      q.andWhereIsolated(qw => {
+        qw.andWhereIsolated(qw2 => {
+          qw2.andWhere(
+            e => e.employeeJourney.checkOutDate,
+            w => w.greaterThanOrEqual(checkOutDateFrom),
+          );
+          qw2.andWhere(
+            e => e.employeeJourney.checkOutDate,
+            w => w.lessThanOrEqual(checkOutDateTo),
+          );
+        });
+        qw.orWhere(e => e.employeeJourney.checkOutDate, w => w.isNull());
+      });
+      q.andWhere(
+        e => e.employeeJourney.checkInDate,
+        w => w.greaterThanOrEqual(checkInDateFrom),
+      );
+      q.andWhere(
+        e => e.employeeJourney.checkInDate,
+        w => w.lessThanOrEqual(checkInDateTo),
+      );
     }
     if (sortDir == 'DESC') {
       q.orderBy({
