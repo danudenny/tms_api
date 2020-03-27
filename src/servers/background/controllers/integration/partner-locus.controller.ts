@@ -1,8 +1,8 @@
 import { Body, Controller, Post, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
-import { AuthGojekGuard } from '../../../../shared/guards/auth-gojek.guard';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { PartnerLocusService } from '../../services/integration/partner-locus.service';
+import { AuthLocusGuard } from '../../../../shared/guards/auth-locus.guard';
 
 @ApiUseTags('Integration Sicepat x Locus')
 @Controller('integration')
@@ -26,7 +26,7 @@ export class PartnerLocusController {
 
   @Post('locus/taskCallback')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGojekGuard)
+  @UseGuards(AuthLocusGuard)
   @ResponseSerializerOptions({ disable: true })
   public async webHookTaskCallback(@Body() payload: any) {
     console.log(payload);
@@ -35,7 +35,7 @@ export class PartnerLocusController {
 
   @Post('locus/planCallback')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGojekGuard)
+  @UseGuards(AuthLocusGuard)
   @ResponseSerializerOptions({ disable: true })
   public async webHookPlanCallback(@Body() payload: any) {
     console.log(payload);
