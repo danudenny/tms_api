@@ -4,125 +4,59 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { BadRequestException } from '@nestjs/common';
 import { AwbSendPartnerQueueService } from '../../../queue/services/awb-send-partner-queue.service';
-import { LocusTimeSlotVm } from '../../models/partner/locus-task.vm';
+import { LocusTimeSlotVm, LocusCreateTaskVm } from '../../models/partner/locus-task.vm';
 
 export class PartnerLocusService {
-  static async createBatchTask() {
-    // TODO: check data pickup request by city jakarta barat (for testing only)
-    // get data pickup requset detail
-    // looping data construct json data
-    // sending request
-    const partnerId = 99; // hardcode partner id locus
-    return await this.sendDataBatch(partnerId);
+  static async createBatchTask(payload: LocusCreateTaskVm) {
+    // NOTE: check data pickup request by city jakarta barat (for testing only)
+    const partnerId = payload.partnerIdLocus;
+    // TODO: how to set pickupSlot and dropSlot ??
+    const { pickupSlot, dropSlot } = this.slotTime(payload);
+    return await this.sendDataBatch(partnerId, pickupSlot, dropSlot);
   }
 
-  static async createTask() {
+  static async createTask(payload: LocusCreateTaskVm) {
     const result = [];
-    const partnerId = 99; // hardcode partner id locus
-    const pickupRequests = await this.getDataPickupRequest(partnerId, 5);
+    const partnerId = payload.partnerIdLocus;
+    const { pickupSlot, dropSlot } = this.slotTime(payload);
+    const totalTask = payload.totalTask ? payload.totalTask : 1;
+    const pickupRequests = await this.getDataPickupRequest(partnerId, totalTask);
     if (pickupRequests.length) {
       for (const pickupRequest of pickupRequests) {
-        const response = await this.sendDataTask(pickupRequest, partnerId);
+        const response = await this.sendDataTask(
+          pickupRequest,
+          partnerId,
+          pickupSlot,
+          dropSlot,
+        );
         result.push(response);
       }
     }
     return { data: result };
   }
 
-  private static async sendDataTask(pickupRequest: any, partnerId: number) {
+  private static async sendDataTask(
+    pickupRequest: any,
+    partnerId: number,
+    pickupSlot: LocusTimeSlotVm,
+    dropSlot: LocusTimeSlotVm,
+  ) {
     const taskId = pickupRequest.awbNumber;
     const url = `https://locus-api.com/v1/client/sicepat-sds/mpmdtask/${taskId}`;
     let result = {};
-    // TODO: set pickupSlot and dropSlot ??
-    const pickupSlot = {
-      start: moment('2020-03-27 17:00:00').toISOString(),
-      end: moment('2020-03-27 18:00:00').toISOString(),
-    };
-    const dropSlot = {
-      start: moment('2020-03-27 19:00:00').toISOString(),
-      end: moment('2020-03-27 20:00:00').toISOString(),
-    };
 
-    const objItem = {
-      taskId,
-      teamId: 'jakbar-sds',
-      lineItems: [
-        {
-          id: pickupRequest.awbNumber,
-          name: pickupRequest.parcelContent,
-          quantity: 1,
-        },
-      ],
-      autoAssign: true,
-      pickupContactPoint: {
-        name: pickupRequest.shipperName,
-        number: this.handlePhoneNumber(pickupRequest.shipperPhone),
-      },
-      pickupLocationAddress: {
-        formattedAddress: pickupRequest.shipperAddress,
-        pincode: pickupRequest.shipperZip,
-        city: pickupRequest.shipperCity,
-        state: pickupRequest.shipperProvince,
-        countryCode: 'ID',
-      },
+    const objItem = await this.constructData(
+      pickupRequest,
       pickupSlot,
-      pickupTransactionDuration: 1000,
-      dropContactPoint: {
-        name: pickupRequest.recipientName,
-        number: this.handlePhoneNumber(pickupRequest.recipientPhone),
-      },
-      dropLocationAddress: {
-        formattedAddress: pickupRequest.recipientAddress,
-        pincode: pickupRequest.recipientZip,
-        city: pickupRequest.recipientCity,
-        state: pickupRequest.recipientProvince,
-        countryCode: 'ID',
-      },
       dropSlot,
-      dropTransactionDuration: 1000,
-      volume: {
-        value: 1,
-        unit: 'ITEM_COUNT',
-      },
+    );
+    // NOTE: additional params
+    const additional = {
+      teamId: 'jakbar-sds',
+      autoAssign: true,
     };
 
-    // NOTE: check data have lat long??
-    let geoloc = {};
-    if (
-      pickupRequest.shipperLatitude &&
-      pickupRequest.shipperLongitude &&
-      this.isValidateLatLong(
-        pickupRequest.shipperLatitude,
-        pickupRequest.shipperLongitude,
-      )
-    ) {
-      // add lot lang
-      geoloc = {
-        pickupLatLng: {
-          lat: pickupRequest.shipperLatitude,
-          lng: pickupRequest.shipperLongitude,
-        },
-      };
-    }
-
-    if (
-      pickupRequest.recipientLatitude &&
-      pickupRequest.recipientLongitude &&
-      this.isValidateLatLong(
-        pickupRequest.recipientLatitude,
-        pickupRequest.recipientLongitude,
-      )
-    ) {
-      geoloc = {
-        dropLatLng: {
-          lat: pickupRequest.recipientLatitude,
-          lng: pickupRequest.recipientLongitude,
-        },
-        ...geoloc,
-      };
-    }
-
-    const jsonData = { ...objItem, ...geoloc };
+    const jsonData = { ...objItem, ...additional };
 
     try {
       PinoLoggerService.log('sending data to locus !!');
@@ -147,7 +81,11 @@ export class PartnerLocusService {
     return result;
   }
 
-  private static async sendDataBatch(partnerId: number) {
+  private static async sendDataBatch(
+    partnerId: number,
+    pickupSlot: LocusTimeSlotVm,
+    dropSlot: LocusTimeSlotVm,
+  ) {
     // const clientId = 'sicepat-sds';
     // custom batchId??
     const batchId = moment().format('YYYY-MM-DD-HH-mm-ss');
@@ -155,20 +93,11 @@ export class PartnerLocusService {
 
     let result = {};
     const tasks = [];
-    // NOTE: set pickupSlot and dropSlot ??
-    const pickupSlot = {
-      start: moment('2020-03-27 17:00:00').toISOString(),
-      end: moment('2020-03-27 18:00:00').toISOString(),
-    };
-    const dropSlot = {
-      start: moment('2020-03-27 19:00:00').toISOString(),
-      end: moment('2020-03-27 20:00:00').toISOString(),
-    };
 
     const pickupRequests = await this.getDataPickupRequest(partnerId);
     if (pickupRequests.length) {
       for (const pickupRequest of pickupRequests) {
-        const item = await this.constructDataBatch(pickupRequest, pickupSlot, dropSlot);
+        const item = await this.constructData(pickupRequest, pickupSlot, dropSlot);
         tasks.push(item);
       } // end of for
 
@@ -177,10 +106,9 @@ export class PartnerLocusService {
         tasksDate: moment().format('YYYY-MM-DD'),
         inputTasks: tasks,
       };
-
+      // NOTE: debug only
       // result = jsonData;
       // PinoLoggerService.log('DATA : ', jsonData.inputTasks.length);
-      // send data to locus
       try {
         PinoLoggerService.log('Sending data to locus !!');
         const response = await axios.put(url, jsonData, this.getOptionsLocus());
@@ -214,7 +142,7 @@ export class PartnerLocusService {
     return result;
   }
 
-  private static async constructDataBatch(
+  private static async constructData(
     pickupRequest: any,
     pickupSlot: LocusTimeSlotVm,
     dropSlot: LocusTimeSlotVm,
@@ -227,6 +155,10 @@ export class PartnerLocusService {
           id: pickupRequest.awbNumber,
           name: pickupRequest.parcelContent,
           quantity: 1,
+          price: {
+            amount: pickupRequest.parcelValue,
+            currency: 'IDR',
+          },
         },
       ],
       pickupContactPoint: {
@@ -261,17 +193,7 @@ export class PartnerLocusService {
       },
     };
 
-    if (objItem.pickupContactPoint.number.length > 14) {
-      console.log(pickupRequest.awbNumber + ' : ' + objItem.pickupContactPoint.number);
-    }
-
-    if (objItem.dropContactPoint.number.length > 14) {
-      console.log(
-        pickupRequest.awbNumber + ' : ' + objItem.dropContactPoint.number,
-      );
-    }
-
-      // NOTE: check and validate lat long??
+    // NOTE: check and validate lat long??
     let geoloc = {};
     if (
       pickupRequest.shipperLatitude &&
@@ -392,5 +314,19 @@ export class PartnerLocusService {
     const lat = /^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$/;
     const latlong = lat.test(latitude) && long.test(longitude);
     return latlong;
+  }
+
+  private static slotTime(payload: LocusCreateTaskVm) {
+    const today = moment().format('YYYY-MM-DD');
+    const pickupSlot = {
+      start: moment(`${today} ${payload.pickupStartHour}`).toISOString(),
+      end: moment(`${today} ${payload.pickupEndHour}`).toISOString(),
+    };
+    const dropSlot = {
+      start: moment(`${today} ${payload.dropStartHour}`).toISOString(),
+      end: moment(`${today} ${payload.dropEndHour}`).toISOString(),
+    };
+
+    return { pickupSlot, dropSlot };
   }
 }

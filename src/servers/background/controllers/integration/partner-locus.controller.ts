@@ -3,6 +3,7 @@ import { ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-sw
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { PartnerLocusService } from '../../services/integration/partner-locus.service';
 import { AuthLocusGuard } from '../../../../shared/guards/auth-locus.guard';
+import { LocusCreateTaskVm } from '../../models/partner/locus-task.vm';
 
 @ApiUseTags('Integration Sicepat x Locus')
 @Controller('integration')
@@ -13,15 +14,15 @@ export class PartnerLocusController {
   @Post('locus/createTask')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
-  public async createTask() {
-    return PartnerLocusService.createTask();
+  public async createTask(@Body() payload: LocusCreateTaskVm) {
+    return PartnerLocusService.createTask(payload);
   }
 
   @Post('locus/createBatchTask')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
-  public async createBatchTask() {
-    return PartnerLocusService.createBatchTask();
+  public async createBatchTask(@Body() payload: LocusCreateTaskVm) {
+    return PartnerLocusService.createBatchTask(payload);
   }
 
   @Post('locus/taskCallback')
