@@ -6,4 +6,10 @@ export class MobileAwbFilterListResponseVm {
 
   @ApiModelProperty({ type: () => [MobileScanInBranchResponseVm] })
   data: MobileScanInBranchResponseVm[];
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
 }

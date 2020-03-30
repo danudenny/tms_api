@@ -78,3 +78,11 @@ export class DeliveryFilterPayloadVm {
   @ApiModelProperty()
   sortDir: string;
 }
+
+export class DetailTransitPayloadVm {
+  @ApiModelProperty()
+  dateFrom: string;
+
+  @ApiModelProperty()
+  dateTo: string;
+}

@@ -20,6 +20,8 @@ import { BagItemHistoryQueueService } from './services/bag-item-history-queue.se
 import { MappingRoleQueueService } from './services/mapping-role-queue.service';
 import { BagScanOutBranchQueueService } from './services/bag-scan-out-branch-queue.service';
 import { LogglyMiddleware } from '../../shared/middlewares/loggly.middleware';
+import { BagScanOutHubQueueService } from './services/bag-scan-out-hub-queue.service';
+import { AwbSendPartnerQueueService } from './services/awb-send-partner-queue.service';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -108,7 +110,9 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     DoPodDetailPostMetaQueueService.boot();
     BagItemHistoryQueueService.boot();
     BagScanOutBranchQueueService.boot();
+    BagScanOutHubQueueService.boot();
     MappingRoleQueueService.boot();
+    AwbSendPartnerQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
   }

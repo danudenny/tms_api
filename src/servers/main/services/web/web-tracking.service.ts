@@ -7,7 +7,9 @@ import {
 } from '../../models/tracking.vm';
 
 export class WebTrackingService {
-  static async awb(payload: TrackingAwbPayloadVm): Promise<TrackingAwbResponseVm> {
+  static async awb(
+    payload: TrackingAwbPayloadVm,
+  ): Promise<TrackingAwbResponseVm> {
     const result = new TrackingAwbResponseVm();
 
     const data = await this.getRawAwb(payload.awbNumber);
@@ -38,8 +40,10 @@ export class WebTrackingService {
       result.refRepresentativeCode = data.refRepresentativeCode;
       result.parcelValue = data.parcelValue;
       result.partnerLogisticAwb = data.partnerLogisticAwb;
+      result.partnerLogisticName = data.partnerLogisticName;
       result.doPodDeliverDetailId = data.doPodDeliverDetailId;
       result.isHasPhotoReceiver = data.doPodDeliverAttachmentId ? true : false;
+      result.returnAwbNumber = data.returnAwbNumber;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -51,7 +55,9 @@ export class WebTrackingService {
     return result;
   }
 
-  static async bag(payload: TrackingBagPayloadVm): Promise<TrackingBagResponseVm> {
+  static async bag(
+    payload: TrackingBagPayloadVm,
+  ): Promise<TrackingBagResponseVm> {
     const result = new TrackingBagResponseVm();
     const data = await this.getRawBag(payload.bagNumber);
     if (data) {
@@ -103,6 +109,16 @@ export class WebTrackingService {
         COALESCE(pt.package_type_code, '') as "packageTypeCode",
         COALESCE(pt.package_type_name, '') as "packageTypeName",
         COALESCE(p.payment_method_code, '') as "paymentMethodCode",
+        COALESCE(
+          (
+            CASE
+              WHEN ar.is_partner_logistic = true THEN null
+              ELSE ar.return_awb_number
+            END
+          ), ''
+        ) as "returnAwbNumber",
+        COALESCE(ar.partner_logistic_awb, '') as "partnerLogisticAwb",
+        COALESCE(ar.partner_logistic_name, '') as "partnerLogisticName",
         a.total_cod_value as "totalCodValue",
         CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
         COALESCE(bg.bagging_code, '') as "baggingCode",
@@ -129,8 +145,9 @@ export class WebTrackingService {
         LEFT JOIN bag ba ON ba.bag_id = bi.bag_id AND ba.is_deleted = false
         LEFT JOIN bagging bg ON bg.bagging_id = bi.bagging_id_last AND bg.is_deleted = false
         LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
-        LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false
+        LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false AND dpd.consignee_name IS NOT NULL
         LEFT JOIN do_pod_deliver_attachment dpa ON dpa.do_pod_deliver_detail_id = dpd.do_pod_deliver_detail_id AND dpa.is_deleted = false
+        LEFT JOIN awb_return ar ON ar.origin_awb_id = ait.awb_id AND ar.is_deleted = false
       WHERE a.awb_number = :awbNumber
       AND a.is_deleted = false LIMIT 1;
     `;
@@ -149,6 +166,8 @@ export class WebTrackingService {
         ast.awb_visibility as "awbVisibility",
         ah.employee_id_driver as "employeeIdDriver",
         e.fullname as "employeeNameDriver",
+        e2.fullname as "employeeNameScan",
+        e2.nik as "employeeNikScan",
         u.username,
         b.branch_name as "branchName",
         ast.awb_status_name as "awbStatusName",
@@ -158,6 +177,7 @@ export class WebTrackingService {
       FROM awb_history ah
         LEFT JOIN branch b ON b.branch_id = ah.branch_id
         LEFT JOIN users u ON u.user_id = ah.user_id
+        LEFT JOIN employee e2 ON e2.employee_id = u.employee_id
         LEFT JOIN awb_status ast ON ast.awb_status_id = ah.awb_status_id
         LEFT JOIN employee e ON e.employee_id = ah.employee_id_driver
       WHERE ah.awb_item_id = :awbItemId
@@ -191,7 +211,8 @@ export class WebTrackingService {
         WHERE b.bag_number = :bagNumber AND bi.bag_seq = :seqNumber LIMIT 1
       `;
       const rawData = await RawQueryService.queryWithParams(query, {
-        bagNumber, seqNumber,
+        bagNumber,
+        seqNumber,
       });
       return rawData ? rawData[0] : null;
     } else {

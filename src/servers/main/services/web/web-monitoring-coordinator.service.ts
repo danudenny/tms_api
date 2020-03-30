@@ -275,6 +275,13 @@ export class WebMonitoringCoordinatorService {
   static async createCoordinatorTrans(): Promise<CreateTransactionCoordinatorResponse> {
       const timeNow = moment().format();
       const userId = 3; // super admin;
+      const qb = createQueryBuilder();
+      qb.from('user_to_branch', 'utb');
+      qb.leftJoin('korwil_transaction', 'b', `b.user_to_branch_id = utb.user_to_branch_id AND b.date::date = '${moment().format('YYYY-MM-DD')}' AND b.is_deleted = false`);
+      qb.where('utb.is_deleted = false');
+      qb.andWhere('b.korwil_transaction_id IS NULL');
+      const count = await qb.getCount();
+
       const execute = await RawQueryService.query(`INSERT INTO korwil_transaction
         (
           date,
@@ -291,23 +298,19 @@ export class WebMonitoringCoordinatorService {
         (
           SELECT
             '${timeNow}' AS date,
-            ref_branch_id,
-            ref_user_id,
+            a.ref_branch_id,
+            a.ref_user_id,
             0 as status,
             '${timeNow}' AS created_time,
              '${userId}' as user_id_created,
             '${timeNow}' AS updated_time,
             '${userId}' as user_id_updated,
-            user_to_branch_id
-            FROM user_to_branch
-            WHERE is_deleted = false
+            a.user_to_branch_id
+            FROM user_to_branch a
+            LEFT JOIN korwil_transaction b ON b.user_to_branch_id = a.user_to_branch_id AND b.date::date = '${moment().format('YYYY-MM-DD')}' AND b.is_deleted = false
+            WHERE b.korwil_transaction_id IS NULL AND a.is_deleted = false
         )`,
       );
-
-      const qb = createQueryBuilder();
-      qb.from('user_to_branch', 'utb');
-      qb.where('is_deleted = false');
-      const count = await qb.getCount();
 
       const result = new CreateTransactionCoordinatorResponse();
       if (execute) {
