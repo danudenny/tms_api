@@ -4,6 +4,7 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { BadRequestException } from '@nestjs/common';
 import { AwbSendPartnerQueueService } from '../../../queue/services/awb-send-partner-queue.service';
+import { LocusTimeSlotVm } from '../../models/partner/locus-task.vm';
 
 export class PartnerLocusService {
   static async createBatchTask() {
@@ -215,8 +216,8 @@ export class PartnerLocusService {
 
   private static async constructDataBatch(
     pickupRequest: any,
-    pickupSlot: {},
-    dropSlot: {},
+    pickupSlot: LocusTimeSlotVm,
+    dropSlot: LocusTimeSlotVm,
   ) {
 
     const objItem = {
