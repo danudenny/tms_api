@@ -25,6 +25,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           requestErrorResponse = exception.getResponse();
         }
       }
+      PinoLoggerService.debug(' REQUEST : ', request);
       PinoLoggerService.debug(exception);
       // NOTE: detail error stack only fatal status
       const fatalStatus = [500, 501, 502, 503, 504, 505];
