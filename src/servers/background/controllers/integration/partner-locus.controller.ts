@@ -7,7 +7,6 @@ import { LocusCreateTaskVm } from '../../models/partner/locus-task.vm';
 
 @ApiUseTags('Integration Sicepat x Locus')
 @Controller('integration')
-@ApiBearerAuth()
 export class PartnerLocusController {
   constructor() {}
 
@@ -27,7 +26,6 @@ export class PartnerLocusController {
 
   @Post('locus/taskCallback')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthLocusGuard)
   @ResponseSerializerOptions({ disable: true })
   public async webHookTaskCallback(@Body() payload: any) {
     console.log(payload);
@@ -36,7 +34,6 @@ export class PartnerLocusController {
 
   @Post('locus/planCallback')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthLocusGuard)
   @ResponseSerializerOptions({ disable: true })
   public async webHookPlanCallback(@Body() payload: any) {
     console.log(payload);
