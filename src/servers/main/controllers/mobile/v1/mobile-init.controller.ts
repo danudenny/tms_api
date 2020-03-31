@@ -86,26 +86,40 @@ export class V1MobileInitController {
         title: dataRedis.title,
         subtitle: dataRedis.subtitle,
         message: dataRedis.message,
+        isActive: dataRedis.isActive,
       };
     } else {
+      const expireOnSeconds = 60 * 60 * 1;
       // get data app notification
       const appNotif = await AppNotification.findOne({ appCode, isActive: true });
       if (appNotif) {
-        // set data on redis
-        const expireOnSeconds = 60 * 60 * 3;
-        await RedisService.setex(
-          `appNotification:mobile:${appCode}`,
-          JSON.stringify(appNotif),
-          expireOnSeconds,
-        );
         response = {
           appCode: appNotif.appCode,
           title: appNotif.title,
           subtitle: appNotif.subtitle,
           message: appNotif.message,
+          isActive: appNotif.isActive,
         };
+        // set data on redis
+        await RedisService.setex(
+          `appNotification:mobile:${appCode}`,
+          JSON.stringify(response),
+          expireOnSeconds,
+        );
       } else {
-        throw new BadRequestException('Data Tidak ditemukan !');
+        // throw new BadRequestException('Data Tidak ditemukan !');
+        response = {
+          appCode,
+          title: '',
+          subtitle: '',
+          message: 'Data Tidak ditemukan !',
+          isActive: false,
+        };
+        await RedisService.setex(
+          `appNotification:mobile:${appCode}`,
+          JSON.stringify(response),
+          expireOnSeconds,
+        );
       }
     }
 
