@@ -7,8 +7,6 @@ import { CustomCounterCode } from '../../../../shared/services/custom-counter-co
 import { WorkOrderDetail } from '../../../../shared/orm-entity/work-order-detail';
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
-import { BranchPartner } from '../../../../shared/orm-entity/branch-partner';
-import { BranchChildPartner } from '../../../../shared/orm-entity/branch-child-partner';
 import { Not } from 'typeorm';
 
 export class PartnerFastpayService {
@@ -23,16 +21,16 @@ export class PartnerFastpayService {
     payload: DropCashlessVm,
   ): Promise<DropCashLessResponseVM> {
     // check branch partner code
-    const branchPartner = await this.getDataBranchChild(payload.branchCode);
+    const branchPartner = await this.getDataBranchChild(payload.branch_code);
     if (branchPartner) {
       // NOTE: check pickup request with awb number
       let pickupRequest = await this.getPickupRequestAwbNumber(
-        payload.awbNumber,
+        payload.awb_number,
       );
       // check pickup reqeust with referenceNo
       if (!pickupRequest) {
         pickupRequest = await this.getPickupRequestReferenceNo(
-          payload.awbNumber,
+          payload.awb_number,
         );
       }
 
@@ -113,23 +111,23 @@ export class PartnerFastpayService {
   ): Promise<DropCashLessResponseVM> {
     return {
       partner: pickupRequest.partner,
-      noRef: pickupRequest.noRef,
-      refAwbNumber: pickupRequest.refAwbNumber,
-      recipientCity: pickupRequest.recipientCity,
-      deliveryType: pickupRequest.deliveryType,
-      shipperName: pickupRequest.shipperName,
-      shipperAddress: pickupRequest.shipperAddress,
-      shipperDistrict: pickupRequest.shipperDistrict,
-      shipperCity: pickupRequest.shipperCity,
-      shipperProvince: pickupRequest.shipperProvince,
-      shipperZip: pickupRequest.shipperZip,
-      shipperPhone: pickupRequest.shipperPhone,
-      recipientName: pickupRequest.recipientName,
-      recipientAddress: pickupRequest.recipientAddress,
-      recipientDistrict: pickupRequest.recipientDistrict,
-      recipientProvince: pickupRequest.recipientProvince,
-      recipientZip: pickupRequest.recipientZip,
-      recipientPhone: pickupRequest.recipientPhone,
+      ref_no: pickupRequest.noRef,
+      ref_awb_number: pickupRequest.refAwbNumber,
+      recipient_city: pickupRequest.recipientCity,
+      delivery_type: pickupRequest.deliveryType,
+      shipper_name: pickupRequest.shipperName,
+      shipper_address: pickupRequest.shipperAddress,
+      shipper_district: pickupRequest.shipperDistrict,
+      shipper_city: pickupRequest.shipperCity,
+      shipper_province: pickupRequest.shipperProvince,
+      shipper_zip: pickupRequest.shipperZip,
+      shipper_phone: pickupRequest.shipperPhone,
+      recipient_name: pickupRequest.recipientName,
+      recipient_address: pickupRequest.recipientAddress,
+      recipient_district: pickupRequest.recipientDistrict,
+      recipient_province: pickupRequest.recipientProvince,
+      recipient_zip: pickupRequest.recipientZip,
+      recipient_phone: pickupRequest.recipientPhone,
     };
   }
 

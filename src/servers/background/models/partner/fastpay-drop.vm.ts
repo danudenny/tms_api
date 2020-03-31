@@ -2,10 +2,10 @@ import { ApiModelProperty } from '../../../../shared/external/nestjs-swagger';
 
 export class DropCashlessVm {
   @ApiModelProperty()
-  awbNumber: string;
+  awb_number: string;
 
   @ApiModelProperty()
-  branchCode: string;
+  branch_code: string;
 
 }
 
@@ -14,53 +14,53 @@ export class DropCashLessResponseVM {
   partner: string;
 
   @ApiModelProperty()
-  noRef: string;
+  ref_no: string;
 
   @ApiModelProperty()
-  refAwbNumber: string;
+  ref_awb_number: string;
 
   @ApiModelProperty()
-  recipientCity: string;
+  recipient_city: string;
 
   @ApiModelProperty()
-  deliveryType: string;
+  delivery_type: string;
 
   @ApiModelProperty()
-  shipperName: string;
+  shipper_name: string;
 
   @ApiModelProperty()
-  shipperAddress: string;
+  shipper_address: string;
 
   @ApiModelProperty()
-  shipperDistrict: string;
+  shipper_district: string;
 
   @ApiModelProperty()
-  shipperCity: string;
+  shipper_city: string;
 
   @ApiModelProperty()
-  shipperProvince: string;
+  shipper_province: string;
 
   @ApiModelProperty()
-  shipperZip: string;
+  shipper_zip: string;
 
   @ApiModelProperty()
-  shipperPhone: string;
+  shipper_phone: string;
 
   @ApiModelProperty()
-  recipientName: string;
+  recipient_name: string;
 
   @ApiModelProperty()
-  recipientAddress: string;
+  recipient_address: string;
 
   @ApiModelProperty()
-  recipientDistrict: string;
+  recipient_district: string;
 
   @ApiModelProperty()
-  recipientProvince: string;
+  recipient_province: string;
 
   @ApiModelProperty()
-  recipientZip: string;
+  recipient_zip: string;
 
   @ApiModelProperty()
-  recipientPhone: string;
+  recipient_phone: string;
 }
