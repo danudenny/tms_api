@@ -18,6 +18,20 @@ export class AppNotification extends BaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'title',
+  })
+  title: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'subtitle',
+  })
+  subtitle: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
     name: 'image_url',
   })
   imageUrl: string | null;
