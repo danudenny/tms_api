@@ -95,7 +95,7 @@ export class WebTrackingService {
         CONCAT(r.representative_code, ' - ', dt.district_name) as "branchToName",
         CONCAT(ca.customer_account_code, ' - ',ca.customer_account_name) as "customerName",
         COALESCE(a.ref_prev_customer_account_id, '') as "customerNameRds",
-        COALESCE(a.consignee_name, '') as "consigneeName",
+        COALESCE(dpd.consignee_name, a.consignee_name, '') as "consigneeName",
         COALESCE(a.consignee_address, '') as "consigneeAddress",
         a.awb_date as "awbDate",
         a.is_cod as "isCod",
@@ -145,7 +145,7 @@ export class WebTrackingService {
         LEFT JOIN bag ba ON ba.bag_id = bi.bag_id AND ba.is_deleted = false
         LEFT JOIN bagging bg ON bg.bagging_id = bi.bagging_id_last AND bg.is_deleted = false
         LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
-        LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false AND dpd.consignee_name IS NOT NULL
+        LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false
         LEFT JOIN do_pod_deliver_attachment dpa ON dpa.do_pod_deliver_detail_id = dpd.do_pod_deliver_detail_id AND dpa.is_deleted = false
         LEFT JOIN awb_return ar ON ar.origin_awb_id = ait.awb_id AND ar.is_deleted = false
       WHERE a.awb_number = :awbNumber
