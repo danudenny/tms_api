@@ -44,9 +44,9 @@ export class PackageService {
     if (value.includes('*BUKA')) {
       const dataResult      = await this.openSortirCombine(payload);
       result.bagNumber      = dataResult.bagNumber;
-      result.branchName   = dataResult.branchName;
-      result.branchId     = dataResult.branchId;
-      result.branchCode   = dataResult.branchCode;
+      result.branchName     = dataResult.branchName;
+      result.branchId       = dataResult.branchId;
+      result.branchCode     = dataResult.branchCode;
       result.podScanInHubId = dataResult.podScanInHubId;
       result.dataBag        = dataResult.dataBag;
       result.bagItemId      = dataResult.bagItemId;
@@ -57,7 +57,7 @@ export class PackageService {
       if (!payload.branchId && !payload.bagNumber) {
           RequestErrorService.throwObj(
           {
-            message: 'Masukan kode branch terlebih dahulu',
+            message: 'Masukan kode gerai terlebih dahulu',
           },
           HttpStatus.BAD_REQUEST,
         );
@@ -86,7 +86,7 @@ export class PackageService {
       if (!branch) {
         RequestErrorService.throwObj(
           {
-            message: 'Kode Gerai tidak ditemukan',
+            message: 'Kode gerai tidak ditemukan',
           },
           HttpStatus.BAD_REQUEST,
         );
@@ -228,12 +228,12 @@ export class PackageService {
       let bagSeq;
       let bagWeight;
 
-      bagNumber = `${data[0].bagNumber}${data[0].bagSeq.toString().padStart(3, '0')}`;
-      branchId = data[0].branchId;
+      bagNumber  = `${data[0].bagNumber}${data[0].bagSeq.toString().padStart(3, '0')}`;
+      branchId   = data[0].branchId;
       branchName = data[0].branchName;
       branchCode = data[0].branchCode;
-      bagItemId = data[0].bagItemId;
-      bagWeight = data[0].bagWeight;
+      bagItemId  = data[0].bagItemId;
+      bagWeight  = data[0].bagWeight;
       bagSeq = data[0].bagSeq;
 
       result.bagNumber      = bagNumber;
@@ -273,13 +273,7 @@ export class PackageService {
           HttpStatus.BAD_REQUEST,
         );
       }
-    const branchId       = payload.branchId;
-    const branch = await Branch.findOne({
-      where: {
-        branchId,
-      },
-    });
-    const districtId = branch ? branch.branchId : null;
+    const branchId = payload.branchId;
 
     const qb = createQueryBuilder();
     qb.addSelect('a.bag_id', 'bagId');
@@ -289,7 +283,7 @@ export class PackageService {
     qb.from('bag', 'a');
     qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
     qb.where('a.created_time::date = :today', { today: moment().format('YYYY-MM-DD') });
-    qb.andWhere('a.district_id_to = :districtId', { districtId });
+    qb.andWhere('a.branch_id_to = :branchId', { branchId });
     qb.andWhere('a.is_deleted = false');
     qb.groupBy('a.bag_id');
 
@@ -299,37 +293,37 @@ export class PackageService {
     let randomBagNumber;
 
     if (!bagData) {
-          // generate bag number
-          randomBagNumber = 'S' + sampleSize('012345678900123456789001234567890', 6).join('');
-          const representativeCode = payload.districtDetail.districtCode.substring(0, 3);
-          const representative = await Representative.findOne({ where: { isDeleted: false, representativeCode } });
+      // generate bag number
+      randomBagNumber          = 'S' + sampleSize('012345678900123456789001234567890', 6).join('');
+      const representativeCode = payload.districtDetail.districtCode.substring(0, 3);
+      const representative     =  await Representative.findOne({ where: { isDeleted: false, representativeCode } });
 
-          const bagDetail = Bag.create({
-            bagNumber            : randomBagNumber,
-            districtIdTo         : districtId,
-            branchIdTo           : branchId,
-            refRepresentativeCode: representative.representativeCode,
-            representativeIdTo   : representative.representativeId,
-            bagType              : 'district',
-            branchId             : permissonPayload.branchId,
-            bagDate              : moment().format('YYYY-MM-DD'),
-            bagDateReal          : moment().toDate(),
-            createdTime          : moment().toDate(),
-            updatedTime          : moment().toDate(),
-            userIdCreated        : authMeta.userId,
-            userIdUpdated        : authMeta.userId,
-            isSortir             : true,
-          });
+      const bagDetail = Bag.create({
+        bagNumber            : randomBagNumber,
+        branchIdTo           : branchId,
+        refRepresentativeCode: representative.representativeCode,
+        representativeIdTo   : representative.representativeId,
+        refBranchCode        : payload.branchDetail.branchCode,
+        bagType              : 'branch',
+        branchId             : permissonPayload.branchId,
+        bagDate              : moment().format('YYYY-MM-DD'),
+        bagDateReal          : moment().toDate(),
+        createdTime          : moment().toDate(),
+        updatedTime          : moment().toDate(),
+        userIdCreated        : authMeta.userId,
+        userIdUpdated        : authMeta.userId,
+        isSortir             : true,
+      });
 
-          const bag = await Bag.save(bagDetail);
-          bagId     = bag.bagId;
-          sequence  = 1;
-          assign(result, { bagNumber: randomBagNumber });
-        } else {
-          bagId    = bagData.bagId;
-          sequence = bagData.lastSequence + 1;
-          randomBagNumber = bagData.bagNumber;
-        }
+      const bag = await Bag.save(bagDetail);
+      bagId     = bag.bagId;
+      sequence  = 1;
+      assign(result, { bagNumber: randomBagNumber });
+    } else {
+      bagId           = bagData.bagId;
+      sequence        = bagData.lastSequence + 1;
+      randomBagNumber = bagData.bagNumber;
+    }
 
     const awbDetail = payload.awbDetail;
 
@@ -510,16 +504,16 @@ export class PackageService {
       const districtDetail = await District.findOne({ where: { isDeleted: false, districtId } });
 
       const detail = {
-        awbNumber     : awb.awbNumber,
-        totalWeightRealRounded  : awb.totalWeightRealRounded,
-        totalWeightFinalRounded : awb.totalWeightFinalRounded,
-        consigneeName   : awb.consigneeName,
-        consigneeNumber : awb.consigneeNumber,
-        awbItemId       : awbItemAttr.awbItemId,
-        customerId      : awb.customerAccountId,
-        pickupMerchant  : awb.pickupMerchant,
-        shipperName     : awb.refReseller,
-        consigneeAddress: awb.consigneeAddress,
+        awbNumber              : awb.awbNumber,
+        totalWeightRealRounded : awb.totalWeightRealRounded,
+        totalWeightFinalRounded: awb.totalWeightFinalRounded,
+        consigneeName          : awb.consigneeName,
+        consigneeNumber        : awb.consigneeNumber,
+        awbItemId              : awbItemAttr.awbItemId,
+        customerId             : awb.customerAccountId,
+        pickupMerchant         : awb.pickupMerchant,
+        shipperName            : awb.refReseller,
+        consigneeAddress       : awb.consigneeAddress,
         isTrouble,
       };
 
@@ -529,6 +523,7 @@ export class PackageService {
         isTrouble,
         troubleDesc,
         districtDetail,
+        branchDetail: branch,
       });
 
       if (payload.bagNumber) {
