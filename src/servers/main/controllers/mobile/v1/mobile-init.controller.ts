@@ -72,35 +72,45 @@ export class V1MobileInitController {
   @Get('getAppNotification/:appCode')
   @ResponseSerializerOptions({ disable: true })
   public async getAppNotification(@Param('appCode') appCode: string) {
-    let message = '';
+    let response = {};
     // TODO: check redis app notifiations
     const dataRedis = await RedisService.get(
       `appNotification:mobile:${appCode}`,
+      true,
     );
 
     if (dataRedis) {
       PinoLoggerService.log('Load Data from redis!');
-      message = dataRedis;
+      response = {
+        appCode: dataRedis.appCode,
+        title: dataRedis.title,
+        subtitle: dataRedis.subtitle,
+        message: dataRedis.message,
+      };
     } else {
       // get data app notification
-      const appMsg = await AppNotification.findOne({ appCode, isActive: true });
-      if (appMsg) {
+      const appNotif = await AppNotification.findOne({ appCode, isActive: true });
+      if (appNotif) {
         // set data on redis
         const expireOnSeconds = 60 * 60 * 3;
         await RedisService.setex(
           `appNotification:mobile:${appCode}`,
-          appMsg.message,
+          JSON.stringify(appNotif),
           expireOnSeconds,
         );
-        message = appMsg.message;
+        response = {
+          appCode: appNotif.appCode,
+          title: appNotif.title,
+          subtitle: appNotif.subtitle,
+          message: appNotif.message,
+        };
       } else {
         throw new BadRequestException('Data Tidak ditemukan !');
       }
     }
 
     return {
-      appCode,
-      message,
+      ...response,
       timeString: moment().format('YYYY-MM-DD HH:mm:ss'),
     };
   }
