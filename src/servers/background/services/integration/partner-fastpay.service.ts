@@ -276,7 +276,7 @@ export class PartnerFastpayService {
         bp.branch_id as "branchId",
         bp.branch_partner_id as "branchPartnerId"
       FROM branch_partner bp
-          INNER JOIN branch_child_partner bcp
+          LEFT JOIN branch_child_partner bcp
           ON bp.branch_partner_id = bcp.branch_partner_id AND bcp.is_deleted = false
       WHERE (bp.branch_partner_code = :branchCode OR bcp.branch_child_partner_code = :branchCode)
       AND bp.is_deleted = false
