@@ -311,20 +311,22 @@ export class CpsService {
 
         const downloadQuery = await this.getDownloadQuery(payload.lastId, branchId);
 
-        const arrQueryBranch: CpsQueryBranch[] = [];
-        for (const item of downloadQuery) {
-          const timeNow = moment().toDate();
-          const cpsQueryBranch = CpsQueryBranch.create(
-            {
-              cpsQueryId: item.id,
-              branchId,
-              createdTime: timeNow,
-              updatedTime: timeNow,
-            },
-          );
-          arrQueryBranch.push(cpsQueryBranch);
+        if (downloadQuery) {
+          const arrQueryBranch: CpsQueryBranch[] = [];
+          for (const item of downloadQuery) {
+            const timeNow = moment().toDate();
+            const cpsQueryBranch = CpsQueryBranch.create(
+              {
+                cpsQueryId: item.id,
+                branchId,
+                createdTime: timeNow,
+                updatedTime: timeNow,
+              },
+            );
+            arrQueryBranch.push(cpsQueryBranch);
+          }
+          if (arrQueryBranch.length > 0) { await CpsQueryBranch.insert(arrQueryBranch); }
         }
-        await CpsQueryBranch.insert(arrQueryBranch);
 
         result = downloadQuery;
       } else {
