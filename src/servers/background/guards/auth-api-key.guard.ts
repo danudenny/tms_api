@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { ConfigService } from '../../../shared/services/config.service';
 
 @Injectable()
-export class AuthenticatedGuard implements CanActivate {
+export class AuthApiKeyGuard implements CanActivate {
   constructor() {}
   canActivate(
     context: ExecutionContext,

@@ -74,7 +74,7 @@ export class MobileDashboardService {
   public static async getTransitDetailScanIn(
     payload: DetailTransitPayloadVm,
   ): Promise<MobileDetailTransitResponseVm> {
-    // const authMeta = AuthService.getAuthMetadata();
+    const authMeta = AuthService.getAuthMetadata();
     const currentMoment = moment();
     const mobileTransitResponseVm = new MobileTransitResponseVm();
     const result = new MobileDetailTransitResponseVm();
@@ -94,7 +94,7 @@ export class MobileDashboardService {
       'pod_scan_in_branch',
       'pcb',
       'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId ',
-      { userId: 5240 },
+      { userId: authMeta.userId },
     );
     qb.where(
       'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',

@@ -95,7 +95,7 @@ export class WebTrackingService {
         CONCAT(r.representative_code, ' - ', dt.district_name) as "branchToName",
         CONCAT(ca.customer_account_code, ' - ',ca.customer_account_name) as "customerName",
         COALESCE(a.ref_prev_customer_account_id, '') as "customerNameRds",
-        COALESCE(a.consignee_name, '') as "consigneeName",
+        COALESCE(dpd.consignee_name, a.consignee_name, '') as "consigneeName",
         COALESCE(a.consignee_address, '') as "consigneeAddress",
         a.awb_date as "awbDate",
         a.is_cod as "isCod",
