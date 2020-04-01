@@ -93,11 +93,12 @@ export class V1MobileInitController {
       // get data app notification
       const appNotif = await AppNotification.findOne({ appCode, isActive: true });
       if (appNotif) {
+        const message = appNotif.message.replace(/\\n/g, '\n'); // replace newline
         response = {
           appCode: appNotif.appCode,
           title: appNotif.title,
           subtitle: appNotif.subtitle,
-          message: appNotif.message,
+          message,
           isActive: appNotif.isActive,
         };
         // set data on redis
