@@ -13,19 +13,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<express.Response>();
     const request = ctx.getRequest();
+    let requestErrorResponse = exception;
 
     SentryService.trackFromExceptionAndNestHostOrContext(exception, host);
-
     if (request && response) {
       let status = HttpStatus.INTERNAL_SERVER_ERROR;
       if (exception instanceof HttpException) {
         const exceptionStatus = exception.getStatus();
         if (exceptionStatus) {
           status = exceptionStatus;
+          requestErrorResponse = exception.getResponse();
         }
       }
-
-      let requestErrorResponse = exception.getResponse();
       // NOTE: detail error stack only fatal status
       const fatalStatus = [500, 501, 502, 503, 504, 505];
       if (fatalStatus.includes(status)) {
