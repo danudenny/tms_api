@@ -64,3 +64,120 @@ export class DropCashLessResponseVM {
   @ApiModelProperty()
   recipient_phone: string;
 }
+
+export class DropPickupRequestResponseVM {
+  @ApiModelProperty()
+  partner: string;
+
+  @ApiModelProperty()
+  refNo: string;
+
+  @ApiModelProperty()
+  pickupRequestId: number;
+
+  @ApiModelProperty()
+  pickupRequestDetailId: number;
+
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  refAwbNumber: string;
+
+  @ApiModelProperty()
+  deliveryType: string;
+
+  @ApiModelProperty()
+  shipperName: string;
+
+  @ApiModelProperty()
+  shipperAddress: string;
+
+  @ApiModelProperty()
+  shipperDistrict: string;
+
+  @ApiModelProperty()
+  shipperCity: string;
+
+  @ApiModelProperty()
+  shipperProvince: string;
+
+  @ApiModelProperty()
+  shipperZip: string;
+
+  @ApiModelProperty()
+  shipperPhone: string;
+
+  @ApiModelProperty()
+  recipientName: string;
+
+  @ApiModelProperty()
+  recipientAddress: string;
+
+  @ApiModelProperty()
+  recipientDistrict: string;
+
+  @ApiModelProperty()
+  recipientCity: string;
+
+  @ApiModelProperty()
+  recipientProvince: string;
+  @ApiModelProperty()
+  recipientZip: string;
+
+  @ApiModelProperty()
+  recipientPhone: string;
+
+  @ApiModelProperty()
+  workOrderIdLast: number;
+
+  @ApiModelProperty()
+  pickupRequestName: string;
+
+  @ApiModelProperty()
+  pickupRequestAddress: string;
+
+  @ApiModelProperty()
+  encryptAddress255: string;
+
+  @ApiModelProperty()
+  encryptMerchantName: string;
+
+  @ApiModelProperty()
+  pickupPhone: string;
+
+  @ApiModelProperty()
+  pickupEmail: string;
+
+  @ApiModelProperty()
+  pickupNotes;
+}
+
+export class DropCreateWorkOrderPayloadVM {
+  @ApiModelProperty()
+  branchPartnerId: number;
+
+  @ApiModelProperty()
+  pickupAddress: string;
+
+  @ApiModelProperty()
+  encryptAddress255: string;
+
+  @ApiModelProperty()
+  merchantName: string;
+
+  @ApiModelProperty()
+  encryptMerchantName: string;
+
+  @ApiModelProperty()
+  pickupPhone: string;
+
+  @ApiModelProperty()
+  pickupEmail: string;
+
+  @ApiModelProperty()
+  pickupNotes: string;
+
+  @ApiModelProperty()
+  totalAwbQty: number;
+}
