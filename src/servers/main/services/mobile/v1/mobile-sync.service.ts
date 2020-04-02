@@ -222,7 +222,7 @@ export class V1MobileSyncService {
         doPodDeliverAttachment.doPodDeliverDetailId = payload.id;
         doPodDeliverAttachment.attachmentTmsId = attachmentId;
         doPodDeliverAttachment.type = payload.imageType;
-        DoPodDeliverAttachment.save(doPodDeliverAttachment);
+        await DoPodDeliverAttachment.save(doPodDeliverAttachment);
       }
     }
 
