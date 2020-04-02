@@ -216,14 +216,17 @@ export class V1MobileSyncService {
       if (attachment) {
         attachmentId = attachment.attachmentTmsId;
         url = attachment.url;
-
-        // NOTE: insert data
-        const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
-        doPodDeliverAttachment.doPodDeliverDetailId = payload.id;
-        doPodDeliverAttachment.attachmentTmsId = attachmentId;
-        doPodDeliverAttachment.type = payload.imageType;
-        await DoPodDeliverAttachment.save(doPodDeliverAttachment);
       }
+    }
+
+    // NOTE: insert data
+    if (attachmentId) {
+      // TODO: validate doPodDeliverDetailId ??
+      const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
+      doPodDeliverAttachment.doPodDeliverDetailId = payload.id;
+      doPodDeliverAttachment.attachmentTmsId = attachmentId;
+      doPodDeliverAttachment.type = payload.imageType;
+      await DoPodDeliverAttachment.save(doPodDeliverAttachment);
     }
 
     result.url = url;
