@@ -28,8 +28,7 @@ export class PartnerLocusController {
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
   public async webHookTaskCallback(@Body() payload: any) {
-    console.log(payload);
-    return { status: 'ok', message: 'success' };
+    return PartnerLocusService.callbackTask(payload);
   }
 
   @Post('locus/planCallback')
