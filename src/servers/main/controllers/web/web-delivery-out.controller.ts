@@ -221,7 +221,7 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllTransitListAwb(payload);
   }
 
-  @Post('transit/updateAwbPartner')
+  @Post('transit/updateAwb')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
