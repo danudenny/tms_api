@@ -121,6 +121,16 @@ export class FilterScanOutAwbListVm {
 
 }
 
+export class UpdateAwbPartnerPayloadVm {
+
+  @ApiModelProperty()
+  doPodDetailId: string;
+
+  @ApiModelProperty()
+  awbSubstitute: string;
+
+}
+
 export class WebScanOutAwbListPayloadVm extends BaseMetaPayloadVm {
 }
 
@@ -142,6 +152,9 @@ export class WebScanOutVm {
 
   @ApiModelPropertyOptional()
   partnerLogisticId?: string;
+
+  @ApiModelPropertyOptional()
+  partnerLogisticName?: string;
 
   @ApiModelProperty({
     skipValidation: true,

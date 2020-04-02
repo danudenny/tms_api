@@ -142,6 +142,13 @@ export class DoPodDetail extends TmsBaseEntity {
   })
   bagNumber: string;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'awb_substitute',
+  })
+  awbSubstitute: string;
+
   // @OneToOne(() => PodScanIn)
   // @JoinColumn({ name: 'pod_scan_in_id' })
   // podScanIn: PodScanIn;
