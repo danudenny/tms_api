@@ -1,4 +1,4 @@
-import { DropCashlessVm, DropCashLessResponseVM } from '../../models/partner/fastpay-drop.vm';
+import { DropCashlessVm, DropCashLessResponseVM, DropPickupRequestResponseVM, DropCreateWorkOrderPayloadVM } from '../../models/partner/fastpay-drop.vm';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -67,7 +67,18 @@ export class PartnerFastpayService {
           }
         } else {
           // Create data work order
-          workOrderId = await this.createWorkOrder(branchPartnerId, timeNow);
+          const params: DropCreateWorkOrderPayloadVM = {
+            branchPartnerId,
+            pickupAddress: pickupRequest.pickupRequestAddress,
+            encryptAddress255: pickupRequest.encryptAddress255,
+            merchantName: pickupRequest.pickupRequestName,
+            encryptMerchantName: pickupRequest.encryptMerchantName,
+            pickupPhone: pickupRequest.pickupPhone,
+            pickupEmail: pickupRequest.pickupEmail,
+            pickupNotes: pickupRequest.pickupNotes,
+            totalAwbQty: 1,
+          };
+          workOrderId = await this.createWorkOrder(params, timeNow);
           if (workOrderId) {
             // create data work order detail
             await this.createWorkOrderDetail(
@@ -131,7 +142,10 @@ export class PartnerFastpayService {
     };
   }
 
-  private static async createWorkOrder(branchPartnerId: number, timeNow: Date) {
+  private static async createWorkOrder(
+    params: DropCreateWorkOrderPayloadVM,
+    timeNow: Date,
+  ) {
     const workOrderCode = await CustomCounterCode.workOrderCodeRandom(timeNow);
     const dataWorkOrder = WorkOrder.create({
       workOrderCode,
@@ -141,9 +155,17 @@ export class PartnerFastpayService {
       workOrderStatusIdPick: null,
       branchIdAssigned: 0,
       branchId: 0,
-      isMember: false,
+      isMember: true,
       workOrderType: 'automatic',
-      branchPartnerId,
+      branchPartnerId: params.branchPartnerId,
+      pickupAddress: params.pickupAddress,
+      encryptAddress255: params.encryptAddress255,
+      merchantName: params.merchantName,
+      encryptMerchantName: params.encryptMerchantName,
+      pickupPhone: params.pickupPhone,
+      pickupEmail: params.pickupEmail,
+      pickupNotes: params.pickupNotes,
+      totalAwbQty: params.totalAwbQty,
       userId: 1,
       userIdCreated: 1,
       createdTime: timeNow,
@@ -197,7 +219,9 @@ export class PartnerFastpayService {
     return await WorkOrderHistory.insert(workOrderHistory);
   }
 
-  private static async getPickupRequestAwbNumber(awb: string): Promise<any> {
+  private static async getPickupRequestAwbNumber(
+    awb: string,
+  ): Promise<DropPickupRequestResponseVM> {
     const query = `
       SELECT p.partner_name as "partner",
             pr.reference_no as "noRef",
@@ -205,7 +229,6 @@ export class PartnerFastpayService {
             prd.pickup_request_detail_id as "pickupRequestDetailId",
             prd.awb_item_id as "awbItemId",
             prd.ref_awb_number as "refAwbNumber",
-            prd.recipient_city as "recipientCity",
             prd.delivery_type as "deliveryType",
             prd.shipper_name as "shipperName",
             prd.shipper_address as "shipperAddress",
@@ -221,7 +244,14 @@ export class PartnerFastpayService {
             prd.recipient_province as "recipientProvince",
             prd.recipient_zip as "recipientZip",
             prd.recipient_phone as "recipientPhone",
-            prd.work_order_id_last as "workOrderIdLast"
+            prd.work_order_id_last as "workOrderIdLast",
+            pr.pickup_request_name as "pickupRequestName",
+            pr.pickup_request_address as "pickup_request_address",
+            pr.encrypt_address255 as "encryptAddress255",
+            pr.encrypt_merchant_name as "encryptMerchantName",
+            pr.pickup_request_contact_no as "pickupPhone",
+            pr.pickup_request_email as "pickupEmail",
+            pr.pickup_request_notes as "pickupNotes"
       FROM pickup_request_detail prd
         JOIN pickup_request pr ON pr.pickup_request_id = prd.pickup_request_id
         JOIN partner p ON pr.partner_id = p.partner_id
@@ -233,7 +263,7 @@ export class PartnerFastpayService {
 
   private static async getPickupRequestReferenceNo(
     referenceNo: string,
-  ): Promise<any> {
+  ): Promise<DropPickupRequestResponseVM> {
     const query = `
       SELECT p.partner_name as "partner",
             pr.reference_no as "noRef",
@@ -241,7 +271,6 @@ export class PartnerFastpayService {
             prd.pickup_request_detail_id as "pickupRequestDetailId",
             prd.awb_item_id as "awbItemId",
             prd.ref_awb_number as "refAwbNumber",
-            prd.recipient_city as "recipientCity",
             prd.delivery_type as "deliveryType",
             prd.shipper_name as "shipperName",
             prd.shipper_address as "shipperAddress",
@@ -257,7 +286,14 @@ export class PartnerFastpayService {
             prd.recipient_province as "recipientProvince",
             prd.recipient_zip as "recipientZip",
             prd.recipient_phone as "recipientPhone",
-            prd.work_order_id_last as "workOrderIdLast"
+            prd.work_order_id_last as "workOrderIdLast",
+            pr.pickup_request_name as "pickupRequestName",
+            pr.pickup_request_address as "pickupRequestAddress",
+            pr.encrypt_address255 as "encryptAddress255",
+            pr.encrypt_merchant_name as "encryptMerchantName",
+            pr.pickup_request_contact_no as "pickupPhone",
+            pr.pickup_request_email as "pickupEmail",
+            pr.pickup_request_notes as "pickupNotes"
       FROM pickup_request pr
         JOIN pickup_request_detail prd ON pr.pickup_request_id = prd.pickup_request_id
         JOIN partner p ON pr.partner_id = p.partner_id
