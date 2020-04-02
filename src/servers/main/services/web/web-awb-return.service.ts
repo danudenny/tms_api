@@ -230,7 +230,7 @@ export class WebAwbReturnService {
             }
           }
 
-          const awbReturn = AwbReturn.create(  {
+          const awbReturn = AwbReturn.create({
             originAwbId: payload.awbId,
             originAwbNumber: payload.awbNumber,
             returnAwbId: awb.awbId,
@@ -277,46 +277,49 @@ export class WebAwbReturnService {
       },
     });
 
-    if (awbReturn) {
-      // NOTE: If via internal
-      if (payload.partnerLogisticId === '') {
-        if (!awb) {
-          result.status = 'error';
-          result.message = `No resi ${payload.awbReturnNumber} tidak ditemukan`;
-        } else {
-          AwbReturn.update(awbReturn.awbReturnId, {
-              returnAwbId: awb.awbId,
-              returnAwbNumber: awb.awbNumber,
-              userIdUpdated: authMeta.userId,
-              updatedTime: moment().toDate(),
-          });
-
-          result.status = 'ok';
-          result.message = 'success';
-        }
-      } else {
-        const partnerLogistic = await PartnerLogistic.findOne({ partnerLogisticId: payload.partnerLogisticId });
-        if (partnerLogistic) {
-          AwbReturn.update(awbReturn.awbReturnId, {
-            partnerLogisticId: payload.partnerLogisticId,
-            returnAwbNumber: payload.awbReturnNumber,
-            partnerLogisticName: partnerLogistic.partnerLogisticName,
-            isPartnerLogistic: true,
-            partnerLogisticAwb: payload.awbReturnNumber,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          });
-          result.status = 'ok';
-          result.message = 'success';
-        } else {
-          result.status = 'error';
-          result.message = '3PL tidak ditemukan';
-        }
-      }
-    } else {
-      result.status = 'error';
-      result.message = 'ID retur tidak ditemukan';
+    let returnAwbId = null;
+    if (awb) {
+      returnAwbId = awb.awbId;
     }
+    // NOTE: If via internal
+    if (payload.partnerLogisticId === '') {
+      // if (!awb) {
+      //   result.status = 'error';
+      //   result.message = `No resi ${payload.awbReturnNumber} tidak ditemukan`;
+      // } else {
+      AwbReturn.update(awbReturn.awbReturnId, {
+        returnAwbId,
+        returnAwbNumber: payload.awbReturnNumber,
+        userIdUpdated: authMeta.userId,
+        updatedTime: moment().toDate(),
+      });
+
+      result.status = 'ok';
+      result.message = 'success';
+      // }
+    } else {
+      const partnerLogistic = await PartnerLogistic.findOne({ partnerLogisticId: payload.partnerLogisticId });
+      if (partnerLogistic) {
+        AwbReturn.update(awbReturn.awbReturnId, {
+          partnerLogisticId: payload.partnerLogisticId,
+          returnAwbNumber: payload.awbReturnNumber,
+          partnerLogisticName: partnerLogistic.partnerLogisticName,
+          isPartnerLogistic: true,
+          partnerLogisticAwb: payload.awbReturnNumber,
+          userIdUpdated: authMeta.userId,
+          updatedTime: moment().toDate(),
+        });
+        result.status = 'ok';
+        result.message = 'success';
+      } else {
+        result.status = 'error';
+        result.message = '3PL tidak ditemukan';
+      }
+    }
+    // } else {
+    //   result.status = 'error';
+    //   result.message = 'ID retur tidak ditemukan';
+    // }
 
     return result;
   }

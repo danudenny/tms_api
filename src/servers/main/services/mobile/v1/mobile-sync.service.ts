@@ -21,6 +21,8 @@ import { MobileSyncImageResponseVm, MobileSyncDataResponseVm, MobileSyncAwbVm } 
 
 import moment = require('moment');
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
+import { AuthService } from '../../../../../shared/services/auth.service';
+import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 // #endregion
 
 export class V1MobileSyncService {
@@ -54,6 +56,9 @@ export class V1MobileSyncService {
 
   public static async syncDeliver(delivery: MobileDeliveryVm) {
     const doPodDeliverHistories: DoPodDeliverHistory[] = [];
+    const authMeta         = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
     let process = false;
     for (const deliveryHistory of delivery.deliveryHistory) {
       if (!deliveryHistory.doPodDeliverHistoryId) {
@@ -83,17 +88,11 @@ export class V1MobileSyncService {
           ? lastDoPodDeliverHistory.awbStatusDateTime
           : lastDoPodDeliverHistory.syncDateTime;
 
-      const awbdDelivery = await DoPodDeliverDetail.findOne({
-        relations: ['doPodDeliver'],
-        where: {
-          doPodDeliverDetailId: delivery.doPodDeliverDetailId,
-          isDeleted: false,
-        },
-      });
+      const awbdDelivery = await this.getDoPodDeliverDetail(delivery.doPodDeliverDetailId);
       const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
       if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
         const awbStatus = await AwbStatus.findOne(
-          lastDoPodDeliverHistory.awbStatusId,
+          { awbStatusId: lastDoPodDeliverHistory.awbStatusId },
         );
 
         // #region transaction data
@@ -167,9 +166,9 @@ export class V1MobileSyncService {
         DoPodDetailPostMetaQueueService.createJobV1MobileSync(
           awbdDelivery.awbItemId,
           lastDoPodDeliverHistory.awbStatusId,
-          awbdDelivery.doPodDeliver.userId,
-          awbdDelivery.doPodDeliver.branchId,
-          awbdDelivery.userIdCreated,
+          authMeta.userId,
+          awbdDelivery.branchId,
+          authMeta.userId,
           delivery.employeeId,
           lastDoPodDeliverHistory.reasonId,
           lastDoPodDeliverHistory.desc,
@@ -217,21 +216,38 @@ export class V1MobileSyncService {
       if (attachment) {
         attachmentId = attachment.attachmentTmsId;
         url = attachment.url;
-      }
-    }
 
-    // NOTE: insert data
-    if (attachmentId) {
-      // TODO: validate doPodDeliverDetailId ??
-      const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
-      doPodDeliverAttachment.doPodDeliverDetailId = payload.id;
-      doPodDeliverAttachment.attachmentTmsId = attachmentId;
-      doPodDeliverAttachment.type = payload.imageType;
-      DoPodDeliverAttachment.save(doPodDeliverAttachment);
+        // NOTE: insert data
+        const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
+        doPodDeliverAttachment.doPodDeliverDetailId = payload.id;
+        doPodDeliverAttachment.attachmentTmsId = attachmentId;
+        doPodDeliverAttachment.type = payload.imageType;
+        DoPodDeliverAttachment.save(doPodDeliverAttachment);
+      }
     }
 
     result.url = url;
     result.attachmentId = attachmentId;
     return result;
+  }
+
+  private static async getDoPodDeliverDetail(
+    doPodDeliverDetailId: string,
+  ): Promise<any> {
+    const query = `
+      SELECT
+        dpdd.awb_status_id_last as "awbStatusIdLast",
+        dpdd.awb_item_id as "awbItemId",
+        dpd.branch_id as "branchId"
+      FROM do_pod_deliver_detail dpdd
+      INNER JOIN do_pod_deliver dpd ON dpd.do_pod_deliver_id = dpdd.do_pod_deliver_id
+      WHERE
+        dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId AND
+        dpdd.is_deleted = FALSE
+    `;
+    const rawData = await RawQueryService.queryWithParams(query, {
+      doPodDeliverDetailId,
+    });
+    return rawData.length ? rawData[0] : null;
   }
 }

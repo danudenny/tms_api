@@ -61,6 +61,7 @@ import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagTroubleService } from '../../../../shared/services/bag-trouble.service';
 import { Employee } from '../../../../shared/orm-entity/employee';
 import { Branch } from '../../../../shared/orm-entity/branch';
+import { BagScanOutHubQueueService } from '../../../queue/services/bag-scan-out-hub-queue.service';
 // #endregion
 
 @Injectable()
@@ -611,13 +612,15 @@ export class WebDeliveryOutService {
 
   // TODO: need refactoring
   /**
-   * Create DO POD Detail
+   * Create DO POD Detail for Scan Out HUB
    * with scan bag number
    * @param {WebScanOutBagVm} payload
    * @returns {Promise<WebScanOutBagResponseVm>}
    * @memberof WebDeliveryOutService
    */
-  async scanOutBag(payload: WebScanOutBagVm): Promise<WebScanOutBagResponseVm> {
+  async scanOutBag(
+    payload: WebScanOutBagVm,
+  ): Promise<WebScanOutBagResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
@@ -638,23 +641,18 @@ export class WebDeliveryOutService {
     });
 
     for (const bagNumber of payload.bagNumber) {
-      const response = {
-        status: 'ok',
-        message: 'Success',
-      };
+      const response = new ScanBagVm();
+      response.status = 'ok';
+      response.message = 'success';
+
       const bagData = await BagService.validBagNumber(bagNumber);
       if (bagData) {
         // NOTE: validate bag branch id last
         // TODO: validation need improvement
         // bag status scan out by doPodType (3005 Branch/ 3010 and 3020 HUB)
         const bagStatus = BAG_STATUS.OUT_HUB;
+        let additionMinutes = 0;
         const transactionStatusId = 300; // OUT HUB
-
-        // Branch
-        // if (doPod.doPodType == 3005) {
-        //   bagStatus = BAG_STATUS.OUT_BRANCH;
-        //   transactionStatusId =  800;
-        // }
 
         const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
         const holdRedis = await RedisService.locking(
@@ -692,11 +690,18 @@ export class WebDeliveryOutService {
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
             await DoPodDetailBag.insert(doPodDetailBag);
 
+            // Assign print metadata
+            response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
+            response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
+            response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
+            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagNumber;
+            response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
+
             // AFTER Scan OUT ===============================================
             // #region after scanout
             // Update bag_item set bag_item_status_id = 1000
 
-            BagItem.update(bagData.bagItemId, {
+            await BagItem.update(bagData.bagItemId, {
               bagItemStatusIdLast: bagStatus,
               branchIdLast: doPod.branchId,
               branchIdNext: doPod.branchIdTo,
@@ -707,15 +712,16 @@ export class WebDeliveryOutService {
             // NOTE: Loop data bag_item_awb for update status awb
             // and create do_pod_detail (data awb on bag)
             // TODO: need to refactor send to background job
-            // BagScanOutBranchQueueService.perform
-            await BagService.statusOutBranchAwbBag(
+            BagScanOutHubQueueService.perform(
               bagData.bagId,
               bagData.bagItemId,
               doPod.doPodId,
               doPod.branchIdTo,
               doPod.userIdDriver,
-              doPod.doPodType,
               bagNumber,
+              authMeta.userId,
+              permissonPayload.branchId,
+              doPod.doPodType,
             );
 
             // TODO: if isTransit auto IN
@@ -729,6 +735,12 @@ export class WebDeliveryOutService {
               );
             }
 
+            // NOTE: handle sorting status OUT AND IN HUB
+            // force OUT_HUB created after IN_HUB in history bag (queue)
+            if(bagStatus == BAG_STATUS.OUT_HUB){
+              additionMinutes = 1;
+            }
+
             // TODO: need refactoring
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
@@ -736,6 +748,7 @@ export class WebDeliveryOutService {
               bagStatus,
               permissonPayload.branchId,
               authMeta.userId,
+              additionMinutes,
             );
             // #endregion after scanout
 
@@ -1666,6 +1679,26 @@ export class WebDeliveryOutService {
   }
 
   async photoDetail(payload: PhotoDetailVm): Promise<PhotoResponseVm> {
+    let q = createQueryBuilder();
+    q.addSelect("dpdd.awb_number", "awbNumber");
+    q.from('do_pod_deliver_detail', 'dpdd');
+    q.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
+      doPodDeliverDetailId: payload.doPodDeliverDetailId,
+    });
+    let temp = await q.getRawOne();
+
+    q = createQueryBuilder();
+    q.addSelect("dpdd.do_pod_deliver_id", "doPodDeliverId");
+    q.from('do_pod_deliver_detail', 'dpdd');
+    q.where('dpdd.awb_number = :awbNumber', {
+      awbNumber: temp.awbNumber,
+    });
+    temp = await q.getRawMany();
+
+    let id = "";
+    temp.map(function(item){
+      id += id ? ",'"+item.doPodDeliverId+"'" : "'"+item.doPodDeliverId+"'";
+    });
     const qq = createQueryBuilder();
     qq.addSelect('attachments.url', 'url');
     qq.addSelect('dpda.type', 'type');
@@ -1681,10 +1714,7 @@ export class WebDeliveryOutService {
       'attachments',
       'attachments.attachment_tms_id = dpda.attachment_tms_id',
     );
-    qq.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
-      doPodDeliverDetailId: payload.doPodDeliverDetailId,
-
-    });
+    qq.where(`dpdd.do_pod_deliver_id IN (${id})`);
 
     const result = new PhotoResponseVm();
     const data = await qq.getRawMany();

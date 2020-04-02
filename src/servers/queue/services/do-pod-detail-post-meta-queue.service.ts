@@ -154,6 +154,7 @@ export class DoPodDetailPostMetaQueueService {
     cityName: string,
     branchIdNext: number,
     branchNameNext: string,
+    addTime?: number,
   ) {
     // TODO: ONLY OUT_HUB, OUT_BRANCH
     const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver} ke ${branchNameNext}`;
@@ -169,7 +170,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver,
-      timestamp: moment().toDate(),
+      timestamp: addTime ? moment().add(addTime, "minutes").toDate() : moment().toDate(),
       noteInternal,
       notePublic,
       branchIdNext,

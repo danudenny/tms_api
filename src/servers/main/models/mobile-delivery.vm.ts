@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { MobileDeliveryHistoryVm } from './mobile-delivery-history.vm';
 
 export class MobileDeliveryVm {
@@ -67,4 +67,35 @@ export class MobileDeliveryVm {
 
   @ApiModelProperty({ type: [MobileDeliveryHistoryVm] })
   deliveryHistory: MobileDeliveryHistoryVm[];
+}
+
+export class ScanValidateBranchVm {
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  totalAwbInBag: number;
+
+  @ApiModelProperty()
+  totalAwbScan: number;
+
+  @ApiModelProperty()
+  totalAwbMore: number;
+
+  @ApiModelProperty()
+  totalAwbLess: number;
+
+}
+
+export class MobileScanInValidateBranchVm {
+
+  @ApiModelProperty()
+  podScanInBranchId: string;
+
+  @ApiModelPropertyOptional()
+  notes?: string;
+
+  @ApiModelPropertyOptional({type: [ScanValidateBranchVm]})
+  bagNumberDetail?: ScanValidateBranchVm[];
+
 }

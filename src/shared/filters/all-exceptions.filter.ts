@@ -9,7 +9,6 @@ import { SentryService } from '../services/sentry.service';
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
-    PinoLoggerService.error(exception);
 
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<express.Response>();
@@ -26,7 +25,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
         }
       }
 
-      const requestErrorResponse = ErrorParserService.parseRequestErrorFromExceptionAndArgumentsHost(exception, host);
+      let requestErrorResponse = exception.getResponse();
+      // NOTE: detail error stack only fatal status
+      const fatalStatus = [500, 501, 502, 503, 504, 505];
+      if (fatalStatus.includes(status)) {
+        requestErrorResponse = ErrorParserService.parseRequestErrorFromExceptionAndArgumentsHost(
+          exception,
+          host,
+        );
+        PinoLoggerService.error(exception);
+      } else {
+        PinoLoggerService.warn(requestErrorResponse);
+      }
       const finalRequestErrorResponse = fclone(requestErrorResponse);
       response.status(status).json(finalRequestErrorResponse);
     }
