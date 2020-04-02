@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger/decorators';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger/decorators';
 
 export class PrintDoPodDataDoPodDetailAwbItemAwbVm {
   @ApiModelProperty()
