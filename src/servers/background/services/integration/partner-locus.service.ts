@@ -5,6 +5,7 @@ import { PinoLoggerService } from '../../../../shared/services/pino-logger.servi
 import { BadRequestException } from '@nestjs/common';
 import { AwbSendPartnerQueueService } from '../../../queue/services/awb-send-partner-queue.service';
 import { LocusTimeSlotVm, LocusCreateTaskVm } from '../../models/partner/locus-task.vm';
+import { PartnerSameDayService } from '../../../../shared/orm-entity/partner-same-day-service';
 
 export class PartnerLocusService {
   static async createBatchTask(payload: LocusCreateTaskVm) {
@@ -12,7 +13,14 @@ export class PartnerLocusService {
     const partnerId = payload.partnerIdLocus;
     // TODO: how to set pickupSlot and dropSlot ??
     const { pickupSlot, dropSlot } = this.slotTime(payload);
-    return await this.sendDataBatch(partnerId, pickupSlot, dropSlot);
+    // default get data task 100
+    const totalTask = payload.totalTask ? payload.totalTask : 100;
+    return await this.sendDataBatch(
+      partnerId,
+      pickupSlot,
+      dropSlot,
+      totalTask,
+    );
   }
 
   static async createTask(payload: LocusCreateTaskVm) {
@@ -35,6 +43,82 @@ export class PartnerLocusService {
     return { data: result };
   }
 
+  static async callbackTask(payload: any) {
+    if (payload.task) {
+      let data = {};
+      // handle status partner
+      switch (payload.task.status.status) {
+        case 'COMPLETED':
+          data = {
+            completionTime: moment(
+              payload.task.status.triggerTime,
+            ).toDate(),
+          };
+          break;
+        case 'CANCELLED':
+          data = {
+            cancelReason: payload.task.status.checklistValues['cancel-reason'],
+            urlImageCancel: payload.task.status.checklistValues['photo'],
+            completionTime: moment(
+              payload.task.status.triggerTime,
+            ).toDate(),
+          };
+          break;
+
+        default:
+          break;
+      }
+
+      if (payload.task.taskGraph.visits.length) {
+        for (const item of payload.task.taskGraph.visits) {
+          switch (item.id) {
+            case 'pickup':
+              const pickup = {
+                urlImagePickup: item.visitStatus.checklistValues['signature-1'],
+                trackLinkPickup: item.trackLink,
+              };
+              data = { ...data, ...pickup };
+              break;
+            case 'drop':
+              const drop = {
+                urlImageDrop: item.visitStatus.checklistValues.photo,
+                trackLinkDrop: item.trackLink,
+              };
+              data = { ...data, ...drop };
+              break;
+            default:
+              break;
+          }
+        }
+      }
+
+      const partnerSds = await PartnerSameDayService.findOne({
+        awbNumber: payload.task.taskId,
+        isDeleted: false,
+      });
+
+      if (partnerSds) {
+        await PartnerSameDayService.update(
+          { partnerSameDayServiceId: partnerSds.partnerSameDayServiceId },
+          {
+            assignedUser: payload.task.assignedUser.userId,
+            statusPartner: payload.task.status.status,
+            statusUpdates: payload.task.statusUpdates,
+            ...data,
+          },
+        );
+      } else {
+        throw new BadRequestException();
+      }
+
+    } else {
+      throw new BadRequestException();
+    }
+
+    return { status: 'ok', message: 'success' };
+  }
+
+  // private method
   private static async sendDataTask(
     pickupRequest: any,
     partnerId: number,
@@ -63,11 +147,16 @@ export class PartnerLocusService {
       const response = await axios.put(url, jsonData, this.getOptionsLocus());
       if (response.status == 200) {
         // NOTE: background process insert data on awb_send_partner
-        AwbSendPartnerQueueService.addData(
-          pickupRequest.awbNumber,
+        // AwbSendPartnerQueueService.addData(
+        //   pickupRequest.awbNumber,
+        //   partnerId,
+        //   jsonData,
+        // );
+        this.partnerSameDay({
+          awbNumber: pickupRequest.awbNumber,
           partnerId,
-          jsonData,
-        );
+          statusPartner: 'RECEIVED',
+        });
         result = { status: response.status };
       } else {
         result = { status: response.status, ...response.data };
@@ -85,6 +174,7 @@ export class PartnerLocusService {
     partnerId: number,
     pickupSlot: LocusTimeSlotVm,
     dropSlot: LocusTimeSlotVm,
+    totalTask: number,
   ) {
     // const clientId = 'sicepat-sds';
     // custom batchId??
@@ -94,7 +184,7 @@ export class PartnerLocusService {
     let result = {};
     const tasks = [];
 
-    const pickupRequests = await this.getDataPickupRequest(partnerId);
+    const pickupRequests = await this.getDataPickupRequest(partnerId, totalTask);
     if (pickupRequests.length) {
       for (const pickupRequest of pickupRequests) {
         const item = await this.constructData(pickupRequest, pickupSlot, dropSlot);
@@ -115,15 +205,20 @@ export class PartnerLocusService {
         if (response.status == 200) {
           // NOTE: background process insert data on awb_send_partner
           for (const task of jsonData.inputTasks) {
-            AwbSendPartnerQueueService.addData(
-              task.taskId,
+            // AwbSendPartnerQueueService.addData(
+            //   task.taskId,
+            //   partnerId,
+            //   {
+            //     teamId: 'jakbar-sds',
+            //     tasksDate: moment().format('YYYY-MM-DD'),
+            //     batchId,
+            //   },
+            // );
+            this.partnerSameDay({
+              awbNumber: task.taskId,
               partnerId,
-              {
-                teamId: 'jakbar-sds',
-                tasksDate: moment().format('YYYY-MM-DD'),
-                batchId,
-              },
-            );
+              statusPartner: 'RECEIVED',
+            });
           } // end of loop
         }
         result = { status: response.status, total: jsonData.inputTasks.length };
@@ -265,19 +360,16 @@ export class PartnerLocusService {
         prd.parcel_width as "parcelWidth",
         prd.parcel_height as "parcelHeight",
         prd.total_weight as "totalWeight",
-        pr.pickup_request_email as "pickupRequestEmail",
-        a.send_count as "sendCount",
-        a.awb_send_partner_id as "awbSendPartnerId",
-        a.is_send as "isSend"
+        pr.pickup_request_email as "pickupRequestEmail"
       FROM pickup_request_detail prd
       INNER JOIN pickup_request pr ON prd.pickup_request_id=pr.pickup_request_id
         AND pr.is_deleted=false AND pr.partner_id = 9
-      LEFT JOIN awb_send_partner a ON prd.ref_awb_number=a.awb_number
-        AND a.partner_id = :partnerId AND a.is_deleted=false
+      LEFT JOIN partner_same_day_service psds ON prd.ref_awb_number=psds.awb_number
+        AND psds.partner_id = :partnerId AND psds.is_deleted=false
       WHERE
         prd.shipper_city ILIKE '%Jakarta Barat' AND
         prd.recipient_city ILIKE '%Jakarta Barat' AND
-        prd.created_time >= :backDate AND a.awb_number IS NULL and prd.is_deleted=false and prd.ref_awb_number is not null
+        prd.created_time >= :backDate AND psds.awb_number IS NULL and prd.is_deleted=false and prd.ref_awb_number is not null
       LIMIT :limit
     `;
 
@@ -328,5 +420,14 @@ export class PartnerLocusService {
     };
 
     return { pickupSlot, dropSlot };
+  }
+
+  private static async partnerSameDay(payload: any) {
+    const partnerSds = PartnerSameDayService.create();
+    partnerSds.awbNumber = payload.awbNumber;
+    partnerSds.partnerId = payload.partnerId;
+    partnerSds.statusPartner = payload.statusPartner;
+    partnerSds.creationTime = moment().toDate();
+    await PartnerSameDayService.insert(partnerSds);
   }
 }
