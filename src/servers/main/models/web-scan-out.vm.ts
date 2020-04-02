@@ -191,6 +191,11 @@ export class WebScanOutCreateVm extends WebScanOutVm {
   base64Image?: string;
 
 }
+export class ProofValidateTransitPayloadVm {
+
+  @ApiModelProperty()
+  doPodCode: string;
+}
 
 // Edit DO POD AWB
 export class WebScanOutEditVm extends WebScanOutVm {

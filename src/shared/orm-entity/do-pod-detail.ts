@@ -6,6 +6,7 @@ import { BagItem } from './bag-item';
 import { DoPod } from './do-pod';
 import { PodScanIn } from './pod-scan-in';
 import { TmsBaseEntity } from './tms-base';
+import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 
 @Entity('do_pod_detail', { schema: 'public' })
 export class DoPodDetail extends TmsBaseEntity {
@@ -168,4 +169,8 @@ export class DoPodDetail extends TmsBaseEntity {
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   awbItemAttr: AwbItemAttr;
+
+  @OneToOne(() => DoPodDeliverDetail)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  doPodDeliverDetail: DoPodDeliverDetail;
 }

@@ -19,12 +19,12 @@ import {
     WebScanOutAwbResponseVm, WebScanOutCreateResponseVm, WebScanOutResponseForEditVm, WebAwbThirdPartyListResponseVm, ScanAwbVm,
 } from '../../../models/web-scan-out-response.vm';
 import {
-    WebScanOutAwbVm, WebScanOutCreateDeliveryVm, WebScanOutDeliverEditVm, WebScanOutLoadForEditVm, TransferAwbDeliverVm,
+    WebScanOutAwbVm, WebScanOutCreateDeliveryVm, WebScanOutDeliverEditVm, WebScanOutLoadForEditVm, TransferAwbDeliverVm, ProofValidateTransitPayloadVm,
 } from '../../../models/web-scan-out.vm';
 import { AwbService } from '../../v1/awb.service';
 import moment = require('moment');
 import { AutoUpdateAwbStatusService } from '../../v1/auto-update-awb-status.service';
-import { ProofDeliveryResponseVm, ProofDeliveryPayloadVm } from '../../../models/last-mile/proof-delivery.vm';
+import { ProofDeliveryResponseVm, ProofDeliveryPayloadVm, ProofTransitResponseVm, ProofValidateTransitResponseVm } from '../../../models/last-mile/proof-delivery.vm';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../../shared/services/meta.service';
@@ -554,6 +554,96 @@ export class LastMileDeliveryOutService {
 
     result.data = data;
     result.buildPaging(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async listProofTransit(payload: BaseMetaPayloadVm)
+  : Promise<ProofTransitResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    // payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
+
+    const repo = new OrionRepositoryService(DoPod, 't1');
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_code', 'doPodCode'],
+      ['t1.do_pod_id', 'doPodId'],
+      ['t5.awb_number', 'awbNumber'],
+      ['t5.consignee_name', 'consigneeName'],
+      [`COALESCE(t5.consignee_address, '')`, 'consigneeAddress'],
+      ['t4.awb_status_name', 'awbStatusName'],
+      ['t4.awb_status_title', 'awbStatusCode'],
+      [`COALESCE(t6.consignee_name, '')`, 'refConsigneeName'],
+      [`COALESCE(t6.awb_status_date_time_last, t7.do_pod_deliver_date_time)`, 'awbStatusDateLast'],
+    );
+    q.innerJoin(e => e.doPodDetails , 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodDetails.awbItemAttr, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodDetails.awbItemAttr.awbStatus, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodDetails.awbItem.awb, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doPodDetails.doPodDeliverDetail, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doPodDetails.doPodDeliverDetail.doPodDeliver, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    const data   = await q.exec();
+    const total  = await q.countWithoutTakeAndSkip();
+    const result = new ProofTransitResponseVm();
+    result.data  = data;
+
+    // SELECT
+    //   b.awb_number,
+    //   d.consignee_address,
+    //   d.consignee_name,
+    //   e.awb_status_id_last,
+    //   f.awb_status_name,
+    //   f.awb_status_title,
+    //   b.awb_id,
+    //   COALESCE(g.awb_status_date_time_last, h.do_pod_deliver_date_time) AS deliveryDatetime,
+    //   g.consignee_name AS consignee_package
+    // FROM do_pod a
+    // JOIN do_pod_detail b ON a.do_pod_id = b.do_pod_id
+    // JOIN awb_item c ON c.awb_item_id = b.awb_item_id
+    // JOIN awb d ON d.awb_id = c.awb_id
+    // JOIN awb_item_attr e ON d.awb_id = e.awb_id
+    // JOIN awb_status f ON f.awb_status_id = e.awb_status_id_last
+    // LEFT JOIN do_pod_deliver_detail g ON g.awb_id = d.awb_id
+    // LEFT JOIN do_pod_deliver h ON g.do_pod_deliver_id = h.do_pod_deliver_id
+    // WHERE a.do_pod_code = 'DOP/2003/31/IGTS8970'
+    // ORDER BY b.awb_number
+
+    // result.data = data;
+    result.buildPaging(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async validateTransit(payload: ProofValidateTransitPayloadVm)
+  : Promise<ProofValidateTransitResponseVm> {
+    const result = new ProofValidateTransitResponseVm();
+    const doPod = await DoPod.findOne({ doPodCode: payload.doPodCode });
+    if (doPod) {
+      result.doPodId = doPod.doPodId;
+      result.message = 'success';
+      result.status  = 'ok';
+    } else {
+      result.doPodId = '';
+      result.message = 'Data tidak ditemukan';
+      result.status = 'error';
+    }
 
     return result;
   }
