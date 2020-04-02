@@ -4,7 +4,10 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { BadRequestException } from '@nestjs/common';
 import { AwbSendPartnerQueueService } from '../../../queue/services/awb-send-partner-queue.service';
-import { LocusTimeSlotVm, LocusCreateTaskVm } from '../../models/partner/locus-task.vm';
+import {
+  LocusTimeSlotVm,
+  LocusCreateTaskVm,
+} from '../../models/partner/locus-task.vm';
 import { PartnerSameDayService } from '../../../../shared/orm-entity/partner-same-day-service';
 
 export class PartnerLocusService {
@@ -15,12 +18,7 @@ export class PartnerLocusService {
     const { pickupSlot, dropSlot } = this.slotTime(payload);
     // default get data task 100
     const totalTask = payload.totalTask ? payload.totalTask : 100;
-    return await this.sendDataBatch(
-      partnerId,
-      pickupSlot,
-      dropSlot,
-      totalTask,
-    );
+    return await this.sendDataBatch(partnerId, pickupSlot, dropSlot, totalTask);
   }
 
   static async createTask(payload: LocusCreateTaskVm) {
@@ -28,7 +26,10 @@ export class PartnerLocusService {
     const partnerId = payload.partnerIdLocus;
     const { pickupSlot, dropSlot } = this.slotTime(payload);
     const totalTask = payload.totalTask ? payload.totalTask : 1;
-    const pickupRequests = await this.getDataPickupRequest(partnerId, totalTask);
+    const pickupRequests = await this.getDataPickupRequest(
+      partnerId,
+      totalTask,
+    );
     if (pickupRequests.length) {
       for (const pickupRequest of pickupRequests) {
         const response = await this.sendDataTask(
@@ -50,18 +51,14 @@ export class PartnerLocusService {
       switch (payload.task.status.status) {
         case 'COMPLETED':
           data = {
-            completionTime: moment(
-              payload.task.status.triggerTime,
-            ).toDate(),
+            completionTime: moment(payload.task.status.triggerTime).toDate(),
           };
           break;
         case 'CANCELLED':
           data = {
             cancelReason: payload.task.status.checklistValues['cancel-reason'],
             urlImageCancel: payload.task.status.checklistValues['photo'],
-            completionTime: moment(
-              payload.task.status.triggerTime,
-            ).toDate(),
+            completionTime: moment(payload.task.status.triggerTime).toDate(),
           };
           break;
 
@@ -73,15 +70,25 @@ export class PartnerLocusService {
         for (const item of payload.task.taskGraph.visits) {
           switch (item.id) {
             case 'pickup':
+              const urlImagePickup = Object.keys(
+                item.visitStatus.checklistValues,
+              ).length
+                ? item.visitStatus.checklistValues['signature-1']
+                : null;
               const pickup = {
-                urlImagePickup: item.visitStatus.checklistValues['signature-1'],
+                urlImagePickup,
                 trackLinkPickup: item.trackLink,
               };
               data = { ...data, ...pickup };
               break;
             case 'drop':
+              const urlImageDrop = Object.keys(
+                item.visitStatus.checklistValues,
+              ).length
+                ? item.visitStatus.checklistValues.photo
+                : null;
               const drop = {
-                urlImageDrop: item.visitStatus.checklistValues.photo,
+                urlImageDrop,
                 trackLinkDrop: item.trackLink,
               };
               data = { ...data, ...drop };
@@ -110,7 +117,6 @@ export class PartnerLocusService {
       } else {
         throw new BadRequestException();
       }
-
     } else {
       throw new BadRequestException();
     }
@@ -184,10 +190,17 @@ export class PartnerLocusService {
     let result = {};
     const tasks = [];
 
-    const pickupRequests = await this.getDataPickupRequest(partnerId, totalTask);
+    const pickupRequests = await this.getDataPickupRequest(
+      partnerId,
+      totalTask,
+    );
     if (pickupRequests.length) {
       for (const pickupRequest of pickupRequests) {
-        const item = await this.constructData(pickupRequest, pickupSlot, dropSlot);
+        const item = await this.constructData(
+          pickupRequest,
+          pickupSlot,
+          dropSlot,
+        );
         tasks.push(item);
       } // end of for
 
@@ -242,7 +255,6 @@ export class PartnerLocusService {
     pickupSlot: LocusTimeSlotVm,
     dropSlot: LocusTimeSlotVm,
   ) {
-
     const objItem = {
       taskId: pickupRequest.awbNumber,
       lineItems: [
@@ -331,7 +343,9 @@ export class PartnerLocusService {
     partnerId: number,
     limit: number = 500,
   ): Promise<any> {
-    const backDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
+    const backDate = moment()
+      .add(-1, 'days')
+      .format('YYYY-MM-DD 00:00:00');
     const query = `
       SELECT
         prd.ref_awb_number as "awbNumber",
