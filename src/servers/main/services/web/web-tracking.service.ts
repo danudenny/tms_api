@@ -15,35 +15,37 @@ export class WebTrackingService {
     const data = await this.getRawAwb(payload.awbNumber);
     if (data) {
       // mapping data
-      result.awbDate = data.awbDate;
-      result.createdName = data.employeeName;
-      result.awbNumber = data.awbNumber;
-      result.awbStatusLast = data.awbStatusLast;
-      result.bagNumber = data.bagNumber;
-      result.branchName = data.branchName;
-      result.branchToName = data.branchToName;
-      result.consigneeName = data.consigneeName;
-      result.consigneeAddress = data.consigneeAddress;
-      result.customerName = data.customerName;
-      result.customerNameRds = data.customerNameRds;
-      result.packageTypeCode = data.packageTypeCode;
-      result.packageTypeName = data.packageTypeName;
-      result.paymentMethodCode = data.paymentMethodCode;
-      result.totalSellPrice = data.totalSellPrice;
-      result.totalCodValue = data.totalCodValue;
-      result.totalWeightFinal = data.totalWeightFinal;
-      result.totalWeightFinalRounded = data.totalWeightFinalRounded;
-      result.isCod = data.isCod;
-      result.totalWeightVolume = data.totalWeightVolume;
-      result.refResellerPhone = data.refResellerPhone;
-      result.consigneePhone = data.consigneePhone;
-      result.refRepresentativeCode = data.refRepresentativeCode;
-      result.parcelValue = data.parcelValue;
-      result.partnerLogisticAwb = data.partnerLogisticAwb;
-      result.partnerLogisticName = data.partnerLogisticName;
-      result.doPodDeliverDetailId = data.doPodDeliverDetailId;
-      result.isHasPhotoReceiver = data.doPodDeliverAttachmentId ? true : false;
-      result.returnAwbNumber = data.returnAwbNumber;
+      result.awbDate                   = data.awbDate;
+      result.createdName               = data.employeeName;
+      result.awbNumber                 = data.awbNumber;
+      result.awbStatusLast             = data.awbStatusLast;
+      result.bagNumber                 = data.bagNumber;
+      result.branchName                = data.branchName;
+      result.branchToName              = data.branchToName;
+      result.consigneeName             = data.consigneeName;
+      result.consigneeAddress          = data.consigneeAddress;
+      result.customerName              = data.customerName;
+      result.customerNameRds           = data.customerNameRds;
+      result.packageTypeCode           = data.packageTypeCode;
+      result.packageTypeName           = data.packageTypeName;
+      result.paymentMethodCode         = data.paymentMethodCode;
+      result.totalSellPrice            = data.totalSellPrice;
+      result.totalCodValue             = data.totalCodValue;
+      result.totalWeightFinal          = data.totalWeightFinal;
+      result.totalWeightFinalRounded   = data.totalWeightFinalRounded;
+      result.isCod                     = data.isCod;
+      result.totalWeightVolume         = data.totalWeightVolume;
+      result.refResellerPhone          = data.refResellerPhone;
+      result.consigneePhone            = data.consigneePhone;
+      result.refRepresentativeCode     = data.refRepresentativeCode;
+      result.parcelValue               = data.parcelValue;
+      result.partnerLogisticAwb        = data.partnerLogisticAwb;
+      result.partnerLogisticName       = data.partnerLogisticName;
+      result.doPodDeliverDetailId      = data.doPodDeliverDetailId;
+      result.isHasPhotoReceiver        = data.doPodDeliverAttachmentId ? true : false;
+      result.returnAwbNumber           = data.returnAwbNumber;
+      result.awbSubstitute             = data.awbSubstitute;
+      result.partnerLogisticSubstitute = data.partnerLogisticSubstitute;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -61,15 +63,15 @@ export class WebTrackingService {
     const result = new TrackingBagResponseVm();
     const data = await this.getRawBag(payload.bagNumber);
     if (data) {
-      result.bagNumber = data.bagNumber;
-      result.weight = data.weight;
-      result.bagItemId = data.bagItemId;
-      result.bagItemStatusId = data.bagItemStatusId;
+      result.bagNumber         = data.bagNumber;
+      result.weight            = data.weight;
+      result.bagItemId         = data.bagItemId;
+      result.bagItemStatusId   = data.bagItemStatusId;
       result.bagItemStatusName = data.bagItemStatusName;
-      result.branchCodeLast = data.branchCodeLast;
-      result.branchNameLast = data.branchNameLast;
-      result.branchCodeNext = data.branchCodeNext;
-      result.branchNameNext = data.branchNameNext;
+      result.branchCodeLast    = data.branchCodeLast;
+      result.branchNameLast    = data.branchNameLast;
+      result.branchCodeNext    = data.branchCodeNext;
+      result.branchNameNext    = data.branchNameNext;
       const history = await this.getRawBagHistory(data.bagItemId);
       if (history && history.length) {
         result.bagHistory = history;
@@ -124,7 +126,13 @@ export class WebTrackingService {
         COALESCE(bg.bagging_code, '') as "baggingCode",
         COALESCE(s.smu_code, '') as "smuCode",
         dpd.do_pod_deliver_detail_id as "doPodDeliverDetailId",
-        dpa.do_pod_deliver_attachment_id as "doPodDeliverAttachmentId"
+        dpa.do_pod_deliver_attachment_id as "doPodDeliverAttachmentId",
+        dpdet.awb_substitute as "awbSubstitute",
+        CASE
+          WHEN dpod.partner_logistic_name IS NOT NULL THEN dpod.partner_logistic_name
+          WHEN dpod.partner_logistic_id IS NOT NULL THEN pl.partner_logistic_name
+          ELSE ''
+        END AS "partnerLogisticSubstitute"
       FROM awb a
         INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
@@ -148,6 +156,9 @@ export class WebTrackingService {
         LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false
         LEFT JOIN do_pod_deliver_attachment dpa ON dpa.do_pod_deliver_detail_id = dpd.do_pod_deliver_detail_id AND dpa.is_deleted = false
         LEFT JOIN awb_return ar ON ar.origin_awb_id = ait.awb_id AND ar.is_deleted = false
+        LEFT JOIN do_pod_detail dpdet ON dpdet.awb_id = a.awb_id AND dpdet.is_deleted = false
+        LEFT JOIN do_pod dpod ON dpod.do_pod_id = dpdet.do_pod_id AND dpod.is_deleted = false
+        LEFT JOIN partner_logistic pl ON pl.partner_logistic_id = dpod.partner_logistic_id AND pl.is_deleted = false
       WHERE a.awb_number = :awbNumber
       AND a.is_deleted = false LIMIT 1;
     `;

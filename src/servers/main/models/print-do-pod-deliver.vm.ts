@@ -30,6 +30,9 @@ export class PrintDoPodDeliverDataDoPodDeliverDetailAwbItemAwbVm {
   consigneeAddress: string;
 
   @ApiModelProperty()
+  totalWeight: any;
+
+  @ApiModelProperty()
   consigneeZip: string;
 
   @ApiModelProperty()

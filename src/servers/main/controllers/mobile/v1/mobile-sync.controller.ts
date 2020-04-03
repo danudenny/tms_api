@@ -27,6 +27,7 @@ import {
 } from '../../../models/mobile-sync-response.vm';
 import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
 import { V1MobileSyncService } from '../../../services/mobile/v1/mobile-sync.service';
+import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('Mobile Sync Data')
 @Controller('mobile/v1/sync')
@@ -47,6 +48,7 @@ export class V1MobileSyncController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileSyncImageResponseVm })
+  @Transactional()
   public async checkInForm(
     @Body() payload: MobileSyncImagePayloadVm,
     @UploadedFile() file,

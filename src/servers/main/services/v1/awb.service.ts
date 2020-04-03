@@ -25,6 +25,8 @@ export class AwbService {
       awbItem: {
         awbItemId: true,
         awbId: true,
+        weightReal: true,
+        weightRealRounded: true,
         awb: {
           consigneeName: true,
           consigneeNumber: true,
