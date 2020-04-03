@@ -150,7 +150,7 @@ export class WebTrackingService {
         LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false
         LEFT JOIN do_pod_deliver_attachment dpa ON dpa.do_pod_deliver_detail_id = dpd.do_pod_deliver_detail_id AND dpa.is_deleted = false
         LEFT JOIN awb_return ar ON ar.origin_awb_id = ait.awb_id AND ar.is_deleted = false
-        LEFT JOIN do_pod_detail dpdet ON dpdet.awb_item_id = dpd.awb_item_id AND dpdet.is_deleted = false
+        LEFT JOIN do_pod_detail dpdet ON dpdet.awb_id = a.awb_id AND dpdet.is_deleted = false
       WHERE a.awb_number = :awbNumber
       AND a.is_deleted = false LIMIT 1;
     `;
