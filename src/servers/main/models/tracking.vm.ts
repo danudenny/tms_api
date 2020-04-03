@@ -151,6 +151,9 @@ export class TrackingAwbResponseVm {
   @ApiModelProperty()
   awbSubstitute: string;
 
+  @ApiModelProperty()
+  partnerLogisticSubstitute: string;
+
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];
 }

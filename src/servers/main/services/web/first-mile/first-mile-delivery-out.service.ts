@@ -526,6 +526,14 @@ export class FirstMileDeliveryOutService {
             // #region after scanout
 
             // NOTE: queue by Bull
+            let partnerLogisticName = '';
+            if (doPod.partnerLogisticName) {
+              partnerLogisticName = doPod.partnerLogisticName;
+            } else if (doPod.partnerLogisticId) {
+              const partnerLogistic = await PartnerLogistic.findOne({ partnerLogisticId: doPod.partnerLogisticId });
+              partnerLogisticName = partnerLogistic.partnerLogisticName;
+            }
+
             DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
               awb.awbItemId,
               AWB_STATUS.OUT_BRANCH,
@@ -533,6 +541,7 @@ export class FirstMileDeliveryOutService {
               authMeta.userId,
               doPod.userIdDriver,
               doPod.branchIdTo,
+              partnerLogisticName,
             );
             totalSuccess += 1;
             // #endregion after scanout
