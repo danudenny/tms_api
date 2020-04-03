@@ -44,6 +44,7 @@ export class WebTrackingService {
       result.doPodDeliverDetailId    = data.doPodDeliverDetailId;
       result.isHasPhotoReceiver      = data.doPodDeliverAttachmentId ? true : false;
       result.returnAwbNumber         = data.returnAwbNumber;
+      result.awbSubstitute           = data.awbSubstitute;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -124,7 +125,7 @@ export class WebTrackingService {
         COALESCE(bg.bagging_code, '') as "baggingCode",
         COALESCE(s.smu_code, '') as "smuCode",
         dpd.do_pod_deliver_detail_id as "doPodDeliverDetailId",
-        dpa.do_pod_deliver_attachment_id as "doPodDeliverAttachmentId"
+        dpa.do_pod_deliver_attachment_id as "doPodDeliverAttachmentId",
         dpdet.awb_substitute as "awbSubstitute"
       FROM awb a
         INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
