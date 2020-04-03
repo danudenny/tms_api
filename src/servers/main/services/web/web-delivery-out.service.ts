@@ -921,6 +921,7 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['employeeName'] = 't2.fullname';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
+    payload.fieldResolverMap['partnerLogisticName'] = `"partnerLogisticName"`;
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
