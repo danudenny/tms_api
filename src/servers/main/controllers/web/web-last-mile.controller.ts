@@ -18,8 +18,8 @@ import { AwbThirdPartyVm, AwbThirdPartyUpdateResponseVm } from '../../models/las
 
 @ApiUseTags('Last Mile Delivery')
 @Controller('pod/lastMile')
-// @ApiBearerAuth()
-// @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+@ApiBearerAuth()
+@UseGuards(AuthenticatedGuard, PermissionTokenGuard)
 export class WebLastMileController {
   constructor() {}
   /**
