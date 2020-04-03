@@ -97,6 +97,7 @@ export class DoPodDetailPostMetaQueueService {
     userId: number,
     userIdDriver: number,
     branchIdNext: number,
+    partnerLogisticName: string = null,
   ) {
     // TODO: ONLY AWB OUT_BRANCH
     let branchName     = 'Kantor Pusat';
@@ -115,14 +116,18 @@ export class DoPodDetailPostMetaQueueService {
 
     let employeeIdDriver   = null;
     let employeeNameDriver = '';
+    let noteInternal = '';
     if (userIdDriver) {
       const userDriverRepo = await this.getDataUserEmployee(userIdDriver);
       if (userDriverRepo) {
         employeeIdDriver   = userDriverRepo.employeeId;
         employeeNameDriver = userDriverRepo.employee.employeeName;
       }
+      noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver}  ke ${branchNameNext}`;
+    } else {
+      noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Menggunakan ${partnerLogisticName} ke ${branchNameNext}`;
     }
-    const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver}  ke ${branchNameNext}`;
+
     const notePublic   = `Paket keluar dari ${cityName} [${branchName}]`;
     // provide data
     const obj = {
