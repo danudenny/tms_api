@@ -133,9 +133,9 @@ export class FirstMileDeliveryOutService {
           partnerLogisticName = partnerLogistic.partnerLogisticName;
         }
 
-        result.printDoPodMetadata.userDriver.employee.nik      = '3PL';
-        result.printDoPodMetadata.userDriver.employee.nickname = partnerLogisticName;
-        result.printDoPodMetadata.vehicleNumber                = null;
+        result.printDoPodMetadata.userDriver.employee.nik      = '';
+        result.printDoPodMetadata.userDriver.employee.nickname = '3PL';
+        result.printDoPodMetadata.vehicleNumber                = partnerLogisticName;
       } else {
         result.printDoPodMetadata.vehicleNumber                = payload.vehicleNumber;
         result.printDoPodMetadata.userDriver.employee.nik      = dataUser[0].nik;

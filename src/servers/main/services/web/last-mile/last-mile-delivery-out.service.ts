@@ -650,7 +650,7 @@ export class LastMileDeliveryOutService {
                     ELSE g.nik
                   END`, 'driverNik');
     qb.addSelect(`COUNT(*) FILTER ( WHERE d.awb_status_id = 30000 )`, 'totalDelivered');
-    qb.addSelect(`COUNT(*) FILTER ( WHERE d.awb_status_id <> 30000 )`, 'totalReturned');
+    qb.addSelect(`COUNT(*) FILTER ( WHERE d.awb_status_id NOT IN (30000, 3500, 3005))`, 'totalReturned');
     qb.from('do_pod', 'a');
     qb.innerJoin('do_pod_detail', 'b', 'a.do_pod_id = b.do_pod_id AND b.is_deleted = false');
     qb.innerJoin('awb_item_attr', 'c', 'b.awb_item_id = c.awb_item_id AND c.is_deleted = false');
