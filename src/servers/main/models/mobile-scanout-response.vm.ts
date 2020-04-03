@@ -1,7 +1,6 @@
-import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 import { ItemDeliveryResponseVm } from './web-delivery-list-response.vm';
-
 
 // Scan Out Awb
 export class ScanAwbVm {
@@ -49,13 +48,10 @@ export class MobileScanOutAwbResponseVm {
 
 export class CreateDoPodResponseVm {
   @ApiModelProperty()
-  doPodId: string;
+  doPodDeliverId: string;
 
   @ApiModelProperty()
   status: string;
-
-  @ApiModelProperty()
-  trouble: boolean;
 
   @ApiModelProperty()
   message: string;

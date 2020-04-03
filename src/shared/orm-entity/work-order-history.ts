@@ -241,5 +241,18 @@ export class WorkOrderHistory extends TmsBaseEntity {
     length: 255,
     name: 'work_order_status_code',
   })
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_partner_id',
+  })
+  branchPartnerId: number;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'partner_id',
+  })
+  partnerId: number;
+
   workOrderStatusCode: string | null;
 }
