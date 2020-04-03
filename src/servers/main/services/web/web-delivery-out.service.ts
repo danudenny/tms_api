@@ -1002,6 +1002,7 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
     payload.fieldResolverMap['awbNumber']   = 't2.awb_number';
+    payload.fieldResolverMap['awbSubstitute']   = 't1.awbSubstitute';
 
     const repo = new OrionRepositoryService(DoPodDetail, 't1');
     const q = repo.findAllRaw();
