@@ -511,16 +511,17 @@ export class FirstMileDeliveryOutService {
             await DoPodDetail.save(doPodDetail);
 
             // Assign print metadata - Scan Out & Deliver
-            response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
-            response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
+            response.printDoPodDetailMetadata.awbItem.awb.awbId         = awb.awbId;
+            response.printDoPodDetailMetadata.awbItem.awb.awbNumber     = awbNumber;
             response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
 
             // Assign print metadata - Deliver
             response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber = awb.awbItem.awb.consigneeNumber;
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
-            response.printDoPodDetailMetadata.awbItem.awb.isCod = awb.awbItem.awb.isCod;
-            response.printDoPodDetailMetadata.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber  = awb.awbItem.awb.consigneeNumber;
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeZip     = awb.awbItem.awb.consigneeZip;
+            response.printDoPodDetailMetadata.awbItem.awb.isCod            = awb.awbItem.awb.isCod;
+            response.printDoPodDetailMetadata.awbItem.awb.totalCodValue    = awb.awbItem.awb.totalCodValue;
+            response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.awb.totalWeightFinalRounded;
 
             // AFTER Scan OUT ===============================================
             // #region after scanout
