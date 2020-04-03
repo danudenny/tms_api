@@ -37,6 +37,9 @@ export class PrintDoPodDeliverDataDoPodDeliverDetailAwbItemAwbVm {
 
   @ApiModelProperty()
   isCod: boolean;
+
+  @ApiModelProperty()
+  totalWeight: number;
 }
 
 export class PrintDoPodDeliverDataDoPodDeliverDetailAwbItemVm {
