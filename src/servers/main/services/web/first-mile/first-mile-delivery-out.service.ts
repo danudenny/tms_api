@@ -92,7 +92,7 @@ export class FirstMileDeliveryOutService {
     // TODO: Query and populate result printDoPodMetadata, printDoPodBagMetadata, and printDoPodDeliverMetadata based on do pod type
     // query for get Employee
     let dataUser;
-    if (payload.doPodMethod || (payload.doPodMethod && payload.doPodMethod !== '3pl')) {
+    if (!payload.doPodMethod || (payload.doPodMethod && payload.doPodMethod !== '3pl')) {
       const repo = new OrionRepositoryService(Employee, 't1');
       const q = repo.findAllRaw();
 
