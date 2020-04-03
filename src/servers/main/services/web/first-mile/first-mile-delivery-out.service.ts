@@ -521,7 +521,7 @@ export class FirstMileDeliveryOutService {
             response.printDoPodDetailMetadata.awbItem.awb.consigneeZip     = awb.awbItem.awb.consigneeZip;
             response.printDoPodDetailMetadata.awbItem.awb.isCod            = awb.awbItem.awb.isCod;
             response.printDoPodDetailMetadata.awbItem.awb.totalCodValue    = awb.awbItem.awb.totalCodValue;
-            response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.awb.totalWeightFinalRounded;
+            response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.weightReal;
 
             // AFTER Scan OUT ===============================================
             // #region after scanout
