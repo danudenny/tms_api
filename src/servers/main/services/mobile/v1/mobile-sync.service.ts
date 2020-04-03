@@ -198,6 +198,7 @@ export class V1MobileSyncService {
       where: {
         fileName: file.originalname,
       },
+      lock: { mode: 'pessimistic_write' },
     });
 
     if (attachment) {
