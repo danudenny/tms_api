@@ -997,9 +997,10 @@ export class WebDeliveryOutService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanOutTransitListAwbResponseVm> {
     // mapping field
-    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    payload.fieldResolverMap['doPodId']     = 't1.do_pod_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
+    payload.fieldResolverMap['awbNumber']   = 't2.awb_number';
 
     const repo = new OrionRepositoryService(DoPodDetail, 't1');
     const q = repo.findAllRaw();
@@ -1025,11 +1026,11 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const data   = await q.exec();
+    const total  = await q.countWithoutTakeAndSkip();
     const result = new WebScanOutTransitListAwbResponseVm();
 
-    result.data = data;
+    result.data   = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
@@ -1728,10 +1729,13 @@ export class WebDeliveryOutService {
     const result   = new WebScanOutTransitUpdateAwbPartnerResponseVm();
     result.status  = 'ok';
     result.message = 'success';
+    const authMeta = AuthService.getAuthData();
 
     const doPodDetail = await DoPodDetail.findOne({ doPodDetailId: payload.doPodDetailId });
     if (doPodDetail) {
       doPodDetail.awbSubstitute = payload.awbSubstitute;
+      doPodDetail.updatedTime   = moment().toDate();
+      doPodDetail.userIdUpdated = authMeta.userId;
       await doPodDetail.save();
     } else {
       result.status  = 'error';
