@@ -405,7 +405,7 @@ export class PartnerService {
     let pickupRequestEmail;
     let pickupRequestNotes;
 
-    const arrDropStatus = [7050, 7100];
+    const arrDropStatus = [7050, 7060, 7070, 7100];
     const err = '';
 
     const dataBranch = await this.getBranchPartnerId(paramBranchCode);
@@ -535,6 +535,8 @@ export class PartnerService {
               work_order_status_id_last: '7050',
               work_order_status_id_pick: null,
               branch_id: '1481',
+              branch_partner_id: branchPartnerId,
+              partner_id: paramPartnerId,
               is_final: true,
               user_id: '1',
               created_time: timeNow,
@@ -633,6 +635,8 @@ export class PartnerService {
                 work_order_status_id_last: '7050',
                 work_order_status_id_pick: null,
                 branch_id: '1481',
+                branch_partner_id: branchPartnerId,
+                partner_id: paramPartnerId,
                 is_final: true,
                 user_id: '1',
                 created_time: timeNow,
@@ -853,6 +857,8 @@ export class PartnerService {
       workOrderStatusId: params['work_order_status_id_last'],
       userId: params['user_id'],
       branchId: params['branch_id'],
+      branchPartnerId: params['branch_partner_id'],
+      partnerId: params['partner_id'],
       isFinal: params['is_final'],
       historyDateTime: params['updated_time'],
       userIdCreated: params['user_id'],
