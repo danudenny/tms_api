@@ -58,6 +58,16 @@ export class PrintController {
     return PrintService.printDoPodReturnByRequest(serverResponse, queryParams);
   }
 
+  @Get('do-pod-return-transit')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printDoPodReturnTransit(
+    @Query() queryParams: PrintDoPodDeliverPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintService.printDoPodReturnTransitByRequest(serverResponse, queryParams);
+  }
+
   @Get('bag-item-for-sticker')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
