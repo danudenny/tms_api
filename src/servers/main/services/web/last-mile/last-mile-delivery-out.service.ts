@@ -634,13 +634,39 @@ export class LastMileDeliveryOutService {
   static async validateTransit(payload: ProofValidateTransitPayloadVm)
   : Promise<ProofValidateTransitResponseVm> {
     const result = new ProofValidateTransitResponseVm();
-    const doPod = await DoPod.findOne({ doPodCode: payload.doPodCode });
+    // const doPod = await DoPod.findOne({ doPodCode: payload.doPodCode });
+    const qb = createQueryBuilder();
+    qb.addSelect('a.do_pod_id', 'doPodId');
+    qb.addSelect('a.do_pod_code', 'doPodCode');
+    qb.addSelect(`CASE
+                    WHEN a.partner_logistic_name IS NOT NULL THEN a.partner_logistic_name
+                    WHEN a.partner_logistic_name IS NULL THEN e.partner_logistic_name
+                    ELSE
+                      g.fullname
+                  END`, 'driverFullName');
+    qb.addSelect(`CASE
+                    WHEN a.do_pod_method = 3000 THEN '3PL'
+                    ELSE g.nik
+                  END`, 'driverNik');
+    qb.addSelect(`COUNT(*) FILTER ( WHERE d.awb_status_id = 3000 )`, 'totalDelivered');
+    qb.addSelect(`COUNT(*) FILTER ( WHERE d.awb_status_id <> 3000 )`, 'totalReturned');
+    qb.from('do_pod', 'a');
+    qb.innerJoin('do_pod_detail', 'b', 'a.do_pod_id = b.do_pod_id AND b.is_deleted = false');
+    qb.innerJoin('awb_item_attr', 'c', 'b.awb_item_id = c.awb_item_id AND c.is_deleted = false');
+    qb.innerJoin('awb_status', 'd', 'd.awb_status_id = c.awb_status_id_last AND d.is_deleted = false');
+    qb.leftJoin('partner_logistic', 'e', 'e.partner_logistic_id = a.partner_logistic_id AND e.is_deleted = false');
+    qb.leftJoin('users', 'f', 'f.user_id = a.user_id_driver AND f.is_deleted = false');
+    qb.leftJoin('employee', 'g', 'g.employee_id = f.employee_id AND g.is_deleted = false');
+    qb.where('a.do_pod_code = :doPodCode', { doPodCode: payload.doPodCode });
+    qb.andWhere('a.is_deleted = false');
+    qb.groupBy('a.do_pod_id, a.do_pod_code, g.fullname,g.nik, a.do_pod_method, e.partner_logistic_name');
+    const doPod = await qb.getRawOne();
+
     if (doPod) {
-      result.doPodId = doPod.doPodId;
+      result.data = doPod;
       result.message = 'success';
       result.status  = 'ok';
     } else {
-      result.doPodId = '';
       result.message = 'Data tidak ditemukan';
       result.status = 'error';
     }

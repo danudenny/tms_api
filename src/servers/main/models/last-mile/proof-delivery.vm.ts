@@ -52,9 +52,29 @@ export class ProofTransitDataVm {
   @ApiModelProperty()
   awbStatusDateLast: Date;
 }
-export class ProofValidateTransitResponseVm {
+
+export class ProofValidateTransitDataVm {
   @ApiModelProperty()
   doPodId: string;
+
+  @ApiModelProperty()
+  doPodCode: string;
+
+  @ApiModelProperty()
+  totalDelivered: number;
+
+  @ApiModelProperty()
+  totalReturned: number;
+
+  @ApiModelProperty()
+  driverFullName: string;
+
+  @ApiModelProperty()
+  driverNik: string;
+}
+export class ProofValidateTransitResponseVm {
+  @ApiModelProperty({ type: () => ProofValidateTransitDataVm })
+  data: ProofValidateTransitDataVm;
 
   @ApiModelProperty()
   status: string;
