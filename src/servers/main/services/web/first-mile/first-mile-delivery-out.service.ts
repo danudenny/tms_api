@@ -133,9 +133,9 @@ export class FirstMileDeliveryOutService {
           partnerLogisticName = partnerLogistic.partnerLogisticName;
         }
 
-        result.printDoPodMetadata.userDriver.employee.nik      = '3PL';
-        result.printDoPodMetadata.userDriver.employee.nickname = partnerLogisticName;
-        result.printDoPodMetadata.vehicleNumber                = null;
+        result.printDoPodMetadata.userDriver.employee.nik      = '';
+        result.printDoPodMetadata.userDriver.employee.nickname = '3PL';
+        result.printDoPodMetadata.vehicleNumber                = partnerLogisticName;
       } else {
         result.printDoPodMetadata.vehicleNumber                = payload.vehicleNumber;
         result.printDoPodMetadata.userDriver.employee.nik      = dataUser[0].nik;
@@ -521,7 +521,7 @@ export class FirstMileDeliveryOutService {
             response.printDoPodDetailMetadata.awbItem.awb.consigneeZip     = awb.awbItem.awb.consigneeZip;
             response.printDoPodDetailMetadata.awbItem.awb.isCod            = awb.awbItem.awb.isCod;
             response.printDoPodDetailMetadata.awbItem.awb.totalCodValue    = awb.awbItem.awb.totalCodValue;
-            response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.awb.totalWeightFinalRounded;
+            response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.weightReal;
 
             // AFTER Scan OUT ===============================================
             // #region after scanout
