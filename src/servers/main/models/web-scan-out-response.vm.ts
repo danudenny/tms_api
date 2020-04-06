@@ -131,16 +131,13 @@ export class WebScanTransitAwbResponseVm {
   isCod: string;
 
   @ApiModelProperty()
-  doPodDeliverDetailId: string;
-
-  @ApiModelProperty()
   doPodId: number;
 
-  // @ApiModelProperty()
-  // photoType: string;
+  @ApiModelProperty()
+  doPodDetailId: string;
 
-  // @ApiModelProperty()
-  // url: string;
+  @ApiModelProperty()
+  awbSubstitute: string;
 }
 
 export class WebScanInDeliverResponseVm {
@@ -215,6 +212,15 @@ export class WebScanInDeliverGroupResponseVm {
 
   @ApiModelProperty()
   userIdDriver: number;
+}
+export class WebScanOutTransitUpdateAwbPartnerResponseVm {
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+
 }
 
 export class WebScanOutAwbListResponseVm extends BaseMetaResponseVm {
@@ -322,6 +328,21 @@ export class ScanBagVm {
 }
 
 export class WebScanOutBagResponseVm {
+
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({ type: [ScanBagVm] })
+  data: ScanBagVm[];
+}
+
+export class WebHubScanOutBagResponseVm {
 
   @ApiModelProperty()
   totalData: number;

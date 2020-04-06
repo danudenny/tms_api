@@ -395,9 +395,17 @@ export class PartnerService {
     let workOrderStatusIdLast = null;
     let refAwbNumber = null;
     let pickupRequestDetailId = null;
-    let branchPartnerId = null;
+    let paramBranchPartnerId = null;
     let awbItemId = null;
-    const arrDropStatus = [7050, 7100];
+    let pickupRequestAddress;
+    let encryptAddress255;
+    let encryptMerchantName;
+    let pickupRequestName;
+    let pickupRequestContactNo ;
+    let pickupRequestEmail;
+    let pickupRequestNotes;
+
+    const arrDropStatus = [7050, 7060, 7070, 7100];
     const err = '';
 
     const dataBranch = await this.getBranchPartnerId(paramBranchCode);
@@ -409,10 +417,17 @@ export class PartnerService {
       refAwbNumber = item.ref_awb_number;
       pickupRequestDetailId = item.pickup_request_detail_id;
       awbItemId = item.awb_item_id;
+      pickupRequestAddress = item.pickup_request_address;
+      encryptAddress255 = item.encrypt_address255;
+      encryptMerchantName = item.encrypt_merchant_name;
+      pickupRequestName = item.pickup_request_name;
+      pickupRequestContactNo = item.pickup_request_contact_no;
+      pickupRequestEmail = item.pickup_request_email;
+      pickupRequestNotes = item.pickup_request_notes;
     }
 
     for (const itemBranch of dataBranch) {
-      branchPartnerId = itemBranch.branch_partner_id;
+      paramBranchPartnerId = itemBranch.branch_partner_id;
     }
 
     if (refAwbNumber != null) {
@@ -440,7 +455,7 @@ export class PartnerService {
         );
         return result;
       } else {
-        if (branchPartnerId == null) {
+        if (paramBranchPartnerId == null) {
           result = {
             code: '422',
             message: 'Branch code not found',
@@ -472,9 +487,18 @@ export class PartnerService {
               work_order_status_id_pick: null,
               branch_id_assigned: '0',
               branch_id: '0',
-              is_member: false,
+              is_member: true,
               work_order_type: 'AUTOMATIC',
-              branch_partner_id: branchPartnerId,
+              branch_partner_id: paramBranchPartnerId,
+              partner_id_assigned: paramPartnerId,
+              pickup_address: pickupRequestAddress,
+              encrypt_address255: encryptAddress255,
+              merchant_name: pickupRequestName,
+              encrypt_merchant_name: encryptMerchantName,
+              pickup_phone: pickupRequestContactNo,
+              pickup_email: pickupRequestEmail,
+              pickup_notes: pickupRequestNotes,
+              total_awb_qty: 1,
               user_id: '1',
               created_time: timeNow,
               updated_time: timeNow,
@@ -512,6 +536,8 @@ export class PartnerService {
               work_order_status_id_last: '7050',
               work_order_status_id_pick: null,
               branch_id: '1481',
+              branch_partner_id: paramBranchPartnerId,
+              partner_id: paramPartnerId,
               is_final: true,
               user_id: '1',
               created_time: timeNow,
@@ -557,7 +583,8 @@ export class PartnerService {
             await WorkOrder.update(workOrderIdLast, {
               workOrderStatusIdLast: 7050,
               workOrderStatusIdPick: null,
-              branchPartnerId,
+              branchPartnerId: paramBranchPartnerId,
+              partnerIdAssigned: parseInt(paramPartnerId, 10),
               userIdUpdated: 1,
               updatedTime: timeNow,
             });
@@ -610,6 +637,8 @@ export class PartnerService {
                 work_order_status_id_last: '7050',
                 work_order_status_id_pick: null,
                 branch_id: '1481',
+                branch_partner_id: paramBranchPartnerId,
+                partner_id: paramPartnerId,
                 is_final: true,
                 user_id: '1',
                 created_time: timeNow,
@@ -691,8 +720,17 @@ export class PartnerService {
         prd.pickup_request_id,
         prd.pickup_request_detail_id,
         wo.work_order_status_id_last,
-        prd.awb_item_id
+        prd.awb_item_id,
+        pr.pickup_request_address,
+				pr.encrypt_address255,
+				pr.encrypt_merchant_name,
+        pr.pickup_request_name,
+        pr.pickup_schedule_date_time,
+        pr.pickup_request_contact_no,
+        pr.pickup_request_email,
+        pr.pickup_request_notes
       FROM pickup_request_detail prd
+      INNER JOIN pickup_request pr on prd.pickup_request_id = pr.pickup_request_id AND pr.is_deleted=FALSE
       LEFT JOIN work_order wo on prd.work_order_id_last = wo.work_order_id AND wo.is_deleted=FALSE
       WHERE
         prd.ref_awb_number = :awb AND
@@ -732,7 +770,7 @@ export class PartnerService {
     const timeNow = moment().toDate();
     // $prefix = $prefix = 'SPK' .; '/' . date('ym', strtotime($work_order_time)) .; '/';
     prefix = `SPK/${moment(workOrderTime).format('YYMM')}/`;
-    console.log(prefix);
+    // console.log(prefix);
     const code = await SysCounter.findOne({
       where: {
         key: prefix,
@@ -780,6 +818,15 @@ export class PartnerService {
       isMember: params['is_member'],
       workOrderType: params['work_order_type'],
       branchPartnerId: params['branch_partner_id'],
+      partnerIdAssigned: params['partner_id_assigned'],
+      pickupAddress: params['pickup_address'],
+      encryptAddress255: params['encrypt_address255'],
+      merchantName: params['merchant_name'],
+      encryptMerchantName: params['encrypt_merchant_name'],
+      pickupPhone: params['pickup_phone'],
+      pickupEmail: params['pickup_email'],
+      pickupNotes: params['pickup_notes'],
+      totalAwbQty: params['total_awb_qty'],
       userIdCreated: params['user_id'],
       createdTime: params['created_time'],
       userIdUpdated: params['user_id'],
@@ -813,6 +860,8 @@ export class PartnerService {
       workOrderStatusId: params['work_order_status_id_last'],
       userId: params['user_id'],
       branchId: params['branch_id'],
+      branchPartnerId: params['branch_partner_id'],
+      partnerId: params['partner_id'],
       isFinal: params['is_final'],
       historyDateTime: params['updated_time'],
       userIdCreated: params['user_id'],

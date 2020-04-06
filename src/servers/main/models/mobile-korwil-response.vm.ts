@@ -1,5 +1,6 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 import { ValidateBranchCoordinateResponseVm } from './branch-response.vm';
+import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 export class DetailBranchListKorwilResponseVm {
   @ApiModelProperty()
@@ -87,4 +88,88 @@ export class MobileUpdateProcessKorwilResponseVm {
 
   @ApiModelProperty()
   status: string;
+}
+
+export class KorwilHistoryResponseDetailVm {
+  @ApiModelProperty()
+  korwilTransactionId: string;
+
+  @ApiModelProperty()
+  totalTask: number;
+
+  @ApiModelProperty()
+  checkInDate: string;
+
+  @ApiModelProperty()
+  branchId: string;
+
+  @ApiModelProperty()
+  checkOutDate: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  userId: string;
+}
+
+export class KorwilHistoryResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({
+    type: () => [KorwilHistoryResponseDetailVm],
+  })
+  data: KorwilHistoryResponseDetailVm[];
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class DetailItemKorwilHistoryKorwil {
+  @ApiModelProperty()
+  korwilItemName: string;
+
+  @ApiModelProperty()
+  korwilItemId: string;
+
+  @ApiModelProperty()
+  korwilTransactionDetailId: string;
+
+  @ApiModelProperty()
+  isDone: string;
+
+  @ApiModelProperty()
+  statusItem: string;
+
+  @ApiModelProperty()
+  note: string;
+
+  @ApiModelProperty({ type: () => [DetailPhotoResponseVm] })
+  photo: DetailPhotoResponseVm[];
+}
+
+export class DetailHistoryKorwilResponseVm {
+  @ApiModelProperty()
+  statusKorwil: string;
+
+  @ApiModelProperty()
+  checkInDate: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  checkOutDate: string;
+
+  @ApiModelProperty()
+  korwilTransactionId: string;
+
+  @ApiModelProperty({
+    type: () => [DetailItemKorwilHistoryKorwil],
+  })
+  items: DetailItemKorwilHistoryKorwil[];
 }

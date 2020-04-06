@@ -64,15 +64,18 @@ export class BagItemHistoryQueueService {
     bagItemStatusId: number,
     branchId: number,
     userId: number,
+    addTime?: number,
     ) {
 
     // NOTE: obj data
+    // force bag history created time greater than now
+    // ,to avoid wrong sorting in tracking
     const obj = {
       bagItemId,
       bagItemStatusId,
       branchId,
       userId,
-      timestamp: moment().toDate(),
+      timestamp: addTime ? moment().add(addTime, 'minutes').toDate() : moment().toDate(),
     };
 
     return BagItemHistoryQueueService.queue.add(obj);

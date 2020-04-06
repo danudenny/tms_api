@@ -118,6 +118,12 @@ export class Bag extends TmsBaseEntity {
   })
   districtIdTo: number;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id_to',
+  })
+  branchIdTo: number;
+
   @Column('boolean', {
     nullable: true,
     name: 'is_sortir',
@@ -147,6 +153,10 @@ export class Bag extends TmsBaseEntity {
   @OneToOne(() => District)
   @JoinColumn({ name: 'district_id_to' })
   district: District;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_to' })
+  branchTo: Branch;
 
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
