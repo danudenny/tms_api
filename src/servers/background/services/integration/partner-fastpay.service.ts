@@ -60,6 +60,8 @@ export class PartnerFastpayService {
             await this.createWorkOrderHistory(
               workOrderId,
               branchPartner.branchId,
+              branchPartner.branchPartnerId,
+              branchPartner.partnerId,
               timeNow,
             );
           } else {
@@ -100,6 +102,8 @@ export class PartnerFastpayService {
             await this.createWorkOrderHistory(
               workOrderId,
               branchPartner.branchId,
+              branchPartner.branchPartnerId,
+              branchPartner.partnerId,
               timeNow,
             );
           } else {
@@ -201,6 +205,8 @@ export class PartnerFastpayService {
   private static async createWorkOrderHistory(
     workOrderId: number,
     branchId: number,
+    branchPartnerId: number,
+    partnerId: number,
     timeNow: Date,
   ) {
     const workOrderHistory = WorkOrderHistory.create({
@@ -210,6 +216,8 @@ export class PartnerFastpayService {
       userId: 1,
       branchId,
       isFinal: true,
+      branchPartnerId,
+      partnerId,
       historyDateTime: timeNow,
       userIdCreated: 1,
       createdTime: timeNow,
@@ -310,7 +318,8 @@ export class PartnerFastpayService {
     const query = `
       SELECT
         bp.branch_id as "branchId",
-        bp.branch_partner_id as "branchPartnerId"
+        bp.branch_partner_id as "branchPartnerId",
+        bp.partner_id as "partnerId"
       FROM branch_partner bp
           LEFT JOIN branch_child_partner bcp
           ON bp.branch_partner_id = bcp.branch_partner_id AND bcp.is_deleted = false
