@@ -16,6 +16,12 @@ export class PartnerSameDayService extends BaseEntity {
 
   @Column('bigint', {
     nullable: false,
+    name: 'awb_item_id',
+  })
+  awbItemId: number;
+
+  @Column('bigint', {
+    nullable: false,
     name: 'partner_id',
   })
   partnerId: number;
