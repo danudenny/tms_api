@@ -125,8 +125,10 @@ export class MobileCheckInService {
     // 2. else if time now GREATER THAN EQUAL to 06:00 o'clock, dateFrom = 06:00 today and dateTo = 06:00 tomorrow
 
     // Choose condition 1
-    let fromDate = now.subtract(1, 'days').format('YYYY-MM-DD 06:00:00');
-    let toDate = now.format('YYYY-MM-DD 06:00:00');
+    let fromDate = moment()
+      .subtract(1, 'days')
+      .format('YYYY-MM-DD 06:00:00');
+    let toDate = moment().format('YYYY-MM-DD 06:00:00');
     if (moment().isSameOrAfter(moment().format('YYYY-MM-DD 06:00:00'))) {
       // choose condition 2
       fromDate = moment().format('YYYY-MM-DD 06:00:00');
@@ -150,7 +152,9 @@ export class MobileCheckInService {
       : permissonPayload.branchId.toString();
     const branch = await this.branchRepository.findOne({
       select: [`branchName`, `branchId`, `updatedTime`],
-      where: { branchId: branchIdTemp },
+      where: {
+        branchId: branchIdTemp,
+      },
     });
     branchName = branch.branchName;
 
@@ -246,7 +250,9 @@ export class MobileCheckInService {
         qb.addSelect('ki.korwil_item_id', 'korwilItemId');
         qb.from('korwil_item', 'ki');
         qb.where('ki.is_deleted = false');
-        qb.where('ki.role_id = :roleId', { roleId: permission.roleId });
+        qb.where('ki.role_id = :roleId', {
+          roleId: permission.roleId,
+        });
 
         const korwilItem = await qb.getRawMany();
         let isCreateKorwilDetail = false;

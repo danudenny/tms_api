@@ -170,8 +170,10 @@ export class MobileKorwilService {
     // 2. else if time now GREATER THAN EQUAL to 06:00 o'clock, dateFrom = 06:00 today and dateTo = 06:00 tomorrow
 
     // Choose condition 1
-    let fromDate = now.subtract(1, 'days').format('YYYY-MM-DD 06:00:00');
-    let toDate = now.format('YYYY-MM-DD 06:00:00');
+    let fromDate = moment()
+      .subtract(1, 'days')
+      .format('YYYY-MM-DD 06:00:00');
+    let toDate = moment().format('YYYY-MM-DD 06:00:00');
     if (moment().isSameOrAfter(moment().format('YYYY-MM-DD 06:00:00'))) {
       // choose condition 2
       fromDate = moment().format('YYYY-MM-DD 06:00:00');

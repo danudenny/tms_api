@@ -1,12 +1,24 @@
-import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+import {
+  ApiModelProperty,
+  ApiModelPropertyOptional,
+} from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 import { ItemDeliveryResponseVm } from './web-delivery-list-response.vm';
 import {
-  PrintDoPodDataBranchToVm, PrintDoPodDataDoPodDetailVm, PrintDoPodDataUserDriverEmployeeVm,
-  PrintDoPodDataUserDriverVm, PrintDoPodDataVm,
+  PrintDoPodDataBranchToVm,
+  PrintDoPodDataDoPodDetailVm,
+  PrintDoPodDataUserDriverEmployeeVm,
+  PrintDoPodDataUserDriverVm,
+  PrintDoPodDataVm,
 } from './print-do-pod.vm';
-import { PrintDoPodBagDataDoPodDetailBagVm, PrintDoPodBagDataVm } from './print-do-pod-bag.vm';
-import { PrintDoPodDeliverDataDoPodDeliverDetailVm, PrintDoPodDeliverDataVm } from './print-do-pod-deliver.vm';
+import {
+  PrintDoPodBagDataDoPodDetailBagVm,
+  PrintDoPodBagDataVm,
+} from './print-do-pod-bag.vm';
+import {
+  PrintDoPodDeliverDataDoPodDeliverDetailVm,
+  PrintDoPodDeliverDataVm,
+} from './print-do-pod-deliver.vm';
 
 // Scan Out Awb List
 export class WebScanInResponseVm {
@@ -86,11 +98,9 @@ export class WebScanTransitResponseVm {
 
   @ApiModelProperty()
   partnerLogisticName: string;
-
 }
 
 export class WebScanTransitAwbResponseVm {
-
   @ApiModelProperty()
   awbNumber: string;
 
@@ -131,16 +141,13 @@ export class WebScanTransitAwbResponseVm {
   isCod: string;
 
   @ApiModelProperty()
-  doPodDeliverDetailId: string;
-
-  @ApiModelProperty()
   doPodId: number;
 
-  // @ApiModelProperty()
-  // photoType: string;
+  @ApiModelProperty()
+  doPodDetailId: string;
 
-  // @ApiModelProperty()
-  // url: string;
+  @ApiModelProperty()
+  awbSubstitute: string;
 }
 
 export class WebScanInDeliverResponseVm {
@@ -179,7 +186,6 @@ export class WebScanInDeliverResponseVm {
 }
 
 export class WebScanInDeliverGroupResponseVm {
-
   @ApiModelProperty({ format: 'date' })
   datePOD: string;
 
@@ -216,56 +222,20 @@ export class WebScanInDeliverGroupResponseVm {
   @ApiModelProperty()
   userIdDriver: number;
 }
-export class WebScanOutDeliverPartnerDataResponseVm {
+export class WebScanOutTransitUpdateAwbPartnerResponseVm {
+  @ApiModelProperty()
+  status: string;
 
   @ApiModelProperty()
-  doPodDeliverId: string;
-
-  @ApiModelProperty()
-  doPodDeliverCode: string;
-
-  @ApiModelProperty()
-  branchName: string;
-
-  @ApiModelProperty()
-  assignDate: string;
-
-  @ApiModelProperty()
-  confirmDate: string;
-
-  @ApiModelProperty()
-  awbNumber: string;
-
-  @ApiModelProperty()
-  driverName: string;
-
-  @ApiModelProperty()
-  awbStatusIdLast: number;
-
-  @ApiModelProperty()
-  awbStatus: string;
-
-  @ApiModelProperty()
-  consigneeAddress: string;
-
-  @ApiModelProperty()
-  completedDate: string;
-
-  @ApiModelProperty()
-  orderNo: string;
-
-  @ApiModelProperty()
-  receiverName: string;
+  message: string;
 }
 
 export class WebScanOutAwbListResponseVm extends BaseMetaResponseVm {
-
   @ApiModelProperty({ type: () => [WebScanInResponseVm] })
   data: WebScanInResponseVm[];
 }
 
 export class WebScanOutTransitListResponseVm extends BaseMetaResponseVm {
-
   @ApiModelProperty({ type: () => [WebScanTransitResponseVm] })
   data: WebScanTransitResponseVm[];
 }
@@ -276,7 +246,6 @@ export class WebScanOutTransitListAwbResponseVm extends BaseMetaResponseVm {
 }
 
 export class WebScanOutDeliverListResponseVm extends BaseMetaResponseVm {
-
   @ApiModelProperty({ type: () => [WebScanInDeliverResponseVm] })
   data: WebScanInDeliverResponseVm[];
 }
@@ -286,13 +255,6 @@ export class WebScanOutDeliverGroupListResponseVm extends BaseMetaResponseVm {
     type: () => [WebScanInDeliverGroupResponseVm],
   })
   data: WebScanInDeliverGroupResponseVm[];
-}
-
-export class WebScanOutDeliverPartnerListResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({
-    type: () => [WebScanOutDeliverPartnerDataResponseVm],
-  })
-  data: WebScanOutDeliverPartnerDataResponseVm[];
 }
 
 // Create DO POD
@@ -331,12 +293,13 @@ export class ScanAwbVm {
   message: string;
 
   // Use PrintDoPodDeliverDataVm rather than PrintDoPodDataVm, the current implementation of create scan out & create scan out deliver is on the same source
-  @ApiModelPropertyOptional({ type: () => PrintDoPodDeliverDataDoPodDeliverDetailVm })
+  @ApiModelPropertyOptional({
+    type: () => PrintDoPodDeliverDataDoPodDeliverDetailVm,
+  })
   printDoPodDetailMetadata?: PrintDoPodDeliverDataDoPodDeliverDetailVm = new PrintDoPodDeliverDataDoPodDeliverDetailVm();
 }
 
 export class WebScanOutAwbResponseVm {
-
   @ApiModelProperty()
   totalData: number;
 
@@ -370,7 +333,6 @@ export class ScanBagVm {
 }
 
 export class WebScanOutBagResponseVm {
-
   @ApiModelProperty()
   totalData: number;
 
@@ -385,7 +347,6 @@ export class WebScanOutBagResponseVm {
 }
 
 export class WebHubScanOutBagResponseVm {
-
   @ApiModelProperty()
   totalData: number;
 

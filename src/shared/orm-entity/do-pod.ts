@@ -170,6 +170,12 @@ export class DoPod extends TmsBaseEntity {
   })
   partnerLogisticId: string | null;
 
+  @Column('character varying', {
+    nullable: true,
+    name: 'partner_logistic_name',
+  })
+  partnerLogisticName: string | null;
+
   @Column('integer', {
     nullable: true,
     name: 'do_pod_method',

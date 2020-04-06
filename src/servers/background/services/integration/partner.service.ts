@@ -395,7 +395,7 @@ export class PartnerService {
     let workOrderStatusIdLast = null;
     let refAwbNumber = null;
     let pickupRequestDetailId = null;
-    let branchPartnerId = null;
+    let paramBranchPartnerId = null;
     let awbItemId = null;
     let pickupRequestAddress;
     let encryptAddress255;
@@ -427,7 +427,7 @@ export class PartnerService {
     }
 
     for (const itemBranch of dataBranch) {
-      branchPartnerId = itemBranch.branch_partner_id;
+      paramBranchPartnerId = itemBranch.branch_partner_id;
     }
 
     if (refAwbNumber != null) {
@@ -455,7 +455,7 @@ export class PartnerService {
         );
         return result;
       } else {
-        if (branchPartnerId == null) {
+        if (paramBranchPartnerId == null) {
           result = {
             code: '422',
             message: 'Branch code not found',
@@ -489,7 +489,8 @@ export class PartnerService {
               branch_id: '0',
               is_member: true,
               work_order_type: 'AUTOMATIC',
-              branch_partner_id: branchPartnerId,
+              branch_partner_id: paramBranchPartnerId,
+              partner_id_assigned: paramPartnerId,
               pickup_address: pickupRequestAddress,
               encrypt_address255: encryptAddress255,
               merchant_name: pickupRequestName,
@@ -535,7 +536,7 @@ export class PartnerService {
               work_order_status_id_last: '7050',
               work_order_status_id_pick: null,
               branch_id: '1481',
-              branch_partner_id: branchPartnerId,
+              branch_partner_id: paramBranchPartnerId,
               partner_id: paramPartnerId,
               is_final: true,
               user_id: '1',
@@ -582,7 +583,8 @@ export class PartnerService {
             await WorkOrder.update(workOrderIdLast, {
               workOrderStatusIdLast: 7050,
               workOrderStatusIdPick: null,
-              branchPartnerId,
+              branchPartnerId: paramBranchPartnerId,
+              partnerIdAssigned: parseInt(paramPartnerId, 10),
               userIdUpdated: 1,
               updatedTime: timeNow,
             });
@@ -635,7 +637,7 @@ export class PartnerService {
                 work_order_status_id_last: '7050',
                 work_order_status_id_pick: null,
                 branch_id: '1481',
-                branch_partner_id: branchPartnerId,
+                branch_partner_id: paramBranchPartnerId,
                 partner_id: paramPartnerId,
                 is_final: true,
                 user_id: '1',
@@ -816,6 +818,7 @@ export class PartnerService {
       isMember: params['is_member'],
       workOrderType: params['work_order_type'],
       branchPartnerId: params['branch_partner_id'],
+      partnerIdAssigned: params['partner_id_assigned'],
       pickupAddress: params['pickup_address'],
       encryptAddress255: params['encrypt_address255'],
       merchantName: params['merchant_name'],
