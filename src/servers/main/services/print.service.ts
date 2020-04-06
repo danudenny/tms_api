@@ -128,6 +128,129 @@ export class PrintService {
     });
   }
 
+  public static async printDoPodReturnTransitByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodDeliverPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doPod.findOne();
+    q.leftJoin(e => e.doPodDetails);
+    q.leftJoin(e => e.userDriver.employee);
+    q.leftJoin(e => e.doPodDetails);
+    q.leftJoin(e => e.doPodDetails.awbItemAttr);
+    q.leftJoin(e => e.doPodDetails.doPodDeliverDetail);
+    q.leftJoin(e => e.doPodDetails.doPodDeliverDetail.reasonLast);
+
+    const doPod = await q
+      .select({
+        doPodId: true, // needs to be selected due to do_pod_deliver relations are being included
+        doPodCode: true,
+        description: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
+        },
+        doPodDetails: {
+          doPodDetailId: true, // needs to be selected due to do_pod_deliver_detail relations are being included
+          doPodDeliverDetail: {
+            reasonLast: {
+              reasonCode: true,
+            },
+            consigneeName: true,
+          },
+          awbItemAttr: {
+            awbStatus: {
+              awbStatusName: true,
+            },
+          },
+          awbItem: {
+            awbItemId: true, // needs to be selected due to awb_item relations are being included
+            awb: {
+              awbId: true,
+              awbNumber: true,
+              consigneeName: true,
+              consigneeNumber: true,
+              consigneeAddress: true,
+              consigneeZip: true,
+              totalCodValue: true,
+              isCod: true,
+            },
+          },
+        },
+      })
+      .where(e => e.doPodId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodDetails.isDeleted, w => w.isFalse());
+
+    if (!doPod) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    const awbIds = map(doPod.doPodDetails, doPodDetail => doPodDetail.awbItem.awb.awbId);
+    const result = await RawQueryService.query(`SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(',')})`);
+    let totalAllCod = result[0].total;
+
+    if (totalAllCod < 1) {
+      totalAllCod = 0;
+    }
+
+    const currentUser = await RepositoryService.user
+      .loadById(queryParams.userId)
+      .select({
+        userId: true, // needs to be selected due to users relations are being included
+        employee: {
+          nickname: true,
+        },
+      })
+      .exec();
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
+    const currentBranch = await RepositoryService.branch
+      .loadById(queryParams.branchId)
+      .select({
+        branchName: true,
+      });
+
+    if (!currentBranch) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
+
+    const m = moment();
+    const jsreportParams = {
+      data: doPod,
+      meta: {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        totalItems: doPod.doPodDetails.length,
+        totalCod: totalAllCod,
+      },
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      printerName: 'StrukPrinter',
+      templates: [
+        {
+          templateName: 'surat-jalan-balik-transit',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+      ],
+    });
+  }
+
   public static async printBagItemForStickerByRequest(
     res: express.Response,
     queryParams: PrintBagItemPayloadQueryVm,

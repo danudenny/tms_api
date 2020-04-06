@@ -35,6 +35,7 @@ import {
   WebScanTransitResponseVm,
   WebScanOutTransitListResponseVm,
   WebScanOutTransitListAwbResponseVm,
+  WebScanOutTransitUpdateAwbPartnerResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import {
   WebScanOutAwbVm,
@@ -47,6 +48,8 @@ import {
   WebScanOutBagValidateVm,
   WebScanOutLoadForEditVm,
   WebScanOutBagForPrintVm,
+  WebScanOutAwbListPayloadVm,
+  UpdateAwbPartnerPayloadVm,
 } from '../../models/web-scan-out.vm';
 import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag';
 import { BagService } from '../v1/bag.service';
@@ -694,7 +697,7 @@ export class WebDeliveryOutService {
             response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
             response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
             response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
-            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagNumber;
+            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagData.bag.bagNumber;
             response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
 
             // AFTER Scan OUT ===============================================
@@ -918,6 +921,7 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['employeeName'] = 't2.fullname';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
+    payload.fieldResolverMap['partnerLogisticName'] = `"partnerLogisticName"`;
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
@@ -952,7 +956,14 @@ export class WebDeliveryOutService {
       ['t2.fullname', 'employeeName'],
       ['t3.branch_name', 'branchName'],
       ['COUNT (t4.do_pod_id)', 'totalAwb'],
-      [`COALESCE(t5.partner_logistic_name, 'Internal')`, 'partnerLogisticName'],
+      [`
+        CASE
+          WHEN t1.partner_logistic_name IS NOT NULL THEN t1.partner_logistic_name
+          WHEN t1.partner_logistic_id IS NOT NULL AND t1.partner_logistic_name IS NULL THEN t5.partner_logistic_name
+          ELSE
+            'Internal'
+        END
+      `, 'partnerLogisticName'],
     );
 
     q.innerJoin(e => e.doPodDetails, 't4', j =>
@@ -961,7 +972,7 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+    q.leftJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.partnerLogistic, 't5', j =>
@@ -987,17 +998,11 @@ export class WebDeliveryOutService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanOutTransitListAwbResponseVm> {
     // mapping field
-    payload.fieldResolverMap['doPodDeliverId'] = 't1.do_pod_deliver_id';
-    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
-    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['doPodId']     = 't1.do_pod_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
-    // mapping search field and operator default ilike
-    payload.globalSearchFields = [
-      {
-        field: 'doPodDeliverId',
-      },
-    ];
+    payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
+    payload.fieldResolverMap['awbNumber']   = 't2.awb_number';
+    payload.fieldResolverMap['awbSubstitute']   = 't1.awbSubstitute';
 
     const repo = new OrionRepositoryService(DoPodDetail, 't1');
     const q = repo.findAllRaw();
@@ -1013,6 +1018,7 @@ export class WebDeliveryOutService {
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t2.consignee_name', 'consigneeName'],
       ['CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))', 'totalCodValue'],
+      ['t1.awb_substitute', 'awbSubstitute'],
     );
 
     q.innerJoin(e => e.awbItem.awb, 't2', j =>
@@ -1022,15 +1028,11 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    // q.innerJoin(e => e.awbStatus, 't3', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
-
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const data   = await q.exec();
+    const total  = await q.countWithoutTakeAndSkip();
     const result = new WebScanOutTransitListAwbResponseVm();
 
-    result.data = data;
+    result.data   = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
@@ -1721,6 +1723,27 @@ export class WebDeliveryOutService {
     if (data) {
       result.data = data;
     }
+    return result;
+  }
+
+  async updateAwbPartner(payload: UpdateAwbPartnerPayloadVm):
+    Promise<WebScanOutTransitUpdateAwbPartnerResponseVm> {
+    const result   = new WebScanOutTransitUpdateAwbPartnerResponseVm();
+    result.status  = 'ok';
+    result.message = 'success';
+    const authMeta = AuthService.getAuthData();
+
+    const doPodDetail = await DoPodDetail.findOne({ doPodDetailId: payload.doPodDetailId });
+    if (doPodDetail) {
+      doPodDetail.awbSubstitute = payload.awbSubstitute;
+      doPodDetail.updatedTime   = moment().toDate();
+      doPodDetail.userIdUpdated = authMeta.userId;
+      await doPodDetail.save();
+    } else {
+      result.status  = 'error';
+      result.message = 'Data tidak ditemukan';
+    }
+
     return result;
   }
 
