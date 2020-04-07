@@ -11,6 +11,7 @@ export class HeaderMetadataMiddleware implements NestMiddleware {
     this.parseRequestIp(req);
     this.parseRequestUserAgent(req);
     this.parsePermissionToken(req);
+    this.parsePartnerToken(req);
     next();
   }
 
@@ -44,6 +45,26 @@ export class HeaderMetadataMiddleware implements NestMiddleware {
       RequestContextMetadataService.setMetadata(
         'PERMISSION_TOKEN',
         permissionToken,
+      );
+    }
+  }
+
+  parsePartnerToken(req: express.Request) {
+    let partnerToken;
+    if (req.headers && req.headers['x-api-key']) {
+      partnerToken = req.headers['x-api-key'];
+    } else {
+      const urlParts = url.parse(req.url, true);
+      const reqQuery = urlParts.query;
+      if (reqQuery && reqQuery.partnerToken) {
+        partnerToken = reqQuery.partnerToken;
+      }
+    }
+
+    if (partnerToken) {
+      RequestContextMetadataService.setMetadata(
+        'PARTNER_TOKEN',
+        partnerToken,
       );
     }
   }

@@ -24,6 +24,7 @@ import { PinoLoggerService } from './pino-logger.service';
 import { RedisService } from './redis.service';
 import { RepositoryService } from './repository.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
+import { PartnerTokenPayload } from '../interfaces/partner-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -172,11 +173,11 @@ export class AuthService {
     clientId: string,
     roleId: number,
     branchId: number,
-    ): Promise<PermissionAccessResponseVM> {
-      const authMeta = AuthService.getAuthMetadata();
-      const configKorwil = ConfigService.get('korwil');
+  ): Promise<PermissionAccessResponseVM> {
+    const authMeta = AuthService.getAuthMetadata();
+    const configKorwil = ConfigService.get('korwil');
 
-      if (authMeta) {
+    if (authMeta) {
       const user = await RepositoryService.user
         .loadById(authMeta.userId)
         .innerJoinAndSelect(e => e.userRoles.role.rolePermissions)
@@ -216,9 +217,9 @@ export class AuthService {
       result.isPalkur = false;
 
       // Role Id Korwil 38, role Id palkur 40
-      if(roleId == configKorwil.korwilRoleId){
+      if (roleId == configKorwil.korwilRoleId) {
         result.isKorwil = true;
-      }else if(roleId == configKorwil.palkurRoleId){
+      } else if (roleId == configKorwil.palkurRoleId) {
         result.isPalkur = true;
       }
       // Populate return value
@@ -407,6 +408,13 @@ export class AuthService {
   public static getPermissionTokenPayload() {
     return RequestContextMetadataService.getMetadata<JwtPermissionTokenPayload>(
       'PERMISSION_TOKEN_PAYLOAD',
+    );
+  }
+
+  // get data partner payload
+  public static getPartnerTokenPayload() {
+    return RequestContextMetadataService.getMetadata<PartnerTokenPayload>(
+      'PARTNER_TOKEN_PAYLOAD',
     );
   }
 
