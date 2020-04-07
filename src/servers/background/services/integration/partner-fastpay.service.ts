@@ -8,23 +8,37 @@ import { WorkOrderDetail } from '../../../../shared/orm-entity/work-order-detail
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
 import { Not } from 'typeorm';
+import { CommissionType } from '../../../../shared/orm-entity/commission-type';
+import { RedisService } from '../../../../shared/services/redis.service';
+import { AuthService } from '../../../../shared/services/auth.service';
 
 export class PartnerFastpayService {
 
   static async dropCash(
     payload: DropCashlessVm,
   ): Promise<DropCashLessResponseVM> {
-    return await this.dropCashless(payload);
+    const partner = AuthService.getPartnerTokenPayload();
+    return await this.dropPartnerProcess(payload, partner.partnerId, 'CASH');
   }
 
   static async dropCashless(
     payload: DropCashlessVm,
   ): Promise<DropCashLessResponseVM> {
+    const partner = AuthService.getPartnerTokenPayload();
+    return await this.dropPartnerProcess(payload, partner.partnerId, 'CASHLESS');
+  }
+
+  // private method ============================================================
+  private static async dropPartnerProcess(
+    payload: DropCashlessVm,
+    partnerId: number,
+    dropPartnerType: string,
+  ): Promise<DropCashLessResponseVM> {
     // check branch partner code
-    const branchPartner = await this.getDataBranchChild(payload.branch_code);
+    const branchPartner = await this.getDataBranchChild(payload.branch_code, partnerId);
     if (branchPartner) {
       // NOTE: check pickup request with awb number
-      let pickupRequest = await this.getPickupRequestAwbNumber(
+      let pickupRequest: DropPickupRequestResponseVM = await this.getPickupRequestAwbNumber(
         payload.awb_number,
       );
       // check pickup reqeust with referenceNo
@@ -52,6 +66,8 @@ export class PartnerFastpayService {
                 branchIdAssigned: 0,
                 branchId: 0,
                 workOrderStatusIdLast: 7050,
+                workOrderStatusIdPick: null,
+                partnerIdAssigned: partnerId,
                 branchPartnerId,
                 updatedTime: timeNow,
               },
@@ -61,7 +77,7 @@ export class PartnerFastpayService {
               workOrderId,
               branchPartner.branchId,
               branchPartner.branchPartnerId,
-              branchPartner.partnerId,
+              partnerId,
               timeNow,
             );
           } else {
@@ -79,6 +95,7 @@ export class PartnerFastpayService {
             pickupEmail: pickupRequest.pickupEmail,
             pickupNotes: pickupRequest.pickupNotes,
             totalAwbQty: 1,
+            partnerIdAssigned: partnerId,
           };
           workOrderId = await this.createWorkOrder(params, timeNow);
           if (workOrderId) {
@@ -89,26 +106,38 @@ export class PartnerFastpayService {
               pickupRequest.awbItemId,
               timeNow,
             );
-            // update pickup request detail
-            await PickupRequestDetail.update(
-              { pickupRequestDetailId },
-              {
-                workOrderIdLast: workOrderId,
-                userIdUpdated: 1,
-                updatedTime: timeNow,
-              },
-            );
+
             // with status drop partner
             await this.createWorkOrderHistory(
               workOrderId,
               branchPartner.branchId,
               branchPartner.branchPartnerId,
-              branchPartner.partnerId,
+              partnerId,
               timeNow,
             );
           } else {
             throw new BadRequestException('Gagal menyimpan data');
           }
+        }
+
+        // NOTE: update pickup request detail
+        if (workOrderId) {
+          // calculate partner charge
+          const dropPartnerCharge = await this.partnerCommission(dropPartnerType,
+            partnerId,
+            pickupRequest.parcelValue,
+          );
+
+          await PickupRequestDetail.update(
+            { pickupRequestDetailId },
+            {
+              workOrderIdLast: workOrderId,
+              dropPartnerCharge,
+              dropPartnerType,
+              userIdUpdated: 1,
+              updatedTime: timeNow,
+            },
+          );
         }
 
         // handle response request
@@ -122,11 +151,11 @@ export class PartnerFastpayService {
   }
 
   private static async handleResult(
-    pickupRequest: any,
+    pickupRequest: DropPickupRequestResponseVM,
   ): Promise<DropCashLessResponseVM> {
     return {
       partner: pickupRequest.partner,
-      ref_no: pickupRequest.noRef,
+      ref_no: pickupRequest.refNo,
       ref_awb_number: pickupRequest.refAwbNumber,
       recipient_city: pickupRequest.recipientCity,
       delivery_type: pickupRequest.deliveryType,
@@ -162,6 +191,7 @@ export class PartnerFastpayService {
       isMember: true,
       workOrderType: 'automatic',
       branchPartnerId: params.branchPartnerId,
+      partnerIdAssigned: params.partnerIdAssigned,
       pickupAddress: params.pickupAddress,
       encryptAddress255: params.encryptAddress255,
       merchantName: params.merchantName,
@@ -232,7 +262,7 @@ export class PartnerFastpayService {
   ): Promise<DropPickupRequestResponseVM> {
     const query = `
       SELECT p.partner_name as "partner",
-            pr.reference_no as "noRef",
+            pr.reference_no as "refNo",
             prd.pickup_request_id as "pickupRequestId",
             prd.pickup_request_detail_id as "pickupRequestDetailId",
             prd.awb_item_id as "awbItemId",
@@ -253,8 +283,9 @@ export class PartnerFastpayService {
             prd.recipient_zip as "recipientZip",
             prd.recipient_phone as "recipientPhone",
             prd.work_order_id_last as "workOrderIdLast",
+            prd.parcel_value as "parcelValue",
             pr.pickup_request_name as "pickupRequestName",
-            pr.pickup_request_address as "pickup_request_address",
+            pr.pickup_request_address as "pickupRequestAddress",
             pr.encrypt_address255 as "encryptAddress255",
             pr.encrypt_merchant_name as "encryptMerchantName",
             pr.pickup_request_contact_no as "pickupPhone",
@@ -274,7 +305,7 @@ export class PartnerFastpayService {
   ): Promise<DropPickupRequestResponseVM> {
     const query = `
       SELECT p.partner_name as "partner",
-            pr.reference_no as "noRef",
+            pr.reference_no as "refNo",
             prd.pickup_request_id as "pickupRequestId",
             prd.pickup_request_detail_id as "pickupRequestDetailId",
             prd.awb_item_id as "awbItemId",
@@ -295,6 +326,7 @@ export class PartnerFastpayService {
             prd.recipient_zip as "recipientZip",
             prd.recipient_phone as "recipientPhone",
             prd.work_order_id_last as "workOrderIdLast",
+            prd.parcel_value as "parcelValue",
             pr.pickup_request_name as "pickupRequestName",
             pr.pickup_request_address as "pickupRequestAddress",
             pr.encrypt_address255 as "encryptAddress255",
@@ -313,7 +345,7 @@ export class PartnerFastpayService {
     return rawData.length ? rawData[0] : null;
   }
 
-  private static async getDataBranchChild(branchCode: string) {
+  private static async getDataBranchChild(branchCode: string, partnerId: number) {
     // find data Branch Child Partner and Branch Partner
     const query = `
       SELECT
@@ -324,13 +356,85 @@ export class PartnerFastpayService {
           LEFT JOIN branch_child_partner bcp
           ON bp.branch_partner_id = bcp.branch_partner_id AND bcp.is_deleted = false
       WHERE (bp.branch_partner_code = :branchCode OR bcp.branch_child_partner_code = :branchCode)
-      AND bp.is_deleted = false
+      AND bp.parent_id = :partnerId AND bp.is_deleted = false
       LIMIT 1`;
 
     const branchPartner = await RawQueryService.queryWithParams(query, {
       branchCode,
+      partnerId,
     });
 
     return branchPartner.length ? branchPartner[0] : null;
+  }
+
+  private static async partnerCommission(
+    dropPartnerType: string,
+    partnerId: number,
+    parcelValue: number,
+  ): Promise<number> {
+    let dropPartnerCharge = 0;
+    const expireOnSeconds = 60 * 1; // 15 minutes
+    const redisKey = `cache:CommissionType:${dropPartnerType}:partnerId:${partnerId}`;
+
+    switch (dropPartnerType) {
+      case 'CASH':
+        let commissionPercentValue = 0;
+        const dataRedisCash = await RedisService.get(
+          redisKey,
+        );
+        if (dataRedisCash) {
+          commissionPercentValue = Number(dataRedisCash);
+        } else {
+          const commissionTypeCash = await CommissionType.findOne({
+            select: ['commissionPercentValue'],
+            where: {
+              partnerId,
+              commissionType: 'PRESENTASE',
+            },
+          });
+          if (commissionTypeCash) {
+            // set redis
+            await RedisService.setex(
+              redisKey,
+              commissionTypeCash.commissionPercentValue.toString(),
+              expireOnSeconds,
+            );
+            commissionPercentValue = commissionTypeCash.commissionPercentValue;
+          }
+        }
+        console.log('PRESENTASE ', commissionPercentValue);
+        dropPartnerCharge = parcelValue * (commissionPercentValue / 100);
+        break;
+
+      case 'CASHLESS':
+        let commissionValue = 0;
+        const dataRedisCashless = await RedisService.get(redisKey);
+        if (dataRedisCashless) {
+          commissionValue = Number(dataRedisCashless);
+        } else {
+          const commissionTypeCashLess = await CommissionType.findOne({
+            select: ['commissionValue'],
+            where: {
+              partnerId,
+              commissionType: 'VALUE',
+            },
+          });
+          if (commissionTypeCashLess) {
+            // set redis
+            await RedisService.setex(
+              redisKey,
+              commissionTypeCashLess.commissionValue.toString(),
+              expireOnSeconds,
+            );
+            commissionValue = commissionTypeCashLess.commissionValue;
+          }
+        }
+        dropPartnerCharge = commissionValue;
+        break;
+
+      default:
+        break;
+    }
+    return dropPartnerCharge;
   }
 }

@@ -151,6 +151,9 @@ export class DropPickupRequestResponseVM {
 
   @ApiModelProperty()
   pickupNotes;
+
+  @ApiModelProperty()
+  parcelValue: number;
 }
 
 export class DropCreateWorkOrderPayloadVM {
@@ -180,4 +183,7 @@ export class DropCreateWorkOrderPayloadVM {
 
   @ApiModelProperty()
   totalAwbQty: number;
+
+  @ApiModelProperty()
+  partnerIdAssigned: number;
 }

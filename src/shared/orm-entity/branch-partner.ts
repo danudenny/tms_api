@@ -30,4 +30,37 @@ export class BranchPartner extends TmsBaseEntity {
   })
   branchId: number | null;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'partner_id',
+  })
+  partnerId: number | null;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 500,
+    name: 'address',
+  })
+  address: string;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'phone',
+  })
+  phone: string;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'latitude',
+  })
+  latitude: string;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'longitude',
+  })
+  longitude: string;
 }
