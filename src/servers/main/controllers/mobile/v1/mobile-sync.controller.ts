@@ -20,10 +20,12 @@ import { PermissionTokenGuard } from '../../../../../shared/guards/permission-to
 import {
   MobileSyncPayloadVm,
   MobileSyncImagePayloadVm,
+  MobileSyncImageDataPayloadVm,
 } from '../../../models/mobile-sync-payload.vm';
 import {
   MobileSyncImageResponseVm,
   MobileSyncDataResponseVm,
+  MobileSyncImageDataResponseVm,
 } from '../../../models/mobile-sync-response.vm';
 import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
 import { V1MobileSyncService } from '../../../services/mobile/v1/mobile-sync.service';
@@ -54,5 +56,19 @@ export class V1MobileSyncController {
     @UploadedFile() file,
   ) {
     return V1MobileSyncService.syncImage(payload, file);
+  }
+
+  @Post('imageData')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: MobileSyncImageDataResponseVm })
+  @Transactional()
+  public async syncImageForm(
+    @Body() payload: MobileSyncImageDataPayloadVm,
+    @UploadedFile() file,
+  ) {
+    return V1MobileSyncService.syncImageData(payload, file);
   }
 }
