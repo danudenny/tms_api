@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm, DoReturnAwbListFindAllResponseVm } from '../../models/do-return.response.vm';
+import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm, DoReturnAwbListFindAllResponseVm, DoReturnFinenceFindAllResponseVm } from '../../models/do-return.response.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoReturnAwb } from '../../../../shared/orm-entity/do_return_awb';
 import { MetaService } from '../../../../shared/services/meta.service';
@@ -24,6 +24,7 @@ import { createQueryBuilder } from 'typeorm';
 import { AuthMetadata } from '../../../auth/models/auth-metadata.model';
 import { ReturnReceivedCustFindAllResponseVm } from '../../models/do-return-received-cust.response.vm';
 import { TrackingNote } from '../../../../shared/orm-entity/tracking_note';
+import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 
 @Injectable()
 export class DoReturnService {
@@ -115,6 +116,80 @@ export class DoReturnService {
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new ReturnFindAllResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findAllByRequestReport(
+    payload: BaseMetaPayloadVm,
+  ): Promise<DoReturnFinenceFindAllResponseVm> {
+    const {MongoClient} = require('mongodb');
+    // const uri = 'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-tracking-cluster-nrgvr.mongodb.net/test?retryWrites=true&w=majority';
+    // const client = new MongoClient(uri);
+    // console.log(client);
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+
+      {
+        field: 'refawbNumber',
+      },
+      {
+        field: 'createdTime',
+      },
+      {
+        field: 'originCode',
+      },
+      {
+        field: 'destinationCode',
+      },
+      {
+        field: 'awbStatusName',
+      },
+      {
+        field: 'partnerName',
+      },
+    ];
+    payload.fieldResolverMap['refAwbNumber'] = 'prd.ref_awb_number';
+    payload.fieldResolverMap['originCode'] = 'prd.origin_code';
+    payload.fieldResolverMap['createdTime'] = 'prd.created_time';
+    payload.fieldResolverMap['destinationCode'] = 'prd.destination_code';
+    payload.fieldResolverMap['doReturnNumber'] = 'prd.do_return_number';
+    payload.fieldResolverMap['partnerName'] = 'partner.partner_name';
+    payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
+    const repo = new OrionRepositoryService(PickupRequestDetail, 'prd');
+
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['prd.ref_awb_number', 'refAwbNumber'],
+      ['prd.origin_code', 'originCode'],
+      ['prd.destination_code', 'destinationCode'],
+      ['prd.created_time', 'createdTime'],
+      ['prd.user_created', 'userCreated'],
+      ['prd.updated_time', 'updatedTime'],
+      ['prd.do_return_number', 'doReturnNumber'],
+      ['partner.partner_name', 'partnerName'],
+      ['status.awb_status_name', 'awbStatusName'],
+    );
+    q.innerJoin(e => e.pickupRequest, 'pr', j =>
+      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      );
+    q.innerJoin(e => e.awbitem.awbStatus, 'status', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+    q.innerJoin(e => e.awbitem.awbId, 'awb',
+      );
+    q.innerJoin(e => e.pickupRequest.partner, 'partner', j =>
+      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new DoReturnFinenceFindAllResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 

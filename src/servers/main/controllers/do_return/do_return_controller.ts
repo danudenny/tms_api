@@ -51,6 +51,14 @@ export class DoReturnController {
     return DoReturnService.findAllDoListAwb(payload);
   }
 
+  @Post('dolist/report')
+  @HttpCode(HttpStatus.OK)
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: DoReturnAwbListFindAllResponseVm })
+  public async findAllDoReturnReport(@Body() payload: BaseMetaPayloadVm ) {
+    return DoReturnService.findAllByRequestReport(payload);
+  }
+
   @Post('dolist/ct')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)

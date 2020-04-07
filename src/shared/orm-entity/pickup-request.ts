@@ -13,6 +13,7 @@ import {
   PrimaryGeneratedColumn,
   RelationId,
 } from 'typeorm';
+import { Partner } from './partner';
 
 @Entity('pickup_request', { schema: 'public' })
 @Index('pickup_request_last_request_idx', [
@@ -153,7 +154,6 @@ export class PickupRequest extends BaseEntity {
 
   @Column('bigint', {
     nullable: true,
-
   })
   partner_id: string | null;
 
@@ -204,7 +204,6 @@ export class PickupRequest extends BaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
   })
   is_deleted: boolean;
 
@@ -214,4 +213,8 @@ export class PickupRequest extends BaseEntity {
 
   })
   encrypt_merchant_name: string | null;
+
+  @OneToOne(() => Partner)
+  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partner_id' })
+  partner: Partner;
 }

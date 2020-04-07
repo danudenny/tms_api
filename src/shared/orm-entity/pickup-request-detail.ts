@@ -3,8 +3,14 @@ import {
   Entity,
   Index,
   PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
+  ManyToOne,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import { PickupRequest } from './pickup-request';
+import { AwbItemAttr } from './awb-item-attr';
+import { AwbItem } from './awb-item';
 
 @Entity('pickup_request_detail', { schema: 'public' })
 // @Index('pickup_request_detail_pickup_request_id_idx', [
@@ -316,6 +322,13 @@ export class PickupRequestDetail extends TmsBaseEntity {
   })
   shipperLongitude: string | null;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'do_return_number',
+  })
+  doReturnNumber: string | null;
+
   @Column('numeric', {
     nullable: true,
     precision: 18,
@@ -323,4 +336,17 @@ export class PickupRequestDetail extends TmsBaseEntity {
     name: 'tax_value',
   })
   taxValue: string | null;
+
+  @ManyToOne(() => PickupRequest)
+  @JoinColumn({ name: 'pickup_request_id' })
+  pickupRequest: PickupRequest;
+
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  awbItemAttr: AwbItemAttr;
+
+  @OneToOne(() => AwbItem)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  awbitem: AwbItem;
+
 }
