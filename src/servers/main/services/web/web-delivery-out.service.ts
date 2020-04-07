@@ -35,6 +35,7 @@ import {
   WebScanTransitResponseVm,
   WebScanOutTransitListResponseVm,
   WebScanOutTransitListAwbResponseVm,
+  WebScanOutTransitUpdateAwbPartnerResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import {
   WebScanOutAwbVm,
@@ -47,6 +48,8 @@ import {
   WebScanOutBagValidateVm,
   WebScanOutLoadForEditVm,
   WebScanOutBagForPrintVm,
+  WebScanOutAwbListPayloadVm,
+  UpdateAwbPartnerPayloadVm,
 } from '../../models/web-scan-out.vm';
 import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag';
 import { BagService } from '../v1/bag.service';
@@ -61,6 +64,7 @@ import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagTroubleService } from '../../../../shared/services/bag-trouble.service';
 import { Employee } from '../../../../shared/orm-entity/employee';
 import { Branch } from '../../../../shared/orm-entity/branch';
+import { BagScanOutHubQueueService } from '../../../queue/services/bag-scan-out-hub-queue.service';
 // #endregion
 
 @Injectable()
@@ -611,13 +615,15 @@ export class WebDeliveryOutService {
 
   // TODO: need refactoring
   /**
-   * Create DO POD Detail
+   * Create DO POD Detail for Scan Out HUB
    * with scan bag number
    * @param {WebScanOutBagVm} payload
    * @returns {Promise<WebScanOutBagResponseVm>}
    * @memberof WebDeliveryOutService
    */
-  async scanOutBag(payload: WebScanOutBagVm): Promise<WebScanOutBagResponseVm> {
+  async scanOutBag(
+    payload: WebScanOutBagVm,
+  ): Promise<WebScanOutBagResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
@@ -638,23 +644,18 @@ export class WebDeliveryOutService {
     });
 
     for (const bagNumber of payload.bagNumber) {
-      const response = {
-        status: 'ok',
-        message: 'Success',
-      };
+      const response = new ScanBagVm();
+      response.status = 'ok';
+      response.message = 'success';
+
       const bagData = await BagService.validBagNumber(bagNumber);
       if (bagData) {
         // NOTE: validate bag branch id last
         // TODO: validation need improvement
         // bag status scan out by doPodType (3005 Branch/ 3010 and 3020 HUB)
         const bagStatus = BAG_STATUS.OUT_HUB;
+        let additionMinutes = 0;
         const transactionStatusId = 300; // OUT HUB
-
-        // Branch
-        // if (doPod.doPodType == 3005) {
-        //   bagStatus = BAG_STATUS.OUT_BRANCH;
-        //   transactionStatusId =  800;
-        // }
 
         const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
         const holdRedis = await RedisService.locking(
@@ -692,11 +693,18 @@ export class WebDeliveryOutService {
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
             await DoPodDetailBag.insert(doPodDetailBag);
 
+            // Assign print metadata
+            response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
+            response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
+            response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
+            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagData.bag.bagNumber;
+            response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
+
             // AFTER Scan OUT ===============================================
             // #region after scanout
             // Update bag_item set bag_item_status_id = 1000
 
-            BagItem.update(bagData.bagItemId, {
+            await BagItem.update(bagData.bagItemId, {
               bagItemStatusIdLast: bagStatus,
               branchIdLast: doPod.branchId,
               branchIdNext: doPod.branchIdTo,
@@ -707,15 +715,16 @@ export class WebDeliveryOutService {
             // NOTE: Loop data bag_item_awb for update status awb
             // and create do_pod_detail (data awb on bag)
             // TODO: need to refactor send to background job
-            // BagScanOutBranchQueueService.perform
-            await BagService.statusOutBranchAwbBag(
+            BagScanOutHubQueueService.perform(
               bagData.bagId,
               bagData.bagItemId,
               doPod.doPodId,
               doPod.branchIdTo,
               doPod.userIdDriver,
-              doPod.doPodType,
               bagNumber,
+              authMeta.userId,
+              permissonPayload.branchId,
+              doPod.doPodType,
             );
 
             // TODO: if isTransit auto IN
@@ -729,6 +738,12 @@ export class WebDeliveryOutService {
               );
             }
 
+            // NOTE: handle sorting status OUT AND IN HUB
+            // force OUT_HUB created after IN_HUB in history bag (queue)
+            if(bagStatus == BAG_STATUS.OUT_HUB){
+              additionMinutes = 1;
+            }
+
             // TODO: need refactoring
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
@@ -736,6 +751,7 @@ export class WebDeliveryOutService {
               bagStatus,
               permissonPayload.branchId,
               authMeta.userId,
+              additionMinutes,
             );
             // #endregion after scanout
 
@@ -905,6 +921,7 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['employeeName'] = 't2.fullname';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
+    payload.fieldResolverMap['partnerLogisticName'] = `"partnerLogisticName"`;
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
@@ -939,7 +956,14 @@ export class WebDeliveryOutService {
       ['t2.fullname', 'employeeName'],
       ['t3.branch_name', 'branchName'],
       ['COUNT (t4.do_pod_id)', 'totalAwb'],
-      [`COALESCE(t5.partner_logistic_name, 'Internal')`, 'partnerLogisticName'],
+      [`
+        CASE
+          WHEN t1.partner_logistic_name IS NOT NULL THEN t1.partner_logistic_name
+          WHEN t1.partner_logistic_id IS NOT NULL AND t1.partner_logistic_name IS NULL THEN t5.partner_logistic_name
+          ELSE
+            'Internal'
+        END
+      `, 'partnerLogisticName'],
     );
 
     q.innerJoin(e => e.doPodDetails, 't4', j =>
@@ -948,7 +972,7 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+    q.leftJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.partnerLogistic, 't5', j =>
@@ -974,17 +998,11 @@ export class WebDeliveryOutService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanOutTransitListAwbResponseVm> {
     // mapping field
-    payload.fieldResolverMap['doPodDeliverId'] = 't1.do_pod_deliver_id';
-    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
-    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['doPodId']     = 't1.do_pod_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
-    // mapping search field and operator default ilike
-    payload.globalSearchFields = [
-      {
-        field: 'doPodDeliverId',
-      },
-    ];
+    payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
+    payload.fieldResolverMap['awbNumber']   = 't2.awb_number';
+    payload.fieldResolverMap['awbSubstitute']   = 't1.awbSubstitute';
 
     const repo = new OrionRepositoryService(DoPodDetail, 't1');
     const q = repo.findAllRaw();
@@ -1000,6 +1018,7 @@ export class WebDeliveryOutService {
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t2.consignee_name', 'consigneeName'],
       ['CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))', 'totalCodValue'],
+      ['t1.awb_substitute', 'awbSubstitute'],
     );
 
     q.innerJoin(e => e.awbItem.awb, 't2', j =>
@@ -1009,15 +1028,11 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    // q.innerJoin(e => e.awbStatus, 't3', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
-
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const data   = await q.exec();
+    const total  = await q.countWithoutTakeAndSkip();
     const result = new WebScanOutTransitListAwbResponseVm();
 
-    result.data = data;
+    result.data   = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
@@ -1666,6 +1681,26 @@ export class WebDeliveryOutService {
   }
 
   async photoDetail(payload: PhotoDetailVm): Promise<PhotoResponseVm> {
+    let q = createQueryBuilder();
+    q.addSelect("dpdd.awb_number", "awbNumber");
+    q.from('do_pod_deliver_detail', 'dpdd');
+    q.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
+      doPodDeliverDetailId: payload.doPodDeliverDetailId,
+    });
+    let temp = await q.getRawOne();
+
+    q = createQueryBuilder();
+    q.addSelect("dpdd.do_pod_deliver_id", "doPodDeliverId");
+    q.from('do_pod_deliver_detail', 'dpdd');
+    q.where('dpdd.awb_number = :awbNumber', {
+      awbNumber: temp.awbNumber,
+    });
+    temp = await q.getRawMany();
+
+    let id = "";
+    temp.map(function(item){
+      id += id ? ",'"+item.doPodDeliverId+"'" : "'"+item.doPodDeliverId+"'";
+    });
     const qq = createQueryBuilder();
     qq.addSelect('attachments.url', 'url');
     qq.addSelect('dpda.type', 'type');
@@ -1681,16 +1716,34 @@ export class WebDeliveryOutService {
       'attachments',
       'attachments.attachment_tms_id = dpda.attachment_tms_id',
     );
-    qq.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
-      doPodDeliverDetailId: payload.doPodDeliverDetailId,
-
-    });
+    qq.where(`dpdd.do_pod_deliver_id IN (${id})`);
 
     const result = new PhotoResponseVm();
     const data = await qq.getRawMany();
     if (data) {
       result.data = data;
     }
+    return result;
+  }
+
+  async updateAwbPartner(payload: UpdateAwbPartnerPayloadVm):
+    Promise<WebScanOutTransitUpdateAwbPartnerResponseVm> {
+    const result   = new WebScanOutTransitUpdateAwbPartnerResponseVm();
+    result.status  = 'ok';
+    result.message = 'success';
+    const authMeta = AuthService.getAuthData();
+
+    const doPodDetail = await DoPodDetail.findOne({ doPodDetailId: payload.doPodDetailId });
+    if (doPodDetail) {
+      doPodDetail.awbSubstitute = payload.awbSubstitute;
+      doPodDetail.updatedTime   = moment().toDate();
+      doPodDetail.userIdUpdated = authMeta.userId;
+      await doPodDetail.save();
+    } else {
+      result.status  = 'error';
+      result.message = 'Data tidak ditemukan';
+    }
+
     return result;
   }
 

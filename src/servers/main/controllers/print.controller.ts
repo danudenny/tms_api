@@ -12,7 +12,8 @@ import { PrintDoPodService } from '../services/print-do-pod.service';
 import { PrintDoPodBagService } from '../services/print-do-pod-bag.service';
 import { PrintDoPodDeliverService } from '../services/print-do-pod-deliver.service';
 import { PrintDoPodReturnPayloadQueryVm } from '../models/print-do-pod-return.vm';
-import { PrintDoPodDoReturnPayloadQueryVm } from '../models/print-do-pod-do-return.vm';
+import { PrintBagItemPaperService } from '../services/print-bag-item-paper.service';
+import { PrintBagItemStickerService } from '../services/print-bag-item-sticker.service';
 
 @ApiUseTags('General')
 @Controller('print')
@@ -57,6 +58,16 @@ export class PrintController {
     return PrintService.printDoPodReturnByRequest(serverResponse, queryParams);
   }
 
+  @Get('do-pod-return-transit')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printDoPodReturnTransit(
+    @Query() queryParams: PrintDoPodDeliverPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintService.printDoPodReturnTransitByRequest(serverResponse, queryParams);
+  }
+
   @Get('bag-item-for-sticker')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
@@ -64,7 +75,7 @@ export class PrintController {
     @Query() queryParams: PrintBagItemPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintService.printBagItemForStickerByRequest(serverResponse, queryParams);
+    return PrintBagItemStickerService.printBagItemStickerByRequest(serverResponse, queryParams);
   }
 
   @Get('bag-item-for-paper')
@@ -74,7 +85,7 @@ export class PrintController {
     @Query() queryParams: PrintBagItemPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintService.printBagItemForPaperByRequest(serverResponse, queryParams);
+    return PrintBagItemPaperService.printBagItemPaperByRequest(serverResponse, queryParams);
   }
 
   @Get('bag-item-sticker-paper')

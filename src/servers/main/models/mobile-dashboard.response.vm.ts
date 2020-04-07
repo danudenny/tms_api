@@ -24,4 +24,10 @@ export class MobileDetailTransitResponseVm {
 
   @ApiModelProperty()
   notScanOutAwb: MobileTransitResponseVm;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
 }

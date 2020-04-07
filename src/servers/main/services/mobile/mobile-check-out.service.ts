@@ -101,28 +101,23 @@ export class MobileCheckOutService {
 
     const timeNow = moment().toDate();
 
-    if(payload.branchId){
-      const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(payload.latitudeCheckOut, payload.longitudeCheckOut, payload.branchId);
-      if (responseCheckBranch.status == false){
-        const qb = createQueryBuilder();
-        qb.addSelect('utb.user_to_branch_id', 'userToBranchId');
-        qb.from('user_to_branch', 'utb');
-        qb.where('utb.is_deleted = false');
-        qb.andWhere('utb.ref_branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
-        qb.andWhere('utb.ref_user_id = :idUserLogin', { idUserLogin: authMeta.userId });
-        const res = await qb.getRawOne();
+    if (payload.branchId) {
+      const responseCheckBranch = await MobileKorwilService.validateBranchByCoordinate(
+        payload.latitudeCheckOut,
+        payload.longitudeCheckOut,
+        payload.branchId,
+      );
+      if (responseCheckBranch.status == false) {
+        // const qb = createQueryBuilder();
+        // qb.addSelect('utb.user_to_branch_id', 'userToBranchId');
+        // qb.from('user_to_branch', 'utb');
+        // qb.where('utb.is_deleted = false');
+        // qb.andWhere('utb.ref_branch_id = :branchIdTemp', { branchIdTemp: payload.branchId });
+        // qb.andWhere('utb.ref_user_id = :idUserLogin', { idUserLogin: authMeta.userId });
+        // const res = await qb.getRawOne();
 
-        if(!res){
-          result.status = "error";
-          result.message = 'Branch Check In tidak valid!';
-          result.branchName = branchName;
-          result.checkOutDate = checkOutDate;
-          result.attachmentId = attachmentId;
-          result.checkoutIdBranch = null;
-          return result;
-        }else{
-          message = "Checkout berhasil, Check Out diluar wilayah gerai Check In";
-        }
+        // NOTE: give warning branch out of range
+        message = 'Checkout berhasil, Check Out diluar wilayah gerai Check In';
       }
     }
 
@@ -159,7 +154,11 @@ export class MobileCheckOutService {
 
       const branch = await this.branchRepository.findOne({
         select: ['branchName', 'branchId'],
-        where: { branchId: payload.branchId ? payload.branchId : permissonPayload.branchId },
+        where: {
+          branchId: payload.branchId
+            ? payload.branchId
+            : permissonPayload.branchId,
+        },
       });
 
       branchName = branch.branchName;

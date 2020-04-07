@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { ConfigService } from '../../../shared/services/config.service';
 
 @Injectable()
-export class AuthenticatedGuard implements CanActivate {
+export class AuthApiKeyCpsGuard implements CanActivate {
   constructor() {}
   canActivate(
     context: ExecutionContext,
@@ -13,7 +13,7 @@ export class AuthenticatedGuard implements CanActivate {
   }
 
   private hasValidCredentials(request: Request): boolean {
-    if (request['headers']['api-key'] === ConfigService.get('masterData.apiKey')) {
+    if (request['headers']['api-key'] === ConfigService.get('cps.apiKey')) {
       return true;
     } else {
       return false;

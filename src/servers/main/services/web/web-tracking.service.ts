@@ -7,39 +7,45 @@ import {
 } from '../../models/tracking.vm';
 
 export class WebTrackingService {
-  static async awb(payload: TrackingAwbPayloadVm): Promise<TrackingAwbResponseVm> {
+  static async awb(
+    payload: TrackingAwbPayloadVm,
+  ): Promise<TrackingAwbResponseVm> {
     const result = new TrackingAwbResponseVm();
 
     const data = await this.getRawAwb(payload.awbNumber);
     if (data) {
       // mapping data
-      result.awbDate = data.awbDate;
-      result.createdName = data.employeeName;
-      result.awbNumber = data.awbNumber;
-      result.awbStatusLast = data.awbStatusLast;
-      result.bagNumber = data.bagNumber;
-      result.branchName = data.branchName;
-      result.branchToName = data.branchToName;
-      result.consigneeName = data.consigneeName;
-      result.consigneeAddress = data.consigneeAddress;
-      result.customerName = data.customerName;
-      result.customerNameRds = data.customerNameRds;
-      result.packageTypeCode = data.packageTypeCode;
-      result.packageTypeName = data.packageTypeName;
-      result.paymentMethodCode = data.paymentMethodCode;
-      result.totalSellPrice = data.totalSellPrice;
-      result.totalCodValue = data.totalCodValue;
-      result.totalWeightFinal = data.totalWeightFinal;
-      result.totalWeightFinalRounded = data.totalWeightFinalRounded;
-      result.isCod = data.isCod;
-      result.totalWeightVolume = data.totalWeightVolume;
-      result.refResellerPhone = data.refResellerPhone;
-      result.consigneePhone = data.consigneePhone;
-      result.refRepresentativeCode = data.refRepresentativeCode;
-      result.parcelValue = data.parcelValue;
-      result.partnerLogisticAwb = data.partnerLogisticAwb;
-      result.doPodDeliverDetailId = data.doPodDeliverDetailId;
-      result.isHasPhotoReceiver = data.doPodDeliverAttachmentId ? true : false;
+      result.awbDate                   = data.awbDate;
+      result.createdName               = data.employeeName;
+      result.awbNumber                 = data.awbNumber;
+      result.awbStatusLast             = data.awbStatusLast;
+      result.bagNumber                 = data.bagNumber;
+      result.branchName                = data.branchName;
+      result.branchToName              = data.branchToName;
+      result.consigneeName             = data.consigneeName;
+      result.consigneeAddress          = data.consigneeAddress;
+      result.customerName              = data.customerName;
+      result.customerNameRds           = data.customerNameRds;
+      result.packageTypeCode           = data.packageTypeCode;
+      result.packageTypeName           = data.packageTypeName;
+      result.paymentMethodCode         = data.paymentMethodCode;
+      result.totalSellPrice            = data.totalSellPrice;
+      result.totalCodValue             = data.totalCodValue;
+      result.totalWeightFinal          = data.totalWeightFinal;
+      result.totalWeightFinalRounded   = data.totalWeightFinalRounded;
+      result.isCod                     = data.isCod;
+      result.totalWeightVolume         = data.totalWeightVolume;
+      result.refResellerPhone          = data.refResellerPhone;
+      result.consigneePhone            = data.consigneePhone;
+      result.refRepresentativeCode     = data.refRepresentativeCode;
+      result.parcelValue               = data.parcelValue;
+      result.partnerLogisticAwb        = data.partnerLogisticAwb;
+      result.partnerLogisticName       = data.partnerLogisticName;
+      result.doPodDeliverDetailId      = data.doPodDeliverDetailId;
+      result.isHasPhotoReceiver        = data.doPodDeliverAttachmentId ? true : false;
+      result.returnAwbNumber           = data.returnAwbNumber;
+      result.awbSubstitute             = data.awbSubstitute;
+      result.partnerLogisticSubstitute = data.partnerLogisticSubstitute;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -51,19 +57,21 @@ export class WebTrackingService {
     return result;
   }
 
-  static async bag(payload: TrackingBagPayloadVm): Promise<TrackingBagResponseVm> {
+  static async bag(
+    payload: TrackingBagPayloadVm,
+  ): Promise<TrackingBagResponseVm> {
     const result = new TrackingBagResponseVm();
     const data = await this.getRawBag(payload.bagNumber);
     if (data) {
-      result.bagNumber = data.bagNumber;
-      result.weight = data.weight;
-      result.bagItemId = data.bagItemId;
-      result.bagItemStatusId = data.bagItemStatusId;
+      result.bagNumber         = data.bagNumber;
+      result.weight            = data.weight;
+      result.bagItemId         = data.bagItemId;
+      result.bagItemStatusId   = data.bagItemStatusId;
       result.bagItemStatusName = data.bagItemStatusName;
-      result.branchCodeLast = data.branchCodeLast;
-      result.branchNameLast = data.branchNameLast;
-      result.branchCodeNext = data.branchCodeNext;
-      result.branchNameNext = data.branchNameNext;
+      result.branchCodeLast    = data.branchCodeLast;
+      result.branchNameLast    = data.branchNameLast;
+      result.branchCodeNext    = data.branchCodeNext;
+      result.branchNameNext    = data.branchNameNext;
       const history = await this.getRawBagHistory(data.bagItemId);
       if (history && history.length) {
         result.bagHistory = history;
@@ -89,7 +97,7 @@ export class WebTrackingService {
         CONCAT(r.representative_code, ' - ', dt.district_name) as "branchToName",
         CONCAT(ca.customer_account_code, ' - ',ca.customer_account_name) as "customerName",
         COALESCE(a.ref_prev_customer_account_id, '') as "customerNameRds",
-        COALESCE(a.consignee_name, '') as "consigneeName",
+        COALESCE(dpd.consignee_name, a.consignee_name, '') as "consigneeName",
         COALESCE(a.consignee_address, '') as "consigneeAddress",
         a.awb_date as "awbDate",
         a.is_cod as "isCod",
@@ -103,12 +111,28 @@ export class WebTrackingService {
         COALESCE(pt.package_type_code, '') as "packageTypeCode",
         COALESCE(pt.package_type_name, '') as "packageTypeName",
         COALESCE(p.payment_method_code, '') as "paymentMethodCode",
+        COALESCE(
+          (
+            CASE
+              WHEN ar.is_partner_logistic = true THEN null
+              ELSE ar.return_awb_number
+            END
+          ), ''
+        ) as "returnAwbNumber",
+        COALESCE(ar.partner_logistic_awb, '') as "partnerLogisticAwb",
+        COALESCE(ar.partner_logistic_name, '') as "partnerLogisticName",
         a.total_cod_value as "totalCodValue",
         CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
         COALESCE(bg.bagging_code, '') as "baggingCode",
         COALESCE(s.smu_code, '') as "smuCode",
         dpd.do_pod_deliver_detail_id as "doPodDeliverDetailId",
-        dpa.do_pod_deliver_attachment_id as "doPodDeliverAttachmentId"
+        dpa.do_pod_deliver_attachment_id as "doPodDeliverAttachmentId",
+        dpdet.awb_substitute as "awbSubstitute",
+        CASE
+          WHEN dpod.partner_logistic_name IS NOT NULL THEN dpod.partner_logistic_name
+          WHEN dpod.partner_logistic_id IS NOT NULL THEN pl.partner_logistic_name
+          ELSE ''
+        END AS "partnerLogisticSubstitute"
       FROM awb a
         INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
@@ -131,6 +155,10 @@ export class WebTrackingService {
         LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
         LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false
         LEFT JOIN do_pod_deliver_attachment dpa ON dpa.do_pod_deliver_detail_id = dpd.do_pod_deliver_detail_id AND dpa.is_deleted = false
+        LEFT JOIN awb_return ar ON ar.origin_awb_id = ait.awb_id AND ar.is_deleted = false
+        LEFT JOIN do_pod_detail dpdet ON dpdet.awb_id = a.awb_id AND dpdet.is_deleted = false
+        LEFT JOIN do_pod dpod ON dpod.do_pod_id = dpdet.do_pod_id AND dpod.is_deleted = false
+        LEFT JOIN partner_logistic pl ON pl.partner_logistic_id = dpod.partner_logistic_id AND pl.is_deleted = false
       WHERE a.awb_number = :awbNumber
       AND a.is_deleted = false LIMIT 1;
     `;
@@ -149,6 +177,8 @@ export class WebTrackingService {
         ast.awb_visibility as "awbVisibility",
         ah.employee_id_driver as "employeeIdDriver",
         e.fullname as "employeeNameDriver",
+        e2.fullname as "employeeNameScan",
+        e2.nik as "employeeNikScan",
         u.username,
         b.branch_name as "branchName",
         ast.awb_status_name as "awbStatusName",
@@ -158,6 +188,7 @@ export class WebTrackingService {
       FROM awb_history ah
         LEFT JOIN branch b ON b.branch_id = ah.branch_id
         LEFT JOIN users u ON u.user_id = ah.user_id
+        LEFT JOIN employee e2 ON e2.employee_id = u.employee_id
         LEFT JOIN awb_status ast ON ast.awb_status_id = ah.awb_status_id
         LEFT JOIN employee e ON e.employee_id = ah.employee_id_driver
       WHERE ah.awb_item_id = :awbItemId
@@ -191,7 +222,8 @@ export class WebTrackingService {
         WHERE b.bag_number = :bagNumber AND bi.bag_seq = :seqNumber LIMIT 1
       `;
       const rawData = await RawQueryService.queryWithParams(query, {
-        bagNumber, seqNumber,
+        bagNumber,
+        seqNumber,
       });
       return rawData ? rawData[0] : null;
     } else {

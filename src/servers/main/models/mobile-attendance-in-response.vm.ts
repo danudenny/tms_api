@@ -10,3 +10,20 @@ export class MobileAttendanceInResponseVm {
   @ApiModelProperty()
   branchName: string;
 }
+
+export class MobileAttendanceInitResponseVm {
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  checkInDate: string;
+
+  @ApiModelProperty()
+  attachmentId: number;
+
+  @ApiModelPropertyOptional()
+  isAttendanceIn?: boolean;
+}
