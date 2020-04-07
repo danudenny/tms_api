@@ -2,6 +2,8 @@ import * as _ from 'lodash';
 import { Pool } from 'pg';
 import { mssqlService } from '../../config/database/mssql.service';
 import * as mysql from 'mysql';
+const mongodb = require('mongodb');
+const MongoClient = require('mongodb').MongoClient;
 
 export abstract class DatabaseConfig {
 
@@ -19,6 +21,27 @@ export abstract class DatabaseConfig {
     connectionTimeout: 12000000, // 2 minutes,
     requestTimeout: 12000000, // 2 minutes
   };
+
+  private static sicepatMonggoConnectionString: string = 'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-tracking-cluster-nrgvr.mongodb.net/test?retryWrites=true&w=majority';
+  private static sicepatMonggoClient: any;
+  public static async getSicepatMonggoClient() {
+    if (!this.sicepatMonggoClient) {
+      try {
+        const client = await MongoClient.connect(this.sicepatMonggoConnectionString, { useNewUrlParser: true });
+        this.sicepatMonggoClient = client;
+      } catch (error) {
+        console.log(error);
+        throw error;
+      }
+    }
+
+    return this.sicepatMonggoClient;
+  }
+
+  public static async getSicepatMonggoDb() {
+    const client = await this.getSicepatMonggoClient();
+    return client.db('sicepat');
+  }
 
   public static getPodDbConfig(config) {
     return config

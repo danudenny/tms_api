@@ -25,6 +25,7 @@ import { AuthMetadata } from '../../../auth/models/auth-metadata.model';
 import { ReturnReceivedCustFindAllResponseVm } from '../../models/do-return-received-cust.response.vm';
 import { TrackingNote } from '../../../../shared/orm-entity/tracking_note';
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
+import { DatabaseConfig } from '../../../background/config/database/db.config';
 
 @Injectable()
 export class DoReturnService {
@@ -125,10 +126,6 @@ export class DoReturnService {
   static async findAllByRequestReport(
     payload: BaseMetaPayloadVm,
   ): Promise<DoReturnFinenceFindAllResponseVm> {
-    // const {MongoClient} = require('mongodb');
-    // const uri = 'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-tracking-cluster-nrgvr.mongodb.net/test?retryWrites=true&w=majority';
-    // const client = new MongoClient(uri);
-    // console.log(client);
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
 
@@ -136,37 +133,29 @@ export class DoReturnService {
         field: 'refawbNumber',
       },
       {
-        field: 'createdTime',
-      },
-      {
-        field: 'originCode',
-      },
-      {
-        field: 'destinationCode',
-      },
-      {
-        field: 'awbStatusName',
-      },
-      {
-        field: 'partnerName',
+        field: 'doReturnNumber',
       },
     ];
     payload.fieldResolverMap['refAwbNumber'] = 'prd.ref_awb_number';
-    payload.fieldResolverMap['originCode'] = 'prd.origin_code';
-    payload.fieldResolverMap['createdTime'] = 'prd.created_time';
-    payload.fieldResolverMap['destinationCode'] = 'prd.destination_code';
+    payload.fieldResolverMap['originCode'] = 'district.district_code';
+    payload.fieldResolverMap['createdTime'] = 'pr.pickup_request_date_time';
+    payload.fieldResolverMap['destinationCode'] = 'dist_desc.district_code';
     payload.fieldResolverMap['doReturnNumber'] = 'prd.do_return_number';
     payload.fieldResolverMap['partnerName'] = 'partner.partner_name';
     payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
     const repo = new OrionRepositoryService(PickupRequestDetail, 'prd');
-
+    // conenct mongodb get price
+    const db = await DatabaseConfig.getSicepatMonggoDb();
+    const configCollection = db.collection('pricelist');
+    const configData = await configCollection.findOne({ origin_code: 'CGK', destination_code: 'UPG10014', service_type: 'REG' });
+    // console.log(configData);
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
       ['prd.ref_awb_number', 'refAwbNumber'],
-      ['prd.origin_code', 'originCode'],
-      ['prd.destination_code', 'destinationCode'],
+      ['district.district_code', 'originCode'],
+      ['dist_desc.district_code', 'destinationCode'],
       ['prd.created_time', 'createdTime'],
       ['prd.user_created', 'userCreated'],
       ['prd.updated_time', 'updatedTime'],
@@ -180,14 +169,22 @@ export class DoReturnService {
     q.innerJoin(e => e.awbitem.awbStatus, 'status', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
-    q.innerJoin(e => e.awbitem.awbId, 'awb',
-      );
+    q.innerJoin(e => e.awbitem.awb.district, 'district', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbitem.awb.districtTo, 'dist_desc', j =>
+     j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.innerJoin(e => e.pickupRequest.partner, 'partner', j =>
       j.andWhere(e => e.is_deleted, w => w.isFalse()),
       );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
+    console.log(data);
+    // for (const mongo of data) {
+    //   result.des = 
+    // }
 
     const result = new DoReturnFinenceFindAllResponseVm();
     result.data = data;
