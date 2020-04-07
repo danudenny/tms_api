@@ -5,7 +5,7 @@ import { DoReturnService } from '../../services/do-return/do-return.service';
 import { ReturnPayloadVm, DoReturnResponseVm } from '../../models/do-return.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { DoReturnPayloadVm } from '../../models/do-return-update.vm';
-import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm, DoReturnAwbListFindAllResponseVm } from '../../models/do-return.response.vm';
+import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm, DoReturnAwbListFindAllResponseVm, DoReturnFinenceFindAllResponseVm } from '../../models/do-return.response.vm';
 import { ReturnUpdateFindAllResponseVm } from '../../models/do-return-update.response.vm';
 import { ReturnCreateVm } from '../../models/do-return-create.vm';
 import { DoReturnDeliveryOrderCreateVm, DoReturnUpdate } from '../../models/do-return-surat-jalan-create.vm';
@@ -54,7 +54,7 @@ export class DoReturnController {
   @Post('dolist/report')
   @HttpCode(HttpStatus.OK)
   // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: DoReturnAwbListFindAllResponseVm })
+  @ApiOkResponse({ type: DoReturnFinenceFindAllResponseVm })
   public async findAllDoReturnReport(@Body() payload: BaseMetaPayloadVm ) {
     return DoReturnService.findAllByRequestReport(payload);
   }

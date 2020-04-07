@@ -26,6 +26,8 @@ import { ReturnReceivedCustFindAllResponseVm } from '../../models/do-return-rece
 import { TrackingNote } from '../../../../shared/orm-entity/tracking_note';
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { DatabaseConfig } from '../../../background/config/database/db.config';
+import { DoReturnFInanceResponseVm } from '../../models/do-return.vm';
+import { forEach } from 'lodash';
 
 @Injectable()
 export class DoReturnService {
@@ -147,14 +149,13 @@ export class DoReturnService {
     // conenct mongodb get price
     const db = await DatabaseConfig.getSicepatMonggoDb();
     const configCollection = db.collection('pricelist');
-    const configData = await configCollection.findOne({ origin_code: 'CGK', destination_code: 'UPG10014', service_type: 'REG' });
-    // console.log(configData);
+
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
       ['prd.ref_awb_number', 'refAwbNumber'],
-      ['district.district_code', 'originCode'],
+      ['SUBSTRING(district.district_code, 0, 4)', 'originCode'],
       ['dist_desc.district_code', 'destinationCode'],
       ['prd.created_time', 'createdTime'],
       ['prd.user_created', 'userCreated'],
@@ -181,17 +182,34 @@ export class DoReturnService {
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
-    console.log(data);
-    // for (const mongo of data) {
-    //   result.des = 
-    // }
+
+    const asyncForEach = async () => {
+      const listCustomer: DoReturnFInanceResponseVm[] = [];
+      for (let i = 0; i < data.length; i++) {
+
+          const configData = await configCollection.findOne({ origin_code: data[i].originCode, destination_code: data[i].destinationCode, service_type: 'REG' });
+          const customer: DoReturnFInanceResponseVm = data[0];
+          customer.awbStatusName = data[i].awbStatusName;
+          customer.originCode = data[i].originCode;
+          customer.destinationCode = data[i].destinationCode;
+          customer.refAwbNumber = data[i].refAwbNumber;
+          customer.customerName = data[i].partnerName;
+          customer.harga = (configData) ? configData.price : 0;
+
+          listCustomer.push(customer);
+      }
+
+      return listCustomer;
+    };
+
+    const resultListCustomer = await asyncForEach();
 
     const result = new DoReturnFinenceFindAllResponseVm();
-    result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
-
+    result.data = resultListCustomer;
+    // console.log(resultListCustomer);
     return result;
   }
+
   static async updateDoReturn(
     payload: DoReturnPayloadVm,
   ): Promise<ReturnUpdateFindAllResponseVm> {
