@@ -1,24 +1,57 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { Partner } from '../orm-entity/partner';
+import { RequestContextMetadataService } from '../services/request-context-metadata.service';
+import { ObjectService } from '../services/object.service';
+import { RedisService } from '../services/redis.service';
 
 @Injectable()
 export class AuthXAPIKeyGuard implements CanActivate {
   constructor() {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: Request = context.switchToHttp().getRequest();
-    return await this.hasValidCredentials(request);
-  }
+    const partnerToken = RequestContextMetadataService.getMetadata(
+      'PARTNER_TOKEN',
+    );
+    if (partnerToken) {
+      // get data on redis;
+      const dataRedis = await RedisService.get(
+        `cache:partnerToken:${partnerToken}`,
+        true,
+      );
 
-  private async hasValidCredentials(request: Request): Promise<boolean> {
-    const partner = await Partner.findOne({
-      select: ['partner_id'],
-      where: { api_key: request['headers']['x-api-key'] },
-    });
-    if (partner) {
-      // TODO: set result data to redis
-      return true;
+      if (dataRedis) {
+        console.log(
+          'Get data from redis key ',
+          `cache:partnerToken:${partnerToken}`,
+        );
+        RequestContextMetadataService.setMetadata(
+          'PARTNER_TOKEN_PAYLOAD',
+          dataRedis,
+        );
+        return true;
+      } else {
+        const expireOnSeconds = 60 * 5; // 5 minute set on redis
+        const partner = await Partner.findOne({
+          where: { api_key: partnerToken },
+        });
+        if (partner) {
+          const partnerPayload = ObjectService.transformToCamelCaseKeys(partner);
+          // set data on redis
+          await RedisService.setex(
+            `cache:partnerToken:${partnerToken}`,
+            JSON.stringify(partnerPayload),
+            expireOnSeconds,
+          );
+          RequestContextMetadataService.setMetadata(
+            'PARTNER_TOKEN_PAYLOAD',
+            partnerPayload,
+          );
+          return true;
+        } else {
+          throw new BadRequestException('API KEY not found');
+        }
+      }
     } else {
-      return false;
+      throw new ForbiddenException('API KEY is required');
     }
   }
 }
