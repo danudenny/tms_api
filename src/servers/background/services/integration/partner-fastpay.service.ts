@@ -356,7 +356,7 @@ export class PartnerFastpayService {
           LEFT JOIN branch_child_partner bcp
           ON bp.branch_partner_id = bcp.branch_partner_id AND bcp.is_deleted = false
       WHERE (bp.branch_partner_code = :branchCode OR bcp.branch_child_partner_code = :branchCode)
-      AND bp.parent_id = :partnerId AND bp.is_deleted = false
+      AND bp.partner_id = :partnerId AND bp.is_deleted = false
       LIMIT 1`;
 
     const branchPartner = await RawQueryService.queryWithParams(query, {
@@ -402,7 +402,6 @@ export class PartnerFastpayService {
             commissionPercentValue = commissionTypeCash.commissionPercentValue;
           }
         }
-        console.log('PRESENTASE ', commissionPercentValue);
         dropPartnerCharge = parcelValue * (commissionPercentValue / 100);
         break;
 
