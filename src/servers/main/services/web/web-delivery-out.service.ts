@@ -697,7 +697,7 @@ export class WebDeliveryOutService {
             response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
             response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
             response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
-            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagNumber;
+            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagData.bag.bagNumber;
             response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
 
             // AFTER Scan OUT ===============================================
@@ -921,6 +921,7 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['employeeName'] = 't2.fullname';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
+    payload.fieldResolverMap['partnerLogisticName'] = `"partnerLogisticName"`;
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
@@ -971,7 +972,7 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+    q.leftJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.partnerLogistic, 't5', j =>
@@ -1001,6 +1002,7 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
     payload.fieldResolverMap['awbNumber']   = 't2.awb_number';
+    payload.fieldResolverMap['awbSubstitute']   = 't1.awbSubstitute';
 
     const repo = new OrionRepositoryService(DoPodDetail, 't1');
     const q = repo.findAllRaw();

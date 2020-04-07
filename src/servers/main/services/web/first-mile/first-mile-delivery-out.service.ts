@@ -133,9 +133,9 @@ export class FirstMileDeliveryOutService {
           partnerLogisticName = partnerLogistic.partnerLogisticName;
         }
 
-        result.printDoPodMetadata.userDriver.employee.nik      = '3PL';
-        result.printDoPodMetadata.userDriver.employee.nickname = partnerLogisticName;
-        result.printDoPodMetadata.vehicleNumber                = null;
+        result.printDoPodMetadata.userDriver.employee.nik      = '';
+        result.printDoPodMetadata.userDriver.employee.nickname = '3PL';
+        result.printDoPodMetadata.vehicleNumber                = partnerLogisticName;
       } else {
         result.printDoPodMetadata.vehicleNumber                = payload.vehicleNumber;
         result.printDoPodMetadata.userDriver.employee.nik      = dataUser[0].nik;
@@ -511,21 +511,30 @@ export class FirstMileDeliveryOutService {
             await DoPodDetail.save(doPodDetail);
 
             // Assign print metadata - Scan Out & Deliver
-            response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
-            response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
+            response.printDoPodDetailMetadata.awbItem.awb.awbId         = awb.awbId;
+            response.printDoPodDetailMetadata.awbItem.awb.awbNumber     = awbNumber;
             response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
 
             // Assign print metadata - Deliver
             response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber = awb.awbItem.awb.consigneeNumber;
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
-            response.printDoPodDetailMetadata.awbItem.awb.isCod = awb.awbItem.awb.isCod;
-            response.printDoPodDetailMetadata.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber  = awb.awbItem.awb.consigneeNumber;
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeZip     = awb.awbItem.awb.consigneeZip;
+            response.printDoPodDetailMetadata.awbItem.awb.isCod            = awb.awbItem.awb.isCod;
+            response.printDoPodDetailMetadata.awbItem.awb.totalCodValue    = awb.awbItem.awb.totalCodValue;
+            response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.weightReal;
 
             // AFTER Scan OUT ===============================================
             // #region after scanout
 
             // NOTE: queue by Bull
+            let partnerLogisticName = '';
+            if (doPod.partnerLogisticName) {
+              partnerLogisticName = doPod.partnerLogisticName;
+            } else if (doPod.partnerLogisticId) {
+              const partnerLogistic = await PartnerLogistic.findOne({ partnerLogisticId: doPod.partnerLogisticId });
+              partnerLogisticName = partnerLogistic.partnerLogisticName;
+            }
+
             DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
               awb.awbItemId,
               AWB_STATUS.OUT_BRANCH,
@@ -533,6 +542,7 @@ export class FirstMileDeliveryOutService {
               authMeta.userId,
               doPod.userIdDriver,
               doPod.branchIdTo,
+              partnerLogisticName,
             );
             totalSuccess += 1;
             // #endregion after scanout
@@ -676,7 +686,7 @@ export class FirstMileDeliveryOutService {
             response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
             response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
             response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
-            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagNumber;
+            response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagData.bag.bagNumber;
             response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
 
             // AFTER Scan OUT ===============================================

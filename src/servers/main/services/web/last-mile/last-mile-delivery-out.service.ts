@@ -382,16 +382,17 @@ export class LastMileDeliveryOutService {
                 await DoPodDeliverDetail.insert(doPodDeliverDetail);
 
                 // Assign print metadata - Scan Out & Deliver
-                response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
-                response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
+                response.printDoPodDetailMetadata.awbItem.awb.awbId         = awb.awbId;
+                response.printDoPodDetailMetadata.awbItem.awb.awbNumber     = awbNumber;
                 response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
 
                 // Assign print metadata - Deliver
                 response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
-                response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber = awb.awbItem.awb.consigneeNumber;
-                response.printDoPodDetailMetadata.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
-                response.printDoPodDetailMetadata.awbItem.awb.isCod = awb.awbItem.awb.isCod;
-                response.printDoPodDetailMetadata.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
+                response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber  = awb.awbItem.awb.consigneeNumber;
+                response.printDoPodDetailMetadata.awbItem.awb.consigneeZip     = awb.awbItem.awb.consigneeZip;
+                response.printDoPodDetailMetadata.awbItem.awb.isCod            = awb.awbItem.awb.isCod;
+                response.printDoPodDetailMetadata.awbItem.awb.totalCodValue    = awb.awbItem.awb.totalCodValue;
+                response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.awb.totalWeightFinalRounded;
 
                 // TODO: need improvement counter total scan out
                 const totalAwb = doPodDeliver.totalAwb + 1;
@@ -648,8 +649,8 @@ export class LastMileDeliveryOutService {
                     WHEN a.do_pod_method = 3000 THEN '3PL'
                     ELSE g.nik
                   END`, 'driverNik');
-    qb.addSelect(`COUNT(*) FILTER ( WHERE d.awb_status_id = 3000 )`, 'totalDelivered');
-    qb.addSelect(`COUNT(*) FILTER ( WHERE d.awb_status_id <> 3000 )`, 'totalReturned');
+    qb.addSelect(`COUNT(*) FILTER ( WHERE d.awb_status_id = 30000 )`, 'totalDelivered');
+    qb.addSelect(`COUNT(*) FILTER ( WHERE d.awb_status_id NOT IN (30000, 3500, 3005))`, 'totalReturned');
     qb.from('do_pod', 'a');
     qb.innerJoin('do_pod_detail', 'b', 'a.do_pod_id = b.do_pod_id AND b.is_deleted = false');
     qb.innerJoin('awb_item_attr', 'c', 'b.awb_item_id = c.awb_item_id AND c.is_deleted = false');
