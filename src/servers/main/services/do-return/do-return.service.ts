@@ -125,7 +125,7 @@ export class DoReturnService {
   static async findAllByRequestReport(
     payload: BaseMetaPayloadVm,
   ): Promise<DoReturnFinenceFindAllResponseVm> {
-    const {MongoClient} = require('mongodb');
+    // const {MongoClient} = require('mongodb');
     // const uri = 'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-tracking-cluster-nrgvr.mongodb.net/test?retryWrites=true&w=majority';
     // const client = new MongoClient(uri);
     // console.log(client);
