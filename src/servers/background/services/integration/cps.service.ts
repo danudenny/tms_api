@@ -219,7 +219,7 @@ export class CpsService {
                 item.perwakilan, item.zonatujuan, item.reseller, item.nohpreseller, item.resijne,
                 item.nokonfirmasi, item.hubkirim, item.diskon, item.layanan, item.tglpending, item.tglmanifested,
                 item.beratvolume, item.ketvolume, item.grouppod, item.groupanalisa, item.grouptujuan, item.eta1,
-                item.eta2, item.sync, item.is_void,
+                item.eta2, 1, item.is_void,
             ]];
             PinoLoggerService.debug('===========', results);
             if (results.length > 0) {
