@@ -8,7 +8,7 @@ import { RedisService } from '../services/redis.service';
 export class AuthXAPIKeyGuard implements CanActivate {
   constructor() {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const partnerToken = RequestContextMetadataService.getMetadata(
+    const partnerToken: string = RequestContextMetadataService.getMetadata(
       'PARTNER_TOKEN',
     );
     if (partnerToken) {
@@ -32,7 +32,9 @@ export class AuthXAPIKeyGuard implements CanActivate {
         console.log('## partnerToken : ', partnerToken);
         const expireOnSeconds = 60 * 5; // 5 minute set on redis
         const partner = await Partner.findOne({
-          api_key: partnerToken,
+          where: {
+            apiKey: partnerToken,
+          },
         });
         if (partner) {
           const partnerPayload = ObjectService.transformToCamelCaseKeys(partner);
