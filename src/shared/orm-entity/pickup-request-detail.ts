@@ -294,6 +294,20 @@ export class PickupRequestDetail extends TmsBaseEntity {
   })
   isReturn: boolean;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_doreturn_sync',
+  })
+  isDoreturnSync: boolean;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'do_return',
+  })
+  doReturn: boolean;
+
   @Column('character varying', {
     nullable: true,
     length: 100,
