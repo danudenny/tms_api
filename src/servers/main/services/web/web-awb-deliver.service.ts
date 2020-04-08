@@ -68,7 +68,7 @@ export class WebAwbDeliverService {
 
             if (syncManualDelivery) {
               // add handel final status
-              const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.RTN, AWB_STATUS.RTS];
+              const statusFinal = [AWB_STATUS.DLV];
               if (statusFinal.includes(awb.awbStatusIdLast)) {
                 response.status = 'error';
                 response.message = `Resi ${

@@ -27,3 +27,14 @@ export class MobileSyncImageResponseVm {
   @ApiModelProperty()
   url: string;
 }
+
+export class MobileSyncImageDataResponseVm {
+  @ApiModelProperty()
+  attachmentId: number;
+
+  @ApiModelProperty()
+  url: string;
+
+  @ApiModelProperty()
+  totalData: number;
+}

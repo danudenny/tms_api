@@ -29,6 +29,7 @@ import { DoReturnAdmintoCt } from '../orm-entity/do_return_admin_to_ct';
 import { DoReturnHistory } from '../orm-entity/do_return_history';
 import { DoReturnCtToCollection } from '../orm-entity/do_return_ct_to_collection';
 import { DoReturnCollectionToCust } from '../orm-entity/do_return_collection_to_cust';
+import { Partner } from '../orm-entity/partner';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -124,5 +125,8 @@ export class RepositoryService {
   }
   static get doReturnCollectiontoCust() {
     return new OrionRepositoryService(DoReturnCollectionToCust);
+  }
+  static get partner() {
+    return new OrionRepositoryService(Partner);
   }
 }
