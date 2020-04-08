@@ -36,9 +36,9 @@ export class RawQueryService {
     }
   }
 
-  public static async queryWithParams(sql: string, parameters: Object, dbMode: 'master' | 'slave' = 'slave') {
+  public static async queryWithParams(sql: string, parameters: Object, dbMode?: 'master' | 'slave') {
     let queryRunner;
-    console.log('########################## MODE : ', dbMode);
+
     if (dbMode) {
       queryRunner = this.manager.connection.createQueryRunner(dbMode);
     } else {
