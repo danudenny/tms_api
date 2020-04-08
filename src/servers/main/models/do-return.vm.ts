@@ -129,6 +129,12 @@ export class DoReturnFInanceResponseVm {
   originCode: string;
 
   @ApiModelProperty()
+  asal: string;
+
+  @ApiModelProperty()
+  tujuan: string;
+
+  @ApiModelProperty()
   destinationCode: number;
 
   @ApiModelProperty()

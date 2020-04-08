@@ -140,8 +140,10 @@ export class DoReturnService {
     ];
     payload.fieldResolverMap['refAwbNumber'] = 'prd.ref_awb_number';
     payload.fieldResolverMap['originCode'] = 'district.district_code';
+    payload.fieldResolverMap['asal'] = 'district.district_code';
     payload.fieldResolverMap['createdTime'] = 'pr.pickup_request_date_time';
     payload.fieldResolverMap['destinationCode'] = 'dist_desc.district_code';
+    payload.fieldResolverMap['tujuan'] = 'dist_desc.district_code';
     payload.fieldResolverMap['doReturnNumber'] = 'prd.do_return_number';
     payload.fieldResolverMap['partnerName'] = 'partner.partner_name';
     payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
@@ -157,6 +159,8 @@ export class DoReturnService {
       ['prd.ref_awb_number', 'refAwbNumber'],
       ['SUBSTRING(district.district_code, 0, 4)', 'originCode'],
       ['dist_desc.district_code', 'destinationCode'],
+      ['dist_desc.district_name', 'tujuan'],
+      ['district.district_name', 'asal'],
       ['prd.created_time', 'createdTime'],
       ['prd.user_created', 'userCreated'],
       ['prd.updated_time', 'updatedTime'],
@@ -188,14 +192,13 @@ export class DoReturnService {
       for (let i = 0; i < data.length; i++) {
 
           const configData = await configCollection.findOne({ origin_code: data[i].originCode, destination_code: data[i].destinationCode, service_type: 'REG' });
-          const customer: DoReturnFInanceResponseVm = data[0];
+          const customer: DoReturnFInanceResponseVm = data[i];
           customer.awbStatusName = data[i].awbStatusName;
           customer.originCode = data[i].originCode;
           customer.destinationCode = data[i].destinationCode;
           customer.refAwbNumber = data[i].refAwbNumber;
           customer.customerName = data[i].partnerName;
           customer.harga = (configData) ? configData.price : 0;
-
           listCustomer.push(customer);
       }
 
@@ -203,10 +206,9 @@ export class DoReturnService {
     };
 
     const resultListCustomer = await asyncForEach();
-
+    // console.log(resultListCustomer);
     const result = new DoReturnFinenceFindAllResponseVm();
     result.data = resultListCustomer;
-    // console.log(resultListCustomer);
     return result;
   }
 
