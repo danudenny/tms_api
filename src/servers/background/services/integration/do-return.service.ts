@@ -49,7 +49,10 @@ export class DoReturnService {
       left join customer_account ca on a.customer_account_id=ca.customer_account_id and ca.is_deleted=false
       where t.dokembali = true and t.is_sync_dokembali = false and aia.awb_status_id_last >= 3500
       );
-    `);
+    `,
+    null,
+    false,
+    );
 
     return true;
   }
@@ -59,7 +62,7 @@ export class DoReturnService {
     SET is_sync_dokembali = true
     FROM do_return_awb p2
     WHERE p1.nostt = p2.awb_number
-    AND p1.is_sync_dokembali = false ;`);
+    AND p1.is_sync_dokembali = false ;`, null, false);
     return true;
   }
 

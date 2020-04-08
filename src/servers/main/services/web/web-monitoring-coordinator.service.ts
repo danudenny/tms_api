@@ -254,7 +254,7 @@ export class WebMonitoringCoordinatorService {
       DISTINCT (t1.branch_id) AS "branchId",
       t1.user_id AS "userId",
       t2.branch_name AS "branchName"
-    `
+    `,
     );
     q.innerJoin(e => e.branches, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -302,7 +302,7 @@ export class WebMonitoringCoordinatorService {
             a.ref_user_id,
             0 as status,
             '${timeNow}' AS created_time,
-             '${userId}' as user_id_created,
+            '${userId}' as user_id_created,
             '${timeNow}' AS updated_time,
             '${userId}' as user_id_updated,
             a.user_to_branch_id
@@ -310,6 +310,8 @@ export class WebMonitoringCoordinatorService {
             LEFT JOIN korwil_transaction b ON b.user_to_branch_id = a.user_to_branch_id AND b.date::date = '${moment().format('YYYY-MM-DD')}' AND b.is_deleted = false
             WHERE b.korwil_transaction_id IS NULL AND a.is_deleted = false
         )`,
+        null,
+        false,
       );
 
       const result = new CreateTransactionCoordinatorResponse();
