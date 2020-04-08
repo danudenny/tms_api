@@ -40,26 +40,26 @@ export class DoReturnService {
       a.history_date_last AS "pod_datetime",
       a.user_id_created,
       a.user_id_updated,
-      t.nokonfirmasi,
+      prd.do_return_number,
       a.created_time,
       a.updated_time
-      from temp_stt t
-      inner join awb_item_attr aia on t.nostt=aia.awb_number and aia.is_deleted=false
+      from pickup_request_detail prd
+      inner join awb_item_attr aia on prd.ref_awb_number=aia.awb_number and aia.is_deleted=false
       inner join awb a on aia.awb_id=a.awb_id and a.is_deleted=false
       left join customer_account ca on a.customer_account_id=ca.customer_account_id and ca.is_deleted=false
-      where t.dokembali = true and t.is_sync_dokembali = false and aia.awb_status_id_last >= 3500
+      where prd.do_return = true and prd.is_doreturn_sync = false and aia.awb_status_id_last >= 3500
       );
     `);
 
     return true;
   }
 
-  private static async updateTempStt(): Promise<any> {
-    await RawQueryService.query(` UPDATE temp_stt p1
-    SET is_sync_dokembali = true
+  private static async updatePickReqDetail(): Promise<any> {
+    await RawQueryService.query(` UPDATE pickup_request_detail prd
+    SET is_doreturn_sync = true
     FROM do_return_awb p2
-    WHERE p1.nostt = p2.awb_number
-    AND p1.is_sync_dokembali = false ;`);
+    WHERE prd.ref_awb_number = p2.awb_number
+    AND prd.is_doreturn_sync = false ;`);
     return true;
   }
 
@@ -70,7 +70,7 @@ export class DoReturnService {
     const time = moment().format('DD/MM/YYYY, h:mm:ss a');
     const result = new DoReturnSyncResponseVm();
     if (insertReturn) {
-      const updateReturn = await this.updateTempStt();
+      const updateReturn = await this.updatePickReqDetail();
     }
     result.message = message;
     result.status = status;
