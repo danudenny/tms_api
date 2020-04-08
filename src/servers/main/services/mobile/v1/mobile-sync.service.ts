@@ -15,9 +15,9 @@ import {
 } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { MobileDeliveryVm } from '../../../models/mobile-delivery.vm';
 import {
-    MobileSyncImagePayloadVm, MobileSyncPayloadVm,
+    MobileSyncImagePayloadVm, MobileSyncPayloadVm, MobileSyncImageDataPayloadVm,
 } from '../../../models/mobile-sync-payload.vm';
-import { MobileSyncImageResponseVm, MobileSyncDataResponseVm, MobileSyncAwbVm } from '../../../models/mobile-sync-response.vm';
+import { MobileSyncImageResponseVm, MobileSyncDataResponseVm, MobileSyncAwbVm, MobileSyncImageDataResponseVm } from '../../../models/mobile-sync-response.vm';
 
 import moment = require('moment');
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
@@ -232,6 +232,60 @@ export class V1MobileSyncService {
 
     result.url = url;
     result.attachmentId = attachmentId;
+    return result;
+  }
+
+  public static async syncImageData(
+    payload: MobileSyncImageDataPayloadVm,
+    file,
+  ): Promise<MobileSyncImageDataResponseVm> {
+    const result = new MobileSyncImageDataResponseVm();
+
+    let url = null;
+    let attachmentId = null;
+
+    let attachment = await AttachmentTms.findOne({
+      where: {
+        fileName: file.originalname,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
+
+    if (attachment) {
+      // attachment exist
+      attachmentId = attachment.attachmentTmsId;
+      url = attachment.url;
+    } else {
+      // upload image
+      const pathId = `tms-delivery-${payload.imageType}`;
+      attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        pathId,
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+        url = attachment.url;
+      }
+    }
+
+    // NOTE: insert data array
+    let total = 0;
+    if (attachmentId && payload.data.length) {
+      for (const item of payload.data) {
+        const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
+        doPodDeliverAttachment.doPodDeliverDetailId = item.id;
+        doPodDeliverAttachment.attachmentTmsId = attachmentId;
+        doPodDeliverAttachment.type = payload.imageType;
+        await DoPodDeliverAttachment.save(doPodDeliverAttachment);
+        total += 1;
+      }
+    }
+
+    result.url = url;
+    result.attachmentId = attachmentId;
+    result.totalData = total;
     return result;
   }
 

@@ -204,8 +204,9 @@ export class PickupRequest extends BaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name : 'is_deleted',
   })
-  is_deleted: boolean;
+  isDeleted: boolean;
 
   @Column('character varying', {
     nullable: true,
