@@ -28,6 +28,8 @@ import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-reques
 import { DatabaseConfig } from '../../../background/config/database/db.config';
 import { DoReturnFInanceResponseVm } from '../../models/do-return.vm';
 import { forEach } from 'lodash';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
 
 @Injectable()
 export class DoReturnService {
@@ -74,7 +76,8 @@ export class DoReturnService {
       ['return.customer_id', 'customerId'],
       ['branch.branch_name', 'branchName'],
       ['customer.customer_name', 'customerName'],
-      ['tracking.trackingtype', 'awbStatus'],
+      ['awb_status.awb_status_title', 'awbStatus'],
+      // ['tracking.trackingtype', 'awbStatus'],
       ['return.branch_id_last', 'branchIdLast'],
       ['return.do_return_admin_to_ct_id', 'doReturnAdminToCtId'],
       ['return.do_return_ct_to_collection_id', 'doReturnCtToCollectionId'],
@@ -110,9 +113,9 @@ export class DoReturnService {
     q.leftJoin(e => e.awbLast.awbStatus, 'awb_status', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.trackingNote, 'tracking', j =>
-      j.andWhereRaw('tracking.id = (SELECT MAX(id) FROM tracking_note WHERE receiptnumber = return.awb_number)'),
-    );
+    // q.leftJoin(e => e.trackingNote, 'tracking', j =>
+    //   j.andWhereRaw('tracking.id = (SELECT MAX(id) FROM tracking_note WHERE receiptnumber = return.awb_number)'),
+    // );
 
     q.orderBy({ podDatetime: 'DESC' });
     const data = await q.exec();
@@ -536,6 +539,23 @@ export class DoReturnService {
       },
     });
 
+    const doReturnAwb = await DoReturnAwb.findOne({
+      where: {
+        doReturnAdminToCtId : payload.doReturnAdminToCtId,
+      },
+    });
+    // console.log(doReturnAwb);
+    const partner = await PartnerLogistic.findOne({
+      where: {
+        partnerLogisticId : payload.partnerLogisticId,
+      },
+    });
+    const attr  = await AwbItemAttr.findOne({
+      where: {
+        awbNumber: doReturnAwb.awbNumber,
+       } ,
+      });
+    // console.log(attr.awbNumber);
   //  insert to do return awb history
 
     await DoReturnAdmintoCt.update(
@@ -546,6 +566,18 @@ export class DoReturnService {
         updatedTime : timeNow,
       },
     );
+
+    AwbItemAttr.update(attr.awbItemAttrId, {
+      doreturnNewAwb: payload.awbNumberNew,
+      updatedTime: moment().toDate(),
+    });
+
+    if (payload.partnerLogisticId) {
+      AwbItemAttr.update(attr.awbItemAttrId, {
+      doreturnNewAwb3Pl: partner.partnerLogisticName,
+      });
+    }
+    
     result.status = status;
     result.message = message;
     // result.doId = admin.doReturnAdminToCtId;
