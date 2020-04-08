@@ -13,162 +13,121 @@ import {
   PrimaryGeneratedColumn,
   RelationId,
 } from 'typeorm';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('partner', { schema: 'public' })
-export class Partner extends BaseEntity {
+export class Partner extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
   })
   partner_id: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'partner_name',
   })
-  partner_name: string | null;
+  partnerName: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
+    name: 'partner_email',
 
   })
-  partner_email: string | null;
+  partnerEmail: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-
+    name: 'api_key',
   })
-  api_key: string | null;
+  apiKey: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'customer_account_id',
   })
-  customer_account_id: string | null;
+  customerAccountId: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'awb_number_start',
   })
-  awb_number_start: string | null;
+  awbNumberStart: string | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'awb_number_end',
 
   })
-  awb_number_end: string | null;
+  awbNumberEnd: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'current_awb_number',
   })
-  current_awb_number: string | null;
+  currentAwbNumber: string | null;
 
   @Column('integer', {
     nullable: true,
-
+    name: 'sla_hour_pickup',
   })
-  sla_hour_pickup: number | null;
+  slaHourPickup: number | null;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_active',
   })
-  is_active: boolean;
+  isActive: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_email_log',
   })
-  is_email_log: boolean;
+  isEmailLog: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_assign_to_branch',
   })
-  is_assign_to_branch: boolean;
+  isAssignToBranch: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_assign_to_courier',
 
   })
-  is_assign_to_courier: boolean;
+  isAssignToCourier: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_pick_unpick',
   })
-  is_pick_unpick: boolean;
+  isPickUnpick: boolean;
 
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-
+    name: 'is_reschedule',
   })
-  is_reschedule: boolean;
+  isReschedule: boolean;
 
   @Column('character varying', {
     nullable: true,
     length: 20,
-
+    name: 'sm_code',
   })
-  sm_code: string | null;
-
-  @Column('bigint', {
-    nullable: false,
-
-  })
-  user_id_created: string;
-
-  @Column('character varying', {
-    nullable: true,
-    length: 255,
-
-  })
-  user_created: string | null;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-
-  })
-  created_time: Date;
-
-  @Column('bigint', {
-    nullable: false,
-
-  })
-  user_id_updated: string;
-
-  @Column('character varying', {
-    nullable: true,
-    length: 255,
-
-  })
-  user_updated: string | null;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-
-  })
-  updated_time: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
+  smCode: string | null;
 
   @Column('json', {
     nullable: true,
+    name: 'validation',
 
   })
   validation: Object | null;

@@ -36,7 +36,7 @@ export class PartnerController {
     }
 
     const partner = await Partner.findOne({
-      api_key: apiKeyPartner,
+      apiKey: apiKeyPartner,
     });
     if (!partner) {
       result = {
@@ -45,7 +45,7 @@ export class PartnerController {
       };
       return result;
     } else {
-      if (partner.partner_name.toLocaleLowerCase() === 'pos indonesia') {
+      if (partner.partnerName.toLocaleLowerCase() === 'pos indonesia') {
         payload.partner_id = partner.partner_id;
         return PartnerService.dropAwbPosIndonesia(payload);
       } else {
