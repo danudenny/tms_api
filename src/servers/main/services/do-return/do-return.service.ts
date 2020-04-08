@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm, DoReturnAwbListFindAllResponseVm } from '../../models/do-return.response.vm';
+import { ReturnFindAllResponseVm, DoReturnAdminFindAllResponseVm, DoReturnCtFindAllResponseVm, DoReturnCollectionFindAllResponseVm, DoReturnAwbListFindAllResponseVm, DoReturnFinenceFindAllResponseVm } from '../../models/do-return.response.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoReturnAwb } from '../../../../shared/orm-entity/do_return_awb';
 import { MetaService } from '../../../../shared/services/meta.service';
@@ -24,6 +24,10 @@ import { createQueryBuilder } from 'typeorm';
 import { AuthMetadata } from '../../../auth/models/auth-metadata.model';
 import { ReturnReceivedCustFindAllResponseVm } from '../../models/do-return-received-cust.response.vm';
 import { TrackingNote } from '../../../../shared/orm-entity/tracking_note';
+import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
+import { DatabaseConfig } from '../../../background/config/database/db.config';
+import { DoReturnFInanceResponseVm } from '../../models/do-return.vm';
+import { forEach } from 'lodash';
 
 @Injectable()
 export class DoReturnService {
@@ -120,6 +124,94 @@ export class DoReturnService {
 
     return result;
   }
+
+  static async findAllByRequestReport(
+    payload: BaseMetaPayloadVm,
+  ): Promise<DoReturnFinenceFindAllResponseVm> {
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+
+      {
+        field: 'refawbNumber',
+      },
+      {
+        field: 'doReturnNumber',
+      },
+    ];
+    payload.fieldResolverMap['refAwbNumber'] = 'prd.ref_awb_number';
+    payload.fieldResolverMap['originCode'] = 'district.district_code';
+    payload.fieldResolverMap['asal'] = 'district.district_code';
+    payload.fieldResolverMap['createdTime'] = 'pr.pickup_request_date_time';
+    payload.fieldResolverMap['destinationCode'] = 'dist_desc.district_code';
+    payload.fieldResolverMap['tujuan'] = 'dist_desc.district_code';
+    payload.fieldResolverMap['doReturnNumber'] = 'prd.do_return_number';
+    payload.fieldResolverMap['partnerName'] = 'partner.partner_name';
+    payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
+    const repo = new OrionRepositoryService(PickupRequestDetail, 'prd');
+    // conenct mongodb get price
+    const db = await DatabaseConfig.getSicepatMonggoDb();
+    const configCollection = db.collection('pricelist');
+
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['prd.ref_awb_number', 'refAwbNumber'],
+      ['SUBSTRING(district.district_code, 0, 4)', 'originCode'],
+      ['dist_desc.district_code', 'destinationCode'],
+      ['dist_desc.district_name', 'tujuan'],
+      ['district.district_name', 'asal'],
+      ['prd.created_time', 'createdTime'],
+      ['prd.user_created', 'userCreated'],
+      ['prd.updated_time', 'updatedTime'],
+      ['prd.do_return_number', 'doReturnNumber'],
+      ['partner.partner_name', 'partnerName'],
+      ['status.awb_status_name', 'awbStatusName'],
+    );
+    q.innerJoin(e => e.pickupRequest, 'pr', j =>
+      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      );
+    q.innerJoin(e => e.awbitem.awbStatus, 'status', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+    q.innerJoin(e => e.awbitem.awb.district, 'district', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbitem.awb.districtTo, 'dist_desc', j =>
+     j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.pickupRequest.partner, 'partner', j =>
+      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const asyncForEach = async () => {
+      const listCustomer: DoReturnFInanceResponseVm[] = [];
+      for (let i = 0; i < data.length; i++) {
+
+          const configData = await configCollection.findOne({ origin_code: data[i].originCode, destination_code: data[i].destinationCode, service_type: 'REG' });
+          const customer: DoReturnFInanceResponseVm = data[i];
+          customer.awbStatusName = data[i].awbStatusName;
+          customer.originCode = data[i].originCode;
+          customer.destinationCode = data[i].destinationCode;
+          customer.refAwbNumber = data[i].refAwbNumber;
+          customer.customerName = data[i].partnerName;
+          customer.harga = (configData) ? configData.price : 0;
+          listCustomer.push(customer);
+      }
+
+      return listCustomer;
+    };
+
+    const resultListCustomer = await asyncForEach();
+    // console.log(resultListCustomer);
+    const result = new DoReturnFinenceFindAllResponseVm();
+    result.data = resultListCustomer;
+    return result;
+  }
+
   static async updateDoReturn(
     payload: DoReturnPayloadVm,
   ): Promise<ReturnUpdateFindAllResponseVm> {

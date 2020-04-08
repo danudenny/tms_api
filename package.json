@@ -50,8 +50,10 @@
     "glob": "^7.1.3",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
+    "mongodb": "^3.5.5",
     "ms": "^2.1.2",
     "mssql": "^4.3.2",
+    "mysql": "^2.18.1",
     "on-change": "^1.6.2",
     "patch-package": "^6.1.2",
     "path-to-regexp": "^3.0.0",
@@ -73,7 +75,7 @@
     "uuid": "^3.3.3",
     "winston": "^3.2.1",
     "winston-loggly-bulk": "^3.0.1",
-    "mysql": "^2.18.1"
+    "yarn ": "^3.5.5"
   },
   "devDependencies": {
     "@entity-factory/core": "^0.2.1",
