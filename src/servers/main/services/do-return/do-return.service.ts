@@ -169,7 +169,7 @@ export class DoReturnService {
       ['status.awb_status_name', 'awbStatusName'],
     );
     q.innerJoin(e => e.pickupRequest, 'pr', j =>
-      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
     q.innerJoin(e => e.awbitem.awbStatus, 'status', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -181,7 +181,7 @@ export class DoReturnService {
      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.pickupRequest.partner, 'partner', j =>
-      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
     const data = await q.exec();
