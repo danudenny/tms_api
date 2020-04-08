@@ -46,6 +46,7 @@ export class WebTrackingService {
       result.returnAwbNumber           = data.returnAwbNumber;
       result.awbSubstitute             = data.awbSubstitute;
       result.partnerLogisticSubstitute = data.partnerLogisticSubstitute;
+      result.doReturnAwb               = data.doReturnAwb;
       // TODO: get data image awb number
       // relation to do pod deliver
 
@@ -132,7 +133,8 @@ export class WebTrackingService {
           WHEN dpod.partner_logistic_name IS NOT NULL THEN dpod.partner_logistic_name
           WHEN dpod.partner_logistic_id IS NOT NULL THEN pl.partner_logistic_name
           ELSE ''
-        END AS "partnerLogisticSubstitute"
+        END AS "partnerLogisticSubstitute",
+        COALESCE(ai.doreturn_new_awb, ai.doreturn_new_awb_3pl) as "doReturnAwb"
       FROM awb a
         INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
