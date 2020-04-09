@@ -272,13 +272,14 @@ export class V1MobileSyncService {
 
     // NOTE: insert data array
     let total = 0;
-    if (attachmentId && payload.data.length) {
+    if (attachmentId && payload.data) {
       PinoLoggerService.log('#### Payload Data : ', payload.data);
-      for (const item of payload.data) {
-        PinoLoggerService.log('#### Data Item : ', item);
-        if (item.id) {
+      const data = payload.data.split(';');
+      for (const item of data) {
+        PinoLoggerService.log('#### Data Item Id : ', item);
+        if (item) {
           const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
-          doPodDeliverAttachment.doPodDeliverDetailId = item.id;
+          doPodDeliverAttachment.doPodDeliverDetailId = item;
           doPodDeliverAttachment.attachmentTmsId = attachmentId;
           doPodDeliverAttachment.type = payload.imageType;
           await DoPodDeliverAttachment.save(doPodDeliverAttachment);
@@ -311,7 +312,7 @@ export class V1MobileSyncService {
     `;
     const rawData = await RawQueryService.queryWithParams(query, {
       doPodDeliverDetailId,
-    }, false);
+    });
     return rawData.length ? rawData[0] : null;
   }
 }
