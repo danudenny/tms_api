@@ -322,7 +322,7 @@ export class LastMileDeliveryOutService {
         // NOTE: first must scan in branch
         if (notDeliver) {
           // add handel final status
-          const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.RTN, AWB_STATUS.RTS];
+          const statusFinal = [AWB_STATUS.DLV];
           if (statusFinal.includes(awb.awbStatusIdLast)) {
             totalError += 1;
             response.status = 'error';
@@ -746,7 +746,7 @@ export class LastMileDeliveryOutService {
       const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
         // add handel final status
-        const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.RTN, AWB_STATUS.RTS];
+        const statusFinal = [AWB_STATUS.DLV];
         if (statusFinal.includes(awb.awbStatusIdLast)) {
           totalError += 1;
           response.status = 'error';

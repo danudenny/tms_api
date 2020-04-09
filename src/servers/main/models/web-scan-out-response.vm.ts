@@ -222,6 +222,48 @@ export class WebScanInDeliverGroupResponseVm {
   @ApiModelProperty()
   userIdDriver: number;
 }
+export class WebScanOutDeliverPartnerDataResponseVm {
+
+  @ApiModelProperty()
+  doPodDeliverId: string;
+
+  @ApiModelProperty()
+  doPodDeliverCode: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  assignDate: string;
+
+  @ApiModelProperty()
+  confirmDate: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  driverName: string;
+
+  @ApiModelProperty()
+  awbStatusIdLast: number;
+
+  @ApiModelProperty()
+  awbStatus: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  completedDate: string;
+
+  @ApiModelProperty()
+  orderNo: string;
+
+  @ApiModelProperty()
+  receiverName: string;
+}
+
 export class WebScanOutTransitUpdateAwbPartnerResponseVm {
   @ApiModelProperty()
   status: string;

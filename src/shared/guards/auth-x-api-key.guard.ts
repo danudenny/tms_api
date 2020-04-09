@@ -29,22 +29,18 @@ export class AuthXAPIKeyGuard implements CanActivate {
         );
         return true;
       } else {
-        console.log('## partnerToken : ', partnerToken);
         const expireOnSeconds = 60 * 5; // 5 minute set on redis
         const partner = await Partner.findOne({
-          where: {
-            apiKey: partnerToken,
-          },
+          apiKey: partnerToken,
         });
         if (partner) {
           const partnerPayload = ObjectService.transformToCamelCaseKeys(partner);
-          console.log(partnerPayload);
           // set data on redis
-          // await RedisService.setex(
-          //   `cache:partnerToken:${partnerToken}`,
-          //   JSON.stringify(partnerPayload),
-          //   expireOnSeconds,
-          // );
+          await RedisService.setex(
+            `cache:partnerToken:${partnerToken}`,
+            JSON.stringify(partnerPayload),
+            expireOnSeconds,
+          );
           RequestContextMetadataService.setMetadata(
             'PARTNER_TOKEN_PAYLOAD',
             partnerPayload,
