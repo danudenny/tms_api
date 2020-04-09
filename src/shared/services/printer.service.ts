@@ -42,7 +42,7 @@ export class PrinterService {
     listPrinterName?: any;
   }) {
     if (listPrinterName) {
-      listPrinterName.forEach(name => {
+      listPrinterName.forEach((name, index) => {
         const payload: any = {};
         payload.type = 'jsreport';
         payload.printerName = name;
@@ -53,9 +53,10 @@ export class PrinterService {
           method: 'POST',
           json: payload,
         });
+        const end = index === listPrinterName.length - 1 ? true : false;
         reqTmsPrinter.pipe(
           res,
-          { end: false },
+          { end },
         );
       });
     } else {
