@@ -1,9 +1,8 @@
 import express = require('express');
 import { size } from 'lodash';
 import request = require('request');
-
+import axios from 'axios';
 import { ConfigService } from './config.service';
-
 export class PrinterService {
   public static responseForRawCommands({
     res,
@@ -25,8 +24,7 @@ export class PrinterService {
     });
     reqTmsPrinter.pipe(res);
   }
-
-  public static responseForJsReport({
+  public static async responseForJsReport({
     res,
     printerName,
     templates,
@@ -41,30 +39,32 @@ export class PrinterService {
     }>;
     listPrinterName?: any;
   }) {
+    const payload: any = {};
+    payload.type = 'jsreport';
+    payload.printerName = printerName;
+    payload.templates = templates;
     if (listPrinterName) {
-      listPrinterName.forEach((name, index) => {
-        const payload: any = {};
-        payload.type = 'jsreport';
-        payload.printerName = name;
-        payload.templates = templates;
+      for (let index = 0; index < listPrinterName.length; index++) {
+        payload.printerName = listPrinterName[index];
+        const url = ConfigService.get('printerHelper.url');
+        const options = {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        };
+        // NOTE: check status tmsPrinter
+        // post to printer endpoint
+        const checkTmsPrinter = await axios.post(url, payload, options);
 
-        const reqTmsPrinter = request.post({
-          url: ConfigService.get('printerHelper.url'),
-          method: 'POST',
-          json: payload,
-        });
-        const end = index === listPrinterName.length - 1 ? true : false;
-        reqTmsPrinter.pipe(
-          res,
-          { end },
-        );
-      });
+        if (
+          checkTmsPrinter.status == 200 ||
+          index == listPrinterName.length - 1
+        ) {
+          await this.responseForJsReport({ res, printerName, templates });
+          break;
+        }
+      }
     } else {
-      const payload: any = {};
-      payload.type = 'jsreport';
-      payload.printerName = printerName;
-      payload.templates = templates;
-
       const reqTmsPrinter = request.post({
         url: ConfigService.get('printerHelper.url'),
         method: 'POST',
