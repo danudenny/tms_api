@@ -254,6 +254,8 @@ export class PrintService {
         totalCod: totalAllCod,
       },
     };
+    const listPrinterName = ['BarcodePrinter', 'StruckPrinter'];
+
     PrinterService.responseForJsReport({
       res,
       printerName: 'StrukPrinter',
@@ -264,6 +266,7 @@ export class PrintService {
           printCopy: queryParams.printCopy,
         },
       ],
+      listPrinterName,
     });
   }
 
