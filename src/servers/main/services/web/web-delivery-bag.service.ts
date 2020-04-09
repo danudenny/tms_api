@@ -11,6 +11,7 @@ import { WebDeliveryFindAllResponseVm } from '../../models/web-delivery.response
 import { WebDeliveryFilterPayloadVm } from '../../models/web-delivery.vm';
 
 @Injectable()
+// TODO: to be remove
 export class WebDeliveryBagService {
   constructor() {}
   async findallbagdelivery(
