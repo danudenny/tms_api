@@ -120,19 +120,17 @@ export class PartnerFastpayService {
           }
         }
 
-        // NOTE: update pickup request detail
         if (workOrderId) {
-          // calculate partner charge
-          const dropPartnerCharge = await this.partnerCommission(dropPartnerType,
-            partnerId,
-            pickupRequest.parcelValue,
-          );
+          // NOTE: takeout calculate partner charge
+          // const dropPartnerCharge = await this.partnerCommission(dropPartnerType,
+          //   partnerId,
+          //   pickupRequest.parcelValue,
+          // );
 
           await PickupRequestDetail.update(
             { pickupRequestDetailId },
             {
               workOrderIdLast: workOrderId,
-              dropPartnerCharge,
               dropPartnerType,
               userIdUpdated: 1,
               updatedTime: timeNow,
