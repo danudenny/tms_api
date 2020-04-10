@@ -62,7 +62,7 @@ export class DoReturnService {
       SET is_doreturn_sync = true
       FROM do_return_awb p2
       WHERE prd.ref_awb_number = p2.awb_number
-      AND prd.is_doreturn_sync = false :`, null, false);
+      AND prd.is_doreturn_sync = false ;`, null, false);
     return true;
 
 }
