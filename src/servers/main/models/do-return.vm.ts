@@ -117,6 +117,62 @@ export class DoReturnCtResponseVm {
   @ApiModelProperty()
   employeeNik: string;
 }
+
+export class DoReturnFinanceResponseVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  doReturnAwbId: number;
+
+  @ApiModelProperty()
+  doPodDeliverId: string;
+
+  @ApiModelProperty()
+  doReturnAwbNumber: string;
+
+  @ApiModelProperty()
+  originCode: string;
+
+  @ApiModelProperty()
+  asal: string;
+
+  @ApiModelProperty()
+  tujuan: string;
+
+  @ApiModelProperty()
+  destinationCode: number;
+
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  awbDate: string;
+
+  @ApiModelProperty()
+  customerAccountName: string;
+
+  @ApiModelProperty()
+  customerAccountId: string;
+
+  @ApiModelProperty()
+  customerName: string;
+
+  @ApiModelProperty()
+  customerId: string;
+
+  @ApiModelProperty()
+  doPodDeliverDateTime: string;
+
+  @ApiModelProperty()
+  awbStatusName: string;
+
+  @ApiModelProperty()
+  awbStatusId: string;
+
+  @ApiModelProperty()
+  harga: string;
+}
 export class DoReturnCollectionResponseVm {
 
   @ApiModelProperty()

@@ -10,7 +10,7 @@ export const ApiImplicitHeader = (metadata: {
   name: string;
   description?: string;
   required?: boolean;
-}): MethodDecorator => {
+}): any => {
   const param = {
     name: isNil(metadata.name) ? initialMetadata.name : metadata.name,
     in: 'header',
