@@ -65,7 +65,7 @@ export class PartnerFastpayService {
               isDeleted: false,
             },
           });
-          if (workOrderHistory) {
+          if (!workOrderHistory) {
             await WorkOrder.update(
               { workOrderId },
               {
