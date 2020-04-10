@@ -59,10 +59,14 @@ export class DoReturnService {
 
   private static async updatePickReqDetail(): Promise<any> {
     await RawQueryService.query(` UPDATE pickup_request_detail prd
-    SET is_doreturn_sync = true
-    FROM do_return_awb p2
-    WHERE prd.ref_awb_number = p2.awb_number
-    AND prd.is_doreturn_sync = false ;`);
+      SET is_doreturn_sync = true
+      FROM do_return_awb p2
+      WHERE prd.ref_awb_number = p2.awb_number
+      AND prd.is_doreturn_sync = false ;
+      ,`,
+      null,
+      false,
+    );
     return true;
   }
 
