@@ -7,7 +7,7 @@ import { CustomCounterCode } from '../../../../shared/services/custom-counter-co
 import { WorkOrderDetail } from '../../../../shared/orm-entity/work-order-detail';
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
-import { Not } from 'typeorm';
+import { In } from 'typeorm';
 import { CommissionType } from '../../../../shared/orm-entity/commission-type';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -55,11 +55,17 @@ export class PartnerFastpayService {
         let workOrderId = pickupRequest.workOrderIdLast;
 
         if (workOrderId) {
-          const workOrder = await WorkOrder.findOne({
-            select: ['workOrderId', 'workOrderStatusIdLast'],
-            where: { workOrderId, workOrderStatusIdLast: Not(7050), isDeleted: false },
+          // NOTE: validation work order with status in history
+          // PICK, DROP PARTNER, DROP (4950, 5000, 7050, 7100)
+          const workOrderHistory = await WorkOrderHistory.findOne({
+            select: ['workOrderId', 'workOrderStatusId'],
+            where: {
+              workOrderId,
+              workOrderStatusId: In([4950, 5000, 7050, 7100]),
+              isDeleted: false,
+            },
           });
-          if (workOrder) {
+          if (workOrderHistory) {
             await WorkOrder.update(
               { workOrderId },
               {
