@@ -49,7 +49,10 @@ export class DoReturnService {
       left join customer_account ca on a.customer_account_id=ca.customer_account_id and ca.is_deleted=false
       where prd.do_return = true and prd.is_doreturn_sync = false and aia.awb_status_id_last >= 3500
       );
-    `);
+      `,
+      null,
+      false,
+    );
 
     return true;
   }
