@@ -30,6 +30,7 @@ export class PrinterService {
     res,
     printerName,
     templates,
+    listPrinterName,
   }: {
     res: express.Response;
     printerName?: string;
@@ -37,18 +38,39 @@ export class PrinterService {
       templateName: string;
       templateData?: any;
       printCopy?: number;
-    }>
+    }>;
+    listPrinterName?: any;
   }) {
-    const payload: any = {};
-    payload.type = 'jsreport';
-    payload.printerName = printerName;
-    payload.templates = templates;
+    if (listPrinterName) {
+      listPrinterName.forEach((name, index) => {
+        const payload: any = {};
+        payload.type = 'jsreport';
+        payload.printerName = name;
+        payload.templates = templates;
 
-    const reqTmsPrinter = request.post({
-      url: ConfigService.get('printerHelper.url'),
-      method: 'POST',
-      json: payload,
-    });
-    reqTmsPrinter.pipe(res);
+        const reqTmsPrinter = request.post({
+          url: ConfigService.get('printerHelper.url'),
+          method: 'POST',
+          json: payload,
+        });
+        const end = index === listPrinterName.length - 1 ? true : false;
+        reqTmsPrinter.pipe(
+          res,
+          { end },
+        );
+      });
+    } else {
+      const payload: any = {};
+      payload.type = 'jsreport';
+      payload.printerName = printerName;
+      payload.templates = templates;
+
+      const reqTmsPrinter = request.post({
+        url: ConfigService.get('printerHelper.url'),
+        method: 'POST',
+        json: payload,
+      });
+      reqTmsPrinter.pipe(res);
+    }
   }
 }
