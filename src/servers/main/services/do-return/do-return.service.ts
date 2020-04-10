@@ -26,8 +26,9 @@ import { ReturnReceivedCustFindAllResponseVm } from '../../models/do-return-rece
 import { TrackingNote } from '../../../../shared/orm-entity/tracking_note';
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { DatabaseConfig } from '../../../background/config/database/db.config';
-import { DoReturnFInanceResponseVm } from '../../models/do-return.vm';
-import { forEach } from 'lodash';
+import { DoReturnFinanceResponseVm } from '../../models/do-return.vm';
+import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
+import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
 
@@ -131,26 +132,33 @@ export class DoReturnService {
   static async findAllByRequestReport(
     payload: BaseMetaPayloadVm,
   ): Promise<DoReturnFinenceFindAllResponseVm> {
-    // mapping search field and operator default ilike
     payload.globalSearchFields = [
-
       {
-        field: 'refawbNumber',
+        field: 'awbNumber',
       },
       {
         field: 'doReturnNumber',
-      },
+      }
     ];
-    payload.fieldResolverMap['refAwbNumber'] = 'prd.ref_awb_number';
+    // mapping search field and operator default ilike
+    payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
     payload.fieldResolverMap['originCode'] = 'district.district_code';
-    payload.fieldResolverMap['asal'] = 'district.district_code';
-    payload.fieldResolverMap['createdTime'] = 'pr.pickup_request_date_time';
-    payload.fieldResolverMap['destinationCode'] = 'dist_desc.district_code';
-    payload.fieldResolverMap['tujuan'] = 'dist_desc.district_code';
-    payload.fieldResolverMap['doReturnNumber'] = 'prd.do_return_number';
-    payload.fieldResolverMap['partnerName'] = 'partner.partner_name';
+    payload.fieldResolverMap['asal'] = 'district.district_name';
+    payload.fieldResolverMap['podDatetime'] = 'return.pod_datetime';
+    payload.fieldResolverMap['destinationCode'] = 'districtto.district_name';
+    payload.fieldResolverMap['tujuan'] = 'districtto.district_code';
+    payload.fieldResolverMap['doReturnNumber'] = 'return.do_return_awb_number';
+    payload.fieldResolverMap['doReturnAwbId'] = 'return.do_return_awb_id';
+    payload.fieldResolverMap['customerAccountName'] = 'customer.customer_account_name';
+    payload.fieldResolverMap['customerAccountId'] = 'customer.customer_account_id';
+    payload.fieldResolverMap['customerName'] = 'cust.customer_name';
+    payload.fieldResolverMap['customerId'] = 'cust.customer_id';
+    payload.fieldResolverMap['doPodDeliverDateTime'] = 'dpd.do_pod_deliver_date_time';
     payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
-    const repo = new OrionRepositoryService(PickupRequestDetail, 'prd');
+    payload.fieldResolverMap['awbDate'] = 'awb.awb_date';
+// mapping search field and operator default ilike
+
+    const repo = new OrionRepositoryService(DoReturnAwb, 'return');
     // conenct mongodb get price
     const db = await DatabaseConfig.getSicepatMonggoDb();
     const configCollection = db.collection('pricelist');
@@ -159,59 +167,211 @@ export class DoReturnService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['prd.ref_awb_number', 'refAwbNumber'],
+      ['return.do_return_awb_number', 'doReturnAwbNumber'],
+      ['return.created_time', 'createdTime'],
       ['SUBSTRING(district.district_code, 0, 4)', 'originCode'],
-      ['dist_desc.district_code', 'destinationCode'],
-      ['dist_desc.district_name', 'tujuan'],
+      ['districtto.district_code', 'destinationCode'],
+      ['districtto.district_name', 'tujuan'],
       ['district.district_name', 'asal'],
-      ['prd.created_time', 'createdTime'],
-      ['prd.user_created', 'userCreated'],
-      ['prd.updated_time', 'updatedTime'],
-      ['prd.do_return_number', 'doReturnNumber'],
-      ['partner.partner_name', 'partnerName'],
+      ['customer.customer_account_id', 'customerAccountId'],
+      ['customer.customer_account_name', 'customerAccountName'],
+      ['cust.customer_id', 'customerId'],
+      ['cust.customer_name', 'customerName'],
+      ['status.awb_status_id', 'awbStatusId'],
       ['status.awb_status_name', 'awbStatusName'],
+      ['return.awb_status_id_last', 'awbStatusId'],
+      [
+        `CASE return.awb_status_id_last WHEN 30000 THEN do_pod_deliver_date_time ELSE null END`,
+        'doPodDeliverDateTime',
+      ],
+      ['dpd.do_pod_deliver_id', 'doPodDeliverId'],
+      ['return.awb_number', 'awbNumber'],
+      ['return.do_return_awb_id', 'doReturnAwbId'],
+      ['awb.awb_date', 'awbDate'],
+
     );
-    q.innerJoin(e => e.pickupRequest, 'pr', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-    q.innerJoin(e => e.awbitem.awbStatus, 'status', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-    q.innerJoin(e => e.awbitem.awb.district, 'district', j =>
+
+    q.innerJoin(e => e.awbLast, 'aia', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 'awb', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.customerAccount, 'customer', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awbitem.awb.districtTo, 'dist_desc', j =>
+    q.innerJoin(e => e.customer, 'cust', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.districtTo, 'districtto', j =>
      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.pickupRequest.partner, 'partner', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q.innerJoin(e => e.awb.district, 'district', j =>
+     j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbStatusDetail, 'status',
       );
+    q.leftJoin(e => e.awb.doPodDeliverDetail, 'dpdd', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.awb.doPodDeliverDetail.doPodDeliverReturn, 'dpd', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
 
     const data = await q.exec();
+
     const total = await q.countWithoutTakeAndSkip();
 
     const asyncForEach = async () => {
-      const listCustomer: DoReturnFInanceResponseVm[] = [];
+      const listCustomer: DoReturnFinanceResponseVm[] = [];
       for (let i = 0; i < data.length; i++) {
 
-          const configData = await configCollection.findOne({ origin_code: data[i].originCode, destination_code: data[i].destinationCode, service_type: 'REG' });
-          const customer: DoReturnFInanceResponseVm = data[i];
-          customer.awbStatusName = data[i].awbStatusName;
-          customer.originCode = data[i].originCode;
-          customer.destinationCode = data[i].destinationCode;
-          customer.refAwbNumber = data[i].refAwbNumber;
-          customer.customerName = data[i].partnerName;
-          customer.harga = (configData) ? configData.price : 0;
-          listCustomer.push(customer);
+        const configData = await configCollection.findOne({ origin_code: data[i].originCode, destination_code: data[i].destinationCode, service_type: 'REG' });
+        const customer: DoReturnFinanceResponseVm = data[i];
+        customer.awbStatusName = data[i].awbStatusName;
+        customer.originCode = data[i].originCode;
+        customer.destinationCode = data[i].destinationCode ;
+        customer.awbNumber = data[i].awbNumber;
+        customer.doReturnAwbNumber = data[i].doReturnAwbNumber;
+        customer.customerAccountName = data[i].customerAccountName;
+        customer.customerName = data[i].customerName;
+        customer.harga = (configData) ? configData.price : 0;
+        customer.doReturnAwbId = data[i].doReturnAwbId;
+        customer.doPodDeliverDateTime = data[i].doPodDeliverDateTime;
+        customer.doPodDeliverId = data[i].doPodDeliverId;
+        listCustomer.push(customer);
       }
 
       return listCustomer;
     };
 
     const resultListCustomer = await asyncForEach();
-    // console.log(resultListCustomer);
     const result = new DoReturnFinenceFindAllResponseVm();
     result.data = resultListCustomer;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+    return result;
+  }
+
+  static async findAllByRequestExport(
+    payload: BaseMetaPayloadVm,
+  ): Promise<DoReturnFinenceFindAllResponseVm> {
+    payload.globalSearchFields = [
+      {
+        field: 'awbNumber',
+      },
+      {
+        field: 'doReturnNumber',
+      }
+    ];
+    // mapping search field and operator default ilike
+    payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
+    payload.fieldResolverMap['originCode'] = 'district.district_code';
+    payload.fieldResolverMap['asal'] = 'district.district_name';
+    payload.fieldResolverMap['podDatetime'] = 'return.pod_datetime';
+    payload.fieldResolverMap['destinationCode'] = 'districtto.district_name';
+    payload.fieldResolverMap['tujuan'] = 'districtto.district_code';
+    payload.fieldResolverMap['doReturnNumber'] = 'return.do_return_awb_number';
+    payload.fieldResolverMap['doReturnAwbId'] = 'return.do_return_awb_id';
+    payload.fieldResolverMap['customerAccountName'] = 'customer.customer_account_name';
+    payload.fieldResolverMap['customerAccountId'] = 'customer.customer_account_id';
+    payload.fieldResolverMap['customerName'] = 'cust.customer_name';
+    payload.fieldResolverMap['customerId'] = 'cust.customer_id';
+    payload.fieldResolverMap['doPodDeliverDateTime'] = 'dpd.do_pod_deliver_date_time';
+    payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
+    payload.fieldResolverMap['awbDate'] = 'awb.awb_date';
+// mapping search field and operator default ilike
+
+    const repo = new OrionRepositoryService(DoReturnAwb, 'return');
+    // conenct mongodb get price
+    const db = await DatabaseConfig.getSicepatMonggoDb();
+    const configCollection = db.collection('pricelist');
+
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['return.do_return_awb_number', 'doReturnAwbNumber'],
+      ['return.created_time', 'createdTime'],
+      ['SUBSTRING(district.district_code, 0, 4)', 'originCode'],
+      ['districtto.district_code', 'destinationCode'],
+      ['districtto.district_name', 'tujuan'],
+      ['district.district_name', 'asal'],
+      ['customer.customer_account_id', 'customerAccountId'],
+      ['customer.customer_account_name', 'customerAccountName'],
+      ['cust.customer_id', 'customerId'],
+      ['cust.customer_name', 'customerName'],
+      ['status.awb_status_id', 'awbStatusId'],
+      ['status.awb_status_name', 'awbStatusName'],
+      ['return.awb_status_id_last', 'awbStatusId'],
+      [
+        `CASE return.awb_status_id_last WHEN 30000 THEN do_pod_deliver_date_time ELSE null END`,
+        'doPodDeliverDateTime',
+      ],
+      ['dpd.do_pod_deliver_id', 'doPodDeliverId'],
+      ['return.awb_number', 'awbNumber'],
+      ['return.do_return_awb_id', 'doReturnAwbId'],
+      ['awb.awb_date', 'awbDate'],
+
+    );
+
+    q.innerJoin(e => e.awbLast, 'aia', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 'awb', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.customerAccount, 'customer', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.customer, 'cust', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.districtTo, 'districtto', j =>
+     j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.district, 'district', j =>
+     j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbStatusDetail, 'status',
+      );
+    q.leftJoin(e => e.awb.doPodDeliverDetail, 'dpdd', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.awb.doPodDeliverDetail.doPodDeliverReturn, 'dpd', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+
+    const total = await q.countWithoutTakeAndSkip();
+
+    const asyncForEach = async () => {
+      const listCustomer: DoReturnFinanceResponseVm[] = [];
+      for (let i = 0; i < data.length; i++) {
+
+        const configData = await configCollection.findOne({ origin_code: data[i].originCode, destination_code: data[i].destinationCode, service_type: 'REG' });
+        const customer: DoReturnFinanceResponseVm = data[i];
+        customer.awbStatusName = data[i].awbStatusName;
+        customer.originCode = data[i].originCode;
+        customer.destinationCode = data[i].destinationCode ;
+        customer.awbNumber = data[i].awbNumber;
+        customer.doReturnAwbNumber = data[i].doReturnAwbNumber;
+        customer.customerAccountName = data[i].customerAccountName;
+        customer.customerName = data[i].customerName;
+        customer.harga = (configData) ? configData.price : 0;
+        customer.doReturnAwbId = data[i].doReturnAwbId;
+        customer.doPodDeliverDateTime = data[i].doPodDeliverDateTime;
+        customer.doPodDeliverId = data[i].doPodDeliverId;
+        listCustomer.push(customer);
+      }
+
+      return listCustomer;
+    };
+
+    const resultListCustomer = await asyncForEach();
+    const result = new DoReturnFinenceFindAllResponseVm();
+    result.data = resultListCustomer;
+
     return result;
   }
 
@@ -577,7 +737,6 @@ export class DoReturnService {
       doreturnNewAwb3Pl: partner.partnerLogisticName,
       });
     }
-    
     result.status = status;
     result.message = message;
     // result.doId = admin.doReturnAdminToCtId;

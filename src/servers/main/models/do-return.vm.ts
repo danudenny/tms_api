@@ -118,12 +118,18 @@ export class DoReturnCtResponseVm {
   employeeNik: string;
 }
 
-export class DoReturnFInanceResponseVm {
+export class DoReturnFinanceResponseVm {
   @ApiModelProperty()
-  refAwbNumber: string;
+  awbNumber: string;
 
   @ApiModelProperty()
-  doReturnNumber: string;
+  doReturnAwbId: number;
+
+  @ApiModelProperty()
+  doPodDeliverId: string;
+
+  @ApiModelProperty()
+  doReturnAwbNumber: string;
 
   @ApiModelProperty()
   originCode: string;
@@ -141,19 +147,28 @@ export class DoReturnFInanceResponseVm {
   createdTime: string;
 
   @ApiModelProperty()
-  userCreated: string;
+  awbDate: string;
 
   @ApiModelProperty()
-  updatedTime: string;
+  customerAccountName: string;
 
   @ApiModelProperty()
-  userUpdated: string;
+  customerAccountId: string;
 
   @ApiModelProperty()
   customerName: string;
 
   @ApiModelProperty()
+  customerId: string;
+
+  @ApiModelProperty()
+  doPodDeliverDateTime: string;
+
+  @ApiModelProperty()
   awbStatusName: string;
+
+  @ApiModelProperty()
+  awbStatusId: string;
 
   @ApiModelProperty()
   harga: string;

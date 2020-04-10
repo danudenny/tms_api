@@ -131,7 +131,7 @@ export class PickupRequestDetail extends TmsBaseEntity {
     scale: 2,
     name: 'parcel_value',
   })
-  parcelValue: string | null;
+  parcelValue: number | null;
 
   @Column('character varying', {
     nullable: true,
@@ -294,6 +294,20 @@ export class PickupRequestDetail extends TmsBaseEntity {
   })
   isReturn: boolean;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_doreturn_sync',
+  })
+  isDoreturnSync: boolean;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'do_return',
+  })
+  doReturn: boolean;
+
   @Column('character varying', {
     nullable: true,
     length: 100,
@@ -337,16 +351,32 @@ export class PickupRequestDetail extends TmsBaseEntity {
   })
   taxValue: string | null;
 
-  @ManyToOne(() => PickupRequest)
-  @JoinColumn({ name: 'pickup_request_id' })
-  pickupRequest: PickupRequest;
+  // @Column('boolean', {
+  //   nullable: false,
+  //   default: () => 'false',
+  //   name: 'do_return',
+  // })
+  // doReturn: boolean;
 
-  @OneToOne(() => AwbItemAttr)
-  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
-  awbItemAttr: AwbItemAttr;
+  // @Column('character varying', {
+  //   nullable: true,
+  //   length: 100,
+  //   name: 'do_return_number',
+  // })
+  // doReturnNumber: string | null;
 
-  @OneToOne(() => AwbItem)
-  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
-  awbitem: AwbItem;
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'drop_partner_type',
+  })
+  dropPartnerType: string | null;
 
+  @Column('numeric', {
+    nullable: true,
+    precision: 20,
+    scale: 2,
+    name: 'drop_partner_charge',
+  })
+  dropPartnerCharge: number | null;
 }
