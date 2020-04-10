@@ -132,6 +132,14 @@ export class DoReturnService {
   static async findAllByRequestReport(
     payload: BaseMetaPayloadVm,
   ): Promise<DoReturnFinenceFindAllResponseVm> {
+    payload.globalSearchFields = [
+      {
+        field: 'awbNumber',
+      },
+      {
+        field: 'doReturnNumber',
+      }
+    ];
     // mapping search field and operator default ilike
     payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
     payload.fieldResolverMap['originCode'] = 'district.district_code';
@@ -240,12 +248,21 @@ export class DoReturnService {
     const resultListCustomer = await asyncForEach();
     const result = new DoReturnFinenceFindAllResponseVm();
     result.data = resultListCustomer;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
     return result;
   }
 
   static async findAllByRequestExport(
     payload: BaseMetaPayloadVm,
   ): Promise<DoReturnFinenceFindAllResponseVm> {
+    payload.globalSearchFields = [
+      {
+        field: 'awbNumber',
+      },
+      {
+        field: 'doReturnNumber',
+      }
+    ];
     // mapping search field and operator default ilike
     payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
     payload.fieldResolverMap['originCode'] = 'district.district_code';
@@ -354,6 +371,7 @@ export class DoReturnService {
     const resultListCustomer = await asyncForEach();
     const result = new DoReturnFinenceFindAllResponseVm();
     result.data = resultListCustomer;
+
     return result;
   }
 
