@@ -147,10 +147,19 @@ export class DoReturnFinanceResponseVm {
   createdTime: string;
 
   @ApiModelProperty()
+  awbDate: string;
+
+  @ApiModelProperty()
   customerAccountName: string;
 
   @ApiModelProperty()
   customerAccountId: string;
+
+  @ApiModelProperty()
+  customerName: string;
+
+  @ApiModelProperty()
+  customerId: string;
 
   @ApiModelProperty()
   doPodDeliverDateTime: string;

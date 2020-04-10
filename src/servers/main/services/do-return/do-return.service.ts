@@ -143,8 +143,11 @@ export class DoReturnService {
     payload.fieldResolverMap['doReturnAwbId'] = 'return.do_return_awb_id';
     payload.fieldResolverMap['customerAccountName'] = 'customer.customer_account_name';
     payload.fieldResolverMap['customerAccountId'] = 'customer.customer_account_id';
+    payload.fieldResolverMap['customerName'] = 'cust.customer_name';
+    payload.fieldResolverMap['customerId'] = 'cust.customer_id';
     payload.fieldResolverMap['doPodDeliverDateTime'] = 'dpd.do_pod_deliver_date_time';
     payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
+    payload.fieldResolverMap['awbDate'] = 'awb.awb_date';
 // mapping search field and operator default ilike
 
     const repo = new OrionRepositoryService(DoReturnAwb, 'return');
@@ -164,6 +167,8 @@ export class DoReturnService {
       ['district.district_name', 'asal'],
       ['customer.customer_account_id', 'customerAccountId'],
       ['customer.customer_account_name', 'customerAccountName'],
+      ['cust.customer_id', 'customerId'],
+      ['cust.customer_name', 'customerName'],
       ['status.awb_status_id', 'awbStatusId'],
       ['status.awb_status_name', 'awbStatusName'],
       ['return.awb_status_id_last', 'awbStatusId'],
@@ -174,6 +179,7 @@ export class DoReturnService {
       ['dpd.do_pod_deliver_id', 'doPodDeliverId'],
       ['return.awb_number', 'awbNumber'],
       ['return.do_return_awb_id', 'doReturnAwbId'],
+      ['awb.awb_date', 'awbDate'],
 
     );
 
@@ -184,6 +190,9 @@ export class DoReturnService {
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.awb.customerAccount, 'customer', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.customer, 'cust', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.awb.districtTo, 'districtto', j =>
@@ -217,6 +226,7 @@ export class DoReturnService {
         customer.awbNumber = data[i].awbNumber;
         customer.doReturnAwbNumber = data[i].doReturnAwbNumber;
         customer.customerAccountName = data[i].customerAccountName;
+        customer.customerName = data[i].customerName;
         customer.harga = (configData) ? configData.price : 0;
         customer.doReturnAwbId = data[i].doReturnAwbId;
         customer.doPodDeliverDateTime = data[i].doPodDeliverDateTime;
@@ -247,8 +257,11 @@ export class DoReturnService {
     payload.fieldResolverMap['doReturnAwbId'] = 'return.do_return_awb_id';
     payload.fieldResolverMap['customerAccountName'] = 'customer.customer_account_name';
     payload.fieldResolverMap['customerAccountId'] = 'customer.customer_account_id';
+    payload.fieldResolverMap['customerName'] = 'cust.customer_name';
+    payload.fieldResolverMap['customerId'] = 'cust.customer_id';
     payload.fieldResolverMap['doPodDeliverDateTime'] = 'dpd.do_pod_deliver_date_time';
     payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
+    payload.fieldResolverMap['awbDate'] = 'awb.awb_date';
 // mapping search field and operator default ilike
 
     const repo = new OrionRepositoryService(DoReturnAwb, 'return');
@@ -268,6 +281,8 @@ export class DoReturnService {
       ['district.district_name', 'asal'],
       ['customer.customer_account_id', 'customerAccountId'],
       ['customer.customer_account_name', 'customerAccountName'],
+      ['cust.customer_id', 'customerId'],
+      ['cust.customer_name', 'customerName'],
       ['status.awb_status_id', 'awbStatusId'],
       ['status.awb_status_name', 'awbStatusName'],
       ['return.awb_status_id_last', 'awbStatusId'],
@@ -278,6 +293,7 @@ export class DoReturnService {
       ['dpd.do_pod_deliver_id', 'doPodDeliverId'],
       ['return.awb_number', 'awbNumber'],
       ['return.do_return_awb_id', 'doReturnAwbId'],
+      ['awb.awb_date', 'awbDate'],
 
     );
 
@@ -288,6 +304,9 @@ export class DoReturnService {
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.awb.customerAccount, 'customer', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.customer, 'cust', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.awb.districtTo, 'districtto', j =>
@@ -321,6 +340,7 @@ export class DoReturnService {
         customer.awbNumber = data[i].awbNumber;
         customer.doReturnAwbNumber = data[i].doReturnAwbNumber;
         customer.customerAccountName = data[i].customerAccountName;
+        customer.customerName = data[i].customerName;
         customer.harga = (configData) ? configData.price : 0;
         customer.doReturnAwbId = data[i].doReturnAwbId;
         customer.doPodDeliverDateTime = data[i].doPodDeliverDateTime;
