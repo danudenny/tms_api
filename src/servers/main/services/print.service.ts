@@ -6,7 +6,10 @@ import { PrinterService } from '../../../shared/services/printer.service';
 import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
-import { PrintBagItemPayloadQueryVm, PrintAwbPayloadQueryVm } from '../models/print-bag-item-payload.vm';
+import {
+  PrintBagItemPayloadQueryVm,
+  PrintAwbPayloadQueryVm,
+} from '../models/print-bag-item-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodReturnPayloadQueryVm } from '../models/print-do-pod-return.vm';
 
@@ -66,8 +69,15 @@ export class PrintService {
       });
     }
 
-    const awbIds = map(doPodDeliver.doPodDeliverDetails, doPodDeliverDetail => doPodDeliverDetail.awbItem.awb.awbId);
-    const result = await RawQueryService.query(`SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(',')})`);
+    const awbIds = map(
+      doPodDeliver.doPodDeliverDetails,
+      doPodDeliverDetail => doPodDeliverDetail.awbItem.awb.awbId,
+    );
+    const result = await RawQueryService.query(
+      `SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(
+        ',',
+      )})`,
+    );
     let totalAllCod = result[0].total;
 
     if (totalAllCod < 1) {
@@ -161,6 +171,7 @@ export class PrintService {
             consigneeName: true,
           },
           awbItemAttr: {
+            awbItemAttrId: true, // needs to be selected due to awb_status relations are being included
             awbStatus: {
               awbStatusName: true,
             },
@@ -182,15 +193,21 @@ export class PrintService {
       })
       .where(e => e.doPodId, w => w.equals(queryParams.id))
       .andWhere(e => e.doPodDetails.isDeleted, w => w.isFalse());
-
     if (!doPod) {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
       });
     }
 
-    const awbIds = map(doPod.doPodDetails, doPodDetail => doPodDetail.awbItem.awb.awbId);
-    const result = await RawQueryService.query(`SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(',')})`);
+    const awbIds = map(
+      doPod.doPodDetails,
+      doPodDetail => doPodDetail.awbItem.awb.awbId,
+    );
+    const result = await RawQueryService.query(
+      `SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(
+        ',',
+      )})`,
+    );
     let totalAllCod = result[0].total;
 
     if (totalAllCod < 1) {
@@ -237,7 +254,6 @@ export class PrintService {
         totalCod: totalAllCod,
       },
     };
-
     PrinterService.responseForJsReport({
       res,
       printerName: 'StrukPrinter',
@@ -317,7 +333,9 @@ export class PrintService {
       });
     }
 
-    const weightNumberOnly = `${bagItem.weight}`.replace(/\D/gm, '').substring(0, 5);
+    const weightNumberOnly = `${bagItem.weight}`
+      .replace(/\D/gm, '')
+      .substring(0, 5);
     const finalWeightRounded2Decimal = parseFloat(`${bagItem.weight}`).toFixed(
       2,
     );
@@ -336,12 +354,8 @@ export class PrintService {
       `BARCODE 30,200,"128",100,1,0,3,10,"${finalBagItemBarcodeNumber}"\n` +
       `TEXT 30,380,"3",0,1,1,"Koli ke : ${finalBagItemSeq}"\n` +
       `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${bagItemAwbsTotal} resi"\n` +
-      `TEXT 30,460,"4",0,1,1,0,"${
-        bagItem.bag.district.districtCode
-      }"\n` +
-      `TEXT 30,510,"5",0,1,1,0,"${
-        bagItem.bag.district.districtName
-      }"\n` +
+      `TEXT 30,460,"4",0,1,1,0,"${bagItem.bag.district.districtCode}"\n` +
+      `TEXT 30,510,"5",0,1,1,0,"${bagItem.bag.district.districtName}"\n` +
       `PRINT 1\n` +
       `EOP`;
 
@@ -438,10 +452,12 @@ export class PrintService {
     PrinterService.responseForJsReport({
       res,
       printerName: 'StrukPrinter',
-      templates: [{
-        templateName: 'surat-jalan-gabungan-sortir-paper',
-        templateData: jsreportParams,
-      }],
+      templates: [
+        {
+          templateName: 'surat-jalan-gabungan-sortir-paper',
+          templateData: jsreportParams,
+        },
+      ],
     });
   }
 
@@ -511,8 +527,9 @@ export class PrintService {
         });
       }
 
-      let data1 = `TEXT 30,100,"3",0,1,1,"Pengirim : ${awbItem.branch.branchName}"\n` +
-      `TEXT 30,135,"3",0,1,1,"Telp : ${awbItem.branch.phone1}"\n`;
+      let data1 =
+        `TEXT 30,100,"3",0,1,1,"Pengirim : ${awbItem.branch.branchName}"\n` +
+        `TEXT 30,135,"3",0,1,1,"Telp : ${awbItem.branch.phone1}"\n`;
       let addX = 170;
       let startX = 0;
       let endX = 25;
@@ -521,16 +538,31 @@ export class PrintService {
         const count = Math.round(awbItem.branch.address.length / 25);
         for (let i = 0; i < count; i++) {
           if (i === 0) {
-            data1 += `TEXT 30,` + addX + `,"3",0,1,1,"Alamat : ${awbItem.branch.address.substring(startX, endX)}"\n`;
+            data1 +=
+              `TEXT 30,` +
+              addX +
+              `,"3",0,1,1,"Alamat : ${awbItem.branch.address.substring(
+                startX,
+                endX,
+              )}"\n`;
           } else {
-            data1 += `TEXT 30,` + addX + `,"3",0,1,1,"${awbItem.branch.address.substring(startX, endX)}"\n`;
+            data1 +=
+              `TEXT 30,` +
+              addX +
+              `,"3",0,1,1,"${awbItem.branch.address.substring(
+                startX,
+                endX,
+              )}"\n`;
           }
           addX += 35;
           startX = endX;
           endX = endX + 30;
         }
       } else {
-        data1 += `TEXT 30,` + addX + `,"3",0,1,1,"Alamat : ${awbItem.branch.address}"\n`;
+        data1 +=
+          `TEXT 30,` +
+          addX +
+          `,"3",0,1,1,"Alamat : ${awbItem.branch.address}"\n`;
       }
 
       const addYpn = addX + 70;
@@ -538,23 +570,43 @@ export class PrintService {
       let addY = addYtl + 35;
       let startY = 0;
       let endY = 25;
-      let data2 = `TEXT 30,` + addYpn + `,"3",0,1,1,"Penerima : ${awbItem.consigneeName}"\n` +
-      `TEXT 30,` + addYtl + `,"3",0,1,1,"Telp : ${awbItem.consigneeNumber}"\n`;
+      let data2 =
+        `TEXT 30,` +
+        addYpn +
+        `,"3",0,1,1,"Penerima : ${awbItem.consigneeName}"\n` +
+        `TEXT 30,` +
+        addYtl +
+        `,"3",0,1,1,"Telp : ${awbItem.consigneeNumber}"\n`;
 
       if (awbItem.consigneeAddress) {
         const count = Math.round(awbItem.consigneeAddress.length / 25);
         for (let i = 0; i < count; i++) {
           if (i === 0) {
-            data2 += `TEXT 30,` + addY + `,"3",0,1,1,"Alamat : ${awbItem.consigneeAddress.substring(startY, endY)}"\n`;
+            data2 +=
+              `TEXT 30,` +
+              addY +
+              `,"3",0,1,1,"Alamat : ${awbItem.consigneeAddress.substring(
+                startY,
+                endY,
+              )}"\n`;
           } else {
-            data2 += `TEXT 30,` + addY + `,"3",0,1,1,"${awbItem.consigneeAddress.substring(startY, endY)}"\n`;
+            data2 +=
+              `TEXT 30,` +
+              addY +
+              `,"3",0,1,1,"${awbItem.consigneeAddress.substring(
+                startY,
+                endY,
+              )}"\n`;
           }
           addY += 35;
           startY = endY;
           endY = endY + 30;
         }
       } else {
-        data2 += `TEXT 30,` + addY + `,"3",0,1,1,"Alamat : ${awbItem.consigneeAddress}"\n`;
+        data2 +=
+          `TEXT 30,` +
+          addY +
+          `,"3",0,1,1,"Alamat : ${awbItem.consigneeAddress}"\n`;
       }
 
       const rawTsplPrinterCommands =
@@ -598,7 +650,7 @@ export class PrintService {
           },
         })
         .where(e => e.awbNumber, w => w.equals(queryParams.id));
-        // .andWhere(e => e.refRepresentativeCode, w => w.isNotNull);
+      // .andWhere(e => e.refRepresentativeCode, w => w.isNotNull);
 
       if (!awbItem) {
         RequestErrorService.throwObj({
@@ -634,7 +686,10 @@ export class PrintService {
         });
       }
 
-      const consZip = awbItem.consigneeZip.substring((awbItem.consigneeZip.length - 3), awbItem.consigneeZip.length);
+      const consZip = awbItem.consigneeZip.substring(
+        awbItem.consigneeZip.length - 3,
+        awbItem.consigneeZip.length,
+      );
       let data1 = '';
       let addX = 370;
       let startX = 0;
@@ -644,16 +699,31 @@ export class PrintService {
         const count = Math.round(awbItem.consigneeAddress.length / 25);
         for (let i = 0; i < count; i++) {
           if (i === 0) {
-            data1 += `TEXT 30,` + addX + `,"2",0,1,1,"Alamat : ${awbItem.consigneeAddress.substring(startX, endX)}"\n`;
+            data1 +=
+              `TEXT 30,` +
+              addX +
+              `,"2",0,1,1,"Alamat : ${awbItem.consigneeAddress.substring(
+                startX,
+                endX,
+              )}"\n`;
           } else {
-            data1 += `TEXT 30,` + addX + `,"2",0,1,1,"${awbItem.consigneeAddress.substring(startX, endX)}"\n`;
+            data1 +=
+              `TEXT 30,` +
+              addX +
+              `,"2",0,1,1,"${awbItem.consigneeAddress.substring(
+                startX,
+                endX,
+              )}"\n`;
           }
           addX += 27;
           startX = endX;
           endX = endX + 30;
         }
       } else {
-        data1 += `TEXT 30,` + addX + `,"2",0,1,1,"Alamat : ${awbItem.consigneeAddress}"\n`;
+        data1 +=
+          `TEXT 30,` +
+          addX +
+          `,"2",0,1,1,"Alamat : ${awbItem.consigneeAddress}"\n`;
       }
 
       let data2 = '';
@@ -664,15 +734,20 @@ export class PrintService {
         const disName2word = Math.round(disNameLength.length / 2);
         let x = 0;
 
-        for (let i = 0; i < disName2word; i++ ) {
+        for (let i = 0; i < disName2word; i++) {
           if (disNameLength.length < 2) {
-            data2 += `TEXT 400,` + rightX + `,"2",0,1,1,"${disNameLength[x]}"\n`;
+            data2 +=
+              `TEXT 400,` + rightX + `,"2",0,1,1,"${disNameLength[x]}"\n`;
           } else {
             x++;
-            if (x <= (disNameLength.length - 1)) {
-              data2 += `TEXT 400,` + rightX + `,"2",0,1,1,"${disNameLength[x - 1]} ${disNameLength[x]}"\n`;
+            if (x <= disNameLength.length - 1) {
+              data2 +=
+                `TEXT 400,` +
+                rightX +
+                `,"2",0,1,1,"${disNameLength[x - 1]} ${disNameLength[x]}"\n`;
             } else {
-              data2 += `TEXT 400,` + rightX + `,"2",0,1,1,"${disNameLength[x - 1]}"\n`;
+              data2 +=
+                `TEXT 400,` + rightX + `,"2",0,1,1,"${disNameLength[x - 1]}"\n`;
             }
             x++;
           }
@@ -690,15 +765,25 @@ export class PrintService {
         `BARCODE 30,120,"128",100,1,0,3,10,"${awbItem.awbNumber}"\n` +
         `TEXT 400,120,"4",0,1,1,"${awbItem.refRepresentativeCode}"\n` +
         data2 +
-        `TEXT 400,` + (rightX) + `,"3",0,1,1,"${consZip}"\n` +
+        `TEXT 400,` +
+        rightX +
+        `,"3",0,1,1,"${consZip}"\n` +
         `TEXT 30,280,"2",0,1,1,"No Resi : ${awbItem.awbNumber}"\n` +
         `TEXT 30,310,"2",0,1,1,"Penerima : ${awbItem.consigneeName}"\n` +
         `TEXT 30,340,"2",0,1,1,"Telp : ${awbItem.consigneeNumber}"\n` +
         data1 +
-        `TEXT 30,` + (addX + 30) + `,"2",0,1,1,"Diterima Oleh,"\n` +
-        `TEXT 30,` + (addX + 120) + `,"2",0,1,1,"(TTD & Nama Terang)"\n` +
-        `TEXT 30,` + (addX + 220) + `,"2",0,1,1,"Pengirim : Sicepat Gerai ${awbItem.branch.branchName}"\n` +
-        `TEXT 30,` + (addX + 250) + `,"2",0,1,1,"Telp : ${awbItem.branch.phone1}"\n` +
+        `TEXT 30,` +
+        (addX + 30) +
+        `,"2",0,1,1,"Diterima Oleh,"\n` +
+        `TEXT 30,` +
+        (addX + 120) +
+        `,"2",0,1,1,"(TTD & Nama Terang)"\n` +
+        `TEXT 30,` +
+        (addX + 220) +
+        `,"2",0,1,1,"Pengirim : Sicepat Gerai ${awbItem.branch.branchName}"\n` +
+        `TEXT 30,` +
+        (addX + 250) +
+        `,"2",0,1,1,"Telp : ${awbItem.branch.phone1}"\n` +
         `PRINT 1\n` +
         `EOP`;
 
@@ -757,11 +842,13 @@ export class PrintService {
     PrinterService.responseForJsReport({
       res,
       printerName: 'StrukPrinter',
-      templates: [{
-        templateName: 'surat-jalan-do-balik',
-        templateData: jsreportParams,
-        printCopy: queryParams.printCopy,
-      }],
+      templates: [
+        {
+          templateName: 'surat-jalan-do-balik',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+      ],
     });
   }
 
@@ -803,7 +890,8 @@ export class PrintService {
       });
     }
 
-    await q.select({
+    await q
+      .select({
         doReturnHistoryId: true, // needs to be selected due to do_pod relations are being included
         doReturnAwbs: {
           branchTo: {
@@ -831,18 +919,20 @@ export class PrintService {
       meta: {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
-        totalData: (await dataCount),
+        totalData: await dataCount,
       },
     };
 
     PrinterService.responseForJsReport({
       res,
       printerName: 'StrukPrinter',
-      templates: [{
-        templateName: 'ttd-do-balik',
-        templateData: jsreportParams,
-        printCopy: queryParams.printCopy,
-      }],
+      templates: [
+        {
+          templateName: 'ttd-do-balik',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+      ],
     });
   }
 
@@ -889,11 +979,13 @@ export class PrintService {
     PrinterService.responseForJsReport({
       res,
       printerName: 'StrukPrinter',
-      templates: [{
-        templateName: 'tanda-terima-do-balik-ct',
-        templateData: jsreportParams,
-        printCopy: queryParams.printCopy,
-      }],
+      templates: [
+        {
+          templateName: 'tanda-terima-do-balik-ct',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+      ],
     });
   }
 
@@ -949,11 +1041,13 @@ export class PrintService {
     PrinterService.responseForJsReport({
       res,
       printerName: 'StrukPrinter',
-      templates: [{
-        templateName: 'tanda-terima-do-balik-collection',
-        templateData: jsreportParams,
-        printCopy: queryParams.printCopy,
-      }],
+      templates: [
+        {
+          templateName: 'tanda-terima-do-balik-collection',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+      ],
     });
   }
 }

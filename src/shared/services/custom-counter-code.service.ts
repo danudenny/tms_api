@@ -17,6 +17,12 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
+  public static async workOrderCodeRandom(dateTime: Date, digit: number = 8) {
+    const prefix = `SPKAR/${moment(dateTime).format('YYMM')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode;
+  }
+
   // counter code awb number for return
   public static async awbReturn() {
     const prefix = `R`;
