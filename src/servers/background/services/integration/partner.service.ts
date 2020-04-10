@@ -404,8 +404,10 @@ export class PartnerService {
     let pickupRequestContactNo ;
     let pickupRequestEmail;
     let pickupRequestNotes;
+    let paramworkOrdeStatusIdPick;
 
     const arrDropStatus = [7050, 7060, 7070, 7100];
+    const arrPickStatus = [4950, 5000];
     const err = '';
 
     const dataBranch = await this.getBranchPartnerId(paramBranchCode);
@@ -424,6 +426,7 @@ export class PartnerService {
       pickupRequestContactNo = item.pickup_request_contact_no;
       pickupRequestEmail = item.pickup_request_email;
       pickupRequestNotes = item.pickup_request_notes;
+      paramworkOrdeStatusIdPick = item.work_order_status_id_pick;
     }
 
     for (const itemBranch of dataBranch) {
@@ -478,6 +481,31 @@ export class PartnerService {
           );
           return result;
         } else {
+          // Tambahan Kur
+          if (arrPickStatus.indexOf(Math.floor(paramworkOrdeStatusIdPick)) > -1) {
+            result = {
+              code: '422',
+              message: 'Awb Already Pick Status',
+            };
+            const paramsAwbPartnerLog = {
+              partner_id: paramPartnerId,
+              awb_number: refAwbNumber,
+              request_data: payload.body,
+              response_code: 422,
+              response_data: 'Awb Already Pick Status',
+              user_id: '1',
+              created_time: timeNow,
+              updated_time: timeNow,
+            };
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+              paramsAwbPartnerLog,
+            );
+            const awb_partner_log = await AwbPartnerLog.insert(
+              dataParamsAwbPartnerLog,
+            );
+            return result;
+          }
+          // end of tambahn kur
           if (workOrderIdLast === null) {
             const paramsWorkOrder = {
               work_order_code: dataWorkOrderCode,
@@ -728,7 +756,8 @@ export class PartnerService {
         pr.pickup_schedule_date_time,
         pr.pickup_request_contact_no,
         pr.pickup_request_email,
-        pr.pickup_request_notes
+        pr.pickup_request_notes,
+        wo.work_order_status_id_pick
       FROM pickup_request_detail prd
       INNER JOIN pickup_request pr on prd.pickup_request_id = pr.pickup_request_id AND pr.is_deleted=FALSE
       LEFT JOIN work_order wo on prd.work_order_id_last = wo.work_order_id AND wo.is_deleted=FALSE
