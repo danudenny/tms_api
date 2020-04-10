@@ -213,6 +213,48 @@ export class WebScanInDeliverGroupResponseVm {
   @ApiModelProperty()
   userIdDriver: number;
 }
+export class WebScanOutDeliverPartnerDataResponseVm {
+
+  @ApiModelProperty()
+  doPodDeliverId: string;
+
+  @ApiModelProperty()
+  doPodDeliverCode: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  assignDate: string;
+
+  @ApiModelProperty()
+  confirmDate: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  driverName: string;
+
+  @ApiModelProperty()
+  awbStatusIdLast: number;
+
+  @ApiModelProperty()
+  awbStatus: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  completedDate: string;
+
+  @ApiModelProperty()
+  orderNo: string;
+
+  @ApiModelProperty()
+  receiverName: string;
+}
+
 export class WebScanOutTransitUpdateAwbPartnerResponseVm {
 
   @ApiModelProperty()
@@ -220,7 +262,6 @@ export class WebScanOutTransitUpdateAwbPartnerResponseVm {
 
   @ApiModelProperty()
   message: string;
-
 }
 
 export class WebScanOutAwbListResponseVm extends BaseMetaResponseVm {
@@ -251,6 +292,13 @@ export class WebScanOutDeliverGroupListResponseVm extends BaseMetaResponseVm {
     type: () => [WebScanInDeliverGroupResponseVm],
   })
   data: WebScanInDeliverGroupResponseVm[];
+}
+
+export class WebScanOutDeliverPartnerListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({
+    type: () => [WebScanOutDeliverPartnerDataResponseVm],
+  })
+  data: WebScanOutDeliverPartnerDataResponseVm[];
 }
 
 // Create DO POD
