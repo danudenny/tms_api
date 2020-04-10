@@ -59,6 +59,14 @@ export class DoReturnController {
     return DoReturnService.findAllByRequestReport(payload);
   }
 
+  @Post('dolist/export')
+  @HttpCode(HttpStatus.OK)
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: DoReturnFinenceFindAllResponseVm })
+  public async findAllDoReturnExport(@Body() payload: BaseMetaPayloadVm ) {
+    return DoReturnService.findAllByRequestExport(payload);
+  }
+
   @Post('dolist/ct')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)

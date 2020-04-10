@@ -12,6 +12,7 @@ import { CustomerAccount } from './customer-account';
 import { User } from './user';
 import { AwbItemAttr } from './awb-item-attr';
 import { TrackingNote } from './tracking_note';
+import { Awb } from './awb';
 
 @Entity('do_return_awb', { schema: 'public' })
 export class DoReturnAwb extends TmsBaseEntity {
@@ -101,9 +102,13 @@ export class DoReturnAwb extends TmsBaseEntity {
   @JoinColumn({ name: 'awb_number', referencedColumnName: 'awbNumber' })
   awbLast: AwbItemAttr;
 
-  @OneToMany(() => TrackingNote, x => x.doReturnAwb)
-  @JoinColumn({ name: 'receiptnumber', referencedColumnName: 'receiptnumber' })
-  trackingNote: TrackingNote[];
+  @OneToOne(() => Awb)
+  @JoinColumn({ name: 'awb_number', referencedColumnName: 'awbNumber' })
+  awb: Awb;
+
+  // @OneToMany(() => TrackingNote, x => x.doReturnAwb)
+  // @JoinColumn({ name: 'receiptnumber', referencedColumnName: 'receiptnumber' })
+  // trackingNote: TrackingNote[];
 
   @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })

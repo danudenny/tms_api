@@ -1,6 +1,6 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
-import { DoReturnResponseVm, DoReturnAdminResponseVm, DoReturnCtResponseVm, DoReturnCollectionResponseVm, DoReturnAwbListResponseVm, DoReturnFInanceResponseVm } from './do-return.vm';
+import { DoReturnResponseVm, DoReturnAdminResponseVm, DoReturnCtResponseVm, DoReturnCollectionResponseVm, DoReturnAwbListResponseVm, DoReturnFinanceResponseVm } from './do-return.vm';
 export class ReturnFindAllResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [DoReturnResponseVm] })
   data: DoReturnResponseVm[];
@@ -26,6 +26,6 @@ export class DoReturnCollectionFindAllResponseVm extends BaseMetaResponseVm {
 }
 
 export class DoReturnFinenceFindAllResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [DoReturnFInanceResponseVm] })
-  data: DoReturnFInanceResponseVm[];
+  @ApiModelProperty({ type: () => [DoReturnFinanceResponseVm] })
+  data: DoReturnFinanceResponseVm[];
 }
