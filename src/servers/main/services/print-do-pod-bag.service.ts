@@ -55,13 +55,18 @@ export class PrintDoPodBagService {
       });
     }
 
-    this.printDoPodBagAndQueryMeta(res, doPod as any, {
-      userId: queryParams.userId,
-      branchId: queryParams.branchId,
-      templateType: +queryParams.type,
-    }, {
-      printCopy: queryParams.printCopy,
-    });
+    this.printDoPodBagAndQueryMeta(
+      res,
+      doPod as any,
+      {
+        userId: queryParams.userId,
+        branchId: queryParams.branchId,
+        templateType: +queryParams.type,
+      },
+      {
+        printCopy: queryParams.printCopy,
+      },
+    );
   }
 
   public static async printDoPodBagAndQueryMeta(
@@ -70,7 +75,7 @@ export class PrintDoPodBagService {
     metaQuery: {
       userId: number;
       branchId: number;
-      templateType: number,
+      templateType: number;
     },
     templateConfig: {
       printCopy?: number;
@@ -125,15 +130,20 @@ export class PrintDoPodBagService {
 
     const currentDate = moment();
 
-    return this.printDoPodBag(res, data, {
-      currentUserName: currentUser.employee.nickname,
-      currentBranchName: currentBranch.branchName,
-      date: currentDate.format('DD/MM/YY'),
-      time: currentDate.format('HH:mm'),
-      totalItems: totalBagItem,
-      printType: printName,
-      printCol: printColumn,
-    }, templateConfig);
+    return this.printDoPodBag(
+      res,
+      data,
+      {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: currentDate.format('DD/MM/YY'),
+        time: currentDate.format('HH:mm'),
+        totalItems: totalBagItem,
+        printType: printName,
+        printCol: printColumn,
+      },
+      templateConfig,
+    );
   }
 
   public static async printDoPodBag(
@@ -145,8 +155,8 @@ export class PrintDoPodBagService {
       date: string;
       time: string;
       totalItems: number;
-      printType: string,
-      printCol: string,
+      printType: string;
+      printCol: string;
     },
     templateConfig: {
       printCopy?: number;
@@ -159,14 +169,17 @@ export class PrintDoPodBagService {
       meta,
     };
 
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
-      templates: [{
-        templateName: 'surat-jalan-gabung-paket',
-        templateData: jsreportParams,
-        printCopy: templateConfig.printCopy,
-      }],
+      templates: [
+        {
+          templateName: 'surat-jalan-gabung-paket',
+          templateData: jsreportParams,
+          printCopy: templateConfig.printCopy,
+        },
+      ],
+      listPrinterName,
     });
   }
 }
