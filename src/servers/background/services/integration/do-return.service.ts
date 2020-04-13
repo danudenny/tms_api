@@ -49,19 +49,23 @@ export class DoReturnService {
       left join customer_account ca on a.customer_account_id=ca.customer_account_id and ca.is_deleted=false
       where prd.do_return = true and prd.is_doreturn_sync = false and aia.awb_status_id_last >= 3500
       );
-    `);
+      `,
+      null,
+      false,
+    );
 
     return true;
   }
 
   private static async updatePickReqDetail(): Promise<any> {
     await RawQueryService.query(` UPDATE pickup_request_detail prd
-    SET is_doreturn_sync = true
-    FROM do_return_awb p2
-    WHERE prd.ref_awb_number = p2.awb_number
-    AND prd.is_doreturn_sync = false ;`);
+      SET is_doreturn_sync = true
+      FROM do_return_awb p2
+      WHERE prd.ref_awb_number = p2.awb_number
+      AND prd.is_doreturn_sync = false ;`, null, false);
     return true;
-  }
+
+}
 
   static async syncDoReturn(): Promise<DoReturnSyncResponseVm> {
     const insertReturn = await this.searchDoKembali();

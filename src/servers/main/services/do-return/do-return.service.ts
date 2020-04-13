@@ -137,7 +137,7 @@ export class DoReturnService {
         field: 'awbNumber',
       },
       {
-        field: 'doReturnNumber',
+        field: 'doReturnAwbNumber',
       }
     ];
     // mapping search field and operator default ilike
@@ -147,7 +147,7 @@ export class DoReturnService {
     payload.fieldResolverMap['podDatetime'] = 'return.pod_datetime';
     payload.fieldResolverMap['destinationCode'] = 'districtto.district_name';
     payload.fieldResolverMap['tujuan'] = 'districtto.district_code';
-    payload.fieldResolverMap['doReturnNumber'] = 'return.do_return_awb_number';
+    payload.fieldResolverMap['doReturnAwbNumber'] = 'return.do_return_awb_number';
     payload.fieldResolverMap['doReturnAwbId'] = 'return.do_return_awb_id';
     payload.fieldResolverMap['customerAccountName'] = 'customer.customer_account_name';
     payload.fieldResolverMap['customerAccountId'] = 'customer.customer_account_id';
@@ -260,7 +260,7 @@ export class DoReturnService {
         field: 'awbNumber',
       },
       {
-        field: 'doReturnNumber',
+        field: 'doReturnAwbNumber',
       }
     ];
     // mapping search field and operator default ilike
@@ -270,7 +270,7 @@ export class DoReturnService {
     payload.fieldResolverMap['podDatetime'] = 'return.pod_datetime';
     payload.fieldResolverMap['destinationCode'] = 'districtto.district_name';
     payload.fieldResolverMap['tujuan'] = 'districtto.district_code';
-    payload.fieldResolverMap['doReturnNumber'] = 'return.do_return_awb_number';
+    payload.fieldResolverMap['doReturnAwbNumber'] = 'return.do_return_awb_number';
     payload.fieldResolverMap['doReturnAwbId'] = 'return.do_return_awb_id';
     payload.fieldResolverMap['customerAccountName'] = 'customer.customer_account_name';
     payload.fieldResolverMap['customerAccountId'] = 'customer.customer_account_id';
@@ -371,7 +371,6 @@ export class DoReturnService {
     const resultListCustomer = await asyncForEach();
     const result = new DoReturnFinenceFindAllResponseVm();
     result.data = resultListCustomer;
-
     return result;
   }
 
