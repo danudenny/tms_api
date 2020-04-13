@@ -125,9 +125,9 @@ export class PrintService {
       },
     };
 
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
       templates: [
         {
           templateName: 'surat-jalan-balik',
@@ -135,6 +135,7 @@ export class PrintService {
           printCopy: queryParams.printCopy,
         },
       ],
+      listPrinterName,
     });
   }
 
@@ -361,10 +362,11 @@ export class PrintService {
       `PRINT 1\n` +
       `EOP`;
 
+    const listPrinterName = ['StrukPrinter', 'BarcodePrinter'];
     PrinterService.responseForRawCommands({
       res,
       rawCommands: rawTsplPrinterCommands,
-      printerName: 'BarcodePrinter',
+      listPrinterName,
     });
   }
 
@@ -451,15 +453,16 @@ export class PrintService {
       },
     };
 
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
       templates: [
         {
           templateName: 'surat-jalan-gabungan-sortir-paper',
           templateData: jsreportParams,
         },
       ],
+      listPrinterName,
     });
   }
 
@@ -623,10 +626,11 @@ export class PrintService {
         `PRINT 1\n` +
         `EOP`;
 
+      const listPrinterName = ['StrukPrinter', 'BarcodePrinter'];
       PrinterService.responseForRawCommands({
         res,
         rawCommands: rawTsplPrinterCommands,
-        printerName: 'BarcodePrinter',
+        listPrinterName,
       });
     } else {
       const q = RepositoryService.awb.findOne();
@@ -789,10 +793,11 @@ export class PrintService {
         `PRINT 1\n` +
         `EOP`;
 
+      const listPrinterName = ['StrukPrinter', 'BarcodePrinter'];
       PrinterService.responseForRawCommands({
         res,
         rawCommands: rawTsplPrinterCommands,
-        printerName: 'BarcodePrinter',
+        listPrinterName,
       });
     }
   }
@@ -841,9 +846,9 @@ export class PrintService {
       },
     };
 
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
       templates: [
         {
           templateName: 'surat-jalan-do-balik',
@@ -851,6 +856,7 @@ export class PrintService {
           printCopy: queryParams.printCopy,
         },
       ],
+      listPrinterName,
     });
   }
 
@@ -925,9 +931,9 @@ export class PrintService {
       },
     };
 
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
       templates: [
         {
           templateName: 'ttd-do-balik',
@@ -935,6 +941,7 @@ export class PrintService {
           printCopy: queryParams.printCopy,
         },
       ],
+      listPrinterName,
     });
   }
 
@@ -978,9 +985,9 @@ export class PrintService {
       },
     };
 
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
       templates: [
         {
           templateName: 'tanda-terima-do-balik-ct',
@@ -988,6 +995,7 @@ export class PrintService {
           printCopy: queryParams.printCopy,
         },
       ],
+      listPrinterName,
     });
   }
 
@@ -1040,9 +1048,9 @@ export class PrintService {
       },
     };
 
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
       templates: [
         {
           templateName: 'tanda-terima-do-balik-collection',
@@ -1050,6 +1058,7 @@ export class PrintService {
           printCopy: queryParams.printCopy,
         },
       ],
+      listPrinterName,
     });
   }
 }

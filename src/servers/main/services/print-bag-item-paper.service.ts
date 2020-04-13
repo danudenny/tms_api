@@ -98,12 +98,17 @@ export class PrintBagItemPaperService {
 
     const currentDate = moment();
 
-    return this.printBagItemPaper(res, data, {
-      currentUserName: currentUser.employee.nickname,
-      currentBranchName: currentBranch.branchName,
-      date: currentDate.format('DD/MM/YY'),
-      time: currentDate.format('HH:mm'),
-    }, templateConfig);
+    return this.printBagItemPaper(
+      res,
+      data,
+      {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: currentDate.format('DD/MM/YY'),
+        time: currentDate.format('HH:mm'),
+      },
+      templateConfig,
+    );
   }
 
   public static async printBagItemPaper(
@@ -126,13 +131,16 @@ export class PrintBagItemPaperService {
       meta,
     };
 
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
-      templates: [{
-        templateName: 'surat-jalan-gabungan-sortir-paper',
-        templateData: jsreportParams,
-      }],
+      templates: [
+        {
+          templateName: 'surat-jalan-gabungan-sortir-paper',
+          templateData: jsreportParams,
+        },
+      ],
+      listPrinterName,
     });
   }
 }
