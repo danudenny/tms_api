@@ -55,12 +55,17 @@ export class PrintDoPodDeliverService {
       });
     }
 
-    this.printDoPodDeliverAndQueryMeta(res, doPodDeliver as any, {
-      userId: queryParams.userId,
-      branchId: queryParams.branchId,
-    }, {
-      printCopy: queryParams.printCopy,
-    });
+    this.printDoPodDeliverAndQueryMeta(
+      res,
+      doPodDeliver as any,
+      {
+        userId: queryParams.userId,
+        branchId: queryParams.branchId,
+      },
+      {
+        printCopy: queryParams.printCopy,
+      },
+    );
   }
 
   public static async printDoPodDeliverAndQueryMeta(
@@ -76,8 +81,15 @@ export class PrintDoPodDeliverService {
       printCopy: 1,
     },
   ) {
-    const awbIds = map(data.doPodDeliverDetails, doPodDeliverDetail => doPodDeliverDetail.awbItem.awb.awbId);
-    const result = await RawQueryService.query(`SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(',')})`);
+    const awbIds = map(
+      data.doPodDeliverDetails,
+      doPodDeliverDetail => doPodDeliverDetail.awbItem.awb.awbId,
+    );
+    const result = await RawQueryService.query(
+      `SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(
+        ',',
+      )})`,
+    );
     let totalAllCod = result[0].total;
 
     if (totalAllCod < 1) {
@@ -114,14 +126,19 @@ export class PrintDoPodDeliverService {
 
     const currentDate = moment();
 
-    return this.printDoPodDeliver(res, data, {
-      currentUserName: currentUser.employee.nickname,
-      currentBranchName: currentBranch.branchName,
-      date: currentDate.format('DD/MM/YY'),
-      time: currentDate.format('HH:mm'),
-      totalItems: data.doPodDeliverDetails.length,
-      totalCod: totalAllCod,
-    }, templateConfig);
+    return this.printDoPodDeliver(
+      res,
+      data,
+      {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: currentDate.format('DD/MM/YY'),
+        time: currentDate.format('HH:mm'),
+        totalItems: data.doPodDeliverDetails.length,
+        totalCod: totalAllCod,
+      },
+      templateConfig,
+    );
   }
 
   public static async printDoPodDeliver(
@@ -146,9 +163,9 @@ export class PrintDoPodDeliverService {
       meta,
     };
 
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
       templates: [
         {
           templateName: 'surat-jalan-antar',
@@ -161,6 +178,7 @@ export class PrintDoPodDeliverService {
           printCopy: templateConfig.printCopy,
         },
       ],
+      listPrinterName,
     });
   }
 }
