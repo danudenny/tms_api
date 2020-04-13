@@ -258,7 +258,6 @@ export class PrintService {
 
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
       templates: [
         {
           templateName: 'surat-jalan-balik-transit',
