@@ -58,6 +58,7 @@ export class DoReturnService {
     payload.fieldResolverMap['podDatetime'] = 'return.pod_datetime';
     payload.fieldResolverMap['branchIdLast'] = 'return.branch_id_last';
     payload.fieldResolverMap['customerId'] = 'return.customer_id';
+    payload.fieldResolverMap['customerAccountId'] = 'return.customer_account_id';
     payload.fieldResolverMap['doReturnAwbNumber'] = 'return.do_return_awb_number';
     payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
     payload.fieldResolverMap['doCodeCt'] = 'do_return_ct.do_return_ct_to_collection';
@@ -75,8 +76,13 @@ export class DoReturnService {
       ['return.do_return_awb_number', 'doReturnAwbNumber'],
       ['return.pod_datetime', 'podDatetime'],
       ['return.customer_id', 'customerId'],
+      ['return.customer_account_id', 'customerAccountId'],
       ['branch.branch_name', 'branchName'],
-      ['customer.customer_name', 'customerName'],
+      ['cust.customer_account_name', 'customerName'],
+      ['cust.customer_account_id', 'customerId'],
+      ['customer.customer_id', 'customerAccId'],
+      ['customer.customer_name', 'customerAccId1'],
+      ['cust.customer_account_name', 'customerNasadme'],
       ['awb_status.awb_status_title', 'awbStatus'],
       // ['tracking.trackingtype', 'awbStatus'],
       ['return.branch_id_last', 'branchIdLast'],
@@ -93,8 +99,10 @@ export class DoReturnService {
     q.innerJoin(e => e.branchTo, 'branch', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.customer, 'customer', j =>
+    q.leftJoin(e => e.customer, 'customer', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.customerAccount, 'cust',
     );
     q.leftJoin(e => e.doReturnHistory.doReturnMaster, 'do_return_master', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -121,7 +129,7 @@ export class DoReturnService {
     q.orderBy({ podDatetime: 'DESC' });
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
-
+    // console.log(data);
     const result = new ReturnFindAllResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
@@ -138,7 +146,7 @@ export class DoReturnService {
       },
       {
         field: 'doReturnAwbNumber',
-      }
+      },
     ];
     // mapping search field and operator default ilike
     payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
@@ -149,10 +157,10 @@ export class DoReturnService {
     payload.fieldResolverMap['tujuan'] = 'districtto.district_code';
     payload.fieldResolverMap['doReturnAwbNumber'] = 'return.do_return_awb_number';
     payload.fieldResolverMap['doReturnAwbId'] = 'return.do_return_awb_id';
-    payload.fieldResolverMap['customerAccountName'] = 'customer.customer_account_name';
-    payload.fieldResolverMap['customerAccountId'] = 'customer.customer_account_id';
-    payload.fieldResolverMap['customerName'] = 'cust.customer_name';
-    payload.fieldResolverMap['customerId'] = 'cust.customer_id';
+    payload.fieldResolverMap['customerAccountName'] = 'cust.customer_name';
+    payload.fieldResolverMap['customerAccountId'] = 'cust.customer_account_id';
+    payload.fieldResolverMap['customerName'] = 'customer.customer_account_name';
+    payload.fieldResolverMap['customerId'] = 'customer.customer_id';
     payload.fieldResolverMap['doPodDeliverDateTime'] = 'dpd.do_pod_deliver_date_time';
     payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
     payload.fieldResolverMap['awbDate'] = 'awb.awb_date';
@@ -169,14 +177,13 @@ export class DoReturnService {
     q.selectRaw(
       ['return.do_return_awb_number', 'doReturnAwbNumber'],
       ['return.created_time', 'createdTime'],
-      ['SUBSTRING(district.district_code, 0, 4)', 'originCode'],
+      ['prd.origin_code', 'originCode'],
       ['districtto.district_code', 'destinationCode'],
       ['districtto.district_name', 'tujuan'],
       ['district.district_name', 'asal'],
       ['customer.customer_account_id', 'customerAccountId'],
-      ['customer.customer_account_name', 'customerAccountName'],
-      ['cust.customer_id', 'customerId'],
-      ['cust.customer_name', 'customerName'],
+      ['customer.customer_account_name', 'customerName'],
+      ['customer.customer_id', 'customerId'],
       ['status.awb_status_id', 'awbStatusId'],
       ['status.awb_status_name', 'awbStatusName'],
       ['return.awb_status_id_last', 'awbStatusId'],
@@ -197,18 +204,19 @@ export class DoReturnService {
     q.innerJoin(e => e.awb, 'awb', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.awb.pickupRequestDetail, 'prd', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.innerJoin(e => e.awb.customerAccount, 'customer', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.customer, 'cust', j =>
+    q.leftJoin(e => e.customerAccount.customer, 'cust', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awb.districtTo, 'districtto', j =>
-     j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q.innerJoin(e => e.awb.pickupRequestDetail.districtDestination, 'districtto',
     );
-    q.innerJoin(e => e.awb.district, 'district', j =>
-     j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoinRaw('district', 'district', 'district.district_code = prd.origin_code || \'10000\'',
+   );
     q.innerJoin(e => e.awbStatusDetail, 'status',
       );
     q.leftJoin(e => e.awb.doPodDeliverDetail, 'dpdd', j =>
@@ -261,7 +269,7 @@ export class DoReturnService {
       },
       {
         field: 'doReturnAwbNumber',
-      }
+      },
     ];
     // mapping search field and operator default ilike
     payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
@@ -272,9 +280,9 @@ export class DoReturnService {
     payload.fieldResolverMap['tujuan'] = 'districtto.district_code';
     payload.fieldResolverMap['doReturnAwbNumber'] = 'return.do_return_awb_number';
     payload.fieldResolverMap['doReturnAwbId'] = 'return.do_return_awb_id';
-    payload.fieldResolverMap['customerAccountName'] = 'customer.customer_account_name';
+    payload.fieldResolverMap['customerAccountName'] = 'cust.customer_name';
     payload.fieldResolverMap['customerAccountId'] = 'customer.customer_account_id';
-    payload.fieldResolverMap['customerName'] = 'cust.customer_name';
+    payload.fieldResolverMap['customerName'] = 'customer.customer_account_name';
     payload.fieldResolverMap['customerId'] = 'cust.customer_id';
     payload.fieldResolverMap['doPodDeliverDateTime'] = 'dpd.do_pod_deliver_date_time';
     payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
@@ -292,14 +300,13 @@ export class DoReturnService {
     q.selectRaw(
       ['return.do_return_awb_number', 'doReturnAwbNumber'],
       ['return.created_time', 'createdTime'],
-      ['SUBSTRING(district.district_code, 0, 4)', 'originCode'],
+      ['prd.origin_code', 'originCode'],
       ['districtto.district_code', 'destinationCode'],
       ['districtto.district_name', 'tujuan'],
       ['district.district_name', 'asal'],
       ['customer.customer_account_id', 'customerAccountId'],
-      ['customer.customer_account_name', 'customerAccountName'],
-      ['cust.customer_id', 'customerId'],
-      ['cust.customer_name', 'customerName'],
+      ['customer.customer_account_name', 'customerName'],
+      ['customer.customer_id', 'customerId'],
       ['status.awb_status_id', 'awbStatusId'],
       ['status.awb_status_name', 'awbStatusName'],
       ['return.awb_status_id_last', 'awbStatusId'],
@@ -320,18 +327,19 @@ export class DoReturnService {
     q.innerJoin(e => e.awb, 'awb', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.awb.pickupRequestDetail, 'prd', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.innerJoin(e => e.awb.customerAccount, 'customer', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.customer, 'cust', j =>
+    q.leftJoin(e => e.customerAccount.customer, 'cust', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awb.districtTo, 'districtto', j =>
-     j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q.innerJoin(e => e.awb.pickupRequestDetail.districtDestination, 'districtto',
     );
-    q.innerJoin(e => e.awb.district, 'district', j =>
-     j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoinRaw('district', 'district', 'district.district_code = prd.origin_code || \'10000\'',
+   );
     q.innerJoin(e => e.awbStatusDetail, 'status',
       );
     q.leftJoin(e => e.awb.doPodDeliverDetail, 'dpdd', j =>
@@ -563,6 +571,8 @@ export class DoReturnService {
       ['t1.is_receipt_cust', 'isReceiptCust'],
       ['t1.customer_id', 'customerId'],
       ['t4.customer_name', 'customerName'],
+      ['t5.customer_account_id', 'customerAccountId'],
+      ['t5.customer_account_name', 'customerAccountName'],
     );
     q.innerJoin(e => e.user, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -571,6 +581,9 @@ export class DoReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.customer, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.customerAccount, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.orderBy({ createdTime: 'DESC' });

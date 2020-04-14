@@ -17,6 +17,9 @@ export class DoReturnResponseVm {
   customerName: string;
 
   @ApiModelProperty()
+  customerAccountName: string;
+
+  @ApiModelProperty()
   branchName: string;
 
   @ApiModelProperty()
@@ -201,6 +204,9 @@ export class DoReturnCollectionResponseVm {
 
   @ApiModelProperty()
   customerName: string;
+
+  @ApiModelProperty()
+  customerAccountName: string;
 
   @ApiModelProperty()
   updatedTime: string;
