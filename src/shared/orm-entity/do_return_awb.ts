@@ -78,6 +78,12 @@ export class DoReturnAwb extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: true,
+    name: 'customer_account_id',
+  })
+  customerAccountId: number | null;
+
+  @Column('bigint', {
+    nullable: true,
     name: 'customer_address_id',
   })
   customerAddressId: number | null;
@@ -115,7 +121,7 @@ export class DoReturnAwb extends TmsBaseEntity {
   customer: Customer;
 
   @ManyToOne(() => CustomerAccount)
-  @JoinColumn({ name: 'customer_id', referencedColumnName: 'customerId' })
+  @JoinColumn({ name: 'customer_account_id' , referencedColumnName: 'customerAccountId' })
   customerAccount: CustomerAccount;
 
   @ManyToOne(() => CustomerAddress)

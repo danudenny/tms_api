@@ -279,7 +279,7 @@ export class OrionRepositoryQueryService<
   }
 
   public innerJoinRaw(
-    fromQuery: OrionRepositoryQueryService<any>,
+    fromQuery: OrionRepositoryQueryService<any> | any,
     joinAlias: string,
     condition?: string,
     parameters?: ObjectLiteral,
