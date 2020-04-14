@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { CustomerAccount } from './customer-account';
 
 @Entity('customer', { schema: 'public' })
 export class Customer extends TmsBaseEntity {
@@ -37,4 +38,8 @@ export class Customer extends TmsBaseEntity {
     name: 'email2',
   })
   email2: string | null;
+
+  @OneToOne(() => CustomerAccount)
+  @JoinColumn({ name: 'customer_id', referencedColumnName: 'customerId' })
+  customerAccount: CustomerAccount;
 }

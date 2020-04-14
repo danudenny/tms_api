@@ -11,6 +11,7 @@ import { TmsBaseEntity } from './tms-base';
 import { PickupRequest } from './pickup-request';
 import { AwbItemAttr } from './awb-item-attr';
 import { AwbItem } from './awb-item';
+import { District } from './district';
 
 @Entity('pickup_request_detail', { schema: 'public' })
 // @Index('pickup_request_detail_pickup_request_id_idx', [
@@ -379,4 +380,12 @@ export class PickupRequestDetail extends TmsBaseEntity {
     name: 'drop_partner_charge',
   })
   dropPartnerCharge: number | null;
+
+  @OneToOne(() => District)
+  @JoinColumn({ name: 'origin_code', referencedColumnName: 'districtCode' })
+  districtOrigin: District;
+
+  @OneToOne(() => District)
+  @JoinColumn({ name: 'destination_code', referencedColumnName: 'districtCode' })
+  districtDestination: District;
 }
