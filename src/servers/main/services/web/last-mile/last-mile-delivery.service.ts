@@ -2,7 +2,11 @@ import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payloa
 import { DoPodDeliver } from '../../../../../shared/orm-entity/do-pod-deliver';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebScanOutDeliverListResponseVm, WebScanOutDeliverGroupListResponseVm } from '../../../models/web-scan-out-response.vm';
+import {
+  WebScanOutDeliverListResponseVm,
+  WebScanOutDeliverGroupListResponseVm,
+  WebScanOutDeliverPartnerListResponseVm,
+} from '../../../models/web-scan-out-response.vm';
 import { WebScanOutDeliverListPayloadVm } from '../../../models/web-scan-out.vm';
 
 export class LastMileDeliveryService {
@@ -66,7 +70,9 @@ export class LastMileDeliveryService {
     q.innerJoin(e => e.branch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name');
+    q.groupByRaw(
+      '"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
+    );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -155,15 +161,67 @@ export class LastMileDeliveryService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     // TODO: fix query
-    q.andWhereRaw(
-      `DATE(t1.do_pod_deliver_date_time) = '${datePod}'`,
-      );
+    q.andWhereRaw(`DATE(t1.do_pod_deliver_date_time) = '${datePod}'`);
     q.groupByRaw('t1.do_pod_deliver_id, t2.fullname');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanOutDeliverListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findAllDeliverPartner(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanOutDeliverPartnerListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+
+    const repo = new OrionRepositoryService(DoPodDeliver, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_deliver_id', 'doPodDeliverId'],
+      ['t1.do_pod_deliver_code', 'doPodDeliverCode'],
+      ['t1.do_pod_deliver_date_time', 'assignDate'],
+      ['t3.ref_order_created_time', 'confirmDate'],
+      ['t2.awb_number', 'awbNumber'],
+      ['t3.ref_driver_name', 'driverName'],
+      ['t2.awb_status_id_last', 'awbStatusIdLast'],
+      ['t4.awb_status_title', 'awbStatus'],
+      ['t5.consignee_address', 'consigneeAddress'],
+      ['t3.ref_order_arrival_time', 'completedDate'],
+      ['t3.ref_order_no', 'orderNo'],
+      ['t3.ref_receiver_name', 'receiverName'],
+      ['t6.branch_name', 'branchName'],
+    );
+
+    q.innerJoin(e => e.doPodDeliverDetails, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodAttr, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodDeliverDetails.awbStatus, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodDeliverDetails.awb, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanOutDeliverPartnerListResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 

@@ -66,15 +66,15 @@ export class LastMileDeliveryOutService {
     // create do_pod_deliver (Surat Jalan Antar sigesit)
     const doPod = DoPodDeliver.create();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    // NOTE: moment(payload.doPodDateTime).toDate();
+    // NOTE                    : moment(payload.doPodDateTime).toDate();
     const doPodDateTime = moment().toDate();
 
-    // NOTE: Tipe surat (jalan Antar Sigesit)
+    // NOTE                    : Tipe surat (jalan Antar Sigesit)
     doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
       doPodDateTime,
     ); // generate code
 
-    // doPod.userIdDriver = payload.
+    // doPod.userIdDriver      = payload.
     doPod.userIdDriver = payload.userIdDriver || null;
     doPod.doPodDeliverDateTime = doPodDateTime;
     doPod.description = payload.desc || null;
@@ -82,10 +82,22 @@ export class LastMileDeliveryOutService {
     doPod.branchId = permissonPayload.branchId;
     doPod.userId = authMeta.userId;
 
+    // NOTE: check if delivery with partner
+    if (payload.isPartner) {
+      doPod.isPartner = true;
+      doPod.partnerId = payload.partnerId;
+    } else {
+      doPod.isPartner = false;
+    }
+
     // await for get do pod id
     await DoPodDeliver.save(doPod);
 
-    await this.createAuditDeliveryHistory(doPod.doPodDeliverId, false);
+    await this.createAuditDeliveryHistory(
+      doPod.doPodDeliverId,
+      false,
+      payload.isPartner,
+    );
 
     // Populate return value
     result.status = 'ok';
@@ -93,21 +105,26 @@ export class LastMileDeliveryOutService {
     result.doPodId = doPod.doPodDeliverId;
 
     // query for get Employee
-    const repo = new OrionRepositoryService(Employee, 't1');
-    const q = repo.findAllRaw();
 
-    q.selectRaw(['t1.nik', 'nik'], ['t1.nickname', 'nickname']);
+    if (!payload.isPartner) {
+      const repo = new OrionRepositoryService(Employee, 't1');
+      const q = repo.findAllRaw();
 
-    q.innerJoin(e => e.user, 't2');
-    q.where(e => e.user.userId, w => w.equals(payload.userIdDriver));
-    const dataUser = await q.exec();
+      q.selectRaw(['t1.nik', 'nik'], ['t1.nickname', 'nickname']);
 
-    // For printDoPodDeliverMetadata
-    result.printDoPodDeliverMetadata.doPodDeliverCode = doPod.doPodDeliverCode;
-    result.printDoPodDeliverMetadata.description = payload.desc;
-    result.printDoPodDeliverMetadata.userDriver.employee.nik = dataUser[0].nik;
-    result.printDoPodDeliverMetadata.userDriver.employee.nickname =
-      dataUser[0].nickname;
+      q.innerJoin(e => e.user, 't2');
+      q.where(e => e.user.userId, w => w.equals(payload.userIdDriver));
+      const dataUser = await q.exec();
+
+      // For printDoPodDeliverMetadata
+      result.printDoPodDeliverMetadata.doPodDeliverCode =
+        doPod.doPodDeliverCode;
+      result.printDoPodDeliverMetadata.description = payload.desc;
+      result.printDoPodDeliverMetadata.userDriver.employee.nik =
+        dataUser[0].nik;
+      result.printDoPodDeliverMetadata.userDriver.employee.nickname =
+        dataUser[0].nickname;
+    }
 
     return result;
   }
@@ -386,6 +403,8 @@ export class LastMileDeliveryOutService {
                 // Assign print metadata - Deliver
                 response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress =
                   awb.awbItem.awb.consigneeAddress;
+                response.printDoPodDetailMetadata.awbItem.awb.awbItemId =
+                  awb.awbItemId;
                 response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber =
                   awb.awbItem.awb.consigneeNumber;
                 response.printDoPodDetailMetadata.awbItem.awb.consigneeZip =
@@ -404,13 +423,24 @@ export class LastMileDeliveryOutService {
                 });
 
                 // NOTE: queue by Bull ANT
+                let employeeIdDriver;
+                let employeeNameDriver;
+                if (doPodDeliver.isPartner) {
+                  employeeIdDriver = 0; // partner does not have employee id
+                  employeeNameDriver = null;
+                } else {
+                  employeeIdDriver = doPodDeliver.userDriver.employeeId;
+                  employeeNameDriver =
+                    doPodDeliver.userDriver.employee.employeeName;
+                }
+
                 DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
                   awb.awbItemId,
                   AWB_STATUS.ANT,
                   permissonPayload.branchId,
                   authMeta.userId,
-                  doPodDeliver.userDriver.employeeId,
-                  doPodDeliver.userDriver.employee.employeeName,
+                  employeeIdDriver,
+                  employeeNameDriver,
                 );
                 totalSuccess += 1;
               } else {
@@ -959,6 +989,7 @@ export class LastMileDeliveryOutService {
   private static async createAuditDeliveryHistory(
     doPodDeliveryId: string,
     isUpdate: boolean = true,
+    isPartner: boolean = false,
   ) {
     // find doPodDeliver
     const doPodDeliver = await DoPodDeliverRepository.getDataById(
@@ -972,7 +1003,9 @@ export class LastMileDeliveryOutService {
       const stage = isUpdate ? 'Updated' : 'Created';
       const note = `
         Data ${stage} \n
-        Nama Driver  : ${doPodDeliver.userDriver.employee.employeeName}
+        Nama Driver  : ${
+          isPartner ? '' : doPodDeliver.userDriver.employee.employeeName
+        }
         Gerai Assign : ${doPodDeliver.branch.branchName}
         Note         : ${description}
       `;
