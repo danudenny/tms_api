@@ -81,7 +81,6 @@ export class DoReturnService {
       ['branch.branch_name', 'branchName'],
       ['cust.customer_account_name', 'customerAccountName'],
       ['cust.customer_account_id', 'customerAccountId'],
-      ['customer.customer_id', 'customerId'],
       ['customer.customer_name', 'customerName'],
       ['awb_status.awb_status_title', 'awbStatus'],
       // ['tracking.trackingtype', 'awbStatus'],
