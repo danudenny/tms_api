@@ -185,7 +185,7 @@ export class DoReturnService {
       ['customer.customer_id', 'customerId'],
       ['status.awb_status_id', 'awbStatusId'],
       ['status.awb_status_name', 'awbStatusName'],
-      ['return.awb_status_id_last', 'awbStatusId'],
+      ['aia.awb_status_id_last', 'awbStatusId'],
       [
         `CASE return.awb_status_id_last WHEN 30000 THEN do_pod_deliver_date_time ELSE null END`,
         'doPodDeliverDateTime',
@@ -308,7 +308,7 @@ export class DoReturnService {
       ['customer.customer_id', 'customerId'],
       ['status.awb_status_id', 'awbStatusId'],
       ['status.awb_status_name', 'awbStatusName'],
-      ['return.awb_status_id_last', 'awbStatusId'],
+      ['aia.awb_status_id_last', 'awbStatusId'],
       [
         `CASE return.awb_status_id_last WHEN 30000 THEN do_pod_deliver_date_time ELSE null END`,
         'doPodDeliverDateTime',
