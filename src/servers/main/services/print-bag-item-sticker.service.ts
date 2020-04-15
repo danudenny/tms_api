@@ -82,11 +82,11 @@ export class PrintBagItemStickerService {
       `PRINT 1\n` +
       `EOP`;
 
-    const listPrinterName = ['StrukPrinter', 'BarcodePrinter'];
+    const printerName = 'BarcodePrinter';
     PrinterService.responseForRawCommands({
       res,
       rawCommands: rawTsplPrinterCommands,
-      listPrinterName,
+      printerName,
     });
   }
 }
