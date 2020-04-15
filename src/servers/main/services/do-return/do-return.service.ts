@@ -59,6 +59,7 @@ export class DoReturnService {
     payload.fieldResolverMap['branchIdLast'] = 'return.branch_id_last';
     payload.fieldResolverMap['customerId'] = 'return.customer_id';
     payload.fieldResolverMap['customerAccountId'] = 'return.customer_account_id';
+    payload.fieldResolverMap['customerAccountName'] = 'return.customer_account_name';
     payload.fieldResolverMap['doReturnAwbNumber'] = 'return.do_return_awb_number';
     payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
     payload.fieldResolverMap['doCodeCt'] = 'do_return_ct.do_return_ct_to_collection';
@@ -78,11 +79,9 @@ export class DoReturnService {
       ['return.customer_id', 'customerId'],
       ['return.customer_account_id', 'customerAccountId'],
       ['branch.branch_name', 'branchName'],
-      ['cust.customer_account_name', 'customerName'],
-      ['cust.customer_account_id', 'customerId'],
-      ['customer.customer_id', 'customerAccId'],
-      ['customer.customer_name', 'customerAccId1'],
-      ['cust.customer_account_name', 'customerNasadme'],
+      ['cust.customer_account_name', 'customerAccountName'],
+      ['cust.customer_account_id', 'customerAccountId'],
+      ['customer.customer_name', 'customerName'],
       ['awb_status.awb_status_title', 'awbStatus'],
       // ['tracking.trackingtype', 'awbStatus'],
       ['return.branch_id_last', 'branchIdLast'],
