@@ -120,4 +120,8 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
   @OneToOne(() => DoPodDetail)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   doPodDetails: DoPodDetail;
+
+  @OneToOne(() => DoPodDeliver)
+  @JoinColumn({ name: 'do_pod_deliver_id', referencedColumnName: 'doPodDeliverId' })
+  doPodDeliverReturn: DoPodDeliver;
 }

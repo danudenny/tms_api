@@ -8,7 +8,7 @@ import { RedisService } from '../services/redis.service';
 export class AuthXAPIKeyGuard implements CanActivate {
   constructor() {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const partnerToken = RequestContextMetadataService.getMetadata(
+    const partnerToken: string = RequestContextMetadataService.getMetadata(
       'PARTNER_TOKEN',
     );
     if (partnerToken) {

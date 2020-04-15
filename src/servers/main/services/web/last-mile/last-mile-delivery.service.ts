@@ -2,11 +2,14 @@ import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payloa
 import { DoPodDeliver } from '../../../../../shared/orm-entity/do-pod-deliver';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebScanOutDeliverListResponseVm, WebScanOutDeliverGroupListResponseVm, WebScanOutDeliverPartnerListResponseVm } from '../../../models/web-scan-out-response.vm';
+import {
+  WebScanOutDeliverListResponseVm,
+  WebScanOutDeliverGroupListResponseVm,
+  WebScanOutDeliverPartnerListResponseVm,
+} from '../../../models/web-scan-out-response.vm';
 import { WebScanOutDeliverListPayloadVm } from '../../../models/web-scan-out.vm';
 
 export class LastMileDeliveryService {
-
   static async findAllScanOutDeliverGroupList(
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanOutDeliverGroupListResponseVm> {
@@ -67,7 +70,9 @@ export class LastMileDeliveryService {
     q.innerJoin(e => e.branch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name');
+    q.groupByRaw(
+      '"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
+    );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -156,9 +161,7 @@ export class LastMileDeliveryService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     // TODO: fix query
-    q.andWhereRaw(
-      `DATE(t1.do_pod_deliver_date_time) = '${datePod}'`,
-    );
+    q.andWhereRaw(`DATE(t1.do_pod_deliver_date_time) = '${datePod}'`);
     q.groupByRaw('t1.do_pod_deliver_id, t2.fullname');
 
     const data = await q.exec();
