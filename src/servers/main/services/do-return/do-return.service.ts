@@ -216,7 +216,7 @@ export class DoReturnService {
     );
     q.innerJoinRaw('district', 'district', 'district.district_code = prd.origin_code || \'10000\'',
    );
-    q.innerJoin(e => e.awbStatusDetail, 'status',
+    q.innerJoin(e => e.awbLast.awbStatus, 'status',
       );
     q.leftJoin(e => e.awb.doPodDeliverDetail, 'dpdd', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -339,7 +339,7 @@ export class DoReturnService {
     );
     q.innerJoinRaw('district', 'district', 'district.district_code = prd.origin_code || \'10000\'',
    );
-    q.innerJoin(e => e.awbStatusDetail, 'status',
+    q.innerJoin(e => e.awbLast.awbStatus, 'status',
       );
     q.leftJoin(e => e.awb.doPodDeliverDetail, 'dpdd', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
