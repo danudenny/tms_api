@@ -32,6 +32,7 @@ import {
   WebScanOutDeliverEditVm,
   WebScanOutDeliverListPayloadVm,
   UpdateAwbPartnerPayloadVm,
+  WebScanOutCreateDeliveryPartnerVm,
 } from '../../models/web-scan-out.vm';
 import {
   WebScanOutAwbResponseVm,
@@ -113,6 +114,18 @@ export class WebDeliveryOutController {
     @Body() payload: WebScanOutCreateDeliveryVm,
   ) {
     return LastMileDeliveryOutService.scanOutCreateDelivery(payload);
+  }
+
+  @Post('createDeliverPartner')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutCreateResponseVm })
+  @Transactional()
+  public async scanOutCreateDeliveryPartner(
+    @Body() payload: WebScanOutCreateDeliveryPartnerVm,
+  ) {
+    return LastMileDeliveryOutService.scanOutCreateDeliveryPartner(payload);
   }
 
   @Post('updateDeliver')
