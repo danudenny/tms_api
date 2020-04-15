@@ -146,6 +146,9 @@ export class DoReturnService {
       {
         field: 'doReturnAwbNumber',
       },
+      {
+        field: 'shipperName',
+      },
     ];
     // mapping search field and operator default ilike
     payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
@@ -163,6 +166,7 @@ export class DoReturnService {
     payload.fieldResolverMap['doPodDeliverDateTime'] = 'dpd.do_pod_deliver_date_time';
     payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
     payload.fieldResolverMap['awbDate'] = 'awb.awb_date';
+    payload.fieldResolverMap['shipperName'] = 'prd.shipper_name';
 // mapping search field and operator default ilike
 
     const repo = new OrionRepositoryService(DoReturnAwb, 'return');
@@ -177,6 +181,7 @@ export class DoReturnService {
       ['return.do_return_awb_number', 'doReturnAwbNumber'],
       ['return.created_time', 'createdTime'],
       ['prd.origin_code', 'originCode'],
+      ['prd.shipper_name', 'shipperName'],
       ['districtto.district_code', 'destinationCode'],
       ['districtto.district_name', 'tujuan'],
       ['district.district_name', 'asal'],
@@ -269,6 +274,9 @@ export class DoReturnService {
       {
         field: 'doReturnAwbNumber',
       },
+      {
+        field: 'shipperName',
+      },
     ];
     // mapping search field and operator default ilike
     payload.fieldResolverMap['awbNumber'] = 'return.awb_number';
@@ -286,6 +294,7 @@ export class DoReturnService {
     payload.fieldResolverMap['doPodDeliverDateTime'] = 'dpd.do_pod_deliver_date_time';
     payload.fieldResolverMap['awbStatusName'] = 'status.awb_status_name';
     payload.fieldResolverMap['awbDate'] = 'awb.awb_date';
+    payload.fieldResolverMap['shipperName'] = 'prd.shipper_name';
 // mapping search field and operator default ilike
 
     const repo = new OrionRepositoryService(DoReturnAwb, 'return');
@@ -302,6 +311,7 @@ export class DoReturnService {
       ['prd.origin_code', 'originCode'],
       ['districtto.district_code', 'destinationCode'],
       ['districtto.district_name', 'tujuan'],
+      ['prd.shipper_name', 'shipperName'],
       ['district.district_name', 'asal'],
       ['customer.customer_account_id', 'customerAccountId'],
       ['customer.customer_account_name', 'customerName'],
