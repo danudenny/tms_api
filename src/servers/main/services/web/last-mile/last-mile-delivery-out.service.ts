@@ -43,6 +43,7 @@ import {
   AwbThirdPartyUpdateResponseVm,
 } from '../../../models/last-mile/awb-third-party.vm';
 import { Employee } from '../../../../../shared/orm-entity/employee';
+import { Branch } from '../../../../../shared/orm-entity/branch';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -141,17 +142,24 @@ export class LastMileDeliveryOutService {
       doPodDateTime,
     ); // generate code
 
-    doPod.userIdDriver = payload.userIdDriver || null;
+    doPod.userIdDriver         = payload.userIdDriver || null;
     doPod.doPodDeliverDateTime = doPodDateTime;
-    doPod.description = payload.desc || null;
+    doPod.description          = payload.desc || null;
 
-    doPod.branchId = permissonPayload.branchId;
-    doPod.userId = authMeta.userId;
+    doPod.branchId             = permissonPayload.branchId;
+    doPod.userId               = authMeta.userId;
 
     // NOTE: check if delivery with partner
     if (payload.isPartner) {
       doPod.isPartner = true;
       doPod.partnerId = payload.partnerId;
+      const branch = await Branch.findOne({ branchId: permissonPayload.branchId });
+      // NOTES: Validation branch
+      if (!branch.latitude || !branch.address || !branch.phone1 || !branch.longitude) {
+        result.status  = 'error';
+        result.message = 'Pengantaran melalui partner tidak bisa digunakan pada gerai ini';
+        return result;
+      }
     }
 
     // await for get do pod id
