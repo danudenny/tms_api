@@ -132,6 +132,9 @@ export class DoReturnFinanceResponseVm {
   doPodDeliverId: string;
 
   @ApiModelProperty()
+  shipperName: string;
+
+  @ApiModelProperty()
   doReturnAwbNumber: string;
 
   @ApiModelProperty()
