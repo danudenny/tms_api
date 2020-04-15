@@ -20,3 +20,11 @@ export class MobileSyncImagePayloadVm {
   @ApiModelProperty()
   awbItemId: string;
 }
+
+export class MobileSyncImageDataPayloadVm {
+  @ApiModelProperty()
+  data: string;
+
+  @ApiModelProperty()
+  imageType: string;
+}

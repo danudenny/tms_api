@@ -395,7 +395,7 @@ export class PartnerService {
     let workOrderStatusIdLast = null;
     let refAwbNumber = null;
     let pickupRequestDetailId = null;
-    let branchPartnerId = null;
+    let paramBranchPartnerId = null;
     let awbItemId = null;
     let pickupRequestAddress;
     let encryptAddress255;
@@ -404,8 +404,10 @@ export class PartnerService {
     let pickupRequestContactNo ;
     let pickupRequestEmail;
     let pickupRequestNotes;
+    let paramworkOrdeStatusIdPick;
 
-    const arrDropStatus = [7050, 7100];
+    const arrDropStatus = [7050, 7060, 7070, 7100];
+    const arrPickStatus = [4950, 5000];
     const err = '';
 
     const dataBranch = await this.getBranchPartnerId(paramBranchCode);
@@ -424,10 +426,11 @@ export class PartnerService {
       pickupRequestContactNo = item.pickup_request_contact_no;
       pickupRequestEmail = item.pickup_request_email;
       pickupRequestNotes = item.pickup_request_notes;
+      paramworkOrdeStatusIdPick = item.work_order_status_id_pick;
     }
 
     for (const itemBranch of dataBranch) {
-      branchPartnerId = itemBranch.branch_partner_id;
+      paramBranchPartnerId = itemBranch.branch_partner_id;
     }
 
     if (refAwbNumber != null) {
@@ -455,7 +458,7 @@ export class PartnerService {
         );
         return result;
       } else {
-        if (branchPartnerId == null) {
+        if (paramBranchPartnerId == null) {
           result = {
             code: '422',
             message: 'Branch code not found',
@@ -478,6 +481,31 @@ export class PartnerService {
           );
           return result;
         } else {
+          // Tambahan Kur
+          if (arrPickStatus.indexOf(Math.floor(paramworkOrdeStatusIdPick)) > -1) {
+            result = {
+              code: '422',
+              message: 'Awb Already Pick Status',
+            };
+            const paramsAwbPartnerLog = {
+              partner_id: paramPartnerId,
+              awb_number: refAwbNumber,
+              request_data: payload.body,
+              response_code: 422,
+              response_data: 'Awb Already Pick Status',
+              user_id: '1',
+              created_time: timeNow,
+              updated_time: timeNow,
+            };
+            const dataParamsAwbPartnerLog = await this.getDataAwbPartnerLog(
+              paramsAwbPartnerLog,
+            );
+            const awb_partner_log = await AwbPartnerLog.insert(
+              dataParamsAwbPartnerLog,
+            );
+            return result;
+          }
+          // end of tambahn kur
           if (workOrderIdLast === null) {
             const paramsWorkOrder = {
               work_order_code: dataWorkOrderCode,
@@ -489,7 +517,8 @@ export class PartnerService {
               branch_id: '0',
               is_member: true,
               work_order_type: 'AUTOMATIC',
-              branch_partner_id: branchPartnerId,
+              branch_partner_id: paramBranchPartnerId,
+              partner_id_assigned: paramPartnerId,
               pickup_address: pickupRequestAddress,
               encrypt_address255: encryptAddress255,
               merchant_name: pickupRequestName,
@@ -535,6 +564,8 @@ export class PartnerService {
               work_order_status_id_last: '7050',
               work_order_status_id_pick: null,
               branch_id: '1481',
+              branch_partner_id: paramBranchPartnerId,
+              partner_id: paramPartnerId,
               is_final: true,
               user_id: '1',
               created_time: timeNow,
@@ -580,7 +611,8 @@ export class PartnerService {
             await WorkOrder.update(workOrderIdLast, {
               workOrderStatusIdLast: 7050,
               workOrderStatusIdPick: null,
-              branchPartnerId,
+              branchPartnerId: paramBranchPartnerId,
+              partnerIdAssigned: parseInt(paramPartnerId, 10),
               userIdUpdated: 1,
               updatedTime: timeNow,
             });
@@ -633,6 +665,8 @@ export class PartnerService {
                 work_order_status_id_last: '7050',
                 work_order_status_id_pick: null,
                 branch_id: '1481',
+                branch_partner_id: paramBranchPartnerId,
+                partner_id: paramPartnerId,
                 is_final: true,
                 user_id: '1',
                 created_time: timeNow,
@@ -722,7 +756,8 @@ export class PartnerService {
         pr.pickup_schedule_date_time,
         pr.pickup_request_contact_no,
         pr.pickup_request_email,
-        pr.pickup_request_notes
+        pr.pickup_request_notes,
+        wo.work_order_status_id_pick
       FROM pickup_request_detail prd
       INNER JOIN pickup_request pr on prd.pickup_request_id = pr.pickup_request_id AND pr.is_deleted=FALSE
       LEFT JOIN work_order wo on prd.work_order_id_last = wo.work_order_id AND wo.is_deleted=FALSE
@@ -812,6 +847,7 @@ export class PartnerService {
       isMember: params['is_member'],
       workOrderType: params['work_order_type'],
       branchPartnerId: params['branch_partner_id'],
+      partnerIdAssigned: params['partner_id_assigned'],
       pickupAddress: params['pickup_address'],
       encryptAddress255: params['encrypt_address255'],
       merchantName: params['merchant_name'],
@@ -853,6 +889,8 @@ export class PartnerService {
       workOrderStatusId: params['work_order_status_id_last'],
       userId: params['user_id'],
       branchId: params['branch_id'],
+      branchPartnerId: params['branch_partner_id'],
+      partnerId: params['partner_id'],
       isFinal: params['is_final'],
       historyDateTime: params['updated_time'],
       userIdCreated: params['user_id'],

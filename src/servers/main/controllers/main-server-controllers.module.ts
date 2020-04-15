@@ -10,6 +10,7 @@ import { BranchController } from './master/branch.controller';
 import { CustomerController } from './master/customer.controller';
 import { EmployeeController } from './master/employee.controller';
 import { PartnerLogisticController } from './master/partner-logistic.controller';
+import { MasterPartnerController } from './master/partner.controller';
 import { ReasonController } from './master/reason.controller';
 import { RepresentativeController } from './master/representative.controller';
 import { RolePermissionController } from './master/role-permission.controller';
@@ -65,6 +66,7 @@ import { V1MobileAttendanceController } from './mobile/v1/mobile-attendance.cont
     MobileCheckOutController,
     MobileDashboardController,
     PartnerLogisticController,
+    MasterPartnerController,
     PrintController,
     PrintByStoreController,
     ReasonController,

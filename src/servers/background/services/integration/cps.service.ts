@@ -207,7 +207,7 @@ export class CpsService {
                 nostt, gerai, asal, tujuan, codNilai, codBiaya, packingBiaya, asuransiNilai, asuransiBiaya, koli, berat, biaya, totalbiaya,
                 tglinput, tgltransaksi, keterangan, asuransiAdm, harga, username, hub, nohppenerima, pengirim, penerima, beratAsli, TglFoto,
                 Perwakilan, zonatujuan, reseller, nohpreseller, resiJne, noKonfirmasi, hubkirim, diskon, Layanan, TglPending, TglManifested,
-                BeratVolume, KetVolume, GroupPOD, GroupAnalisa, GroupTujuan, ETA1, ETA2, Sync, is_void
+                BeratVolume, KetVolume, GroupPOD, GroupAnalisa, GroupTujuan, ETA1, ETA2, Sync, is_void, masalah
               ) VALUES ?`
             ;
 
@@ -219,7 +219,7 @@ export class CpsService {
                 item.perwakilan, item.zonatujuan, item.reseller, item.nohpreseller, item.resijne,
                 item.nokonfirmasi, item.hubkirim, item.diskon, item.layanan, item.tglpending, item.tglmanifested,
                 item.beratvolume, item.ketvolume, item.grouppod, item.groupanalisa, item.grouptujuan, item.eta1,
-                item.eta2, item.sync, item.is_void,
+                item.eta2, 1, item.is_void, item.masalah,
             ]];
             PinoLoggerService.debug('===========', results);
             if (results.length > 0) {
@@ -228,7 +228,7 @@ export class CpsService {
                 gerai=?, asal=?, tujuan=?, codNilai=?, codBiaya=?, packingBiaya=?, asuransiNilai=?, asuransiBiaya=?, koli=?, berat=?, biaya=?, totalbiaya=?,
                 tglinput=?, tgltransaksi=?, keterangan=?, asuransiAdm=?, harga=?, username=?, hub=?, nohppenerima=?, pengirim=?, penerima=?, beratAsli=?, TglFoto=?,
                 Perwakilan=?, zonatujuan=?, reseller=?, nohpreseller=?, resiJne=?, noKonfirmasi=?, hubkirim=?, diskon=?, Layanan=?, TglPending=?, TglManifested=?,
-                BeratVolume=?, KetVolume=?, GroupPOD=?, GroupAnalisa=?, GroupTujuan=?, ETA1=?, ETA2=?, Sync=?, is_void=?
+                BeratVolume=?, KetVolume=?, GroupPOD=?, GroupAnalisa=?, GroupTujuan=?, ETA1=?, ETA2=?, Sync=?, is_void=?, masalah=?
                 WHERE nostt=?
               `;
               values = values[0];

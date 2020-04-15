@@ -9,6 +9,7 @@ import { WebScanInListResponseVm } from '../../models/web-scanin-list.response.v
 
 @Injectable()
 export class WebDeliveryListService {
+  // TODO: to be remove
   async findAllDeliveryList(
     payload: WebDeliveryListFilterPayloadVm,
   ): Promise<WebScanInListResponseVm> {
