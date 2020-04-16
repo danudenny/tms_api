@@ -65,12 +65,13 @@ module.exports = {
   },
   korwil: {
     korwilRoleId: 38,
-    palkurRoleId: 40
+    palkurRoleId: 40,
   },
   masterData: {
-    apiKey: 'af8cf9bafac713ae8c6d5119346d783239e07552281e93c01785b1ed9611cec373cd7cbe24236c711512bf366e36b164ed27c874e85dfa7d97f4358df122b213'
+    apiKey:
+      'af8cf9bafac713ae8c6d5119346d783239e07552281e93c01785b1ed9611cec373cd7cbe24236c711512bf366e36b164ed27c874e85dfa7d97f4358df122b213',
   },
   cps: {
-    apiKey: '371b74e652119491854b78ce6f6bf03b'
-  }
+    apiKey: '371b74e652119491854b78ce6f6bf03b',
+  },
 };

@@ -748,16 +748,17 @@ export class DoReturnService {
       },
     );
 
-    // AwbItemAttr.update(attr.awbItemAttrId, {
-    //   doreturnNewAwb: payload.awbNumberNew,
-    //   updatedTime: moment().toDate(),
-    // });
+    AwbItemAttr.update(attr.awbItemAttrId, {
+      doreturnNewAwb: payload.awbNumberNew,
+      updatedTime: moment().toDate(),
+    });
 
-    // if (payload.partnerLogisticId) {
-    //   AwbItemAttr.update(attr.awbItemAttrId, {
-    //   doreturnNewAwb3Pl: partner.partnerLogisticName,
-    //   });
-    // }
+    if (payload.partnerLogisticId) {
+      AwbItemAttr.update(attr.awbItemAttrId, {
+      doreturnNewAwb3Pl: partner.partnerLogisticName,
+      });
+    }
+
     result.status = status;
     result.message = message;
     // result.doId = admin.doReturnAdminToCtId;

@@ -42,10 +42,11 @@ export class WebTrackingService {
       result.partnerLogisticAwb        = data.partnerLogisticAwb;
       result.partnerLogisticName       = data.partnerLogisticName;
       result.doPodDeliverDetailId      = data.doPodDeliverDetailId;
-      result.isHasPhotoReceiver        = data.doPodDeliverAttachmentId ? true : false;
+      // hardcode set photo reveiver only status DLV
+      result.isHasPhotoReceiver        = data.awbStatusLast == 'DLV' ? true : false;
       result.returnAwbNumber           = data.returnAwbNumber;
-      result.awbSubstitute             = data.awbSubstitute;
-      result.partnerLogisticSubstitute = data.partnerLogisticSubstitute;
+      result.awbSubstitute             = ''; // set default
+      result.partnerLogisticSubstitute = ''; // set default
       result.doReturnAwb               = data.doReturnAwb;
       result.isDoReturnPartner         = data.isDoReturnPartner;
       // TODO: get data image awb number
@@ -128,13 +129,11 @@ export class WebTrackingService {
         COALESCE(bg.bagging_code, '') as "baggingCode",
         COALESCE(s.smu_code, '') as "smuCode",
         dpd.do_pod_deliver_detail_id as "doPodDeliverDetailId",
-        dpa.do_pod_deliver_attachment_id as "doPodDeliverAttachmentId",
-        dpdet.awb_substitute as "awbSubstitute",
+        COALESCE(ai.doreturn_new_awb, ai.doreturn_new_awb_3pl) as "doReturnAwb",
         CASE
-          WHEN dpod.partner_logistic_name IS NOT NULL THEN dpod.partner_logistic_name
-          WHEN dpod.partner_logistic_id IS NOT NULL THEN pl.partner_logistic_name
-          ELSE ''
-        END AS "partnerLogisticSubstitute"
+            WHEN ai.doreturn_new_awb_3pl IS NOT NULL THEN true
+            ELSE false
+        END as "isDoReturnPartner"
       FROM awb a
         INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
@@ -142,13 +141,12 @@ export class WebTrackingService {
         LEFT JOIN branch b ON b.branch_id = a.branch_id
         LEFT JOIN users u on a.user_id = u.user_id
         LEFT JOIN employee e on u.employee_id = e.employee_id
-        LEFT JOIN pickup_request_detail prd ON a.awb_id = prd.awb_item_id
+        LEFT JOIN pickup_request_detail prd ON ai.awb_item_id = prd.awb_item_id
         LEFT JOIN district df ON df.district_id = a.from_id AND a.from_type = 40
         LEFT JOIN district dt ON dt.district_id = a.to_id AND a.to_type = 40
         LEFT JOIN branch bt ON bt.branch_id = dt.branch_id_delivery
         LEFT JOIN representative r ON r.representative_id = bt.representative_id
-        LEFT JOIN awb_item_attr ait ON ait.awb_item_id = ai.awb_item_id
-        LEFT JOIN awb_status ast ON ast.awb_status_id = ait.awb_status_id_last
+        LEFT JOIN awb_status ast ON ast.awb_status_id = ai.awb_status_id_last
         LEFT JOIN branch bl on bl.branch_id = a.branch_id_last
         LEFT JOIN payment_method p ON p.payment_method_id = a.payment_method_id
         LEFT JOIN bag_item bi ON bi.bag_item_id = ai.bag_item_id_last AND bi.is_deleted = false
@@ -156,11 +154,7 @@ export class WebTrackingService {
         LEFT JOIN bagging bg ON bg.bagging_id = bi.bagging_id_last AND bg.is_deleted = false
         LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
         LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false
-        LEFT JOIN do_pod_deliver_attachment dpa ON dpa.do_pod_deliver_detail_id = dpd.do_pod_deliver_detail_id AND dpa.is_deleted = false
-        LEFT JOIN awb_return ar ON ar.origin_awb_id = ait.awb_id AND ar.is_deleted = false
-        LEFT JOIN do_pod_detail dpdet ON dpdet.awb_id = a.awb_id AND dpdet.is_deleted = false
-        LEFT JOIN do_pod dpod ON dpod.do_pod_id = dpdet.do_pod_id AND dpod.is_deleted = false
-        LEFT JOIN partner_logistic pl ON pl.partner_logistic_id = dpod.partner_logistic_id AND pl.is_deleted = false
+        LEFT JOIN awb_return ar ON ar.origin_awb_id = ai.awb_id AND ar.is_deleted = false
       WHERE a.awb_number = :awbNumber
       AND a.is_deleted = false LIMIT 1;
     `;
