@@ -11,6 +11,9 @@ import {
     TransferBagNumberHubVm,
 } from '../../models/web-scan-out.vm';
 import { HubTransitDeliveryService } from '../../services/web/hub-transit/hub-transit-delivery.service';
+import { WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
+import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
+import { HubTransitDeliveryInService } from '../../services/web/hub-transit/hub-transit-delivery-in.service';
 
 @ApiUseTags('Hub Delivery')
 @Controller('pod/hub')
@@ -25,6 +28,15 @@ export class WebHubController {
    *
    *
    */
+
+  @Post('dropoff')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanInBagResponseVm })
+  public async scanInBagHub(@Body() payload: WebScanInBagVm) {
+    return HubTransitDeliveryInService.scanInBagHub(payload);
+  }
 
   @Post('transfer/bagNumber')
   @HttpCode(HttpStatus.OK)
