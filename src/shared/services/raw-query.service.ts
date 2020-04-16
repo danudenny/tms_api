@@ -16,7 +16,7 @@ export class RawQueryService {
     return this.connection.driver.escapeQueryWithParameters(sql, parameters, {});
   }
 
-  public static async query(sql: string, parameters?: any[], slaveMode: boolean = true) {
+  public static async query(sql: string, parameters?: any[], slaveMode: boolean = false) {
     let queryRunner;
 
     try {
@@ -39,7 +39,7 @@ export class RawQueryService {
     }
   }
 
-  public static async queryWithParams(sql: string, parameters: Object, slaveMode: boolean = true) {
+  public static async queryWithParams(sql: string, parameters: Object, slaveMode: boolean = false) {
     let queryRunner;
     try {
       const [q, params] = this.connection.driver.escapeQueryWithParameters(sql, parameters, {});
