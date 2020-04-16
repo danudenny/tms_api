@@ -304,7 +304,8 @@ export class LastMileDeliveryOutService {
     qb.addSelect('awb.total_cod_value', 'totalCodValue');
     qb.addSelect('pt.package_type_code', 'service');
     qb.addSelect('aia.awb_status_id_last', 'awbLastStatus');
-
+    // qb.addSelect('aia.awb_item_id', 'awbItemId');
+    qb.addSelect('ah.awb_status_id', 'awbLastStatus');
     qb.from('awb', 'awb');
     qb.innerJoin(
       'package_type',
@@ -316,8 +317,13 @@ export class LastMileDeliveryOutService {
       'aia',
       'aia.awb_id = awb.awb_id AND aia.is_deleted = false',
     );
+    qb.leftJoin(
+      'awb_history',
+      'ah',
+      'ah.awb_history_id = aia.awb_history_id_last AND ah.is_deleted = false',
+    );
     qb.andWhere('awb.is_deleted = false');
-    qb.andWhere('awb.awb_number = :awbNumber', {
+    qb.andWhere('aia.awb_number = :awbNumber', {
       awbNumber: payload.scanValue,
     });
     const resultQuery = await qb.getRawOne();

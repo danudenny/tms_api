@@ -758,6 +758,7 @@ export class DoReturnService {
       doreturnNewAwb3Pl: partner.partnerLogisticName,
       });
     }
+
     result.status = status;
     result.message = message;
     // result.doId = admin.doReturnAdminToCtId;

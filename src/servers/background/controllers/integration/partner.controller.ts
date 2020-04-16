@@ -3,8 +3,9 @@ import { PartnerService } from '../../services/integration/partner.service';
 import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { PosindonesiaPayloadVm } from '../../models/posindonesia.payload.vm';
+import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 
-// @ApiUseTags('Master Data')
+@ApiUseTags('Partner Integration Pos Indonesia')
 @Controller('integration/partner')
 export class PartnerController {
   constructor() {}
@@ -24,15 +25,18 @@ export class PartnerController {
   // @ApiBearerAuth()
   // @UseGuards(AuthenticatedGuard)
   // @ApiOkResponse({ type: TrackingNoteResponseVm })
-  public async dropAwbPosIndonesia(@Req() request: any, @Body() payload: PosindonesiaPayloadVm) {
+  public async dropAwbPosIndonesia(
+    @Req() request: any,
+    @Body() payload: PosindonesiaPayloadVm,
+  ) {
     const apiKeyPartner = request.headers['x-api-key'];
     let result = {};
     if (!apiKeyPartner) {
-       result = {
+      result = {
         code: '422',
         message: 'Invalid API KEY',
       };
-       return result;
+      return result;
     }
 
     const partner = await Partner.findOne({
@@ -56,6 +60,5 @@ export class PartnerController {
         return result;
       }
     }
-
   }
 }

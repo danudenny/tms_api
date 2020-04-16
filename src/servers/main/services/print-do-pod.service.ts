@@ -52,12 +52,17 @@ export class PrintDoPodService {
       });
     }
 
-    this.printDoPodAndQueryMeta(res, doPod as any, {
-      userId: queryParams.userId,
-      branchId: queryParams.branchId,
-    }, {
-      printCopy: queryParams.printCopy,
-    });
+    this.printDoPodAndQueryMeta(
+      res,
+      doPod as any,
+      {
+        userId: queryParams.userId,
+        branchId: queryParams.branchId,
+      },
+      {
+        printCopy: queryParams.printCopy,
+      },
+    );
   }
 
   public static async printDoPodAndQueryMeta(
@@ -102,13 +107,18 @@ export class PrintDoPodService {
 
     const currentDate = moment();
 
-    return this.printDoPod(res, data, {
-      currentUserName: currentUser.employee.nickname,
-      currentBranchName: currentBranch.branchName,
-      date: currentDate.format('DD/MM/YY'),
-      time: currentDate.format('HH:mm'),
-      totalItems: data.doPodDetails.length,
-    }, templateConfig);
+    return this.printDoPod(
+      res,
+      data,
+      {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: currentDate.format('DD/MM/YY'),
+        time: currentDate.format('HH:mm'),
+        totalItems: data.doPodDetails.length,
+      },
+      templateConfig,
+    );
   }
 
   public static async printDoPod(
@@ -132,14 +142,17 @@ export class PrintDoPodService {
       meta,
     };
 
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
-      templates: [{
-        templateName: 'surat-jalan',
-        templateData: jsreportParams,
-        printCopy: templateConfig.printCopy,
-      }],
+      templates: [
+        {
+          templateName: 'surat-jalan',
+          templateData: jsreportParams,
+          printCopy: templateConfig.printCopy,
+        },
+      ],
+      listPrinterName,
     });
   }
 }

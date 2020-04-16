@@ -1,4 +1,13 @@
-import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 
 import { PackagePriceSpecial } from './package-price-special';
 import { CustomerAddress } from './customer-address';
@@ -7,11 +16,9 @@ import { DoReturnAwb } from './do_return_awb';
 
 @Entity('customer_account', { schema: 'public' })
 @Index('code_rds_idx', ['codeRds'])
-@Index(
-  'customer_account_customer_account_code_key',
-  ['customerAccountCode'],
-  { unique: true },
-)
+@Index('customer_account_customer_account_code_key', ['customerAccountCode'], {
+  unique: true,
+})
 @Index('customer_account_is_email_at_night_idx', ['isEmailAtNight'])
 export class CustomerAccount extends BaseEntity {
   @PrimaryGeneratedColumn({
@@ -456,10 +463,13 @@ export class CustomerAccount extends BaseEntity {
   packagePriceSpecials: PackagePriceSpecial[];
 
   @OneToOne(() => CustomerAddress)
-  @JoinColumn({ name: 'customer_account_id', referencedColumnName: 'customerAccountId' })
+  @JoinColumn({
+    name: 'customer_account_id',
+    referencedColumnName: 'customerAccountId',
+  })
   customerAddress: CustomerAddress;
 
   @OneToOne(() => Customer)
-  @JoinColumn({ name: 'customer_account_id', referencedColumnName: 'customerId' })
+  @JoinColumn({ name: 'customer_id', referencedColumnName: 'customerId' })
   customer: Customer;
 }

@@ -272,15 +272,22 @@ export class V1MobileSyncService {
 
     // NOTE: insert data array
     let total = 0;
-    if (attachmentId && payload.data.length) {
-      for (const item of payload.data) {
-        const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
-        doPodDeliverAttachment.doPodDeliverDetailId = item.id;
-        doPodDeliverAttachment.attachmentTmsId = attachmentId;
-        doPodDeliverAttachment.type = payload.imageType;
-        await DoPodDeliverAttachment.save(doPodDeliverAttachment);
-        total += 1;
+    if (attachmentId && payload.data) {
+      PinoLoggerService.log('#### Payload Data : ', payload.data);
+      const data = payload.data.split(';');
+      for (const item of data) {
+        PinoLoggerService.log('#### Data Item Id : ', item);
+        if (item) {
+          const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
+          doPodDeliverAttachment.doPodDeliverDetailId = item;
+          doPodDeliverAttachment.attachmentTmsId = attachmentId;
+          doPodDeliverAttachment.type = payload.imageType;
+          await DoPodDeliverAttachment.save(doPodDeliverAttachment);
+          total += 1;
+        }
       }
+    } else {
+      PinoLoggerService.log('#### Payload Data Not Valid : ', payload.data);
     }
 
     result.url = url;

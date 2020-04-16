@@ -6,12 +6,12 @@ import { AuthXAPIKeyGuard } from '../../../../shared/guards/auth-x-api-key.guard
 import { DropCashLessResponseVM, DropCashlessVm } from '../../models/partner/fastpay-drop.vm';
 import { PartnerFastpayService } from '../../services/integration/partner-fastpay.service';
 
-@ApiUseTags('Partner Integration Sicepat x Fastpay')
+@ApiUseTags('Integration Drop Partner')
 @Controller('integration/partner')
 export class PartnerFastpayController {
   constructor() {}
 
-  @Post('fastpay/dropCash')
+  @Post('dropCash')
   @HttpCode(HttpStatus.OK)
   @ApiImplicitHeader({ name: 'x-api-key' })
   @UseGuards(AuthXAPIKeyGuard)
@@ -20,7 +20,7 @@ export class PartnerFastpayController {
     return PartnerFastpayService.dropCash(payload);
   }
 
-  @Post('fastpay/dropCashless')
+  @Post('dropCashless')
   @HttpCode(HttpStatus.OK)
   @ApiImplicitHeader({ name: 'x-api-key' })
   @UseGuards(AuthXAPIKeyGuard)

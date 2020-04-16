@@ -274,7 +274,9 @@ export class WebScanOutCreateDeliveryVm {
     example: 'keterangan',
   })
   desc?: string;
+}
 
+export class WebScanOutCreateDeliveryPartnerVm extends WebScanOutCreateDeliveryVm {
   @ApiModelProperty({
     example: false,
   })
