@@ -75,6 +75,7 @@ export class BagService {
     return await q.exec();
   }
 
+  // TODO: to be removed
   // scan dropoff_hub update status awb
   static async statusDropoffAwbBag(
     bagItemId: number,
@@ -136,6 +137,8 @@ export class BagService {
     return true;
   }
 
+  // NOTE: ONLY ON UPDATE
+  // NOT USED NOW ???
   static async statusOutBranchAwbBag(
     bagId: number,
     bagItemId: number,
@@ -203,7 +206,7 @@ export class BagService {
               AWB_STATUS.OUT_HUB,
               branchIdNext,
             );
-            
+
             // TODO: if isTransit auto IN
             if (doPodType == 3020) {
               // queue bull IN HUB

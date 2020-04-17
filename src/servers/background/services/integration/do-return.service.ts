@@ -38,7 +38,7 @@ export class DoReturnService {
       aia.awb_number,
       aia.awb_status_id_last,
       a.customer_account_id AS "customeAccountId",
-      a.customer_id AS "customerId",
+      ca.customer_id AS "customerId",
       a.history_date_last AS "pod_datetime",
       a.user_id_created,
       a.user_id_updated,
@@ -49,6 +49,7 @@ export class DoReturnService {
       inner join awb_item_attr aia on prd.ref_awb_number=aia.awb_number and aia.is_deleted=false
       inner join awb a on aia.awb_id=a.awb_id and a.is_deleted=false
       left join customer_account ca on a.customer_account_id=ca.customer_account_id and ca.is_deleted=false
+      left join customer cust on ca.customer_id=cust.customer_id and cust.is_deleted=false
       where prd.do_return = true and prd.is_doreturn_sync = false and aia.awb_status_id_last >= 3500
       );
       `,
