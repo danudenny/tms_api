@@ -17,9 +17,11 @@ import { PhotoResponseVm } from '../../../models/bag-order-detail-response.vm';
 
 @ApiUseTags('Web Tracking')
 @Controller('web/v1/tracking')
+@ApiBearerAuth()
 export class V1WebTrackingController {
   @Post('awbNumber')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: TrackingAwbResponseVm })
   public async awbNumber(@Body() payload: TrackingAwbPayloadVm) {
     return V1WebTrackingService.awb(payload);
@@ -27,6 +29,7 @@ export class V1WebTrackingController {
 
   @Post('awbSubstitute')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: AwbSubstituteResponseVm })
   public async awbSubstitute(@Body() payload: BaseMetaPayloadVm) {
     return V1WebTrackingService.getAwbSubstitute(payload);
@@ -34,7 +37,6 @@ export class V1WebTrackingController {
 
   @Post('photoDetail')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: PhotoResponseVm })
   public async photoDetail(@Body() payload: PhotoDetailVm) {
