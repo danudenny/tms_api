@@ -72,9 +72,6 @@ export class PartnerGojekService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-
-
-
     const pickupDetail = await PickupRequestDetail.findOne({
       where: {
         workOrderIdLast: payload.workOrderId,
@@ -254,7 +251,7 @@ export class PartnerGojekService {
             const calculate              = await this.getEstimatePrice(data.originLatLong, data.destinationLatLong);
             if (calculate) {
               const shipmentMethod = calculate[this.shipmentMethodGojek];
-              if (shipmentMethod.serviceable) {
+              if (shipmentMethod['serviceable']) {
                 const requestGojek = await this.createBooking(data);
                 if (requestGojek) {
                   const detailData = {
@@ -426,8 +423,8 @@ export class PartnerGojekService {
             status,
             null,
             3,
-            payload.driver_name,
             null,
+            payload.driver_name,
             'Gojek',
           );
         } else if (payload.type === 'COMPLETED') {
