@@ -91,9 +91,10 @@ export class V1WebTrackingService {
   }
 
   static async getAwbSubstitute(payload: BaseMetaPayloadVm): Promise <AwbSubstituteResponseVm> {
-    payload.fieldResolverMap['awbSubstitute'] = 't1.awbSubstitute';
-    payload.fieldResolverMap['awbNumber']     = 't1.awb_number';
-    payload.fieldResolverMap['awbItemId']     = 't1.awb_item_id';
+    payload.fieldResolverMap['awbSubstitute']     = 't1.awbSubstitute';
+    payload.fieldResolverMap['awbNumber']         = 't1.awb_number';
+    payload.fieldResolverMap['awbItemId']         = 't1.awb_item_id';
+    payload.fieldResolverMap['awbSubstituteType'] = '"awbSubstituteType"';
 
     const repo = new OrionRepositoryService(DoPodDetail, 't1');
     const q    = repo.findAllRaw();
@@ -102,6 +103,20 @@ export class V1WebTrackingService {
     q.selectRaw(
       ['t1.awb_substitute', 'awbSubstitute'],
       ['t1.do_pod_detail_id', 'doPodDetailId'],
+      [`
+        CASE
+          WHEN t2.partner_logistic_name IS NOT NULL THEN t2.partner_logistic_name
+          WHEN t2.partner_logistic_id IS NOT NULL THEN t3.partner_logistic_name
+          ELSE
+            'Internal'
+        END
+      `, 'awbSubstituteType'],
+    );
+    q.innerJoin(e => e.doPod, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doPod.partnerLogistic, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhereRaw('t1.awb_substitute IS NOT NULL');

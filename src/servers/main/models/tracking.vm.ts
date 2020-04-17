@@ -220,6 +220,9 @@ export class AwbSubstituteListData {
 
   @ApiModelProperty()
   doPodDetailId: string;
+
+  @ApiModelProperty()
+  awbSubstituteType: string;
 }
 
 export class AwbSubstituteResponseVm extends BaseMetaResponseVm {
