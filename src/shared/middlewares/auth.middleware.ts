@@ -52,21 +52,24 @@ export class AuthMiddleware implements NestMiddleware {
       throw new UnauthorizedException();
     }
 
-    RequestContextMetadataService.setMetadata('JWT_ACCESS_TOKEN', jwtToken);
-    RequestContextMetadataService.setMetadata(
-      'JWT_ACCESS_TOKEN_PAYLOAD',
-      jwt.payload,
-    );
-
-    AuthService.setAuthMetadata({
-      clientId: jwt.payload.clientId,
-      accessToken: jwtToken,
-      userId: jwt.payload.userId,
-      username: jwt.payload.username,
-      email: jwt.payload.email,
-      displayName: jwt.payload.displayName,
-      employeeId: jwt.payload.employeeId,
-      roles: jwt.payload.roles || [],
-    });
+    if (jwt) {
+      RequestContextMetadataService.setMetadata('JWT_ACCESS_TOKEN', jwtToken);
+      RequestContextMetadataService.setMetadata(
+        'JWT_ACCESS_TOKEN_PAYLOAD',
+        jwt.payload,
+      );
+      AuthService.setAuthMetadata({
+        clientId: jwt.payload.clientId,
+        accessToken: jwtToken,
+        userId: jwt.payload.userId,
+        username: jwt.payload.username,
+        email: jwt.payload.email,
+        displayName: jwt.payload.displayName,
+        employeeId: jwt.payload.employeeId,
+        roles: jwt.payload.roles || [],
+      });
+    } else {
+      throw new UnauthorizedException();
+    }
   }
 }
