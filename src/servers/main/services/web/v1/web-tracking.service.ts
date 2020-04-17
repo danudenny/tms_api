@@ -1,13 +1,10 @@
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import {
   TrackingAwbPayloadVm,
-  TrackingBagPayloadVm,
   TrackingAwbResponseVm,
-  TrackingBagResponseVm,
   AwbSubstituteResponseVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
-import { RepositoryService } from '../../../../../shared/services/repository.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
 
@@ -47,46 +44,17 @@ export class V1WebTrackingService {
       result.partnerLogisticAwb        = data.partnerLogisticAwb;
       result.partnerLogisticName       = data.partnerLogisticName;
       result.doPodDeliverDetailId      = data.doPodDeliverDetailId;
-      // hardcode set photo reveiver only status DLV
-      // add awb status with have photo
-      result.isHasPhotoReceiver        = data.awbStatusLast == 'DLV' ? true : false;
+      // set photo reveiver only have doPodDeliverDetailId
+      result.isHasPhotoReceiver        = data.doPodDeliverDetailId ? true : false;
       result.returnAwbNumber           = data.returnAwbNumber;
-      result.awbSubstitute             = ''; // set default
-      result.partnerLogisticSubstitute = ''; // set default
       result.doReturnAwb               = data.doReturnAwb;
       result.isDoReturnPartner         = data.isDoReturnPartner;
-      // TODO: get data image awb number
-      // relation to do pod deliver
 
       const history = await this.getRawAwbHistory(data.awbItemId);
       if (history && history.length) {
         result.awbHistory = history;
       }
     }
-    return result;
-  }
-
-  static async bag(
-    payload: TrackingBagPayloadVm,
-  ): Promise<TrackingBagResponseVm> {
-    const result = new TrackingBagResponseVm();
-    const data = await this.getRawBag(payload.bagNumber);
-    if (data) {
-      result.bagNumber         = data.bagNumber;
-      result.weight            = data.weight;
-      result.bagItemId         = data.bagItemId;
-      result.bagItemStatusId   = data.bagItemStatusId;
-      result.bagItemStatusName = data.bagItemStatusName;
-      result.branchCodeLast    = data.branchCodeLast;
-      result.branchNameLast    = data.branchNameLast;
-      result.branchCodeNext    = data.branchCodeNext;
-      result.branchNameNext    = data.branchNameNext;
-      const history = await this.getRawBagHistory(data.bagItemId);
-      if (history && history.length) {
-        result.bagHistory = history;
-      }
-    }
-    // result.bagHistory =
     return result;
   }
 
@@ -184,7 +152,8 @@ export class V1WebTrackingService {
         LEFT JOIN bag ba ON ba.bag_id = bi.bag_id AND ba.is_deleted = false
         LEFT JOIN bagging bg ON bg.bagging_id = bi.bagging_id_last AND bg.is_deleted = false
         LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
-        LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false
+        LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id
+          AND dpd.awb_status_id_last <> 14000 AND dpd.is_deleted = false
         LEFT JOIN awb_return ar ON ar.origin_awb_id = ai.awb_id AND ar.is_deleted = false
       WHERE a.awb_number = :awbNumber
       AND a.is_deleted = false LIMIT 1;
@@ -226,56 +195,4 @@ export class V1WebTrackingService {
     return await RawQueryService.queryWithParams(query, { awbItemId });
   }
 
-  private static async getRawBag(bagNumberSeq: string): Promise<any> {
-    const regexNumber = /^[0-9]+$/;
-    if (regexNumber.test(bagNumberSeq.substring(7, 10))) {
-      const bagNumber: string = bagNumberSeq.substring(0, 7);
-      const seqNumber: number = Number(bagNumberSeq.substring(7, 10));
-      const query = `
-        SELECT
-          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as "bagNumber",
-          bi.weight::numeric(10,2) as weight,
-          bi.bag_item_id as "bagItemId",
-          bis.bag_item_status_id as "bagItemStatusId",
-          bis.bag_item_status_name as "bagItemStatusName",
-          blast.branch_code as "branchCodeLast",
-          blast.branch_name as "branchNameLast",
-          bto.branch_code as "branchCodeNext",
-          bto.branch_name as "branchNameNext"
-        FROM bag b
-        INNER JOIN bag_item bi ON b.bag_id = bi.bag_id AND bi.is_deleted = false
-        LEFT JOIN bag_item_status bis ON bi.bag_item_status_id_last = bis.bag_item_status_id AND bis.is_deleted = false
-        LEFT JOIN branch blast ON bi.branch_id_last = blast.branch_id AND blast.is_deleted = false
-        LEFT JOIN branch bto ON bi.branch_id_next = bto.branch_id AND bto.is_deleted = false
-        WHERE b.bag_number = :bagNumber AND bi.bag_seq = :seqNumber LIMIT 1
-      `;
-      const rawData = await RawQueryService.queryWithParams(query, {
-        bagNumber,
-        seqNumber,
-      });
-      return rawData ? rawData[0] : null;
-    } else {
-      return null;
-    }
-  }
-
-  private static async getRawBagHistory(bagItemId: number): Promise<any> {
-    const query = `
-      SELECT
-        bh.bag_item_history_id,
-        bh.bag_item_status_id as "bagItemStatusId",
-        ast.bag_item_status_name as "bagItemStatusName",
-        bh.history_date as "historyDate",
-        b.branch_name as "branchName",
-        u.username
-      FROM bag_item_history bh
-        LEFT JOIN branch b ON b.branch_id = bh.branch_id
-        LEFT JOIN users u ON u.user_id = bh.user_id
-        LEFT JOIN bag_item_status ast ON ast.bag_item_status_id = bh.bag_item_status_id
-      WHERE bh.bag_item_id = :bagItemId
-      AND bh.is_deleted = false
-      ORDER BY bh.history_date DESC
-    `;
-    return await RawQueryService.queryWithParams(query, { bagItemId });
-  }
 }

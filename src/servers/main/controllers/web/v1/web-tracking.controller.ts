@@ -21,14 +21,6 @@ export class V1WebTrackingController {
     return V1WebTrackingService.awb(payload);
   }
 
-  @Post('awbHistory')
-  @HttpCode(HttpStatus.OK)
-  // @ApiOkResponse({ type: TrackingAwbResponseVm })
-  public async awbHistory(@Body() payload: TrackingAwbPayloadVm) {
-    // TODO: create service for get data awbSubstitute
-    return {};
-  }
-
   @Post('awbSubstitute')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: AwbSubstituteResponseVm })
@@ -36,10 +28,4 @@ export class V1WebTrackingController {
     return V1WebTrackingService.getAwbSubstitute(payload);
   }
 
-  // @Post('bagNumber')
-  // @HttpCode(HttpStatus.OK)
-  // @ApiOkResponse({ type: TrackingBagResponseVm })
-  // public async bagNumber(@Body() payload: TrackingBagPayloadVm) {
-  //   return WebTrackingService.bag(payload);
-  // }
 }
