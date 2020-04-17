@@ -1,12 +1,12 @@
-import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import {
   TrackingAwbPayloadVm,
   TrackingBagPayloadVm,
   TrackingAwbResponseVm,
   TrackingBagResponseVm,
-} from '../../models/tracking.vm';
+} from '../../../models/tracking.vm';
 
-export class WebTrackingService {
+export class V1WebTrackingService {
   static async awb(
     payload: TrackingAwbPayloadVm,
   ): Promise<TrackingAwbResponseVm> {
@@ -43,6 +43,7 @@ export class WebTrackingService {
       result.partnerLogisticName       = data.partnerLogisticName;
       result.doPodDeliverDetailId      = data.doPodDeliverDetailId;
       // hardcode set photo reveiver only status DLV
+      // add awb status with have photo
       result.isHasPhotoReceiver        = data.awbStatusLast == 'DLV' ? true : false;
       result.returnAwbNumber           = data.returnAwbNumber;
       result.awbSubstitute             = ''; // set default
@@ -165,7 +166,23 @@ export class WebTrackingService {
     return rawData ? rawData[0] : null;
   }
 
+  private static async getAwbSubstitute() {
+    // TODO: get data awbSubstitute and partnerLogisticSubstitute
+
+    // dpdet.awb_substitute as "awbSubstitute",
+    // CASE
+    //   WHEN dpod.partner_logistic_name IS NOT NULL THEN dpod.partner_logistic_name
+    //   WHEN dpod.partner_logistic_id IS NOT NULL THEN pl.partner_logistic_name
+    //   ELSE ''
+    // END AS "partnerLogisticSubstitute",
+
+      // LEFT JOIN do_pod_detail dpdet ON dpdet.awb_id = a.awb_id AND dpdet.is_deleted = false
+      // LEFT JOIN do_pod dpod ON dpod.do_pod_id = dpdet.do_pod_id AND dpod.is_deleted = false
+      // LEFT JOIN partner_logistic pl ON pl.partner_logistic_id = dpod.partner_logistic_id AND pl.is_deleted = false
+  }
+
   private static async getRawAwbHistory(awbItemId: number): Promise<any> {
+    // find awb item attr where awb number
     const query = `
       SELECT
         ah.awb_status_id as "awbStatusId",
