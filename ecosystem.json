@@ -4,8 +4,6 @@
     "script": "dist/main.js",
     "instances": "max",
     "exec_mode": "cluster",
-    "watch": true,
-    "watch_delay": 1000,
     "ignore_watch": ["node_modules"],
     "instance_var": "INSTANCE_ID",
     "env": {

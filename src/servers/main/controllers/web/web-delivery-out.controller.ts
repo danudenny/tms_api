@@ -1,6 +1,18 @@
 // #region import
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Param } from '@nestjs/common';
-import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  Param,
+} from '@nestjs/common';
+import {
+  ApiOkResponse,
+  ApiUseTags,
+  ApiBearerAuth,
+} from '../../../../shared/external/nestjs-swagger';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { WebDeliveryOutService } from '../../services/web/web-delivery-out.service';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
@@ -36,13 +48,23 @@ import {
   WebScanOutTransitListResponseVm,
   WebScanOutTransitListAwbResponseVm,
   WebScanOutDeliverGroupListResponseVm,
-  WebScanOutDeliverPartnerListResponseVm,
   WebScanOutTransitUpdateAwbPartnerResponseVm,
+  WebScanOutDeliverPartnerListResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { BagOrderResponseVm, BagDetailResponseVm, PhotoResponseVm, BagDeliveryDetailResponseVm} from '../../models/bag-order-detail-response.vm';
-import { BagAwbVm, BagDetailVm, PhotoDetailVm, BagDeliveryDetailVm } from '../../models/bag-order-response.vm';
+import {
+  BagOrderResponseVm,
+  BagDetailResponseVm,
+  PhotoResponseVm,
+  BagDeliveryDetailResponseVm,
+} from '../../models/bag-order-detail-response.vm';
+import {
+  BagAwbVm,
+  BagDetailVm,
+  PhotoDetailVm,
+  BagDeliveryDetailVm,
+} from '../../models/bag-order-response.vm';
 import { LastMileDeliveryOutService } from '../../services/web/last-mile/last-mile-delivery-out.service';
 import { LastMileDeliveryService } from '../../services/web/last-mile/last-mile-delivery.service';
 // #endregion
@@ -170,6 +192,15 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllScanOutList(payload);
   }
 
+  @Post('deliverPartnerList')
+  @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutDeliverPartnerListResponseVm })
+  public async deliverPartnerList(@Body() payload: BaseMetaPayloadVm) {
+    return LastMileDeliveryService.findAllDeliverPartner(payload);
+  }
+
   @Post('deliverList')
   @HttpCode(HttpStatus.OK)
   // @ApiBearerAuth()
@@ -198,15 +229,6 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebScanOutDeliverGroupListResponseVm })
   public async deliverGroupList(@Body() payload: BaseMetaPayloadVm) {
     return LastMileDeliveryService.findAllScanOutDeliverGroupList(payload);
-  }
-
-  @Post('deliverPartnerList')
-  @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanOutDeliverPartnerListResponseVm })
-  public async deliverPartnerList(@Body() payload: BaseMetaPayloadVm) {
-    return LastMileDeliveryService.findAllDeliverPartner(payload);
   }
 
   @Post('awbValidate')

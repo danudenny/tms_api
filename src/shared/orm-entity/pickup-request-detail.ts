@@ -3,8 +3,15 @@ import {
   Entity,
   Index,
   PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
+  ManyToOne,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import { PickupRequest } from './pickup-request';
+import { AwbItemAttr } from './awb-item-attr';
+import { AwbItem } from './awb-item';
+import { District } from './district';
 
 @Entity('pickup_request_detail', { schema: 'public' })
 // @Index('pickup_request_detail_pickup_request_id_idx', [
@@ -288,6 +295,20 @@ export class PickupRequestDetail extends TmsBaseEntity {
   })
   isReturn: boolean;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_doreturn_sync',
+  })
+  isDoreturnSync: boolean;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'do_return',
+  })
+  doReturn: boolean;
+
   @Column('character varying', {
     nullable: true,
     length: 100,
@@ -316,6 +337,13 @@ export class PickupRequestDetail extends TmsBaseEntity {
   })
   shipperLongitude: string | null;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'do_return_number',
+  })
+  doReturnNumber: string | null;
+
   @Column('numeric', {
     nullable: true,
     precision: 18,
@@ -324,19 +352,19 @@ export class PickupRequestDetail extends TmsBaseEntity {
   })
   taxValue: string | null;
 
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'do_return',
-  })
-  doReturn: boolean;
+  // @Column('boolean', {
+  //   nullable: false,
+  //   default: () => 'false',
+  //   name: 'do_return',
+  // })
+  // doReturn: boolean;
 
-  @Column('character varying', {
-    nullable: true,
-    length: 100,
-    name: 'do_return_number',
-  })
-  doReturnNumber: string | null;
+  // @Column('character varying', {
+  //   nullable: true,
+  //   length: 100,
+  //   name: 'do_return_number',
+  // })
+  // doReturnNumber: string | null;
 
   @Column('character varying', {
     nullable: true,
@@ -352,4 +380,12 @@ export class PickupRequestDetail extends TmsBaseEntity {
     name: 'drop_partner_charge',
   })
   dropPartnerCharge: number | null;
+
+  @OneToOne(() => District)
+  @JoinColumn({ name: 'origin_code', referencedColumnName: 'districtCode' })
+  districtOrigin: District;
+
+  @OneToOne(() => District)
+  @JoinColumn({ name: 'destination_code', referencedColumnName: 'districtCode' })
+  districtDestination: District;
 }

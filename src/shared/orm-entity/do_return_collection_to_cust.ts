@@ -4,6 +4,7 @@ import { TmsBaseEntity } from './tms-base';
 import { User } from './user';
 import { Branch } from './branch';
 import { Customer } from './customer';
+import { CustomerAccount } from './customer-account';
 
 @Entity('do_return_collection_to_cust', { schema: 'public' })
 export class DoReturnCollectionToCust extends TmsBaseEntity {
@@ -51,6 +52,12 @@ export class DoReturnCollectionToCust extends TmsBaseEntity {
   })
   customerId: number;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'customer_account_id',
+  })
+  customerAccountId: number;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_created' })
   user: User;
@@ -65,4 +72,8 @@ export class DoReturnCollectionToCust extends TmsBaseEntity {
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
+
+  @ManyToOne(() => CustomerAccount)
+  @JoinColumn({ name: 'customer_account_id' , referencedColumnName: 'customerAccountId' })
+  customerAccount: CustomerAccount;
 }
