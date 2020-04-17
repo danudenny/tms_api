@@ -4,7 +4,13 @@ import {
   TrackingBagPayloadVm,
   TrackingAwbResponseVm,
   TrackingBagResponseVm,
+  AwbSubstitutePayloadVm,
+  AwbSubstituteResponseVm,
 } from '../../../models/tracking.vm';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { RepositoryService } from '../../../../../shared/services/repository.service';
+import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
+import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
 
 export class V1WebTrackingService {
   static async awb(
@@ -82,6 +88,31 @@ export class V1WebTrackingService {
       }
     }
     // result.bagHistory =
+    return result;
+  }
+
+  static async getAwbSubstitute(payload: BaseMetaPayloadVm): Promise <AwbSubstituteResponseVm> {
+    payload.fieldResolverMap['awbSubstitute'] = 't1.awbSubstitute';
+    payload.fieldResolverMap['awbNumber']     = 't1.awb_number';
+    payload.fieldResolverMap['awbItemId']     = 't1.awb_item_id';
+
+    const repo = new OrionRepositoryService(DoPodDetail, 't1');
+    const q    = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_substitute', 'awbSubstitute'],
+      ['t1.do_pod_detail_id', 'doPodDetailId'],
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhereRaw('t1.awb_substitute IS NOT NULL');
+
+    const data   = await q.exec();
+    const total  = await q.countWithoutTakeAndSkip();
+
+    const result = new AwbSubstituteResponseVm();
+    result.data  = data;
+    result.buildPaging(payload.page, payload.limit, total);
     return result;
   }
 
@@ -164,21 +195,6 @@ export class V1WebTrackingService {
       awbNumber,
     });
     return rawData ? rawData[0] : null;
-  }
-
-  private static async getAwbSubstitute() {
-    // TODO: get data awbSubstitute and partnerLogisticSubstitute
-
-    // dpdet.awb_substitute as "awbSubstitute",
-    // CASE
-    //   WHEN dpod.partner_logistic_name IS NOT NULL THEN dpod.partner_logistic_name
-    //   WHEN dpod.partner_logistic_id IS NOT NULL THEN pl.partner_logistic_name
-    //   ELSE ''
-    // END AS "partnerLogisticSubstitute",
-
-      // LEFT JOIN do_pod_detail dpdet ON dpdet.awb_id = a.awb_id AND dpdet.is_deleted = false
-      // LEFT JOIN do_pod dpod ON dpod.do_pod_id = dpdet.do_pod_id AND dpod.is_deleted = false
-      // LEFT JOIN partner_logistic pl ON pl.partner_logistic_id = dpod.partner_logistic_id AND pl.is_deleted = false
   }
 
   private static async getRawAwbHistory(awbItemId: number): Promise<any> {

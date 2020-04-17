@@ -1,6 +1,8 @@
 import {
   TrackingAwbPayloadVm,
   TrackingAwbResponseVm,
+  AwbSubstitutePayloadVm,
+  AwbSubstituteResponseVm,
 } from '../../../models/tracking.vm';
 import {
   ApiUseTags,
@@ -8,6 +10,7 @@ import {
 } from '../../../../../shared/external/nestjs-swagger';
 import { Controller, Post, HttpCode, HttpStatus, Body } from '@nestjs/common';
 import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('Web Tracking')
 @Controller('web/v1/tracking')
@@ -27,12 +30,11 @@ export class V1WebTrackingController {
     return {};
   }
 
-  @Post('awbawbSubstitute')
+  @Post('awbSubstitute')
   @HttpCode(HttpStatus.OK)
-  // @ApiOkResponse({ type: TrackingAwbResponseVm })
-  public async awbSubstitute(@Body() payload: TrackingAwbPayloadVm) {
-    // TODO: create service for get data awbSubstitute
-    return {};
+  @ApiOkResponse({ type: AwbSubstituteResponseVm })
+  public async awbSubstitute(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebTrackingService.getAwbSubstitute(payload);
   }
 
   // @Post('bagNumber')
