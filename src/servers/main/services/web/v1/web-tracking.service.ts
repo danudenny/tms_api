@@ -4,7 +4,6 @@ import {
   TrackingBagPayloadVm,
   TrackingAwbResponseVm,
   TrackingBagResponseVm,
-  AwbSubstitutePayloadVm,
   AwbSubstituteResponseVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
