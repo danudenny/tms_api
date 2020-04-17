@@ -729,6 +729,35 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
+  // NOTE: ONLY awb status ANT WITH PARTNER
+  public static async createJobByAwbDeliverPartner(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    userId: number,
+    employeeIdDriver: number,
+    employeeName: string,
+    partnerName: string,
+  ) {
+    const noteInternal = `Paket dibawa [${employeeName} - ${partnerName}]`;
+    const notePublic = `Paket dibawa [${employeeName}]`;
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver,
+      timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
   // NOTE: ONLY AWB_STATUS.IN_BRANCH
   public static async createJobByScanInAwbBranch(
     awbItemId: number,

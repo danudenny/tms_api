@@ -44,6 +44,7 @@ import {
 } from '../../../models/last-mile/awb-third-party.vm';
 import { Employee } from '../../../../../shared/orm-entity/employee';
 import { Branch } from '../../../../../shared/orm-entity/branch';
+import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-request-detail';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -488,6 +489,164 @@ export class LastMileDeliveryOutService {
                   employeeNameDriver,
                 );
                 totalSuccess += 1;
+              } else {
+                totalError += 1;
+                response.status = 'error';
+                response.message = `Surat Jalan: Resi ${awbNumber} tidak valid.`;
+              }
+              // #endregion after scanout
+              // remove key holdRedis
+              RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
+            } else {
+              totalError += 1;
+              response.status = 'error';
+              response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+            }
+          } // handle status final
+        } else {
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Resi ${awbNumber} sudah di proses.`;
+        }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Resi ${awbNumber} Tidak di Temukan`;
+      }
+
+      // push item
+      dataItem.push({
+        awbNumber,
+        ...response,
+      });
+    } // end of loop
+
+    // TODO: need improvement
+    // if (doPodDeliver && totalSuccess > 0) {
+    //   const totalAwb = doPodDeliver.totalAwb + totalSuccess;
+    //   await DoPodDeliver.update(doPod.doPodId, {
+    //     totalAwb,
+    //   });
+    // }
+
+    // Populate return value
+    result.totalData = payload.awbNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
+
+    return result;
+  }
+
+  static async scanOutAwbDeliverPartner(
+    payload: WebScanOutAwbVm,
+  ): Promise<WebScanOutAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const result = new WebScanOutAwbResponseVm();
+
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    for (const awbNumber of payload.awbNumber) {
+      const response = new ScanAwbVm();
+      response.status = 'ok';
+      response.message = 'success';
+
+      const awb = await AwbService.validAwbNumber(awbNumber);
+      if (awb) {
+        // TODO: validation need improvement
+        // handle if awb status is null
+        let notDeliver = true;
+        if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
+          notDeliver = awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
+        }
+
+        // NOTE: first must scan in branch
+        if (notDeliver) {
+          // add handel final status
+          const statusFinal = [AWB_STATUS.DLV];
+          if (statusFinal.includes(awb.awbStatusIdLast)) {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Resi ${awbNumber} sudah Final Status !`;
+          } else {
+            const statusCode = await AwbService.awbStatusGroup(
+              awb.awbStatusIdLast,
+            );
+            // save data to awb_troubleß
+            if (statusCode != 'IN') {
+              const branchName = awb.branchLast
+                ? awb.branchLast.branchName
+                : '';
+              await AwbTroubleService.fromScanOut(
+                awbNumber,
+                branchName,
+                awb.awbStatusIdLast,
+              );
+            }
+
+            // Add Locking setnx redis
+            const holdRedis = await RedisService.locking(
+              `hold:scanoutant:${awb.awbItemId}`,
+              'locking',
+            );
+            if (holdRedis) {
+              // AFTER Scan OUT ===============================================
+              // #region after scanout
+              // Update do_pod
+              const doPodDeliver = await DoPodDeliverRepository.getDataById(
+                payload.doPodId,
+              );
+
+              if (doPodDeliver) {
+                const pickReqDetail = await PickupRequestDetail.findOne({ where: { awbItemId: awb.awbItemId } });
+                if (pickReqDetail && pickReqDetail.recipientLatitude && pickReqDetail.recipientLongitude) {
+                  // save table do_pod_detail
+                  // NOTE: create data do pod detail per awb number
+                  const doPodDeliverDetail = DoPodDeliverDetail.create();
+                  doPodDeliverDetail.doPodDeliverId = payload.doPodId;
+                  doPodDeliverDetail.awbId = awb.awbId;
+                  doPodDeliverDetail.awbItemId = awb.awbItemId;
+                  doPodDeliverDetail.awbNumber = awbNumber;
+                  doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
+                  await DoPodDeliverDetail.insert(doPodDeliverDetail);
+
+                  // Assign print metadata - Scan Out & Deliver
+                  response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
+                  response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
+                  response.printDoPodDetailMetadata.awbItem.awb.consigneeName =
+                    awb.awbItem.awb.consigneeName;
+
+                  // Assign print metadata - Deliver
+                  response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress =
+                    awb.awbItem.awb.consigneeAddress;
+                  response.printDoPodDetailMetadata.awbItem.awb.awbItemId =
+                    awb.awbItemId;
+                  response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber =
+                    awb.awbItem.awb.consigneeNumber;
+                  response.printDoPodDetailMetadata.awbItem.awb.consigneeZip =
+                    awb.awbItem.awb.consigneeZip;
+                  response.printDoPodDetailMetadata.awbItem.awb.isCod =
+                    awb.awbItem.awb.isCod;
+                  response.printDoPodDetailMetadata.awbItem.awb.totalCodValue =
+                    awb.awbItem.awb.totalCodValue;
+                  response.printDoPodDetailMetadata.awbItem.awb.totalWeight =
+                    awb.awbItem.awb.totalWeightFinalRounded;
+
+                  // TODO: need improvement counter total scan out
+                  const totalAwb = doPodDeliver.totalAwb + 1;
+                  await DoPodDeliver.update(doPodDeliver.doPodDeliverId, {
+                    totalAwb,
+                  });
+                  totalSuccess += 1;
+                } else {
+                  totalError += 1;
+                  response.status = 'error';
+                  response.message = `Resi ${awbNumber} tidak memiliki data longitude dan latitude`;
+                }
               } else {
                 totalError += 1;
                 response.status = 'error';

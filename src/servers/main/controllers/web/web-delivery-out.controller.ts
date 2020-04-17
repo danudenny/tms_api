@@ -140,6 +140,16 @@ export class WebDeliveryOutController {
     return LastMileDeliveryOutService.scanOutAwbDeliver(payload);
   }
 
+  @Post('awbDeliverPartner')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutAwbResponseVm })
+  @Transactional()
+  public async scanOutAwbDeliverPartner(@Body() payload: WebScanOutAwbVm) {
+    return LastMileDeliveryOutService.scanOutAwbDeliverPartner(payload);
+  }
+
   @Post('bag')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
