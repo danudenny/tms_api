@@ -90,28 +90,22 @@ export class WebDeliveryOutService {
     const doPod = this.doPodRepository.create();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const doPodDateTime = moment(payload.doPodDateTime).toDate();
+    const statusPodTypeHub = [POD_TYPE.OUT_HUB, POD_TYPE.OUT_HUB_TRANSIT];
+    // internal or 3PL/Third Party
+    const method = payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
 
     doPod.doPodCode = await CustomCounterCode.doPod(doPodDateTime);
+    doPod.doPodMethod = method;
     doPod.doPodType = payload.doPodType;
-    const method =
-      payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
-    doPod.doPodMethod = method; // internal or 3PL/Third Party
-    payload.doPodMethod && payload.doPodMethod == '3pl'
-      ? (doPod.partnerLogisticId = payload.partnerLogisticId || null)
-      : (doPod.partnerLogisticId = null);
-    // doPod.partnerLogisticId = payload.partnerLogisticId || null;
-    doPod.branchIdTo = payload.branchIdTo || null;
-
-    // doPod.userIdDriver = payload.
-    doPod.userIdDriver = payload.userIdDriver || null;
     doPod.doPodDateTime = doPodDateTime;
-
+    doPod.branchId = permissonPayload.branchId;
+    doPod.partnerLogisticId = payload.partnerLogisticId || null;
+    doPod.branchIdTo = payload.branchIdTo || null;
+    doPod.userIdDriver = payload.userIdDriver || null;
     doPod.vehicleNumber = payload.vehicleNumber || null;
     doPod.description = payload.desc || null;
 
-    doPod.branchId = permissonPayload.branchId;
-    // doPod.userId = authMeta.userId;
-
+    // save if image exist
     if (payload.base64Image) {
       const attachment = await AttachmentService.uploadFileBase64(
         payload.base64Image,
@@ -120,6 +114,9 @@ export class WebDeliveryOutService {
       if (attachment) {
         doPod.photoId = attachment.attachmentTmsId;
       }
+    }
+
+    if (statusPodTypeHub.includes(payload.doPodType)) {
       doPod.transactionStatusId = 300; // HUB
     } else {
       doPod.transactionStatusId = 800; // BRANCH
@@ -127,7 +124,6 @@ export class WebDeliveryOutService {
 
     // await for get do pod id
     await this.doPodRepository.save(doPod);
-
     await this.createAuditHistory(doPod.doPodId, false);
 
     // Populate return value
@@ -164,8 +160,10 @@ export class WebDeliveryOutService {
     // For printDoPodBagMetadata and printDoPodMetadata
     result.printDoPodBagMetadata.doPodCode = doPod.doPodCode;
     result.printDoPodBagMetadata.description = payload.desc;
-    result.printDoPodBagMetadata.userDriver.employee.nik = dataUser[0].nik;
-    result.printDoPodBagMetadata.userDriver.employee.nickname = dataUser[0].nickname;
+    if (dataUser) {
+      result.printDoPodBagMetadata.userDriver.employee.nik = dataUser[0].nik;
+      result.printDoPodBagMetadata.userDriver.employee.nickname = dataUser[0].nickname;
+    }
     result.printDoPodBagMetadata.vehicleNumber = payload.vehicleNumber;
     result.printDoPodBagMetadata.branchTo.branchName = branchData.branchName;
 
@@ -740,7 +738,7 @@ export class WebDeliveryOutService {
 
             // NOTE: handle sorting status OUT AND IN HUB
             // force OUT_HUB created after IN_HUB in history bag (queue)
-            if(bagStatus == BAG_STATUS.OUT_HUB){
+            if (bagStatus == BAG_STATUS.OUT_HUB) {
               additionMinutes = 1;
             }
 
@@ -886,7 +884,7 @@ export class WebDeliveryOutService {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB));
       // q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     } else if (isHubTransit) {
-      q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.HUB_TRANSIT));
+      q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB_TRANSIT));
       // q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     } else {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
@@ -1682,7 +1680,7 @@ export class WebDeliveryOutService {
 
   async photoDetail(payload: PhotoDetailVm): Promise<PhotoResponseVm> {
     let q = createQueryBuilder();
-    q.addSelect("dpdd.awb_number", "awbNumber");
+    q.addSelect('dpdd.awb_number', 'awbNumber');
     q.from('do_pod_deliver_detail', 'dpdd');
     q.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
       doPodDeliverDetailId: payload.doPodDeliverDetailId,
@@ -1690,16 +1688,16 @@ export class WebDeliveryOutService {
     let temp = await q.getRawOne();
 
     q = createQueryBuilder();
-    q.addSelect("dpdd.do_pod_deliver_id", "doPodDeliverId");
+    q.addSelect('dpdd.do_pod_deliver_id', 'doPodDeliverId');
     q.from('do_pod_deliver_detail', 'dpdd');
     q.where('dpdd.awb_number = :awbNumber', {
       awbNumber: temp.awbNumber,
     });
     temp = await q.getRawMany();
 
-    let id = "";
-    temp.map(function(item){
-      id += id ? ",'"+item.doPodDeliverId+"'" : "'"+item.doPodDeliverId+"'";
+    let id = '';
+    temp.map(function(item) {
+      id += id ? ',\'' + item.doPodDeliverId + '\'' : '\'' + item.doPodDeliverId + '\'';
     });
     const qq = createQueryBuilder();
     qq.addSelect('attachments.url', 'url');

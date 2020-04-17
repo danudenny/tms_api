@@ -50,6 +50,7 @@ import { V1MobileInitController } from './mobile/v1/mobile-init.controller';
 import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
 import { WebHubController } from './web/web-hub.controller';
 import { V1MobileAttendanceController } from './mobile/v1/mobile-attendance.controller';
+import { V1WebTrackingController } from './web/v1/web-tracking.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -104,6 +105,7 @@ import { V1MobileAttendanceController } from './mobile/v1/mobile-attendance.cont
     V1MobileSyncController,
     V1MobileAttendanceController,
     WebHubController,
+    V1WebTrackingController,
   ],
 })
 export class MainServerControllersModule {}
