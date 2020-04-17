@@ -7,6 +7,9 @@ import {
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
+import { PhotoDetailVm } from '../../../models/bag-order-response.vm';
+import { PhotoResponseVm } from '../../../models/bag-order-detail-response.vm';
+import { createQueryBuilder } from 'typeorm';
 
 export class V1WebTrackingService {
   static async awb(
@@ -95,6 +98,31 @@ export class V1WebTrackingService {
     const result = new AwbSubstituteResponseVm();
     result.data  = data;
     result.buildPaging(payload.page, payload.limit, total);
+    return result;
+  }
+
+  static async getPhotoDetail(payload: PhotoDetailVm) {
+    const qq = createQueryBuilder();
+    qq.addSelect('attachments.url', 'url');
+    qq.addSelect('dpda.type', 'type');
+    qq.addSelect('dpdd.awb_number', 'awbNumber');
+    qq.from('do_pod_deliver_attachment', 'dpda');
+    qq.innerJoin(
+      'do_pod_deliver_detail',
+      'dpdd',
+      'dpdd.do_pod_deliver_detail_id = dpda.do_pod_deliver_detail_id AND dpdd.is_deleted = false',
+    );
+    qq.innerJoin(
+      'attachment_tms',
+      'attachments',
+      'attachments.attachment_tms_id = dpda.attachment_tms_id ',
+    );
+    qq.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
+      doPodDeliverDetailId: payload.doPodDeliverDetailId,
+    });
+
+    const result = new PhotoResponseVm();
+    result.data = await qq.getRawMany();
     return result;
   }
 
