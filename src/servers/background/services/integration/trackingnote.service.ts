@@ -102,7 +102,7 @@ export class TrackingNoteService {
               request.input('IsPublic', sql.Bit, isPublic);
 
               request.query(`
-                insert into TmsTrackingNote (
+                insert into TmsTrackingNoteStaging (
                   AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, NoteInternal, NotePublic, NoteTms, UsrCrt, UsrUpd, DtmCrt, DtmUpd, ReceiverName, IsPublic
                   )
                 values (
