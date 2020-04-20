@@ -402,6 +402,7 @@ export class PartnerGojekService {
         doPodDeliverDetail.awbStatusIdLast       = status;
         doPodDeliverDetail.awbStatusDateTimeLast = moment().toDate();
         doPodDeliverDetail.updatedTime           = moment().toDate();
+        doPodDeliverDetail.consigneeName         = payload.receiver_name;
         doPodDeliverDetail.save();
 
         // NOTE: Insert to do pod deliver detail history
@@ -417,18 +418,29 @@ export class PartnerGojekService {
         await DoPodDeliverHistory.insert(doPodDeliverHistory);
 
         // NOTE: Create job for update awb history
+        const doPodDeliver = await DoPodDeliver.findOne({ doPodDeliverId: doPodAttr.doPodDeliverId });
         if (payload.type === 'PICKED_UP') {
           DoPodDetailPostMetaQueueService.createJobByAwbDeliverPartner(
             doPodDeliverDetail.awbItemId,
             status,
-            null,
-            3,
+            doPodDeliver.branchId,
+            3, // NOTE: SUPERADMIN USER
             null,
             payload.driver_name,
             'Gojek',
           );
         } else if (payload.type === 'COMPLETED') {
           // NOTES: UPDATE AWB HISTORY TO DLV
+            const desc = 'Dikirim oleh Gojek';
+            DoPodDetailPostMetaQueueService.createJobByManualSyncPartner(
+              doPodDeliverDetail.awbItemId,
+              status,
+              doPodDeliver.branchId,
+              3, // NOTE: SUPERADMIN USER
+              3, // NOTE: SUPERADMIN USER
+              desc,
+              payload.receiver_name,
+            );
         }
       }
     }
