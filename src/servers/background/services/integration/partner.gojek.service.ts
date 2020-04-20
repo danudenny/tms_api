@@ -21,6 +21,9 @@ import { DoPodAttr } from '../../../../shared/orm-entity/do-pod-attr';
 import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 import { DoPodDeliverHistory } from '../../../../shared/orm-entity/do-pod-deliver-history';
+import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 
 export class PartnerGojekService {
 
@@ -68,9 +71,6 @@ export class PartnerGojekService {
     result.response = null;
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-
-
-
 
     const pickupDetail = await PickupRequestDetail.findOne({
       where: {
@@ -191,18 +191,17 @@ export class PartnerGojekService {
   static async createBookingDelivery(
     payload: GojekBookingPodVm,
   ): Promise<GojekBookingPodResponseVm> {
-    const result = new GojekBookingPodResponseVm();
-    result.status = 'failed';
-    result.message = `Layanan tidak bisa digunakan saat ini`;
-    result.data = null;
-    result.response = null;
-    const authMeta = AuthService.getAuthData();
+    const result           = new GojekBookingPodResponseVm();
+    result.status          = 'failed';
+    result.message         = `Layanan tidak bisa digunakan saat ini`;
+    result.data            = null;
+    result.response        = null;
+    const authMeta         = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const branch = await Branch.findOne({
       where: {
-        branchId: permissonPayload.branchId,
-        // branchId : 3,
+        branchId : permissonPayload.branchId,
         isDeleted: false,
       }
     });
@@ -210,14 +209,14 @@ export class PartnerGojekService {
     // NOTE: Check do pod deliver id and awb item id valid or not
     const doPodDeliver = await DoPodDeliver.findOne({
       where: {
-        awbItemId: payload.awbItemId,
+        awbItemId     : payload.awbItemId,
         doPodDeliverId: payload.doPodDeliverId,
       }
     });
 
     // NOTE: Check if do pod deliver right data
     if (!doPodDeliver) {
-      result.status = 'failed';
+      result.status  = 'failed';
       result.message = 'Data tidak sesuai';
       await this.deleteDoPodDeliver(payload.doPodDeliverId, authMeta.userId);
       return result;
@@ -228,13 +227,13 @@ export class PartnerGojekService {
       const data = new GojekBookingPayloadVm();
       if (branch.latitude && branch.longitude) {
         // NOTE: Origin Data
-        data.originAddress = branch.address;
+        data.originAddress      = branch.address;
         data.originContactPhone = branch.phone1;
-        data.originContactName = branch.branchName;
-        data.originLatLong = `${branch.latitude},${branch.longitude}`;
+        data.originContactName  = branch.branchName;
+        data.originLatLong      = `${branch.latitude},${branch.longitude}`;
 
         if (!data.originContactPhone) {
-          result.status = 'failed';
+          result.status  = 'failed';
           result.message = 'Data gerai tidak lengkap, gerai tidak memiliki data no telpon';
           await this.deleteDoPodDeliver(payload.doPodDeliverId, authMeta.userId);
           return result;
@@ -244,56 +243,54 @@ export class PartnerGojekService {
         if (pickReqDetail) {
           if (pickReqDetail.recipientLatitude && pickReqDetail.recipientLongitude) {
             // NOTE: Destination Data
-            data.destinationContactName = pickReqDetail.recipientName;
-            data.destinationAddress = pickReqDetail.recipientAddress;
-            data.destinationLatLong = `${pickReqDetail.recipientLatitude},${pickReqDetail.recipientLongitude}`;
+            data.destinationContactName  = pickReqDetail.recipientName;
+            data.destinationAddress      = pickReqDetail.recipientAddress;
+            data.destinationLatLong      = `${pickReqDetail.recipientLatitude},${pickReqDetail.recipientLongitude}`;
             data.destinationContactPhone = pickReqDetail.recipientPhone;
-            data.item = pickReqDetail.parcelCategory;
-            const calculate = await this.getEstimatePrice(data.originLatLong, data.destinationLatLong);
+            data.item                    = pickReqDetail.parcelCategory;
+            const calculate              = await this.getEstimatePrice(data.originLatLong, data.destinationLatLong);
             if (calculate) {
               const shipmentMethod = calculate[this.shipmentMethodGojek];
-              if (shipmentMethod.serviceable) {
+              if (shipmentMethod['serviceable']) {
                 const requestGojek = await this.createBooking(data);
                 if (requestGojek) {
                   const detailData = {
                     response: requestGojek,
-                    userId: authMeta.userId,
+                    userId  : authMeta.userId,
                     branchId: permissonPayload.branchId,
-                    // userId  : 3,
-                    // branchId: 3,
                     payload,
                   };
                   failed = false;
                   await this.responProcessForPod(detailData);
-                  result.data = data;
+                  result.data     = data;
                   result.response = requestGojek;
-                  result.status = 'ok';
-                  result.message = 'success';
+                  result.status   = 'ok';
+                  result.message  = 'success';
                 }
               } else {
-                result.status = 'failed';
+                result.status  = 'failed';
                 result.message = `Tidak bisa digunakan di daerah Anda`;
               }
             }
           } else {
             // NOTE: destination does not have latitude and longitude
-            result.status = 'failed';
+            result.status  = 'failed';
             result.message = 'Alamat pengiriman resi tidak memiliki data latitude dan longitude';
           }
         } else {
           // NOTE: AWB Item Not found in table pickup request detail
-          result.status = 'failed';
+          result.status  = 'failed';
           result.message = 'No resi tidak ditemukan';
         }
       } else {
         // NOTE: branch does not have latitude or longitude
-        result.status = 'failed';
+        result.status  = 'failed';
         result.message = 'Gerai tidak memiliki data latitude dan longitude';
       }
 
     } else {
       // NOTE: branch not found
-      result.status = 'failed';
+      result.status  = 'failed';
       result.message = 'Gerai tidak ditemukan';
     }
 
@@ -308,8 +305,8 @@ export class PartnerGojekService {
     await DoPodDeliver.update(
       doPodDeliverId,
       {
-        isDeleted: true,
-        updatedTime: moment().toDate(),
+        isDeleted    : true,
+        updatedTime  : moment().toDate(),
         userIdUpdated: userId,
       },
     );
@@ -317,11 +314,11 @@ export class PartnerGojekService {
 
   static async cancelBookingDelivery(payload: GojekCancelBookingVm) {
     const doPodAttr = await DoPodAttr.findOne({ where: { refOrderNo: payload.orderNo } });
-    const authMeta = AuthService.getAuthData();
+    const authMeta  = AuthService.getAuthData();
     if (doPodAttr) {
       if (doPodAttr.refType === 'CUSTOMER_CANCELLED' || doPodAttr.refType === 'DRIVER_NOT_FOUND') {
         const result = {
-          status: 'ok',
+          status : 'ok',
           message: 'No order sudah dibatalkan',
         };
         return result;
@@ -334,19 +331,17 @@ export class PartnerGojekService {
             doPodDeliverId: doPodAttr.doPodDeliverId,
           },
             {
-              awbStatusIdLast: 14900,
+              awbStatusIdLast      : 14900,
               awbStatusDateTimeLast: moment().toDate(),
-              userIdUpdated: authMeta.userId,
-              // userIdUpdated        : 3,
-              updatedTime: moment().toDate(),
+              userIdUpdated        : authMeta.userId,
+              updatedTime          : moment().toDate(),
             });
 
-          doPodAttr.refType = 'CUSTOMER_CANCELLED';
-          doPodAttr.updatedTime = moment().toDate();
-          doPodAttr.userIdUpdated = authMeta.userId;
-          // doPodAttr.userIdUpdated        = 3;
+          doPodAttr.refType              = 'CUSTOMER_CANCELLED';
+          doPodAttr.updatedTime          = moment().toDate();
+          doPodAttr.userIdUpdated        = authMeta.userId;
           doPodAttr.refOrderDispatchTime = moment().toDate();
-          doPodAttr.refStatus = 'cancelled';
+          doPodAttr.refStatus            = 'cancelled';
           doPodAttr.save();
         }
         return response;
@@ -371,23 +366,23 @@ export class PartnerGojekService {
     if (doPodAttr) {
       const eventDate = moment(payload.event_date).toDate();
       // NOTE: Update status
-      doPodAttr.refBookingType = payload.booking_type;
-      doPodAttr.refStatus = payload.status;
-      doPodAttr.refReceiverName = payload.receiver_name;
-      doPodAttr.refLiveTrackingUrl = payload.live_tracking_url;
+      doPodAttr.refBookingType        = payload.booking_type;
+      doPodAttr.refStatus             = payload.status;
+      doPodAttr.refReceiverName       = payload.receiver_name;
+      doPodAttr.refLiveTrackingUrl    = payload.live_tracking_url;
       doPodAttr.refCancellationReason = payload.cancellation_reason;
-      doPodAttr.refCancelledBy = payload.cancelled_by;
+      doPodAttr.refCancelledBy        = payload.cancelled_by;
       doPodAttr.refTotalDistanceInKms = payload.total_distance_in_kms;
-      doPodAttr.refDriverName = payload.driver_name;
-      doPodAttr.refDriverPhone = payload.driver_phone;
-      doPodAttr.refDriverPhone2 = payload.driver_phone2;
-      doPodAttr.refType = payload.type;
-      doPodAttr.refDriverPhone3 = payload.driver_phone3;
-      doPodAttr.refDriverPhotoUrl = payload.driver_photo_url;
-      doPodAttr.refDeliveryEta = payload.delivery_eta;
-      doPodAttr.refPickupEta = payload.pickup_eta;
-      doPodAttr.updatedTime = moment().toDate();
-      doPodAttr.userIdUpdated = 3;
+      doPodAttr.refDriverName         = payload.driver_name;
+      doPodAttr.refDriverPhone        = payload.driver_phone;
+      doPodAttr.refDriverPhone2       = payload.driver_phone2;
+      doPodAttr.refType               = payload.type;
+      doPodAttr.refDriverPhone3       = payload.driver_phone3;
+      doPodAttr.refDriverPhotoUrl     = payload.driver_photo_url;
+      doPodAttr.refDeliveryEta        = payload.delivery_eta;
+      doPodAttr.refPickupEta          = payload.pickup_eta;
+      doPodAttr.updatedTime           = moment().toDate();
+      doPodAttr.userIdUpdated         = 3;
 
       if (payload.type === 'CREATED') {
         doPodAttr.refOrderCreatedTime = eventDate;
@@ -404,22 +399,49 @@ export class PartnerGojekService {
         doPodDeliverId: doPodAttr.doPodDeliverId,
       });
       if (doPodDeliverDetail) {
-        doPodDeliverDetail.awbStatusIdLast = status;
+        doPodDeliverDetail.awbStatusIdLast       = status;
         doPodDeliverDetail.awbStatusDateTimeLast = moment().toDate();
-        doPodDeliverDetail.updatedTime = moment().toDate();
+        doPodDeliverDetail.updatedTime           = moment().toDate();
+        doPodDeliverDetail.consigneeName         = payload.receiver_name;
         doPodDeliverDetail.save();
 
         // NOTE: Insert to do pod deliver detail history
-        const doPodDeliverHistory = DoPodDeliverHistory.create();
+        const doPodDeliverHistory                = DoPodDeliverHistory.create();
         doPodDeliverHistory.doPodDeliverDetailId = doPodDeliverDetail.doPodDeliverDetailId;
-        doPodDeliverHistory.awbStatusId = status;
-        doPodDeliverHistory.awbStatusDateTime = moment().toDate();
-        doPodDeliverHistory.historyDateTime = moment().toDate();
-        doPodDeliverHistory.userIdCreated = 3; // superadmin
-        doPodDeliverHistory.userIdUpdated = 3; // superadmin
-        doPodDeliverHistory.createdTime = moment().toDate();
-        doPodDeliverHistory.updatedTime = moment().toDate();
+        doPodDeliverHistory.awbStatusId          = status;
+        doPodDeliverHistory.awbStatusDateTime    = moment().toDate();
+        doPodDeliverHistory.historyDateTime      = moment().toDate();
+        doPodDeliverHistory.userIdCreated        = 3; // superadmin
+        doPodDeliverHistory.userIdUpdated        = 3; // superadmin
+        doPodDeliverHistory.createdTime          = moment().toDate();
+        doPodDeliverHistory.updatedTime          = moment().toDate();
         await DoPodDeliverHistory.insert(doPodDeliverHistory);
+
+        // NOTE: Create job for update awb history
+        const doPodDeliver = await DoPodDeliver.findOne({ doPodDeliverId: doPodAttr.doPodDeliverId });
+        if (payload.type === 'PICKED_UP') {
+          DoPodDetailPostMetaQueueService.createJobByAwbDeliverPartner(
+            doPodDeliverDetail.awbItemId,
+            status,
+            doPodDeliver.branchId,
+            3, // NOTE: SUPERADMIN USER
+            null,
+            payload.driver_name,
+            'Gojek',
+          );
+        } else if (payload.type === 'COMPLETED') {
+          // NOTES: UPDATE AWB HISTORY TO DLV
+            const desc = 'Dikirim oleh Gojek';
+            DoPodDetailPostMetaQueueService.createJobByManualSyncPartner(
+              doPodDeliverDetail.awbItemId,
+              status,
+              doPodDeliver.branchId,
+              3, // NOTE: SUPERADMIN USER
+              3, // NOTE: SUPERADMIN USER
+              desc,
+              payload.receiver_name,
+            );
+        }
       }
     }
   }
@@ -431,27 +453,27 @@ export class PartnerGojekService {
     payload: GojekBookingPodVm
   }) {
     // NOTE: Insert to order partner
-    const orderPartner = OrderPartner.create();
-    orderPartner.partnerId = data.payload.partnerId;
-    orderPartner.orderNo = data.response.orderNo;
-    orderPartner.isDelivery = true;
-    orderPartner.isPickup = false;
+    const orderPartner         = OrderPartner.create();
+    orderPartner.partnerId     = data.payload.partnerId;
+    orderPartner.orderNo       = data.response.orderNo;
+    orderPartner.isDelivery    = true;
+    orderPartner.isPickup      = false;
     orderPartner.userIdCreated = data.userId;
     orderPartner.userIdUpdated = data.userId;
-    orderPartner.updatedTime = moment().toDate();
-    orderPartner.createdTime = moment().toDate();
+    orderPartner.updatedTime   = moment().toDate();
+    orderPartner.createdTime   = moment().toDate();
     await OrderPartner.insert(orderPartner);
 
     // NOTE: Insert to do pod attr
-    const doPodAttr = DoPodAttr.create();
-    doPodAttr.refOrderNo = data.response.orderNo;
-    doPodAttr.partnerId = data.payload.partnerId;
-    doPodAttr.branchId = data.branchId;
+    const doPodAttr          = DoPodAttr.create();
+    doPodAttr.refOrderNo     = data.response.orderNo;
+    doPodAttr.partnerId      = data.payload.partnerId;
+    doPodAttr.branchId       = data.branchId;
     doPodAttr.doPodDeliverId = data.payload.doPodDeliverId;
-    doPodAttr.createdTime = moment().toDate();
-    doPodAttr.updatedTime = moment().toDate();
-    doPodAttr.userIdCreated = data.userId;
-    doPodAttr.userIdUpdated = data.userId;
+    doPodAttr.createdTime    = moment().toDate();
+    doPodAttr.updatedTime    = moment().toDate();
+    doPodAttr.userIdCreated  = data.userId;
+    doPodAttr.userIdUpdated  = data.userId;
     await DoPodAttr.insert(doPodAttr);
 
   }
@@ -476,7 +498,7 @@ export class PartnerGojekService {
           this.updateStatusDoPodDeliver(payload, 14950);
           break;
         case 'PICKED_UP':
-          this.updateStatusDoPodDeliver(payload, 14600);
+          this.updateStatusDoPodDeliver(payload, AWB_STATUS.ANT);
           break;
         case 'DRIVER_NOT_FOUND':
           this.updateStatusDoPodDeliver(payload, 14800);
@@ -485,7 +507,7 @@ export class PartnerGojekService {
           this.updateStatusDoPodDeliver(payload, 14900);
           break;
         case 'COMPLETED':
-          this.updateStatusDoPodDeliver(payload, 30000);
+          this.updateStatusDoPodDeliver(payload, AWB_STATUS.DLV);
           break;
         default:
           PinoLoggerService.log(payload);
