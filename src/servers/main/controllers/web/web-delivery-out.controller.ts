@@ -269,7 +269,7 @@ export class WebDeliveryOutController {
   @Post('transit/updateAwb')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutTransitUpdateAwbPartnerResponseVm })
   public async updateAwbPartner(@Body() payload: UpdateAwbPartnerPayloadVm) {
     return this.webDeliveryOutService.updateAwbPartner(payload);

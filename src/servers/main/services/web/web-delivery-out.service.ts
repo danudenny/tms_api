@@ -65,6 +65,7 @@ import { BagTroubleService } from '../../../../shared/services/bag-trouble.servi
 import { Employee } from '../../../../shared/orm-entity/employee';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { BagScanOutHubQueueService } from '../../../queue/services/bag-scan-out-hub-queue.service';
+import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
 // #endregion
 
 @Injectable()
@@ -1726,10 +1727,11 @@ export class WebDeliveryOutService {
 
   async updateAwbPartner(payload: UpdateAwbPartnerPayloadVm):
     Promise<WebScanOutTransitUpdateAwbPartnerResponseVm> {
-    const result   = new WebScanOutTransitUpdateAwbPartnerResponseVm();
-    result.status  = 'ok';
-    result.message = 'success';
-    const authMeta = AuthService.getAuthData();
+    const result           = new WebScanOutTransitUpdateAwbPartnerResponseVm();
+    result.status          = 'ok';
+    result.message         = 'success';
+    const authMeta         = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const doPodDetail = await DoPodDetail.findOne({ doPodDetailId: payload.doPodDetailId });
     if (doPodDetail) {
@@ -1737,6 +1739,26 @@ export class WebDeliveryOutService {
       doPodDetail.updatedTime   = moment().toDate();
       doPodDetail.userIdUpdated = authMeta.userId;
       await doPodDetail.save();
+
+      // NOTE: INSERT TO AWB HISTORY
+      const doPod = await DoPod.findOne({ doPodId: doPodDetail.doPodId });
+      if (doPod.partnerLogisticId) {
+        let partnerLogisticName = '';
+        if (doPod.partnerLogisticName) {
+          partnerLogisticName = doPod.partnerLogisticName;
+        } else {
+          const partnerLogistic = await PartnerLogistic.findOne({ partnerLogisticId: doPod.partnerLogisticId });
+          partnerLogisticName = partnerLogistic.partnerLogisticName;
+        }
+        DoPodDetailPostMetaQueueService.createJobByTransitPartnerAwb(
+          doPodDetail.awbItemId,
+          AWB_STATUS.THP,
+          permissonPayload.branchId,
+          authMeta.userId,
+          partnerLogisticName,
+          payload.awbSubstitute,
+        );
+      }
     } else {
       result.status  = 'error';
       result.message = 'Data tidak ditemukan';
