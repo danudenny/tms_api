@@ -177,6 +177,7 @@ export class HubTransitDeliveryInService {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchName'] = 't2.branch_name';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'branchName';
