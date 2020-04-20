@@ -47,22 +47,23 @@ export class RolePermissionService {
     }
 
     const rolePermissions: RolePermission[] = [];
+    const appName = 'POD'; // set appName role permission
 
     for (const rolePermissionName of rolesAccessPermissions) {
       const rolePermission = RepositoryService.rolePermission.manager.create(RolePermission, {
         role_id: roleId,
         nav: rolePermissionName,
         name: rolePermissionName,
+        app_name: appName,
       });
       rolePermissions.push(rolePermission);
     }
-
     await getConnection().transaction(async entityManager => {
       await entityManager
         .createQueryBuilder()
         .delete()
         .from(RolePermission)
-        .where('role_id = :roleId', { roleId })
+        .where('role_id = :roleId AND app_name = :appName', { roleId, appName })
         .execute();
 
       await entityManager
