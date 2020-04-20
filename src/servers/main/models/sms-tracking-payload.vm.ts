@@ -14,7 +14,7 @@ export class SmsTrackingStorePayloadVm {
     example: ['Sender', 'Recepient'],
   })
   @IsDefined({ message: `Label Penerima harus 'Sender' atau 'Recepient'` })
-  sentTo: 'Sender' | 'Recepient';
+  sentTo: string;
 }
 
 export class SmsTrackingListPayloadVm extends BaseMetaPayloadVm {}
