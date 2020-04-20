@@ -1,12 +1,17 @@
-import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import {
   TrackingAwbPayloadVm,
-  TrackingBagPayloadVm,
   TrackingAwbResponseVm,
-  TrackingBagResponseVm,
-} from '../../models/tracking.vm';
+  AwbSubstituteResponseVm,
+} from '../../../models/tracking.vm';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
+import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
+import { PhotoDetailVm } from '../../../models/bag-order-response.vm';
+import { PhotoResponseVm } from '../../../models/bag-order-detail-response.vm';
+import { createQueryBuilder } from 'typeorm';
 
-export class WebTrackingService {
+export class V1WebTrackingService {
   static async awb(
     payload: TrackingAwbPayloadVm,
   ): Promise<TrackingAwbResponseVm> {
@@ -42,15 +47,11 @@ export class WebTrackingService {
       result.partnerLogisticAwb        = data.partnerLogisticAwb;
       result.partnerLogisticName       = data.partnerLogisticName;
       result.doPodDeliverDetailId      = data.doPodDeliverDetailId;
-      // hardcode set photo reveiver only status DLV
-      result.isHasPhotoReceiver        = data.awbStatusLast == 'DLV' ? true : false;
+      // set photo reveiver only have doPodDeliverDetailId
+      result.isHasPhotoReceiver        = data.doPodDeliverDetailId ? true : false;
       result.returnAwbNumber           = data.returnAwbNumber;
-      result.awbSubstitute             = ''; // set default
-      result.partnerLogisticSubstitute = ''; // set default
       result.doReturnAwb               = data.doReturnAwb;
       result.isDoReturnPartner         = data.isDoReturnPartner;
-      // TODO: get data image awb number
-      // relation to do pod deliver
 
       const history = await this.getRawAwbHistory(data.awbItemId);
       if (history && history.length) {
@@ -60,27 +61,68 @@ export class WebTrackingService {
     return result;
   }
 
-  static async bag(
-    payload: TrackingBagPayloadVm,
-  ): Promise<TrackingBagResponseVm> {
-    const result = new TrackingBagResponseVm();
-    const data = await this.getRawBag(payload.bagNumber);
-    if (data) {
-      result.bagNumber         = data.bagNumber;
-      result.weight            = data.weight;
-      result.bagItemId         = data.bagItemId;
-      result.bagItemStatusId   = data.bagItemStatusId;
-      result.bagItemStatusName = data.bagItemStatusName;
-      result.branchCodeLast    = data.branchCodeLast;
-      result.branchNameLast    = data.branchNameLast;
-      result.branchCodeNext    = data.branchCodeNext;
-      result.branchNameNext    = data.branchNameNext;
-      const history = await this.getRawBagHistory(data.bagItemId);
-      if (history && history.length) {
-        result.bagHistory = history;
-      }
-    }
-    // result.bagHistory =
+  static async getAwbSubstitute(payload: BaseMetaPayloadVm): Promise <AwbSubstituteResponseVm> {
+    payload.fieldResolverMap['awbSubstitute']     = 't1.awbSubstitute';
+    payload.fieldResolverMap['awbNumber']         = 't1.awb_number';
+    payload.fieldResolverMap['awbItemId']         = 't1.awb_item_id';
+    payload.fieldResolverMap['awbSubstituteType'] = '"awbSubstituteType"';
+
+    const repo = new OrionRepositoryService(DoPodDetail, 't1');
+    const q    = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_substitute', 'awbSubstitute'],
+      ['t1.do_pod_detail_id', 'doPodDetailId'],
+      [`
+        CASE
+          WHEN t2.partner_logistic_name IS NOT NULL THEN t2.partner_logistic_name
+          WHEN t2.partner_logistic_id IS NOT NULL THEN t3.partner_logistic_name
+          ELSE
+            'Internal'
+        END
+      `, 'awbSubstituteType'],
+    );
+    q.innerJoin(e => e.doPod, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doPod.partnerLogistic, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhereRaw('t1.awb_substitute IS NOT NULL');
+
+    const data   = await q.exec();
+    const total  = await q.countWithoutTakeAndSkip();
+
+    const result = new AwbSubstituteResponseVm();
+    result.data  = data;
+    result.buildPaging(payload.page, payload.limit, total);
+    return result;
+  }
+
+  static async getPhotoDetail(payload: PhotoDetailVm) {
+    const qq = createQueryBuilder();
+    qq.addSelect('attachments.url', 'url');
+    qq.addSelect('dpda.type', 'type');
+    qq.addSelect('dpdd.awb_number', 'awbNumber');
+    qq.from('do_pod_deliver_attachment', 'dpda');
+    qq.innerJoin(
+      'do_pod_deliver_detail',
+      'dpdd',
+      'dpdd.do_pod_deliver_detail_id = dpda.do_pod_deliver_detail_id AND dpdd.is_deleted = false',
+    );
+    qq.innerJoin(
+      'attachment_tms',
+      'attachments',
+      'attachments.attachment_tms_id = dpda.attachment_tms_id ',
+    );
+    qq.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
+      doPodDeliverDetailId: payload.doPodDeliverDetailId,
+    });
+
+    const result = new PhotoResponseVm();
+    result.data = await qq.getRawMany();
     return result;
   }
 
@@ -153,7 +195,8 @@ export class WebTrackingService {
         LEFT JOIN bag ba ON ba.bag_id = bi.bag_id AND ba.is_deleted = false
         LEFT JOIN bagging bg ON bg.bagging_id = bi.bagging_id_last AND bg.is_deleted = false
         LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
-        LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id AND dpd.is_deleted = false
+        LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id
+          AND dpd.awb_status_id_last <> 14000 AND dpd.is_deleted = false
         LEFT JOIN awb_return ar ON ar.origin_awb_id = ai.awb_id AND ar.is_deleted = false
       WHERE a.awb_number = :awbNumber
       AND a.is_deleted = false LIMIT 1;
@@ -166,6 +209,7 @@ export class WebTrackingService {
   }
 
   private static async getRawAwbHistory(awbItemId: number): Promise<any> {
+    // find awb item attr where awb number
     const query = `
       SELECT
         ah.awb_status_id as "awbStatusId",
@@ -194,56 +238,4 @@ export class WebTrackingService {
     return await RawQueryService.queryWithParams(query, { awbItemId });
   }
 
-  private static async getRawBag(bagNumberSeq: string): Promise<any> {
-    const regexNumber = /^[0-9]+$/;
-    if (regexNumber.test(bagNumberSeq.substring(7, 10))) {
-      const bagNumber: string = bagNumberSeq.substring(0, 7);
-      const seqNumber: number = Number(bagNumberSeq.substring(7, 10));
-      const query = `
-        SELECT
-          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as "bagNumber",
-          bi.weight::numeric(10,2) as weight,
-          bi.bag_item_id as "bagItemId",
-          bis.bag_item_status_id as "bagItemStatusId",
-          bis.bag_item_status_name as "bagItemStatusName",
-          blast.branch_code as "branchCodeLast",
-          blast.branch_name as "branchNameLast",
-          bto.branch_code as "branchCodeNext",
-          bto.branch_name as "branchNameNext"
-        FROM bag b
-        INNER JOIN bag_item bi ON b.bag_id = bi.bag_id AND bi.is_deleted = false
-        LEFT JOIN bag_item_status bis ON bi.bag_item_status_id_last = bis.bag_item_status_id AND bis.is_deleted = false
-        LEFT JOIN branch blast ON bi.branch_id_last = blast.branch_id AND blast.is_deleted = false
-        LEFT JOIN branch bto ON bi.branch_id_next = bto.branch_id AND bto.is_deleted = false
-        WHERE b.bag_number = :bagNumber AND bi.bag_seq = :seqNumber LIMIT 1
-      `;
-      const rawData = await RawQueryService.queryWithParams(query, {
-        bagNumber,
-        seqNumber,
-      });
-      return rawData ? rawData[0] : null;
-    } else {
-      return null;
-    }
-  }
-
-  private static async getRawBagHistory(bagItemId: number): Promise<any> {
-    const query = `
-      SELECT
-        bh.bag_item_history_id,
-        bh.bag_item_status_id as "bagItemStatusId",
-        ast.bag_item_status_name as "bagItemStatusName",
-        bh.history_date as "historyDate",
-        b.branch_name as "branchName",
-        u.username
-      FROM bag_item_history bh
-        LEFT JOIN branch b ON b.branch_id = bh.branch_id
-        LEFT JOIN users u ON u.user_id = bh.user_id
-        LEFT JOIN bag_item_status ast ON ast.bag_item_status_id = bh.bag_item_status_id
-      WHERE bh.bag_item_id = :bagItemId
-      AND bh.is_deleted = false
-      ORDER BY bh.history_date DESC
-    `;
-    return await RawQueryService.queryWithParams(query, { bagItemId });
-  }
 }

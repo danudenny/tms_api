@@ -7,60 +7,31 @@ import { TmsBaseEntity } from './tms-base';
 export class RolePermission extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
   })
   role_permission_id: string;
 
   @Column('bigint', {
     nullable: false,
-
   })
   role_id: number;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
   })
   nav: string;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
   })
   name: string | null;
 
-  // @Column('bigint', {
-  //   nullable: false,
-
-  // })
-  // user_id_created: string;
-
-  // @Column('timestamp without time zone', {
-  //   nullable: false,
-
-  // })
-  // created_time: Date;
-
-  // @Column('bigint', {
-  //   nullable: false,
-
-  // })
-  // user_id_updated: string;
-
-  // @Column('timestamp without time zone', {
-  //   nullable: false,
-
-  // })
-  // updated_time: Date;
-
-  // @Column('boolean', {
-  //   nullable: false,
-  //   default: () => 'false',
-
-  // })
-  // is_deleted: boolean;
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+  })
+  app_name: string | null;
 
   @ManyToOne(() => Role, e => e.rolePermissions)
   @JoinColumn({ name: 'role_id' })
