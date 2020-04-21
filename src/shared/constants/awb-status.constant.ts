@@ -14,4 +14,5 @@ export const AWB_STATUS = {
   BROKE: 24000,
   RTN: 24500,
   RTS: 25000,
+  THP: 28500,
 };

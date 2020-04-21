@@ -18,7 +18,6 @@ export class WebScanInResponseVm {
 
   @ApiModelProperty()
   scanInStatus: string;
-
 }
 
 export class WebScanInBranchResponseVm {
@@ -42,7 +41,6 @@ export class WebScanInBranchResponseVm {
 
   @ApiModelProperty()
   weight: string;
-
 }
 
 export class WebScanInBranchBagResponseVm {
@@ -59,7 +57,7 @@ export class WebScanInBranchBagResponseVm {
   branchNameFrom: string;
 
   @ApiModelProperty()
-   branchId: string;
+  branchId: string;
 
   @ApiModelProperty()
   representativeCode: string;
@@ -81,7 +79,6 @@ export class WebScanInBranchBagResponseVm {
 
   @ApiModelProperty()
   weight: string;
-
 }
 
 export class WebScanInBranchAwbResponseVm {
@@ -114,7 +111,6 @@ export class WebScanInBranchAwbResponseVm {
 
   @ApiModelProperty()
   totalAwbScan: string;
-
 }
 
 export class WebScanInHubSortResponseVm {
@@ -182,5 +178,15 @@ export class WebScanInBagResponseVm {
 
   @ApiModelProperty()
   scanInStatus: string;
+}
 
+export class WebDropOffSummaryResponseVm {
+  @ApiModelProperty()
+  totalResi: number;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  dateDropOff: string;
 }
