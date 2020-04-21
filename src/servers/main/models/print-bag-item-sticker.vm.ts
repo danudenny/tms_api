@@ -23,8 +23,15 @@ export class PrintBagItemStickerDataBagVm {
   // @ApiModelProperty({ type: () => PrintBagItemStickerDataBagDistrictVm })
   // district: PrintBagItemStickerDataBagDistrictVm;
 
-  @ApiModelProperty({ type: () => PrintBagItemStickerDataBagBranchVm })
+  @ApiModelProperty({
+    type: () => PrintBagItemStickerDataBagBranchVm,
+  })
   branch: PrintBagItemStickerDataBagBranchVm;
+
+  @ApiModelProperty({
+    type: () => PrintBagItemStickerDataBagBranchVm,
+  })
+  branchTo: PrintBagItemStickerDataBagBranchVm;
 }
 
 export class PrintBagItemStickerDataVm {
