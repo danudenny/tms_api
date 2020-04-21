@@ -140,7 +140,7 @@ export class PrintBagItemPaperService {
       res,
       templates: [
         {
-          templateName: '',
+          templateName: 'surat-jalan-gabungan-sortir-paper',
           templateData: jsreportParams,
         },
       ],
