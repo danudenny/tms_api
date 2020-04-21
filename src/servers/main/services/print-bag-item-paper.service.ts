@@ -53,8 +53,7 @@ export class PrintBagItemPaperService {
     if (bagItem.bagSeq.toString().length < 3) {
       newBagSeq = '0'.repeat(3 - bagItem.bagSeq.toString().length) + newBagSeq;
     }
-    bagItem.bagItemAwbs[0].awbItem.awb.awbNumber =
-      bagItem.bagItemAwbs[0].awbItem.awb.awbNumber + newBagSeq;
+    bagItem.bag.bagNumber = bagItem.bag.bagNumber + newBagSeq;
     this.printBagItemPaperAndQueryMeta(res, bagItem as any, {
       userId: queryParams.userId,
       branchId: queryParams.branchId,
@@ -141,7 +140,7 @@ export class PrintBagItemPaperService {
       res,
       templates: [
         {
-          templateName: 'surat-jalan-gabungan-sortir-paper',
+          templateName: '',
           templateData: jsreportParams,
         },
       ],
