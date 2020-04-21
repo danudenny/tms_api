@@ -43,8 +43,6 @@ export class WebHubController {
 
   @Post('dropoff')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanInBagResponseVm })
   public async scanInBagHub(@Body() payload: WebScanInBagVm) {
     return HubTransitDeliveryInService.scanInBagHub(payload);
@@ -52,8 +50,6 @@ export class WebHubController {
 
   @Post('dropOffSummaryList')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebDropOffSummaryListResponseVm })
   public async loadDropOffHubList(@Body() payload: BaseMetaPayloadVm) {
     return HubTransitDeliveryInService.getDropOffSummaryList(payload);
