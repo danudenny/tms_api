@@ -24,7 +24,7 @@ export class PrintBagItemStickerService {
         bag: {
           bagId: true,
           bagNumber: true,
-          branch: {
+          branchTo: {
             branchName: true,
             branchCode: true,
           },
@@ -38,6 +38,12 @@ export class PrintBagItemStickerService {
         message: 'Gabung paket tidak ditemukan',
       });
     }
+
+    let newBagSeq = data.bagSeq.toString();
+    if (data.bagSeq.toString().length < 3) {
+      newBagSeq = '0'.repeat(3 - data.bagSeq.toString().length) + newBagSeq;
+    }
+    data.bag.bagNumber = data.bag.bagNumber + newBagSeq;
 
     const [{ cnt: bagItemAwbsTotal }] = await RawQueryService.exec(
       `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
@@ -77,8 +83,8 @@ export class PrintBagItemStickerService {
       `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${
         meta.bagItemAwbsTotal
       } resi"\n` +
-      `TEXT 30,460,"4",0,1,1,0,"${data.bag.branch.branchCode}"\n` +
-      `TEXT 30,510,"5",0,1,1,0,"${data.bag.branch.branchName}"\n` +
+      `TEXT 30,460,"4",0,1,1,0,"${data.bag.branchTo.branchCode}"\n` +
+      `TEXT 30,510,"5",0,1,1,0,"${data.bag.branchTo.branchName}"\n` +
       `PRINT 1\n` +
       `EOP`;
 

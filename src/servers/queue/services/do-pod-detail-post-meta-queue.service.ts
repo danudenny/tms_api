@@ -99,7 +99,7 @@ export class DoPodDetailPostMetaQueueService {
     branchIdNext: number,
     partnerLogisticName: string = null,
   ) {
-    // TODO: ONLY AWB OUT_BRANCH
+    // TODO: ONLY AWB OUT_BRANCH and OUT_HUB_AWB_TRANSIT
     let branchName     = 'Kantor Pusat';
     let branchNameNext = 'Pluit';
     let cityName       = 'Jakarta';
@@ -148,6 +148,34 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
+  // NOTE: ONLY STATUS THP
+  public static async createJobByTransitPartnerAwb(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    userId: number,
+    partnerLogisticName: string,
+    awbSubstitute: string,
+  ) {
+    const noteInternal = `Pengiriman dilanjutkan oleh ${partnerLogisticName} dengan no resi ${awbSubstitute}`;
+    const notePublic   = noteInternal;
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
+    };
+
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
   // NOTE: same provide data
   // use on batch from bag service ??
   public static async createJobByScanOutBag(
@@ -177,7 +205,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver,
-      timestamp: addTime ? moment().add(addTime, "minutes").toDate() : moment().toDate(),
+      timestamp: addTime ? moment().add(addTime, 'minutes').toDate() : moment().toDate(),
       noteInternal,
       notePublic,
       branchIdNext,
@@ -615,6 +643,48 @@ export class DoPodDetailPostMetaQueueService {
       return DoPodDetailPostMetaQueueService.queue.add(obj);
     }
 
+  public static async createJobByManualSyncPartner(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    userId: number,
+    userIdCreated: number,
+    descLast: string,
+    consigneeName: string,
+  ) {
+      const awbStatusIdLastPublic = AWB_STATUS.ON_PROGRESS;
+      const awbNote               = descLast;
+      let noteInternal            = '';
+      let notePublic              = '';
+      let receiverName            = '';
+      const desc                  = `${descLast} (Status by system)`;
+
+      if (awbStatusId == AWB_STATUS.DLV) {
+        receiverName = consigneeName;
+        noteInternal = `Paket diterima oleh [${consigneeName}]; catatan: ${desc}`;
+        notePublic   = `Paket diterima oleh [${consigneeName}]`;
+      }
+
+      // provide data
+      const obj = {
+        awbStatusId,
+        awbStatusIdLastPublic,
+        awbItemId,
+        userId,
+        branchId,
+        userIdCreated,
+        userIdUpdated: userIdCreated,
+        employeeIdDriver: null,
+        timestamp: moment().toDate(),
+        noteInternal,
+        notePublic,
+        receiverName,
+        awbNote,
+      };
+
+      return DoPodDetailPostMetaQueueService.queue.add(obj);
+    }
+
   // Manual POD Sync
   public static async createJobByManualStatus(
     awbItemId: number,
@@ -712,6 +782,35 @@ export class DoPodDetailPostMetaQueueService {
   ) {
     const noteInternal = `Paket dibawa [SIGESIT - ${employeeName}]`;
     const notePublic = `Paket dibawa [SIGESIT - ${employeeName}]`;
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver,
+      timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
+  // NOTE: ONLY awb status ANT WITH PARTNER
+  public static async createJobByAwbDeliverPartner(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    userId: number,
+    employeeIdDriver: number,
+    employeeName: string,
+    partnerName: string,
+  ) {
+    const noteInternal = `Paket dibawa [${employeeName} - ${partnerName}]`;
+    const notePublic = `Paket dibawa [${employeeName}]`;
     // provide data
     const obj = {
       awbItemId,

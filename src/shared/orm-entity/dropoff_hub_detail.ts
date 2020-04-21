@@ -4,6 +4,7 @@ import { TmsBaseEntity } from './tms-base';
 import { DropoffHub } from './dropoff_hub';
 import { AwbItemAttr } from './awb-item-attr';
 import { Awb } from './awb';
+import { Branch } from './branch';
 
 @Entity('dropoff_hub_detail', { schema: 'public' })
 export class DropoffHubDetail extends TmsBaseEntity {
@@ -41,6 +42,10 @@ export class DropoffHubDetail extends TmsBaseEntity {
     name: 'awb_number',
   })
   awbNumber: string;
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
+  branch: Branch;
 
   @ManyToOne(() => DropoffHub, e => e.dropoffHubDetails, {
     onDelete: 'CASCADE',

@@ -12,6 +12,11 @@ import { DoPod } from '../../../../../shared/orm-entity/do-pod';
 import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
 import { DropoffHub } from '../../../../../shared/orm-entity/dropoff_hub';
 import { BagDropoffHubQueueService } from '../../../../queue/services/bag-dropoff-hub-queue.service';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
+import { DropoffHubDetail } from '../../../../../shared/orm-entity/dropoff_hub_detail';
+import { WebDropOffSummaryListResponseVm } from '../../../models/web-scanin-list.response.vm';
+import { MetaService } from '../../../../../shared/services/meta.service';
 
 export class HubTransitDeliveryInService {
 
@@ -162,6 +167,46 @@ export class HubTransitDeliveryInService {
     result.totalSuccess = totalSuccess;
     result.totalError = totalError;
     result.data = dataItem;
+
+    return result;
+  }
+
+  static async getDropOffSummaryList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebDropOffSummaryListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchName'] = 't2.branch_name';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'branchName';
+    }
+
+    const repo = new OrionRepositoryService(DropoffHubDetail, 't1');
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['count(t1.branch_id)', 'totalResi'],
+      ['t2.branch_name', 'branchName'],
+      ['DATE(t1.created_time)', 'dateDropOff'],
+    );
+
+    q.innerJoin(e => e.branch, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    // q.whereRaw(
+    //   `t1.created_time >= '2020-04-01' AND t1.created_time < '2020-04-21'`,
+    // );
+    q.groupByRaw(`t1.branch_id, t2.branch_name, "dateDropOff"`);
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebDropOffSummaryListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
