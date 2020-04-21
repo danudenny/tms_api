@@ -6,30 +6,52 @@ import {
 import { Controller, Post, HttpCode, HttpStatus, Body } from '@nestjs/common';
 import { SmsTrackingService } from '../../services/web/sms-tracking.service';
 import {
-  SmsTrackingStorePayloadVm,
-  SmsTrackingListPayloadVm,
+  SmsTrackingStoreMessagePayloadVm,
+  SmsTrackingListMessagePayloadVm,
+  SmsTrackingStoreShiftPayloadVm,
+  SmsTrackingListShiftPayloadVm,
 } from '../../models/sms-tracking-payload.vm';
 import {
-  SmsTrackingStoreResponseVm,
-  SmsTrackingListResponseVm,
+  SmsTrackingStoreMessageResponseVm,
+  SmsTrackingListMessageResponseVm,
+  SmsTrackingListShiftResponseVm,
+  SmsTrackingStoreShiftResponseVm,
 } from '../../models/sms-tracking-response.vm';
 
 @ApiUseTags('Sms Tracking')
-@Controller('web/sms/tracking')
+@Controller('sms-tracking')
 export class SmsTrackingController {
-  @Post('save')
+  @Post('/message/store')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @ApiOkResponse({ type: SmsTrackingStoreResponseVm })
-  public async awbNumber(@Body() payload: SmsTrackingStorePayloadVm) {
-    return SmsTrackingService.save(payload);
+  @ApiOkResponse({ type: SmsTrackingStoreMessageResponseVm })
+  public async messageStore(@Body() payload: SmsTrackingStoreMessagePayloadVm) {
+    return SmsTrackingService.storeMessage(payload);
   }
 
-  @Post('list')
+  @Post('message/list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @ApiOkResponse({ type: SmsTrackingListResponseVm })
-  public async bagNumber(@Body() payload: SmsTrackingListPayloadVm) {
-    return SmsTrackingService.list(payload);
+  @ApiOkResponse({ type: SmsTrackingListMessageResponseVm })
+  public async messageGetList(
+    @Body() payload: SmsTrackingListMessagePayloadVm,
+  ) {
+    return SmsTrackingService.listMessage(payload);
+  }
+
+  @Post('shift/store')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: SmsTrackingStoreShiftResponseVm })
+  public async shiftStore(@Body() payload: SmsTrackingStoreShiftPayloadVm) {
+    return SmsTrackingService.storeShift(payload);
+  }
+
+  @Post('shift/store')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: SmsTrackingListShiftResponseVm })
+  public async shiftList(@Body() payload: SmsTrackingListShiftPayloadVm) {
+    return SmsTrackingService.listShift(payload);
   }
 }

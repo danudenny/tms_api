@@ -3,7 +3,7 @@ import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm
 import { IsDefined } from 'class-validator';
 import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
 
-export class SmsTrackingStorePayloadVm {
+export class SmsTrackingStoreMessagePayloadVm {
   @ApiModelProperty()
   isRepeated: boolean;
 
@@ -17,4 +17,18 @@ export class SmsTrackingStorePayloadVm {
   sentTo: string;
 }
 
-export class SmsTrackingListPayloadVm extends BaseMetaPayloadVm {}
+export class SmsTrackingListMessagePayloadVm extends BaseMetaPayloadVm {}
+
+export class SmsTrackingStoreShiftPayloadVm {
+  @ApiModelProperty({
+    example: ['23:59', '07:00'],
+  })
+  workFrom: string;
+
+  @ApiModelProperty({
+    example: ['23:59', '07:00'],
+  })
+  workTo: string;
+}
+
+export class SmsTrackingListShiftPayloadVm extends BaseMetaPayloadVm {}
