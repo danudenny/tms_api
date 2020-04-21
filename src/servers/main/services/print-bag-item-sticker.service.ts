@@ -24,7 +24,7 @@ export class PrintBagItemStickerService {
         bag: {
           bagId: true,
           bagNumber: true,
-          branch: {
+          branchTo: {
             branchName: true,
             branchCode: true,
           },
