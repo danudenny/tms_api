@@ -142,6 +142,9 @@ export class WebScanInHubSortResponseVm {
   branchName: string;
 
   @ApiModelProperty()
+  branchId: string;
+
+  @ApiModelProperty()
   totalAwb: number;
 
   @ApiModelProperty()
