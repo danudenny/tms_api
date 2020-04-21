@@ -429,7 +429,8 @@ export class WebDeliveryInService {
       t2.bag_item_id,
       t1.bag_number,
       t2.weight,
-      t3.branch_name
+      t3.branch_name,
+      t3.branch_id
     `);
 
     const data = await q.exec();
