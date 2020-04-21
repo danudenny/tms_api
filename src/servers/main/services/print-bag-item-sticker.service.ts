@@ -33,12 +33,17 @@ export class PrintBagItemStickerService {
       .where(e => e.bagItemId, w => w.equals(queryParams.id))
       .andWhere(e => e.bag.isDeleted, w => w.isFalse());
 
-    console.log(data, 'sss');
     if (!data) {
       RequestErrorService.throwObj({
         message: 'Gabung paket tidak ditemukan',
       });
     }
+
+    let newBagSeq = data.bagSeq.toString();
+    if (data.bagSeq.toString().length < 3) {
+      newBagSeq = '0'.repeat(3 - data.bagSeq.toString().length) + newBagSeq;
+    }
+    data.bag.bagNumber = data.bag.bagNumber + newBagSeq;
 
     const [{ cnt: bagItemAwbsTotal }] = await RawQueryService.exec(
       `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
