@@ -5,10 +5,10 @@ import {
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import {
-    WebHubScanOutBagResponseVm,
+    WebHubScanOutBagResponseVm, WebScanOutCreateResponseVm, WebScanOutAwbResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import {
-    TransferBagNumberHubVm,
+    TransferBagNumberHubVm, WebScanOutCreateVm, WebScanOutAwbVm,
 } from '../../models/web-scan-out.vm';
 import { HubTransitDeliveryService } from '../../services/web/hub-transit/hub-transit-delivery.service';
 import { WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
@@ -16,6 +16,8 @@ import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { HubTransitDeliveryInService } from '../../services/web/hub-transit/hub-transit-delivery-in.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { WebDropOffSummaryListResponseVm } from '../../models/web-scanin-list.response.vm';
+import { HubTransitDeliveryOutService } from '../../services/web/hub-transit/hub-transit-delivery-out.service';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 
 @ApiUseTags('Hub Delivery')
 @Controller('pod/hub')
@@ -23,13 +25,21 @@ import { WebDropOffSummaryListResponseVm } from '../../models/web-scanin-list.re
 @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
 export class WebHubController {
   constructor() {}
-  /**
-   * NOTE: Out of Branch HUB
-   *
-   *
-   *
-   *
-   */
+
+  @Post('scanOut/create')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanOutCreateResponseVm })
+  public async scanOutCreate(@Body() payload: WebScanOutCreateVm) {
+    return HubTransitDeliveryOutService.doPodAwbCreate(payload);
+  }
+
+  @Post('scanOut/awb')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanOutAwbResponseVm })
+  @Transactional()
+  public async scanOutAwb(@Body() payload: WebScanOutAwbVm) {
+    return HubTransitDeliveryOutService.scanOutAwb(payload);
+  }
 
   @Post('dropoff')
   @HttpCode(HttpStatus.OK)
