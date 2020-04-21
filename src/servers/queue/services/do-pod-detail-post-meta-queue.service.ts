@@ -148,6 +148,34 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
+  // NOTE: ONLY STATUS THP
+  public static async createJobByTransitPartnerAwb(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    userId: number,
+    partnerLogisticName: string,
+    awbSubstitute: string,
+  ) {
+    const noteInternal = `Pengiriman dilanjutkan oleh ${partnerLogisticName} dengan no resi ${awbSubstitute}`;
+    const notePublic   = noteInternal;
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
+    };
+
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
   // NOTE: same provide data
   // use on batch from bag service ??
   public static async createJobByScanOutBag(
@@ -177,7 +205,7 @@ export class DoPodDetailPostMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver,
-      timestamp: addTime ? moment().add(addTime, "minutes").toDate() : moment().toDate(),
+      timestamp: addTime ? moment().add(addTime, 'minutes').toDate() : moment().toDate(),
       noteInternal,
       notePublic,
       branchIdNext,
