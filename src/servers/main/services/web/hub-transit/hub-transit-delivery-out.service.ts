@@ -71,7 +71,7 @@ export class HubTransitDeliveryOutService {
     // query for get BranchTo
     // TODO: send data branch name from web
     const branchData = await Branch.findOne({
-      cache: true,
+      // cache: true,
       where: {
         branchId: payload.branchIdTo,
       },
@@ -114,7 +114,7 @@ export class HubTransitDeliveryOutService {
         }
       }
     }
-
+    console.log(' ######## RESULT : ', result);
     return result;
   }
 
