@@ -551,11 +551,11 @@ export class PackageService {
         podScanInHubId,
         bagItemId,
         branchId,
-        data        : detail,
-        branchName  : branch.branchName,
-        branchCode  : branch.branchCode,
-        bagWeight   : bag.weight,
-        bagSeq      : bag.bagSeq,
+        data: detail,
+        branchName: branch ? branch.branchName : null,
+        branchCode: branch ? branch.branchCode : null,
+        bagWeight: bag.weight,
+        bagSeq: bag.bagSeq,
       });
     } else {
       assign(result, {
