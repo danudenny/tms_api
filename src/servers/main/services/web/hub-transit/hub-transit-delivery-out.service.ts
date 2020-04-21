@@ -114,7 +114,7 @@ export class HubTransitDeliveryOutService {
         }
       }
     }
-    console.log(' ######## RESULT : ', result);
+
     return result;
   }
 
