@@ -99,7 +99,7 @@ export class DoPodDetailPostMetaQueueService {
     branchIdNext: number,
     partnerLogisticName: string = null,
   ) {
-    // TODO: ONLY AWB OUT_BRANCH
+    // TODO: ONLY AWB OUT_BRANCH and OUT_HUB_AWB_TRANSIT
     let branchName     = 'Kantor Pusat';
     let branchNameNext = 'Pluit';
     let cityName       = 'Jakarta';
