@@ -305,9 +305,6 @@ export class HubTransitDeliveryInService {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
-
-    payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['branchId'] = 't1.branch_id';
     payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
     payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
