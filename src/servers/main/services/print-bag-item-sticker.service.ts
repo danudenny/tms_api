@@ -24,7 +24,7 @@ export class PrintBagItemStickerService {
         bag: {
           bagId: true,
           bagNumber: true,
-          branchTo: {
+          branch: {
             branchName: true,
             branchCode: true,
           },
@@ -83,8 +83,8 @@ export class PrintBagItemStickerService {
       `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${
         meta.bagItemAwbsTotal
       } resi"\n` +
-      `TEXT 30,460,"4",0,1,1,0,"${data.bag.branchTo.branchCode}"\n` +
-      `TEXT 30,510,"5",0,1,1,0,"${data.bag.branchTo.branchName}"\n` +
+      `TEXT 30,460,"4",0,1,1,0,"${data.bag.branch.branchCode}"\n` +
+      `TEXT 30,510,"5",0,1,1,0,"${data.bag.branch.branchName}"\n` +
       `PRINT 1\n` +
       `EOP`;
 
