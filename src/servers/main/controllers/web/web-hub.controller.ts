@@ -15,9 +15,10 @@ import { WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm'
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { HubTransitDeliveryInService } from '../../services/web/hub-transit/hub-transit-delivery-in.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { WebDropOffSummaryListResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebDropOffSummaryListResponseVm, WebScanInHubSortListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { HubTransitDeliveryOutService } from '../../services/web/hub-transit/hub-transit-delivery-out.service';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
+import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 
 @ApiUseTags('Hub Delivery')
 @Controller('pod/hub')
@@ -48,10 +49,24 @@ export class WebHubController {
     return HubTransitDeliveryInService.scanInBagHub(payload);
   }
 
+  @Post('dropOffList')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanInHubSortListResponseVm })
+  public async loadDropOffHubList(@Body() payload: BaseMetaPayloadVm) {
+    return HubTransitDeliveryInService.getDropOffList(payload);
+  }
+
+  @Post('dropOffListDetail')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebDeliveryListResponseVm })
+  public async loadDropOffHubListDetail(@Body() payload: BaseMetaPayloadVm) {
+    return HubTransitDeliveryInService.getDropOffListDetail(payload);
+  }
+
   @Post('dropOffSummaryList')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebDropOffSummaryListResponseVm })
-  public async loadDropOffHubList(@Body() payload: BaseMetaPayloadVm) {
+  public async sumDropOffHubList(@Body() payload: BaseMetaPayloadVm) {
     return HubTransitDeliveryInService.getDropOffSummaryList(payload);
   }
 
