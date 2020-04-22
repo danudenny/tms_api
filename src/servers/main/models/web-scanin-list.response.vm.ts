@@ -38,7 +38,7 @@ export class WebScanInHubSortListResponseVm extends BaseMetaResponseVm {
   data: WebScanInHubSortResponseVm[];
 }
 
-export class WebDropOffSummaryListResponseVm extends BaseMetaResponseVm {
+export class WebDropOffSummaryListResponseVm {
   @ApiModelProperty({ type: () => [WebDropOffSummaryResponseVm] })
   data: WebDropOffSummaryResponseVm[];
 }

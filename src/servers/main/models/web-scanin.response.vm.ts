@@ -186,10 +186,4 @@ export class WebScanInBagResponseVm {
 export class WebDropOffSummaryResponseVm {
   @ApiModelProperty()
   totalResi: number;
-
-  @ApiModelProperty()
-  branchName: string;
-
-  @ApiModelProperty()
-  dateDropOff: string;
 }

@@ -15,8 +15,9 @@ import { BagDropoffHubQueueService } from '../../../../queue/services/bag-dropof
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { DropoffHubDetail } from '../../../../../shared/orm-entity/dropoff_hub_detail';
-import { WebDropOffSummaryListResponseVm } from '../../../models/web-scanin-list.response.vm';
+import { WebDropOffSummaryListResponseVm, WebScanInHubSortListResponseVm } from '../../../models/web-scanin-list.response.vm';
 import { MetaService } from '../../../../../shared/services/meta.service';
+import { WebDeliveryListResponseVm } from '../../../models/web-delivery-list-response.vm';
 
 export class HubTransitDeliveryInService {
 
@@ -171,42 +172,153 @@ export class HubTransitDeliveryInService {
     return result;
   }
 
+  static async getDropOffList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInHubSortListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
+    payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
+    payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+      {
+        field: 'bagNumberCode',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffHub, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+    q.selectRaw(
+      [
+        `CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, '0'))`,
+        'bagNumberCode',
+      ],
+      ['t2.bag_number', 'bagNumber'],
+      ['t2.ref_representative_code', 'representativeCode'],
+      ['t3.bag_seq', 'bagSeq'],
+      ['t1.created_time', 'createdTime'],
+      ['t1.dropoff_hub_id', 'dropoffHubId'],
+      ['t5.branch_name', 'branchName'],
+      ['t6.branch_name', 'branchScanName'],
+      ['COUNT (t4.*)', 'totalAwb'],
+      [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+    );
+
+    q.innerJoin(e => e.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.dropoffHubDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bag.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw(`
+      t1.created_time,
+      t1.dropoff_hub_id,
+      t3.bag_seq,
+      t2.bag_number,
+      t2.ref_representative_code,
+      t3.weight,
+      t5.branch_name,
+      t6.branch_name
+    `);
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInHubSortListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async getDropOffListDetail(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebDeliveryListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['dropOffHubId'] = 't1.dropoff_hub_id';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'dropOffHubId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffHubDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t2.awb_number', 'awbNumber'],
+      ['t3.consignee_name', 'consigneeName'],
+      ['t3.consignee_address', 'consigneeAddress'],
+      ['t4.district_name', 'districtName'],
+    );
+
+    q.innerJoin(e => e.awbItemAttr, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.districtTo, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebDeliveryListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
   static async getDropOffSummaryList(
     payload: BaseMetaPayloadVm,
   ): Promise<WebDropOffSummaryListResponseVm> {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['branchName'] = 't2.branch_name';
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
 
-    if (payload.sortBy === '') {
-      payload.sortBy = 'branchName';
-    }
-
-    const repo = new OrionRepositoryService(DropoffHubDetail, 't1');
+    const repo = new OrionRepositoryService(DropoffHub, 't1');
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
-    q.selectRaw(
-      ['count(t1.branch_id)', 'totalResi'],
-      ['t2.branch_name', 'branchName'],
-      ['DATE(t1.created_time)', 'dateDropOff'],
-    );
-
-    q.innerJoin(e => e.branch, 't2', j =>
+    q.selectRaw(['count(t2.awb_number)', 'totalResi']);
+    q.innerJoin(e => e.dropoffHubDetails, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // q.whereRaw(
-    //   `t1.created_time >= '2020-04-01' AND t1.created_time < '2020-04-21'`,
-    // );
-    q.groupByRaw(`t1.branch_id, t2.branch_name, "dateDropOff"`);
 
     const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebDropOffSummaryListResponseVm();
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
