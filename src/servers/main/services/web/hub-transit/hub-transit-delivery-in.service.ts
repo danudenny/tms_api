@@ -306,12 +306,31 @@ export class HubTransitDeliveryInService {
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
 
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
+    payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
+    payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+
     const repo = new OrionRepositoryService(DropoffHub, 't1');
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
-    q.selectRaw(['count(t2.awb_number)', 'totalResi']);
-    q.innerJoin(e => e.dropoffHubDetails, 't2', j =>
+    q.selectRaw(['count(t4.awb_number)', 'totalResi']);
+    q.innerJoin(e => e.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.dropoffHubDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bag.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
