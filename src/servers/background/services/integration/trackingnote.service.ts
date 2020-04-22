@@ -1,11 +1,13 @@
 import moment = require('moment');
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { TrackingNotePayloadVm } from '../../models/trackingnote.payload.vm';
 import { TrackingNoteResponseVm } from '../../models/trackingnote.response.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { DatabaseConfig } from '../../config/database/db.config';
 import * as sql from 'mssql';
 import { AwbHistoryLastSyncPod } from '../../../../shared/orm-entity/awb-history-last-sync-pod';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { HttpStatus } from '@nestjs/common';
 
 export class TrackingNoteService {
 
@@ -14,16 +16,41 @@ export class TrackingNoteService {
   }
 
   static async findLastAwbHistory(
-    payload: BaseMetaPayloadVm,
+    payload: any,
   ): Promise<TrackingNoteResponseVm> {
     const result = new TrackingNoteResponseVm();
 
-    result.data = await this.insertTmsTrackingNote(5);
+    result.data = await this.insertTmsTrackingNote(5, payload);
 
     return result;
   }
 
-  private static async getRawAwbHistory(awbHistoryId: number): Promise<any> {
+  static async findLastAwbHistoryManual(
+    payload: TrackingNotePayloadVm,
+  ): Promise<TrackingNoteResponseVm> {
+    const result = new TrackingNoteResponseVm();
+
+    if (!Array.isArray(payload.arrAwbHistoryId)) {
+      RequestErrorService.throwObj(
+        {
+          message: 'Arr Awb History Id Must Contain Array',
+        },
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    result.data = await this.insertTmsTrackingNote(1, payload, true);
+
+    return result;
+  }
+
+  private static async getRawAwbHistory(awbHistoryId: number, payload: any, isManual: boolean = false): Promise<any> {
+    let additional_where = 'ah.awb_history_id > :awbHistoryId';
+
+    if (isManual) {
+      additional_where = 'ah.awb_history_id IN (' + payload.arrAwbHistoryId.join(',') + ')';
+    }
+
     const query = `
       SELECT
         ah.awb_history_id as "awbHistoryId",
@@ -45,7 +72,7 @@ export class TrackingNoteService {
       INNER JOIN awb_status s on ah.awb_status_id=s.awb_status_id and s.send_tracking_note=10 and s.is_deleted=false
       LEFT JOIN employee e on ah.employee_id_driver=e.employee_id and e.is_deleted=false
       LEFT JOIN branch b on ah.branch_id=b.branch_id and b.is_deleted=false
-      WHERE ah.awb_history_id > :awbHistoryId and ah.is_deleted=false
+      WHERE ` + additional_where + ` and ah.is_deleted=false
       ORDER BY awb_history_id
       LIMIT 2000;
     `;
@@ -54,7 +81,7 @@ export class TrackingNoteService {
     });
   }
 
-  private static async insertTmsTrackingNote(counter: number = 0): Promise<any> {
+  private static async insertTmsTrackingNote(counter: number = 0, payload: any, isManual: boolean = false): Promise<any> {
     if (counter > 0) {
       const awbHistoryLastSyncPod = await AwbHistoryLastSyncPod.findOne({
         where: {
@@ -63,7 +90,7 @@ export class TrackingNoteService {
       });
 
       if (awbHistoryLastSyncPod) {
-        const data = await this.getRawAwbHistory(awbHistoryLastSyncPod.awbHistoryId);
+        const data = await this.getRawAwbHistory(awbHistoryLastSyncPod.awbHistoryId, payload, isManual);
         if (data) {
           // Connect to POD
           const conn = await DatabaseConfig.getPodDbConn();
@@ -111,10 +138,13 @@ export class TrackingNoteService {
                   if (!err) {
                     ctr++;
                     if (ctr == data.length) {
-                      AwbHistoryLastSyncPod.update(awbHistoryLastSyncPod.awbHistoryLastSyncPodId, {
-                        awbHistoryId: lastSyncId,
-                        updatedTime: new Date(),
-                      });
+                      if (!isManual) {
+                        AwbHistoryLastSyncPod.update(awbHistoryLastSyncPod.awbHistoryLastSyncPodId, {
+                          awbHistoryId: lastSyncId,
+                          updatedTime: new Date(),
+                        });
+                      }
+                      
                       transaction.commit(err => {
                         if (err) {
                           PinoLoggerService.debug(this.logTitle, '[ERROR TRANSACTION] :: ' + err);
@@ -127,7 +157,7 @@ export class TrackingNoteService {
                           });
                         } else {
                           PinoLoggerService.debug(this.logTitle, '[COMMITTED]===================');
-                          this.insertTmsTrackingNote(counter - 1);
+                          this.insertTmsTrackingNote(counter - 1, payload, isManual);
                         }
                       });
                       PinoLoggerService.debug(this.logTitle, '[ALL SUCCESS] Last awb history id === ' + lastSyncId);

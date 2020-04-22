@@ -1,22 +1,21 @@
-import { Body, Controller, HttpCode, HttpStatus, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get } from '@nestjs/common';
 
-import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
-import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { TrackingNoteResponseVm } from '../../models/trackingnote.response.vm';
+import { TrackingNotePayloadVm } from '../../models/trackingnote.payload.vm';
 import { TrackingNoteService } from '../../services/integration/trackingnote.service';
+import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 
-// @ApiUseTags('Master Data')
+@ApiUseTags('Tracking Note')
 @Controller('integration/trackingnote')
 export class TrackingNoteController {
   constructor() {}
 
   @Get('sync')
-  // @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: TrackingNoteResponseVm })
-  public async findLastAwbHistory(@Body() payload: BaseMetaPayloadVm) {
+  public async findLastAwbHistory(@Body() payload: any) {
     return TrackingNoteService.findLastAwbHistory(payload);
+  }
+
+  @Get('sync-manual')
+  public async findLastAwbHistoryManual(@Body() payload: TrackingNotePayloadVm) {
+    return TrackingNoteService.findLastAwbHistoryManual(payload);
   }
 }
