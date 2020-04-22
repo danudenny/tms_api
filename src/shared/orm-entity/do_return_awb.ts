@@ -106,7 +106,7 @@ export class DoReturnAwb extends TmsBaseEntity {
 
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'awb_number', referencedColumnName: 'awbNumber' })
-  awbLast: AwbItemAttr;
+  awbItmAttr: AwbItemAttr;
 
   @OneToOne(() => Awb)
   @JoinColumn({ name: 'awb_number', referencedColumnName: 'awbNumber' })
@@ -123,6 +123,10 @@ export class DoReturnAwb extends TmsBaseEntity {
   @ManyToOne(() => CustomerAccount)
   @JoinColumn({ name: 'customer_account_id' , referencedColumnName: 'customerAccountId' })
   customerAccount: CustomerAccount;
+
+  // @ManyToOne(() => AwbItemAttr)
+  // @JoinColumn({ name: 'awb_number' , referencedColumnName: 'awbNumber' })
+  // awbItmAttr: AwbItemAttr;
 
   @ManyToOne(() => CustomerAddress)
   @JoinColumn({ name: 'customer_address_id' })

@@ -4,6 +4,7 @@ import { TmsBaseEntity } from './tms-base';
 import { Bag } from './bag';
 import { BagItem } from './bag-item';
 import { DropoffHubDetail } from './dropoff_hub_detail';
+import { Branch } from './branch';
 
 @Entity('dropoff_hub', { schema: 'public' })
 export class DropoffHub extends TmsBaseEntity {
@@ -52,4 +53,8 @@ export class DropoffHub extends TmsBaseEntity {
 
   @OneToMany(() => DropoffHubDetail, e => e.dropoffHub, { cascade: ['insert'] })
   dropoffHubDetails: DropoffHubDetail[];
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
+  branch: Branch;
 }
