@@ -58,6 +58,7 @@ export class DoReturnService {
     payload.fieldResolverMap['podDatetime']         = 'return.pod_datetime';
     payload.fieldResolverMap['branchIdLast']        = 'awb_item_attr.branch_id_last';
     payload.fieldResolverMap['customerId']          = 'return.customer_id';
+    payload.fieldResolverMap['branchName']          = 'branch.branch_name';
     payload.fieldResolverMap['customerAccountId']   = 'return.customer_account_id';
     payload.fieldResolverMap['doReturnAwbNumber']   = 'return.do_return_awb_number';
     payload.fieldResolverMap['awbNumber']           = 'return.awb_number';
@@ -77,7 +78,7 @@ export class DoReturnService {
       ['awb_item_attr.awb_history_date_last', 'podDatetime'],
       ['return.customer_id', 'customerId'],
       ['return.customer_account_id', 'customerAccountId'],
-      ['branch_last.branch_name', 'branchName'],
+      ['branch.branch_name', 'branchName'],
       ['customer.customer_name', 'customerName'],
       ['awb_status.awb_status_title', 'awbStatus'],
       ['awb_item_attr.branch_id_last', 'branchIdLast'],
@@ -97,8 +98,7 @@ export class DoReturnService {
     q.innerJoin(e => e.awbItmAttr, 'awb_item_attr', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awbItmAttr.branchLast, 'branch_last', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q.innerJoin(e => e.awbItmAttr.branchLast, 'branch',
     );
     q.innerJoin(e => e.awbItmAttr.awbStatus, 'awb_status', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
