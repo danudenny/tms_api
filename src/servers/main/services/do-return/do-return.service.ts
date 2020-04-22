@@ -78,7 +78,7 @@ export class DoReturnService {
       ['awb_item_attr.awb_history_date_last', 'podDatetime'],
       ['return.customer_id', 'customerId'],
       ['return.customer_account_id', 'customerAccountId'],
-      ['branchLast.branch_name', 'branchName'],
+      ['branch_last.branch_name', 'branchName'],
       ['cust.customer_account_name', 'customerAccountName'],
       ['cust.customer_account_id', 'customerAccountId'],
       ['customer.customer_name', 'customerName'],
@@ -121,7 +121,7 @@ export class DoReturnService {
     q.innerJoin(e => e.awbItmAttr, 'awb_item_attr', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awbItmAttr.branchLast, 'branchLast', j =>
+    q.innerJoin(e => e.awbItmAttr.branchLast, 'branch_last', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     // q.leftJoin(e => e.trackingNote, 'tracking', j =>
