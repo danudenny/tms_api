@@ -70,10 +70,10 @@ export class PrintBagItemStickerService {
     const finalBagItemBarcodeNumber = `${
       data.bag.bagNumber
     }${weightNumberOnly}`;
-    const branchCode = data.bag.branch.branchCode
+    const branchCode = data.bag.branch
       ? data.bag.branch.branchCode
       : data.bag.branchTo.branchCode;
-    const branchName = data.bag.branch.branchName
+    const branchName = data.bag.branch
       ? data.bag.branch.branchName
       : data.bag.branchTo.branchName;
     const rawTsplPrinterCommands =
