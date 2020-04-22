@@ -124,6 +124,10 @@ export class DoReturnAwb extends TmsBaseEntity {
   @JoinColumn({ name: 'customer_account_id' , referencedColumnName: 'customerAccountId' })
   customerAccount: CustomerAccount;
 
+  @ManyToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_number' , referencedColumnName: 'awbNumber' })
+  awbItmAttr: AwbItemAttr;
+
   @ManyToOne(() => CustomerAddress)
   @JoinColumn({ name: 'customer_address_id' })
   customerAddress: CustomerAddress;

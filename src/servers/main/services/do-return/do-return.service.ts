@@ -56,7 +56,7 @@ export class DoReturnService {
       },
     ];
     payload.fieldResolverMap['podDatetime'] = 'return.pod_datetime';
-    payload.fieldResolverMap['branchIdLast'] = 'return.branch_id_last';
+    payload.fieldResolverMap['branchIdLast'] = 'awb_item_attr.branch_id_last';
     payload.fieldResolverMap['customerId'] = 'return.customer_id';
     payload.fieldResolverMap['customerAccountId'] = 'return.customer_account_id';
     payload.fieldResolverMap['customerAccountName'] = 'return.customer_account_name';
@@ -75,7 +75,7 @@ export class DoReturnService {
       ['return.do_return_awb_id', 'doReturnAwbId'],
       ['return.awb_number', 'awbNumber'],
       ['return.do_return_awb_number', 'doReturnAwbNumber'],
-      ['return.pod_datetime', 'podDatetime'],
+      ['awb_item_attr.awb_history_date_last', 'podDatetime'],
       ['return.customer_id', 'customerId'],
       ['return.customer_account_id', 'customerAccountId'],
       ['branch.branch_name', 'branchName'],
@@ -84,7 +84,7 @@ export class DoReturnService {
       ['customer.customer_name', 'customerName'],
       ['awb_status.awb_status_title', 'awbStatus'],
       // ['tracking.trackingtype', 'awbStatus'],
-      ['return.branch_id_last', 'branchIdLast'],
+      ['awb_item_attr.branch_id_last', 'branchIdLast'],
       ['return.do_return_admin_to_ct_id', 'doReturnAdminToCtId'],
       ['return.do_return_ct_to_collection_id', 'doReturnCtToCollectionId'],
       ['return.do_return_collection_to_cust_id', 'doReturnCollectionToCustId'],
@@ -121,6 +121,9 @@ export class DoReturnService {
     q.leftJoin(e => e.awbLast.awbStatus, 'awb_status', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.awbItmAttr, 'awb_item_attr', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
     // q.leftJoin(e => e.trackingNote, 'tracking', j =>
     //   j.andWhereRaw('tracking.id = (SELECT MAX(id) FROM tracking_note WHERE receiptnumber = return.awb_number)'),
     // );
