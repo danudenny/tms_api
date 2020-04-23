@@ -142,6 +142,9 @@ export class WebScanInHubSortResponseVm {
   branchName: string;
 
   @ApiModelProperty()
+  branchScanName: string;
+
+  @ApiModelProperty()
   branchId: string;
 
   @ApiModelProperty()
@@ -186,10 +189,4 @@ export class WebScanInBagResponseVm {
 export class WebDropOffSummaryResponseVm {
   @ApiModelProperty()
   totalResi: number;
-
-  @ApiModelProperty()
-  branchName: string;
-
-  @ApiModelProperty()
-  dateDropOff: string;
 }

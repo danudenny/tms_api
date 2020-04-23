@@ -70,6 +70,12 @@ export class PrintBagItemStickerService {
     const finalBagItemBarcodeNumber = `${
       data.bag.bagNumber
     }${weightNumberOnly}`;
+    const branchCode = data.bag.branch
+      ? data.bag.branch.branchCode
+      : data.bag.branchTo.branchCode;
+    const branchName = data.bag.branch
+      ? data.bag.branch.branchName
+      : data.bag.branchTo.branchName;
     const rawTsplPrinterCommands =
       `SIZE 80 mm, 100 mm\n` +
       `SPEED 3\n` +
@@ -83,8 +89,8 @@ export class PrintBagItemStickerService {
       `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${
         meta.bagItemAwbsTotal
       } resi"\n` +
-      `TEXT 30,460,"4",0,1,1,0,"${data.bag.branchTo.branchCode}"\n` +
-      `TEXT 30,510,"5",0,1,1,0,"${data.bag.branchTo.branchName}"\n` +
+      `TEXT 30,460,"4",0,1,1,0,"${branchCode}"\n` +
+      `TEXT 30,510,"5",0,1,1,0,"${branchName}"\n` +
       `PRINT 1\n` +
       `EOP`;
 
