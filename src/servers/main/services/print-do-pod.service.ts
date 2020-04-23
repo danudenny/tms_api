@@ -5,6 +5,10 @@ import { PrintDoPodDataVm } from '../models/print-do-pod.vm';
 import { PrinterService } from '../../../shared/services/printer.service';
 import express = require('express');
 import moment = require('moment');
+import {
+  PrintDoPodReturnPayloadQueryVm,
+  PrintDoPodReturnAdmiStorePayloadVm,
+} from '../models/print-do-pod-return.vm';
 
 export class PrintDoPodService {
   public static async printDoPodByRequest(
@@ -150,6 +154,70 @@ export class PrintDoPodService {
           templateName: 'surat-jalan',
           templateData: jsreportParams,
           printCopy: templateConfig.printCopy,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  public static reformatDataDoReturnAdmin(data: any) {
+    const response = {
+      user: {
+        firstName: null,
+        lastName: null,
+      },
+      userAdmin: {
+        firstName: null,
+        lastName: null,
+      },
+      doReturnAwbs: null,
+    };
+    const doReturnAwbs = [];
+
+    for (let i = 0; i < data.awbDetail.length; i++) {
+      const temp = data.awbDetail[i];
+      temp.branchTo = {};
+      temp.branchTo.branchName = data.userDetail.branch;
+      doReturnAwbs.push(temp);
+    }
+    response.doReturnAwbs = doReturnAwbs;
+    response.user.firstName = data.userDriver.split(' ')[0];
+    response.user.lastName = data.userDriver.split(' ')[1]
+      ? data.userDriver.split(' ')[1]
+      : '';
+    response.userAdmin.firstName = data.userDetail.userName.split(' ')[0];
+    response.userAdmin.lastName = data.userDetail.userName.split(' ')[1]
+      ? data.userDetail.userName.split(' ')[1]
+      : '';
+
+    return response;
+  }
+
+  public static async printDoPodDoReturnAdminByRequest(
+    res: express.Response,
+    data: PrintDoPodReturnAdmiStorePayloadVm,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
+  ) {
+    const reportParams = this.reformatDataDoReturnAdmin(data);
+
+    const m = moment();
+    const jsreportParams = {
+      reportParams,
+      meta: {
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        totalData: await data.awbDetail,
+      },
+    };
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'ttd-do-balik',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
         },
       ],
       listPrinterName,
