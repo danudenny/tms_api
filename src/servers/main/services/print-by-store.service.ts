@@ -213,9 +213,7 @@ export class PrintByStoreService {
     );
   }
 
-  static async storePrintDoPodReturnAdmin(
-    payloadBody: PrintDoPodReturnAdmiStorePayloadVm,
-  ) {
+  static async storePrintDoPodReturnAdmin(payloadBody: any) {
     return this.storeGenericPrintData(
       'do-pod-return-admin',
       payloadBody.userIdDriver,

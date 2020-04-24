@@ -195,7 +195,7 @@ export class PrintDoPodService {
 
   public static async printDoPodDoReturnAdminByRequest(
     res: express.Response,
-    data: PrintDoPodReturnAdmiStorePayloadVm,
+    data: any,
     queryParams: PrintDoPodReturnPayloadQueryVm,
   ) {
     const reportParams = this.reformatDataDoReturnAdmin(data);
