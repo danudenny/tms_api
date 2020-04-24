@@ -127,9 +127,7 @@ export class PrintByStoreController {
   @Post('do-pod-do-return-admin/store')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
-  public async storePrintDoPodReturnAdmin(
-    @Body() payloadBody: PrintDoPodReturnAdmiStorePayloadVm,
-  ) {
+  public async storePrintDoPodReturnAdmin(@Body() payloadBody: any) {
     return PrintByStoreService.storePrintDoPodReturnAdmin(payloadBody);
   }
 
