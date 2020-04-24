@@ -375,7 +375,8 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['bagNumberCode'] = '"bagNumberCode"';
     payload.fieldResolverMap['representativeFrom'] =
       't1.ref_representative_code';
-    payload.fieldResolverMap['branchIdScan'] = 't5.branch_id';
+    payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
+    payload.fieldResolverMap['branchScanId'] = 't1.branch_id';
     payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -414,7 +415,8 @@ export class WebDeliveryInService {
       ['t2.created_time', 'createdTime'],
       ['t3.branch_name', 'branchName'],
       ['t3.branch_id', 'branchId'],
-      ['t6.branch_name', 'branchScanName'],
+      ['t5.branch_name', 'branchScanName'],
+      ['t5.branch_id', 'branchScanId'],
       ['COUNT (t4.*)', 'totalAwb'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
@@ -428,10 +430,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItems.bagItemAwbs, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.dropoffHubs, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.dropoffHubs.branch, 't6', j =>
+    q.leftJoin(e => e.branch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.branchIdTo, w => w.isNotNull);
@@ -445,7 +444,7 @@ export class WebDeliveryInService {
       t3.branch_name,
       t3.branch_id,
       t5.branch_id,
-      t6.branch_name
+      t5.branch_name
     `);
 
     const data = await q.exec();
