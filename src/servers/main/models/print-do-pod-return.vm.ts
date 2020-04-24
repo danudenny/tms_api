@@ -10,8 +10,8 @@ export class PrintDoPodReturnPayloadQueryVm {
   @ApiModelProperty()
   printCopy: number;
 
-  @ApiModelProperty()
-  userIdDriver: number;
+  @ApiModelPropertyOptional()
+  userIdDriver?: number;
 }
 
 export class AwbDetailDoReturnDataVm {
