@@ -229,7 +229,7 @@ export class PrintByStoreService {
   ) {
     const printPayload = await this.retrieveGenericPrintData<
       PrintDoPodReturnAdmiStorePayloadVm
-    >('do-pod-return-admin', queryParams.id);
+    >('do-pod-return-admin', queryParams.userIdDriver);
 
     if (!printPayload) {
       RequestErrorService.throwObj({
