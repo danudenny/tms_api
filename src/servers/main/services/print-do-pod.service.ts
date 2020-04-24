@@ -9,7 +9,7 @@ import {
   PrintDoPodReturnPayloadQueryVm,
   PrintDoPodReturnAdmiStorePayloadVm,
 } from '../models/print-do-pod-return.vm';
-import { Branch } from 'src/shared/orm-entity/branch';
+import { Branch } from '../../../shared/orm-entity/branch';
 
 export class PrintDoPodService {
   public static async printDoPodByRequest(
