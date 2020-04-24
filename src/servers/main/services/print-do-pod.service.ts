@@ -9,6 +9,7 @@ import {
   PrintDoPodReturnPayloadQueryVm,
   PrintDoPodReturnAdmiStorePayloadVm,
 } from '../models/print-do-pod-return.vm';
+import { Branch } from 'src/shared/orm-entity/branch';
 
 export class PrintDoPodService {
   public static async printDoPodByRequest(
@@ -160,7 +161,7 @@ export class PrintDoPodService {
     });
   }
 
-  public static reformatDataDoReturnAdmin(data: any) {
+  public static async reformatDataDoReturnAdmin(data: any) {
     const response = {
       user: {
         firstName: null,
@@ -173,22 +174,22 @@ export class PrintDoPodService {
       doReturnAwbs: null,
     };
     const doReturnAwbs = [];
+    const branch = await Branch.findOne({
+      select: ['branchName'],
+      where: {
+        branchId: data.userDetail.branch,
+      },
+    });
 
     for (let i = 0; i < data.awbDetail.length; i++) {
       const temp = data.awbDetail[i];
       temp.branchTo = {};
-      temp.branchTo.branchName = data.userDetail.branch;
+      temp.branchTo.branchName = branch.branchName;
       doReturnAwbs.push(temp);
     }
     response.doReturnAwbs = doReturnAwbs;
-    response.user.firstName = data.userDriver.split(' ')[0];
-    response.user.lastName = data.userDriver.split(' ')[1]
-      ? data.userDriver.split(' ')[1]
-      : '';
-    response.userAdmin.firstName = data.userDetail.userName.split(' ')[0];
-    response.userAdmin.lastName = data.userDetail.userName.split(' ')[1]
-      ? data.userDetail.userName.split(' ')[1]
-      : '';
+    response.user.firstName = data.userDriver;
+    response.userAdmin.firstName = data.userDetail.userName;
 
     return response;
   }
@@ -198,7 +199,7 @@ export class PrintDoPodService {
     data: any,
     queryParams: PrintDoPodReturnPayloadQueryVm,
   ) {
-    const reportParams = this.reformatDataDoReturnAdmin(data);
+    const reportParams = await this.reformatDataDoReturnAdmin(data);
 
     const m = moment();
     const jsreportParams = {
