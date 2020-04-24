@@ -122,6 +122,7 @@ export class WebDeliveryInController {
     return this.webDeliveryService.scanInBag(payload);
   }
 
+  // TODO: to be removed
   @Post('dropoff')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -160,6 +161,7 @@ export class WebDeliveryInController {
     return this.webDeliveryService.loadBranchPackage();
   }
 
+  // TODO: to be removed
   @Post('dropOffList')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -168,7 +170,7 @@ export class WebDeliveryInController {
   public async loadDropOffHubList(@Body() payload: BaseMetaPayloadVm) {
     return this.webDeliveryService.loadDropOffList(payload);
   }
-
+  // TODO: to be removed
   @Post('dropOffListDetail')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

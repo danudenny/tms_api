@@ -49,7 +49,11 @@ export class PrintBagItemPaperService {
         message: 'Gabung paket tidak ditemukan',
       });
     }
-
+    let newBagSeq = bagItem.bagSeq.toString();
+    if (bagItem.bagSeq.toString().length < 3) {
+      newBagSeq = '0'.repeat(3 - bagItem.bagSeq.toString().length) + newBagSeq;
+    }
+    bagItem.bag.bagNumber = bagItem.bag.bagNumber + newBagSeq;
     this.printBagItemPaperAndQueryMeta(res, bagItem as any, {
       userId: queryParams.userId,
       branchId: queryParams.branchId,

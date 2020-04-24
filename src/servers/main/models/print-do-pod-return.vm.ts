@@ -7,3 +7,33 @@ export class PrintDoPodReturnPayloadQueryVm {
   @ApiModelProperty()
   printCopy: number;
 }
+
+export class AwbDetailDoReturnDataVm {
+  @ApiModelProperty()
+  branch: string;
+
+  @ApiModelProperty()
+  userName: string;
+}
+
+export class UserDetailDoReturnDataVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  doReturnAwbNumber: string;
+}
+
+export class PrintDoPodReturnAdmiStorePayloadVm {
+  @ApiModelProperty({ type: () => [AwbDetailDoReturnDataVm] })
+  awbDetail: AwbDetailDoReturnDataVm[];
+
+  @ApiModelProperty()
+  userDriver: string;
+
+  @ApiModelProperty()
+  userIdDriver: string;
+
+  @ApiModelProperty({ type: () => [UserDetailDoReturnDataVm] })
+  userDetail: UserDetailDoReturnDataVm[];
+}
