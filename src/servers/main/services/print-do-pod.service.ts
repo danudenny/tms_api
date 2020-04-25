@@ -202,12 +202,16 @@ export class PrintDoPodService {
     const reportParams = await this.reformatDataDoReturnAdmin(data);
 
     const m = moment();
+    const branchName = reportParams[0]
+      ? reportParams[0].branchTo.branchName
+      : null;
     const jsreportParams = {
       reportParams,
       meta: {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
         totalData: await data.awbDetail,
+        branchName,
       },
     };
 
