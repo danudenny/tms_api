@@ -202,8 +202,8 @@ export class PrintDoPodService {
     const reportParams = await this.reformatDataDoReturnAdmin(data);
 
     const m = moment();
-    const branchName = reportParams[0]
-      ? reportParams[0].branchTo.branchName
+    const branchName = reportParams.doReturnAwbs[0]
+      ? reportParams.doReturnAwbs[0].branchTo.branchName
       : null;
     const jsreportParams = {
       reportParams,
