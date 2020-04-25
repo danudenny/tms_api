@@ -220,7 +220,7 @@ export class PrintDoPodService {
       res,
       templates: [
         {
-          templateName: 'ttd-do-balik',
+          templateName: 'ttd-do-balik-admin',
           templateData: jsreportParams,
           printCopy: queryParams.printCopy,
         },
