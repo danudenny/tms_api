@@ -163,15 +163,20 @@ export class PrintDoPodService {
 
   public static async reformatDataDoReturnAdmin(data: any) {
     const response = {
-      user: {
-        firstName: null,
-        lastName: null,
+      data: {
+        user: {
+          firstName: null,
+          lastName: null,
+        },
+        userAdmin: {
+          firstName: null,
+          lastName: null,
+        },
+        doReturnAwbs: null,
       },
-      userAdmin: {
-        firstName: null,
-        lastName: null,
+      meta: {
+        branchName: null,
       },
-      doReturnAwbs: null,
     };
     const doReturnAwbs = [];
     const branch = await Branch.findOne({
@@ -181,15 +186,17 @@ export class PrintDoPodService {
       },
     });
 
+    response.meta.branchName = branch.branchName;
+
     for (let i = 0; i < data.awbDetail.length; i++) {
       const temp = data.awbDetail[i];
       temp.branchTo = {};
       temp.branchTo.branchName = branch.branchName;
       doReturnAwbs.push(temp);
     }
-    response.doReturnAwbs = doReturnAwbs;
-    response.user.firstName = data.userDriver;
-    response.userAdmin.firstName = data.userDetail.userName;
+    response.data.doReturnAwbs = doReturnAwbs;
+    response.data.user.firstName = data.userDriver;
+    response.data.userAdmin.firstName = data.userDetail.userName;
 
     return response;
   }
@@ -199,18 +206,16 @@ export class PrintDoPodService {
     data: any,
     queryParams: PrintDoPodReturnPayloadQueryVm,
   ) {
-    const reportParams = await this.reformatDataDoReturnAdmin(data);
+    const dataReformat = await this.reformatDataDoReturnAdmin(data);
 
     const m = moment();
-    const branchName = reportParams.doReturnAwbs[0]
-      ? reportParams.doReturnAwbs[0].branchTo.branchName
-      : null;
+    const branchName = dataReformat.meta.branchName;
     const jsreportParams = {
-      reportParams,
+      data: dataReformat.data,
       meta: {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
-        totalData: await data.awbDetail,
+        totalData: await data.awbDetail.length,
         branchName,
       },
     };
