@@ -824,6 +824,23 @@ export class DoReturnService {
           updatedTime : timeNow,
         },
       );
+      const doReturnAwb = await DoReturnAwb.findOne({
+        where: {
+          doReturnAdminToCtId : adminCt.doReturnAdminToCtId,
+        },
+      });
+      // update lacak kiriman
+      if (adminCt.awbNumberNew) {
+        const attr = await AwbItemAttr.findOne({
+          where: {
+            awbNumber : doReturnAwb.awbNumber,
+          },
+        });
+        AwbItemAttr.update(attr.awbItemAttrId, {
+          doreturnNewAwb: payload.awbNumberNew,
+          updatedTime: moment().toDate(),
+        });
+      }
     }
   }
     result.status = status;
