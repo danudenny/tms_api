@@ -267,6 +267,15 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllTransitList(payload);
   }
 
+  @Post('sortationHub/transitList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutTransitListResponseVm })
+  public async transitListSortHub(@Body() payload: WebScanOutAwbListPayloadVm) {
+    return this.webDeliveryOutService.findAllSortHubTransitList(payload);
+  }
+
   @Post('transitListAwb')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
