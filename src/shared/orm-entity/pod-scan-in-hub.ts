@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { Branch } from './branch';
 
 @Entity('pod_scan_in_hub', { schema: 'public' })
 export class PodScanInHub extends TmsBaseEntity {
@@ -27,4 +28,8 @@ export class PodScanInHub extends TmsBaseEntity {
     name: 'branch_id',
   })
   branchId: number;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
+  branch: Branch;
 }

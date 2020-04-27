@@ -193,3 +193,23 @@ export class WebDropOffSummaryResponseVm {
   @ApiModelProperty()
   totalResi: number;
 }
+
+export class WebScanInHubResponseDataVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  date: string;
+
+  @ApiModelProperty()
+  branchScanName: string;
+
+  @ApiModelProperty()
+  branchScanId: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+}

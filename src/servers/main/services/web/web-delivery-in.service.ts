@@ -25,6 +25,7 @@ import {
   WebScanInHubSortListResponseVm,
   WebScanInBranchListBagResponseVm,
   WebScanInBranchListAwbResponseVm,
+  WebScanInHubListResponseVm,
 } from '../../models/web-scanin-list.response.vm';
 import {
   WebScanInVm,
@@ -54,6 +55,8 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagTroubleService } from '../../../../shared/services/bag-trouble.service';
 import { DoPodDetailBagRepository } from '../../../../shared/orm-repository/do-pod-detail-bag.repository';
+import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
+import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
 
 // #endregion
 
@@ -1584,5 +1587,64 @@ export class WebDeliveryInService {
       LEFT JOIN "public"."bag" "bag" ON bag.bag_id = bi.bag_id and bag.is_deleted = false
     `;
     return await RawQueryService.query(rawQuery);
+  }
+
+  async hubScanInList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInHubListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't3.awb_number';
+    payload.fieldResolverMap['branchScanId'] = 't4.branch_id';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'consigneeName',
+      },
+      {
+        field: 'consigneeAddress',
+      },
+      {
+        field: 'awbNumber',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(PodScanInHubDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.created_time', 'dateScanIn'],
+      ['t3.awb_number', 'awbNumber'],
+      ['t3.consignee_name', 'consigneeName'],
+      ['t3.consignee_address', 'consigneeAddress'],
+      ['t4.branch_name', 'branchScanName'],
+      ['t4.branch_id', 'branchScanId'],
+    );
+
+    q.innerJoin(e => e.podScanInHub, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.podScanInHub.branch, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInHubListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 }
