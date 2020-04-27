@@ -454,7 +454,7 @@ export class PackageService {
     let podScanInHubId: string  = payload.podScanInHubId;
     let bagItemId: string       = payload.bagItemId;
     let isTrouble: boolean      = false;
-    const isAllow: boolean        = true;
+    let isAllow: boolean        = true;
     const troubleDesc: String[] = [];
     let districtId = null;
     let branch = null;
@@ -488,11 +488,11 @@ export class PackageService {
           branchId,
         },
       });
-      // NOTES: WILL BE USE IN NEXT FUTURE
-      if (!branch || (branch && awb.toId !== branch.districtId)) {
-        // troubleDesc.push('Tujuan tidak sesuai');
-        // isAllow = false;
-      } else if (branch) {
+      // NOTE: Validate branch
+      if (!branch) {
+        troubleDesc.push('Gerai tidak ditemukan');
+        isAllow = false;
+      } else {
         districtId = branch.districtId;
       }
     } else {
