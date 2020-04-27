@@ -57,6 +57,9 @@ export class DoReturnResponseVm {
 
   @ApiModelProperty()
   userDriver: string;
+
+  @ApiModelProperty()
+  shipperName: string;
 }
 export class DoReturnAdminResponseVm {
 
