@@ -1,4 +1,4 @@
-import { DropCashlessVm, DropCashLessResponseVM, DropPickupRequestResponseVM, DropCreateWorkOrderPayloadVM } from '../../models/partner/fastpay-drop.vm';
+import { DropCashlessVm, DropCashLessResponseVM, DropPickupRequestResponseVM, DropCreateWorkOrderPayloadVM, CheckDataDropPartnerVm } from '../../models/partner/fastpay-drop.vm';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -13,6 +13,27 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 
 export class PartnerFastpayService {
+
+  static async checkDataPickupRequest(
+    payload: CheckDataDropPartnerVm,
+  ): Promise<DropCashLessResponseVM> {
+    // NOTE: check pickup request with awb number
+    let pickupRequest: DropPickupRequestResponseVM = await this.getPickupRequestAwbNumber(
+      payload.awb_number,
+    );
+    // check pickup reqeust with referenceNo
+    if (!pickupRequest) {
+      pickupRequest = await this.getPickupRequestReferenceNo(
+        payload.awb_number,
+      );
+    }
+
+    if (pickupRequest) {
+      return this.handleResult(pickupRequest);
+    } else {
+      throw new BadRequestException('Data resi tidak ditemukan!');
+    }
+  }
 
   static async dropCash(
     payload: DropCashlessVm,

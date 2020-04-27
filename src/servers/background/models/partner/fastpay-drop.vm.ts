@@ -1,5 +1,10 @@
 import { ApiModelProperty } from '../../../../shared/external/nestjs-swagger';
 
+export class CheckDataDropPartnerVm {
+  @ApiModelProperty()
+  awb_number: string;
+}
+
 export class DropCashlessVm {
   @ApiModelProperty()
   awb_number: string;
