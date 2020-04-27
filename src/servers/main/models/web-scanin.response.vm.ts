@@ -199,7 +199,7 @@ export class WebScanInHubResponseDataVm {
   awbNumber: string;
 
   @ApiModelProperty()
-  date: string;
+  dateScanIn: string;
 
   @ApiModelProperty()
   branchScanName: string;

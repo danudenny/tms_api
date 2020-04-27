@@ -1596,6 +1596,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['awbNumber'] = 't3.awb_number';
     payload.fieldResolverMap['branchScanId'] = 't4.branch_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['dateScanIn'] = 't1.created_time';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
