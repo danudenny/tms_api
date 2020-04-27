@@ -5,7 +5,10 @@ import { ResponseSerializerOptions } from '../../../shared/decorators/response-s
 import { PrintDoPodBagPayloadQueryVm } from '../models/print-do-pod-bag-payload.vm';
 import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-payload.vm';
 import { PrintDoPodPayloadQueryVm } from '../models/print-do-pod-payload.vm';
-import { ApiUseTags, ApiBearerAuth } from '../../../shared/external/nestjs-swagger';
+import {
+  ApiUseTags,
+  ApiBearerAuth,
+} from '../../../shared/external/nestjs-swagger';
 import { PrintDoPodVm } from '../models/print-do-pod.vm';
 import { PrintDoPodBagVm } from '../models/print-do-pod-bag.vm';
 import { PrintDoPodDeliverVm } from '../models/print-do-pod-deliver.vm';
@@ -13,15 +16,17 @@ import { PrintByStoreService } from '../services/print-by-store.service';
 import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm';
 import { PrintBagItemPaperVm } from '../models/print-bag-item-paper.vm';
 import { PrintBagItemStickerVm } from '../models/print-bag-item-sticker.vm';
+import {
+  PrintDoPodReturnPayloadQueryVm,
+  PrintDoPodReturnAdmiStorePayloadVm,
+} from '../models/print-do-pod-return.vm';
 
 @ApiUseTags('General')
 @Controller('print-by-store')
 export class PrintByStoreController {
   @Post('do-pod/store')
   @ApiBearerAuth()
-  public async storePrintDoPod(
-    @Body() payloadBody: PrintDoPodVm,
-  ) {
+  public async storePrintDoPod(@Body() payloadBody: PrintDoPodVm) {
     return PrintByStoreService.storePrintDoPod(payloadBody);
   }
 
@@ -37,9 +42,7 @@ export class PrintByStoreController {
 
   @Post('do-pod-bag/store')
   @ApiBearerAuth()
-  public async storePrintDoPodBag(
-    @Body() payloadBody: PrintDoPodBagVm,
-  ) {
+  public async storePrintDoPodBag(@Body() payloadBody: PrintDoPodBagVm) {
     return PrintByStoreService.storePrintDoPodBag(payloadBody);
   }
 
@@ -50,7 +53,10 @@ export class PrintByStoreController {
     @Query() queryParams: PrintDoPodBagPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintByStoreService.executePrintDoPodBag(serverResponse, queryParams);
+    return PrintByStoreService.executePrintDoPodBag(
+      serverResponse,
+      queryParams,
+    );
   }
 
   @Post('do-pod-deliver/store')
@@ -68,7 +74,10 @@ export class PrintByStoreController {
     @Query() queryParams: PrintDoPodDeliverPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintByStoreService.executePrintDoPodDeliver(serverResponse, queryParams);
+    return PrintByStoreService.executePrintDoPodDeliver(
+      serverResponse,
+      queryParams,
+    );
   }
 
   @Post('bag-item-for-paper/store')
@@ -87,7 +96,10 @@ export class PrintByStoreController {
     @Query() queryParams: PrintBagItemPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintByStoreService.executePrintBagItemPaper(serverResponse, queryParams);
+    return PrintByStoreService.executePrintBagItemPaper(
+      serverResponse,
+      queryParams,
+    );
   }
 
   @Post('bag-item-for-sticker/store')
@@ -106,6 +118,29 @@ export class PrintByStoreController {
     @Query() queryParams: PrintBagItemPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintByStoreService.executePrintBagItemSticker(serverResponse, queryParams);
+    return PrintByStoreService.executePrintBagItemSticker(
+      serverResponse,
+      queryParams,
+    );
+  }
+
+  @Post('do-pod-do-return-admin/store')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async storePrintDoPodReturnAdmin(@Body() payloadBody: any) {
+    return PrintByStoreService.storePrintDoPodReturnAdmin(payloadBody);
+  }
+
+  @Get('do-pod-do-return-admin/execute')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async executePrintDoPodReturnAdmin(
+    @Query() queryParams: PrintDoPodReturnPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintByStoreService.executePrintDoPodReturnAdmin(
+      serverResponse,
+      queryParams,
+    );
   }
 }
