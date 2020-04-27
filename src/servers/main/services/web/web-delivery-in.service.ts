@@ -1594,14 +1594,24 @@ export class WebDeliveryInService {
   ): Promise<WebScanInHubListResponseVm> {
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't3.awb_number';
-    payload.fieldResolverMap['consigneeName'] = 't3.consignee_name';
-    payload.fieldResolverMap['consigneeAddress'] = 't3.consignee_address';
-    payload.fieldResolverMap['branchScanName'] = 't4.branch_name';
     payload.fieldResolverMap['branchScanId'] = 't4.branch_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'consigneeName',
+      },
+      {
+        field: 'consigneeAddress',
+      },
+      {
+        field: 'awbNumber',
+      },
+    ];
 
     const repo = new OrionRepositoryService(PodScanInHubDetail, 't1');
     const q = repo.findAllRaw();
