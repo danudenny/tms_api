@@ -1100,7 +1100,7 @@ export class WebDeliveryInService {
           });
           if (bagItem) {
             // update status bagItem
-            await BagItem.update(bagItem.bagItemId, {
+            await BagItem.update({ bagItemId: bagItem.bagItemId}, {
               bagItemStatusIdLast: BAG_STATUS.DO_HUB,
               branchIdLast: permissonPayload.branchId,
               updatedTime: timeNow,
@@ -1115,7 +1115,7 @@ export class WebDeliveryInService {
               // counter total scan in
               doPodDetailBag.doPod.totalScanInBag += 1;
               if (doPodDetailBag.doPod.totalScanInBag == 1) {
-                await DoPod.update(doPodDetailBag.doPodId, {
+                await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
                   firstDateScanIn: timeNow,
                   lastDateScanIn: timeNow,
                   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
@@ -1123,7 +1123,7 @@ export class WebDeliveryInService {
                   userIdUpdated: authMeta.userId,
                 });
               } else {
-                await DoPod.update(doPodDetailBag.doPodId, {
+                await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
                   lastDateScanIn: timeNow,
                   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
                   updatedTime: timeNow,
@@ -1204,11 +1204,14 @@ export class WebDeliveryInService {
           });
           if (podScanInBag) {
             const totalDiff = item.totalAwbInBag - item.totalAwbScan;
-            PodScanInBranchBag.update(podScanInBag.podScanInBranchBagId, {
-              totalAwbScan: item.totalAwbScan,
-              notes: payload.notes,
-              totalDiff,
-            });
+            PodScanInBranchBag.update(
+              { podScanInBranchBagId: podScanInBag.podScanInBranchBagId },
+              {
+                totalAwbScan: item.totalAwbScan,
+                notes: payload.notes,
+                totalDiff,
+              },
+            );
           }
           // NOTE: add to bag trouble
           const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
@@ -1234,7 +1237,7 @@ export class WebDeliveryInService {
     });
 
     if (podScanInBranch) {
-      PodScanInBranch.update(payload.podScanInBranchId, {
+      PodScanInBranch.update({ podScanInBranchId: payload.podScanInBranchId }, {
         transactionStatusId: 700,
       });
     }

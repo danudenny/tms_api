@@ -279,14 +279,14 @@ export class HubTransitDeliveryOutService {
     if (doPod) {
       // counter total scan in
       if (doPod.totalScanOutAwb == 0) {
-        await DoPod.update(doPod.doPodId, {
+        await DoPod.update({ doPodId: doPod.doPodId }, {
           totalScanOutAwb: totalSuccess,
           firstDateScanOut: timeNow,
           lastDateScanOut: timeNow,
         });
       } else {
         const totalScanOutAwb = doPod.totalScanOutAwb + totalSuccess;
-        await DoPod.update(doPod.doPodId, {
+        await DoPod.update({ doPodId: doPod.doPodId }, {
           totalScanOutAwb,
           lastDateScanOut: timeNow,
         });
