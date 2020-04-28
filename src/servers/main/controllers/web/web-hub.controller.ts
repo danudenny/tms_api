@@ -5,7 +5,7 @@ import {
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import {
-    WebHubScanOutBagResponseVm, WebScanOutCreateResponseVm, WebScanOutAwbResponseVm,
+    WebHubScanOutBagResponseVm, WebScanOutCreateResponseVm, WebScanOutAwbResponseVm, WebHubScanOutAwbResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import {
     TransferBagNumberHubVm, WebScanOutCreateVm, WebScanOutAwbVm, TransferAwbNumberHubVm,
@@ -79,7 +79,7 @@ export class WebHubController {
   }
   @Post('sortir/awbNumber')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: WebHubScanOutBagResponseVm })
+  @ApiOkResponse({ type: WebHubScanOutAwbResponseVm })
   public async sortirHub(@Body() payload: TransferAwbNumberHubVm) {
     return HubSortirService.hubAwbNumber(payload);
   }
