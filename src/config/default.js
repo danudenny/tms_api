@@ -25,7 +25,7 @@ module.exports = {
     cloudSecretAccessKey: '8J2hhM/vn2pCMIst4TIukElEbLhhkzY9S/PFy9KV',
   },
   printerHelper: {
-    url: 'http://jsreport.sicepat.com/wcpp',
+    url: 'http://sicepat-tms-printer.azurewebsites.net',
   },
   queue: {
     doPodDetailPostMeta: {
