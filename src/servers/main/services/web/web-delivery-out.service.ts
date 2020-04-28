@@ -208,7 +208,7 @@ export class WebDeliveryOutService {
           });
 
           if (doPodDetail) {
-            DoPodDetail.update(doPodDetail.doPodDetailId, {
+            DoPodDetail.update({ doPodDetailId: doPodDetail.doPodDetailId }, {
               isDeleted: true,
             });
             // NOTE: update awb_item_attr and awb_history
@@ -274,7 +274,7 @@ export class WebDeliveryOutService {
         vehicleNumber: payload.vehicleNumber,
         totalScanOutAwb,
       };
-      await DoPod.update(doPod.doPodId, updateDoPod);
+      await DoPod.update({ doPodId: doPod.doPodId }, updateDoPod);
       await this.createAuditHistory(doPod.doPodId);
 
       result.status = 'ok';
@@ -329,7 +329,7 @@ export class WebDeliveryOutService {
             });
 
             if (doPodDetailBag) {
-              DoPodDetailBag.update(doPodDetailBag.doPodDetailBagId, {
+              DoPodDetailBag.update({ doPodDetailBagId: doPodDetailBag.doPodDetailBagId }, {
                 isDeleted: true,
               });
 
@@ -340,7 +340,7 @@ export class WebDeliveryOutService {
                 },
               });
               if (bagItem) {
-                BagItem.update(bagItem.bagItemId, {
+                BagItem.update({ bagItemId: bagItem.bagItemId }, {
                   bagItemStatusIdLast: 2000,
                   branchIdLast: doPod.branchId,
                   branchIdNext: null,
@@ -389,7 +389,7 @@ export class WebDeliveryOutService {
               },
             });
             if (bagItem) {
-              BagItem.update(bagItem.bagItemId, {
+              BagItem.update({ bagItemId: bagItem.bagItemId }, {
                 bagItemStatusIdLast: 1000,
                 branchIdLast: doPod.branchId,
                 branchIdNext: doPod.branchIdTo,
@@ -435,7 +435,7 @@ export class WebDeliveryOutService {
         vehicleNumber: payload.vehicleNumber,
         totalScanOutBag,
       };
-      await DoPod.update(doPod.doPodId, updateDoPod);
+      await DoPod.update({ doPodId: doPod.doPodId }, updateDoPod);
       await this.createAuditHistory(doPod.doPodId);
 
       result.status = 'ok';
@@ -703,7 +703,7 @@ export class WebDeliveryOutService {
             // #region after scanout
             // Update bag_item set bag_item_status_id = 1000
 
-            await BagItem.update(bagData.bagItemId, {
+            await BagItem.update({ bagItemId: bagData.bagItemId }, {
               bagItemStatusIdLast: bagStatus,
               branchIdLast: doPod.branchId,
               branchIdNext: doPod.branchIdTo,
@@ -788,14 +788,14 @@ export class WebDeliveryOutService {
     if (doPod) {
       // counter total scan in
       if (doPod.totalScanOutBag == 0) {
-        await DoPod.update(doPod.doPodId, {
+        await DoPod.update({ doPodId: doPod.doPodId }, {
           totalScanOutBag: totalSuccess,
           firstDateScanOut: timeNow,
           lastDateScanOut: timeNow,
         });
       } else {
         const totalScanOutBag = doPod.totalScanOutBag + totalSuccess;
-        await DoPod.update(doPod.doPodId, {
+        await DoPod.update({ doPodId: doPod.doPodId }, {
           totalScanOutBag,
           lastDateScanOut: timeNow,
         });
