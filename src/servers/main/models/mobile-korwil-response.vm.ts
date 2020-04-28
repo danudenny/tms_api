@@ -44,6 +44,9 @@ export class DetailItemListKorwilResponseVm {
 
   @ApiModelProperty()
   isDone: boolean;
+
+  @ApiModelProperty()
+  isRequired: boolean;
 }
 
 export class ItemListKorwilResponseVm {
@@ -141,6 +144,9 @@ export class DetailItemKorwilHistoryKorwil {
 
   @ApiModelProperty()
   statusItem: string;
+
+  @ApiModelProperty()
+  isRequired: boolean;
 
   @ApiModelProperty()
   note: string;

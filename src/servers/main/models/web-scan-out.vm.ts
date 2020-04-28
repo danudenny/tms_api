@@ -109,6 +109,17 @@ export class TransferBagNumberHubVm {
   @Type(() => String)
   bagNumber: string[];
 }
+export class TransferAwbNumberHubVm {
+  @ApiModelProperty({
+    example: ['0002000101', '0002000202'],
+    skipValidation: true,
+  })
+  // TODO: validation if array length = 0
+  @IsDefined({message: 'No Resi harus diisi'})
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  awbNumber: string[];
+}
 
 // Scan Out Awb List
 export class FilterScanOutAwbListVm {
