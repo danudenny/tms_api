@@ -8,9 +8,10 @@ import {
     WebHubScanOutBagResponseVm, WebScanOutCreateResponseVm, WebScanOutAwbResponseVm,
 } from '../../models/web-scan-out-response.vm';
 import {
-    TransferBagNumberHubVm, WebScanOutCreateVm, WebScanOutAwbVm,
+    TransferBagNumberHubVm, WebScanOutCreateVm, WebScanOutAwbVm, TransferAwbNumberHubVm,
 } from '../../models/web-scan-out.vm';
 import { HubTransitDeliveryService } from '../../services/web/hub-transit/hub-transit-delivery.service';
+import { HubSortirService } from '../../services/web/hub-transit/hub-sortir.service';
 import { WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { HubTransitDeliveryInService } from '../../services/web/hub-transit/hub-transit-delivery-in.service';
@@ -75,5 +76,11 @@ export class WebHubController {
   @ApiOkResponse({ type: WebHubScanOutBagResponseVm })
   public async transferAwbDelivery(@Body() payload: TransferBagNumberHubVm) {
     return HubTransitDeliveryService.transferBagNumber(payload);
+  }
+  @Post('sortir/awbNumber')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebHubScanOutBagResponseVm })
+  public async sortirHub(@Body() payload: TransferAwbNumberHubVm) {
+    return HubSortirService.hubAwbNumber(payload);
   }
 }
