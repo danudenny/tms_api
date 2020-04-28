@@ -54,6 +54,9 @@ export class DoReturnService {
       {
         field: 'doCodeCt',
       },
+      {
+        field: 'shipperName',
+      },
     ];
     payload.fieldResolverMap['podDatetime']         = 'return.pod_datetime';
     payload.fieldResolverMap['branchIdLast']        = 'awb_item_attr.branch_id_last';
@@ -62,6 +65,7 @@ export class DoReturnService {
     payload.fieldResolverMap['customerAccountId']   = 'return.customer_account_id';
     payload.fieldResolverMap['doReturnAwbNumber']   = 'return.do_return_awb_number';
     payload.fieldResolverMap['awbNumber']           = 'return.awb_number';
+    payload.fieldResolverMap['shipperName']          = 'prd.shipper_name';
     payload.fieldResolverMap['doCodeCt']            = 'do_return_ct.do_return_ct_to_collection';
     payload.fieldResolverMap['doCodeCollection']    = 'do_return_collection.do_return_collection_to_cust';
     payload.fieldResolverMap['doCode']              = 'do_return_admin.do_return_admin_to_ct';
@@ -91,12 +95,16 @@ export class DoReturnService {
       ['do_return_ct.do_return_ct_to_collection', 'doCodeCt'],
       ['do_return_collection.do_return_collection_to_cust', 'doCodeCollection'],
       [`CONCAT(user_driver.first_name, ' ', user_driver.last_name)`, 'userDriver'],
+      ['prd.shipper_name', 'shipperName'],
     );
     q.innerJoin(e => e.customer, 'customer', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.awbItmAttr, 'awb_item_attr', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.pickupRequestDetail, 'prd', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.awbItmAttr.branchLast, 'branch',
     );
