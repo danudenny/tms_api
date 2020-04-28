@@ -24,7 +24,14 @@ export class KorwilItem extends TmsBaseEntity {
     length: 500,
     name: 'korwil_item_name',
   })
-  korwilItemName: string | null;;
+  korwilItemName: string | null;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_required',
+  })
+  isRequired: boolean;
 
   @Column('integer', {
     nullable: true,
