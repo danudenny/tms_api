@@ -47,7 +47,7 @@ export class SmsTrackingController {
     return SmsTrackingService.storeShift(payload);
   }
 
-  @Post('shift/store')
+  @Post('shift/list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOkResponse({ type: SmsTrackingListShiftResponseVm })
