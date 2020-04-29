@@ -4,4 +4,5 @@ export const POD_TYPE = {
   OUT_HUB: 3010,
   OUT_BRANCH_AWB: 3015,
   OUT_HUB_TRANSIT: 3020,
+  OUT_HUB_AWB: 3030,
 };

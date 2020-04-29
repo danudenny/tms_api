@@ -50,7 +50,7 @@ export class DoReturnService {
       inner join awb a on aia.awb_id=a.awb_id and a.is_deleted=false
       left join customer_account ca on a.customer_account_id=ca.customer_account_id and ca.is_deleted=false
       left join customer cust on ca.customer_id=cust.customer_id and cust.is_deleted=false
-      where prd.do_return = true and prd.is_doreturn_sync = false and aia.awb_status_id_last >= 3500
+      where prd.do_return = true and prd.is_doreturn_sync is null and aia.awb_status_id_last >= 1500 limit 3000
       );
       `,
       null,
@@ -65,7 +65,7 @@ export class DoReturnService {
       SET is_doreturn_sync = true
       FROM do_return_awb p2
       WHERE prd.ref_awb_number = p2.awb_number
-      AND prd.is_doreturn_sync = false ;`, null, false);
+      AND prd.is_doreturn_sync is null;`, null, false);
     return true;
 
 }

@@ -8,7 +8,7 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { BagRepository } from '../../../../shared/orm-repository/bag.repository';
 import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
-import { WebScanInListResponseVm, WebScanInBagListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm, WebScanInBranchListBagResponseVm, WebScanInBranchListAwbResponseVm } from '../../models/web-scanin-list.response.vm';
+import { WebScanInListResponseVm, WebScanInBagListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm, WebScanInBranchListBagResponseVm, WebScanInBranchListAwbResponseVm, WebScanInHubListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { WebScanInVm, WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebScanInBagBranchVm, WebScanInLoadBranchResponseVm, WebScanInBranchLoadResponseVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
@@ -122,6 +122,7 @@ export class WebDeliveryInController {
     return this.webDeliveryService.scanInBag(payload);
   }
 
+  // TODO: to be removed
   @Post('dropoff')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -160,6 +161,7 @@ export class WebDeliveryInController {
     return this.webDeliveryService.loadBranchPackage();
   }
 
+  // TODO: to be removed
   @Post('dropOffList')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -168,7 +170,7 @@ export class WebDeliveryInController {
   public async loadDropOffHubList(@Body() payload: BaseMetaPayloadVm) {
     return this.webDeliveryService.loadDropOffList(payload);
   }
-
+  // TODO: to be removed
   @Post('dropOffListDetail')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -194,5 +196,14 @@ export class WebDeliveryInController {
   @ApiOkResponse({ type: WebDeliveryListResponseVm })
   public async loadSortationHubListDetail(@Body() payload: BaseMetaPayloadVm) {
     return this.webDeliveryService.loadSortationListDetail(payload);
+  }
+
+  @Post('hubList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanInHubListResponseVm })
+  public async scanInHubList(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryService.hubScanInList(payload);
   }
 }

@@ -56,7 +56,7 @@ export class HubTransitDeliveryService {
           });
           if (doPodBag) {
             // TODO: update counter bag on DoPod
-            await DoPodDetailBag.update(doPodBag.doPodDetailBagId, {
+            await DoPodDetailBag.update({ doPodDetailBagId: doPodBag.doPodDetailBagId }, {
               isDeleted: true,
               updatedTime: timeNow,
               userIdUpdated: authMeta.userId,
