@@ -1,7 +1,7 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 import { IsDefined } from 'class-validator';
-import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
+import {BaseMetaPayloadVm} from '../../../shared/models/base-meta-payload.vm';
 
 export class SmsTrackingStoreMessagePayloadVm {
   @ApiModelProperty()

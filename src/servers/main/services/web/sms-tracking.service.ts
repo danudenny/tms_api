@@ -10,12 +10,12 @@ import {
   SmsTrackingStoreShiftResponseVm,
   SmsTrackingListShiftResponseVm,
 } from '../../models/sms-tracking-response.vm';
-import { SmsTrackingMessage } from 'src/shared/orm-entity/sms-tracking-message';
-import { AuthService } from 'src/shared/services/auth.service';
 import moment = require('moment');
-import { OrionRepositoryService } from 'src/shared/services/orion-repository.service';
 import { async } from 'rxjs/internal/scheduler/async';
 import { SmsTrackingShift } from '../../../../shared/orm-entity/sms-tracking-shift';
+import {AuthService} from '../../../../shared/services/auth.service';
+import {SmsTrackingMessage} from '../../../../shared/orm-entity/sms-tracking-message';
+import {OrionRepositoryService} from '../../../../shared/services/orion-repository.service';
 
 export class SmsTrackingService {
   static async storeMessage(
