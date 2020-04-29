@@ -23,6 +23,7 @@ import moment = require('moment');
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
+import { UploadImagePodQueueService } from '../../../../queue/services/upload-pod-image-queue.service';
 // #endregion
 
 export class V1MobileSyncService {
@@ -273,16 +274,21 @@ export class V1MobileSyncService {
     // NOTE: insert data array
     let total = 0;
     if (attachmentId && payload.data) {
-      PinoLoggerService.log('#### Payload Data : ', payload.data);
       const data = payload.data.split(';');
       for (const item of data) {
-        PinoLoggerService.log('#### Data Item Id : ', item);
         if (item) {
           const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
           doPodDeliverAttachment.doPodDeliverDetailId = item;
           doPodDeliverAttachment.attachmentTmsId = attachmentId;
           doPodDeliverAttachment.type = payload.imageType;
           await DoPodDeliverAttachment.save(doPodDeliverAttachment);
+
+          // send to background reupload s3 with awb number
+          UploadImagePodQueueService.perform(
+            item,
+            url,
+            payload.imageType,
+          );
           total += 1;
         }
       }

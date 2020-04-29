@@ -23,6 +23,7 @@ import { LogglyMiddleware } from '../../shared/middlewares/loggly.middleware';
 import { BagScanOutHubQueueService } from './services/bag-scan-out-hub-queue.service';
 import { AwbSendPartnerQueueService } from './services/awb-send-partner-queue.service';
 import { BagDropoffHubQueueService } from './services/bag-dropoff-hub-queue.service';
+import { UploadImagePodQueueService } from './services/upload-pod-image-queue.service';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -115,6 +116,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     MappingRoleQueueService.boot();
     AwbSendPartnerQueueService.boot();
     BagDropoffHubQueueService.boot();
+    UploadImagePodQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
   }
