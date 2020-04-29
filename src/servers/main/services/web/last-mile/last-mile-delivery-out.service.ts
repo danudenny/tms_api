@@ -211,7 +211,7 @@ export class LastMileDeliveryOutService {
           });
 
           if (doPodDeliverDetail) {
-            DoPodDeliverDetail.update(doPodDeliverDetail.doPodDeliverDetailId, {
+            DoPodDeliverDetail.update({ doPodDeliverDetailId: doPodDeliverDetail.doPodDeliverDetailId }, {
               isDeleted: true,
             });
             // NOTE: update awb_item_attr and awb_history
@@ -273,7 +273,7 @@ export class LastMileDeliveryOutService {
         userId: authMeta.userId,
         totalAwb,
       };
-      await DoPodDeliver.update(doPod.doPodDeliverId, updateDoPod);
+      await DoPodDeliver.update({ doPodDeliverId: doPod.doPodDeliverId }, updateDoPod);
 
       // NOTE: insert table audit history
       await this.createAuditDeliveryHistory(doPod.doPodDeliverId);
@@ -464,7 +464,7 @@ export class LastMileDeliveryOutService {
 
                 // TODO: need improvement counter total scan out
                 const totalAwb = doPodDeliver.totalAwb + 1;
-                await DoPodDeliver.update(doPodDeliver.doPodDeliverId, {
+                await DoPodDeliver.update({ doPodDeliverId: doPodDeliver.doPodDeliverId }, {
                   totalAwb,
                 });
 
@@ -638,7 +638,7 @@ export class LastMileDeliveryOutService {
 
                   // TODO: need improvement counter total scan out
                   const totalAwb = doPodDeliver.totalAwb + 1;
-                  await DoPodDeliver.update(doPodDeliver.doPodDeliverId, {
+                  await DoPodDeliver.update({ doPodDeliverId: doPodDeliver.doPodDeliverId }, {
                     totalAwb,
                   });
                   totalSuccess += 1;
@@ -1004,7 +1004,7 @@ export class LastMileDeliveryOutService {
             if (holdRedis) {
               // Update data do pod detail per awb number
               // doPodDeliverId;
-              await DoPodDeliverDetail.update(awbDeliver.doPodDeliverDetailId, {
+              await DoPodDeliverDetail.update({ doPodDeliverDetailId: awbDeliver.doPodDeliverDetailId }, {
                 isDeleted: true,
                 userIdUpdated: authMeta.userId,
                 updatedTime: moment().toDate(),
@@ -1168,7 +1168,7 @@ export class LastMileDeliveryOutService {
     });
 
     if (awb) {
-      await AwbItemAttr.update(awb.awbItemAttrId, {
+      await AwbItemAttr.update({ awbItemAttrId: awb.awbItemAttrId }, {
         awbThirdParty: payload.awbThirdParty,
         updatedTime: moment().toDate(),
       });

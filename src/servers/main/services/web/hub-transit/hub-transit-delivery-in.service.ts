@@ -82,7 +82,7 @@ export class HubTransitDeliveryInService {
           });
           if (bagItem) {
             // update status bagItem
-            await BagItem.update(bagItem.bagItemId, {
+            await BagItem.update({ bagItemId: bagItem.bagItemId }, {
               bagItemStatusIdLast: BAG_STATUS.DO_HUB,
               branchIdLast: permissonPayload.branchId,
               updatedTime: timeNow,
@@ -125,7 +125,7 @@ export class HubTransitDeliveryInService {
               // counter total scan in
               doPodDetailBag.doPod.totalScanInBag += 1;
               if (doPodDetailBag.doPod.totalScanInBag == 1) {
-                await DoPod.update(doPodDetailBag.doPodId, {
+                await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
                   firstDateScanIn: timeNow,
                   lastDateScanIn: timeNow,
                   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
@@ -133,7 +133,7 @@ export class HubTransitDeliveryInService {
                   userIdUpdated: authMeta.userId,
                 });
               } else {
-                await DoPod.update(doPodDetailBag.doPodId, {
+                await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
                   lastDateScanIn: timeNow,
                   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
                   updatedTime: timeNow,

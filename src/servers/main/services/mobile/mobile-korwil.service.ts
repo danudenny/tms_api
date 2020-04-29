@@ -129,19 +129,10 @@ export class MobileKorwilService {
     });
     const dataKorwil = await qb.getRawOne();
 
-    qb.andWhere('ktd.is_done = false');
-    const unfinishItem = await qb.getRawOne();
-
-    if (unfinishItem) {
-      if (unfinishItem.status == 1) {
-        result.message = 'error';
-        result.status = 'Korwil sudah di submit';
-        return result;
-      } else {
-        result.message = 'error';
-        result.status = 'Item Korwil belum semua di selesaikan';
-        return result;
-      }
+    if (dataKorwil && dataKorwil.status == 1) {
+      result.message = 'error';
+      result.status = 'Korwil sudah di submit';
+      return result;
     } else if (!dataKorwil) {
       result.message = 'error';
       result.status = 'Korwil tidak ditemukan';
@@ -218,6 +209,7 @@ export class MobileKorwilService {
     qb.addSelect('kt.status', 'statusTransaction');
     qb.addSelect('ktd.note', 'note');
     qb.from('korwil_transaction', 'kt');
+    qb.addSelect('ki.is_required', 'isRequired');
     qb.innerJoin(
       'korwil_transaction_detail',
       'ktd',
@@ -488,6 +480,7 @@ export class MobileKorwilService {
       statusItem: null,
       note: null,
       photo: null,
+      isRequired: null,
     };
     const authMeta = AuthService.getAuthMetadata();
     var items = [];
@@ -507,6 +500,7 @@ export class MobileKorwilService {
     qb.addSelect('COALESCE(ej.check_out_date, null)', 'checkOutDate');
     qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
     qb.addSelect('kt.status', 'statusKorwil');
+    qb.addSelect('ki.is_required', 'isRequired');
     qb.from('korwil_transaction', 'kt');
     qb.innerJoin(
       'employee_journey',
@@ -565,6 +559,7 @@ export class MobileKorwilService {
       detailItem.isDone = data[i].isDone;
       detailItem.statusItem = data[i].statusItem;
       detailItem.note = data[i].note;
+      detailItem.isRequired = data[i].isRequired;
       detailItem.photo = photos;
       let temp = clone(detailItem);
       items.push(temp);
