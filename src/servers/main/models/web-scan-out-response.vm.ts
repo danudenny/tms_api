@@ -407,6 +407,19 @@ export class WebHubScanOutBagResponseVm {
   @ApiModelProperty({ type: [ScanBagVm] })
   data: ScanBagVm[];
 }
+export class WebHubScanOutAwbResponseVm {
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({ type: [ScanAwbVm] })
+  data: ScanAwbVm[];
+}
 
 export class EditDataAwbVm {
   @ApiModelProperty()
