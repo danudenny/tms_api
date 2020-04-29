@@ -76,7 +76,7 @@ export class MobileKorwilController {
   @Get('itemList/:branchId')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: ItemListKorwilResponseVm })
   public async itemList(@Param('branchId') branchId: string) {
     return MobileKorwilService.getItemList(branchId);
