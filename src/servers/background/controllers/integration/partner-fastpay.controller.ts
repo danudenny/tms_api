@@ -3,7 +3,9 @@ import {
     ApiImplicitHeader, ApiOkResponse, ApiUseTags,
 } from '../../../../shared/external/nestjs-swagger';
 import { AuthXAPIKeyGuard } from '../../../../shared/guards/auth-x-api-key.guard';
-import { DropCashLessResponseVM, DropCashlessVm, CheckDataDropPartnerVm } from '../../models/partner/fastpay-drop.vm';
+import {
+    CheckDataDropPartnerVm, DropCashLessResponseVM, DropCashlessVm, DropSuccessResponseVm,
+} from '../../models/partner/fastpay-drop.vm';
 import { PartnerFastpayService } from '../../services/integration/partner-fastpay.service';
 
 @ApiUseTags('Integration Drop Partner')
@@ -24,7 +26,7 @@ export class PartnerFastpayController {
   @HttpCode(HttpStatus.OK)
   @ApiImplicitHeader({ name: 'x-api-key' })
   @UseGuards(AuthXAPIKeyGuard)
-  @ApiOkResponse({ type: DropCashLessResponseVM })
+  @ApiOkResponse({ type: DropSuccessResponseVm })
   public async dropCash(@Body() payload: DropCashlessVm) {
     return PartnerFastpayService.dropCash(payload);
   }
@@ -33,7 +35,7 @@ export class PartnerFastpayController {
   @HttpCode(HttpStatus.OK)
   @ApiImplicitHeader({ name: 'x-api-key' })
   @UseGuards(AuthXAPIKeyGuard)
-  @ApiOkResponse({ type: DropCashLessResponseVM })
+  @ApiOkResponse({ type: DropSuccessResponseVm })
   public async dropCashless(@Body() payload: DropCashlessVm) {
     return PartnerFastpayService.dropCashless(payload);
   }
