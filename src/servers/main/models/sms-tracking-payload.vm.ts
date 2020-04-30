@@ -14,9 +14,9 @@ export class SmsTrackingStoreMessagePayloadVm {
   note: string;
 
   @ApiModelProperty({
-    example: ['abcd-efgh-ijkl-mnop-qrst'],
+    example: [12345],
   })
-  sentTo: string;
+  sentTo: number;
 }
 
 export class SmsTrackingListMessagePayloadVm extends BaseMetaPayloadVm {}

@@ -6,13 +6,13 @@ export class SmsTrackingMessage extends BaseEntity {
     type: 'bigint',
     name: 'sms_tracking_message_id',
   })
-  smsTrackingMessageId: string;
+  smsTrackingMessageId: number;
 
-  @Column('uuid', {
-    nullable: false,
+  @Column('bigint', {
+    nullable: true,
     name: 'sent_to',
   })
-  sentTo: string | null;
+  sentTo: number | null;
 
   @Column('boolean', {
     nullable: false,

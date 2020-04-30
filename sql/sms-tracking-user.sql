@@ -2,8 +2,10 @@
 -- PostgreSQL database dump
 --
 
+CREATE SEQUENCE sms_tracking_user_id_seq;
+
 CREATE TABLE public.sms_tracking_user (
-	sms_tracking_user_id uuid NOT NULL DEFAULT uuid_generate_v1(),
+	sms_tracking_user_id int8 DEFAULT nextval('sms_tracking_user_id_seq'::regclass) NOT NULL,
 	name varchar(255) NOT NULL,
 	phone varchar(255) NOT NULL,
 	user_id_created int8 NOT NULL,

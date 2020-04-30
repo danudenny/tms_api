@@ -4,7 +4,7 @@ import { IsDefined } from 'class-validator';
 
 export class SmsTrackingStoreMessageResponseVm {
   @ApiModelProperty()
-  smsTrackingMessageId: string;
+  smsTrackingMessageId: number;
 
   @ApiModelProperty()
   status: string;
@@ -15,10 +15,10 @@ export class SmsTrackingStoreMessageResponseVm {
 
 export class SmsTrackingMsgResponseVm {
   @ApiModelProperty()
-  smsTrackingMessageId: string;
+  smsTrackingMessageId: number;
 
   @ApiModelProperty()
-  sentTo: string;
+  sentTo: number;
 
   @ApiModelProperty()
   isRepeated: boolean;
@@ -37,7 +37,7 @@ export class SmsTrackingListMessageResponseVm extends BaseMetaResponseVm {
 
 export class SmsTrackingStoreShiftResponseVm {
   @ApiModelProperty()
-  smsTrackingShiftId: string;
+  smsTrackingShiftId: number;
 
   @ApiModelProperty()
   status: string;
@@ -48,7 +48,7 @@ export class SmsTrackingStoreShiftResponseVm {
 
 export class SmsTrackingShiftDataVm {
   @ApiModelProperty()
-  smsTrackingShiftId: string;
+  smsTrackingShiftId: number;
 
   @ApiModelProperty()
   workFrom: string;
@@ -64,7 +64,7 @@ export class SmsTrackingListShiftResponseVm extends BaseMetaResponseVm {
 
 export class SmsTrackingListUserDataVm {
   @ApiModelProperty()
-  smsTrackingUserId: string;
+  smsTrackingUserId: number;
 
   @ApiModelProperty()
   name: string;

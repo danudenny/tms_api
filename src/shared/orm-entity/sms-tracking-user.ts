@@ -6,7 +6,7 @@ export class SmsTrackingUser extends BaseEntity {
     type: 'bigint',
     name: 'sms_tracking_user_id',
   })
-  smsTrackingUserId: string;
+  smsTrackingUserId: number;
 
   @Column('character varying', {
     nullable: true,

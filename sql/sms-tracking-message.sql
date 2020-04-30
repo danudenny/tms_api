@@ -1,10 +1,11 @@
 --
 -- PostgreSQL database dump
 --
+CREATE SEQUENCE sms_tracking_message_sms_tracking_message_id_seq;
 
 CREATE TABLE public.sms_tracking_message (
-	sms_tracking_message_id uuid NOT NULL DEFAULT uuid_generate_v1(),
-	sent_to uuid NOT NULL,
+	sms_tracking_message_id int8 DEFAULT nextval('sms_tracking_message_sms_tracking_message_id_seq'::regclass) NOT NULL,
+	sent_to int8 NOT NULL,
 	is_repeated bool NULL DEFAULT false,
 	is_repeated_over bool NULL DEFAULT false,
 	note varchar(255) NOT NULL,
