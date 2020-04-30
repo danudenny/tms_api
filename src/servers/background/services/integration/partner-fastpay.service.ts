@@ -1,4 +1,4 @@
-import { DropCashlessVm, DropCashLessResponseVM, DropPickupRequestResponseVM, DropCreateWorkOrderPayloadVM, CheckDataDropPartnerVm } from '../../models/partner/fastpay-drop.vm';
+import { DropCashlessVm, DropCashLessResponseVM, DropPickupRequestResponseVM, DropCreateWorkOrderPayloadVM, CheckDataDropPartnerVm, DropSuccessResponseVm } from '../../models/partner/fastpay-drop.vm';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -8,8 +8,6 @@ import { WorkOrderDetail } from '../../../../shared/orm-entity/work-order-detail
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
 import { In } from 'typeorm';
-import { CommissionType } from '../../../../shared/orm-entity/commission-type';
-import { RedisService } from '../../../../shared/services/redis.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 
 export class PartnerFastpayService {
@@ -37,14 +35,14 @@ export class PartnerFastpayService {
 
   static async dropCash(
     payload: DropCashlessVm,
-  ): Promise<DropCashLessResponseVM> {
+  ): Promise<DropSuccessResponseVm> {
     const partner = AuthService.getPartnerTokenPayload();
     return await this.dropPartnerProcess(payload, partner.partnerId, 'CASH');
   }
 
   static async dropCashless(
     payload: DropCashlessVm,
-  ): Promise<DropCashLessResponseVM> {
+  ): Promise<DropSuccessResponseVm> {
     const partner = AuthService.getPartnerTokenPayload();
     return await this.dropPartnerProcess(payload, partner.partnerId, 'CASHLESS');
   }
@@ -54,8 +52,8 @@ export class PartnerFastpayService {
     payload: DropCashlessVm,
     partnerId: number,
     dropPartnerType: string,
-  ): Promise<DropCashLessResponseVM> {
-    // check branch partner code
+  ): Promise<DropSuccessResponseVm> {
+    // check branch partner code and active branch
     const branchPartner = await this.getDataBranchChild(payload.branch_code, partnerId);
     if (branchPartner) {
       // NOTE: check pickup request with awb number
@@ -166,7 +164,9 @@ export class PartnerFastpayService {
         }
 
         // handle response request
-        return this.handleResult(pickupRequest);
+        const result = new DropSuccessResponseVm();
+        result.message = 'Drop Success';
+        return result;
       } else {
         throw new BadRequestException('Data resi tidak ditemukan!');
       }
@@ -318,6 +318,7 @@ export class PartnerFastpayService {
             pr.pickup_request_notes as "pickupNotes"
       FROM pickup_request_detail prd
         JOIN pickup_request pr ON pr.pickup_request_id = prd.pickup_request_id
+          AND pr.pickup_request_status_id != 150
         JOIN partner p ON pr.partner_id = p.partner_id
       WHERE prd.ref_awb_number = :awb AND prd.is_deleted = FALSE;
     `;
@@ -362,7 +363,8 @@ export class PartnerFastpayService {
       FROM pickup_request pr
         JOIN pickup_request_detail prd ON pr.pickup_request_id = prd.pickup_request_id
         JOIN partner p ON pr.partner_id = p.partner_id
-      WHERE pr.reference_no = :referenceNo AND pr.is_deleted = FALSE;
+      WHERE pr.reference_no = :referenceNo AND pr.pickup_request_status_id != 150
+        AND pr.is_deleted = FALSE;
     `;
     const rawData = await RawQueryService.queryWithParams(query, {
       referenceNo,
@@ -392,73 +394,4 @@ export class PartnerFastpayService {
     return branchPartner.length ? branchPartner[0] : null;
   }
 
-  private static async partnerCommission(
-    dropPartnerType: string,
-    partnerId: number,
-    parcelValue: number,
-  ): Promise<number> {
-    let dropPartnerCharge = 0;
-    const expireOnSeconds = 60 * 1; // 15 minutes
-    const redisKey = `cache:CommissionType:${dropPartnerType}:partnerId:${partnerId}`;
-
-    switch (dropPartnerType) {
-      case 'CASH':
-        let commissionPercentValue = 0;
-        const dataRedisCash = await RedisService.get(
-          redisKey,
-        );
-        if (dataRedisCash) {
-          commissionPercentValue = Number(dataRedisCash);
-        } else {
-          const commissionTypeCash = await CommissionType.findOne({
-            select: ['commissionPercentValue'],
-            where: {
-              partnerId,
-              commissionType: 'PRESENTASE',
-            },
-          });
-          if (commissionTypeCash) {
-            // set redis
-            await RedisService.setex(
-              redisKey,
-              commissionTypeCash.commissionPercentValue.toString(),
-              expireOnSeconds,
-            );
-            commissionPercentValue = commissionTypeCash.commissionPercentValue;
-          }
-        }
-        dropPartnerCharge = parcelValue * (commissionPercentValue / 100);
-        break;
-
-      case 'CASHLESS':
-        let commissionValue = 0;
-        const dataRedisCashless = await RedisService.get(redisKey);
-        if (dataRedisCashless) {
-          commissionValue = Number(dataRedisCashless);
-        } else {
-          const commissionTypeCashLess = await CommissionType.findOne({
-            select: ['commissionValue'],
-            where: {
-              partnerId,
-              commissionType: 'VALUE',
-            },
-          });
-          if (commissionTypeCashLess) {
-            // set redis
-            await RedisService.setex(
-              redisKey,
-              commissionTypeCashLess.commissionValue.toString(),
-              expireOnSeconds,
-            );
-            commissionValue = commissionTypeCashLess.commissionValue;
-          }
-        }
-        dropPartnerCharge = commissionValue;
-        break;
-
-      default:
-        break;
-    }
-    return dropPartnerCharge;
-  }
 }

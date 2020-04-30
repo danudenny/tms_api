@@ -14,6 +14,11 @@ export class DropCashlessVm {
 
 }
 
+export class DropSuccessResponseVm {
+  @ApiModelProperty()
+  message: string;
+}
+
 export class DropCashLessResponseVM {
   @ApiModelProperty()
   partner: string;
