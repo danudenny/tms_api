@@ -388,7 +388,7 @@ export class PartnerService {
     paramBranchCode = payload.branch_code;
     paramPartnerId = payload.partner_id;
 
-    // Notes: Pos Indonesia Use All Awb
+    // Notes: Pos Indonesia Use All Awb dan pickup Request tidak cancel
     const data = await this.getAwbWorkOrderId(paramAwb);
     let workOrderIdLast = null;
     let pickupRequestId = null;
@@ -409,7 +409,7 @@ export class PartnerService {
     const arrDropStatus = [7050, 7060, 7070, 7100];
     const arrPickStatus = [4950, 5000];
     const err = '';
-
+    // Cek branch partner udah di mapping dan status active
     const dataBranch = await this.getBranchPartnerId(paramBranchCode);
 
     for (const item of data) {
@@ -759,7 +759,7 @@ export class PartnerService {
         pr.pickup_request_notes,
         wo.work_order_status_id_pick
       FROM pickup_request_detail prd
-      INNER JOIN pickup_request pr on prd.pickup_request_id = pr.pickup_request_id AND pr.is_deleted=FALSE
+      INNER JOIN pickup_request pr on prd.pickup_request_id = pr.pickup_request_id AND pr.is_deleted=FALSE AND pr.pickup_request_status_id != 150
       LEFT JOIN work_order wo on prd.work_order_id_last = wo.work_order_id AND wo.is_deleted=FALSE
       WHERE
         prd.ref_awb_number = :awb AND
@@ -784,7 +784,7 @@ export class PartnerService {
       FROM branch_partner prd
       WHERE
         branch_partner_code = :branchPartnerCode AND
-        is_deleted = FALSE
+        is_deleted = FALSE AND is_active = TRUE
     `;
 
     return await RawQueryService.queryWithParams(query, {
