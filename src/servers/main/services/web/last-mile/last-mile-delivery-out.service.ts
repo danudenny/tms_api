@@ -4,40 +4,50 @@ import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant'
 import { AuditHistory } from '../../../../../shared/orm-entity/audit-history';
 import { DoPodDeliver } from '../../../../../shared/orm-entity/do-pod-deliver';
 import { DoPodDeliverDetail } from '../../../../../shared/orm-entity/do-pod-deliver-detail';
-import {
-    DoPodDeliverRepository,
-} from '../../../../../shared/orm-repository/do-pod-deliver.repository';
+import { DoPodDeliverRepository } from '../../../../../shared/orm-repository/do-pod-deliver.repository';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { AwbTroubleService } from '../../../../../shared/services/awb-trouble.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
+import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
-    DoPodDetailPostMetaQueueService,
-} from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
-import {
-    WebScanOutAwbResponseVm, WebScanOutCreateResponseVm, WebScanOutResponseForEditVm, WebAwbThirdPartyListResponseVm, ScanAwbVm,
+  WebScanOutAwbResponseVm,
+  WebScanOutCreateResponseVm,
+  WebScanOutResponseForEditVm,
+  WebAwbThirdPartyListResponseVm,
+  ScanAwbVm,
 } from '../../../models/web-scan-out-response.vm';
 import {
-    WebScanOutAwbVm, WebScanOutCreateDeliveryVm, WebScanOutDeliverEditVm, WebScanOutLoadForEditVm, TransferAwbDeliverVm, ProofValidateTransitPayloadVm,
+  WebScanOutAwbVm,
+  WebScanOutCreateDeliveryVm,
+  WebScanOutDeliverEditVm,
+  WebScanOutLoadForEditVm,
+  TransferAwbDeliverVm,
+  ProofValidateTransitPayloadVm,
+  WebScanOutCreateDeliveryPartnerVm,
 } from '../../../models/web-scan-out.vm';
 import { AwbService } from '../../v1/awb.service';
 import moment = require('moment');
-import { AutoUpdateAwbStatusService } from '../../v1/auto-update-awb-status.service';
-import { ProofDeliveryResponseVm, ProofDeliveryPayloadVm, ProofTransitResponseVm, ProofValidateTransitResponseVm } from '../../../models/last-mile/proof-delivery.vm';
+import {
+  ProofDeliveryResponseVm,
+  ProofTransitResponseVm,
+  ProofValidateTransitResponseVm,
+} from '../../../models/last-mile/proof-delivery.vm';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../../shared/services/meta.service';
-import { QueryBuilderService } from '../../../../../shared/services/query-builder.service';
 import { DoPod } from '../../../../../shared/orm-entity/do-pod';
-import { POD_TYPE } from '../../../../../shared/constants/pod-type.constant';
-import { AwbThirdPartyVm, AwbThirdPartyUpdateResponseVm } from '../../../models/last-mile/awb-third-party.vm';
-import { PodScanIn } from '../../../../../shared/orm-entity/pod-scan-in';
+import {
+  AwbThirdPartyVm,
+  AwbThirdPartyUpdateResponseVm,
+} from '../../../models/last-mile/awb-third-party.vm';
 import { Employee } from '../../../../../shared/orm-entity/employee';
+import { Branch } from '../../../../../shared/orm-entity/branch';
+import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-request-detail';
 // #endregion
 
 export class LastMileDeliveryOutService {
-
   /**
    * Create DO POD Deliver
    * with type: Deliver (Sigesit)
@@ -62,13 +72,15 @@ export class LastMileDeliveryOutService {
       doPodDateTime,
     ); // generate code
 
-    // doPod.userIdDriver = payload.
     doPod.userIdDriver = payload.userIdDriver || null;
     doPod.doPodDeliverDateTime = doPodDateTime;
     doPod.description = payload.desc || null;
 
     doPod.branchId = permissonPayload.branchId;
     doPod.userId = authMeta.userId;
+
+    // NOTE: check if delivery with sigesit
+    doPod.isPartner = false;
 
     // await for get do pod id
     await DoPodDeliver.save(doPod);
@@ -87,27 +99,83 @@ export class LastMileDeliveryOutService {
     const repo = new OrionRepositoryService(Employee, 't1');
     const q = repo.findAllRaw();
 
-    q.selectRaw(
-      [
-        't1.nik',
-        'nik',
-      ],
-      ['t1.nickname', 'nickname'],
-    );
-
+    q.selectRaw(['t1.nik', 'nik'], ['t1.nickname', 'nickname']);
     q.innerJoin(e => e.user, 't2');
-    q.where(
-      e => e.user.userId,
-      w => w.equals(payload.userIdDriver),
-    );
+    q.where(e => e.user.userId, w => w.equals(payload.userIdDriver));
     const dataUser = await q.exec();
 
     // For printDoPodDeliverMetadata
-    result.printDoPodDeliverMetadata.doPodDeliverCode = doPod.doPodDeliverCode;
+    result.printDoPodDeliverMetadata.doPodDeliverCode =
+      doPod.doPodDeliverCode;
     result.printDoPodDeliverMetadata.description = payload.desc;
-    result.printDoPodDeliverMetadata.userDriver.employee.nik = dataUser[0].nik;
-    result.printDoPodDeliverMetadata.userDriver.employee.nickname = dataUser[0].nickname;
+    if (dataUser) {
+      result.printDoPodDeliverMetadata.userDriver.employee.nik =
+        dataUser[0].nik;
+      result.printDoPodDeliverMetadata.userDriver.employee.nickname =
+        dataUser[0].nickname;
+    }
 
+    return result;
+  }
+
+  /**
+   * Create DO POD Deliver Partner
+   * with type: Deliver Partner ex:Gojek
+   * @static
+   * @param {WebScanOutCreateDeliveryPartnerVm} payload
+   * @returns {Promise<WebScanOutCreateResponseVm>}
+   * @memberof LastMileDeliveryOutService
+   */
+  static async scanOutCreateDeliveryPartner(
+    payload: WebScanOutCreateDeliveryPartnerVm,
+  ): Promise<WebScanOutCreateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const result = new WebScanOutCreateResponseVm();
+
+    // create do_pod_deliver (Surat Jalan Antar sigesit)
+    const doPod = DoPodDeliver.create();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    // NOTE: moment(payload.doPodDateTime).toDate();
+    const doPodDateTime = moment().toDate();
+
+    // NOTE: Tipe surat (jalan Antar Sigesit)
+    doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
+      doPodDateTime,
+    ); // generate code
+
+    doPod.userIdDriver         = payload.userIdDriver || null;
+    doPod.doPodDeliverDateTime = doPodDateTime;
+    doPod.description          = payload.desc || null;
+
+    doPod.branchId             = permissonPayload.branchId;
+    doPod.userId               = authMeta.userId;
+
+    // NOTE: check if delivery with partner
+    if (payload.isPartner) {
+      doPod.isPartner = true;
+      doPod.partnerId = payload.partnerId;
+      const branch = await Branch.findOne({ branchId: permissonPayload.branchId });
+      // NOTES: Validation branch
+      if (!branch.latitude || !branch.address || !branch.phone1 || !branch.longitude) {
+        result.status  = 'error';
+        result.message = 'Pengantaran melalui partner tidak bisa digunakan pada gerai ini';
+        return result;
+      }
+    }
+
+    // await for get do pod id
+    await DoPodDeliver.save(doPod);
+
+    await this.createAuditDeliveryHistory(
+      doPod.doPodDeliverId,
+      false,
+      payload.isPartner,
+    );
+
+    // Populate return value
+    result.status = 'ok';
+    result.message = 'success';
+    result.doPodId = doPod.doPodDeliverId;
     return result;
   }
 
@@ -125,8 +193,6 @@ export class LastMileDeliveryOutService {
     const result = new WebScanOutCreateResponseVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    let totalAdd = 0;
-    let totalRemove = 0;
     // edit do_pod (Surat Jalan)
     const doPod = await DoPodDeliverRepository.getDataById(
       payload.doPodDeliverId,
@@ -136,23 +202,18 @@ export class LastMileDeliveryOutService {
       if (payload.removeAwbNumber && payload.removeAwbNumber.length) {
         for (const addAwb of payload.removeAwbNumber) {
           const awb = await AwbService.validAwbNumber(addAwb);
-          const doPodDeliverDetail = await DoPodDeliverDetail.findOne(
-            {
-              where: {
-                doPodDeliverId: payload.doPodDeliverId,
-                awbItemId: awb.awbItemId,
-                isDeleted: false,
-              },
+          const doPodDeliverDetail = await DoPodDeliverDetail.findOne({
+            where: {
+              doPodDeliverId: payload.doPodDeliverId,
+              awbItemId: awb.awbItemId,
+              isDeleted: false,
             },
-          );
+          });
 
           if (doPodDeliverDetail) {
-            DoPodDeliverDetail.update(
-              doPodDeliverDetail.doPodDeliverDetailId,
-              {
-                isDeleted: true,
-              },
-            );
+            DoPodDeliverDetail.update({ doPodDeliverDetailId: doPodDeliverDetail.doPodDeliverDetailId }, {
+              isDeleted: true,
+            });
             // NOTE: update awb_item_attr and awb_history
             await AwbService.updateAwbAttr(
               awb.awbItemId,
@@ -168,7 +229,6 @@ export class LastMileDeliveryOutService {
             );
           }
         }
-        totalRemove = payload.removeAwbNumber.length;
       }
       // looping data list add awb number
       if (payload.addAwbNumber && payload.addAwbNumber.length) {
@@ -200,7 +260,6 @@ export class LastMileDeliveryOutService {
             authMeta.userId,
           );
         }
-        totalAdd = payload.addAwbNumber.length;
       }
 
       const totalAwb = await LastMileDeliveryOutService.getTotalDetailById(
@@ -214,12 +273,10 @@ export class LastMileDeliveryOutService {
         userId: authMeta.userId,
         totalAwb,
       };
-      await DoPodDeliver.update(doPod.doPodDeliverId, updateDoPod);
+      await DoPodDeliver.update({ doPodDeliverId: doPod.doPodDeliverId }, updateDoPod);
 
       // NOTE: insert table audit history
-      await this.createAuditDeliveryHistory(
-        doPod.doPodDeliverId,
-      );
+      await this.createAuditDeliveryHistory(doPod.doPodDeliverId);
 
       result.status = 'ok';
       result.message = 'success';
@@ -339,7 +396,9 @@ export class LastMileDeliveryOutService {
             );
             // save data to awb_troubleß
             if (statusCode != 'IN') {
-              const branchName = awb.branchLast ? awb.branchLast.branchName : '';
+              const branchName = awb.branchLast
+                ? awb.branchLast.branchName
+                : '';
               await AwbTroubleService.fromScanOut(
                 awbNumber,
                 branchName,
@@ -382,32 +441,52 @@ export class LastMileDeliveryOutService {
                 await DoPodDeliverDetail.insert(doPodDeliverDetail);
 
                 // Assign print metadata - Scan Out & Deliver
-                response.printDoPodDetailMetadata.awbItem.awb.awbId         = awb.awbId;
-                response.printDoPodDetailMetadata.awbItem.awb.awbNumber     = awbNumber;
-                response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
+                response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
+                response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
+                response.printDoPodDetailMetadata.awbItem.awb.consigneeName =
+                  awb.awbItem.awb.consigneeName;
 
                 // Assign print metadata - Deliver
-                response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
-                response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber  = awb.awbItem.awb.consigneeNumber;
-                response.printDoPodDetailMetadata.awbItem.awb.consigneeZip     = awb.awbItem.awb.consigneeZip;
-                response.printDoPodDetailMetadata.awbItem.awb.isCod            = awb.awbItem.awb.isCod;
-                response.printDoPodDetailMetadata.awbItem.awb.totalCodValue    = awb.awbItem.awb.totalCodValue;
-                response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.awb.totalWeightFinalRounded;
+                response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress =
+                  awb.awbItem.awb.consigneeAddress;
+                response.printDoPodDetailMetadata.awbItem.awb.awbItemId =
+                  awb.awbItemId;
+                response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber =
+                  awb.awbItem.awb.consigneeNumber;
+                response.printDoPodDetailMetadata.awbItem.awb.consigneeZip =
+                  awb.awbItem.awb.consigneeZip;
+                response.printDoPodDetailMetadata.awbItem.awb.isCod =
+                  awb.awbItem.awb.isCod;
+                response.printDoPodDetailMetadata.awbItem.awb.totalCodValue =
+                  awb.awbItem.awb.totalCodValue;
+                response.printDoPodDetailMetadata.awbItem.awb.totalWeight =
+                  awb.awbItem.awb.totalWeightFinalRounded;
 
                 // TODO: need improvement counter total scan out
                 const totalAwb = doPodDeliver.totalAwb + 1;
-                await DoPodDeliver.update(doPodDeliver.doPodDeliverId, {
+                await DoPodDeliver.update({ doPodDeliverId: doPodDeliver.doPodDeliverId }, {
                   totalAwb,
                 });
 
                 // NOTE: queue by Bull ANT
+                let employeeIdDriver;
+                let employeeNameDriver;
+                if (doPodDeliver.isPartner) {
+                  employeeIdDriver = 0; // partner does not have employee id
+                  employeeNameDriver = null;
+                } else {
+                  employeeIdDriver = doPodDeliver.userDriver.employeeId;
+                  employeeNameDriver =
+                    doPodDeliver.userDriver.employee.employeeName;
+                }
+
                 DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
                   awb.awbItemId,
                   AWB_STATUS.ANT,
                   permissonPayload.branchId,
                   authMeta.userId,
-                  doPodDeliver.userDriver.employeeId,
-                  doPodDeliver.userDriver.employee.employeeName,
+                  employeeIdDriver,
+                  employeeNameDriver,
                 );
                 totalSuccess += 1;
               } else {
@@ -459,12 +538,172 @@ export class LastMileDeliveryOutService {
     return result;
   }
 
-  static async listProofDelivery(payload: BaseMetaPayloadVm)
-  : Promise<ProofDeliveryResponseVm> {
+  static async scanOutAwbDeliverPartner(
+    payload: WebScanOutAwbVm,
+  ): Promise<WebScanOutAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const result = new WebScanOutAwbResponseVm();
+
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    for (const awbNumber of payload.awbNumber) {
+      const response = new ScanAwbVm();
+      response.status = 'ok';
+      response.message = 'success';
+
+      const awb = await AwbService.validAwbNumber(awbNumber);
+      if (awb) {
+        // TODO: validation need improvement
+        // handle if awb status is null
+        let notDeliver = true;
+        if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
+          notDeliver = awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
+        }
+
+        // NOTE: first must scan in branch
+        if (notDeliver) {
+          // add handel final status
+          const statusFinal = [AWB_STATUS.DLV];
+          if (statusFinal.includes(awb.awbStatusIdLast)) {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Resi ${awbNumber} sudah Final Status !`;
+          } else {
+            const statusCode = await AwbService.awbStatusGroup(
+              awb.awbStatusIdLast,
+            );
+            // save data to awb_troubleß
+            if (statusCode != 'IN') {
+              const branchName = awb.branchLast
+                ? awb.branchLast.branchName
+                : '';
+              await AwbTroubleService.fromScanOut(
+                awbNumber,
+                branchName,
+                awb.awbStatusIdLast,
+              );
+            }
+
+            // Add Locking setnx redis
+            const holdRedis = await RedisService.locking(
+              `hold:scanoutant:${awb.awbItemId}`,
+              'locking',
+            );
+            if (holdRedis) {
+              // AFTER Scan OUT ===============================================
+              // #region after scanout
+              // Update do_pod
+              const doPodDeliver = await DoPodDeliverRepository.getDataById(
+                payload.doPodId,
+              );
+
+              if (doPodDeliver) {
+                const pickReqDetail = await PickupRequestDetail.findOne({ where: { awbItemId: awb.awbItemId } });
+                if (pickReqDetail && pickReqDetail.recipientLatitude && pickReqDetail.recipientLongitude) {
+                  // save table do_pod_detail
+                  // NOTE: create data do pod detail per awb number
+                  const doPodDeliverDetail = DoPodDeliverDetail.create();
+                  doPodDeliverDetail.doPodDeliverId = payload.doPodId;
+                  doPodDeliverDetail.awbId = awb.awbId;
+                  doPodDeliverDetail.awbItemId = awb.awbItemId;
+                  doPodDeliverDetail.awbNumber = awbNumber;
+                  doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
+                  await DoPodDeliverDetail.insert(doPodDeliverDetail);
+
+                  // Assign print metadata - Scan Out & Deliver
+                  response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
+                  response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
+                  response.printDoPodDetailMetadata.awbItem.awb.consigneeName =
+                    awb.awbItem.awb.consigneeName;
+
+                  // Assign print metadata - Deliver
+                  response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress =
+                    awb.awbItem.awb.consigneeAddress;
+                  response.printDoPodDetailMetadata.awbItem.awb.awbItemId =
+                    awb.awbItemId;
+                  response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber =
+                    awb.awbItem.awb.consigneeNumber;
+                  response.printDoPodDetailMetadata.awbItem.awb.consigneeZip =
+                    awb.awbItem.awb.consigneeZip;
+                  response.printDoPodDetailMetadata.awbItem.awb.isCod =
+                    awb.awbItem.awb.isCod;
+                  response.printDoPodDetailMetadata.awbItem.awb.totalCodValue =
+                    awb.awbItem.awb.totalCodValue;
+                  response.printDoPodDetailMetadata.awbItem.awb.totalWeight =
+                    awb.awbItem.awb.totalWeightFinalRounded;
+
+                  // TODO: need improvement counter total scan out
+                  const totalAwb = doPodDeliver.totalAwb + 1;
+                  await DoPodDeliver.update({ doPodDeliverId: doPodDeliver.doPodDeliverId }, {
+                    totalAwb,
+                  });
+                  totalSuccess += 1;
+                } else {
+                  totalError += 1;
+                  response.status = 'error';
+                  response.message = `Resi ${awbNumber} tidak memiliki data longitude dan latitude`;
+                }
+              } else {
+                totalError += 1;
+                response.status = 'error';
+                response.message = `Surat Jalan: Resi ${awbNumber} tidak valid.`;
+              }
+              // #endregion after scanout
+              // remove key holdRedis
+              RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
+            } else {
+              totalError += 1;
+              response.status = 'error';
+              response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
+            }
+          } // handle status final
+        } else {
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Resi ${awbNumber} sudah di proses.`;
+        }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Resi ${awbNumber} Tidak di Temukan`;
+      }
+
+      // push item
+      dataItem.push({
+        awbNumber,
+        ...response,
+      });
+    } // end of loop
+
+    // TODO: need improvement
+    // if (doPodDeliver && totalSuccess > 0) {
+    //   const totalAwb = doPodDeliver.totalAwb + totalSuccess;
+    //   await DoPodDeliver.update(doPod.doPodId, {
+    //     totalAwb,
+    //   });
+    // }
+
+    // Populate return value
+    result.totalData = payload.awbNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
+
+    return result;
+  }
+
+  static async listProofDelivery(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ProofDeliveryResponseVm> {
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't3.awb_number';
     payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
-    payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_deliver_date_time';
+    payload.fieldResolverMap['doPodDeliverDateTime'] =
+      't1.do_pod_deliver_date_time';
 
     const repo = new OrionRepositoryService(DoPodDeliver, 't1');
     const q = repo.findAllRaw();
@@ -474,13 +713,13 @@ export class LastMileDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.doPodDeliverDetails.awbStatus, 't5', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.doPodDeliverDetails.awb, 't6', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     const result = new ProofDeliveryResponseVm();
 
@@ -495,7 +734,7 @@ export class LastMileDeliveryOutService {
         'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000)',
         'totalErrorAwb',
       ],
-      );
+    );
     const dataTotal = await q1.exec();
     result.totalSuccessAwb = 0;
     result.totalErrorAwb = 0;
@@ -528,7 +767,10 @@ export class LastMileDeliveryOutService {
       ['t2.nik', 'driverNik'],
       ['t2.fullname', 'driverFullName'],
       ['t3.awb_number', 'awbNumber'],
-      [`COALESCE(t3.awb_status_date_time_last, t1.do_pod_deliver_date_time)`, 'awbStatusDateLast'],
+      [
+        `COALESCE(t3.awb_status_date_time_last, t1.do_pod_deliver_date_time)`,
+        'awbStatusDateLast',
+      ],
       [`COALESCE(t3.consignee_name, '')`, 'refConsigneeName'],
       ['t5.awb_status_name', 'awbStatusCode'],
       ['t5.awb_status_title', 'awbStatusName'],
@@ -548,9 +790,9 @@ export class LastMileDeliveryOutService {
     if (data.length != 0) {
       const temp = data[0];
       result.doPodDeliverCode = temp.doPodDeliverCode;
-      result.driverNik        = temp.driverNik;
-      result.driverFullName   = temp.driverFullName;
-      result.doPodDeliverId   = temp.doPodDeliverId;
+      result.driverNik = temp.driverNik;
+      result.driverFullName = temp.driverFullName;
+      result.doPodDeliverId = temp.doPodDeliverId;
     }
 
     result.data = data;
@@ -559,8 +801,9 @@ export class LastMileDeliveryOutService {
     return result;
   }
 
-  static async listProofTransit(payload: BaseMetaPayloadVm)
-  : Promise<ProofTransitResponseVm> {
+  static async listProofTransit(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ProofTransitResponseVm> {
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
@@ -580,9 +823,12 @@ export class LastMileDeliveryOutService {
       ['t4.awb_status_name', 'awbStatusName'],
       ['t4.awb_status_title', 'awbStatusCode'],
       [`COALESCE(t6.consignee_name, '')`, 'refConsigneeName'],
-      [`COALESCE(t6.awb_status_date_time_last, t7.do_pod_deliver_date_time)`, 'awbStatusDateLast'],
+      [
+        `COALESCE(t6.awb_status_date_time_last, t7.do_pod_deliver_date_time)`,
+        'awbStatusDateLast',
+      ],
     );
-    q.innerJoin(e => e.doPodDetails , 't2', j =>
+    q.innerJoin(e => e.doPodDetails, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.doPodDetails.awbItemAttr, 't3', j =>
@@ -600,10 +846,10 @@ export class LastMileDeliveryOutService {
     q.leftJoin(e => e.doPodDetails.doPodDeliverDetail.doPodDeliver, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    const data   = await q.exec();
-    const total  = await q.countWithoutTakeAndSkip();
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
     const result = new ProofTransitResponseVm();
-    result.data  = data;
+    result.data = data;
 
     // SELECT
     //   b.awb_number,
@@ -632,41 +878,80 @@ export class LastMileDeliveryOutService {
     return result;
   }
 
-  static async validateTransit(payload: ProofValidateTransitPayloadVm)
-  : Promise<ProofValidateTransitResponseVm> {
+  static async validateTransit(
+    payload: ProofValidateTransitPayloadVm,
+  ): Promise<ProofValidateTransitResponseVm> {
     const result = new ProofValidateTransitResponseVm();
     // const doPod = await DoPod.findOne({ doPodCode: payload.doPodCode });
     const qb = createQueryBuilder();
     qb.addSelect('a.do_pod_id', 'doPodId');
     qb.addSelect('a.do_pod_code', 'doPodCode');
-    qb.addSelect(`CASE
+    qb.addSelect(
+      `CASE
                     WHEN a.partner_logistic_name IS NOT NULL THEN a.partner_logistic_name
                     WHEN a.partner_logistic_name IS NULL THEN e.partner_logistic_name
                     ELSE
                       g.fullname
-                  END`, 'driverFullName');
-    qb.addSelect(`CASE
+                  END`,
+      'driverFullName',
+    );
+    qb.addSelect(
+      `CASE
                     WHEN a.do_pod_method = 3000 THEN '3PL'
                     ELSE g.nik
-                  END`, 'driverNik');
-    qb.addSelect(`COUNT(*) FILTER ( WHERE d.awb_status_id = 30000 )`, 'totalDelivered');
-    qb.addSelect(`COUNT(*) FILTER ( WHERE d.awb_status_id NOT IN (30000, 3500, 3005))`, 'totalReturned');
+                  END`,
+      'driverNik',
+    );
+    qb.addSelect(
+      `COUNT(*) FILTER ( WHERE d.awb_status_id = 30000 )`,
+      'totalDelivered',
+    );
+    qb.addSelect(
+      `COUNT(*) FILTER ( WHERE d.awb_status_id NOT IN (30000, 3500, 3005))`,
+      'totalReturned',
+    );
     qb.from('do_pod', 'a');
-    qb.innerJoin('do_pod_detail', 'b', 'a.do_pod_id = b.do_pod_id AND b.is_deleted = false');
-    qb.innerJoin('awb_item_attr', 'c', 'b.awb_item_id = c.awb_item_id AND c.is_deleted = false');
-    qb.innerJoin('awb_status', 'd', 'd.awb_status_id = c.awb_status_id_last AND d.is_deleted = false');
-    qb.leftJoin('partner_logistic', 'e', 'e.partner_logistic_id = a.partner_logistic_id AND e.is_deleted = false');
-    qb.leftJoin('users', 'f', 'f.user_id = a.user_id_driver AND f.is_deleted = false');
-    qb.leftJoin('employee', 'g', 'g.employee_id = f.employee_id AND g.is_deleted = false');
+    qb.innerJoin(
+      'do_pod_detail',
+      'b',
+      'a.do_pod_id = b.do_pod_id AND b.is_deleted = false',
+    );
+    qb.innerJoin(
+      'awb_item_attr',
+      'c',
+      'b.awb_item_id = c.awb_item_id AND c.is_deleted = false',
+    );
+    qb.innerJoin(
+      'awb_status',
+      'd',
+      'd.awb_status_id = c.awb_status_id_last AND d.is_deleted = false',
+    );
+    qb.leftJoin(
+      'partner_logistic',
+      'e',
+      'e.partner_logistic_id = a.partner_logistic_id AND e.is_deleted = false',
+    );
+    qb.leftJoin(
+      'users',
+      'f',
+      'f.user_id = a.user_id_driver AND f.is_deleted = false',
+    );
+    qb.leftJoin(
+      'employee',
+      'g',
+      'g.employee_id = f.employee_id AND g.is_deleted = false',
+    );
     qb.where('a.do_pod_code = :doPodCode', { doPodCode: payload.doPodCode });
     qb.andWhere('a.is_deleted = false');
-    qb.groupBy('a.do_pod_id, a.do_pod_code, g.fullname,g.nik, a.do_pod_method, e.partner_logistic_name');
+    qb.groupBy(
+      'a.do_pod_id, a.do_pod_code, g.fullname,g.nik, a.do_pod_method, e.partner_logistic_name',
+    );
     const doPod = await qb.getRawOne();
 
     if (doPod) {
       result.data = doPod;
       result.message = 'success';
-      result.status  = 'ok';
+      result.status = 'ok';
     } else {
       result.message = 'Data tidak ditemukan';
       result.status = 'error';
@@ -719,46 +1004,41 @@ export class LastMileDeliveryOutService {
             if (holdRedis) {
               // Update data do pod detail per awb number
               // doPodDeliverId;
-              await DoPodDeliverDetail.update(
-                awbDeliver.doPodDeliverDetailId,
-                {
-                  isDeleted: true,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: moment().toDate(),
-                },
-              );
+              await DoPodDeliverDetail.update({ doPodDeliverDetailId: awbDeliver.doPodDeliverDetailId }, {
+                isDeleted: true,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              });
 
               // balance total awb
-              await getManager().transaction(
-                async transactionEntityManager => {
-                  const awbItemAttr = await AwbItemAttr.findOne({
-                    where: {
-                      awbItemId: awbDeliver.awbItemId,
-                      isDeleted: false,
-                    },
-                  });
-                  if (awbItemAttr) {
-                    await transactionEntityManager.update(
-                      AwbItemAttr,
-                      awbItemAttr.awbItemAttrId,
-                      {
-                        awbStatusIdLast: AWB_STATUS.IN_BRANCH,
-                        updatedTime: moment().toDate(),
-                      },
-                    );
-                  }
-
-                  await transactionEntityManager.decrement(
-                    DoPodDeliver,
+              await getManager().transaction(async transactionEntityManager => {
+                const awbItemAttr = await AwbItemAttr.findOne({
+                  where: {
+                    awbItemId: awbDeliver.awbItemId,
+                    isDeleted: false,
+                  },
+                });
+                if (awbItemAttr) {
+                  await transactionEntityManager.update(
+                    AwbItemAttr,
+                    awbItemAttr.awbItemAttrId,
                     {
-                      doPodDeliverId: awbDeliver.doPodDeliverId,
-                      totalAwb: MoreThan(0),
+                      awbStatusIdLast: AWB_STATUS.IN_BRANCH,
+                      updatedTime: moment().toDate(),
                     },
-                    'totalAwb',
-                    1,
                   );
-                },
-              );
+                }
+
+                await transactionEntityManager.decrement(
+                  DoPodDeliver,
+                  {
+                    doPodDeliverId: awbDeliver.doPodDeliverId,
+                    totalAwb: MoreThan(0),
+                  },
+                  'totalAwb',
+                  1,
+                );
+              });
 
               totalSuccess += 1;
               // remove key holdRedis
@@ -888,7 +1168,7 @@ export class LastMileDeliveryOutService {
     });
 
     if (awb) {
-      await AwbItemAttr.update(awb.awbItemAttrId, {
+      await AwbItemAttr.update({ awbItemAttrId: awb.awbItemAttrId }, {
         awbThirdParty: payload.awbThirdParty,
         updatedTime: moment().toDate(),
       });
@@ -913,6 +1193,7 @@ export class LastMileDeliveryOutService {
   private static async createAuditDeliveryHistory(
     doPodDeliveryId: string,
     isUpdate: boolean = true,
+    isPartner: boolean = false,
   ) {
     // find doPodDeliver
     const doPodDeliver = await DoPodDeliverRepository.getDataById(
@@ -926,7 +1207,9 @@ export class LastMileDeliveryOutService {
       const stage = isUpdate ? 'Updated' : 'Created';
       const note = `
         Data ${stage} \n
-        Nama Driver  : ${doPodDeliver.userDriver.employee.employeeName}
+        Nama Driver  : ${
+          isPartner ? '' : doPodDeliver.userDriver.employee.employeeName
+        }
         Gerai Assign : ${doPodDeliver.branch.branchName}
         Note         : ${description}
       `;

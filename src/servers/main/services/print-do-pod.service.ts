@@ -5,6 +5,11 @@ import { PrintDoPodDataVm } from '../models/print-do-pod.vm';
 import { PrinterService } from '../../../shared/services/printer.service';
 import express = require('express');
 import moment = require('moment');
+import {
+  PrintDoPodReturnPayloadQueryVm,
+  PrintDoPodReturnAdmiStorePayloadVm,
+} from '../models/print-do-pod-return.vm';
+import { Branch } from '../../../shared/orm-entity/branch';
 
 export class PrintDoPodService {
   public static async printDoPodByRequest(
@@ -52,12 +57,17 @@ export class PrintDoPodService {
       });
     }
 
-    this.printDoPodAndQueryMeta(res, doPod as any, {
-      userId: queryParams.userId,
-      branchId: queryParams.branchId,
-    }, {
-      printCopy: queryParams.printCopy,
-    });
+    this.printDoPodAndQueryMeta(
+      res,
+      doPod as any,
+      {
+        userId: queryParams.userId,
+        branchId: queryParams.branchId,
+      },
+      {
+        printCopy: queryParams.printCopy,
+      },
+    );
   }
 
   public static async printDoPodAndQueryMeta(
@@ -102,13 +112,18 @@ export class PrintDoPodService {
 
     const currentDate = moment();
 
-    return this.printDoPod(res, data, {
-      currentUserName: currentUser.employee.nickname,
-      currentBranchName: currentBranch.branchName,
-      date: currentDate.format('DD/MM/YY'),
-      time: currentDate.format('HH:mm'),
-      totalItems: data.doPodDetails.length,
-    }, templateConfig);
+    return this.printDoPod(
+      res,
+      data,
+      {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: currentDate.format('DD/MM/YY'),
+        time: currentDate.format('HH:mm'),
+        totalItems: data.doPodDetails.length,
+      },
+      templateConfig,
+    );
   }
 
   public static async printDoPod(
@@ -132,14 +147,90 @@ export class PrintDoPodService {
       meta,
     };
 
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
-      printerName: 'StrukPrinter',
-      templates: [{
-        templateName: 'surat-jalan',
-        templateData: jsreportParams,
-        printCopy: templateConfig.printCopy,
-      }],
+      templates: [
+        {
+          templateName: 'surat-jalan',
+          templateData: jsreportParams,
+          printCopy: templateConfig.printCopy,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  public static async reformatDataDoReturnAdmin(data: any) {
+    const response = {
+      data: {
+        user: {
+          firstName: null,
+          lastName: null,
+        },
+        userAdmin: {
+          firstName: null,
+          lastName: null,
+        },
+        doReturnAwbs: null,
+      },
+      meta: {
+        branchName: null,
+      },
+    };
+    const doReturnAwbs = [];
+    const branch = await Branch.findOne({
+      select: ['branchName'],
+      where: {
+        branchId: data.userDetail.branch,
+      },
+    });
+
+    response.meta.branchName = branch.branchName;
+
+    for (let i = 0; i < data.awbDetail.length; i++) {
+      const temp = data.awbDetail[i];
+      temp.branchTo = {};
+      temp.branchTo.branchName = branch.branchName;
+      doReturnAwbs.push(temp);
+    }
+    response.data.doReturnAwbs = doReturnAwbs;
+    response.data.user.firstName = data.userDriver;
+    response.data.userAdmin.firstName = data.userDetail.userName;
+
+    return response;
+  }
+
+  public static async printDoPodDoReturnAdminByRequest(
+    res: express.Response,
+    data: any,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
+  ) {
+    const dataReformat = await this.reformatDataDoReturnAdmin(data);
+
+    const m = moment();
+    const branchName = dataReformat.meta.branchName;
+    const jsreportParams = {
+      data: dataReformat.data,
+      meta: {
+        date: m.format('DD/MM/YY'),
+        time: m.format('HH:mm'),
+        totalData: await data.awbDetail.length,
+        branchName,
+      },
+    };
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'ttd-do-balik-admin',
+          templateData: jsreportParams,
+          printCopy: queryParams.printCopy,
+        },
+      ],
+      listPrinterName,
     });
   }
 }

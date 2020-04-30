@@ -18,6 +18,9 @@ export class PrintDoPodDeliverDataDoPodDeliverDetailAwbItemAwbVm {
   awbId: number;
 
   @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
   awbNumber: string;
 
   @ApiModelProperty()

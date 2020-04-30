@@ -1,4 +1,5 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 // Payload
 
@@ -152,6 +153,12 @@ export class TrackingAwbResponseVm {
   awbSubstitute: string;
 
   @ApiModelProperty()
+  doReturnAwb: string;
+
+  @ApiModelProperty()
+  isDoReturnPartner: boolean;
+
+  @ApiModelProperty()
   partnerLogisticSubstitute: string;
 
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
@@ -205,4 +212,20 @@ export class TrackingBagResponseVm {
 
   @ApiModelProperty({ type: () => [BagHistoryResponseVm] })
   bagHistory: BagHistoryResponseVm[];
+}
+
+export class AwbSubstituteListData {
+  @ApiModelProperty()
+  awbSubstitute: string;
+
+  @ApiModelProperty()
+  doPodDetailId: string;
+
+  @ApiModelProperty()
+  awbSubstituteType: string;
+}
+
+export class AwbSubstituteResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [AwbSubstituteListData] })
+  data: AwbSubstituteListData[];
 }

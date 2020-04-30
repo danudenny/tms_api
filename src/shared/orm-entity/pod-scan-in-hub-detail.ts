@@ -1,6 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { PodScanInHub } from './pod-scan-in-hub';
+import { Awb } from './awb';
 
 @Entity('pod_scan_in_hub_detail', { schema: 'public' })
 export class PodScanInHubDetail extends TmsBaseEntity {
@@ -52,4 +54,12 @@ export class PodScanInHubDetail extends TmsBaseEntity {
     name: 'bag_number',
   })
   bagNumber: string;
+
+  @ManyToOne(() => PodScanInHub)
+  @JoinColumn({ name: 'pod_scan_in_hub_id', referencedColumnName: 'podScanInHubId' })
+  podScanInHub: PodScanInHub;
+
+  @OneToOne(() => Awb)
+  @JoinColumn({ name: 'awb_id', referencedColumnName: 'awbId' })
+  awb: Awb;
 }

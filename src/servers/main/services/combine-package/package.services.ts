@@ -295,14 +295,14 @@ export class PackageService {
     if (!bagData) {
       // generate bag number
       randomBagNumber          = 'S' + sampleSize('012345678900123456789001234567890', 6).join('');
-      const representativeCode = payload.districtDetail.districtCode.substring(0, 3);
+      const representativeCode = payload.districtDetail ? payload.districtDetail.districtCode.substring(0, 3) : null;
       const representative     =  await Representative.findOne({ where: { isDeleted: false, representativeCode } });
 
       const bagDetail = Bag.create({
         bagNumber            : randomBagNumber,
         branchIdTo           : branchId,
-        refRepresentativeCode: representative.representativeCode,
-        representativeIdTo   : representative.representativeId,
+        refRepresentativeCode: representative ? representative.representativeCode : null,
+        representativeIdTo   : representative ? representative.representativeId : null,
         refBranchCode        : payload.branchDetail.branchCode,
         bagType              : 'branch',
         branchId             : permissonPayload.branchId,
@@ -488,11 +488,11 @@ export class PackageService {
           branchId,
         },
       });
-      // NOTES: WILL BE USE IN NEXT FUTURE
-      if (!branch || (branch && awb.toId !== branch.districtId)) {
-        troubleDesc.push('Tujuan tidak sesuai');
+      // NOTE: Validate branch
+      if (!branch) {
+        troubleDesc.push('Gerai tidak ditemukan');
         isAllow = false;
-      } else if (branch) {
+      } else {
         districtId = branch.districtId;
       }
     } else {
@@ -551,11 +551,11 @@ export class PackageService {
         podScanInHubId,
         bagItemId,
         branchId,
-        data        : detail,
-        branchName  : branch.branchName,
-        branchCode  : branch.branchCode,
-        bagWeight   : bag.weight,
-        bagSeq      : bag.bagSeq,
+        data: detail,
+        branchName: branch ? branch.branchName : null,
+        branchCode: branch ? branch.branchCode : null,
+        bagWeight: bag.weight,
+        bagSeq: bag.bagSeq,
       });
     } else {
       assign(result, {

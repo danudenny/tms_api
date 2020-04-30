@@ -9,6 +9,8 @@ import { PackageType } from './package-type';
 import { CustomerAccount } from './customer-account';
 import { User } from './user';
 import { Representative } from './representative';
+import { DoPodDeliverDetail } from './do-pod-deliver-detail';
+import { PickupRequestDetail } from './pickup-request-detail';
 
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
@@ -713,6 +715,10 @@ export class Awb extends BaseEntity {
   @JoinColumn({ name: 'awb_status_id_last' })
   awbStatus: AwbStatus;
 
+  @OneToOne(() => DoPodDeliverDetail)
+  @JoinColumn({ name: 'awb_id', referencedColumnName: 'awbId' })
+  doPodDeliverDetail: DoPodDeliverDetail;
+
   @OneToOne(() => BagItemAwb)
   @JoinColumn({ name: 'awb_number', referencedColumnName: 'awbNumber' })
   bagItemAwb: BagItemAwb;
@@ -724,6 +730,10 @@ export class Awb extends BaseEntity {
   @OneToOne(() => CustomerAccount)
   @JoinColumn({ name: 'customer_account_id' })
   customerAccount: CustomerAccount;
+
+  @OneToOne(() => PickupRequestDetail)
+  @JoinColumn({ name: 'ref_awb_number', referencedColumnName: 'refAwbNumber' })
+  pickupRequestDetail: PickupRequestDetail;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id', referencedColumnName: 'userId' })

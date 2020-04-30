@@ -22,6 +22,7 @@ import {
 import { nameOfProp, nameOfProps } from '../util/nameof';
 import { ObjectService } from './object.service';
 import { OrionRepositoryQueryConditionService } from './orion-repository-query-condition.service';
+import { RawQueryService } from './raw-query.service';
 
 export class OrionRepositoryQueryService<
   T,
@@ -279,7 +280,7 @@ export class OrionRepositoryQueryService<
   }
 
   public innerJoinRaw(
-    fromQuery: OrionRepositoryQueryService<any>,
+    fromQuery: OrionRepositoryQueryService<any> | any,
     joinAlias: string,
     condition?: string,
     parameters?: ObjectLiteral,
@@ -741,12 +742,20 @@ export class OrionRepositoryQueryService<
   private async getCountRawQuery(queryBuilder: SelectQueryBuilder<any>) {
     let rawQuery: string = queryBuilder.getQuery();
     rawQuery = `SELECT COUNT(*) as cnt FROM (${rawQuery}) t`;
-    return this.entityManager.query(rawQuery).then(results => {
+    // use conn slave
+    return await RawQueryService.query(rawQuery).then(results => {
       if (results && results.length) {
         return +results[0].cnt;
       }
       return 0;
     });
+    // // use conn master
+    // return this.entityManager.query(rawQuery).then(results => {
+    //   if (results && results.length) {
+    //     return +results[0].cnt;
+    //   }
+    //   return 0;
+    // });
   }
 
   private isExpressionContainsSelectorArgs(expression: string) {

@@ -109,6 +109,17 @@ export class TransferBagNumberHubVm {
   @Type(() => String)
   bagNumber: string[];
 }
+export class TransferAwbNumberHubVm {
+  @ApiModelProperty({
+    example: ['0002000101', '0002000202'],
+    skipValidation: true,
+  })
+  // TODO: validation if array length = 0
+  @IsDefined({message: 'No Resi harus diisi'})
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  awbNumber: string[];
+}
 
 // Scan Out Awb List
 export class FilterScanOutAwbListVm {
@@ -259,11 +270,9 @@ export class WebScanOutEditHubVm extends WebScanOutVm {
 
 // Create DO POD Delivery
 export class WebScanOutCreateDeliveryVm {
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: 123,
-    skipValidation: true,
   })
-  @IsDefined({message: 'Sigesit harus diisi'})
   userIdDriver: number;
 
   @ApiModelPropertyOptional({
@@ -276,6 +285,18 @@ export class WebScanOutCreateDeliveryVm {
     example: 'keterangan',
   })
   desc?: string;
+}
+
+export class WebScanOutCreateDeliveryPartnerVm extends WebScanOutCreateDeliveryVm {
+  @ApiModelProperty({
+    example: false,
+  })
+  isPartner: boolean;
+
+  @ApiModelPropertyOptional({
+    example: 123,
+  })
+  partnerId: number;
 }
 
 export class WebScanOutDeliverEditVm {

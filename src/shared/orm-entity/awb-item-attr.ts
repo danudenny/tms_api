@@ -116,6 +116,18 @@ export class AwbItemAttr extends BaseEntity {
   })
   awbThirdParty: string | null;
 
+  @Column('character varying', {
+    nullable: true,
+    name: 'doreturn_new_awb',
+  })
+  doreturnNewAwb: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    name: 'doreturn_new_awb_3pl',
+  })
+  doreturnNewAwb3Pl: string | null;
+
   @Column('timestamp without time zone', {
     nullable: false,
     name: 'updated_time',
@@ -161,7 +173,7 @@ export class AwbItemAttr extends BaseEntity {
   bagItemLast: BagItem;
 
   @OneToOne(() => DoReturnAwb)
-  @JoinColumn({ name: 'awb_status_id_last', referencedColumnName: 'awbNumber'})
+  @JoinColumn({ name: 'awb_status_id_last', referencedColumnName: 'awbStatusIdLast'})
   doReturnAwb: DoReturnAwb;
 
   @OneToOne(() => AwbItem)

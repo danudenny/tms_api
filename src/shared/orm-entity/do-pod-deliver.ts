@@ -5,6 +5,7 @@ import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 import { Employee } from './employee';
 import { TmsBaseEntity } from './tms-base';
 import { User } from './user';
+import { DoPodAttr } from './do-pod-attr';
 
 @Entity('do_pod_deliver', { schema: 'public' })
 export class DoPodDeliver extends TmsBaseEntity {
@@ -109,6 +110,19 @@ export class DoPodDeliver extends TmsBaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
+    name: 'is_partner',
+  })
+  isPartner: boolean;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'partner_id',
+  })
+  partnerId: number | null;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
     name: 'is_deleted',
   })
   isDeleted: boolean;
@@ -116,6 +130,10 @@ export class DoPodDeliver extends TmsBaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
+
+  @OneToOne(() => DoPodAttr)
+  @JoinColumn({ name: 'do_pod_deliver_id', referencedColumnName: 'doPodDeliverId' })
+  doPodAttr: DoPodAttr;
 
   @OneToMany(() => DoPodDeliverDetail, e => e.doPodDeliver)
   doPodDeliverDetails: DoPodDeliverDetail[];

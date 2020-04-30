@@ -1,186 +1,215 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+  import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 
-export class WebScanInResponseVm {
-  @ApiModelProperty()
-  podScaninDateTime: string;
+  export class WebScanInResponseVm {
+    @ApiModelProperty()
+    podScaninDateTime: string;
 
-  @ApiModelProperty()
-  awbNumber: string;
+    @ApiModelProperty()
+    awbNumber: string;
 
-  @ApiModelProperty()
-  branchNameScan: string;
+    @ApiModelProperty()
+    branchNameScan: string;
 
-  @ApiModelProperty()
-  branchNameFrom: string;
+    @ApiModelProperty()
+    branchNameFrom: string;
 
-  @ApiModelProperty()
-  employeeName: string;
+    @ApiModelProperty()
+    employeeName: string;
 
-  @ApiModelProperty()
-  scanInStatus: string;
+    @ApiModelProperty()
+    scanInStatus: string;
+  }
 
-}
+  export class WebScanInBranchResponseVm {
+    @ApiModelProperty()
+    createdTime: string;
 
-export class WebScanInBranchResponseVm {
-  @ApiModelProperty()
-  createdTime: string;
+    @ApiModelProperty()
+    bagNumber: string;
 
-  @ApiModelProperty()
-  bagNumber: string;
+    @ApiModelProperty()
+    totalBagScan: string;
 
-  @ApiModelProperty()
-  totalBagScan: string;
+    @ApiModelProperty()
+    podScanInBranchId: string;
 
-  @ApiModelProperty()
-  podScanInBranchId: string;
+    @ApiModelProperty()
+    branchName: string;
 
-  @ApiModelProperty()
-  branchName: string;
+    @ApiModelProperty()
+    totalAwbScan: string;
 
-  @ApiModelProperty()
-  totalAwbScan: string;
+    @ApiModelProperty()
+    weight: string;
+  }
 
-  @ApiModelProperty()
-  weight: string;
+  export class WebScanInBranchBagResponseVm {
+    @ApiModelProperty()
+    createdTime: string;
 
-}
+    @ApiModelProperty()
+    bagNumber: string;
 
-export class WebScanInBranchBagResponseVm {
-  @ApiModelProperty()
-  createdTime: string;
+    @ApiModelProperty()
+    podScanInBranchId: string;
 
-  @ApiModelProperty()
-  bagNumber: string;
+    @ApiModelProperty()
+    branchNameFrom: string;
 
-  @ApiModelProperty()
-  podScanInBranchId: string;
+    @ApiModelProperty()
+    branchId: string;
 
-  @ApiModelProperty()
-  branchNameFrom: string;
+    @ApiModelProperty()
+    representativeCode: string;
 
-  @ApiModelProperty()
-   branchId: string;
+    @ApiModelProperty()
+    bagId: number;
 
-  @ApiModelProperty()
-  representativeCode: string;
+    @ApiModelProperty()
+    bagItemId: number;
 
-  @ApiModelProperty()
-  bagId: number;
+    @ApiModelProperty()
+    totalAwbScan: number;
 
-  @ApiModelProperty()
-  bagItemId: number;
+    @ApiModelProperty()
+    totalAwbItem: number;
 
-  @ApiModelProperty()
-  totalAwbScan: number;
+    @ApiModelProperty()
+    totalDiff: number;
 
-  @ApiModelProperty()
-  totalAwbItem: number;
+    @ApiModelProperty()
+    weight: string;
+  }
 
-  @ApiModelProperty()
-  totalDiff: number;
+  export class WebScanInBranchAwbResponseVm {
+    @ApiModelProperty()
+    createdTime: string;
 
-  @ApiModelProperty()
-  weight: string;
+    @ApiModelProperty()
+    awbNumber: string;
 
-}
+    @ApiModelProperty()
+    podScanInBranchId: string;
 
-export class WebScanInBranchAwbResponseVm {
-  @ApiModelProperty()
-  createdTime: string;
+    @ApiModelProperty()
+    branchName: string;
 
-  @ApiModelProperty()
-  awbNumber: string;
+    @ApiModelProperty()
+    branchId: string;
 
-  @ApiModelProperty()
-  podScanInBranchId: string;
+    @ApiModelProperty()
+    consigneeAddress: string;
 
-  @ApiModelProperty()
-  branchName: string;
+    @ApiModelProperty()
+    consigneeName: string;
 
-  @ApiModelProperty()
-  branchId: string;
+    @ApiModelProperty()
+    totalWeightFinal: string;
 
-  @ApiModelProperty()
-  consigneeAddress: string;
+    @ApiModelProperty()
+    totalCodValue: string;
 
-  @ApiModelProperty()
-  consigneeName: string;
+    @ApiModelProperty()
+    totalAwbScan: string;
+  }
 
-  @ApiModelProperty()
-  totalWeightFinal: string;
+  export class WebScanInHubSortResponseVm {
+    @ApiModelProperty()
+    createdTime: string;
 
-  @ApiModelProperty()
-  totalCodValue: string;
+    @ApiModelProperty()
+    bagNumberCode: string;
 
-  @ApiModelProperty()
-  totalAwbScan: string;
+    @ApiModelProperty()
+    bagNumber: string;
 
-}
+    @ApiModelProperty()
+    bagItemId: string;
 
-export class WebScanInHubSortResponseVm {
-  @ApiModelProperty()
-  createdTime: string;
+    @ApiModelProperty()
+    dropoffHubId: string;
 
-  @ApiModelProperty()
-  bagNumberCode: string;
+    @ApiModelProperty()
+    dropoffSortationId: string;
 
-  @ApiModelProperty()
-  bagNumber: string;
+    @ApiModelProperty()
+    bagSeq: string;
 
-  @ApiModelProperty()
-  bagItemId: string;
+    @ApiModelProperty()
+    districtName: string;
 
-  @ApiModelProperty()
-  dropoffHubId: string;
+    @ApiModelProperty()
+    branchName: string;
 
-  @ApiModelProperty()
-  dropoffSortationId: string;
+    @ApiModelProperty()
+    branchScanName: string;
 
-  @ApiModelProperty()
-  bagSeq: string;
+    @ApiModelProperty()
+    branchScanId: string;
 
-  @ApiModelProperty()
-  districtName: string;
+    @ApiModelProperty()
+    branchId: string;
 
-  @ApiModelProperty()
-  branchName: string;
+    @ApiModelProperty()
+    totalAwb: number;
 
-  @ApiModelProperty()
-  totalAwb: number;
+    @ApiModelProperty()
+    weight: string;
 
-  @ApiModelProperty()
-  weight: string;
+    @ApiModelProperty()
+    representativeCode: string;
+  }
 
-  @ApiModelProperty()
-  representativeCode: string;
-}
+  export class WebScanInBagResponseVm {
+    @ApiModelProperty()
+    podScaninDateTime: string;
 
-export class WebScanInBagResponseVm {
-  @ApiModelProperty()
-  podScaninDateTime: string;
+    @ApiModelProperty()
+    bagNumber: string;
 
-  @ApiModelProperty()
-  bagNumber: string;
+    @ApiModelProperty()
+    bagSeq: string;
 
-  @ApiModelProperty()
-  bagSeq: string;
+    @ApiModelProperty()
+    bagNumberCode: string;
 
-  @ApiModelProperty()
-  bagNumberCode: string;
+    @ApiModelProperty()
+    totalAwb: number;
 
-  @ApiModelProperty()
-  totalAwb: number;
+    @ApiModelProperty()
+    branchNameScan: string;
 
-  @ApiModelProperty()
-  branchNameScan: string;
+    @ApiModelProperty()
+    branchNameFrom: string;
 
-  @ApiModelProperty()
-  branchNameFrom: string;
+    @ApiModelProperty()
+    employeeName: string;
 
-  @ApiModelProperty()
-  employeeName: string;
+    @ApiModelProperty()
+    scanInStatus: string;
+  }
 
-  @ApiModelProperty()
-  scanInStatus: string;
+  export class WebDropOffSummaryResponseVm {
+    @ApiModelProperty()
+    totalResi: number;
+  }
 
-}
+  export class WebScanInHubResponseDataVm {
+    @ApiModelProperty()
+    awbNumber: string;
+
+    @ApiModelProperty()
+    dateScanIn: string;
+
+    @ApiModelProperty()
+    branchScanName: string;
+
+    @ApiModelProperty()
+    branchScanId: string;
+
+    @ApiModelProperty()
+    consigneeName: string;
+
+    @ApiModelProperty()
+    consigneeAddress: string;
+  }

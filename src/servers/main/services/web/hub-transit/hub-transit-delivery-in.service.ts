@@ -1,32 +1,35 @@
-import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { BagItem } from '../../../../../shared/orm-entity/bag-item';
-import { BagItemAwb } from '../../../../../shared/orm-entity/bag-item-awb';
-import { BagTrouble } from '../../../../../shared/orm-entity/bag-trouble';
-import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
-import { DeliveryService } from '../../../../../shared/services/delivery.service';
-import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
-import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
-import { Logger } from '@nestjs/common';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import { WebScanInBagResponseVm } from '../../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../../models/web-scanin-bag.vm';
 import moment = require('moment');
+import { BagService } from '../../v1/bag.service';
+import { BAG_STATUS } from '../../../../../shared/constants/bag-status.constant';
+import { BagTroubleService } from '../../../../../shared/services/bag-trouble.service';
+import { DoPodDetailBagRepository } from '../../../../../shared/orm-repository/do-pod-detail-bag.repository';
+import { DoPod } from '../../../../../shared/orm-entity/do-pod';
+import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
+import { DropoffHub } from '../../../../../shared/orm-entity/dropoff_hub';
+import { BagDropoffHubQueueService } from '../../../../queue/services/bag-dropoff-hub-queue.service';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
+import { DropoffHubDetail } from '../../../../../shared/orm-entity/dropoff_hub_detail';
+import { WebDropOffSummaryListResponseVm, WebScanInHubSortListResponseVm } from '../../../models/web-scanin-list.response.vm';
+import { MetaService } from '../../../../../shared/services/meta.service';
+import { WebDeliveryListResponseVm } from '../../../models/web-delivery-list-response.vm';
 
 export class HubTransitDeliveryInService {
 
   /**
-   * Scan in Bag Number (Hub) - NewFlow
-   * Flow Data : https://docs.google.com/document/d/1wnrYqlCmZruMMwgI9d-ko54JGQDWE9sn2yjSYhiAIrg/edit
+   * scan dropoff_hub
+   *
+   * @static
    * @param {WebScanInBagVm} payload
-   * @param {boolean} isHub
    * @returns {Promise<WebScanInBagResponseVm>}
-   * @memberof WebDeliveryInService
+   * @memberof HubTransitDeliveryInService
    */
-  static async scanInBag(
-    payload: WebScanInBagVm,
-    isHub: boolean = true,
-  ): Promise<WebScanInBagResponseVm> {
+  static async scanInBagHub(payload: WebScanInBagVm): Promise<WebScanInBagResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
@@ -44,142 +47,110 @@ export class HubTransitDeliveryInService {
         message: 'Success',
       };
 
-      const bagData = await DeliveryService.validBagNumber(bagNumber);
-
+      const bagData = await BagService.validBagNumber(bagNumber);
       if (bagData) {
         // NOTE: check condition disable on check branchIdNext
-        // bagData.branchIdNext == permissonPayload.branchId;
-        if (permissonPayload.branchId) {
-          if (bagData.bagItemStatusIdLast) {
-            const holdRedis = await RedisService.locking(
-              `hold:bagscanin:${bagData.bagItemId}`,
-              'locking',
+        // status bagItemStatusIdLast ??
+        const notScan =  bagData.bagItemStatusIdLast != BAG_STATUS.DO_HUB ? true : false;
+        // Add Locking setnx redis
+        const holdRedis = await RedisService.locking(
+          `hold:dropoff:${bagData.bagItemId}`,
+          'locking',
+        );
+        if (notScan && holdRedis) {
+          // validate scan branch ??
+          const notScanBranch = bagData.branchIdNext != permissonPayload.branchId ? true : false;
+          // create bag trouble ==========================
+          if (
+            bagData.bagItemStatusIdLast != BAG_STATUS.OUT_BRANCH ||
+            notScanBranch
+          ) {
+            const desc = notScanBranch ? 'Gerai tidak sesuai' : 'Status bag tidak sesuai';
+            BagTroubleService.create(
+              bagNumber,
+              bagData.bagItemStatusIdLast,
+              100, // IN HUB
+              desc,
             );
-            if (holdRedis) {
-              // AFTER Scan IN ===============================================
-              // #region after scanin
-              // NOTE: check doPodDetail
-              const doPodDetail = await DoPodDetail.findOne({
-                where: {
-                  bagItemId: bagData.bagItemId,
-                  isScanIn: false,
-                  isDeleted: false,
-                },
-              });
-              if (doPodDetail) {
-                // save data to table pod_scan_id
-                // Update Data doPodDetail
-                // doPodDetail.podScanInId = podScanIn.podScanInId;
-                doPodDetail.isScanIn = true;
-                doPodDetail.updatedTime = timeNow;
-                doPodDetail.userIdUpdated = authMeta.userId;
-                await DoPodDetail.save(doPodDetail);
-
-                // NOTE:
-                // const doPod = await DoPod.findOne({
-                //   where: {
-                //     doPodId: doPodDetail.doPodId,
-                //     isDeleted: false,
-                //   },
-                // });
-
-                // counter total scan in
-                // doPod.totalScanIn = doPod.totalScanIn + 1;
-                // if (doPod.totalScanIn == 1) {
-                //   doPod.firstDateScanIn = timeNow;
-                //   doPod.lastDateScanIn = timeNow;
-                // } else {
-                //   doPod.lastDateScanIn = timeNow;
-                // }
-                // await DoPod.save(doPod);
-              }
-
-              totalSuccess += 1;
-              // update bagItem
-              const bagItem = await BagItem.findOne({
-                where: {
-                  bagItemId: bagData.bagItemId,
-                },
-              });
-
-              if (bagItem) {
-                bagItem.bagItemStatusIdLast = isHub ? 3500 : 2000;
-                bagItem.branchIdLast = permissonPayload.branchId;
-                bagItem.updatedTime = timeNow;
-                bagItem.userIdUpdated = authMeta.userId;
-                BagItem.save(bagItem);
-
-                // NOTE: status DO_HUB (12600: drop off hub)
-                if (isHub) {
-                  const bagItemsAwb = await BagItemAwb.find({
-                    where: {
-                      bagItemId: bagData.bagItemId,
-                      isDeleted: false,
-                    },
-                  });
-                  if (bagItemsAwb && bagItemsAwb.length > 0) {
-                    for (const itemAwb of bagItemsAwb) {
-                      if (itemAwb.awbItemId) {
-                        // await DeliveryService.updateAwbAttr(
-                        //   itemAwb.awbItemId,
-                        //   null,
-                        //   AWB_STATUS.DO_HUB,
-                        // );
-                        // NOTE: queue by Bull
-                        DoPodDetailPostMetaQueueService.createJobByDropoffBag(
-                          itemAwb.awbItemId,
-                          permissonPayload.branchId,
-                          authMeta.userId,
-                        );
-                      }
-                    }
-                  } else {
-                    Logger.log('### Data Bag Item Awb :: Not Found!!');
-                  }
-                }
-              }
-
-              // else {
-              //   totalError += 1;
-              //   response.status = 'error';
-              //   response.message = `Gabung paket ${bagNumber} belum scan out di gerai sebelumnya`;
-              // }
-              // #endregion after scanin
-
-              // remove key holdRedis
-              RedisService.del(`hold:bagscanin:${bagData.bagItemId}`);
-            } else {
-              totalError += 1;
-              response.status = 'error';
-              response.message = 'Server Busy';
-            }
-
-            // TODO: add bag trouble (with status 500)
-          } else {
-            totalSuccess += 1;
-            // status 1000
-            response.message = `Gabung paket ${bagNumber} belum scan out di gerai sebelumnya`;
-            if (Number(bagData.bagItemStatusIdLast) == 2000) {
-              response.message = `Gabung paket ${bagNumber} sudah pernah scan in`;
-            }
           }
-        } else {
-          // TODO: bag trouble (warning)
-          // NOTE: create data bag trouble
-          const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
-          const bagTrouble = BagTrouble.create({
-            bagNumber,
-            bagTroubleCode,
-            bagTroubleStatus: 100,
-            bagStatusId: 2000,
-            employeeId: authMeta.employeeId,
-            branchId: permissonPayload.branchId,
-          });
-          await BagTrouble.save(bagTrouble);
+          // ==================================================================
 
+          const bagItem = await BagItem.findOne({
+            where: {
+              bagItemId: bagData.bagItemId,
+            },
+          });
+          if (bagItem) {
+            // update status bagItem
+            await BagItem.update({ bagItemId: bagItem.bagItemId }, {
+              bagItemStatusIdLast: BAG_STATUS.DO_HUB,
+              branchIdLast: permissonPayload.branchId,
+              updatedTime: timeNow,
+              userIdUpdated: authMeta.userId,
+            });
+
+            // create data dropoff hub
+            const dropoffHub = DropoffHub.create();
+            dropoffHub.branchId = permissonPayload.branchId;
+            dropoffHub.bagId = bagData.bag.bagId;
+            dropoffHub.bagItemId = bagData.bagItemId;
+            dropoffHub.bagNumber = bagNumber;
+            await DropoffHub.save(dropoffHub);
+
+            // NOTE: background job for insert bag item history
+            BagItemHistoryQueueService.addData(
+              bagData.bagItemId,
+              BAG_STATUS.DO_HUB,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
+
+            // NOTE:
+            // refactor send to background job for loop awb
+            // update status DO_HUB (12600: drop off hub)
+            BagDropoffHubQueueService.perform(
+              dropoffHub.dropoffHubId,
+              bagData.bagItemId,
+              authMeta.userId,
+              permissonPayload.branchId,
+            );
+
+            // update first scan in do pod =====================================
+            // TODO: need refactoring code
+            const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
+              bagData.bagItemId,
+              BAG_STATUS.DO_HUB,
+            );
+            if (doPodDetailBag) {
+              // counter total scan in
+              doPodDetailBag.doPod.totalScanInBag += 1;
+              if (doPodDetailBag.doPod.totalScanInBag == 1) {
+                await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
+                  firstDateScanIn: timeNow,
+                  lastDateScanIn: timeNow,
+                  totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
+                  updatedTime: timeNow,
+                  userIdUpdated: authMeta.userId,
+                });
+              } else {
+                await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
+                  lastDateScanIn: timeNow,
+                  totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
+                  updatedTime: timeNow,
+                  userIdUpdated: authMeta.userId,
+                });
+              }
+            }
+            // =================================================================
+
+            totalSuccess += 1;
+          }
+          // remove key holdRedis
+          RedisService.del(`hold:dropoff:${bagData.bagItemId}`);
+        } else {
           totalError += 1;
           response.status = 'error';
-          response.message = `Gabung paket ${bagNumber} bukan milik gerai ini`;
+          response.message = `Gabung paket ${bagNumber} Sudah di proses.`;
         }
       } else {
         totalError += 1;
@@ -197,6 +168,173 @@ export class HubTransitDeliveryInService {
     result.totalSuccess = totalSuccess;
     result.totalError = totalError;
     result.data = dataItem;
+
+    return result;
+  }
+
+  static async getDropOffList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInHubSortListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
+    payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
+    payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+      {
+        field: 'bagNumberCode',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffHub, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+    q.selectRaw(
+      [
+        `CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, '0'))`,
+        'bagNumberCode',
+      ],
+      ['t2.bag_number', 'bagNumber'],
+      ['t2.ref_representative_code', 'representativeCode'],
+      ['t3.bag_seq', 'bagSeq'],
+      ['t1.created_time', 'createdTime'],
+      ['t1.dropoff_hub_id', 'dropoffHubId'],
+      ['t5.branch_name', 'branchName'],
+      ['t6.branch_name', 'branchScanName'],
+      ['COUNT (t4.*)', 'totalAwb'],
+      [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+    );
+
+    q.innerJoin(e => e.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.dropoffHubDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bag.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw(`
+      t1.created_time,
+      t1.dropoff_hub_id,
+      t3.bag_seq,
+      t2.bag_number,
+      t2.ref_representative_code,
+      t3.weight,
+      t5.branch_name,
+      t6.branch_name
+    `);
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInHubSortListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async getDropOffListDetail(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebDeliveryListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['dropOffHubId'] = 't1.dropoff_hub_id';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'dropOffHubId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffHubDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t2.awb_number', 'awbNumber'],
+      ['t3.consignee_name', 'consigneeName'],
+      ['t3.consignee_address', 'consigneeAddress'],
+      ['t4.district_name', 'districtName'],
+    );
+
+    q.innerJoin(e => e.awbItemAttr, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.districtTo, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebDeliveryListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async getDropOffSummaryList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebDropOffSummaryListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
+    payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
+    payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+
+    const repo = new OrionRepositoryService(DropoffHub, 't1');
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(['count(t4.awb_number)', 'totalResi']);
+    q.innerJoin(e => e.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.dropoffHubDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bag.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+
+    const result = new WebDropOffSummaryListResponseVm();
+    result.data = data;
 
     return result;
   }
