@@ -29,7 +29,9 @@ export class SmsTrackingService {
     const smsTrackingMessage = SmsTrackingMessage.create({
         sentTo: payload.sentTo,
         isRepeated: payload.isRepeated,
+        isRepeatedOver: payload.isRepeatedOver,
         note: payload.note,
+        awbStatusId: payload.awbStatusId,
         userIdCreated: authMeta.userId,
         createdTime: moment().toDate(),
         updatedTime: moment().toDate(),
@@ -65,12 +67,22 @@ export class SmsTrackingService {
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
+    q.innerJoin(e => e.awbStatus, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.smsTrackingUser, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.selectRaw(
       ['t1.sms_tracking_message_id', 'smsTrackingMessageId'],
       ['t1.sent_to', 'sentTo'],
       ['t1.is_repeated', 'isRepeated'],
       ['t1.note', 'note'],
       ['t1.is_repeated_over', 'isRepeatedOver'],
+      ['t2.awb_status_id', 'awbStatusId'],
+      ['t2.awb_status_name', 'awbStatusName'],
+      ['t3.sms_tracking_user_id', 'sentTo'],
+      ['t3.sms_tracking_user_name', 'sentToName'],
     );
     q.orderBy({ createdTime: 'DESC' });
     const data = await q.exec();
@@ -88,35 +100,28 @@ export class SmsTrackingService {
   ): Promise<SmsTrackingStoreShiftResponseVm> {
     const result = new SmsTrackingStoreShiftResponseVm();
 
-    if (moment(payload.workFrom, 'HH:mm', true).isValid() ||
+    if (!moment(payload.workFrom, 'HH:mm', true).isValid() ||
         !moment(payload.workTo, 'HH:mm', true).isValid()) {
         result.smsTrackingShiftId = null;
-        result.message = `Salah format workFrom workTo`;
+        result.message = `Salah format payload workFrom dan workTo`;
         result.status = 'error';
         return result;
     }
 
-    try {
-      const authMeta = AuthService.getAuthData();
-      const smsTrackingShift = SmsTrackingShift.create({
-        workFrom: payload.workFrom,
-        workTo: payload.workTo,
-        userIdCreated: authMeta.userId,
-        createdTime: moment().toDate(),
-        updatedTime: moment().toDate(),
-        userIdUpdated: authMeta.userId,
-      });
-      const response = await SmsTrackingShift.save(smsTrackingShift);
-      result.smsTrackingShiftId = response.smsTrackingShiftId;
-      result.message = 'Berhasil Menyimpan sms tracking - shift';
-      result.status = 'sukses';
-      return result;
-    } catch (error) {
-      result.smsTrackingShiftId = null;
-      result.message = 'Gagal menyimpan data sms tracking - shift';
-      result.status = 'error';
-      return result;
-    }
+    const authMeta = AuthService.getAuthData();
+    const smsTrackingShift = SmsTrackingShift.create({
+      workFrom: payload.workFrom,
+      workTo: payload.workTo,
+      userIdCreated: authMeta.userId,
+      createdTime: moment().toDate(),
+      updatedTime: moment().toDate(),
+      userIdUpdated: authMeta.userId,
+    });
+    const response = await SmsTrackingShift.save(smsTrackingShift);
+    result.smsTrackingShiftId = response.smsTrackingShiftId;
+    result.message = 'Berhasil Menyimpan sms tracking - shift';
+    result.status = 'sukses';
+    return result;
 
     return result;
   }
@@ -156,13 +161,13 @@ export class SmsTrackingService {
   ): Promise<SmsTrackingListUserResponseVm> {
     // mapping search field and operator default ilike
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['name'] = 't1.name';
+    payload.fieldResolverMap['sentTo'] = 't1.sms_tracking_user_id';
     payload.fieldResolverMap['phone'] = 't1.phone';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
-        field: 'name',
+        field: 'sentToName',
       },
       {
         field: 'phone',
@@ -176,7 +181,7 @@ export class SmsTrackingService {
 
     q.selectRaw(
       ['t1.sms_tracking_user_id', 'smsTrackingUserId'],
-      ['t1.name', 'name'],
+      ['t1.sms_tracking_user_name', 'name'],
       ['t1.phone', 'phone'],
     );
     q.orderBy({

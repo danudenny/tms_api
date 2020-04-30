@@ -1,4 +1,6 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import {AwbStatus} from './awb-status';
+import {SmsTrackingUser} from './sms-tracking-user';
 
 @Entity('sms_tracking_message', { schema: 'public' })
 export class SmsTrackingMessage extends BaseEntity {
@@ -13,6 +15,12 @@ export class SmsTrackingMessage extends BaseEntity {
     name: 'sent_to',
   })
   sentTo: number | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'awb_status_id',
+  })
+  awbStatusId: number | null;
 
   @Column('boolean', {
     nullable: false,
@@ -65,4 +73,12 @@ export class SmsTrackingMessage extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @OneToOne(() => AwbStatus)
+  @JoinColumn({ name: 'awb_status_id', referencedColumnName: 'awbStatusId' })
+  awbStatus: AwbStatus;
+
+  @OneToOne(() => SmsTrackingUser)
+  @JoinColumn({ name: 'sent_to', referencedColumnName: 'smsTrackingUserId' })
+  smsTrackingUser: SmsTrackingUser;
 }

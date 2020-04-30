@@ -5,6 +5,7 @@ CREATE SEQUENCE sms_tracking_message_sms_tracking_message_id_seq;
 
 CREATE TABLE public.sms_tracking_message (
 	sms_tracking_message_id int8 DEFAULT nextval('sms_tracking_message_sms_tracking_message_id_seq'::regclass) NOT NULL,
+	awb_status_id int8 NOT NULL,
 	sent_to int8 NOT NULL,
 	is_repeated bool NULL DEFAULT false,
 	is_repeated_over bool NULL DEFAULT false,

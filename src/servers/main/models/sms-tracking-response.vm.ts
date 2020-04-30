@@ -21,6 +21,9 @@ export class SmsTrackingMsgResponseVm {
   sentTo: number;
 
   @ApiModelProperty()
+  sentToName: string;
+
+  @ApiModelProperty()
   isRepeated: boolean;
 
   @ApiModelProperty()
@@ -28,6 +31,12 @@ export class SmsTrackingMsgResponseVm {
 
   @ApiModelProperty()
   note: string;
+
+  @ApiModelProperty()
+  awbStatusId: number;
+
+  @ApiModelProperty()
+  awbStatusName: string;
 }
 
 export class SmsTrackingListMessageResponseVm extends BaseMetaResponseVm {

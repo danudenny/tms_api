@@ -14,9 +14,14 @@ export class SmsTrackingStoreMessagePayloadVm {
   note: string;
 
   @ApiModelProperty({
-    example: [12345],
+    example: 12345,
   })
   sentTo: number;
+
+  @ApiModelProperty({
+    example: 12345,
+  })
+  awbStatusId: number;
 }
 
 export class SmsTrackingListMessagePayloadVm extends BaseMetaPayloadVm {}
