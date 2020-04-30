@@ -160,10 +160,13 @@ export class DropPickupRequestResponseVM {
   pickupEmail: string;
 
   @ApiModelProperty()
-  pickupNotes;
+  pickupNotes: string;
 
   @ApiModelProperty()
   parcelValue: number;
+
+  @ApiModelProperty()
+  pickupRequestStatus: number;
 }
 
 export class DropCreateWorkOrderPayloadVM {
