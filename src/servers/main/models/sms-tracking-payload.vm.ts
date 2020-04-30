@@ -8,12 +8,14 @@ export class SmsTrackingStoreMessagePayloadVm {
   isRepeated: boolean;
 
   @ApiModelProperty()
+  isRepeatedOver: boolean;
+
+  @ApiModelProperty()
   note: string;
 
   @ApiModelProperty({
-    example: ['Sender', 'Recepient'],
+    example: ['abcd-efgh-ijkl-mnop-qrst'],
   })
-  @IsDefined({ message: `Label Penerima harus 'Sender' atau 'Recepient'` })
   sentTo: string;
 }
 
@@ -32,3 +34,17 @@ export class SmsTrackingStoreShiftPayloadVm {
 }
 
 export class SmsTrackingListShiftPayloadVm extends BaseMetaPayloadVm {}
+
+export class SmsTrackingStoreUserPayloadVm {
+  @ApiModelProperty({
+    example: 'Awb Number',
+  })
+  label: string;
+
+  @ApiModelProperty({
+    example: 'awbNumber',
+  })
+  name: string;
+}
+
+export class SmsTrackingListUserPayloadVm extends BaseMetaPayloadVm {}

@@ -24,6 +24,9 @@ export class SmsTrackingMsgResponseVm {
   isRepeated: boolean;
 
   @ApiModelProperty()
+  isRepeatedOver: boolean;
+
+  @ApiModelProperty()
   note: string;
 }
 
@@ -43,7 +46,7 @@ export class SmsTrackingStoreShiftResponseVm {
   message: string;
 }
 
-export class SmsTrackingLstResponseVm {
+export class SmsTrackingShiftDataVm {
   @ApiModelProperty()
   smsTrackingShiftId: string;
 
@@ -55,6 +58,22 @@ export class SmsTrackingLstResponseVm {
 }
 
 export class SmsTrackingListShiftResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [SmsTrackingLstResponseVm] })
-  data: SmsTrackingLstResponseVm[];
+  @ApiModelProperty({ type: () => [SmsTrackingShiftDataVm] })
+  data: SmsTrackingShiftDataVm[];
+}
+
+export class SmsTrackingListUserDataVm {
+  @ApiModelProperty()
+  smsTrackingUserId: string;
+
+  @ApiModelProperty()
+  name: string;
+
+  @ApiModelProperty()
+  phone: string;
+}
+
+export class SmsTrackingListUserResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [SmsTrackingListUserDataVm] })
+  data: SmsTrackingListUserDataVm[];
 }
