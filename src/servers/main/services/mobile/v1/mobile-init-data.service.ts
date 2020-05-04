@@ -215,6 +215,8 @@ export class V1MobileInitDataService {
       'pickup_request_detail.recipient_latitude',
       'recipientLatitude',
     );
+    qb.addSelect('pickup_request_detail.do_return', 'isDoReturn');
+    qb.addSelect('pickup_request_detail.do_return_number', 'doReturnNumber');
     qb.from('do_pod_deliver_detail', 'do_pod_deliver_detail');
     qb.innerJoin(
       'do_pod_deliver',
