@@ -10,12 +10,14 @@ import {
   SmsTrackingListMessagePayloadVm,
   SmsTrackingStoreShiftPayloadVm,
   SmsTrackingListShiftPayloadVm,
+  SmsTrackingListUserPayloadVm,
 } from '../../models/sms-tracking-payload.vm';
 import {
   SmsTrackingStoreMessageResponseVm,
   SmsTrackingListMessageResponseVm,
   SmsTrackingListShiftResponseVm,
   SmsTrackingStoreShiftResponseVm,
+  SmsTrackingListUserResponseVm,
 } from '../../models/sms-tracking-response.vm';
 
 @ApiUseTags('Sms Tracking')
@@ -53,5 +55,13 @@ export class SmsTrackingController {
   @ApiOkResponse({ type: SmsTrackingListShiftResponseVm })
   public async shiftList(@Body() payload: SmsTrackingListShiftPayloadVm) {
     return SmsTrackingService.listShift(payload);
+  }
+
+  @Post('user/list')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: SmsTrackingListUserResponseVm })
+  public async legendList(@Body() payload: SmsTrackingListUserPayloadVm) {
+    return SmsTrackingService.userList(payload);
   }
 }

@@ -65,6 +65,12 @@ export class MobileDeliveryVm {
   @ApiModelProperty()
   isCOD: boolean;
 
+  @ApiModelProperty()
+  isDoReturn: boolean;
+
+  @ApiModelProperty()
+  doReturnNumber: string;
+
   @ApiModelProperty({ type: [MobileDeliveryHistoryVm] })
   deliveryHistory: MobileDeliveryHistoryVm[];
 }
