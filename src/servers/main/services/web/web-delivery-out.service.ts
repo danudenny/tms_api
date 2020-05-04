@@ -1294,6 +1294,8 @@ export class WebDeliveryOutService {
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['COALESCE(t1.consignee_name, t2.consignee_name)', 'consigneeName'],
       ['t3.awb_status_title', 'awbStatusTitle'],
+      ['t4.do_return', 'isDoReturn'],
+      ['t4.do_return_number', 'doReturnNumber'],
       [
         'CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))',
         'totalCodValue',
@@ -1304,6 +1306,9 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.awbStatus, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.pickupRequestDetail, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
