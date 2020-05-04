@@ -191,6 +191,8 @@ export class V1MobileSyncService {
     file,
   ): Promise<MobileSyncImageResponseVm> {
     const result = new MobileSyncImageResponseVm();
+    const authMeta = AuthService.getAuthData();
+    PinoLoggerService.log('#### DEBUG USER SYNC IMAGE : ', authMeta);
 
     let url = null;
     let attachmentId = null;
@@ -229,6 +231,13 @@ export class V1MobileSyncService {
       doPodDeliverAttachment.attachmentTmsId = attachmentId;
       doPodDeliverAttachment.type = payload.imageType;
       await DoPodDeliverAttachment.save(doPodDeliverAttachment);
+
+      // send to background reupload s3 with awb number
+      UploadImagePodQueueService.perform(
+        payload.id,
+        url,
+        payload.imageType,
+      );
     }
 
     result.url = url;
