@@ -4,6 +4,7 @@ import {
   SmsTrackingStoreShiftPayloadVm,
   SmsTrackingListShiftPayloadVm,
   SmsTrackingListUserPayloadVm,
+  SmsTrackingDeleteUserPayloadVm,
 } from '../../models/sms-tracking-payload.vm';
 import {
   SmsTrackingListMessageResponseVm,
@@ -19,6 +20,7 @@ import {AuthService} from '../../../../shared/services/auth.service';
 import {SmsTrackingMessage} from '../../../../shared/orm-entity/sms-tracking-message';
 import {OrionRepositoryService} from '../../../../shared/services/orion-repository.service';
 import {SmsTrackingUser} from '../../../../shared/orm-entity/sms-tracking-user';
+import { In } from 'typeorm';
 
 export class SmsTrackingService {
   static async storeMessage(
@@ -62,6 +64,9 @@ export class SmsTrackingService {
         field: 'note',
       },
     ];
+    if (!payload.limit) {
+      payload.limit = 1000;
+    }
     const repo = new OrionRepositoryService(SmsTrackingMessage, 't1');
 
     const q = repo.findAllRaw();
@@ -74,16 +79,17 @@ export class SmsTrackingService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.selectRaw(
-      ['t1.sms_tracking_message_id', 'smsTrackingMessageId'],
+      ['t1.sms_tracking_message_id::integer', 'smsTrackingMessageId'],
       ['t1.sent_to', 'sentTo'],
       ['t1.is_repeated', 'isRepeated'],
       ['t1.note', 'note'],
       ['t1.is_repeated_over', 'isRepeatedOver'],
       ['t2.awb_status_id', 'awbStatusId'],
       ['t2.awb_status_name', 'awbStatusName'],
-      ['t3.sms_tracking_user_id', 'sentTo'],
+      ['t3.sms_tracking_user_id::integer', 'sentTo'],
       ['t3.sms_tracking_user_name', 'sentToName'],
     );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.orderBy({ createdTime: 'DESC' });
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -134,15 +140,18 @@ export class SmsTrackingService {
     payload.fieldResolverMap['workFrom'] = 't1.work_from';
     payload.fieldResolverMap['workTo'] = 't1.work_to';
     const repo = new OrionRepositoryService(SmsTrackingShift, 't1');
-
+    if (!payload.limit) {
+      payload.limit = 1000;
+    }
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.sms_tracking_shift_id', 'smsTrackingShiftId'],
+      ['t1.sms_tracking_shift_id::integer', 'smsTrackingShiftId'],
       ['t1.work_from', 'workFrom'],
       ['t1.work_to', 'workTo'],
     );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.orderBy({
       createdTime: 'DESC',
     });
@@ -173,17 +182,20 @@ export class SmsTrackingService {
         field: 'phone',
       },
     ];
-
+    if (!payload.limit) {
+      payload.limit = 1000;
+    }
     const repo = new OrionRepositoryService(SmsTrackingUser, 't1');
 
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.sms_tracking_user_id', 'smsTrackingUserId'],
+      ['t1.sms_tracking_user_id::integer', 'smsTrackingUserId'],
       ['t1.sms_tracking_user_name', 'name'],
       ['t1.phone', 'phone'],
     );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.orderBy({
       createdTime: 'DESC',
     });
@@ -195,5 +207,21 @@ export class SmsTrackingService {
     result.data = data;
 
     return result;
+  }
+  static async deleteUser(payload: SmsTrackingDeleteUserPayloadVm) {
+    const data = payload.trackingMessageId;
+    try {
+      const db = await SmsTrackingMessage.update({ smsTrackingMessageId: In(data) }, {
+        isDeleted: true,
+      });
+      const result = {
+                       status: 'success',
+                       message: 'Berhasil Menghapus Data',
+                     };
+      db.raw = result;
+      return db.raw;
+    } catch (error) {
+      return { status: 'error', message: 'Gagal Menghapus Data' };
+    }
   }
 }
