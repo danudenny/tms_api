@@ -4,7 +4,7 @@ import { IsDefined } from 'class-validator';
 
 export class SmsTrackingStoreMessageResponseVm {
   @ApiModelProperty()
-  smsTrackingMessageId: string;
+  smsTrackingMessageId: number;
 
   @ApiModelProperty()
   status: string;
@@ -15,16 +15,28 @@ export class SmsTrackingStoreMessageResponseVm {
 
 export class SmsTrackingMsgResponseVm {
   @ApiModelProperty()
-  smsTrackingMessageId: string;
+  smsTrackingMessageId: number;
 
   @ApiModelProperty()
-  sentTo: string;
+  sentTo: number;
+
+  @ApiModelProperty()
+  sentToName: string;
 
   @ApiModelProperty()
   isRepeated: boolean;
 
   @ApiModelProperty()
+  isRepeatedOver: boolean;
+
+  @ApiModelProperty()
   note: string;
+
+  @ApiModelProperty()
+  awbStatusId: number;
+
+  @ApiModelProperty()
+  awbStatusName: string;
 }
 
 export class SmsTrackingListMessageResponseVm extends BaseMetaResponseVm {
@@ -34,7 +46,7 @@ export class SmsTrackingListMessageResponseVm extends BaseMetaResponseVm {
 
 export class SmsTrackingStoreShiftResponseVm {
   @ApiModelProperty()
-  smsTrackingShiftId: string;
+  smsTrackingShiftId: number;
 
   @ApiModelProperty()
   status: string;
@@ -43,18 +55,37 @@ export class SmsTrackingStoreShiftResponseVm {
   message: string;
 }
 
-export class SmsTrackingLstResponseVm {
+export class SmsTrackingShiftDataVm {
   @ApiModelProperty()
-  smsTrackingShiftId: string;
+  smsTrackingShiftId: number;
 
   @ApiModelProperty()
   workFrom: string;
 
   @ApiModelProperty()
   workTo: string;
+
+  @ApiModelProperty()
+  shiftName: string;
 }
 
 export class SmsTrackingListShiftResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [SmsTrackingLstResponseVm] })
-  data: SmsTrackingLstResponseVm[];
+  @ApiModelProperty({ type: () => [SmsTrackingShiftDataVm] })
+  data: SmsTrackingShiftDataVm[];
+}
+
+export class SmsTrackingListUserDataVm {
+  @ApiModelProperty()
+  smsTrackingUserId: number;
+
+  @ApiModelProperty()
+  name: string;
+
+  @ApiModelProperty()
+  phone: string;
+}
+
+export class SmsTrackingListUserResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [SmsTrackingListUserDataVm] })
+  data: SmsTrackingListUserDataVm[];
 }

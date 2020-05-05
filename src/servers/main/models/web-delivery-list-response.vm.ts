@@ -47,6 +47,12 @@ export class ItemDeliveryResponseVm {
   isCod: string;
 
   @ApiModelProperty()
+  isDoReturn: string;
+
+  @ApiModelProperty()
+  doReturnNumber: string;
+
+  @ApiModelProperty()
   doPodDeliverDetailId: string;
 
   @ApiModelProperty()

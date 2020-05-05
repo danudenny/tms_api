@@ -1,26 +1,26 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('sms_tracking_shift', { schema: 'public' })
-export class SmsTrackingShift extends BaseEntity {
+@Entity('sms_tracking_user', { schema: 'public' })
+export class SmsTrackingUser extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-    name: 'sms_tracking_shift_id',
+    name: 'sms_tracking_user_id',
   })
-  smsTrackingShiftId: number;
+  smsTrackingUserId: number;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-    name: 'work_from',
+    name: 'sms_tracking_user_name',
   })
-  workFrom: string | null;
+  smsTrackingUserName: string | null;
 
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'work_to',
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'phone',
   })
-  workTo: string | null;
+  phone: string | null;
 
   @Column('bigint', {
     nullable: false,
@@ -52,9 +52,4 @@ export class SmsTrackingShift extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
-  @Column('character varying', {
-    nullable: false,
-    name: 'sms_tracking_shift_name',
-  })
-  shiftName: string;
 }

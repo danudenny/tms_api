@@ -8,13 +8,20 @@ export class SmsTrackingStoreMessagePayloadVm {
   isRepeated: boolean;
 
   @ApiModelProperty()
+  isRepeatedOver: boolean;
+
+  @ApiModelProperty()
   note: string;
 
   @ApiModelProperty({
-    example: ['Sender', 'Recepient'],
+    example: 12345,
   })
-  @IsDefined({ message: `Label Penerima harus 'Sender' atau 'Recepient'` })
-  sentTo: string;
+  sentTo: number;
+
+  @ApiModelProperty({
+    example: 12345,
+  })
+  awbStatusId: number;
 }
 
 export class SmsTrackingListMessagePayloadVm extends BaseMetaPayloadVm {}
@@ -29,6 +36,32 @@ export class SmsTrackingStoreShiftPayloadVm {
     example: ['23:59', '07:00'],
   })
   workTo: string;
+
+  @ApiModelProperty({
+    example: 'shifting 1',
+  })
+  shiftName: string;
 }
 
 export class SmsTrackingListShiftPayloadVm extends BaseMetaPayloadVm {}
+
+export class SmsTrackingStoreUserPayloadVm {
+  @ApiModelProperty({
+    example: 'Awb Number',
+  })
+  label: string;
+
+  @ApiModelProperty({
+    example: 'awbNumber',
+  })
+  name: string;
+}
+
+export class SmsTrackingListUserPayloadVm extends BaseMetaPayloadVm {}
+
+export class SmsTrackingDeleteUserPayloadVm {
+  @ApiModelProperty({
+    example: [1, 2],
+  })
+  trackingMessageId: number[];
+}
