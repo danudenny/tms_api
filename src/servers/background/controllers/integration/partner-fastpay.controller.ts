@@ -13,20 +13,20 @@ import { PartnerFastpayService } from '../../services/integration/partner-fastpa
 export class PartnerFastpayController {
   constructor() {}
 
-  @Post('checkData')
-  @HttpCode(HttpStatus.OK)
-  @ApiImplicitHeader({ name: 'x-api-key' })
-  @UseGuards(AuthXAPIKeyGuard)
-  @ApiOkResponse({ type: DropCashLessResponseVM })
-  public async checkDataPickupRequest(@Body() payload: CheckDataDropPartnerVm) {
-    return PartnerFastpayService.checkDataPickupRequest(payload);
-  }
+  // @Post('checkData')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiImplicitHeader({ name: 'x-api-key' })
+  // @UseGuards(AuthXAPIKeyGuard)
+  // @ApiOkResponse({ type: DropCashLessResponseVM })
+  // public async checkDataPickupRequest(@Body() payload: CheckDataDropPartnerVm) {
+  //   return PartnerFastpayService.checkDataPickupRequest(payload);
+  // }
 
   @Post('dropCash')
   @HttpCode(HttpStatus.OK)
   @ApiImplicitHeader({ name: 'x-api-key' })
   @UseGuards(AuthXAPIKeyGuard)
-  @ApiOkResponse({ type: DropSuccessResponseVm })
+  @ApiOkResponse({ type: DropCashLessResponseVM })
   public async dropCash(@Body() payload: DropCashlessVm) {
     return PartnerFastpayService.dropCash(payload);
   }
@@ -35,7 +35,7 @@ export class PartnerFastpayController {
   @HttpCode(HttpStatus.OK)
   @ApiImplicitHeader({ name: 'x-api-key' })
   @UseGuards(AuthXAPIKeyGuard)
-  @ApiOkResponse({ type: DropSuccessResponseVm })
+  @ApiOkResponse({ type: DropCashLessResponseVM })
   public async dropCashless(@Body() payload: DropCashlessVm) {
     return PartnerFastpayService.dropCashless(payload);
   }

@@ -41,14 +41,14 @@ export class PartnerFastpayService {
 
   static async dropCash(
     payload: DropCashlessVm,
-  ): Promise<DropSuccessResponseVm> {
+  ): Promise<DropCashLessResponseVM> {
     const partner = AuthService.getPartnerTokenPayload();
     return await this.dropPartnerProcess(payload, partner.partnerId, 'CASH');
   }
 
   static async dropCashless(
     payload: DropCashlessVm,
-  ): Promise<DropSuccessResponseVm> {
+  ): Promise<DropCashLessResponseVM> {
     const partner = AuthService.getPartnerTokenPayload();
     return await this.dropPartnerProcess(payload, partner.partnerId, 'CASHLESS');
   }
@@ -58,7 +58,7 @@ export class PartnerFastpayService {
     payload: DropCashlessVm,
     partnerId: number,
     dropPartnerType: string,
-  ): Promise<DropSuccessResponseVm> {
+  ): Promise<DropCashLessResponseVM> {
     // check branch partner code and active branch
     const branchPartner = await this.getDataBranchChild(payload.branch_code, partnerId);
     if (branchPartner) {
@@ -175,9 +175,10 @@ export class PartnerFastpayService {
           }
 
           // handle response request
-          const result = new DropSuccessResponseVm();
-          result.message = 'Drop Success';
-          return result;
+          // const result = new DropSuccessResponseVm();
+          // result.message = 'Drop Success';
+          // return result;
+          return this.handleResult(pickupRequest);
         }
       } else {
         throw new BadRequestException('Data resi tidak ditemukan!');
