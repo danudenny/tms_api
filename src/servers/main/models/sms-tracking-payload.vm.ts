@@ -53,10 +53,3 @@ export class SmsTrackingStoreUserPayloadVm {
 }
 
 export class SmsTrackingListUserPayloadVm extends BaseMetaPayloadVm {}
-
-export class SmsTrackingDeleteUserPayloadVm {
-  @ApiModelProperty({
-    example: [1, 2],
-  })
-  trackingMessageId: number[];
-}
