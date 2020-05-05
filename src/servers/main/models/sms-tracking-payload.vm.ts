@@ -36,6 +36,11 @@ export class SmsTrackingStoreShiftPayloadVm {
     example: ['23:59', '07:00'],
   })
   workTo: string;
+
+  @ApiModelProperty({
+    example: 'shifting 1',
+  })
+  shiftName: string;
 }
 
 export class SmsTrackingListShiftPayloadVm extends BaseMetaPayloadVm {}
@@ -53,3 +58,10 @@ export class SmsTrackingStoreUserPayloadVm {
 }
 
 export class SmsTrackingListUserPayloadVm extends BaseMetaPayloadVm {}
+
+export class SmsTrackingDeleteUserPayloadVm {
+  @ApiModelProperty({
+    example: [1, 2],
+  })
+  trackingMessageId: number[];
+}
