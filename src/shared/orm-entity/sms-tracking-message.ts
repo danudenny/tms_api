@@ -1,4 +1,6 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import {AwbStatus} from './awb-status';
+import {SmsTrackingUser} from './sms-tracking-user';
 
 @Entity('sms_tracking_message', { schema: 'public' })
 export class SmsTrackingMessage extends BaseEntity {
@@ -6,14 +8,19 @@ export class SmsTrackingMessage extends BaseEntity {
     type: 'bigint',
     name: 'sms_tracking_message_id',
   })
-  smsTrackingMessageId: string;
+  smsTrackingMessageId: number;
 
-  @Column('character varying', {
+  @Column('bigint', {
     nullable: true,
-    length: 100,
     name: 'sent_to',
   })
-  sentTo: string | null;
+  sentTo: number | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'awb_status_id',
+  })
+  awbStatusId: number | null;
 
   @Column('boolean', {
     nullable: false,
@@ -21,6 +28,13 @@ export class SmsTrackingMessage extends BaseEntity {
     name: 'is_repeated',
   })
   isRepeated: boolean;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_repeated_over',
+  })
+  isRepeatedOver: boolean;
 
   @Column('character varying', {
     nullable: true,
@@ -59,4 +73,12 @@ export class SmsTrackingMessage extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @OneToOne(() => AwbStatus)
+  @JoinColumn({ name: 'awb_status_id', referencedColumnName: 'awbStatusId' })
+  awbStatus: AwbStatus;
+
+  @OneToOne(() => SmsTrackingUser)
+  @JoinColumn({ name: 'sent_to', referencedColumnName: 'smsTrackingUserId' })
+  smsTrackingUser: SmsTrackingUser;
 }

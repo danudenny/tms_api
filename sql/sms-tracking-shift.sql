@@ -1,9 +1,10 @@
 --
 -- PostgreSQL database dump
 --
+CREATE SEQUENCE sms_tracking_shift_sms_tracking_shift_id_seq;
 
 CREATE TABLE public.sms_tracking_shift (
-	sms_tracking_shift_id uuid NOT NULL DEFAULT uuid_generate_v1(),
+	sms_tracking_shift_id int8 DEFAULT nextval('sms_tracking_shift_sms_tracking_shift_id_seq'::regclass) NOT NULL,
 	work_from varchar(255) NULL,
 	work_to varchar(255) NULL,
 	user_id_created int8 NOT NULL,

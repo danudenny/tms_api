@@ -3,19 +3,22 @@ import {
   ApiBearerAuth,
   ApiOkResponse,
 } from '../../../../shared/external/nestjs-swagger';
-import { Controller, Post, HttpCode, HttpStatus, Body } from '@nestjs/common';
+import { Controller, Post, HttpCode, HttpStatus, Body, Delete, Param } from '@nestjs/common';
 import { SmsTrackingService } from '../../services/web/sms-tracking.service';
 import {
   SmsTrackingStoreMessagePayloadVm,
   SmsTrackingListMessagePayloadVm,
   SmsTrackingStoreShiftPayloadVm,
   SmsTrackingListShiftPayloadVm,
+  SmsTrackingListUserPayloadVm,
+  SmsTrackingDeleteUserPayloadVm,
 } from '../../models/sms-tracking-payload.vm';
 import {
   SmsTrackingStoreMessageResponseVm,
   SmsTrackingListMessageResponseVm,
   SmsTrackingListShiftResponseVm,
   SmsTrackingStoreShiftResponseVm,
+  SmsTrackingListUserResponseVm,
 } from '../../models/sms-tracking-response.vm';
 
 @ApiUseTags('Sms Tracking')
@@ -53,5 +56,20 @@ export class SmsTrackingController {
   @ApiOkResponse({ type: SmsTrackingListShiftResponseVm })
   public async shiftList(@Body() payload: SmsTrackingListShiftPayloadVm) {
     return SmsTrackingService.listShift(payload);
+  }
+
+  @Post('user/list')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: SmsTrackingListUserResponseVm })
+  public async userList(@Body() payload: SmsTrackingListUserPayloadVm) {
+    return SmsTrackingService.userList(payload);
+  }
+  @Post('delete-user')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  // @ApiOkResponse({ type: SmsTrackingListUserResponseVm })
+  public async deleteUser(@Body() payload: SmsTrackingDeleteUserPayloadVm) {
+    return SmsTrackingService.deleteUser(payload);
   }
 }
