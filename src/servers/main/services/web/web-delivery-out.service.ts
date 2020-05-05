@@ -1308,7 +1308,7 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.awbStatus, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.pickupRequestDetail, 't4', j =>
+    q.leftJoin(e => e.pickupRequestDetail, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
