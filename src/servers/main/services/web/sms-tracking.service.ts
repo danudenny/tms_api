@@ -106,17 +106,16 @@ export class SmsTrackingService {
   ): Promise<SmsTrackingStoreShiftResponseVm> {
     const result = new SmsTrackingStoreShiftResponseVm();
 
-    // if (!moment(payload.workFrom, 'HH:mm', true).isValid() ||
-    //     !moment(payload.workTo, 'HH:mm', true).isValid()) {
-    //     result.smsTrackingShiftId = null;
-    //     result.message = `Salah format payload workFrom dan workTo`;
-    //     result.status = 'error';
-    //     return result;
-    // }
+    if (!moment(payload.workFrom, 'HH:mm', true).isValid() ||
+        !moment(payload.workTo, 'HH:mm', true).isValid()) {
+        result.smsTrackingShiftId = null;
+        result.message = `Salah format payload workFrom dan workTo`;
+        result.status = 'error';
+        return result;
+    }
 
     const authMeta = AuthService.getAuthData();
     const smsTrackingShift = SmsTrackingShift.create({
-      shiftName: payload.shiftName,
       workFrom: payload.workFrom,
       workTo: payload.workTo,
       userIdCreated: authMeta.userId,
@@ -128,6 +127,8 @@ export class SmsTrackingService {
     result.smsTrackingShiftId = response.smsTrackingShiftId;
     result.message = 'Berhasil Menyimpan sms tracking - shift';
     result.status = 'sukses';
+    return result;
+
     return result;
   }
 
@@ -149,7 +150,6 @@ export class SmsTrackingService {
       ['t1.sms_tracking_shift_id::integer', 'smsTrackingShiftId'],
       ['t1.work_from', 'workFrom'],
       ['t1.work_to', 'workTo'],
-      ['t1.sms_tracking_shift_name', 'shiftName'],
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.orderBy({
