@@ -11,8 +11,9 @@ import {
   SmsTrackingStoreShiftPayloadVm,
   SmsTrackingListShiftPayloadVm,
   SmsTrackingListUserPayloadVm,
-  SmsTrackingDeleteUserPayloadVm,
   GenerateReportSmsTrackingPayloadVm,
+  SmsTrackingDeleteMessagePayloadVm,
+  SmsTrackingUpdateMessagePayloadVm,
 } from '../../models/sms-tracking-payload.vm';
 import {
   SmsTrackingStoreMessageResponseVm,
@@ -44,6 +45,24 @@ export class SmsTrackingController {
     return SmsTrackingService.listMessage(payload);
   }
 
+  @Post('message/update')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  // @ApiOkResponse({ type: SmsTrackingListMessageResponseVm })
+  public async updateMessage(
+    @Body() payload: SmsTrackingUpdateMessagePayloadVm,
+  ) {
+    return SmsTrackingService.updateMessage(payload);
+  }
+
+  @Post('delete-message')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  // @ApiOkResponse({ type: SmsTrackingListUserResponseVm })
+  public async deleteMessage(@Body() payload: SmsTrackingDeleteMessagePayloadVm) {
+    return SmsTrackingService.deleteMessage(payload);
+  }
+
   @Post('shift/store')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -66,13 +85,6 @@ export class SmsTrackingController {
   @ApiOkResponse({ type: SmsTrackingListUserResponseVm })
   public async userList(@Body() payload: SmsTrackingListUserPayloadVm) {
     return SmsTrackingService.userList(payload);
-  }
-  @Post('delete-user')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  // @ApiOkResponse({ type: SmsTrackingListUserResponseVm })
-  public async deleteUser(@Body() payload: SmsTrackingDeleteUserPayloadVm) {
-    return SmsTrackingService.deleteUser(payload);
   }
 
   @Get('export/excel')

@@ -4,8 +4,9 @@ import {
   SmsTrackingStoreShiftPayloadVm,
   SmsTrackingListShiftPayloadVm,
   SmsTrackingListUserPayloadVm,
-  SmsTrackingDeleteUserPayloadVm,
   GenerateReportSmsTrackingPayloadVm,
+  SmsTrackingDeleteMessagePayloadVm,
+  SmsTrackingUpdateMessagePayloadVm,
 } from '../../models/sms-tracking-payload.vm';
 import {
   SmsTrackingListMessageResponseVm,
@@ -13,21 +14,20 @@ import {
   SmsTrackingStoreShiftResponseVm,
   SmsTrackingListShiftResponseVm,
   SmsTrackingListUserResponseVm,
+  SmsTrackingUpdateMessageResponseVm,
 } from '../../models/sms-tracking-response.vm';
 import moment = require('moment');
 import { async } from 'rxjs/internal/scheduler/async';
 import { SmsTrackingShift } from '../../../../shared/orm-entity/sms-tracking-shift';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { SmsTrackingMessage } from '../../../../shared/orm-entity/sms-tracking-message';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { SmsTrackingUser } from '../../../../shared/orm-entity/sms-tracking-user';
-import { In, createQueryBuilder } from 'typeorm';
 import fs = require('fs');
 import xlsx = require('xlsx');
-import { ExportToCsv } from 'export-to-csv';
 import express = require('express');
-import { format } from 'path';
 import { isEmpty } from 'lodash';
+import {AuthService} from '../../../../shared/services/auth.service';
+import {SmsTrackingMessage} from '../../../../shared/orm-entity/sms-tracking-message';
+import {OrionRepositoryService} from '../../../../shared/services/orion-repository.service';
+import {SmsTrackingUser} from '../../../../shared/orm-entity/sms-tracking-user';
+import { In, getConnection } from 'typeorm';
 
 export class SmsTrackingService {
   static async storeMessage(
@@ -51,6 +51,56 @@ export class SmsTrackingService {
     result.message = 'Berhasil Menyimpan sms tracking - message';
     result.status = 'success';
     return result;
+  }
+  static async updateMessage(
+    payload: SmsTrackingUpdateMessagePayloadVm,
+  ): Promise<SmsTrackingUpdateMessageResponseVm> {
+    const result = new SmsTrackingStoreMessageResponseVm();
+    try {
+      const db = await SmsTrackingMessage.query(`SELECT * FROM sms_tracking_message WHERE sms_tracking_message_id = ${payload.smsTrackingMessageId}`);
+      const authMeta = AuthService.getAuthData();
+
+      const updateSmsTrackingMessage = await getConnection()
+      .createQueryBuilder().update(SmsTrackingMessage).set({
+          sentTo: payload.sentTo,
+          isRepeated: payload.isRepeated,
+          isRepeatedOver: payload.isRepeatedOver,
+          note: payload.note,
+          awbStatusId: payload.awbStatusId,
+          userIdCreated: authMeta.userId,
+          updatedTime: moment().toDate(),
+          userIdUpdated: authMeta.userId,
+      }).where(`sms_tracking_message_id = ${payload.smsTrackingMessageId}`, {sms_tracking_message_id: 8 })
+      .returning(['smsTrackingMessageId'])
+      .execute();
+
+      const response = await updateSmsTrackingMessage;
+      result.smsTrackingMessageId = response.raw[0].sms_tracking_message_id;
+      result.message = 'Berhasil Menyimpan sms tracking - message';
+      result.status = 'success';
+      return result;
+
+    } catch (error) {
+        result.message = 'Gagal Menyimpan Data sms tracking - message';
+        result.status = 'error';
+        return result;
+    }
+  }
+  static async deleteMessage(payload: SmsTrackingDeleteMessagePayloadVm) {
+    const data = payload.trackingMessageId;
+    try {
+      const db = await SmsTrackingMessage.update({ smsTrackingMessageId: In(data) }, {
+        isDeleted: true,
+      });
+      const result = {
+                       status: 'success',
+                       message: 'Berhasil Menghapus Data',
+                     };
+      db.raw = result;
+      return db.raw;
+    } catch (error) {
+      return { status: 'error', message: 'Gagal Menghapus Data' };
+    }
   }
 
   static async listMessage(
@@ -178,15 +228,11 @@ export class SmsTrackingService {
     // mapping search field and operator default ilike
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['sentTo'] = 't1.sms_tracking_user_id';
-    payload.fieldResolverMap['phone'] = 't1.phone';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
         field: 'sentToName',
-      },
-      {
-        field: 'phone',
       },
     ];
     if (!payload.limit) {
@@ -200,7 +246,6 @@ export class SmsTrackingService {
     q.selectRaw(
       ['t1.sms_tracking_user_id::integer', 'smsTrackingUserId'],
       ['t1.sms_tracking_user_name', 'name'],
-      ['t1.phone', 'phone'],
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.orderBy({
@@ -215,23 +260,7 @@ export class SmsTrackingService {
 
     return result;
   }
-  static async deleteUser(payload: SmsTrackingDeleteUserPayloadVm) {
-    const data = payload.trackingMessageId;
-    try {
-      const db = await SmsTrackingMessage.update({ smsTrackingMessageId: In(data) }, {
-        isDeleted: true,
-      });
-      const result = {
-        status: 'success',
-        message: 'Berhasil Menghapus Data',
-      };
-      db.raw = result;
-      return db.raw;
-    } catch (error) {
-      return { status: 'error', message: 'Gagal Menghapus Data' };
-    }
-  }
-
+  
   public static async export(
     res: express.Response,
     date: string,
