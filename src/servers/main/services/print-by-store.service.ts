@@ -34,6 +34,11 @@ export class PrintByStoreService {
     identifier: string | number,
     genericData: any,
   ) {
+    if (!genericData || !identifier) {
+      RequestErrorService.throwObj({
+        message: 'Data tidak valid',
+      });
+    }
     return RedisService.setex(
       `print-store-${prefix}-${identifier}`,
       genericData,
@@ -59,7 +64,7 @@ export class PrintByStoreService {
       queryParams.id,
     );
 
-    if (!printPayload) {
+    if (!printPayload || (printPayload && !printPayload.data)) {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
       });
@@ -95,7 +100,7 @@ export class PrintByStoreService {
       queryParams.id,
     );
 
-    if (!printPayload.data) {
+    if (!printPayload || (printPayload && !printPayload.data)) {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
       });
@@ -131,7 +136,7 @@ export class PrintByStoreService {
       PrintDoPodDeliverVm
     >('do-pod-deliver', queryParams.id);
 
-    if (!printPayload.data) {
+    if (!printPayload || (printPayload && !printPayload.data)) {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
       });
@@ -166,7 +171,7 @@ export class PrintByStoreService {
       PrintBagItemStickerVm
     >('bag-item-for-sticker', queryParams.id);
 
-    if (!printPayload.data) {
+    if (!printPayload || (printPayload && !printPayload.data)) {
       RequestErrorService.throwObj({
         message: 'Gabungan paket tidak ditemukan',
       });
@@ -197,7 +202,7 @@ export class PrintByStoreService {
       PrintBagItemPaperVm
     >('bag-item-for-paper', queryParams.id);
 
-    if (!printPayload.data) {
+    if (!printPayload || (printPayload && !printPayload.data)) {
       RequestErrorService.throwObj({
         message: 'Gabungan paket tidak ditemukan',
       });
