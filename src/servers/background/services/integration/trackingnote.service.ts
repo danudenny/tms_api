@@ -8,6 +8,7 @@ import { AwbHistoryLastSyncPod } from '../../../../shared/orm-entity/awb-history
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { HttpStatus } from '@nestjs/common';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 export class TrackingNoteService {
 
@@ -19,6 +20,18 @@ export class TrackingNoteService {
     payload: any,
   ): Promise<TrackingNoteResponseVm> {
     const result = new TrackingNoteResponseVm();
+
+    const locking = await RedisService.locking(
+      `hold:trackingnote:sync`,
+      'locking',
+    );
+
+    if (locking) {
+      result.message = 'OK';
+    } else {
+      result.message = 'Previous Service Still Running';
+      return result;
+    }
 
     result.data = await this.insertTmsTrackingNote(5, payload);
 
@@ -138,13 +151,15 @@ export class TrackingNoteService {
                   if (!err) {
                     ctr++;
                     if (ctr == data.length) {
+                      RedisService.del(`hold:trackingnote:sync`);
+
                       if (!isManual) {
                         AwbHistoryLastSyncPod.update(awbHistoryLastSyncPod.awbHistoryLastSyncPodId, {
                           awbHistoryId: lastSyncId,
                           updatedTime: new Date(),
                         });
                       }
-                      
+
                       transaction.commit(err => {
                         if (err) {
                           PinoLoggerService.debug(this.logTitle, '[ERROR TRANSACTION] :: ' + err);
