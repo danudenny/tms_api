@@ -87,13 +87,19 @@ export class PrintDoPodDeliverService {
     if (data && data.doPodDeliverDetails) {
       const awbIds = map(
         data.doPodDeliverDetails,
-        doPodDeliverDetail => doPodDeliverDetail.awbItem.awb.awbId,
+        doPodDeliverDetail => (doPodDeliverDetail && doPodDeliverDetail.awbItem && doPodDeliverDetail.awbItem.awb) ?
+                                doPodDeliverDetail.awbItem.awb.awbId : null,
       );
       const result = await RawQueryService.query(
         `SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(
           ',',
         )})`,
       );
+      if (!result) {
+        RequestErrorService.throwObj({
+          message: 'Surat jalan tidak ditemukan',
+        });
+      }
       totalAllCod = result[0].total;
       totalItems = data.doPodDeliverDetails.length;
 
