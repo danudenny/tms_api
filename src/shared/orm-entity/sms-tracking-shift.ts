@@ -52,9 +52,4 @@ export class SmsTrackingShift extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
-  @Column('character varying', {
-    nullable: false,
-    name: 'sms_tracking_shift_name',
-  })
-  shiftName: string;
 }
