@@ -151,8 +151,6 @@ export class TrackingNoteService {
                   if (!err) {
                     ctr++;
                     if (ctr == data.length) {
-                      RedisService.del(`hold:trackingnote:sync`);
-
                       if (!isManual) {
                         AwbHistoryLastSyncPod.update(awbHistoryLastSyncPod.awbHistoryLastSyncPodId, {
                           awbHistoryId: lastSyncId,
@@ -201,6 +199,8 @@ export class TrackingNoteService {
       } else {
         PinoLoggerService.debug(this.logTitle, 'Last Awb History Empty');
       }
+    } else {
+      RedisService.del(`hold:trackingnote:sync`);
     }
   }
 }
