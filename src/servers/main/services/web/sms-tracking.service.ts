@@ -5,6 +5,7 @@ import {
   SmsTrackingListShiftPayloadVm,
   SmsTrackingListUserPayloadVm,
   SmsTrackingDeleteUserPayloadVm,
+  GenerateReportSmsTrackingPayloadVm,
 } from '../../models/sms-tracking-payload.vm';
 import {
   SmsTrackingListMessageResponseVm,
@@ -20,7 +21,12 @@ import {AuthService} from '../../../../shared/services/auth.service';
 import {SmsTrackingMessage} from '../../../../shared/orm-entity/sms-tracking-message';
 import {OrionRepositoryService} from '../../../../shared/services/orion-repository.service';
 import {SmsTrackingUser} from '../../../../shared/orm-entity/sms-tracking-user';
-import { In } from 'typeorm';
+import { In, createQueryBuilder } from 'typeorm';
+import fs = require('fs');
+import xlsx = require('xlsx');
+import { ExportToCsv } from 'export-to-csv';
+import express = require('express');
+import {format} from 'path';
 
 export class SmsTrackingService {
   static async storeMessage(
@@ -222,6 +228,194 @@ export class SmsTrackingService {
       return db.raw;
     } catch (error) {
       return { status: 'error', message: 'Gagal Menghapus Data' };
+    }
+  }
+
+  public static async export(
+    res: express.Response,
+    payload: GenerateReportSmsTrackingPayloadVm,
+    ) {
+      // query get all sms tracking message
+      let qb = createQueryBuilder();
+      qb.addSelect('stm.is_repeated_over', 'isRepeatedOver');
+      qb.addSelect('stm.is_repeated', 'isRepeated');
+      qb.addSelect('stm.awb_status_id', 'awbStatusId');
+      qb.from('sms_tracking_message', 'stm');
+      qb.andWhere('stm.is_deleted = false');
+      const smsTrackingMessage = await qb.getRawMany();
+
+      // query get sms tracking shift on id
+      qb = createQueryBuilder();
+      qb.addSelect('sts.is_repeated', 'isRepeated');
+      qb.addSelect('sts.awb_status_id', 'awbStatusId');
+      qb.from('sms_tracking_shift', 'sts');
+      qb.andWhere('sts.is_deleted = false');
+      qb.andWhere(`sts.sms_tracking_shift_id = '${payload.smsTrackingShiftId}'`);
+      const smsTrackingShift = await qb.getRawOne();
+
+      const date7DayBefore = moment(payload.date, 'YYYY-MM-DD').subtract(7, 'd')
+                              .format('YYYY-MM-DD');
+      const workFromDT = moment(smsTrackingShift.workFrom, 'hh:mm A');
+      const workToDT = moment(smsTrackingShift.workTo, 'hh:mm A');
+
+      // query get awb
+      qb = createQueryBuilder();
+      qb.addSelect('awb.awbNumber', 'waybill'); // waybill
+      qb.addSelect(`
+        CASE
+          WHEN prd.recipient_phone ~ '^([/08|/+\62][0-9]{10,13})$' THEN 'valid'
+          ELSE 'invalid'
+        END as "status_phone_recipient"
+      `);
+      qb.addSelect(`
+        CASE
+          WHEN prd.shipper_phone ~ '^([/08|/+\62][0-9]{10,13})$' THEN 'valid'
+          ELSE 'invalid'
+        END as "status_phone_sender"
+      `);
+      qb.from('awb', 'awb');
+      qb.innerJoin(
+        'awb_item_attr',
+        'aia',
+        'aia.awb_id = awb.awb_id AND aia.is_deleted = false',
+      );
+      qb.innerJoin(
+        'pickup_request_detail',
+        'prd',
+        'prd.ref_awb_number = prd.ref_awb_number AND prd.is_deleted = false',
+      );
+      qb.innerJoin(
+        'awb_status',
+        'as',
+        'aia.awb_status_id_last = as.awb_status_id AND as.is_deleted = false',
+      );
+      qb.innerJoin(
+        'sms_tracking_message',
+        'stm',
+        'stm.awb_status_id = aia.awb_status_id_last AND stm.is_deleted = false',
+        );
+      qb.innerJoin(
+        'sms_tracking_user',
+        'stu',
+        'stu.sms_tracking_user_id = stm.sent_to AND stu.is_deleted = false',
+      );
+      // const dateReq1 = moment(payload.date, 'YYYY-MM-DD').format('YYYY-MM-DD 00:00:00');
+      // const dateReq2 = moment(payload.date, 'YYYY-MM-DD').format('YYYY-MM-DD 23:59:59');
+
+      // query filter by shift awb status
+      smsTrackingMessage.forEach(data => {
+        if (data.isRepeatedOver && data.isRepeated) { // filter 7 hari kebelakang
+          qb.andWhere(`(
+            awb.awb_status_id = '${data.awbStatusId}' AND
+            ( awb.updated_time BETWEEN '${date7DayBefore}' AND '${payload.date}' )
+          )`);
+        } else if (data.isRepeatedOver && !data.isRepeated) { // filter dalam lingkup jam shifting dan 7 hari kebelakang
+          if (workToDT.isAfter(workFromDT)) {
+            qb.andWhere(`(
+              awb.awb_status_id = '${data.awbStatusId}' AND
+              ( awb.updated_time BETWEEN '${date7DayBefore}' AND '${payload.date}' ) AND
+              CAST(awb.updated_time AS TIME) >= '${smsTrackingShift.workFrom}' AND
+              CAST(awb.updated_time AS TIME) <= '${smsTrackingShift.workTo}'
+            )`);
+          } else {
+            qb.andWhere(`(
+              awb.awb_status_id = '${data.awbStatusId}' AND
+              ( awb.updated_time BETWEEN '${date7DayBefore}' AND '${payload.date}' ) AND
+              (
+                CAST(awb.updated_time AS TIME) <= '${smsTrackingShift.workFrom}' OR
+                CAST(awb.updated_time AS TIME) => '${smsTrackingShift.workTo}'
+              )
+            )`);
+          }
+        } else if (!data.isRepeatedOver && data.isRepeated) { // filter diluar lingkup jam shifting dan 7 hari kebelakang
+          if (workToDT.isAfter(workFromDT)) {
+            qb.andWhere(`(
+              awb.awb_status_id = '${data.awbStatusId}' AND
+              ( awb.updated_time BETWEEN '${date7DayBefore}' AND '${payload.date}' ) AND
+              (
+                CAST(awb.updated_time AS TIME) < '${smsTrackingShift.workFrom}' OR
+                CAST(awb.updated_time AS TIME) > '${smsTrackingShift.workTo}'
+              )
+            )`);
+          } else { // filter hanya dalam lingkup jam shifting pada tanggal request
+            if (workToDT.isAfter(workFromDT)) {
+              qb.andWhere(`(
+                awb.awb_status_id = '${data.awbStatusId}' AND
+                awb.updated_time >= '${payload.date} 00:00:00' AND
+                awb.updated_time <= '${payload.date} 23:59:59' AND
+                CAST(awb.updated_time AS TIME) >= '${smsTrackingShift.workFrom}' AND
+                CAST(awb.updated_time AS TIME) <= '${smsTrackingShift.workTo}'
+              )`);
+            } else {
+              qb.andWhere(`(
+                awb.awb_status_id = '${data.awbStatusId}' AND
+                awb.updated_time >= '${payload.date} 00:00:00' AND
+                awb.updated_time <= '${payload.date} 23:59:59' AND
+                (
+                  CAST(awb.updated_time AS TIME) <= '${smsTrackingShift.workFrom}' OR
+                  CAST(awb.updated_time AS TIME) => '${smsTrackingShift.workTo}'
+                )
+              )`);
+            }
+          }
+        }
+      });
+      return 'ok';
+    // qb.andWhere(`(
+    //   (
+    //     stu.sms_tracking_user_name = 'Recipient' AND
+    //     prd.recipient_phone ~ '^([/08|/+\62][0-9]{10,13})$'
+    //   ) OR
+    //   (
+    //     stu.sms_tracking_user_name = 'Sender' AND
+    //     prd.recipient_phone ~ '^([/08|/+\62][0-9]{9,11})$'
+    //   )
+    // )`);
+      const result = await qb.getRawMany();
+
+      const obj = [];
+      const obj2 = [];
+      for (let i = 1; i <= 20; i++) {
+      obj.push({
+        name: 'test' + i,
+      });
+      obj2.push({
+        age: i,
+      });
+    }
+
+    // NOTE: create excel using unique name
+      const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.xlsx';
+      try {
+      const newWB = xlsx.utils.book_new();
+      const newWS = xlsx.utils.json_to_sheet(obj);
+      const newWS2 = xlsx.utils.json_to_sheet(obj2);
+      xlsx.utils.book_append_sheet(newWB, newWS, 'Sheet1');
+      xlsx.utils.book_append_sheet(newWB, newWS2, 'Sheet2');
+      // const resp = newWB.Sheets;
+      // console.log(resp);
+      xlsx.writeFile(newWB, fileName);
+
+      // const buffExcel = fs.createReadStream(fileName);
+      const filestream = fs.createReadStream(fileName);
+      const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+      // const attachment = await AttachmentService.uploadFileBufferToS3(
+      //   buffExcel,
+      //   fileName,
+      //   mimeType,
+      //   'sms-tracking-excel',
+      // );
+
+      res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
+      res.setHeader('Content-type', mimeType);
+      filestream.pipe(res);
+    } catch (error) {
+      console.log('error ketika download excel sms-tracking');
+    } finally {
+      if (fs.existsSync(fileName)) {
+        fs.unlinkSync(fileName);
+      }
     }
   }
 }

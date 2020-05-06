@@ -60,3 +60,15 @@ export class SmsTrackingDeleteUserPayloadVm {
   })
   trackingMessageId: number[];
 }
+
+export class GenerateReportSmsTrackingPayloadVm {
+  @ApiModelProperty({
+    example: '2020-02-28',
+  })
+  date: string;
+
+  @ApiModelProperty({
+    example: 20020003,
+  })
+  smsTrackingShiftId: number;
+}
