@@ -3,7 +3,7 @@ import {
   ApiBearerAuth,
   ApiOkResponse,
 } from '../../../../shared/external/nestjs-swagger';
-import { Controller, Post, HttpCode, HttpStatus, Body, Delete, Param, Get, Response } from '@nestjs/common';
+import { Controller, Post, HttpCode, HttpStatus, Body, Delete, Param, Get, Response, Query } from '@nestjs/common';
 import { SmsTrackingService } from '../../services/web/sms-tracking.service';
 import {
   SmsTrackingStoreMessagePayloadVm,
@@ -93,8 +93,9 @@ export class SmsTrackingController {
   // @ApiOkResponse({ type: SmsTrackingListUserResponseVm })
   public async export(
     @Response() serverResponse: express.Response,
-    @Body() payload: GenerateReportSmsTrackingPayloadVm,
+    @Query('date') date: string,
+    @Query('smsTrackingShiftId') smsTrackingShiftId: number,
   ) {
-    return SmsTrackingService.export(serverResponse, payload);
+    return SmsTrackingService.export(serverResponse, date, smsTrackingShiftId);
   }
 }
