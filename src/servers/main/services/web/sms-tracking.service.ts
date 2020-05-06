@@ -223,15 +223,11 @@ export class SmsTrackingService {
     // mapping search field and operator default ilike
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['sentTo'] = 't1.sms_tracking_user_id';
-    payload.fieldResolverMap['phone'] = 't1.phone';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
         field: 'sentToName',
-      },
-      {
-        field: 'phone',
       },
     ];
     if (!payload.limit) {
@@ -245,7 +241,6 @@ export class SmsTrackingService {
     q.selectRaw(
       ['t1.sms_tracking_user_id::integer', 'smsTrackingUserId'],
       ['t1.sms_tracking_user_name', 'name'],
-      ['t1.phone', 'phone'],
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.orderBy({
