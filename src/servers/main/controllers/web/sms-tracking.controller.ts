@@ -3,7 +3,7 @@ import {
   ApiBearerAuth,
   ApiOkResponse,
 } from '../../../../shared/external/nestjs-swagger';
-import { Controller, Post, HttpCode, HttpStatus, Body, Delete, Param } from '@nestjs/common';
+import { Controller, Post, HttpCode, HttpStatus, Body, Delete, Param, Get, Response } from '@nestjs/common';
 import { SmsTrackingService } from '../../services/web/sms-tracking.service';
 import {
   SmsTrackingStoreMessagePayloadVm,
@@ -11,6 +11,7 @@ import {
   SmsTrackingStoreShiftPayloadVm,
   SmsTrackingListShiftPayloadVm,
   SmsTrackingListUserPayloadVm,
+  GenerateReportSmsTrackingPayloadVm,
   SmsTrackingDeleteMessagePayloadVm,
   SmsTrackingUpdateMessagePayloadVm,
 } from '../../models/sms-tracking-payload.vm';
@@ -21,6 +22,7 @@ import {
   SmsTrackingStoreShiftResponseVm,
   SmsTrackingListUserResponseVm,
 } from '../../models/sms-tracking-response.vm';
+import express = require('express');
 
 @ApiUseTags('Sms Tracking')
 @Controller('sms-tracking')
@@ -84,5 +86,15 @@ export class SmsTrackingController {
   public async userList(@Body() payload: SmsTrackingListUserPayloadVm) {
     return SmsTrackingService.userList(payload);
   }
- 
+
+  @Get('export/excel')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @ApiOkResponse({ type: SmsTrackingListUserResponseVm })
+  public async export(
+    @Response() serverResponse: express.Response,
+    @Body() payload: GenerateReportSmsTrackingPayloadVm,
+  ) {
+    return SmsTrackingService.export(serverResponse, payload);
+  }
 }
