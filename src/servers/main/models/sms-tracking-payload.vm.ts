@@ -24,6 +24,31 @@ export class SmsTrackingStoreMessagePayloadVm {
   awbStatusId: number;
 }
 
+export class SmsTrackingUpdateMessagePayloadVm {
+  @ApiModelProperty()
+  smsTrackingMessageId: number;
+
+  @ApiModelProperty()
+  isRepeated: boolean;
+
+  @ApiModelProperty()
+  isRepeatedOver: boolean;
+
+  @ApiModelProperty()
+  note: string;
+
+  @ApiModelProperty({
+    example: 12345,
+  })
+  sentTo: number;
+
+  @ApiModelProperty({
+    example: 12345,
+  })
+  awbStatusId: number;
+
+}
+
 export class SmsTrackingListMessagePayloadVm extends BaseMetaPayloadVm {}
 
 export class SmsTrackingStoreShiftPayloadVm {
@@ -36,11 +61,6 @@ export class SmsTrackingStoreShiftPayloadVm {
     example: ['23:59', '07:00'],
   })
   workTo: string;
-
-  @ApiModelProperty({
-    example: 'shifting 1',
-  })
-  shiftName: string;
 }
 
 export class SmsTrackingListShiftPayloadVm extends BaseMetaPayloadVm {}
@@ -59,7 +79,7 @@ export class SmsTrackingStoreUserPayloadVm {
 
 export class SmsTrackingListUserPayloadVm extends BaseMetaPayloadVm {}
 
-export class SmsTrackingDeleteUserPayloadVm {
+export class SmsTrackingDeleteMessagePayloadVm {
   @ApiModelProperty({
     example: [1, 2],
   })
