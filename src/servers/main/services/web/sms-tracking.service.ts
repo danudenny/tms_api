@@ -6,6 +6,8 @@ import {
   SmsTrackingListUserPayloadVm,
   SmsTrackingDeleteMessagePayloadVm,
   SmsTrackingUpdateMessagePayloadVm,
+  SmsTrackingDeleteShiftPayloadVm,
+  SmsTrackingUpdateShiftPayloadVm,
 } from '../../models/sms-tracking-payload.vm';
 import {
   SmsTrackingListMessageResponseVm,
@@ -14,6 +16,7 @@ import {
   SmsTrackingListShiftResponseVm,
   SmsTrackingListUserResponseVm,
   SmsTrackingUpdateMessageResponseVm,
+  SmsTrackingUpdateShiftResponseVm,
 } from '../../models/sms-tracking-response.vm';
 import moment = require('moment');
 import { async } from 'rxjs/internal/scheduler/async';
@@ -65,7 +68,7 @@ export class SmsTrackingService {
           userIdCreated: authMeta.userId,
           updatedTime: moment().toDate(),
           userIdUpdated: authMeta.userId,
-      }).where(`sms_tracking_message_id = ${payload.smsTrackingMessageId}`, {sms_tracking_message_id: 8 })
+      }).where(`sms_tracking_message_id = ${payload.smsTrackingMessageId}`, {sms_tracking_message_id: payload.smsTrackingMessageId })
       .returning(['smsTrackingMessageId'])
       .execute();
 
@@ -158,13 +161,13 @@ export class SmsTrackingService {
   ): Promise<SmsTrackingStoreShiftResponseVm> {
     const result = new SmsTrackingStoreShiftResponseVm();
 
-    if (!moment(payload.workFrom, 'HH:mm', true).isValid() ||
-        !moment(payload.workTo, 'HH:mm', true).isValid()) {
-        result.smsTrackingShiftId = null;
-        result.message = `Salah format payload workFrom dan workTo`;
-        result.status = 'error';
-        return result;
-    }
+    // if (!moment(payload.workFrom, 'HH:mm', true).isValid() ||
+    //     !moment(payload.workTo, 'HH:mm', true).isValid()) {
+    //     result.smsTrackingShiftId = null;
+    //     result.message = `Salah format payload workFrom dan workTo`;
+    //     result.status = 'error';
+    //     return result;
+    // }
 
     const authMeta = AuthService.getAuthData();
     const smsTrackingShift = SmsTrackingShift.create({
@@ -174,14 +177,47 @@ export class SmsTrackingService {
       createdTime: moment().toDate(),
       updatedTime: moment().toDate(),
       userIdUpdated: authMeta.userId,
+      shiftName: payload.shiftName,
     });
     const response = await SmsTrackingShift.save(smsTrackingShift);
     result.smsTrackingShiftId = response.smsTrackingShiftId;
     result.message = 'Berhasil Menyimpan sms tracking - shift';
     result.status = 'sukses';
     return result;
+  }
+  static async updateShift(payload: SmsTrackingUpdateShiftPayloadVm) {
+    const result = new SmsTrackingUpdateShiftResponseVm();
 
-    return result;
+    const authMeta = AuthService.getAuthData();
+    // tslint:disable-next-line:no-console
+    console.log(payload.smsTrackingShiftId);
+    console.log("----------------------------");
+
+    try {
+      const updateSmsTrackingShift = await getConnection()
+        .createQueryBuilder().update(SmsTrackingShift).set({
+          workFrom: payload.workFrom,
+          workTo: payload.workTo,
+          userIdCreated: authMeta.userId,
+          createdTime: moment().toDate(),
+          updatedTime: moment().toDate(),
+          userIdUpdated: authMeta.userId,
+          shiftName: payload.shiftName,
+        }).where(`sms_tracking_shift_id = ${payload.smsTrackingShiftId}`, {sms_tracking_shift_id: payload.smsTrackingShiftId })
+        .returning(['smsTrackingShiftId'])
+        .execute();
+        
+
+      const response = await updateSmsTrackingShift;
+      result.smsTrackingShiftId = response.raw[0].sms_tracking_shift_id;
+      result.message = 'Berhasil Update data sms tracking - message';
+      result.status = 'success';
+      return result;
+    } catch (error) {
+      result.message = 'Gagal Menyimpan Data sms tracking - message';
+      result.status = 'error';
+      return result;
+    }
   }
 
   static async listShift(
@@ -191,6 +227,7 @@ export class SmsTrackingService {
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['workFrom'] = 't1.work_from';
     payload.fieldResolverMap['workTo'] = 't1.work_to';
+    payload.fieldResolverMap['shiftName'] = 't1.sms_tracking_shift_name';
     const repo = new OrionRepositoryService(SmsTrackingShift, 't1');
     if (!payload.limit) {
       payload.limit = 1000;
@@ -202,6 +239,7 @@ export class SmsTrackingService {
       ['t1.sms_tracking_shift_id::integer', 'smsTrackingShiftId'],
       ['t1.work_from', 'workFrom'],
       ['t1.work_to', 'workTo'],
+      ['t1.sms_tracking_shift_name', 'shiftName'],
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.orderBy({
@@ -215,6 +253,24 @@ export class SmsTrackingService {
     result.data = data;
 
     return result;
+  }
+
+  static async deleteShift(payload: SmsTrackingDeleteShiftPayloadVm) {
+    const data = payload.trackingShiftId;
+    
+    try {
+      const db = await SmsTrackingShift.update({ smsTrackingShiftId: In(data) }, {
+        isDeleted: true,
+      });
+      const result = {
+                       status: 'success',
+                       message: 'Berhasil Menghapus Data',
+                     };
+      db.raw = result;
+      return result;
+    } catch (error) {
+      return { status: 'error', message: 'Gagal Menghapus Data' };
+    }
   }
 
   static async userList(
