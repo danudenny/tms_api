@@ -4,7 +4,6 @@ import {
   SmsTrackingStoreShiftPayloadVm,
   SmsTrackingListShiftPayloadVm,
   SmsTrackingListUserPayloadVm,
-  GenerateReportSmsTrackingPayloadVm,
   SmsTrackingDeleteMessagePayloadVm,
   SmsTrackingUpdateMessagePayloadVm,
 } from '../../models/sms-tracking-payload.vm';
@@ -17,17 +16,17 @@ import {
   SmsTrackingUpdateMessageResponseVm,
 } from '../../models/sms-tracking-response.vm';
 import moment = require('moment');
-import { async } from 'rxjs/internal/scheduler/async';
 import { SmsTrackingShift } from '../../../../shared/orm-entity/sms-tracking-shift';
 import fs = require('fs');
 import xlsx = require('xlsx');
 import express = require('express');
-import { isEmpty } from 'lodash';
-import {AuthService} from '../../../../shared/services/auth.service';
-import {SmsTrackingMessage} from '../../../../shared/orm-entity/sms-tracking-message';
-import {OrionRepositoryService} from '../../../../shared/services/orion-repository.service';
-import {SmsTrackingUser} from '../../../../shared/orm-entity/sms-tracking-user';
-import { In, getConnection } from 'typeorm';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { SmsTrackingMessage } from '../../../../shared/orm-entity/sms-tracking-message';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { SmsTrackingUser } from '../../../../shared/orm-entity/sms-tracking-user';
+import { In, getConnection, createQueryBuilder } from 'typeorm';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { HttpStatus } from '@nestjs/common';
 
 export class SmsTrackingService {
   static async storeMessage(
@@ -61,7 +60,7 @@ export class SmsTrackingService {
       const authMeta = AuthService.getAuthData();
 
       const updateSmsTrackingMessage = await getConnection()
-      .createQueryBuilder().update(SmsTrackingMessage).set({
+        .createQueryBuilder().update(SmsTrackingMessage).set({
           sentTo: payload.sentTo,
           isRepeated: payload.isRepeated,
           isRepeatedOver: payload.isRepeatedOver,
@@ -70,9 +69,9 @@ export class SmsTrackingService {
           userIdCreated: authMeta.userId,
           updatedTime: moment().toDate(),
           userIdUpdated: authMeta.userId,
-      }).where(`sms_tracking_message_id = ${payload.smsTrackingMessageId}`, {sms_tracking_message_id: 8 })
-      .returning(['smsTrackingMessageId'])
-      .execute();
+        }).where(`sms_tracking_message_id = ${payload.smsTrackingMessageId}`, { sms_tracking_message_id: 8 })
+        .returning(['smsTrackingMessageId'])
+        .execute();
 
       const response = await updateSmsTrackingMessage;
       result.smsTrackingMessageId = response.raw[0].sms_tracking_message_id;
@@ -81,9 +80,9 @@ export class SmsTrackingService {
       return result;
 
     } catch (error) {
-        result.message = 'Gagal Menyimpan Data sms tracking - message';
-        result.status = 'error';
-        return result;
+      result.message = 'Gagal Menyimpan Data sms tracking - message';
+      result.status = 'error';
+      return result;
     }
   }
   static async deleteMessage(payload: SmsTrackingDeleteMessagePayloadVm) {
@@ -93,9 +92,9 @@ export class SmsTrackingService {
         isDeleted: true,
       });
       const result = {
-                       status: 'success',
-                       message: 'Berhasil Menghapus Data',
-                     };
+        status: 'success',
+        message: 'Berhasil Menghapus Data',
+      };
       db.raw = result;
       return db.raw;
     } catch (error) {
@@ -260,7 +259,7 @@ export class SmsTrackingService {
 
     return result;
   }
-  
+
   public static async export(
     res: express.Response,
     date: string,
@@ -283,14 +282,104 @@ export class SmsTrackingService {
     qb.andWhere('sts.is_deleted = false');
     qb.andWhere(`sts.sms_tracking_shift_id = '${id}'`);
     const smsTrackingShift = await qb.getRawOne();
+    if (!smsTrackingShift) {
+      RequestErrorService.throwObj(
+        {
+          message: 'Sms Tracking Shift tidak ditemukan',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
+    const listValid = [];
+    const listInvalid = [];
+    let header = [];
+    let temp = null;
+    const data = await this.getDataExcel(smsTrackingShift, smsTrackingMessage, date);
+
+    // mapping data to row excel
+    data.map(function (detail) {
+      let content = {};
+      if (detail.sentTo === 'Sender') {
+        if (detail.statusPhone === 'valid') {
+          content['Waybill Number'] = detail.waybill;
+          content['Phone'] = detail.senderPhone;
+          content['Name of Recipient'] = detail.note;
+          listValid.push(content);
+        } else {
+          content = this.getDetailExcelRow(detail);
+          listInvalid.push(content);
+        }
+      } else if (detail.sentTo === 'Recipient') {
+        if (detail.statusPhone === 'valid') {
+          content[header[0]] = detail.awbStatusName;
+          content[header[1]] = detail.recipientPhone;
+          content[header[2]] = detail.note;
+          listValid.push(content);
+        } else {
+          content = this.getDetailExcelRow(detail);
+          listInvalid.push(content);
+        }
+      }
+    });
+
+    // NOTE: create excel using unique name
+    const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.xlsx';
+    try {
+      // NOTE: create now workbok for storing excel rows
+      // response passed through express response
+      const newWB = xlsx.utils.book_new();
+      const newWS = xlsx.utils.json_to_sheet(listValid);
+      const newWS2 = xlsx.utils.json_to_sheet(listInvalid);
+      xlsx.utils.book_append_sheet(newWB, newWS, 'Sheet1');
+      xlsx.utils.book_append_sheet(newWB, newWS2, 'Sheet2');
+      xlsx.writeFile(newWB, fileName);
+
+      const filestream = fs.createReadStream(fileName);
+      const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+      res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
+      res.setHeader('Content-type', mimeType);
+      filestream.pipe(res);
+    } catch (error) {
+      RequestErrorService.throwObj(
+        {
+          message: 'error ketika download excel sms-tracking',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    } finally {
+      if (fs.existsSync(fileName)) {
+        fs.unlinkSync(fileName);
+      }
+    }
+  }
+
+  static async getDetailExcelRow(data) {
+    const row = {};
+    row['Waybill Number'] = data.waybill;
+    row['Name of Sender'] = data.senderName;
+    row['Phone of Sender'] = data.senderPhone;
+    row['Name of Recipient'] = data.recipientName;
+    row['Phone of Recipient'] = data.recipientPhone;
+    row['Sigesit'] = data.driverName; //
+    row['Position'] = data.BranchName; //
+    row['Remark'] = data.packageNote; //
+    row['Tracking Type'] = data.awbStatusName;
+    row['Agency Code'] = data.representativeName; //
+    row['Note of SMS'] = data.note;
+
+    return row;
+  }
+
+  static async getDataExcel(smsTrackingShift, smsTrackingMessage, date: string): Promise<any> {
     const date7DayBefore = moment(date, 'YYYY-MM-DD').subtract(7, 'd')
       .format('YYYY-MM-DD');
     const workFromDT = moment(smsTrackingShift.workFrom, 'hh:mm A');
     const workToDT = moment(smsTrackingShift.workTo, 'hh:mm A');
 
     // query get data for excel
-    qb = createQueryBuilder();
+    const qb = createQueryBuilder();
     qb.addSelect('awb.awb_number', 'waybill'); // waybill
 
     qb.addSelect(`(
@@ -409,97 +498,6 @@ export class SmsTrackingService {
         }
       }
     });
-    const data = await qb.getRawMany();
-    const listValid = [];
-    const listInvalid = [];
-    let header = [];
-    let temp = null;
-
-    // // override header with first index data, header:[status, phone, note]
-    // if (!isEmpty(data)) {
-    //   header = [
-    //     data[0].awbStatusName,
-    //     data[0].sentTo === 'Sender' ? data[0].senderPhone : data[0].recipientPhone,
-    //     data[0].note,
-    //   ];
-    //   data.shift();
-    // }
-    // mapping data to object excel
-    data.map(function (detail) {
-      const content = {};
-      if (detail.sentTo === 'Sender') {
-        if (detail.statusPhone === 'valid') {
-          content['Waybill Number'] = detail.waybill;
-          content['Phone'] = detail.senderPhone;
-          content['Name of Recipient'] = detail.note;
-          listValid.push(content);
-        } else {
-          content['Waybill Number'] = detail.waybill;
-          content['Name of Sender'] = detail.senderName;
-          content['Phone of Sender'] = detail.senderPhone;
-          content['Name of Recipient'] = detail.recipientName;
-          content['Phone of Recipient'] = detail.recipientPhone;
-          content['Sigesit'] = detail.driverName; //
-          content['Position'] = detail.BranchName; //
-          content['Remark'] = detail.packageNote; //
-          content['Tracking Type'] = detail.awbStatusName;
-          content['Agency Code'] = detail.representativeName; //
-          content['Note of SMS'] = detail.note;
-          listInvalid.push(content);
-        }
-      } else if (detail.sentTo === 'Recipient') {
-        if (detail.statusPhone === 'valid') {
-          content[header[0]] = detail.awbStatusName;
-          content[header[1]] = detail.recipientPhone;
-          content[header[2]] = detail.note;
-          listValid.push(content);
-        } else {
-          content['Waybill Number'] = detail.waybill;
-          content['Name of Sender'] = detail.senderName;
-          content['Phone of Sender'] = detail.senderPhone;
-          content['Name of Recipient'] = detail.recipientName;
-          content['Phone of Recipient'] = detail.recipientPhone;
-          content['Sigesit'] = detail.driverName; //
-          content['Position'] = detail.BranchName; //
-          content['Remark'] = detail.packageNote; //
-          content['Tracking Type'] = detail.awbStatusName;
-          content['Agency Code'] = detail.representativeName; //
-          content['Note of SMS'] = detail.note;
-          listInvalid.push(content);
-        }
-      }
-    });
-
-    // NOTE: create excel using unique name
-    const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.xlsx';
-    try {
-      const newWB = xlsx.utils.book_new();
-      const newWS = xlsx.utils.json_to_sheet(listValid);
-      const newWS2 = xlsx.utils.json_to_sheet(listInvalid);
-      xlsx.utils.book_append_sheet(newWB, newWS, 'Sheet1');
-      xlsx.utils.book_append_sheet(newWB, newWS2, 'Sheet2');
-      xlsx.writeFile(newWB, fileName);
-
-      // const buffExcel = fs.createReadStream(fileName);
-      const filestream = fs.createReadStream(fileName);
-      const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-
-      // const attachment = await AttachmentService.uploadFileBufferToS3(
-      //   buffExcel,
-      //   fileName,
-      //   mimeType,
-      //   'sms-tracking-excel',
-      // );
-
-      res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
-      res.setHeader('Content-type', mimeType);
-      filestream.pipe(res);
-    } catch (error) {
-      console.log('error ketika download excel sms-tracking');
-    } finally {
-      if (fs.existsSync(fileName)) {
-        fs.unlinkSync(fileName);
-      }
-    }
+    return qb.getRawMany();
   }
 }
