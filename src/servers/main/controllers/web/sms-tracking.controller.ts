@@ -14,6 +14,8 @@ import {
   GenerateReportSmsTrackingPayloadVm,
   SmsTrackingDeleteMessagePayloadVm,
   SmsTrackingUpdateMessagePayloadVm,
+  SmsTrackingDeleteShiftPayloadVm,
+  SmsTrackingUpdateShiftPayloadVm,
 } from '../../models/sms-tracking-payload.vm';
 import {
   SmsTrackingStoreMessageResponseVm,
@@ -77,6 +79,23 @@ export class SmsTrackingController {
   @ApiOkResponse({ type: SmsTrackingListShiftResponseVm })
   public async shiftList(@Body() payload: SmsTrackingListShiftPayloadVm) {
     return SmsTrackingService.listShift(payload);
+  }
+  @Post('shift/update')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  // @ApiOkResponse({ type: SmsTrackingListMessageResponseVm })
+  public async updateShift(
+    @Body() payload: SmsTrackingUpdateShiftPayloadVm,
+  ) {
+    return SmsTrackingService.updateShift(payload);
+  }
+
+  @Post('shift/delete')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: SmsTrackingListShiftResponseVm })
+  public async shiftDelete(@Body() payload: SmsTrackingDeleteShiftPayloadVm) {
+    return SmsTrackingService.deleteShift(payload);
   }
 
   @Post('user/list')

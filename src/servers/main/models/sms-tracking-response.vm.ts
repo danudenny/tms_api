@@ -65,6 +65,17 @@ export class SmsTrackingStoreShiftResponseVm {
   message: string;
 }
 
+export class SmsTrackingUpdateShiftResponseVm {
+  @ApiModelProperty()
+  smsTrackingShiftId: number;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+}
+
 export class SmsTrackingShiftDataVm {
   @ApiModelProperty()
   smsTrackingShiftId: number;
@@ -74,6 +85,9 @@ export class SmsTrackingShiftDataVm {
 
   @ApiModelProperty()
   workTo: string;
+
+  @ApiModelProperty()
+  shiftName: string;
 }
 
 export class SmsTrackingListShiftResponseVm extends BaseMetaResponseVm {
