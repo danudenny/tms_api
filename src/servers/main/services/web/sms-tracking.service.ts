@@ -307,7 +307,17 @@ export class SmsTrackingService {
           content['Name of Recipient'] = detail.note;
           listValid.push(content);
         } else {
-          content = this.getDetailExcelRow(detail);
+          content['Waybill Number'] = detail.waybill;
+          content['Name of Sender'] = detail.senderName;
+          content['Phone of Sender'] = detail.senderPhone;
+          content['Name of Recipient'] = detail.recipientName;
+          content['Phone of Recipient'] = detail.recipientPhone;
+          content['Sigesit'] = detail.driverName; //
+          content['Position'] = detail.BranchName; //
+          content['Remark'] = detail.packageNote; //
+          content['Tracking Type'] = detail.awbStatusName;
+          content['Agency Code'] = detail.representativeName; //
+          content['Note of SMS'] = detail.note;
           listInvalid.push(content);
         }
       } else if (detail.sentTo === 'Recipient') {
@@ -317,7 +327,17 @@ export class SmsTrackingService {
           content[header[2]] = detail.note;
           listValid.push(content);
         } else {
-          content = this.getDetailExcelRow(detail);
+          content['Waybill Number'] = detail.waybill;
+          content['Name of Sender'] = detail.senderName;
+          content['Phone of Sender'] = detail.senderPhone;
+          content['Name of Recipient'] = detail.recipientName;
+          content['Phone of Recipient'] = detail.recipientPhone;
+          content['Sigesit'] = detail.driverName; //
+          content['Position'] = detail.BranchName; //
+          content['Remark'] = detail.packageNote; //
+          content['Tracking Type'] = detail.awbStatusName;
+          content['Agency Code'] = detail.representativeName; //
+          content['Note of SMS'] = detail.note;
           listInvalid.push(content);
         }
       }
@@ -353,23 +373,6 @@ export class SmsTrackingService {
         fs.unlinkSync(fileName);
       }
     }
-  }
-
-  static async getDetailExcelRow(data) {
-    const row = {};
-    row['Waybill Number'] = data.waybill;
-    row['Name of Sender'] = data.senderName;
-    row['Phone of Sender'] = data.senderPhone;
-    row['Name of Recipient'] = data.recipientName;
-    row['Phone of Recipient'] = data.recipientPhone;
-    row['Sigesit'] = data.driverName; //
-    row['Position'] = data.BranchName; //
-    row['Remark'] = data.packageNote; //
-    row['Tracking Type'] = data.awbStatusName;
-    row['Agency Code'] = data.representativeName; //
-    row['Note of SMS'] = data.note;
-
-    return row;
   }
 
   static async getDataExcel(smsTrackingShift, smsTrackingMessage, date: string): Promise<any> {
