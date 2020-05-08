@@ -275,7 +275,7 @@ export class SmsTrackingService {
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
-        field: 'sentToName',
+        field: 'smsTrackingUsername',
       },
     ];
     if (!payload.limit) {
@@ -318,7 +318,7 @@ export class SmsTrackingService {
     qb.andWhere('stm.is_deleted = false');
     const smsTrackingMessage = await qb.getRawMany();
 
-    // query get sms tracking shift on id
+    // query get sms tracking shift by id
     qb = createQueryBuilder();
     qb.addSelect('sts.work_from', 'workFrom');
     qb.addSelect('sts.work_to', 'workTo');
