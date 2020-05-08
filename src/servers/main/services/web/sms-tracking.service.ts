@@ -72,9 +72,9 @@ export class SmsTrackingService {
           userIdCreated: authMeta.userId,
           updatedTime: moment().toDate(),
           userIdUpdated: authMeta.userId,
-      }).where(`sms_tracking_message_id = ${payload.smsTrackingMessageId}`, {sms_tracking_message_id: payload.smsTrackingMessageId })
-      .returning(['smsTrackingMessageId'])
-      .execute();
+        }).where(`sms_tracking_message_id = ${payload.smsTrackingMessageId}`, { sms_tracking_message_id: payload.smsTrackingMessageId })
+        .returning(['smsTrackingMessageId'])
+        .execute();
 
       const response = await updateSmsTrackingMessage;
       result.smsTrackingMessageId = response.raw[0].sms_tracking_message_id;
@@ -195,10 +195,10 @@ export class SmsTrackingService {
           updatedTime: moment().toDate(),
           userIdUpdated: authMeta.userId,
           shiftName: payload.shiftName,
-        }).where(`sms_tracking_shift_id = ${payload.smsTrackingShiftId}`, {sms_tracking_shift_id: payload.smsTrackingShiftId })
+        }).where(`sms_tracking_shift_id = ${payload.smsTrackingShiftId}`, { sms_tracking_shift_id: payload.smsTrackingShiftId })
         .returning(['smsTrackingShiftId'])
         .execute();
-        
+
 
       const response = await updateSmsTrackingShift;
       result.smsTrackingShiftId = response.raw[0].sms_tracking_shift_id;
@@ -249,15 +249,15 @@ export class SmsTrackingService {
 
   static async deleteShift(payload: SmsTrackingDeleteShiftPayloadVm) {
     const data = payload.trackingShiftId;
-    
+
     try {
       const db = await SmsTrackingShift.update({ smsTrackingShiftId: In(data) }, {
         isDeleted: true,
       });
       const result = {
-                       status: 'success',
-                       message: 'Berhasil Menghapus Data',
-                     };
+        status: 'success',
+        message: 'Berhasil Menghapus Data',
+      };
       db.raw = result;
       return result;
     } catch (error) {
@@ -339,52 +339,67 @@ export class SmsTrackingService {
     const listInvalid = [];
     let header = [];
     let temp = null;
-    const data = await this.getDataExcel(smsTrackingShift, smsTrackingMessage, date);
+    let data = [];
+    let maxRowPerSheet = 65000;
+    let currIdxSheet = 0;
+
+    // handle multiple sheet for large data
+    do {
+      temp = await this.getDataExcel(smsTrackingShift, smsTrackingMessage, date, currIdxSheet * maxRowPerSheet, maxRowPerSheet);
+      data.push(temp);
+      currIdxSheet++;
+    }
+    while (temp.length == maxRowPerSheet);
 
     // mapping data to row excel
-    data.map(function (detail) {
-      let content = {};
-      if (detail.sentTo === 'Sender') {
-        if (detail.statusPhone === 'valid') {
-          content['Waybill Number'] = detail.waybill;
-          content['Phone'] = detail.senderPhone;
-          content['Name of Recipient'] = detail.note;
-          listValid.push(content);
-        } else {
-          content['Waybill Number'] = detail.waybill;
-          content['Name of Sender'] = detail.senderName;
-          content['Phone of Sender'] = detail.senderPhone;
-          content['Name of Recipient'] = detail.recipientName;
-          content['Phone of Recipient'] = detail.recipientPhone;
-          content['Sigesit'] = detail.driverName; //
-          content['Position'] = detail.BranchName; //
-          content['Remark'] = detail.packageNote; //
-          content['Tracking Type'] = detail.awbStatusName;
-          content['Agency Code'] = detail.representativeName; //
-          content['Note of SMS'] = detail.note;
-          listInvalid.push(content);
+    data.map(function (data1, index) {
+      data1.map(function (detail) {
+        let content = {};
+        if (detail.sentTo === 'Sender') {
+          if (detail.statusPhone === 'valid') {
+            content['Waybill Number'] = detail.waybill;
+            content['Phone'] = detail.senderPhone;
+            content['Name of Recipient'] = detail.note;
+            listValid[index] = [];
+            listValid[index].push(content);
+          } else {
+            content['Waybill Number'] = detail.waybill;
+            content['Name of Sender'] = detail.senderName;
+            content['Phone of Sender'] = detail.senderPhone;
+            content['Name of Recipient'] = detail.recipientName;
+            content['Phone of Recipient'] = detail.recipientPhone;
+            content['Sigesit'] = detail.driverName; //
+            content['Position'] = detail.BranchName; //
+            content['Remark'] = detail.packageNote; //
+            content['Tracking Type'] = detail.awbStatusName;
+            content['Agency Code'] = detail.representativeName; //
+            content['Note of SMS'] = detail.note;
+            listInvalid.push(content);
+          }
+        } else if (detail.sentTo === 'Recipient') {
+          if (detail.statusPhone === 'valid') {
+            content[header[0]] = detail.awbStatusName;
+            content[header[1]] = detail.recipientPhone;
+            content[header[2]] = detail.note;
+            listValid[index] = [];
+            listValid[index].push(content);
+          } else {
+            content['Waybill Number'] = detail.waybill;
+            content['Name of Sender'] = detail.senderName;
+            content['Phone of Sender'] = detail.senderPhone;
+            content['Name of Recipient'] = detail.recipientName;
+            content['Phone of Recipient'] = detail.recipientPhone;
+            content['Sigesit'] = detail.driverName; //
+            content['Position'] = detail.BranchName; //
+            content['Remark'] = detail.packageNote; //
+            content['Tracking Type'] = detail.awbStatusName;
+            content['Agency Code'] = detail.representativeName; //
+            content['Note of SMS'] = detail.note;
+            listValid[index] = [];
+            listInvalid.push(content);
+          }
         }
-      } else if (detail.sentTo === 'Recipient') {
-        if (detail.statusPhone === 'valid') {
-          content[header[0]] = detail.awbStatusName;
-          content[header[1]] = detail.recipientPhone;
-          content[header[2]] = detail.note;
-          listValid.push(content);
-        } else {
-          content['Waybill Number'] = detail.waybill;
-          content['Name of Sender'] = detail.senderName;
-          content['Phone of Sender'] = detail.senderPhone;
-          content['Name of Recipient'] = detail.recipientName;
-          content['Phone of Recipient'] = detail.recipientPhone;
-          content['Sigesit'] = detail.driverName; //
-          content['Position'] = detail.BranchName; //
-          content['Remark'] = detail.packageNote; //
-          content['Tracking Type'] = detail.awbStatusName;
-          content['Agency Code'] = detail.representativeName; //
-          content['Note of SMS'] = detail.note;
-          listInvalid.push(content);
-        }
-      }
+      });
     });
 
     // NOTE: create excel using unique name
@@ -393,10 +408,12 @@ export class SmsTrackingService {
       // NOTE: create now workbok for storing excel rows
       // response passed through express response
       const newWB = xlsx.utils.book_new();
-      const newWS = xlsx.utils.json_to_sheet(listValid);
+      listValid.map(function (detail, index) {
+        const newWS = xlsx.utils.json_to_sheet(detail);
+        xlsx.utils.book_append_sheet(newWB, newWS, (index == 0 ? date : `${date}(${index + 1}`));
+      });
       const newWS2 = xlsx.utils.json_to_sheet(listInvalid);
-      xlsx.utils.book_append_sheet(newWB, newWS, 'Sheet1');
-      xlsx.utils.book_append_sheet(newWB, newWS2, 'Sheet2');
+      xlsx.utils.book_append_sheet(newWB, newWS2, 'failed');
       xlsx.writeFile(newWB, fileName);
 
       const filestream = fs.createReadStream(fileName);
@@ -419,7 +436,7 @@ export class SmsTrackingService {
     }
   }
 
-  static async getDataExcel(smsTrackingShift, smsTrackingMessage, date: string): Promise<any> {
+  static async getDataExcel(smsTrackingShift, smsTrackingMessage, date: string, offset?: number, limit?: number): Promise<any> {
     const date7DayBefore = moment(date, 'YYYY-MM-DD').subtract(7, 'd')
       .format('YYYY-MM-DD');
     const workFromDT = moment(smsTrackingShift.workFrom, 'hh:mm A');
@@ -503,7 +520,6 @@ export class SmsTrackingService {
           )`);
         }
       } else if (!data.isRepeatedOver && data.isRepeated) { // filter diluar lingkup jam shifting dan 7 hari kebelakang
-        console.log('filter diluar lingkup jam shifting dan 7 hari kebelakang ' + data.awbStatusId);
         if (workToDT.isAfter(workFromDT)) {
           qb.orWhere(`(
             aia.awb_status_id_last = '${data.awbStatusId}' AND
@@ -545,6 +561,10 @@ export class SmsTrackingService {
         }
       }
     });
+    if (limit && offset != 0) {
+      qb.limit(limit);
+      qb.offset(offset);
+    }
     return qb.getRawMany();
   }
 }
