@@ -8,6 +8,7 @@ import { AwbHistoryLastSyncPod } from '../../../../shared/orm-entity/awb-history
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { HttpStatus } from '@nestjs/common';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 export class TrackingNoteService {
 
@@ -19,6 +20,18 @@ export class TrackingNoteService {
     payload: any,
   ): Promise<TrackingNoteResponseVm> {
     const result = new TrackingNoteResponseVm();
+
+    const locking = await RedisService.locking(
+      `hold:trackingnote:sync`,
+      'locking',
+    );
+
+    if (locking) {
+      result.message = 'OK';
+    } else {
+      result.message = 'Previous Service Still Running';
+      return result;
+    }
 
     result.data = await this.insertTmsTrackingNote(5, payload);
 
@@ -65,13 +78,21 @@ export class TrackingNoteService {
         ah.note_public as "notePublic",
         ah.awb_note as "noteTms",
         ah.receiver_name as "receiverName",
-        s.awb_visibility as "isPublic"
+        s.awb_visibility as "isPublic",
+        dpd.latitude_delivery_last as "latitude",
+        dpd.longitude_delivery_last as "longitude",
+        r.reason_name as "reasonName"
       FROM awb_history ah
       INNER JOIN awb_item ai on ai.awb_item_id=ah.awb_item_id and ai.is_deleted=false
       INNER JOIN awb a on a.awb_id=ai.awb_id and a.is_deleted=false
       INNER JOIN awb_status s on ah.awb_status_id=s.awb_status_id and s.send_tracking_note=10 and s.is_deleted=false
       LEFT JOIN employee e on ah.employee_id_driver=e.employee_id and e.is_deleted=false
       LEFT JOIN branch b on ah.branch_id=b.branch_id and b.is_deleted=false
+      LEFT JOIN do_pod_deliver_detail dpd on
+        dpd.awb_item_id = ah.awb_item_id
+        and dpd.awb_status_id_last = ah.awb_status_id
+        and dpd.is_deleted = false
+      LEFT JOIN reason r on r.reason_id = dpd.reason_id_last and r.is_deleted=false
       WHERE ` + additional_where + ` and ah.is_deleted=false
       ORDER BY awb_history_id
       LIMIT 2000;
@@ -127,13 +148,18 @@ export class TrackingNoteService {
                 isPublic = 1;
               }
               request.input('IsPublic', sql.Bit, isPublic);
+              request.input('Latitude', sql.VarChar, item.latitude);
+              request.input('Longitude', sql.VarChar, item.longitude);
+              request.input('ReasonName', sql.VarChar, item.reasonName);
 
               request.query(`
                 insert into TmsTrackingNoteStaging (
-                  AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, NoteInternal, NotePublic, NoteTms, UsrCrt, UsrUpd, DtmCrt, DtmUpd, ReceiverName, IsPublic
-                  )
+                  AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, NoteInternal,
+                  NotePublic, NoteTms, UsrCrt, UsrUpd, DtmCrt, DtmUpd, ReceiverName, IsPublic, Latitude, Longitude, ReasonName
+                )
                 values (
-                  @AwbHistoryId, @ReceiptNumber, @TrackingDateTime, @AwbStatusId, @TrackingType, @CourierName, @Nik, @BranchCode, @NoteInternal, @NotePublic, @NoteTms, @UsrCrt, @UsrUpd, @DtmCrt, @DtmUpd, @ReceiverName, @IsPublic
+                  @AwbHistoryId, @ReceiptNumber, @TrackingDateTime, @AwbStatusId, @TrackingType, @CourierName, @Nik, @BranchCode, @NoteInternal,
+                  @NotePublic, @NoteTms, @UsrCrt, @UsrUpd, @DtmCrt, @DtmUpd, @ReceiverName, @IsPublic, @Latitude, @Longitude, @ReasonName
                 )`, (err, result) => {
                   if (!err) {
                     ctr++;
@@ -144,7 +170,7 @@ export class TrackingNoteService {
                           updatedTime: new Date(),
                         });
                       }
-                      
+
                       transaction.commit(err => {
                         if (err) {
                           PinoLoggerService.debug(this.logTitle, '[ERROR TRANSACTION] :: ' + err);
@@ -186,6 +212,8 @@ export class TrackingNoteService {
       } else {
         PinoLoggerService.debug(this.logTitle, 'Last Awb History Empty');
       }
+    } else {
+      RedisService.del(`hold:trackingnote:sync`);
     }
   }
 }
