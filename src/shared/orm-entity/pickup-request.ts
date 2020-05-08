@@ -1,3 +1,4 @@
+
 import {
   BaseEntity,
   Column,
@@ -204,7 +205,7 @@ export class PickupRequest extends BaseEntity {
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
-    name : 'is_deleted',
+    name: 'is_deleted',
   })
   isDeleted: boolean;
 
