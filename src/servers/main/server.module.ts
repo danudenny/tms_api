@@ -17,6 +17,7 @@ import { MainServerControllersModule } from './controllers/main-server-controlle
 import { MainServerInjectorService } from './services/main-server-injector.service';
 import { MainServerServicesModule } from './services/main-server-services.module';
 import { LogglyMiddleware } from '../../shared/middlewares/loggly.middleware';
+import { urlencoded, json } from 'express';
 
 @Module({
   imports: [SharedModule, MainServerControllersModule, LoggingInterceptor, MainServerServicesModule],
@@ -59,7 +60,10 @@ export class MainServerModule extends MultiServerAppModule implements NestModule
     }
 
     this.app = app;
-
+    // NOTE: The default limit defined by body-parser is 100kb
+    // https://github.com/expressjs/body-parser/blob/0632e2f378d53579b6b2e4402258f4406e62ac6f/lib/types/json.js#L53-L55
+    app.use(json({ limit: '1mb' }));
+    app.use(urlencoded({ extended: true, limit: '1mb' }));
     app.enableCors();
     app.use(RequestContextMiddleware.rawExpressMiddleware);
     app.useGlobalPipes(
