@@ -19,7 +19,6 @@ export class RolePodManual {
               ],
               where: {
                 roleId: payload.roleId,
-                isBulky: true,
                 isDeleted: false,
               },
         });
