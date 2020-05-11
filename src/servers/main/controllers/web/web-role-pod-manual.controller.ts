@@ -3,10 +3,12 @@ import {
     ApiBearerAuth,
     ApiOkResponse,
   } from '../../../../shared/external/nestjs-swagger';
-import { Controller, Post, HttpCode, HttpStatus, Body, Delete, Param, Get, Response, Query } from '@nestjs/common';
+import { Controller, Post, HttpCode, HttpStatus, Body, Delete, Param, Get, Response, Query, UseGuards } from '@nestjs/common';
 import express = require('express');
-import { RolePodManualPayloadStoreVm, RolePodManualPayloadGetVm } from '../../models/role-pod-manual-payload.vm';
+import { RolePodManualPayloadStoreVm, RolePodManualPayloadGetVm, RolePodManualPayloadPostVm } from '../../models/role-pod-manual-payload.vm';
 import { RolePodManual } from '../../services/web/role-pod-manual.service';
+import { AuthenticatedGuard } from 'src/shared/guards/authenticated.guard';
+import { PermissionTokenGuard } from 'src/shared/guards/permission-token.guard';
 
 
 @ApiUseTags('Role Pod Manual')
@@ -15,15 +17,14 @@ export class RolePodManualController {
   @Post('/get-status')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-//   @ApiOkResponse({ type: SmsTrackingStoreMessageResponseVm })
   public async getPodManualList(@Body() payload: RolePodManualPayloadGetVm) {
     return RolePodManual.getStatus(payload);
   }
   @Post('/post-status')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-//   @ApiOkResponse({ type: SmsTrackingStoreMessageResponseVm })
-  public async podManualStore(@Body() payload: any) {
+  @UseGuards(AuthenticatedGuard)
+  public async podManualStore(@Body() payload: RolePodManualPayloadPostVm) {
     return RolePodManual.postStatus(payload);
   }
 }

@@ -1,5 +1,5 @@
 import {
-    RolePodManualPayloadGetVm, RolePodManualPayloadStoreVm,
+    RolePodManualPayloadGetVm, RolePodManualPayloadStoreVm, RolePodManualPayloadPostVm,
   } from '../../models/role-pod-manual-payload.vm';
 import { AuthService } from 'src/shared/services/auth.service';
 import { RolePodManualStatus } from '../../../../shared/orm-entity/role-pod-manual-status';
@@ -31,8 +31,9 @@ export class RolePodManual {
         return result;
     }
     static async postStatus(
-      payload: any,
+      payload: RolePodManualPayloadPostVm,
     ) {
+        const authMeta = AuthService.getAuthData();
         const result = new RolePodManualResponseVm();
         const deleteData = await getConnection()
         .createQueryBuilder()
@@ -43,12 +44,12 @@ export class RolePodManual {
 
         payload.data.forEach(async data => {
             const insertData = await RolePodManualStatus.create({
-                roleId: payload.roleId,
+                roleId: payload.roleId  ,
                 awbStatusId: data.awbStatusId,
                 isBulky: data.isBulky,
-                userIdCreated: data.userIdCreated,
+                userIdCreated: authMeta.userId,
+                userIdUpdated: authMeta.userId,
                 createdTime: new Date(),
-                userIdUpdated: data.userIdCreated,
                 updatedTime: new Date(),
               });
             const response = await RolePodManualStatus.save(insertData);
