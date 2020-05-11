@@ -12,7 +12,7 @@ import { RolePodManual } from '../../services/web/role-pod-manual.service';
 @ApiUseTags('Role Pod Manual')
 @Controller('role-pod-manual')
 export class RolePodManualController {
-  @Get('/get-status')
+  @Post('/get-status')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
 //   @ApiOkResponse({ type: SmsTrackingStoreMessageResponseVm })

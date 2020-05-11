@@ -22,4 +22,9 @@ export class RolePodManualPayloadStoreVm {
   userIdCreated: string;
 }
 
-export class RolePodManualPayloadGetVm extends BaseMetaPayloadVm {}
+export class RolePodManualPayloadGetVm {
+  @ApiModelProperty({
+    example: 12345,
+  })
+  roleId: number;
+}

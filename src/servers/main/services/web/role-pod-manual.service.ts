@@ -20,7 +20,7 @@ export class RolePodManual {
                 'awbStatusId',
               ],
               where: {
-                roleId: 11,
+                roleId: payload.roleId,
                 isBulky: true,
                 isDeleted: false,
               },
