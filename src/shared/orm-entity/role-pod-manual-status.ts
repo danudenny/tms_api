@@ -32,7 +32,7 @@ export class RolePodManualStatus extends BaseEntity {
     nullable: false,
     name: 'user_id_created',
   })
-  userIdCreated: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -44,7 +44,7 @@ export class RolePodManualStatus extends BaseEntity {
     nullable: false,
     name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
