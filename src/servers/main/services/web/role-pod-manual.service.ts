@@ -25,7 +25,7 @@ export class RolePodManual {
                 isDeleted: false,
               },
         });
-        result.data = db.length === 0 ? [] : [db];
+        result.data = db.length === 0 ? [] : db;
         result.message = 'Berhasil mengambil Data';
         result.status = 'success';
         return result;
