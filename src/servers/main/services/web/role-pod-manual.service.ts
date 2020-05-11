@@ -20,7 +20,7 @@ export class RolePodManual {
                 'awbStatusId',
               ],
               where: {
-                roleId: 32,
+                roleId: payload.roleId,
                 isBulky: true,
                 isDeleted: false,
               },
@@ -55,7 +55,7 @@ export class RolePodManual {
             const response = await RolePodManualStatus.save(insertData);
         });
         result.message = 'Berhasil Menyimpan data';
-        result.status = 'sukses';
+        result.status = 'success';
         return result;
     }
 }
