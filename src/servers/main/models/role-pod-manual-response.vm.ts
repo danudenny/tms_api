@@ -12,12 +12,6 @@ export class RolePodManualResponseVm {
 }
 
 export class RolePodManualResponseGetDataVm {
-
-  @ApiModelProperty()
-  settingStatusRoleId: string;
-  @ApiModelProperty()
-  roleId: number;
-
   @ApiModelProperty()
   awbStatusId: number;
 
