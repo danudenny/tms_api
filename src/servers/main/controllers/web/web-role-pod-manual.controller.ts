@@ -27,4 +27,5 @@ export class RolePodManualController {
   public async podManualStore(@Body() payload: RolePodManualPayloadPostVm) {
     return RolePodManual.postStatus(payload);
   }
+
 }
