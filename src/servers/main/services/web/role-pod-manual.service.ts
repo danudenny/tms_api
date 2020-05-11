@@ -20,12 +20,12 @@ export class RolePodManual {
                 'awbStatusId',
               ],
               where: {
-                roleId: payload.roleId,
+                roleId: 32,
                 isBulky: true,
                 isDeleted: false,
               },
-        }); 
-        result.data = [db];
+        });
+        result.data = db.length === 0 ? [] : [db];
         result.message = 'Berhasil mengambil Data';
         result.status = 'success';
         return result;
