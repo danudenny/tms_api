@@ -28,7 +28,7 @@ export class ReportAttendanceService {
       't4',
       't4.branch_id = t1.branch_id_check_in',
     );
-    qb.innerJoin(
+    qb.leftJoin(
       'branch',
       't6',
       't6.branch_id=t1.branch_id_check_out',
