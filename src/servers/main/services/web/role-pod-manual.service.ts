@@ -14,8 +14,6 @@ export class RolePodManual {
 
         const db = await RolePodManualStatus.find({
             select: [
-                'settingStatusRoleId',
-                'roleId',
                 'isBulky',
                 'awbStatusId',
               ],
