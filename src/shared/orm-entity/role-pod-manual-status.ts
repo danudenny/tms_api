@@ -1,4 +1,5 @@
-import { BaseEntity, Column, Entity } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { AwbStatus } from '../orm-entity/awb-status'
 
 @Entity('setting_status_role', { schema: 'public' })
 export class RolePodManualStatus extends BaseEntity {
@@ -58,4 +59,8 @@ export class RolePodManualStatus extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @OneToOne(() => AwbStatus)
+  @JoinColumn({ name: 'awb_status_id', referencedColumnName: 'awbStatusId'})
+  awbStatus: AwbStatus;
 }

@@ -102,7 +102,4 @@ export class AwbStatus extends BaseEntity {
   })
   isReturn: boolean | null;
 
-  @OneToOne(() => RolePodManualStatus)
-  @JoinColumn({ name: 'awb_status_id', referencedColumnName: 'awbStatusId'})
-  rolePodManualStatus: RolePodManualStatus;
 }

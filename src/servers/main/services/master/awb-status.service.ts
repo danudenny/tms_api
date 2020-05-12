@@ -52,42 +52,28 @@ export class AwbStatusService {
       {
         field: 'awbStatusTitle',
       },
-      {
-        field: 'roleId',
-      }
     ];
-    payload.fieldResolverMap['roleId'] = 't1.role_id';
-    payload.fieldResolverMap['isFinalStatus'] = 'awb_status.is_final_status';
-    payload.fieldResolverMap['isReturn'] = 'awb_status.is_return';
-    payload.fieldResolverMap['isProble'] = 'awb_status.is_problem';
-    payload.fieldResolverMap['awbStatusName'] = 'awb_status.awb_status_name';
-    payload.fieldResolverMap['awb_status_title'] = 'awb_status.awb_status_title';
+    // payload.fieldResolverMap['roleId'] = 't1.role_id';
+    payload.fieldResolverMap['isFinalStatus'] = 't1.is_final_status';
+    payload.fieldResolverMap['isReturn'] = 't1.is_return';
+    payload.fieldResolverMap['isProble'] = 't1.is_problem';
+    payload.fieldResolverMap['awbStatusName'] = 't1.awb_status_name';
+    payload.fieldResolverMap['awb_status_title'] = 't1.awb_status_title';
 
-    const db = await RolePodManualStatus.find({
-        select: [
-            'isBulky',
-            'awbStatusId',
-          ],
-          where: {
-            isDeleted: false,
-          },
-    });
-
-    const q = RepositoryService.awbStatus.findAllRaw();
+    const q = RepositoryService.rolePodManualStatus.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.awb_status_id', 'awbStatusId'],
-      ['t1.isBulky', 'isBulky'],
-      ['awb_status.awb_status_name', 'awbStatusName'],
-      ['awb_status.awb_status_title', 'awbStatusTitle'],
-      ['awb_status.is_problem', 'isProblem'],
-      ['awb_status.is_final_status', 'isFinalStatus'],
+      ['role_pod_manual_status.awb_status_id', 'awbStatusId'],
+      ['t1.awb_status_name', 'awbStatusName'],
+      ['t1.awb_status_title', 'awbStatusTitle'],
+      ['t1.is_problem', 'isProblem'],
+      ['t1.is_final_status', 'isFinalStatus'],
       );
-    q.innerJoin(e => e.rolePodManualStatus, 't1', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
+    q.innerJoin(e => e.awbStatus, 't1', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.orWhere(e => e.isProblem, w => w.isTrue());
-    q.orWhere(e => e.isFinalStatus, w => w.isTrue());
+    q.orWhere(e => e.awbStatus.isProblem, w => w.isTrue());
+    q.orWhere(e => e.awbStatus.isFinalStatus, w => w.isTrue());
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
     const result = new AwbStatusNonDeliveFindAllResponseVm();
