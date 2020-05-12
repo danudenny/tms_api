@@ -120,8 +120,8 @@ export class V2MobileSyncService {
               updatedTime: moment().toDate(),
             },
           );
-          
-          if(delivery.isCOD){
+
+          if (delivery.isCOD) {
             await transactionEntityManager.insert(
               CodPayment,
               {
@@ -132,7 +132,11 @@ export class V2MobileSyncService {
                 note: delivery.note,
                 noReference: delivery.noReference,
                 doPodDeliverDetailId: delivery.doPodDeliverDetailId,
-              }
+                userIdCreated: authMeta.userId,
+                userIdUpdated: authMeta.userId,
+                createdTime: moment().toDate(),
+                updatedTime: moment().toDate(),
+              },
             );
           }
 
