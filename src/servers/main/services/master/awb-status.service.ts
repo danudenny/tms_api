@@ -56,7 +56,7 @@ export class AwbStatusService {
     // payload.fieldResolverMap['roleId'] = 't1.role_id';
     payload.fieldResolverMap['isFinalStatus'] = 't1.is_final_status';
     payload.fieldResolverMap['isReturn'] = 't1.is_return';
-    payload.fieldResolverMap['isProble'] = 't1.is_problem';
+    payload.fieldResolverMap['isProblem'] = 't1.is_problem';
     payload.fieldResolverMap['awbStatusName'] = 't1.awb_status_name';
     payload.fieldResolverMap['awb_status_title'] = 't1.awb_status_title';
 
