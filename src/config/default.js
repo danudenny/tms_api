@@ -1,11 +1,11 @@
-const { getAllServerConfigurations } = require('./util');
-const path = require('path');
+const { getAllServerConfigurations } = require("./util");
+const path = require("path");
 
 module.exports = {
   redis: {
-    host: '18.141.116.177',
+    host: '3.1.243.32',
     port: '6379',
-    password: 'r3di5S1c3pat116688_',
+    password: '9F864DAF0B09974AA3F0E90646EEFEA3',
     db: process.env.NODE_ENV === 'test' ? 1 : 0,
   },
   jwt: {
@@ -18,8 +18,8 @@ module.exports = {
     assets: path.resolve(__dirname, '..', 'assets'),
   },
   cloudStorage: {
-    cloudUrl: 'https://sicepatmasterdata.s3-ap-southeast-1.amazonaws.com',
-    cloudBucket: 'sicepatmasterdata',
+    cloudUrl: 'https://sicepattesting.s3-ap-southeast-1.amazonaws.com',
+    cloudBucket: 'sicepattesting',
     cloudRegion: 'ap-southeast-1',
     cloudAccessKeyId: 'AKIA2ZCLVOSJTBNWP73E',
     cloudSecretAccessKey: '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',
@@ -41,21 +41,21 @@ module.exports = {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
   sentry: {
-    dsn: 'http://ab6f52ba994f42dc9d15d23464dfbcee@sicepat-sentry.eastus.cloudapp.azure.com:9000/2',
+    dsn: 'http://8d763ea5cbaf4321ad5d58778e08d589@sentry.sicepat.com/2',
   },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
     subdomain: 'sicepat',
-    tags: ['API-POD'],
+    tags: ['API-POD-DEV'],
   },
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {
     ttlToken: 1000,
-    username: 'rHzS2Pf0djuTlBffxvIOtXWqSL0a',
-    password: 'bqYVa8cAZDA0FjYfVpMIrGJMYFga',
-    baseUrl: 'https://api.posindonesia.co.id:8245/',
+    username: 'T1F2V4Xgof0hTvYlS9QYvTpitBka',
+    password: 'tGLlYLfqRSiK7IA2mYHeu_EMbbwa',
+    baseUrl: 'https://sandbox.posindonesia.co.id:8245/',
     tokenEndpoint: 'token',
-    postAwbEndpoint: 'webhook/1.0/AddPostingDoc'
+    postAwbEndpoint: 'webhookpos/1.0.1/AddPostingDoc',
   },
   gojek: {
     baseUrl: 'https://integration-kilat-api.gojekapi.com/gokilat/v10/',

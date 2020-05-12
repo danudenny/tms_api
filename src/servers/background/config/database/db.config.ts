@@ -63,7 +63,7 @@ export abstract class DatabaseConfig {
   private static mysqlDbConnectionString = {
     user: 'rudydarw_damar',
     password: 'Rudybosnyasicepat168168',
-    host: 'sicepatrds.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+    host: 'sicepatrds-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
     database: 'rudydarw_sicepat',
     connectionTimeout: 12000000, // 2 minutes,
     requestTimeout: 12000000,

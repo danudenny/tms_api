@@ -1,20 +1,20 @@
-import { Body, Controller, Post, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-
-import { ApiOkResponse, ApiUseTags, ApiBearerAuth } from '../../../shared/external/nestjs-swagger';
-import { Transactional } from '../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
-// import { AuthenticatedAuthGuard } from '../../../shared/guards/anonymous.guard';
+//#region import
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../shared/external/nestjs-swagger';
+import {
+    Transactional,
+} from '../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
+import { AuthenticatedGuard } from '../../../shared/guards/authenticated.guard';
 import { AuthService } from '../../../shared/services/auth.service';
 import {
-  AuthLoginByEmailOrUsernamePayloadVM,
-  AuthLoginResponseVM,
-  AuthLoginWithRolesResponseVM,
-  PermissionRolesPayloadVM,
-  PermissionRolesResponseVM,
-  PermissionAccessPayloadVM,
-  PermissionAccessResponseVM,
+    AuthLoginByEmailOrUsernamePayloadVM, AuthLoginResponseVM, AuthLoginWithRolesResponseVM,
+    PermissionAccessPayloadVM, PermissionAccessResponseVM, PermissionRolesPayloadVM,
+    PermissionRolesResponseVM,
 } from '../models/auth.vm';
-import { AuthenticatedGuard } from '../../../shared/guards/authenticated.guard';
-import { RefreshAccessTokenPayload } from '../models/refresh-access-token.model';
+import {
+    RefreshAccessTokenPayload, RefreshTokenLogoutPayload,
+} from '../models/refresh-access-token.model';
+//#endregion
 
 @ApiUseTags('Authentication')
 @Controller('auth')
@@ -83,8 +83,6 @@ export class AuthController {
 
   @Post('refreshToken')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: AuthLoginResponseVM })
   @Transactional()
   public async refreshAccessToken(@Body() payload: RefreshAccessTokenPayload) {
@@ -93,9 +91,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  public async authLogout(@Body() payload: RefreshAccessTokenPayload) {
+  public async authLogout(@Body() payload: RefreshTokenLogoutPayload) {
     return await this.authService.removeToken(payload.refreshToken);
   }
 

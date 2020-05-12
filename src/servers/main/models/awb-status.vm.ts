@@ -14,6 +14,23 @@ export class AwbStatusVm {
   @ApiModelProperty()
   awbStatusName: string;
 }
+export class AwbStatusNonDeliveVm {
+  @ApiModelProperty()
+  awbStatusId: number;
+
+  @ApiModelProperty()
+  isBulky: boolean;
+
+  @ApiModelProperty()
+  awbStatusCode: string;
+
+  @ApiModelProperty()
+  awbStatusTitle: string;
+
+  @ApiModelProperty()
+  awbStatusName: string;
+
+}
 
 export class AwbStatusSearchVm {
   @ApiModelProperty()
@@ -50,4 +67,9 @@ export class AwbStatusPayloadVm {
 export class AwbStatusFindAllResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [AwbStatusVm] })
   data: AwbStatusVm[];
+}
+
+export class AwbStatusNonDeliveFindAllResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [AwbStatusNonDeliveVm] })
+  data: AwbStatusNonDeliveVm[];
 }

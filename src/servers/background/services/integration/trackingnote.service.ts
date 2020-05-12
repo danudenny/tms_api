@@ -21,9 +21,10 @@ export class TrackingNoteService {
   ): Promise<TrackingNoteResponseVm> {
     const result = new TrackingNoteResponseVm();
 
-    const locking = await RedisService.locking(
+    const locking = await RedisService.lockingWithExpire(
       `hold:trackingnote:sync`,
       'locking',
+      120,
     );
 
     if (locking) {
@@ -104,7 +105,7 @@ export class TrackingNoteService {
 
       if (awbHistoryLastSyncPod) {
         const data = await this.getRawAwbHistory(awbHistoryLastSyncPod.awbHistoryId, payload, isManual);
-        if (data) {
+        if (data.length > 0) {
           // Connect to POD
           const conn = await DatabaseConfig.getPodDbConn();
           const transaction = new sql.Transaction(conn);
@@ -142,7 +143,7 @@ export class TrackingNoteService {
               request.input('IsPublic', sql.Bit, isPublic);
 
               request.query(`
-                insert into TmsTrackingNote (
+                insert into TmsTrackingNoteStaging (
                   AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, NoteInternal, NotePublic, NoteTms, UsrCrt, UsrUpd, DtmCrt, DtmUpd, ReceiverName, IsPublic
                   )
                 values (
@@ -192,15 +193,18 @@ export class TrackingNoteService {
             }
           });
         } else {
-          PinoLoggerService.debug(this.logTitle, 'Awb History Empty (' + awbHistoryLastSyncPod.awbHistoryId + ')');
+          if (!isManual) { RedisService.del(`hold:trackingnote:sync`); }
+          PinoLoggerService.debug(this.logTitle, 'Awb History Empty (' + awbHistoryLastSyncPod.awbHistoryId + '), Counter ' + counter);
         }
 
         return data;
       } else {
-        PinoLoggerService.debug(this.logTitle, 'Last Awb History Empty');
+        if (!isManual) { RedisService.del(`hold:trackingnote:sync`); }
+        PinoLoggerService.debug(this.logTitle, 'Last Awb History Empty, Counter ' + counter);
       }
     } else {
-      RedisService.del(`hold:trackingnote:sync`);
+      if (!isManual) { RedisService.del(`hold:trackingnote:sync`); }
+      PinoLoggerService.debug(this.logTitle, 'Finished All, Counter ' + counter);
     }
   }
 }
