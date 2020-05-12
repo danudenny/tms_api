@@ -244,13 +244,14 @@ export class WebAwbDeliverService {
       // #endregion of transaction
 
       // NOTE: queue by Bull need refactoring
+      const reasonId = delivery.reasonId == 0 ? null : delivery.reasonId;
       DoPodDetailPostMetaQueueService.createJobByManualSync(
         delivery.awbItemId,
         delivery.awbStatusId,
         authMeta.userId,
         permissonPayload.branchId,
         authMeta.userId,
-        delivery.reasonId,
+        reasonId,
         delivery.reasonNotes,
         delivery.consigneeNameNote,
         awbStatus.awbStatusName,
