@@ -58,5 +58,5 @@ export class ReportAttendanceService {
 
     const result = await qb.getRawMany();
     return result;
-   }
   }
+}
