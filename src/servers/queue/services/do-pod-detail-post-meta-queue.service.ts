@@ -70,6 +70,7 @@ export class DoPodDetailPostMetaQueueService {
             longitude: data.longitude,
             reasonId: data.reasonId,
             reasonName: data.reasonName,
+            location: data.location,
           });
           await transactionalEntityManager.insert(AwbHistory, awbHistory);
 
@@ -433,6 +434,7 @@ export class DoPodDetailPostMetaQueueService {
     let notePublic = '';
     let receiverName = '';
     let reasonName = null;
+    let location = null;
 
     if (awbStatusId == AWB_STATUS.DLV) {
       // TODO: title case consigneeName
@@ -454,6 +456,11 @@ export class DoPodDetailPostMetaQueueService {
       notePublic = `Paket di kembalikan di ${cityName} [${branchName}] - (${awbStatusName}) ${awbStatusCode}`;
     }
 
+    // NOTE: geopoint (lat,lon)
+    if (latitudeDelivery != '' && longitudeDelivery != '') {
+      location = `${latitudeDelivery},${longitudeDelivery}`;
+    }
+
     // provide data
     const obj = {
       awbStatusId,
@@ -473,6 +480,7 @@ export class DoPodDetailPostMetaQueueService {
       longitude: longitudeDelivery,
       reasonId,
       reasonName,
+      location,
     };
 
     return DoPodDetailPostMetaQueueService.queue.add(obj);
