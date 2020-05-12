@@ -181,7 +181,7 @@ export class MobileKorwilService {
       'ki',
       'ki.korwil_item_id = ktd.korwil_item_id AND ki.is_deleted = false',
     );
-    if (roleId != this.configKorwil.palkurRoleId) {
+    if ( this.configKorwil.palkurRoleId,includes(roleId)) {
       qb.innerJoin(
         'user_to_branch',
         'utb',
