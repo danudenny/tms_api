@@ -79,7 +79,7 @@ export class MobileKorwilService {
       },
     );
 
-    let korwilTransaction = await KorwilTransaction.findOne({
+    const korwilTransaction = await KorwilTransaction.findOne({
       where: {
         korwilTransactionId: payload.korwilTransactionId,
       },
@@ -111,7 +111,7 @@ export class MobileKorwilService {
     result.message = 'success';
     result.status = 'ok';
 
-    let korwilTransaction = await KorwilTransaction.findOne({
+    const korwilTransaction = await KorwilTransaction.findOne({
       where: {
         korwilTransactionId: payload.korwilTransactionId,
         status: 0,
@@ -181,7 +181,7 @@ export class MobileKorwilService {
       'ki',
       'ki.korwil_item_id = ktd.korwil_item_id AND ki.is_deleted = false',
     );
-    if ( this.configKorwil.palkurRoleId,includes(roleId)) {
+    if (!this.configKorwil.palkurRoleId.includes(roleId)) {
       qb.innerJoin(
         'user_to_branch',
         'utb',
@@ -208,7 +208,7 @@ export class MobileKorwilService {
     : Promise<ItemListKorwilResponseVm> {
     const result = new ItemListKorwilResponseVm();
     const authMeta = AuthService.getAuthData();
-    let itemList = [];
+    const itemList = [];
     let statusTransaction = null;
 
     // GET item korwil
@@ -239,7 +239,7 @@ export class MobileKorwilService {
       employeeId: authMeta.employeeId,
     });
     qb.andWhere(`ej.check_out_date IS NULL`);
-    qb.orderBy('kt.created_time', 'DESC')
+    qb.orderBy('kt.created_time', 'DESC');
     const dataLatestLogin = await qb.getRawOne();
 
     statusTransaction = (dataLatestLogin && dataLatestLogin.korwilTransactionId) ? dataLatestLogin.status : null;
@@ -342,7 +342,7 @@ export class MobileKorwilService {
     const authMeta = AuthService.getAuthMetadata();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timeNow = moment().toDate();
-    let now = moment();
+    const now = moment();
     // NOTE: configure dateFrom and dateTo
     // 1. if time now LOWER THAN 06:00 o'clock, dateFrom = 06:00 yesterday and dateTo = 06:00 today
     // 2. else if time now GREATER THAN EQUAL to 06:00 o'clock, dateFrom = 06:00 today and dateTo = 06:00 tomorrow
@@ -380,7 +380,7 @@ export class MobileKorwilService {
     qb1.andWhere('kt.is_deleted = false');
     qb1.orderBy('created_time', 'DESC');
     const dataKorwil = await qb1.getRawOne();
-    let id = dataKorwil ? dataKorwil.id : null;
+    const id = dataKorwil ? dataKorwil.id : null;
 
     // get data item list
     const data = await this.getDataListItem(branchId, authMeta.userId, id, permissonPayload.roleId);
@@ -631,7 +631,7 @@ export class MobileKorwilService {
       isRequired: null,
     };
     const authMeta = AuthService.getAuthMetadata();
-    var items = [];
+    const items = [];
 
     // NOTE: get transaction and detail name
     const qb = createQueryBuilder();
@@ -643,7 +643,7 @@ export class MobileKorwilService {
     );
     qb.addSelect('ktd.is_done', 'isDone');
     qb.addSelect('ktd.status', 'statusItem');
-    qb.addSelect("COALESCE(ktd.note, '')", 'note');
+    qb.addSelect('COALESCE(ktd.note, \'\')', 'note');
     qb.addSelect('COALESCE(ej.check_in_date, null)', 'checkInDate');
     qb.addSelect('COALESCE(ej.check_out_date, null)', 'checkOutDate');
     qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
@@ -709,7 +709,7 @@ export class MobileKorwilService {
       detailItem.note = data[i].note;
       detailItem.isRequired = data[i].isRequired;
       detailItem.photo = photos;
-      let temp = clone(detailItem);
+      const temp = clone(detailItem);
       items.push(temp);
     }
     result.items = items;
@@ -735,7 +735,7 @@ export class MobileKorwilService {
     qb.where('ktd.is_deleted = false');
     qb.andWhere(
       'ktd.korwil_transaction_detail_id = :korwilTransactionDetailId',
-      { korwilTransactionDetailId: korwilTransactionDetailId },
+      { korwilTransactionDetailId },
     );
 
     const data = await qb.getRawOne();
@@ -756,7 +756,7 @@ export class MobileKorwilService {
     qb.where('ktdp.is_deleted = false');
     qb.andWhere(
       'ktdp.korwil_transaction_detail_id = :korwilTransactionDetailId',
-      { korwilTransactionDetailId: korwilTransactionDetailId },
+      { korwilTransactionDetailId },
     );
     const dataUrl = await qb.getRawMany();
 
@@ -810,7 +810,7 @@ export class MobileKorwilService {
       return result;
     }
 
-    let qb = createQueryBuilder();
+    const qb = createQueryBuilder();
     qb.addSelect(
       'ktd.korwil_transaction_detail_id',
       'korwilTransactionDetailId',
@@ -855,7 +855,7 @@ export class MobileKorwilService {
     }
 
     // GET total photo after delete and upload
-    let qb1 = createQueryBuilder();
+    const qb1 = createQueryBuilder();
     qb1.addSelect(
       'ktdp.korwil_transaction_detail_photo_id',
       'korwilTransactionDetailPhotoId',
@@ -874,7 +874,7 @@ export class MobileKorwilService {
     const deletedPhotoLength = deletedPhotos ? deletedPhotos.length : 0;
     const countPhoto = temp - deletedPhotoLength + countInsertedImage;
     // update count photo in korwil
-    let korwilTransactionDetail = await KorwilTransactionDetail.findOne({
+    const korwilTransactionDetail = await KorwilTransactionDetail.findOne({
       where: {
         korwilTransactionDetailId: payload.korwilTransactionDetailId,
       },
@@ -972,7 +972,7 @@ export class MobileKorwilService {
     const radius = [0.5, 0.5]; // in kilometer
     const data = [];
     const response = new ValidateBranchCoordinateResponseVm();
-    let nearby_branch = await this.getNearby(lata, longa, radius[0]);
+    const nearby_branch = await this.getNearby(lata, longa, radius[0]);
 
     response.status = false;
     response.message = 'Lokasi anda tidak sesuai dengan lokasi gerai';
