@@ -66,7 +66,7 @@ module.exports = {
   },
   korwil: {
     korwilRoleId: 38,
-    palkurRoleId: [40, 41],
+    palkurRoleId: 40,
   },
   masterData: {
     apiKey:
