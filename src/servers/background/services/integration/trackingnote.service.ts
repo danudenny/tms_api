@@ -83,8 +83,8 @@ export class TrackingNoteService {
       INNER JOIN awb_item ai on ai.awb_item_id=ah.awb_item_id and ai.is_deleted=false
       INNER JOIN awb a on a.awb_id=ai.awb_id and a.is_deleted=false
       INNER JOIN awb_status s on ah.awb_status_id=s.awb_status_id and s.send_tracking_note=10 and s.is_deleted=false
-      LEFT JOIN employee e on ah.employee_id_driver=e.employee_id and e.is_deleted=false
-      LEFT JOIN branch b on ah.branch_id=b.branch_id and b.is_deleted=false
+      LEFT JOIN employee e on ah.employee_id_driver=e.employee_id
+      LEFT JOIN branch b on ah.branch_id=b.branch_id
       WHERE ` + additional_where + ` and ah.is_deleted=false
       ORDER BY awb_history_id
       LIMIT 2000;
