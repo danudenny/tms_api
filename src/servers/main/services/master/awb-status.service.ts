@@ -72,8 +72,6 @@ export class AwbStatusService {
       );
     q.innerJoin(e => e.awbStatus, 't1', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.orWhere(e => e.awbStatus.isProblem, w => w.isTrue());
-    q.orWhere(e => e.awbStatus.isFinalStatus, w => w.isTrue());
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
     const result = new AwbStatusNonDeliveFindAllResponseVm();
