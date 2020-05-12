@@ -292,4 +292,10 @@ export class AwbHistory extends TmsBaseEntity {
     name: 'reason_name',
   })
   reasonName: string;
+
+  // NOTE: geopoint (lat,lon)
+  @Column('point', {
+    nullable: true,
+  })
+  location: string;
 }
