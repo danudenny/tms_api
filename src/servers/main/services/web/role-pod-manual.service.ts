@@ -4,25 +4,27 @@ import {
 import { AuthService } from 'src/shared/services/auth.service';
 import { RolePodManualStatus } from '../../../../shared/orm-entity/role-pod-manual-status';
 import { RolePodManualResponseVm, PodManualStatusResponseGetVm } from '../../models/role-pod-manual-response.vm';
-import { getConnection } from 'typeorm';
+import { getConnection, createQueryBuilder } from 'typeorm';
 
 export class RolePodManual {
     static async getStatus(
       payload: RolePodManualPayloadGetVm,
     ) {
         const result = new  PodManualStatusResponseGetVm();
-
-        const db = await RolePodManualStatus.find({
-            select: [
-                'isBulky',
-                'awbStatusId',
-              ],
-              where: {
-                roleId: payload.roleId,
-                isDeleted: false,
-              },
-        });
-        result.data = db.length === 0 ? [] : db;
+        const qb = createQueryBuilder();
+        qb.addSelect('ssr.awb_status_id', 'awbStatusId');
+        qb.addSelect('is_bulky', 'isBulky');
+        qb.addSelect('awb.is_return', 'isReturn');
+        qb.from('setting_status_role', 'ssr');
+        qb.innerJoin(
+          'awb_status',
+          'awb',
+          'awb.awb_status_id = ssr.awb_status_id AND ssr.is_deleted = false',
+        );
+        qb.andWhere('ssr.is_deleted = false');
+        qb.andWhere(`ssr.role_id = '${payload.roleId}'`);
+        const data = await qb.getRawMany();
+        result.data = data.length === 0 ? [] : data;
         result.message = 'Berhasil mengambil Data';
         result.status = 'success';
         return result;

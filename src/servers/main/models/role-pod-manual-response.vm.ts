@@ -17,6 +17,8 @@ export class RolePodManualResponseGetDataVm {
 
   @ApiModelProperty()
   isBulky: boolean;
+  @ApiModelProperty()
+  isReturn: boolean;
 
 }
 
