@@ -44,6 +44,12 @@ export class KorwilTransaction extends TmsBaseEntity {
   })
   totalTask: number | null;
 
+  @Column('integer', {
+    nullable: true,
+    name: 'total_task_done',
+  })
+  totalTaskDone: number | null;
+
   @Column('bigint', {
     nullable: true,
     name: 'user_id',

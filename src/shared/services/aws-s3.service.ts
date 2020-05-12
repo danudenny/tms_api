@@ -4,6 +4,7 @@ import fs = require('fs');
 
 import { AWS_S3 } from '../constants/aws-s3.constant';
 import { ConfigService } from './config.service';
+import axios from 'axios';
 
 export class AwsS3Service {
   public static uploadFileBuffer(
@@ -81,6 +82,40 @@ export class AwsS3Service {
           contentType,
         };
       });
+  }
+
+  public static async uploadFromUrl(
+    url: string,
+    awsKey: string,
+    bucketName?: string,
+  ) {
+    // init bucketName
+    if (!bucketName && ConfigService.has('cloudStorage.cloudBucket')) {
+      bucketName = ConfigService.get('cloudStorage.cloudBucket');
+    }
+
+    try {
+      const res = await axios.get(url, {responseType: 'arraybuffer'});
+      if (res) {
+        // NOTE: The optional contentType option can be used to set Content/mime type of the file.
+        // By default the content type is set to application/octet-stream.
+        return AWS_S3.putObject({
+          ACL: 'public-read',
+          ContentType: res.headers['content-type'],
+          Body: res.data, // buffer
+          Bucket: bucketName,
+          Key: awsKey,
+        })
+        .promise()
+        .then(() => {
+          return {
+            awsKey,
+          };
+        });
+      }
+    } catch (error) {
+      console.log('get error: ', error.message);
+    }
   }
 
   public static async uploadFromFilePath(

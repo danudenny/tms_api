@@ -1,5 +1,10 @@
 import { ApiModelProperty } from '../../../../shared/external/nestjs-swagger';
 
+export class CheckDataDropPartnerVm {
+  @ApiModelProperty()
+  awb_number: string;
+}
+
 export class DropCashlessVm {
   @ApiModelProperty()
   awb_number: string;
@@ -7,6 +12,11 @@ export class DropCashlessVm {
   @ApiModelProperty()
   branch_code: string;
 
+}
+
+export class DropSuccessResponseVm {
+  @ApiModelProperty()
+  message: string;
 }
 
 export class DropCashLessResponseVM {
@@ -150,10 +160,13 @@ export class DropPickupRequestResponseVM {
   pickupEmail: string;
 
   @ApiModelProperty()
-  pickupNotes;
+  pickupNotes: string;
 
   @ApiModelProperty()
   parcelValue: number;
+
+  @ApiModelProperty()
+  pickupRequestStatus: number;
 }
 
 export class DropCreateWorkOrderPayloadVM {
