@@ -279,4 +279,23 @@ export class AwbHistory extends TmsBaseEntity {
     name: 'branch_id_next',
   })
   branchIdNext: number | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'reason_id',
+  })
+  reasonId: number | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'reason_name',
+  })
+  reasonName: string;
+
+  // NOTE: geopoint (lat,lon)
+  @Column('point', {
+    nullable: true,
+  })
+  location: string;
 }

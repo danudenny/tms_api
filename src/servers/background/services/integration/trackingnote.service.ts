@@ -8,6 +8,7 @@ import { AwbHistoryLastSyncPod } from '../../../../shared/orm-entity/awb-history
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { HttpStatus } from '@nestjs/common';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 export class TrackingNoteService {
 
@@ -19,6 +20,18 @@ export class TrackingNoteService {
     payload: any,
   ): Promise<TrackingNoteResponseVm> {
     const result = new TrackingNoteResponseVm();
+
+    const locking = await RedisService.locking(
+      `hold:trackingnote:sync`,
+      'locking',
+    );
+
+    if (locking) {
+      result.message = 'OK';
+    } else {
+      result.message = 'Previous Service Still Running';
+      return result;
+    }
 
     result.data = await this.insertTmsTrackingNote(5, payload);
 
@@ -130,10 +143,12 @@ export class TrackingNoteService {
 
               request.query(`
                 insert into TmsTrackingNoteStaging (
-                  AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, NoteInternal, NotePublic, NoteTms, UsrCrt, UsrUpd, DtmCrt, DtmUpd, ReceiverName, IsPublic
-                  )
+                  AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, NoteInternal,
+                  NotePublic, NoteTms, UsrCrt, UsrUpd, DtmCrt, DtmUpd, ReceiverName, IsPublic
+                )
                 values (
-                  @AwbHistoryId, @ReceiptNumber, @TrackingDateTime, @AwbStatusId, @TrackingType, @CourierName, @Nik, @BranchCode, @NoteInternal, @NotePublic, @NoteTms, @UsrCrt, @UsrUpd, @DtmCrt, @DtmUpd, @ReceiverName, @IsPublic
+                  @AwbHistoryId, @ReceiptNumber, @TrackingDateTime, @AwbStatusId, @TrackingType, @CourierName, @Nik, @BranchCode, @NoteInternal,
+                  @NotePublic, @NoteTms, @UsrCrt, @UsrUpd, @DtmCrt, @DtmUpd, @ReceiverName, @IsPublic
                 )`, (err, result) => {
                   if (!err) {
                     ctr++;
@@ -144,7 +159,7 @@ export class TrackingNoteService {
                           updatedTime: new Date(),
                         });
                       }
-                      
+
                       transaction.commit(err => {
                         if (err) {
                           PinoLoggerService.debug(this.logTitle, '[ERROR TRANSACTION] :: ' + err);
@@ -186,6 +201,8 @@ export class TrackingNoteService {
       } else {
         PinoLoggerService.debug(this.logTitle, 'Last Awb History Empty');
       }
+    } else {
+      RedisService.del(`hold:trackingnote:sync`);
     }
   }
 }
