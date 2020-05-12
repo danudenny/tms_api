@@ -11,11 +11,11 @@ import { DoPodDeliverHistory } from '../../../../../shared/orm-entity/do-pod-del
 import { DoPodDeliverAttachment } from '../../../../../shared/orm-entity/do_pod_deliver_attachment';
 import { AttachmentService } from '../../../../../shared/services/attachment.service';
 import {
-    DoPodDetailPostMetaQueueService,
+  DoPodDetailPostMetaQueueService,
 } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { MobileDeliveryVm } from '../../../models/mobile-delivery.vm';
 import {
-    MobileSyncImagePayloadVm, MobileSyncPayloadVm, MobileSyncImageDataPayloadVm,
+  MobileSyncImagePayloadVm, MobileSyncPayloadVm, MobileSyncImageDataPayloadVm,
 } from '../../../models/mobile-sync-payload.vm';
 import { MobileSyncImageResponseVm, MobileSyncDataResponseVm, MobileSyncAwbVm, MobileSyncImageDataResponseVm } from '../../../models/mobile-sync-response.vm';
 
@@ -24,7 +24,7 @@ import { PinoLoggerService } from '../../../../../shared/services/pino-logger.se
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { UploadImagePodQueueService } from '../../../../queue/services/upload-pod-image-queue.service';
-import {CodPayment} from '../../../../../shared/orm-entity/cod-payment';
+import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 // #endregion
 
 export class V2MobileSyncService {
@@ -33,7 +33,7 @@ export class V2MobileSyncService {
     payload: MobileSyncPayloadVm,
   ): Promise<MobileSyncDataResponseVm> {
     const result = new MobileSyncDataResponseVm();
-    const dataItem: MobileSyncAwbVm [] = [];
+    const dataItem: MobileSyncAwbVm[] = [];
     for (const delivery of payload.deliveries) {
       const response = {
         process: false,
@@ -58,7 +58,7 @@ export class V2MobileSyncService {
 
   public static async syncDeliver(delivery: MobileDeliveryVm) {
     const doPodDeliverHistories: DoPodDeliverHistory[] = [];
-    const authMeta         = AuthService.getAuthData();
+    const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     let process = false;
@@ -86,7 +86,7 @@ export class V2MobileSyncService {
       // handle time status offline
       const historyDateTime =
         lastDoPodDeliverHistory.awbStatusDateTime <
-        lastDoPodDeliverHistory.syncDateTime
+          lastDoPodDeliverHistory.syncDateTime
           ? lastDoPodDeliverHistory.awbStatusDateTime
           : lastDoPodDeliverHistory.syncDateTime;
 

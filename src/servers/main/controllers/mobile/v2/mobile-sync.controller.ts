@@ -28,7 +28,7 @@ import {
   MobileSyncImageDataResponseVm,
 } from '../../../models/mobile-sync-response.vm';
 import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
-import { V2MobileSyncService } from '../../../services/mobile/V2/mobile-sync.service';
+import { V2MobileSyncService } from '../../../services/mobile/v2/mobile-sync.service';
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('Mobile Sync Data V2')
