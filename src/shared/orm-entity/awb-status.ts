@@ -1,4 +1,6 @@
-import { BaseEntity, Column, Entity } from 'typeorm';
+import { BaseEntity, Column, Entity, OneToOne, JoinColumn } from 'typeorm';
+import { RolePodManualStatus } from '../orm-entity/role-pod-manual-status'
+
 
 @Entity('awb_status', { schema: 'public' })
 export class AwbStatus extends BaseEntity {
@@ -99,4 +101,5 @@ export class AwbStatus extends BaseEntity {
     name: 'is_return',
   })
   isReturn: boolean | null;
+
 }
