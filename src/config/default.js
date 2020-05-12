@@ -21,8 +21,8 @@ module.exports = {
     cloudUrl: 'https://sicepatmasterdata.s3-ap-southeast-1.amazonaws.com',
     cloudBucket: 'sicepatmasterdata',
     cloudRegion: 'ap-southeast-1',
-    cloudAccessKeyId: 'AKIAJHHTEMTLK42N7TQA',
-    cloudSecretAccessKey: '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',
+    cloudAccessKeyId: 'AKIA2ZCLVOSJTBNWP73E',
+    cloudSecretAccessKey: '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',
   },
   printerHelper: {
     url: 'http://jsreport.sicepat.com/wcpp',
