@@ -24,7 +24,7 @@ export class TrackingNoteService {
     const locking = await RedisService.lockingWithExpire(
       `hold:trackingnote:sync`,
       'locking',
-      30,
+      120,
     );
 
     if (locking) {
