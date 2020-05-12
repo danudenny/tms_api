@@ -132,7 +132,11 @@ export class V2MobileSyncService {
                 note: delivery.note,
                 noReference: delivery.noReference,
                 doPodDeliverDetailId: delivery.doPodDeliverDetailId,
-              }
+                userIdCreated: authMeta.userId,
+                userIdUpdated: authMeta.userId,
+                createdTime: moment().toDate(),
+                updatedTime: moment().toDate(),
+              },
             );
           }
 
