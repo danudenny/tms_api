@@ -24,13 +24,4 @@ export class TrackingNoteVm {
 
   @ApiModelProperty()
   branchCode: string;
-
-  @ApiModelProperty()
-  latitude: string;
-
-  @ApiModelProperty()
-  longitude: string;
-
-  @ApiModelProperty()
-  reasonName: string;
 }
