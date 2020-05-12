@@ -52,7 +52,16 @@ export class AwbStatusService {
       {
         field: 'awbStatusTitle',
       },
+      {
+        field: 'roleId',
+      }
     ];
+    payload.fieldResolverMap['roleId'] = 't1.role_id';
+    payload.fieldResolverMap['isFinalStatus'] = 'awb_status.is_final_status';
+    payload.fieldResolverMap['isReturn'] = 'awb_status.is_return';
+    payload.fieldResolverMap['isProble'] = 'awb_status.is_problem';
+    payload.fieldResolverMap['awbStatusName'] = 'awb_status.awb_status_name';
+    payload.fieldResolverMap['awb_status_title'] = 'awb_status.awb_status_title';
 
     const db = await RolePodManualStatus.find({
         select: [
@@ -68,47 +77,23 @@ export class AwbStatusService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['awb_status.awb_status_id', 'awbStatusId'],
+      ['t1.awb_status_id', 'awbStatusId'],
+      ['t1.isBulky', 'isBulky'],
       ['awb_status.awb_status_name', 'awbStatusName'],
       ['awb_status.awb_status_title', 'awbStatusTitle'],
       ['awb_status.is_problem', 'isProblem'],
       ['awb_status.is_final_status', 'isFinalStatus'],
       );
+    q.innerJoin(e => e.rolePodManualStatus, 't1', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.orWhere(e => e.isProblem, w => w.isTrue());
     q.orWhere(e => e.isFinalStatus, w => w.isTrue());
     const data = await q.exec();
-
-    const dataResult = [];
-    let objData = {};
-
-    // tslint:disable-next-line:prefer-for-of
-    for (let i = 0; i < data.length; i++) {
-        // tslint:disable-next-line:prefer-for-of
-        for (let j = 0; j < db.length; j++) {
-         if (data[i].awbStatusId === db[j].awbStatusId ) {
-           objData = {
-              awbStatusId: db[j].awbStatusId,
-              isBulky: db[j].isBulky,
-              awbStatusTitle: data[i].awbStatusTitle,
-              awbStatusName: data[i].awbStatusName,
-           };
-
-           dataResult.push(objData);
-          }
-        }
-      }
     const total = await q.countWithoutTakeAndSkip();
     const result = new AwbStatusNonDeliveFindAllResponseVm();
 
-    if (dataResult.length > 0 ) {
-      result.data = dataResult;
-      result.buildPaging(payload.page, payload.limit, total);
-      return result;
-    } else {
-      result.buildPaging(payload.page, payload.limit, total);
-      return result;
-    }
-
+    result.buildPaging(payload.page, payload.limit, total);
+    result.data = data;
+    return result;
   }
 }
