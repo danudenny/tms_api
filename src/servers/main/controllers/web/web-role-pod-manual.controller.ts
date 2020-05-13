@@ -1,15 +1,11 @@
 import {
     ApiUseTags,
     ApiBearerAuth,
-    ApiOkResponse,
   } from '../../../../shared/external/nestjs-swagger';
-import { Controller, Post, HttpCode, HttpStatus, Body, Delete, Param, Get, Response, Query, UseGuards } from '@nestjs/common';
-import express = require('express');
-import { RolePodManualPayloadStoreVm, RolePodManualPayloadGetVm, RolePodManualPayloadPostVm } from '../../models/role-pod-manual-payload.vm';
+import { Controller, Post, HttpCode, HttpStatus, Body, UseGuards } from '@nestjs/common';
+import { RolePodManualPayloadGetVm, RolePodManualPayloadPostVm } from '../../models/role-pod-manual-payload.vm';
 import { RolePodManual } from '../../services/web/role-pod-manual.service';
-import { AuthenticatedGuard } from 'src/shared/guards/authenticated.guard';
-import { PermissionTokenGuard } from 'src/shared/guards/permission-token.guard';
-
+import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 
 @ApiUseTags('Role Pod Manual')
 @Controller('role-pod-manual')

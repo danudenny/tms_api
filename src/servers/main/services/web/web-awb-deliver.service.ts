@@ -1,35 +1,38 @@
+// //#region import
 import { getManager, LessThan, MoreThan } from 'typeorm';
-
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 import { DoPodDeliverHistory } from '../../../../shared/orm-entity/do-pod-deliver-history';
 import { AuthService } from '../../../../shared/services/auth.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import {
     DoPodDetailPostMetaQueueService,
 } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
-    WebAwbDeliverSyncPayloadVm, WebDeliveryVm, WebAwbDeliverSyncResponseVm, AwbDeliverManualSync,
+    AwbDeliverManualSync, WebAwbDeliverSyncPayloadVm, WebAwbDeliverSyncResponseVm, WebDeliveryVm,
 } from '../../models/web-awb-deliver.vm';
 import { AwbService } from '../v1/awb.service';
 import moment = require('moment');
-import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
-
+import { BadRequestException } from '@nestjs/common';
+// //#endregion
 export class WebAwbDeliverService {
-  constructor() {
-  }
+  constructor() {}
 
   static async syncAwbDeliver(
     payload: WebAwbDeliverSyncPayloadVm,
   ): Promise<WebAwbDeliverSyncResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+
     const response = new AwbDeliverManualSync();
     const result = new WebAwbDeliverSyncResponseVm();
+
     const dataItem = [];
     let onlyDriver = false;
+
     try {
       for (const delivery of payload.deliveries) {
         // TODO: check awb number
@@ -41,29 +44,20 @@ export class WebAwbDeliverService {
           const awbDeliver = await this.getDeliverDetail(delivery.awbNumber);
           if (awbDeliver) {
             // check role
-            // role palkur => CODA, BA, RETUR tidak perlu ANT
-            switch (payload.role) {
-              case 'ct':
+            const roleIdSigesit = 23;
+            if (payload.role == 'sigesit' || permissonPayload.roleId == roleIdSigesit) {
+              // check only own awb number
+              if (
+                awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&
+                awbDeliver.doPodDeliver.userIdDriver ==
+                  authMeta.userId
+              ) {
                 syncManualDelivery = true;
-                break;
-              case 'palkur':
-                // if (statusProblem.includes(delivery.awbStatusId)) {
-                // }
-                syncManualDelivery = true;
-                break;
-              case 'sigesit':
-                // check only own awb number
-                if (
-                  awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&
-                  awbDeliver.doPodDeliver.userIdDriver == authMeta.userId
-                ) {
-                  syncManualDelivery = true;
-                } else {
-                  onlyDriver = true;
-                }
-                break;
-              default:
-                break;
+              } else {
+                onlyDriver = true;
+              }
+            } else {
+              syncManualDelivery = true;
             }
 
             if (syncManualDelivery) {
@@ -82,7 +76,6 @@ export class WebAwbDeliverService {
                 // delivery.employeeId = authMeta.employeeId;
                 await this.syncDeliver(delivery);
 
-                // is return insert into awb return
                 // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
                 if (payload.isReturn) {
                   await this.createAwbReturn(
@@ -113,7 +106,6 @@ export class WebAwbDeliverService {
             const manualStatus = await this.syncStatusManual(
               authMeta.userId,
               permissonPayload.branchId,
-              payload.role,
               delivery,
               payload.isReturn,
               awb.awbId,
@@ -137,18 +129,15 @@ export class WebAwbDeliverService {
           ...response,
         });
       } // end of for
+
+      // return array of data
+      result.data = dataItem;
+      return result;
     } catch (error) {
       response.status = 'error';
       response.message = `message error ${error.message}`;
-      dataItem.push({
-        awbNumber: '',
-        ...response,
-      });
+      throw new BadRequestException(response);
     }
-
-    // return array of data
-    result.data = dataItem;
-    return result;
   }
 
   private static async syncDeliver(delivery: WebDeliveryVm) {
@@ -173,7 +162,7 @@ export class WebAwbDeliverService {
         isDeleted: false,
       },
     });
-    const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
+    const finalStatus = [AWB_STATUS.DLV];
     if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
       const awbStatus = await AwbStatus.findOne(
         doPodDeliverHistory.awbStatusId,
@@ -244,13 +233,14 @@ export class WebAwbDeliverService {
       // #endregion of transaction
 
       // NOTE: queue by Bull need refactoring
+      const reasonId = delivery.reasonId == 0 ? null : delivery.reasonId;
       DoPodDetailPostMetaQueueService.createJobByManualSync(
         delivery.awbItemId,
         delivery.awbStatusId,
         authMeta.userId,
         permissonPayload.branchId,
         authMeta.userId,
-        delivery.reasonId,
+        reasonId,
         delivery.reasonNotes,
         delivery.consigneeNameNote,
         awbStatus.awbStatusName,
@@ -265,29 +255,13 @@ export class WebAwbDeliverService {
   private static async syncStatusManual(
     userId: number,
     branchId: number,
-    role: string,
     delivery: WebDeliveryVm,
     isReturn: boolean,
     awbId: number,
   ) {
-    let syncManualDelivery = false;
-    // role palkur => CODA, BA, RETUR tidak perlu ANT
-    // const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
-
-    if (delivery.awbStatusId != AWB_STATUS.DLV) {
-      switch (role) {
-        case 'ct':
-          syncManualDelivery = true;
-          break;
-        case 'palkur':
-          // if (statusProblem.includes(delivery.awbStatusId)) {
-          // }
-          syncManualDelivery = true;
-          break;
-        default:
-          break;
-      }
-      if (syncManualDelivery) {
+    // NOTE: role palkur => CODA, BA, RETUR tidak perlu ANT
+    try {
+      if (delivery.awbStatusId != AWB_STATUS.DLV) {
         if (isReturn) {
           // TODO: handle is return status??
           // NOTES: Insert into table awb return
@@ -298,14 +272,6 @@ export class WebAwbDeliverService {
             userId,
           );
         }
-
-        // Update status awb item attr
-        // await AwbService.updateAwbAttr(
-        //   delivery.awbItemId,
-        //   delivery.awbStatusId,
-        //   null,
-        // );
-
         // TODO: queue by Bull need refactoring
         DoPodDetailPostMetaQueueService.createJobByManualStatus(
           delivery.awbItemId,
@@ -315,8 +281,11 @@ export class WebAwbDeliverService {
           delivery.reasonNotes,
         );
       }
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
     }
-    return syncManualDelivery;
   }
 
   private static async getDeliverDetail(awbNumber: string): Promise<DoPodDeliverDetail> {
@@ -352,8 +321,8 @@ export class WebAwbDeliverService {
     awbId: number,
     branchId: number,
     userId: number,
-  ): Promise<AwbReturn> {
-    // NOTES: Insert into table awb return
+  ): Promise<boolean> {
+    // NOTE: Insert into table awb return
     // check duplicate data
     let awbReturnData = await AwbReturn.findOne({
       where: {
@@ -361,9 +330,7 @@ export class WebAwbDeliverService {
         isDeleted: false,
       },
     });
-    if (awbReturnData) {
-      // TODO: update awb status ??
-    } else {
+    if (!awbReturnData) {
       awbReturnData = AwbReturn.create({
           originAwbId: awbId,
           originAwbNumber: awbNumber,
@@ -375,6 +342,6 @@ export class WebAwbDeliverService {
       });
       await AwbReturn.insert(awbReturnData);
     }
-    return awbReturnData;
+    return true;
   }
 }

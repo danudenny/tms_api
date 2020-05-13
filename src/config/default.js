@@ -21,11 +21,11 @@ module.exports = {
     cloudUrl: 'https://sicepattesting.s3-ap-southeast-1.amazonaws.com',
     cloudBucket: 'sicepattesting',
     cloudRegion: 'ap-southeast-1',
-    cloudAccessKeyId: 'AKIAJHHTEMTLK42N7TQA',
-    cloudSecretAccessKey: '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',
+    cloudAccessKeyId: 'AKIA2ZCLVOSJTBNWP73E',
+    cloudSecretAccessKey: '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',
   },
   printerHelper: {
-    url: 'http://sicepat-tms-printer.azurewebsites.net',
+    url: 'http://jsreport.sicepat.com/wcpp',
   },
   queue: {
     doPodDetailPostMeta: {
@@ -41,8 +41,7 @@ module.exports = {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
   sentry: {
-    dsn:
-      'http://ab6f52ba994f42dc9d15d23464dfbcee@sicepat-sentry.eastus.cloudapp.azure.com:9000/2',
+    dsn: 'http://8d763ea5cbaf4321ad5d58778e08d589@sentry.sicepat.com/2',
   },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',

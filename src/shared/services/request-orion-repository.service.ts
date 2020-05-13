@@ -105,13 +105,23 @@ export class RequestOrionRepositoryService {
           }
 
           const field = metaPayload.resolveFieldAsFieldAlias(filter.field);
-          qWhere.andWhere(
-            field,
-            qWhereItem => {
-              this.applyMetaPayloadFilterItem(qWhereItem, filter);
-            },
-            false,
-          );
+          if (filter.isOR == true) {
+            qWhere.orWhere(
+              field,
+              qWhereItem => {
+                this.applyMetaPayloadFilterItem(qWhereItem, filter);
+              },
+              false,
+            );
+          } else {
+            qWhere.andWhere(
+              field,
+              qWhereItem => {
+                this.applyMetaPayloadFilterItem(qWhereItem, filter);
+              },
+              false,
+            );
+          }
         }
       });
     }
