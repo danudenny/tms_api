@@ -145,4 +145,20 @@ export class RedisService {
 
     return !!locking;
   }
+
+  public static async lockingWithExpire(key: string, value: string, expire: number = 5) {
+    let countRetry = 1;
+    let locking = {};
+    do {
+      locking = await this.setnx(key, value);
+      if (!!locking || countRetry === 3) {
+        await this.expire(key, expire);
+        break;
+      }
+      await sleep(500); // delay 0.5 seconds
+      countRetry += 1;
+    } while (countRetry < 4);
+
+    return !!locking;
+  }
 }
