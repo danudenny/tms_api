@@ -8,6 +8,7 @@ import { AwbHistoryLastSyncPod } from '../../../../shared/orm-entity/awb-history
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { HttpStatus } from '@nestjs/common';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 export class TrackingNoteService {
 
@@ -20,7 +21,26 @@ export class TrackingNoteService {
   ): Promise<TrackingNoteResponseVm> {
     const result = new TrackingNoteResponseVm();
 
-    result.data = await this.insertTmsTrackingNote(5, payload);
+    const locking = await RedisService.lockingWithExpire(
+      `hold:trackingnote:sync`,
+      'locking',
+      120,
+    );
+
+    if (locking) {
+      result.message = 'OK';
+    } else {
+      result.message = 'Previous Service Still Running';
+      return result;
+    }
+
+    let rate = 5;
+    if (payload.rate > 0) {
+      rate = payload.rate;
+    }
+    PinoLoggerService.debug(this.logTitle, ' RATE ' + rate);
+
+    result.data = await this.insertTmsTrackingNote(rate, payload);
 
     return result;
   }
@@ -70,8 +90,8 @@ export class TrackingNoteService {
       INNER JOIN awb_item ai on ai.awb_item_id=ah.awb_item_id and ai.is_deleted=false
       INNER JOIN awb a on a.awb_id=ai.awb_id and a.is_deleted=false
       INNER JOIN awb_status s on ah.awb_status_id=s.awb_status_id and s.send_tracking_note=10 and s.is_deleted=false
-      LEFT JOIN employee e on ah.employee_id_driver=e.employee_id and e.is_deleted=false
-      LEFT JOIN branch b on ah.branch_id=b.branch_id and b.is_deleted=false
+      LEFT JOIN employee e on ah.employee_id_driver=e.employee_id
+      LEFT JOIN branch b on ah.branch_id=b.branch_id
       WHERE ` + additional_where + ` and ah.is_deleted=false
       ORDER BY awb_history_id
       LIMIT 2000;
@@ -91,7 +111,7 @@ export class TrackingNoteService {
 
       if (awbHistoryLastSyncPod) {
         const data = await this.getRawAwbHistory(awbHistoryLastSyncPod.awbHistoryId, payload, isManual);
-        if (data) {
+        if (data.length > 0) {
           // Connect to POD
           const conn = await DatabaseConfig.getPodDbConn();
           const transaction = new sql.Transaction(conn);
@@ -144,7 +164,7 @@ export class TrackingNoteService {
                           updatedTime: new Date(),
                         });
                       }
-                      
+
                       transaction.commit(err => {
                         if (err) {
                           PinoLoggerService.debug(this.logTitle, '[ERROR TRANSACTION] :: ' + err);
@@ -179,13 +199,18 @@ export class TrackingNoteService {
             }
           });
         } else {
-          PinoLoggerService.debug(this.logTitle, 'Awb History Empty (' + awbHistoryLastSyncPod.awbHistoryId + ')');
+          if (!isManual) { RedisService.del(`hold:trackingnote:sync`); }
+          PinoLoggerService.debug(this.logTitle, 'Awb History Empty (' + awbHistoryLastSyncPod.awbHistoryId + '), Counter ' + counter);
         }
 
         return data;
       } else {
-        PinoLoggerService.debug(this.logTitle, 'Last Awb History Empty');
+        if (!isManual) { RedisService.del(`hold:trackingnote:sync`); }
+        PinoLoggerService.debug(this.logTitle, 'Last Awb History Empty, Counter ' + counter);
       }
+    } else {
+      if (!isManual) { RedisService.del(`hold:trackingnote:sync`); }
+      PinoLoggerService.debug(this.logTitle, 'Finished All, Counter ' + counter);
     }
   }
 }

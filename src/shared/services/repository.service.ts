@@ -30,6 +30,7 @@ import { DoReturnHistory } from '../orm-entity/do_return_history';
 import { DoReturnCtToCollection } from '../orm-entity/do_return_ct_to_collection';
 import { DoReturnCollectionToCust } from '../orm-entity/do_return_collection_to_cust';
 import { Partner } from '../orm-entity/partner';
+import { RolePodManualStatus } from '../orm-entity/role-pod-manual-status';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -129,4 +130,8 @@ export class RepositoryService {
   static get partner() {
     return new OrionRepositoryService(Partner);
   }
+  static get rolePodManualStatus() {
+    return new OrionRepositoryService(RolePodManualStatus);
+  }
+  
 }

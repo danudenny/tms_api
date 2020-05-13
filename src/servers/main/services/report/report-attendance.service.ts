@@ -23,32 +23,32 @@ export class ReportAttendanceService {
     qb.addSelect('t1.latitude_check_out', 'latitudeCheckOut');
     qb.addSelect('t1.created_time', 'createdTime');
     qb.from('employee_journey', 't1');
-    qb.innerJoin(
+    qb.leftJoin(
       'branch',
       't4',
       't4.branch_id = t1.branch_id_check_in',
     );
-    qb.innerJoin(
+    qb.leftJoin(
       'branch',
       't6',
       't6.branch_id=t1.branch_id_check_out',
     );
-    qb.innerJoin(
+    qb.leftJoin(
       'employee',
       't3',
       't3.employee_id=t1.employee_id',
     );
-    qb.innerJoin(
+    qb.leftJoin(
       'branch',
       't7',
       't7.branch_id=t3.branch_id',
     );
-    qb.innerJoin(
+    qb.leftJoin(
       'attachment_tms',
       't2',
       't2.attachment_tms_id=t1.attachment_id_check_in',
     );
-    qb.innerJoin(
+    qb.leftJoin(
       'attachment_tms',
       't5',
       't5.attachment_tms_id=t1.attachment_id_check_in',
@@ -58,5 +58,5 @@ export class ReportAttendanceService {
 
     const result = await qb.getRawMany();
     return result;
-   }
   }
+}
