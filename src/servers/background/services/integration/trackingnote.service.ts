@@ -94,7 +94,7 @@ export class TrackingNoteService {
       LEFT JOIN branch b on ah.branch_id=b.branch_id
       WHERE ` + additional_where + ` and ah.is_deleted=false
       ORDER BY awb_history_id
-      LIMIT 2000;
+      LIMIT 500;
     `;
     return await RawQueryService.queryWithParams(query, {
       awbHistoryId,
