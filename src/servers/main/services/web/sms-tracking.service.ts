@@ -8,6 +8,7 @@ import {
   SmsTrackingUpdateMessagePayloadVm,
   SmsTrackingDeleteShiftPayloadVm,
   SmsTrackingUpdateShiftPayloadVm,
+  GenerateReportSmsTrackingPayloadVm,
 } from '../../models/sms-tracking-payload.vm';
 import {
   SmsTrackingListMessageResponseVm,
@@ -199,7 +200,6 @@ export class SmsTrackingService {
         .returning(['smsTrackingShiftId'])
         .execute();
 
-
       const response = await updateSmsTrackingShift;
       result.smsTrackingShiftId = response.raw[0].sms_tracking_shift_id;
       result.message = 'Berhasil Update data sms tracking - message';
@@ -306,8 +306,7 @@ export class SmsTrackingService {
 
   public static async export(
     res: express.Response,
-    date: string,
-    id: number,
+    payload: GenerateReportSmsTrackingPayloadVm,
   ) {
     // query get all sms tracking message
     let qb = createQueryBuilder();
@@ -318,18 +317,30 @@ export class SmsTrackingService {
     qb.andWhere('stm.is_deleted = false');
     const smsTrackingMessage = await qb.getRawMany();
 
-    // query get sms tracking shift by id
-    qb = createQueryBuilder();
-    qb.addSelect('sts.work_from', 'workFrom');
-    qb.addSelect('sts.work_to', 'workTo');
-    qb.from('sms_tracking_shift', 'sts');
-    qb.andWhere('sts.is_deleted = false');
-    qb.andWhere(`sts.sms_tracking_shift_id = '${id}'`);
-    const smsTrackingShift = await qb.getRawOne();
-    if (!smsTrackingShift) {
+    let smsTrackingShift = null;
+    if (payload.date && payload.smsTrackingShiftId) {
+      // query get sms tracking shift on id
+      qb = createQueryBuilder();
+      qb.addSelect('sts.work_from', 'workFrom');
+      qb.addSelect('sts.work_to', 'workTo');
+      qb.from('sms_tracking_shift', 'sts');
+      qb.andWhere('sts.is_deleted = false');
+      qb.andWhere(`sts.sms_tracking_shift_id = '${payload.smsTrackingShiftId}'`);
+      smsTrackingShift = await qb.getRawOne();
+      if (!smsTrackingShift) {
+        RequestErrorService.throwObj(
+          {
+            message: 'Sms Tracking Shift tidak ditemukan',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    } else if (payload.awbNumber) {
+      payload.awbNumber = payload.awbNumber.replace(' ', '');
+    } else {
       RequestErrorService.throwObj(
         {
-          message: 'Sms Tracking Shift tidak ditemukan',
+          message: 'Masukkan date dan sms_tracking_shift_id atau hanya string Awb Number',
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -337,24 +348,24 @@ export class SmsTrackingService {
 
     const listValid = [];
     const listInvalid = [];
-    let header = [];
+    const header = [];
     let temp = null;
-    let data = [];
-    let maxRowPerSheet = 65000;
+    const data = [];
+    const maxRowPerSheet = 65000;
     let currIdxSheet = 0;
 
     // handle multiple sheet for large data
     do {
-      temp = await this.getDataExcel(smsTrackingShift, smsTrackingMessage, date, currIdxSheet * maxRowPerSheet, maxRowPerSheet);
+      temp = await this.getDataExcel(smsTrackingShift, smsTrackingMessage, payload);
       data.push(temp);
       currIdxSheet++;
     }
     while (temp.length == maxRowPerSheet);
 
     // mapping data to row excel
-    data.map(function (data1, index) {
-      data1.map(function (detail) {
-        let content = {};
+    data.map(function(data1, index) {
+      data1.map(function(detail) {
+        const content = {};
         if (detail.sentTo === 'Sender') {
           if (detail.statusPhone === 'valid') {
             content['Waybill Number'] = detail.waybill;
@@ -378,9 +389,9 @@ export class SmsTrackingService {
           }
         } else if (detail.sentTo === 'Recipient') {
           if (detail.statusPhone === 'valid') {
-            content[header[0]] = detail.awbStatusName;
-            content[header[1]] = detail.recipientPhone;
-            content[header[2]] = detail.note;
+            content['Waybill Number'] = detail.awbStatusName;
+            content['Phone'] = detail.recipientPhone;
+            content['Name of Recipient'] = detail.note;
             listValid[index] = [];
             listValid[index].push(content);
           } else {
@@ -405,39 +416,39 @@ export class SmsTrackingService {
     // NOTE: create excel using unique name
     const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.xlsx';
     try {
-      // NOTE: create now workbok for storing excel rows
-      // response passed through express response
-      const newWB = xlsx.utils.book_new();
-      listValid.map(function (detail, index) {
-        const newWS = xlsx.utils.json_to_sheet(detail);
-        xlsx.utils.book_append_sheet(newWB, newWS, (index == 0 ? date : `${date}(${index + 1}`));
-      });
-      const newWS2 = xlsx.utils.json_to_sheet(listInvalid);
-      xlsx.utils.book_append_sheet(newWB, newWS2, 'failed');
-      xlsx.writeFile(newWB, fileName);
+          // NOTE: create now workbok for storing excel rows
+          // response passed through express response
+          const newWB = xlsx.utils.book_new();
+          listValid.map(function(detail, index) {
+            const newWS = xlsx.utils.json_to_sheet(detail);
+            xlsx.utils.book_append_sheet(newWB, newWS, (index == 0 ? payload.date : `${payload.date}(${index + 1}`));
+          });
+          const newWS2 = xlsx.utils.json_to_sheet(listInvalid);
+          xlsx.utils.book_append_sheet(newWB, newWS2, 'failed');
+          xlsx.writeFile(newWB, fileName);
 
-      const filestream = fs.createReadStream(fileName);
-      const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          const filestream = fs.createReadStream(fileName);
+          const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
-      res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
-      res.setHeader('Content-type', mimeType);
-      filestream.pipe(res);
-    } catch (error) {
-      RequestErrorService.throwObj(
-        {
-          message: 'error ketika download excel sms-tracking',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    } finally {
-      if (fs.existsSync(fileName)) {
-        fs.unlinkSync(fileName);
-      }
-    }
+          res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
+          res.setHeader('Content-type', mimeType);
+          filestream.pipe(res);
+        } catch (error) {
+          RequestErrorService.throwObj(
+            {
+              message: 'error ketika download excel sms-tracking',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        } finally {
+          if (fs.existsSync(fileName)) {
+            fs.unlinkSync(fileName);
+          }
+        }
   }
 
-  static async getDataExcel(smsTrackingShift, smsTrackingMessage, date: string, offset?: number, limit?: number): Promise<any> {
-    const date7DayBefore = moment(date, 'YYYY-MM-DD').subtract(7, 'd')
+  static async getDataExcel(smsTrackingShift, smsTrackingMessage, payload: GenerateReportSmsTrackingPayloadVm, offset?: number, limit?: number): Promise<any> {
+    const date7DayBefore = moment(payload.date, 'YYYY-MM-DD').subtract(7, 'd')
       .format('YYYY-MM-DD');
     const workFromDT = moment(smsTrackingShift.workFrom, 'hh:mm A');
     const workToDT = moment(smsTrackingShift.workTo, 'hh:mm A');
@@ -491,76 +502,80 @@ export class SmsTrackingService {
       'prd.ref_awb_number = awb.ref_awb_number AND prd.is_deleted = false',
     );
 
-    // query filter by shift awb status
-    smsTrackingMessage.forEach(data => {
-      if (data.isRepeatedOver && data.isRepeated) { // filter 7 hari kebelakang
-        qb.orWhere(`(
-          aia.awb_status_id_last = '${data.awbStatusId}' AND
-          aia.updated_time >= '${date7DayBefore} 00:00:00' AND
-          aia.updated_time <= '${date} 23:59:59'
-        )`);
-      } else if (data.isRepeatedOver && !data.isRepeated) { // filter dalam lingkup jam shifting dan 7 hari kebelakang
-        if (workToDT.isAfter(workFromDT)) {
+    if (payload.date) {
+      // query filter by shift awb status
+      smsTrackingMessage.forEach(data => {
+        if (data.isRepeatedOver && data.isRepeated) { // filter 7 hari kebelakang
           qb.orWhere(`(
             aia.awb_status_id_last = '${data.awbStatusId}' AND
             aia.updated_time >= '${date7DayBefore} 00:00:00' AND
-            aia.updated_time <= '${date} 23:59:59' AND
-            CAST(aia.updated_time AS TIME) >= '${smsTrackingShift.workFrom}' AND
-            CAST(aia.updated_time AS TIME) <= '${smsTrackingShift.workTo}'
+            aia.updated_time <= '${payload.date} 23:59:59'
           )`);
-        } else {
-          qb.orWhere(`(
-            aia.awb_status_id_last = '${data.awbStatusId}' AND
-            aia.updated_time >= '${date7DayBefore} 00:00:00' AND
-            aia.updated_time <= '${date} 23:59:59' AND
-            (
-              CAST(aia.updated_time AS TIME) <= '${smsTrackingShift.workFrom}' OR
-              CAST(aia.updated_time AS TIME) >= '${smsTrackingShift.workTo}'
-            )
-          )`);
+        } else if (data.isRepeatedOver && !data.isRepeated) { // filter dalam lingkup jam shifting dan 7 hari kebelakang
+          if (workToDT.isAfter(workFromDT)) {
+            qb.orWhere(`(
+              aia.awb_status_id_last = '${data.awbStatusId}' AND
+              aia.updated_time >= '${date7DayBefore} 00:00:00' AND
+              aia.updated_time <= '${payload.date} 23:59:59' AND
+              CAST(aia.updated_time AS TIME) >= '${smsTrackingShift.workFrom}' AND
+              CAST(aia.updated_time AS TIME) <= '${smsTrackingShift.workTo}'
+            )`);
+          } else {
+            qb.orWhere(`(
+              aia.awb_status_id_last = '${data.awbStatusId}' AND
+              aia.updated_time >= '${date7DayBefore} 00:00:00' AND
+              aia.updated_time <= '${payload.date} 23:59:59' AND
+              (
+                CAST(aia.updated_time AS TIME) <= '${smsTrackingShift.workFrom}' OR
+                CAST(aia.updated_time AS TIME) >= '${smsTrackingShift.workTo}'
+              )
+            )`);
+          }
+        } else if (!data.isRepeatedOver && data.isRepeated) { // filter diluar lingkup jam shifting dan 7 hari kebelakang
+          if (workToDT.isAfter(workFromDT)) {
+            qb.orWhere(`(
+              aia.awb_status_id_last = '${data.awbStatusId}' AND
+              aia.updated_time >= '${date7DayBefore} 00:00:00' AND
+              aia.updated_time <= '${payload.date} 23:59:59' AND
+              CAST(aia.updated_time AS TIME) < '${smsTrackingShift.workFrom}' AND
+              CAST(aia.updated_time AS TIME) > '${smsTrackingShift.workTo}'
+            )`);
+          } else {
+            qb.orWhere(`(
+              aia.awb_status_id_last = '${data.awbStatusId}' AND
+              aia.updated_time >= '${date7DayBefore} 00:00:00' AND
+              aia.updated_time <= '${payload.date} 23:59:59' AND
+              (
+                CAST(aia.updated_time AS TIME) > '${smsTrackingShift.workFrom}' OR
+                CAST(aia.updated_time AS TIME) < '${smsTrackingShift.workTo}'
+              )
+            )`);
+          }
+        } else { // filter hanya dalam lingkup jam shifting pada tanggal request
+          if (workToDT.isAfter(workFromDT)) {
+            qb.orWhere(`(
+              aia.awb_status_id_last = '${data.awbStatusId}' AND
+              aia.updated_time >= '${payload.date} 00:00:00' AND
+              aia.updated_time <= '${payload.date} 23:59:59' AND
+              CAST(aia.updated_time AS TIME) >= '${smsTrackingShift.workFrom}' AND
+              CAST(aia.updated_time AS TIME) <= '${smsTrackingShift.workTo}'
+            )`);
+          } else {
+            qb.orWhere(`(
+              aia.awb_status_id_last = '${data.awbStatusId}' AND
+              aia.updated_time >= '${payload.date} 00:00:00' AND
+              aia.updated_time <= '${payload.date} 23:59:59' AND
+              (
+                CAST(aia.updated_time AS TIME) <= '${smsTrackingShift.workFrom}' OR
+                CAST(aia.updated_time AS TIME) >= '${smsTrackingShift.workTo}'
+              )
+            )`);
+          }
         }
-      } else if (!data.isRepeatedOver && data.isRepeated) { // filter diluar lingkup jam shifting dan 7 hari kebelakang
-        if (workToDT.isAfter(workFromDT)) {
-          qb.orWhere(`(
-            aia.awb_status_id_last = '${data.awbStatusId}' AND
-            aia.updated_time >= '${date7DayBefore} 00:00:00' AND
-            aia.updated_time <= '${date} 23:59:59' AND
-            CAST(aia.updated_time AS TIME) < '${smsTrackingShift.workFrom}' AND
-            CAST(aia.updated_time AS TIME) > '${smsTrackingShift.workTo}'
-          )`);
-        } else {
-          qb.orWhere(`(
-            aia.awb_status_id_last = '${data.awbStatusId}' AND
-            aia.updated_time >= '${date7DayBefore} 00:00:00' AND
-            aia.updated_time <= '${date} 23:59:59' AND
-            (
-              CAST(aia.updated_time AS TIME) > '${smsTrackingShift.workFrom}' OR
-              CAST(aia.updated_time AS TIME) < '${smsTrackingShift.workTo}'
-            )
-          )`);
-        }
-      } else { // filter hanya dalam lingkup jam shifting pada tanggal request
-        if (workToDT.isAfter(workFromDT)) {
-          qb.orWhere(`(
-            aia.awb_status_id_last = '${data.awbStatusId}' AND
-            aia.updated_time >= '${date} 00:00:00' AND
-            aia.updated_time <= '${date} 23:59:59' AND
-            CAST(aia.updated_time AS TIME) >= '${smsTrackingShift.workFrom}' AND
-            CAST(aia.updated_time AS TIME) <= '${smsTrackingShift.workTo}'
-          )`);
-        } else {
-          qb.orWhere(`(
-            aia.awb_status_id_last = '${data.awbStatusId}' AND
-            aia.updated_time >= '${date} 00:00:00' AND
-            aia.updated_time <= '${date} 23:59:59' AND
-            (
-              CAST(aia.updated_time AS TIME) <= '${smsTrackingShift.workFrom}' OR
-              CAST(aia.updated_time AS TIME) >= '${smsTrackingShift.workTo}'
-            )
-          )`);
-        }
-      }
-    });
+      });
+    } else if (payload.awbNumber) {
+      qb.andWhere(`awb.awb_number IN (${payload.awbNumber})`);
+    }
     if (limit && offset != 0) {
       qb.limit(limit);
       qb.offset(offset);

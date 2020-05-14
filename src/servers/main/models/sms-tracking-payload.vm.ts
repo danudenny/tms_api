@@ -125,10 +125,15 @@ export class GenerateReportSmsTrackingPayloadVm {
   @ApiModelProperty({
     example: '2020-02-28',
   })
-  date: string;
+  date?: string;
 
   @ApiModelProperty({
     example: 20020003,
   })
-  smsTrackingShiftId: number;
+  smsTrackingShiftId?: number;
+
+  @ApiModelProperty({
+    example: '123456789101, 234567892387,213234568091',
+  })
+  awbNumber?: string;
 }
