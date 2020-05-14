@@ -1,6 +1,4 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
-import { IsDefined } from 'class-validator';
-import { BaseMetaResponseVm } from 'src/shared/models/base-meta-response.vm';
 
 // tslint:disable-next-line:class-name
 export class RolePodManualResponseVm {
@@ -17,6 +15,8 @@ export class RolePodManualResponseGetDataVm {
 
   @ApiModelProperty()
   isBulky: boolean;
+  @ApiModelProperty()
+  isReturn: boolean;
 
 }
 
