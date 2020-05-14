@@ -7,4 +7,7 @@ export class TrackingNoteResponseVm {
 
   @ApiModelProperty({ type: () => [TrackingNoteVm] })
   data: TrackingNoteVm[];
+
+  @ApiModelProperty()
+  message: string;
 }
