@@ -382,6 +382,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
     payload.fieldResolverMap['branchScanId'] = 't1.branch_id';
     payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
+
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -403,13 +404,7 @@ export class WebDeliveryInService {
 
     q.selectRaw(
       [
-        `CASE LENGTH (CAST(t2.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t1.bag_number,'00',t2.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t1.bag_number,'0',t2.bag_seq)
-          ELSE
-            CONCAT (t1.bag_number,t2.bag_seq) END`,
+        `CONCAT(t1.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`,
         'bagNumberCode',
       ],
       ['t1.bag_number', 'bagNumber'],
@@ -611,13 +606,7 @@ export class WebDeliveryInService {
       ['t5.awb_status_title', 'awbStatusTitle'],
       ['t5.is_problem', 'isProblem'],
       [
-        `CASE LENGTH (CAST(t6.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t7.bag_number,'00',t6.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t7.bag_number,'0',t6.bag_seq)
-          ELSE
-            CONCAT (t7.bag_number,t6.bag_seq) END`,
+        `CONCAT(t7.bag_number, LPAD(t6.bag_seq::text, 3, '0'))`,
         'bagNumber',
       ],
       ['t8.branch_name', 'branchName'],
