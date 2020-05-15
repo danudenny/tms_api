@@ -19,7 +19,7 @@ import { CustomCounterCode } from '../../../../../shared/services/custom-counter
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
 import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
-import { PackageBackupPayloadVm } from '../../../models/gabungan-payload.vm';
+import { PackageBackupPayloadVm, PackagePayloadVm } from '../../../models/gabungan-payload.vm';
 import {
   AwbPackageDetail,
   PackageAwbResponseVm,
@@ -34,7 +34,7 @@ export class V1PackageService {
   constructor() {}
 
   static async awbPackage(
-    payload: PackageBackupPayloadVm,
+    payload: PackagePayloadVm,
   ): Promise<PackageAwbResponseVm> {
     const regexNumber = /^[0-9]+$/;
     const value = payload.value;
@@ -56,33 +56,34 @@ export class V1PackageService {
       result.bagItemId = dataResult.bagItemId;
       result.bagSeq = dataResult.bagSeq;
       result.weight = dataResult.weight;
+
     } else if (value === '*SELESAI' || value === '*selesai') {
       await this.onFinish(payload);
     } else {
       // scan awb number or district code
       if (regexNumber.test(value) && valueLength === 12) {
         //  scan resi
-        if (!payload.districtId && !payload.bagNumber) {
-          RequestErrorService.throwObj(
-            {
-              message: 'Masukan kode kecamatan terlebih dahulu',
-            },
-            HttpStatus.BAD_REQUEST,
-          );
-        }
+      if (!payload.branchId && !payload.bagNumber) {
+        throw new BadRequestException(
+          'Masukan kode gerai terlebih dahulu',
+        );
+      }
 
-        const scanResult = await this.awbScan(payload);
-        result.dataBag = scanResult.dataBag;
-        result.bagNumber = scanResult.bagNumber;
-        result.branchId = scanResult.branchId;
-        result.branchName = scanResult.branchName;
-        result.branchCode = scanResult.branchCode;
-        result.data = scanResult.data;
-        result.bagItemId = scanResult.bagItemId;
-        result.isAllow = scanResult.isAllow;
-        result.podScanInHubId = scanResult.podScanInHubId;
-        result.bagSeq = scanResult.bagSeq;
-        result.bagWeight = scanResult.bagWeight;
+      // TODO: handle first scan and create bag number
+      const scanResult = await this.awbScan(payload);
+
+      result.dataBag = scanResult.dataBag;
+      result.bagNumber = scanResult.bagNumber;
+      result.branchId = scanResult.branchId;
+      result.branchName = scanResult.branchName;
+      result.branchCode = scanResult.branchCode;
+      result.data = scanResult.data;
+      result.bagItemId = scanResult.bagItemId;
+      result.isAllow = scanResult.isAllow;
+      result.podScanInHubId = scanResult.podScanInHubId;
+      result.bagSeq = scanResult.bagSeq;
+      result.bagWeight = scanResult.bagWeight;
+
       } else {
         // search branch code
         const branch = await Branch.findOne({
@@ -268,15 +269,20 @@ export class V1PackageService {
     }
   }
 
-  private static async onFinish(payload): Promise<any> {
+  private static async onFinish(payload): Promise<boolean> {
     const authMeta = AuthService.getAuthData();
     const podScanInHub = await PodScanInHub.findOne({
       where: { podScanInHubId: payload.podScanInHubId },
     });
-    podScanInHub.transactionStatusId = 200;
-    podScanInHub.updatedTime = moment().toDate();
-    podScanInHub.userIdUpdated = authMeta.userId;
-    podScanInHub.save();
+    if (podScanInHub) {
+      podScanInHub.transactionStatusId = 200;
+      podScanInHub.updatedTime = moment().toDate();
+      podScanInHub.userIdUpdated = authMeta.userId;
+      podScanInHub.save();
+      return true;
+    } else {
+      throw new BadRequestException('Data tidak ditemukan!');
+    }
   }
 
   private static async createBagNumber(payload): Promise<any> {
