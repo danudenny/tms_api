@@ -376,6 +376,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchId'] = 't3.branch_id';
     payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
     payload.fieldResolverMap['bagNumberCode'] = '"bagNumberCode"';
+    payload.fieldResolverMap['totalAwb'] = '"totalAwb"';
     payload.fieldResolverMap['representativeFrom'] =
       't1.ref_representative_code';
     payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
