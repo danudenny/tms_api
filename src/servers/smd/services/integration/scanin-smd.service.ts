@@ -13,6 +13,7 @@ import { BagItemHistory } from 'src/shared/orm-entity/bag-item-history';
 import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm } from '../../models/scanin-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 
 @Injectable()
 export class ScaninSmdService {
@@ -108,6 +109,9 @@ export class ScaninSmdService {
           if (isNew == true) {
             paramTotalSeq = 1;
             paramTotalBagWeight = weight;
+            // const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeRandom(
+            //   timeNow,
+            // );
             const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
             paramReceivedBagId = await this.createReceivedBag(
               dataReceivedBagCode,
@@ -346,7 +350,8 @@ export class ScaninSmdService {
       : null;
   }
 
-  public; static async getDataReceivedBagCode(receivedBagTime: any): Promise<any> {
+  // TODO: need to replace
+  public static async getDataReceivedBagCode(receivedBagTime: any): Promise<any> {
     let receivedBagCode = '';
     let prefix = '';
     let lastNumber = 0;
