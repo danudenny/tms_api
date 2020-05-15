@@ -86,7 +86,7 @@ export class CustomCounterCode {
     return prefix + randomCode.toString();
   }
 
-  public static async receivedBagCodeCounter(dateTime: string, digit: number = 5) {
+  public static async receivedBagCodeCounter(dateTime: Date, digit: number = 5) {
     const prefix = `TB/${moment(dateTime).format('YYMM')}/`;
     const last_number = await this.getLastNumber(prefix);
     return prefix + last_number.toString().padStart(digit, '0');

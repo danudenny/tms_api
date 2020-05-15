@@ -40,8 +40,6 @@ export class ScanInBaggingVm {
 
   @ApiModelProperty({type: () => [ScanInBagScannedVm]})
   data_bag_scanned: ScanInBagScannedVm[];
-  // @ApiModelProperty()
-  // data_bag_scanned: object[];
 
 }
 

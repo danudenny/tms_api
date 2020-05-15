@@ -31,10 +31,6 @@ export class ScaninSmdService {
       const paramSeq = await paramBagSeq * 1;
       const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       if (paramBagNumber == null || paramBagNumber == undefined) {
-        // result = {
-        //   code: '422',
-        //   message: 'Bag Number Not Found',
-        // };
         throw new BadRequestException('Bag Number Not Found');
       } else {
         const bag = await Bag.findOne({
@@ -109,10 +105,8 @@ export class ScaninSmdService {
           if (isNew == true) {
             paramTotalSeq = 1;
             paramTotalBagWeight = weight;
-            // const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeRandom(
-            //   timeNow,
-            // );
-            const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
+            const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
+            // const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
             paramReceivedBagId = await this.createReceivedBag(
               dataReceivedBagCode,
               payload.employee_id,
