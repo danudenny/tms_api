@@ -448,11 +448,6 @@ export class SmsTrackingService {
   }
 
   static async getDataExcel(smsTrackingShift, smsTrackingMessage, payload: GenerateReportSmsTrackingPayloadVm, offset?: number, limit?: number): Promise<any> {
-    const date7DayBefore = moment(payload.date, 'YYYY-MM-DD').subtract(7, 'd')
-      .format('YYYY-MM-DD');
-    const workFromDT = moment(smsTrackingShift.workFrom, 'hh:mm A');
-    const workToDT = moment(smsTrackingShift.workTo, 'hh:mm A');
-
     // query get data for excel
     const qb = createQueryBuilder();
     qb.addSelect('awb.awb_number', 'waybill'); // waybill
@@ -503,6 +498,10 @@ export class SmsTrackingService {
     );
 
     if (payload.date) {
+      const date7DayBefore = moment(payload.date, 'YYYY-MM-DD').subtract(7, 'd')
+      .format('YYYY-MM-DD');
+      const workFromDT = moment(smsTrackingShift.workFrom, 'hh:mm A');
+      const workToDT = moment(smsTrackingShift.workTo, 'hh:mm A');
       // query filter by shift awb status
       smsTrackingMessage.forEach(data => {
         if (data.isRepeatedOver && data.isRepeated) { // filter 7 hari kebelakang
@@ -574,7 +573,12 @@ export class SmsTrackingService {
         }
       });
     } else if (payload.awbNumber) {
-      qb.andWhere(`awb.awb_number IN (${payload.awbNumber})`);
+      let id = '';
+      const ids = payload.awbNumber.split(',');
+      ids.map(function(item) {
+        id += id ? ',\'' + item + '\'' : '\'' + item + '\'';
+      });
+      qb.andWhere(`awb.awb_number IN (${id})`);
     }
     if (limit && offset != 0) {
       qb.limit(limit);
