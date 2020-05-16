@@ -10,15 +10,24 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm } from '../../models/scanin-smd.response.vm';
+import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm } from '../../models/scanin-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { WebScanInHubSortListResponseVm } from '../../../main/models/web-scanin-list.response.vm';
 
 @Injectable()
 export class ScaninSmdService {
   static async scanInBag(payload: any): Promise<any> {
     // const result = {};
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
     const result = new ScanInSmdBagResponseVm();
     let errCode = 0;
     let errMessage ;
@@ -48,7 +57,7 @@ export class ScaninSmdService {
         } else {
           paramBagId = await this.createBag(
             paramBagNumber,
-            payload.user_id,
+            authMeta.userId,
             timeNow,
           );
         }
@@ -59,7 +68,7 @@ export class ScaninSmdService {
             br.branch_name as branch_name_scan,
             u.username as username_scan
           FROM bag_item bi
-          LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bi.bag_item_history_id AND bih.branch_id = ${payload.branch_id} AND bih.is_deleted = false
+          LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bi.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
           LEFT JOIN branch br ON br.branch_id = bih.branch_id AND br.is_deleted = false
           LEFT JOIN users u ON u.user_id = bih.user_id AND u.is_deleted = false
           WHERE
@@ -109,9 +118,9 @@ export class ScaninSmdService {
             // const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
             paramReceivedBagId = await this.createReceivedBag(
               dataReceivedBagCode,
-              payload.employee_id,
-              payload.user_id,
-              payload.branch_id,
+              authMeta.employeeId,
+              authMeta.userId,
+              permissonPayload.branchId,
               paramTotalSeq,
               paramTotalBagWeight,
               timeNow,
@@ -124,7 +133,7 @@ export class ScaninSmdService {
               {
                 totalSeq: paramTotalSeq,
                 totalBagWeight: paramTotalBagWeight,
-                userIdUpdated: payload.user_id,
+                userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
               },
             );
@@ -136,7 +145,7 @@ export class ScaninSmdService {
             paramBagSeq,
             payload.bag_item_number,
             weight,
-            payload.user_id,
+            authMeta.userId,
           );
 
           if (exist == false) {
@@ -144,7 +153,7 @@ export class ScaninSmdService {
               paramSeq,
               weight,
               paramBagId,
-              payload.user_id,
+              authMeta.userId,
             );
           } else {
             await BagItem.update(
@@ -153,20 +162,20 @@ export class ScaninSmdService {
                 bagSeq: paramSeq,
                 weight,
                 bagId: paramBagId,
-                userIdUpdated: payload.user_id,
+                userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
               },
             );
           }
           const resultbagItemHistory = BagItemHistory.create();
           resultbagItemHistory.bagItemId = paramBagItemId.toString();
-          resultbagItemHistory.userId = payload.user_id;
-          resultbagItemHistory.branchId = payload.branch_id;
+          resultbagItemHistory.userId = authMeta.userId.toString();
+          resultbagItemHistory.branchId = permissonPayload.branchId.toString();
           resultbagItemHistory.historyDate = moment().toDate();
           resultbagItemHistory.bagItemStatusId = '2000';
-          resultbagItemHistory.userIdCreated = payload.user_id;
+          resultbagItemHistory.userIdCreated = authMeta.userId;
           resultbagItemHistory.createdTime = moment().toDate();
-          resultbagItemHistory.userIdUpdated = payload.user_id;
+          resultbagItemHistory.userIdUpdated = authMeta.userId;
           resultbagItemHistory.updatedTime = moment().toDate();
           await BagItemHistory.insert(resultbagItemHistory);
           console.log(resultbagItemHistory);
@@ -186,6 +195,7 @@ export class ScaninSmdService {
         data.push({
           show_number: showNumber,
           id: paramBagNumber + paramBagSeq,
+          received_bag_id: paramReceivedBagId,
         });
         result.statusCode = HttpStatus.OK;
         result.message = message;
@@ -201,6 +211,8 @@ export class ScaninSmdService {
 
   static async scanInBagging(payload: any): Promise<any> {
     const result = new ScanInSmdBaggingResponseVm();
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     if (payload.bag_item_number.length > 15) {
       const rawQueryBag = `
         SELECT
@@ -209,7 +221,7 @@ export class ScaninSmdService {
         INNER JOIN do_pod doPod ON doPod.do_pod_id=doPodDetailBag.do_pod_id AND (doPod.is_deleted = 'false')
         INNER JOIN bag_item bagItem ON bagItem.bag_item_id=doPodDetailBag.bag_item_id AND (bagItem.is_deleted = 'false')
         LEFT JOIN bag bag ON bag.bag_id=bagItem.bag_id AND (bag.is_deleted = 'false')
-        LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${payload.branch_id} AND bih.is_deleted = false
+        LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
         WHERE
           doPod.do_pod_code = '${payload.bag_item_number}' AND
           (bih.bag_item_status_id = 1000 OR bih.bag_item_status_id = 500 OR bih.bag_item_status_id IS NULL)
@@ -224,7 +236,7 @@ export class ScaninSmdService {
         INNER JOIN do_pod doPod ON doPod.do_pod_id=doPodDetailBag.do_pod_id AND (doPod.is_deleted = 'false')
         INNER JOIN bag_item bagItem ON bagItem.bag_item_id=doPodDetailBag.bag_item_id AND (bagItem.is_deleted = 'false')
         LEFT JOIN bag bag ON bag.bag_id=bagItem.bag_id AND (bag.is_deleted = 'false')
-        LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${payload.branch_id} AND bih.is_deleted = false
+        LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
         WHERE
           doPod.do_pod_code =  '${payload.bag_item_number}' AND
           (bih.bag_item_status_id <> 1000 AND bih.bag_item_status_id <> 500 AND bih.bag_item_status_id IS NOT NULL)
@@ -247,6 +259,142 @@ export class ScaninSmdService {
     } else {
       throw new BadRequestException('Bag length must > 15');
     }
+  }
+
+  static async findScanInList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanInListResponseVm> {
+    // ScanInListResponseVm
+    payload.fieldResolverMap['baggingDateTime'] = 'b.created_time';
+    payload.fieldResolverMap['branchId'] = 'bhin.branch_id';
+
+    payload.globalSearchFields = [
+      {
+        field: 'baggingDateTime',
+      },
+      {
+        field: 'branchId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(Bag, 'b');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['b.bag_id', 'bag_id'],
+      [`CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'bag_number_seq'],
+      [`TO_CHAR(b.created_time, 'dd-mm-YYYY HH24:MI:SS')`, 'bagging_datetime'],
+      [`CASE
+          WHEN bhin.history_date IS NULL THEN 'Belum Scan IN'
+          ELSE CONCAT(TO_CHAR(bhin.history_date, 'dd-mm-YYYY HH24:MI:SS'),' - ',bb.branch_name)
+        END`, 'scan_in_datetime'],
+      [`CASE
+          WHEN b.representative_id_to IS NULL then 'Belum Upload'
+          ELSE r.representative_name
+        END`, 'representative_name'],
+      ['(SELECT count(bag_item_id) FROM bag_item bit where bit.bag_id = b.bag_id GROUP BY bit.bag_id)', 'tot_resi'],
+      [`CONCAT(bi.weight::numeric(10,2), ' kg')`, 'weight'],
+      [`CONCAT(
+          CASE
+            WHEN bi.weight > 10 THEN bi.weight
+            ELSE 10
+          END,' kg')`, 'weight_accumulative'],
+
+    );
+
+    q.innerJoin(e => e.bagItems, 'bi', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.branch, 'br', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoinRaw(
+      'bag_item_history',
+      'bhin',
+      'bhin.bag_item_id = bi.bag_item_id AND bhin.bag_item_status_id = 2000 AND bhin.is_deleted = FALSE',
+    );
+    q.leftJoin(e => e.representative, 'r', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoinRaw(
+      'branch',
+      'bb',
+      'bhin.branch_id=bb.branch_id and bb.is_deleted = FALSE ',
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhereRaw('bhin.bag_item_status_id = 2000');
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new ScanInListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+
+    // const q = payload.buildQueryBuilder();
+    // q.select('b.bag_id', 'bag_id')
+    // .addSelect(`CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'bag_number_seq')
+    // .addSelect('br.branch_name', 'branch_name')
+    // .addSelect(`TO_CHAR(b.created_time, 'dd-mm-YYYY HH24:MI:SS')`, 'bagging_datetime')
+    // .addSelect(`CASE
+    //               WHEN bhin.history_date IS NULL THEN 'Belum Scan IN'
+    //               ELSE CONCAT(TO_CHAR(bhin.history_date, 'dd-mm-YYYY HH24:MI:SS'),' - ',bb.branch_name)
+    //             END`, 'scan_in_datetime')
+    // .addSelect(`CASE
+    //               WHEN b.representative_id_to IS NULL then 'Belum Upload'
+    //               ELSE r.representative_name
+    //             END`, 'representative_name')
+    // .addSelect('(SELECT count(bag_item_id) FROM bag_item bit where bit.bag_id = b.bag_id GROUP BY bit.bag_id)', 'tot_resi')
+    // .addSelect(`CONCAT(bi.weight::numeric(10,2), ' kg')`, 'weight')
+    // .addSelect(`CONCAT(
+    //               CASE
+    //                 WHEN bi.weight > 10 THEN bi.weight
+    //                 ELSE 10
+    //               END,' kg')`, 'weight_accumulative')
+    // .from('bag', 'b')
+    // .innerJoin(
+    //   'bag_item',
+    //   'bi',
+    //   'b.bag_id = bi.bag_id AND bi.is_deleted = FALSE',
+    // )
+    // .leftJoin(
+    //   'branch',
+    //   'br',
+    //   'br.branch_id = b.branch_id',
+    // )
+    // .leftJoin(
+    //   'bag_item_history',
+    //   'bhin',
+    //   'bhin.bag_item_id = bi.bag_item_id AND bhin.bag_item_status_id = 2000 AND bhin.is_deleted = FALSE',
+    // )
+    // .leftJoin(
+    //   'representative',
+    //   'r',
+    //   'r.representative_id = b.representative_id_to AND r.is_deleted = FALSE',
+    // )
+    // .leftJoin(
+    //   'branch',
+    //   'bb',
+    //   'bhin.branch_id=bb.branch_id and bb.is_deleted = FALSE ',
+    // )
+    // .where('bhin.bag_item_status_id = 2000')
+    // .andWhere('b.is_deleted = false');
+
+    // const total = await QueryBuilderService.count(q, '1');
+    // payload.applyRawPaginationToQueryBuilder(q);
+    // const data = await q.getRawMany();
+    // console.log(data);
+
+    // const result = new ScanInListResponseVm();
+    // result.data = data;
+    // result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    // return result;
   }
 
   private static async createBag(
