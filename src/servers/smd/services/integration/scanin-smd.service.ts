@@ -20,6 +20,7 @@ import { QueryBuilderService } from '../../../../shared/services/query-builder.s
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { WebScanInHubSortListResponseVm } from '../../../main/models/web-scanin-list.response.vm';
+import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 
 @Injectable()
 export class ScaninSmdService {
@@ -77,7 +78,7 @@ export class ScaninSmdService {
             bi.is_deleted = false
         `;
         const resultData = await RawQueryService.query(rawQuery);
-        if (resultData) {
+        if (resultData.length > 0) {
           exist = true;
           const branchNameScan = resultData[0].branch_name_scan;
           const usernameScan = resultData[0].username_scan;
@@ -172,7 +173,7 @@ export class ScaninSmdService {
           resultbagItemHistory.userId = authMeta.userId.toString();
           resultbagItemHistory.branchId = permissonPayload.branchId.toString();
           resultbagItemHistory.historyDate = moment().toDate();
-          resultbagItemHistory.bagItemStatusId = '2000';
+          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_BRANCH.toString();
           resultbagItemHistory.userIdCreated = authMeta.userId;
           resultbagItemHistory.createdTime = moment().toDate();
           resultbagItemHistory.userIdUpdated = authMeta.userId;
@@ -243,7 +244,7 @@ export class ScaninSmdService {
         GROUP BY bagnumber
         `;
       const resultDataBagScanned = await RawQueryService.query(rawQueryBagScanned);
-      if (resultDataBag) {
+      if (resultDataBag.length > 0) {
         const data = [];
         data.push({
           data_bag: resultDataBag,
