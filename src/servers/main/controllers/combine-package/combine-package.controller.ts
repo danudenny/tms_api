@@ -2,8 +2,8 @@ import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { GabunganPayloadVm, PackagePayloadVm } from '../../models/gabungan-payload.vm';
-import { GabunganFindAllResponseVm, PackageAwbResponseVm } from '../../models/gabungan.response.vm';
+import { PackagePayloadVm } from '../../models/gabungan-payload.vm';
+import { PackageAwbResponseVm } from '../../models/gabungan.response.vm';
 import { PackageService } from '../../services/combine-package/package.services';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 

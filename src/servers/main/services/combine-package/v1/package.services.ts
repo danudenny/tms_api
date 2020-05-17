@@ -28,6 +28,7 @@ import { AwbService } from '../../v1/awb.service';
 import { BagService } from '../../v1/bag.service';
 import moment = require('moment');
 import { Branch } from '../../../../../shared/orm-entity/branch';
+import { OpenSortirCombineVM, PackageBagDetailVM } from '../../../models/package-payload.vm';
 // //#endregion
 
 export class V1PackageService {
@@ -63,26 +64,26 @@ export class V1PackageService {
       // scan awb number or district code
       if (regexNumber.test(value) && valueLength === 12) {
         //  scan resi
-      if (!payload.branchId && !payload.bagNumber) {
-        throw new BadRequestException(
-          'Masukan kode gerai terlebih dahulu',
-        );
-      }
+        if (!payload.branchId && !payload.bagNumber) {
+          throw new BadRequestException(
+            'Masukan kode gerai terlebih dahulu',
+          );
+        }
 
-      // TODO: handle first scan and create bag number
-      const scanResult = await this.awbScan(payload);
+        // TODO: handle first scan and create bag number
+        const scanResult = await this.awbScan(payload);
 
-      result.dataBag = scanResult.dataBag;
-      result.bagNumber = scanResult.bagNumber;
-      result.branchId = scanResult.branchId;
-      result.branchName = scanResult.branchName;
-      result.branchCode = scanResult.branchCode;
-      result.data = scanResult.data;
-      result.bagItemId = scanResult.bagItemId;
-      result.isAllow = scanResult.isAllow;
-      result.podScanInHubId = scanResult.podScanInHubId;
-      result.bagSeq = scanResult.bagSeq;
-      result.bagWeight = scanResult.bagWeight;
+        result.dataBag = scanResult.dataBag;
+        result.bagNumber = scanResult.bagNumber;
+        result.branchId = scanResult.branchId;
+        result.branchName = scanResult.branchName;
+        result.branchCode = scanResult.branchCode;
+        result.data = scanResult.data;
+        result.bagItemId = scanResult.bagItemId;
+        result.isAllow = scanResult.isAllow;
+        result.podScanInHubId = scanResult.podScanInHubId;
+        result.bagSeq = scanResult.bagSeq;
+        result.bagWeight = scanResult.bagWeight;
 
       } else {
         // search branch code
@@ -96,7 +97,7 @@ export class V1PackageService {
           result.branchName = branch.branchName.trim();
           result.branchCode = branch.branchCode.trim();
         } else {
-          throw new BadRequestException('Kode kecamatan tidak ditemukan');
+          throw new BadRequestException('Kode gerai tidak ditemukan');
         }
       }
     }
@@ -184,18 +185,8 @@ export class V1PackageService {
 
   // private ==================================================================
   private static async openSortirCombine(
-    payload,
-  ): Promise<{
-    bagNumber: string;
-    branchId: number;
-    branchName: string;
-    podScanInHubId: string;
-    dataBag: AwbPackageDetail[];
-    bagItemId: number;
-    branchCode: string;
-    bagSeq: number;
-    weight: number;
-  }> {
+    payload: PackagePayloadVm,
+  ): Promise<OpenSortirCombineVM> {
     const value = payload.value;
     const permissonPayload = AuthService.getPermissionTokenPayload();
     // open package combine
@@ -204,12 +195,7 @@ export class V1PackageService {
     const bagDetail = await BagService.validBagNumber(bagNumber);
 
     if (!bagDetail) {
-      RequestErrorService.throwObj(
-        {
-          message: 'No gabungan sortir tidak ditemukan',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('No gabungan sortir tidak ditemukan');
     }
 
     const qb = createQueryBuilder();
@@ -248,6 +234,7 @@ export class V1PackageService {
     qb.andWhere('a.branch_id = :branchId', {
       branchId: permissonPayload.branchId,
     });
+
     const data = await qb.getRawMany();
     if (data.length) {
       const dataResult = {
@@ -269,16 +256,19 @@ export class V1PackageService {
     }
   }
 
-  private static async onFinish(payload): Promise<boolean> {
+  private static async onFinish(payload: PackagePayloadVm): Promise<boolean> {
     const authMeta = AuthService.getAuthData();
     const podScanInHub = await PodScanInHub.findOne({
       where: { podScanInHubId: payload.podScanInHubId },
     });
     if (podScanInHub) {
-      podScanInHub.transactionStatusId = 200;
-      podScanInHub.updatedTime = moment().toDate();
-      podScanInHub.userIdUpdated = authMeta.userId;
-      podScanInHub.save();
+      await PodScanInHub.update({
+        podScanInHubId: payload.podScanInHubId,
+      }, {
+        transactionStatusId: 200,
+        updatedTime: moment().toDate(),
+        userIdUpdated: authMeta.userId,
+      });
       return true;
     } else {
       throw new BadRequestException('Data tidak ditemukan!');
@@ -485,57 +475,51 @@ export class V1PackageService {
     return result;
   }
 
-  private static async awbScan(payload): Promise<any> {
-    const value = payload.value;
-    const result = new Object();
-    const awbItemAttr = await AwbService.validAwbNumber(value);
+  private static async awbScan(payload: PackagePayloadVm): Promise<any> {
+    const awbNumber = payload.value;
     const branchId: number = payload.branchId;
-    let bagNumber: number = payload.bagNumber;
-    let bag = null;
+    const result = new Object();
+    const troubleDesc: String[] = [];
+
+    let bag: BagItem = null;
+    let branch: Branch = null;
+    let branchName = null;
+    let branchCode = null;
+
+    let bagItemId: number = payload.bagItemId;
+    let bagNumber: string = payload.bagNumber;
     let podScanInHubId: string = payload.podScanInHubId;
-    let bagItemId: string = payload.bagItemId;
+
     let isTrouble: boolean = false;
     let isAllow: boolean = true;
-    const troubleDesc: String[] = [];
     let districtId = null;
-    let branch = null;
 
+    const awbItemAttr = await AwbService.validAwbNumber(awbNumber);
     if (!awbItemAttr) {
-      RequestErrorService.throwObj(
-        {
-          message: 'No resi tidak ditemukan / tidak valid',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('No resi tidak ditemukan / tidak valid');
     } else if (awbItemAttr.isPackageCombined) {
-      RequestErrorService.throwObj(
-        {
-          message: 'Nomor resi sudah digabung sortir',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('Nomor resi sudah digabung sortir');
     }
-
-    if (Number(awbItemAttr.awbStatusIdLast) !== 2600) {
+    // check awb status
+    if (awbItemAttr.awbStatusIdLast !== 2600) {
       isTrouble = true;
       troubleDesc.push('Awb status tidak sesuai');
     }
 
+    // NOTE: check destination awb with awb.toId
     const awb = await Awb.findOne({
-      where: { awbNumber: value, isDeleted: false },
+      where: { awbNumber, isDeleted: false },
     });
-
     if (awb.toId) {
-      branch = await Branch.findOne({
-        where: {
-          branchId,
-        },
-      });
+      // use cache data
+      branch = await Branch.findOne({ cache: true, where: { branchId } });
       // NOTE: Validate branch
       if (!branch) {
-        troubleDesc.push('Gerai tidak ditemukan');
         isAllow = false;
+        troubleDesc.push('Gerai tidak ditemukan');
       } else {
+        branchCode = branch.branchCode;
+        branchName = branch.branchName;
         districtId = branch.districtId;
       }
     } else {
@@ -544,10 +528,13 @@ export class V1PackageService {
     }
 
     if (isAllow) {
+      // use cache data
       const districtDetail = await District.findOne({
-        where: { isDeleted: false, districtId },
+        cache: true,
+        where: { districtId, isDeleted: false },
       });
 
+      // construct data detail
       const detail = {
         awbNumber: awb.awbNumber,
         totalWeightRealRounded: awb.totalWeightRealRounded,
@@ -571,6 +558,7 @@ export class V1PackageService {
         branchDetail: branch,
       });
 
+      // get data bag / create new data bag
       if (payload.bagNumber) {
         bag = await this.insertDetailAwb(payload);
       } else {
@@ -589,7 +577,7 @@ export class V1PackageService {
         };
         await this.insertAwbTrouble(dataTrouble);
       }
-
+      // construct response data
       assign(result, {
         bagNumber,
         isAllow,
@@ -597,11 +585,12 @@ export class V1PackageService {
         bagItemId,
         branchId,
         data: detail,
-        branchName: branch ? branch.branchName : null,
-        branchCode: branch ? branch.branchCode : null,
+        branchName,
+        branchCode,
         bagWeight: bag.weight,
         bagSeq: bag.bagSeq,
       });
+
     } else {
       assign(result, {
         isAllow,
@@ -610,8 +599,8 @@ export class V1PackageService {
         bagItemId,
         data: [],
         branchId,
-        branchName: branch ? branch.branchName : null,
-        branchCode: branch ? branch.branchCode : null,
+        branchName,
+        branchCode,
         bagWeight: null,
         bagSeq: null,
       });
@@ -620,7 +609,7 @@ export class V1PackageService {
     return result;
   }
 
-  private static async insertDetailAwb(payload): Promise<any> {
+  private static async insertDetailAwb(payload): Promise<BagItem> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const bagDetail = await this.getBagDetail(payload.bagNumber);
@@ -642,64 +631,65 @@ export class V1PackageService {
     const bagItem = await BagItem.findOne({
       where: { bagItemId: bagDetail.bagItemId },
     });
-    const bagWeight = +bagItem.weight;
-    const totalWeightRealRounded = +payload.awbDetail.totalWeightRealRounded;
-    const bagWeightFinalFloat = (bagWeight + totalWeightRealRounded).toFixed(5);
-    bagItem.weight = bagWeightFinalFloat as any;
-    bagItem.save();
+    if (bagItem) {
+      const bagWeight = +bagItem.weight;
+      const totalWeightRealRounded = +payload.awbDetail.totalWeightRealRounded;
+      const bagWeightFinalFloat = (bagWeight + totalWeightRealRounded).toFixed(5);
+      await BagItem.update({
+        bagItemId: bagDetail.bagItemId,
+      }, {
+        weight: bagWeightFinalFloat as any,
+      });
 
-    // Insert into table pod scan in hub detail
-    const podScanInHubDetailData = PodScanInHubDetail.create({
-      podScanInHubId: payload.podScanInHubId,
-      bagId: bagDetail.bagId,
-      bagItemId: bagDetail.bagItemId,
-      awbItemId: payload.awbItemId,
-      awbId: payload.awbDetail.awbId,
-      userIdCreated: authMeta.userId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
-      userIdUpdated: authMeta.userId,
-    });
-    const podScanInHubDetail = await PodScanInHubDetail.save(
-      podScanInHubDetailData,
-    );
+      // Insert into table pod scan in hub detail
+      const podScanInHubDetailData = PodScanInHubDetail.create({
+        podScanInHubId: payload.podScanInHubId,
+        bagId: bagDetail.bagId,
+        bagItemId: bagDetail.bagItemId,
+        awbItemId: payload.awbItemId,
+        awbId: payload.awbDetail.awbId,
+        userIdCreated: authMeta.userId,
+        createdTime: moment().toDate(),
+        updatedTime: moment().toDate(),
+        userIdUpdated: authMeta.userId,
+      });
+      const podScanInHubDetail = await PodScanInHubDetail.save(
+        podScanInHubDetailData,
+      );
 
-    // Update Pod scan in hub bag
-    const podScanInHubBag = await PodScanInHubBag.findOne({
-      where: { podScanInHubId: payload.podScanInHubId },
-    });
-    podScanInHubBag.totalAwbItem += 1;
-    podScanInHubBag.totalAwbScan += 1;
-    await PodScanInHubBag.save(podScanInHubBag);
+      // Update Pod scan in hub bag
+      const podScanInHubBag = await PodScanInHubBag.findOne({
+        where: { podScanInHubId: payload.podScanInHubId },
+      });
+      podScanInHubBag.totalAwbItem += 1;
+      podScanInHubBag.totalAwbScan += 1;
+      await PodScanInHubBag.save(podScanInHubBag);
 
-    // update awb_item_attr
-    const awbItemAttr = await AwbItemAttr.findOne({
-      where: { awbItemId: payload.awbItemId, isDeleted: false },
-    });
-    awbItemAttr.bagItemIdLast = bagDetail.bagItemId;
-    awbItemAttr.updatedTime = moment().toDate();
-    awbItemAttr.isPackageCombined = true;
-    awbItemAttr.awbStatusIdLast = 4500;
-    (awbItemAttr.userIdLast = authMeta.userId),
-      await AwbItemAttr.save(awbItemAttr);
+      // update awb_item_attr
+      const awbItemAttr = await AwbItemAttr.findOne({
+        where: { awbItemId: payload.awbItemId, isDeleted: false },
+      });
+      awbItemAttr.bagItemIdLast = bagDetail.bagItemId;
+      awbItemAttr.updatedTime = moment().toDate();
+      awbItemAttr.isPackageCombined = true;
+      awbItemAttr.awbStatusIdLast = 4500;
+      (awbItemAttr.userIdLast = authMeta.userId),
+        await AwbItemAttr.save(awbItemAttr);
 
-    // update status
-    DoPodDetailPostMetaQueueService.createJobByAwbFilter(
-      payload.awbItemId,
-      permissonPayload.branchId,
-      authMeta.userId,
-    );
+      // update status
+      DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+        payload.awbItemId,
+        permissonPayload.branchId,
+        authMeta.userId,
+      );
+    }
 
     return bagItem;
   }
 
   private static async getBagDetail(
     bagNumber: string,
-  ): Promise<{
-    bagNumber: number;
-    bagId: number;
-    bagItemId: number;
-  }> {
+  ): Promise<PackageBagDetailVM> {
     const bagNumberReal: string = bagNumber.substring(0, 7);
     const bagSequence: number = Number(bagNumber.substring(7, 10));
 
@@ -714,7 +704,6 @@ export class V1PackageService {
     qb.andWhere('a.is_deleted = false');
 
     const bagDetail = await qb.getRawOne();
-
     return bagDetail;
   }
 

@@ -53,7 +53,6 @@ import { V1MobileAttendanceController } from './mobile/v1/mobile-attendance.cont
 import { V1WebTrackingController } from './web/v1/web-tracking.controller';
 import { SmsTrackingController } from './web/sms-tracking.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
-import { V1CombinePackageController } from './web/v1/combine-package.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -111,7 +110,6 @@ import { V1CombinePackageController } from './web/v1/combine-package.controller'
     V1WebTrackingController,
     SmsTrackingController,
     RolePodManualController,
-    V1CombinePackageController,
   ],
 })
 export class MainServerControllersModule {}
