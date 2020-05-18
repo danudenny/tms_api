@@ -20,11 +20,11 @@ export class ScanInController {
     return ScaninSmdService.scanInBag(payload);
   }
 
-  @Post('scanIn/bagging')
+  @Post('scanIn/do')
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async scanInBaggingSmd(@Req() request: any, @Body() payload: ScanInSmdPayloadVm) {
-    return ScaninSmdService.scanInBagging(payload);
+    return ScaninSmdService.scanInDo(payload);
   }
 
   @Post('scanIn/list')

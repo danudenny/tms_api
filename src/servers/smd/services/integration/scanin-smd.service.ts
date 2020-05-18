@@ -210,7 +210,7 @@ export class ScaninSmdService {
     }
   }
 
-  static async scanInBagging(payload: any): Promise<any> {
+  static async scanInDo(payload: any): Promise<any> {
     const result = new ScanInSmdBaggingResponseVm();
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
