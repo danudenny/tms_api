@@ -17,9 +17,7 @@ export class ProviderOfPaymentService {
     };
   }
 
-  static async getListPaymentProvider()
-  : Promise<ListProviderResponseVm> {
-    const result = new ListProviderResponseVm();
+  static async getListPaymentProvider() {
     // GET item korwil
     const qb = createQueryBuilder();
     qb.addSelect('pps.payment_provider_service_id', 'paymentProviderServiceId');
@@ -28,7 +26,7 @@ export class ProviderOfPaymentService {
     qb.addSelect('pps.payment_provider_service_logo', 'paymentProviderServiceLogo');
     qb.from('payment_provider_service', 'pps');
     qb.andWhere('pps.is_deleted = false');
-    result.data = await qb.getRawMany();
+    const result = await qb.getRawMany();
     return result;
   }
 }

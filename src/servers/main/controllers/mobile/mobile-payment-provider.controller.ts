@@ -26,7 +26,6 @@ export class PaymentProviderController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: ListProviderResponseVm })
   public async getListPaymentProvider() {
     return ProviderOfPaymentService.getListPaymentProvider();
   }
