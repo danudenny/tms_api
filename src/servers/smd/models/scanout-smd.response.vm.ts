@@ -28,6 +28,35 @@ export class ScanOutVehicleVm {
 
 }
 
+export class ScanOutSmdRouteResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutRouteVm]})
+  data: ScanOutRouteVm[];
+}
+
+export class ScanOutRouteVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_code: string;
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+  @ApiModelProperty()
+  representative_code_list: string;
+
+}
 export class ScanInSmdBaggingResponseVm {
   @ApiModelProperty()
   statusCode: number;

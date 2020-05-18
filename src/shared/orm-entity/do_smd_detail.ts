@@ -9,7 +9,7 @@ import { Representative } from './representative';
 // import { DropoffSortation } from './dropoff_sortation';
 import { Branch } from './branch';
 
-@Entity('do_smd', { schema: 'public' })
+@Entity('do_smd_detail', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
 // @Index('bag_bag_number_idx', ['bagNumber'])
 // @Index('bag_branch_id_idx', ['branchId'])
@@ -113,14 +113,14 @@ export class DoSmdDetail extends TmsBaseEntity {
   @Column('bigint', {
     nullable: false,
     default: () => 0,
-    name: 'totalBag',
+    name: 'total_bag',
   })
   totalBag: number;
 
   @Column('bigint', {
     nullable: false,
     default: () => 0,
-    name: 'totalBagging',
+    name: 'total_bagging',
   })
   totalBagging: number;
 

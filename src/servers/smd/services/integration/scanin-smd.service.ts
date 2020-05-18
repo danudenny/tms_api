@@ -267,15 +267,18 @@ export class ScaninSmdService {
     payload: BaseMetaPayloadVm,
   ): Promise<ScanInListResponseVm> {
     // ScanInListResponseVm
-    payload.fieldResolverMap['baggingDateTime'] = 'b.created_time';
-    payload.fieldResolverMap['branchId'] = 'bhin.branch_id';
+    // payload.fieldResolverMap['baggingDateTime'] = 'b.created_time';
+    // payload.fieldResolverMap['branchId'] = 'bhin.branch_id';
+
+    payload.fieldResolverMap['bagging_date_time'] = 'b.created_time';
+    payload.fieldResolverMap['branch_id'] = 'bhin.branch_id';
 
     payload.globalSearchFields = [
       {
-        field: 'baggingDateTime',
+        field: 'bagging_date_time',
       },
       {
-        field: 'branchId',
+        field: 'branch_id',
       },
     ];
 
@@ -408,11 +411,11 @@ export class ScaninSmdService {
     payload: BaseMetaPayloadVm,
   ): Promise<ScanInDetailListResponseVm> {
     // ScanInListResponseVm
-    payload.fieldResolverMap['bagId'] = 'bi.bag_id';
+    payload.fieldResolverMap['bag_id'] = 'bi.bag_id';
 
     payload.globalSearchFields = [
       {
-        field: 'bagId',
+        field: 'bag_id',
       },
     ];
 

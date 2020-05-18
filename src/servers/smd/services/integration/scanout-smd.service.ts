@@ -10,7 +10,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanOutSmdRouteResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -25,6 +25,7 @@ import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { DoSmdVehicle } from '../../../../shared/orm-entity/do_smd_vehicle';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { Branch } from '../../../../shared/orm-entity/branch';
+import { Representative } from '../../../../shared/orm-entity/representative';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -78,9 +79,10 @@ export class ScanoutSmdService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const result = new ScanOutSmdVehicleResponseVm();
+    const result = new ScanOutSmdRouteResponseVm();
     const timeNow = moment().toDate();
-    let paramrepresentativeCode ;
+    const data = [];
+
     const resultDoSmd = await DoSmd.findOne({
       where: {
         doSmdId: payload.do_smd_id,
@@ -98,42 +100,108 @@ export class ScanoutSmdService {
       });
 
       if (resultbranchTo) {
-        const rawQuery = `
-          SELECT
-            do_smd_detail_id ,
-            representative_code_list
-          FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
-          where
-            s.code  = '${escape(payload.representative_code)}' AND
-            do_smd_id = ${payload.do_smd_id} AND
-            is_deleted = FALSE;
-        `;
-        const resultDataRepresentative = await RawQueryService.query(rawQuery);
-
-        if (resultDataRepresentative.length > 0) {
-          // console.log(resultDataRepresentative[0].representative_code_list);
-          paramrepresentativeCode = resultDataRepresentative[0].representative_code_list + ',' + payload.representative_code;
-        } else {
-          paramrepresentativeCode = payload.representative_code;
-        }
-        const paramDoSmdDetailId = await this.createDoSmdDetail(
-          resultDoSmd.doSmdId,
-          resultDoSmd.doSmdVehicleIdLast,
-          paramrepresentativeCode,
-          resultDoSmd.doSmdTime,
-          permissonPayload.branchId,
-          resultbranchTo.branchId,
-          authMeta.userId,
-        );
-
-        await DoSmd.update(
-          { doSmdId : resultDoSmd.doSmdId },
-          {
-            totalDetail: resultDoSmd.totalDetail + 1,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
+        const resultRepresentative = await Representative.findOne({
+          where: {
+            representativeCode: payload.representative_code,
+            isDeleted: false,
           },
-        );
+        });
+        if (resultRepresentative) {
+          const resultDoSmdDetail = await DoSmdDetail.findOne({
+            where: {
+              doSmdId: resultDoSmd.doSmdId,
+              branchIdTo: resultbranchTo.branchId,
+              isDeleted: false,
+            },
+          });
+          if (resultDoSmdDetail) {
+            const rawQuery = `
+              SELECT
+                do_smd_detail_id ,
+                representative_code_list
+              FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+              where
+                s.code  = '${escape(payload.representative_code)}' AND
+                do_smd_id = ${payload.do_smd_id} AND
+                is_deleted = FALSE;
+            `;
+            const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+            if (resultDataRepresentative.length > 0) {
+              throw new BadRequestException(`Representative Code already scan !!`);
+            } else {
+              await DoSmdDetail.update(
+                { doSmdDetailId : resultDoSmdDetail.doSmdDetailId },
+                {
+                  representativeCodeList: resultDoSmdDetail.representativeCodeList + ',' + payload.representative_code,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+
+              data.push({
+                do_smd_id: resultDoSmd.doSmdId,
+                do_smd_code: resultDoSmd.doSmdCode,
+                do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+                branch_name: resultbranchTo.branchName,
+                representative_code_list: resultDoSmdDetail.representativeCodeList + ',' + payload.representative_code,
+              });
+              result.statusCode = HttpStatus.OK;
+              result.message = 'SMD Route Success Upated';
+              result.data = data;
+              return result;
+            }
+          } else {
+            const rawQuery = `
+              SELECT
+                do_smd_detail_id ,
+                representative_code_list
+              FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+              where
+                s.code  = '${escape(payload.representative_code)}' AND
+                do_smd_id = ${payload.do_smd_id} AND
+                is_deleted = FALSE;
+            `;
+            const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+            if (resultDataRepresentative.length > 0) {
+              throw new BadRequestException(`Representative Code already scan !!`);
+            } else {
+              const paramDoSmdDetailId = await this.createDoSmdDetail(
+                resultDoSmd.doSmdId,
+                resultDoSmd.doSmdVehicleIdLast,
+                payload.representative_code,
+                resultDoSmd.doSmdTime,
+                permissonPayload.branchId,
+                resultbranchTo.branchId,
+                authMeta.userId,
+              );
+
+              await DoSmd.update(
+                { doSmdId : resultDoSmd.doSmdId },
+                {
+                  totalDetail: resultDoSmd.totalDetail + 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+
+              data.push({
+                do_smd_id: resultDoSmd.doSmdId,
+                do_smd_code: resultDoSmd.doSmdCode,
+                do_smd_detail_id: paramDoSmdDetailId,
+                branch_name: resultbranchTo.branchName,
+                representative_code_list: payload.representative_code,
+              });
+              result.statusCode = HttpStatus.OK;
+              result.message = 'SMD Route Success Created';
+              result.data = data;
+              return result;
+            }
+          }
+        } else {
+          throw new BadRequestException(`Can't Find  Representative Code : ` + payload.representative_code);
+        }
 
       } else {
         throw new BadRequestException(`Can't Find  Branch Code : ` + payload.branch_code);
@@ -214,7 +282,7 @@ export class ScanoutSmdService {
       userIdUpdated: userId,
       updatedTime: moment().toDate(),
     });
-    const doSmdDetail = await DoSmd.insert(dataDoSmdDetail);
+    const doSmdDetail = await DoSmdDetail.insert(dataDoSmdDetail);
     return doSmdDetail.identifiers.length
       ? doSmdDetail.identifiers[0].doSmdDetailId
       : null;
