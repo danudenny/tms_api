@@ -1,7 +1,7 @@
 // //#region
 import _, { assign, join, sampleSize } from 'lodash';
 import { createQueryBuilder } from 'typeorm';
-import { HttpStatus, BadRequestException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 
 import { Awb } from '../../../../../shared/orm-entity/awb';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
@@ -16,19 +16,16 @@ import { PodScanInHubDetail } from '../../../../../shared/orm-entity/pod-scan-in
 import { Representative } from '../../../../../shared/orm-entity/representative';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
-import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
 import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
-import { PackageBackupPayloadVm, PackagePayloadVm } from '../../../models/gabungan-payload.vm';
-import {
-  AwbPackageDetail,
-  PackageAwbResponseVm,
-} from '../../../models/gabungan.response.vm';
+import { PackagePayloadVm } from '../../../models/gabungan-payload.vm';
+import { PackageAwbResponseVm } from '../../../models/gabungan.response.vm';
 import { AwbService } from '../../v1/awb.service';
 import { BagService } from '../../v1/bag.service';
 import moment = require('moment');
 import { Branch } from '../../../../../shared/orm-entity/branch';
-import { OpenSortirCombineVM, PackageBagDetailVM } from '../../../models/package-payload.vm';
+import { OpenSortirCombineVM, PackageBagDetailVM, CreateBagNumberResponseVM } from '../../../models/package-payload.vm';
+import { CreateBagFirstScanHubQueueService } from '../../../../queue/services/create-bag-first-scan-hub-queue.service';
 // //#endregion
 
 export class V1PackageService {
@@ -275,21 +272,19 @@ export class V1PackageService {
     }
   }
 
-  private static async createBagNumber(payload): Promise<any> {
-    const value = payload.value;
-    const result = new Object();
+  private static async createBagNumber(payload): Promise<CreateBagNumberResponseVM> {
+    const result = new CreateBagNumberResponseVM();
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    const branchId = payload.branchId;
+
+    let bagId: number;
+    let sequence: number;
+    let randomBagNumber;
 
     if (!payload.awbItemId || payload.awbItemId.length < 1) {
-      RequestErrorService.throwObj(
-        {
-          message: 'Tidak ada nomor resi',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('Tidak ada nomor resi');
     }
-    const branchId = payload.branchId;
 
     const qb = createQueryBuilder();
     qb.addSelect('a.bag_id', 'bagId');
@@ -306,9 +301,6 @@ export class V1PackageService {
     qb.groupBy('a.bag_id');
 
     const bagData = await qb.getRawOne();
-    let bagId;
-    let sequence;
-    let randomBagNumber;
 
     if (!bagData) {
       // generate bag number
@@ -351,7 +343,7 @@ export class V1PackageService {
       sequence = bagData.lastSequence + 1;
       randomBagNumber = bagData.bagNumber;
     }
-
+    const bagSeq: string = sequence.toString().padStart(3, '0');
     const awbDetail = payload.awbDetail;
 
     // INSERT INTO TABLE BAG ITEM
@@ -384,44 +376,11 @@ export class V1PackageService {
       authMeta.userId,
     );
 
-    const totalWeight = parseFloat(awbDetail.weight);
-    // INSERT INTO TABLE BAG ITEM AWB
-    const bagItemAwbDetail = BagItemAwb.create({
-      bagItemId: bagItem.bagItemId,
-      awbNumber: awbDetail.awbNumber,
-      weight: parseFloat(awbDetail.totalWeightRealRounded),
-      awbItemId: payload.awbItemId,
-      userIdCreated: authMeta.userId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
-      userIdUpdated: authMeta.userId,
-      isSortir: true,
-    });
-    await BagItemAwb.save(bagItemAwbDetail);
-
-    // update awb_item_attr
-    const awbItemAttr = await AwbItemAttr.findOne({
-      where: { awbItemId: payload.awbItemId, isDeleted: false },
-    });
-    awbItemAttr.bagItemIdLast = bagItem.bagItemId;
-    awbItemAttr.updatedTime = moment().toDate();
-    awbItemAttr.isPackageCombined = true;
-    awbItemAttr.awbStatusIdLast = 4500;
-    (awbItemAttr.userIdLast = authMeta.userId),
-      await AwbItemAttr.save(awbItemAttr);
-
-    // update status
-    DoPodDetailPostMetaQueueService.createJobByAwbFilter(
-      payload.awbItemId,
-      permissonPayload.branchId,
-      authMeta.userId,
-    );
-
     // insert into pod scan in hub
+    // 100 = inprogress, 200 = done
     const podScanInHubData = PodScanInHub.create({
       branchId: permissonPayload.branchId,
       scanInType: 'BAG',
-      // 100 = inprogress, 200 = done
       transactionStatusId: 100,
       userIdCreated: authMeta.userId,
       createdTime: moment().toDate(),
@@ -430,47 +389,27 @@ export class V1PackageService {
     });
     const podScanInHub = await PodScanInHub.save(podScanInHubData);
 
-    // insert into pod scan in hub detail
-    const podScanInHubDetailData = PodScanInHubDetail.create({
-      podScanInHubId: podScanInHub.podScanInHubId,
+    // #region send to background process
+    CreateBagFirstScanHubQueueService.perform(
       bagId,
-      bagItemId: bagItem.bagItemId,
-      bagNumber: randomBagNumber,
-      awbItemId: payload.awbItemId,
-      awbId: awbDetail.awbId,
-      awbNumber: awbDetail.awbNumber,
-      userIdCreated: authMeta.userId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
-      userIdUpdated: authMeta.userId,
-    });
-    const podScanInHubDetail = await PodScanInHubDetail.save(
-      podScanInHubDetailData,
+      bagItem.bagItemId,
+      randomBagNumber,
+      payload.awbItemId,
+      awbDetail.awbNumber,
+      podScanInHub.podScanInHubId,
+      parseFloat(awbDetail.totalWeightRealRounded),
+      authMeta.userId,
+      permissonPayload.branchId,
+      moment().toDate(),
     );
+    // #endregion send to background process
 
-    // insert into pod scan in hub bag
-    const podScanInHubBagData = PodScanInHubBag.create({
-      podScanInHubId: podScanInHub.podScanInHubId,
-      branchId: permissonPayload.branchId,
-      bagId,
-      bagNumber: randomBagNumber,
-      bagItemId: bagItem.bagItemId,
-      totalAwbItem: 1,
-      totalAwbScan: 1,
-      userIdCreated: authMeta.userId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
-      userIdUpdated: authMeta.userId,
-    });
-    const podScanInHubBag = await PodScanInHubBag.save(podScanInHubBagData);
-    const bagSeq = sequence.toString().padStart(3, '0');
-    assign(result, {
-      bagItemId: bagItem.bagItemId,
-      podScanInHubId: podScanInHub.podScanInHubId,
-      bagNumber: `${randomBagNumber}${bagSeq}`,
-      weight: bagItem.weight,
-      bagSeq,
-    });
+    // contruct data response
+    result.bagItemId = bagItem.bagItemId;
+    result.podScanInHubId = podScanInHub.podScanInHubId;
+    result.bagNumber = `${randomBagNumber}${bagSeq}`;
+    result.weight = bagItem.weight;
+    result.bagSeq = sequence;
 
     return result;
   }
@@ -481,7 +420,8 @@ export class V1PackageService {
     const result = new Object();
     const troubleDesc: String[] = [];
 
-    let bag: BagItem = null;
+    let bagWeight: number = null;
+    let bagSeq: number = null;
     let branch: Branch = null;
     let branchName = null;
     let branchCode = null;
@@ -549,6 +489,7 @@ export class V1PackageService {
         isTrouble,
       };
 
+      // assign data payload
       assign(payload, {
         awbItemId: awbItemAttr.awbItemId,
         awbDetail: awb,
@@ -558,18 +499,23 @@ export class V1PackageService {
         branchDetail: branch,
       });
 
+      // NOTE: critical path
       // get data bag / create new data bag
       if (payload.bagNumber) {
-        bag = await this.insertDetailAwb(payload);
+        const bagItem = await this.insertDetailAwb(payload);
+        bagWeight = bagItem.weight;
+        bagSeq = bagItem.bagSeq;
       } else {
         // Generate Bag Number
         const genBagNumber = await this.createBagNumber(payload);
         bagNumber = genBagNumber.bagNumber;
-        bagItemId = genBagNumber.bagItemId;
         podScanInHubId = genBagNumber.podScanInHubId;
-        bag = genBagNumber;
+        bagItemId = genBagNumber.bagItemId;
+        bagWeight = genBagNumber.weight;
+        bagSeq = genBagNumber.bagSeq;
       }
 
+      // insert data trouble
       if (isTrouble) {
         const dataTrouble = {
           awbNumber: awb.awbNumber,
@@ -577,6 +523,7 @@ export class V1PackageService {
         };
         await this.insertAwbTrouble(dataTrouble);
       }
+
       // construct response data
       assign(result, {
         bagNumber,
@@ -587,8 +534,8 @@ export class V1PackageService {
         data: detail,
         branchName,
         branchCode,
-        bagWeight: bag.weight,
-        bagSeq: bag.bagSeq,
+        bagWeight,
+        bagSeq,
       });
 
     } else {
@@ -601,8 +548,8 @@ export class V1PackageService {
         branchId,
         branchName,
         branchCode,
-        bagWeight: null,
-        bagSeq: null,
+        bagWeight,
+        bagSeq,
       });
     }
 

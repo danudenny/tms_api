@@ -40,3 +40,20 @@ export class PackageBagDetailVM {
   @ApiModelProperty()
   bagItemId: number;
 }
+
+export class CreateBagNumberResponseVM {
+  @ApiModelProperty()
+  bagItemId: number;
+
+  @ApiModelProperty()
+  podScanInHubId: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  weight: number;
+
+  @ApiModelProperty()
+  bagSeq: number;
+}
