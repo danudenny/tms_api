@@ -9,9 +9,9 @@ import { QueueBullBoard } from './queue-bull-board';
 
 // DOC: https://optimalbits.github.io/bull/
 
-export class CreateBagFirstScanHubQueueService {
+export class CreateBagAwbScanHubQueueService {
   public static queue = QueueBullBoard.createQueue.add(
-    'create-bag-first-scan-hub-queue',
+    'create-bag-awb-scan-hub-queue',
     {
       defaultJobOptions: {
         timeout: 0,
@@ -36,10 +36,10 @@ export class CreateBagFirstScanHubQueueService {
 
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
-    this.queue.process(async job => {
+    this.queue.process(5, async job => {
       const data = job.data;
       await getManager().transaction(async transactional => {
-        // Handle first awb scan
+        // Handle awb scan
         const awbItemAttr = await AwbItemAttr.findOne({
           where: { awbItemId: data.awbItemId, isDeleted: false },
         });
@@ -87,21 +87,22 @@ export class CreateBagFirstScanHubQueueService {
           });
           await transactional.insert(PodScanInHubDetail, podScanInHubDetailData);
 
-          // insert into pod scan in hub bag
-          const podScanInHubBagData = PodScanInHubBag.create({
-            podScanInHubId: data.podScanInHubId,
-            branchId: data.branchId,
-            bagId: data.bagId,
-            bagNumber: data.bagNumber,
-            bagItemId: data.bagItemId,
-            totalAwbItem: 1,
-            totalAwbScan: 1,
-            userIdCreated: data.userId,
-            userIdUpdated: data.userId,
-            createdTime: data.timestamp,
-            updatedTime: data.timestamp,
+          // Update Pod scan in hub bag
+          const podScanInHubBag = await PodScanInHubBag.findOne({
+            where: { bagItemId: data.bagItemId },
           });
-          await transactional.insert(PodScanInHubBag, podScanInHubBagData);
+          if (podScanInHubBag) {
+            await transactional.update(
+              PodScanInHubBag,
+              {
+                podScanInHubBagId: podScanInHubBag.podScanInHubBagId,
+              },
+              {
+                totalAwbItem: podScanInHubBag.totalAwbItem += 1,
+                totalAwbScan: podScanInHubBag.totalAwbScan += 1,
+              },
+            );
+          }
 
           // update status awb
           DoPodDetailPostMetaQueueService.createJobByAwbFilter(
@@ -152,6 +153,6 @@ export class CreateBagFirstScanHubQueueService {
       timestamp,
     };
 
-    return CreateBagFirstScanHubQueueService.queue.add(obj);
+    return CreateBagAwbScanHubQueueService.queue.add(obj);
   }
 }

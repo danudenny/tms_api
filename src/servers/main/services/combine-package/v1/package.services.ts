@@ -4,20 +4,15 @@ import { createQueryBuilder } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 
 import { Awb } from '../../../../../shared/orm-entity/awb';
-import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { AwbTrouble } from '../../../../../shared/orm-entity/awb-trouble';
 import { Bag } from '../../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../../shared/orm-entity/bag-item';
-import { BagItemAwb } from '../../../../../shared/orm-entity/bag-item-awb';
 import { District } from '../../../../../shared/orm-entity/district';
 import { PodScanInHub } from '../../../../../shared/orm-entity/pod-scan-in-hub';
-import { PodScanInHubBag } from '../../../../../shared/orm-entity/pod-scan-in-hub-bag';
-import { PodScanInHubDetail } from '../../../../../shared/orm-entity/pod-scan-in-hub-detail';
 import { Representative } from '../../../../../shared/orm-entity/representative';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
-import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { PackagePayloadVm } from '../../../models/gabungan-payload.vm';
 import { PackageAwbResponseVm } from '../../../models/gabungan.response.vm';
 import { AwbService } from '../../v1/awb.service';
@@ -26,6 +21,8 @@ import moment = require('moment');
 import { Branch } from '../../../../../shared/orm-entity/branch';
 import { OpenSortirCombineVM, PackageBagDetailVM, CreateBagNumberResponseVM } from '../../../models/package-payload.vm';
 import { CreateBagFirstScanHubQueueService } from '../../../../queue/services/create-bag-first-scan-hub-queue.service';
+import { CreateBagAwbScanHubQueueService } from '../../../../queue/services/create-bag-awb-scan-hub-queue.service';
+import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 // //#endregion
 
 export class V1PackageService {
@@ -559,20 +556,11 @@ export class V1PackageService {
   private static async insertDetailAwb(payload): Promise<BagItem> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    const bagDetail = await this.getBagDetail(payload.bagNumber);
+    const bagDetail = await BagService.validBagNumber(payload.bagNumber);
 
-    // Insert into table bag item awb
-    const bagItemAwbData = BagItemAwb.create({
-      bagItemId: bagDetail.bagItemId,
-      awbNumber: payload.awbDetail.awbNumber,
-      weight: payload.awbDetail.totalWeightRealRounded,
-      awbItemId: payload.awbItemId,
-      userIdCreated: authMeta.userId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
-      userIdUpdated: authMeta.userId,
-    });
-    await BagItemAwb.save(bagItemAwbData);
+    if (!bagDetail) {
+      throw new BadRequestException('No gabungan sortir tidak ditemukan');
+    }
 
     // update weight in bag item
     const bagItem = await BagItem.findOne({
@@ -581,77 +569,29 @@ export class V1PackageService {
     if (bagItem) {
       const bagWeight = +bagItem.weight;
       const totalWeightRealRounded = +payload.awbDetail.totalWeightRealRounded;
-      const bagWeightFinalFloat = (bagWeight + totalWeightRealRounded).toFixed(5);
+      const bagWeightFinalFloat = parseFloat((bagWeight + totalWeightRealRounded).toFixed(5));
       await BagItem.update({
         bagItemId: bagDetail.bagItemId,
       }, {
-        weight: bagWeightFinalFloat as any,
+        weight: bagWeightFinalFloat,
       });
-
-      // Insert into table pod scan in hub detail
-      const podScanInHubDetailData = PodScanInHubDetail.create({
-        podScanInHubId: payload.podScanInHubId,
-        bagId: bagDetail.bagId,
-        bagItemId: bagDetail.bagItemId,
-        awbItemId: payload.awbItemId,
-        awbId: payload.awbDetail.awbId,
-        userIdCreated: authMeta.userId,
-        createdTime: moment().toDate(),
-        updatedTime: moment().toDate(),
-        userIdUpdated: authMeta.userId,
-      });
-      const podScanInHubDetail = await PodScanInHubDetail.save(
-        podScanInHubDetailData,
-      );
-
-      // Update Pod scan in hub bag
-      const podScanInHubBag = await PodScanInHubBag.findOne({
-        where: { podScanInHubId: payload.podScanInHubId },
-      });
-      podScanInHubBag.totalAwbItem += 1;
-      podScanInHubBag.totalAwbScan += 1;
-      await PodScanInHubBag.save(podScanInHubBag);
-
-      // update awb_item_attr
-      const awbItemAttr = await AwbItemAttr.findOne({
-        where: { awbItemId: payload.awbItemId, isDeleted: false },
-      });
-      awbItemAttr.bagItemIdLast = bagDetail.bagItemId;
-      awbItemAttr.updatedTime = moment().toDate();
-      awbItemAttr.isPackageCombined = true;
-      awbItemAttr.awbStatusIdLast = 4500;
-      (awbItemAttr.userIdLast = authMeta.userId),
-        await AwbItemAttr.save(awbItemAttr);
-
-      // update status
-      DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+      PinoLoggerService.log('#### DEBUG AWB SCAN PAYLOAD', payload);
+      // //#region sending background process
+      CreateBagAwbScanHubQueueService.perform(
+        bagDetail.bagId,
+        bagDetail.bagItemId,
+        bagDetail.bag.bagNumber,
         payload.awbItemId,
-        permissonPayload.branchId,
+        payload.awbDetail.awbNumber,
+        payload.podScanInHubId,
+        payload.awbDetail.totalWeightRealRounded,
         authMeta.userId,
+        permissonPayload.branchId,
+        moment().toDate(),
       );
+      // //#endregion
     }
-
     return bagItem;
-  }
-
-  private static async getBagDetail(
-    bagNumber: string,
-  ): Promise<PackageBagDetailVM> {
-    const bagNumberReal: string = bagNumber.substring(0, 7);
-    const bagSequence: number = Number(bagNumber.substring(7, 10));
-
-    const qb = createQueryBuilder();
-    qb.addSelect('a.bag_id', 'bagId');
-    qb.addSelect('a.bag_number', 'bagNumber');
-    qb.addSelect('b.bag_item_id', 'bagItemId');
-    qb.from('bag', 'a');
-    qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
-    qb.where('a.bag_number = :bagNumber', { bagNumber: bagNumberReal });
-    qb.andWhere('b.bag_seq = :bagSeq', { bagSeq: bagSequence });
-    qb.andWhere('a.is_deleted = false');
-
-    const bagDetail = await qb.getRawOne();
-    return bagDetail;
   }
 
   private static async insertAwbTrouble(data): Promise<any> {
@@ -676,5 +616,26 @@ export class V1PackageService {
       userIdUpdated: authMeta.userId,
     });
     await AwbTrouble.save(awbTroubleData);
+  }
+
+  // TODO: need to be removed
+  private static async getBagDetail(
+    bagNumber: string,
+  ): Promise<PackageBagDetailVM> {
+    const bagNumberReal: string = bagNumber.substring(0, 7);
+    const bagSequence: number = Number(bagNumber.substring(7, 10));
+
+    const qb = createQueryBuilder();
+    qb.addSelect('a.bag_id', 'bagId');
+    qb.addSelect('a.bag_number', 'bagNumber');
+    qb.addSelect('b.bag_item_id', 'bagItemId');
+    qb.from('bag', 'a');
+    qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
+    qb.where('a.bag_number = :bagNumber', { bagNumber: bagNumberReal });
+    qb.andWhere('b.bag_seq = :bagSeq', { bagSeq: bagSequence });
+    qb.andWhere('a.is_deleted = false');
+
+    const bagDetail = await qb.getRawOne();
+    return bagDetail;
   }
 }
