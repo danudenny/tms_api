@@ -1,9 +1,26 @@
-import { createQueryBuilder } from 'typeorm';
+import { createQueryBuilder, Code } from 'typeorm';
 import axios from 'axios';
-import {ListProviderResponseVm} from '../../models/payment-provider-response.vm';
+import {ListProviderResponseVm, MobileProviderPaymentDivaResponseVm } from '../../models/payment-provider-response.vm';
+import {CodPayment} from '../../../../shared/orm-entity/cod-payment';
+import {AuthService} from '../../../../shared/services/auth.service';
+import moment = require('moment');
+import {MobileProviderPaymentDivaPayloadVm} from '../../models/payment-provider-payload';
+import {ConfigService} from '../../../../shared/services/config.service';
 
 export class ProviderOfPaymentService {
   constructor() {
+  }
+
+  // Partner GOJEK ============================================================
+  private static get odooBaseUrl() {
+    return ConfigService.get('odoo.baseUrl');
+  }
+
+  private static get headerOdoo() {
+    return {
+      'auth-key': ConfigService.get('odoo.authKey'),
+      'Content-Type': 'application/json',
+    };
   }
 
   static async getListPaymentProvider()
@@ -21,30 +38,57 @@ export class ProviderOfPaymentService {
     return result;
   }
 
-//   static async sendPayment() {
-//     const urlPost = `http://52.77.199.252:5168/dive_payment`;
-//     const jsonData = {
-//       jsonrpc: '2.0',
-//       params: {
-//         air_waybill: 'asasasa',
-//         trx_no: 'asasaa',
-//       },
-//     };
-//     const options = {
-//       headers: {
-//         'auth-key': '5a71a345b4eaa9d23b4d4c745e7785e9',
-//         'Content-Type': 'application/json',
-//       },
-//     };
-//     try {
-//     const response = await axios.post(urlPost, jsonData, options);
-//     console.log(response);
-//     return response;
-//     } catch (error) {
-//       return {
-//         status: error.response.status,
-//         ...error.response.data,
-//       };
-//     }
-//   }
+  static async sendPayment(
+    payload: MobileProviderPaymentDivaPayloadVm,
+  ): Promise<MobileProviderPaymentDivaResponseVm> {
+    const result = new MobileProviderPaymentDivaResponseVm();
+    const authMeta = AuthService.getAuthData();
+    const urlPost = `${this.odooBaseUrl}diva_payment`;
+    const jsonData = {
+      jsonrpc: '2.0',
+      params: {
+        air_waybill: payload.awbNumber,
+        trx_no: payload.noReference,
+      },
+    };
+    const options = {
+      headers: this.headerOdoo,
+    };
+
+    try {
+      const response = await axios.post(urlPost, jsonData, options);
+      const data = response.data;
+
+      if (data.result && data.result.response_code === '00') {
+        const codPayment = CodPayment.create({
+          awbNumber: payload.awbNumber,
+          codValue: payload.totalCodValue,
+          codPaymentMethod: payload.codPaymentMethod,
+          codPaymentService: payload.codPaymentService,
+          note: payload.note,
+          noReference: payload.noReference,
+          doPodDeliverDetailId: payload.doPodDeliverDetailId,
+          userIdCreated: authMeta.userId,
+          userIdUpdated: authMeta.userId,
+          createdTime: moment().toDate(),
+          updatedTime: moment().toDate(),
+        });
+        CodPayment.insert(codPayment);
+
+        result.message = 'Berhasil Melakukan Transaksi COD';
+        result.status = 'success';
+      } else {
+        result.status = 'error';
+        result.message = data.result.response_msg;
+      }
+
+      result.data = payload;
+      return result;
+    } catch (error) {
+      result.data = payload;
+      result.status = 'error';
+      result.message = 'Gagal melakukan transaksi COD';
+      return result;
+    }
+  }
 }
