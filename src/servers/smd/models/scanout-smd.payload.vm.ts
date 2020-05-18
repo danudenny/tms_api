@@ -1,0 +1,25 @@
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+
+export class ScanOutSmdVehiclePayloadVm {
+  @ApiModelProperty()
+  employee_id_driver: number;
+
+  @ApiModelProperty()
+  smd_date: Date;
+
+  @ApiModelProperty()
+  vehicle_number: Date;
+
+}
+
+export class ScanOutSmdRoutePayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  branch_code: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+}

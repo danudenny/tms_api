@@ -10,7 +10,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm } from '../../models/scanin-smd.response.vm';
+import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanInDetailListResponseVm } from '../../models/scanin-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -21,6 +21,7 @@ import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { WebScanInHubSortListResponseVm } from '../../../main/models/web-scanin-list.response.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
+import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 
 @Injectable()
 export class ScaninSmdService {
@@ -289,19 +290,21 @@ export class ScaninSmdService {
       [`TO_CHAR(b.created_time, 'dd-mm-YYYY HH24:MI:SS')`, 'bagging_datetime'],
       [`CASE
           WHEN bhin.history_date IS NULL THEN 'Belum Scan IN'
-          ELSE CONCAT(TO_CHAR(bhin.history_date, 'dd-mm-YYYY HH24:MI:SS'),' - ',bb.branch_name)
+          ELSE TO_CHAR(bhin.history_date, 'dd-mm-YYYY HH24:MI:SS')
         END`, 'scan_in_datetime'],
+      ['bb.branch_name', 'branch_name'],
       [`CASE
           WHEN b.representative_id_to IS NULL then 'Belum Upload'
           ELSE r.representative_name
         END`, 'representative_name'],
-      ['(SELECT count(bag_item_id) FROM bag_item bit where bit.bag_id = b.bag_id GROUP BY bit.bag_id)', 'tot_resi'],
+      ['(SELECT count(bia.bag_item_awb_id) FROM bag_item_awb bia WHERE bi.bag_item_id = bia.bag_item_id AND bia.is_deleted = FALSE GROUP BY bia.bag_item_awb_id)', 'tot_resi'],
       [`CONCAT(bi.weight::numeric(10,2), ' kg')`, 'weight'],
       [`CONCAT(
           CASE
             WHEN bi.weight > 10 THEN bi.weight
             ELSE 10
           END,' kg')`, 'weight_accumulative'],
+      [`CONCAT(u.first_name, ' ', u.last_name)`, 'fullname'],
 
     );
 
@@ -323,6 +326,9 @@ export class ScaninSmdService {
       'branch',
       'bb',
       'bhin.branch_id=bb.branch_id and bb.is_deleted = FALSE ',
+    );
+    q.leftJoin(e => e.user, 'u', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhereRaw('bhin.bag_item_status_id = 2000');
@@ -396,6 +402,42 @@ export class ScaninSmdService {
     // result.paging = MetaService.set(payload.page, payload.limit, total);
 
     // return result;
+  }
+
+  static async findDetailScanInList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanInDetailListResponseVm> {
+    // ScanInListResponseVm
+    payload.fieldResolverMap['bagId'] = 'bi.bag_id';
+
+    payload.globalSearchFields = [
+      {
+        field: 'bagId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(BagItemAwb, 'bia');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['bia.awb_number', 'awb_number'],
+    );
+    q.innerJoin(e => e.bagItem, 'bi', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new ScanInDetailListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 
   private static async createBag(

@@ -32,4 +32,10 @@ export class ScanInController {
   public async FindscanInList(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
     return ScaninSmdService.findScanInList(payload);
   }
+
+  @Post('scanInDetail/list')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async FindDetailscanInList(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
+    return ScaninSmdService.findDetailScanInList(payload);
+  }
 }
