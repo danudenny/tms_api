@@ -131,6 +131,7 @@ export class MobileCheckOutService {
         checkInDate: 'DESC',
       },
     });
+
     if (employeeJourney) {
       // upload image
       const attachment = await AttachmentService.uploadFileBufferToS3(
@@ -157,7 +158,7 @@ export class MobileCheckOutService {
         where: {
           branchId: payload.branchId
             ? payload.branchId
-            : permissonPayload.branchId,
+            : employeeJourney.branchCheckIn,
         },
       });
 
