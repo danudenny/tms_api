@@ -10,11 +10,11 @@ export class PaymentService {
   constructor() {
   }
 
-  private static get odooBaseUrl() {
+  public static get odooBaseUrl() {
     return ConfigService.get('odoo.baseUrl');
   }
 
-  private static get headerOdoo() {
+  public static get headerOdoo() {
     return {
       'auth-key': ConfigService.get('odoo.authKey'),
       'Content-Type': 'application/json',

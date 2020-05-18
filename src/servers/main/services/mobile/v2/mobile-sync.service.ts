@@ -25,6 +25,7 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { UploadImagePodQueueService } from '../../../../queue/services/upload-pod-image-queue.service';
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
+import {CodPaymentQueueService} from '../../../../queue/services/cod-payment-queue.service';
 // #endregion
 
 export class V2MobileSyncService {
@@ -138,6 +139,8 @@ export class V2MobileSyncService {
                 updatedTime: moment().toDate(),
               },
             );
+
+            CodPaymentQueueService.perform(delivery.awbNumber, delivery.noReference);
           }
 
           const doPodDeliver = await DoPodDeliver.findOne({
