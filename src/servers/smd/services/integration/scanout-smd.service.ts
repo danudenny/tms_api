@@ -261,7 +261,7 @@ export class ScanoutSmdService {
             is_deleted = FALSE;
         `;
         const resultDataRepresentative = await RawQueryService.query(rawQuery);
-        if (resultDataRepresentative) {
+        if (resultDataRepresentative.length > 0) {
           for (let i = 0; i < resultDataBagItem.length; i++) {
             // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
             // customer.awbStatusName = data[i].awbStatusName;
@@ -294,20 +294,88 @@ export class ScanoutSmdService {
       }
     } else {
       // cari di bag code
-      rawQuery = `
-        SELECT
-          do_smd_detail_id ,
-          representative_code_list
-        FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
-        where
-          s.code  = '${escape(payload.representative_code)}' AND
-          do_smd_id = ${payload.do_smd_id} AND
-          is_deleted = FALSE;
-      `;
-      const resultDataRepresentative = await RawQueryService.query(rawQuery);
+      if (payload.item_number.length == 15) {
+        const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
+        const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
+        const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
+        const paramSeq = await paramBagSeq * 1;
+        const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+        rawQuery = `
+          SELECT
+            bi.bag_item_id,
+            b.bag_id,
+            b.representative_id_to,
+            r.representative_code
+          FROM bag_item bi
+          INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
+          LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
+          WHERE
+            b.bag_number = '${escape(paramBagNumber)}' AND
+            bi.bag_seq = '${paramSeq}' AND
+            is_deleted = FALSE;
+        `;
+        const resultDataBag = await RawQueryService.query(rawQuery);
+        if (resultDataBag.length > 0) {
 
-      if (resultDataRepresentative.length > 0) {
+          rawQuery = `
+            SELECT
+              do_smd_detail_id ,
+              representative_code_list
+            FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+            where
+              s.code  = '${escape(resultDataBag[0].representative_code)}' AND
+              do_smd_id = ${payload.do_smd_id} AND
+              is_deleted = FALSE;
+          `;
+          const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
+          if (resultDataRepresentative.length > 0) {
+            // for (let i = 0; i < resultDataBag.length; i++) {
+              // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
+              // customer.awbStatusName = data[i].awbStatusName;
+              //  BAG TYPE 0 = Bagging, 1 = Bag / Gab. Paket
+              const paramDoSmdDetailItemId = await this.createDoSmdDetailItem(
+                resultDataRepresentative[0].do_smd_detail_id,
+                permissonPayload.branchId,
+                resultDataBag[0].bag_item_id,
+                resultDataBag[0].bag_id,
+                null,
+                1,
+                authMeta.userId,
+              );
+            // }
+
+              await DoSmdDetail.update(
+              { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
+              {
+                totalBag: resultDataRepresentative[0].total_bag + 1,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+              },
+            );
+          } else {
+            throw new BadRequestException(`Representative To Bag Not Match`);
+          }
+        } else {
+          throw new BadRequestException(`Bag Not Found`);
+        }
+        // rawQuery = `
+        //   SELECT
+        //     do_smd_detail_id ,
+        //     representative_code_list
+        //   FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+        //   where
+        //     s.code  = '${escape(payload.representative_code)}' AND
+        //     do_smd_id = ${payload.do_smd_id} AND
+        //     is_deleted = FALSE;
+        // `;
+        // const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+        // if (resultDataRepresentative.length > 0) {
+
+        // } else {
+        //   throw new BadRequestException(`Bagging / Bag Not Found`);
+        // }
       } else {
         throw new BadRequestException(`Bagging / Bag Not Found`);
       }
