@@ -34,7 +34,13 @@ export class TrackingNoteService {
       return result;
     }
 
-    result.data = await this.insertTmsTrackingNote(5, payload);
+    let rate = 5;
+    if (payload.rate > 0) {
+      rate = payload.rate;
+    }
+    PinoLoggerService.debug(this.logTitle, ' RATE ' + rate);
+
+    result.data = await this.insertTmsTrackingNote(rate, payload);
 
     return result;
   }

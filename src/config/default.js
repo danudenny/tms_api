@@ -41,7 +41,8 @@ module.exports = {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
   sentry: {
-    dsn: 'http://8d763ea5cbaf4321ad5d58778e08d589@sentry.sicepat.com/2',
+    dsn:
+      'https://cd146c2621d24fc5b937d3ec598328da@o392502.ingest.sentry.io/5245618',
   },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
