@@ -10,7 +10,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanOutSmdRouteResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
