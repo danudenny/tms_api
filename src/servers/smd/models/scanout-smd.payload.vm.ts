@@ -23,3 +23,12 @@ export class ScanOutSmdRoutePayloadVm {
   representative_code: string;
 
 }
+
+export class ScanOutSmdItemPayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  item_number: string;
+
+}
