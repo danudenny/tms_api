@@ -10,7 +10,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -220,7 +220,7 @@ export class ScanoutSmdService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const result = new ScanOutSmdRouteResponseVm();
+    const result = new ScanOutSmdItemResponseVm();
     const timeNow = moment().toDate();
     const data = [];
     let rawQuery;
@@ -262,30 +262,60 @@ export class ScanoutSmdService {
         `;
         const resultDataRepresentative = await RawQueryService.query(rawQuery);
         if (resultDataRepresentative.length > 0) {
-          for (let i = 0; i < resultDataBagItem.length; i++) {
-            // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
-            // customer.awbStatusName = data[i].awbStatusName;
-            //  BAG TYPE 0 = Bagging, 1 = Bag / Gab. Paket
-            const paramDoSmdDetailItemId = await this.createDoSmdDetailItem(
-              resultDataRepresentative[0].do_smd_detail_id,
-              permissonPayload.branchId,
-              resultDataBagItem[i].bag_item_id,
-              resultDataBagItem[i].bag_id,
-              resultDataBagItem[i].bagging_id,
-              0,
-              authMeta.userId,
-            );
-          }
-
-          await DoSmdDetail.update(
-            { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-            {
-              totalBagging: resultDataRepresentative[0].total_bagging + 1,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
+          const resultDoSmdDetailItem = await DoSmdDetailItem.findOne({
+            where: {
+              doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
+              baggingId: resultBagging.baggingId,
+              isDeleted: false,
             },
-          );
+          });
+          if (resultDoSmdDetailItem) {
+            throw new BadRequestException(`Bagging Already Scanned`);
+          } else {
+            for (let i = 0; i < resultDataBagItem.length; i++) {
+              // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
+              // customer.awbStatusName = data[i].awbStatusName;
+              //  BAG TYPE 0 = Bagging, 1 = Bag / Gab. Paket
+              const paramDoSmdDetailItemId = await this.createDoSmdDetailItem(
+                resultDataRepresentative[0].do_smd_detail_id,
+                permissonPayload.branchId,
+                resultDataBagItem[i].bag_item_id,
+                resultDataBagItem[i].bag_id,
+                resultDataBagItem[i].bagging_id,
+                0,
+                authMeta.userId,
+              );
+            }
 
+            await DoSmdDetail.update(
+              { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
+              {
+                totalBagging: resultDataRepresentative[0].total_bagging + 1,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+              },
+            );
+            const resultDoSmdDetail = await DoSmdDetail.findOne({
+              where: {
+                doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
+                isDeleted: false,
+              },
+            });
+
+            data.push({
+              do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
+              bagging_id: resultDataBagItem[0].bagging_id,
+              bag_id: null,
+              bag_item_id: null,
+              bag_type: 0,
+              total_bag: resultDoSmdDetail.totalBag,
+              total_bagging: resultDoSmdDetail.totalBagging,
+            });
+            result.statusCode = HttpStatus.OK;
+            result.message = 'SMD Route Success Created';
+            result.data = data;
+            return result;
+          }
         } else {
           throw new BadRequestException(`Representative To Bagging Not Match`);
         }
@@ -295,9 +325,9 @@ export class ScanoutSmdService {
     } else {
       // cari di bag code
       if (payload.item_number.length == 15) {
-        const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
-        const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
-        const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
+        const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 8 );
+        const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
+        const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 8 , 3);
         const paramSeq = await paramBagSeq * 1;
         const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
         rawQuery = `
@@ -312,7 +342,7 @@ export class ScanoutSmdService {
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
-            is_deleted = FALSE;
+            bi.is_deleted = FALSE;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
         if (resultDataBag.length > 0) {
@@ -320,7 +350,8 @@ export class ScanoutSmdService {
           rawQuery = `
             SELECT
               do_smd_detail_id ,
-              representative_code_list
+              representative_code_list,
+              total_bag
             FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
             where
               s.code  = '${escape(resultDataBag[0].representative_code)}' AND
@@ -346,36 +377,38 @@ export class ScanoutSmdService {
             // }
 
               await DoSmdDetail.update(
-              { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-              {
-                totalBag: resultDataRepresentative[0].total_bag + 1,
-                userIdUpdated: authMeta.userId,
-                updatedTime: timeNow,
-              },
-            );
+                { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
+                {
+                  totalBag: resultDataRepresentative[0].total_bag + 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+              const resultDoSmdDetail = await DoSmdDetail.findOne({
+                where: {
+                  doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
+                  isDeleted: false,
+                },
+              });
+              data.push({
+                do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
+                bagging_id: null,
+                bag_id: resultDataBag[0].bag_id,
+                bag_item_id: resultDataBag[0].bag_item_id,
+                bag_type: 1,
+                total_bag: resultDoSmdDetail.totalBag,
+                total_bagging: resultDoSmdDetail.totalBagging,
+              });
+              result.statusCode = HttpStatus.OK;
+              result.message = 'SMD Route Success Created';
+              result.data = data;
+              return result;
           } else {
             throw new BadRequestException(`Representative To Bag Not Match`);
           }
         } else {
           throw new BadRequestException(`Bag Not Found`);
         }
-        // rawQuery = `
-        //   SELECT
-        //     do_smd_detail_id ,
-        //     representative_code_list
-        //   FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
-        //   where
-        //     s.code  = '${escape(payload.representative_code)}' AND
-        //     do_smd_id = ${payload.do_smd_id} AND
-        //     is_deleted = FALSE;
-        // `;
-        // const resultDataRepresentative = await RawQueryService.query(rawQuery);
-
-        // if (resultDataRepresentative.length > 0) {
-
-        // } else {
-        //   throw new BadRequestException(`Bagging / Bag Not Found`);
-        // }
       } else {
         throw new BadRequestException(`Bagging / Bag Not Found`);
       }

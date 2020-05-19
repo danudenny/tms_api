@@ -75,18 +75,27 @@ export class ScanOutItemVm {
   do_smd_detail_id: number;
 
   @ApiModelProperty()
-  branch_name: string;
+  bagging_id: number;
 
   @ApiModelProperty()
-  representative_code_list: string;
+  bag_id: number;
+
+  @ApiModelProperty()
+  bag_item_id: number;
+
+  @ApiModelProperty()
+  bag_type: number;
+
+  // @ApiModelProperty()
+  // branch_name: string;
+
+  // @ApiModelProperty()
+  // representative_code_list: string;
 
   @ApiModelProperty()
   total_bag: number;
 
   @ApiModelProperty()
   total_bagging: number;
-
-  @ApiModelProperty()
-  bag_type: number;
 
 }

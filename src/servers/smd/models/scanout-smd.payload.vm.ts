@@ -8,7 +8,7 @@ export class ScanOutSmdVehiclePayloadVm {
   smd_date: Date;
 
   @ApiModelProperty()
-  vehicle_number: Date;
+  vehicle_number: string;
 
 }
 
