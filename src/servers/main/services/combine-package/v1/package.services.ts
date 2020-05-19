@@ -290,8 +290,9 @@ export class V1PackageService {
     qb.addSelect('MAX(b.bag_seq)', 'lastSequence');
     qb.from('bag', 'a');
     qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
-    qb.where('a.created_time::date = :today', {
+    qb.where('a.created_time >= :today AND a.created_time < :tomorrow', {
       today: moment().format('YYYY-MM-DD'),
+      tomorrow: moment().add(1, 'd').format('YYYY-MM-DD'),
     });
     qb.andWhere('a.branch_id_to = :branchId', { branchId });
     qb.andWhere('a.is_deleted = false');
