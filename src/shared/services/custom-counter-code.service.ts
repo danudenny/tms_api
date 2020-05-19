@@ -79,6 +79,25 @@ export class CustomCounterCode {
     return prefix + randomCode.toString();
   }
 
+  // SMD
+    public static async receivedBagCodeRandom(dateTime: Date, digit: number = 8) {
+    const prefix = `TB/${moment(dateTime).format('YYMM/DD')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
+  public static async receivedBagCodeCounter(dateTime: Date, digit: number = 5) {
+    const prefix = `TB/${moment(dateTime).format('YYMM')}/`;
+    const last_number = await this.getLastNumber(prefix);
+    return prefix + last_number.toString().padStart(digit, '0');
+  }
+
+  public static async doSmdCodeCounter(dateTime: Date, digit: number = 5) {
+    const prefix = `DMD/${moment(dateTime).format('YYMM')}/`;
+    const last_number = await this.getLastNumber(prefix);
+    return prefix + last_number.toString().padStart(digit, '0');
+  }
+
   // get data on DB
   private static async getLastNumber(prefix: string) {
     const timeNow = moment().toDate();

@@ -2,6 +2,7 @@ import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGenerat
 
 import { Bag } from './bag';
 import { BagItemAwb } from './bag-item-awb';
+import { BagItemHistory } from './bag-item-history';
 import { Branch } from './branch';
 import { Employee } from './employee';
 import { TmsBaseEntity } from './tms-base';
@@ -113,4 +114,7 @@ export class BagItem extends TmsBaseEntity {
 
   @OneToMany(() => DropoffSortation, e => e.bagItem, { cascade: ['insert'] })
   dropoffSortation: DropoffSortation[];
+
+  @OneToMany(() => BagItemHistory, bagItemHistory => bagItemHistory.bagItemId)
+  bagItemHistorys: BagItemHistory[];
 }

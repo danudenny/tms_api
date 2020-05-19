@@ -30,8 +30,9 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { MetaService } from '../../../../shared/services/meta.service';
 
 export class MobileKorwilService {
-  constructor() {}
+  constructor() { }
   static E_RADIUS = 6372.8;
+  static configKorwil = ConfigService.get('korwil');
 
   public static async getBranchList(): Promise<BranchListKorwilResponseVm> {
     const authMeta = AuthService.getAuthMetadata();
@@ -154,7 +155,7 @@ export class MobileKorwilService {
     return result;
   }
 
-  public static async getDataListItem(branchId, userId, id): Promise<any> {
+  public static async getDataListItem(branchId, userId, id, roleId): Promise<any> {
     // item list korwil
     const qb = createQueryBuilder();
     qb.addSelect('ki.korwil_item_name', 'korwilItemName');
@@ -180,17 +181,19 @@ export class MobileKorwilService {
       'ki',
       'ki.korwil_item_id = ktd.korwil_item_id AND ki.is_deleted = false',
     );
-    qb.innerJoin(
-      'user_to_branch',
-      'utb',
-      'utb.ref_branch_id = kt.branch_id AND utb.is_deleted = false',
-    );
-    qb.where('kt.is_deleted = false');
+    if (roleId != this.configKorwil.palkurRoleId) {
+      qb.innerJoin(
+        'user_to_branch',
+        'utb',
+        'utb.ref_branch_id = kt.branch_id AND utb.is_deleted = false',
+      );
+      qb.andWhere('utb.ref_user_id = :userId', {
+        userId,
+      });
+    }
+    qb.andWhere('kt.is_deleted = false');
     qb.andWhere('kt.branch_id = :branchIdTemp', {
       branchIdTemp: branchId,
-    });
-    qb.andWhere('utb.ref_user_id = :userId', {
-      userId,
     });
     qb.andWhere('kt.korwil_transaction_id = :korwilId', {
       korwilId: id,
@@ -201,12 +204,11 @@ export class MobileKorwilService {
     return data;
   }
 
-  public static async insertAndGetKorwilTransactionDetail(branchId, korwilId)
-  : Promise<ItemListKorwilResponseVm> {
+  public static async insertAndGetKorwilTransactionDetail(branchId, korwilId, roleId)
+    : Promise<ItemListKorwilResponseVm> {
     const result = new ItemListKorwilResponseVm();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
-    const itemList = [];
+    let itemList = [];
     let statusTransaction = null;
 
     // GET item korwil
@@ -216,7 +218,8 @@ export class MobileKorwilService {
     qb.addSelect('ki.korwil_item_id', 'korwilItemId');
     qb.from('korwil_item', 'ki');
     qb.andWhere('ki.is_deleted = false');
-    qb.andWhere(`ki.role_id = ${permissonPayload.roleId}`);
+    qb.andWhere(`ki.role_id = ${roleId}`);
+    qb.orderBy('ki.sort_order', 'ASC');
     const korwilItem = await qb.getRawMany();
 
     // get last data login
@@ -227,15 +230,16 @@ export class MobileKorwilService {
     qb.addSelect('kt.status', 'status');
     qb.from('employee_journey', 'ej');
     qb.leftJoin(
-    'korwil_transaction',
-    'kt',
-    'kt.employee_journey_id = ej.employee_journey_id AND kt.is_deleted = false',
+      'korwil_transaction',
+      'kt',
+      'kt.employee_journey_id = ej.employee_journey_id AND kt.is_deleted = false',
     );
     qb.andWhere('ej.is_deleted = false');
     qb.andWhere('ej.employee_id = :employeeId', {
       employeeId: authMeta.employeeId,
     });
     qb.andWhere(`ej.check_out_date IS NULL`);
+    qb.orderBy('kt.created_time', 'DESC')
     const dataLatestLogin = await qb.getRawOne();
 
     statusTransaction = (dataLatestLogin && dataLatestLogin.korwilTransactionId) ? dataLatestLogin.status : null;
@@ -258,7 +262,7 @@ export class MobileKorwilService {
       korwil.branchId = branchId;
       korwil.createdTime = moment().toDate();
       korwil.date = moment().toDate();
-      korwil.employeeJourneyId =  dataLatestLogin.employeeJourneyId;
+      korwil.employeeJourneyId = dataLatestLogin.employeeJourneyId;
       korwil.isDeleted = false;
       korwil.status = statusTransaction;
       korwil.totalTask = totalTask;
@@ -302,7 +306,7 @@ export class MobileKorwilService {
       const korwilDetail = await qb.getRawOne();
 
       if (!korwilDetail) {
-         // Create Korwil Item
+        // Create Korwil Item
         for (const item of korwilItem) {
           const korwilTransactionDetail = KorwilTransactionDetail.create();
           korwilTransactionDetail.korwilItemId = item.korwilItemId;
@@ -336,6 +340,7 @@ export class MobileKorwilService {
     branchId: string,
   ): Promise<ItemListKorwilResponseVm> {
     const authMeta = AuthService.getAuthMetadata();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const timeNow = moment().toDate();
     let now = moment();
     // NOTE: configure dateFrom and dateTo
@@ -378,14 +383,14 @@ export class MobileKorwilService {
     let id = dataKorwil ? dataKorwil.id : null;
 
     // get data item list
-    const data = await this.getDataListItem(branchId, authMeta.userId, id);
+    const data = await this.getDataListItem(branchId, authMeta.userId, id, permissonPayload.roleId);
     let result = new ItemListKorwilResponseVm();
     if (data.length != 0) {
       result.itemList = data;
       result.korwilTransactionId = data[0].korwilTransactionId;
       result.status = data[0].statusTransaction;
     } else {
-      result = await this.insertAndGetKorwilTransactionDetail(branchId, id);
+      result = await this.insertAndGetKorwilTransactionDetail(branchId, id, permissonPayload.roleId);
     }
     return result;
   }
@@ -879,7 +884,7 @@ export class MobileKorwilService {
     korwilTransactionDetail.note = payload.note;
     // korwilTransactionDetail.isDone = payload.isDone;
     korwilTransactionDetail.status = payload.status;
-  korwilTransactionDetail.userIdUpdated = authMeta.userId;
+    korwilTransactionDetail.userIdUpdated = authMeta.userId;
     korwilTransactionDetail.updatedTime = timeNow;
     korwilTransactionDetail.photoCount = countPhoto;
     await KorwilTransactionDetail.save(korwilTransactionDetail);
@@ -976,10 +981,10 @@ export class MobileKorwilService {
       AND longitude IS NOT NULL AND latitude IS NOT NULL
       AND latitude::float >= ${nearby_branch[0]} AND latitude::float <= ${
       nearby_branch[2]
-    }
+      }
       AND longitude::float >= ${nearby_branch[1]} AND longitude::float <= ${
       nearby_branch[3]
-    }
+      }
       AND branch_id = ${branchId}`);
     if (res.length != 0) {
       response.message = 'Lokasi branch valid';

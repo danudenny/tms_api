@@ -1,0 +1,108 @@
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
+
+export class ScanInSmdBagResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanInBagVm]})
+  data: ScanInBagVm[];
+}
+
+export class ScanInBagVm {
+  @ApiModelProperty()
+  show_number: string;
+
+  @ApiModelProperty()
+  id: string;
+
+  @ApiModelProperty()
+  rbid: string;
+
+}
+
+export class ScanInSmdBaggingResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanInBaggingVm]})
+  data: ScanInBaggingVm[];
+}
+
+export class ScanInBaggingVm {
+  @ApiModelProperty({type: () => [ScanInBagNotScannedVm]})
+  data_bag: ScanInBagNotScannedVm[];
+
+  @ApiModelProperty({type: () => [ScanInBagScannedVm]})
+  data_bag_scanned: ScanInBagScannedVm[];
+
+}
+
+export class ScanInBagScannedVm {
+  @ApiModelProperty()
+  bagnumber: string;
+
+}
+
+export class ScanInBagNotScannedVm {
+  @ApiModelProperty()
+  bagnumber: string;
+
+}
+
+export class ScanInListResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [ScanInListVm] })
+  data: ScanInListVm[];
+  // @ApiModelProperty({ type: () => [ScanInListVm] })
+  // data: ScanInListVm[];
+}
+
+export class ScanInListVm {
+  @ApiModelProperty()
+  bag_id: number;
+
+  @ApiModelProperty()
+  bag_number_seq: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+  @ApiModelProperty()
+  bagging_datetime: string;
+
+  @ApiModelProperty()
+  scan_in_datetime: string;
+
+  @ApiModelProperty()
+  representative_name: string;
+
+  @ApiModelProperty()
+  tot_resi: number;
+
+  @ApiModelProperty()
+  weight: number;
+
+  @ApiModelProperty()
+  weight_accumulative: number;
+
+  @ApiModelProperty()
+  fullname: string;
+}
+
+export class ScanInDetailListResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [ScanInDetailListVm] })
+  data: ScanInDetailListVm[];
+}
+
+export class ScanInDetailListVm {
+  @ApiModelProperty()
+  awb_number: string;
+}

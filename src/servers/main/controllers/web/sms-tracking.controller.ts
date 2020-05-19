@@ -3,7 +3,7 @@ import {
   ApiBearerAuth,
   ApiOkResponse,
 } from '../../../../shared/external/nestjs-swagger';
-import { Controller, Post, HttpCode, HttpStatus, Body, Delete, Param } from '@nestjs/common';
+import { Controller, Post, HttpCode, HttpStatus, Body, Delete, Param, Get, Response, Query } from '@nestjs/common';
 import { SmsTrackingService } from '../../services/web/sms-tracking.service';
 import {
   SmsTrackingStoreMessagePayloadVm,
@@ -11,7 +11,11 @@ import {
   SmsTrackingStoreShiftPayloadVm,
   SmsTrackingListShiftPayloadVm,
   SmsTrackingListUserPayloadVm,
-  SmsTrackingDeleteUserPayloadVm,
+  GenerateReportSmsTrackingPayloadVm,
+  SmsTrackingDeleteMessagePayloadVm,
+  SmsTrackingUpdateMessagePayloadVm,
+  SmsTrackingDeleteShiftPayloadVm,
+  SmsTrackingUpdateShiftPayloadVm,
 } from '../../models/sms-tracking-payload.vm';
 import {
   SmsTrackingStoreMessageResponseVm,
@@ -20,6 +24,7 @@ import {
   SmsTrackingStoreShiftResponseVm,
   SmsTrackingListUserResponseVm,
 } from '../../models/sms-tracking-response.vm';
+import express = require('express');
 
 @ApiUseTags('Sms Tracking')
 @Controller('sms-tracking')
@@ -42,6 +47,24 @@ export class SmsTrackingController {
     return SmsTrackingService.listMessage(payload);
   }
 
+  @Post('message/update')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  // @ApiOkResponse({ type: SmsTrackingListMessageResponseVm })
+  public async updateMessage(
+    @Body() payload: SmsTrackingUpdateMessagePayloadVm,
+  ) {
+    return SmsTrackingService.updateMessage(payload);
+  }
+
+  @Post('delete-message')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  // @ApiOkResponse({ type: SmsTrackingListUserResponseVm })
+  public async deleteMessage(@Body() payload: SmsTrackingDeleteMessagePayloadVm) {
+    return SmsTrackingService.deleteMessage(payload);
+  }
+
   @Post('shift/store')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -57,6 +80,23 @@ export class SmsTrackingController {
   public async shiftList(@Body() payload: SmsTrackingListShiftPayloadVm) {
     return SmsTrackingService.listShift(payload);
   }
+  @Post('shift/update')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  // @ApiOkResponse({ type: SmsTrackingListMessageResponseVm })
+  public async updateShift(
+    @Body() payload: SmsTrackingUpdateShiftPayloadVm,
+  ) {
+    return SmsTrackingService.updateShift(payload);
+  }
+
+  @Post('shift/delete')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: SmsTrackingListShiftResponseVm })
+  public async shiftDelete(@Body() payload: SmsTrackingDeleteShiftPayloadVm) {
+    return SmsTrackingService.deleteShift(payload);
+  }
 
   @Post('user/list')
   @HttpCode(HttpStatus.OK)
@@ -65,11 +105,16 @@ export class SmsTrackingController {
   public async userList(@Body() payload: SmsTrackingListUserPayloadVm) {
     return SmsTrackingService.userList(payload);
   }
-  @Post('delete-user')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
+
+  @Get('export/excel')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
   // @ApiOkResponse({ type: SmsTrackingListUserResponseVm })
-  public async deleteUser(@Body() payload: SmsTrackingDeleteUserPayloadVm) {
-    return SmsTrackingService.deleteUser(payload);
+  public async export(
+    @Response() serverResponse: express.Response,
+    @Query('date') date: string,
+    @Query('smsTrackingShiftId') smsTrackingShiftId: number,
+  ) {
+    return SmsTrackingService.export(serverResponse, date, smsTrackingShiftId);
   }
 }
