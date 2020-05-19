@@ -57,72 +57,36 @@ export class ScanOutRouteVm {
   representative_code_list: string;
 
 }
-export class ScanInSmdBaggingResponseVm {
+
+export class ScanOutSmdItemResponseVm {
   @ApiModelProperty()
   statusCode: number;
 
   @ApiModelProperty()
   message: string;
 
-  @ApiModelProperty({type: () => [ScanInBaggingVm]})
-  data: ScanInBaggingVm[];
+  @ApiModelProperty({type: () => [ScanOutItemVm]})
+  data: ScanOutItemVm[];
 }
 
-export class ScanInBaggingVm {
-  @ApiModelProperty({type: () => [ScanInBagNotScannedVm]})
-  data_bag: ScanInBagNotScannedVm[];
-
-  @ApiModelProperty({type: () => [ScanInBagScannedVm]})
-  data_bag_scanned: ScanInBagScannedVm[];
-
-}
-
-export class ScanInBagScannedVm {
-  @ApiModelProperty()
-  bagnumber: string;
-
-}
-
-export class ScanInBagNotScannedVm {
-  @ApiModelProperty()
-  bagnumber: string;
-
-}
-
-export class ScanInListResponseVm extends BaseMetaResponseVm {
-
-  @ApiModelProperty({ type: () => [ScanInListVm] })
-  data: ScanInListVm[];
-  // @ApiModelProperty({ type: () => [ScanInListVm] })
-  // data: ScanInListVm[];
-}
-
-export class ScanInListVm {
-  @ApiModelProperty()
-  bag_id: number;
+export class ScanOutItemVm {
 
   @ApiModelProperty()
-  bag_number_seq: string;
+  do_smd_detail_id: number;
 
   @ApiModelProperty()
   branch_name: string;
 
   @ApiModelProperty()
-  bagging_datetime: string;
+  representative_code_list: string;
 
   @ApiModelProperty()
-  scan_in_datetime: string;
+  total_bag: number;
 
   @ApiModelProperty()
-  representative_name: string;
+  total_bagging: number;
 
   @ApiModelProperty()
-  tot_resi: number;
+  bag_type: number;
 
-  @ApiModelProperty()
-  weight: number;
-
-  @ApiModelProperty()
-  weight_accumulative: number;
 }
-

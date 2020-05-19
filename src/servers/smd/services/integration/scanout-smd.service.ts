@@ -26,6 +26,9 @@ import { DoSmdVehicle } from '../../../../shared/orm-entity/do_smd_vehicle';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { Representative } from '../../../../shared/orm-entity/representative';
+import { Bagging } from '../../../../shared/orm-entity/bagging';
+import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
+import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -213,6 +216,105 @@ export class ScanoutSmdService {
 
   }
 
+  static async scanOutItem(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdRouteResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+    let rawQuery;
+    const resultBagging = await Bagging.findOne({
+      where: {
+        baggingCode: payload.item_number,
+        isDeleted: false,
+      },
+    });
+
+    if (resultBagging) {
+      rawQuery = `
+        SELECT
+          bg.bagging_id,
+          b.bag_id,
+          bi.bag_item_id ,
+          r.representative_code
+        FROM bag_item bi
+        INNER JOIN bagging_item bgi ON bi.bag_item_id = bgi.bag_item_id AND bgi.is_deleted = FALSE
+        INNER JOIN bagging bg ON bgi.bagging_id = bg.bagging_id AND bg.is_deleted = FALSE
+        INNER JOIN bag b ON bi.bag_id = b.bag_id AND b.is_deleted = FALSE
+        LEFT JOIN representative  r on bg.representative_id_to = r.representative_id and r.is_deleted  = FALSE
+        WHERE
+          bg.bagging_id = ${resultBagging.baggingId} AND
+          bi.is_deleted = FALSE;
+      `;
+      const resultDataBagItem = await RawQueryService.query(rawQuery);
+      if (resultDataBagItem.length > 0) {
+        rawQuery = `
+          SELECT
+            do_smd_detail_id ,
+            representative_code_list,
+            total_bagging
+          FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+          where
+            s.code  = '${escape(resultDataBagItem[0].representative_code)}' AND
+            do_smd_id = ${payload.do_smd_id} AND
+            is_deleted = FALSE;
+        `;
+        const resultDataRepresentative = await RawQueryService.query(rawQuery);
+        if (resultDataRepresentative) {
+          for (let i = 0; i < resultDataBagItem.length; i++) {
+            // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
+            // customer.awbStatusName = data[i].awbStatusName;
+            //  BAG TYPE 0 = Bagging, 1 = Bag / Gab. Paket
+            const paramDoSmdDetailItemId = await this.createDoSmdDetailItem(
+              resultDataRepresentative[0].do_smd_detail_id,
+              permissonPayload.branchId,
+              resultDataBagItem[i].bag_item_id,
+              resultDataBagItem[i].bag_id,
+              resultDataBagItem[i].bagging_id,
+              0,
+              authMeta.userId,
+            );
+          }
+
+          await DoSmdDetail.update(
+            { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
+            {
+              totalBagging: resultDataRepresentative[0].total_bagging + 1,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            },
+          );
+
+        } else {
+          throw new BadRequestException(`Representative To Bagging Not Match`);
+        }
+      } else {
+        throw new BadRequestException(`Bagging Item Not Found`);
+      }
+    } else {
+      // cari di bag code
+      rawQuery = `
+        SELECT
+          do_smd_detail_id ,
+          representative_code_list
+        FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+        where
+          s.code  = '${escape(payload.representative_code)}' AND
+          do_smd_id = ${payload.do_smd_id} AND
+          is_deleted = FALSE;
+      `;
+      const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+      if (resultDataRepresentative.length > 0) {
+
+      } else {
+        throw new BadRequestException(`Bagging / Bag Not Found`);
+      }
+    }
+
+  }
+
   private static async createDoSmd(
     paramDoSmdCode: string,
     paramDoSmdTime: Date,
@@ -285,6 +387,34 @@ export class ScanoutSmdService {
     const doSmdDetail = await DoSmdDetail.insert(dataDoSmdDetail);
     return doSmdDetail.identifiers.length
       ? doSmdDetail.identifiers[0].doSmdDetailId
+      : null;
+  }
+
+  private static async createDoSmdDetailItem(
+    paramDoSmdDetailId: number,
+    paramBranchId: number,
+    paramBagItemId: number,
+    paramBagId: number,
+    paramBaggingId: number,
+    paramBagType: number,
+    userId: number,
+  ) {
+    const dataDoSmdDetailItem = DoSmdDetailItem.create({
+      doSmdDetailId: paramDoSmdDetailId,
+      userIdScan: userId,
+      branchIdScan: paramBranchId,
+      bagItemId: paramBagItemId,
+      bagId: paramBagId,
+      baggingId: paramBaggingId,
+      bagType: paramBagType,
+      userIdCreated: userId,
+      createdTime: moment().toDate(),
+      userIdUpdated: userId,
+      updatedTime: moment().toDate(),
+    });
+    const doSmdDetailItem = await DoSmdDetailItem.insert(dataDoSmdDetailItem);
+    return doSmdDetailItem.identifiers.length
+      ? doSmdDetailItem.identifiers[0].doSmdDetailItemId
       : null;
   }
 
