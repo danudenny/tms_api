@@ -513,12 +513,14 @@ export class V1PackageService {
       }
 
       // insert data trouble
+      // TODO: feature disable
       if (isTrouble) {
         const dataTrouble = {
           awbNumber: awb.awbNumber,
           troubleDesc: join(troubleDesc, ' dan '),
         };
-        await this.insertAwbTrouble(dataTrouble);
+        console.error('TROUBLE SCAN GAB SORTIR :: ', dataTrouble);
+        // await this.insertAwbTrouble(dataTrouble);
       }
 
       // construct response data
