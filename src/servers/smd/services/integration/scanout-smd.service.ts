@@ -416,6 +416,43 @@ export class ScanoutSmdService {
 
   }
 
+  static async scanOutSeal(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdItemResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+    let rawQuery;
+
+    rawQuery = `
+      SELECT
+        do_smd_detail_id
+      FROM do_smd_detail
+      WHERE
+        do_smd_id = ${payload.do_smd_id} AND
+        arrival_time IS NULL AND
+        seal_number IS NULL AND
+        is_deleted = FALSE
+       ;
+    `;
+    const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
+    if (resultDataDoSmdDetail.length > 0 ) {
+      for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+        await DoSmdDetail.update(
+          { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+          {
+            sealNumber: payload.seal_number,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+      }
+    } else {
+      throw new BadRequestException(`Updated Seal Fail`);
+    }
+  }
+
   private static async createDoSmd(
     paramDoSmdCode: string,
     paramDoSmdTime: Date,

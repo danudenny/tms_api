@@ -99,3 +99,27 @@ export class ScanOutItemVm {
   total_bagging: number;
 
 }
+
+export class ScanOutSmdSealResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutSealVm]})
+  data: ScanOutSealVm[];
+}
+
+export class ScanOutSealVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_code: string;
+
+  @ApiModelProperty()
+  seal_number: string;
+
+}

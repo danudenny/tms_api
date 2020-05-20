@@ -32,3 +32,12 @@ export class ScanOutSmdItemPayloadVm {
   item_number: string;
 
 }
+
+export class ScanOutSmdSealPayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  seal_number: string;
+
+}
