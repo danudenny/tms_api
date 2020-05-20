@@ -4,6 +4,7 @@ import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { PosindonesiaPayloadVm } from '../../models/posindonesia.payload.vm';
 import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import { ResponseMaintenanceService } from '../../../../shared/services/response-maintenance.service';
 
 @ApiUseTags('Partner Integration Pos Indonesia')
 @Controller('integration/partner')
@@ -29,6 +30,9 @@ export class PartnerController {
     @Req() request: any,
     @Body() payload: PosindonesiaPayloadVm,
   ) {
+    // NOTE: handle for message disable this service
+    await ResponseMaintenanceService.dropService();
+
     const apiKeyPartner = request.headers['x-api-key'];
     let result = {};
     if (!apiKeyPartner) {
