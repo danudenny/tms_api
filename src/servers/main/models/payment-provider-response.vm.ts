@@ -3,6 +3,7 @@ import {
   ApiModelPropertyOptional,
 } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
+import {MobileProviderPaymentDivaPayloadVm} from './payment-provider-payload';
 
 export class PaymentProviderDetailVm {
   @ApiModelProperty()
@@ -21,4 +22,15 @@ export class PaymentProviderDetailVm {
 export class ListProviderResponseVm {
   @ApiModelProperty({ type: () => [PaymentProviderDetailVm] })
   data: PaymentProviderDetailVm[];
+}
+
+export class MobileProviderPaymentDivaResponseVm {
+  @ApiModelProperty()
+  data: MobileProviderPaymentDivaPayloadVm;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
 }

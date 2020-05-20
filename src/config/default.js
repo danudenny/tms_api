@@ -63,6 +63,10 @@ module.exports = {
     passKey: '2e8a7f4d5ef4b746a503ef270ce2a98e562bc77e2dd6c19bf10e3d95e3390393',
     shipmentMethod: 'Instant',
   },
+  odoo: {
+    baseUrl: 'http://52.77.199.252:5168/',
+    authKey: '5a71a345b4eaa9d23b4d4c745e7785e9',
+  },
   korwil: {
     korwilRoleId: 38,
     palkurRoleId: [40, 41],
