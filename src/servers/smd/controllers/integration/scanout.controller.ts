@@ -41,4 +41,16 @@ export class ScanOutController {
     return ScanoutSmdService.scanOutSeal(payload);
   }
 
+  @Post('scanOut/list')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async FindscanOutList(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
+    return ScanoutSmdService.findScanOutList(payload);
+  }
+
+  @Post('scanOut/history')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async FindscanOutHistory(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
+    return ScanoutSmdService.findScanOutHistory(payload);
+  }
+
 }

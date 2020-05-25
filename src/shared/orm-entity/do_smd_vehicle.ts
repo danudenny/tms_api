@@ -8,6 +8,8 @@ import { Representative } from './representative';
 // import { DropoffHub } from './dropoff_hub';
 // import { DropoffSortation } from './dropoff_sortation';
 import { Branch } from './branch';
+import { Employee } from './employee';
+import { DoSmdVehicleAttachment } from './do_smd_vehicle_attachment';
 
 @Entity('do_smd_vehicle', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
@@ -92,4 +94,11 @@ export class DoSmdVehicle extends TmsBaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_end' })
   branchEnd: Branch;
+
+  @OneToOne(() => Employee)
+  @JoinColumn({ name: 'employee_id_driver' })
+  employee: Branch;
+
+  // @OneToMany(() => DoSmdVehicleAttachment, doSmdVehicleAttachment => doSmdVehicleAttachment.doSmdVehicleId)
+  // doSmdVehicleAttachments: DoSmdVehicleAttachment[];
 }

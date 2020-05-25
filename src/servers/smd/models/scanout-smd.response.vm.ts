@@ -86,11 +86,11 @@ export class ScanOutItemVm {
   @ApiModelProperty()
   bag_type: number;
 
-  // @ApiModelProperty()
-  // branch_name: string;
+  @ApiModelProperty()
+  bag_number: string;
 
-  // @ApiModelProperty()
-  // representative_code_list: string;
+  @ApiModelProperty()
+  bagging_number: string;
 
   @ApiModelProperty()
   total_bag: number;
@@ -122,4 +122,83 @@ export class ScanOutSealVm {
   @ApiModelProperty()
   seal_number: string;
 
+}
+
+export class ScanOutListResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [ScanOutListVm] })
+  data: ScanOutListVm[];
+}
+
+export class ScanOutListVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_code: string;
+
+  @ApiModelProperty()
+  do_smd_time: Date;
+
+  @ApiModelProperty()
+  fullname: string;
+
+  @ApiModelProperty()
+  vehicle_number: string;
+
+  @ApiModelProperty()
+  branch_from_name: string;
+
+  @ApiModelProperty()
+  branch_to_name: string;
+
+  @ApiModelProperty()
+  total_bag: number;
+
+  @ApiModelProperty()
+  total_bagging: number;
+}
+
+export class ScanOutHistoryResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [ScanOutHistoryVm] })
+  data: ScanOutHistoryVm[];
+}
+
+export class ScanOutHistoryVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_code: number;
+
+  @ApiModelProperty()
+  branch_from_name: string;
+
+  @ApiModelProperty()
+  branch_to_name: string;
+
+  @ApiModelProperty()
+  history_date: Date;
+
+  @ApiModelProperty()
+  history_status: String;
+
+  @ApiModelProperty()
+  seal_number: String;
+
+  @ApiModelProperty()
+  photo_url: String;
+
+  @ApiModelProperty()
+  username: String;
+
+  @ApiModelProperty()
+  assigne: String;
+
+  @ApiModelProperty()
+  branch_name: String;
+
+  @ApiModelProperty()
+  reason_name: String;
 }

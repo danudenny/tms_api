@@ -10,7 +10,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -29,6 +29,7 @@ import { Representative } from '../../../../shared/orm-entity/representative';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
+import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -62,6 +63,20 @@ export class ScanoutSmdService {
         userIdUpdated: authMeta.userId,
         updatedTime: timeNow,
       },
+    );
+
+    const paramDoSmdHistoryId = await this.createDoSmdHistory(
+      paramDoSmdId,
+      null,
+      paramDoSmdVehicleId,
+      null,
+      null,
+      payload.smd_date,
+      permissonPayload.branchId,
+      1000,
+      null,
+      null,
+      authMeta.userId,
     );
 
     const data = [];
@@ -183,11 +198,27 @@ export class ScanoutSmdService {
               await DoSmd.update(
                 { doSmdId : resultDoSmd.doSmdId },
                 {
+                  branchToNameList: (resultDoSmd.branchToNameList) ? resultDoSmd.branchToNameList + ',' + resultbranchTo.branchName : resultbranchTo.branchName,
+                  doSmdDetailIdLast: paramDoSmdDetailId,
                   totalDetail: resultDoSmd.totalDetail + 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
               );
+
+              // const paramDoSmdHistoryId = await this.createDoSmdHistory(
+              //   resultDoSmd.doSmdId,
+              //   paramDoSmdDetailId,
+              //   resultDoSmd.doSmdVehicleIdLast,
+              //   null,
+              //   null,
+              //   resultDoSmd.doSmdTime,
+              //   permissonPayload.branchId,
+              //   1000,
+              //   null,
+              //   null,
+              //   authMeta.userId,
+              // );
 
               data.push({
                 do_smd_id: resultDoSmd.doSmdId,
@@ -227,6 +258,13 @@ export class ScanoutSmdService {
     const resultBagging = await Bagging.findOne({
       where: {
         baggingCode: payload.item_number,
+        isDeleted: false,
+      },
+    });
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
         isDeleted: false,
       },
     });
@@ -302,12 +340,23 @@ export class ScanoutSmdService {
               },
             });
 
+            await DoSmd.update(
+              { doSmdId : payload.do_smd_id },
+              {
+                totalBagging: resultDoSmd[0].total_bagging + 1,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+              },
+            );
+
             data.push({
               do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
               bagging_id: resultDataBagItem[0].bagging_id,
               bag_id: null,
               bag_item_id: null,
               bag_type: 0,
+              bag_number: null,
+              bagging_number: payload.item_number,
               total_bag: resultDoSmdDetail.totalBag,
               total_bagging: resultDoSmdDetail.totalBagging,
             });
@@ -384,18 +433,30 @@ export class ScanoutSmdService {
                   updatedTime: timeNow,
                 },
               );
+
               const resultDoSmdDetail = await DoSmdDetail.findOne({
                 where: {
                   doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
                   isDeleted: false,
                 },
               });
+
+              await DoSmd.update(
+                { doSmdId : payload.do_smd_id },
+                {
+                  totalBagging: resultDoSmd[0].total_bag + 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
               data.push({
                 do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
                 bagging_id: null,
                 bag_id: resultDataBag[0].bag_id,
                 bag_item_id: resultDataBag[0].bag_item_id,
                 bag_type: 1,
+                bag_number: payload.item_number,
+                bagging_number: null,
                 total_bag: resultDoSmdDetail.totalBag,
                 total_bagging: resultDoSmdDetail.totalBagging,
               });
@@ -420,7 +481,7 @@ export class ScanoutSmdService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const result = new ScanOutSmdItemResponseVm();
+    const result = new ScanOutSmdSealResponseVm();
     const timeNow = moment().toDate();
     const data = [];
     let rawQuery;
@@ -448,9 +509,173 @@ export class ScanoutSmdService {
           },
         );
       }
+      const resultDoSmd = await DoSmd.findOne({
+        where: {
+          doSmdId: payload.do_smd_id,
+          isDeleted: false,
+        },
+      });
+      const paramDoSmdHistoryId = await this.createDoSmdHistory(
+        resultDoSmd.doSmdId,
+        null,
+        resultDoSmd.doSmdVehicleIdLast,
+        null,
+        null,
+        resultDoSmd.doSmdTime,
+        permissonPayload.branchId,
+        2000,
+        payload.seal_number,
+        null,
+        authMeta.userId,
+      );
+      data.push({
+        do_smd_id: resultDoSmd.doSmdId,
+        do_smd_code: resultDoSmd.doSmdCode,
+        seal_number: payload.seal_number,
+      });
+      result.statusCode = HttpStatus.OK;
+      result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' With Seal ' + payload.seal_number + 'Success Created';
+      result.data = data;
+      return result;
     } else {
       throw new BadRequestException(`Updated Seal Fail`);
     }
+  }
+
+  static async findScanOutList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutListResponseVm> {
+    // ScanInListResponseVm
+    // payload.fieldResolverMap['baggingDateTime'] = 'b.created_time';
+    // payload.fieldResolverMap['branchId'] = 'bhin.branch_id';
+
+    payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
+    payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
+    payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
+
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_time',
+      },
+      {
+        field: 'branch_id_from',
+      },
+      {
+        field: 'branch_id_to',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoSmd, 'ds');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['ds.do_smd_id', 'do_smd_id'],
+      ['ds.do_smd_code', 'do_smd_code'],
+      ['ds.do_smd_time', 'do_smd_time'],
+      ['e.fullname', 'fullname'],
+      ['dsv.vehicle_number', 'vehicle_number'],
+      ['b.branch_name', 'branch_from_name'],
+      ['ds.branch_to_name_list', 'branch_to_name'],
+      ['ds.total_bag', 'total_bag'],
+      ['ds.total_bagging', 'total_bagging'],
+    );
+
+    q.innerJoin(e => e.doSmdDetail, 'dsd', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doSmdVehicle, 'dsv', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.branch, 'b', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doSmdVehicle.employee, 'e', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging');
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new ScanOutListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findScanOutHistory(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutHistoryResponseVm> {
+
+    payload.fieldResolverMap['do_smd_id'] = 'ds.do_smd_id';
+
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_id',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoSmdHistory, 'dsh');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['ds.do_smd_id', 'do_smd_id'],
+      ['ds.do_smd_code', 'do_smd_code'],
+      ['b.branch_name', 'branch_from_name'],
+      ['ds.branch_to_name_list', 'branch_to_name'],
+      ['dsh.created_time', 'history_date'],
+      ['dss.do_smd_status_title', 'history_status'],
+      ['dsh.seal_number', 'seal_number'],
+      ['dsva.photo_url', 'photo_url'],
+      [`CONCAT(u.first_name, ' ', u.last_name )`, 'username'],
+      ['e.fullname', 'assigne'],
+      ['r.reason_name', 'reason_name'],
+    );
+
+    q.innerJoin(e => e.doSmd, 'ds', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doSmdStatus, 'dss', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doSmdVehicle, 'dsv', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoinRaw(
+      'do_smd_vehicle_attachment',
+      'dsva',
+      'dsva.do_smd_vehicle_id = dsv.do_smd_vehicle_id AND dsva.is_deleted = FALSE',
+    );
+    q.leftJoin(e => e.doSmdVehicle.employee, 'e', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.user, 'u', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.reason, 'r', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.branch, 'b', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new ScanOutHistoryResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 
   private static async createDoSmd(
@@ -465,6 +690,7 @@ export class ScanoutSmdService {
       userId,
       branchId: paramBranchId,
       totalVehicle: 1,
+      departureScheduleDateTime: paramDoSmdTime,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,
@@ -558,30 +784,38 @@ export class ScanoutSmdService {
 
   private static async createDoSmdHistory(
     paramDoSmdId: number,
+    paramDoSmdDetailId: number,
     paramDoSmdVehicleId: number,
-    paramrepresentativeCode: string,
+    paramLatitude: string,
+    paramLongitude: string,
     paramDoSmdDepartureScheduleDate: Date,
     paramBranchId: number,
-    paramBranchIdTo: number,
+    paramDoSmdStatusId: number,
+    paramSealNumber: string,
+    paramReasonId: number,
     userId: number,
   ) {
-    const dataDoSmdDetail = DoSmdDetail.create({
+    const dataDoSmdHistory = DoSmdHistory.create({
       doSmdId: paramDoSmdId,
+      doSmdDetailId: paramDoSmdDetailId,
+      doSmdTime: paramDoSmdDepartureScheduleDate,
       doSmdVehicleId: paramDoSmdVehicleId,
       userId,
       branchId: paramBranchId,
-      branchIdFrom: paramBranchId,
-      branchIdTo: paramBranchIdTo,
-      representativeCodeList: paramrepresentativeCode,
+      latitude: paramLatitude,
+      longitude: paramLongitude,
+      doSmdStatusId: paramDoSmdStatusId,
       departureScheduleDateTime: paramDoSmdDepartureScheduleDate,
+      sealNumber: paramSealNumber,
+      reasonId: paramReasonId,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,
       updatedTime: moment().toDate(),
     });
-    const doSmdDetail = await DoSmd.insert(dataDoSmdDetail);
-    return doSmdDetail.identifiers.length
-      ? doSmdDetail.identifiers[0].doSmdDetailId
+    const doSmdHistory = await DoSmdHistory.insert(dataDoSmdHistory);
+    return doSmdHistory.identifiers.length
+      ? doSmdHistory.identifiers[0].doSmdHistoryId
       : null;
   }
 

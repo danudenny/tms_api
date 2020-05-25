@@ -3,26 +3,36 @@ import { TmsBaseEntity } from './tms-base';
 import { Representative } from './representative';
 import { Branch } from './branch';
 import { DoSmdDetail } from './do_smd_detail';
+import { DoSmd } from './do_smd';
+import { DoSmdStatus } from './do_smd_status';
+import { DoSmdVehicle } from './do_smd_vehicle';
+import { User } from './user';
+import { Reason } from './reason';
 
-@Entity('do_smd', { schema: 'public' })
+@Entity('do_smd_history', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
 // @Index('bag_bag_number_idx', ['bagNumber'])
 // @Index('bag_branch_id_idx', ['branchId'])
 // @Index('bag_created_time_idx', ['createdTime'])
 // @Index('bag_is_deleted_idx', ['isDeleted'])
-export class DoSmd extends TmsBaseEntity {
+export class DoSmdHistory extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'do_smd_history_id',
+  })
+  doSmdHistoryId: number;
+
+  @Column('bigint', {
+    nullable: false,
     name: 'do_smd_id',
   })
   doSmdId: number;
 
-  @Column('character varying', {
-    nullable: false,
-    length: 255,
-    name: 'do_smd_code',
+  @Column('bigint', {
+    nullable: true,
+    name: 'do_smd_detail_id',
   })
-  doSmdCode: string;
+  doSmdDetailId: number | null;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -42,46 +52,57 @@ export class DoSmd extends TmsBaseEntity {
   })
   branchId: number;
 
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: true,
-    name: 'do_smd_detail_id_last',
+    length: 500,
+    name: 'latitude',
   })
-  doSmdDetailIdLast: number | null;
+  latitude: string | null;
 
-  @Column('bigint', {
-    nullable: false,
-    default: () => 0,
-    name: 'total_detail',
-  })
-  totalDetail: number;
-
-  @Column('bigint', {
-    nullable: false,
-    default: () => 0,
-    name: 'total_item',
-  })
-  totalItem: number;
-
-  @Column('bigint', {
-    nullable: false,
-    default: () => 0,
-    name: 'total_vehicle',
-  })
-  totalVehicle: number;
-
-  @Column('bigint', {
+  @Column('character varying', {
     nullable: true,
-    // name: 'do_smd_vehicle_id_last',
-    name: 'vehicle_id_last',
+    length: 500,
+    name: 'longitude',
   })
-  doSmdVehicleIdLast: number | null;
+  longitude: string | null;
 
   @Column('bigint', {
     nullable: false,
     default: () => 1000,
-    name: 'do_smd_status_id_last',
+    name: 'do_smd_status_id',
   })
-  doSmdStatusIdLast: number;
+  doSmdStatusId: number;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'do_smd_vehicle_id',
+  })
+  doSmdVehicleId: number | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'seal_number',
+  })
+  sealNumber: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'departure_schedule_date_time',
+  })
+  departureScheduleDateTime: Date;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'reason_id',
+  })
+  reasonId: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_created',
+  })
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -112,7 +133,28 @@ export class DoSmd extends TmsBaseEntity {
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
 
-  @OneToOne(() => DoSmdDetail)
+  @OneToOne(() => DoSmd)
   @JoinColumn({ name: 'do_smd_id' })
+  doSmd: DoSmd;
+
+  @OneToOne(() => DoSmdDetail)
+  @JoinColumn({ name: 'do_smd_detail_id' })
   doSmdDetail: DoSmdDetail;
+
+  @OneToOne(() => DoSmdStatus)
+  @JoinColumn({ name: 'do_smd_status_id' })
+  doSmdStatus: DoSmdStatus;
+
+  @OneToOne(() => DoSmdVehicle)
+  @JoinColumn({ name: 'do_smd_vehicle_id' })
+  doSmdVehicle: DoSmdVehicle;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'user_id_created' })
+  user: User;
+
+  @OneToOne(() => Reason)
+  @JoinColumn({ name: 'reason_id' })
+  reason: Reason;
+
 }
