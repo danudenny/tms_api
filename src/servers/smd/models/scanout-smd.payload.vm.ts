@@ -8,7 +8,7 @@ export class ScanOutSmdVehiclePayloadVm {
   smd_date: Date;
 
   @ApiModelProperty()
-  vehicle_number: Date;
+  vehicle_number: string;
 
 }
 
@@ -30,5 +30,17 @@ export class ScanOutSmdItemPayloadVm {
 
   @ApiModelProperty()
   item_number: string;
+
+}
+
+export class ScanOutSmdSealPayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  seal_number: string;
+
+  @ApiModelProperty()
+  seal_seq: string;
 
 }

@@ -270,12 +270,12 @@ export class ScaninSmdService {
     // payload.fieldResolverMap['baggingDateTime'] = 'b.created_time';
     // payload.fieldResolverMap['branchId'] = 'bhin.branch_id';
 
-    payload.fieldResolverMap['bagging_date_time'] = 'b.created_time';
+    payload.fieldResolverMap['bagging_datetime'] = 'b.created_time';
     payload.fieldResolverMap['branch_id'] = 'bhin.branch_id';
 
     payload.globalSearchFields = [
       {
-        field: 'bagging_date_time',
+        field: 'bagging_datetime',
       },
       {
         field: 'branch_id',
@@ -300,7 +300,15 @@ export class ScaninSmdService {
           WHEN b.representative_id_to IS NULL then 'Belum Upload'
           ELSE r.representative_name
         END`, 'representative_name'],
-      ['(SELECT count(bia.bag_item_awb_id) FROM bag_item_awb bia WHERE bi.bag_item_id = bia.bag_item_id AND bia.is_deleted = FALSE GROUP BY bia.bag_item_awb_id)', 'tot_resi'],
+      [`(
+        SELECT
+          count(bia.awb_number)
+        FROM bag_item_awb bia
+        INNER JOIN bag_item bitem ON bitem.bag_item_id = bia.bag_item_id AND bitem.is_deleted  = FALSE
+        WHERE
+          bitem.bag_id = b.bag_id AND
+          bia.is_deleted = FALSE
+        GROUP BY bitem.bag_id)`, 'tot_resi'],
       [`CONCAT(bi.weight::numeric(10,2), ' kg')`, 'weight'],
       [`CONCAT(
           CASE

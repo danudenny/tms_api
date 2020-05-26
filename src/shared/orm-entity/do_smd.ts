@@ -3,6 +3,7 @@ import { TmsBaseEntity } from './tms-base';
 import { Representative } from './representative';
 import { Branch } from './branch';
 import { DoSmdDetail } from './do_smd_detail';
+import { DoSmdVehicle } from './do_smd_vehicle';
 
 @Entity('do_smd', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
@@ -108,6 +109,33 @@ export class DoSmd extends TmsBaseEntity {
   })
   isDeleted: boolean;
 
+  @Column('bigint', {
+    nullable: false,
+    default: () => 0,
+    name: 'total_bagging',
+  })
+  totalBagging: number;
+
+  @Column('bigint', {
+    nullable: false,
+    default: () => 0,
+    name: 'total_bag',
+  })
+  totalBag: number;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'branch_to_name_list',
+  })
+  branchToNameList: string;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'departure_schedule_date_time',
+  })
+  departureScheduleDateTime: Date;
+
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
@@ -115,4 +143,8 @@ export class DoSmd extends TmsBaseEntity {
   @OneToOne(() => DoSmdDetail)
   @JoinColumn({ name: 'do_smd_id' })
   doSmdDetail: DoSmdDetail;
+
+  @OneToOne(() => DoSmdVehicle)
+  @JoinColumn({ name: 'vehicle_id_last' })
+  doSmdVehicle: DoSmdVehicle;
 }
