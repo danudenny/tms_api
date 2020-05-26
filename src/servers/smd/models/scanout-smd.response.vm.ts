@@ -226,3 +226,30 @@ export class ScanOutHandoverVm {
   do_smd_vehicle_id: number;
 
 }
+
+export class ScanOutSmdDetailResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailVm]})
+  data: ScanOutDetailVm[];
+}
+
+export class ScanOutDetailVm {
+
+  @ApiModelProperty()
+  bag_number: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}

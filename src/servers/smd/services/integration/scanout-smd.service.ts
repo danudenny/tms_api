@@ -10,7 +10,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -682,6 +682,78 @@ export class ScanoutSmdService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
+  }
+
+  static async findScanOutDetail(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdDetailResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmd) {
+      if (payload.bag_type == 0) {
+        // Detail Gabung Paket
+        const rawQuerySmdDetail = `
+          SELECT
+            do_smd_detail_id
+          FROM do_smd_detail
+          WHERE
+            do_smd_id= ${payload.do_smd_id} AND
+            is_deleted = FALSE;
+        `;
+        const resultDataDoSmdDetail = await RawQueryService.query(rawQuerySmdDetail);
+        if (resultDataDoSmdDetail.length > 0 ) {
+          for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+            const rawQuery = `
+              SELECT
+                b.bag_id,
+                CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0')) AS bag_number,
+                CONCAT(bi.weight::numeric(10,2), ' Kg') AS weight,
+                r.representative_code,
+                br.branch_name
+              FROM do_smd_detail_item dsdi
+              INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
+              INNER JOIN bag b ON dsdi.bag_id = b.bag_id AND b.is_deleted = FALSE
+              INNER JOIN bag_item bi ON b.bag_id = bi.bag_id AND bi.is_deleted = FALSE
+              LEFT JOIN representative r ON b.representative_id_to = r.representative_id AND r.is_deleted = FALSE
+              LEFT JOIN branch br ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
+              WHERE
+                dsdi.do_smd_detail_id= ${resultDataDoSmdDetail[i].do_smd_detail_id} AND
+                dsdi.is_deleted = FALSE;
+            `;
+            const resultDataBag = await RawQueryService.query(rawQuery);
+            if (resultDataBag.length > 0 ) {
+              for (let i = 0; i < resultDataBag.length; i++) {
+                data.push({
+                  bag_number: resultDataBag[i].bag_number,
+                  weight: resultDataBag[i].weight,
+                  representative_code: resultDataBag[i].representative_code,
+                  branch_name: resultDataBag[i].branch_name,
+                });
+              }
+            }
+          }
+          result.statusCode = HttpStatus.OK;
+          result.message = 'List Bag Success';
+          result.data = data;
+          return result;
+        } else {
+          throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Detail Can't Found !`);
+        }
+      } else {
+        // Detail Bagging
+      }
+    } else {
+      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
+    }
   }
 
   public static async deleteSmd(paramdoSmdId: number) {

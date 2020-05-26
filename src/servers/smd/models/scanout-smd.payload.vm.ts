@@ -56,3 +56,12 @@ export class ScanOutSmdHandoverPayloadVm {
   vehicle_number: string;
 
 }
+
+export class ScanOutSmdDetailPayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  bag_type: number;
+
+}
