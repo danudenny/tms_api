@@ -44,3 +44,15 @@ export class ScanOutSmdSealPayloadVm {
   seal_seq: string;
 
 }
+
+export class ScanOutSmdHandoverPayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  employee_id_driver: number;
+
+  @ApiModelProperty()
+  vehicle_number: string;
+
+}

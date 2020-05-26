@@ -202,3 +202,27 @@ export class ScanOutHistoryVm {
   @ApiModelProperty()
   reason_name: String;
 }
+
+export class ScanOutSmdHandoverResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutHandoverVm]})
+  data: ScanOutHandoverVm[];
+}
+
+export class ScanOutHandoverVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_code: string;
+
+  @ApiModelProperty()
+  do_smd_vehicle_id: number;
+
+}

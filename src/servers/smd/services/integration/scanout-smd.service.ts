@@ -10,7 +10,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -704,14 +704,13 @@ export class ScanoutSmdService {
         },
       );
       const rawQuery = `
-      SELECT
-        do_smd_detail_id
-      FROM do_smd_detail
-      WHERE
-        do_smd_id = ${paramdoSmdId} AND
-        is_deleted = FALSE
-       ;
-    `;
+        SELECT
+          do_smd_detail_id
+        FROM do_smd_detail
+        WHERE
+          do_smd_id = ${paramdoSmdId} AND
+          is_deleted = FALSE;
+      `;
       const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
       if (resultDataDoSmdDetail.length > 0 ) {
         await DoSmdDetail.update(
@@ -756,6 +755,83 @@ export class ScanoutSmdService {
       }
     } else {
       throw new BadRequestException(`SMD ID: ` + paramdoSmdId + ` Can't Found !`);
+    }
+  }
+
+  static async scanOutHandover(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdHandoverResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmd) {
+      const rawQuery = `
+        SELECT
+          do_smd_vehicle_id
+        FROM do_smd_vehicle
+        WHERE
+          do_smd_vehicle_id = ${resultDoSmd.doSmdVehicleIdLast} AND
+          is_active = TRUE AND
+          reason_id IS NOT NULL AND
+          is_deleted = FALSE;
+      `;
+      const resultDataDoSmdVehicle = await RawQueryService.query(rawQuery);
+      if (resultDataDoSmdVehicle.length > 0 ) {
+        // Set Active False yang lama
+        await DoSmdVehicle.update(
+          { doSmdVehicleId : resultDataDoSmdVehicle[0].do_smd_vehicle_id },
+          {
+            isActive: false,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          },
+        );
+        // Create Vehicle Dulu dan jangan update ke do_smd
+        const paramDoSmdVehicleId = await this.createDoSmdVehicle(
+          payload.do_smd_id,
+          payload.vehicle_number,
+          payload.employee_id_driver,
+          permissonPayload.branchId,
+          authMeta.userId,
+        );
+
+        const paramDoSmdHistoryId = await this.createDoSmdHistory(
+          resultDoSmd.doSmdId,
+          null,
+          resultDoSmd.doSmdVehicleIdLast,
+          null,
+          null,
+          resultDoSmd.doSmdTime,
+          permissonPayload.branchId,
+          1150,
+          null,
+          null,
+          authMeta.userId,
+        );
+
+        data.push({
+          do_smd_id: resultDoSmd.doSmdId,
+          do_smd_code: resultDoSmd.doSmdCode,
+          do_smd_vehicle_id: paramDoSmdVehicleId,
+        });
+
+        result.statusCode = HttpStatus.OK;
+        result.message = 'SMD Code ' + resultDoSmd.doSmdCode + 'Success Handover';
+        result.data = data;
+        return result;
+      } else {
+        throw new BadRequestException(`Can't Found Trouble Reason For SMD: ` + resultDoSmd.doSmdCode);
+      }
+    } else {
+      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
     }
   }
 
