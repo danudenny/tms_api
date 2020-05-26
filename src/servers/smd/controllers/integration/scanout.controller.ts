@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards, Delete, Param } from '@nestjs/common';
 import { ScanoutSmdService } from '../../services/integration/scanout-smd.service';
 // import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
@@ -51,6 +51,17 @@ export class ScanOutController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async FindscanOutHistory(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
     return ScanoutSmdService.findScanOutHistory(payload);
+  }
+
+  @Delete('scanOut/deleted/:id')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async deleteAttachment(@Param('id') attachmentId: number) {
+    await ScanoutSmdService.deleteSmd(attachmentId);
+
+    return {
+      message: 'SMD ID: ' + attachmentId + ' Deleted' ,
+      statusCode: 200,
+    };
   }
 
 }

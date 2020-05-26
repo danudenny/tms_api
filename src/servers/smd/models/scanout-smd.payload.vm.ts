@@ -40,4 +40,7 @@ export class ScanOutSmdSealPayloadVm {
   @ApiModelProperty()
   seal_number: string;
 
+  @ApiModelProperty()
+  seal_seq: string;
+
 }

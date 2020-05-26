@@ -515,6 +515,12 @@ export class ScanoutSmdService {
           isDeleted: false,
         },
       });
+      let paramStatusId;
+      if (payload.seal_seq == 1) {
+        paramStatusId = 2000;
+      } else {
+        paramStatusId = 1200;
+      }
       const paramDoSmdHistoryId = await this.createDoSmdHistory(
         resultDoSmd.doSmdId,
         null,
@@ -523,7 +529,7 @@ export class ScanoutSmdService {
         null,
         resultDoSmd.doSmdTime,
         permissonPayload.branchId,
-        2000,
+        paramStatusId,
         payload.seal_number,
         null,
         authMeta.userId,
@@ -676,6 +682,81 @@ export class ScanoutSmdService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
+  }
+
+  public static async deleteSmd(paramdoSmdId: number) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: paramdoSmdId,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmd) {
+      await DoSmd.update(
+        { doSmdId : paramdoSmdId },
+        {
+          isDeleted: true,
+          userIdUpdated: authMeta.userId,
+          updatedTime: moment().toDate(),
+        },
+      );
+      const rawQuery = `
+      SELECT
+        do_smd_detail_id
+      FROM do_smd_detail
+      WHERE
+        do_smd_id = ${paramdoSmdId} AND
+        is_deleted = FALSE
+       ;
+    `;
+      const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
+      if (resultDataDoSmdDetail.length > 0 ) {
+        await DoSmdDetail.update(
+          { doSmdId : paramdoSmdId },
+          {
+            isDeleted: true,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          },
+        );
+        await DoSmdVehicle.update(
+          { doSmdId : paramdoSmdId },
+          {
+            isDeleted: true,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          },
+        );
+        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+          await DoSmdDetailItem.update(
+            { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+            {
+              isDeleted: true,
+              userIdUpdated: authMeta.userId,
+              updatedTime: moment().toDate(),
+            },
+          );
+        }
+        const paramDoSmdHistoryId = await this.createDoSmdHistory(
+          resultDoSmd.doSmdId,
+          null,
+          resultDoSmd.doSmdVehicleIdLast,
+          null,
+          null,
+          resultDoSmd.doSmdTime,
+          permissonPayload.branchId,
+          7000,
+          null,
+          null,
+          authMeta.userId,
+        );
+      }
+    } else {
+      throw new BadRequestException(`SMD ID: ` + paramdoSmdId + ` Can't Found !`);
+    }
   }
 
   private static async createDoSmd(
