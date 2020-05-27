@@ -7,6 +7,7 @@ import {
     CheckDataDropPartnerVm, DropCashLessResponseVM, DropCashlessVm, DropSuccessResponseVm,
 } from '../../models/partner/fastpay-drop.vm';
 import { PartnerFastpayService } from '../../services/integration/partner-fastpay.service';
+import { ResponseMaintenanceService } from '../../../../shared/services/response-maintenance.service';
 
 @ApiUseTags('Integration Drop Partner')
 @Controller('integration/partner')
@@ -28,6 +29,8 @@ export class PartnerFastpayController {
   @UseGuards(AuthXAPIKeyGuard)
   @ApiOkResponse({ type: DropCashLessResponseVM })
   public async dropCash(@Body() payload: DropCashlessVm) {
+    // NOTE: handle for message disable this service
+    await ResponseMaintenanceService.dropService();
     return PartnerFastpayService.dropCash(payload);
   }
 
@@ -37,6 +40,8 @@ export class PartnerFastpayController {
   @UseGuards(AuthXAPIKeyGuard)
   @ApiOkResponse({ type: DropCashLessResponseVM })
   public async dropCashless(@Body() payload: DropCashlessVm) {
+    // NOTE: handle for message disable this service
+    await ResponseMaintenanceService.dropService();
     return PartnerFastpayService.dropCashless(payload);
   }
 }
