@@ -10,7 +10,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutDetailMoreResponseVm, ScanOutDetailBaggingMoreResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -325,6 +325,156 @@ export class ScanoutSmdListService {
     } else {
       throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
     }
+  }
+
+  static async findScanOutDetailMore(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutDetailMoreResponseVm> {
+
+    payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.ds.do_smd_id';
+
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_detail_id',
+      },
+    ];
+    const repo = new OrionRepositoryService(DoSmdDetailItem, 'dsdi');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['dsdi.do_smd_detail_id', 'do_smd_detail_id'],
+      ['b.bag_id', 'bag_id'],
+      [`CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0'))`, 'bag_number'],
+      [`CONCAT(bi.weight::numeric(10,2), ' Kg')`, 'weight'],
+      ['r.representative_code', 'representative_code'],
+      ['br.branch_name', 'branch_name'],
+    );
+
+    q.innerJoinRaw(
+      'do_smd_detail',
+      'dsd',
+      'dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE',
+    );
+    q.innerJoinRaw(
+      'bag',
+      'b',
+      'dsdi.bag_id = b.bag_id AND b.is_deleted = FALSE',
+    );
+    q.innerJoinRaw(
+      'bag_item',
+      'bi',
+      'b.bag_id = bi.bag_id AND bi.is_deleted = FALSE',
+    );
+    q.leftJoinRaw(
+      'representative',
+      'r',
+      'b.representative_id_to = r.representative_id AND r.is_deleted = FALSE',
+    );
+    q.leftJoinRaw(
+      'branch',
+      'br',
+      'dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE',
+    );
+    q.andWhereRaw(`dsdi.bag_type = 0`);
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new ScanOutDetailMoreResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findScanOutDetailBaggingMore(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutDetailBaggingMoreResponseVm> {
+
+    // SELECT
+    //             d.bagging_id,
+    //             bg.bagging_code,
+    //             bg.total_item,
+    //             CONCAT(bg.total_weight::numeric(10,2), ' Kg') AS total_weight,
+    //             r.representative_code,
+    //             br.branch_name
+    //           FROM(
+    //             SELECT
+    //               dsdi.bagging_id,
+    //               dsd.branch_id
+    //             FROM do_smd_detail_item dsdi
+    //             INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
+    //             WHERE
+    //               dsdi.do_smd_detail_id = ${resultDataDoSmdDetail[i].do_smd_detail_id} AND
+    //               dsdi.bag_type = 1 AND
+    //               dsdi.is_deleted = FALSE
+    //             GROUP BY
+    //               dsdi.bagging_id,
+    //               dsd.branch_id
+    //           )d
+    //           INNER JOIN bagging bg ON bg.bagging_id = d.bagging_id AND bg.is_deleted = FALSE
+    //           LEFT JOIN branch br ON d.branch_id = br.branch_id AND br.is_deleted = FALSE
+    //           LEFT JOIN representative r ON bg.representative_id_to = r.representative_id  AND r.is_deleted = FALSE
+    //           LIMIT 5;
+
+    payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.do_smd_detail_id';
+    payload.fieldFilterManualMap['do_smd_detail_id'] = true;
+    const q = payload.buildQueryBuilder();
+
+    q.select('d.bagging_id', 'bagging_id')
+      .addSelect('bg.bagging_code', 'bagging_number')
+      .addSelect('bg.total_item', 'total_bag')
+      .addSelect(`CONCAT(bg.total_weight::numeric(10,2), ' Kg')`, 'weight')
+      .addSelect('r.representative_code', 'representative_code')
+      .addSelect('br.branch_name', 'branch_name')
+      .from(subQuery => {
+        subQuery
+          .select('dsdi.bagging_id')
+          .addSelect('dsd.branch_id')
+          .from('do_smd_detail_item', 'dsdi')
+          .innerJoin(
+            'do_smd_detail',
+            'dsd',
+            'dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE',
+          );
+
+        payload.applyFiltersToQueryBuilder(subQuery, ['do_smd_detail_id']);
+
+        subQuery
+          .andWhere('dsdi.bag_type = 1')
+          .andWhere('dsdi.is_deleted = false')
+          .groupBy('dsdi.bagging_id')
+          .addGroupBy('dsd.branch_id');
+
+        return subQuery;
+      }, 'd')
+      .innerJoin(
+        'bagging',
+        'bg',
+        'bg.bagging_id = d.bagging_id AND bg.is_deleted = FALSE',
+      )
+      .leftJoin(
+        'branch',
+        'br',
+        'd.branch_id = br.branch_id AND br.is_deleted = FALSE',
+      )
+      .leftJoin(
+        'representative',
+        'r',
+        'bg.representative_id_to = r.representative_id  AND r.is_deleted = FALSE',
+      );
+
+    const total = await QueryBuilderService.count(q, '1');
+    payload.applyRawPaginationToQueryBuilder(q);
+    const data = await q.getRawMany();
+
+    const result = new ScanOutDetailBaggingMoreResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 
 }
