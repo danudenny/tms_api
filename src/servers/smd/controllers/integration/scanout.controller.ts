@@ -41,32 +41,6 @@ export class ScanOutController {
     return ScanoutSmdService.scanOutSeal(payload);
   }
 
-  @Post('scanOut/list')
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async FindscanOutList(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
-    return ScanoutSmdService.findScanOutList(payload);
-  }
-
-  @Post('scanOut/history')
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async FindscanOutHistory(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
-    return ScanoutSmdService.findScanOutHistory(payload);
-  }
-
-  @Post('scanOut/detailBag')
-  @Transactional()
-  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  public async FindscanOutDetail(@Req() request: any, @Body() payload: ScanOutSmdDetailPayloadVm) {
-    return ScanoutSmdService.findScanOutDetail(payload);
-  }
-
-  @Post('scanOut/detailBagging')
-  @Transactional()
-  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  public async FindscanOutDetailBagging(@Req() request: any, @Body() payload: ScanOutSmdDetailPayloadVm) {
-    return ScanoutSmdService.findScanOutDetailBagging(payload);
-  }
-
   @Delete('scanOut/deleted/:id')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async deleteAttachment(@Param('id') attachmentId: number) {
