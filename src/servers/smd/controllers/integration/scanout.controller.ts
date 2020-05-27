@@ -53,11 +53,18 @@ export class ScanOutController {
     return ScanoutSmdService.findScanOutHistory(payload);
   }
 
-  @Post('scanOut/detail')
+  @Post('scanOut/detailBag')
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async FindscanOutDetail(@Req() request: any, @Body() payload: ScanOutSmdDetailPayloadVm) {
     return ScanoutSmdService.findScanOutDetail(payload);
+  }
+
+  @Post('scanOut/detailBagging')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async FindscanOutDetailBagging(@Req() request: any, @Body() payload: ScanOutSmdDetailPayloadVm) {
+    return ScanoutSmdService.findScanOutDetailBagging(payload);
   }
 
   @Delete('scanOut/deleted/:id')

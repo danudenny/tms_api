@@ -10,7 +10,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -726,17 +726,20 @@ export class ScanoutSmdService {
               LEFT JOIN representative r ON b.representative_id_to = r.representative_id AND r.is_deleted = FALSE
               LEFT JOIN branch br ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
               WHERE
-                dsdi.do_smd_detail_id= ${resultDataDoSmdDetail[i].do_smd_detail_id} AND
-                dsdi.is_deleted = FALSE;
+                dsdi.do_smd_detail_id = ${resultDataDoSmdDetail[i].do_smd_detail_id} AND
+                dsdi.bag_type = 0 AND
+                dsdi.is_deleted = FALSE
+              LIMIT 5;
             `;
             const resultDataBag = await RawQueryService.query(rawQuery);
             if (resultDataBag.length > 0 ) {
-              for (let i = 0; i < resultDataBag.length; i++) {
+              for (let a = 0; a < resultDataBag.length; a++) {
                 data.push({
-                  bag_number: resultDataBag[i].bag_number,
-                  weight: resultDataBag[i].weight,
-                  representative_code: resultDataBag[i].representative_code,
-                  branch_name: resultDataBag[i].branch_name,
+                  do_smd_detail_id: resultDataDoSmdDetail[i].do_smd_detail_id,
+                  bag_number: resultDataBag[a].bag_number,
+                  weight: resultDataBag[a].weight,
+                  representative_code: resultDataBag[a].representative_code,
+                  branch_name: resultDataBag[a].branch_name,
                 });
               }
             }
@@ -749,7 +752,90 @@ export class ScanoutSmdService {
           throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Detail Can't Found !`);
         }
       } else {
+        throw new BadRequestException(`This API For Detail Bag / Gab.Paket Only`);
+      }
+    } else {
+      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
+    }
+  }
+
+  static async findScanOutDetailBagging(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdDetailBaggingResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmd) {
+      if (payload.bag_type == 1) {
         // Detail Bagging
+        const rawQuerySmdDetail = `
+          SELECT
+            do_smd_detail_id
+          FROM do_smd_detail
+          WHERE
+            do_smd_id= ${payload.do_smd_id} AND
+            is_deleted = FALSE;
+        `;
+        const resultDataDoSmdDetail = await RawQueryService.query(rawQuerySmdDetail);
+        if (resultDataDoSmdDetail.length > 0 ) {
+          for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+            const rawQuery = `
+              SELECT
+                d.bagging_id,
+                bg.bagging_code,
+                bg.total_item,
+                CONCAT(bg.total_weight::numeric(10,2), ' Kg') AS total_weight,
+                r.representative_code,
+                br.branch_name
+              FROM(
+                SELECT
+                  dsdi.bagging_id,
+                  dsd.branch_id
+                FROM do_smd_detail_item dsdi
+                INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
+                WHERE
+                  dsdi.do_smd_detail_id = ${resultDataDoSmdDetail[i].do_smd_detail_id} AND
+                  dsdi.bag_type = 1 AND
+                  dsdi.is_deleted = FALSE
+                GROUP BY
+                  dsdi.bagging_id,
+                  dsd.branch_id
+              )d
+              INNER JOIN bagging bg ON bg.bagging_id = d.bagging_id AND bg.is_deleted = FALSE
+              LEFT JOIN branch br ON d.branch_id = br.branch_id AND br.is_deleted = FALSE
+              LEFT JOIN representative r ON bg.representative_id_to = r.representative_id  AND r.is_deleted = FALSE
+              LIMIT 5;
+            `;
+            const resultDataBagging = await RawQueryService.query(rawQuery);
+            if (resultDataBagging.length > 0 ) {
+              for (let a = 0; a < resultDataBagging.length; a++) {
+                data.push({
+                  do_smd_detail_id: resultDataDoSmdDetail[i].do_smd_detail_id,
+                  bagging_number: resultDataBagging[a].bagging_code,
+                  total_bag: resultDataBagging[a].total_item,
+                  weight: resultDataBagging[a].total_weight,
+                  representative_code: resultDataBagging[a].representative_code,
+                  branch_name: resultDataBagging[a].branch_name,
+                });
+              }
+            }
+          }
+          result.statusCode = HttpStatus.OK;
+          result.message = 'List Bagging Success';
+          result.data = data;
+          return result;
+        } else {
+          throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Detail Can't Found !`);
+        }
+      } else {
+        throw new BadRequestException(`This API For Detail Bagging Only`);
       }
     } else {
       throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);

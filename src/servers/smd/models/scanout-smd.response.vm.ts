@@ -239,6 +239,9 @@ export class ScanOutSmdDetailResponseVm {
 }
 
 export class ScanOutDetailVm {
+  
+  @ApiModelProperty()
+  do_smd_detail_id: number;
 
   @ApiModelProperty()
   bag_number: string;
@@ -253,3 +256,37 @@ export class ScanOutDetailVm {
   branch_name: string;
 
 }
+
+export class ScanOutSmdDetailBaggingResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailBaggingVm]})
+  data: ScanOutDetailBaggingVm[];
+}
+
+export class ScanOutDetailBaggingVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bagging_number: string;
+
+  @ApiModelProperty()
+  total_bag: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}
+
