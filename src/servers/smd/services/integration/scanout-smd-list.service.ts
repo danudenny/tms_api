@@ -393,32 +393,6 @@ export class ScanoutSmdListService {
     payload: BaseMetaPayloadVm,
   ): Promise<ScanOutDetailBaggingMoreResponseVm> {
 
-    // SELECT
-    //             d.bagging_id,
-    //             bg.bagging_code,
-    //             bg.total_item,
-    //             CONCAT(bg.total_weight::numeric(10,2), ' Kg') AS total_weight,
-    //             r.representative_code,
-    //             br.branch_name
-    //           FROM(
-    //             SELECT
-    //               dsdi.bagging_id,
-    //               dsd.branch_id
-    //             FROM do_smd_detail_item dsdi
-    //             INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
-    //             WHERE
-    //               dsdi.do_smd_detail_id = ${resultDataDoSmdDetail[i].do_smd_detail_id} AND
-    //               dsdi.bag_type = 1 AND
-    //               dsdi.is_deleted = FALSE
-    //             GROUP BY
-    //               dsdi.bagging_id,
-    //               dsd.branch_id
-    //           )d
-    //           INNER JOIN bagging bg ON bg.bagging_id = d.bagging_id AND bg.is_deleted = FALSE
-    //           LEFT JOIN branch br ON d.branch_id = br.branch_id AND br.is_deleted = FALSE
-    //           LEFT JOIN representative r ON bg.representative_id_to = r.representative_id  AND r.is_deleted = FALSE
-    //           LIMIT 5;
-
     payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.do_smd_detail_id';
     payload.fieldFilterManualMap['do_smd_detail_id'] = true;
     const q = payload.buildQueryBuilder();
