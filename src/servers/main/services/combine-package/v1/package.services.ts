@@ -473,10 +473,11 @@ export class V1PackageService {
       });
 
       // construct data detail
+      // NOTE: change totalWeightFinalRounded : awb.totalWeightRealRounded
       const detail = {
         awbNumber: awb.awbNumber,
         totalWeightRealRounded: awb.totalWeightRealRounded,
-        totalWeightFinalRounded: awb.totalWeightFinalRounded,
+        totalWeightFinalRounded: awb.totalWeightRealRounded,
         consigneeName: awb.consigneeName,
         consigneeNumber: awb.consigneeNumber,
         awbItemId: awbItemAttr.awbItemId,
@@ -572,16 +573,8 @@ export class V1PackageService {
     if (bagItem) {
       const bagWeight = Number(bagItem.weight);
       const totalWeightRealRounded = Number(payload.awbDetail.totalWeightRealRounded);
-      const bagWeightFinalFloat = bagWeight + totalWeightRealRounded;
-      PinoLoggerService.log('#### DEBUG AWB bagWeight :: ', bagWeight);
-      PinoLoggerService.log(
-        '#### DEBUG AWB totalWeightRealRounded :: ',
-        totalWeightRealRounded,
-      );
-      PinoLoggerService.log(
-        '#### bagWeightFinalFloat :: ',
-        bagWeightFinalFloat,
-      );
+      const bagWeightFinalFloat = parseFloat((bagWeight + totalWeightRealRounded).toFixed(5));
+      PinoLoggerService.log('#### bagWeightFinalFloat :: ', bagWeightFinalFloat );
 
       await BagItem.update({
         bagItemId: bagDetail.bagItemId,
