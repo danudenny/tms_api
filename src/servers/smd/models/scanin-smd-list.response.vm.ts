@@ -35,4 +35,32 @@ export class ScanInSmdListVm {
   @ApiModelProperty()
   total_bagging: number;
 }
+export class ScanInSmdDetailResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
 
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanInDetailVm]})
+  data: ScanInDetailVm[];
+}
+
+export class ScanInDetailVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_number: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}

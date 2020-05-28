@@ -343,7 +343,7 @@ export class ScanoutSmdService {
             await DoSmd.update(
               { doSmdId : payload.do_smd_id },
               {
-                totalBagging: resultDoSmd[0].total_bagging + 1,
+                totalBagging: resultDoSmd.totalBagging + 1,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
               },
@@ -444,7 +444,7 @@ export class ScanoutSmdService {
               await DoSmd.update(
                 { doSmdId : payload.do_smd_id },
                 {
-                  totalBagging: resultDoSmd[0].total_bag + 1,
+                  totalBagging: resultDoSmd.totalBag + 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
