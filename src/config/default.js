@@ -21,8 +21,8 @@ module.exports = {
     cloudUrl: 'https://sicepattesting.s3-ap-southeast-1.amazonaws.com',
     cloudBucket: 'sicepattesting',
     cloudRegion: 'ap-southeast-1',
-    cloudAccessKeyId: 'AKIAJHHTEMTLK42N7TQA',
-    cloudSecretAccessKey: '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',
+    cloudAccessKeyId: 'AKIA2ZCLVOSJTBNWP73E',
+    cloudSecretAccessKey: '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',
   },
   printerHelper: {
     url: 'http://jsreport.sicepat.com/wcpp',
@@ -63,9 +63,13 @@ module.exports = {
     passKey: '2e8a7f4d5ef4b746a503ef270ce2a98e562bc77e2dd6c19bf10e3d95e3390393',
     shipmentMethod: 'Instant',
   },
+  odoo: {
+    baseUrl: 'http://52.77.199.252:5168/',
+    authKey: '5a71a345b4eaa9d23b4d4c745e7785e9',
+  },
   korwil: {
     korwilRoleId: 38,
-    palkurRoleId: 40,
+    palkurRoleId: [40, 41],
   },
   masterData: {
     apiKey:

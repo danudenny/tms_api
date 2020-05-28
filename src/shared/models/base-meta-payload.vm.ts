@@ -40,6 +40,9 @@ export class BaseMetaPayloadFilterVm {
   @ApiModelProperty()
   value?: any;
 
+  @ApiModelPropertyOptional()
+  isOR?: boolean;
+
   get sqlOperator() {
     return RequestQueryBuidlerService.convertFilterOperatorToSqlOperator(
       this.operator,
