@@ -226,3 +226,113 @@ export class ScanOutHandoverVm {
   do_smd_vehicle_id: number;
 
 }
+
+export class ScanOutSmdDetailResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailVm]})
+  data: ScanOutDetailVm[];
+}
+
+export class ScanOutDetailVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_number: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}
+
+export class ScanOutSmdDetailBaggingResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailBaggingVm]})
+  data: ScanOutDetailBaggingVm[];
+}
+
+export class ScanOutDetailBaggingVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bagging_number: string;
+
+  @ApiModelProperty()
+  total_bag: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}
+
+export class ScanOutDetailMoreResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [ScanOutDetailMoreVm] })
+  data: ScanOutDetailMoreVm[];
+}
+
+export class ScanOutDetailMoreVm {
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_number: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+}
+
+export class ScanOutDetailBaggingMoreResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [ScanOutDetailBaggingMoreVm] })
+  data: ScanOutDetailBaggingMoreVm[];
+}
+
+export class ScanOutDetailBaggingMoreVm {
+
+  @ApiModelProperty()
+  bagging_number: string;
+
+  @ApiModelProperty()
+  total_bag: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+}
