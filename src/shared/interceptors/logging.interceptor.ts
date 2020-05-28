@@ -29,7 +29,7 @@ export class LoggingInterceptor implements NestInterceptor {
     };
     PinoLoggerService.withContext('LoggingInterceptor').log(dataLog);
     // Loggly
-    WinstonLogglyService.info(dataLog);
+    // WinstonLogglyService.info(dataLog);
     return next.handle();
   }
 }
