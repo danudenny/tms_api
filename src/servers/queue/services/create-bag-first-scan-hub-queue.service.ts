@@ -78,7 +78,7 @@ export class CreateBagFirstScanHubQueueService {
             bagItemId: data.bagItemId,
             bagNumber: data.bagNumber,
             awbItemId: data.awbItemId,
-            awbId: data.awbId,
+            awbId: awbItemAttr.awbId,
             awbNumber: data.awbNumber,
             userIdCreated: data.userId,
             userIdUpdated: data.userId,
