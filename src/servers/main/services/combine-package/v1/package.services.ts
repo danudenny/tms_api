@@ -581,6 +581,8 @@ export class V1PackageService {
       }, {
         weight: bagWeightFinalFloat,
       });
+      bagItem.weight = bagWeightFinalFloat;
+      // await bagItem.save();
 
       // //#region sending background process
       CreateBagAwbScanHubQueueService.perform(
