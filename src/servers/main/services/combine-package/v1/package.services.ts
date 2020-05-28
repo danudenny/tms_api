@@ -570,15 +570,25 @@ export class V1PackageService {
       where: { bagItemId: bagDetail.bagItemId },
     });
     if (bagItem) {
-      const bagWeight = +bagItem.weight;
-      const totalWeightRealRounded = +payload.awbDetail.totalWeightRealRounded;
-      const bagWeightFinalFloat = parseFloat((bagWeight + totalWeightRealRounded).toFixed(5));
+      const bagWeight = Number(bagItem.weight);
+      const totalWeightRealRounded = Number(payload.awbDetail.totalWeightRealRounded);
+      const bagWeightFinalFloat = bagWeight + totalWeightRealRounded;
+      PinoLoggerService.log('#### DEBUG AWB bagWeight :: ', bagWeight);
+      PinoLoggerService.log(
+        '#### DEBUG AWB totalWeightRealRounded :: ',
+        totalWeightRealRounded,
+      );
+      PinoLoggerService.log(
+        '#### bagWeightFinalFloat :: ',
+        bagWeightFinalFloat,
+      );
+
       await BagItem.update({
         bagItemId: bagDetail.bagItemId,
       }, {
         weight: bagWeightFinalFloat,
       });
-      PinoLoggerService.log('#### DEBUG AWB SCAN PAYLOAD', payload);
+
       // //#region sending background process
       CreateBagAwbScanHubQueueService.perform(
         bagDetail.bagId,
