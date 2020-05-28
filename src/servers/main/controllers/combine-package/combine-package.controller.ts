@@ -29,6 +29,7 @@ export class CombinePackageController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: PackageAwbResponseVm })
   public async loadPackageAwb() {
-    return this.packageService.loadAwbPackage();
+    // return this.packageService.loadAwbPackage();
+    return V1PackageService.loadAwbPackage();
   }
 }

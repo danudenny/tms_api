@@ -135,7 +135,7 @@ export class V1PackageService {
       qb.addSelect('d.pickup_merchant', 'pickupMerchant');
       qb.addSelect('d.ref_reseller', 'shipperName');
       qb.addSelect('d.total_weight_real_rounded', 'weight');
-      qb.addSelect('d.total_weight_final_rounded', 'totalWeightFinalRounded');
+      qb.addSelect('d.total_weight_real_rounded', 'totalWeightFinalRounded');
       qb.from('pod_scan_in_hub_detail', 'a');
       qb.innerJoin('bag', 'b', 'a.bag_id = b.bag_id');
       qb.innerJoin('bag_item', 'c', 'c.bag_item_id = a.bag_item_id');
