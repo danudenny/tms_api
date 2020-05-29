@@ -54,6 +54,8 @@ import { V1WebTrackingController } from './web/v1/web-tracking.controller';
 import { SmsTrackingController } from './web/sms-tracking.controller';
 import { V2MobileSyncController } from './mobile/v2/mobile-sync.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
+import {PaymentProviderController} from './mobile/mobile-payment-provider.controller';
+import {CodPaymentController} from './mobile/mobile-cod-payment.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -112,6 +114,8 @@ import { RolePodManualController } from './web/web-role-pod-manual.controller';
     V1WebTrackingController,
     SmsTrackingController,
     RolePodManualController,
+    PaymentProviderController,
+    CodPaymentController,
   ],
 })
 export class MainServerControllersModule { }
