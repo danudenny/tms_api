@@ -64,3 +64,36 @@ export class ScanInDetailVm {
   branch_name: string;
 
 }
+
+export class ScanInSmdDetailBaggingResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanInDetailBaggingVm]})
+  data: ScanInDetailBaggingVm[];
+}
+
+export class ScanInDetailBaggingVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bagging_number: string;
+
+  @ApiModelProperty()
+  total_bag: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}

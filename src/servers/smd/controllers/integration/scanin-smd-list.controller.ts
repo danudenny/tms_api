@@ -25,4 +25,11 @@ export class ScanInSmdListController {
     return ScaninSmdListService.findScanInDetail(payload);
   }
 
+  @Post('scanIn/detailBagging')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async FindscanInDetailBagging(@Req() request: any, @Body() payload: ScanInSmdDetailPayloadVm) {
+    return ScaninSmdListService.findScanInDetailBagging(payload);
+  }
+
 }
