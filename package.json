@@ -25,7 +25,9 @@
     "migration:run": "npm run typeorm migration:run",
     "migration:revert": "npm run typeorm migration:revert",
     "migration:generate": "npm run typeorm migration:generate -- -n",
-    "drakov:start": "drakov -f 'contracts/*.apib' -p 3100 --public --autoOptions --watch"
+    "drakov:start": "drakov -f 'contracts/*.apib' -p 3100 --public --autoOptions --watch",
+    "check-format": "prettier --check \"**/*.ts\"",
+    "format-code": "prettier --write \"**/*.ts\""
   },
   "dependencies": {
     "@nestjs/common": "^6.5.3",

@@ -27,9 +27,9 @@ export class LoggingInterceptor implements NestInterceptor {
       params,
       query,
     };
-    PinoLoggerService.withContext('LoggingInterceptor').debug(dataLog);
+    PinoLoggerService.withContext('LoggingInterceptor').log(dataLog);
     // Loggly
-    WinstonLogglyService.info(dataLog);
+    // WinstonLogglyService.info(dataLog);
     return next.handle();
   }
 }

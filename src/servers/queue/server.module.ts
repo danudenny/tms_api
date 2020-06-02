@@ -26,6 +26,7 @@ import { BagDropoffHubQueueService } from './services/bag-dropoff-hub-queue.serv
 import { UploadImagePodQueueService } from './services/upload-pod-image-queue.service';
 import { CreateBagFirstScanHubQueueService } from './services/create-bag-first-scan-hub-queue.service';
 import { CreateBagAwbScanHubQueueService } from './services/create-bag-awb-scan-hub-queue.service';
+import {CodPaymentQueueService} from './services/cod-payment-queue.service';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -121,6 +122,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     UploadImagePodQueueService.boot();
     CreateBagFirstScanHubQueueService.boot();
     CreateBagAwbScanHubQueueService.boot();
+    CodPaymentQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
   }

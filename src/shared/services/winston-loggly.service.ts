@@ -18,4 +18,12 @@ export class WinstonLogglyService {
   public static info(message: any) {
     winston.log('info', message);
   }
+
+  public static error(message: any) {
+    winston.log('error', message);
+  }
+
+  public static warn(message: any) {
+    winston.log('warn', message);
+  }
 }
