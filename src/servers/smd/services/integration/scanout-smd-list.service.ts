@@ -189,7 +189,7 @@ export class ScanoutSmdListService {
       },
     });
     if (resultDoSmd) {
-      if (payload.bag_type == 0) {
+      if (payload.bag_type == 1) {
         // Detail Gabung Paket
         const rawQuerySmdDetail = `
           SELECT
@@ -217,7 +217,7 @@ export class ScanoutSmdListService {
               LEFT JOIN branch br ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
               WHERE
                 dsdi.do_smd_detail_id = ${resultDataDoSmdDetail[i].do_smd_detail_id} AND
-                dsdi.bag_type = 0 AND
+                dsdi.bag_type = 1 AND
                 dsdi.is_deleted = FALSE
               LIMIT 5;
             `;
@@ -263,7 +263,7 @@ export class ScanoutSmdListService {
       },
     });
     if (resultDoSmd) {
-      if (payload.bag_type == 1) {
+      if (payload.bag_type == 0) {
         // Detail Bagging
         const rawQuerySmdDetail = `
           SELECT
@@ -292,7 +292,7 @@ export class ScanoutSmdListService {
                 INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
                 WHERE
                   dsdi.do_smd_detail_id = ${resultDataDoSmdDetail[i].do_smd_detail_id} AND
-                  dsdi.bag_type = 1 AND
+                  dsdi.bag_type = 0 AND
                   dsdi.is_deleted = FALSE
                 GROUP BY
                   dsdi.bagging_id,
@@ -382,7 +382,7 @@ export class ScanoutSmdListService {
       'br',
       'dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE',
     );
-    q.andWhereRaw(`dsdi.bag_type = 0`);
+    q.andWhereRaw(`dsdi.bag_type = 1`);
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
@@ -422,7 +422,7 @@ export class ScanoutSmdListService {
         payload.applyFiltersToQueryBuilder(subQuery, ['do_smd_detail_id']);
 
         subQuery
-          .andWhere('dsdi.bag_type = 1')
+          .andWhere('dsdi.bag_type = 0')
           .andWhere('dsdi.is_deleted = false')
           .groupBy('dsdi.bagging_id')
           .addGroupBy('dsd.branch_id');

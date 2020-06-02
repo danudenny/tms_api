@@ -8,32 +8,27 @@ import { PermissionTokenGuard } from '../../../../shared/guards/permission-token
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
-import { MobileInitDataResponseVm } from '../../../main/models/mobile-init-data-response.vm';
-import { MobileInitDataPayloadVm } from '../../../main/models/mobile-init-data-payload.vm';
+import { MobileSmdListVm, MobileSmdListDetailBagVm, MobileSmdListDetailBaggingVm } from '../../models/mobile-smd-list.response.vm';
+import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArrivalPayloadVm } from '../../models/mobile-smd.payload.vm';
 import { MobileSmdService } from '../../services/integration/mobile-smd.service';
 
-@ApiUseTags('SCAN OUT SMD')
+@ApiUseTags('Mobile SMD')
 @Controller('smd')
 export class MobileSmdController {
   constructor() {}
 
-  @Post('getHistory')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ResponseSerializerOptions({ disable: true })
-  @ApiOkResponse({ type: MobileInitDataResponseVm })
-  public async getHistory(@Body() payload: MobileInitDataPayloadVm) {
-    return MobileSmdService.getHistoryByRequest(
-      payload.doPodDeliverDetailId,
-    );
-  }
-
-  @Post('mobile/list')
+  @Post('mobile/departure')
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  public async scanOutVehicle(@Req() request: any, @Body() payload: ScanOutSmdVehiclePayloadVm) {
-    return ScanoutSmdService.scanOutVehicle(payload);
+  public async scanOutMobile(@Req() request: any, @Body() payload: MobileSmdDeparturePayloadVm) {
+    return MobileSmdService.scanOutMobile(payload);
+  }
+
+  @Post('mobile/arrival')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async scanInMobile(@Req() request: any, @Body() payload: MobileSmdArrivalPayloadVm) {
+    return MobileSmdService.scanInMobile(payload);
   }
 
 }

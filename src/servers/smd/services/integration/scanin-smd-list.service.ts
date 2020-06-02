@@ -122,7 +122,7 @@ export class ScaninSmdListService {
           LEFT JOIN branch br ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
           WHERE
             dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
-            dsdi.bag_type = 0 AND
+            dsdi.bag_type = 1 AND
             dsdi.is_deleted = FALSE
           LIMIT 5;
         `;
@@ -184,7 +184,7 @@ export class ScaninSmdListService {
             INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
             WHERE
               dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
-              dsdi.bag_type = 1 AND
+              dsdi.bag_type = 0 AND
               dsdi.is_deleted = FALSE
             GROUP BY
               dsdi.bagging_id,
