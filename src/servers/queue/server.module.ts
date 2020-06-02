@@ -120,6 +120,8 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     AwbSendPartnerQueueService.boot();
     BagDropoffHubQueueService.boot();
     UploadImagePodQueueService.boot();
+    CreateBagFirstScanHubQueueService.boot();
+    CreateBagAwbScanHubQueueService.boot();
     CodPaymentQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
