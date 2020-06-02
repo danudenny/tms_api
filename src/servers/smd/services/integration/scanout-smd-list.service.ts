@@ -73,9 +73,14 @@ export class ScanoutSmdListService {
       ['ds.total_bagging', 'total_bagging'],
     );
 
-    q.innerJoin(e => e.doSmdDetail, 'dsd', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q.innerJoinRaw(
+      'do_smd_detail',
+      'dsd',
+      'dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE',
     );
+    // q.innerJoin(e => e.doSmdDetail, 'dsd', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
     q.innerJoin(e => e.doSmdVehicle, 'dsv', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );

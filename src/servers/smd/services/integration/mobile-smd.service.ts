@@ -30,67 +30,70 @@ import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
+import { createQueryBuilder } from 'typeorm';
 
 @Injectable()
-export class ScanoutSmdService {
-  static async scanOutVehicle(payload: any): Promise<any> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+export class MobileSmdService {
 
-    const result = new ScanOutSmdVehicleResponseVm();
-    const timeNow = moment().toDate();
-    const paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
-
-    const paramDoSmdId = await this.createDoSmd(
-      paramDoSmdCode,
-      payload.smd_date,
-      permissonPayload.branchId,
-      authMeta.userId,
+  public static async getHistoryByRequest(doPodDeliverDetailId: string) {
+    const qb = createQueryBuilder();
+    qb.addSelect(
+      'dsd.do_smd_detail_id',
+      'doPodDeliverHistoryId',
     );
-
-    const paramDoSmdVehicleId = await this.createDoSmdVehicle(
-      paramDoSmdId,
-      payload.vehicle_number,
-      payload.employee_id_driver,
-      permissonPayload.branchId,
-      authMeta.userId,
+    qb.addSelect(
+      'do_pod_deliver_history.history_date_time',
+      'historyDateTime',
     );
-
-    await DoSmd.update(
-      { doSmdId : paramDoSmdId },
+    qb.addSelect('reason.reason_id', 'reasonId');
+    qb.addSelect('reason.reason_code', 'reasonCode');
+    qb.addSelect('do_pod_deliver_history.desc', 'reasonNotes');
+    qb.addSelect('employee_history.employee_id', 'employeeId');
+    qb.addSelect('employee_history.fullname', 'employeeName');
+    qb.addSelect(
+      'do_pod_deliver_history.awb_status_id',
+      'awbStatusId',
+    );
+    qb.addSelect(
+      'awb_status.awb_status_name',
+      'awbStatusCode',
+    );
+    qb.addSelect(
+      'awb_status.awb_status_title',
+      'awbStatusName',
+    );
+    qb.addSelect(
+      'do_pod_deliver_history.latitude_delivery',
+      'latitudeDelivery',
+    );
+    qb.addSelect(
+      'do_pod_deliver_history.longitude_delivery',
+      'longitudeDelivery',
+    );
+    qb.from('do_pod_deliver_history', 'do_pod_deliver_history');
+    qb.leftJoin(
+      'reason',
+      'reason',
+      'reason.reason_id = do_pod_deliver_history.reason_id',
+    );
+    qb.leftJoin(
+      'awb_status',
+      'awb_status',
+      'awb_status.awb_status_id = do_pod_deliver_history.awb_status_id',
+    );
+    qb.leftJoin(
+      'employee',
+      'employee_history',
+      'employee_history.employee_id = do_pod_deliver_history.employee_id_driver',
+    );
+    qb.where(
+      'do_pod_deliver_history.do_pod_deliver_detail_id = :doPodDeliverDetailId',
       {
-        doSmdVehicleIdLast: paramDoSmdVehicleId,
-        userIdUpdated: authMeta.userId,
-        updatedTime: timeNow,
+        doPodDeliverDetailId,
       },
     );
-
-    const paramDoSmdHistoryId = await this.createDoSmdHistory(
-      paramDoSmdId,
-      null,
-      paramDoSmdVehicleId,
-      null,
-      null,
-      payload.smd_date,
-      permissonPayload.branchId,
-      1000,
-      null,
-      null,
-      authMeta.userId,
-    );
-
-    const data = [];
-    data.push({
-      do_smd_id: paramDoSmdId,
-      do_smd_code: paramDoSmdCode,
-      do_smd_vehicle_id: paramDoSmdVehicleId,
-      departure_schedule_date_time: payload.do_smd_time,
-    });
-    result.statusCode = HttpStatus.OK;
-    result.message = 'SMD Success Created';
-    result.data = data;
-    return result;
-
+    qb.andWhere('do_pod_deliver_history.is_deleted = false');
+    return await qb.getRawMany();
   }
 
   static async scanOutRoute(payload: any): Promise<any> {
