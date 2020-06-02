@@ -160,7 +160,7 @@ export class MobileSmdService {
         arrival_date_time: payload.arrival_date_time,
       });
       result.statusCode = HttpStatus.OK;
-      result.message = 'SMD Success Departure';
+      result.message = 'SMD Success Arrival';
       result.data = data;
       return result;
     } else {

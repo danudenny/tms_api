@@ -57,9 +57,14 @@ export class ScanOutSmdHandoverPayloadVm {
 
 }
 
-export class ScanOutSmdDetailPayloadVm {
+export class ScanOutSmdDetailRepresentativePayloadVm {
   @ApiModelProperty()
   do_smd_id: number;
+}
+
+export class ScanOutSmdDetailPayloadVm {
+  @ApiModelProperty()
+  do_smd_detail_id: number;
 
   @ApiModelProperty()
   bag_type: number;
