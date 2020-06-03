@@ -1,5 +1,5 @@
 // #region import
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import moment = require('moment');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -1178,6 +1178,11 @@ export class WebDeliveryInService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timeNow = moment().toDate();
+
+    // handle podScanInBranchId
+    if (payload.podScanInBranchId === '') {
+      throw new BadRequestException('PodScanInBranchId NULL');
+    }
 
     if (payload.bagNumberDetail && payload.bagNumberDetail.length) {
       for (const item of payload.bagNumberDetail) {
