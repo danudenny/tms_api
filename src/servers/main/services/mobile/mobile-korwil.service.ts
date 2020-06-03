@@ -238,20 +238,20 @@ export class MobileKorwilService {
     );
     qb.andWhere(`ej.check_out_date IS NULL`);
     qb.orderBy('ej.created_time', 'DESC');
-    const dataLatestLogin = await qb.getRawOne();
+    const dataLatestCheckinKorwil = await qb.getRawOne();
 
     const totalTaskDone = 0;
     const totalTask = korwilItem.length;
     let korwilId = null;
     let korwil = null;
 
-    if (korwilItem.length != 0) {
+    if (korwilItem.length != 0 && dataLatestCheckinKorwil) {
       // Insert Korwil Transaction
       korwil = KorwilTransaction.create();
       korwil.branchId = branchId;
       korwil.createdTime = moment().toDate();
       korwil.date = moment().toDate();
-      korwil.employeeJourneyId = dataLatestLogin.employeeJourneyId;
+      korwil.employeeJourneyId = dataLatestCheckinKorwil.employeeJourneyId;
       korwil.isDeleted = false;
       korwil.status = 0;
       korwil.totalTask = totalTask;
@@ -260,7 +260,7 @@ export class MobileKorwilService {
       korwil.userId = authMeta.userId;
       korwil.userIdCreated = authMeta.userId;
       korwil.userIdUpdated = authMeta.userId;
-      korwil.userToBranchId = dataLatestLogin.userToBranchId;
+      korwil.userToBranchId = dataLatestCheckinKorwil.userToBranchId;
       await KorwilTransaction.save(korwil);
 
       korwilId = korwil.korwilTransactionId;
