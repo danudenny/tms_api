@@ -225,11 +225,17 @@ export class MobileKorwilService {
     // get last data checkin
     qb = createQueryBuilder();
     qb.addSelect('ej.employee_journey_id', 'employeeJourneyId');
+    qb.addSelect('kt.user_to_branch_id', 'userToBranchId');
     qb.from('employee_journey', 'ej');
     qb.andWhere('ej.is_deleted = false');
     qb.andWhere('ej.employee_id = :employeeId', {
       employeeId: authMeta.employeeId,
     });
+    qb.leftJoin(
+      'korwil_transaction',
+      'kt',
+      'kt.employee_journey_id = ej.employee_journey_id AND kt.is_deleted = false',
+    );
     qb.andWhere(`ej.check_out_date IS NULL`);
     qb.orderBy('ej.created_time', 'DESC');
     const dataLatestLogin = await qb.getRawOne();
@@ -254,7 +260,7 @@ export class MobileKorwilService {
       korwil.userId = authMeta.userId;
       korwil.userIdCreated = authMeta.userId;
       korwil.userIdUpdated = authMeta.userId;
-      korwil.userToBranchId = branchId;
+      korwil.userToBranchId = dataLatestLogin.userToBranchId;
       await KorwilTransaction.save(korwil);
 
       korwilId = korwil.korwilTransactionId;
