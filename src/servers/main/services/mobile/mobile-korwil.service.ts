@@ -181,7 +181,7 @@ export class MobileKorwilService {
       'ki',
       'ki.korwil_item_id = ktd.korwil_item_id AND ki.is_deleted = false',
     );
-    if (!this.configKorwil.palkurRoleId.includes(roleId)) {
+    if (!this.configKorwil.palkurRoleId.includes(Number(roleId))) {
       qb.innerJoin(
         'user_to_branch',
         'utb',
@@ -225,27 +225,33 @@ export class MobileKorwilService {
     // get last data checkin
     qb = createQueryBuilder();
     qb.addSelect('ej.employee_journey_id', 'employeeJourneyId');
+    qb.addSelect('kt.user_to_branch_id', 'userToBranchId');
     qb.from('employee_journey', 'ej');
     qb.andWhere('ej.is_deleted = false');
     qb.andWhere('ej.employee_id = :employeeId', {
       employeeId: authMeta.employeeId,
     });
+    qb.leftJoin(
+      'korwil_transaction',
+      'kt',
+      'kt.employee_journey_id = ej.employee_journey_id AND kt.is_deleted = false',
+    );
     qb.andWhere(`ej.check_out_date IS NULL`);
     qb.orderBy('ej.created_time', 'DESC');
-    const dataLatestLogin = await qb.getRawOne();
+    const dataLatestCheckinKorwil = await qb.getRawOne();
 
     const totalTaskDone = 0;
     const totalTask = korwilItem.length;
     let korwilId = null;
     let korwil = null;
 
-    if (korwilItem.length != 0) {
+    if (korwilItem.length != 0 && dataLatestCheckinKorwil) {
       // Insert Korwil Transaction
       korwil = KorwilTransaction.create();
       korwil.branchId = branchId;
       korwil.createdTime = moment().toDate();
       korwil.date = moment().toDate();
-      korwil.employeeJourneyId = dataLatestLogin.employeeJourneyId;
+      korwil.employeeJourneyId = dataLatestCheckinKorwil.employeeJourneyId;
       korwil.isDeleted = false;
       korwil.status = 0;
       korwil.totalTask = totalTask;
@@ -254,7 +260,7 @@ export class MobileKorwilService {
       korwil.userId = authMeta.userId;
       korwil.userIdCreated = authMeta.userId;
       korwil.userIdUpdated = authMeta.userId;
-      korwil.userToBranchId = branchId;
+      korwil.userToBranchId = dataLatestCheckinKorwil.userToBranchId;
       await KorwilTransaction.save(korwil);
 
       korwilId = korwil.korwilTransactionId;
