@@ -62,9 +62,12 @@ export class PrintBagItemStickerService {
       bagItemAwbsTotal: number;
     },
   ) {
-    const weightNumberOnly = `${data.weight}`
+    let weightNumberOnly = `${data.weight}`
       .replace(/\D/gm, '')
       .substring(0, 5);
+
+    // NOTE: Handle when weightNumberOnly not 5 digits
+    weightNumberOnly = weightNumberOnly.padEnd(5, '0');
     const finalWeightRounded2Decimal = parseFloat(`${data.weight}`).toFixed(2);
     const finalBagItemSeq = String(data.bagSeq).padStart(3, '0');
     const finalBagItemBarcodeNumber = `${

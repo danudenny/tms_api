@@ -310,7 +310,7 @@ export class V1PackageService {
       const representative = await Representative.findOne({
         where: { isDeleted: false, representativeCode },
       });
-
+      const refBranchCode = payload.branchDetail ? payload.branchDetail.branchCode : '';
       const bagDetail = Bag.create({
         bagNumber: randomBagNumber,
         branchIdTo: branchId,
@@ -320,7 +320,7 @@ export class V1PackageService {
         representativeIdTo: representative
           ? representative.representativeId
           : null,
-        refBranchCode: payload.branchDetail.branchCode,
+        refBranchCode,
         bagType: 'branch',
         branchId: permissonPayload.branchId,
         bagDate: moment().format('YYYY-MM-DD'),
@@ -421,6 +421,7 @@ export class V1PackageService {
     let bagWeight: number = null;
     let bagSeq: number = null;
     let branch: Branch = null;
+    let districtDetail: District = null;
     let branchName = null;
     let branchCode = null;
 
@@ -466,11 +467,13 @@ export class V1PackageService {
     }
 
     if (isAllow) {
-      // use cache data
-      const districtDetail = await District.findOne({
-        cache: true,
-        where: { districtId, isDeleted: false },
-      });
+      // use data district from branch
+      if (branch && districtId) {
+        districtDetail = await District.findOne({
+          cache: true,
+          where: { districtId, isDeleted: false },
+        });
+      }
 
       // construct data detail
       // NOTE: change totalWeightFinalRounded : awb.totalWeightRealRounded
@@ -502,8 +505,10 @@ export class V1PackageService {
       // get data bag / create new data bag
       if (payload.bagNumber) {
         const bagItem = await this.insertDetailAwb(payload);
-        bagWeight = bagItem.weight;
-        bagSeq = bagItem.bagSeq;
+        if (bagItem) {
+          bagWeight = bagItem.weight;
+          bagSeq = bagItem.bagSeq;
+        }
       } else {
         // Generate Bag Number
         const genBagNumber = await this.createBagNumber(payload);
@@ -567,6 +572,8 @@ export class V1PackageService {
     }
 
     // update weight in bag item
+    // delay get data from replication
+    // TODO: change method update data weight bag ??
     const bagItem = await BagItem.findOne({
       where: { bagItemId: bagDetail.bagItemId },
     });
