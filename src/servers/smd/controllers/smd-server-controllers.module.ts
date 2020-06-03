@@ -8,6 +8,7 @@ import { ScanOutListController } from './integration/scanout-list.controller';
 import { ScanInSmdListController } from './integration/scanin-smd-list.controller';
 import { MobileSmdListController } from './integration/mobile-smd-list.controller';
 import { MobileSmdController } from './integration/mobile-smd.controller';
+import { ReasonSmdController } from './integration/reason-smd.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
@@ -18,6 +19,7 @@ import { MobileSmdController } from './integration/mobile-smd.controller';
     ScanInSmdListController,
     MobileSmdController,
     MobileSmdListController,
+    ReasonSmdController,
   ],
 })
 export class SmdServerControllersModule {}
