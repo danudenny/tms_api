@@ -219,7 +219,7 @@ export class AuthService {
       // Role Id Korwil 38, role Id palkur 40
       if (roleId == configKorwil.korwilRoleId) {
         result.isKorwil = true;
-      } else if (configKorwil.palkurRoleId.includes(roleId)) {
+      } else if (configKorwil.palkurRoleId.includes(Number(roleId))) {
         result.isPalkur = true;
       }
       // Populate return value
