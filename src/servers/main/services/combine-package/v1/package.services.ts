@@ -605,6 +605,10 @@ export class V1PackageService {
         moment().toDate(),
       );
       // //#endregion
+    } else {
+      // DEBUG: TypeError: Cannot read property 'weight' of undefined
+      console.error('######## BAGITEM NOT FOUND :: BAG DETAIL :: ', bagDetail);
+      console.error('######## BAGITEM NOT FOUND :: PAYLOAD :: ', payload);
     }
     return bagItem;
   }
