@@ -421,6 +421,7 @@ export class V1PackageService {
     let bagWeight: number = null;
     let bagSeq: number = null;
     let branch: Branch = null;
+    let districtDetail: District = null;
     let branchName = null;
     let branchCode = null;
 
@@ -466,11 +467,13 @@ export class V1PackageService {
     }
 
     if (isAllow) {
-      // use cache data
-      const districtDetail = await District.findOne({
-        cache: true,
-        where: { districtId, isDeleted: false },
-      });
+      // use data district from branch
+      if (branch && districtId) {
+        districtDetail = await District.findOne({
+          cache: true,
+          where: { districtId, isDeleted: false },
+        });
+      }
 
       // construct data detail
       // NOTE: change totalWeightFinalRounded : awb.totalWeightRealRounded
