@@ -45,3 +45,12 @@ export class ScanInArrivalVm {
   departure_date_time: Date;
 
 }
+
+export class MobileUploadImageResponseVm {
+
+  @ApiModelProperty()
+  attachmentId: number;
+
+  @ApiModelProperty()
+  url: string;
+}

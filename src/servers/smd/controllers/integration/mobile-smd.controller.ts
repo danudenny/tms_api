@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards, Delete, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards, Delete, Param, HttpCode, HttpStatus, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { ScanoutSmdService } from '../../services/integration/scanout-smd.service';
 // import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
@@ -9,8 +9,10 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { MobileSmdListVm, MobileSmdListDetailBagVm, MobileSmdListDetailBaggingVm } from '../../models/mobile-smd-list.response.vm';
-import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArrivalPayloadVm } from '../../models/mobile-smd.payload.vm';
+import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArrivalPayloadVm, MobileUploadImagePayloadVm } from '../../models/mobile-smd.payload.vm';
 import { MobileSmdService } from '../../services/integration/mobile-smd.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { MobileUploadImageResponseVm } from '../../models/mobile-smd.response.vm';
 
 @ApiUseTags('Mobile SMD')
 @Controller('smd')
@@ -29,6 +31,20 @@ export class MobileSmdController {
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async scanInMobile(@Req() request: any, @Body() payload: MobileSmdArrivalPayloadVm) {
     return MobileSmdService.scanInMobile(payload);
+  }
+
+  @Post('mobile/image')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: MobileUploadImageResponseVm })
+  @Transactional()
+  public async uploadImageMobile(
+    @Body() payload: MobileUploadImagePayloadVm,
+    @UploadedFile() file,
+  ) {
+    return MobileSmdService.uploadImageMobile(payload, file);
   }
 
   @Post('mobile/problem')

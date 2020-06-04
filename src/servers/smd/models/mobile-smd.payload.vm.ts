@@ -30,6 +30,18 @@ export class MobileSmdArrivalPayloadVm {
 
 }
 
+export class MobileUploadImagePayloadVm {
+  // do_smd_detail_id
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  image_type: string;
+
+  // @ApiModelProperty()
+  // awbItemId: string;
+}
+
 export class MobileSmdProblemPayloadVm {
   @ApiModelProperty()
   do_smd_id: number;
@@ -47,3 +59,4 @@ export class MobileSmdProblemPayloadVm {
   longitude: string;
 
 }
+

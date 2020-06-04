@@ -31,7 +31,12 @@ import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import { createQueryBuilder } from 'typeorm';
-import { ScanOutSmdDepartureResponseVm } from '../../models/mobile-smd.response.vm';
+import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm } from '../../models/mobile-smd.response.vm';
+import { MobileUploadImagePayloadVm } from '../../models/mobile-smd.payload.vm';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
+import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { DoSmdDetailAttachment } from '../../../../shared/orm-entity/do_smd_detail_attachment';
 
 @Injectable()
 export class MobileSmdService {
@@ -167,6 +172,58 @@ export class MobileSmdService {
       throw new BadRequestException(`Can't Find  DO SMD Detail ID : ` + payload.do_smd_detail_id.toString());
     }
 
+  }
+
+  public static async uploadImageMobile(
+    payload: MobileUploadImagePayloadVm,
+    file,
+  ): Promise<MobileUploadImageResponseVm> {
+    const result = new MobileUploadImageResponseVm();
+    const authMeta = AuthService.getAuthData();
+    PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SMD: ', authMeta);
+
+    let url = null;
+    let attachmentId = null;
+
+    let attachment = await AttachmentTms.findOne({
+      where: {
+        fileName: file.originalname,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
+
+    if (attachment) {
+      // attachment exist
+      attachmentId = attachment.attachmentTmsId;
+      url = attachment.url;
+    } else {
+      // upload image
+      const pathId = `smd-delivery-${payload.image_type}`;
+      attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        pathId,
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+        url = attachment.url;
+      }
+    }
+
+    // NOTE: insert data
+    if (attachmentId) {
+      // TODO: validate doPodDeliverDetailId ??
+      const doSmdDelivereyAttachment = await DoSmdDetailAttachment.create();
+      doSmdDelivereyAttachment.doSmdDetailId = payload.do_smd_detail_id;
+      doSmdDelivereyAttachment.attachmentTmsId = attachmentId;
+      doSmdDelivereyAttachment.attachmentType = payload.image_type;
+      await DoSmdDetailAttachment.save(doSmdDelivereyAttachment);
+    }
+
+    result.url = url;
+    result.attachmentId = attachmentId;
+    return result;
   }
 
   static async problemMobile(payload: any): Promise<any> {
