@@ -393,7 +393,7 @@ export class ScanoutSmdListService {
     payload: BaseMetaPayloadVm,
   ): Promise<ScanOutDetailMoreResponseVm> {
 
-    payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.ds.do_smd_id';
+    payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.do_smd_detail_id';
 
     payload.globalSearchFields = [
       {
