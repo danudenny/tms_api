@@ -263,7 +263,7 @@ export class ScanoutSmdListService {
           FROM do_smd_detail_item dsdi
           INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
           INNER JOIN bag b ON dsdi.bag_id = b.bag_id AND b.is_deleted = FALSE
-          INNER JOIN bag_item bi ON b.bag_id = bi.bag_id AND bi.is_deleted = FALSE
+          INNER JOIN bag_item bi ON dsdi.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE
           LEFT JOIN representative r ON b.representative_id_to = r.representative_id AND r.is_deleted = FALSE
           LEFT JOIN branch br ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
           WHERE

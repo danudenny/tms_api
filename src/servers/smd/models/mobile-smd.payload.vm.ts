@@ -29,3 +29,21 @@ export class MobileSmdArrivalPayloadVm {
   longitude: string;
 
 }
+
+export class MobileSmdProblemPayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  reason_id: number;
+
+  @ApiModelProperty()
+  reason_note: string;
+
+  @ApiModelProperty()
+  latitude: string;
+
+  @ApiModelProperty()
+  longitude: string;
+
+}

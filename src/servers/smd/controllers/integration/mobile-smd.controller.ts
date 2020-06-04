@@ -31,4 +31,11 @@ export class MobileSmdController {
     return MobileSmdService.scanInMobile(payload);
   }
 
+  @Post('mobile/problem')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async problemMobile(@Req() request: any, @Body() payload: MobileSmdArrivalPayloadVm) {
+    return MobileSmdService.problemMobile(payload);
+  }
+
 }
