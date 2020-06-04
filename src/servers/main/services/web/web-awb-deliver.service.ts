@@ -43,9 +43,9 @@ export class WebAwbDeliverService {
           // const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
           const awbDeliver = await this.getDeliverDetail(delivery.awbNumber);
           if (awbDeliver) {
-            // check role
+            // hardcode check role sigesit
             const roleIdSigesit = 23;
-            if (payload.role == 'sigesit' || permissonPayload.roleId == roleIdSigesit) {
+            if (permissonPayload.roleId == roleIdSigesit) {
               // check only own awb number
               if (
                 awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&

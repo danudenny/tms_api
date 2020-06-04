@@ -17,7 +17,7 @@ export class ProviderOfPaymentService {
     };
   }
 
-  static async getListPaymentProvider() {
+  static async  getListPaymentProvider() {
     // GET item korwil
     const qb = createQueryBuilder();
     qb.addSelect('pps.payment_provider_service_id', 'paymentProviderServiceId');

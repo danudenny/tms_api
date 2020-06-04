@@ -182,6 +182,7 @@ export class HubTransitDeliveryInService {
     payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    payload.fieldResolverMap['branchScanName'] = 't6.branch_name';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
