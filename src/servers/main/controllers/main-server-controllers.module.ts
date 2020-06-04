@@ -56,6 +56,7 @@ import { V2MobileSyncController } from './mobile/v2/mobile-sync.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
 import {PaymentProviderController} from './mobile/mobile-payment-provider.controller';
 import {CodPaymentController} from './mobile/mobile-cod-payment.controller';
+import { V1CombinePackageController } from './web/v1/combine-package.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -116,6 +117,7 @@ import {CodPaymentController} from './mobile/mobile-cod-payment.controller';
     RolePodManualController,
     PaymentProviderController,
     CodPaymentController,
+    V1CombinePackageController,
   ],
 })
-export class MainServerControllersModule { }
+export class MainServerControllersModule {}

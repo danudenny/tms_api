@@ -19,7 +19,7 @@ import { AwbService } from '../../v1/awb.service';
 import { BagService } from '../../v1/bag.service';
 import moment = require('moment');
 import { Branch } from '../../../../../shared/orm-entity/branch';
-import { OpenSortirCombineVM, PackageBagDetailVM, CreateBagNumberResponseVM } from '../../../models/package-payload.vm';
+import { OpenSortirCombineVM, PackageBagDetailVM, CreateBagNumberResponseVM, UnloadAwbPayloadVm } from '../../../models/package-payload.vm';
 import { CreateBagFirstScanHubQueueService } from '../../../../queue/services/create-bag-first-scan-hub-queue.service';
 import { CreateBagAwbScanHubQueueService } from '../../../../queue/services/create-bag-awb-scan-hub-queue.service';
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
@@ -175,6 +175,27 @@ export class V1PackageService {
       result.dataBag = data;
     }
     return result;
+  }
+
+  static async unloadAwb(payload: UnloadAwbPayloadVm) {
+    // TODO:
+    // 1. // update awb_item_attr
+    // await transactional.update(AwbItemAttr,
+    //   { awbItemAttrId: awbItemAttr.awbItemAttrId },
+    //   {
+    //     bagItemIdLast: data.bagItemId,
+    //     updatedTime: data.timestamp,
+    //     isPackageCombined: true,
+    //     awbStatusIdLast: 4500,
+    //     userIdLast: data.userId,
+    //   },
+    // 1.1 // Bag item [reduce weight]
+
+    // 2. // BagItemAwb [remove]
+    // 3. // PodScanInHubDetail [remove]
+    // 4. // PodScanInHubBag [update data]
+    // 5. // insert data to package-awb-remove ???
+    return {};
   }
 
   // private ==================================================================
@@ -434,7 +455,12 @@ export class V1PackageService {
     let districtId = null;
 
     const awbItemAttr = await AwbService.validAwbNumber(awbNumber);
-    if (!awbItemAttr) {
+    // NOTE: check destination awb with awb.toId
+    const awb = await Awb.findOne({
+      where: { awbNumber, isDeleted: false },
+    });
+    // handle awb not found
+    if (!awbItemAttr || !awb) {
       throw new BadRequestException('No resi tidak ditemukan / tidak valid');
     } else if (awbItemAttr.isPackageCombined) {
       throw new BadRequestException('Nomor resi sudah digabung sortir');
@@ -445,10 +471,6 @@ export class V1PackageService {
       troubleDesc.push('Awb status tidak sesuai');
     }
 
-    // NOTE: check destination awb with awb.toId
-    const awb = await Awb.findOne({
-      where: { awbNumber, isDeleted: false },
-    });
     if (awb.toId) {
       // use cache data
       branch = await Branch.findOne({ cache: true, where: { branchId } });
