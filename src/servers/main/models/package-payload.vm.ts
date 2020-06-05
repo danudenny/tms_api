@@ -71,7 +71,21 @@ export class UnloadAwbPayloadVm {
 
   @ApiModelProperty()
   bagNumber: string;
+}
 
-  @ApiModelPropertyOptional()
-  podScanInHubId?: string;
+export class UnloadAwbResponseVm {
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  bagItemId: number;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  weight: number;
 }
