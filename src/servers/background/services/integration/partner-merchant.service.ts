@@ -90,7 +90,7 @@ export class PartnerMerchantService {
         SELECT pr.pickup_request_id, ` + select + `
         FROM pickup_request pr
         INNER JOIN pickup_request_detail prd on pr.pickup_request_id=prd.pickup_request_id and prd.is_deleted=false
-        INNER JOIN work_order w on w.work_order_id=prd.work_order_id_last and w.is_deleted=false
+        INNER JOIN work_order w on w.work_order_id=prd.work_order_id_last and w.branch_id_assigned is not null and w.is_deleted=false
         LEFT JOIN partner_merchant pm on pm.partner_merchant_code = ` + select_encrypt + ` and pm.is_deleted=false
         WHERE
           pm.partner_merchant_id is null
