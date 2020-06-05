@@ -13,11 +13,11 @@ import { MobileSmdListVm, MobileSmdListDetailBagVm, MobileSmdListDetailBaggingVm
 import { MobileSmdListDetailPayloadVm } from '../../models/mobile-smd.payload.vm';
 
 @ApiUseTags('Mobile SMD')
-@Controller('smd')
+@Controller('mobile')
 export class MobileSmdListController {
   constructor() {}
 
-  @Post('mobile/list')
+  @Post('smd/list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
@@ -27,7 +27,7 @@ export class MobileSmdListController {
     return MobileSmdListService.getScanOutMobileList();
   }
 
-  @Post('mobile/list/detail')
+  @Post('smd/list/detail')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
@@ -39,7 +39,7 @@ export class MobileSmdListController {
     );
   }
 
-  @Post('mobile/list/detailBag')
+  @Post('smd/list/detailBag')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
@@ -51,7 +51,7 @@ export class MobileSmdListController {
     );
   }
 
-  @Post('mobile/list/detailBagging')
+  @Post('smd/list/detailBagging')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
