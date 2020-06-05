@@ -57,3 +57,15 @@ export class MobileSmdProblemPayloadVm {
   longitude: string;
 
 }
+
+export class MobileSmdContinuePayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  latitude: string;
+
+  @ApiModelProperty()
+  longitude: string;
+
+}
