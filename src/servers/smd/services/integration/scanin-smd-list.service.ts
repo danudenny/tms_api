@@ -19,13 +19,13 @@ export class ScaninSmdListService {
     payload: BaseMetaPayloadVm,
   ): Promise<ScanInSmdListResponseVm> {
 
-    payload.fieldResolverMap['departure_schedule_date_time'] = 'dsd.departure_schedule_date_time';
+    payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['branch_id_from'] = 'dsd.branch_id_from';
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
 
     payload.globalSearchFields = [
       {
-        field: 'departure_schedule_date_time',
+        field: 'do_smd_time',
       },
       {
         field: 'branch_id_from',
@@ -42,14 +42,14 @@ export class ScaninSmdListService {
     q.selectRaw(
       ['dsd.do_smd_detail_id', 'do_smd_detail_id'],
       ['ds.do_smd_code', 'do_smd_code'],
-      ['dsd.departure_schedule_date_time', 'departure_schedule_date_time'],
+      ['ds.do_smd_time', 'do_smd_time'],
       ['dsd.arrival_time', 'arrival_time'],
       ['e.fullname', 'fullname'],
       ['dsv.vehicle_number', 'vehicle_number'],
       ['bf.branch_name', 'branch_from_name'],
       ['bt.branch_name', 'branch_to_name'],
-      ['ds.total_bag', 'total_bag'],
-      ['ds.total_bagging', 'total_bagging'],
+      ['dsd.total_bag', 'total_bag'],
+      ['dsd.total_bagging', 'total_bagging'],
     );
 
     q.innerJoinRaw(
