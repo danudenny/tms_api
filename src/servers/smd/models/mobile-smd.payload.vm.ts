@@ -56,6 +56,12 @@ export class MobileSmdProblemPayloadVm {
   @ApiModelProperty()
   longitude: string;
 
+  @ApiModelProperty()
+  attachment_tms_id: number;
+
+  @ApiModelProperty()
+  photo_url: string;
+
 }
 
 export class MobileSmdContinuePayloadVm {
@@ -69,3 +75,22 @@ export class MobileSmdContinuePayloadVm {
   longitude: string;
 
 }
+
+export class MobileSmdHandOverPayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  latitude: string;
+
+  @ApiModelProperty()
+  longitude: string;
+
+  @ApiModelProperty()
+  attachment_tms_id: number;
+
+  @ApiModelProperty()
+  photo_url: string;
+
+}
+

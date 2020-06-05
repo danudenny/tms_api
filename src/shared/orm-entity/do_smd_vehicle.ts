@@ -96,6 +96,12 @@ export class DoSmdVehicle extends TmsBaseEntity {
   reasonDate: Date | null;
 
   @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'handover_date',
+  })
+  handOverDate: Date | null;
+
+  @Column('timestamp without time zone', {
     nullable: false,
     name: 'created_time',
   })
