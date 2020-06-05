@@ -12,6 +12,9 @@ export class ScanInSmdListVm {
   do_smd_detail_id: number;
 
   @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
   do_smd_code: string;
 
   @ApiModelProperty()

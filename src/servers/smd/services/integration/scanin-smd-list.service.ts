@@ -40,6 +40,7 @@ export class ScaninSmdListService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
+      ['ds.do_smd_id', 'do_smd_id'],
       ['dsd.do_smd_detail_id', 'do_smd_detail_id'],
       ['ds.do_smd_code', 'do_smd_code'],
       ['ds.do_smd_time', 'do_smd_time'],
