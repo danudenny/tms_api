@@ -75,3 +75,21 @@ export class ScanOutProblemVm {
   reason_date: Date;
 
 }
+
+export class ScanOutSmdContinueResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutContinueVm]})
+  data: ScanOutContinueVm[];
+}
+
+export class ScanOutContinueVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+}
