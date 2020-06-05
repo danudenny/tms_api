@@ -227,6 +227,27 @@ export class ScanOutHandoverVm {
 
 }
 
+export class ScanOutSmdDetailRepresentativeResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailRepresentativeVm]})
+  data: ScanOutDetailRepresentativeVm[];
+}
+
+export class ScanOutDetailRepresentativeVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}
+
 export class ScanOutSmdDetailResponseVm {
   @ApiModelProperty()
   statusCode: number;

@@ -62,6 +62,39 @@ export class DoSmdVehicle extends TmsBaseEntity {
   })
   branchIdEnd: number | null;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'reason_id',
+  })
+  reasonId: number | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+    name: 'notes',
+  })
+  notes: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+    name: 'latitude',
+  })
+  latitude: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+    name: 'longitude',
+  })
+  longitude: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'reason_date',
+  })
+  reasonDate: Date | null;
+
   @Column('timestamp without time zone', {
     nullable: false,
     name: 'created_time',

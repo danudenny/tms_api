@@ -343,7 +343,7 @@ export class ScanoutSmdService {
             await DoSmd.update(
               { doSmdId : payload.do_smd_id },
               {
-                totalBagging: resultDoSmd.totalBagging + 1,
+                totalBagging: Number(resultDoSmd.totalBagging) + 1,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
               },
@@ -444,7 +444,7 @@ export class ScanoutSmdService {
               await DoSmd.update(
                 { doSmdId : payload.do_smd_id },
                 {
-                  totalBagging: resultDoSmd.totalBag + 1,
+                  totalBag: Number(resultDoSmd.totalBag) + 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
@@ -517,8 +517,10 @@ export class ScanoutSmdService {
       });
       let paramStatusId;
       if (payload.seal_seq == 1) {
+        // Untuk Seal Pertama X
         paramStatusId = 2000;
       } else {
+        //  Untuk Ganti Seal
         paramStatusId = 1200;
       }
       const paramDoSmdHistoryId = await this.createDoSmdHistory(
