@@ -93,3 +93,24 @@ export class ScanOutContinueVm {
   do_smd_id: number;
 
 }
+
+export class ScanOutSmdHandOverResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutHandOverVm]})
+  data: ScanOutHandOverVm[];
+}
+
+export class ScanOutHandOverVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  handover_date: Date;
+
+}

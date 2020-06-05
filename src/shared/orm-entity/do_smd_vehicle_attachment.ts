@@ -31,12 +31,18 @@ export class DoSmdVehicleAttachment extends TmsBaseEntity {
   })
   doSmdId: number;
 
-  @Column('character varying', {
+  @Column('bigint', {
     nullable: false,
+    name: 'attachment_tms_id',
+  })
+  attachmentTmsId: number;
+
+  @Column('character varying', {
+    nullable: true,
     length: 500,
     name: 'photo_url',
   })
-  photoUrl: number;
+  photoUrl: string | null;
 
   @Column('bigint', {
     nullable: false,
