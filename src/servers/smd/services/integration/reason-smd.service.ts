@@ -50,16 +50,7 @@ export class ReasonSmdService {
 
     const q = RepositoryService.reason.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
-    // SELECT
-    //                             reason_id,
-    //                             reason_code,
-    //                             reason_name,
-    //                             reason_type,
-    //                             reason_category
-    //                         FROM reason
-    //                         WHERE
-    //                             reason_category = 'smd' AND
-    //                             is_deleted=false
+    
     q.selectRaw(
       ['reason.reason_id', 'reason_id'],
       ['reason.reason_code', 'reason_code'],

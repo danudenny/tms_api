@@ -9,7 +9,7 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { MobileSmdListVm, MobileSmdListDetailBagVm, MobileSmdListDetailBaggingVm } from '../../models/mobile-smd-list.response.vm';
-import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArrivalPayloadVm, MobileUploadImagePayloadVm } from '../../models/mobile-smd.payload.vm';
+import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArrivalPayloadVm, MobileUploadImagePayloadVm, MobileSmdProblemPayloadVm } from '../../models/mobile-smd.payload.vm';
 import { MobileSmdService } from '../../services/integration/mobile-smd.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MobileUploadImageResponseVm } from '../../models/mobile-smd.response.vm';
@@ -50,7 +50,7 @@ export class MobileSmdController {
   @Post('mobile/problem')
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  public async problemMobile(@Req() request: any, @Body() payload: MobileSmdArrivalPayloadVm) {
+  public async problemMobile(@Req() request: any, @Body() payload: MobileSmdProblemPayloadVm) {
     return MobileSmdService.problemMobile(payload);
   }
 

@@ -54,3 +54,24 @@ export class MobileUploadImageResponseVm {
   @ApiModelProperty()
   url: string;
 }
+
+export class ScanOutSmdProblemResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutProblemVm]})
+  data: ScanOutProblemVm[];
+}
+
+export class ScanOutProblemVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  reason_date: Date;
+
+}

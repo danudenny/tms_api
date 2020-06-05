@@ -233,19 +233,19 @@ export class MobileSmdService {
     const result = new ScanOutSmdDepartureResponseVm();
     const timeNow = moment().toDate();
 
-    const resultDoSmdDetail = await DoSmdDetail.findOne({
+    const resultDoSmd = await DoSmd.findOne({
       where: {
-        doSmdDetailId: payload.do_smd_detail_id,
+        doSmdDetailId: payload.do_smd_id,
         isDeleted: false,
       },
     });
 
-    if (resultDoSmdDetail) {
+    if (resultDoSmd) {
       // Ubah Status 4000 Arrived
       await DoSmd.update(
-        { doSmdId : resultDoSmdDetail.doSmdId },
+        { doSmdId : resultDoSmd.doSmdId },
         {
-          doSmdStatusIdLast: 4000,
+          doSmdStatusIdLast: 8000,
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
@@ -254,41 +254,50 @@ export class MobileSmdService {
       await DoSmdDetail.update(
         { doSmdId : payload.do_smd_id, arrivalTime: null },
         {
-          doSmdStatusIdLast: 4000,
-          arrivalTime: moment().toDate(),
-          latitudeArrival: payload.latitude,
-          longitudeArrival: payload.longitude,
+          doSmdStatusIdLast: 8000,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      await DoSmdVehicle.update(
+        { doSmdVehicleId : resultDoSmd.doSmdVehicleIdLast },
+        {
+          reasonId: payload.reason_id,
+          notes: payload.reason_notes,
+          reasonDate: timeNow,
+          latitude: payload.latitude,
+          longitude: payload.longitude,
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
       );
 
       const paramDoSmdHistoryId = await this.createDoSmdHistory(
-        resultDoSmdDetail.doSmdId,
+        resultDoSmd.doSmdId,
         null,
-        null,
-        null,
-        null,
+        resultDoSmd.doSmdVehicleIdLast,
+        payload.latitude,
+        payload.longitude,
         null,
         permissonPayload.branchId,
-        4000,
+        8000,
         null,
-        null,
+        payload.reasonId,
         authMeta.userId,
       );
 
       const data = [];
       data.push({
-        do_smd_id: resultDoSmdDetail.doSmdId,
-        do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
-        arrival_date_time: payload.arrival_date_time,
+        do_smd_id: resultDoSmd.doSmdId,
+        reason_date: timeNow,
       });
       result.statusCode = HttpStatus.OK;
-      result.message = 'SMD Success Arrival';
+      result.message = 'SMD Success Created Problem';
       result.data = data;
       return result;
     } else {
-      throw new BadRequestException(`Can't Find  DO SMD Detail ID : ` + payload.do_smd_detail_id.toString());
+      throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
     }
 
   }

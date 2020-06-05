@@ -38,8 +38,6 @@ export class MobileUploadImagePayloadVm {
   @ApiModelProperty()
   image_type: string;
 
-  // @ApiModelProperty()
-  // awbItemId: string;
 }
 
 export class MobileSmdProblemPayloadVm {
@@ -59,4 +57,3 @@ export class MobileSmdProblemPayloadVm {
   longitude: string;
 
 }
-
