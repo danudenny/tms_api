@@ -1,28 +1,42 @@
 // //#region
 import _, { assign, join, sampleSize } from 'lodash';
-import { createQueryBuilder } from 'typeorm';
-import { BadRequestException } from '@nestjs/common';
+import { createQueryBuilder, getManager } from 'typeorm';
 
+import { BadRequestException } from '@nestjs/common';
 import { Awb } from '../../../../../shared/orm-entity/awb';
+import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { AwbTrouble } from '../../../../../shared/orm-entity/awb-trouble';
 import { Bag } from '../../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../../shared/orm-entity/bag-item';
+import { BagItemAwb } from '../../../../../shared/orm-entity/bag-item-awb';
+import { Branch } from '../../../../../shared/orm-entity/branch';
 import { District } from '../../../../../shared/orm-entity/district';
 import { PodScanInHub } from '../../../../../shared/orm-entity/pod-scan-in-hub';
+import { PodScanInHubBag } from '../../../../../shared/orm-entity/pod-scan-in-hub-bag';
+import { PodScanInHubDetail } from '../../../../../shared/orm-entity/pod-scan-in-hub-detail';
 import { Representative } from '../../../../../shared/orm-entity/representative';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
-import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
+import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
+import {
+    BagItemHistoryQueueService,
+} from '../../../../queue/services/bag-item-history-queue.service';
+import {
+    CreateBagAwbScanHubQueueService,
+} from '../../../../queue/services/create-bag-awb-scan-hub-queue.service';
+import {
+    CreateBagFirstScanHubQueueService,
+} from '../../../../queue/services/create-bag-first-scan-hub-queue.service';
 import { PackagePayloadVm } from '../../../models/gabungan-payload.vm';
 import { PackageAwbResponseVm } from '../../../models/gabungan.response.vm';
+import {
+    CreateBagNumberResponseVM, OpenSortirCombineVM, PackageBagDetailVM, UnloadAwbPayloadVm,
+    UnloadAwbResponseVm,
+} from '../../../models/package-payload.vm';
 import { AwbService } from '../../v1/awb.service';
 import { BagService } from '../../v1/bag.service';
+
 import moment = require('moment');
-import { Branch } from '../../../../../shared/orm-entity/branch';
-import { OpenSortirCombineVM, PackageBagDetailVM, CreateBagNumberResponseVM } from '../../../models/package-payload.vm';
-import { CreateBagFirstScanHubQueueService } from '../../../../queue/services/create-bag-first-scan-hub-queue.service';
-import { CreateBagAwbScanHubQueueService } from '../../../../queue/services/create-bag-awb-scan-hub-queue.service';
-import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 // //#endregion
 
 export class V1PackageService {
@@ -174,6 +188,100 @@ export class V1PackageService {
       result.bagItemId = bagItemId;
       result.dataBag = data;
     }
+    return result;
+  }
+
+  static async unloadAwb(payload: UnloadAwbPayloadVm): Promise <UnloadAwbResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const timestamp = moment().toDate();
+    const result = new UnloadAwbResponseVm();
+
+    await getManager().transaction(async transactional => {
+      // check valid data awb and bag item
+      const bagItemAwb = await transactional.findOne(BagItemAwb, {
+        where: {
+          awbItemId: payload.awbItemId,
+          bagItemId: payload.bagItemId,
+          isSortir: true,
+          isDeleted: false,
+        },
+      });
+
+      if (bagItemAwb) {
+        // Step 1: update AwbItemAttr
+        await transactional.update(
+          AwbItemAttr,
+          { awbItemId: payload.awbItemId },
+          {
+            bagItemIdLast: null,
+            updatedTime: timestamp,
+            isPackageCombined: false,
+            userIdLast: authMeta.userId,
+          },
+        );
+        // 1.1 // Bag item [reduce weight] ?? next
+
+        // Step 2: update BagItemAwb
+        await transactional.update(
+          BagItemAwb,
+          {
+            bagItemAwbId: bagItemAwb.bagItemAwbId,
+          },
+          {
+            isDeleted: true,
+            updatedTime: timestamp,
+            userIdUpdated: authMeta.userId,
+          },
+        );
+
+        // Step 3: update PodScanInHubDetail
+        await transactional.update(
+          PodScanInHubDetail,
+          {
+            bagItemId: payload.bagItemId,
+            awbItemId: payload.awbItemId,
+          },
+          {
+            isDeleted: true,
+            updatedTime: timestamp,
+            userIdUpdated: authMeta.userId,
+          },
+        );
+
+        // Step 4: balance total awb podScanInHubBag
+        const podScanInHubBag = await transactional.findOne(
+          PodScanInHubBag,
+          {
+            where: { bagItemId: payload.bagItemId },
+          },
+        );
+        if (podScanInHubBag) {
+          await transactional.update(
+            PodScanInHubBag,
+            {
+              bagItemId: payload.bagItemId,
+            },
+            {
+              totalAwbItem: podScanInHubBag.totalAwbItem -= 1,
+              totalAwbScan: podScanInHubBag.totalAwbScan -= 1,
+            },
+          );
+        }
+
+        // TODO: create new data history delete awb from combine package
+        // insert data to package-awb-remove ???
+
+        // handle response data
+        result.awbNumber = bagItemAwb.awbNumber;
+        result.awbItemId = bagItemAwb.awbItemId;
+        result.bagItemId = bagItemAwb.bagItemId;
+        result.bagNumber = payload.bagNumber;
+        result.weight = bagItemAwb.weight;
+
+      } else {
+        throw new BadRequestException('Data tidak valid No Resi tidak ditemukan!');
+      }
+    });
     return result;
   }
 
@@ -434,7 +542,12 @@ export class V1PackageService {
     let districtId = null;
 
     const awbItemAttr = await AwbService.validAwbNumber(awbNumber);
-    if (!awbItemAttr) {
+    // NOTE: check destination awb with awb.toId
+    const awb = await Awb.findOne({
+      where: { awbNumber, isDeleted: false },
+    });
+    // handle awb not found
+    if (!awbItemAttr || !awb) {
       throw new BadRequestException('No resi tidak ditemukan / tidak valid');
     } else if (awbItemAttr.isPackageCombined) {
       throw new BadRequestException('Nomor resi sudah digabung sortir');
@@ -445,10 +558,6 @@ export class V1PackageService {
       troubleDesc.push('Awb status tidak sesuai');
     }
 
-    // NOTE: check destination awb with awb.toId
-    const awb = await Awb.findOne({
-      where: { awbNumber, isDeleted: false },
-    });
     if (awb.toId) {
       // use cache data
       branch = await Branch.findOne({ cache: true, where: { branchId } });
