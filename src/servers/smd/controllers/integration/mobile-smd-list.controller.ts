@@ -63,4 +63,14 @@ export class MobileSmdListController {
     );
   }
 
+  @Post('smd/list/history')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  @ApiOkResponse({ type: MobileSmdListVm })
+  public async getScanOutMobileListHistory() {
+    return MobileSmdListService.getScanOutMobileListHistory();
+  }
+
 }
