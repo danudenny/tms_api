@@ -31,7 +31,13 @@ import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import { createQueryBuilder } from 'typeorm';
-import { ScanOutSmdDepartureResponseVm } from '../../models/mobile-smd.response.vm';
+import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm } from '../../models/mobile-smd.response.vm';
+import { MobileUploadImagePayloadVm } from '../../models/mobile-smd.payload.vm';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
+import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { DoSmdDetailAttachment } from '../../../../shared/orm-entity/do_smd_detail_attachment';
+import { DoSmdVehicleAttachment } from '../../../../shared/orm-entity/do_smd_vehicle_attachment';
 
 @Injectable()
 export class MobileSmdService {
@@ -169,26 +175,78 @@ export class MobileSmdService {
 
   }
 
+  public static async uploadImageMobile(
+    payload: MobileUploadImagePayloadVm,
+    file,
+  ): Promise<MobileUploadImageResponseVm> {
+    const result = new MobileUploadImageResponseVm();
+    const authMeta = AuthService.getAuthData();
+    PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SMD: ', authMeta);
+
+    let url = null;
+    let attachmentId = null;
+
+    let attachment = await AttachmentTms.findOne({
+      where: {
+        fileName: file.originalname,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
+
+    if (attachment) {
+      // attachment exist
+      attachmentId = attachment.attachmentTmsId;
+      url = attachment.url;
+    } else {
+      // upload image
+      const pathId = `smd-delivery-${payload.image_type}`;
+      attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        pathId,
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+        url = attachment.url;
+      }
+    }
+
+    // NOTE: insert data
+    if (attachmentId) {
+      // TODO: validate doPodDeliverDetailId ??
+      const doSmdDelivereyAttachment = await DoSmdDetailAttachment.create();
+      doSmdDelivereyAttachment.doSmdDetailId = payload.do_smd_detail_id;
+      doSmdDelivereyAttachment.attachmentTmsId = attachmentId;
+      doSmdDelivereyAttachment.attachmentType = payload.image_type;
+      await DoSmdDetailAttachment.save(doSmdDelivereyAttachment);
+    }
+
+    result.url = url;
+    result.attachmentId = attachmentId;
+    return result;
+  }
+
   static async problemMobile(payload: any): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const result = new ScanOutSmdDepartureResponseVm();
+    const result = new ScanOutSmdProblemResponseVm();
     const timeNow = moment().toDate();
 
-    const resultDoSmdDetail = await DoSmdDetail.findOne({
+    const resultDoSmd = await DoSmd.findOne({
       where: {
-        doSmdDetailId: payload.do_smd_detail_id,
+        doSmdId: payload.do_smd_id,
         isDeleted: false,
       },
     });
 
-    if (resultDoSmdDetail) {
+    if (resultDoSmd) {
       // Ubah Status 4000 Arrived
       await DoSmd.update(
-        { doSmdId : resultDoSmdDetail.doSmdId },
+        { doSmdId : resultDoSmd.doSmdId },
         {
-          doSmdStatusIdLast: 4000,
+          doSmdStatusIdLast: 8000,
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
@@ -197,41 +255,211 @@ export class MobileSmdService {
       await DoSmdDetail.update(
         { doSmdId : payload.do_smd_id, arrivalTime: null },
         {
-          doSmdStatusIdLast: 4000,
-          arrivalTime: moment().toDate(),
-          latitudeArrival: payload.latitude,
-          longitudeArrival: payload.longitude,
+          doSmdStatusIdLast: 8000,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      await DoSmdVehicle.update(
+        { doSmdVehicleId : resultDoSmd.doSmdVehicleIdLast },
+        {
+          reasonId: payload.reason_id,
+          notes: payload.reason_note,
+          reasonDate: timeNow,
+          latitude: payload.latitude,
+          longitude: payload.longitude,
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
       );
 
       const paramDoSmdHistoryId = await this.createDoSmdHistory(
-        resultDoSmdDetail.doSmdId,
+        resultDoSmd.doSmdId,
         null,
-        null,
-        null,
-        null,
-        null,
+        resultDoSmd.doSmdVehicleIdLast,
+        payload.latitude,
+        payload.longitude,
+        resultDoSmd.doSmdTime,
         permissonPayload.branchId,
-        4000,
+        8000,
         null,
-        null,
+        payload.reasonId,
+        authMeta.userId,
+      );
+
+      const paramDoSmdVehicleAttachmentId = await this.createDoSmdVehicleAttachment(
+        resultDoSmd.doSmdId,
+        resultDoSmd.doSmdVehicleIdLast,
+        payload.attacment_tms_id,
+        payload.photo_url,
         authMeta.userId,
       );
 
       const data = [];
       data.push({
-        do_smd_id: resultDoSmdDetail.doSmdId,
-        do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
-        arrival_date_time: payload.arrival_date_time,
+        do_smd_id: resultDoSmd.doSmdId,
+        reason_date: timeNow,
       });
       result.statusCode = HttpStatus.OK;
-      result.message = 'SMD Success Arrival';
+      result.message = 'SMD Success Created Problem';
       result.data = data;
       return result;
     } else {
-      throw new BadRequestException(`Can't Find  DO SMD Detail ID : ` + payload.do_smd_detail_id.toString());
+      throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+    }
+
+  }
+
+  static async continueMobile(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdProblemResponseVm();
+    const timeNow = moment().toDate();
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+
+    if (resultDoSmd) {
+      // Ubah Status 4000 Arrived
+      await DoSmd.update(
+        { doSmdId : resultDoSmd.doSmdId },
+        {
+          doSmdStatusIdLast: 3000,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      await DoSmdDetail.update(
+        { doSmdId : payload.do_smd_id, arrivalTime: null },
+        {
+          doSmdStatusIdLast: 3000,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      const paramDoSmdHistoryId = await this.createDoSmdHistory(
+        resultDoSmd.doSmdId,
+        null,
+        resultDoSmd.doSmdVehicleIdLast,
+        payload.latitude,
+        payload.longitude,
+        resultDoSmd.doSmdTime,
+        permissonPayload.branchId,
+        3000,
+        null,
+        payload.reasonId,
+        authMeta.userId,
+      );
+
+      const data = [];
+      data.push({
+        do_smd_id: resultDoSmd.doSmdId,
+      });
+      result.statusCode = HttpStatus.OK;
+      result.message = 'SMD Success Created Continue';
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+    }
+
+  }
+
+  static async handOverMobile(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdHandOverResponseVm();
+    const timeNow = moment().toDate();
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+
+    if (resultDoSmd) {
+
+      await DoSmdVehicle.update(
+        { doSmdVehicleId : resultDoSmd.doSmdVehicleIdLast },
+        {
+          handOverDate: timeNow,
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      const resultDoSmdVehicle = await DoSmdVehicle.findOne({
+        where: {
+          doSmdId: payload.do_smd_id,
+          isActive: true,
+          isDeleted: false,
+        },
+      });
+
+      const paramDoSmdVehicleAttachmentId = await this.createDoSmdVehicleAttachment(
+        resultDoSmd.doSmdId,
+        resultDoSmd.doSmdVehicleIdLast,
+        payload.attacment_tms_id,
+        payload.photo_url,
+        authMeta.userId,
+      );
+
+      await DoSmd.update(
+        { doSmdId : resultDoSmd.doSmdId },
+        {
+          doSmdStatusIdLast: 1150,
+          doSmdVehicleIdLast: resultDoSmdVehicle.doSmdVehicleId,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      await DoSmdDetail.update(
+        { doSmdId : payload.do_smd_id, arrivalTime: null },
+        {
+          doSmdStatusIdLast: 1150,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      const paramDoSmdHistoryId = await this.createDoSmdHistory(
+        resultDoSmd.doSmdId,
+        null,
+        resultDoSmdVehicle.doSmdVehicleId,
+        payload.latitude,
+        payload.longitude,
+        resultDoSmd.doSmdTime,
+        permissonPayload.branchId,
+        1150,
+        null,
+        payload.reasonId,
+        authMeta.userId,
+      );
+
+      const data = [];
+      data.push({
+        do_smd_id: resultDoSmd.doSmdId,
+        handover_date: timeNow,
+      });
+      result.statusCode = HttpStatus.OK;
+      result.message = 'SMD Success Handover';
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
     }
 
   }
@@ -270,6 +498,29 @@ export class MobileSmdService {
     const doSmdHistory = await DoSmdHistory.insert(dataDoSmdHistory);
     return doSmdHistory.identifiers.length
       ? doSmdHistory.identifiers[0].doSmdHistoryId
+      : null;
+  }
+
+  private static async createDoSmdVehicleAttachment(
+    paramDoSmdId: number,
+    paramDoSmdVehicleId: number,
+    paramAttachmentTmsId: number,
+    paramPhotoUrl: string,
+    userId: number,
+  ) {
+    const dataDoSmdVehicleAttachment = DoSmdVehicleAttachment.create({
+      doSmdVehicleId: paramDoSmdVehicleId,
+      doSmdId: paramDoSmdId,
+      attachmentTmsId: paramAttachmentTmsId,
+      photoUrl: paramPhotoUrl,
+      userIdCreated: userId,
+      createdTime: moment().toDate(),
+      userIdUpdated: userId,
+      updatedTime: moment().toDate(),
+    });
+    const doSmdVehicleAttachment = await DoSmdVehicleAttachment.insert(dataDoSmdVehicleAttachment);
+    return doSmdVehicleAttachment.identifiers.length
+      ? doSmdVehicleAttachment.identifiers[0].doSmdVehicleAttachmentId
       : null;
   }
 

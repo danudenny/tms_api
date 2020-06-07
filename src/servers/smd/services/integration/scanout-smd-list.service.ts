@@ -393,7 +393,7 @@ export class ScanoutSmdListService {
     payload: BaseMetaPayloadVm,
   ): Promise<ScanOutDetailMoreResponseVm> {
 
-    payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.ds.do_smd_id';
+    payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.do_smd_detail_id';
 
     payload.globalSearchFields = [
       {
@@ -427,7 +427,7 @@ export class ScanoutSmdListService {
     q.innerJoinRaw(
       'bag_item',
       'bi',
-      'b.bag_id = bi.bag_id AND bi.is_deleted = FALSE',
+      'dsdi.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE',
     );
     q.leftJoinRaw(
       'representative',

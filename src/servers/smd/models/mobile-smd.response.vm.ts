@@ -45,3 +45,72 @@ export class ScanInArrivalVm {
   departure_date_time: Date;
 
 }
+
+export class MobileUploadImageResponseVm {
+
+  @ApiModelProperty()
+  attachmentId: number;
+
+  @ApiModelProperty()
+  url: string;
+}
+
+export class ScanOutSmdProblemResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutProblemVm]})
+  data: ScanOutProblemVm[];
+}
+
+export class ScanOutProblemVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  reason_date: Date;
+
+}
+
+export class ScanOutSmdContinueResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutContinueVm]})
+  data: ScanOutContinueVm[];
+}
+
+export class ScanOutContinueVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+}
+
+export class ScanOutSmdHandOverResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutHandOverVm]})
+  data: ScanOutHandOverVm[];
+}
+
+export class ScanOutHandOverVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  handover_date: Date;
+
+}
