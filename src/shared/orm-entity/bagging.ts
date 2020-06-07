@@ -1,4 +1,7 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {Representative} from './representative';
+import {User} from './user';
+import {Branch} from './branch';
 
 @Entity('bagging', { schema: 'public' })
 @Index('bagging_representative_id_to_idx', ['representativeIdTo'])
@@ -118,4 +121,22 @@ export class Bagging extends BaseEntity {
     name: 'smu_item_id_last',
   })
   smuItemIdLast: string | null;
+
+  @ManyToOne(() => Representative, representative => representative.representativeId, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'representative_id_to', referencedColumnName: 'representativeId' })
+  representative: Representative;
+
+  @ManyToOne(() => User, user => user.userId, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'userId' })
+  user: User;
+
+  @ManyToOne(() => Branch, branch => branch.branchId, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
+  branch: Branch;
 }

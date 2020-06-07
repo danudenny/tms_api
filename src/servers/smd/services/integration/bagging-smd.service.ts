@@ -4,12 +4,71 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
 import {createQueryBuilder} from 'typeorm';
 import {SmdScanBaggingPayloadVm} from '../../../main/models/smd-bagging-payload.vm';
-import {SmdScanBaggingResponseVm} from '../../../main/models/smd-bagging-response.vm';
+import {SmdScanBaggingResponseVm, ListBaggingResponseVm} from '../../../main/models/smd-bagging-response.vm';
 import {BaggingItem} from '../../../../shared/orm-entity/bagging-item';
 import {BagItem} from '../../../../shared/orm-entity/bag-item';
+import {BaseMetaPayloadVm} from '../../../../shared/models/base-meta-payload.vm';
+import {OrionRepositoryService} from '../../../../shared/services/orion-repository.service';
+import {MetaService} from '../../../../shared/services/meta.service';
 
 @Injectable()
 export class BaggingSmdService {
+  static async listBagging(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ListBaggingResponseVm> {
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'representativeCode',
+      },
+      {
+        field: 'baggingCode',
+      },
+      {
+        field: 'lastName',
+      },
+      {
+        field: 'firstName',
+      },
+    ];
+    payload.fieldResolverMap['baggingCode'] = 't1.bagging_code';
+    payload.fieldResolverMap['representativeCode'] = 't2.representative_code';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    const repo = new OrionRepositoryService(Bagging, 't1');
+
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.bagging_code', 'baggingCode'],
+      ['t1.bagging_date', 'baggingDate'],
+      ['t1.bagging_date_real', 'baggingScanDate'],
+      ['t1.total_item', 'totalItem'],
+      ['t1.total_weight', 'totalWeight'],
+      ['t2.representative_code', 'representativeCode'],
+      ['CONCAT(t3.first_name, CONCAT(\' \', t3.last_name))', 'user'],
+      ['t4.branch_name', 'branchBagging'],
+    );
+    q.innerJoin(e => e.representative, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.user, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.orderBy({ createdTime: 'DESC' });
+    const data    = await q.exec();
+    const total   = await q.countWithoutTakeAndSkip();
+    const result  = new ListBaggingResponseVm();
+    result.data   = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
   static async createBagging(
     payload: SmdScanBaggingPayloadVm,
   ): Promise<SmdScanBaggingResponseVm> {
