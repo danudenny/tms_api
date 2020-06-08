@@ -206,8 +206,182 @@ export class ScaninSmdService {
       } else {
         throw new BadRequestException(errMessage);
       }
+    } else if (payload.bag_item_number.length == 10) {
+      const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
+      // const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
+      const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
+      const paramSeq = await paramBagSeq * 1;
+      // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+      let weight;
+      if (paramBagNumber == null || paramBagNumber == undefined) {
+        throw new BadRequestException('Bag Number Not Found');
+      } else {
+        const bag = await Bag.findOne({
+          where: {
+            bagNumber: paramBagNumber,
+            isDeleted: false,
+          },
+        });
+
+        let paramBagId;
+        let exist = false;
+        let paramBagItemId = null;
+        if (bag) {
+          paramBagId = bag.bagId;
+        } else {
+          paramBagId = await this.createBag(
+            paramBagNumber,
+            authMeta.userId,
+            timeNow,
+          );
+        }
+        const rawQuery = `
+          SELECT
+            bi.bag_item_id,
+            bih.bag_item_status_id,
+            br.branch_name as branch_name_scan,
+            u.username as username_scan,
+            bi.weight
+          FROM bag_item bi
+          LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bi.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
+          LEFT JOIN branch br ON br.branch_id = bih.branch_id AND br.is_deleted = false
+          LEFT JOIN users u ON u.user_id = bih.user_id AND u.is_deleted = false
+          WHERE
+            bi.bag_id = ${paramBagId} AND
+            bi.bag_seq = ${paramSeq} AND
+            bi.is_deleted = false
+        `;
+        const resultData = await RawQueryService.query(rawQuery);
+        if (resultData.length > 0) {
+          exist = true;
+          const branchNameScan = resultData[0].branch_name_scan;
+          const usernameScan = resultData[0].username_scan;
+          paramBagItemId = resultData[0].bag_item_id;
+          weight =  resultData[0].weight;
+          console.log(resultData[0].bag_item_status_id);
+          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 1000 || resultData[0].bag_item_status_id == 500 ) {
+            // do nothing
+          } else if ( resultData[0].bag_item_status_id == 2000 ) {
+            errCode = errCode + 1;
+            errMessage = 'Resi Gabung Paket sudah Scan IN gerai ' + branchNameScan + ' Oleh ' + usernameScan;
+          } else {
+            errCode = errCode + 1;
+            errMessage = 'Resi Gabung Paket belum di scan OUT di gerai';
+          }
+        }
+        if (errCode == 0) {
+
+          let paramTotalSeq;
+          let paramTotalBagWeight;
+          let isNew = true;
+          if ( paramReceivedBagId > 0) {
+            const resultReceivedBag = await ReceivedBag.findOne({
+              where: {
+                receivedBagId: paramReceivedBagId,
+                isDeleted: false,
+              },
+            });
+            if (resultReceivedBag) {
+              paramTotalSeq = resultReceivedBag.totalSeq;
+              paramTotalBagWeight = resultReceivedBag.totalBagWeight;
+              isNew = false;
+            }
+          }
+          if (isNew == true) {
+            paramTotalSeq = 1;
+            paramTotalBagWeight = weight;
+            const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
+            // const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
+            paramReceivedBagId = await this.createReceivedBag(
+              dataReceivedBagCode,
+              authMeta.employeeId,
+              authMeta.userId,
+              permissonPayload.branchId,
+              paramTotalSeq,
+              paramTotalBagWeight,
+              timeNow,
+            );
+          } else {
+            paramTotalSeq = paramTotalSeq + 1;
+            paramTotalBagWeight = paramTotalBagWeight + weight ;
+            await ReceivedBag.update(
+              { receivedBagId: paramReceivedBagId },
+              {
+                totalSeq: paramTotalSeq,
+                totalBagWeight: paramTotalBagWeight,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+              },
+            );
+          }
+
+          const paramReceivedBagDetailId = await this.createReceivedBagDetail(
+            paramReceivedBagId,
+            paramBagNumber,
+            paramBagSeq,
+            payload.bag_item_number,
+            weight,
+            authMeta.userId,
+          );
+
+          if (exist == false) {
+            paramBagItemId = await this.createBagItem(
+              paramSeq,
+              weight,
+              paramBagId,
+              authMeta.userId,
+            );
+          } else {
+            await BagItem.update(
+              { bagItemId : paramBagItemId },
+              {
+                bagSeq: paramSeq,
+                weight,
+                bagId: paramBagId,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+              },
+            );
+          }
+          const resultbagItemHistory = BagItemHistory.create();
+          resultbagItemHistory.bagItemId = paramBagItemId.toString();
+          resultbagItemHistory.userId = authMeta.userId.toString();
+          resultbagItemHistory.branchId = permissonPayload.branchId.toString();
+          resultbagItemHistory.historyDate = moment().toDate();
+          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_BRANCH.toString();
+          resultbagItemHistory.userIdCreated = authMeta.userId;
+          resultbagItemHistory.createdTime = moment().toDate();
+          resultbagItemHistory.userIdUpdated = authMeta.userId;
+          resultbagItemHistory.updatedTime = moment().toDate();
+          await BagItemHistory.insert(resultbagItemHistory);
+          console.log(resultbagItemHistory);
+          console.log(resultbagItemHistory.bagItemHistoryId);
+          await BagItem.update(
+            { bagItemId : paramBagItemId },
+            {
+              bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
+            },
+          );
+        }
+      }
+      if (errCode == 0) {
+        const showNumber = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ';
+        const message = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
+        const data = [];
+        data.push({
+          show_number: showNumber,
+          id: paramBagNumber + paramBagSeq,
+          received_bag_id: paramReceivedBagId,
+        });
+        result.statusCode = HttpStatus.OK;
+        result.message = message;
+        result.data = data;
+        return result;
+      } else {
+        throw new BadRequestException(errMessage);
+      }
     } else {
-      throw new BadRequestException('Bag length <> 15');
+      throw new BadRequestException('Bag length <> 15 OR Bag length <> 10');
     }
   }
 
@@ -272,6 +446,7 @@ export class ScaninSmdService {
 
     payload.fieldResolverMap['bagging_datetime'] = 'b.created_time';
     payload.fieldResolverMap['branch_id'] = 'bhin.branch_id';
+    payload.fieldResolverMap['bag_number_seq'] = `CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`;
 
     payload.globalSearchFields = [
       {
@@ -279,6 +454,9 @@ export class ScaninSmdService {
       },
       {
         field: 'branch_id',
+      },
+      {
+        field: 'bag_number_seq',
       },
     ];
 
