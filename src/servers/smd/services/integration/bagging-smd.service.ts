@@ -34,6 +34,7 @@ export class BaggingSmdService {
     payload.fieldResolverMap['baggingCode'] = 't1.bagging_code';
     payload.fieldResolverMap['representativeCode'] = 't2.representative_code';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
     const repo = new OrionRepositoryService(Bagging, 't1');
 
     const q = repo.findAllRaw();
