@@ -268,6 +268,13 @@ export class BaggingSmdService {
       ['t1.bagging_item_id', 'baggingItemId'],
       ['t1.bagging_id', 'baggingId'],
       ['t1.bag_item_id', 'bagItemId'],
+      ['CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, \'0\'))', 'bagNumber'],
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.orderBy({ createdTime: 'DESC' });
     const data    = await q.exec();

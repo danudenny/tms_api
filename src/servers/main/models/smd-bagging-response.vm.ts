@@ -55,6 +55,9 @@ export class ListDetailBaggingDataVm {
 
   @ApiModelProperty()
   bagItemId: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
 }
 
 export class ListDetailBaggingResponseVm extends BaseMetaResponseVm {
