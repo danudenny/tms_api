@@ -207,12 +207,12 @@ export class ScaninSmdService {
         throw new BadRequestException(errMessage);
       }
     } else if (payload.bag_item_number.length == 10) {
-      const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 3 );
+      const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
       // const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
-      const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 3 , 3);
+      const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
       const paramSeq = await paramBagSeq * 1;
       // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
-      let weight = 0;
+      let weight;
       if (paramBagNumber == null || paramBagNumber == undefined) {
         throw new BadRequestException('Bag Number Not Found');
       } else {
@@ -467,6 +467,7 @@ export class ScaninSmdService {
 
     q.selectRaw(
       ['b.bag_id', 'bag_id'],
+      ['bi.bag_item_id', 'bag_item_id'],
       [`CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'bag_number_seq'],
       [`TO_CHAR(b.created_time, 'dd-mm-YYYY HH24:MI:SS')`, 'bagging_datetime'],
       [`CASE
@@ -478,15 +479,23 @@ export class ScaninSmdService {
           WHEN b.representative_id_to IS NULL then 'Belum Upload'
           ELSE r.representative_name
         END`, 'representative_name'],
+      // [`(
+      //   SELECT
+      //     count(bia.awb_number)
+      //   FROM bag_item_awb bia
+      //   INNER JOIN bag_item bitem ON bitem.bag_item_id = bia.bag_item_id AND bitem.is_deleted  = FALSE
+      //   WHERE
+      //     bitem.bag_id = b.bag_id AND
+      //     bia.is_deleted = FALSE
+      //   GROUP BY bitem.bag_id)`, 'tot_resi'],
       [`(
         SELECT
           count(bia.awb_number)
         FROM bag_item_awb bia
-        INNER JOIN bag_item bitem ON bitem.bag_item_id = bia.bag_item_id AND bitem.is_deleted  = FALSE
         WHERE
-          bitem.bag_id = b.bag_id AND
+          bia.bag_item_id = bi.bag_item_id AND
           bia.is_deleted = FALSE
-        GROUP BY bitem.bag_id)`, 'tot_resi'],
+        GROUP BY bia.bag_item_id)`, 'tot_resi'],
       [`CONCAT(bi.weight::numeric(10,2), ' kg')`, 'weight'],
       [`CONCAT(
           CASE
@@ -597,11 +606,15 @@ export class ScaninSmdService {
     payload: BaseMetaPayloadVm,
   ): Promise<ScanInDetailListResponseVm> {
     // ScanInListResponseVm
-    payload.fieldResolverMap['bag_id'] = 'bi.bag_id';
+    // payload.fieldResolverMap['bag_id'] = 'bi.bag_id';
+    payload.fieldResolverMap['bag_item_id'] = 'bi.bag_item_id';
 
     payload.globalSearchFields = [
+      // {
+      //   field: 'bag_id',
+      // },
       {
-        field: 'bag_id',
+        field: 'bag_item_id',
       },
     ];
 
