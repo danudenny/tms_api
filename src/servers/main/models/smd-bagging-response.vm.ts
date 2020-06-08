@@ -14,6 +14,9 @@ export class SmdScanBaggingResponseVm {
 
 export class ListBaggingDetailVm {
   @ApiModelProperty()
+  baggingId: string;
+
+  @ApiModelProperty()
   baggingCode: string;
 
   @ApiModelProperty()
@@ -41,4 +44,20 @@ export class ListBaggingDetailVm {
 export class ListBaggingResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [ListBaggingDetailVm] })
   data: ListBaggingDetailVm[];
+}
+
+export class ListDetailBaggingDataVm {
+  @ApiModelProperty()
+  baggingItemId: string;
+
+  @ApiModelProperty()
+  baggingId: string;
+
+  @ApiModelProperty()
+  bagItemId: string;
+}
+
+export class ListDetailBaggingResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [ListDetailBaggingDataVm] })
+  data: ListDetailBaggingDataVm[];
 }
