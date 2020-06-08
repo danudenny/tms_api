@@ -486,17 +486,30 @@ export class ScanoutSmdService {
     const data = [];
     let rawQuery;
 
-    rawQuery = `
-      SELECT
-        do_smd_detail_id
-      FROM do_smd_detail
-      WHERE
-        do_smd_id = ${payload.do_smd_id} AND
-        arrival_time IS NULL AND
-        seal_number IS NULL AND
-        is_deleted = FALSE
-       ;
-    `;
+    if (payload.seal_seq == 1) {
+      rawQuery = `
+        SELECT
+          do_smd_detail_id
+        FROM do_smd_detail
+        WHERE
+          do_smd_id = ${payload.do_smd_id} AND
+          arrival_time IS NULL AND
+          seal_number IS NULL AND
+          is_deleted = FALSE
+        ;
+      `;
+    } else {
+      rawQuery = `
+        SELECT
+          do_smd_detail_id
+        FROM do_smd_detail
+        WHERE
+          do_smd_id = ${payload.do_smd_id} AND
+          arrival_time IS NULL AND
+          is_deleted = FALSE
+        ;
+      `;
+    }
     const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
     if (resultDataDoSmdDetail.length > 0 ) {
       for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
@@ -542,7 +555,7 @@ export class ScanoutSmdService {
         seal_number: payload.seal_number,
       });
       result.statusCode = HttpStatus.OK;
-      result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' With Seal ' + payload.seal_number + 'Success Created';
+      result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' With Seal ' + payload.seal_number + ' Success Created';
       result.data = data;
       return result;
     } else {
