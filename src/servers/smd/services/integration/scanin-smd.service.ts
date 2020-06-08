@@ -207,12 +207,12 @@ export class ScaninSmdService {
         throw new BadRequestException(errMessage);
       }
     } else if (payload.bag_item_number.length == 10) {
-      const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
+      const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 3 );
       // const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
-      const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
+      const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 3 , 3);
       const paramSeq = await paramBagSeq * 1;
       // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
-      let weight;
+      let weight = 0;
       if (paramBagNumber == null || paramBagNumber == undefined) {
         throw new BadRequestException('Bag Number Not Found');
       } else {
