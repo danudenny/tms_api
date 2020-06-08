@@ -345,7 +345,7 @@ export class LastMileDeliveryInService {
       // TODO: validation need improvement
       let notScanIn = true;
       // handle if awb.awbStatusIdLast is null
-      const finalStatusIn = [AWB_STATUS.IN_BRANCH, AWB_STATUS.ANT, AWB_STATUS.DLV];
+      const finalStatusIn = [AWB_STATUS.IN_BRANCH, AWB_STATUS.ANT];
       if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
         // check exclude final status in
         notScanIn = !finalStatusIn.includes(awb.awbStatusIdLast) ? true : false;

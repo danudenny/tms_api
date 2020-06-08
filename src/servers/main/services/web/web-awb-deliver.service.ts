@@ -101,21 +101,25 @@ export class WebAwbDeliverService {
               }
             }
           } else {
-            // NOTE: Manual Status not POD only status problem
+            // NOTE: Manual Status not POD only status problem (not have spk)
             delivery.awbItemId = awb.awbItemId;
-            const manualStatus = await this.syncStatusManual(
-              authMeta.userId,
-              permissonPayload.branchId,
-              delivery,
-              payload.isReturn,
-              awb.awbId,
-            );
-            if (manualStatus) {
-              response.status = 'ok';
-              response.message = 'success';
+            if (delivery.awbStatusId != AWB_STATUS.DLV) {
+              const manualStatus = await this.syncStatusManual(
+                authMeta.userId,
+                permissonPayload.branchId,
+                delivery,
+                payload.isReturn,
+                awb.awbId,
+              );
+              const messageError = `Resi ${delivery.awbNumber}, tidak dapat update status manual`;
+              response.status = manualStatus ? 'ok' : 'error';
+              response.message = manualStatus ? 'success' : messageError ;
             } else {
+              // status DLV, but not have spk
               response.status = 'error';
-              response.message = `Resi ${delivery.awbNumber}, tidak dapat update status manual`;
+              response.message = `Resi ${
+                delivery.awbNumber
+              }, tidak memiliki surat jalan, harap buatkan surat jalan terlebih dahulu!`;
             }
           }
         } else {
@@ -261,26 +265,24 @@ export class WebAwbDeliverService {
   ) {
     // NOTE: role palkur => CODA, BA, RETUR tidak perlu ANT
     try {
-      if (delivery.awbStatusId != AWB_STATUS.DLV) {
-        if (isReturn) {
-          // TODO: handle is return status??
-          // NOTES: Insert into table awb return
-          await this.createAwbReturn(
-            delivery.awbNumber,
-            awbId,
-            branchId,
-            userId,
-          );
-        }
-        // TODO: queue by Bull need refactoring
-        DoPodDetailPostMetaQueueService.createJobByManualStatus(
-          delivery.awbItemId,
-          delivery.awbStatusId,
-          userId,
+      if (isReturn) {
+        // TODO: handle is return status??
+        // NOTES: Insert into table awb return
+        await this.createAwbReturn(
+          delivery.awbNumber,
+          awbId,
           branchId,
-          delivery.reasonNotes,
+          userId,
         );
       }
+      // TODO: queue by Bull need refactoring
+      DoPodDetailPostMetaQueueService.createJobByManualStatus(
+        delivery.awbItemId,
+        delivery.awbStatusId,
+        userId,
+        branchId,
+        delivery.reasonNotes,
+      );
       return true;
     } catch (error) {
       console.error(error);
