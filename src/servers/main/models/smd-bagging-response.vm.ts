@@ -38,6 +38,9 @@ export class ListBaggingDetailVm {
   representativeCode: string;
 
   @ApiModelProperty()
+  representativeName: string;
+
+  @ApiModelProperty()
   user: string;
 }
 

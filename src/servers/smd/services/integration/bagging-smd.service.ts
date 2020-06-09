@@ -48,6 +48,7 @@ export class BaggingSmdService {
       ['COUNT(t5.bagging_item_id)', 'totalItem'],
       ['t1.total_weight', 'totalWeight'],
       ['t2.representative_code', 'representativeCode'],
+      ['t2.representative_name', 'representativeName'],
       ['CONCAT(t3.first_name, CONCAT(\' \', t3.last_name))', 'user'],
       ['t4.branch_name', 'branchBagging'],
     );
@@ -73,7 +74,8 @@ export class BaggingSmdService {
       t2.representative_code,
       t4.branch_name,
       t3.first_name,
-      t3.last_name
+      t3.last_name,
+      t2.representative_name
     `);
 
     q.orderBy({ createdTime: 'DESC' });
