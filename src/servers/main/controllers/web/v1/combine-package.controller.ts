@@ -5,8 +5,9 @@ import { PermissionTokenGuard } from '../../../../../shared/guards/permission-to
 import { PackageAwbResponseVm } from '../../../models/gabungan.response.vm';
 import { PackagePayloadVm } from '../../../models/gabungan-payload.vm';
 import { V1PackageService } from '../../../services/combine-package/v1/package.services';
+import { UnloadAwbPayloadVm, UnloadAwbResponseVm } from '../../../models/package-payload.vm';
 
-@ApiUseTags('Resi Bag')
+@ApiUseTags('Gabungan Sortir')
 @Controller('web/v1/combine')
 @ApiBearerAuth()
 export class V1CombinePackageController {
@@ -26,5 +27,13 @@ export class V1CombinePackageController {
   @ApiOkResponse({ type: PackageAwbResponseVm })
   public async loadPackageAwb() {
     return V1PackageService.loadAwbPackage();
+  }
+
+  @Post('unload/awb')
+  @HttpCode(200)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: UnloadAwbResponseVm })
+  public async unloadAwb(@Body() payload: UnloadAwbPayloadVm) {
+    return V1PackageService.unloadAwb(payload);
   }
 }
