@@ -207,9 +207,9 @@ export class ScaninSmdService {
         throw new BadRequestException(errMessage);
       }
     } else if (payload.bag_item_number.length == 10) {
-      const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
+      const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 3 );
       // const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
-      const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
+      const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 3 , 3);
       const paramSeq = await paramBagSeq * 1;
       // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       let weight = 0;
@@ -447,6 +447,7 @@ export class ScaninSmdService {
     payload.fieldResolverMap['bagging_datetime'] = 'b.created_time';
     payload.fieldResolverMap['branch_id'] = 'bhin.branch_id';
     payload.fieldResolverMap['bag_number_seq'] = `CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`;
+    payload.fieldResolverMap['scan_in_datetime'] = 'bhin.history_date';
 
     payload.globalSearchFields = [
       {
@@ -457,6 +458,9 @@ export class ScaninSmdService {
       },
       {
         field: 'bag_number_seq',
+      },
+      {
+        field: 'scan_in_datetime',
       },
     ];
 
