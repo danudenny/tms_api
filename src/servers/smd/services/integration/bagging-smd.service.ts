@@ -237,8 +237,8 @@ export class BaggingSmdService {
   }
 
   public static dateMinus1day(date: Date) {
-    const maxTime = moment().format('YYYY-MM-DD 00:00:00');
-    const minTime = moment().format('YYYY-MM-DD 08:00:00');
+    const maxTime = moment().format('YYYY-MM-DD 08:00:00');
+    const minTime = moment().format('YYYY-MM-DD 00:00:00');
     const momentMax = moment(maxTime, 'YYYY-MM-DD HH:mm:ss');
     const momentMin = moment(minTime, 'YYYY-MM-DD HH:mm:ss');
     let momentDate = moment(date);
