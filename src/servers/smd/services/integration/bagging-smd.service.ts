@@ -105,6 +105,7 @@ export class BaggingSmdService {
     const bagSeq = payload.bagNumber.substring(7, 10);
     const weight = payload.bagNumber.substring(10);
     let baggingId = '';
+    let baggingCode = '';
 
     // check status gabung paket
     let qb = createQueryBuilder();
@@ -140,6 +141,7 @@ export class BaggingSmdService {
     if (payload.baggingId) {
       const q = createQueryBuilder();
       q.addSelect('b.bagging_id', 'baggingId');
+      q.addSelect('b.bagging_code', 'baggingCode');
       q.addSelect('b.total_weight', 'totalWeight');
       q.addSelect('b.totalItem', 'totalItem');
       q.from('bagging', 'b');
@@ -151,6 +153,7 @@ export class BaggingSmdService {
         return result;
       }
       baggingId = bagging.baggingId;
+      baggingCode = bagging.baggingCode;
 
       const total_weight = (Number(dataBagging.weight) + Number(bagging.totalWeight));
       await Bagging.update(baggingId, {
@@ -175,6 +178,7 @@ export class BaggingSmdService {
       await Bagging.save(bagging);
 
       baggingId = bagging.baggingId;
+      baggingCode = bagging.baggingCode;
     }
     const baggingItem = BaggingItem.create();
     baggingItem.baggingId = baggingId;
@@ -191,6 +195,7 @@ export class BaggingSmdService {
 
     result.status = 'success';
     result.baggingId = baggingId;
+    result.baggingCode = baggingCode;
     result.message = 'Scan gabung paket berhasil';
     return result;
   }

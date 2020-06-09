@@ -10,6 +10,9 @@ export class SmdScanBaggingResponseVm {
 
   @ApiModelProperty()
   baggingId: string;
+
+  @ApiModelProperty()
+  baggingCode: string;
 }
 
 export class ListBaggingDetailVm {
