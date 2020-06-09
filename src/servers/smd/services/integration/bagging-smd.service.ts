@@ -32,6 +32,7 @@ export class BaggingSmdService {
       },
     ];
     payload.fieldResolverMap['baggingCode'] = 't1.bagging_code';
+    payload.fieldResolverMap['baggingDate'] = 't1.bagging_date';
     payload.fieldResolverMap['representativeCode'] = 't2.representative_code';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
