@@ -10,10 +10,12 @@ import { MobileSmdListController } from './integration/mobile-smd-list.controlle
 import { MobileSmdController } from './integration/mobile-smd.controller';
 import { ReasonSmdController } from './integration/reason-smd.controller';
 import { SmdBaggingController } from './integration/smd-bagging.controller';
+import {MasterDataController} from './integration/masterdata.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
   controllers: [
+    MasterDataController,
     ScanInController,
     ScanOutController,
     ScanOutListController,
