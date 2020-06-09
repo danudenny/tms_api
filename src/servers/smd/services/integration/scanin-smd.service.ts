@@ -447,6 +447,7 @@ export class ScaninSmdService {
     payload.fieldResolverMap['bagging_datetime'] = 'b.created_time';
     payload.fieldResolverMap['branch_id'] = 'bhin.branch_id';
     payload.fieldResolverMap['bag_number_seq'] = `CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`;
+    payload.fieldResolverMap['scan_in_datetime'] = 'bhin.history_date';
 
     payload.globalSearchFields = [
       {
@@ -457,6 +458,9 @@ export class ScaninSmdService {
       },
       {
         field: 'bag_number_seq',
+      },
+      {
+        field: 'scan_in_datetime',
       },
     ];
 
