@@ -69,6 +69,9 @@ export class ScanInListVm {
   bag_id: number;
 
   @ApiModelProperty()
+  bag_item_id: number;
+
+  @ApiModelProperty()
   bag_number_seq: string;
 
   @ApiModelProperty()

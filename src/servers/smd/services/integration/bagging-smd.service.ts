@@ -4,7 +4,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
 import {createQueryBuilder} from 'typeorm';
 import {SmdScanBaggingPayloadVm} from '../../../main/models/smd-bagging-payload.vm';
-import {SmdScanBaggingResponseVm, ListBaggingResponseVm} from '../../../main/models/smd-bagging-response.vm';
+import {SmdScanBaggingResponseVm, ListBaggingResponseVm, ListDetailBaggingResponseVm} from '../../../main/models/smd-bagging-response.vm';
 import {BaggingItem} from '../../../../shared/orm-entity/bagging-item';
 import {BagItem} from '../../../../shared/orm-entity/bag-item';
 import {BaseMetaPayloadVm} from '../../../../shared/models/base-meta-payload.vm';
@@ -34,6 +34,7 @@ export class BaggingSmdService {
     payload.fieldResolverMap['baggingCode'] = 't1.bagging_code';
     payload.fieldResolverMap['representativeCode'] = 't2.representative_code';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
     const repo = new OrionRepositoryService(Bagging, 't1');
 
     const q = repo.findAllRaw();
@@ -41,9 +42,10 @@ export class BaggingSmdService {
 
     q.selectRaw(
       ['t1.bagging_code', 'baggingCode'],
+      ['t1.bagging_id', 'baggingId'],
       ['t1.bagging_date', 'baggingDate'],
       ['t1.bagging_date_real', 'baggingScanDate'],
-      ['t1.total_item', 'totalItem'],
+      ['COUNT(t5.bagging_item_id)', 'totalItem'],
       ['t1.total_weight', 'totalWeight'],
       ['t2.representative_code', 'representativeCode'],
       ['CONCAT(t3.first_name, CONCAT(\' \', t3.last_name))', 'user'],
@@ -58,6 +60,21 @@ export class BaggingSmdService {
     q.innerJoin(e => e.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.baggingItems, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw(`
+      t1.bagging_id,
+      t1.bagging_code,
+      t1.created_time,
+      t1.bagging_date,
+      t1.bagging_date_real,
+      t1.total_weight,
+      t2.representative_code,
+      t4.branch_name,
+      t3.first_name,
+      t3.last_name
+    `);
 
     q.orderBy({ createdTime: 'DESC' });
     const data    = await q.exec();
@@ -75,7 +92,7 @@ export class BaggingSmdService {
     const result = new SmdScanBaggingResponseVm();
     result.status = 'error';
 
-    if (payload.bagNumber.length != 15) {
+    if (payload.bagNumber.length != 10) {
       result.message = 'Bag number tidak valid';
       return result;
     }
@@ -88,7 +105,7 @@ export class BaggingSmdService {
     let baggingId = '';
 
     // check status gabung paket
-    const qb = createQueryBuilder();
+    let qb = createQueryBuilder();
     qb.addSelect('bi.bag_item_id', 'bagItemId');
     qb.addSelect('bi.weight', 'weight');
     qb.from('bag', 'b');
@@ -111,6 +128,12 @@ export class BaggingSmdService {
       result.message = 'Resi gabung paket tidak di temukan';
       return result;
     }
+
+    qb = createQueryBuilder();
+    qb.addSelect('r.representative_id', 'representativeId');
+    qb.from('representative', 'r');
+    qb.where('r.representative_code = :representativeCode', { representativeCode: payload.representativeCode });
+    const representative = await qb.getRawOne();
 
     if (payload.baggingId) {
       const q = createQueryBuilder();
@@ -136,7 +159,7 @@ export class BaggingSmdService {
     } else {
       const bagging = Bagging.create();
       bagging.userId = authMeta.userId.toString();
-      bagging.representativeIdTo = payload.representativeCode;
+      bagging.representativeIdTo = representative.representativeId;
       bagging.branchId = permissionPayload.branchId.toString();
       bagging.totalItem = 1;
       bagging.totalWeight = dataBagging.weight.toString();
@@ -218,5 +241,48 @@ export class BaggingSmdService {
     }
 
     return momentDate.format('YYYY-MM-DD HH:mm:ss');
+  }
+
+  static async listDetailBagging(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ListDetailBaggingResponseVm> {
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'baggingId',
+      },
+      {
+        field: 'bagItemId',
+      },
+      {
+        field: 'baggingItemId',
+      },
+    ];
+    payload.fieldResolverMap['baggingId'] = 't1.bagging_id';
+    const repo = new OrionRepositoryService(BaggingItem, 't1');
+
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.bagging_item_id', 'baggingItemId'],
+      ['t1.bagging_id', 'baggingId'],
+      ['t1.bag_item_id', 'bagItemId'],
+      ['CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, \'0\'))', 'bagNumber'],
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.orderBy({ createdTime: 'DESC' });
+    const data    = await q.exec();
+    const total   = await q.countWithoutTakeAndSkip();
+    const result  = new ListDetailBaggingResponseVm();
+    result.data   = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 }

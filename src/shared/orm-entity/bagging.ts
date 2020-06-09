@@ -1,7 +1,8 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import {Representative} from './representative';
 import {User} from './user';
 import {Branch} from './branch';
+import {BaggingItem} from './bagging-item';
 
 @Entity('bagging', { schema: 'public' })
 @Index('bagging_representative_id_to_idx', ['representativeIdTo'])
@@ -139,4 +140,7 @@ export class Bagging extends BaseEntity {
   })
   @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
   branch: Branch;
+
+  @OneToMany(() => BaggingItem, e => e.bagging, { cascade: ['insert'] })
+  baggingItems: BaggingItem[];
 }
