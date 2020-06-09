@@ -94,7 +94,7 @@ export class BaggingSmdService {
     const result = new SmdScanBaggingResponseVm();
     result.status = 'error';
 
-    if (payload.bagNumber.length != 10) {
+    if (payload.bagNumber.length != 10 && payload.bagNumber.length != 15) {
       result.message = 'Bag number tidak valid';
       return result;
     }
