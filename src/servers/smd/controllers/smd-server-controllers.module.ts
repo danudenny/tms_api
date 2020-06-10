@@ -11,6 +11,7 @@ import { MobileSmdController } from './integration/mobile-smd.controller';
 import { ReasonSmdController } from './integration/reason-smd.controller';
 import { SmdBaggingController } from './integration/smd-bagging.controller';
 import {MasterDataController} from './integration/masterdata.controller';
+import {SmdPrintController} from './integration/print-smd.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
@@ -24,6 +25,7 @@ import {MasterDataController} from './integration/masterdata.controller';
     MobileSmdListController,
     ReasonSmdController,
     SmdBaggingController,
+    SmdPrintController,
   ],
 })
 export class SmdServerControllersModule {}
