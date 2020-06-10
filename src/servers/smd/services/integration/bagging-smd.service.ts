@@ -44,8 +44,8 @@ export class BaggingSmdService {
     q.selectRaw(
       ['t1.bagging_code', 'baggingCode'],
       ['t1.bagging_id', 'baggingId'],
-      ['TO_CHAR(t1.bagging_date, \'dd-mm-YYYYTHH24:MI:SS\')', 'baggingDate'],
-      ['TO_CHAR(t1.bagging_date_real, \'dd-mm-YYYYTHH24:MI:SS\')', 'baggingScanDate'],
+      ['TO_CHAR(t1.bagging_date, \'dd-mm-YYYY HH24:MI:SS\')', 'baggingDate'],
+      ['TO_CHAR(t1.bagging_date_real, \'dd-mm-YYYY HH24:MI:SS\')', 'baggingScanDate'],
       ['COUNT(t5.bagging_item_id)', 'totalItem'],
       ['t1.total_weight', 'totalWeight'],
       ['t2.representative_code', 'representativeCode'],
