@@ -3,13 +3,13 @@ import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
 import {createQueryBuilder} from 'typeorm';
-import {SmdScanBaggingPayloadVm} from '../../../main/models/smd-bagging-payload.vm';
-import {SmdScanBaggingResponseVm, ListBaggingResponseVm, ListDetailBaggingResponseVm} from '../../../main/models/smd-bagging-response.vm';
 import {BaggingItem} from '../../../../shared/orm-entity/bagging-item';
 import {BagItem} from '../../../../shared/orm-entity/bag-item';
 import {BaseMetaPayloadVm} from '../../../../shared/models/base-meta-payload.vm';
 import {OrionRepositoryService} from '../../../../shared/services/orion-repository.service';
 import {MetaService} from '../../../../shared/services/meta.service';
+import {ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm} from '../../models/smd-bagging-response.vm';
+import {SmdScanBaggingPayloadVm} from '../../models/smd-bagging-payload.vm';
 
 @Injectable()
 export class BaggingSmdService {

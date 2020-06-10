@@ -3,11 +3,11 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs
 import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import {BaggingSmdService} from '../../services/integration/bagging-smd.service';
-import {SmdScanBaggingPayloadVm} from '../../../main/models/smd-bagging-payload.vm';
 import {PermissionTokenGuard} from '../../../../shared/guards/permission-token.guard';
 import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
 import {BaseMetaPayloadVm} from '../../../../shared/models/base-meta-payload.vm';
-import {ListBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingResponseVm} from '../../../main/models/smd-bagging-response.vm';
+import {SmdScanBaggingResponseVm, ListBaggingResponseVm, ListDetailBaggingResponseVm} from '../../models/smd-bagging-response.vm';
+import {SmdScanBaggingPayloadVm} from '../../models/smd-bagging-payload.vm';
 
 @ApiUseTags('SMD Bagging')
 @Controller('smd/bagging')
