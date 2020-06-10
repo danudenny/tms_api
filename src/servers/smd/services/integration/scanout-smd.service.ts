@@ -858,158 +858,188 @@ export class ScanoutSmdService {
   }
 
   public static async scanOutReassignItem(payload: any) {
-    const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 8 );
-    const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
-    const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 8 , 3);
-    const paramSeq = await paramBagSeq * 1;
-    const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
     const authMeta = AuthService.getAuthData();
     const timeNow = moment().toDate();
+    let totalSuccess = 0;
+    let totalError = 0;
+    const result = {
+      totalData: null,
+      totalSuccess: null,
+      totalError: null,
+      data: [],
+    };
+    const dataItem = [];
+    // const result = new ScanOutSmdRouteResponseVm();
 
-    if (payload.item_number.length != 15) {
-      throw new BadRequestException(`Nomor Gabung Paket Tidak Valid`);
+    for (const itemNumber of payload.item_number) {
+      const paramBagNumber = itemNumber.substr( 0 , (itemNumber.length) - 8 );
+      const paramWeightStr = await itemNumber.substr(itemNumber.length - 5);
+      const paramBagSeq = await itemNumber.substr( (itemNumber.length) - 8 , 3);
+      const paramSeq = await paramBagSeq * 1;
+      const response = {
+        status: 'ok',
+        message: 'Assign Ulang Gabung Paket Berhasil',
+      };
+
+      if (itemNumber.length != 15 && itemNumber.length != 10) {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Nomor Gabung Paket Tidak Valid`;
+      } else {
+        // get assigning do_smd data
+        let rawQuery = `
+          SELECT
+            ds.do_smd_id,
+            dsd.do_smd_detail_id,
+            dsd.total_bagging,
+            dsd.total_bag
+          FROM do_smd ds
+          INNER JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
+          WHERE
+            ds.do_smd_id = '${payload.do_smd_id}' AND
+            ds.is_deleted = FALSE
+          LIMIT 1;
+        `;
+        const assigningSMD = await RawQueryService.query(rawQuery);
+
+        if (assigningSMD.length == 0) {
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Surat jalan ` + payload.do_smd_id + ` tidak ditemukan`;
+        } else {
+          // get unassigning do_smd data
+          rawQuery = `
+            SELECT
+              ds.do_smd_id,
+              dsd.do_smd_detail_id,
+              dsd.total_bagging,
+              dsd.total_bag,
+              dsdi.do_smd_detail_item_id
+            FROM bag_item bi
+            INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
+            INNER JOIN do_smd_detail_item dsdi ON dsdi.bag_item_id = bi.bag_item_id AND dsdi.is_deleted = FALSE
+            INNER JOIN do_smd_detail dsd on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsd.is_deleted  = FALSE
+            INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
+            WHERE
+              b.bag_number = '${escape(paramBagNumber)}' AND
+              bi.bag_seq = '${paramSeq}' AND
+              bi.is_deleted = FALSE
+            LIMIT 1;
+          `;
+          const unassigningSMD = await RawQueryService.query(rawQuery);
+
+          if (unassigningSMD.length == 0) {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Gabung Paket Tidak Ditemukan`;
+          } else {
+            // Check if item_number is belongs to bagging or bag
+            const resultBagging = await Bagging.findOne({
+              where: {
+                baggingCode: itemNumber,
+                isDeleted: false,
+              },
+            });
+
+            if (resultBagging) {
+              // Update Bagging and SMD/DO_SMD Data
+              // increase amount Assign Bagging
+              await DoSmdDetail.update(
+                { doSmdDetailId : assigningSMD.do_smd_detail_id },
+                {
+                  totalBagging: assigningSMD.total_bagging + 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+              await DoSmd.update(
+                { doSmdId : assigningSMD.do_smd_id },
+                {
+                  totalBagging: assigningSMD.total_bagging + 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+
+              // decrease amount Unassign Bagging
+              await DoSmdDetail.update(
+                { doSmdDetailId : unassigningSMD.do_smd_detail_id },
+                {
+                  totalBagging: unassigningSMD.total_bagging - 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+              await DoSmd.update(
+                { doSmdId : unassigningSMD.do_smd_id },
+                {
+                  totalBagging: unassigningSMD.total_bagging - 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+            } else {
+              // Update Bag and SMD/DO_SMD Data
+              // increase amount Assign Bag
+              await DoSmdDetail.update(
+                { doSmdDetailId : assigningSMD.do_smd_detail_id },
+                {
+                  totalBag: assigningSMD.total_bag + 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+              await DoSmd.update(
+                { doSmdId : assigningSMD.do_smd_id },
+                {
+                  totalBag: assigningSMD.total_bagging + 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+
+              // decrease amount Unassign Bag
+              await DoSmdDetail.update(
+                { doSmdDetailId : unassigningSMD.do_smd_detail_id },
+                {
+                  totalBag: unassigningSMD.total_bag - 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+              await DoSmd.update(
+                { doSmdId : unassigningSMD.do_smd_id },
+                {
+                  totalBag: unassigningSMD.total_bagging - 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+            }
+
+            // Reassign do_smd_detail_item to new assigned-smd
+            await DoSmdDetailItem.update(
+              { doSmdDetailItemId : unassigningSMD.do_smd_detail_item_id },
+              {
+                doSmdDetailId: assigningSMD.do_smd_detail_id,
+                userIdUpdated: authMeta.userId,
+              },
+            );
+            totalSuccess += 1;
+          }
+        }
+      }
+      dataItem.push({
+        itemNumber,
+        ...response,
+      });
     }
 
-    // get assigning do_smd data
-    let rawQuery = `
-      SELECT
-        ds.do_smd_id,
-        dsd.do_smd_detail_id,
-        dsd.total_bagging,
-        dsd.total_bag
-      FROM do_smd ds
-      INNER JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
-      WHERE
-        ds.do_smd_id = '${payload.do_smd_id}' AND
-        ds.is_deleted = FALSE
-      LIMIT 1;
-    `;
-    const assigningSMD = await RawQueryService.query(rawQuery);
-
-    if (assigningSMD.length == 0) {
-      throw new BadRequestException(`Surat jalan ` + payload.do_smd_id + ` tidak ditemukan`);
-    }
-
-    // get unassigning do_smd data
-    rawQuery = `
-      SELECT
-        ds.do_smd_id,
-        dsd.do_smd_detail_id,
-        dsd.total_bagging,
-        dsd.total_bag,
-        dsdi.do_smd_detail_item_id
-      FROM bag_item bi
-      INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-      INNER JOIN do_smd_detail_item dsdi ON dsdi.bag_item_id = bi.bag_item_id AND dsdi.is_deleted = FALSE
-      INNER JOIN do_smd_detail dsd on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsd.is_deleted  = FALSE
-      INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
-      WHERE
-        b.bag_number = '${escape(paramBagNumber)}' AND
-        bi.bag_seq = '${paramSeq}' AND
-        bi.is_deleted = FALSE
-      LIMIT 1;
-    `;
-    const unassigningSMD = await RawQueryService.query(rawQuery);
-
-    if (unassigningSMD.length == 0) {
-      throw new BadRequestException(`Gabung Paket Tidak Ditemukan`);
-    }
-
-    // Check if item_number is belongs to bagging or bag
-    const resultBagging = await Bagging.findOne({
-      where: {
-        baggingCode: payload.item_number,
-        isDeleted: false,
-      },
-    });
-
-    if (resultBagging) {
-      // Update Bagging and SMD/DO_SMD Data
-      // increase amount Assign Bagging
-      await DoSmdDetail.update(
-        { doSmdDetailId : assigningSMD.do_smd_detail_id },
-        {
-          totalBagging: assigningSMD.total_bagging + 1,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
-      await DoSmd.update(
-        { doSmdId : assigningSMD.do_smd_id },
-        {
-          totalBagging: assigningSMD.total_bagging + 1,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
-
-      // decrease amount Unassign Bagging
-      await DoSmdDetail.update(
-        { doSmdDetailId : unassigningSMD.do_smd_detail_id },
-        {
-          totalBagging: unassigningSMD.total_bagging - 1,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
-      await DoSmd.update(
-        { doSmdId : unassigningSMD.do_smd_id },
-        {
-          totalBagging: unassigningSMD.total_bagging - 1,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
-    } else {
-      // Update Bag and SMD/DO_SMD Data
-      // increase amount Assign Bag
-      await DoSmdDetail.update(
-        { doSmdDetailId : assigningSMD.do_smd_detail_id },
-        {
-          totalBag: assigningSMD.total_bag + 1,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
-      await DoSmd.update(
-        { doSmdId : assigningSMD.do_smd_id },
-        {
-          totalBag: assigningSMD.total_bagging + 1,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
-
-      // decrease amount Unassign Bag
-      await DoSmdDetail.update(
-        { doSmdDetailId : unassigningSMD.do_smd_detail_id },
-        {
-          totalBag: unassigningSMD.total_bag - 1,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
-      await DoSmd.update(
-        { doSmdId : unassigningSMD.do_smd_id },
-        {
-          totalBag: unassigningSMD.total_bagging - 1,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
-    }
-
-    // Reassign do_smd_detail_item to new assigned-smd
-    await DoSmdDetailItem.update(
-      { doSmdDetailItemId : unassigningSMD.do_smd_detail_item_id },
-      {
-        doSmdDetailId: assigningSMD.do_smd_detail_id,
-        userIdUpdated: authMeta.userId,
-      },
-    );
-    const result = new ScanOutSmdRouteResponseVm();
-    result.statusCode = HttpStatus.OK;
-    result.message = 'Assign Ulang Gabung Paket Berhasil';
+    // Populate return value
+    result.totalData = payload.bagNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
     return result;
   }
 }
