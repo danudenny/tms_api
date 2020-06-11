@@ -1036,7 +1036,7 @@ export class ScanoutSmdService {
     }
 
     // Populate return value
-    result.totalData = payload.bagNumber.length;
+    result.totalData = payload.item_number.length;
     result.totalSuccess = totalSuccess;
     result.totalError = totalError;
     result.data = dataItem;
