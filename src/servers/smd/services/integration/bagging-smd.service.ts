@@ -138,6 +138,10 @@ export class BaggingSmdService {
     qb.from('representative', 'r');
     qb.where('r.representative_code = :representativeCode', { representativeCode: payload.representativeCode });
     const representative = await qb.getRawOne();
+    if (!representative) {
+      result.message = 'Tujuan tidak ditemukan';
+      return result;
+    }
 
     if (payload.baggingId) {
       const q = createQueryBuilder();
