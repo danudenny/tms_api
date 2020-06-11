@@ -1,5 +1,5 @@
 // #region import
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createQueryBuilder } from 'typeorm';
 import { sumBy } from 'lodash';
@@ -43,8 +43,9 @@ import {
 } from '../../models/web-awb-filter.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { District } from '../../../../shared/orm-entity/district';
-import { WebAwbSortirResponseVm } from '../../models/web-awb-sortir-response.vm';
-import { BaseMetaSortirPayloadVm } from '../../../../shared/models/base-filter-search.payload.vm';
+import { WebAwbSortResponseVm, WebAwbSortPayloadVm, WebAwbSortVm } from '../../models/web-awb-sort.vm';
+import { Awb } from '../../../../shared/orm-entity/awb';
+import { ConfigService } from '../../../../shared/services/config.service';
 // #endregion
 export class WebAwbFilterService {
   constructor(
@@ -530,39 +531,92 @@ export class WebAwbFilterService {
     return result;
   }
 
-  async findAllAwbSortirList(
-    payload: BaseMetaSortirPayloadVm,
-  ): Promise<WebAwbSortirResponseVm> {
+  async sortAwbHub(
+    payload: WebAwbSortPayloadVm,
+  ): Promise<WebAwbSortResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const result = new WebAwbSortResponseVm();
+    try {
+      switch (payload.type) {
+        case 'subDistrict':
+          // key: kode pos
+          // value: nama gerai
+          // suara gerai
+          const awb = await Awb.findOne({
+            select: ['awbId', 'awbNumber', 'consigneeZip', 'toId'],
+            where: {
+              awbNumber: payload.awbNumber,
+              isDeleted: false,
+            },
+          });
+          if (awb) {
+            if (awb.consigneeZip) {
+              const qb = createQueryBuilder();
+              qb.addSelect('sd.sub_district_name', 'subDistrictName');
+              qb.addSelect('b.branch_code', 'branchCode');
+              qb.addSelect('b.branch_name', 'branchName');
+              qb.addSelect('a.attachment_path', 'attachmentPath');
+              qb.from('sub_district', 'sd');
+              qb.innerJoin(
+                'branch',
+                'b',
+                'b.district_id = sd.district_id AND b.is_deleted = false',
+              );
+              qb.leftJoin(
+                'attachment',
+                'a',
+                'a.attachment_id = b.branch_sound_url AND a.is_deleted = false',
+              );
+              qb.where(
+                'sd.zip_code = :zipCode AND sd.is_deleted = false AND sd.is_active = true',
+                {
+                  zipCode: awb.consigneeZip,
+                },
+              );
+              const data = await qb.getRawOne();
+              if (data) {
+                // NOTE: sample sound path
+                // https://sicepattesting.s3.amazonaws.com/
+                // branch/sound/PSwjOTU_NCwkLCM5MSo5IzcSNCIzOD0oPjkPf2B_YH1mfGF8YBJif2R8YRISLD4pJSM3bRIsMiw7LD5jPT1j
+                if (data.attachmentPath) {
+                  result.urlSound = `${ConfigService.get(
+                    'cloudStorage.cloudUrl',
+                  )}/${data.attachmentPath}`;
+                }
 
-    const qb = createQueryBuilder();
-    qb.addSelect('awb.awb_number', 'awbNumber');
-    qb.addSelect('awb.ref_representative_code', 'refRepresentativeCode');
-    qb.addSelect('district.district_id', 'districtId');
-    qb.addSelect('district.district_code', 'districtCode');
-    qb.from('awb', 'awb');
-    qb.innerJoin(
-      'district',
-      'district',
-      'district.district_id = awb.to_id AND district.is_deleted = false',
-    );
-    qb.where(
-      'awb.awb_number = :awbNumber AND awb.is_deleted = false',
-      {
-        awbNumber: payload.awbNumber,
-      },
-    );
-
-    const data = await qb.getRawOne();
-    // console.log(data);
-    const result = new WebAwbSortirResponseVm();
-    // console.log(data.districtCode);
-    // console.log(data.districtId);
-    if (data) {
-      result.districtTo = data.districtId;
-      result.districtCode = data.districtCode;
-      result.awbNumber = data.awbNumber;
-      result.refRepresentativeCode = data.refRepresentativeCode;
+                result.subDistrict = {
+                  key: awb.consigneeZip,
+                  value: data.branchName,
+                };
+              } else {
+                throw new BadRequestException(
+                  `Data resi ${payload.awbNumber}, kode pos tidak ditemukan!`,
+                );
+              }
+            } else {
+              // TODO: check toId
+            }
+          } else {
+            throw new BadRequestException(
+              `Data resi ${payload.awbNumber}, tidak ditemukan!`,
+            );
+          }
+          break;
+        case 'city':
+          // TODO:
+          // key: perwakilan
+          // value: nama kota
+          // suara kota
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      throw new BadRequestException(error);
     }
+
+    result.awbNumber = payload.awbNumber;
+    result.type = payload.type;
     return result;
   }
 
