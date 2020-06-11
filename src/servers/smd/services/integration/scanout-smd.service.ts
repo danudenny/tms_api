@@ -945,17 +945,17 @@ export class ScanoutSmdService {
               // Update Bagging and SMD/DO_SMD Data
               // increase amount Assign Bagging
               await DoSmdDetail.update(
-                { doSmdDetailId : assigningSMD.do_smd_detail_id },
+                { doSmdDetailId : assigningSMD[0].do_smd_detail_id },
                 {
-                  totalBagging: assigningSMD.total_bagging + 1,
+                  totalBagging: assigningSMD[0].total_bagging + 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
               );
               await DoSmd.update(
-                { doSmdId : assigningSMD.do_smd_id },
+                { doSmdId : assigningSMD[0].do_smd_id },
                 {
-                  totalBagging: assigningSMD.total_bagging + 1,
+                  totalBagging: assigningSMD[0].total_bagging + 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
@@ -963,17 +963,17 @@ export class ScanoutSmdService {
 
               // decrease amount Unassign Bagging
               await DoSmdDetail.update(
-                { doSmdDetailId : unassigningSMD.do_smd_detail_id },
+                { doSmdDetailId : unassigningSMD[0].do_smd_detail_id },
                 {
-                  totalBagging: unassigningSMD.total_bagging - 1,
+                  totalBagging: unassigningSMD[0].total_bagging - 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
               );
               await DoSmd.update(
-                { doSmdId : unassigningSMD.do_smd_id },
+                { doSmdId : unassigningSMD[0].do_smd_id },
                 {
-                  totalBagging: unassigningSMD.total_bagging - 1,
+                  totalBagging: unassigningSMD[0].total_bagging - 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
@@ -982,17 +982,17 @@ export class ScanoutSmdService {
               // Update Bag and SMD/DO_SMD Data
               // increase amount Assign Bag
               await DoSmdDetail.update(
-                { doSmdDetailId : assigningSMD.do_smd_detail_id },
+                { doSmdDetailId : assigningSMD[0].do_smd_detail_id },
                 {
-                  totalBag: assigningSMD.total_bag + 1,
+                  totalBag: assigningSMD[0].total_bag + 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
               );
               await DoSmd.update(
-                { doSmdId : assigningSMD.do_smd_id },
+                { doSmdId : assigningSMD[0].do_smd_id },
                 {
-                  totalBag: assigningSMD.total_bagging + 1,
+                  totalBag: assigningSMD[0].total_bagging + 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
@@ -1000,17 +1000,17 @@ export class ScanoutSmdService {
 
               // decrease amount Unassign Bag
               await DoSmdDetail.update(
-                { doSmdDetailId : unassigningSMD.do_smd_detail_id },
+                { doSmdDetailId : unassigningSMD[0].do_smd_detail_id },
                 {
-                  totalBag: unassigningSMD.total_bag - 1,
+                  totalBag: unassigningSMD[0].total_bag - 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
               );
               await DoSmd.update(
-                { doSmdId : unassigningSMD.do_smd_id },
+                { doSmdId : unassigningSMD[0].do_smd_id },
                 {
-                  totalBag: unassigningSMD.total_bagging - 1,
+                  totalBag: unassigningSMD[0].total_bagging - 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
@@ -1019,9 +1019,9 @@ export class ScanoutSmdService {
 
             // Reassign do_smd_detail_item to new assigned-smd
             await DoSmdDetailItem.update(
-              { doSmdDetailItemId : unassigningSMD.do_smd_detail_item_id },
+              { doSmdDetailItemId : unassigningSMD[0].do_smd_detail_item_id },
               {
-                doSmdDetailId: assigningSMD.do_smd_detail_id,
+                doSmdDetailId: assigningSMD[0].do_smd_detail_id,
                 userIdUpdated: authMeta.userId,
               },
             );
