@@ -553,15 +553,21 @@ export class WebAwbFilterService {
             // suara gerai
             if (awb.consigneeZip) {
               const qb = createQueryBuilder();
+              qb.addSelect('sd.sub_district_id', 'subDistrictId');
               qb.addSelect('sd.sub_district_name', 'subDistrictName');
               qb.addSelect('b.branch_code', 'branchCode');
               qb.addSelect('b.branch_name', 'branchName');
               qb.addSelect('a.attachment_path', 'attachmentPath');
               qb.from('sub_district', 'sd');
               qb.innerJoin(
+                'branch_sub_district',
+                'bsd',
+                'bsd.sub_district_id = sd.sub_district_id AND bsd.is_deleted = false',
+              );
+              qb.innerJoin(
                 'branch',
                 'b',
-                'b.district_id = sd.district_id AND b.is_deleted = false',
+                'b.branch_id = bsd.branch_id AND b.is_deleted = false',
               );
               qb.leftJoin(
                 'attachment',
@@ -574,6 +580,8 @@ export class WebAwbFilterService {
                   zipCode: awb.consigneeZip,
                 },
               );
+              qb.orderBy('a.attachment_path');
+              qb.limit(1);
               const data = await qb.getRawOne();
               if (data) {
                 // NOTE: sample sound path
@@ -591,7 +599,7 @@ export class WebAwbFilterService {
                 };
               } else {
                 throw new BadRequestException(
-                  `Data resi ${payload.awbNumber}, kode pos tidak ditemukan!`,
+                  `Data resi ${payload.awbNumber}, kode pos ${awb.consigneeZip} belum memiliki gerai!`,
                 );
               }
             } else {
