@@ -113,12 +113,14 @@ export class BaggingSmdService {
     let qb = createQueryBuilder();
     qb.addSelect('bi.bag_item_id', 'bagItemId');
     qb.addSelect('bi.weight', 'weight');
-    qb.addSelect('bi.bag_item_status_id_last', 'bagItemStatusIdLast');
+    qb.addSelect('bh.bag_item_status_id', 'bagItemStatusIdLast');
     qb.from('bag', 'b');
     qb.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND bi.is_deleted = false');
+    qb.innerJoin('bag_item_history', 'bh', 'bi.bag_item_id = bh.bag_item_id AND bh.is_deleted = false');
     qb.where('b.bag_number = :bagNumber', { bagNumber });
     qb.andWhere('bi.bag_seq = :bagSeq', { bagSeq });
     qb.andWhere('b.is_deleted = false');
+    qb.orderBy('bh.history_date', 'DESC');
     const dataBagging = await qb.getRawOne();
 
     qb.innerJoin('bagging_item', 'bt', 'bt.bag_item_id = bi.bag_item_id AND bt.is_deleted = false ');
