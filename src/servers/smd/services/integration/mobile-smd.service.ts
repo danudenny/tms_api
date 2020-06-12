@@ -151,7 +151,7 @@ export class MobileSmdService {
         null,
         null,
         null,
-        null,
+        resultDoSmdDetail.departureScheduleDateTime,
         permissonPayload.branchId,
         4000,
         null,
