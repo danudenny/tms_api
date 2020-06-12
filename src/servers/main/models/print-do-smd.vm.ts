@@ -41,6 +41,12 @@ export class PrintDoSmdDataBranchToVm {
 }
 
 export class PrintDoSmdDataDoSmdDetailBagVm {
+  @ApiModelProperty()
+  doSmdDetailItemId: number;
+
+  @ApiModelProperty()
+  bagType: number;
+
   @ApiModelProperty({ type: () => PrintDoSmdBagDataDoSmdDetailBagBagItemVm })
   bagItem: PrintDoSmdBagDataDoSmdDetailBagBagItemVm = new PrintDoSmdBagDataDoSmdDetailBagBagItemVm();
 }
