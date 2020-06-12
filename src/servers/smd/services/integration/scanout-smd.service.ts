@@ -872,9 +872,9 @@ export class ScanoutSmdService {
     // const result = new ScanOutSmdRouteResponseVm();
 
     for (const itemNumber of payload.item_number) {
-      const paramBagNumber = itemNumber.substr( 0 , (itemNumber.length) - 8 );
-      const paramWeightStr = await itemNumber.substr(itemNumber.length - 5);
-      const paramBagSeq = await itemNumber.substr( (itemNumber.length) - 8 , 3);
+      const paramBagNumber = itemNumber.substr( 0, 7 );
+      const paramWeightStr = await itemNumber.substr(10);
+      const paramBagSeq = await itemNumber.substr( 7 , 3);
       const paramSeq = await paramBagSeq * 1;
       const response = {
         status: 'ok',
