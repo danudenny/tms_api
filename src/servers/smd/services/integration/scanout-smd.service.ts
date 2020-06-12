@@ -471,6 +471,103 @@ export class ScanoutSmdService {
         } else {
           throw new BadRequestException(`Bag Not Found`);
         }
+      } else if (payload.item_number.length == 10) {
+        const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 3 );
+        // const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
+        const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 3 , 3);
+        const paramSeq = await paramBagSeq * 1;
+        // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+        rawQuery = `
+          SELECT
+            bi.bag_item_id,
+            b.bag_id,
+            b.representative_id_to,
+            r.representative_code
+          FROM bag_item bi
+          INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
+          LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
+          WHERE
+            b.bag_number = '${escape(paramBagNumber)}' AND
+            bi.bag_seq = '${paramSeq}' AND
+            bi.is_deleted = FALSE;
+        `;
+        const resultDataBag = await RawQueryService.query(rawQuery);
+        if (resultDataBag.length > 0) {
+
+          rawQuery = `
+            SELECT
+              do_smd_detail_id ,
+              representative_code_list,
+              total_bag
+            FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+            where
+              s.code  = '${escape(resultDataBag[0].representative_code)}' AND
+              do_smd_id = ${payload.do_smd_id} AND
+              is_deleted = FALSE;
+          `;
+          const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+          if (resultDataRepresentative.length > 0) {
+            // for (let i = 0; i < resultDataBag.length; i++) {
+              // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
+              // customer.awbStatusName = data[i].awbStatusName;
+              //  BAG TYPE 0 = Bagging, 1 = Bag / Gab. Paket
+              const paramDoSmdDetailItemId = await this.createDoSmdDetailItem(
+                resultDataRepresentative[0].do_smd_detail_id,
+                permissonPayload.branchId,
+                resultDataBag[0].bag_item_id,
+                resultDataBag[0].bag_id,
+                null,
+                1,
+                authMeta.userId,
+              );
+            // }
+
+              await DoSmdDetail.update(
+                { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
+                {
+                  totalBag: resultDataRepresentative[0].total_bag + 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+
+              const resultDoSmdDetail = await DoSmdDetail.findOne({
+                where: {
+                  doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
+                  isDeleted: false,
+                },
+              });
+
+              await DoSmd.update(
+                { doSmdId : payload.do_smd_id },
+                {
+                  totalBag: Number(resultDoSmd.totalBag) + 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+              data.push({
+                do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
+                bagging_id: null,
+                bag_id: resultDataBag[0].bag_id,
+                bag_item_id: resultDataBag[0].bag_item_id,
+                bag_type: 1,
+                bag_number: payload.item_number,
+                bagging_number: null,
+                total_bag: resultDoSmdDetail.totalBag,
+                total_bagging: resultDoSmdDetail.totalBagging,
+              });
+              result.statusCode = HttpStatus.OK;
+              result.message = 'SMD Route Success Created';
+              result.data = data;
+              return result;
+          } else {
+            throw new BadRequestException(`Representative To Bag Not Match`);
+          }
+        } else {
+          throw new BadRequestException(`Bag Not Found`);
+        }
       } else {
         throw new BadRequestException(`Bagging / Bag Not Found`);
       }
