@@ -175,6 +175,73 @@ export class MobileSmdService {
 
   }
 
+  static async scanInCancelMobile(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdDepartureResponseVm();
+    const timeNow = moment().toDate();
+
+    const resultDoSmdDetail = await DoSmdDetail.findOne({
+      where: {
+        doSmdDetailId: payload.do_smd_detail_id,
+        isDeleted: false,
+      },
+    });
+
+    if (resultDoSmdDetail) {
+      // Ubah Status 4000 Arrived
+      await DoSmd.update(
+        { doSmdId : resultDoSmdDetail.doSmdId },
+        {
+          doSmdStatusIdLast: 3000,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      await DoSmdDetail.update(
+        { doSmdId : payload.do_smd_id, arrivalTime: null },
+        {
+          doSmdStatusIdLast: 3000,
+          arrivalTime: null,
+          latitudeArrival: null,
+          longitudeArrival:  null,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      const paramDoSmdHistoryId = await this.createDoSmdHistory(
+        resultDoSmdDetail.doSmdId,
+        null,
+        null,
+        null,
+        null,
+        resultDoSmdDetail.departureScheduleDateTime,
+        permissonPayload.branchId,
+        3000,
+        null,
+        null,
+        authMeta.userId,
+      );
+
+      const data = [];
+      data.push({
+        do_smd_id: resultDoSmdDetail.doSmdId,
+        do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+        arrival_date_time: payload.arrival_date_time,
+      });
+      result.statusCode = HttpStatus.OK;
+      result.message = 'SMD Success Cancel Arrival';
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`Can't Find  DO SMD Detail ID : ` + payload.do_smd_detail_id.toString());
+    }
+
+  }
+
   public static async uploadImageMobile(
     payload: MobileUploadImagePayloadVm,
     file,
