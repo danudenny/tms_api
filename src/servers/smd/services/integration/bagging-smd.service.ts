@@ -7,9 +7,10 @@ import {BaggingItem} from '../../../../shared/orm-entity/bagging-item';
 import {BagItem} from '../../../../shared/orm-entity/bag-item';
 import {BaseMetaPayloadVm} from '../../../../shared/models/base-meta-payload.vm';
 import {OrionRepositoryService} from '../../../../shared/services/orion-repository.service';
-import {MetaService} from '../../../../shared/services/meta.service';
-import {ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm} from '../../models/smd-bagging-response.vm';
-import {SmdScanBaggingPayloadVm} from '../../models/smd-bagging-payload.vm';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm } from '../../models/smd-bagging-response.vm';
+import { SmdScanBaggingPayloadVm } from '../../models/smd-bagging-payload.vm';
+import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 
 @Injectable()
 export class BaggingSmdService {
@@ -112,6 +113,7 @@ export class BaggingSmdService {
     let qb = createQueryBuilder();
     qb.addSelect('bi.bag_item_id', 'bagItemId');
     qb.addSelect('bi.weight', 'weight');
+    qb.addSelect('bi.bag_item_status_id_last', 'bagItemStatusIdLast');
     qb.from('bag', 'b');
     qb.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND bi.is_deleted = false');
     qb.where('b.bag_number = :bagNumber', { bagNumber });
@@ -120,9 +122,7 @@ export class BaggingSmdService {
     const dataBagging = await qb.getRawOne();
 
     qb.innerJoin('bagging_item', 'bt', 'bt.bag_item_id = bi.bag_item_id AND bt.is_deleted = false ');
-    qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bt.bagging_id AND ba.is_deleted = false AND ba.branch_id = :branchId',
-      { branchId: permissionPayload.branchId },
-    );
+    qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bt.bagging_id AND ba.is_deleted = false');
     const dataExists = await qb.getRawOne();
     if (dataExists) {
       result.message = 'Resi Gabung Paket sudah di scan';
@@ -131,16 +131,39 @@ export class BaggingSmdService {
     if (!dataBagging) {
       result.message = 'Resi gabung paket tidak di temukan';
       return result;
+    } else if (dataBagging.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH) {
+      result.message = 'Resi Gabung Paket belum di scan masuk';
+      return result;
     }
 
-    qb = createQueryBuilder();
-    qb.addSelect('r.representative_id', 'representativeId');
-    qb.from('representative', 'r');
-    qb.where('r.representative_code = :representativeCode', { representativeCode: payload.representativeCode });
-    const representative = await qb.getRawOne();
-    if (!representative) {
-      result.message = 'Tujuan tidak ditemukan';
-      return result;
+    // NOTE: representativeCode ada jika bagging di create awal,
+    // jika tidak ada maka
+    // bagging yg di-scan scan mengikuti scan-scan sebelumnnya
+    let representative = null;
+    if (payload.representativeCode) {
+      qb = createQueryBuilder();
+      qb.addSelect('r.representative_id', 'representativeId');
+      qb.from('representative', 'r');
+      qb.where('r.representative_code = :representativeCode', { representativeCode: payload.representativeCode });
+      representative = await qb.getRawOne();
+      if (!representative) {
+        result.message = 'Tujuan tidak ditemukan';
+        return result;
+      }
+    } else {
+      qb = createQueryBuilder();
+      qb.addSelect('ba.representative_id_to', 'representativeIdTo');
+      qb.from('bag', 'b');
+      qb.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND bi.is_deleted = false');
+      qb.where('b.bag_number = :bagNumber', { bagNumber });
+      qb.andWhere('b.is_deleted = false');
+      qb.innerJoin('bagging_item', 'bt', 'bt.bag_item_id = bi.bag_item_id AND bt.is_deleted = false ');
+      qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bt.bagging_id AND ba.is_deleted = false');
+      representative = await qb.getRawOne();
+      if (!representative) {
+        result.message = 'Data baging sebelumnya tidak ditemukan, harap masukkan kode tujuan!';
+        return result;
+      }
     }
 
     if (payload.baggingId) {

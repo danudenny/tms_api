@@ -4,7 +4,7 @@ export class SmdScanBaggingPayloadVm {
   @ApiModelProperty()
   bagNumber: string;
 
-  @ApiModelProperty()
+  @ApiModelPropertyOptional()
   representativeCode: string;
 
   @ApiModelPropertyOptional()
