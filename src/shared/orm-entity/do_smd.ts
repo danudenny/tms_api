@@ -140,8 +140,8 @@ export class DoSmd extends TmsBaseEntity {
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
 
-  @OneToMany(() => DoSmdDetail, e => e.doSmd, { cascade: ['insert'] })
-  doSmdDetail: DoSmdDetail;
+  @OneToMany(() => DoSmdDetail, e => e.doSmd)
+  doSmdDetails: DoSmdDetail[];
 
   @OneToOne(() => DoSmdVehicle)
   @JoinColumn({ name: 'vehicle_id_last' })

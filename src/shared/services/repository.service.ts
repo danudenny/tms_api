@@ -32,6 +32,7 @@ import { DoReturnCollectionToCust } from '../orm-entity/do_return_collection_to_
 import { Partner } from '../orm-entity/partner';
 import { RolePodManualStatus } from '../orm-entity/role-pod-manual-status';
 import { Bagging } from '../orm-entity/bagging';
+import { DoSmd } from '../orm-entity/do_smd';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -136,5 +137,8 @@ export class RepositoryService {
   }
   static get baggingSmd() {
     return new OrionRepositoryService(Bagging);
+  }
+  static get doSmd() {
+    return new OrionRepositoryService(DoSmd);
   }
 }

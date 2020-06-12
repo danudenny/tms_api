@@ -9,6 +9,7 @@ import { Representative } from './representative';
 // import { DropoffSortation } from './dropoff_sortation';
 import { Branch } from './branch';
 import {DoSmd} from './do_smd';
+import { DoSmdDetailItem } from './do_smd_detail_item';
 
 @Entity('do_smd_detail', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
@@ -182,7 +183,14 @@ export class DoSmdDetail extends TmsBaseEntity {
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
 
-  @ManyToOne(() => DoSmd, e => e.doSmdDetail)
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_to' })
+  branchTo: Branch;
+
+  @ManyToOne(() => DoSmd, e => e.doSmdDetails)
   @JoinColumn({ name: 'do_smd_id', referencedColumnName: 'doSmdId' })
   doSmd: DoSmd;
+
+  @OneToMany(() => DoSmdDetailItem, e => e.doSmdDetail)
+  doSmdDetailItems: DoSmdDetailItem[];
 }
