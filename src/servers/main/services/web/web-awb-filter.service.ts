@@ -537,19 +537,20 @@ export class WebAwbFilterService {
     const authMeta = AuthService.getAuthData();
     const result = new WebAwbSortResponseVm();
     try {
-      switch (payload.type) {
-        case 'subDistrict':
-          // key: kode pos
-          // value: nama gerai
-          // suara gerai
-          const awb = await Awb.findOne({
-            select: ['awbId', 'awbNumber', 'consigneeZip', 'toId'],
-            where: {
-              awbNumber: payload.awbNumber,
-              isDeleted: false,
-            },
-          });
-          if (awb) {
+      const awb = await Awb.findOne({
+        select: ['awbId', 'awbNumber', 'consigneeZip', 'toId'],
+        where: {
+          awbNumber: payload.awbNumber,
+          isDeleted: false,
+        },
+      });
+
+      if (awb) {
+        switch (payload.type) {
+          case 'subDistrict':
+            // key: kode pos
+            // value: nama gerai
+            // suara gerai
             if (awb.consigneeZip) {
               const qb = createQueryBuilder();
               qb.addSelect('sd.sub_district_name', 'subDistrictName');
@@ -595,29 +596,31 @@ export class WebAwbFilterService {
               }
             } else {
               // TODO: check toId
+              throw new BadRequestException(
+                `Data resi ${payload.awbNumber}, tidak memiliki kode pos!`,
+              );
             }
-          } else {
-            throw new BadRequestException(
-              `Data resi ${payload.awbNumber}, tidak ditemukan!`,
-            );
-          }
-          break;
-        case 'city':
-          // TODO:
-          // key: perwakilan
-          // value: nama kota
-          // suara kota
-          break;
-        default:
-          break;
+            break;
+          case 'city':
+            // TODO:
+            // key: perwakilan
+            // value: nama kota
+            // suara kota
+            break;
+          default:
+            break;
+        } // end of switch
+        result.awbNumber = payload.awbNumber;
+        result.type = payload.type;
+        return result;
+      } else {
+        throw new BadRequestException(
+          `Data resi ${payload.awbNumber}, tidak ditemukan!`,
+        );
       }
     } catch (error) {
       throw new BadRequestException(error);
     }
-
-    result.awbNumber = payload.awbNumber;
-    result.type = payload.type;
-    return result;
   }
 
   private async createPodFilter(representativeIdTo: number) {

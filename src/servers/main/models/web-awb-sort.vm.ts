@@ -4,7 +4,7 @@ export class WebAwbSortPayloadVm {
   @ApiModelProperty()
   awbNumber: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({ example: 'subDistrict'})
   type: string;
 }
 
