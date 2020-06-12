@@ -1,4 +1,4 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 // import { BagItem } from './bag-item';
 import { TmsBaseEntity } from './tms-base';
 import { Representative } from './representative';
@@ -9,6 +9,8 @@ import { Representative } from './representative';
 // import { DropoffSortation } from './dropoff_sortation';
 import { Branch } from './branch';
 import { User } from './user';
+import { DoSmdDetail } from './do_smd_detail';
+import { BagItem } from './bag-item';
 
 @Entity('do_smd_detail_item', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
@@ -104,4 +106,12 @@ export class DoSmdDetailItem extends TmsBaseEntity {
   @OneToOne(() => User)
   @JoinColumn({ name: 'user_id_scan' })
   user: User;
+
+  @ManyToOne(() => DoSmdDetail, e => e.doSmdDetailItem)
+  @JoinColumn({ name: 'do_smd_detail_id', referencedColumnName: 'doSmdDetailId' })
+  doSmdDetail: DoSmdDetail;
+
+  @OneToOne(() => BagItem)
+  @JoinColumn({ name: 'bag_item_id' })
+  bagItem: BagItem;
 }

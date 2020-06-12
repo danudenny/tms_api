@@ -14,6 +14,8 @@ import { PrintDoPodDeliverService } from '../services/print-do-pod-deliver.servi
 import { PrintDoPodReturnPayloadQueryVm } from '../models/print-do-pod-return.vm';
 import { PrintBagItemPaperService } from '../services/print-bag-item-paper.service';
 import { PrintBagItemStickerService } from '../services/print-bag-item-sticker.service';
+import { PrintDoSmdPayloadQueryVm } from '../models/print-do-smd-payload.vm';
+import { PrintDoSmdService } from '../services/print-do-smd.service';
 
 @ApiUseTags('General')
 @Controller('print')
@@ -146,5 +148,15 @@ export class PrintController {
     @Response() serverResponse: express.Response,
   ) {
     return PrintService.printDoPodDoReturnCollectionByRequest(serverResponse, queryParams);
+  }
+
+  @Get('do-smd')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printDoSmd(
+    @Query() queryParams: PrintDoSmdPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintDoSmdService.printDoSmdByRequest(serverResponse, queryParams);
   }
 }
