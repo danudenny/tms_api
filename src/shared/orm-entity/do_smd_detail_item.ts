@@ -107,7 +107,7 @@ export class DoSmdDetailItem extends TmsBaseEntity {
   @JoinColumn({ name: 'user_id_scan' })
   user: User;
 
-  @ManyToOne(() => DoSmdDetail, e => e.doSmdDetailItem)
+  @ManyToOne(() => DoSmdDetail, e => e.doSmdDetailItems)
   @JoinColumn({ name: 'do_smd_detail_id', referencedColumnName: 'doSmdDetailId' })
   doSmdDetail: DoSmdDetail;
 

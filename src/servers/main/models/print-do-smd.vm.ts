@@ -55,8 +55,8 @@ export class PrintDoSmdDataDoSmdDetailVm {
   @ApiModelProperty({ type: () => PrintDoSmdDataBranchToVm })
   branchTo: PrintDoSmdDataBranchToVm = new PrintDoSmdDataBranchToVm();
 
-  @ApiModelProperty({ type: () => PrintDoSmdDataDoSmdDetailBagVm })
-  doSmdDetailItem: PrintDoSmdDataDoSmdDetailBagVm = new PrintDoSmdDataDoSmdDetailBagVm();
+  @ApiModelProperty({ type: () => [PrintDoSmdDataDoSmdDetailBagVm] })
+  doSmdDetailItems: PrintDoSmdDataDoSmdDetailBagVm[] = [];
 }
 
 export class PrintDoSmdDataVm {

@@ -13,7 +13,7 @@ export class PrintDoSmdService {
   ) {
     const q = RepositoryService.doSmd.findOne();
     q.leftJoin(e => e.doSmdDetails);
-    q.leftJoin(e => e.doSmdDetails.doSmdDetailItem);
+    q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
     q.leftJoin(e => e.doSmdVehicle);
 
     const doSmd = await q
@@ -36,7 +36,7 @@ export class PrintDoSmdService {
           branchTo: {
             branchName: true,
           },
-          doSmdDetailItem: {
+          doSmdDetailItems: {
             doSmdDetailItemId: true,
             bagItem: {
               bagItemId: true, // needs to be selected due to bag_item relations are being included

@@ -191,6 +191,6 @@ export class DoSmdDetail extends TmsBaseEntity {
   @JoinColumn({ name: 'do_smd_id', referencedColumnName: 'doSmdId' })
   doSmd: DoSmd;
 
-  @OneToMany(() => DoSmdDetailItem, e => e.doSmdDetail, { cascade: ['insert'] })
-  doSmdDetailItem: DoSmdDetailItem;
+  @OneToMany(() => DoSmdDetailItem, e => e.doSmdDetail)
+  doSmdDetailItems: DoSmdDetailItem[];
 }
