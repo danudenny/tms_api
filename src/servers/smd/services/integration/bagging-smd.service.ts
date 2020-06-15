@@ -108,6 +108,7 @@ export class BaggingSmdService {
     const weight = payload.bagNumber.substring(10);
     let baggingId = '';
     let baggingCode = '';
+    let validRepresentativeCode = '';
 
     // check status gabung paket
     let qb = createQueryBuilder();
@@ -117,10 +118,11 @@ export class BaggingSmdService {
     qb.addSelect('bi.bag_item_status_id_last', 'bagItemStatusIdLastInBagItem');
     qb.addSelect('b.representative_id_to', 'representativeIdTo');
     qb.addSelect('r.representative_code', 'representativeCode');
+    qb.addSelect('r.is_deleted', 'repIsDeleted');
     qb.from('bag', 'b');
     qb.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND bi.is_deleted = false');
     qb.leftJoin('bag_item_history', 'bh', 'bi.bag_item_id = bh.bag_item_id AND bh.is_deleted = false');
-    qb.leftJoin('representative', 'r', 'r.representative_id = b.representative_id_to AND r.is_deleted = false');
+    qb.leftJoin('representative', 'r', 'r.representative_id = b.representative_id_to');
     qb.where('b.bag_number = :bagNumber', { bagNumber });
     qb.andWhere('bi.bag_seq = :bagSeq', { bagSeq });
     qb.andWhere('b.is_deleted = false');
@@ -133,9 +135,14 @@ export class BaggingSmdService {
     if (!dataBagging) {
       result.message = 'Resi gabung paket tidak ditemukan';
       return result;
-    } else if (dataBagging.bagItemStatusIdLast && dataBagging.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH) {
-      result.message = 'Resi Gabung Paket belum di scan masuk';
-      return result;
+    } else if (dataBagging.bagItemStatusIdLast) {
+      if (dataBagging.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH) {
+        result.message = 'Resi Gabung Paket belum di scan masuk';
+        return result;
+      } else if (dataBagging.repIsDeleted = true) {
+        result.message = 'Tujuan Gabung Paket telah di hapus';
+        return result;
+      }
     } else if (!dataBagging.bagItemStatusIdLast && dataBagging.bagItemStatusIdLastInBagItem != BAG_STATUS.IN_BRANCH) {
       result.message = 'Resi Gabung Paket belum di scan masuk';
       return result;
@@ -148,12 +155,12 @@ export class BaggingSmdService {
     // jika tidak ada maka
     // bagging yg di-scan scan mengikuti scan-scan sebelumnnya
     let representative = null;
-    let validRepresentativeCode = null;
     if (payload.representativeCode) {
       qb = createQueryBuilder();
       qb.addSelect('r.representative_id', 'representativeId');
       qb.from('representative', 'r');
       qb.where('r.representative_code = :representativeCode', { representativeCode: payload.representativeCode });
+      qb.andWhere('r.is_deleted = false');
       representative = await qb.getRawOne();
       if (!representative) {
         result.message = 'Tujuan tidak ditemukan';
