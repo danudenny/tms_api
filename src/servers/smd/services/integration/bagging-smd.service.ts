@@ -114,6 +114,7 @@ export class BaggingSmdService {
     qb.addSelect('bi.bag_item_id', 'bagItemId');
     qb.addSelect('bi.weight', 'weight');
     qb.addSelect('bh.bag_item_status_id', 'bagItemStatusIdLast');
+    qb.addSelect('b.representative_id_to', 'representativeIdTo');
     qb.from('bag', 'b');
     qb.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND bi.is_deleted = false');
     qb.innerJoin('bag_item_history', 'bh', 'bi.bag_item_id = bh.bag_item_id AND bh.is_deleted = false');
@@ -150,6 +151,9 @@ export class BaggingSmdService {
       representative = await qb.getRawOne();
       if (!representative) {
         result.message = 'Tujuan tidak ditemukan';
+        return result;
+      } else if (dataBagging.representativeIdTo != representative.representativeId) {
+        result.message = 'Kode tujuan tidak sama dengan tujuan gabung paket sebelumnya';
         return result;
       }
     } else {
