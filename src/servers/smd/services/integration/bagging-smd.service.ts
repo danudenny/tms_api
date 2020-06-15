@@ -136,7 +136,7 @@ export class BaggingSmdService {
     } else if (dataBagging.bagItemStatusIdLast && dataBagging.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH) {
       result.message = 'Resi Gabung Paket belum di scan masuk';
       return result;
-    } else if (dataBagging.bagItemStatusIdLastInBagItem != BAG_STATUS.IN_BRANCH) {
+    } else if (!dataBagging.bagItemStatusIdLast && dataBagging.bagItemStatusIdLastInBagItem != BAG_STATUS.IN_BRANCH) {
       result.message = 'Resi Gabung Paket belum di scan masuk';
       return result;
     }
@@ -148,100 +148,6 @@ export class BaggingSmdService {
     // jika tidak ada maka
     // bagging yg di-scan scan mengikuti scan-scan sebelumnnya
     let representative = null;
-    let validRepresentativeCode = null;
-    if (payload.representativeCode) {
-      qb = createQueryBuilder();
-      qb.addSelect('r.representative_id', 'representativeId');
-      qb.from('representative', 'r');
-      qb.where('r.representative_code = :representativeCode', { representativeCode: payload.representativeCode });
-      representative = await qb.getRawOne();
-      if (!representative) {
-        result.message = 'Tujuan tidak ditemukan';
-        return result;
-      } else if (dataBagging.representativeIdTo != representative.representativeId) {
-        validRepresentativeCode = dataBagging.representativeCode;
-        result.message = 'Kode tujuan tidak sama dengan tujuan gabung paket sebelumnya';
-        return result;
-      }
-      validRepresentativeCode = representative.representativeCode;
-    } else {
-      qb = createQueryBuilder();
-      qb.addSelect('b.representative_id_to', 'representativeId');
-      qb.from('bag', 'b');
-      qb.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND bi.is_deleted = false');
-      qb.where('b.bag_number = :bagNumber', { bagNumber });
-      qb.andWhere('b.is_deleted = false');
-      qb.innerJoin('bagging_item', 'bt', 'bt.bag_item_id = bi.bag_item_id AND bt.is_deleted = false ');
-      qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bt.bagging_id AND ba.is_deleted = false');
-      representative = await qb.getRawOne();
-      if (!representative) {
-        result.message = 'Data baging sebelumnya tidak ditemukan, harap masukkan kode tujuan!';
-        return result;
-      }
-      validRepresentativeCode = representative.representativeCode;
-    }
-
-    if (payload.baggingId) {
-      const q = createQueryBuilder();
-      q.addSelect('b.bagging_id', 'baggingId');
-      q.addSelect('b.bagging_code', 'baggingCode');
-      q.addSelect('b.total_weight', 'totalWeight');
-      q.addSelect('b.totalItem', 'totalItem');
-      q.from('bagging', 'b');
-      q.andWhere('bagging_id = :baggingId', { baggingId: payload.baggingId });
-      const bagging = await q.getRawOne();
-
-      if (!bagging) {
-        result.message = 'Data bagging tidak ditemukan';
-        return result;
-      }
-      baggingId = bagging.baggingId;
-      baggingCode = bagging.baggingCode;
-
-      const total_weight = (Number(dataBagging.weight) + Number(bagging.totalWeight));
-      await Bagging.update(baggingId, {
-        totalWeight: total_weight.toString(),
-        totalItem: (bagging.totalItem + 1),
-      });
-
-    } else {
-      const bagging = Bagging.create();
-      bagging.userId = authMeta.userId.toString();
-      bagging.representativeIdTo = representative.representativeId;
-      bagging.branchId = permissionPayload.branchId.toString();
-      bagging.totalItem = 1;
-      bagging.totalWeight = dataBagging.weight.toString();
-      bagging.baggingCode = await this.generateCode();
-      bagging.baggingDate = await this.dateMinus1day(moment().toDate());
-      bagging.userIdCreated = authMeta.userId.toString();
-      bagging.userIdUpdated = authMeta.userId.toString();
-      bagging.baggingDateReal = moment().toDate();
-      bagging.createdTime = moment().toDate();
-      bagging.updatedTime = moment().toDate();
-      await Bagging.save(bagging);
-
-      baggingId = bagging.baggingId;
-      baggingCode = bagging.baggingCode;
-    }
-    const baggingItem = BaggingItem.create();
-    baggingItem.baggingId = baggingId;
-    baggingItem.bagItemId = dataBagging.bagItemId;
-    baggingItem.userIdCreated = authMeta.userId.toString();
-    baggingItem.userIdUpdated = authMeta.userId.toString();
-    baggingItem.createdTime = moment().toDate();
-    baggingItem.updatedTime = moment().toDate();
-    BaggingItem.save(baggingItem);
-
-    await BagItem.update(dataBagging.bagItemId, {
-      baggingIdLast: Number(baggingId),
-    });
-
-    result.status = 'success';
-    result.baggingId = baggingId;
-    result.baggingCode = baggingCode;
-    result.validRepresentativeCode = validRepresentativeCode;
-    result.message = 'Scan gabung paket berhasil';
-    return result;
   }
 
   static async generateCode() {
