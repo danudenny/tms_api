@@ -114,11 +114,12 @@ export class BaggingSmdService {
     qb.addSelect('bi.bag_item_id', 'bagItemId');
     qb.addSelect('bi.weight', 'weight');
     qb.addSelect('bh.bag_item_status_id', 'bagItemStatusIdLast');
+    qb.addSelect('bi.bag_item_status_id_last', 'bagItemStatusIdLastInBagItem');
     qb.addSelect('b.representative_id_to', 'representativeIdTo');
     qb.addSelect('r.representative_code', 'representativeCode');
     qb.from('bag', 'b');
     qb.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND bi.is_deleted = false');
-    qb.innerJoin('bag_item_history', 'bh', 'bi.bag_item_id = bh.bag_item_id AND bh.is_deleted = false');
+    qb.leftJoin('bag_item_history', 'bh', 'bi.bag_item_id = bh.bag_item_id AND bh.is_deleted = false');
     qb.leftJoin('representative', 'r', 'r.representative_id = b.representative_id_to AND r.is_deleted = false');
     qb.where('b.bag_number = :bagNumber', { bagNumber });
     qb.andWhere('bi.bag_seq = :bagSeq', { bagSeq });
@@ -130,13 +131,15 @@ export class BaggingSmdService {
     qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bt.bagging_id AND ba.is_deleted = false');
     const dataExists = await qb.getRawOne();
     if (!dataBagging) {
-      result.message = 'Resi gabung paket tidak di temukan';
+      result.message = 'Resi gabung paket tidak ditemukan';
       return result;
-    } else if (dataBagging.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH) {
+    } else if (dataBagging.bagItemStatusIdLast && dataBagging.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH) {
+      result.message = 'Resi Gabung Paket belum di scan masuk';
+      return result;
+    } else if (dataBagging.bagItemStatusIdLastInBagItem != BAG_STATUS.IN_BRANCH) {
       result.message = 'Resi Gabung Paket belum di scan masuk';
       return result;
     }
-
     if (dataExists) {
       result.message = 'Resi Gabung Paket sudah di scan';
       return result;
