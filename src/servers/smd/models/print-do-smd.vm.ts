@@ -9,6 +9,9 @@ export class PrintDoSmdDataUserDriverEmployeeVm {
 }
 
 export class PrintDoSmdDataUserDriverVm {
+  @ApiModelProperty()
+  doSmdVehicleId: number;
+
   @ApiModelProperty({ type: () => PrintDoSmdDataUserDriverEmployeeVm })
   employee: PrintDoSmdDataUserDriverEmployeeVm = new PrintDoSmdDataUserDriverEmployeeVm();
 }

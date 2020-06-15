@@ -69,10 +69,9 @@ export class SmdPrintService {
       .select({
         doSmdId: true, // needs to be selected due to do_smd relations are being included
         doSmdCode: true,
-        // description: true,
         doSmdVehicle: {
+          doSmdVehicleId: true,
           employee: {
-            // employeeName: true,
             nik: true,
             nickname: true,
           },

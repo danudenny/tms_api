@@ -144,6 +144,6 @@ export class DoSmd extends TmsBaseEntity {
   doSmdDetails: DoSmdDetail[];
 
   @OneToOne(() => DoSmdVehicle)
-  @JoinColumn({ name: 'vehicle_id_last' })
+  @JoinColumn({ name: 'vehicle_id_last', referencedColumnName: 'doSmdVehicleId' })
   doSmdVehicle: DoSmdVehicle;
 }
