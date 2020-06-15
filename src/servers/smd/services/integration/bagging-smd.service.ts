@@ -108,9 +108,6 @@ export class BaggingSmdService {
     const weight = payload.bagNumber.substring(10);
     let baggingId = '';
     let baggingCode = '';
-    let validRepresentativeCode = '';
-    result.validRepresentativeCode = validRepresentativeCode;
-
     // check status gabung paket
     let qb = createQueryBuilder();
     qb.addSelect('bi.bag_item_id', 'bagItemId');
@@ -129,10 +126,6 @@ export class BaggingSmdService {
     qb.andWhere('b.is_deleted = false');
     qb.orderBy('bh.history_date', 'DESC');
     const dataBagging = await qb.getRawOne();
-
-    qb.innerJoin('bagging_item', 'bt', 'bt.bag_item_id = bi.bag_item_id AND bt.is_deleted = false ');
-    qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bt.bagging_id AND ba.is_deleted = false');
-    const dataExists = await qb.getRawOne();
     if (!dataBagging) {
       result.message = 'Resi gabung paket tidak ditemukan';
       return result;
@@ -140,14 +133,15 @@ export class BaggingSmdService {
       if (dataBagging.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH) {
         result.message = 'Resi Gabung Paket belum di scan masuk';
         return result;
-      } else if (dataBagging.repIsDeleted = true) {
-        result.message = 'Tujuan Gabung Paket telah di hapus';
-        return result;
       }
     } else if (!dataBagging.bagItemStatusIdLast && dataBagging.bagItemStatusIdLastInBagItem != BAG_STATUS.IN_BRANCH) {
       result.message = 'Resi Gabung Paket belum di scan masuk';
       return result;
     }
+
+    qb.innerJoin('bagging_item', 'bt', 'bt.bag_item_id = bi.bag_item_id AND bt.is_deleted = false ');
+    qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bt.bagging_id AND ba.is_deleted = false');
+    const dataExists = await qb.getRawOne();
     if (dataExists) {
       result.message = 'Resi Gabung Paket sudah di scan';
       return result;
@@ -156,22 +150,24 @@ export class BaggingSmdService {
     // jika tidak ada maka
     // bagging yg di-scan scan mengikuti scan-scan sebelumnnya
     let representative = null;
+    result.validRepresentativeCode = dataBagging.representativeCode;
     if (payload.representativeCode) {
       qb = createQueryBuilder();
       qb.addSelect('r.representative_id', 'representativeId');
       qb.from('representative', 'r');
       qb.where('r.representative_code = :representativeCode', { representativeCode: payload.representativeCode });
-      qb.andWhere('r.is_deleted = false');
-      representative = await qb.getRawOne();
-      if (!representative) {
-        result.message = 'Tujuan tidak ditemukan';
-        return result;
-      } else if (dataBagging.representativeIdTo != representative.representativeId) {
-        validRepresentativeCode = dataBagging.representativeCode;
-        result.message = 'Kode tujuan tidak sama dengan tujuan gabung paket sebelumnya';
+      const representativeExists = await qb.getRawOne();
+      if (!representativeExists) {
+        result.message = 'Kode tujuan ' + payload.representativeCode + ' tidak ditemukan';
         return result;
       }
-      validRepresentativeCode = representative.representativeCode;
+
+      qb.andWhere('r.representative_id = :representativeId', {representativeId: dataBagging.representativeIdTo});
+      representative = await qb.getRawOne();
+      if (!representative) {
+        result.message = 'Kode tujuan ' + payload.representativeCode + ' tidak sama dengan tujuan gabung paket sebelumnya';
+        return result;
+      }
     } else {
       qb = createQueryBuilder();
       qb.addSelect('b.representative_id_to', 'representativeId');
@@ -183,10 +179,9 @@ export class BaggingSmdService {
       qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bt.bagging_id AND ba.is_deleted = false');
       representative = await qb.getRawOne();
       if (!representative) {
-        result.message = 'Data baging sebelumnya tidak ditemukan, harap masukkan kode tujuan!';
+        result.message = 'Gabung paket sebelumnya tidak ditemukan, harap masukkan kode tujuan!';
         return result;
       }
-      validRepresentativeCode = representative.representativeCode;
     }
 
     if (payload.baggingId) {
@@ -247,7 +242,6 @@ export class BaggingSmdService {
     result.status = 'success';
     result.baggingId = baggingId;
     result.baggingCode = baggingCode;
-    result.validRepresentativeCode = validRepresentativeCode;
     result.message = 'Scan gabung paket berhasil';
     return result;
   }
