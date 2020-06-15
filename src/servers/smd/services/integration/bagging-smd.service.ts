@@ -109,6 +109,7 @@ export class BaggingSmdService {
     let baggingId = '';
     let baggingCode = '';
     let validRepresentativeCode = '';
+    result.validRepresentativeCode = validRepresentativeCode;
 
     // check status gabung paket
     let qb = createQueryBuilder();
