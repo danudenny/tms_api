@@ -280,7 +280,7 @@ export class WebAwbFilterService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const results: ScanAwbVm[] = [];
-    let bagNumberSeq = '';
+    const bagNumberSeq = '';
     // get all awb_number from payload
     for (const awbNumber of payload.awbNumber) {
       const res = new ScanAwbVm();
@@ -510,12 +510,48 @@ export class WebAwbFilterService {
           break;
         case 'city':
           // TODO:
-          // key: perwakilan
+          // key: kode kota
           // value: nama kota
           // suara kota
+          if (awb.toId) {
+            const qb = createQueryBuilder();
+            qb.addSelect('d.district_name', 'districtName');
+            qb.addSelect('c.city_code', 'cityCode');
+            qb.addSelect('c.city_name', 'cityName');
+            qb.from('district', 'd');
+            qb.innerJoin(
+              'city',
+              'c',
+              'd.city_id = c.city_id AND c.is_deleted = false',
+            );
+            qb.where(
+              'd.district_id = :districtId AND d.is_deleted = false',
+              {
+                districtId: awb.toId,
+              },
+            );
+            qb.limit(1);
+            const data = await qb.getRawOne();
+            if (data) {
+              // TODO: get data sound city ?
+
+              result.city = {
+                key: data.cityCode,
+                value: data.cityName,
+              };
+            } else {
+              throw new BadRequestException(
+                `Data resi ${payload.awbNumber}, tujuan tidak ditemukan!`,
+              );
+            }
+          } else {
+            throw new BadRequestException(
+              `Data resi ${payload.awbNumber}, tidak memiliki tujuan!`,
+            );
+          }
           break;
         default:
-          break;
+          throw new BadRequestException('Params Type, tidak valid!');
       } // end of switch
       result.awbNumber = payload.awbNumber;
       result.type = payload.type;
