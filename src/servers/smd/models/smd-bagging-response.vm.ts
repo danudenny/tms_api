@@ -13,6 +13,9 @@ export class SmdScanBaggingResponseVm {
 
   @ApiModelProperty()
   baggingCode: string;
+
+  @ApiModelProperty()
+  validRepresentativeCode: string;
 }
 
 export class ListBaggingDetailVm {
