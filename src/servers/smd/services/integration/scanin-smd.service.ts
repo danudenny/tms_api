@@ -529,9 +529,14 @@ export class ScaninSmdService {
       'bb',
       'bhin.branch_id=bb.branch_id and bb.is_deleted = FALSE ',
     );
-    q.leftJoin(e => e.user, 'u', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q.leftJoinRaw(
+      'users',
+      'u',
+      'u.user_id=bhin.user_id_updated and u.is_deleted = FALSE ',
     );
+    // q.leftJoin(e => e.user, 'u', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhereRaw('bhin.bag_item_status_id = 2000');
 
