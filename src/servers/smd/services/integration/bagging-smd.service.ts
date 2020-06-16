@@ -54,9 +54,7 @@ export class BaggingSmdService {
       ['CONCAT(t3.first_name, CONCAT(\' \', t3.last_name))', 'user'],
       ['t4.branch_name', 'branchBagging'],
     );
-    q.innerJoin(e => e.representative, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.leftJoin(e => e.representative, 't2');
     q.innerJoin(e => e.user, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
