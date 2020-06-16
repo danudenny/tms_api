@@ -62,6 +62,12 @@ export class Representative extends TmsBaseEntity {
   })
   representativeIdParent: string | null;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'representative_smd_id_parent',
+  })
+  representativeSmdIdParent: number | null;
+
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;

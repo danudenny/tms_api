@@ -31,6 +31,7 @@ import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import {ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
+import { Any } from 'typeorm';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -94,7 +95,7 @@ export class ScanoutSmdService {
 
   }
 
-  static async scanOutRoute(payload: any): Promise<any> {
+  static async scanOutRouteOld(payload: any): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
@@ -232,6 +233,275 @@ export class ScanoutSmdService {
               result.message = 'SMD Route Success Created';
               result.data = data;
               return result;
+            }
+          }
+        } else {
+          throw new BadRequestException(`Can't Find  Representative Code : ` + payload.representative_code);
+        }
+
+      } else {
+        throw new BadRequestException(`Can't Find  Branch Code : ` + payload.branch_code);
+      }
+
+    } else {
+      throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+    }
+
+  }
+
+  static async scanOutRoute(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdRouteResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+    let paramsresultDoSmdDetailId;
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+
+    if (resultDoSmd) {
+
+      const resultbranchTo = await Branch.findOne({
+        where: {
+          branchCode: payload.branch_code,
+          isDeleted: false,
+        },
+      });
+
+      if (resultbranchTo) {
+        const resultRepresentative = await Representative.findOne({
+          where: {
+            representativeCode: payload.representative_code,
+            isDeleted: false,
+          },
+        });
+        if (resultRepresentative) {
+          const representaiverawQuery = `
+            SELECT
+              representative_code
+            FROM representative
+            where
+              representative_smd_id_parent  = ${resultRepresentative.representativeId} AND
+              is_deleted = FALSE;
+          `;
+          const resultDataRepresentativeChild = await RawQueryService.query(representaiverawQuery);
+          if (resultDataRepresentativeChild.length > 0) {
+            // For
+            for (let i = 0; i < resultDataRepresentativeChild.length; i++) {
+                const resultDoSmdDetail = await DoSmdDetail.findOne({
+                  where: {
+                    doSmdId: resultDoSmd.doSmdId,
+                    branchIdTo: resultbranchTo.branchId,
+                    isDeleted: false,
+                  },
+                });
+                if (resultDoSmdDetail) {
+                  paramsresultDoSmdDetailId = resultDoSmdDetail.doSmdDetailId;
+                  const rawQuery = `
+                  SELECT
+                    do_smd_detail_id ,
+                    representative_code_list
+                  FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+                  where
+                    s.code  = '${escape(resultDataRepresentativeChild[i].representative_code)}' AND
+                    do_smd_id = ${payload.do_smd_id} AND
+                    is_deleted = FALSE;
+                `;
+                  const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+                  if (resultDataRepresentative.length > 0) {
+                  throw new BadRequestException(`Representative Code already scan !!`);
+                } else {
+                  await DoSmdDetail.update(
+                    { doSmdDetailId : resultDoSmdDetail.doSmdDetailId },
+                    {
+                      representativeCodeList: resultDoSmdDetail.representativeCodeList + ',' + resultDataRepresentativeChild[i].representative_code,
+                      userIdUpdated: authMeta.userId,
+                      updatedTime: timeNow,
+                    },
+                  );
+
+                  // data.push({
+                  //   do_smd_id: resultDoSmd.doSmdId,
+                  //   do_smd_code: resultDoSmd.doSmdCode,
+                  //   do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+                  //   branch_name: resultbranchTo.branchName,
+                  //   representative_code_list: resultDoSmdDetail.representativeCodeList + ',' + resultDataRepresentativeChild[i].representative_code,
+                  // });
+                  // result.statusCode = HttpStatus.OK;
+                  // result.message = 'SMD Route Success Upated';
+                  // result.data = data;
+                  // return result;
+                }
+              } else {
+                const rawQuery = `
+                  SELECT
+                    do_smd_detail_id ,
+                    representative_code_list
+                  FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+                  where
+                    s.code  = '${escape(resultDataRepresentativeChild[i].representative_code)}' AND
+                    do_smd_id = ${payload.do_smd_id} AND
+                    is_deleted = FALSE;
+                `;
+                const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+                if (resultDataRepresentative.length > 0) {
+                  throw new BadRequestException(`Representative Code already scan !!`);
+                } else {
+                  const paramDoSmdDetailId = await this.createDoSmdDetail(
+                    resultDoSmd.doSmdId,
+                    resultDoSmd.doSmdVehicleIdLast,
+                    payload.representative_code,
+                    resultDoSmd.doSmdTime,
+                    permissonPayload.branchId,
+                    resultbranchTo.branchId,
+                    authMeta.userId,
+                  );
+
+                  await DoSmd.update(
+                    { doSmdId : resultDoSmd.doSmdId },
+                    {
+                      branchToNameList: (resultDoSmd.branchToNameList) ? resultDoSmd.branchToNameList + ',' + resultbranchTo.branchName : resultbranchTo.branchName,
+                      doSmdDetailIdLast: paramDoSmdDetailId,
+                      totalDetail: resultDoSmd.totalDetail + 1,
+                      userIdUpdated: authMeta.userId,
+                      updatedTime: timeNow,
+                    },
+                  );
+
+                  // data.push({
+                  //   do_smd_id: resultDoSmd.doSmdId,
+                  //   do_smd_code: resultDoSmd.doSmdCode,
+                  //   do_smd_detail_id: paramDoSmdDetailId,
+                  //   branch_name: resultbranchTo.branchName,
+                  //   representative_code_list: payload.representative_code,
+                  // });
+                  // result.statusCode = HttpStatus.OK;
+                  // result.message = 'SMD Route Success Created';
+                  // result.data = data;
+                  // return result;
+                }
+              }
+            }
+            const resultDoSmdDetail = await DoSmdDetail.findOne({
+              where: {
+                doSmdDetailId:  paramsresultDoSmdDetailId,
+                isDeleted: false,
+              },
+            });
+            data.push({
+              do_smd_id: resultDoSmd.doSmdId,
+              do_smd_code: resultDoSmd.doSmdCode,
+              do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+              branch_name: resultbranchTo.branchName,
+              representative_code_list: resultDoSmdDetail.representativeCodeList,
+            });
+            result.statusCode = HttpStatus.OK;
+            result.message = 'SMD Route Success Created';
+            result.data = data;
+            return result;
+
+          } else {
+            const resultDoSmdDetail = await DoSmdDetail.findOne({
+              where: {
+                doSmdId: resultDoSmd.doSmdId,
+                branchIdTo: resultbranchTo.branchId,
+                isDeleted: false,
+              },
+            });
+            if (resultDoSmdDetail) {
+              const rawQuery = `
+                SELECT
+                  do_smd_detail_id ,
+                  representative_code_list
+                FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+                where
+                  s.code  = '${escape(payload.representative_code)}' AND
+                  do_smd_id = ${payload.do_smd_id} AND
+                  is_deleted = FALSE;
+              `;
+              const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+              if (resultDataRepresentative.length > 0) {
+                throw new BadRequestException(`Representative Code already scan !!`);
+              } else {
+                await DoSmdDetail.update(
+                  { doSmdDetailId : resultDoSmdDetail.doSmdDetailId },
+                  {
+                    representativeCodeList: resultDoSmdDetail.representativeCodeList + ',' + payload.representative_code,
+                    userIdUpdated: authMeta.userId,
+                    updatedTime: timeNow,
+                  },
+                );
+
+                data.push({
+                  do_smd_id: resultDoSmd.doSmdId,
+                  do_smd_code: resultDoSmd.doSmdCode,
+                  do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+                  branch_name: resultbranchTo.branchName,
+                  representative_code_list: resultDoSmdDetail.representativeCodeList + ',' + payload.representative_code,
+                });
+                result.statusCode = HttpStatus.OK;
+                result.message = 'SMD Route Success Upated';
+                result.data = data;
+                return result;
+              }
+            } else {
+              const rawQuery = `
+                SELECT
+                  do_smd_detail_id ,
+                  representative_code_list
+                FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+                where
+                  s.code  = '${escape(payload.representative_code)}' AND
+                  do_smd_id = ${payload.do_smd_id} AND
+                  is_deleted = FALSE;
+              `;
+              const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+              if (resultDataRepresentative.length > 0) {
+                throw new BadRequestException(`Representative Code already scan !!`);
+              } else {
+                const paramDoSmdDetailId = await this.createDoSmdDetail(
+                  resultDoSmd.doSmdId,
+                  resultDoSmd.doSmdVehicleIdLast,
+                  payload.representative_code,
+                  resultDoSmd.doSmdTime,
+                  permissonPayload.branchId,
+                  resultbranchTo.branchId,
+                  authMeta.userId,
+                );
+
+                await DoSmd.update(
+                  { doSmdId : resultDoSmd.doSmdId },
+                  {
+                    branchToNameList: (resultDoSmd.branchToNameList) ? resultDoSmd.branchToNameList + ',' + resultbranchTo.branchName : resultbranchTo.branchName,
+                    doSmdDetailIdLast: paramDoSmdDetailId,
+                    totalDetail: resultDoSmd.totalDetail + 1,
+                    userIdUpdated: authMeta.userId,
+                    updatedTime: timeNow,
+                  },
+                );
+
+                data.push({
+                  do_smd_id: resultDoSmd.doSmdId,
+                  do_smd_code: resultDoSmd.doSmdCode,
+                  do_smd_detail_id: paramDoSmdDetailId,
+                  branch_name: resultbranchTo.branchName,
+                  representative_code_list: payload.representative_code,
+                });
+                result.statusCode = HttpStatus.OK;
+                result.message = 'SMD Route Success Created';
+                result.data = data;
+                return result;
+              }
             }
           }
         } else {
