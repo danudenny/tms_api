@@ -106,7 +106,8 @@ export class BaggingSmdService {
     const weight = payload.bagNumber.substring(10);
     let baggingId = '';
     let baggingCode = '';
-    // check status gabung paket
+
+    // check status gabung paket dan ambil data gabung paket
     let qb = createQueryBuilder();
     qb.addSelect('bi.bag_item_id', 'bagItemId');
     qb.addSelect('bi.weight', 'weight');
@@ -144,9 +145,8 @@ export class BaggingSmdService {
       result.message = 'Resi Gabung Paket sudah di scan';
       return result;
     }
-    // NOTE: representativeCode ada jika bagging di create awal,
-    // jika tidak ada maka
-    // bagging yg di-scan scan mengikuti scan-scan sebelumnnya
+
+    // NOTE: representativeCode digunakan untul validasi kode tujuan gabung paket
     let representative = null;
     result.validRepresentativeCode = dataBagging.representativeCode;
     if (payload.representativeCode) {
@@ -167,21 +167,13 @@ export class BaggingSmdService {
         return result;
       }
     } else {
-      qb = createQueryBuilder();
-      qb.addSelect('b.representative_id_to', 'representativeId');
-      qb.from('bag', 'b');
-      qb.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND bi.is_deleted = false');
-      qb.where('b.bag_number = :bagNumber', { bagNumber });
-      qb.andWhere('b.is_deleted = false');
-      qb.innerJoin('bagging_item', 'bt', 'bt.bag_item_id = bi.bag_item_id AND bt.is_deleted = false ');
-      qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bt.bagging_id AND ba.is_deleted = false');
-      representative = await qb.getRawOne();
-      if (!representative) {
-        result.message = 'Gabung paket sebelumnya tidak ditemukan, harap masukkan kode tujuan!';
-        return result;
-      }
+      representative = {
+        representativeId: dataBagging.representativeIdTo,
+      };
     }
 
+    // NOTE: baggingId untuk mencocokkan bagging yg sedang di scan
+    // dengan bagging yg di-scan sebelumnya
     if (payload.baggingId) {
       const q = createQueryBuilder();
       q.addSelect('b.bagging_id', 'baggingId');
