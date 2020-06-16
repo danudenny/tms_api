@@ -210,6 +210,9 @@ export class TrackingBagResponseVm {
   @ApiModelProperty()
   branchNameNext: string;
 
+  @ApiModelProperty()
+  representativeCode: string;
+
   @ApiModelProperty({ type: () => [BagHistoryResponseVm] })
   bagHistory: BagHistoryResponseVm[];
 }
