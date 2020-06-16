@@ -192,8 +192,8 @@ export class BaggingSmdService {
         result.message = 'Data bagging tidak ditemukan';
         return result;
       }
-      result.baggingId = bagging.baggingId;
-      result.baggingCode = bagging.baggingCode;
+      baggingId = result.baggingId = bagging.baggingId;
+      baggingCode = result.baggingCode = bagging.baggingCode;
 
       // check kode tujuan bagging sebelumnya yang pernah di-scan
       q.addSelect('r.representative_code', 'validCode');
