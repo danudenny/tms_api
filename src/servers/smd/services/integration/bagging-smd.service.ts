@@ -185,6 +185,7 @@ export class BaggingSmdService {
       q.addSelect('ba.totalItem', 'totalItem');
       q.from('bagging', 'ba');
       q.andWhere('ba.bagging_id = :baggingId', { baggingId: payload.baggingId });
+      q.andWhere('ba.is_deleted = false');
       const bagging = await q.getRawOne();
 
       if (!bagging) {
@@ -196,9 +197,9 @@ export class BaggingSmdService {
 
       // check kode tujuan bagging sebelumnya yang pernah di-scan
       q.addSelect('r.representative_code', 'validCode');
-      q.innerJoin('bagging_item', 'bai', 'bai.bagging_id = ba.bagging_id');
-      q.innerJoin('bag_item', 'bi', 'bi.bag_item_id = bai.bag_item_id');
-      q.innerJoin('bag', 'b', 'bi.bag_id = b.bag_id');
+      q.innerJoin('bagging_item', 'bai', 'bai.bagging_id = ba.bagging_id AND bai.is_deleted = false');
+      q.innerJoin('bag_item', 'bi', 'bi.bag_item_id = bai.bag_item_id AND bi.is_deleted = false');
+      q.innerJoin('bag', 'b', 'bi.bag_id = b.bag_id AND b.is_deleted = false');
       q.leftJoin('representative', 'r', 'r.representative_id = b.representative_id_to');
       q.andWhere('b.representative_id_to <> :id', { id: dataBagging.representativeIdTo });
       const otherCombinePackegeIsExists = await q.getRawOne();
