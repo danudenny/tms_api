@@ -107,7 +107,7 @@ export class BaggingSmdService {
     let baggingId = '';
     let baggingCode = '';
 
-    // check status gabung paket dan ambil data gabung paket
+    // check status gabung paket dan ambil data gabung paket payload
     let qb = createQueryBuilder();
     qb.addSelect('bi.bag_item_id', 'bagItemId');
     qb.addSelect('bi.weight', 'weight');
@@ -172,25 +172,45 @@ export class BaggingSmdService {
       };
     }
 
+    result.baggingId = baggingId;
+    result.baggingCode = baggingCode;
+
     // NOTE: baggingId untuk mencocokkan bagging yg sedang di scan
     // dengan bagging yg di-scan sebelumnya
     if (payload.baggingId) {
       const q = createQueryBuilder();
-      q.addSelect('b.bagging_id', 'baggingId');
-      q.addSelect('b.bagging_code', 'baggingCode');
-      q.addSelect('b.total_weight', 'totalWeight');
-      q.addSelect('b.totalItem', 'totalItem');
-      q.from('bagging', 'b');
-      q.andWhere('bagging_id = :baggingId', { baggingId: payload.baggingId });
+      q.addSelect('ba.bagging_id', 'baggingId');
+      q.addSelect('ba.bagging_code', 'baggingCode');
+      q.addSelect('ba.total_weight', 'totalWeight');
+      q.addSelect('ba.totalItem', 'totalItem');
+      q.from('bagging', 'ba');
+      q.andWhere('ba.bagging_id = :baggingId', { baggingId: payload.baggingId });
       const bagging = await q.getRawOne();
 
       if (!bagging) {
         result.message = 'Data bagging tidak ditemukan';
         return result;
       }
-      baggingId = bagging.baggingId;
-      baggingCode = bagging.baggingCode;
+      result.baggingId = bagging.baggingId;
+      result.baggingCode = bagging.baggingCode;
 
+      // check kode tujuan bagging sebelumnya yang pernah di-scan
+      q.addSelect('r.representative_code', 'validCode');
+      q.innerJoin('bagging_item', 'bai', 'bai.bagging_id = ba.bagging_id');
+      q.innerJoin('bag_item', 'bi', 'bi.bag_item_id = bai.bag_item_id');
+      q.innerJoin('bag', 'b', 'bi.bag_id = b.bag_id');
+      q.leftJoin('representative', 'r', 'r.representative_id = b.representative_id_to');
+      q.andWhere('b.representative_id_to <> :id', { id: dataBagging.representativeIdTo });
+      const otherCombinePackegeIsExists = await q.getRawOne();
+
+      result.validRepresentativeCode = otherCombinePackegeIsExists ?
+        otherCombinePackegeIsExists.validCode
+        : result.validRepresentativeCode;
+
+      if (otherCombinePackegeIsExists && dataBagging.representativeIdTo) {
+        result.message = 'Tujuan resi ' + payload.bagNumber + ' tidak sama dengan tujuan gabung paket sebelumnya';
+        return result;
+      }
       const total_weight = (Number(dataBagging.weight) + Number(bagging.totalWeight));
       await Bagging.update(baggingId, {
         totalWeight: total_weight.toString(),
