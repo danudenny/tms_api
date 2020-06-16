@@ -1,5 +1,5 @@
 // #region import
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createQueryBuilder } from 'typeorm';
 import { sumBy } from 'lodash';
@@ -43,8 +43,9 @@ import {
 } from '../../models/web-awb-filter.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { District } from '../../../../shared/orm-entity/district';
-import { WebAwbSortirResponseVm } from '../../models/web-awb-sortir-response.vm';
-import { BaseMetaSortirPayloadVm } from '../../../../shared/models/base-filter-search.payload.vm';
+import { WebAwbSortResponseVm, WebAwbSortPayloadVm, WebAwbSortVm } from '../../models/web-awb-sort.vm';
+import { Awb } from '../../../../shared/orm-entity/awb';
+import { ConfigService } from '../../../../shared/services/config.service';
 // #endregion
 export class WebAwbFilterService {
   constructor(
@@ -279,7 +280,7 @@ export class WebAwbFilterService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const results: ScanAwbVm[] = [];
-    let bagNumberSeq = '';
+    const bagNumberSeq = '';
     // get all awb_number from payload
     for (const awbNumber of payload.awbNumber) {
       const res = new ScanAwbVm();
@@ -312,107 +313,6 @@ export class WebAwbFilterService {
           res.message = `Resi ${awbNumber} sudah tersortir`;
           res.districtId = awbItemAttr.awbItem.awb.toId;
         } else {
-          // check payload.podFilterDetailId is valid or not
-          let awbTroubleId = null;
-          let podFilterDetail = await this.getPodFilterDetail(
-            payload.podFilterId,
-            awbItemAttr.bagItemIdLast,
-          );
-
-          // NOTE: check awb include on bag item
-          if (podFilterDetail) {
-            // no error, this awb is fine
-            res.status = 'success';
-            res.trouble = false;
-            res.message = `Resi ${awbNumber} berhasil tersortir`;
-            res.districtId = awbItemAttr.awbItem.awb.toId;
-          } else {
-            // check payload.podFilterDetailId current
-            podFilterDetail = await this.getCurrentPodFilterDetail(
-              payload.podFilterDetailId,
-            );
-
-            // response error, but still process sortir, just announce for CT this awb have a trouble package combine
-            res.status = 'success';
-            res.trouble = true;
-            if (!!awbItemAttr.awbItem.awb.toId) {
-              // NOTE: get data district
-              const getDistrict = await District.findOne({
-                // cache: true,
-                where: {
-                  districtId: awbItemAttr.awbItem.awb.toId,
-                  isDeleted: false,
-                },
-              });
-
-              res.districtId = awbItemAttr.awbItem.awb.toId;
-              res.districtName = getDistrict ? getDistrict.districtName : '';
-              res.message = `Resi ${awbNumber} berhasil tersortir, tetapi tidak ada pada Gabung Paket`;
-            } else {
-              res.message = `Resi ${awbNumber} tidak memiliki tujuan, harap di lengkapi`;
-              res.districtId = null;
-            }
-            // announce for CT using table awb_trouble and the category of trouble is awb_filter
-            // save data to awb_trouble
-            awbTroubleId = await this.createAwbTrouble(
-              awbNumber,
-              res.message,
-              podFilterDetail.bagItem.bag.branchId,
-            );
-          }
-          // bag number
-          bagNumberSeq =
-            `${podFilterDetail.bagItem.bag.bagNumber}` +
-            `${podFilterDetail.bagItem.bagSeq.toString().padStart(3, '0')}`;
-
-          // Update total_awb_filtered, total_awb_item, total_awb_not_in_bag
-          const keyRedis = `hold:awbfiltered:${
-            podFilterDetail.podFilterDetailId
-          }`;
-          const holdRedis = await RedisService.locking(keyRedis, 'locking');
-          if (holdRedis) {
-            // save to pod_filter_detail_item
-            await this.createPodFilterDetailItem(
-              podFilterDetail.podFilterDetailId,
-              awbItemAttr,
-              awbTroubleId,
-            );
-
-            // NOTE:: update awb_item_attr last to IN
-            // await AwbItemAttr.update(awbItemAttr.awbItemAttrId, {
-            //   isDistrictFiltered: true,
-            // });
-
-            await DeliveryService.updateAwbAttr(
-              awbItemAttr.awbItemId,
-              awbItemAttr.branchIdNext,
-              AWB_STATUS.IN_BRANCH,
-            );
-
-            podFilterDetail.totalAwbItem = podFilterDetail.totalAwbItem + 1;
-            if (awbItemAttr.bagItemIdLast) {
-              podFilterDetail.totalAwbFiltered =
-                podFilterDetail.totalAwbFiltered + 1;
-            } else {
-              podFilterDetail.totalAwbNotInBag =
-                podFilterDetail.totalAwbNotInBag + 1;
-            }
-            podFilterDetail.endDateTime = moment().toDate();
-            podFilterDetail.updatedTime = moment().toDate();
-            podFilterDetail.userIdUpdated = authMeta.userId;
-            await RepositoryService.podFilterDetail.save(podFilterDetail);
-
-            // remove key holdRedis
-            RedisService.del(keyRedis);
-          }
-
-          // after scan filter done at all. do posting status last awb
-          // NOTE: posting to awb_history, awb_item_summary
-          DoPodDetailPostMetaQueueService.createJobByAwbFilter(
-            awbItemAttr.awbItemId,
-            permissonPayload.branchId,
-            authMeta.userId,
-          );
         }
       } else {
         res.status = 'error';
@@ -530,40 +430,137 @@ export class WebAwbFilterService {
     return result;
   }
 
-  async findAllAwbSortirList(
-    payload: BaseMetaSortirPayloadVm,
-  ): Promise<WebAwbSortirResponseVm> {
+  async sortAwbHub(
+    payload: WebAwbSortPayloadVm,
+  ): Promise<WebAwbSortResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const result = new WebAwbSortResponseVm();
 
-    const qb = createQueryBuilder();
-    qb.addSelect('awb.awb_number', 'awbNumber');
-    qb.addSelect('awb.ref_representative_code', 'refRepresentativeCode');
-    qb.addSelect('district.district_id', 'districtId');
-    qb.addSelect('district.district_code', 'districtCode');
-    qb.from('awb', 'awb');
-    qb.innerJoin(
-      'district',
-      'district',
-      'district.district_id = awb.to_id AND district.is_deleted = false',
-    );
-    qb.where(
-      'awb.awb_number = :awbNumber AND awb.is_deleted = false',
-      {
+    const awb = await Awb.findOne({
+      select: ['awbId', 'awbNumber', 'consigneeZip', 'toId'],
+      where: {
         awbNumber: payload.awbNumber,
+        isDeleted: false,
       },
-    );
+    });
 
-    const data = await qb.getRawOne();
-    // console.log(data);
-    const result = new WebAwbSortirResponseVm();
-    // console.log(data.districtCode);
-    // console.log(data.districtId);
-    if (data) {
-      result.districtTo = data.districtId;
-      result.districtCode = data.districtCode;
-      result.awbNumber = data.awbNumber;
-      result.refRepresentativeCode = data.refRepresentativeCode;
+    if (awb) {
+      switch (payload.type) {
+        case 'subDistrict':
+          // key: kode pos
+          // value: nama gerai
+          // suara gerai
+          if (awb.consigneeZip) {
+            const qb = createQueryBuilder();
+            qb.addSelect('sd.sub_district_id', 'subDistrictId');
+            qb.addSelect('sd.sub_district_name', 'subDistrictName');
+            qb.addSelect('b.branch_code', 'branchCode');
+            qb.addSelect('b.branch_name', 'branchName');
+            qb.addSelect('a.attachment_path', 'attachmentPath');
+            qb.from('sub_district', 'sd');
+            qb.innerJoin(
+              'branch_sub_district',
+              'bsd',
+              'bsd.sub_district_id = sd.sub_district_id AND bsd.is_deleted = false',
+            );
+            qb.innerJoin(
+              'branch',
+              'b',
+              'b.branch_id = bsd.branch_id AND b.is_deleted = false',
+            );
+            qb.leftJoin(
+              'attachment',
+              'a',
+              'a.attachment_id = b.branch_sound_url AND a.is_deleted = false',
+            );
+            qb.where(
+              'sd.zip_code = :zipCode AND sd.is_deleted = false AND sd.is_active = true',
+              {
+                zipCode: awb.consigneeZip,
+              },
+            );
+            qb.orderBy('a.attachment_path');
+            qb.limit(1);
+            const data = await qb.getRawOne();
+            if (data) {
+              // NOTE: sample sound path
+              // https://sicepattesting.s3.amazonaws.com/
+              // branch/sound/PSwjOTU_NCwkLCM5MSo5IzcSNCIzOD0oPjkPf2B_YH1mfGF8YBJif2R8YRISLD4pJSM3bRIsMiw7LD5jPT1j
+              if (data.attachmentPath) {
+                result.urlSound = `${ConfigService.get(
+                  'cloudStorage.cloudUrl',
+                )}/${data.attachmentPath}`;
+              }
+
+              result.subDistrict = {
+                key: awb.consigneeZip,
+                value: data.branchName,
+              };
+            } else {
+              throw new BadRequestException(
+                `Data resi ${payload.awbNumber}, kode pos ${awb.consigneeZip} belum memiliki gerai!`,
+              );
+            }
+          } else {
+            // TODO: check toId
+            throw new BadRequestException(
+              `Data resi ${payload.awbNumber}, tidak memiliki kode pos!`,
+            );
+          }
+          break;
+        case 'city':
+          // TODO:
+          // key: kode kota
+          // value: nama kota
+          // suara kota
+          if (awb.toId) {
+            const qb = createQueryBuilder();
+            qb.addSelect('d.district_name', 'districtName');
+            qb.addSelect('c.city_code', 'cityCode');
+            qb.addSelect('c.city_name', 'cityName');
+            qb.from('district', 'd');
+            qb.innerJoin(
+              'city',
+              'c',
+              'd.city_id = c.city_id AND c.is_deleted = false',
+            );
+            qb.where(
+              'd.district_id = :districtId AND d.is_deleted = false',
+              {
+                districtId: awb.toId,
+              },
+            );
+            qb.limit(1);
+            const data = await qb.getRawOne();
+            if (data) {
+              // TODO: get data sound city ?
+
+              result.city = {
+                key: data.cityCode,
+                value: data.cityName,
+              };
+            } else {
+              throw new BadRequestException(
+                `Data resi ${payload.awbNumber}, tujuan tidak ditemukan!`,
+              );
+            }
+          } else {
+            throw new BadRequestException(
+              `Data resi ${payload.awbNumber}, tidak memiliki tujuan!`,
+            );
+          }
+          break;
+        default:
+          throw new BadRequestException('Params Type, tidak valid!');
+      } // end of switch
+      result.awbNumber = payload.awbNumber;
+      result.type = payload.type;
+      return result;
+    } else {
+      throw new BadRequestException(
+        `Data resi ${payload.awbNumber}, tidak ditemukan!`,
+      );
     }
-    return result;
   }
 
   private async createPodFilter(representativeIdTo: number) {
