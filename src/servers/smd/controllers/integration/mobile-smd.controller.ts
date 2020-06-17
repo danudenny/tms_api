@@ -40,6 +40,13 @@ export class MobileSmdController {
     return MobileSmdService.scanInCancelMobile(payload);
   }
 
+  @Post('smd/end')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async scanInEndMobile(@Req() request: any, @Body() payload: MobileSmdArrivalPayloadVm) {
+    return MobileSmdService.scanInEndMobile(payload);
+  }
+
   @Post('smd/image')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
