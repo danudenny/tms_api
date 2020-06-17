@@ -86,6 +86,9 @@ export class PrintDoSmdDataDoSmdDetailVm {
   @ApiModelProperty()
   sealNumber: string;
 
+  @ApiModelProperty()
+  arrivalTime: Date;
+
   @ApiModelProperty({ type: () => PrintDoSmdDataBranchToVm })
   branchTo: PrintDoSmdDataBranchToVm = new PrintDoSmdDataBranchToVm();
 
