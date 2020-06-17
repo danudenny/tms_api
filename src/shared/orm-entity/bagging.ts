@@ -1,8 +1,9 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import {Representative} from './representative';
 import {User} from './user';
 import {Branch} from './branch';
 import {BaggingItem} from './bagging-item';
+import { DoSmdDetailItem } from './do_smd_detail_item';
 
 @Entity('bagging', { schema: 'public' })
 @Index('bagging_representative_id_to_idx', ['representativeIdTo'])
@@ -143,4 +144,7 @@ export class Bagging extends BaseEntity {
 
   @OneToMany(() => BaggingItem, e => e.bagging, { cascade: ['insert'] })
   baggingItems: BaggingItem[];
+
+  @OneToMany(() => DoSmdDetailItem, e => e.bagging, { cascade: ['insert'] })
+  doSmdDetailItem: DoSmdDetailItem[];
 }
