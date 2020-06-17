@@ -11,6 +11,7 @@ import { MetaService } from '../../../../shared/services/meta.service';
 import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm } from '../../models/smd-bagging-response.vm';
 import { SmdScanBaggingPayloadVm } from '../../models/smd-bagging-payload.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
+import {RawQueryService} from '../../../../shared/services/raw-query.service';
 
 @Injectable()
 export class BaggingSmdService {
@@ -102,77 +103,88 @@ export class BaggingSmdService {
     const authMeta = AuthService.getAuthData();
     const permissionPayload = AuthService.getPermissionTokenPayload();
     const bagNumber = payload.bagNumber.substring(0, 7);
-    const bagSeq = payload.bagNumber.substring(7, 10);
-    const weight = payload.bagNumber.substring(10);
+    const bagSeq = Number(payload.bagNumber.substring(7, 10));
+    // const weight = payload.bagNumber.substring(10);
     let baggingId = '';
     let baggingCode = '';
 
     // check status gabung paket dan ambil data gabung paket payload
-    let qb = createQueryBuilder();
-    qb.addSelect('bi.bag_item_id', 'bagItemId');
-    qb.addSelect('bi.weight', 'weight');
-    qb.addSelect('bh.bag_item_status_id', 'bagItemStatusIdLast');
-    qb.addSelect('bi.bag_item_status_id_last', 'bagItemStatusIdLastInBagItem');
-    qb.addSelect('b.representative_id_to', 'representativeIdTo');
-    qb.addSelect('r.representative_code', 'representativeCode');
-    qb.addSelect('r.is_deleted', 'repIsDeleted');
-    qb.from('bag', 'b');
-    qb.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND bi.is_deleted = false');
-    qb.leftJoin('bag_item_history', 'bh', 'bi.bag_item_id = bh.bag_item_id AND bh.is_deleted = false');
-    qb.leftJoin('representative', 'r', 'r.representative_id = b.representative_id_to');
-    qb.where('b.bag_number = :bagNumber', { bagNumber });
-    qb.andWhere('bi.bag_seq = :bagSeq', { bagSeq });
-    qb.andWhere('b.is_deleted = false');
-    qb.orderBy('bh.history_date', 'DESC');
-    const dataBagging = await qb.getRawOne();
-    if (!dataBagging) {
+    let rawQuery = `
+      SELECT
+        bi.bag_item_id AS bagItemId,
+        bi.weight as weight,
+        bh.bag_item_status_id AS bagItemStatusIdLast,
+        bi.bag_item_status_id_last AS bagItemStatusIdLastInBagItem,
+        b.representative_id_to AS representativeIdTo,
+        r.representative_code AS representativeCode
+      FROM bag AS b
+      INNER JOIN bag_item bi ON bi.bag_id = b.bag_id AND bi.is_deleted = false
+      LEFT JOIN bag_item_history bh ON bi.bag_item_id = bh.bag_item_id AND bh.is_deleted = false
+      LEFT JOIN representative r ON r.representative_id = b.representative_id_to
+      WHERE
+        b.bag_number = '${bagNumber}' AND
+        bi.bag_seq = '${bagSeq}' AND
+        b.is_deleted = false
+      ORDER BY bh.history_date DESC
+      LIMIT 1;
+    `;
+    const dataBagging = await RawQueryService.query(rawQuery);
+
+    if (dataBagging.length == 0) {
       result.message = 'Resi gabung paket tidak ditemukan';
       return result;
-    } else if (dataBagging.bagItemStatusIdLast) {
-      if (dataBagging.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH) {
+    } else if (dataBagging[0].bagItemStatusIdLast) {
+      if (dataBagging[0].bagItemStatusIdLast != BAG_STATUS.IN_BRANCH) {
         result.message = 'Resi Gabung Paket belum di scan masuk';
         return result;
       }
-    } else if (!dataBagging.bagItemStatusIdLast && dataBagging.bagItemStatusIdLastInBagItem != BAG_STATUS.IN_BRANCH) {
+    } else if (!dataBagging[0].bagItemStatusIdLast && dataBagging[0].bagItemStatusIdLastInBagItem != BAG_STATUS.IN_BRANCH) {
       result.message = 'Resi Gabung Paket belum di scan masuk';
       return result;
     }
 
-    qb = createQueryBuilder();
-    qb.addSelect('bt.bag_item_id', 'bagItemId');
-    qb.from('bagging_item', 'bt');
-    qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bt.bagging_id AND ba.is_deleted = false');
-    qb.andWhere('bt.is_deleted = false AND bt.bag_item_id = :id', {id: dataBagging.bagItemId});
-    const dataExists = await qb.getRawOne();
-    if (dataExists) {
-      result.message = 'Resi Gabung Paket sudah di scan';
+    rawQuery = `
+      SELECT
+        bt.bag_item_id AS bagItemId
+      FROM bagging_item AS bt
+      INNER JOIN bagging AS ba ON ba.bagging_id = bt.bagging_id AND ba.is_deleted = false
+      WHERE
+        bt.is_deleted = false AND bt.bag_item_id = '${dataBagging[0].bagItemId}' AND
+        ba.branch_id = '${permissionPayload.branchId} AND
+        ba.is_deleted = false
+      LIMIT 1;
+    `;
+
+    const dataExists = await RawQueryService.query(rawQuery);
+    if (dataExists.length > 0) {
+      result.message = 'Resi Gabung Paket sudah di scan bagging';
       return result;
     }
 
     // NOTE: representativeCode digunakan untul validasi kode tujuan gabung paket
     let representative = null;
-    result.validRepresentativeCode = dataBagging.representativeCode;
+    result.validRepresentativeCode = dataBagging[0].representativeCode;
     if (payload.representativeCode) {
-      qb = createQueryBuilder();
-      qb.addSelect('r.representative_id', 'representativeId');
-      qb.from('representative', 'r');
-      qb.where('r.representative_code = :representativeCode', { representativeCode: payload.representativeCode });
-      const representativeExists = await qb.getRawOne();
-      if (!representativeExists) {
-        result.message = 'Kode tujuan ' + payload.representativeCode + ' tidak ditemukan';
-        return result;
-      }
-
-      qb.andWhere('r.representative_id = :representativeId', {representativeId: dataBagging.representativeIdTo});
-      representative = await qb.getRawOne();
-      if (!representative) {
-        result.message = 'Kode tujuan ' + payload.representativeCode + ' tidak sama dengan tujuan gabung paket sebelumnya';
+      rawQuery = `
+        SELECT
+          r.representative_id AS representativeId
+        FROM representative AS r
+        WHERE
+          r.representative_code = '${payload.representativeCode}' AND
+          r.representative_id = '${dataBagging[0].representativeIdTo}'
+        LIMIT 1;
+      `;
+      representative = await RawQueryService.query(rawQuery);
+      if (representative.length == 0) {
+        result.message = 'Kode tujuan ' + payload.representativeCode + ' salah / tidak sama dengan tujuan gabung paket sebelumnya';
         return result;
       }
     } else {
-      representative = {
-        representativeId: dataBagging.representativeIdTo,
-      };
+      representative = [
+        {
+          representativeId: dataBagging[0].representativeIdTo,
+        },
+      ];
     }
 
     result.baggingId = baggingId;
@@ -181,77 +193,88 @@ export class BaggingSmdService {
     // NOTE: baggingId untuk mencocokkan bagging yg sedang di scan
     // dengan bagging yg di-scan sebelumnya
     if (payload.baggingId) {
-      let q = createQueryBuilder();
-      q.addSelect('ba.bagging_id', 'baggingId');
-      q.addSelect('ba.bagging_code', 'baggingCode');
-      q.addSelect('ba.total_weight', 'totalWeight');
-      q.addSelect('ba.totalItem', 'totalItem');
-      q.from('bagging', 'ba');
-      q.andWhere('ba.bagging_id = :baggingId', { baggingId: payload.baggingId });
-      q.andWhere('ba.is_deleted = false');
-      const bagging = await q.getRawOne();
-
-      if (!bagging) {
+      rawQuery = `
+        SELECT
+          ba.bagging_id AS baggingId,
+          ba.bagging_code AS baggingCode,
+          ba.total_weight AS totalWeight,
+          ba.totalItem AS totalItem
+        FROM bagging AS ba
+        WHERE
+          ba.bagging_id = '${payload.baggingId}' AND
+          ba.is_deleted = false
+        LIMIT 1;
+      `;
+      const bagging = await RawQueryService.query(rawQuery);
+      if (bagging.length == 0) {
         result.message = 'Data bagging tidak ditemukan';
         return result;
       }
-      baggingId = result.baggingId = bagging.baggingId;
-      baggingCode = result.baggingCode = bagging.baggingCode;
+      baggingId = result.baggingId = bagging[0].baggingId;
+      baggingCode = result.baggingCode = bagging[0].baggingCode;
 
       // check kode tujuan bagging sebelumnya yang pernah di-scan
-      q = createQueryBuilder();
-      q.addSelect('r.representative_code', 'validCode');
-      q.from('bagging_item', 'bai');
-      q.innerJoin('bag_item', 'bi', 'bi.bag_item_id = bai.bag_item_id');
-      q.innerJoin('bag', 'b', 'bi.bag_id = b.bag_id');
-      q.leftJoin('representative', 'r', 'r.representative_id = b.representative_id_to');
-      q.andWhere('b.representative_id_to <> :id', { id: dataBagging.representativeIdTo });
-      q.andWhere('bai.bagging_id = :id', { id: bagging.baggingId });
-      const otherCombinePackegeIsExists = await q.getRawOne();
+      rawQuery = `
+        SELECT
+          r.representative_code AS validCode
+        FROM bagging_item AS bai
+        INNER JOIN bag_item AS bi ON bi.bag_item_id = bai.bag_item_id
+        INNER JOIN bag AS b ON bi.bag_id = b.bag_id
+        LEFT JOIN representative AS r ON r.representative_id = b.representative_id_to
+        WHERE
+          r.representative_code <> '${dataBagging[0].representativeCode}' AND
+          bai.bagging_id = '${bagging[0].baggingId}'
+        LIMIT 1;
+      `;
+      const otherCombinePackegeIsExists = await RawQueryService.query(rawQuery);
 
-      result.validRepresentativeCode = otherCombinePackegeIsExists ?
-        otherCombinePackegeIsExists.validCode
+      result.validRepresentativeCode = otherCombinePackegeIsExists.length > 0 ?
+        otherCombinePackegeIsExists[0].validCode
         : result.validRepresentativeCode;
 
-      if (otherCombinePackegeIsExists && dataBagging.representativeIdTo) {
+      if (otherCombinePackegeIsExists.length > 0 && dataBagging[0].representativeIdTo) {
         result.message = 'Tujuan resi ' + payload.bagNumber + ' tidak sama dengan tujuan gabung paket sebelumnya';
         return result;
       }
-      const total_weight = (Number(dataBagging.weight) + Number(bagging.totalWeight));
+      const total_weight = (Number(dataBagging[0].weight) + Number(bagging[0].totalWeight));
       await Bagging.update(baggingId, {
         totalWeight: total_weight.toString(),
-        totalItem: (bagging.totalItem + 1),
+        totalItem: (bagging[0].totalItem + 1),
       });
 
     } else {
-      const bagging = Bagging.create();
-      bagging.userId = authMeta.userId.toString();
-      bagging.representativeIdTo = representative.representativeId;
-      bagging.branchId = permissionPayload.branchId.toString();
-      bagging.totalItem = 1;
-      bagging.totalWeight = dataBagging.weight.toString();
-      bagging.baggingCode = await this.generateCode();
-      bagging.baggingDate = await this.dateMinus1day(moment().toDate());
-      bagging.userIdCreated = authMeta.userId.toString();
-      bagging.userIdUpdated = authMeta.userId.toString();
-      bagging.baggingDateReal = moment().toDate();
-      bagging.createdTime = moment().toDate();
-      bagging.updatedTime = moment().toDate();
-      await Bagging.save(bagging);
+      const baggingDate = await this.dateMinus1day(moment().toDate());
+      const maxBagSeq = await this.getMaxBaggingSeq(dataBagging[0].representativeIdTo, baggingDate, permissionPayload.branchId);
 
-      baggingId = bagging.baggingId;
-      baggingCode = bagging.baggingCode;
+      const createBagging = Bagging.create();
+      createBagging.userId = authMeta.userId.toString();
+      createBagging.representativeIdTo = representative[0].representativeId;
+      createBagging.branchId = permissionPayload.branchId.toString();
+      createBagging.totalItem = 1;
+      createBagging.totalWeight = dataBagging[0].weight.toString();
+      createBagging.baggingCode = await this.generateCode();
+      createBagging.baggingDate = baggingDate;
+      createBagging.userIdCreated = authMeta.userId.toString();
+      createBagging.userIdUpdated = authMeta.userId.toString();
+      createBagging.baggingDateReal = moment().toDate();
+      createBagging.baggingSeq = maxBagSeq;
+      createBagging.createdTime = moment().toDate();
+      createBagging.updatedTime = moment().toDate();
+      await Bagging.save(createBagging);
+
+      baggingId = createBagging.baggingId;
+      baggingCode = createBagging.baggingCode;
     }
     const baggingItem = BaggingItem.create();
     baggingItem.baggingId = baggingId;
-    baggingItem.bagItemId = dataBagging.bagItemId;
+    baggingItem.bagItemId = dataBagging[0].bagItemId;
     baggingItem.userIdCreated = authMeta.userId.toString();
     baggingItem.userIdUpdated = authMeta.userId.toString();
     baggingItem.createdTime = moment().toDate();
     baggingItem.updatedTime = moment().toDate();
     BaggingItem.save(baggingItem);
 
-    await BagItem.update(dataBagging.bagItemId, {
+    await BagItem.update(dataBagging[0].bagItemId, {
       baggingIdLast: Number(baggingId),
     });
 
@@ -265,37 +288,44 @@ export class BaggingSmdService {
   static async generateCode() {
     const codeAlike = 'BGG/' + moment().format('YYMM') + '/';
     const qb = createQueryBuilder();
-    qb.addSelect('bagging.bagging_code', 'baggingCode');
-    qb.where(`bagging_code LIKE '${codeAlike}%'`);
-    qb.from('bagging', 'bagging');
-    qb.orderBy('bagging_date_real', 'DESC');
-    const result = await qb.getRawOne();
+    const rawQuery = `
+      SELECT
+        bagging.bagging_code AS baggingCode
+      FROM bagging
+      WHERE
+        bagging_code LIKE '${codeAlike}%'
+      ORDER BY bagging_date_real DESC
+      LIMIT 1;
+    `;
+    const result = await RawQueryService.query(rawQuery);
 
     let sequence = 1;
-    if (result) {
-      sequence = Number(result.baggingCode.substring(result.baggingCode.length - 5)) + 1;
+    if (result.length > 0) {
+      sequence = Number(result[0].baggingCode.substring(result[0].baggingCode.length - 5)) + 1;
     }
     const code = codeAlike + '0'.repeat(5 - sequence.toString().length) + sequence;
-
     return code;
   }
 
   static async getMaxBaggingSeq(representativeIdTo, baggingDate, branchId) {
-      const qb = createQueryBuilder();
-      qb.addSelect('MAX(b.bagging_seq)', 'baggingSeq');
-      qb.from('bagging', 'b');
-      qb.where('b.representative_id_to = :representativeIdTo', { representativeIdTo });
-      qb.andWhere('b.bagging_date = :baggingDate', { baggingDate });
-      qb.andWhere('b.branch_id = :branchId', { branchId });
-      qb.andWhere('b.bagging_date = :baggingDate', { baggingDate });
-      qb.andWhere('b.is_deleted = false');
+    const rawQuery = `
+      SELECT
+        MAX(b.bagging_seq) AS baggingSeq
+      FROM bagging AS b
+      WHERE
+        b.representative_id_to = '${representativeIdTo}' AND
+        b.bagging_date = '${baggingDate}' AND
+        b.branch_id = '${branchId}' AND
+        b.is_deleted = false
+      LIMIT 1;
+    `;
+    const bagging = await RawQueryService.query(rawQuery);
 
-      const bagging = await qb.getRawOne();
-      let baggingSeq = bagging.baggingSeq;
-      if (!bagging) {
-        baggingSeq = 0;
-      }
-      return baggingSeq + 1;
+    let baggingSeq = bagging[0].baggingSeq;
+    if (bagging == 0) {
+      baggingSeq = 0;
+    }
+    return baggingSeq + 1;
   }
 
   public static dateMinus1day(date: Date) {
