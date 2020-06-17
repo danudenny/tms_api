@@ -138,8 +138,11 @@ export class BaggingSmdService {
       return result;
     }
 
-    qb.innerJoin('bagging_item', 'bt', 'bt.bag_item_id = bi.bag_item_id AND bt.is_deleted = false ');
+    qb = createQueryBuilder();
+    qb.addSelect('bt.bag_item_id', 'bagItemId');
+    qb.from('bagging_item', 'bt');
     qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bt.bagging_id AND ba.is_deleted = false');
+    qb.andWhere('bt.is_deleted = false AND bt.bag_item_id = :id', {id: dataBagging.bagItemId});
     const dataExists = await qb.getRawOne();
     if (dataExists) {
       result.message = 'Resi Gabung Paket sudah di scan';
@@ -178,7 +181,7 @@ export class BaggingSmdService {
     // NOTE: baggingId untuk mencocokkan bagging yg sedang di scan
     // dengan bagging yg di-scan sebelumnya
     if (payload.baggingId) {
-      const q = createQueryBuilder();
+      let q = createQueryBuilder();
       q.addSelect('ba.bagging_id', 'baggingId');
       q.addSelect('ba.bagging_code', 'baggingCode');
       q.addSelect('ba.total_weight', 'totalWeight');
@@ -196,12 +199,14 @@ export class BaggingSmdService {
       baggingCode = result.baggingCode = bagging.baggingCode;
 
       // check kode tujuan bagging sebelumnya yang pernah di-scan
+      q = createQueryBuilder();
       q.addSelect('r.representative_code', 'validCode');
-      q.innerJoin('bagging_item', 'bai', 'bai.bagging_id = ba.bagging_id AND bai.is_deleted = false');
-      q.innerJoin('bag_item', 'bi', 'bi.bag_item_id = bai.bag_item_id AND bi.is_deleted = false');
-      q.innerJoin('bag', 'b', 'bi.bag_id = b.bag_id AND b.is_deleted = false');
+      q.from('bagging_item', 'bai');
+      q.innerJoin('bag_item', 'bi', 'bi.bag_item_id = bai.bag_item_id');
+      q.innerJoin('bag', 'b', 'bi.bag_id = b.bag_id');
       q.leftJoin('representative', 'r', 'r.representative_id = b.representative_id_to');
       q.andWhere('b.representative_id_to <> :id', { id: dataBagging.representativeIdTo });
+      q.andWhere('bai.bagging_id = :id', { id: bagging.baggingId });
       const otherCombinePackegeIsExists = await q.getRawOne();
 
       result.validRepresentativeCode = otherCombinePackegeIsExists ?
