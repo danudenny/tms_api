@@ -11,6 +11,7 @@ import { Branch } from './branch';
 import { User } from './user';
 import { DoSmdDetail } from './do_smd_detail';
 import { BagItem } from './bag-item';
+import { Bagging } from './bagging';
 
 @Entity('do_smd_detail_item', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
@@ -114,4 +115,8 @@ export class DoSmdDetailItem extends TmsBaseEntity {
   @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id' })
   bagItem: BagItem;
+
+  @ManyToOne(() => Bagging, e => e.doSmdDetailItem)
+  @JoinColumn({ name: 'bagging_id', referencedColumnName: 'baggingId' })
+  bagging: Bagging;
 }
