@@ -185,7 +185,7 @@ export class MobileSmdListService {
     qb.innerJoin(
       'bag_item',
       'bi',
-      'b.bag_id = bi.bag_id AND bi.is_deleted = FALSE',
+      'dsdi.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE',
     );
     qb.where(
       'dsdi.do_smd_detail_id = :do_smd_detail_id',

@@ -79,7 +79,7 @@ export class SmdPrintService {
       t1.do_smd_detail_id
       `);
     const data = await v.exec();
-    console.log(data.length);
+    // console.log(data.length);
     let result = new PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm();
 
     if (data.length > 0) {
@@ -100,7 +100,7 @@ export class SmdPrintService {
     q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
     q.leftJoin(e => e.doSmdVehicle);
 
-    const doSmd = await q
+    let doSmd = await q
       .select({
         doSmdId: true, // needs to be selected due to do_smd relations are being included
         doSmdCode: true,
@@ -140,9 +140,37 @@ export class SmdPrintService {
       .andWhere(e => e.doSmdDetails.isDeleted, w => w.isFalse());
 
     if (!doSmd) {
-      RequestErrorService.throwObj({
-        message: 'Surat jalan tidak ditemukan',
-      });
+      doSmd = await q
+      .select({
+        doSmdId: true, // needs to be selected due to do_smd relations are being included
+        doSmdCode: true,
+        doSmdVehicle: {
+          doSmdVehicleId: true,
+          employee: {
+            nik: true,
+            nickname: true,
+          },
+        },
+        totalBagging: true,
+        totalBag: true,
+        doSmdDetails: {
+          arrivalTime: true,
+          doSmdDetailId: true,
+          sealNumber: true,
+          branchTo: {
+            branchName: true,
+          },
+        },
+      })
+      .where(e => e.doSmdId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doSmdDetails.doSmdDetailItems.bagType, w => w.equals(0))
+      .andWhere(e => e.doSmdDetails.isDeleted, w => w.isFalse());
+
+      if (!doSmd) {
+        RequestErrorService.throwObj({
+          message: 'Surat jalan tidak ditemukan',
+        });
+      }
     }
 
     const response = new PrintDoSmdVm();
@@ -174,10 +202,13 @@ export class SmdPrintService {
       }
       dataSmdDetailVm.branchTo = doSmd.doSmdDetails[i].branchTo;
 
-      const lengthBagItem = doSmd.doSmdDetails[i].doSmdDetailItems.length;
+      if (doSmd.doSmdDetails[i].doSmdDetailItems[0].bagType > 0) {
+        const lengthBagItem = doSmd.doSmdDetails[i].doSmdDetailItems.length;
+        console.log('length: ' + doSmd.doSmdDetails[i].doSmdDetailItems.length);
 
-      for (let j = 0; j < lengthBagItem; j++) {
-        dataSmdDetailsBagVm.push(doSmd.doSmdDetails[i].doSmdDetailItems[j]);
+        for (let j = 0; j < lengthBagItem; j++) {
+          await dataSmdDetailsBagVm.push(doSmd.doSmdDetails[i].doSmdDetailItems[j]);
+        }
       }
 
       dataSmdDetailVm.doSmdDetailItems = dataSmdDetailsBagVm;
@@ -196,6 +227,8 @@ export class SmdPrintService {
 
     dataVm.doSmdDetails = dataSmdDetailsVm;
     response.data = dataVm;
+
+    // console.log(dataVm);
 
     this.printDoSmdAndQueryMeta(
       res,
