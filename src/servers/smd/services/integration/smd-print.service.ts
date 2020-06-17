@@ -66,7 +66,7 @@ export class SmdPrintService {
       ['t2.bagging_id', 'baggingId'],
       ['t1.do_smd_detail_id', 'doSmdDetailId'],
       ['t2.bagging_code', 'baggingCode'],
-      [`CONCAT(t2.total_weight::numeric(10,2), ' Kg')`, 'weight'],
+      [`CONCAT(t2.total_weight::numeric(10,2))`, 'weight'],
       ['t3.representative_code', 'representativeCode'],
     );
     v.leftJoin(e => e.doSmdDetailItems.bagging, 't2');
@@ -114,6 +114,7 @@ export class SmdPrintService {
         totalBagging: true,
         totalBag: true,
         doSmdDetails: {
+          arrivalTime: true,
           doSmdDetailId: true,
           sealNumber: true,
           branchTo: {
@@ -164,7 +165,13 @@ export class SmdPrintService {
       const dataSmdDetailVm = new PrintDoSmdDataDoSmdDetailVm();
       const dataSmdDetailBaggingVm = new PrintDoSmdDataDoSmdDetailBaggingVm();
       dataSmdDetailVm.doSmdDetailId = doSmd.doSmdDetails[i].doSmdDetailId;
-      dataSmdDetailVm.sealNumber = doSmd.doSmdDetails[i].sealNumber;
+      if (!doSmd.doSmdDetails[i].arrivalTime) {
+        dataSmdDetailVm.sealNumber = doSmd.doSmdDetails[i].sealNumber;
+        dataSmdDetailVm.arrivalTime = doSmd.doSmdDetails[i].arrivalTime;
+      } else {
+        dataSmdDetailVm.sealNumber = '-';
+        dataSmdDetailVm.arrivalTime = doSmd.doSmdDetails[i].arrivalTime;
+      }
       dataSmdDetailVm.branchTo = doSmd.doSmdDetails[i].branchTo;
 
       const lengthBagItem = doSmd.doSmdDetails[i].doSmdDetailItems.length;
@@ -248,7 +255,7 @@ export class SmdPrintService {
 
     // console.log(data);
     // console.log(data.doSmdDetails[0].doSmdDetailItems);
-    console.log(data.doSmdDetails[0].doSmdBaggingItems[0].baggingItem);
+    // console.log(data.doSmdDetails[0].doSmdBaggingItems[0].baggingItem);
     return this.printDoSmd(
       res,
       data,
