@@ -242,6 +242,157 @@ export class MobileSmdService {
 
   }
 
+  static async scanInEndMobile(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdDepartureResponseVm();
+    const timeNow = moment().toDate();
+
+    const resultDoSmdDetail = await DoSmdDetail.findOne({
+      where: {
+        doSmdDetailId: payload.do_smd_detail_id,
+        isDeleted: false,
+      },
+    });
+
+    if (resultDoSmdDetail) {
+      const resultDoSmdDetailArrival = await DoSmdDetail.findOne({
+        where: {
+          doSmdDetailId: payload.do_smd_detail_id,
+          arrivalTime: null,
+          isDeleted: false,
+        },
+      });
+      if (resultDoSmdDetailArrival) {
+        await DoSmd.update(
+          { doSmdId : resultDoSmdDetail.doSmdId },
+          {
+            doSmdStatusIdLast: 5000,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+
+        await DoSmdDetail.update(
+          { doSmdDetailId : payload.do_smd_detail_id },
+          {
+            doSmdStatusIdLast: 5000,
+            arrivalTime: moment().toDate(),
+            latitudeArrival: payload.latitude,
+            longitudeArrival: payload.longitude,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+
+        const paramDoSmdHistoryId = await this.createDoSmdHistory(
+          resultDoSmdDetail.doSmdId,
+          null,
+          null,
+          null,
+          null,
+          resultDoSmdDetail.departureScheduleDateTime,
+          permissonPayload.branchId,
+          4050,
+          null,
+          null,
+          authMeta.userId,
+        );
+
+        await this.createDoSmdHistory(
+          resultDoSmdDetail.doSmdId,
+          null,
+          null,
+          null,
+          null,
+          resultDoSmdDetail.departureScheduleDateTime,
+          permissonPayload.branchId,
+          5000,
+          null,
+          null,
+          authMeta.userId,
+        );
+      } else {
+        await DoSmd.update(
+          { doSmdId : resultDoSmdDetail.doSmdId },
+          {
+            doSmdStatusIdLast: 6000,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+
+        await DoSmdDetail.update(
+          { doSmdId : resultDoSmdDetail.doSmdId },
+          {
+            doSmdStatusIdLast: 6000,
+            arrivalTime: moment().toDate(),
+            latitudeArrival: payload.latitude,
+            longitudeArrival: payload.longitude,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+
+        const paramDoSmdHistoryId = await this.createDoSmdHistory(
+          resultDoSmdDetail.doSmdId,
+          null,
+          null,
+          null,
+          null,
+          resultDoSmdDetail.departureScheduleDateTime,
+          permissonPayload.branchId,
+          4050,
+          null,
+          null,
+          authMeta.userId,
+        );
+
+        await this.createDoSmdHistory(
+          resultDoSmdDetail.doSmdId,
+          null,
+          null,
+          null,
+          null,
+          resultDoSmdDetail.departureScheduleDateTime,
+          permissonPayload.branchId,
+          5000,
+          null,
+          null,
+          authMeta.userId,
+        );
+        await this.createDoSmdHistory(
+          resultDoSmdDetail.doSmdId,
+          null,
+          null,
+          null,
+          null,
+          resultDoSmdDetail.departureScheduleDateTime,
+          permissonPayload.branchId,
+          6000,
+          null,
+          null,
+          authMeta.userId,
+        );
+      }
+
+      const data = [];
+      data.push({
+        do_smd_id: resultDoSmdDetail.doSmdId,
+        do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+        arrival_date_time: moment().toDate(),
+      });
+      result.statusCode = HttpStatus.OK;
+      result.message = 'SMD Success Arrival';
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`Can't Find  DO SMD Detail ID : ` + payload.do_smd_detail_id.toString());
+    }
+
+  }
+
   public static async uploadImageMobile(
     payload: MobileUploadImagePayloadVm,
     file,

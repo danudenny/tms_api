@@ -5,7 +5,9 @@ import {PrinterService} from '../../../../shared/services/printer.service';
 import {PrintSmdPayloadVm} from '../../models/print-smd-payload.vm';
 import moment = require('moment');
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
-import { PrintDoSmdDataVm } from '../../models/print-do-smd.vm';
+import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm } from '../../models/print-do-smd.vm';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 
 export class SmdPrintService {
   public static async printBagging(
@@ -56,6 +58,39 @@ export class SmdPrintService {
     });
   }
 
+  public static async getBaggingData(payload) {
+    const repo = new OrionRepositoryService(DoSmdDetail, 't1');
+    const v = repo.findAllRaw();
+
+    v.selectRaw(
+      ['t2.bagging_id', 'baggingId'],
+      ['t1.do_smd_detail_id', 'doSmdDetailId'],
+      ['t2.bagging_code', 'baggingCode'],
+      [`CONCAT(t2.total_weight::numeric(10,2))`, 'weight'],
+      ['t3.representative_code', 'representativeCode'],
+    );
+    v.leftJoin(e => e.doSmdDetailItems.bagging, 't2');
+    v.leftJoin(e => e.doSmdDetailItems.bagging.representative, 't3');
+    v.where(e => e.doSmdDetailId, w => w.equals(payload.id));
+    v.andWhere(e => e.doSmdDetailItems.bagType, w => w.equals(0));
+    v.groupByRaw(`
+      t2.bagging_id,
+      t3.representative_code,
+      t1.do_smd_detail_id
+      `);
+    const data = await v.exec();
+    console.log(data.length);
+    let result = new PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm();
+
+    if (data.length > 0) {
+      result = data;
+    } else {
+      result = null;
+    }
+
+    return result;
+  }
+
   public static async printDoSmdByRequest(
     res: express.Response,
     queryParams: PrintDoSmdPayloadQueryVm,
@@ -79,6 +114,7 @@ export class SmdPrintService {
         totalBagging: true,
         totalBag: true,
         doSmdDetails: {
+          arrivalTime: true,
           doSmdDetailId: true,
           sealNumber: true,
           branchTo: {
@@ -100,6 +136,7 @@ export class SmdPrintService {
         },
       })
       .where(e => e.doSmdId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doSmdDetails.doSmdDetailItems.bagType, w => w.equals(1))
       .andWhere(e => e.doSmdDetails.isDeleted, w => w.isFalse());
 
     if (!doSmd) {
@@ -108,9 +145,61 @@ export class SmdPrintService {
       });
     }
 
+    const response = new PrintDoSmdVm();
+    const dataVm = new PrintDoSmdDataVm();
+    dataVm.doSmdId = doSmd.doSmdId;
+    dataVm.doSmdCode = doSmd.doSmdCode;
+    dataVm.doSmdVehicle = doSmd.doSmdVehicle;
+    dataVm.totalBagging = doSmd.totalBagging;
+    dataVm.totalBag = doSmd.totalBag;
+    const dataSmdDetailsVm: PrintDoSmdDataDoSmdDetailVm[] = [];
+    const dataSmdDetailsBagVm: PrintDoSmdDataDoSmdDetailBagVm[] = [];
+    const dataSmdDetailsBaggingVm: PrintDoSmdDataDoSmdDetailBaggingVm[] = [];
+
+    const lengthDoSmd = doSmd.doSmdDetails.length;
+    const payload = {
+      id: null,
+    };
+
+    for (let i = 0; i < lengthDoSmd; i++) {
+      const dataSmdDetailVm = new PrintDoSmdDataDoSmdDetailVm();
+      const dataSmdDetailBaggingVm = new PrintDoSmdDataDoSmdDetailBaggingVm();
+      dataSmdDetailVm.doSmdDetailId = doSmd.doSmdDetails[i].doSmdDetailId;
+      if (!doSmd.doSmdDetails[i].arrivalTime) {
+        dataSmdDetailVm.sealNumber = doSmd.doSmdDetails[i].sealNumber;
+        dataSmdDetailVm.arrivalTime = doSmd.doSmdDetails[i].arrivalTime;
+      } else {
+        dataSmdDetailVm.sealNumber = '-';
+        dataSmdDetailVm.arrivalTime = doSmd.doSmdDetails[i].arrivalTime;
+      }
+      dataSmdDetailVm.branchTo = doSmd.doSmdDetails[i].branchTo;
+
+      const lengthBagItem = doSmd.doSmdDetails[i].doSmdDetailItems.length;
+
+      for (let j = 0; j < lengthBagItem; j++) {
+        dataSmdDetailsBagVm.push(doSmd.doSmdDetails[i].doSmdDetailItems[j]);
+      }
+
+      dataSmdDetailVm.doSmdDetailItems = dataSmdDetailsBagVm;
+
+      payload.id = doSmd.doSmdDetails[i].doSmdDetailId;
+      const baggingData = await this.getBaggingData(payload);
+      if (baggingData) {
+        dataSmdDetailBaggingVm.baggingItem = baggingData;
+        dataSmdDetailBaggingVm.bagType = 0;
+        dataSmdDetailsBaggingVm.push(dataSmdDetailBaggingVm);
+        dataSmdDetailVm.doSmdBaggingItems = dataSmdDetailsBaggingVm;
+      }
+
+      dataSmdDetailsVm.push(dataSmdDetailVm);
+    }
+
+    dataVm.doSmdDetails = dataSmdDetailsVm;
+    response.data = dataVm;
+
     this.printDoSmdAndQueryMeta(
       res,
-      doSmd as any,
+      dataVm as any,
       {
         userId: queryParams.userId,
         branchId: queryParams.branchId,
@@ -164,6 +253,9 @@ export class SmdPrintService {
 
     const currentDate = moment();
 
+    // console.log(data);
+    // console.log(data.doSmdDetails[0].doSmdDetailItems);
+    // console.log(data.doSmdDetails[0].doSmdBaggingItems[0].baggingItem);
     return this.printDoSmd(
       res,
       data,

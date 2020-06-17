@@ -38,6 +38,20 @@ export class PrintDoSmdBagDataDoSmdDetailBagBagItemVm {
   bag: PrintDoSmdBagDataDoSmdDetailBagBagItemBagVm = new PrintDoSmdBagDataDoSmdDetailBagBagItemBagVm();
 }
 
+export class PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm {
+  @ApiModelProperty()
+  baggingId: number;
+
+  @ApiModelProperty()
+  baggingCode: string;
+
+  @ApiModelProperty()
+  weight: number;
+
+  @ApiModelProperty()
+  refRepresentativeCode: string;
+}
+
 export class PrintDoSmdDataBranchToVm {
   @ApiModelProperty()
   branchName: string;
@@ -54,18 +68,35 @@ export class PrintDoSmdDataDoSmdDetailBagVm {
   bagItem: PrintDoSmdBagDataDoSmdDetailBagBagItemVm = new PrintDoSmdBagDataDoSmdDetailBagBagItemVm();
 }
 
+export class PrintDoSmdDataDoSmdDetailBaggingVm {
+  @ApiModelProperty()
+  doSmdDetailItemId: number;
+
+  @ApiModelProperty()
+  bagType: number;
+
+  @ApiModelProperty({ type: () => PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm })
+  baggingItem: PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm = new PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm();
+}
+
 export class PrintDoSmdDataDoSmdDetailVm {
   @ApiModelProperty()
   doSmdDetailId: number;
 
   @ApiModelProperty()
-  sealNumber: number;
+  sealNumber: string;
+
+  @ApiModelProperty()
+  arrivalTime: Date;
 
   @ApiModelProperty({ type: () => PrintDoSmdDataBranchToVm })
   branchTo: PrintDoSmdDataBranchToVm = new PrintDoSmdDataBranchToVm();
 
   @ApiModelProperty({ type: () => [PrintDoSmdDataDoSmdDetailBagVm] })
   doSmdDetailItems: PrintDoSmdDataDoSmdDetailBagVm[] = [];
+
+  @ApiModelProperty({ type: () => [PrintDoSmdDataDoSmdDetailBaggingVm] })
+  doSmdBaggingItems: PrintDoSmdDataDoSmdDetailBaggingVm[] = [];
 }
 
 export class PrintDoSmdDataVm {
