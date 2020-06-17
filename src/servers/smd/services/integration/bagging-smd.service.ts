@@ -100,8 +100,6 @@ export class BaggingSmdService {
       return result;
     }
 
-    const authMeta = AuthService.getAuthData();
-    const permissionPayload = AuthService.getPermissionTokenPayload();
     const bagNumber = payload.bagNumber.substring(0, 7);
     const bagSeq = Number(payload.bagNumber.substring(7, 10));
     // const weight = payload.bagNumber.substring(10);
@@ -113,19 +111,19 @@ export class BaggingSmdService {
       SELECT
         bi.bag_item_id AS bagItemId,
         bi.weight as weight,
-        bh.bag_item_status_id AS bagItemStatusIdLast,
+        --bh.bag_item_status_id AS bagItemStatusIdLast,
         bi.bag_item_status_id_last AS bagItemStatusIdLastInBagItem,
         b.representative_id_to AS representativeIdTo,
         r.representative_code AS representativeCode
       FROM bag AS b
       INNER JOIN bag_item bi ON bi.bag_id = b.bag_id AND bi.is_deleted = false
-      LEFT JOIN bag_item_history bh ON bi.bag_item_id = bh.bag_item_id AND bh.is_deleted = false
+      --LEFT JOIN bag_item_history bh ON bi.bag_item_id = bh.bag_item_id AND bh.is_deleted = false
       LEFT JOIN representative r ON r.representative_id = b.representative_id_to
       WHERE
         b.bag_number = '${bagNumber}' AND
         bi.bag_seq = '${bagSeq}' AND
         b.is_deleted = false
-      ORDER BY bh.history_date DESC
+      --ORDER BY bh.history_date DESC
       LIMIT 1;
     `;
     const dataBagging = await RawQueryService.query(rawQuery);
@@ -133,16 +131,12 @@ export class BaggingSmdService {
     if (dataBagging.length == 0) {
       result.message = 'Resi gabung paket tidak ditemukan';
       return result;
-    } else if (dataBagging[0].bagItemStatusIdLast) {
-      if (dataBagging[0].bagItemStatusIdLast != BAG_STATUS.IN_BRANCH) {
-        result.message = 'Resi Gabung Paket belum di scan masuk';
-        return result;
-      }
-    } else if (!dataBagging[0].bagItemStatusIdLast && dataBagging[0].bagItemStatusIdLastInBagItem != BAG_STATUS.IN_BRANCH) {
+    } else if (/*!dataBagging[0].bagItemStatusIdLast && */dataBagging[0].bagItemStatusIdLastInBagItem != BAG_STATUS.IN_BRANCH) {
       result.message = 'Resi Gabung Paket belum di scan masuk';
       return result;
     }
 
+    const permissionPayload = AuthService.getPermissionTokenPayload();
     rawQuery = `
       SELECT
         bt.bag_item_id AS bagItemId
@@ -165,6 +159,7 @@ export class BaggingSmdService {
     let representative = null;
     result.validRepresentativeCode = dataBagging[0].representativeCode;
     if (payload.representativeCode) {
+      payload.representativeCode = payload.representativeCode.toUpperCase();
       rawQuery = `
         SELECT
           r.representative_id AS representativeId
@@ -187,6 +182,7 @@ export class BaggingSmdService {
       ];
     }
 
+    const authMeta = AuthService.getAuthData();
     result.baggingId = baggingId;
     result.baggingCode = baggingCode;
 
