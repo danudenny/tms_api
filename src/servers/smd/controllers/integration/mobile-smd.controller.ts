@@ -62,10 +62,12 @@ export class MobileSmdController {
   }
 
   @Post('smd/problem')
+  @UseInterceptors(FileInterceptor('file'))
   @Transactional()
+  @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  public async problemMobile(@Req() request: any, @Body() payload: MobileSmdProblemPayloadVm) {
-    return MobileSmdService.problemMobile(payload);
+  public async problemMobile( @Body() payload: MobileSmdProblemPayloadVm, @UploadedFile() file) {
+    return MobileSmdService.problemMobile(payload, file);
   }
 
   @Post('smd/continue')

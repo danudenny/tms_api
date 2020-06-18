@@ -36,6 +36,7 @@ export class MobileSmdListController {
   public async getScanOutMobileListDetail(@Body() payload: MobileSmdListDetailPayloadVm) {
     return MobileSmdListService.getScanOutMobileListDetail(
       payload.do_smd_detail_id,
+      payload.do_smd_status,
     );
   }
 
