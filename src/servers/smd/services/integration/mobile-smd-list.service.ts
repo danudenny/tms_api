@@ -125,7 +125,7 @@ export class MobileSmdListService {
                   WHERE dsda.do_smd_detail_id = dsd.do_smd_detail_id
                   ORDER BY at.created_time DESC
                   LIMIT 1
-              )`, 'photo_img_path');
+              )`, 'signature_img_path');
     qb.from('do_smd', 'ds');
     qb.innerJoin(
       'do_smd_detail',
