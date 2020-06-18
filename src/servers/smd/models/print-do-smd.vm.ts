@@ -84,6 +84,12 @@ export class PrintDoSmdDataDoSmdDetailVm {
   doSmdDetailId: number;
 
   @ApiModelProperty()
+  totalBagging: number;
+
+  @ApiModelProperty()
+  totalBag: number;
+
+  @ApiModelProperty()
   sealNumber: string;
 
   @ApiModelProperty()
