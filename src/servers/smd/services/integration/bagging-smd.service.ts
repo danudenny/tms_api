@@ -221,13 +221,14 @@ export class BaggingSmdService {
         return result;
       }
 
+      baggingId = result.baggingId = bagging[0].bagging_id;
+      baggingCode = result.baggingCode = bagging[0].bagging_code;
+
       const total_weight = (Number(dataPackage[0].weight) + Number(bagging[0].total_weight));
       await Bagging.update(baggingId, {
         totalWeight: total_weight.toString(),
         totalItem: (bagging[0].total_item + 1),
       });
-      baggingId = result.baggingId = bagging[0].bagging_id;
-      baggingCode = result.baggingCode = bagging[0].bagging_code;
 
     }
 
