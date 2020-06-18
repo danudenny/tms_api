@@ -106,48 +106,37 @@ export class BaggingSmdService {
     let baggingId = '';
     let baggingCode = '';
 
-    // check status gabung paket dan ambil data gabung paket payload
+    // cek data gabung paket
     let rawQuery = `
       SELECT
         bi.bag_item_id AS bag_item_id,
         bi.weight as weight,
-        --bh.bag_item_status_id AS bag_item_status_id_last,
         bi.bag_item_status_id_last AS bag_item_status_id_last_in_bag_item,
         b.representative_id_to AS representative_id_to,
-        r.representative_code AS representative_code,
-        ba.bagging_id AS bagging_id
+        r.representative_code AS representative_code
       FROM bag AS b
       INNER JOIN bag_item bi ON bi.bag_id = b.bag_id AND bi.is_deleted = false
-      --LEFT JOIN bag_item_history bh ON bi.bag_item_id = bh.bag_item_id AND bh.is_deleted = false
-      LEFT JOIN representative r ON r.representative_id = b.representative_id_to
-      LEFT JOIN bagging_item bt ON bt.bag_item_id = bi.bag_item_id AND bt.is_deleted = false
-      LEFT JOIN bagging ba ON ba.bagging_id = bt.bagging_id AND ba.is_deleted = false
+      INNER JOIN representative r ON r.representative_id = b.representative_id_to
       WHERE
         b.bag_number = '${bagNumber}' AND
         bi.bag_seq = '${bagSeq}' AND
         b.is_deleted = false
-      --ORDER BY bh.history_date DESC
       LIMIT 1;
     `;
-    const dataBagging = await RawQueryService.query(rawQuery);
-
-    if (dataBagging.length == 0) {
+    const dataPackage = await RawQueryService.query(rawQuery);
+    if (dataPackage.length == 0) {
       result.message = 'Resi gabung paket tidak ditemukan';
       return result;
     }
-    if (dataBagging[0].bagging_id) {
-      result.message = 'Resi Gabung Paket sudah di scan bagging';
-      return result;
-    }
-    if (dataBagging[0].bag_item_status_id_last_in_bag_item != BAG_STATUS.IN_BRANCH) {
+    if (dataPackage[0].bag_item_status_id_last_in_bag_item != BAG_STATUS.IN_BRANCH) {
       // handle kesalahan data saat scan masuk surat jalan
-      if (dataBagging[0].bag_item_status_id_last_in_bag_item == BAG_STATUS.CREATED) {
+      if (dataPackage[0].bag_item_status_id_last_in_bag_item == BAG_STATUS.CREATED) {
         rawQuery = `
           SELECT
             bh.bag_item_status_id AS bag_item_status_id
           FROM bag_item_history AS bh
           WHERE
-            bh.bag_item_id = '${dataBagging[0].bag_item_id}'
+            bh.bag_item_id = '${dataPackage[0].bag_item_id}'
           LIMIT 1;
         `;
         const history = await RawQueryService.query(rawQuery);
@@ -159,6 +148,24 @@ export class BaggingSmdService {
         result.message = 'Resi Gabung Paket belum di scan masuk';
         return result;
       }
+    }
+
+    // cek data bagging sebelumnya
+    rawQuery = `
+      SELECT
+        bt.bagging_id AS bagging_id
+      FROM bagging_item AS bt
+      INNER JOIN bagging ba ON ba.bagging_id = bt.bagging_id AND ba.is_deleted = false
+      WHERE
+        bt.bag_item_id = '${dataPackage[0].bag_item_id}' AND
+        bt.is_deleted = false
+      LIMIT 1;
+    `;
+    const dataBagging = await RawQueryService.query(rawQuery);
+
+    if (dataBagging.length > 0) {
+      result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
+      return result;
     }
 
     const permissionPayload = AuthService.getPermissionTokenPayload();
@@ -178,7 +185,7 @@ export class BaggingSmdService {
         INNER JOIN bag AS b ON bi.bag_id = b.bag_id
         LEFT JOIN representative AS r ON r.representative_id = b.representative_id_to
         WHERE
-          r.representative_code <> '${dataBagging[0].representative_code}' AND
+          r.representative_code <> '${dataPackage[0].representative_code}' AND
           bai.bagging_id = '${payload.baggingId}'
         LIMIT 1;
       `;
@@ -188,7 +195,7 @@ export class BaggingSmdService {
         otherCombinePackegeIsExists[0].valid_code
         : result.validRepresentativeCode;
 
-      if (otherCombinePackegeIsExists.length > 0 && dataBagging[0].representative_id_to) {
+      if (otherCombinePackegeIsExists.length > 0 && dataPackage[0].representative_id_to) {
         result.validRepresentativeCode = '';
         result.message = 'Tujuan resi ' + payload.bagNumber + ' tidak sama dengan tujuan gabung paket sebelumnya';
         return result;
@@ -212,7 +219,8 @@ export class BaggingSmdService {
         result.message = 'Data bagging tidak ditemukan';
         return result;
       }
-      const total_weight = (Number(dataBagging[0].weight) + Number(bagging[0].total_weight));
+
+      const total_weight = (Number(dataPackage[0].weight) + Number(bagging[0].total_weight));
       await Bagging.update(baggingId, {
         totalWeight: total_weight.toString(),
         totalItem: (bagging[0].total_item + 1),
@@ -224,7 +232,7 @@ export class BaggingSmdService {
 
     // NOTE: representativeCode digunakan untul validasi kode tujuan gabung paket
     let representative = null;
-    result.validRepresentativeCode = dataBagging[0].representative_code;
+    result.validRepresentativeCode = dataPackage[0].representative_code;
     if (payload.representativeCode) {
       payload.representativeCode = payload.representativeCode.toUpperCase();
       rawQuery = `
@@ -233,7 +241,7 @@ export class BaggingSmdService {
         FROM representative AS r
         WHERE
           r.representative_code = '${payload.representativeCode}' AND
-          r.representative_id = '${dataBagging[0].representative_id_to}'
+          r.representative_id = '${dataPackage[0].representative_id_to}'
         LIMIT 1;
       `;
       representative = await RawQueryService.query(rawQuery);
@@ -245,21 +253,21 @@ export class BaggingSmdService {
     } else {
       representative = [
         {
-          representative_id: dataBagging[0].representative_id_to,
+          representative_id: dataPackage[0].representative_id_to,
         },
       ];
     }
 
     if (!payload.baggingId) {
       const baggingDate = await this.dateMinus1day(moment().toDate());
-      const maxBagSeq = await this.getMaxBaggingSeq(dataBagging[0].representative_id_to, baggingDate, permissionPayload.branchId);
+      const maxBagSeq = await this.getMaxBaggingSeq(dataPackage[0].representative_id_to, baggingDate, permissionPayload.branchId);
 
       const createBagging = Bagging.create();
       createBagging.userId = authMeta.userId.toString();
       createBagging.representativeIdTo = representative[0].representative_id;
       createBagging.branchId = permissionPayload.branchId.toString();
       createBagging.totalItem = 1;
-      createBagging.totalWeight = dataBagging[0].weight.toString();
+      createBagging.totalWeight = dataPackage[0].weight.toString();
       createBagging.baggingCode = await this.generateCode();
       createBagging.baggingDate = baggingDate;
       createBagging.userIdCreated = authMeta.userId.toString();
@@ -275,14 +283,14 @@ export class BaggingSmdService {
     }
     const baggingItem = BaggingItem.create();
     baggingItem.baggingId = baggingId;
-    baggingItem.bagItemId = dataBagging[0].bag_item_id;
+    baggingItem.bagItemId = dataPackage[0].bag_item_id;
     baggingItem.userIdCreated = authMeta.userId.toString();
     baggingItem.userIdUpdated = authMeta.userId.toString();
     baggingItem.createdTime = moment().toDate();
     baggingItem.updatedTime = moment().toDate();
     BaggingItem.save(baggingItem);
 
-    await BagItem.update(dataBagging[0].bag_item_id, {
+    await BagItem.update(dataPackage[0].bag_item_id, {
       baggingIdLast: Number(baggingId),
     });
 
