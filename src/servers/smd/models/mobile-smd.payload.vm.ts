@@ -59,10 +59,13 @@ export class MobileSmdProblemPayloadVm {
   longitude: string;
 
   @ApiModelProperty()
-  attachment_tms_id: number;
+  image_type: string;
 
-  @ApiModelProperty()
-  photo_url: string;
+  // @ApiModelProperty()
+  // attachment_tms_id: number;
+
+  // @ApiModelProperty()
+  // photo_url: string;
 
 }
 

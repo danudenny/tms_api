@@ -31,11 +31,11 @@ export class DoSmdVehicleAttachment extends TmsBaseEntity {
   })
   doSmdId: number;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'attachment_tms_id',
-  })
-  attachmentTmsId: number;
+  // @Column('bigint', {
+  //   nullable: false,
+  //   name: 'attachment_tms_id',
+  // })
+  // attachmentTmsId: number;
 
   @Column('character varying', {
     nullable: true,
@@ -75,11 +75,4 @@ export class DoSmdVehicleAttachment extends TmsBaseEntity {
   })
   isDeleted: boolean;
 
-  @OneToOne(() => DoSmd)
-  @JoinColumn({ name: 'do_smd_status_id' })
-  doSmd: DoSmd;
-
-  @OneToOne(() => DoSmdHistory)
-  @JoinColumn({ name: 'do_smd_status_id' })
-  doSmdHistory: DoSmdHistory;
 }

@@ -445,12 +445,67 @@ export class MobileSmdService {
     return result;
   }
 
-  static async problemMobile(payload: any): Promise<any> {
+  static async problemMobile(payload: any, file): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const result = new ScanOutSmdProblemResponseVm();
     const timeNow = moment().toDate();
+
+    let url = null;
+    let attachmentId = null;
+
+    const resultDoSmdDetailArrival = await DoSmdDetail.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        arrivalTime: null,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmdDetailArrival) {
+      // Upload Foto
+      PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SMD: ', authMeta);
+
+      let attachment = await AttachmentTms.findOne({
+        where: {
+          fileName: file.originalname,
+        },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (attachment) {
+        // attachment exist
+        attachmentId = attachment.attachmentTmsId;
+        url = attachment.url;
+      } else {
+        // upload image
+        const pathId = `smd-delivery-${payload.image_type}`;
+        attachment = await AttachmentService.uploadFileBufferToS3(
+          file.buffer,
+          file.originalname,
+          file.mimetype,
+          pathId,
+        );
+        if (attachment) {
+          attachmentId = attachment.attachmentTmsId;
+          url = attachment.url;
+        }
+      }
+
+      // NOTE: insert data
+      if (attachmentId) {
+        // TODO: validate doPodDeliverDetailId ??
+        const doSmdDelivereyAttachment = await DoSmdDetailAttachment.create();
+        doSmdDelivereyAttachment.doSmdDetailId = resultDoSmdDetailArrival.doSmdDetailId;
+        doSmdDelivereyAttachment.attachmentTmsId = attachmentId;
+        doSmdDelivereyAttachment.attachmentType = payload.image_type;
+        await DoSmdDetailAttachment.save(doSmdDelivereyAttachment);
+      }
+
+      //
+    } else {
+      throw new BadRequestException(`DO SMD ID : ` + payload.do_smd_id.toString() + ` already arrival`);
+    }
 
     const resultDoSmd = await DoSmd.findOne({
       where: {
@@ -509,8 +564,8 @@ export class MobileSmdService {
       const paramDoSmdVehicleAttachmentId = await this.createDoSmdVehicleAttachment(
         resultDoSmd.doSmdId,
         resultDoSmd.doSmdVehicleIdLast,
-        payload.attacment_tms_id,
-        payload.photo_url,
+        // attachmentId,
+        url,
         authMeta.userId,
       );
 
@@ -629,7 +684,7 @@ export class MobileSmdService {
       const paramDoSmdVehicleAttachmentId = await this.createDoSmdVehicleAttachment(
         resultDoSmd.doSmdId,
         resultDoSmd.doSmdVehicleIdLast,
-        payload.attacment_tms_id,
+        // payload.attacment_tms_id,
         payload.photo_url,
         authMeta.userId,
       );
@@ -722,14 +777,14 @@ export class MobileSmdService {
   private static async createDoSmdVehicleAttachment(
     paramDoSmdId: number,
     paramDoSmdVehicleId: number,
-    paramAttachmentTmsId: number,
+    // paramAttachmentTmsId: number,
     paramPhotoUrl: string,
     userId: number,
   ) {
     const dataDoSmdVehicleAttachment = DoSmdVehicleAttachment.create({
       doSmdVehicleId: paramDoSmdVehicleId,
       doSmdId: paramDoSmdId,
-      attachmentTmsId: paramAttachmentTmsId,
+      // attachmentTmsId: paramAttachmentTmsId,
       photoUrl: paramPhotoUrl,
       userIdCreated: userId,
       createdTime: moment().toDate(),
