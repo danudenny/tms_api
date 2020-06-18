@@ -117,6 +117,8 @@ export class SmdPrintService {
           arrivalTime: true,
           doSmdDetailId: true,
           sealNumber: true,
+          totalBag: true,
+          totalBagging: true,
           branchTo: {
             branchName: true,
           },
@@ -157,6 +159,8 @@ export class SmdPrintService {
           arrivalTime: true,
           doSmdDetailId: true,
           sealNumber: true,
+          totalBag: true,
+          totalBagging: true,
           branchTo: {
             branchName: true,
           },
@@ -181,39 +185,49 @@ export class SmdPrintService {
     dataVm.totalBagging = doSmd.totalBagging;
     dataVm.totalBag = doSmd.totalBag;
     const dataSmdDetailsVm: PrintDoSmdDataDoSmdDetailVm[] = [];
-    const dataSmdDetailsBagVm: PrintDoSmdDataDoSmdDetailBagVm[] = [];
-    const dataSmdDetailsBaggingVm: PrintDoSmdDataDoSmdDetailBaggingVm[] = [];
 
-    const lengthDoSmd = doSmd.doSmdDetails.length;
     const payload = {
       id: null,
     };
 
-    for (let i = 0; i < lengthDoSmd; i++) {
+    const idDetail = doSmd.doSmdDetails.filter(e => e.doSmdDetailId);
+
+    // tslint:disable-next-line: prefer-for-of
+    for (let l = 0; l < idDetail.length; l++) {
+      const dataSmdDetailsBagVm: PrintDoSmdDataDoSmdDetailBagVm[] = [];
+      const dataSmdDetailsBaggingVm: PrintDoSmdDataDoSmdDetailBaggingVm[] = [];
+
       const dataSmdDetailVm = new PrintDoSmdDataDoSmdDetailVm();
+      let dataSmdDetailBagVm = new PrintDoSmdDataDoSmdDetailBagVm();
       const dataSmdDetailBaggingVm = new PrintDoSmdDataDoSmdDetailBaggingVm();
-      dataSmdDetailVm.doSmdDetailId = doSmd.doSmdDetails[i].doSmdDetailId;
-      if (!doSmd.doSmdDetails[i].arrivalTime) {
-        dataSmdDetailVm.sealNumber = doSmd.doSmdDetails[i].sealNumber;
-        dataSmdDetailVm.arrivalTime = doSmd.doSmdDetails[i].arrivalTime;
+
+      dataSmdDetailVm.doSmdDetailId = idDetail[l].doSmdDetailId; // set ID
+
+      if (!idDetail[l].arrivalTime) {
+        dataSmdDetailVm.sealNumber = idDetail[l].sealNumber; // set Seal number
+        dataSmdDetailVm.arrivalTime = idDetail[l].arrivalTime; // set Arrival time
       } else {
         dataSmdDetailVm.sealNumber = '-';
-        dataSmdDetailVm.arrivalTime = doSmd.doSmdDetails[i].arrivalTime;
+        dataSmdDetailVm.arrivalTime = idDetail[l].arrivalTime;
       }
-      dataSmdDetailVm.branchTo = doSmd.doSmdDetails[i].branchTo;
 
-      if (doSmd.doSmdDetails[i].doSmdDetailItems[0].bagType > 0) {
-        const lengthBagItem = doSmd.doSmdDetails[i].doSmdDetailItems.length;
-        console.log('length: ' + doSmd.doSmdDetails[i].doSmdDetailItems.length);
+      dataSmdDetailVm.branchTo = idDetail[l].branchTo; // set Branch To
+      dataSmdDetailVm.totalBag = idDetail[l].totalBag; // set Total gabung paket
+      dataSmdDetailVm.totalBagging = idDetail[l].totalBagging; // set total bagging
 
-        for (let j = 0; j < lengthBagItem; j++) {
-          await dataSmdDetailsBagVm.push(doSmd.doSmdDetails[i].doSmdDetailItems[j]);
-        }
+      if (idDetail[l].doSmdDetailItems[0].bagType > 0) {
+          const lengthBagItem = idDetail[l].doSmdDetailItems.length;
+          console.log('length: ' + idDetail[l].doSmdDetailItems.length);
+
+          for (let j = 0; j < lengthBagItem; j++) {
+            dataSmdDetailBagVm = idDetail[l].doSmdDetailItems[j];
+            await dataSmdDetailsBagVm.push(dataSmdDetailBagVm);
+          }
       }
 
       dataSmdDetailVm.doSmdDetailItems = dataSmdDetailsBagVm;
 
-      payload.id = doSmd.doSmdDetails[i].doSmdDetailId;
+      payload.id = idDetail[l].doSmdDetailId;
       const baggingData = await this.getBaggingData(payload);
       if (baggingData) {
         dataSmdDetailBaggingVm.baggingItem = baggingData;
@@ -224,6 +238,7 @@ export class SmdPrintService {
 
       dataSmdDetailsVm.push(dataSmdDetailVm);
     }
+    // console.log(dataSmdDetailsVm);
 
     dataVm.doSmdDetails = dataSmdDetailsVm;
     response.data = dataVm;
