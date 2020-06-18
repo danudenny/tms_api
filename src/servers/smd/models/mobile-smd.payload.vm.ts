@@ -4,6 +4,8 @@ export class MobileSmdListDetailPayloadVm {
   @ApiModelProperty()
   do_smd_detail_id: number;
 
+ @ApiModelProperty()
+  do_smd_status: number;
 }
 
 export class MobileSmdDeparturePayloadVm {
@@ -88,7 +90,6 @@ export class MobileSmdHandOverPayloadVm {
 
   @ApiModelProperty()
   attachment_tms_id: number;
-
   @ApiModelProperty()
   photo_url: string;
 

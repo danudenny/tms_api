@@ -95,7 +95,7 @@ export class MobileSmdListService {
     return await qb.getRawMany();
   }
 
-  public static async getScanOutMobileListDetail(do_smd_detail_id?: number) {
+  public static async getScanOutMobileListDetail(do_smd_detail_id?: number, do_smd_status?: number) {
 
     const authMeta = AuthService.getAuthData();
     const paramUserId =  authMeta.userId;
@@ -110,6 +110,22 @@ export class MobileSmdListService {
     qb.addSelect('b.address', 'address');
     qb.addSelect('dsd.total_bag', 'total_bag');
     qb.addSelect('dsd.total_bagging', 'total_bagging');
+    qb.addSelect(`(
+                    SELECT at.url
+                    FROM attachment_tms at
+                    INNER JOIN do_smd_detail_attachment dsda ON at.attachment_tms_id = dsda.attachment_tms_id AND dsda.attachment_type = 'photo' AND dsda.is_deleted = FALSE
+                    WHERE dsda.do_smd_detail_id = dsd.do_smd_detail_id
+                    ORDER BY at.created_time DESC
+                    LIMIT 1
+                )`, 'photo_img_path');
+    qb.addSelect(`(
+                  SELECT at.url
+                  FROM attachment_tms at
+                  INNER JOIN do_smd_detail_attachment dsda ON at.attachment_tms_id = dsda.attachment_tms_id AND dsda.attachment_type = 'signature' AND dsda.is_deleted = FALSE
+                  WHERE dsda.do_smd_detail_id = dsd.do_smd_detail_id
+                  ORDER BY at.created_time DESC
+                  LIMIT 1
+              )`, 'photo_img_path');
     qb.from('do_smd', 'ds');
     qb.innerJoin(
       'do_smd_detail',
@@ -155,7 +171,10 @@ export class MobileSmdListService {
         do_smd_detail_id,
       },
     );
-    qb.andWhere('ds.do_smd_status_id_last <>  6000');
+    if (do_smd_status == 6000) {
+      qb.andWhere('ds.do_smd_status_id_last <>  6000');
+    }
+
     qb.andWhere('ds.is_deleted = false');
     return await qb.getRawMany();
   }
