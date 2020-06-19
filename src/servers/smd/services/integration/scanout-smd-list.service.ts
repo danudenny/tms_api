@@ -141,7 +141,7 @@ export class ScanoutSmdListService {
     q.innerJoin(e => e.doSmdStatus, 'dss', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.doSmdVehicle, 'dsv', j =>
+    q.leftJoin(e => e.doSmdVehicle, 'dsv', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoinRaw(
