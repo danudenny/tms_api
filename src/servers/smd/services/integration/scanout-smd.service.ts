@@ -1343,7 +1343,7 @@ export class ScanoutSmdService {
         LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
         LEFT JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
         LEFT JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-        INNER JOIN representative r ON r.representative_id = b.representative_id_to AND r.representative_code = '${unassigningSMD[0].representative_code}'
+        LEFT JOIN representative r ON r.representative_id = b.representative_id_to AND r.representative_code = '${unassigningSMD[0].representative_code}'
         WHERE
           ds.do_smd_id = '${do_smd_id}' AND
           ds.is_deleted = FALSE
@@ -1355,7 +1355,7 @@ export class ScanoutSmdService {
       if (assigningSMD.length == 0) {
         totalError += 1;
         response.data.status = 'error';
-        response.data.message = `Surat Jalan dari Gabung Paket ${item_number} Tidak Ditemukan`;
+        response.data.message = `Surat Jalan ${assigningSMD[0].do_smd_code} Tidak Ditemukan`;
       } else if (!assigningSMD[0].representative_code) {
         totalError += 1;
         response.data.status = 'error';
@@ -1502,7 +1502,7 @@ export class ScanoutSmdService {
           LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
           LEFT JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
           LEFT JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-          INNER JOIN representative r ON r.representative_id = b.representative_id_to AND r.representative_code = '${unassigningSMD[0].representative_code}'
+          LEFT JOIN representative r ON r.representative_id = b.representative_id_to AND r.representative_code = '${unassigningSMD[0].representative_code}'
           WHERE
             ds.do_smd_id = '${do_smd_id}' AND
             ds.is_deleted = FALSE
@@ -1514,7 +1514,7 @@ export class ScanoutSmdService {
         if (assigningSMD.length == 0) {
           totalError += 1;
           response.data.status = 'error';
-          response.data.message = `Surat Jalan dari Bagging ${item_number} Tidak Ditemukan`;
+          response.data.message = `Surat Jalan ${assigningSMD[0].do_smd_code} Tidak Ditemukan`;
         } else if (!assigningSMD[0].representative_code) {
           totalError += 1;
           response.data.status = 'error';
