@@ -131,13 +131,13 @@ export class BaggingSmdService {
     }
     if (dataPackage[0].bag_item_status_id_last_in_bag_item != BAG_STATUS.IN_BRANCH) {
       // handle kesalahan data saat scan masuk surat jalan
-      if (dataPackage[0].bag_item_status_id_last_in_bag_item == BAG_STATUS.CREATED) {
         rawQuery = `
           SELECT
             bh.bag_item_status_id AS bag_item_status_id
           FROM bag_item_history AS bh
           WHERE
             bh.bag_item_id = '${dataPackage[0].bag_item_id}'
+          ORDER BY bh.history_date DESC
           LIMIT 1;
         `;
         const history = await RawQueryService.query(rawQuery);
@@ -145,10 +145,6 @@ export class BaggingSmdService {
           result.message = 'Resi Gabung Paket belum di scan masuk';
           return result;
         }
-      } else {
-        result.message = 'Resi Gabung Paket belum di scan masuk';
-        return result;
-      }
     }
 
     // cek data bagging sebelumnya
