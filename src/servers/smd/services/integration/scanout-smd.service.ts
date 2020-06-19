@@ -1313,6 +1313,7 @@ export class ScanoutSmdService {
         b.bag_number = '${escape(paramBagNumber)}' AND
         bi.bag_seq = '${paramSeq}' AND
         bi.is_deleted = FALSE
+      ORDER BY case when ds.do_smd_id = '${do_smd_id}' then 1 else 2 end, ds.created_time
       LIMIT 1;
     `;
     const unassigningSMD = await RawQueryService.query(rawQuery);
@@ -1338,7 +1339,7 @@ export class ScanoutSmdService {
           ds.total_bagging as total_bagging_header,
           r.representative_code
         FROM do_smd ds
-        LEFT JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
+        INNER JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
         LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
         LEFT JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
         LEFT JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
@@ -1346,6 +1347,7 @@ export class ScanoutSmdService {
         WHERE
           ds.do_smd_id = '${do_smd_id}' AND
           ds.is_deleted = FALSE
+        ORDER BY ds.created_time DESC
         LIMIT 1;
       `;
       const assigningSMD = await RawQueryService.query(rawQuery);
@@ -1353,7 +1355,7 @@ export class ScanoutSmdService {
       if (assigningSMD.length == 0) {
         totalError += 1;
         response.data.status = 'error';
-        response.data.message = `Surat Jalan Tidak Ditemukan`;
+        response.data.message = `Surat Jalan dari Gabung Paket ${item_number} Tidak Ditemukan`;
       } else if (!assigningSMD[0].representative_code) {
         totalError += 1;
         response.data.status = 'error';
@@ -1455,6 +1457,7 @@ export class ScanoutSmdService {
       WHERE
         ba.bagging_code = '${item_number}' AND
         ba.is_deleted = FALSE
+      ORDER BY case when ds.do_smd_id = '${do_smd_id}' then 1 else 2 end, ds.created_time
       LIMIT 1;
     `;
     const unassigningSMD = await RawQueryService.query(rawQuery);
@@ -1495,7 +1498,7 @@ export class ScanoutSmdService {
             ds.total_bagging as total_bagging_header,
             r.representative_code
           FROM do_smd ds
-          LEFT JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
+          INNER JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
           LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
           LEFT JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
           LEFT JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
@@ -1503,6 +1506,7 @@ export class ScanoutSmdService {
           WHERE
             ds.do_smd_id = '${do_smd_id}' AND
             ds.is_deleted = FALSE
+          ORDER BY ds.created_time DESC
           LIMIT 1;
         `;
         const assigningSMD = await RawQueryService.query(rawQuery);
@@ -1510,7 +1514,7 @@ export class ScanoutSmdService {
         if (assigningSMD.length == 0) {
           totalError += 1;
           response.data.status = 'error';
-          response.data.message = `Surat Jalan Tidak Ditemukan`;
+          response.data.message = `Surat Jalan dari Bagging ${item_number} Tidak Ditemukan`;
         } else if (!assigningSMD[0].representative_code) {
           totalError += 1;
           response.data.status = 'error';
@@ -1557,9 +1561,12 @@ export class ScanoutSmdService {
 
           // Reassign do_smd_detail_item to new assigned-smd
           await DoSmdDetailItem.update(
-            { doSmdDetailItemId : unassigningSMD[0].do_smd_detail_id },
             {
-              baggingId: bagging[0].bagging_id,
+              doSmdDetailItemId : unassigningSMD[0].do_smd_detail_item_id,
+              baggingId: unassigningSMD[0].bagging_id,
+            },
+            {
+              doSmdDetailId: assigningSMD[0].do_smd_detail_id,
               userIdUpdated: userId,
               updatedTime: time,
             },
