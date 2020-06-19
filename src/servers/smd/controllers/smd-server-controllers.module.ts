@@ -10,6 +10,7 @@ import { MobileSmdListController } from './integration/mobile-smd-list.controlle
 import { MobileSmdController } from './integration/mobile-smd.controller';
 import { ReasonSmdController } from './integration/reason-smd.controller';
 import { SmdBaggingController } from './integration/smd-bagging.controller';
+import { VehicleSmdController } from './integration/vehicle-smd.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
@@ -22,6 +23,7 @@ import { SmdBaggingController } from './integration/smd-bagging.controller';
     MobileSmdListController,
     ReasonSmdController,
     SmdBaggingController,
+    VehicleSmdController,
   ],
 })
 export class SmdServerControllersModule {}
