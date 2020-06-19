@@ -1301,14 +1301,14 @@ export class ScanoutSmdService {
         dsd.total_bagging,
         dsd.total_bag,
         ds.total_bag as total_bag_header,
-        dsdi.do_smd_detail_item_id,
-        r.representative_code
+        dsdi.do_smd_detail_item_id
+        --r.representative_code
       FROM bag_item bi
       INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
       INNER JOIN do_smd_detail_item dsdi ON dsdi.bag_item_id = bi.bag_item_id AND dsdi.is_deleted = FALSE
       INNER JOIN do_smd_detail dsd on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsd.is_deleted  = FALSE
       INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
-      INNER JOIN representative r ON r.representative_id = b.representative_id_to
+      --INNER JOIN representative r ON r.representative_id = b.representative_id_to
       WHERE
         b.bag_number = '${escape(paramBagNumber)}' AND
         bi.bag_seq = '${paramSeq}' AND
@@ -1336,14 +1336,14 @@ export class ScanoutSmdService {
           dsd.total_bagging,
           dsd.total_bag,
           ds.total_bag as total_bag_header,
-          ds.total_bagging as total_bagging_header,
-          r.representative_code
+          ds.total_bagging as total_bagging_header
+          --r.representative_code
         FROM do_smd ds
         INNER JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
         LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
         LEFT JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
         LEFT JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-        LEFT JOIN representative r ON r.representative_id = b.representative_id_to AND r.representative_code = '${unassigningSMD[0].representative_code}'
+        --LEFT JOIN representative r ON r.representative_id = b.representative_id_to AND r.representative_code = '${unassigningSMD[0].representative_code}'
         WHERE
           ds.do_smd_id = '${do_smd_id}' AND
           ds.is_deleted = FALSE
@@ -1356,10 +1356,6 @@ export class ScanoutSmdService {
         totalError += 1;
         response.data.status = 'error';
         response.data.message = `Surat Jalan ${assigningSMD[0].do_smd_code} Tidak Ditemukan`;
-      } else if (!assigningSMD[0].representative_code) {
-        totalError += 1;
-        response.data.status = 'error';
-        response.data.message = 'Tujuan Resi ' + item_number + ' Tidak Sama dengan Surat Jalan ' + assigningSMD[0].do_smd_code;
       } else {
 
         // Update Bag and SMD/DO_SMD Data
@@ -1445,15 +1441,15 @@ export class ScanoutSmdService {
         ds.total_bagging as total_bagging_header,
         ds.total_bag as total_bag_header,
         dsdi.do_smd_detail_item_id,
-        dsdi.bagging_id,
-        r.representative_code
+        dsdi.bagging_id
+        --r.representative_code
       FROM bagging ba
       INNER JOIN do_smd_detail_item dsdi ON dsdi.bagging_id = ba.bagging_id AND dsdi.is_deleted = FALSE
       INNER JOIN do_smd_detail dsd on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsd.is_deleted  = FALSE
       INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
       INNER JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
       INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-      INNER JOIN representative r ON r.representative_id = b.representative_id_to
+      --INNER JOIN representative r ON r.representative_id = b.representative_id_to
       WHERE
         ba.bagging_code = '${item_number}' AND
         ba.is_deleted = FALSE
@@ -1495,14 +1491,14 @@ export class ScanoutSmdService {
             dsd.total_bagging,
             dsd.total_bag,
             ds.total_bag as total_bag_header,
-            ds.total_bagging as total_bagging_header,
-            r.representative_code
+            ds.total_bagging as total_bagging_header
+            --r.representative_code
           FROM do_smd ds
           INNER JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
           LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
           LEFT JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
           LEFT JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-          LEFT JOIN representative r ON r.representative_id = b.representative_id_to AND r.representative_code = '${unassigningSMD[0].representative_code}'
+          --LEFT JOIN representative r ON r.representative_id = b.representative_id_to AND r.representative_code = '${unassigningSMD[0].representative_code}'
           WHERE
             ds.do_smd_id = '${do_smd_id}' AND
             ds.is_deleted = FALSE
@@ -1515,10 +1511,6 @@ export class ScanoutSmdService {
           totalError += 1;
           response.data.status = 'error';
           response.data.message = `Surat Jalan ${assigningSMD[0].do_smd_code} Tidak Ditemukan`;
-        } else if (!assigningSMD[0].representative_code) {
-          totalError += 1;
-          response.data.status = 'error';
-          response.data.message = 'Tujuan resi ' + item_number + ' Tidak Sama dengan Surat Jalan ' + assigningSMD[0].do_smd_code;
         } else {
           // Update Bagging and SMD/DO_SMD Data
           // increase amount Assign Bagging
