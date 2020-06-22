@@ -91,10 +91,13 @@ export class MobileSmdHandOverPayloadVm {
   @ApiModelProperty()
   longitude: string;
 
+  // @ApiModelProperty()
+  // attachment_tms_id: number;
+  // @ApiModelProperty()
+  // photo_url: string;
+
   @ApiModelProperty()
-  attachment_tms_id: number;
-  @ApiModelProperty()
-  photo_url: string;
+  notes: string;
 
 }
 

@@ -714,6 +714,7 @@ export class MobileSmdService {
         { doSmdVehicleId : resultDoSmd.doSmdVehicleIdLast },
         {
           handOverDate: timeNow,
+          notes: payload.notes,
           latitude: payload.latitude,
           longitude: payload.longitude,
           userIdUpdated: authMeta.userId,
