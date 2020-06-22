@@ -260,7 +260,7 @@ export class MobileSmdService {
       const resultDoSmdDetailArrival = await DoSmdDetail.findOne({
         where: {
           doSmdDetailId: payload.do_smd_detail_id,
-          arrivalTime: null,
+          departureTime: null,
           isDeleted: false,
         },
       });
@@ -278,9 +278,9 @@ export class MobileSmdService {
           { doSmdDetailId : payload.do_smd_detail_id },
           {
             doSmdStatusIdLast: 5000,
-            arrivalTime: moment().toDate(),
-            latitudeArrival: payload.latitude,
-            longitudeArrival: payload.longitude,
+            // departureTime: moment().toDate(),
+            // latitudeDeparture: payload.latitude,
+            // longitudeDeparture: payload.longitude,
             userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
           },
@@ -327,9 +327,9 @@ export class MobileSmdService {
           { doSmdId : resultDoSmdDetail.doSmdId },
           {
             doSmdStatusIdLast: 6000,
-            arrivalTime: moment().toDate(),
-            latitudeArrival: payload.latitude,
-            longitudeArrival: payload.longitude,
+            // departureTime: moment().toDate(),
+            // latitudeArrival: payload.latitude,
+            // longitudeArrival: payload.longitude,
             userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
           },
