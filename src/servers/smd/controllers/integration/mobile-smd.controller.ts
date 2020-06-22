@@ -78,6 +78,7 @@ export class MobileSmdController {
   }
 
   @Post('smd/handover')
+  @UseInterceptors(FileInterceptor('file'))
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async handOverMobile(@Req() request: any, @Body() payload: MobileSmdHandOverPayloadVm, @UploadedFile() file) {
