@@ -45,4 +45,47 @@ export class MasterDataService {
 
     return result;
   }
+
+  static async findAllDoSmdByRequestBranch(
+    payload: BaseMetaPayloadVm,
+    branchId: string,
+  ): Promise<MappingDoSmdResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doSmdId'] = 't1.do_smd_id';
+    payload.fieldResolverMap['doSmdCode'] = 't1.do_smd_code';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doSmdCode',
+      },
+    ];
+    const repo = new OrionRepositoryService(DoSmd, 't1');
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_smd_id', 'doSmdId'],
+      ['t1.do_smd_code', 'doSmdCode'],
+    );
+    q.innerJoin(e => e.doSmdDetails, 't2', j =>
+      (
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+        j.andWhere(e => e.branchId, w => w.equals(branchId))
+      ),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.groupByRaw(`
+      t1.do_smd_id
+    `);
+    q.orderBy({ doSmdCode: 'DESC' });
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new MappingDoSmdResponseVm();
+    result.data = data;
+    result.buildPaging(payload.page, payload.limit, total);
+
+    return result;
+  }
 }
