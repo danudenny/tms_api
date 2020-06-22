@@ -1301,7 +1301,8 @@ export class ScanoutSmdService {
         dsd.total_bagging,
         dsd.total_bag,
         ds.total_bag as total_bag_header,
-        dsdi.do_smd_detail_item_id
+        dsdi.do_smd_detail_item_id,
+        ds.do_smd_status_id_last as status_last
         --r.representative_code
       FROM bag_item bi
       INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
@@ -1322,6 +1323,10 @@ export class ScanoutSmdService {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Surat jalan dari resi ` + item_number + ` tidak ditemukan`;
+    } else if (unassigningSMD[0].status_last >= 3000) {
+      totalError += 1;
+      response.data.status = 'error';
+      response.data.message = `Gabung Paket ` + item_number + ` Sudah Berada di Jalan/Tujuan`;
     } else if (unassigningSMD[0].do_smd_id == do_smd_id) {
       totalError += 1;
       response.data.status = 'error';
@@ -1336,7 +1341,8 @@ export class ScanoutSmdService {
           dsd.total_bagging,
           dsd.total_bag,
           ds.total_bag as total_bag_header,
-          ds.total_bagging as total_bagging_header
+          ds.total_bagging as total_bagging_header,
+          ds.do_smd_status_id_last as status_last
           --r.representative_code
         FROM do_smd ds
         INNER JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
@@ -1356,6 +1362,10 @@ export class ScanoutSmdService {
         totalError += 1;
         response.data.status = 'error';
         response.data.message = `Surat Jalan ${assigningSMD[0].do_smd_code} Tidak Ditemukan`;
+      } else if (assigningSMD[0].status_last >= 3000) {
+        totalError += 1;
+        response.data.status = 'error';
+        response.data.message = `Gabung Paket dari Surat Jalan ` + assigningSMD[0].do_smd_code + ` Sudah Berada di Jalan`;
       } else {
 
         // Update Bag and SMD/DO_SMD Data
@@ -1441,7 +1451,8 @@ export class ScanoutSmdService {
         ds.total_bagging as total_bagging_header,
         ds.total_bag as total_bag_header,
         dsdi.do_smd_detail_item_id,
-        dsdi.bagging_id
+        dsdi.bagging_id,
+        ds.do_smd_status_id_last as status_last
         --r.representative_code
       FROM bagging ba
       INNER JOIN do_smd_detail_item dsdi ON dsdi.bagging_id = ba.bagging_id AND dsdi.is_deleted = FALSE
@@ -1466,6 +1477,10 @@ export class ScanoutSmdService {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Bagging ` + item_number + ` Sudah Berada di Surat jalan ` + unassigningSMD[0].do_smd_code;
+    } else if (unassigningSMD[0].status_last >= 3000) {
+      totalError += 1;
+      response.data.status = 'error';
+      response.data.message = `Bagging ` + item_number + ` Sudah Berada di Jalan/Tujuan`;
     } else {
       rawQuery = `
         SELECT
@@ -1491,7 +1506,8 @@ export class ScanoutSmdService {
             dsd.total_bagging,
             dsd.total_bag,
             ds.total_bag as total_bag_header,
-            ds.total_bagging as total_bagging_header
+            ds.total_bagging as total_bagging_header,
+            ds.do_smd_status_id_last as status_last
             --r.representative_code
           FROM do_smd ds
           INNER JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
@@ -1511,6 +1527,10 @@ export class ScanoutSmdService {
           totalError += 1;
           response.data.status = 'error';
           response.data.message = `Surat Jalan ${assigningSMD[0].do_smd_code} Tidak Ditemukan`;
+        } else if (assigningSMD[0].status_last >= 3000) {
+          totalError += 1;
+          response.data.status = 'error';
+          response.data.message = `Bagging dari Surat Jalan ` + assigningSMD[0].do_smd_code + ` Sudah Berada di Jalan/Tujuan`;
         } else {
           // Update Bagging and SMD/DO_SMD Data
           // increase amount Assign Bagging

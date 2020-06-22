@@ -32,6 +32,7 @@ export class MasterDataService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.doSmdStatusIdLast, w => w.lessThan(3000));
     q.groupByRaw(`
       t1.do_smd_id
     `);
@@ -74,6 +75,7 @@ export class MasterDataService {
         j.andWhere(e => e.branchId, w => w.equals(branchId))
       ),
     );
+    q.andWhere(e => e.doSmdStatusIdLast, w => w.lessThan(3000));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.groupByRaw(`
       t1.do_smd_id
