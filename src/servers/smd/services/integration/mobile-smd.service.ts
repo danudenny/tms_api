@@ -646,9 +646,57 @@ export class MobileSmdService {
 
   }
 
-  static async handOverMobile(payload: any): Promise<any> {
+  static async handOverMobile(payload: any, file): Promise<any> {
+
+    // const result = new MobileUploadImageResponseVm();
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SMD: ', authMeta);
+
+    let url = null;
+    let attachmentId = null;
+
+    let attachment = await AttachmentTms.findOne({
+      where: {
+        fileName: file.originalname,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
+
+    if (attachment) {
+      // attachment exist
+      attachmentId = attachment.attachmentTmsId;
+      url = attachment.url;
+    } else {
+      // upload image
+      const pathId = `smd-delivery-${payload.image_type}`;
+      attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        pathId,
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+        url = attachment.url;
+      }
+    }
+
+    // NOTE: insert data
+    if (attachmentId) {
+      // TODO: validate doPodDeliverDetailId ??
+      const doSmdDelivereyAttachment = await DoSmdDetailAttachment.create();
+      doSmdDelivereyAttachment.doSmdDetailId = payload.do_smd_detail_id;
+      doSmdDelivereyAttachment.attachmentTmsId = attachmentId;
+      doSmdDelivereyAttachment.attachmentType = payload.image_type;
+      await DoSmdDetailAttachment.save(doSmdDelivereyAttachment);
+    }
+
+    // result.url = url;
+    // result.attachmentId = attachmentId;
+    // return result;
+    // const authMeta = AuthService.getAuthData();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const result = new ScanOutSmdHandOverResponseVm();
     const timeNow = moment().toDate();
@@ -684,8 +732,8 @@ export class MobileSmdService {
       const paramDoSmdVehicleAttachmentId = await this.createDoSmdVehicleAttachment(
         resultDoSmd.doSmdId,
         resultDoSmd.doSmdVehicleIdLast,
-        // payload.attacment_tms_id,
-        payload.photo_url,
+        // payload.photo_url,
+        url,
         authMeta.userId,
       );
 
