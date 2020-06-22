@@ -136,6 +136,12 @@ export class DoSmd extends TmsBaseEntity {
   })
   departureScheduleDateTime: Date;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'trip',
+  })
+  trip: number | null;
+
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;

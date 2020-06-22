@@ -80,8 +80,8 @@ export class MobileSmdController {
   @Post('smd/handover')
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  public async handOverMobile(@Req() request: any, @Body() payload: MobileSmdHandOverPayloadVm) {
-    return MobileSmdService.handOverMobile(payload);
+  public async handOverMobile(@Req() request: any, @Body() payload: MobileSmdHandOverPayloadVm, @UploadedFile() file) {
+    return MobileSmdService.handOverMobile(payload, file);
   }
 
 }
