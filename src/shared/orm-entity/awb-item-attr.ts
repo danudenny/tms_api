@@ -5,6 +5,8 @@ import { BagItem } from './bag-item';
 import { Branch } from './branch';
 import { AwbStatus } from './awb-status';
 import { DoReturnAwb } from './do_return_awb';
+import { DoPodDeliverDetail } from './do-pod-deliver-detail';
+import { Awb } from './awb';
 
 @Entity('awb_item_attr', { schema: 'public' })
 export class AwbItemAttr extends BaseEntity {
@@ -72,7 +74,7 @@ export class AwbItemAttr extends BaseEntity {
   @Column('timestamp without time zone', {
     nullable: true,
     name: 'awb_history_date_last',
-    })
+  })
   awbHistoryDateLast: Date | null;
 
   @Column('bigint', {
@@ -84,7 +86,7 @@ export class AwbItemAttr extends BaseEntity {
   @Column('timestamp without time zone', {
     nullable: true,
     name: 'awb_status_final_date',
-    })
+  })
   awbStatusFinalDate: Date | null;
 
   @Column('bigint', {
@@ -168,22 +170,6 @@ export class AwbItemAttr extends BaseEntity {
   })
   bagItemIdLast: number;
 
-  @OneToOne(() => BagItem)
-  @JoinColumn({ name: 'bag_item_id_last'})
-  bagItemLast: BagItem;
-
-  @OneToOne(() => DoReturnAwb)
-  @JoinColumn({ name: 'awb_status_id_last', referencedColumnName: 'awbStatusIdLast'})
-  doReturnAwb: DoReturnAwb;
-
-  @OneToOne(() => AwbItem)
-  @JoinColumn({ name: 'awb_item_id'})
-  awbItem: AwbItem;
-
-  @OneToOne(() => AwbStatus)
-  @JoinColumn({ name: 'awb_status_id_last'})
-  awbStatus: AwbStatus;
-
   // new field
   @Column('bigint', {
     nullable: true,
@@ -197,4 +183,32 @@ export class AwbItemAttr extends BaseEntity {
     name: 'is_sync',
   })
   isSync: boolean;
+
+  // relation
+  @OneToOne(() => BagItem)
+  @JoinColumn({ name: 'bag_item_id_last' })
+  bagItemLast: BagItem;
+
+  @OneToOne(() => DoReturnAwb)
+  @JoinColumn({
+    name: 'awb_status_id_last',
+    referencedColumnName: 'awbStatusIdLast',
+  })
+  doReturnAwb: DoReturnAwb;
+
+  @OneToOne(() => AwbItem)
+  @JoinColumn({ name: 'awb_item_id' })
+  awbItem: AwbItem;
+
+  @OneToOne(() => AwbStatus)
+  @JoinColumn({ name: 'awb_status_id_last' })
+  awbStatus: AwbStatus;
+
+  @OneToOne(() => Awb)
+  @JoinColumn({ name: 'awb_id' })
+  awb: Awb;
+
+  @OneToOne(() => DoPodDeliverDetail)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  doPodDeliverDetail: DoPodDeliverDetail;
 }

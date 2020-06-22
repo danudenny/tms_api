@@ -640,7 +640,7 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.packageType, 't10', j =>
-      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.customerAccount, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
