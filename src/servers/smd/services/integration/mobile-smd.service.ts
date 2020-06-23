@@ -134,7 +134,7 @@ export class MobileSmdService {
       );
 
       await DoSmdDetail.update(
-        { doSmdId : payload.do_smd_id, arrivalTime: null },
+        { doSmdDetailId : payload.do_smd_detail_id, arrivalTime: null },
         {
           doSmdStatusIdLast: 4000,
           arrivalTime: moment().toDate(),
@@ -259,8 +259,8 @@ export class MobileSmdService {
     if (resultDoSmdDetail) {
       const resultDoSmdDetailArrival = await DoSmdDetail.findOne({
         where: {
-          doSmdDetailId: payload.do_smd_detail_id,
-          departureTime: null,
+          doSmdId: resultDoSmdDetail.doSmdId,
+          arrivalTime: null,
           isDeleted: false,
         },
       });
