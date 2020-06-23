@@ -129,7 +129,7 @@ export class ScanoutSmdListService {
       ['dsh.created_time', 'history_date'],
       ['dss.do_smd_status_title', 'history_status'],
       ['dsh.seal_number', 'seal_number'],
-      ['dsva.photo_url', 'photo_url'],
+      ['', 'photo_url'],
       [`CONCAT(u.first_name, ' ', u.last_name )`, 'username'],
       ['e.fullname', 'assigne'],
       ['r.reason_name', 'reason_name'],
@@ -144,11 +144,11 @@ export class ScanoutSmdListService {
     q.leftJoin(e => e.doSmdVehicle, 'dsv', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoinRaw(
-      'do_smd_vehicle_attachment',
-      'dsva',
-      'dsva.do_smd_vehicle_id = dsv.do_smd_vehicle_id AND dsva.is_deleted = FALSE',
-    );
+    // q.leftJoinRaw(
+    //   'do_smd_vehicle_attachment',
+    //   'dsva',
+    //   'dsva.do_smd_vehicle_id = dsv.do_smd_vehicle_id AND dsva.is_deleted = FALSE',
+    // );
     q.leftJoin(e => e.doSmdVehicle.employee, 'e', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
