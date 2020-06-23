@@ -118,6 +118,7 @@ export class MobileSmdService {
     const resultDoSmdDetail = await DoSmdDetail.findOne({
       where: {
         doSmdDetailId: payload.do_smd_detail_id,
+        arrivalTime: null,
         isDeleted: false,
       },
     });
@@ -170,7 +171,7 @@ export class MobileSmdService {
       result.data = data;
       return result;
     } else {
-      throw new BadRequestException(`Can't Find  DO SMD Detail ID : ` + payload.do_smd_detail_id.toString());
+      throw new BadRequestException(`DO SMD Detail Id : ` + payload.do_smd_detail_id.toString() + ' Already Arrival');
     }
 
   }
