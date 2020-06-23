@@ -653,6 +653,18 @@ export class MobileSmdService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SMD: ', authMeta);
 
+    const resultDoSmdDetail = await DoSmdDetail.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+        arrivalTime: null,
+      },
+    });
+
+    if (!resultDoSmdDetail) {
+      throw new BadRequestException(`All SMD Already Arrival`);
+    }
+
     let url = null;
     let attachmentId = null;
 
@@ -686,7 +698,7 @@ export class MobileSmdService {
     if (attachmentId) {
       // TODO: validate doPodDeliverDetailId ??
       const doSmdDelivereyAttachment = await DoSmdDetailAttachment.create();
-      doSmdDelivereyAttachment.doSmdDetailId = payload.do_smd_detail_id;
+      doSmdDelivereyAttachment.doSmdDetailId = resultDoSmdDetail.doSmdDetailId;
       doSmdDelivereyAttachment.attachmentTmsId = attachmentId;
       doSmdDelivereyAttachment.attachmentType = payload.image_type;
       await DoSmdDetailAttachment.save(doSmdDelivereyAttachment);
@@ -741,7 +753,7 @@ export class MobileSmdService {
       await DoSmd.update(
         { doSmdId : resultDoSmd.doSmdId },
         {
-          doSmdStatusIdLast: 1150,
+          doSmdStatusIdLast: 1050,
           doSmdVehicleIdLast: resultDoSmdVehicle.doSmdVehicleId,
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
@@ -751,7 +763,7 @@ export class MobileSmdService {
       await DoSmdDetail.update(
         { doSmdId : payload.do_smd_id, arrivalTime: null },
         {
-          doSmdStatusIdLast: 1150,
+          doSmdStatusIdLast: 1050,
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
@@ -759,13 +771,13 @@ export class MobileSmdService {
 
       const paramDoSmdHistoryId = await this.createDoSmdHistory(
         resultDoSmd.doSmdId,
-        null,
+        resultDoSmdDetail.doSmdDetailId,
         resultDoSmdVehicle.doSmdVehicleId,
         payload.latitude,
         payload.longitude,
         resultDoSmd.doSmdTime,
         permissonPayload.branchId,
-        1150,
+        1050,
         null,
         payload.reasonId,
         authMeta.userId,
