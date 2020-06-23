@@ -39,7 +39,7 @@ export class WebItemAwbCodResponseVm {
   awbStatusIdLast: string;
 
   @ApiModelProperty()
-  awbStatusNameLast: string;
+  awbStatusLast: string;
 
   @ApiModelPropertyOptional()
   driverName: string;
