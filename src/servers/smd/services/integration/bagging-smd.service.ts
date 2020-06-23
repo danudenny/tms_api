@@ -112,20 +112,30 @@ export class BaggingSmdService {
         bi.bag_item_id AS bag_item_id,
         bi.weight as weight,
         bi.bag_item_status_id_last AS bag_item_status_id_last_in_bag_item,
-        b.representative_id_to AS representative_id_to,
-        r.representative_code AS representative_code
+        b.representative_id_to,
+        r.representative_code,
+        bai.bagging_item_id,
+        ba.bagging_id,
+        ba.bagging_code,
+        ba.total_weight,
+        ba.total_item
       FROM bag AS b
       INNER JOIN bag_item bi ON bi.bag_id = b.bag_id AND bi.is_deleted = false
       INNER JOIN representative r ON r.representative_id = b.representative_id_to
+      LEFT JOIN bagging_item bai ON bi.bag_item_id = bai.bag_item_id AND bai.is_deleted = false
+      LEFT JOIN bagging ba ON ba.bagging_id = bai.bagging_id AND ba.is_deleted = false
       WHERE
         b.bag_number = '${bagNumber}' AND
         bi.bag_seq = '${bagSeq}' AND
         b.is_deleted = false
       LIMIT 1;
-    `;
+      `;
     const dataPackage = await RawQueryService.query(rawQuery);
     if (dataPackage.length == 0) {
       result.message = 'Resi gabung paket tidak ditemukan';
+      return result;
+    } else if (dataPackage[0].bagging_item_id) {
+      result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
       return result;
     }
     if (dataPackage[0].bag_item_status_id_last_in_bag_item != BAG_STATUS.IN_BRANCH) {
@@ -144,24 +154,6 @@ export class BaggingSmdService {
           result.message = 'Resi Gabung Paket belum di scan masuk';
           return result;
         }
-    }
-
-    // cek data bagging sebelumnya
-    rawQuery = `
-      SELECT
-        bt.bagging_id AS bagging_id
-      FROM bagging_item AS bt
-      INNER JOIN bagging ba ON ba.bagging_id = bt.bagging_id AND ba.is_deleted = false
-      WHERE
-        bt.bag_item_id = '${dataPackage[0].bag_item_id}' AND
-        bt.is_deleted = false
-      LIMIT 1;
-    `;
-    const dataBagging = await RawQueryService.query(rawQuery);
-
-    if (dataBagging.length > 0) {
-      result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
-      return result;
     }
 
     const permissionPayload = AuthService.getPermissionTokenPayload();
