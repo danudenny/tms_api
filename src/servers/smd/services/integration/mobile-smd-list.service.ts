@@ -90,7 +90,7 @@ export class MobileSmdListService {
         paramUserId,
       },
     );
-    qb.andWhere('ds.do_smd_status_id_last <>  6000');
+    qb.andWhere('ds.do_smd_status_id_last <> 6000');
     qb.andWhere('ds.is_deleted = false');
     return await qb.getRawMany();
   }
