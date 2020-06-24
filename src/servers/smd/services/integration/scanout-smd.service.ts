@@ -1313,8 +1313,7 @@ export class ScanoutSmdService {
       WHERE
         b.bag_number = '${escape(paramBagNumber)}' AND
         bi.bag_seq = '${paramSeq}' AND
-        dsdi.is_deleted = FALSE AND
-        dsdi.bag_type = 1
+        dsdi.is_deleted = FALSE
       ORDER BY case when ds.do_smd_id = '${do_smd_id}' then 1 else 2 end, ds.created_time, dsh.created_time DESC;
     `;
     const unassigningSMD = await RawQueryService.query(rawQuery);
@@ -1328,7 +1327,7 @@ export class ScanoutSmdService {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Surat jalan dari resi ` + item_number + ` tidak ditemukan`;
-    } else if (unassigningSMD[0].status_last >= 3000) {
+    } else if (unassigningSMD[0].status_last != 1000 && unassigningSMD[0].status_last != 2000) {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Gabung Paket ` + item_number + ` Sudah Berada di Jalan/Tujuan`;
@@ -1339,28 +1338,24 @@ export class ScanoutSmdService {
     } else {
       // get assigning do_smd data
       rawQuery = `
-        SELECT
-          ds.do_smd_id,
-          ds.do_smd_code,
-          dsd.do_smd_detail_id,
-          dsd.total_bagging,
-          dsd.total_bag,
-          ds.total_bag as total_bag_header,
-          ds.total_bagging as total_bagging_header,
-          ds.do_smd_status_id_last as status_last,
-          dsh.do_smd_status_id as status_last
-        FROM do_smd_detail_item dsdi
-        INNER JOIN do_smd_detail dsd ON dsd.do_smd_detail_id = dsdi.do_smd_detail_id AND dsd.is_deleted = FALSE
-        LEFT JOIN bag b ON b.bag_id = dsdi.bag_id AND b.is_deleted = FALSE
-        LEFT JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
-        INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
-        LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
-        WHERE
-          ds.do_smd_id = '${do_smd_id}' AND
-          ds.is_deleted = FALSE AND
-          dsdi.bag_type = 1
-        ORDER BY dsh.created_time DESC
-        LIMIT 1;
+      SELECT
+        ds.do_smd_id,
+        ds.do_smd_code,
+        dsd.do_smd_detail_id,
+        dsd.total_bagging,
+        dsd.total_bag,
+        ds.total_bag as total_bag_header,
+        ds.total_bagging as total_bagging_header,
+        dsh.do_smd_status_id as status_last
+      FROM do_smd ds
+      INNER JOIN do_smd_detail dsd ON ds.do_smd_id = dsd.do_smd_id and dsd.is_deleted  = FALSE
+      LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
+      WHERE
+        ds.do_smd_id = '${do_smd_id}' AND
+        ds.is_deleted = FALSE AND
+        dsdi.bag_type = 1
+      ORDER BY dsh.created_time DESC
+      LIMIT 1;
       `;
       const assigningSMD = await RawQueryService.query(rawQuery);
 
@@ -1368,7 +1363,7 @@ export class ScanoutSmdService {
         totalError += 1;
         response.data.status = 'error';
         response.data.message = `Surat Jalan yang Akan Di-assign Tidak Ditemukan`;
-      } else if (assigningSMD[0].status_last >= 3000) {
+      } else if (assigningSMD[0].status_last != 1000 && assigningSMD[0].status_last != 2000) {
         totalError += 1;
         response.data.status = 'error';
         response.data.message = `Gabung Paket dari Surat Jalan ` + assigningSMD[0].do_smd_code + ` Sudah Berada di Jalan`;
@@ -1477,7 +1472,7 @@ export class ScanoutSmdService {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Bagging ` + item_number + ` Sudah Berada di Surat jalan ` + unassigningSMD[0].do_smd_code;
-    } else if (unassigningSMD[0].status_last >= 3000) {
+    } else if (unassigningSMD[0].status_last != 1000 && unassigningSMD[0].status_last != 2000) {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Bagging ` + item_number + ` Sudah Berada di Jalan/Tujuan`;
@@ -1499,26 +1494,23 @@ export class ScanoutSmdService {
       } else {
         // get assigning do_smd data
         rawQuery = `
-          SELECT
-            ds.do_smd_id,
-            ds.do_smd_code,
-            dsd.do_smd_detail_id,
-            dsd.total_bagging,
-            dsd.total_bag,
-            ds.total_bag as total_bag_header,
-            ds.total_bagging as total_bagging_header,
-            dsh.do_smd_status_id as status_last
-            FROM do_smd_detail_item dsdi
-            INNER JOIN bagging ba ON ba.bagging_id = dsdi.bagging_id AND ba.is_deleted = FALSE
-            LEFT JOIN do_smd_detail dsd on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsd.is_deleted  = FALSE
-            INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
-            LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
-          WHERE
-            ds.do_smd_id = '${do_smd_id}' AND
-            dsdi.is_deleted = FALSE AND
-            dsdi.bag_type = 0
-          ORDER BY dsh.created_time DESC
-          LIMIT 1;
+        SELECT
+          ds.do_smd_id,
+          ds.do_smd_code,
+          dsd.do_smd_detail_id,
+          dsd.total_bagging,
+          dsd.total_bag,
+          ds.total_bag as total_bag_header,
+          ds.total_bagging as total_bagging_header,
+          dsh.do_smd_status_id as status_last
+        FROM do_smd ds
+        INNER JOIN do_smd_detail dsd ON ds.do_smd_id = dsd.do_smd_id and dsd.is_deleted  = FALSE
+        LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
+        WHERE
+          ds.do_smd_id = '${do_smd_id}' AND
+          ds.is_deleted = FALSE
+        ORDER BY dsh.created_time DESC
+        LIMIT 1;
         `;
         const assigningSMD = await RawQueryService.query(rawQuery);
 
@@ -1526,7 +1518,7 @@ export class ScanoutSmdService {
           totalError += 1;
           response.data.status = 'error';
           response.data.message = `Surat Jalan yang Akan Di-assign Tidak Ditemukan`;
-        } else if (assigningSMD[0].status_last >= 3000) {
+        } else if (assigningSMD[0].status_last != 1000 && assigningSMD[0].status_last != 2000) {
           totalError += 1;
           response.data.status = 'error';
           response.data.message = `Bagging dari Surat Jalan ` + assigningSMD[0].do_smd_code + ` Sudah Berada di Jalan/Tujuan`;
