@@ -88,7 +88,14 @@ export class MonitoringSmdServices {
     // return result;
 
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
+    payload.fieldResolverMap['do_smd_code'] = 'd.do_smd_code';
     payload.fieldFilterManualMap['do_smd_time'] = true;
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_code',
+      },
+    ];
+    // payload.fieldFilterManualMap['do_smd_code'] = true;
     const q = payload.buildQueryBuilder();
 
     q.select('d.do_smd_code', 'do_smd_code')
@@ -136,6 +143,7 @@ export class MonitoringSmdServices {
           );
 
         payload.applyFiltersToQueryBuilder(subQuery, ['do_smd_time']);
+        // payload.applyFiltersToQueryBuilder(subQuery, ['do_smd_code']);
 
         subQuery
           .andWhere('ds.is_deleted = false');
