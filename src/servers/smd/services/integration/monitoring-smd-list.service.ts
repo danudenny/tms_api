@@ -88,10 +88,18 @@ export class MonitoringSmdServices {
     // return result;
 
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
+    payload.fieldResolverMap['do_smd_code'] = 'd.do_smd_code';
     payload.fieldFilterManualMap['do_smd_time'] = true;
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_code',
+      },
+    ];
+    // payload.fieldFilterManualMap['do_smd_code'] = true;
     const q = payload.buildQueryBuilder();
 
     q.select('d.do_smd_code', 'do_smd_code')
+      .addSelect('d.do_smd_time', 'do_smd_time')
       .addSelect('d.route', 'route')
       .addSelect('d.vehicle_number', 'vehicle_number')
       .addSelect(`d.trip`, 'trip')
@@ -101,6 +109,7 @@ export class MonitoringSmdServices {
       .from(subQuery => {
         subQuery
           .select('ds.do_smd_code')
+          .addSelect(`ds.do_smd_time`, 'do_smd_time')
           .addSelect(`bf.branch_name || ' - ' || ds.branch_to_name_list`, 'route')
           .addSelect(`dsv.vehicle_number`, 'vehicle_number')
           .addSelect(`ds.trip`, 'trip')
@@ -134,6 +143,7 @@ export class MonitoringSmdServices {
           );
 
         payload.applyFiltersToQueryBuilder(subQuery, ['do_smd_time']);
+        // payload.applyFiltersToQueryBuilder(subQuery, ['do_smd_code']);
 
         subQuery
           .andWhere('ds.is_deleted = false');
