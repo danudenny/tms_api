@@ -31,7 +31,7 @@ import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import {ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
-import { Any } from 'typeorm';
+import { Any, In } from 'typeorm';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -1303,24 +1303,28 @@ export class ScanoutSmdService {
         dsd.total_bag,
         ds.total_bag as total_bag_header,
         dsdi.do_smd_detail_item_id,
-        ds.do_smd_status_id_last as status_last
-        --r.representative_code
-      FROM bag_item bi
-      INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-      INNER JOIN do_smd_detail_item dsdi ON dsdi.bag_item_id = bi.bag_item_id AND dsdi.is_deleted = FALSE
-      INNER JOIN do_smd_detail dsd on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsd.is_deleted  = FALSE
+        dsh.do_smd_status_id as status_last
+      FROM do_smd_detail_item dsdi
+      INNER JOIN do_smd_detail dsd on dsd.do_smd_detail_id = dsdi.do_smd_detail_id AND dsd.is_deleted  = FALSE
+      INNER JOIN bag b ON b.bag_id = dsdi.bag_id AND b.is_deleted = FALSE
+      INNER JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
       INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
-      --INNER JOIN representative r ON r.representative_id = b.representative_id_to
+      LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
       WHERE
         b.bag_number = '${escape(paramBagNumber)}' AND
         bi.bag_seq = '${paramSeq}' AND
-        bi.is_deleted = FALSE
-      ORDER BY case when ds.do_smd_id = '${do_smd_id}' then 1 else 2 end, ds.created_time
-      LIMIT 1;
+        dsdi.is_deleted = FALSE AND
+        dsdi.bag_type = 1
+      ORDER BY case when ds.do_smd_id = '${do_smd_id}' then 1 else 2 end, ds.created_time, dsh.created_time DESC;
     `;
     const unassigningSMD = await RawQueryService.query(rawQuery);
 
-    if (unassigningSMD.length == 0) {
+    const codes = await this.getSmdCodeByRequestData(unassigningSMD);
+    if (codes.doSmdCode.length > 1) {
+      totalError += 1;
+      response.data.status = 'error';
+      response.data.message = `Gabung Paket ${item_number} Lebih dari 1 Surat Jalan: ${codes.doSmdCode.join(', ')}`;
+    } else if (unassigningSMD.length == 0) {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Surat jalan dari resi ` + item_number + ` tidak ditemukan`;
@@ -1343,18 +1347,19 @@ export class ScanoutSmdService {
           dsd.total_bag,
           ds.total_bag as total_bag_header,
           ds.total_bagging as total_bagging_header,
-          ds.do_smd_status_id_last as status_last
-          --r.representative_code
-        FROM do_smd ds
-        INNER JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
-        LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
+          ds.do_smd_status_id_last as status_last,
+          dsh.do_smd_status_id as status_last
+        FROM do_smd_detail_item dsdi
+        INNER JOIN do_smd_detail dsd ON dsd.do_smd_detail_id = dsdi.do_smd_detail_id AND dsd.is_deleted = FALSE
+        LEFT JOIN bag b ON b.bag_id = dsdi.bag_id AND b.is_deleted = FALSE
         LEFT JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
-        LEFT JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-        --LEFT JOIN representative r ON r.representative_id = b.representative_id_to AND r.representative_code = '${unassigningSMD[0].representative_code}'
+        INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
+        LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
         WHERE
           ds.do_smd_id = '${do_smd_id}' AND
-          ds.is_deleted = FALSE
-        ORDER BY ds.created_time DESC
+          ds.is_deleted = FALSE AND
+          dsdi.bag_type = 1
+        ORDER BY dsh.created_time DESC
         LIMIT 1;
       `;
       const assigningSMD = await RawQueryService.query(rawQuery);
@@ -1362,7 +1367,7 @@ export class ScanoutSmdService {
       if (assigningSMD.length == 0) {
         totalError += 1;
         response.data.status = 'error';
-        response.data.message = `Surat Jalan ${assigningSMD[0].do_smd_code} Tidak Ditemukan`;
+        response.data.message = `Surat Jalan yang Akan Di-assign Tidak Ditemukan`;
       } else if (assigningSMD[0].status_last >= 3000) {
         totalError += 1;
         response.data.status = 'error';
@@ -1407,16 +1412,8 @@ export class ScanoutSmdService {
             updatedTime: time,
           },
         );
-
         // Reassign do_smd_detail_item to new assigned-smd
-        await DoSmdDetailItem.update(
-          { doSmdDetailItemId : unassigningSMD[0].do_smd_detail_item_id },
-          {
-            doSmdDetailId: assigningSMD[0].do_smd_detail_id,
-            userIdUpdated: userId,
-            updatedTime: time,
-          },
-        );
+        await this.updateDoSmdDetailItem(codes.doSmdDetailItem, assigningSMD[0].do_smd_detail_id, userId, time);
         totalSuccess += 1;
       }
     }
@@ -1453,24 +1450,26 @@ export class ScanoutSmdService {
         ds.total_bag as total_bag_header,
         dsdi.do_smd_detail_item_id,
         dsdi.bagging_id,
-        ds.do_smd_status_id_last as status_last
-        --r.representative_code
-      FROM bagging ba
-      INNER JOIN do_smd_detail_item dsdi ON dsdi.bagging_id = ba.bagging_id AND dsdi.is_deleted = FALSE
+        dsh.do_smd_status_id as status_last
+        FROM do_smd_detail_item dsdi
+      INNER JOIN bagging ba ON ba.bagging_id = dsdi.bagging_id AND ba.is_deleted = FALSE
       INNER JOIN do_smd_detail dsd on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsd.is_deleted  = FALSE
       INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
-      INNER JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
-      INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-      --INNER JOIN representative r ON r.representative_id = b.representative_id_to
+      LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
       WHERE
         ba.bagging_code = '${item_number}' AND
-        ba.is_deleted = FALSE
-      ORDER BY case when ds.do_smd_id = '${do_smd_id}' then 1 else 2 end, ds.created_time
-      LIMIT 1;
+        dsdi.is_deleted = FALSE AND
+        dsdi.bag_type = 0
+      ORDER BY case when ds.do_smd_id = '${do_smd_id}' then 1 else 2 end, ds.created_time, dsh.created_time DESC;
     `;
     const unassigningSMD = await RawQueryService.query(rawQuery);
+    const codes = await this.getSmdCodeByRequestData(unassigningSMD);
 
-    if (unassigningSMD.length == 0) {
+    if (codes.doSmdCode.length > 1) {
+      totalError += 1;
+      response.data.status = 'error';
+      response.data.message = `Bagging ${item_number} Lebih dari 1 Surat Jalan: ${codes.doSmdCode.join(', ')}`;
+    } else if (unassigningSMD.length == 0) {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Surat jalan dari Bagging ${item_number} Tidak Ditemukan`;
@@ -1508,18 +1507,17 @@ export class ScanoutSmdService {
             dsd.total_bag,
             ds.total_bag as total_bag_header,
             ds.total_bagging as total_bagging_header,
-            ds.do_smd_status_id_last as status_last
-            --r.representative_code
-          FROM do_smd ds
-          INNER JOIN do_smd_detail dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE
-          LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
-          LEFT JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
-          LEFT JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-          --LEFT JOIN representative r ON r.representative_id = b.representative_id_to AND r.representative_code = '${unassigningSMD[0].representative_code}'
+            dsh.do_smd_status_id as status_last
+            FROM do_smd_detail_item dsdi
+            INNER JOIN bagging ba ON ba.bagging_id = dsdi.bagging_id AND ba.is_deleted = FALSE
+            LEFT JOIN do_smd_detail dsd on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsd.is_deleted  = FALSE
+            INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
+            LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
           WHERE
             ds.do_smd_id = '${do_smd_id}' AND
-            ds.is_deleted = FALSE
-          ORDER BY ds.created_time DESC
+            dsdi.is_deleted = FALSE AND
+            dsdi.bag_type = 0
+          ORDER BY dsh.created_time DESC
           LIMIT 1;
         `;
         const assigningSMD = await RawQueryService.query(rawQuery);
@@ -1527,7 +1525,7 @@ export class ScanoutSmdService {
         if (assigningSMD.length == 0) {
           totalError += 1;
           response.data.status = 'error';
-          response.data.message = `Surat Jalan ${assigningSMD[0].do_smd_code} Tidak Ditemukan`;
+          response.data.message = `Surat Jalan yang Akan Di-assign Tidak Ditemukan`;
         } else if (assigningSMD[0].status_last >= 3000) {
           totalError += 1;
           response.data.status = 'error';
@@ -1573,17 +1571,7 @@ export class ScanoutSmdService {
           );
 
           // Reassign do_smd_detail_item to new assigned-smd
-          await DoSmdDetailItem.update(
-            {
-              doSmdDetailItemId : unassigningSMD[0].do_smd_detail_item_id,
-              baggingId: unassigningSMD[0].bagging_id,
-            },
-            {
-              doSmdDetailId: assigningSMD[0].do_smd_detail_id,
-              userIdUpdated: userId,
-              updatedTime: time,
-            },
-          );
+          await this.updateDoSmdDetailItem(codes.doSmdDetailItem, assigningSMD[0].do_smd_detail_id, userId, time);
           totalSuccess += 1;
         }
       }
@@ -1592,5 +1580,33 @@ export class ScanoutSmdService {
       totalSuccess, totalError,
     };
     return response;
+  }
+
+  static async getSmdCodeByRequestData(data: any): Promise<any> {
+    const arrSmdCode = [];
+    const arrSmdItem = [];
+    for (const item of data) {
+      arrSmdItem.push(item.do_smd_detail_item_id);
+      if (arrSmdCode.includes(item.do_smd_code)) {
+        continue;
+      }
+      arrSmdCode.push(item.do_smd_code);
+    }
+    return {
+      doSmdCode: arrSmdCode,
+      doSmdDetailItem: arrSmdItem,
+    };
+  }
+
+  static async updateDoSmdDetailItem(id: any, updatedId, userId, time) {
+    // Reassign do_smd_detail_item to new assigned-smd
+    await DoSmdDetailItem.update(
+      { doSmdDetailItemId : In(id) },
+      {
+        doSmdDetailId: updatedId,
+        userIdUpdated: userId,
+        updatedTime: time,
+      },
+    );
   }
 }
