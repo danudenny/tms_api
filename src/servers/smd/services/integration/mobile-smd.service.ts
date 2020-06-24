@@ -82,7 +82,7 @@ export class MobileSmdService {
       const paramDoSmdHistoryId = await this.createDoSmdHistory(
         payload.do_smd_id,
         null,
-        resultDoSmd.doSmdDetailIdLast,
+        resultDoSmd.doSmdVehicleIdLast,
         null,
         null,
         resultDoSmd.departureScheduleDateTime,
