@@ -113,7 +113,7 @@ export class MonitoringSmdServices {
           .addSelect(`ds.do_smd_time`, 'do_smd_time')
           .addSelect(`bf.branch_name || ' - ' || ds.branch_to_name_list`, 'route')
           .addSelect(`dsv.vehicle_number`, 'vehicle_number')
-          .addSelect(`v..vehicle_name`, 'vehicle_name')
+          .addSelect(`v.vehicle_name`, 'vehicle_name')
           .addSelect(`ds.trip`, 'trip')
           .addSelect(`(
                       select
