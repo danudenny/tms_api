@@ -41,9 +41,20 @@ export class WebItemAwbCodResponseVm {
   @ApiModelProperty()
   awbStatusLast: string;
 
-  @ApiModelPropertyOptional()
+  @ApiModelProperty()
   driverName: string;
 
+  @ApiModelProperty()
+  doPodDeliverDetailId: string;
+
+  @ApiModelPropertyOptional()
+  codPaymentMethod: string;
+
+  @ApiModelPropertyOptional()
+  codPaymentService: string;
+
+  @ApiModelPropertyOptional()
+  noReference: string;
 }
 
 export class WebAwbCodListResponseVm extends BaseMetaResponseVm {

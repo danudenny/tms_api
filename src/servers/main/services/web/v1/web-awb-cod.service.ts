@@ -28,6 +28,9 @@ export class V1WebAwbCodService {
     //     field: 'awbNumber',
     //   },
     // ];
+    if (payload.sortBy === '') {
+      payload.sortBy = 'transactionDate';
+    }
 
     const repo = new OrionRepositoryService(AwbItemAttr, 't1');
     const q = repo.findAllRaw();
@@ -50,6 +53,10 @@ export class V1WebAwbCodService {
       ['t4.user_id', 'userIdDriver'],
       ['t4.first_name', 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
+      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t8.cod_payment_method', 'codPaymentMethod'],
+      ['t8.cod_payment_service', 'codPaymentService'],
+      ['t8.no_reference', 'noReference'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
@@ -72,6 +79,10 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awbStatus, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
