@@ -9,8 +9,8 @@ export class MonitoringResponseVm extends BaseMetaResponseVm {
 
 export class MonitoringListVm {
 
-    // @ApiModelProperty()
-    // do_smd_date_time: Date;
+    @ApiModelProperty()
+    do_smd_time: Date;
 
     @ApiModelProperty()
     do_smd_code: string;
