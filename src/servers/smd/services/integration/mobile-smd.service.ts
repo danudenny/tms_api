@@ -202,7 +202,7 @@ export class MobileSmdService {
       );
 
       await DoSmdDetail.update(
-        { doSmdId : payload.do_smd_id, arrivalTime: null },
+        { doSmdDetailId : payload.do_smd_detail_id },
         {
           doSmdStatusIdLast: 3000,
           arrivalTime: null,
@@ -211,6 +211,20 @@ export class MobileSmdService {
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
+      );
+
+      await this.createDoSmdHistory(
+        resultDoSmdDetail.doSmdId,
+        null,
+        null,
+        null,
+        null,
+        resultDoSmdDetail.departureScheduleDateTime,
+        permissonPayload.branchId,
+        2500,
+        null,
+        null,
+        authMeta.userId,
       );
 
       const paramDoSmdHistoryId = await this.createDoSmdHistory(
