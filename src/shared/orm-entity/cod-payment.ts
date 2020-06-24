@@ -1,6 +1,5 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 import { TmsBaseEntity } from './tms-base';
 
 @Entity('cod_payment', { schema: 'public' })
@@ -10,7 +9,7 @@ export class CodPayment extends TmsBaseEntity {
   })
   codPaymentId: string;
 
-  @PrimaryGeneratedColumn('uuid', {
+  @Column('character varying', {
     name: 'do_pod_deliver_detail_id',
   })
   doPodDeliverDetailId: string;

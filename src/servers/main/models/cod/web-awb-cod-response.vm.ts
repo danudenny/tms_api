@@ -27,7 +27,7 @@ export class WebItemAwbCodResponseVm {
   packageTypeCode: string;
 
   @ApiModelProperty()
-  branchIdLast: string;
+  branchIdLast: number;
 
   @ApiModelProperty()
   branchNameLast: string;
@@ -40,6 +40,9 @@ export class WebItemAwbCodResponseVm {
 
   @ApiModelProperty()
   awbStatusLast: string;
+
+  @ApiModelProperty()
+  userIdDriver: number;
 
   @ApiModelProperty()
   driverName: string;
