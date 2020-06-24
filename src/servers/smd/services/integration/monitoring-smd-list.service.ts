@@ -92,6 +92,7 @@ export class MonitoringSmdServices {
     const q = payload.buildQueryBuilder();
 
     q.select('d.do_smd_code', 'do_smd_code')
+      .addSelect('d.do_smd_time', 'do_smd_time')
       .addSelect('d.route', 'route')
       .addSelect('d.vehicle_number', 'vehicle_number')
       .addSelect(`d.trip`, 'trip')
@@ -101,6 +102,7 @@ export class MonitoringSmdServices {
       .from(subQuery => {
         subQuery
           .select('ds.do_smd_code')
+          .addSelect(`ds.do_smd_time`, 'do_smd_time')
           .addSelect(`bf.branch_name || ' - ' || ds.branch_to_name_list`, 'route')
           .addSelect(`dsv.vehicle_number`, 'vehicle_number')
           .addSelect(`ds.trip`, 'trip')
