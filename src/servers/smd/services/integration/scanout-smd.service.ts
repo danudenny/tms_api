@@ -1352,8 +1352,7 @@ export class ScanoutSmdService {
       LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
       WHERE
         ds.do_smd_id = '${do_smd_id}' AND
-        ds.is_deleted = FALSE AND
-        dsdi.bag_type = 1
+        ds.is_deleted = FALSE
       ORDER BY dsh.created_time DESC
       LIMIT 1;
       `;
@@ -1453,8 +1452,7 @@ export class ScanoutSmdService {
       LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
       WHERE
         ba.bagging_code = '${item_number}' AND
-        dsdi.is_deleted = FALSE AND
-        dsdi.bag_type = 0
+        dsdi.is_deleted = FALSE
       ORDER BY case when ds.do_smd_id = '${do_smd_id}' then 1 else 2 end, ds.created_time, dsh.created_time DESC;
     `;
     const unassigningSMD = await RawQueryService.query(rawQuery);
