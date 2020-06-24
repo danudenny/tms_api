@@ -136,7 +136,7 @@ export class DoSmdVehicle extends TmsBaseEntity {
 
   @OneToOne(() => Employee)
   @JoinColumn({ name: 'employee_id_driver' })
-  employee: Branch;
+  employee: Employee;
 
   // @OneToMany(() => DoSmdVehicleAttachment, doSmdVehicleAttachment => doSmdVehicleAttachment.doSmdVehicleId)
   // doSmdVehicleAttachments: DoSmdVehicleAttachment[];

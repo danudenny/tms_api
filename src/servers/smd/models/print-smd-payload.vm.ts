@@ -1,12 +1,9 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 
-export class SmdScanBaggingPayloadVm {
+export class PrintSmdPayloadVm {
   @ApiModelProperty()
-  bagNumber: string;
-
-  @ApiModelProperty()
-  representativeCode: string;
+  id: number;
 
   @ApiModelPropertyOptional()
-  baggingId: string;
+  printCopy: number;
 }

@@ -29,7 +29,7 @@ export class ScanOutSmdItemPayloadVm {
   do_smd_id: number;
 
   @ApiModelProperty()
-  item_number: string;
+  item_number: string[];
 
 }
 

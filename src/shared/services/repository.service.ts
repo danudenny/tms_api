@@ -31,6 +31,8 @@ import { DoReturnCtToCollection } from '../orm-entity/do_return_ct_to_collection
 import { DoReturnCollectionToCust } from '../orm-entity/do_return_collection_to_cust';
 import { Partner } from '../orm-entity/partner';
 import { RolePodManualStatus } from '../orm-entity/role-pod-manual-status';
+import { Bagging } from '../orm-entity/bagging';
+import { DoSmd } from '../orm-entity/do_smd';
 import { Vehicle } from '../orm-entity/vehicle';
 
 /**
@@ -133,6 +135,12 @@ export class RepositoryService {
   }
   static get rolePodManualStatus() {
     return new OrionRepositoryService(RolePodManualStatus);
+  }
+  static get baggingSmd() {
+    return new OrionRepositoryService(Bagging);
+  }
+  static get doSmd() {
+    return new OrionRepositoryService(DoSmd);
   }
   static get vehicle() {
     return new OrionRepositoryService(Vehicle);
