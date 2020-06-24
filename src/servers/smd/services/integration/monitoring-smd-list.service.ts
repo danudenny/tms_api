@@ -102,6 +102,7 @@ export class MonitoringSmdServices {
       .addSelect('d.do_smd_time', 'do_smd_time')
       .addSelect('d.route', 'route')
       .addSelect('d.vehicle_number', 'vehicle_number')
+      .addSelect('d.vehicle_name', 'vehicle_name')
       .addSelect(`d.trip`, 'trip')
       .addSelect('d.total_weight', 'total_weight')
       .addSelect('d.vehicle_capacity', 'vehicle_capacity')
@@ -112,6 +113,7 @@ export class MonitoringSmdServices {
           .addSelect(`ds.do_smd_time`, 'do_smd_time')
           .addSelect(`bf.branch_name || ' - ' || ds.branch_to_name_list`, 'route')
           .addSelect(`dsv.vehicle_number`, 'vehicle_number')
+          .addSelect(`v..vehicle_name`, 'vehicle_name')
           .addSelect(`ds.trip`, 'trip')
           .addSelect(`(
                       select
