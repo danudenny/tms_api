@@ -47,4 +47,5 @@ export class V1WebTrackingController {
   public async photoDetail(@Body() payload: PhotoDetailVm) {
     return V1WebTrackingService.getPhotoDetail(payload);
   }
+
 }

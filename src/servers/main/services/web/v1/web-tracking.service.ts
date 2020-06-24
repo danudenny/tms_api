@@ -148,6 +148,10 @@ export class V1WebTrackingService {
       doPodDeliverDetailId: payload.doPodDeliverDetailId,
     });
 
+    if (payload.attachmentType) {
+      qq.andWhere('dpda.type = :attachmentType', { attachmentType: payload.attachmentType });
+    }
+
     const result = new PhotoResponseVm();
     result.data = await qq.getRawMany();
     return result;
