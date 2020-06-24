@@ -52,9 +52,17 @@ export class PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm {
   refRepresentativeCode: string;
 }
 
+export class PrintDoSmdDataBranchToRepresentativeVm {
+  @ApiModelProperty()
+  representativeCode: string;
+}
+
 export class PrintDoSmdDataBranchToVm {
   @ApiModelProperty()
   branchName: string;
+
+  @ApiModelProperty({ type: () => PrintDoSmdDataBranchToRepresentativeVm })
+  representative: PrintDoSmdDataBranchToRepresentativeVm = new PrintDoSmdDataBranchToRepresentativeVm();
 }
 
 export class PrintDoSmdDataDoSmdDetailBagVm {
