@@ -13,6 +13,7 @@ import { SmdBaggingController } from './integration/smd-bagging.controller';
 import {MasterDataController} from './integration/masterdata.controller';
 import {SmdPrintController} from './integration/print-smd.controller';
 import { VehicleSmdController } from './integration/vehicle-smd.controller';
+import { MonitoringSmdController } from './integration/smd-monitoring.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
@@ -28,6 +29,7 @@ import { VehicleSmdController } from './integration/vehicle-smd.controller';
     SmdBaggingController,
     SmdPrintController,
     VehicleSmdController,
+    MonitoringSmdController,
   ],
 })
 export class SmdServerControllersModule {}
