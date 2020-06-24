@@ -22,6 +22,9 @@ export class MonitoringListVm {
     vehicle_number: string;
 
     @ApiModelProperty()
+    vehicle_name: string;
+
+    @ApiModelProperty()
     trip: number;
 
     @ApiModelProperty()
