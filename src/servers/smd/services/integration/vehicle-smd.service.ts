@@ -60,7 +60,7 @@ export class VehicleSmdService {
       ['vehicle.vehicle_name', 'vehicle_name'],
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    if (permissonPayload.branchId < > 121) {
+    if (permissonPayload.branchId !== 121) {
       q.andWhereRaw(`vehicle.branch_id = '${permissonPayload.branchId}'`);
     }
 
