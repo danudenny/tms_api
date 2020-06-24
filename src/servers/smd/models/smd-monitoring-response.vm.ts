@@ -5,53 +5,32 @@ export class MonitoringResponseVm extends BaseMetaResponseVm {
 
     @ApiModelProperty({ type: () => [MonitoringListVm] })
     data: MonitoringListVm[];
-    // @ApiModelProperty({ type: () => [ScanInListVm] })
-    // data: ScanInListVm[];
   }
 
 export class MonitoringListVm {
-    // @ApiModelProperty()
-    // bag_id: number;
 
     // @ApiModelProperty()
-    // bag_item_id: number;
-
-    // @ApiModelProperty()
-    // bag_number_seq: string;
-
-    // @ApiModelProperty()
-    // branch_name: string;
-
-    // @ApiModelProperty()
-    // bagging_datetime: string;
+    // do_smd_date_time: Date;
 
     @ApiModelProperty()
-    doSmdDateTime: string;
+    do_smd_code: string;
 
     @ApiModelProperty()
-    doSmdCode: string;
+    route: string;
 
     @ApiModelProperty()
-    doSmdBranchNameList: string;
-
-    @ApiModelProperty()
-    branchFromName: string;
+    vehicle_number: string;
 
     @ApiModelProperty()
     trip: number;
 
     @ApiModelProperty()
-    vehicleCapacity: number;
+    total_weight: number;
 
-    // @ApiModelProperty()
-    // tot_resi: number;
+    @ApiModelProperty()
+    vehicle_capacity: number;
 
-    // @ApiModelProperty()
-    // weight: number;
+    @ApiModelProperty()
+    percentage_load: number;
 
-    // @ApiModelProperty()
-    // weight_accumulative: number;
-
-    // @ApiModelProperty()
-    // fullname: string;
   }
