@@ -1085,6 +1085,104 @@ export class ScanoutSmdService {
     }
   }
 
+  static async scanOutChangeVehicle(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdHandoverResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+    let paramDoSmdStatus;
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        doSmdStatusIdLast: 8000,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmd) {
+      const rawQuery = `
+        SELECT
+          do_smd_vehicle_id,
+          vehicle_number,
+          employee_driver
+        FROM do_smd_vehicle
+        WHERE
+          do_smd_vehicle_id = ${resultDoSmd.doSmdVehicleIdLast} AND
+          is_active = TRUE AND
+          is_deleted = FALSE;
+      `;
+      const resultDataDoSmdVehicle = await RawQueryService.query(rawQuery);
+      if (resultDataDoSmdVehicle.length > 0 ) {
+        // Set Active False yang lama
+        await DoSmdVehicle.update(
+          { doSmdVehicleId : resultDataDoSmdVehicle[0].do_smd_vehicle_id },
+          {
+            isActive: false,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          },
+        );
+        // Create Vehicle Dulu dan jangan update ke do_smd
+        const paramDoSmdVehicleId = await this.createDoSmdVehicle(
+          payload.do_smd_id,
+          payload.vehicle_number,
+          payload.employee_id_driver,
+          permissonPayload.branchId,
+          authMeta.userId,
+        );
+
+        await DoSmd.update(
+          { doSmdId : payload.do_smd_id},
+          {
+            doSmdVehicleIdLast: paramDoSmdVehicleId,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          },
+        );
+        if (resultDataDoSmdVehicle[0].employee_driver == payload.employee_id_driver) {
+          paramDoSmdStatus = 1100;
+        } else {
+          paramDoSmdStatus = 1050;
+        }
+        const paramDoSmdHistoryId = await this.createDoSmdHistory(
+          resultDoSmd.doSmdId,
+          null,
+          resultDoSmd.doSmdVehicleIdLast,
+          null,
+          null,
+          resultDoSmd.doSmdTime,
+          permissonPayload.branchId,
+          paramDoSmdStatus,
+          null,
+          null,
+          authMeta.userId,
+        );
+
+        data.push({
+          do_smd_id: resultDoSmd.doSmdId,
+          do_smd_code: resultDoSmd.doSmdCode,
+          do_smd_vehicle_id: paramDoSmdVehicleId,
+        });
+
+        result.statusCode = HttpStatus.OK;
+        if (paramDoSmdStatus == 1100) {
+          result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' Vehicle Success Changed ';
+        } else {
+          result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' Driver Success Changed ';
+        }
+
+        result.data = data;
+        return result;
+      } else {
+        throw new BadRequestException(`Can't Found Trouble Reason For SMD: ` + resultDoSmd.doSmdCode);
+      }
+    } else {
+      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
+    }
+  }
+
   private static async createDoSmd(
     paramDoSmdCode: string,
     paramDoSmdTime: Date,
