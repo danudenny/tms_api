@@ -127,11 +127,13 @@ export class ScanoutSmdListService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
+      ['dsh.do_smd_history_id', 'do_smd_history_id'],
       ['ds.do_smd_id', 'do_smd_id'],
       ['ds.do_smd_code', 'do_smd_code'],
       ['b.branch_name', 'branch_from_name'],
       ['ds.branch_to_name_list', 'branch_to_name'],
       ['dsh.created_time', 'history_date'],
+      ['dsh.do_smd_status_id', 'do_smd_status_id'],
       ['dss.do_smd_status_title', 'history_status'],
       ['dsh.seal_number', 'seal_number'],
       ['', 'photo_url'],
