@@ -44,7 +44,6 @@ export class ScaninSmdService {
       const paramSeq = await paramBagSeq * 1;
       const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       let paramBagItemId = null;
-      let branchIdNext = null;
       if (paramBagNumber == null || paramBagNumber == undefined) {
         throw new BadRequestException('Bag Number Not Found');
       } else {
@@ -186,24 +185,12 @@ export class ScaninSmdService {
           console.log(resultbagItemHistory);
           console.log(resultbagItemHistory.bagItemHistoryId);
 
-          // old update BagItem
-          // await BagItem.update(
-          //   { bagItemId : paramBagItemId },
-          //   {
-          //     bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
-          //   },
-          // );
-
-          // new update BagItem return branchIdNext for updating awb history
-          const bagItem = await getConnection()
-          .createQueryBuilder().update(BagItem).set({
-            bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
-            bagItemStatusIdLast: BAG_STATUS.IN_BRANCH,
-          }).where(`bag_item_id = ${paramBagItemId}`, {bag_item_id: paramBagItemId })
-          .returning(['branchIdNext'])
-          .execute();
-          const response = await bagItem;
-          branchIdNext = response.raw[0].branch_id_next;
+          await BagItem.update(
+            { bagItemId : paramBagItemId },
+            {
+              bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
+            },
+          );
         }
       }
       if (errCode == 0) {
@@ -213,7 +200,7 @@ export class ScaninSmdService {
         // send to background job
         BagScanInBranchSmdQueueService.perform(
           paramBagItemId,
-          branchIdNext,
+          null,
           null,
           authMeta.userId,
           permissonPayload.branchId,
@@ -241,7 +228,6 @@ export class ScaninSmdService {
       // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       let weight = 0;
       let paramBagItemId = null;
-      let branchIdNext = null;
 
       if (paramBagNumber == null || paramBagNumber == undefined) {
         throw new BadRequestException('Bag Number Not Found');
@@ -386,25 +372,12 @@ export class ScaninSmdService {
           console.log(resultbagItemHistory);
           console.log(resultbagItemHistory.bagItemHistoryId);
 
-          // old update BagItem
-          // await BagItem.update(
-          //   { bagItemId : paramBagItemId },
-          //   {
-          //     bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
-          //   },
-          // );
-
-          // new update BagItem return branchIdNext for updating awb history
-          const bagItem = await getConnection()
-          .createQueryBuilder().update(BagItem).set({
-            bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
-            bagItemStatusIdLast: BAG_STATUS.IN_BRANCH,
-          }).where(`bag_item_id = ${paramBagItemId}`, {bag_item_id: paramBagItemId })
-          .returning(['branchIdNext'])
-          .execute();
-
-          const response = await bagItem;
-          branchIdNext = response.raw[0].branch_id_next;
+          await BagItem.update(
+            { bagItemId : paramBagItemId },
+            {
+              bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
+            },
+          );
         }
       }
       if (errCode == 0) {
@@ -414,7 +387,7 @@ export class ScaninSmdService {
         // send to background job
         BagScanInBranchSmdQueueService.perform(
           paramBagItemId,
-          branchIdNext,
+          null,
           null,
           authMeta.userId,
           permissonPayload.branchId,
