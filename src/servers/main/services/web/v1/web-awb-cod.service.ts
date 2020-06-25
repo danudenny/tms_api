@@ -54,7 +54,6 @@ export class V1WebAwbCodService {
       ['t6.branch_name', 'branchNameLast'],
       ['t2.awb_date', 'manifestedDate'],
       ['t2.consignee_name', 'consigneeName'],
-      ['t2.is_cod', 'isCod'],
       ['t2.total_cod_value', 'codValue'],
       ['t6.representative_id', 'representativeId'],
       ['t4.user_id', 'userIdDriver'],
@@ -93,7 +92,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.whereRaw('t2.is_cod = true');
+    q.andWhere(e => e.awb.isCod, w => w.isTrue());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

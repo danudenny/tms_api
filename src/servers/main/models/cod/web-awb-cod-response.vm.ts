@@ -9,9 +9,6 @@ export class WebItemAwbCodResponseVm {
   codValue: number;
 
   @ApiModelProperty()
-  isCode: boolean;
-
-  @ApiModelProperty()
   awbNumber: string;
 
   @ApiModelProperty({ format: 'date-time' })
