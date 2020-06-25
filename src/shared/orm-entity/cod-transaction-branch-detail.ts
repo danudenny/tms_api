@@ -77,6 +77,12 @@ export class CodTransactionBranchDetail extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: false,
+    name: 'partner_id',
+  })
+  partnerId: number;
+
+  @Column('bigint', {
+    nullable: false,
     name: 'user_id_driver',
   })
   userIdDriver: number;

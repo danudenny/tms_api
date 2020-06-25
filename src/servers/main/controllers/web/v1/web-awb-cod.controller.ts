@@ -14,7 +14,7 @@ import {
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
-import { WebAwbCodListResponseVm, WebCodTransferBranchResponseVM } from '../../../models/cod/web-awb-cod-response.vm';
+import { WebAwbCodListResponseVm, WebCodTransferBranchResponseVm } from '../../../models/cod/web-awb-cod-response.vm';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import { WebCodTransferPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 
@@ -33,7 +33,7 @@ export class V1WebAwbCodController {
   @Post('transferBranch')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebCodTransferBranchResponseVM })
+  @ApiOkResponse({ type: WebCodTransferBranchResponseVm })
   public async transferBranch(@Body() payload: WebCodTransferPayloadVm) {
     return V1WebAwbCodService.transferBranch(payload);
   }

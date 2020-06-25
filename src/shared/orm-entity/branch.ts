@@ -149,6 +149,13 @@ export class Branch extends TmsBaseEntity {
   })
   branchTypeId: number | null;
 
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_active',
+  })
+  isActive: boolean | null;
+
   @OneToOne(() => District)
   @JoinColumn({ name: 'district_id' })
   district: District;

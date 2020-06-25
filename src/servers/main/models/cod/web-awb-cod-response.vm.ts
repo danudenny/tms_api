@@ -62,7 +62,7 @@ export class WebAwbCodListResponseVm extends BaseMetaResponseVm {
   data: WebItemAwbCodResponseVm[];
 }
 
-export class WebCodTransferBranchResponseVM {
+export class WebCodTransferBranchResponseVm {
   @ApiModelProperty()
   transactionCode: string;
 
@@ -77,4 +77,65 @@ export class WebCodTransferBranchResponseVM {
 
   @ApiModelProperty()
   dataError: string[];
+}
+
+export class WebCodAwbValidVm {
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  awbStatusIdLast: number;
+
+  @ApiModelProperty()
+  partnerId: number;
+}
+
+// for data printing
+export class WebCodAwbPrintVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  codValue: number;
+
+  @ApiModelPropertyOptional()
+  provider: string;
+}
+
+export class WebCodPrintMetaVm {
+  @ApiModelProperty()
+  transactionCode: string;
+
+  @ApiModelProperty()
+  transactionDate: string;
+
+  @ApiModelProperty()
+  transactionTime: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  adminName: string;
+
+  @ApiModelProperty()
+  driverName: string;
+
+  @ApiModelProperty()
+  employeeIdDriver: number;
+
+  @ApiModelProperty()
+  totalItems: number;
+
+  @ApiModelProperty()
+  totalCodValue: number;
+}
+
+export class PrintCodTransferBranchVm {
+
+  @ApiModelProperty({ type: () => WebCodPrintMetaVm })
+  meta: WebCodPrintMetaVm;
+
+  @ApiModelProperty({ type: () => [WebCodAwbPrintVm] })
+  data: WebCodAwbPrintVm[];
 }

@@ -15,7 +15,7 @@ import { PrintDoPodReturnPayloadQueryVm } from '../models/print-do-pod-return.vm
 import { PrintBagItemPaperService } from '../services/print-bag-item-paper.service';
 import { PrintBagItemStickerService } from '../services/print-bag-item-sticker.service';
 
-@ApiUseTags('General')
+@ApiUseTags('Print')
 @Controller('print')
 export class PrintController {
   @Get('do-pod')
