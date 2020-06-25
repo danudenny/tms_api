@@ -132,7 +132,7 @@ export class ScanoutSmdListService {
       ['', 'photo_url'],
       [`CONCAT(u.first_name, ' ', u.last_name )`, 'username'],
       ['e.fullname', 'assigne'],
-      ['r.reason_name', 'reason_name'],
+      ['dsh.reason_notes', 'reason_notes'],
     );
 
     q.innerJoin(e => e.doSmd, 'ds', j =>
@@ -155,9 +155,9 @@ export class ScanoutSmdListService {
     q.leftJoin(e => e.user, 'u', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.reason, 'r', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    // q.leftJoin(e => e.reason, 'r', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
     q.leftJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
