@@ -43,6 +43,7 @@ export class ScanoutSmdListService {
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
+    payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
 
     payload.globalSearchFields = [
       {
@@ -53,6 +54,9 @@ export class ScanoutSmdListService {
       },
       {
         field: 'branch_id_to',
+      },
+      {
+        field: 'do_smd_code',
       },
     ];
 
@@ -66,6 +70,7 @@ export class ScanoutSmdListService {
       ['ds.do_smd_code', 'do_smd_code'],
       ['ds.do_smd_time', 'do_smd_time'],
       ['e.fullname', 'fullname'],
+      ['e.employee_id', 'employee_id'],
       ['dsv.vehicle_number', 'vehicle_number'],
       ['b.branch_name', 'branch_from_name'],
       ['ds.branch_to_name_list', 'branch_to_name'],
