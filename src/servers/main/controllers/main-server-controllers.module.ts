@@ -58,6 +58,7 @@ import {PaymentProviderController} from './mobile/mobile-payment-provider.contro
 import {CodPaymentController} from './mobile/mobile-cod-payment.controller';
 import { V1CombinePackageController } from './web/v1/combine-package.controller';
 import { V1WebAwbCodController } from './web/v1/web-awb-cod.controller';
+import { TransactionStatusController } from './master/transaction-status.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -120,6 +121,7 @@ import { V1WebAwbCodController } from './web/v1/web-awb-cod.controller';
     CodPaymentController,
     V1CombinePackageController,
     V1WebAwbCodController,
+    TransactionStatusController,
   ],
 })
 export class MainServerControllersModule {}

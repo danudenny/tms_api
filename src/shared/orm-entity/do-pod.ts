@@ -7,7 +7,7 @@ import { PartnerLogistic } from './partner-logistic';
 import { User } from './user';
 import { DoPodDetailBag } from './do-pod-detail-bag';
 import { AttachmentTms } from './attachment-tms';
-import { TransactionStatus } from './transaction_status';
+import { TransactionStatus } from './transaction-status';
 
 @Entity('do_pod', { schema: 'public' })
 export class DoPod extends TmsBaseEntity {
