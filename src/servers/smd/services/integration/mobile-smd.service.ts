@@ -91,6 +91,7 @@ export class MobileSmdService {
         3000,
         null,
         null,
+        null,
         authMeta.userId,
       );
 
@@ -156,6 +157,7 @@ export class MobileSmdService {
         resultDoSmdDetail.departureScheduleDateTime,
         resultDoSmdDetail.branchIdTo,
         4000,
+        null,
         null,
         null,
         authMeta.userId,
@@ -225,6 +227,7 @@ export class MobileSmdService {
         2500,
         null,
         null,
+        null,
         authMeta.userId,
       );
 
@@ -237,6 +240,7 @@ export class MobileSmdService {
         resultDoSmdDetail.departureScheduleDateTime,
         resultDoSmdDetail.branchIdTo,
         3000,
+        null,
         null,
         null,
         authMeta.userId,
@@ -313,6 +317,7 @@ export class MobileSmdService {
           4050,
           null,
           null,
+          null,
           authMeta.userId,
         );
 
@@ -325,6 +330,7 @@ export class MobileSmdService {
           resultDoSmdDetail.departureScheduleDateTime,
           resultDoSmdDetail.branchIdTo,
           5000,
+          null,
           null,
           null,
           authMeta.userId,
@@ -362,6 +368,7 @@ export class MobileSmdService {
           4050,
           null,
           null,
+          null,
           authMeta.userId,
         );
 
@@ -376,6 +383,7 @@ export class MobileSmdService {
           5000,
           null,
           null,
+          null,
           authMeta.userId,
         );
         await this.createDoSmdHistory(
@@ -387,6 +395,7 @@ export class MobileSmdService {
           resultDoSmdDetail.departureScheduleDateTime,
           resultDoSmdDetail.branchIdTo,
           6000,
+          null,
           null,
           null,
           authMeta.userId,
@@ -575,6 +584,7 @@ export class MobileSmdService {
         8000,
         null,
         payload.reasonId,
+        payload.reason_note,
         authMeta.userId,
       );
 
@@ -647,6 +657,7 @@ export class MobileSmdService {
         3000,
         null,
         payload.reasonId,
+        null,
         authMeta.userId,
       );
 
@@ -799,6 +810,7 @@ export class MobileSmdService {
         1050,
         null,
         payload.reasonId,
+        payload.notes,
         authMeta.userId,
       );
 
@@ -828,6 +840,7 @@ export class MobileSmdService {
     paramDoSmdStatusId: number,
     paramSealNumber: string,
     paramReasonId: number,
+    paramReasonNotes: string,
     userId: number,
   ) {
     const dataDoSmdHistory = DoSmdHistory.create({
@@ -843,6 +856,7 @@ export class MobileSmdService {
       departureScheduleDateTime: paramDoSmdDepartureScheduleDate,
       sealNumber: paramSealNumber,
       reasonId: paramReasonId,
+      reasonNotes: paramReasonNotes,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,
