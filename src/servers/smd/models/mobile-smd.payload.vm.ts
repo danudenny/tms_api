@@ -104,3 +104,11 @@ export class MobileSmdHandOverPayloadVm {
 
 }
 
+export class MobileSmdListHistoryPayloadVm {
+  @ApiModelProperty()
+  start_date: Date;
+
+ @ApiModelProperty()
+  end_date: Date;
+}
+
