@@ -31,7 +31,7 @@ export class MonitoringSmdServices {
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringResponseVm> {
 
-    payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
+    payload.fieldResolverMap['do_smd_time'] = 'd.do_smd_time';
     payload.fieldResolverMap['do_smd_code'] = 'd.do_smd_code';
     payload.fieldResolverMap['branch_id'] = 'd.branch_id';
     payload.fieldFilterManualMap['do_smd_time'] = true;
