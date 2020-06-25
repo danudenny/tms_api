@@ -17,8 +17,6 @@ import { SmdServerControllersModule } from './controllers/smd-server-controllers
 import { SmdServerInjectorService } from './services/smd-server-injector.service';
 import { SmdServerServicesModule } from './services/smd-server-services.module';
 import { LogglyMiddleware } from '../../shared/middlewares/loggly.middleware';
-import { DoSmdPostAwbHistoryMetaQueueService } from '../queue/services/do-smd-post-awb-history-meta-queue.service';
-import { BagScanInBranchSmdQueueService } from '../queue/services/bag-scan-in-branch-smd-queue.service';
 
 @Module({
   imports: [SharedModule, SmdServerControllersModule, LoggingInterceptor, SmdServerServicesModule],
@@ -110,7 +108,5 @@ export class SmdServerModule extends MultiServerAppModule implements NestModule 
     } else {
       await app.listen(process.env.PORT || serverConfig.port, serverConfig.host || '0.0.0.0');
     }
-    DoSmdPostAwbHistoryMetaQueueService.boot();
-    BagScanInBranchSmdQueueService.boot();
   }
 }
