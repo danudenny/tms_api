@@ -54,6 +54,7 @@ export class ScaninSmdListService {
       ['ds.do_smd_time', 'do_smd_time'],
       ['dsd.arrival_time', 'arrival_time'],
       ['e.fullname', 'fullname'],
+      ['e.employee_id', 'employee_id'],
       ['dsv.vehicle_number', 'vehicle_number'],
       ['bf.branch_name', 'branch_from_name'],
       ['bt.branch_name', 'branch_to_name'],

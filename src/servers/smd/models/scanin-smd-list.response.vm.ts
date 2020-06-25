@@ -24,6 +24,9 @@ export class ScanInSmdListVm {
   fullname: string;
 
   @ApiModelProperty()
+  employee_id: number;
+
+  @ApiModelProperty()
   vehicle_number: string;
 
   @ApiModelProperty()

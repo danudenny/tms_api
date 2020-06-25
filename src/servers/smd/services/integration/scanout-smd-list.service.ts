@@ -43,6 +43,7 @@ export class ScanoutSmdListService {
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
+    payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
 
     payload.globalSearchFields = [
       {
@@ -53,6 +54,9 @@ export class ScanoutSmdListService {
       },
       {
         field: 'branch_id_to',
+      },
+      {
+        field: 'do_smd_code',
       },
     ];
 
@@ -66,6 +70,7 @@ export class ScanoutSmdListService {
       ['ds.do_smd_code', 'do_smd_code'],
       ['ds.do_smd_time', 'do_smd_time'],
       ['e.fullname', 'fullname'],
+      ['e.employee_id', 'employee_id'],
       ['dsv.vehicle_number', 'vehicle_number'],
       ['b.branch_name', 'branch_from_name'],
       ['ds.branch_to_name_list', 'branch_to_name'],
@@ -90,7 +95,7 @@ export class ScanoutSmdListService {
     q.leftJoin(e => e.doSmdVehicle.employee, 'e', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging');
+    q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
@@ -132,7 +137,7 @@ export class ScanoutSmdListService {
       ['', 'photo_url'],
       [`CONCAT(u.first_name, ' ', u.last_name )`, 'username'],
       ['e.fullname', 'assigne'],
-      ['r.reason_name', 'reason_name'],
+      ['dsh.reason_notes', 'reason_notes'],
     );
 
     q.innerJoin(e => e.doSmd, 'ds', j =>
@@ -155,9 +160,9 @@ export class ScanoutSmdListService {
     q.leftJoin(e => e.user, 'u', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.reason, 'r', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    // q.leftJoin(e => e.reason, 'r', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
     q.leftJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );

@@ -144,6 +144,9 @@ export class ScanOutListVm {
   fullname: string;
 
   @ApiModelProperty()
+  employee_id: number;
+
+  @ApiModelProperty()
   vehicle_number: string;
 
   @ApiModelProperty()
@@ -200,7 +203,7 @@ export class ScanOutHistoryVm {
   branch_name: String;
 
   @ApiModelProperty()
-  reason_name: String;
+  reason_notes: String;
 }
 
 export class ScanOutSmdHandoverResponseVm {
