@@ -486,6 +486,7 @@ export class ScanoutSmdService {
                     branchToNameList: (resultDoSmd.branchToNameList) ? resultDoSmd.branchToNameList + ',' + resultbranchTo.branchName : resultbranchTo.branchName,
                     doSmdDetailIdLast: paramDoSmdDetailId,
                     totalDetail: resultDoSmd.totalDetail + 1,
+                    trip: Number(resultDoSmd.trip) + 1,
                     userIdUpdated: authMeta.userId,
                     updatedTime: timeNow,
                   },
