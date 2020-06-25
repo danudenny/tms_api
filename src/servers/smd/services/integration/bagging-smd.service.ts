@@ -130,6 +130,7 @@ export class BaggingSmdService {
         b.bag_number = '${bagNumber}' AND
         bi.bag_seq = '${bagSeq}' AND
         b.is_deleted = false
+      ORDER BY b.created_time DESC
       LIMIT 1;
       `;
     const dataPackage = await RawQueryService.query(rawQuery);
