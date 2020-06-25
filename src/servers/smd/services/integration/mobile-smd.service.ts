@@ -308,7 +308,7 @@ export class MobileSmdService {
 
         const paramDoSmdHistoryId = await this.createDoSmdHistory(
           resultDoSmdDetail.doSmdId,
-          null,
+          payload.do_smd_detail_id,
           null,
           null,
           null,
@@ -323,7 +323,7 @@ export class MobileSmdService {
 
         await this.createDoSmdHistory(
           resultDoSmdDetail.doSmdId,
-          null,
+          payload.do_smd_detail_id,
           null,
           null,
           null,
@@ -359,7 +359,7 @@ export class MobileSmdService {
 
         const paramDoSmdHistoryId = await this.createDoSmdHistory(
           resultDoSmdDetail.doSmdId,
-          null,
+          payload.do_smd_detail_id,
           null,
           null,
           null,
@@ -374,7 +374,7 @@ export class MobileSmdService {
 
         await this.createDoSmdHistory(
           resultDoSmdDetail.doSmdId,
-          null,
+          payload.do_smd_detail_id,
           null,
           null,
           null,
@@ -480,6 +480,13 @@ export class MobileSmdService {
     let url = null;
     let attachmentId = null;
 
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+
     const resultDoSmdDetailArrival = await DoSmdDetail.findOne({
       where: {
         doSmdId: payload.do_smd_id,
@@ -487,6 +494,7 @@ export class MobileSmdService {
         isDeleted: false,
       },
     });
+
     if (resultDoSmdDetailArrival) {
       // Upload Foto
       PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SMD: ', authMeta);
@@ -524,6 +532,7 @@ export class MobileSmdService {
         doSmdDelivereyAttachment.doSmdDetailId = resultDoSmdDetailArrival.doSmdDetailId;
         doSmdDelivereyAttachment.attachmentTmsId = attachmentId;
         doSmdDelivereyAttachment.attachmentType = payload.image_type;
+        doSmdDelivereyAttachment.doSmdVehicleId = resultDoSmd.doSmdVehicleIdLast;
         await DoSmdDetailAttachment.save(doSmdDelivereyAttachment);
       }
 
@@ -531,13 +540,6 @@ export class MobileSmdService {
     } else {
       throw new BadRequestException(`DO SMD ID : ` + payload.do_smd_id.toString() + ` already arrival`);
     }
-
-    const resultDoSmd = await DoSmd.findOne({
-      where: {
-        doSmdId: payload.do_smd_id,
-        isDeleted: false,
-      },
-    });
 
     if (resultDoSmd) {
       // Ubah Status 4000 Arrived
@@ -682,6 +684,13 @@ export class MobileSmdService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SMD: ', authMeta);
 
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+
     const resultDoSmdDetail = await DoSmdDetail.findOne({
       where: {
         doSmdId: payload.do_smd_id,
@@ -730,6 +739,7 @@ export class MobileSmdService {
       doSmdDelivereyAttachment.doSmdDetailId = resultDoSmdDetail.doSmdDetailId;
       doSmdDelivereyAttachment.attachmentTmsId = attachmentId;
       doSmdDelivereyAttachment.attachmentType = payload.image_type;
+      doSmdDelivereyAttachment.doSmdVehicleId = resultDoSmd.doSmdVehicleIdLast;
       await DoSmdDetailAttachment.save(doSmdDelivereyAttachment);
     }
 
@@ -742,12 +752,12 @@ export class MobileSmdService {
     const result = new ScanOutSmdHandOverResponseVm();
     const timeNow = moment().toDate();
 
-    const resultDoSmd = await DoSmd.findOne({
-      where: {
-        doSmdId: payload.do_smd_id,
-        isDeleted: false,
-      },
-    });
+    // const resultDoSmd = await DoSmd.findOne({
+    //   where: {
+    //     doSmdId: payload.do_smd_id,
+    //     isDeleted: false,
+    //   },
+    // });
 
     if (resultDoSmd) {
 
