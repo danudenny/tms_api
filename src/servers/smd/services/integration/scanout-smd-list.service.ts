@@ -95,7 +95,7 @@ export class ScanoutSmdListService {
     q.leftJoin(e => e.doSmdVehicle.employee, 'e', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging');
+    q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
