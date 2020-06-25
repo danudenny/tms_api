@@ -31,7 +31,7 @@ import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import {ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
-import { Any } from 'typeorm';
+import { Any, In } from 'typeorm';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -1097,7 +1097,7 @@ export class ScanoutSmdService {
     const resultDoSmd = await DoSmd.findOne({
       where: {
         doSmdId: payload.do_smd_id,
-        doSmdStatusIdLast: 8000,
+        doSmdStatusIdLast: In([1000, 2000]),
         isDeleted: false,
       },
     });
