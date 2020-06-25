@@ -20,10 +20,11 @@ export class WebCodAwbPayloadVm {
   userIdDriver: number;
 
   @ApiModelPropertyOptional()
-  codPaymentService: string;
+  paymentService: string;
 
-  // @ApiModelProperty()
-  // branchIdLast: number;
+  @ApiModelPropertyOptional()
+  noReference: string;
+
 }
 
 export class WebCodTransferPayloadVm {

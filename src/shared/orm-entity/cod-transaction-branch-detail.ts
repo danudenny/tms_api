@@ -49,6 +49,20 @@ export class CodTransactionBranchDetail extends TmsBaseEntity {
   paymentMethod: string;
 
   @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'payment_service',
+  })
+  paymentService: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'no_reference',
+  })
+  noReference: string | null;
+
+  @Column('character varying', {
     nullable: false,
     length: 50,
     name: 'consignee_name',

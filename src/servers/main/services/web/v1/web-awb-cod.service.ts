@@ -1,7 +1,7 @@
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { Awb } from '../../../../../shared/orm-entity/awb';
-import { WebAwbCodListResponseVm } from '../../../models/cod/web-awb-cod-response.vm';
+import { WebAwbCodListResponseVm, WebCodTransferBranchResponseVM } from '../../../models/cod/web-awb-cod-response.vm';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { WebCodTransferPayloadVm, WebCodAwbPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
@@ -12,6 +12,7 @@ import { CustomCounterCode } from '../../../../../shared/services/custom-counter
 import moment = require('moment');
 import { AwbItem } from '../../../../../shared/orm-entity/awb-item';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
+import { CodTransactionBranchDetail } from '../../../../../shared/orm-entity/cod-transaction-branch-detail';
 export class V1WebAwbCodService {
 
   static async awbCod(
@@ -105,12 +106,17 @@ export class V1WebAwbCodService {
     return result;
   }
 
-  static async transferBranch(payload: WebCodTransferPayloadVm) {
+  static async transferBranch(
+    payload: WebCodTransferPayloadVm,
+  ): Promise<WebCodTransferBranchResponseVM> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
     let totalCodValue = 0;
     let totalAwbSuccess = 0;
+    const dataError = [];
+    const dataPrintCash = [];
+    const dataPrintCashless = [];
 
     // TODO: auto print?
     // payload:
@@ -137,10 +143,17 @@ export class V1WebAwbCodService {
       if (this.validStatusAwb(item.awbItemId)) {
         totalCodValue += Number(item.codValue);
         totalAwbSuccess += 1;
-        // codBranch.codTransactionBranchId;
-        // cod transaction branch detail
+
+        this.handleCash(
+          item, codBranch.codTransactionBranchId,
+          permissonPayload.branchId,
+          authMeta.userId,
+        );
+
       } else {
         // NOTE: error message
+        const errorMessage = `status resi ${item.awbNumber} tidak valid, mohon di cek ulang!`;
+        dataError.push(errorMessage);
       }
     } // end of loop data cash
 
@@ -151,10 +164,18 @@ export class V1WebAwbCodService {
         if (this.validStatusAwb(item.awbItemId)) {
           totalCodValue += Number(item.codValue);
           totalAwbSuccess += 1;
+
           // codBranch.codTransactionBranchId;
-          // cod transaction branch detail
+          await this.handleCashless(
+            item,
+            codBranch.codTransactionBranchId,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
         } else {
           // NOTE: error message
+          const errorMessage = `status resi ${item.awbNumber} tidak valid, mohon di cek ulang!`;
+          dataError.push(errorMessage);
         }
       } // end of loop data cashless
     }
@@ -172,18 +193,60 @@ export class V1WebAwbCodService {
 
     // const groupPayment = groupBy(payload.data, 'paymentMethod');
     // return data for print
+    const result = new WebCodTransferBranchResponseVM();
+    result.transactionCode = codBranch.transactionCode;
+    result.transactionDate = codBranch.transactionDate.toDateString();
+    // NOTE: for testing only
+    result.printIdCash = 'c2419414-a56c-11ea-bfda-02fd4ad9cfd4-cash';
+    result.printIdCashless = 'c2419414-a56c-11ea-bfda-02fd4ad9cfd4-cash';
+    result.dataError = dataError;
     // driver_name, admin_name, branch_name
     /// transaction_code, transaction_date
     // data cash // awb | cod value | total_cod_value
     // data cashless // awb | provider |cod value | total_cod_value
-    return null;
+    return result;
   }
 
   // func private ==============================================================
-  private static async handleCash(item: WebCodAwbPayloadVm) {
+  private static async handleCash(
+    item: WebCodAwbPayloadVm,
+    parentId: string,
+    branchId: number,
+    userId: number,
+  ) {
+    const branchDetail = new CodTransactionBranchDetail();
+    branchDetail.codTransactionBranchId = parentId;
+    branchDetail.awbItemId = item.awbItemId;
+    branchDetail.awbNumber = item.awbNumber;
+    branchDetail.codValue = item.codValue;
+    branchDetail.paymentMethod = item.paymentMethod;
+    branchDetail.consigneeName = item.consigneeName;
+    branchDetail.branchId = branchId;
+    branchDetail.userIdDriver = item.userIdDriver;
+
+    return await CodTransactionBranchDetail.insert(branchDetail);
   }
 
-  private static async handleCashless(item: WebCodAwbPayloadVm) {
+  private static async handleCashless(
+    item: WebCodAwbPayloadVm,
+    parentId: string,
+    branchId: number,
+    userId: number,
+  ) {
+    const branchDetail = new CodTransactionBranchDetail();
+    branchDetail.codTransactionBranchId = parentId;
+    branchDetail.awbItemId = item.awbItemId;
+    branchDetail.awbNumber = item.awbNumber;
+    branchDetail.codValue = item.codValue;
+    branchDetail.paymentMethod = item.paymentMethod;
+    branchDetail.paymentService = item.paymentService;
+    branchDetail.noReference = item.noReference;
+
+    branchDetail.consigneeName = item.consigneeName;
+    branchDetail.branchId = branchId;
+    branchDetail.userIdDriver = item.userIdDriver;
+
+    return await CodTransactionBranchDetail.insert(branchDetail);
   }
 
   private static async validStatusAwb(awbItemId: number): Promise<boolean> {

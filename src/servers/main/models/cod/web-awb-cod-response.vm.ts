@@ -61,3 +61,20 @@ export class WebAwbCodListResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [WebItemAwbCodResponseVm] })
   data: WebItemAwbCodResponseVm[];
 }
+
+export class WebCodTransferBranchResponseVM {
+  @ApiModelProperty()
+  transactionCode: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  transactionDate: string;
+
+  @ApiModelProperty()
+  printIdCash: string;
+
+  @ApiModelPropertyOptional()
+  printIdCashless: string;
+
+  @ApiModelProperty()
+  dataError: string[];
+}
