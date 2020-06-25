@@ -55,11 +55,13 @@ export class BagScanInBranchSmdQueueService {
       // 3. insert table AwbHistory ??
       if (bagItemsAwb && bagItemsAwb.length) {
         let employeeIdDriver = null;
-        const userDriverRepo = await SharedService.getDataUserEmployee(
-          data.userIdDriver,
-        );
-        if (userDriverRepo) {
-          employeeIdDriver = userDriverRepo.employeeId;
+        if (data.userIdDriver) {
+          const userDriverRepo = await SharedService.getDataUserEmployee(
+            data.userIdDriver,
+          );
+          if (userDriverRepo) {
+            employeeIdDriver = userDriverRepo.employeeId;
+          }
         }
         let branchName = 'Kantor Pusat';
         let cityName = 'Jakarta';
