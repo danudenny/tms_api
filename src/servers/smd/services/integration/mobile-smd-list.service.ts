@@ -256,13 +256,15 @@ export class MobileSmdListService {
     return await qb.getRawMany();
   }
 
-  public static async getScanOutMobileListHistory() {
+  public static async getScanOutMobileListHistory(paramStartDate?: Date, paramEndDate?: Date) {
 
     const authMeta = AuthService.getAuthData();
     const paramUserId =  authMeta.userId;
-    const startDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
-    const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
-
+    // const startDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
+    // const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
+    const startDate = paramStartDate;
+    const endDate = paramEndDate;
+    
     const qb = createQueryBuilder();
     qb.addSelect('ds.do_smd_id', 'do_smd_id');
     qb.addSelect('dsd.do_smd_detail_id', 'do_smd_detail_id');

@@ -10,7 +10,7 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { MobileSmdListService } from '../../services/integration/mobile-smd-list.service';
 import { MobileSmdListVm, MobileSmdListDetailBagVm, MobileSmdListDetailBaggingVm } from '../../models/mobile-smd-list.response.vm';
-import { MobileSmdListDetailPayloadVm } from '../../models/mobile-smd.payload.vm';
+import { MobileSmdListDetailPayloadVm, MobileSmdListHistoryPayloadVm } from '../../models/mobile-smd.payload.vm';
 
 @ApiUseTags('Mobile SMD')
 @Controller('mobile')
@@ -70,8 +70,11 @@ export class MobileSmdListController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
   @ApiOkResponse({ type: MobileSmdListVm })
-  public async getScanOutMobileListHistory() {
-    return MobileSmdListService.getScanOutMobileListHistory();
+  public async getScanOutMobileListHistory(@Body() payload: MobileSmdListHistoryPayloadVm) {
+    return MobileSmdListService.getScanOutMobileListHistory(
+      payload.start_date,
+      payload.end_date,
+    );
   }
 
 }

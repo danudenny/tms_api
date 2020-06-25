@@ -30,69 +30,17 @@ export class MonitoringSmdServices {
   static async monitoringSmdList(
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringResponseVm> {
-    // payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.do_smd_detail_id';
-    // payload.fieldFilterManualMap['do_smd_detail_id'] = true;
-    // const q = payload.buildQueryBuilder();
-
-    // q.select('d.bagging_id', 'bagging_id')
-    //   .addSelect('bg.bagging_code', 'bagging_number')
-    //   .addSelect('bg.total_item', 'total_bag')
-    //   .addSelect(`CONCAT(bg.total_weight::numeric(10,2), ' Kg')`, 'weight')
-    //   .addSelect('r.representative_code', 'representative_code')
-    //   .addSelect('br.branch_name', 'branch_name')
-    //   .from(subQuery => {
-    //     subQuery
-    //       .select('dsdi.bagging_id')
-    //       .addSelect('dsd.branch_id')
-    //       .from('do_smd_detail_item', 'dsdi')
-    //       .innerJoin(
-    //         'do_smd_detail',
-    //         'dsd',
-    //         'dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE',
-    //       );
-
-    //     payload.applyFiltersToQueryBuilder(subQuery, ['do_smd_detail_id']);
-
-    //     subQuery
-    //       .andWhere('dsdi.bag_type = 0')
-    //       .andWhere('dsdi.is_deleted = false')
-    //       .groupBy('dsdi.bagging_id')
-    //       .addGroupBy('dsd.branch_id');
-
-    //     return subQuery;
-    //   }, 'd')
-    //   .innerJoin(
-    //     'bagging',
-    //     'bg',
-    //     'bg.bagging_id = d.bagging_id AND bg.is_deleted = FALSE',
-    //   )
-    //   .leftJoin(
-    //     'branch',
-    //     'br',
-    //     'd.branch_id = br.branch_id AND br.is_deleted = FALSE',
-    //   )
-    //   .leftJoin(
-    //     'representative',
-    //     'r',
-    //     'bg.representative_id_to = r.representative_id  AND r.is_deleted = FALSE',
-    //   );
-
-    // const total = await QueryBuilderService.count(q, '1');
-    // payload.applyRawPaginationToQueryBuilder(q);
-    // const data = await q.getRawMany();
-
-    // const result = new MonitoringResponseVm();
-    // result.data = data;
-    // result.paging = MetaService.set(payload.page, payload.limit, total);
-
-    // return result;
 
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['do_smd_code'] = 'd.do_smd_code';
+    payload.fieldResolverMap['branch_id'] = 'd.branch_id';
     payload.fieldFilterManualMap['do_smd_time'] = true;
     payload.globalSearchFields = [
       {
         field: 'do_smd_code',
+      },
+      {
+        field: 'branch_id',
       },
     ];
     // payload.fieldFilterManualMap['do_smd_code'] = true;
@@ -100,6 +48,7 @@ export class MonitoringSmdServices {
 
     q.select('d.do_smd_code', 'do_smd_code')
       .addSelect('d.do_smd_time', 'do_smd_time')
+      .addSelect('d.branch_id', 'branch_id')
       .addSelect('d.route', 'route')
       .addSelect('d.vehicle_number', 'vehicle_number')
       .addSelect('d.vehicle_name', 'vehicle_name')
@@ -111,6 +60,7 @@ export class MonitoringSmdServices {
         subQuery
           .select('ds.do_smd_code')
           .addSelect(`ds.do_smd_time`, 'do_smd_time')
+          .addSelect(`bf.branch_id`, 'branch_id')
           .addSelect(`bf.branch_name || ' - ' || ds.branch_to_name_list`, 'route')
           .addSelect(`dsv.vehicle_number`, 'vehicle_number')
           .addSelect(`v.vehicle_name`, 'vehicle_name')
