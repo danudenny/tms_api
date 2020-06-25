@@ -32,8 +32,8 @@ export class MonitoringSmdServices {
   ): Promise<MonitoringResponseVm> {
 
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
-    payload.fieldResolverMap['do_smd_code'] = 'd.do_smd_code';
-    payload.fieldResolverMap['branch_id'] = 'd.branch_id';
+    payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
+    payload.fieldResolverMap['branch_id'] = 'ds.branch_id';
     payload.fieldFilterManualMap['do_smd_time'] = true;
     payload.globalSearchFields = [
       {
@@ -46,15 +46,15 @@ export class MonitoringSmdServices {
     // payload.fieldFilterManualMap['do_smd_code'] = true;
     const q = payload.buildQueryBuilder();
 
-    q.select('d.do_smd_code', 'do_smd_code')
-      .addSelect('d.do_smd_time', 'do_smd_time')
-      .addSelect('d.branch_id', 'branch_id')
-      .addSelect('d.route', 'route')
-      .addSelect('d.vehicle_number', 'vehicle_number')
-      .addSelect('d.vehicle_name', 'vehicle_name')
-      .addSelect(`d.trip`, 'trip')
-      .addSelect('d.total_weight', 'total_weight')
-      .addSelect('d.vehicle_capacity', 'vehicle_capacity')
+    q.select('ds.do_smd_code', 'do_smd_code')
+      .addSelect('ds.do_smd_time', 'do_smd_time')
+      .addSelect('ds.branch_id', 'branch_id')
+      .addSelect('ds.route', 'route')
+      .addSelect('ds.vehicle_number', 'vehicle_number')
+      .addSelect('ds.vehicle_name', 'vehicle_name')
+      .addSelect(`ds.trip`, 'trip')
+      .addSelect('ds.total_weight', 'total_weight')
+      .addSelect('ds.vehicle_capacity', 'vehicle_capacity')
       .addSelect(`((total_weight / vehicle_capacity::integer) * 100)`, 'percentage_load')
       .from(subQuery => {
         subQuery
@@ -95,12 +95,11 @@ export class MonitoringSmdServices {
           );
 
         payload.applyFiltersToQueryBuilder(subQuery, ['do_smd_time']);
-        // payload.applyFiltersToQueryBuilder(subQuery, ['do_smd_code']);
 
         subQuery
           .andWhere('ds.is_deleted = false');
         return subQuery;
-      }, 'd');
+      }, 'ds');
 
     const total = await QueryBuilderService.count(q, '1');
     payload.applyRawPaginationToQueryBuilder(q);
