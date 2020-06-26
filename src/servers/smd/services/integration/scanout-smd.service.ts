@@ -1149,7 +1149,7 @@ export class ScanoutSmdService {
         const paramDoSmdHistoryId = await this.createDoSmdHistory(
           resultDoSmd.doSmdId,
           null,
-          resultDoSmd.doSmdVehicleIdLast,
+          paramDoSmdVehicleId,
           null,
           null,
           resultDoSmd.doSmdTime,
