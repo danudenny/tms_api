@@ -40,6 +40,8 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
 
     payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
     payload.fieldResolverMap['branchNameLast'] = 't6.branch_name';
