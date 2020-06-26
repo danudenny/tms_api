@@ -5,6 +5,8 @@ import {
   HttpStatus,
   UseGuards,
   Post,
+  Get,
+  Param,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -14,7 +16,7 @@ import {
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
-import { WebAwbCodListResponseVm, WebCodTransferBranchResponseVm } from '../../../models/cod/web-awb-cod-response.vm';
+import { WebAwbCodListResponseVm, WebCodTransferBranchResponseVm, WebAwbCodListTransactionResponseVm } from '../../../models/cod/web-awb-cod-response.vm';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import { WebCodTransferPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 
@@ -38,25 +40,24 @@ export class V1WebAwbCodController {
     return V1WebAwbCodService.transferBranch(payload);
   }
 
-  // @Post('transactionBranch')
-  // @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: WebAwbCodListResponseVm })
-  // public async transactionBranch(payload: BaseMetaPayloadVm) {
-  //   // get data transaction branch
-  //   // transaction code |datetime | total awb | total value | branch name last | status ? | user
-  //   return {};
-  // }
+  @Post('transactionBranch')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebAwbCodListTransactionResponseVm })
+  public async transactionBranch(@Body() payload: BaseMetaPayloadVm) {
+    // get data transaction branch
+    return V1WebAwbCodService.transactionBranch(payload);
+  }
 
-  // @Post('detailAwbBranch')
-  // @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: WebAwbCodListResponseVm })
-  // public async detailAwbBranch(payload: BaseMetaPayloadVm) {
-  //   // get data detail
-  //   // penerima | layanan | branch name last | cod_value | sigesit | status
-  //   return {};
-  // }
+  @Get('transactionBranch/detail/:id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebAwbCodListResponseVm })
+  public async transactionBranchDetail(@Param('id') transactionId: string) {
+    // get data transaction branch detail
+    // awb number | method | penerima | nilai cod
+    return {};
+  }
 
   // @Post('transferHeadOffice')
   // @HttpCode(HttpStatus.OK)
@@ -64,7 +65,6 @@ export class V1WebAwbCodController {
   // @ApiOkResponse({ type: WebAwbCodListResponseVm })
   // public async transferHeadOffice(payload: BaseMetaPayloadVm) {
   //   // TODO:
-
   //   return {};
   // }
 }

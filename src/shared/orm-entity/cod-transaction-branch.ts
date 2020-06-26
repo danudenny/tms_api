@@ -2,8 +2,13 @@ import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import { TransactionStatus } from './transaction-status';
+import { Branch } from './branch';
+import { User } from './user';
 
 @Entity('cod_transaction_branch', { schema: 'public' })
 export class CodTransactionBranch extends TmsBaseEntity {
@@ -51,4 +56,16 @@ export class CodTransactionBranch extends TmsBaseEntity {
     name: 'branch_id',
   })
   branchId: number;
+
+  @ManyToOne(() => TransactionStatus)
+  @JoinColumn({ name: 'transaction_status_id' })
+  transactionStatus: TransactionStatus;
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_created' })
+  userAdmin: User;
 }

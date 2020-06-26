@@ -62,6 +62,34 @@ export class WebAwbCodListResponseVm extends BaseMetaResponseVm {
   data: WebItemAwbCodResponseVm[];
 }
 
+export class WebTransactionBranchDetail {
+  @ApiModelProperty()
+  transactionCode: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  transactionDate: string;
+
+  @ApiModelProperty()
+  transactionStatus: string;
+
+  @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  adminName: string;
+}
+
+export class WebAwbCodListTransactionResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebTransactionBranchDetail] })
+  data: WebTransactionBranchDetail[];
+}
+
 export class WebCodTransferBranchResponseVm {
   @ApiModelProperty()
   transactionCode: string;
@@ -90,7 +118,7 @@ export class WebCodAwbValidVm {
   partnerId: number;
 }
 
-// for data printing
+// #region for data printing
 export class WebCodAwbPrintVm {
   @ApiModelProperty()
   awbNumber: string;
@@ -139,3 +167,4 @@ export class PrintCodTransferBranchVm {
   @ApiModelProperty({ type: () => [WebCodAwbPrintVm] })
   data: WebCodAwbPrintVm[];
 }
+// #endregion for data printing

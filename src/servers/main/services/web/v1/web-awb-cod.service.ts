@@ -24,6 +24,7 @@ import {
   WebCodPrintMetaVm,
   PrintCodTransferBranchVm,
   WebCodTransferBranchResponseVm,
+  WebAwbCodListTransactionResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 import moment = require('moment');
@@ -252,6 +253,60 @@ export class V1WebAwbCodService {
     result.printIdCash = printIdCash;
     result.printIdCashless = printIdCashless;
     result.dataError = dataError;
+    return result;
+  }
+
+  static async transactionBranch(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbCodListTransactionResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['transactionStatus'] = 't2.status_name';
+    payload.fieldResolverMap['adminName'] = 't4.first_name';
+    // mapping search field and operator default ilike
+    // payload.globalSearchFields = [
+    //   {
+    //     field: 'awbNumber',
+    //   },
+    // ];
+    if (payload.sortBy === '') {
+      payload.sortBy = 'transactionDate';
+    }
+
+    const repo = new OrionRepositoryService(CodTransactionBranch, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.transaction_code', 'transactionCode'],
+      ['t1.transaction_date', 'transactionDate'],
+      ['t2.status_name', 'transactionStatus'],
+      ['t1.total_awb', 'totalAwb'],
+      ['t1.total_cod_value', 'totalCodValue'],
+      ['t3.branch_name', 'branchName'],
+      ['t4.first_name', 'adminName'],
+    );
+
+    q.innerJoin(e => e.transactionStatus, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.userAdmin, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebAwbCodListTransactionResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
     return result;
   }
 

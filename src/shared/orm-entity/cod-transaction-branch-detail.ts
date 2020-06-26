@@ -37,7 +37,7 @@ export class CodTransactionBranchDetail extends TmsBaseEntity {
     default: () => 0,
     precision: 20,
     scale: 5,
-    name: 'total_cod_value',
+    name: 'cod_value',
   })
   codValue: number;
 
