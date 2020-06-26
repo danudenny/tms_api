@@ -10,7 +10,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutDetailMoreResponseVm, ScanOutDetailBaggingMoreResponseVm, ScanOutSmdDetailRepresentativeResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutDetailMoreResponseVm, ScanOutDetailBaggingMoreResponseVm, ScanOutSmdDetailRepresentativeResponseVm, ScanOutSmdImageResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -127,11 +127,13 @@ export class ScanoutSmdListService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
+      ['dsh.do_smd_history_id', 'do_smd_history_id'],
       ['ds.do_smd_id', 'do_smd_id'],
       ['ds.do_smd_code', 'do_smd_code'],
       ['b.branch_name', 'branch_from_name'],
       ['ds.branch_to_name_list', 'branch_to_name'],
       ['dsh.created_time', 'history_date'],
+      ['dsh.do_smd_status_id', 'do_smd_status_id'],
       ['dss.do_smd_status_title', 'history_status'],
       ['dsh.seal_number', 'seal_number'],
       ['', 'photo_url'],
@@ -517,6 +519,67 @@ export class ScanoutSmdListService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
+  }
+
+  static async findScanOutImage(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdImageResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+    // let paramImageType;
+    let paramWhere;
+
+    const resultDoSmdHistory = await DoSmdHistory.findOne({
+      where: {
+        doSmdHistoryId: payload.do_smd_history_id,
+        isDeleted: false,
+      },
+    });
+
+    if (resultDoSmdHistory ) {
+      if (payload.do_smd_status_id == 8000) {
+        // paramImageType = 'problem';
+        paramWhere = `d.do_smd_vehicle_id = ` + resultDoSmdHistory.doSmdVehicleId + ` AND lower(d.attachment_type) = 'problem'`;
+      } else if (payload.do_smd_status_id == 1150) {
+        // paramImageType = 'handover';
+        paramWhere = `d.do_smd_vehicle_id = ` + resultDoSmdHistory.doSmdVehicleId + ` AND lower(d.attachment_type) = 'handover'`;
+      } else {
+        // paramImageType = 'photo';
+        paramWhere = `d.do_smd_detail_id = ` + resultDoSmdHistory.doSmdDetailId + ` AND lower(d.attachment_type) in('signature', 'photo')`;
+      }
+
+      const rawQuery = `
+        SELECT
+          d.do_smd_detail_attachment_id,
+          a.url,
+          d.attachment_type
+        FROM do_smd_detail_attachment d
+        INNER JOIN attachment_tms a on d.attachment_tms_id = a.attachment_tms_id and a.is_deleted = false
+        WHERE
+          ${paramWhere}
+          AND d.is_deleted = false
+        ;
+      `;
+      const resultDataAttachment = await RawQueryService.query(rawQuery);
+      if (resultDataAttachment.length > 0 ) {
+        for (let a = 0; a < resultDataAttachment.length; a++) {
+          data.push({
+            do_smd_detail_attachment_id: resultDataAttachment[a].do_smd_detail_attachment_id,
+            image_url: resultDataAttachment[a].url,
+            image_type: resultDataAttachment[a].attachment_type,
+          });
+        }
+      }
+
+      result.statusCode = HttpStatus.OK;
+      result.message = 'List Image Success';
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`SMD History Id: ` + payload.do_smd_histroy_id + ` Can't Found !`);
+    }
   }
 
 }

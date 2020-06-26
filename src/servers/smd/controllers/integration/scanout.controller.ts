@@ -70,6 +70,6 @@ export class ScanOutController {
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async scanOutChangeVehicle(@Req() request: any, @Body() payload: ScanOutSmdHandoverPayloadVm) {
-    return ScanoutSmdService.scanOutHandover(payload);
+    return ScanoutSmdService.scanOutChangeVehicle(payload);
   }
 }

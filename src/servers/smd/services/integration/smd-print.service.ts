@@ -120,7 +120,11 @@ export class SmdPrintService {
           totalBag: true,
           totalBagging: true,
           branchTo: {
+            branchId: true,
             branchName: true,
+            representative: {
+              representativeCode: true,
+            },
           },
           doSmdDetailItems: {
             doSmdDetailItemId: true,
@@ -162,7 +166,11 @@ export class SmdPrintService {
           totalBag: true,
           totalBagging: true,
           branchTo: {
+            branchId: true,
             branchName: true,
+            representative: {
+              representativeCode: true,
+            },
           },
         },
       })
@@ -212,6 +220,7 @@ export class SmdPrintService {
       }
 
       dataSmdDetailVm.branchTo = idDetail[l].branchTo; // set Branch To
+      // dataSmdDetailVm.branchTo.representative = idDetail[l].branchTo.representative; // set Branch To
       dataSmdDetailVm.totalBag = idDetail[l].totalBag; // set Total gabung paket
       dataSmdDetailVm.totalBagging = idDetail[l].totalBagging; // set total bagging
 

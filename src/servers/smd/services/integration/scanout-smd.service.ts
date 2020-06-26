@@ -1106,7 +1106,7 @@ export class ScanoutSmdService {
         SELECT
           do_smd_vehicle_id,
           vehicle_number,
-          employee_driver
+          employee_id_driver
         FROM do_smd_vehicle
         WHERE
           do_smd_vehicle_id = ${resultDoSmd.doSmdVehicleIdLast} AND
@@ -1141,7 +1141,7 @@ export class ScanoutSmdService {
             updatedTime: moment().toDate(),
           },
         );
-        if (resultDataDoSmdVehicle[0].employee_driver == payload.employee_id_driver) {
+        if (resultDataDoSmdVehicle[0].employee_id_driver == payload.employee_id_driver) {
           paramDoSmdStatus = 1100;
         } else {
           paramDoSmdStatus = 1050;
@@ -1149,7 +1149,7 @@ export class ScanoutSmdService {
         const paramDoSmdHistoryId = await this.createDoSmdHistory(
           resultDoSmd.doSmdId,
           null,
-          resultDoSmd.doSmdVehicleIdLast,
+          paramDoSmdVehicleId,
           null,
           null,
           resultDoSmd.doSmdTime,

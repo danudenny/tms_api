@@ -82,3 +82,12 @@ export class ScanOutSmdDetailMorePayloadVm {
   bag_type: number;
 }
 
+export class ScanOutSmdImagePayloadVm {
+  @ApiModelProperty()
+  do_smd_history_id: number;
+
+  @ApiModelProperty()
+  do_smd_status_id: number;
+
+}
+

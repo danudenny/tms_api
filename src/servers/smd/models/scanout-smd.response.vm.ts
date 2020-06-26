@@ -170,6 +170,9 @@ export class ScanOutHistoryResponseVm extends BaseMetaResponseVm {
 
 export class ScanOutHistoryVm {
   @ApiModelProperty()
+  do_smd_history_id: number;
+
+  @ApiModelProperty()
   do_smd_id: number;
 
   @ApiModelProperty()
@@ -183,6 +186,9 @@ export class ScanOutHistoryVm {
 
   @ApiModelProperty()
   history_date: Date;
+
+  @ApiModelProperty()
+  do_smd_status_id: number;
 
   @ApiModelProperty()
   history_status: String;
@@ -359,4 +365,27 @@ export class ScanOutDetailBaggingMoreVm {
 
   @ApiModelProperty()
   branch_name: string;
+}
+
+export class ScanOutSmdImageResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutImageVm]})
+  data: ScanOutImageVm[];
+}
+
+export class ScanOutImageVm {
+
+  @ApiModelProperty()
+  do_smd_detail_attachment_id: number;
+
+  @ApiModelProperty()
+  image_url: string;
+
+  @ApiModelProperty()
+  image_type: string;
 }
