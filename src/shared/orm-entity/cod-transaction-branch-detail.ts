@@ -32,6 +32,21 @@ export class CodTransactionBranchDetail extends TmsBaseEntity {
   })
   awbNumber: string;
 
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'awb_date',
+  })
+  awbDate: Date;
+
+  @Column('numeric', {
+    nullable: false,
+    default: () => 0,
+    precision: 20,
+    scale: 5,
+    name: 'parcel_value',
+  })
+  parcelValue: number;
+
   @Column('numeric', {
     nullable: false,
     default: () => 0,

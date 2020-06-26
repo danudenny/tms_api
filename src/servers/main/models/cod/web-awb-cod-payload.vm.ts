@@ -19,6 +19,9 @@ export class WebCodAwbPayloadVm {
   @ApiModelProperty()
   userIdDriver: number;
 
+  @ApiModelProperty({ format: 'date-time' })
+  manifestedDate: string;
+
   @ApiModelPropertyOptional()
   paymentService: string;
 
@@ -28,7 +31,7 @@ export class WebCodAwbPayloadVm {
 }
 
 export class WebCodTransferPayloadVm {
-  @ApiModelProperty( { type: () => [WebCodAwbPayloadVm]})
+  @ApiModelPropertyOptional( { type: () => [WebCodAwbPayloadVm]})
   dataCash: [WebCodAwbPayloadVm];
 
   @ApiModelPropertyOptional( { type: () => [WebCodAwbPayloadVm]})

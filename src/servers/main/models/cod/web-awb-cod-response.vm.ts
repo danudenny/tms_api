@@ -116,6 +116,9 @@ export class WebCodAwbValidVm {
 
   @ApiModelProperty()
   partnerId: number;
+
+  @ApiModelProperty()
+  parcelValue: number;
 }
 
 // #region for data printing
@@ -147,7 +150,13 @@ export class WebCodPrintMetaVm {
   adminName: string;
 
   @ApiModelProperty()
+  nikAdmin: string;
+
+  @ApiModelProperty()
   driverName: string;
+
+  @ApiModelProperty()
+  nikDriver: string;
 
   @ApiModelProperty()
   employeeIdDriver: number;

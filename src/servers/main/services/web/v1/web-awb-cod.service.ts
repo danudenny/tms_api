@@ -152,47 +152,57 @@ export class V1WebAwbCodService {
     codBranch.branchId = permissonPayload.branchId;
     await CodTransactionBranch.save(codBranch);
 
+    let userIdDriver = null; // get data userIdDriver
+    if (payload.dataCash.length) {
+      userIdDriver = payload.dataCash[0].userIdDriver;
+    } else {
+      userIdDriver = payload.dataCashless[0].userIdDriver;
+    }
+
     const metaPrint = await this.generatePrintMeta(
       codBranch.transactionCode,
       authMeta.displayName,
+      authMeta.username,
       permissonPayload.branchId,
-      payload.dataCash[0].userIdDriver,
+      userIdDriver,
     );
 
-    // #region data cash
-    for (const item of payload.dataCash) {
-      const awbValid = await this.validStatusAwb(item.awbItemId);
-      if (awbValid) {
-        totalCodValue += Number(item.codValue);
-        totalCodValueCash += Number(item.codValue);
-        totalAwbSuccess += 1;
+    // #region data cash [optional]
+    if (payload.dataCash.length) {
+      for (const item of payload.dataCash) {
+        const awbValid = await this.validStatusAwb(item.awbItemId);
+        if (awbValid) {
+          totalCodValue += Number(item.codValue);
+          totalCodValueCash += Number(item.codValue);
+          totalAwbSuccess += 1;
 
-        const dataCash = await this.handleAwbCod(
-          item,
-          codBranch.codTransactionBranchId,
-          permissonPayload.branchId,
-          authMeta.userId,
-          awbValid.partnerId,
-          metaPrint.employeeIdDriver,
-        );
-        dataPrintCash.push(dataCash);
-      } else {
-        // NOTE: error message
-        const errorMessage = `status resi ${
-          item.awbNumber
-        } tidak valid, mohon di cek ulang!`;
-        dataError.push(errorMessage);
-      }
-    } // end of loop data cash
-
-    // store data print cash on redis
-    printIdCash = await this.printStoreData(
-      metaPrint,
-      codBranch.codTransactionBranchId,
-      dataPrintCash,
-      totalCodValueCash,
-      'cash',
-    );
+          const dataCash = await this.handleAwbCod(
+            item,
+            codBranch.codTransactionBranchId,
+            permissonPayload.branchId,
+            authMeta.userId,
+            awbValid.partnerId,
+            awbValid.parcelValue,
+            metaPrint.employeeIdDriver,
+          );
+          dataPrintCash.push(dataCash);
+        } else {
+          // NOTE: error message
+          const errorMessage = `status resi ${
+            item.awbNumber
+          } tidak valid, mohon di cek ulang!`;
+          dataError.push(errorMessage);
+        }
+      } // end of loop data cash
+      // store data print cash on redis
+      printIdCash = await this.printStoreData(
+        metaPrint,
+        codBranch.codTransactionBranchId,
+        dataPrintCash,
+        totalCodValueCash,
+        'cash',
+      );
+    }
     // #endregion data cash
 
     // #region data cashless [optional]
@@ -210,6 +220,7 @@ export class V1WebAwbCodService {
             permissonPayload.branchId,
             authMeta.userId,
             awbValid.partnerId,
+            awbValid.parcelValue,
             metaPrint.employeeIdDriver,
           );
           dataPrintCashless.push(dataCashless);
@@ -317,17 +328,20 @@ export class V1WebAwbCodService {
     branchId: number,
     userId: number,
     partnerId: number,
+    parcelValue: number,
     employeeIdDriver: number,
   ): Promise<WebCodAwbPrintVm> {
     const branchDetail = new CodTransactionBranchDetail();
     branchDetail.codTransactionBranchId = parentId;
     branchDetail.awbItemId = item.awbItemId;
     branchDetail.awbNumber = item.awbNumber;
+    branchDetail.awbDate = moment(item.manifestedDate).toDate();
     branchDetail.codValue = item.codValue;
     branchDetail.paymentMethod = item.paymentMethod;
     branchDetail.consigneeName = item.consigneeName;
     branchDetail.branchId = branchId;
     branchDetail.partnerId = partnerId;
+    branchDetail.parcelValue = parcelValue;
     branchDetail.userIdDriver = item.userIdDriver;
 
     // for data cashless
@@ -369,6 +383,7 @@ export class V1WebAwbCodService {
     qb.addSelect('a.awb_item_id', 'awbItemId');
     qb.addSelect('a.awb_status_id_last', 'awbStatusIdLast');
     qb.addSelect('c.partner_id', 'partnerId');
+    qb.addSelect('c.parcel_value', 'parcelValue');
     qb.from('awb_item_attr', 'a');
     qb.innerJoin(
       'pickup_request_detail',
@@ -395,6 +410,7 @@ export class V1WebAwbCodService {
   private static async generatePrintMeta(
     transactionCode: string,
     adminName: string,
+    nikAdmin: string,
     branchId: number,
     userIdDriver: number,
   ): Promise<WebCodPrintMetaVm> {
@@ -405,6 +421,7 @@ export class V1WebAwbCodService {
     result.transactionDate = timestamp.format('DD/MM/YY');
     result.transactionTime = timestamp.format('HH:mm');
     result.adminName = adminName;
+    result.nikAdmin = nikAdmin;
 
     const branch = await Branch.findOne({
       select: ['branchId', 'branchName'],
@@ -420,7 +437,7 @@ export class V1WebAwbCodService {
     }
 
     const user = await User.findOne({
-      select: ['userId', 'employeeId', 'firstName'],
+      select: ['userId', 'employeeId', 'firstName', 'username'],
       where: {
         userId: userIdDriver,
         isDeleted: false,
@@ -434,6 +451,7 @@ export class V1WebAwbCodService {
     result.branchName = branch.branchName;
     result.driverName = user.firstName;
     result.employeeIdDriver = user.employeeId;
+    result.nikDriver = user.username;
     return result;
   }
 
