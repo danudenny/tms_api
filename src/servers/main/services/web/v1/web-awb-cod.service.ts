@@ -383,7 +383,7 @@ export class V1WebAwbCodService {
     qb.addSelect('a.awb_item_id', 'awbItemId');
     qb.addSelect('a.awb_status_id_last', 'awbStatusIdLast');
     qb.addSelect('c.partner_id', 'partnerId');
-    qb.addSelect('c.parcel_value', 'parcelValue');
+    qb.addSelect('b.parcel_value', 'parcelValue');
     qb.from('awb_item_attr', 'a');
     qb.innerJoin(
       'pickup_request_detail',
