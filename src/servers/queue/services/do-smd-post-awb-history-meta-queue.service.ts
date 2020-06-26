@@ -121,4 +121,39 @@ export class DoSmdPostAwbHistoryMetaQueueService {
 
     return DoSmdPostAwbHistoryMetaQueueService.queue.add(obj);
   }
+
+  public static async createJobByScanOutBag(
+    awbItemId: number,
+    branchId: number,
+    userId: number,
+    employeeIdDriver: number,
+    employeeNameDriver: string,
+    awbStatusId: number,
+    branchName: string,
+    cityName: string,
+    branchIdNext: number,
+    branchNameNext: string,
+    addTime?: number,
+  ) {
+    // TODO: ONLY OUT_BRANCH
+    const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver} ke ${branchNameNext}`;
+    const notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver,
+      timestamp: addTime ? moment().add(addTime, 'minutes').toDate() : moment().toDate(),
+      noteInternal,
+      notePublic,
+      branchIdNext,
+    };
+
+    return DoSmdPostAwbHistoryMetaQueueService.queue.add(obj);
+  }
 }
