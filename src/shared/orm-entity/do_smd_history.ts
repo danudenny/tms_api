@@ -98,6 +98,13 @@ export class DoSmdHistory extends TmsBaseEntity {
   })
   reasonId: number;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+    name: 'reason_notes',
+  })
+  reasonNotes: string | null;
+
   @Column('bigint', {
     nullable: false,
     name: 'user_id_created',

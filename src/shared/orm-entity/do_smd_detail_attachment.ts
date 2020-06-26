@@ -31,6 +31,12 @@ export class DoSmdDetailAttachment extends TmsBaseEntity {
   })
   attachmentType: string;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'do_smd_vehicle_id',
+  })
+  doSmdVehicleId: number | null;
+
   // @ManyToOne(() => DoPodDeliverDetail)
   // @JoinColumn({ name: 'do_pod_deliver_detail_id' })
   // doPodDeliverDetail: DoPodDeliverDetail;

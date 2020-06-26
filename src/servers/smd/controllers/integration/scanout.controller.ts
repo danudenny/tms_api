@@ -65,4 +65,11 @@ export class ScanOutController {
   public async scanOutReassign(@Req() request: any, @Body() payload: ScanOutSmdItemPayloadVm) {
     return ScanoutSmdService.scanOutReassignItem(payload);
   }
+
+  @Post('scanOut/changeVehicle')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async scanOutChangeVehicle(@Req() request: any, @Body() payload: ScanOutSmdHandoverPayloadVm) {
+    return ScanoutSmdService.scanOutChangeVehicle(payload);
+  }
 }

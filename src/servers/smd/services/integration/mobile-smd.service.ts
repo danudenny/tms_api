@@ -86,8 +86,10 @@ export class MobileSmdService {
         null,
         null,
         resultDoSmd.departureScheduleDateTime,
-        permissonPayload.branchId,
+        // permissonPayload.branchId,
+        null,
         3000,
+        null,
         null,
         null,
         authMeta.userId,
@@ -153,8 +155,9 @@ export class MobileSmdService {
         null,
         null,
         resultDoSmdDetail.departureScheduleDateTime,
-        permissonPayload.branchId,
+        resultDoSmdDetail.branchIdTo,
         4000,
+        null,
         null,
         null,
         authMeta.userId,
@@ -220,8 +223,9 @@ export class MobileSmdService {
         null,
         null,
         resultDoSmdDetail.departureScheduleDateTime,
-        permissonPayload.branchId,
+        resultDoSmdDetail.branchIdTo,
         2500,
+        null,
         null,
         null,
         authMeta.userId,
@@ -234,8 +238,9 @@ export class MobileSmdService {
         null,
         null,
         resultDoSmdDetail.departureScheduleDateTime,
-        permissonPayload.branchId,
+        resultDoSmdDetail.branchIdTo,
         3000,
+        null,
         null,
         null,
         authMeta.userId,
@@ -303,13 +308,14 @@ export class MobileSmdService {
 
         const paramDoSmdHistoryId = await this.createDoSmdHistory(
           resultDoSmdDetail.doSmdId,
-          null,
+          payload.do_smd_detail_id,
           null,
           null,
           null,
           resultDoSmdDetail.departureScheduleDateTime,
-          permissonPayload.branchId,
+          resultDoSmdDetail.branchIdTo,
           4050,
+          null,
           null,
           null,
           authMeta.userId,
@@ -317,13 +323,14 @@ export class MobileSmdService {
 
         await this.createDoSmdHistory(
           resultDoSmdDetail.doSmdId,
-          null,
+          payload.do_smd_detail_id,
           null,
           null,
           null,
           resultDoSmdDetail.departureScheduleDateTime,
-          permissonPayload.branchId,
+          resultDoSmdDetail.branchIdTo,
           5000,
+          null,
           null,
           null,
           authMeta.userId,
@@ -352,13 +359,14 @@ export class MobileSmdService {
 
         const paramDoSmdHistoryId = await this.createDoSmdHistory(
           resultDoSmdDetail.doSmdId,
-          null,
+          payload.do_smd_detail_id,
           null,
           null,
           null,
           resultDoSmdDetail.departureScheduleDateTime,
-          permissonPayload.branchId,
+          resultDoSmdDetail.branchIdTo,
           4050,
+          null,
           null,
           null,
           authMeta.userId,
@@ -366,13 +374,14 @@ export class MobileSmdService {
 
         await this.createDoSmdHistory(
           resultDoSmdDetail.doSmdId,
-          null,
+          payload.do_smd_detail_id,
           null,
           null,
           null,
           resultDoSmdDetail.departureScheduleDateTime,
-          permissonPayload.branchId,
+          resultDoSmdDetail.branchIdTo,
           5000,
+          null,
           null,
           null,
           authMeta.userId,
@@ -384,8 +393,9 @@ export class MobileSmdService {
           null,
           null,
           resultDoSmdDetail.departureScheduleDateTime,
-          permissonPayload.branchId,
+          resultDoSmdDetail.branchIdTo,
           6000,
+          null,
           null,
           null,
           authMeta.userId,
@@ -470,6 +480,13 @@ export class MobileSmdService {
     let url = null;
     let attachmentId = null;
 
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+
     const resultDoSmdDetailArrival = await DoSmdDetail.findOne({
       where: {
         doSmdId: payload.do_smd_id,
@@ -477,6 +494,7 @@ export class MobileSmdService {
         isDeleted: false,
       },
     });
+
     if (resultDoSmdDetailArrival) {
       // Upload Foto
       PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SMD: ', authMeta);
@@ -514,6 +532,7 @@ export class MobileSmdService {
         doSmdDelivereyAttachment.doSmdDetailId = resultDoSmdDetailArrival.doSmdDetailId;
         doSmdDelivereyAttachment.attachmentTmsId = attachmentId;
         doSmdDelivereyAttachment.attachmentType = payload.image_type;
+        doSmdDelivereyAttachment.doSmdVehicleId = resultDoSmd.doSmdVehicleIdLast;
         await DoSmdDetailAttachment.save(doSmdDelivereyAttachment);
       }
 
@@ -521,13 +540,6 @@ export class MobileSmdService {
     } else {
       throw new BadRequestException(`DO SMD ID : ` + payload.do_smd_id.toString() + ` already arrival`);
     }
-
-    const resultDoSmd = await DoSmd.findOne({
-      where: {
-        doSmdId: payload.do_smd_id,
-        isDeleted: false,
-      },
-    });
 
     if (resultDoSmd) {
       // Ubah Status 4000 Arrived
@@ -569,10 +581,12 @@ export class MobileSmdService {
         payload.latitude,
         payload.longitude,
         resultDoSmd.doSmdTime,
-        permissonPayload.branchId,
+        // permissonPayload.branchId,
+        null,
         8000,
         null,
         payload.reasonId,
+        payload.reason_note,
         authMeta.userId,
       );
 
@@ -640,10 +654,12 @@ export class MobileSmdService {
         payload.latitude,
         payload.longitude,
         resultDoSmd.doSmdTime,
-        permissonPayload.branchId,
+        // permissonPayload.branchId,
+        null,
         3000,
         null,
         payload.reasonId,
+        null,
         authMeta.userId,
       );
 
@@ -667,6 +683,13 @@ export class MobileSmdService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SMD: ', authMeta);
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
 
     const resultDoSmdDetail = await DoSmdDetail.findOne({
       where: {
@@ -716,6 +739,7 @@ export class MobileSmdService {
       doSmdDelivereyAttachment.doSmdDetailId = resultDoSmdDetail.doSmdDetailId;
       doSmdDelivereyAttachment.attachmentTmsId = attachmentId;
       doSmdDelivereyAttachment.attachmentType = payload.image_type;
+      doSmdDelivereyAttachment.doSmdVehicleId = resultDoSmd.doSmdVehicleIdLast;
       await DoSmdDetailAttachment.save(doSmdDelivereyAttachment);
     }
 
@@ -728,12 +752,12 @@ export class MobileSmdService {
     const result = new ScanOutSmdHandOverResponseVm();
     const timeNow = moment().toDate();
 
-    const resultDoSmd = await DoSmd.findOne({
-      where: {
-        doSmdId: payload.do_smd_id,
-        isDeleted: false,
-      },
-    });
+    // const resultDoSmd = await DoSmd.findOne({
+    //   where: {
+    //     doSmdId: payload.do_smd_id,
+    //     isDeleted: false,
+    //   },
+    // });
 
     if (resultDoSmd) {
 
@@ -791,10 +815,12 @@ export class MobileSmdService {
         payload.latitude,
         payload.longitude,
         resultDoSmd.doSmdTime,
-        permissonPayload.branchId,
+        // permissonPayload.branchId,
+        null,
         1050,
         null,
         payload.reasonId,
+        payload.notes,
         authMeta.userId,
       );
 
@@ -824,6 +850,7 @@ export class MobileSmdService {
     paramDoSmdStatusId: number,
     paramSealNumber: string,
     paramReasonId: number,
+    paramReasonNotes: string,
     userId: number,
   ) {
     const dataDoSmdHistory = DoSmdHistory.create({
@@ -839,6 +866,7 @@ export class MobileSmdService {
       departureScheduleDateTime: paramDoSmdDepartureScheduleDate,
       sealNumber: paramSealNumber,
       reasonId: paramReasonId,
+      reasonNotes: paramReasonNotes,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,

@@ -60,7 +60,9 @@ export class VehicleSmdService {
       ['vehicle.vehicle_name', 'vehicle_name'],
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhereRaw(`vehicle.branch_id = '${permissonPayload.branchId}'`);
+    if (permissonPayload.branchId !== 121) {
+      q.andWhereRaw(`vehicle.branch_id = '${permissonPayload.branchId}'`);
+    }
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

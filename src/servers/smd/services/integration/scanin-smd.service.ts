@@ -22,6 +22,8 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { WebScanInHubSortListResponseVm } from '../../../main/models/web-scanin-list.response.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
+import { BagScanInBranchSmdQueueService } from '../../../queue/services/bag-scan-in-branch-smd-queue.service';
+import { getConnection } from 'typeorm';
 
 @Injectable()
 export class ScaninSmdService {
@@ -41,6 +43,7 @@ export class ScaninSmdService {
       const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
       const paramSeq = await paramBagSeq * 1;
       const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+      let paramBagItemId = null;
       if (paramBagNumber == null || paramBagNumber == undefined) {
         throw new BadRequestException('Bag Number Not Found');
       } else {
@@ -53,7 +56,6 @@ export class ScaninSmdService {
 
         let paramBagId;
         let exist = false;
-        let paramBagItemId = null;
         if (bag) {
           paramBagId = bag.bagId;
         } else {
@@ -182,6 +184,7 @@ export class ScaninSmdService {
           await BagItemHistory.insert(resultbagItemHistory);
           console.log(resultbagItemHistory);
           console.log(resultbagItemHistory.bagItemHistoryId);
+
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
@@ -191,6 +194,17 @@ export class ScaninSmdService {
         }
       }
       if (errCode == 0) {
+        // NOTE: post awb status in in last transaction when success
+        // Loop data bag_item_awb for update status awb
+        // TODO: need to refactor
+        // send to background job
+        BagScanInBranchSmdQueueService.perform(
+          paramBagItemId,
+          null,
+          null,
+          authMeta.userId,
+          permissonPayload.branchId,
+        );
         const showNumber = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ';
         const message = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
         const data = [];
@@ -213,6 +227,8 @@ export class ScaninSmdService {
       const paramSeq = await paramBagSeq * 1;
       // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       let weight = 0;
+      let paramBagItemId = null;
+
       if (paramBagNumber == null || paramBagNumber == undefined) {
         throw new BadRequestException('Bag Number Not Found');
       } else {
@@ -225,7 +241,6 @@ export class ScaninSmdService {
 
         let paramBagId;
         let exist = false;
-        let paramBagItemId = null;
         if (bag) {
           paramBagId = bag.bagId;
         } else {
@@ -356,6 +371,7 @@ export class ScaninSmdService {
           await BagItemHistory.insert(resultbagItemHistory);
           console.log(resultbagItemHistory);
           console.log(resultbagItemHistory.bagItemHistoryId);
+
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
@@ -365,6 +381,17 @@ export class ScaninSmdService {
         }
       }
       if (errCode == 0) {
+        // NOTE: post awb status in in last transaction when success
+        // Loop data bag_item_awb for update status awb
+        // TODO: need to refactor
+        // send to background job
+        BagScanInBranchSmdQueueService.perform(
+          paramBagItemId,
+          null,
+          null,
+          authMeta.userId,
+          permissonPayload.branchId,
+        );
         const showNumber = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ';
         const message = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
         const data = [];

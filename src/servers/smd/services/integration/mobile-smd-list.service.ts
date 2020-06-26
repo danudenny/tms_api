@@ -90,7 +90,8 @@ export class MobileSmdListService {
         paramUserId,
       },
     );
-    qb.andWhere('ds.do_smd_status_id_last <> 6000');
+    // qb.andWhere('ds.do_smd_status_id_last <> 6000');
+    qb.andWhere('dsd.do_smd_status_id_last not in (5000, 6000) ');
     qb.andWhere('ds.is_deleted = false');
     return await qb.getRawMany();
   }
@@ -255,18 +256,21 @@ export class MobileSmdListService {
     return await qb.getRawMany();
   }
 
-  public static async getScanOutMobileListHistory() {
+  public static async getScanOutMobileListHistory(paramStartDate?: Date, paramEndDate?: Date) {
 
     const authMeta = AuthService.getAuthData();
     const paramUserId =  authMeta.userId;
-    const startDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
-    const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
+    // const startDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
+    // const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
+    const startDate = paramStartDate;
+    const endDate = paramEndDate;
 
     const qb = createQueryBuilder();
     qb.addSelect('ds.do_smd_id', 'do_smd_id');
     qb.addSelect('dsd.do_smd_detail_id', 'do_smd_detail_id');
     qb.addSelect('ds.do_smd_code', 'do_smd_code');
     qb.addSelect('ds.departure_schedule_date_time', 'departure_schedule_date_time');
+    qb.addSelect('dsd.arrival_time', 'arrival_time');
     qb.addSelect('b.branch_name', 'branch_name');
     qb.addSelect('b.address', 'address');
     qb.addSelect('dsd.total_bag', 'total_bag');
@@ -293,13 +297,13 @@ export class MobileSmdListService {
       'dsd.branch_id_to = b.branch_id and b.is_deleted = false',
     );
     qb.where(
-      'ds.departure_schedule_date_time >= :startDate',
+      'dsd.arrival_time >= :startDate',
       {
         startDate,
       },
     );
     qb.andWhere(
-      'ds.departure_schedule_date_time < :endDate',
+      'dsd.arrival_time < :endDate',
       {
         endDate,
       },
