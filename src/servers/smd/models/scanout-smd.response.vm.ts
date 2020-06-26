@@ -366,3 +366,26 @@ export class ScanOutDetailBaggingMoreVm {
   @ApiModelProperty()
   branch_name: string;
 }
+
+export class ScanOutSmdImageResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutImageVm]})
+  data: ScanOutImageVm[];
+}
+
+export class ScanOutImageVm {
+
+  @ApiModelProperty()
+  do_smd_detail_attachment_id: number;
+
+  @ApiModelProperty()
+  image_url: string;
+
+  @ApiModelProperty()
+  image_type: string;
+}
