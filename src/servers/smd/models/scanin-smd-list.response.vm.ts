@@ -21,6 +21,9 @@ export class ScanInSmdListVm {
   do_smd_time: Date;
 
   @ApiModelProperty()
+  arrival_time: Date;
+
+  @ApiModelProperty()
   fullname: string;
 
   @ApiModelProperty()
