@@ -64,6 +64,9 @@ export class WebAwbCodListResponseVm extends BaseMetaResponseVm {
 
 export class WebTransactionBranchDetail {
   @ApiModelProperty()
+  transactionId: string;
+
+  @ApiModelProperty()
   transactionCode: string;
 
   @ApiModelProperty({ format: 'date-time' })

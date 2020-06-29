@@ -7,6 +7,8 @@ import {
   Post,
   Get,
   Param,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -18,7 +20,8 @@ import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payloa
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import { WebAwbCodListResponseVm, WebCodTransferBranchResponseVm, WebAwbCodListTransactionResponseVm } from '../../../models/cod/web-awb-cod-response.vm';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
-import { WebCodTransferPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { WebCodTransferPayloadVm, WebCodTransferHeadOfficePayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiUseTags('Web Awb COD')
 @Controller('web/v1/cod')
@@ -59,16 +62,17 @@ export class V1WebAwbCodController {
   //   return {};
   // }
 
-  // @Post('transferHeadOffice/create')
-  // @HttpCode(HttpStatus.OK)
-  // @UseInterceptors(FileInterceptor('file'))
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  // @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
-  // public async deliveryOrderCreate(
-  //   @Body() payload: DoReturnDeliveryOrderCreateVm,
-  //   @UploadedFile() file,
-  // ) {
-  //   return DoReturnService.deliveryOrderCreate(payload, file);
-  // }
+  // form multipart
+  @Post('transferHeadOffice')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: {} })
+  public async deliveryOrderCreate(
+    @Body() payload: WebCodTransferHeadOfficePayloadVm,
+    @UploadedFile() file,
+  ) {
+    return {}; // DoReturnService.deliveryOrderCreate(payload, file);
+  }
 }

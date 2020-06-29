@@ -15,7 +15,7 @@ import { CustomCounterCode } from '../../../../../shared/services/custom-counter
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import {
-    WebCodAwbPayloadVm, WebCodTransferPayloadVm,
+    WebCodAwbPayloadVm, WebCodTransferPayloadVm, WebCodTransferHeadOfficePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   WebAwbCodListResponseVm,
@@ -29,6 +29,7 @@ import {
 import { PrintByStoreService } from '../../print-by-store.service';
 import moment = require('moment');
 import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { AttachmentService } from '../../../../../shared/services/attachment.service';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -280,7 +281,7 @@ export class V1WebAwbCodService {
         {
           totalCodValue,
           totalAwb: totalAwbCashless,
-          transactionStatusId: 30000,
+          transactionStatusId: 35000,
         },
       );
     } // end of check data cashless
@@ -303,6 +304,10 @@ export class V1WebAwbCodService {
     // mapping field
     payload.fieldResolverMap['transactionStatus'] = 't2.status_name';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
+    payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
+    payload.fieldResolverMap['districtId'] = 't3.district_id';
+    payload.fieldResolverMap['representativeId'] = 't3.representative_id';
+
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
     //   {
@@ -319,6 +324,7 @@ export class V1WebAwbCodService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
+      ['t1.cod_transaction_branch_id', 'transactionId'],
       ['t1.transaction_code', 'transactionCode'],
       ['t1.transaction_date', 'transactionDate'],
       ['t1.transaction_type', 'transactionType'],
@@ -351,6 +357,47 @@ export class V1WebAwbCodService {
 
     return result;
   }
+
+  static async transferHeadOffice(
+    payload: WebCodTransferHeadOfficePayloadVm,
+    file,
+  ) {
+      const authMeta = AuthService.getAuthData();
+      const permissonPayload = AuthService.getPermissionTokenPayload();
+      let attachmentId = null;
+      // upload file to aws s3
+      if (file) {
+        const attachment = await AttachmentService.uploadFileBufferToS3(
+          file.buffer,
+          file.originalname,
+          file.mimetype,
+          'bank-statement',
+        );
+        if (attachment) {
+          attachmentId = attachment.attachmentTmsId;
+        } else {
+          throw new BadRequestException('Gagal bukti transfer, coba ulangi lagi!');
+        }
+      } else {
+        throw new BadRequestException('Harap inputkan bukti transfer!');
+      }
+
+      // transaction >>
+      // create bank statement
+        // bank statement code
+        // bank statement date
+        // bank statement status
+        // bank statement total value
+        // bank account id
+        // attachment id
+
+      // looping data transaction and update status and bank statement id [create new table] ??
+
+      // add history bank statment
+      // << transaction
+
+      return {};
+    }
 
   // func private ==============================================================
   private static async handleAwbCod(

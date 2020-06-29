@@ -37,3 +37,11 @@ export class WebCodTransferPayloadVm {
   @ApiModelPropertyOptional( { type: () => [WebCodAwbPayloadVm]})
   dataCashless: [WebCodAwbPayloadVm];
 }
+
+export class WebCodTransferHeadOfficePayloadVm {
+  @ApiModelProperty()
+  dataTransactionId: string[];
+
+  @ApiModelProperty()
+  bankAccountId: string;
+}
