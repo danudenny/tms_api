@@ -98,7 +98,6 @@ export class PartnerMerchantService {
           and pr.pickup_request_name <> ''
           and pr.pickup_request_address <> ''
           and pr.is_deleted = false
-          and (w.work_order_status_id_pick >= 4200 or w.work_order_status_id_last >= 7000 )
         LIMIT 2500
       ) pr
       GROUP BY ` + select + `
