@@ -127,6 +127,25 @@ export class WebCodAwbValidVm {
   parcelValue: number;
 }
 
+export class CodTransactionDetail {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  paymentMethod: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  codValue: number;
+}
+
+export class WebCodTransactionDetailResponseVm {
+  @ApiModelProperty({ type: () => [CodTransactionDetail] })
+  data: CodTransactionDetail[];
+}
+
 // #region for data printing
 export class WebCodAwbPrintVm {
   @ApiModelProperty()

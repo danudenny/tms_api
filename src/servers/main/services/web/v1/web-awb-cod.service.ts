@@ -25,6 +25,7 @@ import {
   PrintCodTransferBranchVm,
   WebCodTransferBranchResponseVm,
   WebAwbCodListTransactionResponseVm,
+  WebCodTransactionDetailResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 import moment = require('moment');
@@ -356,6 +357,30 @@ export class V1WebAwbCodService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
+  }
+
+  static async transactionBranchDetail(
+    id: string,
+  ): Promise<WebCodTransactionDetailResponseVm> {
+    // awb number | method | penerima | nilai cod
+    const qb = createQueryBuilder();
+    qb.addSelect('t1.awb_number', 'awbNumber');
+    qb.addSelect('t1.payment_method', 'paymentMethod');
+    qb.addSelect('t1.consignee_name', 'consigneeName');
+    qb.addSelect('t1.cod_value', 'codValue');
+
+    qb.from('cod_transaction_branch_detail', 't1');
+    qb.where('t1.cod_transaction_branch_id = :id', { id });
+    qb.andWhere('t1.is_deleted = false');
+
+    const data = await qb.getRawMany();
+    if (data.length) {
+      const result = new WebCodTransactionDetailResponseVm();
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException('Data tidak ditemukan!');
+    }
   }
 
   static async transferHeadOffice(

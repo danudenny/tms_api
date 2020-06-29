@@ -18,7 +18,7 @@ import {
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
-import { WebAwbCodListResponseVm, WebCodTransferBranchResponseVm, WebAwbCodListTransactionResponseVm } from '../../../models/cod/web-awb-cod-response.vm';
+import { WebAwbCodListResponseVm, WebCodTransferBranchResponseVm, WebAwbCodListTransactionResponseVm, WebCodTransactionDetailResponseVm } from '../../../models/cod/web-awb-cod-response.vm';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import { WebCodTransferPayloadVm, WebCodTransferHeadOfficePayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -52,15 +52,14 @@ export class V1WebAwbCodController {
     return V1WebAwbCodService.transactionBranch(payload);
   }
 
-  // @Get('transactionBranch/detail/:id')
-  // @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: WebAwbCodListResponseVm })
-  // public async transactionBranchDetail(@Param('id') transactionId: string) {
-  //   // get data transaction branch detail
-  //   // awb number | method | penerima | nilai cod
-  //   return {};
-  // }
+  @Get('transactionBranch/detail/:id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodTransactionDetailResponseVm })
+  public async transactionBranchDetail(@Param('id') transactionId: string) {
+    // get data transaction branch detail
+    return V1WebAwbCodService.transactionBranchDetail(transactionId);
+  }
 
   // form multipart
   @Post('transferHeadOffice')
