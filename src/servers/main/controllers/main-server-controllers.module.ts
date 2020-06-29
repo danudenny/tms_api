@@ -59,6 +59,7 @@ import {CodPaymentController} from './mobile/mobile-cod-payment.controller';
 import { V1CombinePackageController } from './web/v1/combine-package.controller';
 import { V1WebAwbCodController } from './web/v1/web-awb-cod.controller';
 import { TransactionStatusController } from './master/transaction-status.controller';
+import { BankAccountController } from './master/bank-account.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -122,6 +123,7 @@ import { TransactionStatusController } from './master/transaction-status.control
     V1CombinePackageController,
     V1WebAwbCodController,
     TransactionStatusController,
+    BankAccountController,
   ],
 })
 export class MainServerControllersModule {}
