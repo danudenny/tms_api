@@ -49,22 +49,26 @@ export class V1WebAwbCodController {
     return V1WebAwbCodService.transactionBranch(payload);
   }
 
-  @Get('transactionBranch/detail/:id')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebAwbCodListResponseVm })
-  public async transactionBranchDetail(@Param('id') transactionId: string) {
-    // get data transaction branch detail
-    // awb number | method | penerima | nilai cod
-    return {};
-  }
-
-  // @Post('transferHeadOffice')
+  // @Get('transactionBranch/detail/:id')
   // @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @UseGuards(AuthenticatedGuard)
   // @ApiOkResponse({ type: WebAwbCodListResponseVm })
-  // public async transferHeadOffice(payload: BaseMetaPayloadVm) {
-  //   // TODO:
+  // public async transactionBranchDetail(@Param('id') transactionId: string) {
+  //   // get data transaction branch detail
+  //   // awb number | method | penerima | nilai cod
   //   return {};
+  // }
+
+  // @Post('transferHeadOffice/create')
+  // @HttpCode(HttpStatus.OK)
+  // @UseInterceptors(FileInterceptor('file'))
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
+  // public async deliveryOrderCreate(
+  //   @Body() payload: DoReturnDeliveryOrderCreateVm,
+  //   @UploadedFile() file,
+  // ) {
+  //   return DoReturnService.deliveryOrderCreate(payload, file);
   // }
 }

@@ -36,6 +36,13 @@ export class CodTransactionBranch extends TmsBaseEntity {
   })
   transactionStatusId: number;
 
+  @Column('character varying', {
+    nullable: false,
+    length: 20,
+    name: 'transaction_code',
+  })
+  transactionType: string;
+
   @Column('integer', {
     nullable: false,
     name: 'total_awb',

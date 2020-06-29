@@ -91,11 +91,11 @@ export class WebAwbCodListTransactionResponseVm extends BaseMetaResponseVm {
 }
 
 export class WebCodTransferBranchResponseVm {
-  @ApiModelProperty()
-  transactionCode: string;
+  // @ApiModelProperty()
+  // transactionCode: string;
 
-  @ApiModelProperty({ format: 'date-time' })
-  transactionDate: string;
+  // @ApiModelProperty({ format: 'date-time' })
+  // transactionDate: string;
 
   @ApiModelProperty()
   printIdCash: string;
