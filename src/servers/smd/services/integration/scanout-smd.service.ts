@@ -548,12 +548,15 @@ export class ScanoutSmdService {
           bg.bagging_id,
           b.bag_id,
           bi.bag_item_id ,
-          r.representative_code
+          r.representative_code,
+          bih.bag_item_status_id
         FROM bag_item bi
         INNER JOIN bagging_item bgi ON bi.bag_item_id = bgi.bag_item_id AND bgi.is_deleted = FALSE
         INNER JOIN bagging bg ON bgi.bagging_id = bg.bagging_id AND bg.is_deleted = FALSE
         INNER JOIN bag b ON bi.bag_id = b.bag_id AND b.is_deleted = FALSE
         LEFT JOIN representative  r on bg.representative_id_to = r.representative_id and r.is_deleted  = FALSE
+        LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
+            and bih.bag_item_status_id = 2000
         WHERE
           bg.bagging_id = ${resultBagging.baggingId} AND
           bi.is_deleted = FALSE;
@@ -641,6 +644,8 @@ export class ScanoutSmdService {
         } else {
           throw new BadRequestException(`Representative To Bagging Not Match`);
         }
+      } else if (!resultDataBagItem[0].bag_item_status_id) {
+        throw new BadRequestException(`Bagging Not Scan In Yet`);
       } else {
         throw new BadRequestException(`Bagging Item Not Found`);
       }
@@ -657,10 +662,13 @@ export class ScanoutSmdService {
             bi.bag_item_id,
             b.bag_id,
             b.representative_id_to,
-            r.representative_code
+            r.representative_code,
+            bih.bag_item_status_id
           FROM bag_item bi
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
+          LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
+            and bih.bag_item_status_id = 2000
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
@@ -740,6 +748,8 @@ export class ScanoutSmdService {
           } else {
             throw new BadRequestException(`Representative To Bag Not Match`);
           }
+        } else if (!resultDataBag[0].bag_item_status_id) {
+          throw new BadRequestException(`Bag Not Scan In Yet`);
         } else {
           throw new BadRequestException(`Bag Not Found`);
         }
