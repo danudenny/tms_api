@@ -99,9 +99,9 @@ export class MobileSmdListService {
   public static async getScanOutMobileListDetail(do_smd_detail_id?: number, do_smd_status?: number) {
 
     const authMeta = AuthService.getAuthData();
-    const paramUserId =  authMeta.userId;
-    const startDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
-    const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
+    // const paramUserId =  authMeta.userId;
+    // const startDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
+    // const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
 
     const qb = createQueryBuilder();
     qb.addSelect('dsd.do_smd_detail_id', 'do_smd_detail_id');
@@ -148,24 +148,24 @@ export class MobileSmdListService {
       'b',
       'dsd.branch_id_to = b.branch_id and b.is_deleted = false',
     );
-    qb.where(
-      'ds.departure_schedule_date_time >= :startDate',
-      {
-        startDate,
-      },
-    );
-    qb.andWhere(
-      'ds.departure_schedule_date_time < :endDate',
-      {
-        endDate,
-      },
-    );
-    qb.andWhere(
-      'u.user_id = :paramUserId',
-      {
-        paramUserId,
-      },
-    );
+    // qb.where(
+    //   'ds.departure_schedule_date_time >= :startDate',
+    //   {
+    //     startDate,
+    //   },
+    // );
+    // qb.andWhere(
+    //   'ds.departure_schedule_date_time < :endDate',
+    //   {
+    //     endDate,
+    //   },
+    // );
+    // qb.andWhere(
+    //   'u.user_id = :paramUserId',
+    //   {
+    //     paramUserId,
+    //   },
+    // );
     qb.andWhere(
       'dsd.do_smd_detail_id = :do_smd_detail_id',
       {
