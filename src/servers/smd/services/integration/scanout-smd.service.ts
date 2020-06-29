@@ -562,7 +562,7 @@ export class ScanoutSmdService {
           bi.is_deleted = FALSE;
       `;
       const resultDataBagItem = await RawQueryService.query(rawQuery);
-      if (resultDataBagItem.length > 0) {
+      if (resultDataBagItem.length > 0 && resultDataBagItem[0].bag_item_status_id) {
         rawQuery = `
           SELECT
             do_smd_detail_id ,
@@ -644,7 +644,7 @@ export class ScanoutSmdService {
         } else {
           throw new BadRequestException(`Representative To Bagging Not Match`);
         }
-      } else if (!resultDataBagItem[0].bag_item_status_id) {
+      } else if (resultDataBagItem.length > 0 && !resultDataBagItem[0].bag_item_status_id) {
         throw new BadRequestException(`Bagging Not Scan In Yet`);
       } else {
         throw new BadRequestException(`Bagging Item Not Found`);
@@ -675,7 +675,7 @@ export class ScanoutSmdService {
             bi.is_deleted = FALSE;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
-        if (resultDataBag.length > 0) {
+        if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
 
           rawQuery = `
             SELECT
@@ -748,7 +748,7 @@ export class ScanoutSmdService {
           } else {
             throw new BadRequestException(`Representative To Bag Not Match`);
           }
-        } else if (!resultDataBag[0].bag_item_status_id) {
+        } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
           throw new BadRequestException(`Bag Not Scan In Yet`);
         } else {
           throw new BadRequestException(`Bag Not Found`);
@@ -764,17 +764,20 @@ export class ScanoutSmdService {
             bi.bag_item_id,
             b.bag_id,
             b.representative_id_to,
-            r.representative_code
+            r.representative_code,
+            bih.bag_item_status_id
           FROM bag_item bi
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
+          LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
+            and bih.bag_item_status_id = 2000
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
             bi.is_deleted = FALSE;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
-        if (resultDataBag.length > 0) {
+        if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
 
           rawQuery = `
             SELECT
@@ -847,6 +850,8 @@ export class ScanoutSmdService {
           } else {
             throw new BadRequestException(`Representative To Bag Not Match`);
           }
+        } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
+          throw new BadRequestException(`Bag Not Scan In Yet`);
         } else {
           throw new BadRequestException(`Bag Not Found`);
         }
