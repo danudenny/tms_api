@@ -321,6 +321,7 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.transaction_code', 'transactionCode'],
       ['t1.transaction_date', 'transactionDate'],
+      ['t1.transaction_type', 'transactionType'],
       ['t2.status_name', 'transactionStatus'],
       ['t1.total_awb', 'totalAwb'],
       ['t1.total_cod_value', 'totalCodValue'],

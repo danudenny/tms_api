@@ -73,6 +73,9 @@ export class WebTransactionBranchDetail {
   transactionStatus: string;
 
   @ApiModelProperty()
+  transactionType: string;
+
+  @ApiModelProperty()
   totalAwb: number;
 
   @ApiModelProperty()
