@@ -24,6 +24,7 @@ export class ScaninSmdListService {
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
     payload.fieldResolverMap['do_smd_detail_id'] = 'dsd.do_smd_detail_id';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
+    payload.fieldResolverMap['arrival_time'] = 'dsd.arrival_time';
 
     payload.globalSearchFields = [
       {
@@ -40,6 +41,9 @@ export class ScaninSmdListService {
       },
       {
         field: 'do_smd_code',
+      },
+      {
+        field: 'arrival_time',
       },
     ];
 
