@@ -43,5 +43,5 @@ export class WebCodTransferHeadOfficePayloadVm {
   dataTransactionId: string[];
 
   @ApiModelProperty()
-  bankAccountId: string;
+  bankBranchId: number;
 }

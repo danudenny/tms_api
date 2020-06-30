@@ -1,5 +1,5 @@
 // #region import
-import { createQueryBuilder } from 'typeorm';
+import { createQueryBuilder, getManager } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
@@ -31,6 +31,7 @@ import { PrintByStoreService } from '../../print-by-store.service';
 import moment = require('moment');
 import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { AttachmentService } from '../../../../../shared/services/attachment.service';
+import { CodBankStatement } from '../../../../../shared/orm-entity/cod-bank-statement';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -305,6 +306,7 @@ export class V1WebAwbCodService {
     // mapping field
     payload.fieldResolverMap['transactionStatus'] = 't2.status_name';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
+    payload.fieldResolverMap['transactionId'] = 't1.transaction_id';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
     payload.fieldResolverMap['districtId'] = 't3.district_id';
     payload.fieldResolverMap['representativeId'] = 't3.representative_id';
@@ -389,6 +391,7 @@ export class V1WebAwbCodService {
   ) {
       const authMeta = AuthService.getAuthData();
       const permissonPayload = AuthService.getPermissionTokenPayload();
+      const timestamp = moment().toDate();
       let attachmentId = null;
       // upload file to aws s3
       if (file) {
@@ -401,27 +404,67 @@ export class V1WebAwbCodService {
         if (attachment) {
           attachmentId = attachment.attachmentTmsId;
         } else {
-          throw new BadRequestException('Gagal bukti transfer, coba ulangi lagi!');
+          throw new BadRequestException('Gagal upload bukti transfer, coba ulangi lagi!');
         }
       } else {
         throw new BadRequestException('Harap inputkan bukti transfer!');
       }
 
-      // transaction >>
-      // create bank statement
-        // bank statement code
-        // bank statement date
-        // bank statement status
-        // bank statement total value
-        // bank account id
-        // attachment id
+      const dataError = [];
+      const randomCode = await CustomCounterCode.bankStatement(
+        timestamp,
+      );
+      const bankAccount = await this.getBankAccount(payload.bankBranchId);
+      try {
+        // #region transaction data
+        await getManager().transaction(async transactionManager => {
+          // create bank statement
+          const bankStatement = new CodBankStatement();
+          bankStatement.bankStatementCode = randomCode;
+          bankStatement.bankStatementDate = timestamp;
+          bankStatement.transactionStatusId = 35000;
+          bankStatement.totalCodValue = 0; // init
+          bankStatement.bankBranchId = payload.bankBranchId;
+          bankStatement.bankAccount = bankAccount;
+          bankStatement.attachmentId = attachmentId;
+          bankStatement.branchId = permissonPayload.branchId;
+          await transactionManager.save(CodBankStatement, bankStatement);
 
-      // looping data transaction and update status and bank statement id [create new table] ??
+          // looping data transaction and update status and bank statement id [create new table] ??
+          for (const transactionId of payload.dataTransactionId) {
+            const codBranch = await CodTransactionBranch.findOne({
+              where: {
+                codTransactionBranchId: transactionId,
+                isDeleted: false,
+              },
+            });
+            if (codBranch) {
+              // update data
+              transactionManager.update(
+                CodTransactionBranch,
+                {
+                  codTransactionBranchId: codBranch.codTransactionBranchId,
+                },
+                {
+                  codBankStatementId: bankStatement.codBankStatementId,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timestamp,
+                },
+              );
+            } else {
+              dataError.push(`Transaction Id ${transactionId}, tidak valid!`);
+            }
+          } // endof loop
+          // add history bank statment
 
-      // add history bank statment
-      // << transaction
+        });
+        // #endregion of transaction
 
-      return {};
+        // response
+        return {};
+      } catch (error) {
+        throw new BadRequestException(error.message);
+      }
     }
 
   // func private ==============================================================
@@ -482,6 +525,7 @@ export class V1WebAwbCodService {
   private static async validStatusAwb(awbItemId: number): Promise<WebCodAwbValidVm> {
     // check awb status mush valid dlv
     // get data partner id??
+    // prepare data for suplier invoice
     const qb = createQueryBuilder();
     qb.addSelect('a.awb_item_id', 'awbItemId');
     qb.addSelect('a.awb_status_id_last', 'awbStatusIdLast');
@@ -579,5 +623,26 @@ export class V1WebAwbCodService {
       storePrint,
     );
     return printId;
+  }
+
+  private static async getBankAccount(bankBranchId: number): Promise<string> {
+    const qb = createQueryBuilder();
+    qb.addSelect('t1.account_number', 'accountNumber');
+    qb.addSelect('t2.bank_code', 'bankCode');
+    qb.from('bank_branch', 't1');
+    qb.innerJoin(
+      'bank',
+      't2',
+      't1.bank_id = t2.bank_id AND t2.is_deleted = false',
+    );
+    qb.where('t1.bank_branch_id = :bankBranchId', { bankBranchId });
+    qb.andWhere('t1.is_deleted = false');
+
+    const bankBranch = await qb.getRawOne();
+    if (bankBranch) {
+      return `${bankBranch.bankCode}/${bankBranch.accountNumber}`;
+    } else {
+      throw new BadRequestException('Data bank tidak valid/tidak ditemukan!');
+    }
   }
 }

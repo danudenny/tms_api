@@ -72,6 +72,6 @@ export class V1WebAwbCodController {
     @Body() payload: WebCodTransferHeadOfficePayloadVm,
     @UploadedFile() file,
   ) {
-    return {}; // DoReturnService.deliveryOrderCreate(payload, file);
+    return V1WebAwbCodService.transferHeadOffice(payload, file);
   }
 }
