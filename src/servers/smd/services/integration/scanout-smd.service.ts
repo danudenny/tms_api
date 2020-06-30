@@ -1707,25 +1707,27 @@ export class ScanoutSmdService {
           );
 
           // decrease amount Unassign Bagging
-          await DoSmdDetail.update(
-            { doSmdDetailId : unassigningSMD[0].do_smd_detail_id },
-            {
-              totalBagging: (unassigningSMD[0].total_bagging == 0) ? 0 :
-                (Number(unassigningSMD[0].total_bagging) - 1),
-              userIdUpdated: userId,
-              updatedTime: time,
-            },
-          );
-          await DoSmd.update(
-            { doSmdId : unassigningSMD[0].do_smd_id },
-            {
-              totalBagging: (unassigningSMD[0].total_bagging_header == 0) ? 0 :
-                Number(unassigningSMD[0].total_bagging_header) - 1,
-              userIdUpdated: userId,
-              updatedTime: time,
-            },
-          );
-
+          // decrease amount SMD of bagging and its combine package
+          for (const item of unassigningSMD) {
+            await DoSmdDetail.update(
+              { doSmdDetailId : item.do_smd_detail_id },
+              {
+                totalBagging: (item.total_bagging == 0) ? 0 :
+                  (Number(item.total_bagging) - 1),
+                userIdUpdated: userId,
+                updatedTime: time,
+              },
+            );
+            await DoSmd.update(
+              { doSmdId : item.do_smd_id },
+              {
+                totalBagging: (item.total_bagging_header == 0) ? 0 :
+                  Number(item.total_bagging_header) - 1,
+                userIdUpdated: userId,
+                updatedTime: time,
+              },
+            );
+          }
           // Reassign do_smd_detail_item to new assigned-smd
           await this.updateDoSmdDetailItem(codes.doSmdDetailItem, validDestination[0].do_smd_detail_id, userId, time);
           totalSuccess += 1;
