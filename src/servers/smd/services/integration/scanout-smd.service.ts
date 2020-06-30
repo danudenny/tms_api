@@ -1529,7 +1529,7 @@ export class ScanoutSmdService {
 
           // decrease amount Unassign Bag
           await DoSmdDetail.update(
-            { doSmdDetailId : validDestination[0].do_smd_detail_id },
+            { doSmdDetailId : unassigningSMD[0].do_smd_detail_id },
             {
               totalBag: (unassigningSMD[0].total_bag == 0) ? 0 :
                 Number(unassigningSMD[0].total_bag) - 1,
@@ -1708,7 +1708,7 @@ export class ScanoutSmdService {
 
           // decrease amount Unassign Bagging
           await DoSmdDetail.update(
-            { doSmdDetailId : validDestination[0].do_smd_detail_id },
+            { doSmdDetailId : unassigningSMD[0].do_smd_detail_id },
             {
               totalBagging: (unassigningSMD[0].total_bagging == 0) ? 0 :
                 (Number(unassigningSMD[0].total_bagging) - 1),
