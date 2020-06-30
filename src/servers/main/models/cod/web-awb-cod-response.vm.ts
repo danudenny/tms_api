@@ -146,6 +146,17 @@ export class WebCodTransactionDetailResponseVm {
   data: CodTransactionDetail[];
 }
 
+export class WebCodTransferHeadOfficeResponseVm {
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  dataError: string[];
+}
+
 // #region for data printing
 export class WebCodAwbPrintVm {
   @ApiModelProperty()

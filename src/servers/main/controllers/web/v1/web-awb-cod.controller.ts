@@ -1,27 +1,22 @@
 import {
-  Body,
-  Controller,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-  Post,
-  Get,
-  Param,
-  UseInterceptors,
-  UploadedFile,
+    Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UploadedFile, UseGuards,
+    UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
-  ApiBearerAuth,
-  ApiOkResponse,
-  ApiUseTags,
+    ApiBearerAuth, ApiOkResponse, ApiUseTags,
 } from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
-import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
-import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
-import { WebAwbCodListResponseVm, WebCodTransferBranchResponseVm, WebAwbCodListTransactionResponseVm, WebCodTransactionDetailResponseVm } from '../../../models/cod/web-awb-cod-response.vm';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
-import { WebCodTransferPayloadVm, WebCodTransferHeadOfficePayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import {
+    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm,
+} from '../../../models/cod/web-awb-cod-payload.vm';
+import {
+    WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebCodTransactionDetailResponseVm,
+    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm,
+} from '../../../models/cod/web-awb-cod-response.vm';
+import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 
 @ApiUseTags('Web Awb COD')
 @Controller('web/v1/cod')
@@ -67,7 +62,7 @@ export class V1WebAwbCodController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: {} })
+  @ApiOkResponse({ type: WebCodTransferHeadOfficeResponseVm })
   public async deliveryOrderCreate(
     @Body() payload: WebCodTransferHeadOfficePayloadVm,
     @UploadedFile() file,

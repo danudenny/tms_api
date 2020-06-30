@@ -26,12 +26,14 @@ import {
   WebCodTransferBranchResponseVm,
   WebAwbCodListTransactionResponseVm,
   WebCodTransactionDetailResponseVm,
+  WebCodTransferHeadOfficeResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 import moment = require('moment');
 import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { AttachmentService } from '../../../../../shared/services/attachment.service';
 import { CodBankStatement } from '../../../../../shared/orm-entity/cod-bank-statement';
+import { CodBankStatementHistory } from '../../../../../shared/orm-entity/cod-bank-statement-history';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -388,7 +390,7 @@ export class V1WebAwbCodService {
   static async transferHeadOffice(
     payload: WebCodTransferHeadOfficePayloadVm,
     file,
-  ) {
+  ): Promise<WebCodTransferHeadOfficeResponseVm> {
       const authMeta = AuthService.getAuthData();
       const permissonPayload = AuthService.getPermissionTokenPayload();
       const timestamp = moment().toDate();
@@ -415,6 +417,7 @@ export class V1WebAwbCodService {
         timestamp,
       );
       const bankAccount = await this.getBankAccount(payload.bankBranchId);
+      let totalValue = 0;
       try {
         // #region transaction data
         await getManager().transaction(async transactionManager => {
@@ -423,7 +426,7 @@ export class V1WebAwbCodService {
           bankStatement.bankStatementCode = randomCode;
           bankStatement.bankStatementDate = timestamp;
           bankStatement.transactionStatusId = 35000;
-          bankStatement.totalCodValue = 0; // init
+          bankStatement.totalCodValue = totalValue; // init
           bankStatement.bankBranchId = payload.bankBranchId;
           bankStatement.bankAccount = bankAccount;
           bankStatement.attachmentId = attachmentId;
@@ -439,14 +442,16 @@ export class V1WebAwbCodService {
               },
             });
             if (codBranch) {
+              totalValue += Number(codBranch.totalCodValue);
               // update data
-              transactionManager.update(
+              await transactionManager.update(
                 CodTransactionBranch,
                 {
                   codTransactionBranchId: codBranch.codTransactionBranchId,
                 },
                 {
                   codBankStatementId: bankStatement.codBankStatementId,
+                  transactionStatusId: 35000,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timestamp,
                 },
@@ -455,13 +460,42 @@ export class V1WebAwbCodService {
               dataError.push(`Transaction Id ${transactionId}, tidak valid!`);
             }
           } // endof loop
-          // add history bank statment
 
+          // add history bank statment
+          const bankStatementHistory = new CodBankStatementHistory();
+          bankStatementHistory.codBankStatementId = bankStatement.codBankStatementId;
+          bankStatementHistory.transactionStatusId = 35000;
+          bankStatementHistory.totalCodValue = totalValue;
+          bankStatementHistory.bankBranchId = payload.bankBranchId;
+          bankStatementHistory.bankAccount = bankAccount;
+          bankStatementHistory.attachmentId = attachmentId;
+          await transactionManager.insert(
+            CodBankStatementHistory,
+            bankStatementHistory,
+          );
+
+          // update data bank statment
+          await transactionManager.update(
+            CodBankStatement,
+            {
+              codBankStatementId: bankStatement.codBankStatementId,
+            },
+            {
+              totalCodValue: totalValue,
+              updatedTime: timestamp,
+              userIdUpdated: authMeta.userId,
+            },
+          );
         });
         // #endregion of transaction
 
         // response
-        return {};
+        const result = new WebCodTransferHeadOfficeResponseVm();
+        result.status = 'ok';
+        result.message = 'success';
+        result.dataError = dataError;
+        return result;
+
       } catch (error) {
         throw new BadRequestException(error.message);
       }
