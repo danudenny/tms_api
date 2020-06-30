@@ -76,6 +76,9 @@ export class WebTransactionBranchDetail {
   transactionStatus: string;
 
   @ApiModelProperty()
+  transactionStatusId: number;
+
+  @ApiModelProperty()
   transactionType: string;
 
   @ApiModelProperty()

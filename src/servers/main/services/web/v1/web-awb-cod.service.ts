@@ -308,7 +308,7 @@ export class V1WebAwbCodService {
     // mapping field
     payload.fieldResolverMap['transactionStatus'] = 't2.status_name';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
-    payload.fieldResolverMap['transactionId'] = 't1.transaction_id';
+    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
     payload.fieldResolverMap['districtId'] = 't3.district_id';
     payload.fieldResolverMap['representativeId'] = 't3.representative_id';
@@ -333,6 +333,7 @@ export class V1WebAwbCodService {
       ['t1.transaction_code', 'transactionCode'],
       ['t1.transaction_date', 'transactionDate'],
       ['t1.transaction_type', 'transactionType'],
+      ['t1.transaction_status_id', 'transactionStatusId'],
       ['t2.status_name', 'transactionStatus'],
       ['t1.total_awb', 'totalAwb'],
       ['t1.total_cod_value', 'totalCodValue'],
