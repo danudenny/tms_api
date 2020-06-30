@@ -307,7 +307,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodListTransactionResponseVm> {
     // mapping field
-    payload.fieldResolverMap['transactionStatus'] = 't2.status_code';
+    payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
     payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
@@ -335,7 +335,7 @@ export class V1WebAwbCodService {
       ['t1.transaction_date', 'transactionDate'],
       ['t1.transaction_type', 'transactionType'],
       ['t1.transaction_status_id', 'transactionStatusId'],
-      ['t2.status_code', 'transactionStatus'],
+      ['t2.status_title', 'transactionStatus'],
       ['t1.total_awb', 'totalAwb'],
       ['t1.total_cod_value', 'totalCodValue'],
       ['t3.branch_name', 'branchName'],
@@ -511,7 +511,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodBankStatementResponseVm> {
     // mapping field
-    payload.fieldResolverMap['transactionStatus'] = 't2.status_code';
+    payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
     payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
@@ -539,7 +539,7 @@ export class V1WebAwbCodService {
       ['t1.bank_statement_date', 'bankStatementDate'],
       ['t1.transaction_status_id', 'transactionStatusId'],
       ['t1.bank_account', 'bankAccount'],
-      ['t2.status_code', 'transactionStatus'],
+      ['t2.status_title', 'transactionStatus'],
       ['t1.total_transaction', 'totalTransaction'],
       ['t1.total_cod_value', 'totalCodValue'],
       ['t3.branch_name', 'branchName'],
