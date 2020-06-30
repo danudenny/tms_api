@@ -52,6 +52,12 @@ export class CodBankStatement extends TmsBaseEntity {
   })
   totalCodValue: number;
 
+  @Column('integer', {
+    nullable: false,
+    name: 'total_transaction',
+  })
+  totalTransaction: number;
+
   @Column('bigint', {
     nullable: false,
     name: 'bank_branch_id',

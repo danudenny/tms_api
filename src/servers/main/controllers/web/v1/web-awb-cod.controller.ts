@@ -69,4 +69,13 @@ export class V1WebAwbCodController {
   ) {
     return V1WebAwbCodService.transferHeadOffice(payload, file);
   }
+
+  @Post('bankStatement')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebAwbCodListTransactionResponseVm })
+  public async bankStatement(@Body() payload: BaseMetaPayloadVm) {
+    // get data bankStatement
+    return V1WebAwbCodService.bankStatement(payload);
+  }
 }

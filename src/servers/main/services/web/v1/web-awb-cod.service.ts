@@ -392,115 +392,126 @@ export class V1WebAwbCodService {
     payload: WebCodTransferHeadOfficePayloadVm,
     file,
   ): Promise<WebCodTransferHeadOfficeResponseVm> {
-      const authMeta = AuthService.getAuthData();
-      const permissonPayload = AuthService.getPermissionTokenPayload();
-      const timestamp = moment().toDate();
-      let attachmentId = null;
-      // upload file to aws s3
-      if (file) {
-        const attachment = await AttachmentService.uploadFileBufferToS3(
-          file.buffer,
-          file.originalname,
-          file.mimetype,
-          'bank-statement',
-        );
-        if (attachment) {
-          attachmentId = attachment.attachmentTmsId;
-        } else {
-          throw new BadRequestException('Gagal upload bukti transfer, coba ulangi lagi!');
-        }
-      } else {
-        throw new BadRequestException('Harap inputkan bukti transfer!');
-      }
-
-      const dataError = [];
-      const randomCode = await CustomCounterCode.bankStatement(
-        timestamp,
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timestamp = moment().toDate();
+    let attachmentId = null;
+    // upload file to aws s3
+    if (file) {
+      const attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        'bank-statement',
       );
-      const bankAccount = await this.getBankAccount(payload.bankBranchId);
-      let totalValue = 0;
-      try {
-        // #region transaction data
-        await getManager().transaction(async transactionManager => {
-          // create bank statement
-          const bankStatement = new CodBankStatement();
-          bankStatement.bankStatementCode = randomCode;
-          bankStatement.bankStatementDate = timestamp;
-          bankStatement.transactionStatusId = 35000;
-          bankStatement.totalCodValue = totalValue; // init
-          bankStatement.bankBranchId = payload.bankBranchId;
-          bankStatement.bankAccount = bankAccount;
-          bankStatement.attachmentId = attachmentId;
-          bankStatement.branchId = permissonPayload.branchId;
-          await transactionManager.save(CodBankStatement, bankStatement);
-
-          // looping data transaction and update status and bank statement id [create new table] ??
-          for (const transactionId of payload.dataTransactionId) {
-            const codBranch = await CodTransactionBranch.findOne({
-              where: {
-                codTransactionBranchId: transactionId,
-                isDeleted: false,
-              },
-            });
-            if (codBranch) {
-              totalValue += Number(codBranch.totalCodValue);
-              // update data
-              await transactionManager.update(
-                CodTransactionBranch,
-                {
-                  codTransactionBranchId: codBranch.codTransactionBranchId,
-                },
-                {
-                  codBankStatementId: bankStatement.codBankStatementId,
-                  transactionStatusId: 35000,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: timestamp,
-                },
-              );
-            } else {
-              dataError.push(`Transaction Id ${transactionId}, tidak valid!`);
-            }
-          } // endof loop
-
-          // add history bank statment
-          const bankStatementHistory = new CodBankStatementHistory();
-          bankStatementHistory.codBankStatementId = bankStatement.codBankStatementId;
-          bankStatementHistory.transactionStatusId = 35000;
-          bankStatementHistory.totalCodValue = totalValue;
-          bankStatementHistory.bankBranchId = payload.bankBranchId;
-          bankStatementHistory.bankAccount = bankAccount;
-          bankStatementHistory.attachmentId = attachmentId;
-          await transactionManager.insert(
-            CodBankStatementHistory,
-            bankStatementHistory,
-          );
-
-          // update data bank statment
-          await transactionManager.update(
-            CodBankStatement,
-            {
-              codBankStatementId: bankStatement.codBankStatementId,
-            },
-            {
-              totalCodValue: totalValue,
-              updatedTime: timestamp,
-              userIdUpdated: authMeta.userId,
-            },
-          );
-        });
-        // #endregion of transaction
-
-        // response
-        const result = new WebCodTransferHeadOfficeResponseVm();
-        result.status = 'ok';
-        result.message = 'success';
-        result.dataError = dataError;
-        return result;
-
-      } catch (error) {
-        throw new BadRequestException(error.message);
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+      } else {
+        throw new BadRequestException('Gagal upload bukti transfer, coba ulangi lagi!');
       }
+    } else {
+      throw new BadRequestException('Harap inputkan bukti transfer!');
     }
+
+    const dataError = [];
+    const randomCode = await CustomCounterCode.bankStatement(
+      timestamp,
+    );
+    const bankAccount = await this.getBankAccount(payload.bankBranchId);
+    let totalValue = 0;
+    let totalData = 0;
+    try {
+      // #region transaction data
+      await getManager().transaction(async transactionManager => {
+        // create bank statement
+        const bankStatement = new CodBankStatement();
+        bankStatement.bankStatementCode = randomCode;
+        bankStatement.bankStatementDate = timestamp;
+        bankStatement.transactionStatusId = 35000;
+        bankStatement.totalCodValue = totalValue; // init
+        bankStatement.totalTransaction = totalData; // init
+        bankStatement.bankBranchId = payload.bankBranchId;
+        bankStatement.bankAccount = bankAccount;
+        bankStatement.attachmentId = attachmentId;
+        bankStatement.branchId = permissonPayload.branchId;
+        await transactionManager.save(CodBankStatement, bankStatement);
+
+        // looping data transaction and update status and bank statement id [create new table] ??
+        for (const transactionId of payload.dataTransactionId) {
+          const codBranch = await CodTransactionBranch.findOne({
+            where: {
+              codTransactionBranchId: transactionId,
+              isDeleted: false,
+            },
+          });
+          if (codBranch) {
+            totalData += 1;
+            totalValue += Number(codBranch.totalCodValue);
+            // update data
+            await transactionManager.update(
+              CodTransactionBranch,
+              {
+                codTransactionBranchId: codBranch.codTransactionBranchId,
+              },
+              {
+                codBankStatementId: bankStatement.codBankStatementId,
+                transactionStatusId: 35000,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timestamp,
+              },
+            );
+          } else {
+            dataError.push(`Transaction Id ${transactionId}, tidak valid!`);
+          }
+        } // endof loop
+
+        // add history bank statment
+        const bankStatementHistory = new CodBankStatementHistory();
+        bankStatementHistory.codBankStatementId = bankStatement.codBankStatementId;
+        bankStatementHistory.transactionStatusId = 35000;
+        bankStatementHistory.totalCodValue = totalValue;
+        bankStatementHistory.bankBranchId = payload.bankBranchId;
+        bankStatementHistory.bankAccount = bankAccount;
+        bankStatementHistory.attachmentId = attachmentId;
+        await transactionManager.insert(
+          CodBankStatementHistory,
+          bankStatementHistory,
+        );
+
+        // update data bank statment
+        await transactionManager.update(
+          CodBankStatement,
+          {
+            codBankStatementId: bankStatement.codBankStatementId,
+          },
+          {
+            totalCodValue: totalValue,
+            totalTransaction: totalData,
+            updatedTime: timestamp,
+            userIdUpdated: authMeta.userId,
+          },
+        );
+      });
+      // #endregion of transaction
+
+      // response
+      const result = new WebCodTransferHeadOfficeResponseVm();
+      result.status = 'ok';
+      result.message = 'success';
+      result.dataError = dataError;
+      return result;
+
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  static async bankStatement(
+    payload: BaseMetaPayloadVm,
+  ) {
+
+    return null;
+  }
 
   // func private ==============================================================
   private static async handleAwbCod(
