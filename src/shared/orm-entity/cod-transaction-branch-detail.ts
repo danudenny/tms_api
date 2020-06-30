@@ -14,7 +14,6 @@ export class CodTransactionBranchDetail extends TmsBaseEntity {
 
   @Column('character varying', {
     nullable: false,
-    length: 100,
     name: 'cod_transaction_branch_id',
   })
   codTransactionBranchId: string;

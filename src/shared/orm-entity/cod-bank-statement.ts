@@ -10,25 +10,25 @@ import { TransactionStatus } from './transaction-status';
 import { Branch } from './branch';
 import { User } from './user';
 
-@Entity('cod_transaction_branch', { schema: 'public' })
-export class CodTransactionBranch extends TmsBaseEntity {
+@Entity('cod_bank_statement', { schema: 'public' })
+export class CodBankStatement extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
-    name: 'cod_transaction_branch_id',
+    name: 'cod_bank_statement_id',
   })
-  codTransactionBranchId: string;
+  codBankStatementId: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-    name: 'transaction_code',
+    name: 'bank_statement_code',
   })
-  transactionCode: string;
+  bankStatementCode: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
-    name: 'transaction_date',
+    name: 'bank_statement_date',
   })
-  transactionDate: Date;
+  bankStatementDate: Date;
 
   @Column('bigint', {
     nullable: false,
@@ -38,16 +38,10 @@ export class CodTransactionBranch extends TmsBaseEntity {
 
   @Column('character varying', {
     nullable: false,
-    length: 20,
-    name: 'transaction_code',
+    length: 100,
+    name: 'bank_account',
   })
-  transactionType: string;
-
-  @Column('integer', {
-    nullable: false,
-    name: 'total_awb',
-  })
-  totalAwb: number;
+  bankAccount: string;
 
   @Column('numeric', {
     nullable: false,
@@ -60,16 +54,23 @@ export class CodTransactionBranch extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: false,
+    name: 'bank_branch_id',
+  })
+  bankBranchId: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'attachment_id',
+  })
+  attachmentId: number;
+
+  @Column('bigint', {
+    nullable: false,
     name: 'branch_id',
   })
   branchId: number;
 
-  @Column('character varying', {
-    nullable: true,
-    name: 'cod_bank_statement_id',
-  })
-  codBankStatementId: string;
-
+  // relation
   @ManyToOne(() => TransactionStatus)
   @JoinColumn({ name: 'transaction_status_id' })
   transactionStatus: TransactionStatus;
