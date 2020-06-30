@@ -14,7 +14,7 @@ import {
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebCodTransactionDetailResponseVm,
-    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm,
+    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebAwbCodBankStatementResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 
@@ -73,7 +73,7 @@ export class V1WebAwbCodController {
   @Post('bankStatement')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebAwbCodListTransactionResponseVm })
+  @ApiOkResponse({ type: WebAwbCodBankStatementResponseVm })
   public async bankStatement(@Body() payload: BaseMetaPayloadVm) {
     // get data bankStatement
     return V1WebAwbCodService.bankStatement(payload);

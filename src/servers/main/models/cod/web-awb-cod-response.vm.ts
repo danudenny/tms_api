@@ -99,6 +99,43 @@ export class WebAwbCodListTransactionResponseVm extends BaseMetaResponseVm {
   data: WebTransactionBranchDetail[];
 }
 
+export class WebCodBankStatementVm {
+  @ApiModelProperty()
+  bankStatementId: string;
+
+  @ApiModelProperty()
+  bankStatementCode: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  bankStatementDate: string;
+
+  @ApiModelProperty()
+  transactionStatusId: number;
+
+  @ApiModelProperty()
+  bankAccount: string;
+
+  @ApiModelProperty()
+  transactionStatus: string;
+
+  @ApiModelProperty()
+  totalTransaction: number;
+
+  @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  adminName: string;
+}
+
+export class WebAwbCodBankStatementResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebCodBankStatementVm] })
+  data: WebCodBankStatementVm[];
+}
+
 export class WebCodTransferBranchResponseVm {
   // @ApiModelProperty()
   // transactionCode: string;

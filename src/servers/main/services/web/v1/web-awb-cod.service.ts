@@ -27,6 +27,7 @@ import {
   WebAwbCodListTransactionResponseVm,
   WebCodTransactionDetailResponseVm,
   WebCodTransferHeadOfficeResponseVm,
+  WebAwbCodBankStatementResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 import moment = require('moment');
@@ -306,7 +307,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodListTransactionResponseVm> {
     // mapping field
-    payload.fieldResolverMap['transactionStatus'] = 't2.status_name';
+    payload.fieldResolverMap['transactionStatus'] = 't2.status_code';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
     payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
@@ -334,7 +335,7 @@ export class V1WebAwbCodService {
       ['t1.transaction_date', 'transactionDate'],
       ['t1.transaction_type', 'transactionType'],
       ['t1.transaction_status_id', 'transactionStatusId'],
-      ['t2.status_name', 'transactionStatus'],
+      ['t2.status_code', 'transactionStatus'],
       ['t1.total_awb', 'totalAwb'],
       ['t1.total_cod_value', 'totalCodValue'],
       ['t3.branch_name', 'branchName'],
@@ -508,9 +509,64 @@ export class V1WebAwbCodService {
 
   static async bankStatement(
     payload: BaseMetaPayloadVm,
-  ) {
+  ): Promise<WebAwbCodBankStatementResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['transactionStatus'] = 't2.status_code';
+    payload.fieldResolverMap['adminName'] = 't4.first_name';
+    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+    payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
+    payload.fieldResolverMap['districtId'] = 't3.district_id';
+    payload.fieldResolverMap['representativeId'] = 't3.representative_id';
 
-    return null;
+    // mapping search field and operator default ilike
+    // payload.globalSearchFields = [
+    //   {
+    //     field: 'awbNumber',
+    //   },
+    // ];
+    if (payload.sortBy === '') {
+      payload.sortBy = 'bankStatementDate';
+    }
+
+    const repo = new OrionRepositoryService(CodBankStatement, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.cod_bank_statement_id', 'bankStatementId'],
+      ['t1.bank_statement_code', 'bankStatementCode'],
+      ['t1.bank_statement_date', 'bankStatementDate'],
+      ['t1.transaction_status_id', 'transactionStatusId'],
+      ['t1.bank_account', 'bankAccount'],
+      ['t2.status_code', 'transactionStatus'],
+      ['t1.total_transaction', 'totalTransaction'],
+      ['t1.total_cod_value', 'totalCodValue'],
+      ['t3.branch_name', 'branchName'],
+      ['t4.first_name', 'adminName'],
+    );
+
+    q.innerJoin(e => e.transactionStatus, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.userAdmin, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebAwbCodBankStatementResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 
   // func private ==============================================================
