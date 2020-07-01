@@ -93,4 +93,17 @@ export class V1WebAwbCodController {
       bankStatementId,
     );
   }
+
+  @Get('bankStatement/awb/:bankStatementId')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodTransactionDetailResponseVm })
+  public async transactionBankDetailStatement(
+    @Param('bankStatementId') bankStatementId: string,
+  ) {
+    // get data transaction branch
+    return V1WebAwbCodService.transactionBranchDetailByBankStatementId(
+      bankStatementId,
+    );
+  }
 }
