@@ -544,6 +544,7 @@ export class V1WebAwbCodService {
       ['t1.total_cod_value', 'totalCodValue'],
       ['t3.branch_name', 'branchName'],
       ['t4.first_name', 'adminName'],
+      ['t5.url', 'attachmentUrl'],
     );
 
     q.innerJoin(e => e.transactionStatus, 't2', j =>
@@ -553,6 +554,9 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.userAdmin, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.attachment, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 

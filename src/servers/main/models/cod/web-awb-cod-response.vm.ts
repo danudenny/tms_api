@@ -129,6 +129,9 @@ export class WebCodBankStatementVm {
 
   @ApiModelProperty()
   adminName: string;
+
+  @ApiModelProperty()
+  attachmentUrl: string;
 }
 
 export class WebAwbCodBankStatementResponseVm extends BaseMetaResponseVm {
