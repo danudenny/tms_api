@@ -86,10 +86,10 @@ export class PartnerMerchantService {
 
     const query = `
       SELECT
-        MAX(pr.pickup_request_id) as max_pid, ` + select + `,
+        MAX(pr.work_order_id) as max_pid, ` + select + `,
         ` + select_encrypt + ` as partner_merchant_code
       FROM (
-        SELECT pr.pickup_request_id, ` + select + `
+        SELECT w.work_order_id, ` + select + `
         FROM work_order w
         INNER JOIN pickup_request_detail prd on w.work_order_id = prd.work_order_id_last and prd.is_deleted=false
         INNER JOIN pickup_request pr on
