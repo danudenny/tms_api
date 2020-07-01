@@ -421,6 +421,7 @@ export class V1WebAwbCodService {
     const bankAccount = await this.getBankAccount(payload.bankBranchId);
     let totalValue = 0;
     let totalData = 0;
+    let totalAwb = 0;
     try {
       // #region transaction data
       await getManager().transaction(async transactionManager => {
@@ -431,6 +432,7 @@ export class V1WebAwbCodService {
         bankStatement.transactionStatusId = 35000;
         bankStatement.totalCodValue = totalValue; // init
         bankStatement.totalTransaction = totalData; // init
+        bankStatement.totalAwb = totalAwb; // init
         bankStatement.bankBranchId = payload.bankBranchId;
         bankStatement.bankAccount = bankAccount;
         bankStatement.attachmentId = attachmentId;
@@ -448,6 +450,7 @@ export class V1WebAwbCodService {
           if (codBranch) {
             totalData += 1;
             totalValue += Number(codBranch.totalCodValue);
+            totalAwb += Number(codBranch.totalAwb);
             // update data
             await transactionManager.update(
               CodTransactionBranch,
@@ -488,6 +491,7 @@ export class V1WebAwbCodService {
           {
             totalCodValue: totalValue,
             totalTransaction: totalData,
+            totalAwb,
             updatedTime: timestamp,
             userIdUpdated: authMeta.userId,
           },
@@ -585,6 +589,7 @@ export class V1WebAwbCodService {
       ['t1.bank_account', 'bankAccount'],
       ['t2.status_title', 'transactionStatus'],
       ['t1.total_transaction', 'totalTransaction'],
+      ['t1.total_awb', 'totalAwb'],
       ['t1.total_cod_value', 'totalCodValue'],
       ['t3.branch_name', 'branchName'],
       ['t4.first_name', 'adminName'],

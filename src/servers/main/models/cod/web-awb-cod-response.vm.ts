@@ -122,6 +122,9 @@ export class WebCodBankStatementVm {
   totalTransaction: number;
 
   @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
   totalCodValue: number;
 
   @ApiModelProperty()
