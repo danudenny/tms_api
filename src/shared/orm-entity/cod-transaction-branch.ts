@@ -39,7 +39,7 @@ export class CodTransactionBranch extends TmsBaseEntity {
   @Column('character varying', {
     nullable: false,
     length: 20,
-    name: 'transaction_code',
+    name: 'transaction_type',
   })
   transactionType: string;
 
