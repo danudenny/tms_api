@@ -469,19 +469,6 @@ export class V1WebAwbCodService {
           }
         } // endof loop
 
-        // add history bank statment
-        const bankStatementHistory = new CodBankStatementHistory();
-        bankStatementHistory.codBankStatementId = bankStatement.codBankStatementId;
-        bankStatementHistory.transactionStatusId = 35000;
-        bankStatementHistory.totalCodValue = totalValue;
-        bankStatementHistory.bankBranchId = payload.bankBranchId;
-        bankStatementHistory.bankAccount = bankAccount;
-        bankStatementHistory.attachmentId = attachmentId;
-        await transactionManager.insert(
-          CodBankStatementHistory,
-          bankStatementHistory,
-        );
-
         // update data bank statment
         await transactionManager.update(
           CodBankStatement,
