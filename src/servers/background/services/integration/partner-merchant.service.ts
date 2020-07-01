@@ -11,7 +11,9 @@ export class PartnerMerchantService {
   static async sync(payload: any): Promise<any> {
     const result = [];
 
-    let pid = 41102333;
+    // pid by pickup_request_id start 41102333
+    // pid by work_order_id start 146744249 (30 Juni 2020)
+    let pid = 146744249;
     const configId = 4;
 
     const schedulerConfig = await SchedulerConfig.findOne({
@@ -88,17 +90,20 @@ export class PartnerMerchantService {
         ` + select_encrypt + ` as partner_merchant_code
       FROM (
         SELECT pr.pickup_request_id, ` + select + `
-        FROM pickup_request pr
-        INNER JOIN pickup_request_detail prd on pr.pickup_request_id=prd.pickup_request_id and prd.is_deleted=false
-        INNER JOIN work_order w on w.work_order_id=prd.work_order_id_last and w.branch_id_assigned is not null and w.is_deleted=false
-        LEFT JOIN partner_merchant pm on pm.partner_merchant_code = ` + select_encrypt + ` and pm.is_deleted=false
-        WHERE
-          pm.partner_merchant_id is null
-          and pr.pickup_request_id > :pid
+        FROM work_order w
+        INNER JOIN pickup_request_detail prd on w.work_order_id = prd.work_order_id_last and prd.is_deleted=false
+        INNER JOIN pickup_request pr on
+          pr.pickup_request_id = prd.pickup_request_id
           and pr.pickup_request_name <> ''
           and pr.pickup_request_address <> ''
           and pr.is_deleted = false
-        LIMIT 2500
+        LEFT JOIN partner_merchant pm on pm.partner_merchant_code = ` + select_encrypt + ` and pm.is_deleted=false
+        WHERE
+          pm.partner_merchant_id is null
+          and w.work_order_id > :pid
+          and w.branch_id_assigned is not null
+          and w.is_deleted = false
+        LIMIT 1
       ) pr
       GROUP BY ` + select + `
     `;
