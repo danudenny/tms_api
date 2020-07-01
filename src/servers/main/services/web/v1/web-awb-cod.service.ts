@@ -507,6 +507,50 @@ export class V1WebAwbCodService {
     }
   }
 
+  static async transactionBranchByBankStatementId(
+    id: string,
+  ): Promise<WebAwbCodListTransactionResponseVm> {
+    const qb = createQueryBuilder();
+    qb.addSelect('t1.cod_transaction_branch_id', 'transactionId');
+    qb.addSelect('t1.transaction_code', 'transactionCode');
+    qb.addSelect('t1.transaction_date', 'transactionDate');
+    qb.addSelect('t1.transaction_type', 'transactionType');
+    qb.addSelect('t1.transaction_status_id', 'transactionStatusId');
+    qb.addSelect('t2.status_title', 'transactionStatus');
+    qb.addSelect('t1.total_awb', 'totalAwb');
+    qb.addSelect('t1.total_cod_value', 'totalCodValue');
+    qb.addSelect('t3.branch_name', 'branchName');
+    qb.addSelect('t4.first_name', 'adminName');
+
+    qb.from('cod_transaction_branch', 't1');
+    qb.innerJoin(
+      'transaction_status',
+      't2',
+      't1.transaction_status_id = t2.transaction_status_id AND t2.is_deleted = false',
+    );
+    qb.innerJoin(
+      'branch',
+      't3',
+      't1.branch_id = t3.branch_id AND t3.is_deleted = false',
+    );
+    qb.innerJoin(
+      'users',
+      't4',
+      't1.user_id_created = t4.user_id AND t4.is_deleted = false',
+    );
+    qb.where('t1.cod_bank_statement_id = :id', { id });
+    qb.andWhere('t1.is_deleted = false');
+
+    const data = await qb.getRawMany();
+    if (data.length) {
+      const result = new WebAwbCodListTransactionResponseVm();
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException('Data tidak ditemukan!');
+    }
+  }
+
   static async bankStatement(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodBankStatementResponseVm> {

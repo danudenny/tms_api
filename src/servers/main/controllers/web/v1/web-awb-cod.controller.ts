@@ -47,11 +47,13 @@ export class V1WebAwbCodController {
     return V1WebAwbCodService.transactionBranch(payload);
   }
 
-  @Get('transactionBranch/detail/:id')
+  @Get('transactionBranch/detail/:transactionBranchId')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebCodTransactionDetailResponseVm })
-  public async transactionBranchDetail(@Param('id') transactionId: string) {
+  public async transactionBranchDetail(
+    @Param('transactionBranchId') transactionId: string,
+  ) {
     // get data transaction branch detail
     return V1WebAwbCodService.transactionBranchDetail(transactionId);
   }
@@ -77,5 +79,18 @@ export class V1WebAwbCodController {
   public async bankStatement(@Body() payload: BaseMetaPayloadVm) {
     // get data bankStatement
     return V1WebAwbCodService.bankStatement(payload);
+  }
+
+  @Get('bankStatement/transactionBranch/:bankStatementId')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebAwbCodListTransactionResponseVm })
+  public async transactionBankStatement(
+    @Param('bankStatementId') bankStatementId: string,
+  ) {
+    // get data transaction branch
+    return V1WebAwbCodService.transactionBranchByBankStatementId(
+      bankStatementId,
+    );
   }
 }
