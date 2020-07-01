@@ -103,7 +103,8 @@ export class PartnerMerchantService {
           and w.work_order_id > :pid
           and w.branch_id_assigned is not null
           and w.is_deleted = false
-        LIMIT 1
+        ORDER BY w.work_order_id
+        LIMIT 2500
       ) pr
       GROUP BY ` + select + `
     `;
