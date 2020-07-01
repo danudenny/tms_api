@@ -83,6 +83,7 @@ export class PartnerMerchantService {
         pr.merchant_code, pr.pickup_request_name, MD5(pr.pickup_request_address), pr.pickup_request_email, pr.pickup_request_contact_no, pr.partner_id, branch_id_assigned
       ))
     `;
+    const endpid = pid + 5000;
 
     const query = `
       SELECT
@@ -101,16 +102,16 @@ export class PartnerMerchantService {
         WHERE
           pm.partner_merchant_id is null
           and w.work_order_id > :pid
+          and w.work_order_id <= :endpid
           and w.branch_id_assigned is not null
           and w.is_deleted = false
-        ORDER BY w.work_order_id
-        LIMIT 2500
       ) pr
       GROUP BY ` + select + `
     `;
 
     return await RawQueryService.queryWithParams(query, {
       pid,
+      endpid
     });
   }
 }
