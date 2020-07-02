@@ -1444,7 +1444,7 @@ export class ScanoutSmdService {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Surat jalan dari resi ` + item_number + ` tidak ditemukan`;
-    } else if (unassigningSMD[0].status_last != 1000 && unassigningSMD[0].status_last != 2000) {
+    } else if (unassigningSMD[0].status_last >= 3000) {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Gabung Paket ` + item_number + ` Sudah Berada di Jalan/Tujuan`;
@@ -1483,7 +1483,7 @@ export class ScanoutSmdService {
         totalError += 1;
         response.data.status = 'error';
         response.data.message = `Surat Jalan yang Akan Di-assign Tidak Ditemukan`;
-      } else if (assigningSMD[0].status_last != 1000 && assigningSMD[0].status_last != 2000) {
+      } else if (assigningSMD[0].status_last >= 3000) {
         totalError += 1;
         response.data.status = 'error';
         response.data.message = `Gabung Paket dari Surat Jalan ` + assigningSMD[0].do_smd_code + ` Sudah Berada di Jalan`;
@@ -1617,7 +1617,7 @@ export class ScanoutSmdService {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Bagging ` + item_number + ` Sudah Berada di Surat jalan ` + unassigningSMD[0].do_smd_code;
-    } else if (unassigningSMD[0].status_last != 1000 && unassigningSMD[0].status_last != 2000) {
+    } else if (unassigningSMD[0].status_last >= 3000) {
       totalError += 1;
       response.data.status = 'error';
       response.data.message = `Bagging ` + item_number + ` Sudah Berada di Jalan/Tujuan`;
@@ -1681,7 +1681,7 @@ export class ScanoutSmdService {
           totalError += 1;
           response.data.status = 'error';
           response.data.message = `Surat Jalan yang Akan Di-assign Tidak Ditemukan`;
-        } else if (assigningSMD[0].status_last != 1000 && assigningSMD[0].status_last != 2000) {
+        } else if (assigningSMD[0].status_last >= 3000) {
           totalError += 1;
           response.data.status = 'error';
           response.data.message = `Bagging dari Surat Jalan ` + assigningSMD[0].do_smd_code + ` Sudah Berada di Jalan/Tujuan`;
