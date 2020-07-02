@@ -643,7 +643,6 @@ export class V1WebAwbCodService {
     payload: WebCodBankStatementValidatePayloadVm,
   ): Promise<WebCodBankStatementResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
     // validate data
     const bankStatement = await CodBankStatement.findOne({
@@ -704,9 +703,61 @@ export class V1WebAwbCodService {
   static async bankStatementCancel(
     payload: WebCodBankStatementCancelPayloadVm,
   ): Promise<WebCodBankStatementResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const timestamp = moment().toDate();
+    // validate data
+    const bankStatement = await CodBankStatement.findOne({
+      select: ['codBankStatementId'],
+      where: {
+        codBankStatementId: payload.bankStatementId,
+        transactionStatusId: 35000,
+        isDeleted: false,
+      },
+    });
+
+    if (!bankStatement) {
+      throw new BadRequestException('Data tidak ditemukan/sudah di proses!');
+    }
+
     try {
       // TODO: process cancel bank statement
-      return null;
+      // #region transaction data
+      await getManager().transaction(async transactionManager => {
+        // update data bank statment
+        await transactionManager.update(
+          CodBankStatement,
+          {
+            codBankStatementId: payload.bankStatementId,
+          },
+          {
+            transactionStatusId: 32500,
+            cancelDatetime: timestamp,
+            updatedTime: timestamp,
+            userIdUpdated: authMeta.userId,
+          },
+        );
+
+        // update transaction branch
+        await transactionManager.update(
+          CodTransactionBranch,
+          {
+            codBankStatementId: payload.bankStatementId,
+          },
+          {
+            transactionStatusId: 32500,
+            updatedTime: timestamp,
+            userIdUpdated: authMeta.userId,
+          },
+        );
+        // TODO: update status detail?
+      });
+      // #endregion of transaction
+
+      const result = new WebCodBankStatementResponseVm();
+      result.status = 'ok';
+      result.message = 'success';
+      return result;
+
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }
