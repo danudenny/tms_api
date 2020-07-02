@@ -1,3 +1,4 @@
+// #region import
 import {
     Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UploadedFile, UseGuards,
     UseInterceptors,
@@ -10,13 +11,14 @@ import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.g
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
-    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm,
+    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodBankStatementValidatePayloadVm, WebCodBankStatementCancelPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebCodTransactionDetailResponseVm,
-    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebAwbCodBankStatementResponseVm,
+    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebAwbCodBankStatementResponseVm, WebCodBankStatementResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
+// #endregion import
 
 @ApiUseTags('Web Awb COD')
 @Controller('web/v1/cod')
@@ -105,5 +107,27 @@ export class V1WebAwbCodController {
     return V1WebAwbCodService.transactionBranchDetailByBankStatementId(
       bankStatementId,
     );
+  }
+
+  @Post('bankStatement/validate')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodBankStatementResponseVm })
+  public async bankStatementValidate(
+    @Body() payload: WebCodBankStatementValidatePayloadVm,
+  ) {
+    // validate bankStatement
+    return V1WebAwbCodService.bankStatementValidate(payload);
+  }
+
+  @Post('bankStatement/cancel')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodBankStatementResponseVm })
+  public async bankStatementCancel(
+    @Body() payload: WebCodBankStatementCancelPayloadVm,
+  ) {
+    // cancel bankStatement
+    return V1WebAwbCodService.bankStatementCancel(payload);
   }
 }

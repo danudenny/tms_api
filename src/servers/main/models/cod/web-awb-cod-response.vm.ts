@@ -203,6 +203,14 @@ export class WebCodTransferHeadOfficeResponseVm {
   dataError: string[];
 }
 
+export class WebCodBankStatementResponseVm {
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+}
+
 // #region for data printing
 export class WebCodAwbPrintVm {
   @ApiModelProperty()

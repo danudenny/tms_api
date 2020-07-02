@@ -1,6 +1,6 @@
 // #region import
 import { createQueryBuilder, getManager } from 'typeorm';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
@@ -15,7 +15,7 @@ import { CustomCounterCode } from '../../../../../shared/services/custom-counter
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import {
-    WebCodAwbPayloadVm, WebCodTransferPayloadVm, WebCodTransferHeadOfficePayloadVm,
+    WebCodAwbPayloadVm, WebCodTransferPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodBankStatementValidatePayloadVm, WebCodBankStatementCancelPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   WebAwbCodListResponseVm,
@@ -28,6 +28,7 @@ import {
   WebCodTransactionDetailResponseVm,
   WebCodTransferHeadOfficeResponseVm,
   WebAwbCodBankStatementResponseVm,
+  WebCodBankStatementResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 import moment = require('moment');
@@ -636,6 +637,79 @@ export class V1WebAwbCodService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
+  }
+
+  static async bankStatementValidate(
+    payload: WebCodBankStatementValidatePayloadVm,
+  ): Promise<WebCodBankStatementResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timestamp = moment().toDate();
+    // validate data
+    const bankStatement = await CodBankStatement.findOne({
+      select: ['codBankStatementId'],
+      where: {
+        codBankStatementId: payload.bankStatementId,
+        transactionStatusId: 35000,
+        isDeleted: false,
+      },
+    });
+
+    if (!bankStatement) {
+      throw new BadRequestException('Data tidak ditemukan/sudah di proses!');
+    }
+
+    try {
+      // TODO: process validate bank statement
+      // #region transaction data
+      await getManager().transaction(async transactionManager => {
+        // update data bank statment
+        await transactionManager.update(
+          CodBankStatement,
+          {
+            codBankStatementId: payload.bankStatementId,
+          },
+          {
+            transactionStatusId: 40000,
+            bankNoReference: payload.bankNoReference,
+            updatedTime: timestamp,
+            userIdUpdated: authMeta.userId,
+          },
+        );
+
+        // update transaction branch
+        await transactionManager.update(
+          CodTransactionBranch,
+          {
+            codBankStatementId: payload.bankStatementId,
+          },
+          {
+            transactionStatusId: 40000,
+            updatedTime: timestamp,
+            userIdUpdated: authMeta.userId,
+          },
+        );
+        // TODO: update status detail?
+      });
+      // #endregion of transaction
+      const result = new WebCodBankStatementResponseVm();
+      result.status = 'ok';
+      result.message = 'success';
+      return result;
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
+    }
+  }
+
+  static async bankStatementCancel(
+    payload: WebCodBankStatementCancelPayloadVm,
+  ): Promise<WebCodBankStatementResponseVm> {
+    try {
+      // TODO: process cancel bank statement
+      return null;
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
+    }
   }
 
   // func private ==============================================================

@@ -84,6 +84,19 @@ export class CodBankStatement extends TmsBaseEntity {
   })
   branchId: number;
 
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'cancel_datetime',
+  })
+  cancelDatetime: Date;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 100,
+    name: 'bank_no_reference',
+  })
+  bankNoReference: string;
+
   // relation
   @ManyToOne(() => TransactionStatus)
   @JoinColumn({ name: 'transaction_status_id' })

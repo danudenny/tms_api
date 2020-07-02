@@ -45,3 +45,16 @@ export class WebCodTransferHeadOfficePayloadVm {
   @ApiModelProperty()
   bankBranchId: number;
 }
+
+export class WebCodBankStatementValidatePayloadVm {
+  @ApiModelProperty()
+  bankStatementId: string;
+
+  @ApiModelProperty()
+  bankNoReference: string;
+}
+
+export class WebCodBankStatementCancelPayloadVm {
+  @ApiModelProperty()
+  bankStatementId: string;
+}
