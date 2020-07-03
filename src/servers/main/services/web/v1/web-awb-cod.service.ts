@@ -35,7 +35,6 @@ import moment = require('moment');
 import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { AttachmentService } from '../../../../../shared/services/attachment.service';
 import { CodBankStatement } from '../../../../../shared/orm-entity/cod-bank-statement';
-import { CodBankStatementHistory } from '../../../../../shared/orm-entity/cod-bank-statement-history';
 // #endregion
 export class V1WebAwbCodService {
 

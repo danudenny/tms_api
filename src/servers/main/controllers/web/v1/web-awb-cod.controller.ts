@@ -18,6 +18,8 @@ import {
     WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebAwbCodBankStatementResponseVm, WebCodBankStatementResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
+import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
+import { V1WebReportCodService } from '../../../services/web/v1/web-report-cod.service';
 // #endregion import
 
 @ApiUseTags('Web Awb COD')
@@ -129,5 +131,14 @@ export class V1WebAwbCodController {
   ) {
     // cancel bankStatement
     return V1WebAwbCodService.bankStatementCancel(payload);
+  }
+
+  @Get('supplierInvoice/testExport')
+  @HttpCode(HttpStatus.OK)
+  // @UseGuards(AuthenticatedGuard)
+  // @ApiOkResponse({ type: WebCodTransactionDetailResponseVm })
+  @ResponseSerializerOptions({ disable: true })
+  public async testExportData() {
+    return V1WebReportCodService.testExport();
   }
 }
