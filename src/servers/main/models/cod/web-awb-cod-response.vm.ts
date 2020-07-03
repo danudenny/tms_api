@@ -241,6 +241,12 @@ export class WebAwbCodInvoice {
 
   @ApiModelProperty()
   adminName: string;
+
+  @ApiModelProperty()
+  transactionStatusId: number;
+
+  @ApiModelProperty()
+  transactionStatus: string;
 }
 
 export class WebAwbCodSupplierInvoiceResponseVm extends BaseMetaResponseVm {

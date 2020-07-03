@@ -689,7 +689,36 @@ export class V1WebAwbCodService {
             userIdUpdated: authMeta.userId,
           },
         );
-        // TODO: update status detail?
+
+        // looping data transaction branch
+        const transactionsBranch = await transactionManager.find(
+          CodTransactionBranch,
+          {
+            where: {
+              codBankStatementId: payload.bankStatementId,
+              isDeleted: false,
+            },
+          },
+        );
+        if (transactionsBranch.length) {
+          for (const item of transactionsBranch) {
+            await transactionManager.update(
+              CodTransactionBranchDetail,
+              {
+                codTransactionBranchId: item.codBankStatementId,
+                isDeleted: false,
+              },
+              {
+                transactionStatusId: 40000,
+                updatedTime: timestamp,
+                userIdUpdated: authMeta.userId,
+              },
+            );
+
+            // TODO: update awb status detail?
+          }
+        }
+
       });
       // #endregion of transaction
       const result = new WebCodBankStatementResponseVm();
@@ -750,7 +779,7 @@ export class V1WebAwbCodService {
             userIdUpdated: authMeta.userId,
           },
         );
-        // TODO: update status detail?
+
       });
       // #endregion of transaction
 
@@ -771,9 +800,9 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['partnerName'] = 't3.partner_name';
     payload.fieldResolverMap['partnerId'] = 't2.partner_id';
 
-    payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
+    payload.fieldResolverMap['transactionStatus'] = 't5.status_title';
+    payload.fieldResolverMap['transactionStatusId'] = 't2.transaction_status_id';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
-    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
 
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
@@ -801,6 +830,8 @@ export class V1WebAwbCodService {
       ['t2.cod_value', 'codValue'],
       ['t2.payment_method', 'paymentMethod'],
       ['t2.consignee_name', 'consigneeName'],
+      ['t2.transaction_status_id', 'transactionStatusId'],
+      ['t5.status_title', 'transactionStatus'],
       ['t4.first_name', 'adminName'],
     );
 
@@ -811,6 +842,9 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.userAdmin, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.transactions.details.transactionStatus, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 

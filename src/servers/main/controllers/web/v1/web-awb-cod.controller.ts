@@ -11,7 +11,7 @@ import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.g
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
-    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodBankStatementValidatePayloadVm, WebCodBankStatementCancelPayloadVm,
+    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodBankStatementValidatePayloadVm, WebCodBankStatementCancelPayloadVm, WebCodSupplierInvoicePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebCodTransactionDetailResponseVm,
@@ -146,7 +146,9 @@ export class V1WebAwbCodController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
   // @ApiOkResponse({ type: WebAwbCodSupplierInvoiceResponseVm })
-  public async supplierInvoicePaid(@Body() payload: BaseMetaPayloadVm) {
+  public async supplierInvoicePaid(
+    @Body() payload: WebCodSupplierInvoicePayloadVm,
+  ) {
     // TODO: validate data paid supplier invoice
     return {};
   }

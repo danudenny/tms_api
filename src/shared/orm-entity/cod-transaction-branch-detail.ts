@@ -8,6 +8,7 @@ import {
 import { TmsBaseEntity } from './tms-base';
 import { CodTransactionBranch } from './cod-transaction-branch';
 import { Partner } from './partner';
+import { TransactionStatus } from './transaction-status';
 
 @Entity('cod_transaction_branch_detail', { schema: 'public' })
 export class CodTransactionBranchDetail extends TmsBaseEntity {
@@ -105,7 +106,17 @@ export class CodTransactionBranchDetail extends TmsBaseEntity {
   })
   userIdDriver: number;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'transaction_status_id',
+  })
+  transactionStatusId: number;
+
   //  relation
+  @ManyToOne(() => TransactionStatus)
+  @JoinColumn({ name: 'transaction_status_id' })
+  transactionStatus: TransactionStatus;
+
   @ManyToOne(() => CodTransactionBranch, x => x.details)
   @JoinColumn({
     name: 'cod_transaction_branch_id',
