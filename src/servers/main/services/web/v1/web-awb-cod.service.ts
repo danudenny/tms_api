@@ -48,7 +48,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
-    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['awbStatusIdLast'] = 't7.awb_status_id_last';
     payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
 
     payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
@@ -76,7 +76,7 @@ export class V1WebAwbCodService {
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
       ['t1.updated_time', 'transactionDate'],
-      ['t1.awb_status_id_last', 'awbStatusIdLast'],
+      ['t7.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
@@ -112,7 +112,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbStatus, 't7', j =>
+    q.innerJoin(e => e.doPodDeliverDetail.awbStatus, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
