@@ -5,6 +5,7 @@ import {
   AwbSubstituteResponseVm,
   TrackingBagPayloadVm,
   TrackingBagResponseVm,
+  AwbPhotoDetailVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
@@ -146,6 +147,36 @@ export class V1WebTrackingService {
     );
     qq.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
       doPodDeliverDetailId: payload.doPodDeliverDetailId,
+    });
+
+    if (payload.attachmentType) {
+      qq.andWhere('dpda.type = :attachmentType', { attachmentType: payload.attachmentType });
+    }
+
+    const result = new PhotoResponseVm();
+    result.data = await qq.getRawMany();
+    return result;
+  }
+
+  // get data photo by awb item id
+  static async awbPhotoDetail(payload: AwbPhotoDetailVm): Promise<PhotoResponseVm> {
+    const qq = createQueryBuilder();
+    qq.addSelect('attachments.url', 'url');
+    qq.addSelect('dpda.type', 'type');
+    qq.addSelect('dpdd.awb_number', 'awbNumber');
+    qq.from('do_pod_deliver_attachment', 'dpda');
+    qq.innerJoin(
+      'do_pod_deliver_detail',
+      'dpdd',
+      'dpdd.do_pod_deliver_detail_id = dpda.do_pod_deliver_detail_id AND dpdd.is_deleted = false',
+    );
+    qq.innerJoin(
+      'attachment_tms',
+      'attachments',
+      'attachments.attachment_tms_id = dpda.attachment_tms_id ',
+    );
+    qq.where('dpdd.awb_item_id = :awbItemId', {
+      awbItemId: payload.awbItemId,
     });
 
     if (payload.attachmentType) {

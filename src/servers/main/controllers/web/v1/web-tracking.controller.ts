@@ -9,6 +9,8 @@ import { PhotoDetailVm } from '../../../models/bag-order-response.vm';
 import {
     AwbSubstituteResponseVm, TrackingAwbPayloadVm, TrackingAwbResponseVm, TrackingBagPayloadVm,
     TrackingBagResponseVm,
+    AwbPhotoDetailVm,
+    AwbPhotoResponseVm,
 } from '../../../models/tracking.vm';
 import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
 
@@ -48,4 +50,11 @@ export class V1WebTrackingController {
     return V1WebTrackingService.getPhotoDetail(payload);
   }
 
+  @Post('awbPhoto')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: AwbPhotoResponseVm })
+  public async awbPhoto(@Body() payload: AwbPhotoDetailVm) {
+    return V1WebTrackingService.awbPhotoDetail(payload);
+  }
 }

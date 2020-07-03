@@ -29,7 +29,6 @@ import { WebDeliveryInController } from './web/web-delivery-in.controller';
 import { WebDeliveryOutController } from './web/web-delivery-out.controller';
 import { WebFirstMileController } from './web/web-first-mile.controller';
 import { WebMonitoringController } from './web/web-monitoring.controller';
-import { WebTrackingController } from './web/web-tracking.controller';
 import { ProvincesController } from './master/provinces.controller';
 import { CitiesController } from './master/cities.controller';
 import { DistrictsController } from './master/districts.controller';
@@ -94,7 +93,6 @@ import { BankAccountController } from './master/bank-account.controller';
     WebMonitoringController,
     WebAwbUpdateStatusController,
     WebAwbCountController,
-    WebTrackingController,
     WebFirstMileController,
     WebAwbReturnController,
     ProvincesController,

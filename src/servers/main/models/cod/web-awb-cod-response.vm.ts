@@ -213,6 +213,9 @@ export class WebCodBankStatementResponseVm {
 
 export class WebAwbCodInvoice {
   @ApiModelProperty()
+  partnerId: number;
+
+  @ApiModelProperty()
   partnerName: string;
 
   @ApiModelProperty()
@@ -222,7 +225,10 @@ export class WebAwbCodInvoice {
   bankStatementDate: string;
 
   @ApiModelProperty()
-  transactionStatus: string;
+  paymentMethod: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
 
   @ApiModelProperty()
   awbItemId: number;

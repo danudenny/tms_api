@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 // Payload
@@ -231,4 +231,28 @@ export class AwbSubstituteListData {
 export class AwbSubstituteResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [AwbSubstituteListData] })
   data: AwbSubstituteListData[];
+}
+
+export class AwbPhotoDetailVm {
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelPropertyOptional({ example: 'photo, photoCod, signature'})
+  attachmentType: string;
+}
+
+export class AwbPhotoDetailResponseVm {
+  @ApiModelProperty()
+  url: string;
+
+  @ApiModelProperty()
+  type: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+}
+
+export class AwbPhotoResponseVm {
+  @ApiModelProperty({ type: () => [AwbPhotoDetailResponseVm] })
+  data: AwbPhotoDetailResponseVm[];
 }

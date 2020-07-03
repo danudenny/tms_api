@@ -48,7 +48,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
-    payload.fieldResolverMap['awbStatusIdLast'] = 't7.awb_status_id_last';
+    payload.fieldResolverMap['awbStatusIdLast'] = 't3.awb_status_id_last';
     payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
 
     payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
@@ -76,7 +76,7 @@ export class V1WebAwbCodService {
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
       ['t1.updated_time', 'transactionDate'],
-      ['t7.awb_status_id_last', 'awbStatusIdLast'],
+      ['t3.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
@@ -768,8 +768,8 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodSupplierInvoiceResponseVm> {
     // mapping field
-    payload.fieldResolverMap['partnerName'] = 't5.partner_name';
-    payload.fieldResolverMap['partnerId'] = 't3.partner_id';
+    payload.fieldResolverMap['partnerName'] = 't3.partner_name';
+    payload.fieldResolverMap['partnerId'] = 't2.partner_id';
 
     payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
@@ -792,29 +792,28 @@ export class V1WebAwbCodService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t5.partner_name', 'partnerName'],
+      ['t2.partner_id', 'partnerId'],
+      ['t3.partner_name', 'partnerName'],
       ['t1.bank_account', 'bankAccount'],
       ['t1.bank_statement_date', 'bankStatementDate'],
-      ['t2.status_title', 'transactionStatus'],
-      ['t3.awb_item_id', 'awbItemId'],
-      ['t3.awb_number', 'awbNumber'],
-      ['t3.cod_value', 'codValue'],
+      ['t2.awb_item_id', 'awbItemId'],
+      ['t2.awb_number', 'awbNumber'],
+      ['t2.cod_value', 'codValue'],
+      ['t2.payment_method', 'paymentMethod'],
+      ['t2.consignee_name', 'consigneeName'],
       ['t4.first_name', 'adminName'],
     );
 
-    q.innerJoin(e => e.transactionStatus, 't2', j =>
+    q.innerJoin(e => e.transactions.details, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.transactions.details.partner, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.userAdmin, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.transactions.details, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.transactions.details.partner, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.transactionStatusId, w => w.equals(40000));
 
