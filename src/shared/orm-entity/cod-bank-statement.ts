@@ -5,12 +5,14 @@ import {
   ManyToOne,
   JoinColumn,
   OneToOne,
+  OneToMany,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { TransactionStatus } from './transaction-status';
 import { Branch } from './branch';
 import { User } from './user';
 import { AttachmentTms } from './attachment-tms';
+import { CodTransactionBranch } from './cod-transaction-branch';
 
 @Entity('cod_bank_statement', { schema: 'public' })
 export class CodBankStatement extends TmsBaseEntity {
@@ -113,4 +115,7 @@ export class CodBankStatement extends TmsBaseEntity {
   @OneToOne(() => AttachmentTms)
   @JoinColumn({ name: 'attachment_id' })
   attachment: AttachmentTms;
+
+  @OneToMany(() => CodTransactionBranch, x => x.bankStatement)
+  transactions: CodTransactionBranch[];
 }

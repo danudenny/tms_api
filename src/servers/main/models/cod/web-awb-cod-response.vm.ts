@@ -211,6 +211,37 @@ export class WebCodBankStatementResponseVm {
   message: string;
 }
 
+export class WebAwbCodInvoice {
+  @ApiModelProperty()
+  partnerName: string;
+
+  @ApiModelProperty()
+  bankAccount: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  bankStatementDate: string;
+
+  @ApiModelProperty()
+  transactionStatus: string;
+
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  codValue: number;
+
+  @ApiModelProperty()
+  adminName: string;
+}
+
+export class WebAwbCodSupplierInvoiceResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebAwbCodInvoice] })
+  data: WebAwbCodInvoice[];
+}
+
 // #region for data printing
 export class WebCodAwbPrintVm {
   @ApiModelProperty()

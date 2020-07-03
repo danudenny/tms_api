@@ -15,7 +15,7 @@ import {
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebCodTransactionDetailResponseVm,
-    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebAwbCodBankStatementResponseVm, WebCodBankStatementResponseVm,
+    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebAwbCodBankStatementResponseVm, WebCodBankStatementResponseVm, WebAwbCodSupplierInvoiceResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
@@ -131,6 +131,24 @@ export class V1WebAwbCodController {
   ) {
     // cancel bankStatement
     return V1WebAwbCodService.bankStatementCancel(payload);
+  }
+
+  @Post('supplierInvoice')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebAwbCodSupplierInvoiceResponseVm })
+  public async supplierInvoice(@Body() payload: BaseMetaPayloadVm) {
+    // get data supplier invoice
+    return V1WebAwbCodService.supplierInvoice(payload);
+  }
+
+  @Post('supplierInvoice/paid')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  // @ApiOkResponse({ type: WebAwbCodSupplierInvoiceResponseVm })
+  public async supplierInvoicePaid(@Body() payload: BaseMetaPayloadVm) {
+    // TODO: validate data paid supplier invoice
+    return {};
   }
 
   @Get('supplierInvoice/testExport')

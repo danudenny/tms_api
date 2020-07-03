@@ -4,11 +4,14 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { TransactionStatus } from './transaction-status';
 import { Branch } from './branch';
 import { User } from './user';
+import { CodTransactionBranchDetail } from './cod-transaction-branch-detail';
+import { CodBankStatement } from './cod-bank-statement';
 
 @Entity('cod_transaction_branch', { schema: 'public' })
 export class CodTransactionBranch extends TmsBaseEntity {
@@ -81,4 +84,14 @@ export class CodTransactionBranch extends TmsBaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_created' })
   userAdmin: User;
+
+  @ManyToOne(() => CodBankStatement, x => x.transactions)
+  @JoinColumn({
+    name: 'cod_bank_statement_id',
+    referencedColumnName: 'codBankStatementId',
+  })
+  bankStatement: CodBankStatement;
+
+  @OneToMany(() => CodTransactionBranchDetail, x => x.transactionBranch)
+  details: CodTransactionBranchDetail[];
 }

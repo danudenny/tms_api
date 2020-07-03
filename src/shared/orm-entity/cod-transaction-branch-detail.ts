@@ -2,8 +2,12 @@ import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
+  JoinColumn,
+  ManyToOne,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import { CodTransactionBranch } from './cod-transaction-branch';
+import { Partner } from './partner';
 
 @Entity('cod_transaction_branch_detail', { schema: 'public' })
 export class CodTransactionBranchDetail extends TmsBaseEntity {
@@ -100,4 +104,16 @@ export class CodTransactionBranchDetail extends TmsBaseEntity {
     name: 'user_id_driver',
   })
   userIdDriver: number;
+
+  //  relation
+  @ManyToOne(() => CodTransactionBranch, x => x.details)
+  @JoinColumn({
+    name: 'cod_transaction_branch_id',
+    referencedColumnName: 'codTransactionBranchId',
+  })
+  transactionBranch: CodTransactionBranch;
+
+  @ManyToOne(() => Partner)
+  @JoinColumn({ name: 'partner_id' })
+  partner: Partner;
 }

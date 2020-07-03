@@ -29,6 +29,7 @@ import {
   WebCodTransferHeadOfficeResponseVm,
   WebAwbCodBankStatementResponseVm,
   WebCodBankStatementResponseVm,
+  WebAwbCodSupplierInvoiceResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 import moment = require('moment');
@@ -48,6 +49,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
 
     payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
     payload.fieldResolverMap['branchNameLast'] = 't6.branch_name';
@@ -760,6 +762,71 @@ export class V1WebAwbCodService {
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }
+  }
+
+  static async supplierInvoice(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbCodSupplierInvoiceResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['partnerName'] = 't5.partner_name';
+    payload.fieldResolverMap['partnerId'] = 't3.partner_id';
+
+    payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
+    payload.fieldResolverMap['adminName'] = 't4.first_name';
+    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+
+    // mapping search field and operator default ilike
+    // payload.globalSearchFields = [
+    //   {
+    //     field: 'awbNumber',
+    //   },
+    // ];
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'bankStatementDate';
+    }
+
+    const repo = new OrionRepositoryService(CodBankStatement, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t5.partner_name', 'partnerName'],
+      ['t1.bank_account', 'bankAccount'],
+      ['t1.bank_statement_date', 'bankStatementDate'],
+      ['t2.status_title', 'transactionStatus'],
+      ['t3.awb_item_id', 'awbItemId'],
+      ['t3.awb_number', 'awbNumber'],
+      ['t3.cod_value', 'codValue'],
+      ['t4.first_name', 'adminName'],
+    );
+
+    q.innerJoin(e => e.transactionStatus, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.userAdmin, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.transactions.details, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.transactions.details.partner, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.transactionStatusId, w => w.equals(40000));
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebAwbCodSupplierInvoiceResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 
   // func private ==============================================================
