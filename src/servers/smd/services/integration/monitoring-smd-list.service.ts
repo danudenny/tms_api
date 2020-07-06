@@ -248,6 +248,15 @@ export class MonitoringSmdServices {
   }
 
   static async storeExcelPayload(payloadBody: any) {
+    if (!payloadBody) {
+      RequestErrorService.throwObj({
+        message: 'data should not be null or undefined',
+      });
+    } else if (!payloadBody.data) {
+      RequestErrorService.throwObj({
+        message: 'data should not be null or undefined',
+      });
+    }
     const identifier = moment().format('YYMMDDHHmmss');
     const authMeta = AuthService.getAuthData();
     const data = RedisService.setex(
