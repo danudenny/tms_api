@@ -258,15 +258,14 @@ export class MonitoringSmdServices {
       });
     }
     const identifier = moment().format('YYMMDDHHmmss');
-    const authMeta = AuthService.getAuthData();
-    const data = RedisService.setex(
+    // const authMeta = AuthService.getAuthData();
+    RedisService.setex(
       `export-monitoring-smd-${identifier}`,
       payloadBody,
       10 * 60,
       true,
     );
     return {
-      data,
       id: identifier,
     };
   }
