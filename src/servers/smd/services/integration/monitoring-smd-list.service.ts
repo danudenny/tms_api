@@ -112,18 +112,13 @@ export class MonitoringSmdServices {
     res: express.Response,
     queryParams: MonitoringPayloadVm,
   ): Promise<any> {
-    const retrievedData = await this.retrieveData(queryParams.id);
-    const body = retrievedData.data;
+    const body = await this.retrieveData(queryParams.id);
 
     const payload = new BaseMetaPayloadVm();
-    payload.filters = body.filters;
-    payload.autoConvertFieldsToSnakeCase = body.autoConvertFieldsToSnakeCase;
-
-    payload.page = body.page;
-    payload.limit = body.limit;
-    payload.sortBy = body.sortBy;
-    payload.sortDir = body.sortDir;
-    payload.search = body.search;
+    payload.filters = body.filters ? body.filters : [];
+    payload.sortBy = body.sortBy ? body.sortBy : '';
+    payload.sortDir = body.sortDir ? body.sortDir : 'desc';
+    payload.search = body.search ? body.search : '';
 
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
@@ -237,8 +232,8 @@ export class MonitoringSmdServices {
     return RedisService.get<T>(`export-monitoring-smd-${identifier}`, true);
   }
 
-  public static async retrieveData(id: string): Promise<StoreExcelMonitoringPayloadVm> {
-    const data = await this.retrieveGenericData<StoreExcelMonitoringPayloadVm>(id);
+  public static async retrieveData(id: string): Promise<MonitoringPayloadVm> {
+    const data = await this.retrieveGenericData<MonitoringPayloadVm>(id);
     if (!data) {
       RequestErrorService.throwObj({
         message: 'Data export excel tidak ditemukan',
@@ -250,11 +245,7 @@ export class MonitoringSmdServices {
   static async storeExcelPayload(payloadBody: any) {
     if (!payloadBody) {
       RequestErrorService.throwObj({
-        message: 'data should not be null or undefined',
-      });
-    } else if (!payloadBody.data) {
-      RequestErrorService.throwObj({
-        message: 'data should not be null or undefined',
+        message: 'body cannot be null or undefined',
       });
     }
     const identifier = moment().format('YYMMDDHHmmss');

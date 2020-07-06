@@ -1,9 +1,5 @@
 import { Body, Controller, Post, Req, UseGuards, Query, Get, Response} from '@nestjs/common';
-import { ScaninSmdService } from '../../services/integration/scanin-smd.service';
 import { MonitoringSmdServices } from '../../services/integration/monitoring-smd-list.service';
-// import { Partner } from '../../../../shared/orm-entity/partner';
-import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
-import { ScanInSmdPayloadVm } from '../../models/scanin-smd.payload.vm';
 import { ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
