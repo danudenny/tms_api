@@ -25,17 +25,17 @@ export class MonitoringSmdController {
 
   @Post('smd/excel/store')
   @ApiBearerAuth()
-  public async storePayloadExcel(@Body() payload: StoreExcelMonitoringPayloadVm) {
-    return MonitoringSmdServices.storeExcelPayload(payload);
+  @ResponseSerializerOptions({ disable: true })
+  public async storePayloadExcel(@Body() payloadBody: StoreExcelMonitoringPayloadVm) {
+    return MonitoringSmdServices.storeExcelPayload(payloadBody);
   }
 
   @Get('smd/export/excel')
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async exportExcel(
-    @Response() res: express.Response,
     @Query() queryParams: MonitoringPayloadVm,
+    @Response() serverResponse: express.Response,
   ) {
-    return MonitoringSmdServices.exportExcel(res, queryParams);
+    return MonitoringSmdServices.exportExcel(serverResponse, queryParams);
   }
 
 }
