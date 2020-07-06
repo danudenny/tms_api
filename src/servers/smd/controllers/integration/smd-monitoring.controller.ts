@@ -8,7 +8,7 @@ import { ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-sw
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { MonitoringPayloadVm } from '../../models/smd-monitoring-payload.vm';
+import { MonitoringPayloadVm, StoreExcelMonitoringPayloadVm } from '../../models/smd-monitoring-payload.vm';
 import express = require('express');
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 
@@ -27,7 +27,7 @@ export class MonitoringSmdController {
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
   public async storePayloadExcel(
-    @Body() payload: BaseMetaPayloadVm,
+    @Body() payload: StoreExcelMonitoringPayloadVm,
   ) {
     return MonitoringSmdServices.storeExcelPayload(payload);
   }

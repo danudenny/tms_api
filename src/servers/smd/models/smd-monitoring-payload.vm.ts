@@ -12,3 +12,8 @@ export class MonitoringPayloadVm extends BaseMetaPayloadVm {
   @ApiModelProperty()
   id: string;
 }
+
+export class StoreExcelMonitoringPayloadVm {
+  @ApiModelProperty({ type: () => MonitoringPayloadVm })
+  data: MonitoringPayloadVm = new MonitoringPayloadVm();
+}

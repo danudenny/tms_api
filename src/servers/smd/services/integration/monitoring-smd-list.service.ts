@@ -3,33 +3,15 @@ import moment = require('moment');
 import express = require('express');
 import fs = require('fs');
 import xlsx = require('xlsx');
-import { BadRequestException } from '@nestjs/common';
-import axios from 'axios';
 import { RedisService } from '../../../../shared/services/redis.service';
-import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { SysCounter } from '../../../../shared/orm-entity/sys-counter';
-import { Bag } from '../../../../shared/orm-entity/bag';
-import { DoSmd } from '../../../../shared/orm-entity/do_smd';
-import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
-import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
-import { BagItem } from '../../../../shared/orm-entity/bag-item';
-import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanInDetailListResponseVm } from '../../models/scanin-smd.response.vm';
 import { MonitoringResponseVm } from '../../models/smd-monitoring-response.vm';
 import { HttpStatus } from '@nestjs/common';
-import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
-import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { WebScanInHubSortListResponseVm } from '../../../main/models/web-scanin-list.response.vm';
-import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
-import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
-import {RequestErrorService} from '../../../../shared/services/request-error.service';
-import {MonitoringPayloadVm} from '../../models/smd-monitoring-payload.vm';
-import {multiply} from 'lodash';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { StoreExcelMonitoringPayloadVm, MonitoringPayloadVm } from '../../models/smd-monitoring-payload.vm';
 
 @Injectable()
 export class MonitoringSmdServices {
@@ -130,7 +112,8 @@ export class MonitoringSmdServices {
     res: express.Response,
     queryParams: MonitoringPayloadVm,
   ): Promise<any> {
-    const body = await this.retrieveData(queryParams.id);
+    const retrievedData = await this.retrieveData(queryParams.id);
+    const body = retrievedData.data;
 
     const payload = new BaseMetaPayloadVm();
     payload.filters = body.filters;
@@ -254,8 +237,8 @@ export class MonitoringSmdServices {
     return RedisService.get<T>(`export-monitoring-smd-${identifier}`, true);
   }
 
-  public static async retrieveData(id: string): Promise<BaseMetaPayloadVm> {
-    const data = await this.retrieveGenericData<BaseMetaPayloadVm>(id);
+  public static async retrieveData(id: string): Promise<StoreExcelMonitoringPayloadVm> {
+    const data = await this.retrieveGenericData<StoreExcelMonitoringPayloadVm>(id);
     if (!data) {
       RequestErrorService.throwObj({
         message: 'Data export excel tidak ditemukan',
