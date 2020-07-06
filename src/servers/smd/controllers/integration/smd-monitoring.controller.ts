@@ -25,10 +25,7 @@ export class MonitoringSmdController {
 
   @Post('smd/excel/store')
   @ApiBearerAuth()
-  @ResponseSerializerOptions({ disable: true })
-  public async storePayloadExcel(
-    @Body() payload: StoreExcelMonitoringPayloadVm,
-  ) {
+  public async storePayloadExcel(@Body() payload: StoreExcelMonitoringPayloadVm) {
     return MonitoringSmdServices.storeExcelPayload(payload);
   }
 
