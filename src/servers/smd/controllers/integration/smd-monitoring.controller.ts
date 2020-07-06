@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards, Query, Get, Response} from '@nestjs/common';
 import { ScaninSmdService } from '../../services/integration/scanin-smd.service';
 import { MonitoringSmdServices } from '../../services/integration/monitoring-smd-list.service';
 // import { Partner } from '../../../../shared/orm-entity/partner';
@@ -8,6 +8,8 @@ import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import {MonitoringPayloadVm} from '../../models/smd-monitoring-payload.vm';
+import express = require('express');
 
 @ApiUseTags('Monitoring SMD')
 @Controller('monitoring')
@@ -19,4 +21,22 @@ export class MonitoringSmdController {
   public async FindDetailscanInList(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
     return MonitoringSmdServices.monitoringSmdList(payload);
   }
+
+  @Post('smd/excel/store')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async storePayloadExcel(
+    @Body() payload: BaseMetaPayloadVm,
+  ) {
+    return MonitoringSmdServices.storeExcelPayload(payload);
+  }
+
+  @Get('smd/export/excel')
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async exportExcel(
+    @Response() res: express.Response,
+    @Query() queryParams: MonitoringPayloadVm,
+  ) {
+    return MonitoringSmdServices.exportExcel(res, queryParams);
+  }
+
 }
