@@ -15,7 +15,7 @@ import { CustomCounterCode } from '../../../../../shared/services/custom-counter
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import {
-    WebCodAwbPayloadVm, WebCodTransferPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodBankStatementValidatePayloadVm, WebCodBankStatementCancelPayloadVm,
+    WebCodAwbPayloadVm, WebCodTransferPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodBankStatementValidatePayloadVm, WebCodBankStatementCancelPayloadVm, WebCodSupplierInvoicePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   WebAwbCodListResponseVm,
@@ -705,7 +705,7 @@ export class V1WebAwbCodService {
             await transactionManager.update(
               CodTransactionBranchDetail,
               {
-                codTransactionBranchId: item.codBankStatementId,
+                codTransactionBranchId: item.codTransactionBranchId,
                 isDeleted: false,
               },
               {
@@ -716,6 +716,7 @@ export class V1WebAwbCodService {
             );
 
             // TODO: update awb status detail?
+            // awb status 48000 - Terima HO
           }
         }
 
@@ -860,6 +861,17 @@ export class V1WebAwbCodService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
+  }
+
+  static async supplierInvoicePaid(payload: WebCodSupplierInvoicePayloadVm) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timestamp = moment().toDate();
+
+    // TODO: loop data find and update transaction detail
+    // update awb history, with awb status paid
+
+    return null;
   }
 
   // func private ==============================================================

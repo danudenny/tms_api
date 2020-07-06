@@ -150,7 +150,7 @@ export class V1WebAwbCodController {
     @Body() payload: WebCodSupplierInvoicePayloadVm,
   ) {
     // TODO: validate data paid supplier invoice
-    return {};
+    return V1WebAwbCodService.supplierInvoicePaid(payload);
   }
 
   @Get('supplierInvoice/testExport')
