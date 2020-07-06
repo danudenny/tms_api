@@ -4,12 +4,13 @@ import { MonitoringSmdServices } from '../../services/integration/monitoring-smd
 // import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { ScanInSmdPayloadVm } from '../../models/scanin-smd.payload.vm';
-import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import { ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import {MonitoringPayloadVm} from '../../models/smd-monitoring-payload.vm';
+import { MonitoringPayloadVm } from '../../models/smd-monitoring-payload.vm';
 import express = require('express');
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 
 @ApiUseTags('Monitoring SMD')
 @Controller('monitoring')
@@ -23,7 +24,8 @@ export class MonitoringSmdController {
   }
 
   @Post('smd/excel/store')
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
   public async storePayloadExcel(
     @Body() payload: BaseMetaPayloadVm,
   ) {
