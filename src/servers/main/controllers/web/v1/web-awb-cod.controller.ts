@@ -15,7 +15,7 @@ import {
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebCodTransactionDetailResponseVm,
-    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebAwbCodBankStatementResponseVm, WebCodBankStatementResponseVm, WebAwbCodSupplierInvoiceResponseVm,
+    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebAwbCodBankStatementResponseVm, WebCodBankStatementResponseVm, WebAwbCodSupplierInvoiceResponseVm, WebCodSupplierInvoicePaidResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
@@ -145,7 +145,7 @@ export class V1WebAwbCodController {
   @Post('supplierInvoice/paid')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: WebAwbCodSupplierInvoiceResponseVm })
+  @ApiOkResponse({ type: WebCodSupplierInvoicePaidResponseVm })
   public async supplierInvoicePaid(
     @Body() payload: WebCodSupplierInvoicePayloadVm,
   ) {

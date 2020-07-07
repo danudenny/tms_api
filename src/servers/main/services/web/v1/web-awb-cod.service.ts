@@ -1,5 +1,5 @@
 // #region import
-import { createQueryBuilder, getManager } from 'typeorm';
+import { createQueryBuilder, getManager, Not } from 'typeorm';
 import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
@@ -30,12 +30,13 @@ import {
   WebAwbCodBankStatementResponseVm,
   WebCodBankStatementResponseVm,
   WebAwbCodSupplierInvoiceResponseVm,
+  WebCodSupplierInvoicePaidResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 import moment = require('moment');
-import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { AttachmentService } from '../../../../../shared/services/attachment.service';
 import { CodBankStatement } from '../../../../../shared/orm-entity/cod-bank-statement';
+import { CodTransactionHistory } from '../../../../../shared/orm-entity/cod-transaction-history';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -182,6 +183,7 @@ export class V1WebAwbCodService {
           totalCodValueCash += Number(item.codValue);
           totalAwbCash += 1;
 
+          // send to background process
           const dataCash = await this.handleAwbCod(
             item,
             codBranchCash.codTransactionBranchId,
@@ -191,6 +193,7 @@ export class V1WebAwbCodService {
             awbValid.parcelValue,
             metaPrint.employeeIdDriver,
           );
+
           dataPrintCash.push(dataCash);
         } else {
           // NOTE: error message
@@ -863,15 +866,55 @@ export class V1WebAwbCodService {
     return result;
   }
 
-  static async supplierInvoicePaid(payload: WebCodSupplierInvoicePayloadVm) {
+  static async supplierInvoicePaid(
+    payload: WebCodSupplierInvoicePayloadVm,
+  ): Promise<WebCodSupplierInvoicePaidResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
+    const dataError = [];
 
     // TODO: loop data find and update transaction detail
     // update awb history, with awb status paid
+    if (!payload.data.length) {
+      throw new BadRequestException('Data yang dikirim kosong!');
+    }
 
-    return null;
+    for (const item of payload.data) {
+      const detail = await CodTransactionBranchDetail.findOne({
+        where: {
+          awbItemId: item.awbItemId,
+          transactionStatusId: Not(45000),
+          isDeleted: false,
+        },
+      });
+      if (detail) {
+        // update data detail transaction status awb 45000 [PAID]
+        await CodTransactionBranchDetail.update(
+          {
+            codTransactionBranchDetailId: detail.codTransactionBranchDetailId,
+          },
+          {
+            transactionStatusId: 45000,
+            updatedTime: timestamp,
+            userIdUpdated: authMeta.userId,
+          },
+        );
+      } else {
+        // NOTE: push message error
+        const errorMessage = `data resi ${
+          item.awbNumber
+        } tidak valid, atau sudah di proses!`;
+        dataError.push(errorMessage);
+      }
+    } // end of loop
+
+    // response
+    const result = new WebCodSupplierInvoicePaidResponseVm();
+    result.status = 'ok';
+    result.message = 'success';
+    result.dataError = dataError;
+    return result;
   }
 
   // func private ==============================================================
@@ -896,32 +939,25 @@ export class V1WebAwbCodService {
     branchDetail.partnerId = partnerId;
     branchDetail.parcelValue = parcelValue;
     branchDetail.userIdDriver = item.userIdDriver;
+    branchDetail.transactionStatusId = 30000;
 
     // for data cashless
     branchDetail.paymentService = item.paymentService;
     branchDetail.noReference = item.noReference;
 
     await CodTransactionBranchDetail.insert(branchDetail);
-    // NOTE: update status, insert awb history
-    // send background process with bull
-    // awb status 40000 (Setor Dana)
-    DoPodDetailPostMetaQueueService.createJobByCodTransferBranch(
-      item.awbItemId,
-      40000,
-      branchId,
-      userId,
-      employeeIdDriver,
-    );
 
-    // awb status 45000 (Terima Dana)
-    DoPodDetailPostMetaQueueService.createJobByCodTransferBranch(
-      item.awbItemId,
-      45000,
-      branchId,
-      userId,
-      employeeIdDriver,
-    );
+    // inset transaction history
+    const history = new CodTransactionHistory();
+    history.awbItemId = item.awbItemId;
+    history.awbNumber = item.awbNumber;
+    history.transactionDate = moment().toDate();
+    history.transactionStatusId = 30000;
+    history.branchId = branchId;
 
+    await CodTransactionHistory.insert(history);
+
+    // response
     const result = new WebCodAwbPrintVm();
     result.awbNumber = item.awbNumber;
     result.codValue = item.codValue;
