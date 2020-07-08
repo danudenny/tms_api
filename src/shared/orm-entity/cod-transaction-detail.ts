@@ -10,18 +10,18 @@ import { CodTransaction } from './cod-transaction';
 import { Partner } from './partner';
 import { TransactionStatus } from './transaction-status';
 
-@Entity('cod_transaction_branch_detail', { schema: 'public' })
+@Entity('cod_transaction_detail', { schema: 'public' })
 export class CodTransactionDetail extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
-    name: 'cod_transaction_branch_detail_id',
+    name: 'cod_transaction_detail_id',
   })
-  codTransactionBranchDetailId: string;
+  codTransactionDetailId: string;
 
   @Column('character varying', {
-    nullable: false,
-    name: 'cod_transaction_branch_id',
+    nullable: true,
+    name: 'cod_transaction_id',
   })
-  codTransactionBranchId: string;
+  codTransactionId: string;
 
   @Column('bigint', {
     nullable: false,

@@ -13,12 +13,12 @@ import { User } from './user';
 import { CodTransactionDetail } from './cod-transaction-detail';
 import { CodBankStatement } from './cod-bank-statement';
 
-@Entity('cod_transaction_branch', { schema: 'public' })
+@Entity('cod_transaction', { schema: 'public' })
 export class CodTransaction extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
-    name: 'cod_transaction_branch_id',
+    name: 'cod_transaction_id',
   })
-  codTransactionBranchId: string;
+  codTransactionId: string;
 
   @Column('character varying', {
     nullable: false,

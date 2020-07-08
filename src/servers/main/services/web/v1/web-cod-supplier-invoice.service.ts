@@ -141,7 +141,7 @@ export class V1WebCodSupplierInvoiceService {
         // update data detail transaction status awb 45000 [PAID]
         await CodTransactionDetail.update(
           {
-            codTransactionBranchDetailId: detail.codTransactionBranchDetailId,
+            codTransactionDetailId: detail.codTransactionDetailId,
           },
           {
             transactionStatusId: 45000,

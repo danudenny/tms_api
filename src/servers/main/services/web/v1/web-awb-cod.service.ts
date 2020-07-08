@@ -187,7 +187,7 @@ export class V1WebAwbCodService {
           // send to background process
           const dataCash = await this.handleAwbCod(
             item,
-            codBranchCash.codTransactionBranchId,
+            codBranchCash.codTransactionId,
             permissonPayload.branchId,
             authMeta.userId,
             awbValid.partnerId,
@@ -208,7 +208,7 @@ export class V1WebAwbCodService {
       // store data print cash on redis
       printIdCash = await this.printStoreData(
         metaPrint,
-        codBranchCash.codTransactionBranchId,
+        codBranchCash.codTransactionId,
         dataPrintCash,
         totalCodValueCash,
         'cash',
@@ -216,7 +216,7 @@ export class V1WebAwbCodService {
       // update data
       await CodTransaction.update(
         {
-          codTransactionBranchId: codBranchCash.codTransactionBranchId,
+          codTransactionId: codBranchCash.codTransactionId,
         },
         {
           totalCodValue,
@@ -260,7 +260,7 @@ export class V1WebAwbCodService {
 
           const dataCashless = await this.handleAwbCod(
             item,
-            codBranchCashless.codTransactionBranchId,
+            codBranchCashless.codTransactionId,
             permissonPayload.branchId,
             authMeta.userId,
             awbValid.partnerId,
@@ -280,7 +280,7 @@ export class V1WebAwbCodService {
       // store data print cashless on redis
       printIdCashless = await this.printStoreData(
         metaPrint,
-        codBranchCashless.codTransactionBranchId,
+        codBranchCashless.codTransactionId,
         dataPrintCashless,
         totalCodValueCashless,
         'cashless',
@@ -288,7 +288,7 @@ export class V1WebAwbCodService {
       // update data
       await CodTransaction.update(
         {
-          codTransactionBranchId: codBranchCashless.codTransactionBranchId,
+          codTransactionId: codBranchCashless.codTransactionId,
         },
         {
           totalCodValue,
@@ -450,7 +450,7 @@ export class V1WebAwbCodService {
         for (const transactionId of payload.dataTransactionId) {
           const codBranch = await CodTransaction.findOne({
             where: {
-              codTransactionBranchId: transactionId,
+              codTransactionId: transactionId,
               isDeleted: false,
             },
           });
@@ -462,7 +462,7 @@ export class V1WebAwbCodService {
             await transactionManager.update(
               CodTransaction,
               {
-                codTransactionBranchId: codBranch.codTransactionBranchId,
+                codTransactionId: codBranch.codTransactionId,
               },
               {
                 codBankStatementId: bankStatement.codBankStatementId,
@@ -710,7 +710,7 @@ export class V1WebAwbCodService {
             await transactionManager.update(
               CodTransactionDetail,
               {
-                codTransactionBranchId: item.codTransactionBranchId,
+                codTransactionId: item.codTransactionId,
                 isDeleted: false,
               },
               {
@@ -812,7 +812,7 @@ export class V1WebAwbCodService {
 
     // #region send to background
     const branchDetail = new CodTransactionDetail();
-    branchDetail.codTransactionBranchId = parentId;
+    branchDetail.codTransactionId = parentId;
     branchDetail.awbItemId = item.awbItemId;
     branchDetail.awbNumber = item.awbNumber;
     branchDetail.awbDate = moment(item.manifestedDate).toDate();
@@ -936,7 +936,7 @@ export class V1WebAwbCodService {
 
   private static async printStoreData(
     metaPrint: WebCodPrintMetaVm,
-    codTransactionBranchId: string,
+    codTransactionId: string,
     data: WebCodAwbPrintVm[],
     totalValue: number,
     type: string,
@@ -948,7 +948,7 @@ export class V1WebAwbCodService {
     storePrint.meta = metaPrint;
     storePrint.data = data;
     // store redis
-    const printId = `${codTransactionBranchId}--${type}`;
+    const printId = `${codTransactionId}--${type}`;
     await PrintByStoreService.storeGenericPrintData(
       'cod-transfer-branch',
       printId,
