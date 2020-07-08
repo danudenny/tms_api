@@ -80,7 +80,7 @@ export class BagScanInBranchSmdQueueService {
               data.branchId,
               data.userId,
               employeeIdDriver,
-              AWB_STATUS.IN_BRANCH,
+              AWB_STATUS.DO_HUB,
               branchName,
               cityName,
               data.branchIdNext,

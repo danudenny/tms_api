@@ -99,7 +99,7 @@ export class DoSmdPostAwbHistoryMetaQueueService {
     branchIdNext: number,
     addTime?: number,
   ) {
-    // TODO: ONLY IN_BRANCH
+    // TODO: ONLY DO_HUB
     const noteInternal = `Paket masuk ke ${cityName} [${branchName}]`;
     const notePublic = `Paket masuk ke ${cityName} [${branchName}]`;
 
@@ -135,7 +135,7 @@ export class DoSmdPostAwbHistoryMetaQueueService {
     branchNameNext: string,
     addTime?: number,
   ) {
-    // TODO: ONLY OUT_BRANCH
+    // TODO: IN_HUB AND OUT_HUB
     const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver} ke ${branchNameNext}`;
     const notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
     // provide data

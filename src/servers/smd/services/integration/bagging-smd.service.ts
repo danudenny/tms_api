@@ -141,7 +141,7 @@ export class BaggingSmdService {
       result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
       return result;
     }
-    if (dataPackage[0].bag_item_status_id_last_in_bag_item != BAG_STATUS.IN_BRANCH) {
+    if (dataPackage[0].bag_item_status_id_last_in_bag_item != BAG_STATUS.DO_HUB) {
       // handle kesalahan data saat scan masuk surat jalan
       rawQuery = `
           SELECT

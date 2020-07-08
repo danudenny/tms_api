@@ -90,7 +90,7 @@ export class BagScanOutBranchSmdQueueService {
         }
         tempBag.push(item.bag_item_id);
 
-        if (item.bag_item_status_id == BAG_STATUS.OUT_BRANCH.toString()) {
+        if (item.bag_item_status_id == BAG_STATUS.OUT_HUB.toString()) {
           // failed to update
           // do nothing
         } else {
@@ -122,7 +122,7 @@ export class BagScanOutBranchSmdQueueService {
           resultbagItemHistory.userId = data.userId.toString();
           resultbagItemHistory.branchId = data.branchId.toString();
           resultbagItemHistory.historyDate = moment().toDate();
-          resultbagItemHistory.bagItemStatusId = BAG_STATUS.OUT_BRANCH.toString();
+          resultbagItemHistory.bagItemStatusId = BAG_STATUS.OUT_HUB.toString();
           resultbagItemHistory.userIdCreated = data.userId;
           resultbagItemHistory.createdTime = moment().toDate();
           resultbagItemHistory.userIdUpdated = data.userId;
@@ -140,11 +140,25 @@ export class BagScanOutBranchSmdQueueService {
                   data.userId,
                   employeeIdDriver,
                   employeeNameDriver,
-                  AWB_STATUS.OUT_BRANCH,
+                  AWB_STATUS.IN_HUB,
                   branchName,
                   cityName,
                   item.branch_id_to,
                   branchNameNext,
+                );
+
+                DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
+                  itemAwb.awbItemId,
+                  data.branchId,
+                  data.userId,
+                  employeeIdDriver,
+                  employeeNameDriver,
+                  AWB_STATUS.OUT_HUB,
+                  branchName,
+                  cityName,
+                  item.branch_id_to,
+                  branchNameNext,
+                  1,
                 );
               }
             }
