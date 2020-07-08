@@ -204,6 +204,7 @@ export class V1WebAwbCodService {
           dataError.push(errorMessage);
         }
       } // end of loop data cash
+
       // store data print cash on redis
       printIdCash = await this.printStoreData(
         metaPrint,
@@ -808,6 +809,8 @@ export class V1WebAwbCodService {
     parcelValue: number,
     employeeIdDriver: number,
   ): Promise<WebCodAwbPrintVm> {
+
+    // #region send to background
     const branchDetail = new CodTransactionBranchDetail();
     branchDetail.codTransactionBranchId = parentId;
     branchDetail.awbItemId = item.awbItemId;
@@ -839,14 +842,9 @@ export class V1WebAwbCodService {
     await CodTransactionHistory.insert(history);
 
     // TODO: how to flag this awb is transaction ??
-    // awb status 45000 (Terima Dana)
-    DoPodDetailPostMetaQueueService.createJobByCodTransferBranch(
-      item.awbItemId,
-      45000,
-      branchId,
-      userId,
-      employeeIdDriver,
-    );
+    // update transction statud id on table awb item attr
+
+    // #endregion send to background
 
     // response
     const result = new WebCodAwbPrintVm();

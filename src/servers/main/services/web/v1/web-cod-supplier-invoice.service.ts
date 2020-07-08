@@ -82,6 +82,8 @@ export class V1WebCodSupplierInvoiceService {
     q.selectRaw(
       ['t1.partner_id', 'partnerId'],
       ['t1.awb_number', 'awbNumber'],
+      ['t1.payment_method', 'paymentMethod'],
+      ['t1.consignee_name', 'consigneeName'],
       ['t1.cod_value', 'codValue'],
     );
 

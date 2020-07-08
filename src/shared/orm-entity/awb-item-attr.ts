@@ -184,7 +184,13 @@ export class AwbItemAttr extends BaseEntity {
   })
   isSync: boolean;
 
-  // relation
+  @Column('bigint', {
+    nullable: false,
+    name: 'transaction_status_id',
+  })
+  transactionStatusId: number;
+
+ // relation
   @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id_last' })
   bagItemLast: BagItem;

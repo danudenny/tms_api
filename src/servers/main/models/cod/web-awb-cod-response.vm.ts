@@ -249,6 +249,12 @@ export class WebAwbCodDetailPartnerVm {
   awbNumber: string;
 
   @ApiModelProperty()
+  paymentMethod: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
   codValue: number;
 }
 
