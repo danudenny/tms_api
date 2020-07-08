@@ -3,7 +3,6 @@ import { Not } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
-import { CodBankStatement } from '../../../../../shared/orm-entity/cod-bank-statement';
 import {
     CodTransactionBranchDetail,
 } from '../../../../../shared/orm-entity/cod-transaction-branch-detail';
@@ -12,8 +11,10 @@ import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { WebCodSupplierInvoicePayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
-    WebAwbCodSupplierInvoiceResponseVm, WebCodSupplierInvoicePaidResponseVm,
+    WebAwbCodDetailPartnerResponseVm, WebAwbCodSupplierInvoiceResponseVm,
+    WebCodSupplierInvoicePaidResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
+
 import moment = require('moment');
 
 export class V1WebCodSupplierInvoiceService {
@@ -64,6 +65,52 @@ export class V1WebCodSupplierInvoiceService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
+  }
+
+  static async awbDetailByPartnerId(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbCodDetailPartnerResponseVm> {
+
+    const repo = new OrionRepositoryService(
+      CodTransactionBranchDetail,
+      't1',
+    );
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.partner_id', 'partnerId'],
+      ['t1.awb_number', 'awbNumber'],
+      ['t1.cod_value', 'codValue'],
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    // TODO: set this filter
+    // q.andWhere(e => e.transactionStatusId, w => w.equals(40000));
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebAwbCodDetailPartnerResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async supplierInvoiceValidate() {
+    // TODO: generate supplier invoice by partnerid
+    // create data supplier invoice with status draft
+    // update data transaction detail, add FK supplier invoice id
+    //
+  }
+
+  static async supplierInvoiceAdd() {
+  }
+
+  static async supplierInvoiceRemove() {
   }
 
   static async supplierInvoicePaid(

@@ -241,6 +241,22 @@ export class WebAwbCodSupplierInvoiceResponseVm extends BaseMetaResponseVm {
   data: WebAwbCodDetailInvoice[];
 }
 
+export class WebAwbCodDetailPartnerVm {
+  @ApiModelProperty()
+  partnerId: number;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  codValue: number;
+}
+
+export class WebAwbCodDetailPartnerResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebAwbCodDetailPartnerVm] })
+  data: WebAwbCodDetailPartnerVm[];
+}
+
 // #region for data printing
 export class WebCodAwbPrintVm {
   @ApiModelProperty()
