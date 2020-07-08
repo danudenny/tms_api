@@ -64,6 +64,7 @@ export class ScaninSmdListService {
       ['bt.branch_name', 'branch_to_name'],
       ['dsd.total_bag', 'total_bag'],
       ['dsd.total_bagging', 'total_bagging'],
+      ['dss.do_smd_status_title', 'do_smd_status_title'],
     );
 
     q.innerJoinRaw(
@@ -90,6 +91,11 @@ export class ScaninSmdListService {
       'employee',
       'e',
       'dsv.employee_id_driver = e.employee_id and e.is_deleted = false',
+    );
+    q.leftJoinRaw(
+      'do_smd_status',
+      'dss',
+      'dsd.do_smd_status_id_last = dss.do_smd_status_id and dss.is_deleted = false',
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 

@@ -43,6 +43,9 @@ export class ScanInSmdListVm {
 
   @ApiModelProperty()
   total_bagging: number;
+
+  @ApiModelProperty()
+  do_smd_status_title: string;
 }
 export class ScanInSmdDetailResponseVm {
   @ApiModelProperty()
