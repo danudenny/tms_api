@@ -27,6 +27,7 @@ import { UploadImagePodQueueService } from './services/upload-pod-image-queue.se
 import { DoSmdPostAwbHistoryMetaQueueService } from './services/do-smd-post-awb-history-meta-queue.service';
 import { BagScanInBranchSmdQueueService } from './services/bag-scan-in-branch-smd-queue.service';
 import { BagScanOutBranchSmdQueueService } from './services/bag-scan-out-branch-smd-queue.service';
+import { BagScanDoSmdQueueService } from './services/bag-scan-do-smd-queue.service';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -123,6 +124,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     DoSmdPostAwbHistoryMetaQueueService.boot();
     BagScanInBranchSmdQueueService.boot();
     BagScanOutBranchSmdQueueService.boot();
+    BagScanDoSmdQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
   }

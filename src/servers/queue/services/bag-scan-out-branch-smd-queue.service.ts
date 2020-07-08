@@ -134,18 +134,6 @@ export class BagScanOutBranchSmdQueueService {
               if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
                 // handle duplikat resi dalam beberapa gabung paket
                 tempAwb.push(itemAwb.awbItemId);
-                DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
-                  itemAwb.awbItemId,
-                  data.branchId,
-                  data.userId,
-                  employeeIdDriver,
-                  employeeNameDriver,
-                  AWB_STATUS.IN_HUB,
-                  branchName,
-                  cityName,
-                  item.branch_id_to,
-                  branchNameNext,
-                );
 
                 DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
                   itemAwb.awbItemId,
@@ -158,7 +146,6 @@ export class BagScanOutBranchSmdQueueService {
                   cityName,
                   item.branch_id_to,
                   branchNameNext,
-                  1,
                 );
               }
             }

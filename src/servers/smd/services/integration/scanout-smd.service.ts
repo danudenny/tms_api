@@ -32,6 +32,7 @@ import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_ite
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import {ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
 import { Any, In } from 'typeorm';
+import { BagScanDoSmdQueueService } from '../../../queue/services/bag-scan-do-smd-queue.service';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -526,6 +527,7 @@ export class ScanoutSmdService {
 
     const result = new ScanOutSmdItemResponseVm();
     const timeNow = moment().toDate();
+    let arrBagItemId = [];
     const data = [];
     let rawQuery;
     const resultBagging = await Bagging.findOne({
@@ -599,6 +601,9 @@ export class ScanoutSmdService {
                 0,
                 authMeta.userId,
               );
+
+              // GET BAG ITEM ID
+              arrBagItemId.push(resultDataBagItem[i].bag_item_id);
             }
 
             await DoSmdDetail.update(
@@ -624,6 +629,9 @@ export class ScanoutSmdService {
                 updatedTime: timeNow,
               },
             );
+
+            // Generate history bag and its awb IN_HUB
+            BagScanDoSmdQueueService.perform(arrBagItemId, authMeta.userId, permissonPayload.branchId);
 
             data.push({
               do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
@@ -704,6 +712,7 @@ export class ScanoutSmdService {
                 1,
                 authMeta.userId,
               );
+              arrBagItemId = [resultDataBag[0].bag_item_id];
             // }
 
               await DoSmdDetail.update(
@@ -730,6 +739,10 @@ export class ScanoutSmdService {
                   updatedTime: timeNow,
                 },
               );
+
+              // Generate history bag and its awb IN_HUB
+              BagScanDoSmdQueueService.perform(arrBagItemId, authMeta.userId, permissonPayload.branchId);
+
               data.push({
                 do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
                 bagging_id: null,
@@ -806,6 +819,7 @@ export class ScanoutSmdService {
                 1,
                 authMeta.userId,
               );
+              arrBagItemId = [resultDataBag[0].bag_item_id];
             // }
 
               await DoSmdDetail.update(
@@ -832,6 +846,10 @@ export class ScanoutSmdService {
                   updatedTime: timeNow,
                 },
               );
+
+              // Generate history bag and its awb IN_HUB
+              BagScanDoSmdQueueService.perform(arrBagItemId, authMeta.userId, permissonPayload.branchId);
+
               data.push({
                 do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
                 bagging_id: null,
