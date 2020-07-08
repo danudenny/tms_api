@@ -337,7 +337,7 @@ export class V1WebAwbCodService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.cod_transaction_branch_id', 'transactionId'],
+      ['t1.cod_transaction_id', 'transactionId'],
       ['t1.transaction_code', 'transactionCode'],
       ['t1.transaction_date', 'transactionDate'],
       ['t1.transaction_type', 'transactionType'],
@@ -382,8 +382,8 @@ export class V1WebAwbCodService {
     qb.addSelect('t1.consignee_name', 'consigneeName');
     qb.addSelect('t1.cod_value', 'codValue');
 
-    qb.from('cod_transaction_branch_detail', 't1');
-    qb.where('t1.cod_transaction_branch_id = :id', { id });
+    qb.from('cod_transaction_detail', 't1');
+    qb.where('t1.cod_transaction_id = :id', { id });
     qb.andWhere('t1.is_deleted = false');
 
     const data = await qb.getRawMany();
@@ -509,7 +509,7 @@ export class V1WebAwbCodService {
     id: string,
   ): Promise<WebAwbCodListTransactionResponseVm> {
     const qb = createQueryBuilder();
-    qb.addSelect('t1.cod_transaction_branch_id', 'transactionId');
+    qb.addSelect('t1.cod_transaction_id', 'transactionId');
     qb.addSelect('t1.transaction_code', 'transactionCode');
     qb.addSelect('t1.transaction_date', 'transactionDate');
     qb.addSelect('t1.transaction_type', 'transactionType');
@@ -520,7 +520,7 @@ export class V1WebAwbCodService {
     qb.addSelect('t3.branch_name', 'branchName');
     qb.addSelect('t4.first_name', 'adminName');
 
-    qb.from('cod_transaction_branch', 't1');
+    qb.from('cod_transaction', 't1');
     qb.innerJoin(
       'transaction_status',
       't2',
@@ -559,11 +559,11 @@ export class V1WebAwbCodService {
     qb.addSelect('t1.consignee_name', 'consigneeName');
     qb.addSelect('t1.cod_value', 'codValue');
 
-    qb.from('cod_transaction_branch_detail', 't1');
+    qb.from('cod_transaction_detail', 't1');
     qb.innerJoin(
-      'cod_transaction_branch',
+      'cod_transaction',
       't2',
-      't1.cod_transaction_branch_id = t2.cod_transaction_branch_id AND t2.is_deleted = false',
+      't1.cod_transaction_id = t2.cod_transaction_id AND t2.is_deleted = false',
     );
     qb.where('t2.cod_bank_statement_id = :id', { id });
     qb.andWhere('t1.is_deleted = false');

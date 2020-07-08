@@ -17,11 +17,17 @@ export class CodTransactionDetail extends TmsBaseEntity {
   })
   codTransactionDetailId: string;
 
-  @Column('character varying', {
+  @Column('uuid', {
     nullable: true,
     name: 'cod_transaction_id',
   })
   codTransactionId: string;
+
+  @Column('uuid', {
+    nullable: true,
+    name: 'cod_supplier_invoice_id',
+  })
+  codSupplierInvoiceId: string;
 
   @Column('bigint', {
     nullable: false,
@@ -42,23 +48,11 @@ export class CodTransactionDetail extends TmsBaseEntity {
   })
   awbDate: Date;
 
-  @Column('numeric', {
+  @Column('timestamp without time zone', {
     nullable: false,
-    default: () => 0,
-    precision: 20,
-    scale: 5,
-    name: 'parcel_value',
+    name: 'pod_date',
   })
-  parcelValue: number;
-
-  @Column('numeric', {
-    nullable: false,
-    default: () => 0,
-    precision: 20,
-    scale: 5,
-    name: 'cod_value',
-  })
-  codValue: number;
+  podDate: Date;
 
   @Column('character varying', {
     nullable: false,
@@ -80,6 +74,42 @@ export class CodTransactionDetail extends TmsBaseEntity {
     name: 'no_reference',
   })
   noReference: string | null;
+
+  @Column('numeric', {
+    nullable: false,
+    default: () => 0,
+    precision: 20,
+    scale: 5,
+    name: 'weight_rounded',
+  })
+  weightRounded: number;
+
+  @Column('numeric', {
+    nullable: false,
+    default: () => 0,
+    precision: 20,
+    scale: 5,
+    name: 'parcel_value',
+  })
+  parcelValue: number;
+
+  @Column('numeric', {
+    nullable: false,
+    default: () => 0,
+    precision: 20,
+    scale: 5,
+    name: 'cod_value',
+  })
+  codValue: number;
+
+  @Column('numeric', {
+    nullable: false,
+    default: () => 0,
+    precision: 20,
+    scale: 5,
+    name: 'cod_fee',
+  })
+  codFee: number;
 
   @Column('character varying', {
     nullable: false,
@@ -112,15 +142,26 @@ export class CodTransactionDetail extends TmsBaseEntity {
   })
   transactionStatusId: number;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'supplier_invoice_status_id',
+  })
+  supplierInvoiceStatusId: number;
+
   //  relation
+
+  // @ManyToOne(() => TransactionStatus)
+  // @JoinColumn({ name: 'supplier_invoice_status_id' })
+  // supplierInvoiceStatus: TransactionStatus;
+
   @ManyToOne(() => TransactionStatus)
   @JoinColumn({ name: 'transaction_status_id' })
   transactionStatus: TransactionStatus;
 
   @ManyToOne(() => CodTransaction, x => x.details)
   @JoinColumn({
-    name: 'cod_transaction_branch_id',
-    referencedColumnName: 'codTransactionBranchId',
+    name: 'cod_transaction_id',
+    referencedColumnName: 'codTransactionId',
   })
   transactionBranch: CodTransaction;
 
