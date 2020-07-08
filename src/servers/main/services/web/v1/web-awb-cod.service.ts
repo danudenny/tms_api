@@ -37,6 +37,7 @@ import moment = require('moment');
 import { AttachmentService } from '../../../../../shared/services/attachment.service';
 import { CodBankStatement } from '../../../../../shared/orm-entity/cod-bank-statement';
 import { CodTransactionHistory } from '../../../../../shared/orm-entity/cod-transaction-history';
+import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -49,7 +50,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
-    payload.fieldResolverMap['awbStatusIdLast'] = 't3.awb_status_id_last';
+    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
 
     payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
@@ -808,13 +809,6 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['transactionStatusId'] = 't2.transaction_status_id';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
 
-    // mapping search field and operator default ilike
-    // payload.globalSearchFields = [
-    //   {
-    //     field: 'awbNumber',
-    //   },
-    // ];
-
     if (payload.sortBy === '') {
       payload.sortBy = 'bankStatementDate';
     }
@@ -956,6 +950,16 @@ export class V1WebAwbCodService {
     history.branchId = branchId;
 
     await CodTransactionHistory.insert(history);
+
+    // TODO: how to flag this awb is transaction ??
+    // awb status 45000 (Terima Dana)
+    DoPodDetailPostMetaQueueService.createJobByCodTransferBranch(
+      item.awbItemId,
+      45000,
+      branchId,
+      userId,
+      employeeIdDriver,
+    );
 
     // response
     const result = new WebCodAwbPrintVm();
