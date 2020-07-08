@@ -5,10 +5,10 @@ import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant'
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { Branch } from '../../../../../shared/orm-entity/branch';
-import { CodTransactionBranch } from '../../../../../shared/orm-entity/cod-transaction-branch';
+import { CodTransaction } from '../../../../../shared/orm-entity/cod-transaction';
 import {
-    CodTransactionBranchDetail,
-} from '../../../../../shared/orm-entity/cod-transaction-branch-detail';
+    CodTransactionDetail,
+} from '../../../../../shared/orm-entity/cod-transaction-detail';
 import { User } from '../../../../../shared/orm-entity/user';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
@@ -78,7 +78,7 @@ export class V1WebAwbCodService {
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
       ['t1.updated_time', 'transactionDate'],
-      ['t1.awb_status_id_last', 'awbStatusIdLast'],
+      ['COALESCE(t1.transaction_status_id, t1.awb_status_id_last)', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
@@ -157,7 +157,7 @@ export class V1WebAwbCodService {
 
     // #region data cash [optional]
     if (payload.dataCash.length) {
-      const codBranchCash = new CodTransactionBranch();
+      const codBranchCash = new CodTransaction();
       const randomCode = await CustomCounterCode.transactionCodBranch(timestamp);
       codBranchCash.transactionCode = randomCode;
       codBranchCash.transactionDate = timestamp;
@@ -166,7 +166,7 @@ export class V1WebAwbCodService {
       codBranchCash.totalCodValue = totalCodValue;
       codBranchCash.totalAwb = totalAwbCash;
       codBranchCash.branchId = permissonPayload.branchId;
-      await CodTransactionBranch.save(codBranchCash);
+      await CodTransaction.save(codBranchCash);
 
       const userIdDriver = payload.dataCash[0].userIdDriver;
       const metaPrint = await this.generatePrintMeta(
@@ -214,7 +214,7 @@ export class V1WebAwbCodService {
         'cash',
       );
       // update data
-      await CodTransactionBranch.update(
+      await CodTransaction.update(
         {
           codTransactionBranchId: codBranchCash.codTransactionBranchId,
         },
@@ -229,7 +229,7 @@ export class V1WebAwbCodService {
 
     // #region data cashless [optional]
     if (payload.dataCashless.length) {
-      const codBranchCashless = new CodTransactionBranch();
+      const codBranchCashless = new CodTransaction();
       const randomCode = await CustomCounterCode.transactionCodBranch(
         timestamp,
       );
@@ -240,7 +240,7 @@ export class V1WebAwbCodService {
       codBranchCashless.totalCodValue = totalCodValue;
       codBranchCashless.totalAwb = totalAwbCashless;
       codBranchCashless.branchId = permissonPayload.branchId;
-      await CodTransactionBranch.save(codBranchCashless);
+      await CodTransaction.save(codBranchCashless);
 
       const userIdDriver = payload.dataCashless[0].userIdDriver;
       const metaPrint = await this.generatePrintMeta(
@@ -286,7 +286,7 @@ export class V1WebAwbCodService {
         'cashless',
       );
       // update data
-      await CodTransactionBranch.update(
+      await CodTransaction.update(
         {
           codTransactionBranchId: codBranchCashless.codTransactionBranchId,
         },
@@ -331,7 +331,7 @@ export class V1WebAwbCodService {
       payload.sortBy = 'transactionDate';
     }
 
-    const repo = new OrionRepositoryService(CodTransactionBranch, 't1');
+    const repo = new OrionRepositoryService(CodTransaction, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -448,7 +448,7 @@ export class V1WebAwbCodService {
 
         // looping data transaction and update status and bank statement id [create new table] ??
         for (const transactionId of payload.dataTransactionId) {
-          const codBranch = await CodTransactionBranch.findOne({
+          const codBranch = await CodTransaction.findOne({
             where: {
               codTransactionBranchId: transactionId,
               isDeleted: false,
@@ -460,7 +460,7 @@ export class V1WebAwbCodService {
             totalAwb += Number(codBranch.totalAwb);
             // update data
             await transactionManager.update(
-              CodTransactionBranch,
+              CodTransaction,
               {
                 codTransactionBranchId: codBranch.codTransactionBranchId,
               },
@@ -684,7 +684,7 @@ export class V1WebAwbCodService {
 
         // update transaction branch
         await transactionManager.update(
-          CodTransactionBranch,
+          CodTransaction,
           {
             codBankStatementId: payload.bankStatementId,
           },
@@ -697,7 +697,7 @@ export class V1WebAwbCodService {
 
         // looping data transaction branch
         const transactionsBranch = await transactionManager.find(
-          CodTransactionBranch,
+          CodTransaction,
           {
             where: {
               codBankStatementId: payload.bankStatementId,
@@ -708,7 +708,7 @@ export class V1WebAwbCodService {
         if (transactionsBranch.length) {
           for (const item of transactionsBranch) {
             await transactionManager.update(
-              CodTransactionBranchDetail,
+              CodTransactionDetail,
               {
                 codTransactionBranchId: item.codTransactionBranchId,
                 isDeleted: false,
@@ -775,7 +775,7 @@ export class V1WebAwbCodService {
 
         // update transaction branch
         await transactionManager.update(
-          CodTransactionBranch,
+          CodTransaction,
           {
             codBankStatementId: payload.bankStatementId,
           },
@@ -811,7 +811,7 @@ export class V1WebAwbCodService {
   ): Promise<WebCodAwbPrintVm> {
 
     // #region send to background
-    const branchDetail = new CodTransactionBranchDetail();
+    const branchDetail = new CodTransactionDetail();
     branchDetail.codTransactionBranchId = parentId;
     branchDetail.awbItemId = item.awbItemId;
     branchDetail.awbNumber = item.awbNumber;
@@ -829,7 +829,7 @@ export class V1WebAwbCodService {
     branchDetail.paymentService = item.paymentService;
     branchDetail.noReference = item.noReference;
 
-    await CodTransactionBranchDetail.insert(branchDetail);
+    await CodTransactionDetail.insert(branchDetail);
 
     // inset transaction history
     const history = new CodTransactionHistory();

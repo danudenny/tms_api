@@ -12,7 +12,7 @@ import { TransactionStatus } from './transaction-status';
 import { Branch } from './branch';
 import { User } from './user';
 import { AttachmentTms } from './attachment-tms';
-import { CodTransactionBranch } from './cod-transaction-branch';
+import { CodTransaction } from './cod-transaction';
 
 @Entity('cod_bank_statement', { schema: 'public' })
 export class CodBankStatement extends TmsBaseEntity {
@@ -116,6 +116,6 @@ export class CodBankStatement extends TmsBaseEntity {
   @JoinColumn({ name: 'attachment_id' })
   attachment: AttachmentTms;
 
-  @OneToMany(() => CodTransactionBranch, x => x.bankStatement)
-  transactions: CodTransactionBranch[];
+  @OneToMany(() => CodTransaction, x => x.bankStatement)
+  transactions: CodTransaction[];
 }

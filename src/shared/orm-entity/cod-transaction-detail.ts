@@ -6,12 +6,12 @@ import {
   ManyToOne,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
-import { CodTransactionBranch } from './cod-transaction-branch';
+import { CodTransaction } from './cod-transaction';
 import { Partner } from './partner';
 import { TransactionStatus } from './transaction-status';
 
 @Entity('cod_transaction_branch_detail', { schema: 'public' })
-export class CodTransactionBranchDetail extends TmsBaseEntity {
+export class CodTransactionDetail extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'cod_transaction_branch_detail_id',
   })
@@ -117,12 +117,12 @@ export class CodTransactionBranchDetail extends TmsBaseEntity {
   @JoinColumn({ name: 'transaction_status_id' })
   transactionStatus: TransactionStatus;
 
-  @ManyToOne(() => CodTransactionBranch, x => x.details)
+  @ManyToOne(() => CodTransaction, x => x.details)
   @JoinColumn({
     name: 'cod_transaction_branch_id',
     referencedColumnName: 'codTransactionBranchId',
   })
-  transactionBranch: CodTransactionBranch;
+  transactionBranch: CodTransaction;
 
   @ManyToOne(() => Partner)
   @JoinColumn({ name: 'partner_id' })

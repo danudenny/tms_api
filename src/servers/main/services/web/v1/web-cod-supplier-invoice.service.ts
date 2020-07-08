@@ -4,8 +4,8 @@ import { BadRequestException } from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
-    CodTransactionBranchDetail,
-} from '../../../../../shared/orm-entity/cod-transaction-branch-detail';
+    CodTransactionDetail,
+} from '../../../../../shared/orm-entity/cod-transaction-detail';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
@@ -32,7 +32,7 @@ export class V1WebCodSupplierInvoiceService {
       payload.sortBy = 'partnerName';
     }
 
-    const repo = new OrionRepositoryService(CodTransactionBranchDetail, 't1');
+    const repo = new OrionRepositoryService(CodTransactionDetail, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -72,7 +72,7 @@ export class V1WebCodSupplierInvoiceService {
   ): Promise<WebAwbCodDetailPartnerResponseVm> {
 
     const repo = new OrionRepositoryService(
-      CodTransactionBranchDetail,
+      CodTransactionDetail,
       't1',
     );
     const q = repo.findAllRaw();
@@ -130,7 +130,7 @@ export class V1WebCodSupplierInvoiceService {
     }
 
     for (const item of payload.data) {
-      const detail = await CodTransactionBranchDetail.findOne({
+      const detail = await CodTransactionDetail.findOne({
         where: {
           awbItemId: item.awbItemId,
           transactionStatusId: Not(45000),
@@ -139,7 +139,7 @@ export class V1WebCodSupplierInvoiceService {
       });
       if (detail) {
         // update data detail transaction status awb 45000 [PAID]
-        await CodTransactionBranchDetail.update(
+        await CodTransactionDetail.update(
           {
             codTransactionBranchDetailId: detail.codTransactionBranchDetailId,
           },

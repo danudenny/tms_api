@@ -10,11 +10,11 @@ import { TmsBaseEntity } from './tms-base';
 import { TransactionStatus } from './transaction-status';
 import { Branch } from './branch';
 import { User } from './user';
-import { CodTransactionBranchDetail } from './cod-transaction-branch-detail';
+import { CodTransactionDetail } from './cod-transaction-detail';
 import { CodBankStatement } from './cod-bank-statement';
 
 @Entity('cod_transaction_branch', { schema: 'public' })
-export class CodTransactionBranch extends TmsBaseEntity {
+export class CodTransaction extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'cod_transaction_branch_id',
   })
@@ -92,6 +92,6 @@ export class CodTransactionBranch extends TmsBaseEntity {
   })
   bankStatement: CodBankStatement;
 
-  @OneToMany(() => CodTransactionBranchDetail, x => x.transactionBranch)
-  details: CodTransactionBranchDetail[];
+  @OneToMany(() => CodTransactionDetail, x => x.transactionBranch)
+  details: CodTransactionDetail[];
 }
