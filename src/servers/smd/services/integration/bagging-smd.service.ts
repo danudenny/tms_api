@@ -2,16 +2,16 @@ import { Injectable, Param, PayloadTooLargeException } from '@nestjs/common';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
-import {createQueryBuilder} from 'typeorm';
-import {BaggingItem} from '../../../../shared/orm-entity/bagging-item';
-import {BagItem} from '../../../../shared/orm-entity/bag-item';
-import {BaseMetaPayloadVm} from '../../../../shared/models/base-meta-payload.vm';
-import {OrionRepositoryService} from '../../../../shared/services/orion-repository.service';
+import { createQueryBuilder } from 'typeorm';
+import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
+import { BagItem } from '../../../../shared/orm-entity/bag-item';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm } from '../../models/smd-bagging-response.vm';
 import { SmdScanBaggingPayloadVm } from '../../models/smd-bagging-payload.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
-import {RawQueryService} from '../../../../shared/services/raw-query.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 @Injectable()
 export class BaggingSmdService {
@@ -38,6 +38,8 @@ export class BaggingSmdService {
     payload.fieldResolverMap['representativeCode'] = 't2.representative_code';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
+    payload.fieldResolverMap['baggingScanDate'] = 't1.bagging_date_real';
+    payload.fieldResolverMap['branchBagging'] = 't4.branch_name';
     const repo = new OrionRepositoryService(Bagging, 't1');
 
     const q = repo.findAllRaw();
@@ -80,10 +82,10 @@ export class BaggingSmdService {
     `);
 
     q.orderBy({ createdTime: 'DESC' });
-    const data    = await q.exec();
-    const total   = await q.countWithoutTakeAndSkip();
-    const result  = new ListBaggingResponseVm();
-    result.data   = data;
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new ListBaggingResponseVm();
+    result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
@@ -128,6 +130,7 @@ export class BaggingSmdService {
         b.bag_number = '${bagNumber}' AND
         bi.bag_seq = '${bagSeq}' AND
         b.is_deleted = false
+      ORDER BY b.created_time DESC
       LIMIT 1;
       `;
     const dataPackage = await RawQueryService.query(rawQuery);
@@ -138,9 +141,9 @@ export class BaggingSmdService {
       result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
       return result;
     }
-    if (dataPackage[0].bag_item_status_id_last_in_bag_item != BAG_STATUS.IN_BRANCH) {
+    if (dataPackage[0].bag_item_status_id_last_in_bag_item != BAG_STATUS.DO_HUB) {
       // handle kesalahan data saat scan masuk surat jalan
-        rawQuery = `
+      rawQuery = `
           SELECT
             bh.bag_item_status_id AS bag_item_status_id
           FROM bag_item_history AS bh
@@ -149,11 +152,11 @@ export class BaggingSmdService {
           ORDER BY bh.history_date DESC
           LIMIT 1;
         `;
-        const history = await RawQueryService.query(rawQuery);
-        if (history.length == 0 || (history.length > 0 && history[0].bag_item_status_id != BAG_STATUS.IN_BRANCH)) {
-          result.message = 'Resi Gabung Paket belum di scan masuk';
-          return result;
-        }
+      const history = await RawQueryService.query(rawQuery);
+      if (history.length == 0 || (history.length > 0 && history[0].bag_item_status_id != BAG_STATUS.IN_BRANCH)) {
+        result.message = 'Resi Gabung Paket belum di scan masuk';
+        return result;
+      }
     }
 
     const permissionPayload = AuthService.getPermissionTokenPayload();
@@ -341,7 +344,7 @@ export class BaggingSmdService {
     let momentDate = moment(date);
 
     if (momentDate.isBefore(momentMax) && momentDate.isSameOrAfter(momentMin)) {
-        momentDate = momentDate.subtract(1, 'd');
+      momentDate = momentDate.subtract(1, 'd');
     }
 
     return momentDate.format('YYYY-MM-DD HH:mm:ss');
@@ -381,10 +384,10 @@ export class BaggingSmdService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.orderBy({ createdTime: 'DESC' });
-    const data    = await q.exec();
-    const total   = await q.countWithoutTakeAndSkip();
-    const result  = new ListDetailBaggingResponseVm();
-    result.data   = data;
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new ListDetailBaggingResponseVm();
+    result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;

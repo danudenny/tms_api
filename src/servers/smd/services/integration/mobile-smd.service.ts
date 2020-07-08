@@ -30,7 +30,7 @@ import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
-import { createQueryBuilder } from 'typeorm';
+import { createQueryBuilder, In } from 'typeorm';
 import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm } from '../../models/mobile-smd.response.vm';
 import { MobileUploadImagePayloadVm } from '../../models/mobile-smd.payload.vm';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
@@ -38,6 +38,8 @@ import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { DoSmdDetailAttachment } from '../../../../shared/orm-entity/do_smd_detail_attachment';
 import { DoSmdVehicleAttachment } from '../../../../shared/orm-entity/do_smd_vehicle_attachment';
+import { map } from 'lodash';
+import { BagScanOutBranchSmdQueueService } from '../../../queue/services/bag-scan-out-branch-smd-queue.service';
 
 @Injectable()
 export class MobileSmdService {
@@ -67,8 +69,21 @@ export class MobileSmdService {
         },
       );
 
-      await DoSmdDetail.update(
-        { doSmdId : payload.do_smd_id, arrivalTime: null },
+      // old update DoSmdDetail
+      // await DoSmdDetail.update(
+      //   { doSmdId : payload.do_smd_id, arrivalTime: null },
+      //   {
+      //     doSmdStatusIdLast: 3000,
+      //     departureTime: moment().toDate(),
+      //     latitudeDeparture: payload.latitude,
+      //     longitudeDeparture: payload.longitude,
+      //     userIdUpdated: authMeta.userId,
+      //     updatedTime: timeNow,
+      //   },
+      // );
+
+      // new update DoSmdDetail returning doSmdDetailId
+      const updateDoSmdDetail = await createQueryBuilder().update(DoSmdDetail).set(
         {
           doSmdStatusIdLast: 3000,
           departureTime: moment().toDate(),
@@ -77,7 +92,23 @@ export class MobileSmdService {
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
-      );
+      ).where(`do_smd_id = '${payload.do_smd_id}' AND do_smd_status_id_last <> '3000'`)
+      .andWhere('arrival_time IS NULL')
+      .returning(['doSmdDetailId', 'branchIdTo', 'doSmdStatusIdLast'])
+      .execute();
+      if (updateDoSmdDetail.raw.length > 0) {
+        const doSmdDetailIds = map(updateDoSmdDetail.raw, item => {
+          return item.do_smd_detail_id;
+        });
+        // UPDATE STATUS AWB AND BAG
+        // BACKGROUND PROCESS
+        BagScanOutBranchSmdQueueService.perform(
+          doSmdDetailIds,
+          payload.do_smd_id,
+          permissonPayload.branchId,
+          authMeta.userId,
+        );
+      }
 
       const paramDoSmdHistoryId = await this.createDoSmdHistory(
         payload.do_smd_id,

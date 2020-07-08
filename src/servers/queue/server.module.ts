@@ -24,6 +24,9 @@ import { BagScanOutHubQueueService } from './services/bag-scan-out-hub-queue.ser
 import { AwbSendPartnerQueueService } from './services/awb-send-partner-queue.service';
 import { BagDropoffHubQueueService } from './services/bag-dropoff-hub-queue.service';
 import { UploadImagePodQueueService } from './services/upload-pod-image-queue.service';
+import { DoSmdPostAwbHistoryMetaQueueService } from './services/do-smd-post-awb-history-meta-queue.service';
+import { BagScanInBranchSmdQueueService } from './services/bag-scan-in-branch-smd-queue.service';
+import { BagScanOutBranchSmdQueueService } from './services/bag-scan-out-branch-smd-queue.service';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -117,6 +120,9 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     AwbSendPartnerQueueService.boot();
     BagDropoffHubQueueService.boot();
     UploadImagePodQueueService.boot();
+    DoSmdPostAwbHistoryMetaQueueService.boot();
+    BagScanInBranchSmdQueueService.boot();
+    BagScanOutBranchSmdQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
   }

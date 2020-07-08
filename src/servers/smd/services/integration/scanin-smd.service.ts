@@ -22,6 +22,8 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { WebScanInHubSortListResponseVm } from '../../../main/models/web-scanin-list.response.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
+import { BagScanInBranchSmdQueueService } from '../../../queue/services/bag-scan-in-branch-smd-queue.service';
+import { getConnection } from 'typeorm';
 
 @Injectable()
 export class ScaninSmdService {
@@ -41,6 +43,7 @@ export class ScaninSmdService {
       const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
       const paramSeq = await paramBagSeq * 1;
       const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+      let paramBagItemId = null;
       if (paramBagNumber == null || paramBagNumber == undefined) {
         throw new BadRequestException('Bag Number Not Found');
       } else {
@@ -53,7 +56,6 @@ export class ScaninSmdService {
 
         let paramBagId;
         let exist = false;
-        let paramBagItemId = null;
         if (bag) {
           paramBagId = bag.bagId;
         } else {
@@ -85,9 +87,9 @@ export class ScaninSmdService {
           const usernameScan = resultData[0].username_scan;
           paramBagItemId = resultData[0].bag_item_id;
           console.log(resultData[0].bag_item_status_id);
-          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 1000 || resultData[0].bag_item_status_id == 500 ) {
+          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4500 || resultData[0].bag_item_status_id == 500 ) {
             // do nothing
-          } else if ( resultData[0].bag_item_status_id == 2000 ) {
+          } else if ( resultData[0].bag_item_status_id == 3500 ) {
             errCode = errCode + 1;
             errMessage = 'Resi Gabung Paket sudah Scan IN gerai ' + branchNameScan + ' Oleh ' + usernameScan;
           } else {
@@ -174,7 +176,7 @@ export class ScaninSmdService {
           resultbagItemHistory.userId = authMeta.userId.toString();
           resultbagItemHistory.branchId = permissonPayload.branchId.toString();
           resultbagItemHistory.historyDate = moment().toDate();
-          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_BRANCH.toString();
+          resultbagItemHistory.bagItemStatusId = BAG_STATUS.DO_HUB.toString();
           resultbagItemHistory.userIdCreated = authMeta.userId;
           resultbagItemHistory.createdTime = moment().toDate();
           resultbagItemHistory.userIdUpdated = authMeta.userId;
@@ -182,6 +184,7 @@ export class ScaninSmdService {
           await BagItemHistory.insert(resultbagItemHistory);
           console.log(resultbagItemHistory);
           console.log(resultbagItemHistory.bagItemHistoryId);
+
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
@@ -191,6 +194,17 @@ export class ScaninSmdService {
         }
       }
       if (errCode == 0) {
+        // NOTE: post awb status in in last transaction when success
+        // Loop data bag_item_awb for update status awb
+        // TODO: need to refactor
+        // send to background job
+        BagScanInBranchSmdQueueService.perform(
+          paramBagItemId,
+          null,
+          null,
+          authMeta.userId,
+          permissonPayload.branchId,
+        );
         const showNumber = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ';
         const message = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
         const data = [];
@@ -213,6 +227,8 @@ export class ScaninSmdService {
       const paramSeq = await paramBagSeq * 1;
       // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       let weight = 0;
+      let paramBagItemId = null;
+
       if (paramBagNumber == null || paramBagNumber == undefined) {
         throw new BadRequestException('Bag Number Not Found');
       } else {
@@ -225,7 +241,6 @@ export class ScaninSmdService {
 
         let paramBagId;
         let exist = false;
-        let paramBagItemId = null;
         if (bag) {
           paramBagId = bag.bagId;
         } else {
@@ -259,9 +274,9 @@ export class ScaninSmdService {
           paramBagItemId = resultData[0].bag_item_id;
           weight =  resultData[0].weight;
           console.log(resultData[0].bag_item_status_id);
-          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 1000 || resultData[0].bag_item_status_id == 500 ) {
+          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4500 || resultData[0].bag_item_status_id == 500 ) {
             // do nothing
-          } else if ( resultData[0].bag_item_status_id == 2000 ) {
+          } else if ( resultData[0].bag_item_status_id == 3500 ) {
             errCode = errCode + 1;
             errMessage = 'Resi Gabung Paket sudah Scan IN gerai ' + branchNameScan + ' Oleh ' + usernameScan;
           } else {
@@ -348,7 +363,7 @@ export class ScaninSmdService {
           resultbagItemHistory.userId = authMeta.userId.toString();
           resultbagItemHistory.branchId = permissonPayload.branchId.toString();
           resultbagItemHistory.historyDate = moment().toDate();
-          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_BRANCH.toString();
+          resultbagItemHistory.bagItemStatusId = BAG_STATUS.DO_HUB.toString();
           resultbagItemHistory.userIdCreated = authMeta.userId;
           resultbagItemHistory.createdTime = moment().toDate();
           resultbagItemHistory.userIdUpdated = authMeta.userId;
@@ -356,6 +371,7 @@ export class ScaninSmdService {
           await BagItemHistory.insert(resultbagItemHistory);
           console.log(resultbagItemHistory);
           console.log(resultbagItemHistory.bagItemHistoryId);
+
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
@@ -365,6 +381,17 @@ export class ScaninSmdService {
         }
       }
       if (errCode == 0) {
+        // NOTE: post awb status in in last transaction when success
+        // Loop data bag_item_awb for update status awb
+        // TODO: need to refactor
+        // send to background job
+        BagScanInBranchSmdQueueService.perform(
+          paramBagItemId,
+          null,
+          null,
+          authMeta.userId,
+          permissonPayload.branchId,
+        );
         const showNumber = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ';
         const message = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
         const data = [];
@@ -400,7 +427,7 @@ export class ScaninSmdService {
         LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
         WHERE
           doPod.do_pod_code = '${payload.bag_item_number}' AND
-          (bih.bag_item_status_id = 1000 OR bih.bag_item_status_id = 500 OR bih.bag_item_status_id IS NULL)
+          (bih.bag_item_status_id = 4500 OR bih.bag_item_status_id = 500 OR bih.bag_item_status_id IS NULL)
         GROUP BY bagnumber
         `;
       const resultDataBag = await RawQueryService.query(rawQueryBag);
@@ -415,7 +442,7 @@ export class ScaninSmdService {
         LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
         WHERE
           doPod.do_pod_code =  '${payload.bag_item_number}' AND
-          (bih.bag_item_status_id <> 1000 AND bih.bag_item_status_id <> 500 AND bih.bag_item_status_id IS NOT NULL)
+          (bih.bag_item_status_id <> 4500 AND bih.bag_item_status_id <> 500 AND bih.bag_item_status_id IS NOT NULL)
         GROUP BY bagnumber
         `;
       const resultDataBagScanned = await RawQueryService.query(rawQueryBagScanned);
@@ -519,7 +546,7 @@ export class ScaninSmdService {
     q.leftJoinRaw(
       'bag_item_history',
       'bhin',
-      'bhin.bag_item_id = bi.bag_item_id AND bhin.bag_item_status_id = 2000 AND bhin.is_deleted = FALSE',
+      'bhin.bag_item_id = bi.bag_item_id AND bhin.bag_item_status_id = 3500 AND bhin.is_deleted = FALSE',
     );
     q.leftJoin(e => e.representative, 'r', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -538,7 +565,7 @@ export class ScaninSmdService {
     //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
     // );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhereRaw('bhin.bag_item_status_id = 2000');
+    q.andWhereRaw('bhin.bag_item_status_id = 3500');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

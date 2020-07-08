@@ -5,7 +5,7 @@ import {PrinterService} from '../../../../shared/services/printer.service';
 import {PrintSmdPayloadVm} from '../../models/print-smd-payload.vm';
 import moment = require('moment');
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
-import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm } from '../../models/print-do-smd.vm';
+import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm } from '../../models/print-do-smd.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 
@@ -41,7 +41,7 @@ export class SmdPrintService {
       `DIRECTION 0\n` +
       `OFFSET 0\n` +
       `CLS\n` +
-      `TEXT 30,120,"5",0,1,1,0,"BAGGING"\n` +
+      `TEXT 30,120,"5",0,1,1,0,"BAGGING DARAT"\n` +
       `BARCODE 30,200,"128",100,1,0,3,10,"${bagging.baggingCode}"\n` +
       `TEXT 30,380,"3",0,1,1,"Jumlah koli : ${bagging.totalItem}"\n` +
       `TEXT 30,420,"3",0,1,1,"Berat : ${bagging.totalWeight}"\n` +
@@ -91,6 +91,41 @@ export class SmdPrintService {
     return result;
   }
 
+  public static async getBagData(payload) {
+    const repo = new OrionRepositoryService(DoSmdDetail, 't1');
+    const v = repo.findAllRaw();
+
+    v.selectRaw(
+      ['t2.bag_item_id', 'bagItemId'],
+      ['t1.do_smd_detail_id', 'doSmdDetailId'],
+      ['t2.bag_seq', 'bagSeq'],
+      [`CONCAT(t2.weight::numeric(10,2))`, 'weight'],
+      ['t3.bag_number', 'bagNumber'],
+      ['t3.ref_representative_code', 'refRepresentativeCode'],
+    );
+    v.leftJoin(e => e.doSmdDetailItems.bagItem, 't2');
+    v.leftJoin(e => e.doSmdDetailItems.bagItem.bag, 't3');
+    v.where(e => e.doSmdDetailId, w => w.equals(payload.id));
+    v.andWhere(e => e.doSmdDetailItems.bagType, w => w.equals(1));
+    v.groupByRaw(`
+      t2.bag_item_id,
+      t3.bag_number,
+      t3.ref_representative_code,
+      t1.do_smd_detail_id
+      `);
+    const data = await v.exec();
+    // console.log(data.length);
+    let result = new PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm();
+
+    if (data.length > 0) {
+      result = data;
+    } else {
+      result = null;
+    }
+
+    return result;
+  }
+
   public static async printDoSmdByRequest(
     res: express.Response,
     queryParams: PrintDoSmdPayloadQueryVm,
@@ -100,7 +135,7 @@ export class SmdPrintService {
     q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
     q.leftJoin(e => e.doSmdVehicle);
 
-    let doSmd = await q
+    const doSmd = await q
       .select({
         doSmdId: true, // needs to be selected due to do_smd relations are being included
         doSmdCode: true,
@@ -114,67 +149,27 @@ export class SmdPrintService {
         totalBagging: true,
         totalBag: true,
         doSmdDetails: {
-          arrivalTime: true,
           doSmdDetailId: true,
+          arrivalTime: true,
           sealNumber: true,
           totalBag: true,
           totalBagging: true,
           branchTo: {
+            branchId: true,
             branchName: true,
-          },
-          doSmdDetailItems: {
-            doSmdDetailItemId: true,
-            bagItem: {
-              bagItemId: true, // needs to be selected due to bag_item relations are being included
-              bagSeq: true,
-              weight: true,
-              bag: {
-                bagNumber: true,
-                refRepresentativeCode: true,
-              },
+            representative: {
+              representativeCode: true,
             },
-            bagType: true,
           },
         },
       })
       .where(e => e.doSmdId, w => w.equals(queryParams.id))
-      .andWhere(e => e.doSmdDetails.doSmdDetailItems.bagType, w => w.equals(1))
       .andWhere(e => e.doSmdDetails.isDeleted, w => w.isFalse());
 
     if (!doSmd) {
-      doSmd = await q
-      .select({
-        doSmdId: true, // needs to be selected due to do_smd relations are being included
-        doSmdCode: true,
-        doSmdVehicle: {
-          doSmdVehicleId: true,
-          employee: {
-            nik: true,
-            nickname: true,
-          },
-        },
-        totalBagging: true,
-        totalBag: true,
-        doSmdDetails: {
-          arrivalTime: true,
-          doSmdDetailId: true,
-          sealNumber: true,
-          totalBag: true,
-          totalBagging: true,
-          branchTo: {
-            branchName: true,
-          },
-        },
-      })
-      .where(e => e.doSmdId, w => w.equals(queryParams.id))
-      .andWhere(e => e.doSmdDetails.doSmdDetailItems.bagType, w => w.equals(0))
-      .andWhere(e => e.doSmdDetails.isDeleted, w => w.isFalse());
-
-      if (!doSmd) {
-        RequestErrorService.throwObj({
-          message: 'Surat jalan tidak ditemukan',
-        });
-      }
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
     }
 
     const response = new PrintDoSmdVm();
@@ -198,7 +193,7 @@ export class SmdPrintService {
       const dataSmdDetailsBaggingVm: PrintDoSmdDataDoSmdDetailBaggingVm[] = [];
 
       const dataSmdDetailVm = new PrintDoSmdDataDoSmdDetailVm();
-      let dataSmdDetailBagVm = new PrintDoSmdDataDoSmdDetailBagVm();
+      const dataSmdDetailBagVm = new PrintDoSmdDataDoSmdDetailBagVm();
       const dataSmdDetailBaggingVm = new PrintDoSmdDataDoSmdDetailBaggingVm();
 
       dataSmdDetailVm.doSmdDetailId = idDetail[l].doSmdDetailId; // set ID
@@ -215,19 +210,14 @@ export class SmdPrintService {
       dataSmdDetailVm.totalBag = idDetail[l].totalBag; // set Total gabung paket
       dataSmdDetailVm.totalBagging = idDetail[l].totalBagging; // set total bagging
 
-      if (idDetail[l].doSmdDetailItems[0].bagType > 0) {
-          const lengthBagItem = idDetail[l].doSmdDetailItems.length;
-          console.log('length: ' + idDetail[l].doSmdDetailItems.length);
-
-          for (let j = 0; j < lengthBagItem; j++) {
-            dataSmdDetailBagVm = idDetail[l].doSmdDetailItems[j];
-            await dataSmdDetailsBagVm.push(dataSmdDetailBagVm);
-          }
-      }
-
-      dataSmdDetailVm.doSmdDetailItems = dataSmdDetailsBagVm;
-
       payload.id = idDetail[l].doSmdDetailId;
+      const bagDataAll = await this.getBagData(payload);
+      if (bagDataAll) {
+        dataSmdDetailBagVm.bagItem = bagDataAll;
+        dataSmdDetailBagVm.bagType = 1;
+        dataSmdDetailsBagVm.push(dataSmdDetailBagVm);
+        dataSmdDetailVm.doSmdDetailItems = dataSmdDetailsBagVm;
+      }
       const baggingData = await this.getBaggingData(payload);
       if (baggingData) {
         dataSmdDetailBaggingVm.baggingItem = baggingData;
@@ -238,12 +228,9 @@ export class SmdPrintService {
 
       dataSmdDetailsVm.push(dataSmdDetailVm);
     }
-    // console.log(dataSmdDetailsVm);
 
     dataVm.doSmdDetails = dataSmdDetailsVm;
     response.data = dataVm;
-
-    // console.log(dataVm);
 
     this.printDoSmdAndQueryMeta(
       res,
@@ -301,9 +288,6 @@ export class SmdPrintService {
 
     const currentDate = moment();
 
-    // console.log(data);
-    // console.log(data.doSmdDetails[0].doSmdDetailItems);
-    // console.log(data.doSmdDetails[0].doSmdBaggingItems[0].baggingItem);
     return this.printDoSmd(
       res,
       data,
