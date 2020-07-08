@@ -142,6 +142,24 @@ export class DoSmd extends TmsBaseEntity {
   })
   trip: number | null;
 
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'departure_date_time',
+  })
+  departureDateTime: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'transit_date_time',
+  })
+  transitDateTime: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'arrival_date_time',
+  })
+  arrivalDateTime: Date | null;
+
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;

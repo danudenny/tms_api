@@ -62,6 +62,9 @@ export class MonitoringSmdServices {
       .addSelect('ds.total_weight', 'total_weight')
       .addSelect('ds.vehicle_capacity', 'vehicle_capacity')
       .addSelect(`((total_weight / vehicle_capacity::integer) * 100)`, 'percentage_load')
+      .addSelect('ds.departure_date_time', 'departure_date_time')
+      .addSelect('ds.transit_date_time', 'transit_date_time')
+      .addSelect('ds.arrival_date_time', 'arrival_date_time')
       .from(subQuery => {
         subQuery
           .select('ds.do_smd_code')
@@ -83,6 +86,9 @@ export class MonitoringSmdServices {
                         dsd.do_smd_id
                     )`, 'total_weight')
           .addSelect(`v.vehicle_capacity`, 'vehicle_capacity')
+          .addSelect(`ds.departure_date_time`, 'departure_date_time')
+          .addSelect(`ds.transit_date_time`, 'transit_date_time')
+          .addSelect(`ds.arrival_date_time`, 'arrival_date_time')
           .from('do_smd', 'ds')
           .innerJoin(
             'do_smd_vehicle',

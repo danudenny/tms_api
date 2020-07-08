@@ -60,14 +60,26 @@ export class MobileSmdService {
 
     if (resultDoSmd) {
       // Ubah Status 3000 OTW
-      await DoSmd.update(
-        { doSmdId : payload.do_smd_id },
-        {
-          doSmdStatusIdLast: 3000,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
+      if (resultDoSmd.departureDateTime) {
+        await DoSmd.update(
+          { doSmdId : payload.do_smd_id },
+          {
+            doSmdStatusIdLast: 3000,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+      } else {
+        await DoSmd.update(
+          { doSmdId : payload.do_smd_id },
+          {
+            doSmdStatusIdLast: 3000,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+            departureDateTime: moment().toDate(),
+          },
+        );
+      }
 
       // old update DoSmdDetail
       // await DoSmdDetail.update(
@@ -158,14 +170,45 @@ export class MobileSmdService {
 
     if (resultDoSmdDetail) {
       // Ubah Status 4000 Arrived
-      await DoSmd.update(
-        { doSmdId : resultDoSmdDetail.doSmdId },
-        {
-          doSmdStatusIdLast: 4000,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
+      const resultDoSmd = await DoSmd.findOne({
+        where: {
+          doSmdId: resultDoSmdDetail.doSmdId,
+          isDeleted: false,
         },
-      );
+      });
+      if (resultDoSmd.trip > 1) {
+        if (resultDoSmd.transitDateTime) {
+          await DoSmd.update(
+            { doSmdId : resultDoSmdDetail.doSmdId },
+            {
+              doSmdStatusIdLast: 4000,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+              arrivalDateTime: moment().toDate(),
+            },
+          );
+        } else {
+          await DoSmd.update(
+            { doSmdId : resultDoSmdDetail.doSmdId },
+            {
+              doSmdStatusIdLast: 4000,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+              transitDateTime: moment().toDate(),
+            },
+          );
+        }
+      } else {
+        await DoSmd.update(
+          { doSmdId : resultDoSmdDetail.doSmdId },
+          {
+            doSmdStatusIdLast: 4000,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+            arrivalDateTime: moment().toDate(),
+          },
+        );
+      }
 
       await DoSmdDetail.update(
         { doSmdDetailId : payload.do_smd_detail_id, arrivalTime: null },
