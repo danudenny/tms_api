@@ -20,6 +20,7 @@ import {
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
 import { V1WebReportCodService } from '../../../services/web/v1/web-report-cod.service';
+import { V1WebCodSupplierInvoiceService } from '../../../services/web/v1/web-cod-supplier-invoice.service';
 // #endregion import
 
 @ApiUseTags('Web Awb COD')
@@ -139,7 +140,7 @@ export class V1WebAwbCodController {
   @ApiOkResponse({ type: WebAwbCodSupplierInvoiceResponseVm })
   public async supplierInvoice(@Body() payload: BaseMetaPayloadVm) {
     // get data awb for generate supplier invoice
-    return V1WebAwbCodService.supplierInvoice(payload);
+    return V1WebCodSupplierInvoiceService.supplierInvoice(payload);
   }
 
   @Post('supplierInvoice/validate')
@@ -183,7 +184,7 @@ export class V1WebAwbCodController {
     @Body() payload: WebCodSupplierInvoicePayloadVm,
   ) {
     // TODO: validate data paid supplier invoice
-    return V1WebAwbCodService.supplierInvoicePaid(payload);
+    return V1WebCodSupplierInvoiceService.supplierInvoicePaid(payload);
   }
 
   @Post('listInvoice')

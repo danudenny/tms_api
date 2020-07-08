@@ -222,7 +222,7 @@ export class WebCodBankStatementResponseVm {
   message: string;
 }
 
-export class WebAwbCodInvoice {
+export class WebAwbCodDetailInvoice {
   @ApiModelProperty()
   partnerId: number;
 
@@ -230,39 +230,15 @@ export class WebAwbCodInvoice {
   partnerName: string;
 
   @ApiModelProperty()
-  bankAccount: string;
-
-  @ApiModelProperty({ format: 'date-time' })
-  bankStatementDate: string;
+  totalCodValue: number;
 
   @ApiModelProperty()
-  paymentMethod: string;
-
-  @ApiModelProperty()
-  consigneeName: string;
-
-  @ApiModelProperty()
-  awbItemId: number;
-
-  @ApiModelProperty()
-  awbNumber: string;
-
-  @ApiModelProperty()
-  codValue: number;
-
-  @ApiModelProperty()
-  adminName: string;
-
-  @ApiModelProperty()
-  transactionStatusId: number;
-
-  @ApiModelProperty()
-  transactionStatus: string;
+  totalAwb: number;
 }
 
 export class WebAwbCodSupplierInvoiceResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [WebAwbCodInvoice] })
-  data: WebAwbCodInvoice[];
+  @ApiModelProperty({ type: () => [WebAwbCodDetailInvoice] })
+  data: WebAwbCodDetailInvoice[];
 }
 
 // #region for data printing
