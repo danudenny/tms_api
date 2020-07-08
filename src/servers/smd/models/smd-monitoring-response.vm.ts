@@ -36,4 +36,13 @@ export class MonitoringListVm {
     @ApiModelProperty()
     percentage_load: number;
 
+    @ApiModelProperty()
+    departure_date_time: Date;
+
+    @ApiModelProperty()
+    transit_date_time: Date;
+
+    @ApiModelProperty()
+    arrival_date_time: Date;
+
   }

@@ -160,6 +160,9 @@ export class ScanOutListVm {
 
   @ApiModelProperty()
   total_bagging: number;
+
+  @ApiModelProperty()
+  do_smd_status_title: string;
 }
 
 export class ScanOutHistoryResponseVm extends BaseMetaResponseVm {
