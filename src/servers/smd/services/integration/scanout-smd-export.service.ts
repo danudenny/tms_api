@@ -55,7 +55,6 @@ export class ScanoutSmdExportService {
     } else {
       result.push(data);
     }
-    console.log(data, result);
     // mapping data to row excel
     result.map(function(item, index) {
       rows[index] = [];
