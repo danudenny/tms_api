@@ -4,6 +4,10 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+
+import {
+    ResponseSerializerOptions,
+} from '../../../../../shared/decorators/response-serializer-options.decorator';
 import {
     ApiBearerAuth, ApiOkResponse, ApiUseTags,
 } from '../../../../../shared/external/nestjs-swagger';
@@ -11,16 +15,23 @@ import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.g
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
-    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodBankStatementValidatePayloadVm, WebCodBankStatementCancelPayloadVm, WebCodSupplierInvoicePayloadVm,
+    WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
+    WebCodInvoiceDraftPayloadVm, WebCodInvoiceValidatePayloadVm, WebCodSupplierInvoicePayloadVm,
+    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
-    WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebCodTransactionDetailResponseVm,
-    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebAwbCodBankStatementResponseVm, WebCodBankStatementResponseVm, WebAwbCodSupplierInvoiceResponseVm, WebCodSupplierInvoicePaidResponseVm, WebAwbCodDetailPartnerResponseVm,
+    WebAwbCodBankStatementResponseVm, WebAwbCodDetailPartnerResponseVm, WebAwbCodInvoiceResponseVm,
+    WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebAwbCodSupplierInvoiceResponseVm,
+    WebCodBankStatementResponseVm, WebCodInvoiceDraftResponseVm, WebCodInvoiceValidateResponseVm,
+    WebCodSupplierInvoicePaidResponseVm, WebCodTransactionDetailResponseVm,
+    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
-import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
+import {
+    V1WebCodSupplierInvoiceService,
+} from '../../../services/web/v1/web-cod-supplier-invoice.service';
 import { V1WebReportCodService } from '../../../services/web/v1/web-report-cod.service';
-import { V1WebCodSupplierInvoiceService } from '../../../services/web/v1/web-cod-supplier-invoice.service';
+
 // #endregion import
 
 @ApiUseTags('Web Awb COD')
@@ -143,7 +154,7 @@ export class V1WebAwbCodController {
     return V1WebCodSupplierInvoiceService.supplierInvoice(payload);
   }
 
-  @Post('supplierInvoice/awb')
+  @Post('supplierInvoice/awbPartner')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebAwbCodDetailPartnerResponseVm })
@@ -155,12 +166,32 @@ export class V1WebAwbCodController {
   @Post('supplierInvoice/validate')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: WebCodSupplierInvoicePaidResponseVm })
+  @ApiOkResponse({ type: WebCodInvoiceValidateResponseVm })
   public async supplierInvoiceValidate(
-    @Body() payload: WebCodSupplierInvoicePayloadVm,
+    @Body() payload: WebCodInvoiceValidatePayloadVm,
   ) {
-    // TODO: validate data paid supplier invoice
-    return {};
+    // validate data paid supplier invoice
+    return V1WebCodSupplierInvoiceService.supplierInvoiceValidate(payload);
+  }
+
+  @Post('supplierInvoice/draft')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodInvoiceDraftResponseVm })
+  public async supplierInvoiceDraft(
+    @Body() payload: WebCodInvoiceDraftPayloadVm,
+  ) {
+    // validate data paid supplier invoice
+    return V1WebCodSupplierInvoiceService.supplierInvoiceDraft(payload);
+  }
+
+  @Post('supplierInvoice/awbInvoice')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebAwbCodInvoiceResponseVm })
+  public async awbDetailByInvoiceId(@Body() payload: BaseMetaPayloadVm) {
+    // get data awb for generate supplier invoice
+    return V1WebCodSupplierInvoiceService.awbDetailByInvoiceId(payload);
   }
 
   @Post('supplierInvoice/add')

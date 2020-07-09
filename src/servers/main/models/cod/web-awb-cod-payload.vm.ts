@@ -90,3 +90,16 @@ export class WebCodFirstTransactionPayloadVm {
   userId: number;
   userIdDriver: number;
 }
+
+// #region Supplier Invoice
+export class WebCodInvoiceValidatePayloadVm {
+  @ApiModelProperty()
+  partnerId: number;
+}
+
+export class WebCodInvoiceDraftPayloadVm {
+  @ApiModelProperty()
+  supplierInvoiceId: string;
+}
+
+// #endregion

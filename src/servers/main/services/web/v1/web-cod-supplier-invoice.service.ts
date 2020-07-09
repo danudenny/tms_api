@@ -1,6 +1,5 @@
-import { Not } from 'typeorm';
-
-import { BadRequestException } from '@nestjs/common';
+import { Not, getManager, IsNull, createQueryBuilder } from 'typeorm';
+import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
@@ -9,13 +8,18 @@ import {
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebCodSupplierInvoicePayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { WebCodSupplierInvoicePayloadVm, WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodDetailPartnerResponseVm, WebAwbCodSupplierInvoiceResponseVm,
     WebCodSupplierInvoicePaidResponseVm,
+    WebCodInvoiceValidateResponseVm,
+    WebAwbCodInvoiceResponseVm,
+    WebCodInvoiceDraftResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 
 import moment = require('moment');
+import { CodSupplierInvoice } from '../../../../../shared/orm-entity/cod-supplier-invoice';
+import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 
 export class V1WebCodSupplierInvoiceService {
   static async supplierInvoice(
@@ -48,12 +52,10 @@ export class V1WebCodSupplierInvoiceService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    // q.innerJoin(e => e.transactionStatus, 't3', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
-
+    // NOTE: set filter
+    q.andWhere(e => e.transactionStatusId, w => w.equals(40000));
+    q.andWhere(e => e.codSupplierInvoiceId, w => w.isNull());
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    // q.andWhere(e => e.transactionStatusId, w => w.equals(40000));
     q.groupByRaw('t2.partner_id');
 
     const data = await q.exec();
@@ -87,9 +89,10 @@ export class V1WebCodSupplierInvoiceService {
       ['t1.cod_value', 'codValue'],
     );
 
+    // NOTE: set filter
+    q.andWhere(e => e.transactionStatusId, w => w.equals(40000));
+    q.andWhere(e => e.codSupplierInvoiceId, w => w.isNull());
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    // TODO: set this filter
-    // q.andWhere(e => e.transactionStatusId, w => w.equals(40000));
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -102,17 +105,106 @@ export class V1WebCodSupplierInvoiceService {
     return result;
   }
 
-  static async supplierInvoiceValidate() {
-    // TODO: generate supplier invoice by partnerid
-    // create data supplier invoice with status draft
-    // update data transaction detail, add FK supplier invoice id
-    //
+  static async supplierInvoiceValidate(
+    payload: WebCodInvoiceValidatePayloadVm,
+  ): Promise<WebCodInvoiceValidateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timestamp = moment().toDate();
+    try {
+      // NOTE: generate supplier invoice by partnerid
+      // create data supplier invoice with status draft
+      const supplierInvoice = new CodSupplierInvoice();
+      const randomCode = await CustomCounterCode.supplierInvoiceCod(timestamp);
+      supplierInvoice.supplierInvoiceCode = randomCode;
+      supplierInvoice.supplierInvoiceDate = timestamp;
+      supplierInvoice.supplierInvoiceStatusId = 41000; // status DRAFT
+      supplierInvoice.branchId = permissonPayload.branchId;
+      supplierInvoice.partnerId = payload.partnerId;
+      await getManager().transaction(async transactionManager => {
+        await transactionManager.save(
+          CodSupplierInvoice,
+          supplierInvoice,
+        );
+
+        // update data transaction detail, add FK supplier invoice id
+        await transactionManager.update(
+          CodTransactionDetail,
+          {
+            partnerId: payload.partnerId,
+            transactionStatusId: 400000,
+            codSupplierInvoiceId: IsNull(),
+          },
+          {
+            codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
+            supplierInvoiceStatusId: 41000,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timestamp,
+          },
+        );
+
+        // TODO: transaction history [41000]
+        // codSupplierInvoiceId
+      });
+      const result = new WebCodInvoiceValidateResponseVm();
+      result.supplierInvoiceId = supplierInvoice.codSupplierInvoiceId;
+      result.supplierInvoiceCode = supplierInvoice.supplierInvoiceCode;
+      result.supplierInvoiceDate = supplierInvoice.supplierInvoiceDate.toDateString();
+      result.status = 'ok';
+      result.message = 'success';
+      return result;
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
+    }
   }
 
-  static async supplierInvoiceAdd() {
+  static async supplierInvoiceDraft(
+    payload: WebCodInvoiceDraftPayloadVm,
+  ): Promise<WebCodInvoiceDraftResponseVm> {
+    // get data supplier invoice
+    const supplierInvoice = await this.getSupplierInvoice(payload.supplierInvoiceId);
+    if (supplierInvoice) {
+      return supplierInvoice;
+    } else {
+      throw new BadRequestException('Data Supplier Invoice tidak ditemukan!');
+    }
   }
 
-  static async supplierInvoiceRemove() {
+  static async awbDetailByInvoiceId(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbCodInvoiceResponseVm> {
+
+    const repo = new OrionRepositoryService(CodTransactionDetail, 't1');
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_item_id', 'awbItemId'],
+      ['t1.awb_number', 'awbNumber'],
+      ['t1.awb_date', 'awbDate'],
+      ['t1.package_type_code', 'packageTypeCode'],
+      ['t1.consignee_name', 'consigneeName'],
+      ['t1.destination', 'destination'],
+      ['t1.cod_value', 'codValue'],
+      ['t1.transaction_status_id', 'transactionStatusId'],
+      ['t2.status_title', 'transactionStatusName'],
+    );
+
+    q.innerJoin(e => e.transactionStatus, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    // NOTE: set filter
+    q.andWhere(e => e.supplierInvoiceStatusId, w => w.equals(41000));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebAwbCodInvoiceResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+    return result;
   }
 
   static async supplierInvoicePaid(
@@ -138,17 +230,17 @@ export class V1WebCodSupplierInvoiceService {
         },
       });
       if (detail) {
-        // update data detail transaction status awb 45000 [PAID]
-        await CodTransactionDetail.update(
-          {
-            codTransactionDetailId: detail.codTransactionDetailId,
-          },
-          {
-            transactionStatusId: 45000,
-            updatedTime: timestamp,
-            userIdUpdated: authMeta.userId,
-          },
-        );
+        // // update data detail transaction status awb 45000 [PAID]
+        // await CodTransactionDetail.update(
+        //   {
+        //     codTransactionDetailId: detail.codTransactionDetailId,
+        //   },
+        //   {
+        //     transactionStatusId: 45000,
+        //     updatedTime: timestamp,
+        //     userIdUpdated: authMeta.userId,
+        //   },
+        // );
       } else {
         // NOTE: push message error
         const errorMessage = `data resi ${
@@ -164,5 +256,40 @@ export class V1WebCodSupplierInvoiceService {
     result.message = 'success';
     result.dataError = dataError;
     return result;
+  }
+
+  static async supplierInvoiceAdd() {
+  }
+
+  static async supplierInvoiceRemove() {
+  }
+
+  private static async getSupplierInvoice(
+    supplierInvoiceId: string,
+  ): Promise<WebCodInvoiceDraftResponseVm> {
+    const qb = createQueryBuilder();
+    qb.addSelect('t2.partner_name', 'partnerName');
+    qb.addSelect('t1.supplier_invoice_code', 'supplierInvoiceCode');
+    qb.addSelect('t1.supplier_invoice_date', 'supplierInvoiceDate');
+    qb.addSelect('COUNT(t3.cod_supplier_invoice_id)', 'totalAwb');
+    qb.addSelect('SUM(t3.cod_value)', 'totalCodValue');
+    qb.from('cod_supplier_invoice', 't1');
+    qb.innerJoin(
+      'partner',
+      't2',
+      't1.partner_id = t2.partner_id AND t2.is_deleted = false',
+    );
+    qb.innerJoin(
+      'cod_transaction_detail',
+      't3',
+      't1.cod_supplier_invoice_id = t3.cod_supplier_invoice_id AND t3.is_deleted = false',
+    );
+    qb.where('t1.cod_supplier_invoice_id = :supplierInvoiceId', {
+      supplierInvoiceId,
+    });
+    qb.andWhere('t1.is_deleted = false');
+    qb.groupBy('t1.cod_supplier_invoice_id, t2.partner_id');
+
+    return await qb.getRawOne();
   }
 }

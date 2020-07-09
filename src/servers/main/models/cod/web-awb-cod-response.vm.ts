@@ -1,6 +1,14 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../../shared/models/base-meta-response.vm';
 
+export class WebCodSuccessResponseVm {
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+}
+
 export class WebItemAwbCodResponseVm {
   @ApiModelProperty()
   awbItemId: number;
@@ -198,54 +206,12 @@ export class WebCodTransactionDetailResponseVm {
   data: CodTransactionDetailVm[];
 }
 
-export class WebCodTransferHeadOfficeResponseVm {
-  @ApiModelProperty()
-  status: string;
-
-  @ApiModelProperty()
-  message: string;
-
+export class WebCodTransferHeadOfficeResponseVm extends WebCodSuccessResponseVm {
   @ApiModelProperty()
   dataError: string[];
 }
 
-export class WebCodSupplierInvoicePaidResponseVm {
-  @ApiModelProperty()
-  status: string;
-
-  @ApiModelProperty()
-  message: string;
-
-  @ApiModelProperty()
-  dataError: string[];
-}
-
-export class WebCodBankStatementResponseVm {
-  @ApiModelProperty()
-  status: string;
-
-  @ApiModelProperty()
-  message: string;
-}
-
-export class WebAwbCodDetailInvoice {
-  @ApiModelProperty()
-  partnerId: number;
-
-  @ApiModelProperty()
-  partnerName: string;
-
-  @ApiModelProperty()
-  totalCodValue: number;
-
-  @ApiModelProperty()
-  totalAwb: number;
-}
-
-export class WebAwbCodSupplierInvoiceResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [WebAwbCodDetailInvoice] })
-  data: WebAwbCodDetailInvoice[];
-}
+export class WebCodBankStatementResponseVm extends WebCodSuccessResponseVm {}
 
 export class WebAwbCodDetailPartnerVm {
   @ApiModelProperty()
@@ -298,6 +264,92 @@ export class AwbTransactionDetailVm {
   parcelContent: string;
   partnerName: string;
 }
+
+// #region Supplier Invoice
+export class WebCodInvoiceValidateResponseVm extends WebCodSuccessResponseVm {
+  @ApiModelProperty()
+  supplierInvoiceId: string;
+  @ApiModelProperty()
+  supplierInvoiceCode: string;
+  @ApiModelProperty()
+  supplierInvoiceDate: string;
+}
+
+export class WebCodSupplierInvoicePaidResponseVm extends WebCodSuccessResponseVm {
+  @ApiModelProperty()
+  dataError: string[];
+}
+
+export class WebAwbCodDetailInvoice {
+  @ApiModelProperty()
+  partnerId: number;
+
+  @ApiModelProperty()
+  partnerName: string;
+
+  @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
+  totalAwb: number;
+}
+
+export class WebAwbCodSupplierInvoiceResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebAwbCodDetailInvoice] })
+  data: WebAwbCodDetailInvoice[];
+}
+
+export class WebAwbCodSupplierInvoiceVm {
+  @ApiModelProperty()
+  packageTypeCode: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  destination: string;
+
+  @ApiModelProperty()
+  transactionStatusName: string;
+
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  awbDate: string;
+
+  @ApiModelProperty()
+  codValue: number;
+
+  @ApiModelProperty()
+  transactionStatusId: number;
+}
+
+export class WebAwbCodInvoiceResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebAwbCodSupplierInvoiceVm] })
+  data: WebAwbCodSupplierInvoiceVm[];
+}
+
+export class WebCodInvoiceDraftResponseVm {
+  @ApiModelProperty()
+  partnerName: string;
+
+  @ApiModelProperty()
+  supplierInvoiceCode: string;
+
+  @ApiModelProperty()
+  supplierInvoiceDate: string;
+
+  @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
+  totalCodValue: string;
+}
+// #endregion
 
 // #region for data printing
 export class WebCodAwbPrintVm {

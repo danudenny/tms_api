@@ -474,6 +474,8 @@ export class V1WebAwbCodService {
                 updatedTime: timestamp,
               },
             );
+            // TODO: update transaction detail and history [35000]
+            // codTransactionId
           } else {
             dataError.push(`Transaction Id ${transactionId}, tidak valid!`);
           }
@@ -723,8 +725,8 @@ export class V1WebAwbCodService {
               },
             );
 
-            // TODO: update awb status detail?
-            // awb status 48000 - Terima HO
+            // TODO: add transaction history [40000]
+            // codTransactionId
           }
         }
 
@@ -789,6 +791,35 @@ export class V1WebAwbCodService {
           },
         );
 
+        // looping data transaction branch
+        const transactionsBranch = await transactionManager.find(
+          CodTransaction,
+          {
+            where: {
+              codBankStatementId: payload.bankStatementId,
+              isDeleted: false,
+            },
+          },
+        );
+        if (transactionsBranch.length) {
+          for (const item of transactionsBranch) {
+            await transactionManager.update(
+              CodTransactionDetail,
+              {
+                codTransactionId: item.codTransactionId,
+                isDeleted: false,
+              },
+              {
+                transactionStatusId: 32500,
+                updatedTime: timestamp,
+                userIdUpdated: authMeta.userId,
+              },
+            );
+
+            // TODO: add transaction history [32500]
+            // codTransactionId
+          }
+        }
       });
       // #endregion of transaction
 
