@@ -14,6 +14,7 @@ import {MasterDataController} from './integration/masterdata.controller';
 import {SmdPrintController} from './integration/print-smd.controller';
 import { VehicleSmdController } from './integration/vehicle-smd.controller';
 import { MonitoringSmdController } from './integration/smd-monitoring.controller';
+import { ScanOutExportController } from './integration/scanout-export.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
@@ -30,6 +31,7 @@ import { MonitoringSmdController } from './integration/smd-monitoring.controller
     SmdPrintController,
     VehicleSmdController,
     MonitoringSmdController,
+    ScanOutExportController,
   ],
 })
 export class SmdServerControllersModule {}

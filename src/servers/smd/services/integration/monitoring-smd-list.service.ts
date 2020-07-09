@@ -177,21 +177,21 @@ export class MonitoringSmdServices {
       rows[index] = [];
       item.map(function(detail) {
         const content = {};
-        content['Nomor_SMD'] = detail.do_smd_code;
+        content['Nomor SMD'] = detail.do_smd_code;
         content['Tanggal'] = detail.do_smd_time ?
           moment(detail.do_smd_time).format('DD MMM YYYY HH:mm') :
           null;
         content['Rute'] = detail.route;
-        content['Nomor_Mobil'] = detail.vehicle_number;
-        content['Type_Truck'] = detail.vehicle_name;
+        content['Nomor Mobil'] = detail.vehicle_number;
+        content['Type Truck'] = detail.vehicle_name;
         content['Trip'] = detail.trip;
-        content['Actual_Berat'] = detail.total_weight ?
+        content['Actual Berat'] = detail.total_weight ?
           Number(detail.total_weight).toFixed(0) + ' KG' :
           null;
         content['Kapasitas'] = detail.vehicle_capacity ?
           detail.vehicle_capacity + ' KG' :
           null;
-        content['Load'] = detail.percentage_load ?
+        content['Load %'] = detail.percentage_load ?
           Number(detail.percentage_load).toFixed(2) + ' %' :
           null;
         rows[index].push(content);

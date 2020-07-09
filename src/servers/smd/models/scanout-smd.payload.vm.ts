@@ -1,4 +1,5 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
 
 export class ScanOutSmdVehiclePayloadVm {
   @ApiModelProperty()
@@ -88,6 +89,15 @@ export class ScanOutSmdImagePayloadVm {
 
   @ApiModelProperty()
   do_smd_status_id: number;
-
 }
 
+export class StoreExcelScanOutPayloadVm extends BaseMetaPayloadVm {
+  @ApiModelPropertyOptional()
+  user_id: string;
+
+  @ApiModelPropertyOptional()
+  baranch_id: string;
+
+  @ApiModelProperty()
+  id: string;
+}

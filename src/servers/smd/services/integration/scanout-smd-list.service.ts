@@ -39,7 +39,17 @@ export class ScanoutSmdListService {
     // ScanInListResponseVm
     // payload.fieldResolverMap['baggingDateTime'] = 'b.created_time';
     // payload.fieldResolverMap['branchId'] = 'bhin.branch_id';
+    const data = await this.getQueryScanoutList(payload);
 
+    const result = new ScanOutListResponseVm();
+
+    result.data = data.data;
+    result.paging = MetaService.set(payload.page, payload.limit, data.total);
+
+    return result;
+  }
+
+  static async getQueryScanoutList(payload: BaseMetaPayloadVm, isGetTotal = true): Promise<any> {
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
@@ -103,15 +113,14 @@ export class ScanoutSmdListService {
     );
     q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, dss.do_smd_status_title');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
-
-    const result = new ScanOutListResponseVm();
-
-    result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
-
+    const result = {
+      data: null,
+      total: null,
+    };
+    result.data = await q.exec();
+    if (isGetTotal) {
+      result.total = await q.countWithoutTakeAndSkip();
+    }
     return result;
   }
 
