@@ -91,7 +91,7 @@ export class ScanOutSmdImagePayloadVm {
   do_smd_status_id: number;
 }
 
-export class StoreExcelScanOutPayloadVm extends BaseMetaPayloadVm {
+export class StoreExcelScanOutPayloadVm {
   @ApiModelPropertyOptional()
   user_id: string;
 
