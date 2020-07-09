@@ -104,7 +104,7 @@ export class MobileSmdService {
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
-      ).where(`do_smd_id = '${payload.do_smd_id}' AND do_smd_status_id_last <> '3000'`)
+      ).where(`do_smd_id = '${payload.do_smd_id}'`)
       .andWhere('arrival_time IS NULL')
       .returning(['doSmdDetailId', 'branchIdTo', 'doSmdStatusIdLast'])
       .execute();
