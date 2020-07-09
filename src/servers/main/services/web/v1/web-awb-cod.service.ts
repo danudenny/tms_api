@@ -1,43 +1,37 @@
 // #region import
 import { createQueryBuilder, getManager, Not } from 'typeorm';
+
 import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
+
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { Branch } from '../../../../../shared/orm-entity/branch';
+import { CodBankStatement } from '../../../../../shared/orm-entity/cod-bank-statement';
 import { CodTransaction } from '../../../../../shared/orm-entity/cod-transaction';
-import {
-    CodTransactionDetail,
-} from '../../../../../shared/orm-entity/cod-transaction-detail';
+import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-transaction-detail';
 import { User } from '../../../../../shared/orm-entity/user';
+import { AttachmentService } from '../../../../../shared/services/attachment.service';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import {
-    WebCodAwbPayloadVm, WebCodTransferPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodBankStatementValidatePayloadVm, WebCodBankStatementCancelPayloadVm, WebCodSupplierInvoicePayloadVm,
+    CodFirstTransactionQueueService,
+} from '../../../../queue/services/cod/cod-first-transaction-queue.service';
+import {
+    WebCodAwbPayloadVm, WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
+    WebCodFirstTransactionPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
-  WebAwbCodListResponseVm,
-  WebCodAwbPrintVm,
-  WebCodAwbValidVm,
-  WebCodPrintMetaVm,
-  PrintCodTransferBranchVm,
-  WebCodTransferBranchResponseVm,
-  WebAwbCodListTransactionResponseVm,
-  WebCodTransactionDetailResponseVm,
-  WebCodTransferHeadOfficeResponseVm,
-  WebAwbCodBankStatementResponseVm,
-  WebCodBankStatementResponseVm,
-  WebAwbCodSupplierInvoiceResponseVm,
-  WebCodSupplierInvoicePaidResponseVm,
+    PrintCodTransferBranchVm, WebAwbCodBankStatementResponseVm, WebAwbCodListResponseVm,
+    WebAwbCodListTransactionResponseVm, WebCodAwbPrintVm, WebCodBankStatementResponseVm,
+    WebCodPrintMetaVm, WebCodTransactionDetailResponseVm, WebCodTransferBranchResponseVm,
+    WebCodTransferHeadOfficeResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
+
 import moment = require('moment');
-import { AttachmentService } from '../../../../../shared/services/attachment.service';
-import { CodBankStatement } from '../../../../../shared/orm-entity/cod-bank-statement';
-import { CodTransactionHistory } from '../../../../../shared/orm-entity/cod-transaction-history';
-import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -190,9 +184,6 @@ export class V1WebAwbCodService {
             codBranchCash.codTransactionId,
             permissonPayload.branchId,
             authMeta.userId,
-            awbValid.partnerId,
-            awbValid.parcelValue,
-            metaPrint.employeeIdDriver,
           );
 
           dataPrintCash.push(dataCash);
@@ -205,25 +196,28 @@ export class V1WebAwbCodService {
         }
       } // end of loop data cash
 
-      // store data print cash on redis
-      printIdCash = await this.printStoreData(
-        metaPrint,
-        codBranchCash.codTransactionId,
-        dataPrintCash,
-        totalCodValueCash,
-        'cash',
-      );
-      // update data
-      await CodTransaction.update(
-        {
-          codTransactionId: codBranchCash.codTransactionId,
-        },
-        {
-          totalCodValue,
-          totalAwb: totalAwbCash,
-          transactionStatusId: 30000,
-        },
-      );
+      if (dataPrintCash.length) {
+        // store data print cash on redis
+        printIdCash = await this.printStoreData(
+          metaPrint,
+          codBranchCash.codTransactionId,
+          dataPrintCash,
+          totalCodValueCash,
+          'cash',
+        );
+
+        // update data
+        await CodTransaction.update(
+          {
+            codTransactionId: codBranchCash.codTransactionId,
+          },
+          {
+            totalCodValue,
+            totalAwb: totalAwbCash,
+            transactionStatusId: 31000,
+          },
+        );
+      }
     }
     // #endregion data cash
 
@@ -263,10 +257,8 @@ export class V1WebAwbCodService {
             codBranchCashless.codTransactionId,
             permissonPayload.branchId,
             authMeta.userId,
-            awbValid.partnerId,
-            awbValid.parcelValue,
-            metaPrint.employeeIdDriver,
           );
+
           dataPrintCashless.push(dataCashless);
         } else {
           // NOTE: error message
@@ -277,33 +269,33 @@ export class V1WebAwbCodService {
         }
       } // end of loop data cashless
 
-      // store data print cashless on redis
-      printIdCashless = await this.printStoreData(
-        metaPrint,
-        codBranchCashless.codTransactionId,
-        dataPrintCashless,
-        totalCodValueCashless,
-        'cashless',
-      );
-      // update data
-      await CodTransaction.update(
-        {
-          codTransactionId: codBranchCashless.codTransactionId,
-        },
-        {
-          totalCodValue,
-          totalAwb: totalAwbCashless,
-          transactionStatusId: 35000,
-        },
-      );
+      if (dataPrintCashless.length) {
+        // store data print cashless on redis
+        printIdCashless = await this.printStoreData(
+          metaPrint,
+          codBranchCashless.codTransactionId,
+          dataPrintCashless,
+          totalCodValueCashless,
+          'cashless',
+        );
+
+        // update data
+        await CodTransaction.update(
+          {
+            codTransactionId: codBranchCashless.codTransactionId,
+          },
+          {
+            totalCodValue,
+            totalAwb: totalAwbCashless,
+            transactionStatusId: 35000,
+          },
+        );
+      }
     } // end of check data cashless
     // #endregion data cashless
 
     // const groupPayment = groupBy(payload.data, 'paymentMethod');
     const result = new WebCodTransferBranchResponseVm();
-    // result.transactionCode = codBranch.transactionCode;
-    // result.transactionDate = codBranch.transactionDate.toDateString();
-
     result.printIdCash = printIdCash;
     result.printIdCashless = printIdCashless;
     result.dataError = dataError;
@@ -802,48 +794,26 @@ export class V1WebAwbCodService {
   // func private ==============================================================
   private static async handleAwbCod(
     item: WebCodAwbPayloadVm,
-    parentId: string,
+    transctiontId: string,
     branchId: number,
     userId: number,
-    partnerId: number,
-    parcelValue: number,
-    employeeIdDriver: number,
   ): Promise<WebCodAwbPrintVm> {
 
-    // #region send to background
-    const branchDetail = new CodTransactionDetail();
-    branchDetail.codTransactionId = parentId;
-    branchDetail.awbItemId = item.awbItemId;
-    branchDetail.awbNumber = item.awbNumber;
-    branchDetail.awbDate = moment(item.manifestedDate).toDate();
-    branchDetail.codValue = item.codValue;
-    branchDetail.paymentMethod = item.paymentMethod;
-    branchDetail.consigneeName = item.consigneeName;
-    branchDetail.branchId = branchId;
-    branchDetail.partnerId = partnerId;
-    branchDetail.parcelValue = parcelValue;
-    branchDetail.userIdDriver = item.userIdDriver;
-    branchDetail.transactionStatusId = 30000;
-
-    // for data cashless
-    branchDetail.paymentService = item.paymentService;
-    branchDetail.noReference = item.noReference;
-
-    await CodTransactionDetail.insert(branchDetail);
-
-    // inset transaction history
-    const history = new CodTransactionHistory();
-    history.awbItemId = item.awbItemId;
-    history.awbNumber = item.awbNumber;
-    history.transactionDate = moment().toDate();
-    history.transactionStatusId = 30000;
-    history.branchId = branchId;
-
-    await CodTransactionHistory.insert(history);
-
-    // TODO: how to flag this awb is transaction ??
-    // update transction statud id on table awb item attr
-
+    // #region send to background process with bull
+    const firstTransaction = new WebCodFirstTransactionPayloadVm();
+    firstTransaction.awbItemId = item.awbItemId;
+    firstTransaction.awbNumber = item.awbNumber;
+    firstTransaction.codTransactionId = transctiontId;
+    firstTransaction.transactionStatusId = 31000;
+    firstTransaction.supplierInvoiceStatusId = null;
+    firstTransaction.codSupplierInvoiceId = null;
+    firstTransaction.paymentMethod = item.paymentMethod;
+    firstTransaction.paymentService = item.paymentService;
+    firstTransaction.noReference = item.noReference;
+    firstTransaction.branchId = branchId;
+    firstTransaction.userId = userId;
+    firstTransaction.userIdDriver = item.userIdDriver;
+    CodFirstTransactionQueueService.perform(firstTransaction, moment().toDate());
     // #endregion send to background
 
     // response
@@ -854,34 +824,20 @@ export class V1WebAwbCodService {
     return result;
   }
 
-  private static async validStatusAwb(awbItemId: number): Promise<WebCodAwbValidVm> {
+  private static async validStatusAwb(awbItemId: number): Promise<boolean> {
     // check awb status mush valid dlv
-    // get data partner id??
-    // prepare data for suplier invoice
-    const qb = createQueryBuilder();
-    qb.addSelect('a.awb_item_id', 'awbItemId');
-    qb.addSelect('a.awb_status_id_last', 'awbStatusIdLast');
-    qb.addSelect('c.partner_id', 'partnerId');
-    qb.addSelect('b.parcel_value', 'parcelValue');
-    qb.from('awb_item_attr', 'a');
-    qb.innerJoin(
-      'pickup_request_detail',
-      'b',
-      'a.awb_item_id = b.awb_item_id AND b.is_deleted = false',
-    );
-    qb.innerJoin(
-      'pickup_request',
-      'c',
-      'c.pickup_request_id = b.pickup_request_id AND c.is_deleted = false',
-    );
-    qb.where('a.awb_item_id = :awbItemId', { awbItemId });
-    qb.andWhere('a.is_deleted = false');
-
-    const awbValid = await qb.getRawOne();
-    if (awbValid && awbValid.awbStatusIdLast == AWB_STATUS.DLV) {
-      return awbValid;
+    const awbValid = await AwbItemAttr.findOne({
+      select: ['awbItemAttrId', 'awbItemId', 'awbStatusIdLast'],
+      where: {
+        awbItemId,
+        awbStatusIdLast: AWB_STATUS.DLV,
+        isDeleted: false,
+      },
+    });
+    if (awbValid) {
+      return true;
     } else {
-      return null;
+      return false;
     }
   }
 
@@ -926,10 +882,9 @@ export class V1WebAwbCodService {
     if (!user) {
       throw new BadRequestException('User tidak ditemukan!');
     }
-
+    // for data print store
     result.branchName = branch.branchName;
     result.driverName = user.firstName;
-    result.employeeIdDriver = user.employeeId;
     result.nikDriver = user.username;
     return result;
   }

@@ -173,7 +173,7 @@ export class WebCodAwbValidVm {
   parcelValue: number;
 }
 
-export class CodTransactionDetail {
+export class CodTransactionDetailVm {
   @ApiModelProperty()
   awbNumber: string;
 
@@ -188,8 +188,8 @@ export class CodTransactionDetail {
 }
 
 export class WebCodTransactionDetailResponseVm {
-  @ApiModelProperty({ type: () => [CodTransactionDetail] })
-  data: CodTransactionDetail[];
+  @ApiModelProperty({ type: () => [CodTransactionDetailVm] })
+  data: CodTransactionDetailVm[];
 }
 
 export class WebCodTransferHeadOfficeResponseVm {
@@ -263,6 +263,36 @@ export class WebAwbCodDetailPartnerResponseVm extends BaseMetaResponseVm {
   data: WebAwbCodDetailPartnerVm[];
 }
 
+export class AwbTransactionDetailVm {
+  parcelNote: string;
+  custPackage: string;
+  partnerId: number;
+  awbItemId: number;
+  awbNumber: string;
+  currentPositionId: number;
+  currentPosition: string;
+  awbStatusIdLast: number;
+  podDate: string;
+  awbDate: string;
+
+  destinationCode: string;
+  destinationId: number;
+  destination: string;
+  packageTypeId: number;
+  packageTypeCode: string;
+  packageTypeName: string;
+  pickupSourceId: number;
+  pickupSource: string;
+
+  weightRealRounded: number;
+  weightFinalRounded: number;
+  consigneeName: string;
+  parcelValue: number;
+  codValue: number;
+  parcelContent: string;
+  partnerName: string;
+}
+
 // #region for data printing
 export class WebCodAwbPrintVm {
   @ApiModelProperty()
@@ -299,9 +329,6 @@ export class WebCodPrintMetaVm {
 
   @ApiModelProperty()
   nikDriver: string;
-
-  @ApiModelProperty()
-  employeeIdDriver: number;
 
   @ApiModelProperty()
   totalItems: number;

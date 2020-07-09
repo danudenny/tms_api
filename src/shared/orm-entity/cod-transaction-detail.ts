@@ -111,24 +111,116 @@ export class CodTransactionDetail extends TmsBaseEntity {
   })
   codFee: number;
 
-  @Column('character varying', {
-    nullable: false,
-    length: 50,
-    name: 'consignee_name',
+  @Column('bigint', {
+    nullable: true,
+    name: 'pickup_source_id',
   })
-  consigneeName: string;
+  pickupSourceId: number;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'pickup_source',
+  })
+  pickupSource: string;
 
   @Column('bigint', {
     nullable: false,
-    name: 'branch_id',
+    name: 'current_position_id',
   })
-  branchId: number;
+  currentPositionId: number;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'current_position',
+  })
+  currentPosition: string;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'destination_id',
+  })
+  destinationId: number;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'destination_code',
+  })
+  destinationCode: string;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'destination',
+  })
+  destination: string;
 
   @Column('bigint', {
     nullable: false,
     name: 'partner_id',
   })
   partnerId: number;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'partner_name',
+  })
+  partnerName: string;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'consignee_name',
+  })
+  consigneeName: string;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'cust_package',
+  })
+  custPackage: string;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'package_type_id',
+  })
+  packageTypeId: number;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 100,
+    name: 'package_type_code',
+  })
+  packageTypeCode: string;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 100,
+    name: 'package_type',
+  })
+  packageType: string;
+
+  @Column('text', {
+    nullable: true,
+    name: 'parcel_content',
+  })
+  parcelContent: string | null;
+
+  @Column('text', {
+    nullable: true,
+    name: 'parcel_note',
+  })
+  parcelNote: string | null;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'branch_id',
+  })
+  branchId: number;
 
   @Column('bigint', {
     nullable: false,
@@ -149,7 +241,6 @@ export class CodTransactionDetail extends TmsBaseEntity {
   supplierInvoiceStatusId: number;
 
   //  relation
-
   // @ManyToOne(() => TransactionStatus)
   // @JoinColumn({ name: 'supplier_invoice_status_id' })
   // supplierInvoiceStatus: TransactionStatus;

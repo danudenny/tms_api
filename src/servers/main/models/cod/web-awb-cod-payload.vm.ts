@@ -74,3 +74,19 @@ export class WebCodSupplierInvoicePayloadVm {
   @ApiModelProperty({ type: () => [AwbSupplierInvoice] })
   data: [AwbSupplierInvoice];
 }
+
+export class WebCodFirstTransactionPayloadVm {
+  awbItemId: number;
+  awbNumber: string;
+  codTransactionId: string;
+  transactionStatusId: number;
+  supplierInvoiceStatusId: number;
+  codSupplierInvoiceId: string;
+
+  paymentMethod: string;
+  paymentService: string;
+  noReference: string;
+  branchId: number;
+  userId: number;
+  userIdDriver: number;
+}

@@ -67,7 +67,7 @@ export class CodTransaction extends TmsBaseEntity {
   })
   branchId: number;
 
-  @Column('character varying', {
+  @Column('uuid', {
     nullable: true,
     name: 'cod_bank_statement_id',
   })
