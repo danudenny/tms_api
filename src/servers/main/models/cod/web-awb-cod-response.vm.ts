@@ -55,6 +55,12 @@ export class WebItemAwbCodResponseVm {
 
   @ApiModelPropertyOptional()
   noReference: string;
+
+  @ApiModelPropertyOptional()
+  transactionStatusId: number;
+
+  @ApiModelPropertyOptional()
+  transactionStatusName: string;
 }
 
 export class WebAwbCodListResponseVm extends BaseMetaResponseVm {

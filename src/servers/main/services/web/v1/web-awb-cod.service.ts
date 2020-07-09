@@ -52,6 +52,8 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['userIdDriver'] = 't4.user_id';
     payload.fieldResolverMap['driverName'] = 't4.first_name';
     payload.fieldResolverMap['packageTypeCode'] = 't5.package_type_code';
+    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+    payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
 
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
@@ -72,7 +74,10 @@ export class V1WebAwbCodService {
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
       ['t1.updated_time', 'transactionDate'],
-      ['COALESCE(t1.transaction_status_id, t1.awb_status_id_last)', 'awbStatusIdLast'],
+      [
+        'COALESCE(t1.transaction_status_id, t1.awb_status_id_last)',
+        'awbStatusIdLast',
+      ],
       ['t7.awb_status_title', 'awbStatusLast'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
@@ -87,6 +92,8 @@ export class V1WebAwbCodService {
       [`COALESCE(t8.cod_payment_method, 'cash')`, 'codPaymentMethod'],
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
+      ['t1.transaction_status_id', 'transactionStatusId'],
+      ['t9.status_title', 'transactionStatusName'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
@@ -113,6 +120,10 @@ export class V1WebAwbCodService {
     );
 
     q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.transactionStatus, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 

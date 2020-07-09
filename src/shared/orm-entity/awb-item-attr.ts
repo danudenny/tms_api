@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, OneToMany, ManyToOne } from 'typeorm';
 
 import { AwbItem } from './awb-item';
 import { BagItem } from './bag-item';
@@ -7,6 +7,7 @@ import { AwbStatus } from './awb-status';
 import { DoReturnAwb } from './do_return_awb';
 import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 import { Awb } from './awb';
+import { TransactionStatus } from './transaction-status';
 
 @Entity('awb_item_attr', { schema: 'public' })
 export class AwbItemAttr extends BaseEntity {
@@ -190,7 +191,7 @@ export class AwbItemAttr extends BaseEntity {
   })
   transactionStatusId: number;
 
- // relation
+  // relation
   @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id_last' })
   bagItemLast: BagItem;
@@ -217,4 +218,8 @@ export class AwbItemAttr extends BaseEntity {
   @OneToOne(() => DoPodDeliverDetail)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   doPodDeliverDetail: DoPodDeliverDetail;
+
+  @ManyToOne(() => TransactionStatus)
+  @JoinColumn({ name: 'transaction_status_id' })
+  transactionStatus: TransactionStatus;
 }

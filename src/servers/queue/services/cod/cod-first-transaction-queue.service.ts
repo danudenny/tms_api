@@ -127,8 +127,6 @@ export class CodFirstTransactionQueueService {
               { awbItemId: data.awbItemId },
               {
                 transactionStatusId: data.transactionStatusId,
-                updatedTime: data.timestamp,
-                userIdLast: data.userId,
               },
             );
 
