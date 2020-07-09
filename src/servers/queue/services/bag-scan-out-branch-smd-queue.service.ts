@@ -29,6 +29,7 @@ export class BagScanOutBranchSmdQueueService {
           delay: ConfigService.get('queue.doSmdDetailPostMeta.retryDelayMs'),
         },
       },
+      redis: ConfigService.get('redis'),
       limiter: {
         max: 1000,
         duration: 5000, // on seconds
@@ -58,7 +59,7 @@ export class BagScanOutBranchSmdQueueService {
         INNER JOIN bag bag ON bag.bag_id = bi.bag_id AND bag.is_deleted = FALSE
         INNER JOIN branch b ON b.branch_id = dsd.branch_id_to AND b.is_deleted = FALSE
         INNER JOIN bag_item_history bih ON bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = FALSE
-        WHERE dsd.do_smd_detail_id IN (${data.doSmdDetailIds.join(',')}) AND dsd.is_deleted = FALSE
+        WHERE dsd.do_smd_id = ${data.doSmdId} AND dsd.is_deleted = FALSE
         GROUP BY bih.bag_item_id, bi.bag_item_id, b.branch_id, b.branch_name, bih.history_date, bih.bag_item_status_id
         ORDER BY bih.history_date DESC;` ,
       );
@@ -167,13 +168,13 @@ export class BagScanOutBranchSmdQueueService {
   }
 
   public static async perform(
-    doSmdDetailIds: any,
+    // doSmdDetailIds: any,
     doSmdId: any,
     branchId: number,
     userId: number,
   ) {
     const obj = {
-      doSmdDetailIds,
+      // doSmdDetailIds,
       doSmdId,
       branchId,
       userId,

@@ -115,7 +115,7 @@ export class MobileSmdService {
         // UPDATE STATUS AWB AND BAG
         // BACKGROUND PROCESS
         BagScanOutBranchSmdQueueService.perform(
-          doSmdDetailIds,
+          // doSmdDetailIds,
           payload.do_smd_id,
           permissonPayload.branchId,
           authMeta.userId,

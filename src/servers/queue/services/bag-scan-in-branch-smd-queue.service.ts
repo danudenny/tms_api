@@ -28,6 +28,7 @@ export class BagScanInBranchSmdQueueService {
           delay: ConfigService.get('queue.doSmdDetailPostMeta.retryDelayMs'),
         },
       },
+      redis: ConfigService.get('redis'),
       limiter: {
         max: 1000,
         duration: 5000, // on seconds
