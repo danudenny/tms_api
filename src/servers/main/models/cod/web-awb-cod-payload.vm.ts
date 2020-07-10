@@ -102,4 +102,20 @@ export class WebCodInvoiceAddAwbPayloadVm {
   @ApiModelProperty()
   supplierInvoiceId: string;
 }
+
+export class WebCodAwbRemovePayloadVm {
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  awbNumber: string;
+}
+
+export class WebCodInvoiceRemoveAwbPayloadVm {
+  @ApiModelPropertyOptional( { type: () => [WebCodAwbRemovePayloadVm]})
+  awb: [WebCodAwbRemovePayloadVm];
+
+  @ApiModelProperty()
+  supplierInvoiceId: string;
+}
 // #endregion

@@ -9,7 +9,7 @@ import {
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodDetailPartnerResponseVm, WebAwbCodSupplierInvoiceResponseVm,
     WebCodSupplierInvoicePaidResponseVm,
@@ -280,7 +280,7 @@ export class V1WebCodSupplierInvoiceService {
     // TODO
   }
 
-  static async supplierInvoiceRemove() {
+  static async supplierInvoiceRemove(payload: WebCodInvoiceRemoveAwbPayloadVm) {
   }
 
   static async listInvoice(

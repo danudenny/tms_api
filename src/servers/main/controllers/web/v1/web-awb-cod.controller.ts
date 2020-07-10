@@ -17,7 +17,7 @@ import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payloa
 import {
     WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
     WebCodInvoiceDraftPayloadVm, WebCodInvoiceValidatePayloadVm,
-    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodInvoiceAddAwbPayloadVm,
+    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodBankStatementResponseVm, WebAwbCodDetailPartnerResponseVm, WebAwbCodInvoiceResponseVm,
@@ -209,7 +209,7 @@ export class V1WebAwbCodController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   // @ApiOkResponse({ type: WebCodSupplierInvoicePaidResponseVm })
-  public async supplierInvoiceRemove(@Body() payload: {}) {
+  public async supplierInvoiceRemove(@Body() payload: WebCodInvoiceRemoveAwbPayloadVm) {
     // TODO: validate data paid supplier invoice
     return {};
   }
