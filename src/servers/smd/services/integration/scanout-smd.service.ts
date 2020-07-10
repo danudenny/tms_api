@@ -680,7 +680,8 @@ export class ScanoutSmdService {
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
-            bi.is_deleted = FALSE;
+            bi.is_deleted = FALSE
+          ORDER BY b.created_time DESC;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
         if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
@@ -740,7 +741,7 @@ export class ScanoutSmdService {
                 },
               );
 
-              // Generate history bag and its awb IN_HUB
+            // Generate history bag and its awb IN_HUB
               BagScanDoSmdQueueService.perform(arrBagItemId, authMeta.userId, permissonPayload.branchId);
 
               data.push({
@@ -787,7 +788,8 @@ export class ScanoutSmdService {
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
-            bi.is_deleted = FALSE;
+            bi.is_deleted = FALSE
+          ORDER BY b.created_time DESC;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
         if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
