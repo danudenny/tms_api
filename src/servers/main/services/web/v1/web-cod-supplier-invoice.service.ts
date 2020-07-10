@@ -281,7 +281,9 @@ export class V1WebCodSupplierInvoiceService {
 
     q.selectRaw(
       ['t4.partner_name', 'partnerName'],
+      ['t1.cod_supplier_invoice_id', 'supplierInvoiceId'],
       ['t1.supplier_invoice_code', 'supplierInvoiceCode'],
+      ['t1.supplier_invoice_date', 'supplierInvoiceDate'],
       ['t1.supplier_invoice_status_id', 'supplierInvoiceStatusId'],
       ['COUNT(t3.cod_supplier_invoice_id)', 'totalAwb'],
       ['SUM(t3.cod_value)', 'totalCodValue'],

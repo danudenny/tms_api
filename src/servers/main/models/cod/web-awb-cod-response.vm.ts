@@ -360,6 +360,9 @@ export class WebCodSupploerInvoiceVm {
   @ApiModelProperty()
   supplierInvoiceCode: string;
 
+  @ApiModelProperty({ format: 'date-time' })
+  supplierInvoiceDate: string;
+
   @ApiModelProperty()
   supplierInvoiceStatusId: number;
 
