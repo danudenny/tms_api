@@ -15,6 +15,7 @@ import {
     WebCodInvoiceValidateResponseVm,
     WebAwbCodInvoiceResponseVm,
     WebCodInvoiceDraftResponseVm,
+    WebCodListInvoiceResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 
 import moment = require('moment');
@@ -264,6 +265,62 @@ export class V1WebCodSupplierInvoiceService {
   static async supplierInvoiceRemove() {
   }
 
+  static async listInvoice(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebCodListInvoiceResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
+    payload.fieldResolverMap['adminName'] = 't5.first_name';
+    payload.fieldResolverMap['supplierInvoiceStatusId'] = 't1.supplier_invoice_status_id';
+    payload.fieldResolverMap['partnerId'] = 't1.partner_id';
+    payload.fieldResolverMap['partnerName'] = 't4.partner_name';
+
+    const repo = new OrionRepositoryService(CodSupplierInvoice, 't1');
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t4.partner_name', 'partnerName'],
+      ['t1.supplier_invoice_code', 'supplierInvoiceCode'],
+      ['t1.supplier_invoice_status_id', 'supplierInvoiceStatusId'],
+      ['COUNT(t3.cod_supplier_invoice_id)', 'totalAwb'],
+      ['SUM(t3.cod_value)', 'totalCodValue'],
+      ['t2.status_title', 'transactionStatus'],
+      ['t5.first_name', 'adminName'],
+    );
+
+    q.innerJoin(e => e.transactionStatus, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.details, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.partner, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.userAdmin, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    // NOTE: set filter
+    // q.andWhere(e => e.supplierInvoiceStatusId, w => w.equals(41000));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.groupByRaw(
+      't1.cod_supplier_invoice_id, t2.transaction_status_id, t4.partner_id, t5.user_id',
+    );
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebCodListInvoiceResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+  // private =======================================================
   private static async getSupplierInvoice(
     supplierInvoiceId: string,
   ): Promise<WebCodInvoiceDraftResponseVm> {

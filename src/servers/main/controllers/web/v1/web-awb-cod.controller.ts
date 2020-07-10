@@ -24,7 +24,7 @@ import {
     WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebAwbCodSupplierInvoiceResponseVm,
     WebCodBankStatementResponseVm, WebCodInvoiceDraftResponseVm, WebCodInvoiceValidateResponseVm,
     WebCodSupplierInvoicePaidResponseVm, WebCodTransactionDetailResponseVm,
-    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm,
+    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodListInvoiceResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import {
@@ -165,7 +165,7 @@ export class V1WebAwbCodController {
 
   @Post('supplierInvoice/validate')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodInvoiceValidateResponseVm })
   public async supplierInvoiceValidate(
     @Body() payload: WebCodInvoiceValidatePayloadVm,
@@ -196,7 +196,7 @@ export class V1WebAwbCodController {
 
   @Post('supplierInvoice/add')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   // @ApiOkResponse({ type: WebCodSupplierInvoicePaidResponseVm })
   public async supplierInvoiceAdd(
     @Body() payload: WebCodSupplierInvoicePayloadVm,
@@ -207,7 +207,7 @@ export class V1WebAwbCodController {
 
   @Post('supplierInvoice/remove')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   // @ApiOkResponse({ type: WebCodSupplierInvoicePaidResponseVm })
   public async supplierInvoiceRemove(
     @Body() payload: WebCodSupplierInvoicePayloadVm,
@@ -218,7 +218,7 @@ export class V1WebAwbCodController {
 
   @Post('supplierInvoice/paid')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodSupplierInvoicePaidResponseVm })
   public async supplierInvoicePaid(
     @Body() payload: WebCodSupplierInvoicePayloadVm,
@@ -230,10 +230,10 @@ export class V1WebAwbCodController {
   @Post('listInvoice')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: WebCodSupplierInvoicePaidResponseVm })
-  public async listInvoice(@Body() payload: WebCodSupplierInvoicePayloadVm) {
-    // TODO: list data paid supplier invoice
-    return {};
+  @ApiOkResponse({ type: WebCodListInvoiceResponseVm })
+  public async listInvoice(@Body() payload: BaseMetaPayloadVm) {
+    // list data supplier invoice
+    return V1WebCodSupplierInvoiceService.listInvoice(payload);
   }
 
   @Get('supplierInvoice/testExport')

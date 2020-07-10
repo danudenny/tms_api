@@ -349,6 +349,37 @@ export class WebCodInvoiceDraftResponseVm {
   @ApiModelProperty()
   totalCodValue: string;
 }
+
+export class WebCodSupploerInvoiceVm {
+  @ApiModelProperty()
+  partnerName: string;
+
+  @ApiModelProperty()
+  supplierInvoiceId: string;
+
+  @ApiModelProperty()
+  supplierInvoiceCode: string;
+
+  @ApiModelProperty()
+  supplierInvoiceStatusId: number;
+
+  @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
+  transactionStatus: string;
+
+  @ApiModelProperty()
+  adminName: string;
+}
+
+export class WebCodListInvoiceResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebCodSupploerInvoiceVm] })
+  data: WebCodSupploerInvoiceVm[];
+}
 // #endregion
 
 // #region for data printing

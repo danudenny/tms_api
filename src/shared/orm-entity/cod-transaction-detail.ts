@@ -9,6 +9,7 @@ import { TmsBaseEntity } from './tms-base';
 import { CodTransaction } from './cod-transaction';
 import { Partner } from './partner';
 import { TransactionStatus } from './transaction-status';
+import { CodSupplierInvoice } from './cod-supplier-invoice';
 
 @Entity('cod_transaction_detail', { schema: 'public' })
 export class CodTransactionDetail extends TmsBaseEntity {
@@ -255,6 +256,13 @@ export class CodTransactionDetail extends TmsBaseEntity {
     referencedColumnName: 'codTransactionId',
   })
   transactionBranch: CodTransaction;
+
+  @ManyToOne(() => CodSupplierInvoice, x => x.details)
+  @JoinColumn({
+    name: 'cod_supplier_invoice_id',
+    referencedColumnName: 'codSupplierInvoiceId',
+  })
+  transactionAwb: CodSupplierInvoice;
 
   @ManyToOne(() => Partner)
   @JoinColumn({ name: 'partner_id' })
