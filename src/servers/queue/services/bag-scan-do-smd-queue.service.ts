@@ -45,49 +45,28 @@ export class BagScanDoSmdQueueService {
       console.log('### SCAN DO SMD JOB ID =========', job.id);
       const data = job.data;
       const tempAwb = [];
-      const tempBag = [];
 
-      for (const item of data.bagItemIds) {
-        // handle duplicate bag_item_id
-        if (tempBag.includes(item)) {
-          continue;
-        }
-        tempBag.push(item);
+      const bagItemsAwb = await BagItemAwb.find({
+        select: ['awbItemId'],
+        where: {
+          bagItemId: Number(data.bagItemId),
+          isDeleted: false,
+        },
+      });
 
-        const resultbagItemHistory = BagItemHistory.create();
-        resultbagItemHistory.bagItemId = item.toString();
-        resultbagItemHistory.userId = data.userId.toString();
-        resultbagItemHistory.branchId = data.branchId.toString();
-        resultbagItemHistory.historyDate = moment().toDate();
-        resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_HUB.toString();
-        resultbagItemHistory.userIdCreated = data.userId;
-        resultbagItemHistory.createdTime = moment().toDate();
-        resultbagItemHistory.userIdUpdated = data.userId;
-        resultbagItemHistory.updatedTime = moment().toDate();
-        await BagItemHistory.insert(resultbagItemHistory);
+      if (bagItemsAwb && bagItemsAwb.length) {
 
-        const bagItemsAwb = await BagItemAwb.find({
-          select: ['awbItemId'],
-          where: {
-            bagItemId: item,
-            isDeleted: false,
-          },
-        });
+        for (const itemAwb of bagItemsAwb) {
+          if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
+            // handle duplicate awb item id
+            tempAwb.push(itemAwb.awbItemId);
 
-        if (bagItemsAwb && bagItemsAwb.length) {
-
-          for (const itemAwb of bagItemsAwb) {
-            if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
-              // handle duplicate awb item id
-              tempAwb.push(itemAwb.awbItemId);
-
-              DoSmdPostAwbHistoryMetaQueueService.createJobByScanDoSmd(
-                itemAwb.awbItemId,
-                data.branchId,
-                data.userId,
-                AWB_STATUS.IN_HUB,
-              );
-            }
+            DoSmdPostAwbHistoryMetaQueueService.createJobByScanDoSmd(
+              Number(itemAwb.awbItemId),
+              Number(data.branchId),
+              Number(data.userId),
+              AWB_STATUS.IN_HUB,
+            );
           }
         }
       }
@@ -106,12 +85,12 @@ export class BagScanDoSmdQueueService {
   }
 
   public static async perform(
-    bagItemIds: any,
+    bagItemId: number,
     userId: number,
     branchId: number,
   ) {
     const obj = {
-      bagItemIds,
+      bagItemId,
       userId,
       branchId,
     };

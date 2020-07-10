@@ -45,7 +45,7 @@ export class BagScanOutBranchSmdQueueService {
       console.log('### SCAN OUT BRANCH SMD JOB ID =========', job.id);
       const data = job.data;
       let employeeIdDriver = null;
-      let employeeNameDriver = null;
+      let employeeNameDriver = '';
 
       const resultBagItemBranch = await RawQueryService.query(`
         SELECT
@@ -86,12 +86,12 @@ export class BagScanOutBranchSmdQueueService {
 
       for (const item of resultBagItemBranch) {
         // handle duplikat bag_item_id
-        if (tempBag.includes(item.bag_item_id)) {
+        if (tempBag.includes(Number(item.bag_item_id))) {
           continue;
         }
-        tempBag.push(item.bag_item_id);
+        tempBag.push(Number(item.bag_item_id));
 
-        if (item.bag_item_status_id == BAG_STATUS.OUT_HUB.toString()) {
+        if (Number(item.bag_item_status_id) == BAG_STATUS.OUT_HUB) {
           // failed to update
           // do nothing
         } else {
@@ -113,7 +113,7 @@ export class BagScanOutBranchSmdQueueService {
           const bagItemsAwb = await BagItemAwb.find({
             select: ['awbItemId'],
             where: {
-              bagItemId: item.bag_item_id,
+              bagItemId: Number(item.bag_item_id),
               isDeleted: false,
             },
           });
@@ -124,9 +124,9 @@ export class BagScanOutBranchSmdQueueService {
           resultbagItemHistory.branchId = data.branchId.toString();
           resultbagItemHistory.historyDate = moment().toDate();
           resultbagItemHistory.bagItemStatusId = BAG_STATUS.OUT_HUB.toString();
-          resultbagItemHistory.userIdCreated = data.userId;
+          resultbagItemHistory.userIdCreated = Number(data.userId);
           resultbagItemHistory.createdTime = moment().toDate();
-          resultbagItemHistory.userIdUpdated = data.userId;
+          resultbagItemHistory.userIdUpdated = Number(data.userId);
           resultbagItemHistory.updatedTime = moment().toDate();
           await BagItemHistory.insert(resultbagItemHistory);
 
@@ -137,15 +137,15 @@ export class BagScanOutBranchSmdQueueService {
                 tempAwb.push(itemAwb.awbItemId);
 
                 DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
-                  itemAwb.awbItemId,
-                  data.branchId,
-                  data.userId,
-                  employeeIdDriver,
+                  Number(itemAwb.awbItemId),
+                  Number(data.branchId),
+                  Number(data.userId),
+                  Number(employeeIdDriver),
                   employeeNameDriver,
                   AWB_STATUS.OUT_HUB,
                   branchName,
                   cityName,
-                  item.branch_id_to,
+                  Number(item.branch_id_to),
                   branchNameNext,
                 );
               }

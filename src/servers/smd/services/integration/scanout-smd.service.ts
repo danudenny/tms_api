@@ -1,38 +1,23 @@
-import { Injectable, Param, PayloadTooLargeException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
-import axios from 'axios';
-import { RedisService } from '../../../../shared/services/redis.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { SysCounter } from '../../../../shared/orm-entity/sys-counter';
-import { Bag } from '../../../../shared/orm-entity/bag';
-import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
-import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
-import { BagItem } from '../../../../shared/orm-entity/bag-item';
-import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
 import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
-import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
-import { MetaService } from '../../../../shared/services/meta.service';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { WebScanInHubSortListResponseVm } from '../../../main/models/web-scanin-list.response.vm';
-import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
-import { DoSmd } from '../../../../shared/orm-entity/do_smd';
-import { DoSmdVehicle } from '../../../../shared/orm-entity/do_smd_vehicle';
-import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { Representative } from '../../../../shared/orm-entity/representative';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
-import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
+import { In } from 'typeorm';
+import { DoSmd } from '../../../../shared/orm-entity/do_smd';
+import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
-import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
-import {ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
-import { Any, In } from 'typeorm';
 import { BagScanDoSmdQueueService } from '../../../queue/services/bag-scan-do-smd-queue.service';
+import { DoSmdVehicle } from '../../../../shared/orm-entity/do_smd_vehicle';
+import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
+import {BAG_STATUS} from '../../../../shared/constants/bag-status.constant';
+import {BagItemHistory} from '../../../../shared/orm-entity/bag-item-history';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -527,7 +512,7 @@ export class ScanoutSmdService {
 
     const result = new ScanOutSmdItemResponseVm();
     const timeNow = moment().toDate();
-    let arrBagItemId = [];
+    const arrBagItemId = [];
     const data = [];
     let rawQuery;
     const resultBagging = await Bagging.findOne({
@@ -631,7 +616,11 @@ export class ScanoutSmdService {
             );
 
             // Generate history bag and its awb IN_HUB
-            BagScanDoSmdQueueService.perform(arrBagItemId, authMeta.userId, permissonPayload.branchId);
+            // BagScanDoSmdQueueService.perform(
+            //   arrBagItemId,
+            //   authMeta.userId,
+            //   permissonPayload.branchId,
+            // );
 
             data.push({
               do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
@@ -713,7 +702,7 @@ export class ScanoutSmdService {
                 1,
                 authMeta.userId,
               );
-              arrBagItemId = [resultDataBag[0].bag_item_id];
+              // arrBagItemId = [resultDataBag[0].bag_item_id];
             // }
 
               await DoSmdDetail.update(
@@ -741,8 +730,14 @@ export class ScanoutSmdService {
                 },
               );
 
-            // Generate history bag and its awb IN_HUB
-              BagScanDoSmdQueueService.perform(arrBagItemId, authMeta.userId, permissonPayload.branchId);
+              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+
+              // Generate history bag and its awb IN_HUB
+              BagScanDoSmdQueueService.perform(
+                Number(resultDataBag[0].bag_item_id),
+                authMeta.userId,
+                permissonPayload.branchId,
+              );
 
               data.push({
                 do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
@@ -821,7 +816,7 @@ export class ScanoutSmdService {
                 1,
                 authMeta.userId,
               );
-              arrBagItemId = [resultDataBag[0].bag_item_id];
+              // arrBagItemId = [resultDataBag[0].bag_item_id];
             // }
 
               await DoSmdDetail.update(
@@ -849,8 +844,14 @@ export class ScanoutSmdService {
                 },
               );
 
+              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+
               // Generate history bag and its awb IN_HUB
-              BagScanDoSmdQueueService.perform(arrBagItemId, authMeta.userId, permissonPayload.branchId);
+              BagScanDoSmdQueueService.perform(
+                Number(resultDataBag[0].bag_item_id),
+                authMeta.userId,
+                permissonPayload.branchId,
+              );
 
               data.push({
                 do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
@@ -880,6 +881,20 @@ export class ScanoutSmdService {
       }
     }
 
+  }
+
+  static async createBagItemHistory(bagItemId: number, userId: number, branchId: number, bagStatus: number) {
+    const resultbagItemHistory = BagItemHistory.create();
+    resultbagItemHistory.bagItemId = bagItemId.toString();
+    resultbagItemHistory.userId = userId.toString();
+    resultbagItemHistory.branchId = branchId.toString();
+    resultbagItemHistory.historyDate = moment().toDate();
+    resultbagItemHistory.bagItemStatusId = bagStatus.toString();
+    resultbagItemHistory.userIdCreated = userId;
+    resultbagItemHistory.createdTime = moment().toDate();
+    resultbagItemHistory.userIdUpdated = userId;
+    resultbagItemHistory.updatedTime = moment().toDate();
+    await BagItemHistory.insert(resultbagItemHistory);
   }
 
   static async scanOutSeal(payload: any): Promise<any> {
