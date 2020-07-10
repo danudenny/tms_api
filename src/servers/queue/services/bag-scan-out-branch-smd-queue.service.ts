@@ -58,7 +58,7 @@ export class BagScanOutBranchSmdQueueService {
         INNER JOIN bag_item bi ON dsdi.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE
         INNER JOIN bag bag ON bag.bag_id = bi.bag_id AND bag.is_deleted = FALSE
         INNER JOIN branch b ON b.branch_id = dsd.branch_id_to AND b.is_deleted = FALSE
-        INNER JOIN bag_item_history bih ON bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = FALSE
+        LEFT JOIN bag_item_history bih ON bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = FALSE
         WHERE dsd.do_smd_id = ${data.doSmdId} AND dsd.is_deleted = FALSE
         GROUP BY bih.bag_item_id, bi.bag_item_id, b.branch_id, b.branch_name, bih.history_date, bih.bag_item_status_id
         ORDER BY bih.history_date DESC;` ,

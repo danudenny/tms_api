@@ -54,6 +54,18 @@ export class BagScanDoSmdQueueService {
         }
         tempBag.push(item);
 
+        const resultbagItemHistory = BagItemHistory.create();
+        resultbagItemHistory.bagItemId = item.toString();
+        resultbagItemHistory.userId = data.userId.toString();
+        resultbagItemHistory.branchId = data.branchId.toString();
+        resultbagItemHistory.historyDate = moment().toDate();
+        resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_HUB.toString();
+        resultbagItemHistory.userIdCreated = data.userId;
+        resultbagItemHistory.createdTime = moment().toDate();
+        resultbagItemHistory.userIdUpdated = data.userId;
+        resultbagItemHistory.updatedTime = moment().toDate();
+        await BagItemHistory.insert(resultbagItemHistory);
+
         const bagItemsAwb = await BagItemAwb.find({
           select: ['awbItemId'],
           where: {
@@ -63,17 +75,6 @@ export class BagScanDoSmdQueueService {
         });
 
         if (bagItemsAwb && bagItemsAwb.length) {
-          const resultbagItemHistory = BagItemHistory.create();
-          resultbagItemHistory.bagItemId = item.toString();
-          resultbagItemHistory.userId = data.userId.toString();
-          resultbagItemHistory.branchId = data.branchId.toString();
-          resultbagItemHistory.historyDate = moment().toDate();
-          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_HUB.toString();
-          resultbagItemHistory.userIdCreated = data.userId;
-          resultbagItemHistory.createdTime = moment().toDate();
-          resultbagItemHistory.userIdUpdated = data.userId;
-          resultbagItemHistory.updatedTime = moment().toDate();
-          await BagItemHistory.insert(resultbagItemHistory);
 
           for (const itemAwb of bagItemsAwb) {
             if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
