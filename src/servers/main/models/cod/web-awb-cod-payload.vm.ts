@@ -59,22 +59,6 @@ export class WebCodBankStatementCancelPayloadVm {
   bankStatementId: string;
 }
 
-export class AwbSupplierInvoice {
-  @ApiModelProperty()
-  awbItemId: number;
-
-  @ApiModelProperty()
-  awbNumber: string;
-
-  @ApiModelProperty()
-  codValue: number;
-}
-
-export class WebCodSupplierInvoicePayloadVm {
-  @ApiModelProperty({ type: () => [AwbSupplierInvoice] })
-  data: [AwbSupplierInvoice];
-}
-
 export class WebCodFirstTransactionPayloadVm {
   awbItemId: number;
   awbNumber: string;
@@ -102,4 +86,8 @@ export class WebCodInvoiceDraftPayloadVm {
   supplierInvoiceId: string;
 }
 
+export class WebCodInvoiceAddAwbPayloadVm {
+  @ApiModelProperty()
+  awbNumbers: string[];
+}
 // #endregion

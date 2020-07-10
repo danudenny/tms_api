@@ -16,8 +16,8 @@ import { PermissionTokenGuard } from '../../../../../shared/guards/permission-to
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
     WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
-    WebCodInvoiceDraftPayloadVm, WebCodInvoiceValidatePayloadVm, WebCodSupplierInvoicePayloadVm,
-    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm,
+    WebCodInvoiceDraftPayloadVm, WebCodInvoiceValidatePayloadVm,
+    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodInvoiceAddAwbPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodBankStatementResponseVm, WebAwbCodDetailPartnerResponseVm, WebAwbCodInvoiceResponseVm,
@@ -199,7 +199,7 @@ export class V1WebAwbCodController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   // @ApiOkResponse({ type: WebCodSupplierInvoicePaidResponseVm })
   public async supplierInvoiceAdd(
-    @Body() payload: WebCodSupplierInvoicePayloadVm,
+    @Body() payload: WebCodInvoiceAddAwbPayloadVm,
   ) {
     // TODO: validate data paid supplier invoice
     return {};
@@ -209,9 +209,7 @@ export class V1WebAwbCodController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   // @ApiOkResponse({ type: WebCodSupplierInvoicePaidResponseVm })
-  public async supplierInvoiceRemove(
-    @Body() payload: WebCodSupplierInvoicePayloadVm,
-  ) {
+  public async supplierInvoiceRemove(@Body() payload: {}) {
     // TODO: validate data paid supplier invoice
     return {};
   }
@@ -221,7 +219,7 @@ export class V1WebAwbCodController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodSupplierInvoicePaidResponseVm })
   public async supplierInvoicePaid(
-    @Body() payload: WebCodSupplierInvoicePayloadVm,
+    @Body() payload: WebCodInvoiceDraftPayloadVm,
   ) {
     // TODO: validate data paid supplier invoice
     return V1WebCodSupplierInvoiceService.supplierInvoicePaid(payload);

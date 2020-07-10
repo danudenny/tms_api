@@ -1,3 +1,4 @@
+// #region import
 import { Not, getManager, IsNull, createQueryBuilder } from 'typeorm';
 import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 
@@ -8,7 +9,7 @@ import {
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebCodSupplierInvoicePayloadVm, WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodDetailPartnerResponseVm, WebAwbCodSupplierInvoiceResponseVm,
     WebCodSupplierInvoicePaidResponseVm,
@@ -21,6 +22,7 @@ import {
 import moment = require('moment');
 import { CodSupplierInvoice } from '../../../../../shared/orm-entity/cod-supplier-invoice';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
+// #endregion import
 
 export class V1WebCodSupplierInvoiceService {
   static async supplierInvoice(
@@ -213,54 +215,63 @@ export class V1WebCodSupplierInvoiceService {
   }
 
   static async supplierInvoicePaid(
-    payload: WebCodSupplierInvoicePayloadVm,
+    payload: WebCodInvoiceDraftPayloadVm,
   ): Promise<WebCodSupplierInvoicePaidResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
-    const dataError = [];
 
-    // TODO: loop data find and update transaction detail
-    // update awb history, with awb status paid
-    if (!payload.data.length) {
-      throw new BadRequestException('Data yang dikirim kosong!');
+    const supplierInvoice = await CodSupplierInvoice.findOne({
+      where: {
+        codSupplierInvoiceId: payload.supplierInvoiceId,
+        supplierInvoiceStatusId: 41000,
+        isDeleted: false,
+      },
+    });
+    if (!supplierInvoice) {
+      throw new BadRequestException('Supplier Invoice tidak valid/sudah di proses!');
     }
 
-    for (const item of payload.data) {
-      const detail = await CodTransactionDetail.findOne({
-        where: {
-          awbItemId: item.awbItemId,
-          transactionStatusId: Not(45000),
-          isDeleted: false,
-        },
-      });
-      if (detail) {
-        // // update data detail transaction status awb 45000 [PAID]
-        // await CodTransactionDetail.update(
-        //   {
-        //     codTransactionDetailId: detail.codTransactionDetailId,
-        //   },
-        //   {
-        //     transactionStatusId: 45000,
-        //     updatedTime: timestamp,
-        //     userIdUpdated: authMeta.userId,
-        //   },
-        // );
-      } else {
-        // NOTE: push message error
-        const errorMessage = `data resi ${
-          item.awbNumber
-        } tidak valid, atau sudah di proses!`;
-        dataError.push(errorMessage);
-      }
-    } // end of loop
+    try {
+      await getManager().transaction(async transactionManager => {
+        await transactionManager.update(
+          CodSupplierInvoice,
+          {
+            codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
+          },
+          {
+            supplierInvoiceStatusId: 45000,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timestamp,
+          },
+        );
 
-    // response
-    const result = new WebCodSupplierInvoicePaidResponseVm();
-    result.status = 'ok';
-    result.message = 'success';
-    result.dataError = dataError;
-    return result;
+        // update data transaction detail, add FK supplier invoice id
+        await transactionManager.update(
+          CodTransactionDetail,
+          {
+            codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
+            transactionStatusId: 410000,
+          },
+          {
+            supplierInvoiceStatusId: 45000,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timestamp,
+          },
+        );
+
+        // TODO: transaction history [45000]
+        // codSupplierInvoiceId
+      });
+      // response
+      const result = new WebCodSupplierInvoicePaidResponseVm();
+      result.status = 'ok';
+      result.message = 'success';
+      return result;
+
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
+    }
   }
 
   static async supplierInvoiceAdd() {
