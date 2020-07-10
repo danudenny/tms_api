@@ -68,6 +68,7 @@ export class ScanoutSmdExportService {
         content['Kendaraan'] = detail.vehicle_number;
         content['Gerai Asal'] = detail.branch_from_name;
         content['Gerai Tujuan'] = detail.branch_to_name;
+        content['Status Terakhir'] = detail.do_smd_status_title;
         content['Gabung Paket'] = detail.total_bag;
         content['Bagging'] = detail.total_bagging;
         rows[index].push(content);

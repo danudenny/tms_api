@@ -181,11 +181,11 @@ export class MonitoringSmdServices {
         content['Tanggal Berangkat'] = detail.departure_date_time ?
           moment(detail.departure_date_time).format('DD MMM YYYY HH:mm') :
           null;
+        content['Tanggal Transit'] = detail.transit_date_time ?
+            moment(detail.transit_date_time).format('DD MMM YYYY HH:mm') :
+            null;
         content['Tanggal Tiba'] = detail.arrival_date_time ?
           moment(detail.arrival_date_time).format('DD MMM YYYY HH:mm') :
-          null;
-        content['Tanggal'] = detail.do_smd_time ?
-          moment(detail.do_smd_time).format('DD MMM YYYY HH:mm') :
           null;
         content['Rute'] = detail.route;
         content['Nomor Mobil'] = detail.vehicle_number;
