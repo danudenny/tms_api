@@ -13,7 +13,7 @@ import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-m
 
 export class BagScanDoSmdQueueService {
   public static queue = QueueBullBoard.createQueue.add(
-    'bag-scan-out-branch-smd-queue',
+    'bag-scan-do-smd-queue',
     {
       defaultJobOptions: {
         timeout: 0,
@@ -47,7 +47,6 @@ export class BagScanDoSmdQueueService {
       const tempAwb = [];
 
       const bagItemsAwb = await BagItemAwb.find({
-        select: ['awbItemId'],
         where: {
           bagItemId: Number(data.bagItemId),
           isDeleted: false,

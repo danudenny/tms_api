@@ -84,6 +84,12 @@ export class BagScanOutBranchSmdQueueService {
       const tempAwb = [];
       const tempBag = [];
 
+      const branch = await SharedService.getDataBranchCity(data.branchId);
+      if (branch) {
+        branchName = branch.branchName;
+        cityName = branch.district ? branch.district.city.cityName : '';
+      }
+
       for (const item of resultBagItemBranch) {
         // handle duplikat bag_item_id
         if (tempBag.includes(Number(item.bag_item_id))) {
@@ -95,11 +101,6 @@ export class BagScanOutBranchSmdQueueService {
           // failed to update
           // do nothing
         } else {
-          const branch = await SharedService.getDataBranchCity(data.branchId);
-          if (branch) {
-            branchName = branch.branchName;
-            cityName = branch.district ? branch.district.city.cityName : '';
-          }
           // branch next
           if (item.branch_id_to) {
             const branchNext = await SharedService.getDataBranchCity(
@@ -111,7 +112,6 @@ export class BagScanOutBranchSmdQueueService {
           }
 
           const bagItemsAwb = await BagItemAwb.find({
-            select: ['awbItemId'],
             where: {
               bagItemId: Number(item.bag_item_id),
               isDeleted: false,

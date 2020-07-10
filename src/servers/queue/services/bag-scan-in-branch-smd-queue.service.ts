@@ -50,20 +50,20 @@ export class BagScanInBranchSmdQueueService {
           isDeleted: false,
         },
       });
-      // TODO: raw query select insert into
-      // 1. insert table doPOdDetail ??
-      // 2. update table awbItemAttr ??
-      // 3. insert table AwbHistory ??
-      if (bagItemsAwb && bagItemsAwb.length) {
-        let employeeIdDriver = null;
-        if (data.userIdDriver) {
-          const userDriverRepo = await SharedService.getDataUserEmployee(
-            data.userIdDriver,
-          );
-          if (userDriverRepo) {
-            employeeIdDriver = userDriverRepo.employeeId;
-          }
+
+      let employeeIdDriver = null;
+      if (data.userIdDriver) {
+        const userDriverRepo = await SharedService.getDataUserEmployee(
+          data.userIdDriver,
+        );
+        if (userDriverRepo) {
+          employeeIdDriver = userDriverRepo.employeeId;
         }
+      }
+      // TODO: raw query select insert into
+      // 1. update table awbItemAttr ??
+      // 2. insert table AwbHistory ??
+      if (bagItemsAwb && bagItemsAwb.length) {
         let branchName = 'Kantor Pusat';
         let cityName = 'Jakarta';
 
