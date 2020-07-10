@@ -22,6 +22,9 @@ export class MonitoringSmdServices {
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
     payload.fieldResolverMap['branch_id'] = 'ds.branch_id';
+    payload.fieldResolverMap['departure_date_time'] = 'ds.departure_date_time';
+    payload.fieldResolverMap['arrival_date_time'] = 'ds.arrival_date_time';
+
     payload.fieldFilterManualMap['do_smd_time'] = true;
     payload.globalSearchFields = [
       {
@@ -29,6 +32,12 @@ export class MonitoringSmdServices {
       },
       {
         field: 'branch_id',
+      },
+      {
+        field: 'departure_date_time',
+      },
+      {
+        field: 'arrival_date_time',
       },
     ];
     if (!payload.sortBy) {
