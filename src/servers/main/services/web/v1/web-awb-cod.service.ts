@@ -619,6 +619,8 @@ export class V1WebAwbCodService {
       ['t1.total_transaction', 'totalTransaction'],
       ['t1.total_awb', 'totalAwb'],
       ['t1.total_cod_value', 'totalCodValue'],
+      ['t1.validate_datetime', 'validateDatetime'],
+      ['t1.cancel_datetime', 'cancelDatetime'],
       ['t3.branch_name', 'branchName'],
       ['t4.first_name', 'adminName'],
       ['t5.url', 'attachmentUrl'],
@@ -682,6 +684,7 @@ export class V1WebAwbCodService {
           {
             transactionStatusId: 40000,
             bankNoReference: payload.bankNoReference,
+            validateDatetime: timestamp,
             updatedTime: timestamp,
             userIdUpdated: authMeta.userId,
           },

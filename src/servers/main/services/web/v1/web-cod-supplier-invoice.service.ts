@@ -174,6 +174,10 @@ export class V1WebCodSupplierInvoiceService {
   static async awbDetailByInvoiceId(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodInvoiceResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['supplierInvoiceId'] = 't1.cod_supplier_invoice_id';
+    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+    payload.fieldResolverMap['transactionStatusName'] = 't2.status_title';
 
     const repo = new OrionRepositoryService(CodTransactionDetail, 't1');
     const q = repo.findAllRaw();
@@ -269,7 +273,7 @@ export class V1WebCodSupplierInvoiceService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebCodListInvoiceResponseVm> {
     // mapping field
-    payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
+    payload.fieldResolverMap['supplierInvoiceStatus'] = 't2.status_title';
     payload.fieldResolverMap['adminName'] = 't5.first_name';
     payload.fieldResolverMap['supplierInvoiceStatusId'] = 't1.supplier_invoice_status_id';
     payload.fieldResolverMap['partnerId'] = 't1.partner_id';
@@ -287,7 +291,7 @@ export class V1WebCodSupplierInvoiceService {
       ['t1.supplier_invoice_status_id', 'supplierInvoiceStatusId'],
       ['COUNT(t3.cod_supplier_invoice_id)', 'totalAwb'],
       ['SUM(t3.cod_value)', 'totalCodValue'],
-      ['t2.status_title', 'transactionStatus'],
+      ['t2.status_title', 'supplierInvoiceStatus'],
       ['t5.first_name', 'adminName'],
     );
 

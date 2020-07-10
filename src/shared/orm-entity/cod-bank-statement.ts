@@ -92,6 +92,12 @@ export class CodBankStatement extends TmsBaseEntity {
   })
   cancelDatetime: Date;
 
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'validate_datetime',
+  })
+  validateDatetime: Date;
+
   @Column('character varying', {
     nullable: false,
     length: 100,

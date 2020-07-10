@@ -125,7 +125,7 @@ export class V1WebAwbCodController {
 
   @Post('bankStatement/validate')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodBankStatementResponseVm })
   public async bankStatementValidate(
     @Body() payload: WebCodBankStatementValidatePayloadVm,

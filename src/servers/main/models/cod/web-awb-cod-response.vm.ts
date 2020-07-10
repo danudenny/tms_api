@@ -149,6 +149,12 @@ export class WebCodBankStatementVm {
 
   @ApiModelProperty()
   attachmentUrl: string;
+
+  @ApiModelProperty()
+  validateDatetime: string;
+
+  @ApiModelProperty()
+  cancelDatetime: string;
 }
 
 export class WebAwbCodBankStatementResponseVm extends BaseMetaResponseVm {
@@ -373,7 +379,7 @@ export class WebCodSupploerInvoiceVm {
   totalCodValue: number;
 
   @ApiModelProperty()
-  transactionStatus: string;
+  supplierInvoiceStatus: string;
 
   @ApiModelProperty()
   adminName: string;
