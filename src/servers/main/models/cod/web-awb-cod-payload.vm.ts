@@ -1,4 +1,7 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../shared/external/nestjs-swagger';
+import { IsAwbNumber } from '../../../../shared/decorators/custom-validation.decorator';
+import { IsDefined } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class WebCodAwbPayloadVm {
   @ApiModelProperty()
@@ -87,7 +90,16 @@ export class WebCodInvoiceDraftPayloadVm {
 }
 
 export class WebCodInvoiceAddAwbPayloadVm {
+  @ApiModelProperty({
+    example: ['000726556611', '000726556612'],
+    skipValidation: true,
+  })
+  @IsDefined({message: 'No Resi harus diisi'})
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  awbNumber: string[];
+
   @ApiModelProperty()
-  awbNumbers: string[];
+  supplierInvoiceId: string;
 }
 // #endregion

@@ -9,7 +9,7 @@ import {
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodDetailPartnerResponseVm, WebAwbCodSupplierInvoiceResponseVm,
     WebCodSupplierInvoicePaidResponseVm,
@@ -133,7 +133,7 @@ export class V1WebCodSupplierInvoiceService {
           CodTransactionDetail,
           {
             partnerId: payload.partnerId,
-            transactionStatusId: 400000,
+            transactionStatusId: 40000,
             codSupplierInvoiceId: IsNull(),
           },
           {
@@ -251,7 +251,7 @@ export class V1WebCodSupplierInvoiceService {
           CodTransactionDetail,
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
-            transactionStatusId: 410000,
+            transactionStatusId: 41000,
           },
           {
             supplierInvoiceStatusId: 45000,
@@ -274,7 +274,10 @@ export class V1WebCodSupplierInvoiceService {
     }
   }
 
-  static async supplierInvoiceAdd() {
+  static async supplierInvoiceAdd(
+    payload: WebCodInvoiceAddAwbPayloadVm,
+  ) {
+    // TODO
   }
 
   static async supplierInvoiceRemove() {
