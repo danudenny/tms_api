@@ -175,6 +175,7 @@ export class V1WebCodSupplierInvoiceService {
     // mapping field
     payload.fieldResolverMap['supplierInvoiceId'] = 't1.cod_supplier_invoice_id';
     payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+    payload.fieldResolverMap['weight'] = 't1.weight_rounded';
     payload.fieldResolverMap['transactionStatusName'] = 't2.status_title';
 
     const repo = new OrionRepositoryService(CodTransactionDetail, 't1');
@@ -189,6 +190,7 @@ export class V1WebCodSupplierInvoiceService {
       ['t1.consignee_name', 'consigneeName'],
       ['t1.destination', 'destination'],
       ['t1.cod_value', 'codValue'],
+      ['t1.weight_rounded', 'weight'],
       ['t1.transaction_status_id', 'transactionStatusId'],
       ['t2.status_title', 'transactionStatusName'],
     );

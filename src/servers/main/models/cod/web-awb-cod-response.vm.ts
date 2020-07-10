@@ -331,6 +331,9 @@ export class WebAwbCodSupplierInvoiceVm {
   codValue: number;
 
   @ApiModelProperty()
+  weight: number;
+
+  @ApiModelProperty()
   transactionStatusId: number;
 }
 
