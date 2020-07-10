@@ -112,6 +112,7 @@ export class V1WebCodSupplierInvoiceService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
+
     try {
       // NOTE: generate supplier invoice by partnerid
       // create data supplier invoice with status draft
@@ -122,12 +123,9 @@ export class V1WebCodSupplierInvoiceService {
       supplierInvoice.supplierInvoiceStatusId = 41000; // status DRAFT
       supplierInvoice.branchId = permissonPayload.branchId;
       supplierInvoice.partnerId = payload.partnerId;
-      await getManager().transaction(async transactionManager => {
-        await transactionManager.save(
-          CodSupplierInvoice,
-          supplierInvoice,
-        );
 
+      await CodSupplierInvoice.save(supplierInvoice);
+      await getManager().transaction(async transactionManager => {
         // update data transaction detail, add FK supplier invoice id
         await transactionManager.update(
           CodTransactionDetail,
