@@ -1183,19 +1183,29 @@ export class ScanoutSmdService {
           authMeta.userId,
         );
 
-        await DoSmd.update(
-          { doSmdId : payload.do_smd_id},
-          {
-            doSmdVehicleIdLast: paramDoSmdVehicleId,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
+        // await DoSmd.update(
+        //   { doSmdId : payload.do_smd_id},
+        //   {
+        //     doSmdVehicleIdLast: paramDoSmdVehicleId,
+        //     userIdUpdated: authMeta.userId,
+        //     updatedTime: moment().toDate(),
+        //   },
+        // );
         if (resultDataDoSmdVehicle[0].employee_id_driver == payload.employee_id_driver) {
           paramDoSmdStatus = 1100;
         } else {
           paramDoSmdStatus = 1050;
         }
+
+        await DoSmd.update(
+          { doSmdId : payload.do_smd_id},
+          {
+            doSmdVehicleIdLast: paramDoSmdVehicleId,
+            doSmdStatusIdLast: paramDoSmdStatus,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          },
+        );
         const paramDoSmdHistoryId = await this.createDoSmdHistory(
           resultDoSmd.doSmdId,
           null,
