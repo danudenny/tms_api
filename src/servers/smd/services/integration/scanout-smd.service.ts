@@ -616,11 +616,12 @@ export class ScanoutSmdService {
             );
 
             // Generate history bag and its awb IN_HUB
-            // BagScanDoSmdQueueService.perform(
-            //   arrBagItemId,
-            //   authMeta.userId,
-            //   permissonPayload.branchId,
-            // );
+            BagScanDoSmdQueueService.perform(
+              null,
+              authMeta.userId,
+              permissonPayload.branchId,
+              arrBagItemId,
+            );
 
             data.push({
               do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,

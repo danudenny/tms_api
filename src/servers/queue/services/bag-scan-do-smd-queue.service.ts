@@ -8,6 +8,7 @@ import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { BAG_STATUS } from '../../../shared/constants/bag-status.constant';
 import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
 import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-meta-queue.service';
+import {In} from 'typeorm';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -48,7 +49,7 @@ export class BagScanDoSmdQueueService {
 
       const bagItemsAwb = await BagItemAwb.find({
         where: {
-          bagItemId: Number(data.bagItemId),
+          bagItemId: data.bagItemId ? Number(data.bagItemId) : In(data.arrBagItemId),
           isDeleted: false,
         },
       });
@@ -87,11 +88,13 @@ export class BagScanDoSmdQueueService {
     bagItemId: number,
     userId: number,
     branchId: number,
+    arrBagItemId = [],
   ) {
     const obj = {
       bagItemId,
       userId,
       branchId,
+      arrBagItemId,
     };
 
     return BagScanDoSmdQueueService.queue.add(obj);
