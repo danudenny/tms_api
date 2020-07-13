@@ -550,7 +550,7 @@ export class ScanoutSmdListService {
         paramWhere = `d.do_smd_vehicle_id = ` + resultDoSmdHistory.doSmdVehicleId + ` AND lower(d.attachment_type) = 'problem'`;
       } else if (payload.do_smd_status_id == 1150) {
         // paramImageType = 'handover';
-        paramWhere = `d.do_smd_vehicle_id = ` + resultDoSmdHistory.doSmdVehicleId + ` AND lower(d.attachment_type) = 'handover'`;
+        paramWhere = `d.do_smd_vehicle_id = ` + resultDoSmdHistory.doSmdVehicleId + ` AND lower(d.attachment_type) in('handover', 'handover_ttd')`;
       } else {
         // paramImageType = 'photo';
         paramWhere = `d.do_smd_detail_id = ` + resultDoSmdHistory.doSmdDetailId + ` AND lower(d.attachment_type) in('signature', 'photo')`;

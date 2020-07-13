@@ -9,7 +9,7 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { MobileSmdListVm, MobileSmdListDetailBagVm, MobileSmdListDetailBaggingVm } from '../../models/mobile-smd-list.response.vm';
-import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArrivalPayloadVm, MobileUploadImagePayloadVm, MobileSmdProblemPayloadVm, MobileSmdContinuePayloadVm, MobileSmdHandOverPayloadVm } from '../../models/mobile-smd.payload.vm';
+import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArrivalPayloadVm, MobileUploadImagePayloadVm, MobileSmdProblemPayloadVm, MobileSmdContinuePayloadVm, MobileSmdHandOverPayloadVm, HandoverImagePayloadVm } from '../../models/mobile-smd.payload.vm';
 import { MobileSmdService } from '../../services/integration/mobile-smd.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MobileUploadImageResponseVm } from '../../models/mobile-smd.response.vm';
@@ -78,11 +78,24 @@ export class MobileSmdController {
   }
 
   @Post('smd/handover')
-  @UseInterceptors(FileInterceptor('file'))
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  public async handOverMobile(@Req() request: any, @Body() payload: MobileSmdHandOverPayloadVm, @UploadedFile() file) {
-    return MobileSmdService.handOverMobile(payload, file);
+  public async handOverMobile(@Req() request: any, @Body() payload: MobileSmdHandOverPayloadVm) {
+    return MobileSmdService.handOverMobile(payload);
+  }
+
+  @Post('smd/handover/image')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: MobileUploadImageResponseVm })
+  @Transactional()
+  public async handOverMobileImage(
+    @Body() payload: HandoverImagePayloadVm,
+    @UploadedFile() file,
+  ) {
+    return MobileSmdService.handOverMobileImage(payload, file);
   }
 
 }
