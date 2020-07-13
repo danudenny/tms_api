@@ -99,6 +99,15 @@ export class MobileSmdHandOverPayloadVm {
   @ApiModelProperty()
   notes: string;
 
+  // @ApiModelProperty()
+  // image_type: string;
+
+}
+
+export class HandoverImagePayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
   @ApiModelProperty()
   image_type: string;
 

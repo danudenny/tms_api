@@ -32,7 +32,7 @@ import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_ite
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import { createQueryBuilder, In } from 'typeorm';
 import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm } from '../../models/mobile-smd.response.vm';
-import { MobileUploadImagePayloadVm } from '../../models/mobile-smd.payload.vm';
+import { MobileUploadImagePayloadVm, HandoverImagePayloadVm } from '../../models/mobile-smd.payload.vm';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
@@ -751,7 +751,7 @@ export class MobileSmdService {
 
   }
 
-  static async handOverMobile(payload: any, file): Promise<any> {
+  static async handOverMobileOld(payload: any, file): Promise<any> {
 
     // const result = new MobileUploadImageResponseVm();
     const authMeta = AuthService.getAuthData();
@@ -911,6 +911,204 @@ export class MobileSmdService {
       throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
     }
 
+  }
+
+  static async handOverMobile(payload: any): Promise<any> {
+
+    // const result = new MobileUploadImageResponseVm();
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+
+    const resultDoSmdDetail = await DoSmdDetail.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+        arrivalTime: null,
+      },
+    });
+
+    if (!resultDoSmdDetail) {
+      throw new BadRequestException(`All SMD Already Arrival`);
+    }
+
+    const result = new ScanOutSmdHandOverResponseVm();
+    const timeNow = moment().toDate();
+
+    if (resultDoSmd) {
+
+      const rawQuery = `
+        SELECT
+          dsda.attachment_tms_id,
+          atm.url,
+          dsda.attachment_type
+        FROM do_smd_detail_attachment dsda
+        INNER JOIN attachment_tms atm ON dsda.attachment_tms_id = atm.attachment_tms_id
+        WHERE
+          dsda.do_smd_vehicle_id = ${resultDoSmd.doSmdVehicleIdLast} AND
+          dsda.is_deleted = FALSE;
+      `;
+      const resultDataDoSmdDetailAttachment = await RawQueryService.query(rawQuery);
+      if (resultDataDoSmdDetailAttachment.length > 0 ) {
+        for (const i of resultDataDoSmdDetailAttachment) {
+          await this.createDoSmdVehicleAttachment(
+            resultDoSmd.doSmdId,
+            resultDoSmd.doSmdVehicleIdLast,
+            // payload.photo_url,
+            i.url,
+            authMeta.userId,
+          );
+        }
+      } else {
+        throw new BadRequestException(`All SMD Already Arrival`);
+      }
+
+      await DoSmdVehicle.update(
+        { doSmdVehicleId : resultDoSmd.doSmdVehicleIdLast },
+        {
+          handOverDate: timeNow,
+          notes: payload.notes,
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      const resultDoSmdVehicle = await DoSmdVehicle.findOne({
+        where: {
+          doSmdId: payload.do_smd_id,
+          isActive: true,
+          isDeleted: false,
+        },
+      });
+
+      await DoSmd.update(
+        { doSmdId : resultDoSmd.doSmdId },
+        {
+          doSmdStatusIdLast: 1050,
+          doSmdVehicleIdLast: resultDoSmdVehicle.doSmdVehicleId,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      await DoSmdDetail.update(
+        { doSmdId : payload.do_smd_id, arrivalTime: null },
+        {
+          doSmdStatusIdLast: 1050,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      const paramDoSmdHistoryId = await this.createDoSmdHistory(
+        resultDoSmd.doSmdId,
+        resultDoSmdDetail.doSmdDetailId,
+        resultDoSmdVehicle.doSmdVehicleId,
+        payload.latitude,
+        payload.longitude,
+        resultDoSmd.doSmdTime,
+        // permissonPayload.branchId,
+        null,
+        1050,
+        null,
+        payload.reasonId,
+        payload.notes,
+        authMeta.userId,
+      );
+
+      const data = [];
+      data.push({
+        do_smd_id: resultDoSmd.doSmdId,
+        handover_date: timeNow,
+      });
+      result.statusCode = HttpStatus.OK;
+      result.message = 'SMD Success Handover';
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+    }
+
+  }
+
+  public static async handOverMobileImage(
+    payload: HandoverImagePayloadVm,
+    file,
+  ): Promise<MobileUploadImageResponseVm> {
+    const result = new MobileUploadImageResponseVm();
+    const authMeta = AuthService.getAuthData();
+    PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SMD: ', authMeta);
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+
+    const resultDoSmdDetail = await DoSmdDetail.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+        arrivalTime: null,
+      },
+    });
+
+    if (!resultDoSmdDetail) {
+      throw new BadRequestException(`All SMD Already Arrival`);
+    }
+
+    let url = null;
+    let attachmentId = null;
+
+    let attachment = await AttachmentTms.findOne({
+      where: {
+        fileName: file.originalname,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
+
+    if (attachment) {
+      // attachment exist
+      attachmentId = attachment.attachmentTmsId;
+      url = attachment.url;
+    } else {
+      // upload image
+      const pathId = `smd-delivery-${payload.image_type}`;
+      attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        pathId,
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+        url = attachment.url;
+      }
+    }
+
+    // NOTE: insert data
+    if (attachmentId) {
+      // TODO: validate doPodDeliverDetailId ??
+      const doSmdDelivereyAttachment = await DoSmdDetailAttachment.create();
+      doSmdDelivereyAttachment.doSmdDetailId = resultDoSmdDetail.doSmdDetailId;
+      doSmdDelivereyAttachment.attachmentTmsId = attachmentId;
+      doSmdDelivereyAttachment.attachmentType = payload.image_type;
+      doSmdDelivereyAttachment.doSmdVehicleId = resultDoSmd.doSmdVehicleIdLast;
+      await DoSmdDetailAttachment.save(doSmdDelivereyAttachment);
+    }
+
+    result.url = url;
+    result.attachmentId = attachmentId;
+    return result;
   }
 
   private static async createDoSmdHistory(
