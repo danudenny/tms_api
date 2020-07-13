@@ -19,13 +19,13 @@ export class MonitoringSmdServices {
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringResponseVm> {
 
-    payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
+    // payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
     payload.fieldResolverMap['branch_id'] = 'ds.branch_id';
     payload.fieldResolverMap['departure_date_time'] = 'ds.departure_date_time';
     payload.fieldResolverMap['arrival_date_time'] = 'ds.arrival_date_time';
 
-    payload.fieldFilterManualMap['do_smd_time'] = true;
+    payload.fieldFilterManualMap['departure_date_time'] = true;
     payload.globalSearchFields = [
       {
         field: 'do_smd_code',
@@ -33,15 +33,15 @@ export class MonitoringSmdServices {
       {
         field: 'branch_id',
       },
-      {
-        field: 'departure_date_time',
-      },
+      // {
+      //   field: 'departure_date_time',
+      // },
       {
         field: 'arrival_date_time',
       },
     ];
     if (!payload.sortBy) {
-      payload.sortBy = 'do_smd_time';
+      payload.sortBy = 'departure_date_time';
     }
     const q = await this.getQuery(payload);
     const total = await QueryBuilderService.count(q, '1');
@@ -115,7 +115,7 @@ export class MonitoringSmdServices {
             'dsv.vehicle_number = v.vehicle_number and v.is_deleted = false ',
           );
 
-        payload.applyFiltersToQueryBuilder(subQuery, ['do_smd_time']);
+        payload.applyFiltersToQueryBuilder(subQuery, ['departure_date_time']);
 
         subQuery
           .andWhere('ds.is_deleted = false');
