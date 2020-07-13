@@ -24,7 +24,12 @@ export class PartnerMerchantService {
       pid = schedulerConfig.workOrderHistoryIdLast;
     }
 
-    const data = await this.getPickupRequest(pid);
+    let isReprocess = false;
+    if (payload.isReprocess == true){
+      isReprocess = true;
+    }
+
+    const data = await this.getPickupRequest(pid, isReprocess);
 
     if (data) {
       let maxPid = -1;
@@ -62,7 +67,7 @@ export class PartnerMerchantService {
 
       PinoLoggerService.debug('##### PREV PID : ' + pid  + ' =======================================================');
 
-      if (maxPid > -1) {
+      if (maxPid > -1 && !isReprocess) {
         PinoLoggerService.debug('##### MAX PID : ' + maxPid  + ' =======================================================');
 
         const timeNow = moment().toDate();
@@ -76,14 +81,28 @@ export class PartnerMerchantService {
     return result;
   }
 
-  private static async getPickupRequest(pid: number): Promise<any> {
+  private static async getPickupRequest(pid: number, isReprocess: boolean = false): Promise<any> {
     const select = 'pr.merchant_code, pr.pickup_request_name, pr.pickup_request_address, pr.pickup_request_email, pr.pickup_request_contact_no, pr.partner_id, branch_id_assigned';
     const select_encrypt = `
       MD5(CONCAT(
         pr.merchant_code, pr.pickup_request_name, MD5(pr.pickup_request_address), pr.pickup_request_email, pr.pickup_request_contact_no, pr.partner_id, branch_id_assigned
       ))
     `;
-    const endpid = pid + 5000;
+    let endpid = pid + 5000;
+    let where = `
+      and w.work_order_id > :pid
+      and w.work_order_id <= :endpid
+    `;
+    let backDate = moment()
+      .add(-7, 'days')
+      .format('YYYY-MM-DD 00:00:00');
+
+    if (isReprocess){
+      where = `
+        and w.is_reprocess_partner_merchant = true
+        and w.work_order_date >= :backDate
+      `;
+    }
 
     const query = `
       SELECT
@@ -101,8 +120,7 @@ export class PartnerMerchantService {
         LEFT JOIN partner_merchant pm on pm.partner_merchant_code = ` + select_encrypt + ` and pm.is_deleted=false
         WHERE
           pm.partner_merchant_id is null
-          and w.work_order_id > :pid
-          and w.work_order_id <= :endpid
+          ` + where + `
           and w.branch_id_assigned is not null
           and w.is_deleted = false
       ) pr
@@ -111,7 +129,8 @@ export class PartnerMerchantService {
 
     return await RawQueryService.queryWithParams(query, {
       pid,
-      endpid
+      endpid,
+      backDate,
     });
   }
 }
