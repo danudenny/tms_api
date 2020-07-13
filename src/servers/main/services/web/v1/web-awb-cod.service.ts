@@ -32,6 +32,7 @@ import {
 import { PrintByStoreService } from '../../print-by-store.service';
 
 import moment = require('moment');
+import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -840,6 +841,14 @@ export class V1WebAwbCodService {
     branchId: number,
     userId: number,
   ): Promise<WebCodAwbPrintVm> {
+
+    // update awb_item_attr transaction status 3100
+    await AwbItemAttr.update(
+      { awbItemId: item.awbItemId },
+      {
+        transactionStatusId: TRANSACTION_STATUS.TRM,
+      },
+    );
 
     // #region send to background process with bull
     const firstTransaction = new WebCodFirstTransactionPayloadVm();

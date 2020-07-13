@@ -1,7 +1,6 @@
 import { getManager, createQueryBuilder } from 'typeorm';
 import { QueueBullBoard } from '../queue-bull-board';
 import { ConfigService } from '../../../../shared/services/config.service';
-import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { AwbTransactionDetailVm } from '../../../main/models/cod/web-awb-cod-response.vm';
 import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transaction-detail';
 import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transaction-history';
@@ -121,15 +120,6 @@ export class CodFirstTransactionQueueService {
         // transaction history
         if (isValidData) {
           if (data.transactionStatusId == 31000) {
-            // update awb_item_attr trnsaction if transaction status 3100
-            await transactional.update(
-              AwbItemAttr,
-              { awbItemId: data.awbItemId },
-              {
-                transactionStatusId: data.transactionStatusId,
-              },
-            );
-
             // create transaction history
             const historyDriver = CodTransactionHistory.create({
               awbItemId: data.awbItemId,

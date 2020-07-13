@@ -87,6 +87,9 @@ export class WebCodInvoiceValidatePayloadVm {
 export class WebCodInvoiceDraftPayloadVm {
   @ApiModelProperty()
   supplierInvoiceId: string;
+
+  // @ApiModelProperty()
+  // totalAwb: number;
 }
 
 export class WebCodInvoiceAddAwbPayloadVm {
