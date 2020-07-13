@@ -103,17 +103,15 @@ export class WebCodInvoiceAddAwbPayloadVm {
   supplierInvoiceId: string;
 }
 
-export class WebCodAwbRemovePayloadVm {
-  @ApiModelProperty()
-  awbItemId: number;
-
-  @ApiModelProperty()
-  awbNumber: string;
-}
-
 export class WebCodInvoiceRemoveAwbPayloadVm {
-  @ApiModelPropertyOptional( { type: () => [WebCodAwbRemovePayloadVm]})
-  awb: [WebCodAwbRemovePayloadVm];
+  @ApiModelProperty({
+    example: ['000726556611', '000726556612'],
+    skipValidation: true,
+  })
+  @IsDefined({message: 'No Resi harus diisi'})
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  awbNumber: string[];
 
   @ApiModelProperty()
   supplierInvoiceId: string;

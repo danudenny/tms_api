@@ -9,7 +9,7 @@ import {
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm, WebCodFirstTransactionPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodDetailPartnerResponseVm, WebAwbCodSupplierInvoiceResponseVm,
     WebCodSupplierInvoicePaidResponseVm,
@@ -17,11 +17,17 @@ import {
     WebAwbCodInvoiceResponseVm,
     WebCodInvoiceDraftResponseVm,
     WebCodListInvoiceResponseVm,
+    WebCodInvoiceAddResponseVm,
+    WebCodAwbDelivery,
 } from '../../../models/cod/web-awb-cod-response.vm';
 
 import moment = require('moment');
 import { CodSupplierInvoice } from '../../../../../shared/orm-entity/cod-supplier-invoice';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
+import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
+import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
+import { CodFirstTransactionQueueService } from '../../../../queue/services/cod/cod-first-transaction-queue.service';
+import { DoPodDeliverDetail } from '../../../../../shared/orm-entity/do-pod-deliver-detail';
 // #endregion import
 
 export class V1WebCodSupplierInvoiceService {
@@ -277,7 +283,64 @@ export class V1WebCodSupplierInvoiceService {
   static async supplierInvoiceAdd(
     payload: WebCodInvoiceAddAwbPayloadVm,
   ) {
-    // TODO
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timestamp = moment().toDate();
+    const dataError = [];
+    // TODO: loop payload
+    for (const awbNumber of payload.awbNumber) {
+      let errorMessage = null;
+      // awb item attr find by awb number
+      // check transaction status id
+      const transactionDetail = await CodTransactionDetail.findOne({
+        where: {
+          awbNumber,
+          isDeleted: false,
+        },
+      });
+      if (transactionDetail) {
+        if (transactionDetail.supplierInvoiceStatusId) {
+          errorMessage = `Resi ${awbNumber} tidak valid, sudah di proses!`;
+        } else {
+          // check transaction status id
+          // transactionDetail.transactionStatusId;
+        }
+      } else {
+        // get data awb item attr
+        const awbItem = await this.getAwbDelivery(awbNumber);
+
+        if (awbItem) {
+          // TODO: process
+          // #region send to background process with bull
+          const firstTransaction = new WebCodFirstTransactionPayloadVm();
+          // firstTransaction.awbItemId = item.awbItemId;
+          // firstTransaction.awbNumber = item.awbNumber;
+          // firstTransaction.codTransactionId = null;
+          // firstTransaction.transactionStatusId = 30000;
+          // firstTransaction.supplierInvoiceStatusId = 41000;
+          // firstTransaction.codSupplierInvoiceId = payload.supplierInvoiceId;
+          // firstTransaction.paymentMethod = item.paymentMethod;
+          // firstTransaction.paymentService = item.paymentService;
+          // firstTransaction.noReference = item.noReference;
+          // firstTransaction.branchId = permissonPayload.branchId;
+          // firstTransaction.userId = authMeta.userId;
+          // firstTransaction.userIdDriver = item.userIdDriver;
+          CodFirstTransactionQueueService.perform(
+            firstTransaction,
+            moment().toDate(),
+          );
+          // #endregion send to background
+        } else {
+          errorMessage = `Resi ${awbNumber} tidak valid, status belum Delivery!`;
+        }
+      }
+
+      // NOTE: error message
+      if (errorMessage) { dataError.push(errorMessage); }
+    } // end of loop
+
+    const result = new WebCodInvoiceAddResponseVm();
+    return null;
   }
 
   static async supplierInvoiceRemove(payload: WebCodInvoiceRemoveAwbPayloadVm) {
@@ -367,6 +430,38 @@ export class V1WebCodSupplierInvoiceService {
     qb.andWhere('t1.is_deleted = false');
     qb.groupBy('t1.cod_supplier_invoice_id, t2.partner_id');
 
+    return await qb.getRawOne();
+  }
+
+  private static async getAwbDelivery(awbNumber: string): Promise<WebCodAwbDelivery> {
+    const qb = createQueryBuilder();
+    qb.addSelect('t1.awb_number', 'awbNumber');
+    qb.addSelect('t1.awb_item_id', 'awbItemId');
+    qb.addSelect('t2.user_id_driver', 'userIdDriver');
+    qb.addSelect('t2.branch_id', 'branchIdAssign');
+    qb.addSelect(
+      `COALESCE(t3.cod_payment_method, 'cash')`,
+      'codPaymentMethod',
+    );
+    qb.addSelect('t3.cod_payment_service', 'codPaymentService');
+    qb.addSelect('t3.no_reference', 'noReference');
+
+    qb.from('do_pod_deliver_detail', 't1');
+    qb.innerJoin(
+      'do_pod_deliver',
+      't2',
+      't1.do_pod_deliver_id = t2.do_pod_deliver_id AND t2.is_deleted = false',
+    );
+    qb.leftJoin(
+      'cod_payment',
+      't3',
+      't1.do_pod_deliver_detail_id = t3.do_pod_deliver_detail_id AND t3.is_deleted = false',
+    );
+    qb.where(
+      't1.awb_number = :awbNumber AND t1.awb_status_id_last = :awbStatus',
+      { awbNumber, awbStatus: AWB_STATUS.DLV },
+    );
+    qb.andWhere('t1.is_deleted = false');
     return await qb.getRawOne();
   }
 }

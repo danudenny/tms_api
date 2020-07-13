@@ -74,10 +74,7 @@ export class V1WebAwbCodService {
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
       ['t1.updated_time', 'transactionDate'],
-      [
-        'COALESCE(t1.transaction_status_id, t1.awb_status_id_last)',
-        'awbStatusIdLast',
-      ],
+      ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],

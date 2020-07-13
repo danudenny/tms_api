@@ -281,7 +281,9 @@ export class WebCodInvoiceValidateResponseVm extends WebCodSuccessResponseVm {
   supplierInvoiceDate: string;
 }
 
-export class WebCodSupplierInvoicePaidResponseVm extends WebCodSuccessResponseVm {
+export class WebCodSupplierInvoicePaidResponseVm extends WebCodSuccessResponseVm {}
+
+export class WebCodInvoiceAddResponseVm extends WebCodSuccessResponseVm {
   @ApiModelProperty()
   dataError: string[];
 }
@@ -391,6 +393,16 @@ export class WebCodSupploerInvoiceVm {
 export class WebCodListInvoiceResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [WebCodSupploerInvoiceVm] })
   data: WebCodSupploerInvoiceVm[];
+}
+
+export class WebCodAwbDelivery {
+  awbNumber: string;
+  awbItemId: number;
+  userIdDriver: number;
+  branchIdAssign: number;
+  codPaymentMethod: string;
+  codPaymentService: string;
+  noReference: string;
 }
 // #endregion
 
