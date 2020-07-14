@@ -54,6 +54,29 @@ export class BagScanDoSmdQueueService {
         },
       });
 
+      // UPDATE HISTORY BAG IF REQUESTED
+      if (data.isUpdatedHistoryBag) {
+        let bagItemIds = null;
+        if (data.bagItemId) {
+          bagItemIds = [data.bagItemId];
+        } else {
+          bagItemIds = data.arrBagItemId;
+        }
+        for (const bagItemIdEach of bagItemIds) {
+          const resultbagItemHistory = BagItemHistory.create();
+          resultbagItemHistory.bagItemId = bagItemIdEach.toString();
+          resultbagItemHistory.userId = data.userId.toString();
+          resultbagItemHistory.branchId = data.branchId.toString();
+          resultbagItemHistory.historyDate = moment().toDate();
+          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_HUB.toString();
+          resultbagItemHistory.userIdCreated = data.userId;
+          resultbagItemHistory.createdTime = moment().toDate();
+          resultbagItemHistory.userIdUpdated = data.userId;
+          resultbagItemHistory.updatedTime = moment().toDate();
+          await BagItemHistory.insert(resultbagItemHistory);
+        }
+      }
+
       if (bagItemsAwb && bagItemsAwb.length) {
 
         for (const itemAwb of bagItemsAwb) {
@@ -89,12 +112,14 @@ export class BagScanDoSmdQueueService {
     userId: number,
     branchId: number,
     arrBagItemId = [],
+    isUpdatedHistoryBag = false,
   ) {
     const obj = {
       bagItemId,
       userId,
       branchId,
       arrBagItemId,
+      isUpdatedHistoryBag,
     };
 
     return BagScanDoSmdQueueService.queue.add(obj);

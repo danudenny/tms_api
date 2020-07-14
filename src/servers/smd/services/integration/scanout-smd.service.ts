@@ -621,6 +621,7 @@ export class ScanoutSmdService {
               authMeta.userId,
               permissonPayload.branchId,
               arrBagItemId,
+              true,
             );
 
             data.push({
