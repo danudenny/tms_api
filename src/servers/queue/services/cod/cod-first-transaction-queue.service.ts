@@ -5,6 +5,7 @@ import { AwbTransactionDetailVm } from '../../../main/models/cod/web-awb-cod-res
 import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transaction-detail';
 import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transaction-history';
 import { WebCodFirstTransactionPayloadVm } from '../../../main/models/cod/web-awb-cod-payload.vm';
+import { CodSyncTransactionQueueService } from './cod-sync-transaction-queue.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -173,6 +174,8 @@ export class CodFirstTransactionQueueService {
         }
 
       }); // end transaction
+      // sync data to mongodb
+      CodSyncTransactionQueueService.perform(data.awbNumber, data.timestamp);
       return true;
     });
 

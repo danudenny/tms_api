@@ -1,5 +1,5 @@
 // #region import
-import { Not, getManager, IsNull, createQueryBuilder } from 'typeorm';
+import { getManager, IsNull, createQueryBuilder } from 'typeorm';
 import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
@@ -9,7 +9,7 @@ import {
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm, WebCodFirstTransactionPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodDetailPartnerResponseVm, WebAwbCodSupplierInvoiceResponseVm,
     WebCodSupplierInvoicePaidResponseVm,
@@ -19,19 +19,15 @@ import {
     WebCodListInvoiceResponseVm,
     WebCodInvoiceAddResponseVm,
     WebCodAwbDelivery,
-    AwbTransactionDetailVm,
     WebCodInvoiceRemoveResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 
 import moment = require('moment');
 import { CodSupplierInvoice } from '../../../../../shared/orm-entity/cod-supplier-invoice';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
-import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
-import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
-import { CodFirstTransactionQueueService } from '../../../../queue/services/cod/cod-first-transaction-queue.service';
-import { DoPodDeliverDetail } from '../../../../../shared/orm-entity/do-pod-deliver-detail';
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { CodTransactionHistory } from '../../../../../shared/orm-entity/cod-transaction-history';
+import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
 // #endregion import
 
 export class V1WebCodSupplierInvoiceService {
@@ -228,7 +224,6 @@ export class V1WebCodSupplierInvoiceService {
     payload: WebCodInvoiceDraftPayloadVm,
   ): Promise<WebCodSupplierInvoicePaidResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
 
     const supplierInvoice = await CodSupplierInvoice.findOne({
@@ -416,7 +411,11 @@ export class V1WebCodSupplierInvoiceService {
             updatedTime: timestamp,
           });
           await CodTransactionHistory.insert(historyInvoice);
-
+          // sync data to mongodb
+          CodSyncTransactionQueueService.perform(
+            awbItem.awbNumber,
+            timestamp,
+          );
           totalSuccess += 1;
           totalCodValue += Number(awbItem.codValue);
         } else {
@@ -441,7 +440,6 @@ export class V1WebCodSupplierInvoiceService {
     payload: WebCodInvoiceRemoveAwbPayloadVm,
   ): Promise<WebCodInvoiceRemoveResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
     const dataError = [];
     let totalSuccess = 0;

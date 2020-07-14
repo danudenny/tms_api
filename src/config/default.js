@@ -79,4 +79,8 @@ module.exports = {
   cps: {
     apiKey: '371b74e652119491854b78ce6f6bf03b',
   },
+  mongodb: {
+    sicepat:
+      'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-staging-cluster.nrgvr.mongodb.net/test?retryWrites=true&w=majority',
+  },
 };

@@ -10,6 +10,7 @@ import { CodTransaction } from './cod-transaction';
 import { Partner } from './partner';
 import { TransactionStatus } from './transaction-status';
 import { CodSupplierInvoice } from './cod-supplier-invoice';
+import { ColumnNumericTransformer } from './column-numeric-transformer';
 
 @Entity('cod_transaction_detail', { schema: 'public' })
 export class CodTransactionDetail extends TmsBaseEntity {
@@ -33,6 +34,7 @@ export class CodTransactionDetail extends TmsBaseEntity {
   @Column('bigint', {
     nullable: false,
     name: 'awb_item_id',
+    transformer: new ColumnNumericTransformer(),
   })
   awbItemId: number;
 
@@ -82,6 +84,7 @@ export class CodTransactionDetail extends TmsBaseEntity {
     precision: 20,
     scale: 5,
     name: 'weight_rounded',
+    transformer: new ColumnNumericTransformer(),
   })
   weightRounded: number;
 
@@ -91,6 +94,7 @@ export class CodTransactionDetail extends TmsBaseEntity {
     precision: 20,
     scale: 5,
     name: 'parcel_value',
+    transformer: new ColumnNumericTransformer(),
   })
   parcelValue: number;
 
@@ -100,6 +104,7 @@ export class CodTransactionDetail extends TmsBaseEntity {
     precision: 20,
     scale: 5,
     name: 'cod_value',
+    transformer: new ColumnNumericTransformer(),
   })
   codValue: number;
 
@@ -109,12 +114,14 @@ export class CodTransactionDetail extends TmsBaseEntity {
     precision: 20,
     scale: 5,
     name: 'cod_fee',
+    transformer: new ColumnNumericTransformer(),
   })
   codFee: number;
 
   @Column('bigint', {
     nullable: true,
     name: 'pickup_source_id',
+    transformer: new ColumnNumericTransformer(),
   })
   pickupSourceId: number;
 
@@ -128,6 +135,7 @@ export class CodTransactionDetail extends TmsBaseEntity {
   @Column('bigint', {
     nullable: false,
     name: 'current_position_id',
+    transformer: new ColumnNumericTransformer(),
   })
   currentPositionId: number;
 
@@ -141,6 +149,7 @@ export class CodTransactionDetail extends TmsBaseEntity {
   @Column('bigint', {
     nullable: false,
     name: 'destination_id',
+    transformer: new ColumnNumericTransformer(),
   })
   destinationId: number;
 
@@ -161,6 +170,7 @@ export class CodTransactionDetail extends TmsBaseEntity {
   @Column('bigint', {
     nullable: false,
     name: 'partner_id',
+    transformer: new ColumnNumericTransformer(),
   })
   partnerId: number;
 
@@ -188,6 +198,7 @@ export class CodTransactionDetail extends TmsBaseEntity {
   @Column('bigint', {
     nullable: false,
     name: 'package_type_id',
+    transformer: new ColumnNumericTransformer(),
   })
   packageTypeId: number;
 
@@ -220,24 +231,28 @@ export class CodTransactionDetail extends TmsBaseEntity {
   @Column('bigint', {
     nullable: false,
     name: 'branch_id',
+    transformer: new ColumnNumericTransformer(),
   })
   branchId: number;
 
   @Column('bigint', {
     nullable: false,
     name: 'user_id_driver',
+    transformer: new ColumnNumericTransformer(),
   })
   userIdDriver: number;
 
   @Column('bigint', {
     nullable: false,
     name: 'transaction_status_id',
+    transformer: new ColumnNumericTransformer(),
   })
   transactionStatusId: number;
 
   @Column('bigint', {
     nullable: false,
     name: 'supplier_invoice_status_id',
+    transformer: new ColumnNumericTransformer(),
   })
   supplierInvoiceStatusId: number;
 
