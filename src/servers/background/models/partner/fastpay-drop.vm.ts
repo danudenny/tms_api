@@ -16,6 +16,9 @@ export class DropCashlessVm {
 
 export class DropSuccessResponseVm {
   @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
   message: string;
 }
 
