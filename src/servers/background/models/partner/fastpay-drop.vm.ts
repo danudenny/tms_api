@@ -15,11 +15,12 @@ export class DropCashlessVm {
 }
 
 export class DropSuccessResponseVm {
-  @ApiModelProperty()
+  @ApiModelProperty({example: 'Drop Success'})
+  message: string;
+
+  @ApiModelProperty({example: 200})
   statusCode: number;
 
-  @ApiModelProperty()
-  message: string;
 }
 
 export class DropCashLessResponseVM {

@@ -176,8 +176,8 @@ export class PartnerFastpayService {
 
           // handle response request
           const result = new DropSuccessResponseVm();
-          result.statusCode = 200;
           result.message = 'Drop Success';
+          result.statusCode = 200;
           return result;
           // return this.handleResult(pickupRequest);
         }
