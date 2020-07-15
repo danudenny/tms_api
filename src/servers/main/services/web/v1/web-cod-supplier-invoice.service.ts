@@ -28,6 +28,8 @@ import { CustomCounterCode } from '../../../../../shared/services/custom-counter
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { CodTransactionHistory } from '../../../../../shared/orm-entity/cod-transaction-history';
 import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
+import { CodUpdateSupplierInvoiceQueueService } from '../../../../queue/services/cod/cod-update-supplier-invoice-queue.service';
+import { CodTransactionHistoryQueueService } from '../../../../queue/services/cod/cod-transaction-history-queue.service';
 // #endregion import
 
 export class V1WebCodSupplierInvoiceService {
@@ -131,8 +133,8 @@ export class V1WebCodSupplierInvoiceService {
       supplierInvoice.supplierInvoiceStatusId = 41000; // status DRAFT
       supplierInvoice.branchId = permissonPayload.branchId;
       supplierInvoice.partnerId = payload.partnerId;
-
       await CodSupplierInvoice.save(supplierInvoice);
+
       await getManager().transaction(async transactionManager => {
         // update data transaction detail, add FK supplier invoice id
         await transactionManager.update(
@@ -149,10 +151,15 @@ export class V1WebCodSupplierInvoiceService {
             updatedTime: timestamp,
           },
         );
-
-        // TODO: transaction history [41000]
-        // codSupplierInvoiceId
       });
+      // NOTE: transaction history [41000]
+      CodUpdateSupplierInvoiceQueueService.perform(
+        supplierInvoice.codSupplierInvoiceId,
+        41000,
+        permissonPayload.branchId,
+        authMeta.userId,
+        timestamp,
+      );
       const result = new WebCodInvoiceValidateResponseVm();
       result.supplierInvoiceId = supplierInvoice.codSupplierInvoiceId;
       result.supplierInvoiceCode = supplierInvoice.supplierInvoiceCode;
@@ -224,6 +231,7 @@ export class V1WebCodSupplierInvoiceService {
     payload: WebCodInvoiceDraftPayloadVm,
   ): Promise<WebCodSupplierInvoicePaidResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
 
     const supplierInvoice = await CodSupplierInvoice.findOne({
@@ -257,7 +265,7 @@ export class V1WebCodSupplierInvoiceService {
           CodTransactionDetail,
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
-            transactionStatusId: 41000,
+            supplierInvoiceStatusId: 41000,
           },
           {
             supplierInvoiceStatusId: 45000,
@@ -266,8 +274,14 @@ export class V1WebCodSupplierInvoiceService {
           },
         );
 
-        // TODO: transaction history [45000]
-        // codSupplierInvoiceId
+        // NOTE: transaction history [45000]
+        CodUpdateSupplierInvoiceQueueService.perform(
+          supplierInvoice.codSupplierInvoiceId,
+          45000,
+          permissonPayload.branchId,
+          authMeta.userId,
+          timestamp,
+        );
       });
       // response
       const result = new WebCodSupplierInvoicePaidResponseVm();
@@ -316,7 +330,15 @@ export class V1WebCodSupplierInvoiceService {
               updatedTime: timestamp,
             },
           );
-          // TODO: update transaction history for supplier invoice??
+          // NOTE: update transaction history for supplier invoice??
+          CodTransactionHistoryQueueService.perform(
+            transactionDetail.awbItemId,
+            transactionDetail.awbNumber,
+            41000,
+            permissonPayload.branchId,
+            authMeta.userId,
+            timestamp,
+          );
           totalSuccess += 1;
           totalCodValue += Number(transactionDetail.codValue);
         }
@@ -440,6 +462,7 @@ export class V1WebCodSupplierInvoiceService {
     payload: WebCodInvoiceRemoveAwbPayloadVm,
   ): Promise<WebCodInvoiceRemoveResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
     const dataError = [];
     let totalSuccess = 0;
@@ -462,8 +485,15 @@ export class V1WebCodSupplierInvoiceService {
           userIdUpdated: authMeta.userId,
           updatedTime: timestamp,
         });
-        // TODO: add transaction history remove invoice ??
-
+        // NOTE: update transaction history for supplier invoice??
+        CodTransactionHistoryQueueService.perform(
+          transactionDetail.awbItemId,
+          transactionDetail.awbNumber,
+          40500,
+          permissonPayload.branchId,
+          authMeta.userId,
+          timestamp,
+        );
         totalSuccess += 1;
       } else {
         errorMessage = `Resi ${awbNumber} tidak valid, tidak ditemukan dalam transaksi!`;

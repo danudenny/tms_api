@@ -29,6 +29,9 @@ import { CreateBagAwbScanHubQueueService } from './services/create-bag-awb-scan-
 import {CodPaymentQueueService} from './services/cod-payment-queue.service';
 import { CodFirstTransactionQueueService } from './services/cod/cod-first-transaction-queue.service';
 import { CodSyncTransactionQueueService } from './services/cod/cod-sync-transaction-queue.service';
+import { CodUpdateTransactionQueueService } from './services/cod/cod-update-transaction-queue.service';
+import { CodTransactionHistoryQueueService } from './services/cod/cod-transaction-history-queue.service';
+import { CodUpdateSupplierInvoiceQueueService } from './services/cod/cod-update-supplier-invoice-queue.service';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -127,7 +130,9 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     CodPaymentQueueService.boot();
     CodFirstTransactionQueueService.boot();
     CodSyncTransactionQueueService.boot();
-
+    CodUpdateTransactionQueueService.boot();
+    CodTransactionHistoryQueueService.boot();
+    CodUpdateSupplierInvoiceQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
   }

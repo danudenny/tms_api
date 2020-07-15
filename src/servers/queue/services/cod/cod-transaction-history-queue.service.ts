@@ -48,34 +48,34 @@ export class CodTransactionHistoryQueueService {
       });
       await CodTransactionHistory.insert(historyInvoice);
 
+      // disable update partial data mongo
       // get config mongodb
-      const collection = await MongoDbConfig.getDbSicepatCod('transaction_detail');
-      const transactionStatusId = Number(data.transactionStatusId);
-      let objUpdate = {};
-      // supplier invoice status
-      if (transactionStatusId >= 41000) {
-        objUpdate = {
-          supplierInvoiceStatusId: transactionStatusId,
-          updatedTime: data.timestamp,
-        };
-      } else {
-        objUpdate = {
-          transactionStatusId,
-          updatedTime: data.timestamp,
-        };
-      }
+      // const collection = await MongoDbConfig.getDbSicepatCod('transaction_detail');
+      // const transactionStatusId = Number(data.transactionStatusId);
+      // let objUpdate = {};
+      // // supplier invoice status
+      // if (transactionStatusId >= 41000) {
+      //   objUpdate = {
+      //     supplierInvoiceStatusId: transactionStatusId,
+      //     updatedTime: data.timestamp,
+      //   };
+      // } else {
+      //   objUpdate = {
+      //     transactionStatusId,
+      //     updatedTime: data.timestamp,
+      //   };
+      // }
+      // try {
+      //   const res = await collection.findOneAndUpdate(
+      //     { _id: data.awbNumber },
+      //     {
+      //       $set: objUpdate,
+      //     },
+      //   );
+      // } catch (error) {
+      //   console.error(error);
+      // }
 
-      try {
-        const res = await collection.findOneAndUpdate(
-          { _id: data.awbNumber },
-          {
-            $set: objUpdate,
-          },
-        );
-
-      } catch (error) {
-        console.error(error);
-      }
       return true;
     });
 

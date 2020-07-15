@@ -1,5 +1,4 @@
 import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transaction-detail';
-import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transaction-history';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { QueueBullBoard } from '../queue-bull-board';

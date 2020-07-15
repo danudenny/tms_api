@@ -33,6 +33,7 @@ import { PrintByStoreService } from '../../print-by-store.service';
 
 import moment = require('moment');
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
+import { CodUpdateTransactionQueueService } from '../../../../queue/services/cod/cod-update-transaction-queue.service';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -472,8 +473,26 @@ export class V1WebAwbCodService {
                 updatedTime: timestamp,
               },
             );
-            // TODO: update transaction detail and history [35000]
-            // codTransactionId
+            // NOTE: update transaction detail and history [35000]
+            await transactionManager.update(
+              CodTransactionDetail,
+              {
+                codTransactionId: codBranch.codTransactionId,
+              },
+              {
+                transactionStatusId: 35000,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timestamp,
+              },
+            );
+            // send background process to insert history
+            CodUpdateTransactionQueueService.perform(
+              codBranch.codTransactionId,
+              35000,
+              permissonPayload.branchId,
+              authMeta.userId,
+              timestamp,
+            );
           } else {
             dataError.push(`Transaction Id ${transactionId}, tidak valid!`);
           }
@@ -654,6 +673,7 @@ export class V1WebAwbCodService {
     payload: WebCodBankStatementValidatePayloadVm,
   ): Promise<WebCodBankStatementResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
     // validate data
     const bankStatement = await CodBankStatement.findOne({
@@ -726,8 +746,15 @@ export class V1WebAwbCodService {
               },
             );
 
-            // TODO: add transaction history [40000]
-            // codTransactionId
+            // NOTE: add transaction history [40000]
+            // send background process to insert history
+            CodUpdateTransactionQueueService.perform(
+              item.codTransactionId,
+              40000,
+              permissonPayload.branchId,
+              authMeta.userId,
+              timestamp,
+            );
           }
         }
 
@@ -746,6 +773,7 @@ export class V1WebAwbCodService {
     payload: WebCodBankStatementCancelPayloadVm,
   ): Promise<WebCodBankStatementResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
     // validate data
     const bankStatement = await CodBankStatement.findOne({
@@ -818,7 +846,14 @@ export class V1WebAwbCodService {
             );
 
             // TODO: add transaction history [32500]
-            // codTransactionId
+            // send background process to insert history
+            CodUpdateTransactionQueueService.perform(
+              item.codTransactionId,
+              32500,
+              permissonPayload.branchId,
+              authMeta.userId,
+              timestamp,
+            );
           }
         }
       });
