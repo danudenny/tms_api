@@ -215,12 +215,16 @@ export class AuthService {
       const result = new PermissionAccessResponseVM();
       result.isKorwil = false;
       result.isPalkur = false;
+      result.isKorwil = false;
 
-      // Role Id Korwil 38, role Id palkur 40
+      // Role Id Korwil 38, role Id palkur 40, role Id SMD Driver 117
       if (roleId == configKorwil.korwilRoleId) {
         result.isKorwil = true;
       } else if (roleId == configKorwil.palkurRoleId) {
         result.isPalkur = true;
+      }
+      if (roleId == configKorwil.smdRoleId) {
+        result.isSmd = true;
       }
       // Populate return value
       result.userId = authMeta.userId;
