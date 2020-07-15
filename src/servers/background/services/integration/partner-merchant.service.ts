@@ -93,14 +93,14 @@ export class PartnerMerchantService {
       and w.work_order_id > :pid
       and w.work_order_id <= :endpid
     `;
-    let backDate = moment()
-      .add(-7, 'days')
-      .format('YYYY-MM-DD 00:00:00');
+    let startDate = moment().format('YYYY-MM-DD 00:00:00');
+    let endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
 
     if (isReprocess){
       where = `
         and w.is_reprocess_partner_merchant = true
-        and w.work_order_date >= :backDate
+        and w.pickup_schedule_date_time >= :startDate
+        and w.pickup_schedule_date_time < :endDate
       `;
     }
 
@@ -130,7 +130,8 @@ export class PartnerMerchantService {
     return await RawQueryService.queryWithParams(query, {
       pid,
       endpid,
-      backDate,
+      startDate,
+      endDate,
     });
   }
 }
