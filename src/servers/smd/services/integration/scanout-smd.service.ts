@@ -16,8 +16,9 @@ import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_ite
 import { BagScanDoSmdQueueService } from '../../../queue/services/bag-scan-do-smd-queue.service';
 import { DoSmdVehicle } from '../../../../shared/orm-entity/do_smd_vehicle';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
-import {BAG_STATUS} from '../../../../shared/constants/bag-status.constant';
-import {BagItemHistory} from '../../../../shared/orm-entity/bag-item-history';
+import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
+import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
+import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -1051,6 +1052,10 @@ export class ScanoutSmdService {
           7000,
           null,
           null,
+          authMeta.userId,
+        );
+        BagAwbDeleteHistoryInHubFromSmdQueueService.perform(
+          paramdoSmdId,
           authMeta.userId,
         );
       }
