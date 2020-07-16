@@ -45,15 +45,22 @@ export class CodSyncTransactionQueueService {
         delete itemTransaction['changedValues'];
         itemTransaction.userIdCreated = Number(itemTransaction.userIdCreated);
         itemTransaction.userIdUpdated = Number(itemTransaction.userIdUpdated);
-        console.log('########## Data ::: ', itemTransaction);
 
         try {
           const checkData = await collection.findOne({
             _id: itemTransaction.awbNumber,
           });
           if (checkData) {
-            const updateData = await collection.updateOne({ _id: itemTransaction.awbNumber}, itemTransaction);
-            console.log('## Update data Mongo :: ', updateData);
+            const objUpdate = {
+              codTransactionId: itemTransaction.codTransactionId,
+              transactionStatusId: itemTransaction.transactionStatusId,
+            };
+            await collection.updateOne(
+              { _id: itemTransaction.awbNumber },
+              {
+                $set: objUpdate,
+              },
+            );
           } else {
             await collection.insertOne({ _id: itemTransaction.awbNumber, ...itemTransaction });
           }
