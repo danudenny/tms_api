@@ -215,7 +215,7 @@ export class AuthService {
       const result = new PermissionAccessResponseVM();
       result.isKorwil = false;
       result.isPalkur = false;
-      result.isKorwil = false;
+      result.isSmd = false;
 
       // Role Id Korwil 38, role Id palkur 40, role Id SMD Driver 117
       if (roleId == configKorwil.korwilRoleId) {
