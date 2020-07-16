@@ -48,7 +48,15 @@ export class CodSyncTransactionQueueService {
         console.log('########## Data ::: ', itemTransaction);
 
         try {
-          await collection.insertOne({ _id: itemTransaction.awbNumber, ...itemTransaction });
+          const checkData = await collection.findOne({
+            _id: itemTransaction.awbNumber,
+          });
+          if (checkData) {
+            const updateData = await collection.updateOne({ _id: itemTransaction.awbNumber}, itemTransaction);
+            console.log('## Update data Mongo :: ', updateData);
+          } else {
+            await collection.insertOne({ _id: itemTransaction.awbNumber, ...itemTransaction });
+          }
         } catch (error) {
           console.error(error);
           throw error;
