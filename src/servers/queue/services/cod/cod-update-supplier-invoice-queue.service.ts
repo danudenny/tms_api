@@ -55,17 +55,37 @@ export class CodUpdateSupplierInvoiceQueueService {
         } // end of looping
       }
 
+      // Update data mongo
       // get config mongodb
       const collection = await MongoDbConfig.getDbSicepatCod(
         'transaction_detail',
       );
-      // Update data mongo
-      // query store the search condition
-      const query = { codSupplierInvoiceId: data.codSupplierInvoiceId };
-      // data stores the updated value
-      const dataUpdate = {
-        $set: { supplierInvoiceStatusId: Number(data.supplierInvoiceStatusId) },
-      };
+      const supplierInvoiceStatusId = Number(data.supplierInvoiceStatusId);
+      let query = {};
+      let dataUpdate = {};
+
+      if (supplierInvoiceStatusId == 41000) {
+        query = {
+            partnerId: data.partnerId,
+            transactionStatusId: 40000,
+            codSupplierInvoiceId: null,
+        };
+        dataUpdate = {
+          $set: {
+            codSupplierInvoiceId: data.codSupplierInvoiceId,
+            supplierInvoiceStatusId,
+          },
+        };
+      } else {
+        // 45000 [PAID]
+        // query store the search condition
+        query = { codSupplierInvoiceId: data.codSupplierInvoiceId };
+        // data stores the updated value
+        dataUpdate = {
+          $set: { supplierInvoiceStatusId },
+        };
+      }
+
       try {
         const updateMongo = await collection.updateMany(query, dataUpdate);
         console.log('## Update MongoDb :: ', updateMongo);
@@ -88,6 +108,7 @@ export class CodUpdateSupplierInvoiceQueueService {
   }
 
   public static async perform(
+    partnerId: number,
     codSupplierInvoiceId: string,
     supplierInvoiceStatusId: number,
     branchId: number,
@@ -95,6 +116,7 @@ export class CodUpdateSupplierInvoiceQueueService {
     timestamp: Date,
   ) {
     const obj = {
+      partnerId,
       codSupplierInvoiceId,
       supplierInvoiceStatusId,
       branchId,

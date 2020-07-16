@@ -154,6 +154,7 @@ export class V1WebCodSupplierInvoiceService {
       });
       // NOTE: transaction history [41000]
       CodUpdateSupplierInvoiceQueueService.perform(
+        payload.partnerId,
         supplierInvoice.codSupplierInvoiceId,
         41000,
         permissonPayload.branchId,
@@ -276,6 +277,7 @@ export class V1WebCodSupplierInvoiceService {
 
         // NOTE: transaction history [45000]
         CodUpdateSupplierInvoiceQueueService.perform(
+          supplierInvoice.partnerId,
           supplierInvoice.codSupplierInvoiceId,
           45000,
           permissonPayload.branchId,
