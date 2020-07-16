@@ -117,7 +117,12 @@ export class PartnerMerchantService {
           and pr.pickup_request_name <> ''
           and pr.pickup_request_address <> ''
           and pr.is_deleted = false
-        LEFT JOIN partner_merchant pm on pm.partner_merchant_code = ` + select_encrypt + ` and pm.is_deleted=false
+        LEFT JOIN partner_merchant pm on
+          pm.merchant_name = pr.pickup_request_name
+          and pm.encrypt_address = pr.encrypt_address255
+          and pm.partner_id = pr.partner_id
+          and pm.branch_id = w.branch_id_assigned
+          and pm.is_deleted=false
         WHERE
           pm.partner_merchant_id is null
           ` + where + `
