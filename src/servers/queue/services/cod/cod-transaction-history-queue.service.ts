@@ -48,33 +48,45 @@ export class CodTransactionHistoryQueueService {
       });
       await CodTransactionHistory.insert(historyInvoice);
 
-      // disable update partial data mongo
       // get config mongodb
-      // const collection = await MongoDbConfig.getDbSicepatCod('transaction_detail');
-      // const transactionStatusId = Number(data.transactionStatusId);
-      // let objUpdate = {};
-      // // supplier invoice status
-      // if (transactionStatusId >= 41000) {
-      //   objUpdate = {
-      //     supplierInvoiceStatusId: transactionStatusId,
-      //     updatedTime: data.timestamp,
-      //   };
-      // } else {
-      //   objUpdate = {
-      //     transactionStatusId,
-      //     updatedTime: data.timestamp,
-      //   };
-      // }
-      // try {
-      //   const res = await collection.findOneAndUpdate(
-      //     { _id: data.awbNumber },
-      //     {
-      //       $set: objUpdate,
-      //     },
-      //   );
-      // } catch (error) {
-      //   console.error(error);
-      // }
+      const transactionStatusId = Number(data.transactionStatusId);
+      if (data.isPartial == true ) {
+        const collection = await MongoDbConfig.getDbSicepatCod(
+          'transaction_detail',
+        );
+        let objUpdate = {};
+        // supplier invoice status
+        // add draft
+        if (transactionStatusId == 41000) {
+          objUpdate = {
+            supplierInvoiceStatusId: transactionStatusId,
+            updatedTime: data.timestamp,
+          };
+          // cancel draft
+        } else if (transactionStatusId == 40500) {
+          objUpdate = {
+            codSupplierInvoiceId: null,
+            supplierInvoiceStatusId: null,
+            updatedTime: data.timestamp,
+          };
+        } else {
+          objUpdate = {
+            transactionStatusId,
+            updatedTime: data.timestamp,
+          };
+        }
+
+        try {
+          const res = await collection.findOneAndUpdate(
+            { _id: data.awbNumber },
+            {
+              $set: objUpdate,
+            },
+          );
+        } catch (error) {
+          console.error(error);
+        }
+      } // end partial update
 
       return true;
     });
@@ -97,6 +109,7 @@ export class CodTransactionHistoryQueueService {
     branchId: number,
     userId: number,
     timestamp: Date,
+    isPartial: boolean = false,
   ) {
     const obj = {
       awbItemId,
@@ -105,6 +118,7 @@ export class CodTransactionHistoryQueueService {
       branchId,
       userId,
       timestamp,
+      isPartial,
     };
 
     return CodTransactionHistoryQueueService.queue.add(obj);
