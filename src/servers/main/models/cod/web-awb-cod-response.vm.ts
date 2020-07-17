@@ -366,6 +366,9 @@ export class WebAwbCodInvoiceResponseVm extends BaseMetaResponseVm {
 
 export class WebCodInvoiceDraftResponseVm {
   @ApiModelProperty()
+  partnerId: number;
+
+  @ApiModelProperty()
   partnerName: string;
 
   @ApiModelProperty()

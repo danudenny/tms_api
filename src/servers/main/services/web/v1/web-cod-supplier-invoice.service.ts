@@ -312,6 +312,7 @@ export class V1WebCodSupplierInvoiceService {
       let transactionDetail = await CodTransactionDetail.findOne({
         where: {
           awbNumber,
+          partnerId: payload.partnerId,
           isDeleted: false,
         },
       });
@@ -347,7 +348,10 @@ export class V1WebCodSupplierInvoiceService {
         }
       } else {
         // get data awb item attr
-        const awbItem = await this.dataTransaction(awbNumber);
+        const awbItem = await this.dataTransaction(
+          awbNumber,
+          payload.partnerId,
+        );
         if (awbItem) {
           // #region send to background process with bull async
           // const firstTransaction = new WebCodFirstTransactionPayloadVm();
@@ -444,7 +448,7 @@ export class V1WebCodSupplierInvoiceService {
           totalSuccess += 1;
           totalCodValue += Number(awbItem.codValue);
         } else {
-          errorMessage = `Resi ${awbNumber} tidak valid, status belum Delivery!`;
+          errorMessage = `Resi ${awbNumber} tidak valid, status belum DLV / milik partner lain!`;
         }
       }
 
@@ -576,6 +580,7 @@ export class V1WebCodSupplierInvoiceService {
     supplierInvoiceId: string,
   ): Promise<WebCodInvoiceDraftResponseVm> {
     const qb = createQueryBuilder();
+    qb.addSelect('t2.partner_id', 'partnerId');
     qb.addSelect('t2.partner_name', 'partnerName');
     qb.addSelect('t1.supplier_invoice_code', 'supplierInvoiceCode');
     qb.addSelect('t1.supplier_invoice_date', 'supplierInvoiceDate');
@@ -603,6 +608,7 @@ export class V1WebCodSupplierInvoiceService {
 
   private static async dataTransaction(
     awbNumber: string,
+    partnerId: number,
   ): Promise<WebCodAwbDelivery> {
 
     const qb = createQueryBuilder();
@@ -698,6 +704,7 @@ export class V1WebCodSupplierInvoiceService {
     );
     qb.where('t1.awb_number = :awbNumber', { awbNumber });
     qb.andWhere('t1.is_deleted = false');
+    qb.andWhere('t4.partner_id = :partnerId', { partnerId });
 
     return await qb.getRawOne();
   }

@@ -106,6 +106,9 @@ export class WebCodInvoiceAddAwbPayloadVm {
   awbNumber: string[];
 
   @ApiModelProperty()
+  partnerId: number;
+
+  @ApiModelProperty()
   supplierInvoiceId: string;
 }
 
