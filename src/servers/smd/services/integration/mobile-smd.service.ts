@@ -269,14 +269,33 @@ export class MobileSmdService {
 
     if (resultDoSmdDetail) {
       // Ubah Status 4000 Arrived
-      await DoSmd.update(
-        { doSmdId : resultDoSmdDetail.doSmdId },
-        {
-          doSmdStatusIdLast: 3000,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
+      const resultDoSmd = await DoSmd.findOne({
+        where: {
+          doSmdId: resultDoSmdDetail.doSmdId,
+          isDeleted: false,
         },
-      );
+      });
+      if (resultDoSmd.arrivalDateTime) {
+        await DoSmd.update(
+          { doSmdId : resultDoSmdDetail.doSmdId },
+          {
+            doSmdStatusIdLast: 3000,
+            arrivalDateTime: null,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+      } else {
+        await DoSmd.update(
+          { doSmdId : resultDoSmdDetail.doSmdId },
+          {
+            doSmdStatusIdLast: 3000,
+            transitDateTime: null,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+      }
 
       await DoSmdDetail.update(
         { doSmdDetailId : payload.do_smd_detail_id },
