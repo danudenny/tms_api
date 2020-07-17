@@ -455,6 +455,9 @@ export class V1WebAwbCodService {
         bankStatement.bankAccount = bankAccount;
         bankStatement.attachmentId = attachmentId;
         bankStatement.branchId = permissonPayload.branchId;
+        bankStatement.bankNoReference = payload.bankNoReference;
+        bankStatement.transferDatetime = timestamp;
+        bankStatement.userIdTransfer = authMeta.userId;
         await transactionManager.save(CodBankStatement, bankStatement);
 
         // looping data transaction and update status and bank statement id [create new table] ??
@@ -615,17 +618,12 @@ export class V1WebAwbCodService {
     // mapping field
     payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
+    payload.fieldResolverMap['transferName'] = 't6.first_name';
     payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
     payload.fieldResolverMap['districtId'] = 't3.district_id';
     payload.fieldResolverMap['representativeId'] = 't3.representative_id';
 
-    // mapping search field and operator default ilike
-    // payload.globalSearchFields = [
-    //   {
-    //     field: 'awbNumber',
-    //   },
-    // ];
     if (payload.sortBy === '') {
       payload.sortBy = 'bankStatementDate';
     }
@@ -647,6 +645,9 @@ export class V1WebAwbCodService {
       ['t1.total_cod_value', 'totalCodValue'],
       ['t1.validate_datetime', 'validateDatetime'],
       ['t1.cancel_datetime', 'cancelDatetime'],
+      ['t1.transfer_datetime', 'transferDatetime'],
+      ['t1.user_id_transfer', 'userIdTransfer'],
+      ['t6.first_name', 'transferName'],
       ['t3.branch_name', 'branchName'],
       ['t4.first_name', 'adminName'],
       ['t5.url', 'attachmentUrl'],
@@ -662,6 +663,10 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.attachment, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    // TODO: set to inner join
+    q.leftJoin(e => e.userTransfer, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -710,7 +715,7 @@ export class V1WebAwbCodService {
           },
           {
             transactionStatusId: 40000,
-            bankNoReference: payload.bankNoReference,
+            transferDatetime: moment(payload.transferDatetime).toDate(),
             validateDatetime: timestamp,
             updatedTime: timestamp,
             userIdUpdated: authMeta.userId,

@@ -156,11 +156,20 @@ export class WebCodBankStatementVm {
   @ApiModelProperty()
   attachmentUrl: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({ format: 'date-time' })
   validateDatetime: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({ format: 'date-time' })
   cancelDatetime: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  transferDatetime: string;
+
+  @ApiModelProperty()
+  userIdTransfer: number;
+
+  @ApiModelProperty()
+  transferName: string;
 }
 
 export class WebAwbCodBankStatementResponseVm extends BaseMetaResponseVm {

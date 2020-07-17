@@ -127,7 +127,7 @@ export class CodBankStatement extends TmsBaseEntity {
   branch: Branch;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id_created' })
+  @JoinColumn({ name: 'user_id_updated' })
   userAdmin: User;
 
   @ManyToOne(() => User)
