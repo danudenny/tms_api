@@ -34,6 +34,9 @@ export class WebCodAwbPayloadVm {
 }
 
 export class WebCodTransferPayloadVm {
+  @ApiModelProperty()
+  userIdDriver: number;
+
   @ApiModelPropertyOptional( { type: () => [WebCodAwbPayloadVm]})
   dataCash: [WebCodAwbPayloadVm];
 

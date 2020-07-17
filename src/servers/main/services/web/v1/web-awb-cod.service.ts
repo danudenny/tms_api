@@ -170,9 +170,10 @@ export class V1WebAwbCodService {
       codBranchCash.totalCodValue = totalCodValue;
       codBranchCash.totalAwb = totalAwbCash;
       codBranchCash.branchId = permissonPayload.branchId;
+      codBranchCash.userIdDriver = payload.userIdDriver;
       await CodTransaction.save(codBranchCash);
 
-      const userIdDriver = payload.dataCash[0].userIdDriver;
+      const userIdDriver = payload.userIdDriver;
       const metaPrint = await this.generatePrintMeta(
         codBranchCash.transactionCode,
         authMeta.displayName,
@@ -244,9 +245,10 @@ export class V1WebAwbCodService {
       codBranchCashless.totalCodValue = totalCodValue;
       codBranchCashless.totalAwb = totalAwbCashless;
       codBranchCashless.branchId = permissonPayload.branchId;
+      codBranchCashless.userIdDriver = payload.userIdDriver;
       await CodTransaction.save(codBranchCashless);
 
-      const userIdDriver = payload.dataCashless[0].userIdDriver;
+      const userIdDriver = payload.userIdDriver;
       const metaPrint = await this.generatePrintMeta(
         codBranchCashless.transactionCode,
         authMeta.displayName,
@@ -317,6 +319,7 @@ export class V1WebAwbCodService {
   ): Promise<WebAwbCodListTransactionResponseVm> {
     // mapping field
     payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
+    payload.fieldResolverMap['driverName'] = 't5.first_name';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
     payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
@@ -349,6 +352,8 @@ export class V1WebAwbCodService {
       ['t1.total_cod_value', 'totalCodValue'],
       ['t3.branch_name', 'branchName'],
       ['t4.first_name', 'adminName'],
+      ['t1.user_id_driver', 'userIdDriver'],
+      ['t5.first_name', 'driverName'],
     );
 
     q.innerJoin(e => e.transactionStatus, 't2', j =>
@@ -358,6 +363,10 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.userAdmin, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    // TODO: change to inner join
+    q.leftJoin(e => e.userDriver, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 

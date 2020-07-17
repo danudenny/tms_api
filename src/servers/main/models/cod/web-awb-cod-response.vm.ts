@@ -106,6 +106,12 @@ export class WebTransactionBranchDetail {
 
   @ApiModelProperty()
   adminName: string;
+
+  @ApiModelProperty()
+  userIdDriver: number;
+
+  @ApiModelProperty()
+  driverName: string;
 }
 
 export class WebAwbCodListTransactionResponseVm extends BaseMetaResponseVm {
