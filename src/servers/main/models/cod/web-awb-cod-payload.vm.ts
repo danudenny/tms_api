@@ -85,7 +85,7 @@ export class WebCodFirstTransactionPayloadVm {
 }
 
 // #region Supplier Invoice
-export class WebCodInvoiceValidatePayloadVm {
+export class WebCodInvoiceCreatePayloadVm {
   @ApiModelProperty()
   partnerId: number;
 }

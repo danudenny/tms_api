@@ -287,11 +287,13 @@ export class AwbTransactionDetailVm {
 }
 
 // #region Supplier Invoice
-export class WebCodInvoiceValidateResponseVm extends WebCodSuccessResponseVm {
+export class WebCodInvoiceCreateResponseVm extends WebCodSuccessResponseVm {
   @ApiModelProperty()
   supplierInvoiceId: string;
+
   @ApiModelProperty()
   supplierInvoiceCode: string;
+
   @ApiModelProperty()
   supplierInvoiceDate: string;
 }

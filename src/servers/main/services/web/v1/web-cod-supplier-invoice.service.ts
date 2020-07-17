@@ -9,17 +9,17 @@ import {
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm, WebCodInvoiceCreatePayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodDetailPartnerResponseVm, WebAwbCodSupplierInvoiceResponseVm,
     WebCodSupplierInvoicePaidResponseVm,
-    WebCodInvoiceValidateResponseVm,
     WebAwbCodInvoiceResponseVm,
     WebCodInvoiceDraftResponseVm,
     WebCodListInvoiceResponseVm,
     WebCodInvoiceAddResponseVm,
     WebCodAwbDelivery,
     WebCodInvoiceRemoveResponseVm,
+    WebCodInvoiceCreateResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 
 import moment = require('moment');
@@ -116,9 +116,9 @@ export class V1WebCodSupplierInvoiceService {
     return result;
   }
 
-  static async supplierInvoiceValidate(
-    payload: WebCodInvoiceValidatePayloadVm,
-  ): Promise<WebCodInvoiceValidateResponseVm> {
+  static async supplierInvoiceCreate(
+    payload: WebCodInvoiceCreatePayloadVm,
+  ): Promise<WebCodInvoiceCreateResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
@@ -161,7 +161,7 @@ export class V1WebCodSupplierInvoiceService {
         authMeta.userId,
         timestamp,
       );
-      const result = new WebCodInvoiceValidateResponseVm();
+      const result = new WebCodInvoiceCreateResponseVm();
       result.supplierInvoiceId = supplierInvoice.codSupplierInvoiceId;
       result.supplierInvoiceCode = supplierInvoice.supplierInvoiceCode;
       result.supplierInvoiceDate = supplierInvoice.supplierInvoiceDate.toDateString();
@@ -496,7 +496,7 @@ export class V1WebCodSupplierInvoiceService {
         CodTransactionHistoryQueueService.perform(
           transactionDetail.awbItemId,
           transactionDetail.awbNumber,
-          40500,
+          TRANSACTION_STATUS.CANCEL_DRAFT,
           permissonPayload.branchId,
           authMeta.userId,
           timestamp,
