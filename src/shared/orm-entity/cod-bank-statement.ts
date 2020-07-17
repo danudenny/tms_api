@@ -105,6 +105,18 @@ export class CodBankStatement extends TmsBaseEntity {
   })
   bankNoReference: string;
 
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'transfer_datetime',
+  })
+  transferDatetime: Date;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_transfer',
+  })
+  userIdTransfer: number;
+
   // relation
   @ManyToOne(() => TransactionStatus)
   @JoinColumn({ name: 'transaction_status_id' })
@@ -117,6 +129,10 @@ export class CodBankStatement extends TmsBaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_created' })
   userAdmin: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_transfer' })
+  userTransfer: User;
 
   @OneToOne(() => AttachmentTms)
   @JoinColumn({ name: 'attachment_id' })
