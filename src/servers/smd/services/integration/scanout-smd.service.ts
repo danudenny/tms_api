@@ -1091,6 +1091,15 @@ export class ScanoutSmdService {
           },
         );
 
+        await DoSmdDetail.update(
+          { doSmdId :  payload.do_smd_id, arrivalTime: null},
+          {
+            doSmdStatusIdLast: 1150,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          },
+        );
+
         data.push({
           do_smd_id: resultDoSmd.doSmdId,
           do_smd_code: resultDoSmd.doSmdCode,
