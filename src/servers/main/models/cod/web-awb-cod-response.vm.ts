@@ -119,6 +119,14 @@ export class WebAwbCodListTransactionResponseVm extends BaseMetaResponseVm {
   data: WebTransactionBranchDetail[];
 }
 
+export class WebCodTransactionUpdateResponseVm extends WebCodSuccessResponseVm {
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  dataError: string[];
+}
+
 export class WebCodBankStatementVm {
   @ApiModelProperty()
   bankStatementId: string;

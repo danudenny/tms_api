@@ -17,7 +17,7 @@ import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payloa
 import {
     WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
     WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceCreatePayloadVm, WebCodInvoiceDraftPayloadVm,
-    WebCodInvoiceRemoveAwbPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm,
+    WebCodInvoiceRemoveAwbPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodTransactionUpdatePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodBankStatementResponseVm, WebAwbCodDetailPartnerResponseVm, WebAwbCodInvoiceResponseVm,
@@ -25,7 +25,7 @@ import {
     WebCodBankStatementResponseVm, WebCodInvoiceAddResponseVm, WebCodInvoiceDraftResponseVm,
     WebCodInvoiceRemoveResponseVm, WebCodListInvoiceResponseVm,
     WebCodSupplierInvoicePaidResponseVm, WebCodTransactionDetailResponseVm,
-    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm,
+    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import {
@@ -73,6 +73,17 @@ export class V1WebAwbCodController {
   ) {
     // get data transaction branch detail
     return V1WebAwbCodService.transactionBranchDetail(transactionId);
+  }
+
+  @Post('transactionBranch/update')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodTransactionUpdateResponseVm })
+  public async transactionBranchUpdate(
+    @Body() payload: WebCodTransactionUpdatePayloadVm,
+  ) {
+    // update data transaction branch
+    return V1WebAwbCodService.transactionBranchUpdate(payload);
   }
 
   // form multipart

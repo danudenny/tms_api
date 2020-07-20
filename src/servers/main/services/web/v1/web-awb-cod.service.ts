@@ -21,19 +21,21 @@ import {
 } from '../../../../queue/services/cod/cod-first-transaction-queue.service';
 import {
     WebCodAwbPayloadVm, WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
-    WebCodFirstTransactionPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm,
+    WebCodFirstTransactionPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodTransactionUpdatePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     PrintCodTransferBranchVm, WebAwbCodBankStatementResponseVm, WebAwbCodListResponseVm,
     WebAwbCodListTransactionResponseVm, WebCodAwbPrintVm, WebCodBankStatementResponseVm,
     WebCodPrintMetaVm, WebCodTransactionDetailResponseVm, WebCodTransferBranchResponseVm,
     WebCodTransferHeadOfficeResponseVm,
+    WebCodTransactionUpdateResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
 import moment = require('moment');
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { CodUpdateTransactionQueueService } from '../../../../queue/services/cod/cod-update-transaction-queue.service';
+import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -405,6 +407,88 @@ export class V1WebAwbCodService {
     } else {
       throw new BadRequestException('Data tidak ditemukan!');
     }
+  }
+
+  static async transactionBranchUpdate(
+    payload: WebCodTransactionUpdatePayloadVm,
+  ): Promise<WebCodTransactionUpdateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
+    const timestamp = moment().toDate();
+    const dataError = [];
+    let totalSuccess = 0;
+    let totalCodValue = 0;
+
+    const transaction = await CodTransaction.findOne({
+      where: {
+        codTransactionId: payload.transactionId,
+        isDeleted: false,
+      },
+    });
+
+    if (!transaction) {
+      throw new BadRequestException('Data transaction tidak valid!');
+    }
+
+    // TODO: loop data awb and update transaction detail
+    for (const awb of payload.awbNumber) {
+      const transactionDetail = await CodTransactionDetail.findOne({
+        select: ['codTransactionDetailId', 'awbNumber', 'codValue'],
+        where: {
+          awbNumber: awb,
+          codTransactionId: payload.transactionId,
+          transactionStatusId: 31000,
+          isDeleted: false,
+        },
+      });
+      if (transactionDetail) {
+        // remove awb from transaction
+        await CodTransactionDetail.update(
+          {
+            codTransactionDetailId: transactionDetail.codTransactionDetailId,
+          },
+          {
+            codTransactionId: null,
+            transactionStatusId: 30000,
+            updatedTime: timestamp,
+            userIdUpdated: authMeta.userId,
+          },
+        );
+        // sync data to mongodb
+        CodSyncTransactionQueueService.perform(
+          awb,
+          timestamp,
+        );
+        totalCodValue += Number(transactionDetail.codValue);
+        totalSuccess += 1;
+      } else {
+        // error message
+        const errorMessage = `Resi ${awb} tidak valid, sudah di proses!`;
+        dataError.push(errorMessage);
+      }
+    } // end of loop
+    // update data table transaction
+    if (totalSuccess > 0) {
+      const totalAwb = Number(transaction.totalAwb) - totalSuccess;
+      const calculateCodValue = Number(transaction.totalCodValue) - totalCodValue;
+      await CodTransaction.update(
+        {
+          codTransactionId: transaction.codTransactionId,
+        },
+        {
+          totalAwb,
+          totalCodValue: calculateCodValue,
+          updatedTime: timestamp,
+          userIdUpdated: authMeta.userId,
+        },
+      );
+    }
+    const result = new WebCodTransactionUpdateResponseVm();
+    result.status = 'ok';
+    result.message = 'success';
+    result.totalSuccess = totalSuccess;
+    result.dataError = dataError;
+    return result;
   }
 
   static async transferHeadOffice(

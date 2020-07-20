@@ -43,6 +43,19 @@ export class WebCodTransferPayloadVm {
   @ApiModelPropertyOptional( { type: () => [WebCodAwbPayloadVm]})
   dataCashless: [WebCodAwbPayloadVm];
 }
+export class WebCodTransactionUpdatePayloadVm {
+  @ApiModelProperty({
+    example: ['000726556611', '000726556612'],
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'No Resi harus diisi' })
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  awbNumber: string[];
+
+  @ApiModelProperty()
+  transactionId: string;
+}
 
 export class WebCodTransferHeadOfficePayloadVm {
   @ApiModelProperty()
