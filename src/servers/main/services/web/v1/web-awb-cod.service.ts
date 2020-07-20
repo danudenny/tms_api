@@ -430,65 +430,69 @@ export class V1WebAwbCodService {
       throw new BadRequestException('Data transaction tidak valid!');
     }
 
-    // TODO: loop data awb and update transaction detail
-    for (const awb of payload.awbNumber) {
-      const transactionDetail = await CodTransactionDetail.findOne({
-        select: ['codTransactionDetailId', 'awbNumber', 'codValue'],
-        where: {
-          awbNumber: awb,
-          codTransactionId: payload.transactionId,
-          transactionStatusId: 31000,
-          isDeleted: false,
-        },
-      });
-      if (transactionDetail) {
-        // remove awb from transaction
-        await CodTransactionDetail.update(
+    try {
+      // NOTE: loop data awb and update transaction detail
+      for (const awb of payload.awbNumber) {
+        const transactionDetail = await CodTransactionDetail.findOne({
+          select: ['codTransactionDetailId', 'awbNumber', 'codValue'],
+          where: {
+            awbNumber: awb,
+            codTransactionId: payload.transactionId,
+            transactionStatusId: 31000,
+            isDeleted: false,
+          },
+        });
+        if (transactionDetail) {
+          // remove awb from transaction
+          await CodTransactionDetail.update(
+            {
+              codTransactionDetailId: transactionDetail.codTransactionDetailId,
+            },
+            {
+              codTransactionId: null,
+              transactionStatusId: 30000,
+              updatedTime: timestamp,
+              userIdUpdated: authMeta.userId,
+            },
+          );
+          // sync data to mongodb
+          CodSyncTransactionQueueService.perform(
+            awb,
+            timestamp,
+          );
+          totalCodValue += Number(transactionDetail.codValue);
+          totalSuccess += 1;
+        } else {
+          // error message
+          const errorMessage = `Resi ${awb} tidak valid, sudah di proses!`;
+          dataError.push(errorMessage);
+        }
+      } // end of loop
+      // update data table transaction
+      if (totalSuccess > 0) {
+        const totalAwb = Number(transaction.totalAwb) - totalSuccess;
+        const calculateCodValue = Number(transaction.totalCodValue) - totalCodValue;
+        await CodTransaction.update(
           {
-            codTransactionDetailId: transactionDetail.codTransactionDetailId,
+            codTransactionId: transaction.codTransactionId,
           },
           {
-            codTransactionId: null,
-            transactionStatusId: 30000,
+            totalAwb,
+            totalCodValue: calculateCodValue,
             updatedTime: timestamp,
             userIdUpdated: authMeta.userId,
           },
         );
-        // sync data to mongodb
-        CodSyncTransactionQueueService.perform(
-          awb,
-          timestamp,
-        );
-        totalCodValue += Number(transactionDetail.codValue);
-        totalSuccess += 1;
-      } else {
-        // error message
-        const errorMessage = `Resi ${awb} tidak valid, sudah di proses!`;
-        dataError.push(errorMessage);
       }
-    } // end of loop
-    // update data table transaction
-    if (totalSuccess > 0) {
-      const totalAwb = Number(transaction.totalAwb) - totalSuccess;
-      const calculateCodValue = Number(transaction.totalCodValue) - totalCodValue;
-      await CodTransaction.update(
-        {
-          codTransactionId: transaction.codTransactionId,
-        },
-        {
-          totalAwb,
-          totalCodValue: calculateCodValue,
-          updatedTime: timestamp,
-          userIdUpdated: authMeta.userId,
-        },
-      );
+      const result = new WebCodTransactionUpdateResponseVm();
+      result.status = 'ok';
+      result.message = 'success';
+      result.totalSuccess = totalSuccess;
+      result.dataError = dataError;
+      return result;
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
     }
-    const result = new WebCodTransactionUpdateResponseVm();
-    result.status = 'ok';
-    result.message = 'success';
-    result.totalSuccess = totalSuccess;
-    result.dataError = dataError;
-    return result;
   }
 
   static async transferHeadOffice(
@@ -962,6 +966,71 @@ export class V1WebAwbCodService {
       result.message = 'success';
       return result;
 
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
+    }
+  }
+
+  static async bankStatementUpdate(
+    payload: WebCodBankStatementValidatePayloadVm,
+  ): Promise<WebCodBankStatementResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timestamp = moment().toDate();
+    // validate data
+    const bankStatement = await CodBankStatement.findOne({
+      select: ['codBankStatementId', 'totalCodValue'],
+      where: {
+        codBankStatementId: payload.bankStatementId,
+        transactionStatusId: 35000,
+        isDeleted: false,
+      },
+    });
+
+    if (!bankStatement) {
+      throw new BadRequestException('Data tidak ditemukan/sudah di proses!');
+    }
+
+    try {
+      // TODO: process validate bank statement
+      // #region transaction data
+      await getManager().transaction(async transactionManager => {
+        // looping data remove transaction
+
+        // // update data bank statment
+        // await transactionManager.update(
+        //   CodBankStatement,
+        //   {
+        //     codBankStatementId: payload.bankStatementId,
+        //   },
+        //   {
+        //     transactionStatusId: 40000,
+        //     transferDatetime: moment(payload.transferDatetime).toDate(),
+        //     validateDatetime: timestamp,
+        //     updatedTime: timestamp,
+        //     userIdUpdated: authMeta.userId,
+        //   },
+        // );
+
+        // // update transaction branch
+        // await transactionManager.update(
+        //   CodTransaction,
+        //   {
+        //     codBankStatementId: payload.bankStatementId,
+        //   },
+        //   {
+        //     transactionStatusId: 40000,
+        //     updatedTime: timestamp,
+        //     userIdUpdated: authMeta.userId,
+        //   },
+        // );
+
+      });
+      // #endregion of transaction
+      const result = new WebCodBankStatementResponseVm();
+      result.status = 'ok';
+      result.message = 'success';
+      return result;
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }

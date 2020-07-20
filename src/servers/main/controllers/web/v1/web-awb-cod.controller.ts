@@ -157,6 +157,17 @@ export class V1WebAwbCodController {
     return V1WebAwbCodService.bankStatementCancel(payload);
   }
 
+  @Post('bankStatement/update')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ApiOkResponse({ type: WebCodBankStatementResponseVm })
+  public async bankStatementUpdate(
+    @Body() payload: WebCodBankStatementValidatePayloadVm,
+  ) {
+    // validate bankStatement
+    return V1WebAwbCodService.bankStatementValidate(payload);
+  }
+
   // #region SUPPLIER INVOICE
   @Post('supplierInvoice')
   @HttpCode(HttpStatus.OK)
@@ -262,10 +273,10 @@ export class V1WebAwbCodController {
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
   public async supplierInvoicePrint(@Body() payload: ReportBaseMetaPayloadVm) {
-    const filterList = V1WebReportCodService.filterList(
-      payload.filters,
+    const filterList = V1WebReportCodService.filterList(payload.filters);
+    return await V1WebReportCodService.printSupplierInvoice(
+      payload,
+      filterList,
     );
-
-    return await V1WebReportCodService.printSupplierInvoice(payload, filterList);
   }
 }

@@ -1,29 +1,28 @@
-import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import fs = require('fs');
+import * as moment from 'moment';
 import * as path from 'path';
+
+import { DateHelper } from '../../../../../shared/helpers/date-helpers';
+import { BaseMetaPayloadFilterVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AwsS3Service } from '../../../../../shared/services/aws-s3.service';
 import { ConfigService } from '../../../../../shared/services/config.service';
-import * as moment from 'moment';
-import { filter } from 'minimatch';
-import { DateHelper } from '../../../../../shared/helpers/date-helpers';
-import { DatabaseCodConfig } from '../../../config/db.config';
-
+import { MongoDbConfig } from '../../../config/database/mongodb.config';
 
 export class V1WebReportCodService {
-  //filter code
-  static filterList(filters: import("../../../../../shared/models/base-meta-payload.vm").BaseMetaPayloadFilterVm[]) {
-    let filterList: any = [];
-    let filterStart: Date = null
-    let filterEnd: Date = null
+  // filter code
+  static filterList(filters: BaseMetaPayloadFilterVm[]) {
+    const filterList: any = [];
+    let filterStart: Date = null;
+    let filterEnd: Date = null;
 
     filters.forEach(filter => {
-      if (filter.field == "periodStart" && filter.value) {
+      if (filter.field == 'periodStart' && filter.value) {
         const summaryDate: string = filter.value;
         const dStart = DateHelper.resetMomentTime((summaryDate) ? moment(summaryDate) : DateHelper.getCurrentWibMomentTime()).toDate();
         filterStart = dStart;
       }
 
-      if (filter.field == "periodEnd" && filter.value) {
+      if (filter.field == 'periodEnd' && filter.value) {
         const finishDate: string = moment(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00');
         const dEnd = DateHelper.resetMomentTime((finishDate) ? moment(finishDate) : DateHelper.getCurrentWibMomentTime()).toDate();
         filterEnd = dEnd;
@@ -31,38 +30,35 @@ export class V1WebReportCodService {
 
       if (filterStart && filterEnd) {
         const filterJson = {
-          "awbDate": {
+          awbDate: {
             $gte: filterStart,
             $lt: filterEnd,
-          }
-        }
+          },
+        };
         filterList.push(filterJson);
       }
 
-
-      if (filter.field == "supplier" && filter.value) {
+      if (filter.field == 'supplier' && filter.value) {
         const f = {
-          'codSupplierInvoiceId': { $eq: filter.value.toString() }
+          codSupplierInvoiceId: { $eq: filter.value.toString() },
         };
 
         filterList.push(f);
       }
 
-      if (filter.field == "status" && filter.value) {
+      if (filter.field == 'status' && filter.value) {
         const f = {
-          "transactionStatusId": { $eq: filter.value.toString() }
+          transactionStatusId: { $eq: filter.value.toString() },
         };
 
         filterList.push(f);
       }
     });
 
-
-
-    return filterList
+    return filterList;
   }
 
-  //csv file code
+  // csv file code
   static async getCSVConfig() {
     const csvHeaders: any = [
       'Partner',
@@ -127,13 +123,12 @@ export class V1WebReportCodService {
     };
   }
 
-
   // private ==================================================================
   static async populateDataCsv(
-    writer, data
+    writer, data,
   ): Promise<boolean> {
     let count = 0;
-    console.log(data)
+    // console.log(data);
     if (data) {
       for (const d of data) {
         // writer.write(d);
@@ -153,8 +148,8 @@ export class V1WebReportCodService {
           d.createdTime
             ? moment(d.createdTime).utc().format('YYYY-MM-DD hh:mm A')
             : null,
-          "DLV",
-          "DLV",
+          'DLV',
+          'DLV',
           this.strReplaceFunc(d.custPackage),
           this.strReplaceFunc(d.pickupSource),
           this.strReplaceFunc(d.currentPosition),
@@ -164,11 +159,11 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.packageType),
           this.strReplaceFunc(d.parcelNote),
           this.strReplaceFunc(d.paymentService),
-          "", ""
+          '', '',
         ]);
 
       }
-      count += 1
+      count += 1;
     } // end of while
     writer.on('data', chunk => {
       console.log(`Received ${chunk.length} bytes of data.`);
@@ -186,11 +181,8 @@ export class V1WebReportCodService {
   }
 
   static strReplaceFunc = str => {
-    console.log(str, "string")
     return str ? str.replace('\n', ' ').replace(/;/g, '|') : null;
-  };
-
-
+  }
 
   private static deleteFile(filePath) {
     return new Promise(async (resolve, reject) => {
@@ -205,10 +197,6 @@ export class V1WebReportCodService {
     });
   }
 
-
-
-
-
   // main code
   static async  printSupplierInvoice(payload, filters) {
     // TODO: query get data
@@ -216,17 +204,15 @@ export class V1WebReportCodService {
     // prepare generate csv
     // ??upload file csv to aws s3
     // retrun file/ link downlod
-    console.log(JSON.stringify({ ...filters }), "filter")
+    console.log(JSON.stringify({ ...filters }), 'filter');
 
-    const db = await DatabaseCodConfig.getSicepatPickupMonitoringMonggoDb();
-
-    const dbMongo = db.collection("transaction_detail");
+    const dbMongo =  await MongoDbConfig.getDbSicepatCod('transaction_detail');
 
     try {
       const datarow = await dbMongo.aggregate([
         {
-          "$match": {
-            "$and": filters,
+          $match: {
+            $and: filters,
           },
         },
         {
@@ -253,10 +239,10 @@ export class V1WebReportCodService {
             podDate: 1,
             transactionStatusId: 1,
             userIdCreated: 1,
-            userIdUpdated: 1
-          }
-        }
-      ])
+            userIdUpdated: 1,
+          },
+        },
+      ]);
 
       const dataRowCount = await datarow.toArray();
       if (!datarow || datarow.length <= 0) {
@@ -270,14 +256,12 @@ export class V1WebReportCodService {
 
       const totalPaging = Math.ceil(dataRowCount.length / limit);
 
-
       console.log(totalPaging, 'start writing');
       if (dataRowCount.length > 1048576) {
         throw new Error('Tidak dapat menarik data. Jumlah data yang ditarik lebih dari 1 jt.');
       }
 
-
-      for (var index = 0; index <= totalPaging; index++) {
+      for (let index = 0; index <= totalPaging; index++) {
         await this.populateDataCsv(writer, await datarow.skip(limit * (index)).limit(limit).toArray());
       }
       writer.end();
@@ -296,15 +280,12 @@ export class V1WebReportCodService {
         // this.deleteFile(csvConfig.filePath);
       }
 
-      return { status: "OK", url: url }
+      return { status: 'OK', url };
     } catch (err) {
       console.log(err);
       throw err;
     }
 
-
-
   }
-
 
 }
