@@ -34,11 +34,27 @@ export class WebCodAwbPayloadVm {
 }
 
 export class WebCodTransferPayloadVm {
+  @ApiModelProperty()
+  userIdDriver: number;
+
   @ApiModelPropertyOptional( { type: () => [WebCodAwbPayloadVm]})
   dataCash: [WebCodAwbPayloadVm];
 
   @ApiModelPropertyOptional( { type: () => [WebCodAwbPayloadVm]})
   dataCashless: [WebCodAwbPayloadVm];
+}
+export class WebCodTransactionUpdatePayloadVm {
+  @ApiModelProperty({
+    example: ['000726556611', '000726556612'],
+    skipValidation: true,
+  })
+  @IsDefined({ message: 'No Resi harus diisi' })
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  awbNumber: string[];
+
+  @ApiModelProperty()
+  transactionId: string;
 }
 
 export class WebCodTransferHeadOfficePayloadVm {
@@ -47,14 +63,17 @@ export class WebCodTransferHeadOfficePayloadVm {
 
   @ApiModelProperty()
   bankBranchId: number;
+
+  @ApiModelProperty()
+  bankNoReference: string;
 }
 
 export class WebCodBankStatementValidatePayloadVm {
   @ApiModelProperty()
   bankStatementId: string;
 
-  @ApiModelProperty()
-  bankNoReference: string;
+  @ApiModelProperty({format: 'date-time'})
+  transferDatetime: string;
 }
 
 export class WebCodBankStatementCancelPayloadVm {
@@ -79,7 +98,7 @@ export class WebCodFirstTransactionPayloadVm {
 }
 
 // #region Supplier Invoice
-export class WebCodInvoiceValidatePayloadVm {
+export class WebCodInvoiceCreatePayloadVm {
   @ApiModelProperty()
   partnerId: number;
 }
@@ -101,6 +120,9 @@ export class WebCodInvoiceAddAwbPayloadVm {
   @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   awbNumber: string[];
+
+  @ApiModelProperty()
+  partnerId: number;
 
   @ApiModelProperty()
   supplierInvoiceId: string;

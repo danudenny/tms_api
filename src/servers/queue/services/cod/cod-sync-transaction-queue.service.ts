@@ -54,6 +54,8 @@ export class CodSyncTransactionQueueService {
             const objUpdate = {
               codTransactionId: itemTransaction.codTransactionId,
               transactionStatusId: itemTransaction.transactionStatusId,
+              updatedTime: data.timestamp,
+              userIdUpdated: itemTransaction.userIdUpdated,
             };
             await collection.updateOne(
               { _id: itemTransaction.awbNumber },

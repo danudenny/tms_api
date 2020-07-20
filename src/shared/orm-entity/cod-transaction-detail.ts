@@ -256,6 +256,19 @@ export class CodTransactionDetail extends TmsBaseEntity {
   })
   supplierInvoiceStatusId: number;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_void',
+  })
+  isVoid: boolean;
+
+  @Column('text', {
+    nullable: true,
+    name: 'void_note',
+  })
+  voidNote: string | null;
+
   //  relation
   // @ManyToOne(() => TransactionStatus)
   // @JoinColumn({ name: 'supplier_invoice_status_id' })

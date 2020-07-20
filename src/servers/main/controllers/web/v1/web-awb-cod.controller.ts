@@ -16,15 +16,16 @@ import { PermissionTokenGuard } from '../../../../../shared/guards/permission-to
 import { BaseMetaPayloadVm, ReportBaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
   WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
-  WebCodInvoiceDraftPayloadVm, WebCodInvoiceValidatePayloadVm,
-  WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm,
+  WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceCreatePayloadVm, WebCodInvoiceDraftPayloadVm,
+  WebCodInvoiceRemoveAwbPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodTransactionUpdatePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   WebAwbCodBankStatementResponseVm, WebAwbCodDetailPartnerResponseVm, WebAwbCodInvoiceResponseVm,
   WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebAwbCodSupplierInvoiceResponseVm,
-  WebCodBankStatementResponseVm, WebCodInvoiceDraftResponseVm, WebCodInvoiceValidateResponseVm,
+  WebCodBankStatementResponseVm, WebCodInvoiceAddResponseVm, WebCodInvoiceDraftResponseVm,
+  WebCodInvoiceRemoveResponseVm, WebCodListInvoiceResponseVm,
   WebCodSupplierInvoicePaidResponseVm, WebCodTransactionDetailResponseVm,
-  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodListInvoiceResponseVm, WebCodInvoiceAddResponseVm, WebCodInvoiceRemoveResponseVm,
+  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import {
@@ -72,6 +73,17 @@ export class V1WebAwbCodController {
   ) {
     // get data transaction branch detail
     return V1WebAwbCodService.transactionBranchDetail(transactionId);
+  }
+
+  @Post('transactionBranch/update')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodTransactionUpdateResponseVm })
+  public async transactionBranchUpdate(
+    @Body() payload: WebCodTransactionUpdatePayloadVm,
+  ) {
+    // update data transaction branch
+    return V1WebAwbCodService.transactionBranchUpdate(payload);
   }
 
   // form multipart
@@ -145,6 +157,7 @@ export class V1WebAwbCodController {
     return V1WebAwbCodService.bankStatementCancel(payload);
   }
 
+  // #region SUPPLIER INVOICE
   @Post('supplierInvoice')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
@@ -163,15 +176,14 @@ export class V1WebAwbCodController {
     return V1WebCodSupplierInvoiceService.awbDetailByPartnerId(payload);
   }
 
-  @Post('supplierInvoice/validate')
+  @Post('supplierInvoice/create')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebCodInvoiceValidateResponseVm })
-  public async supplierInvoiceValidate(
-    @Body() payload: WebCodInvoiceValidatePayloadVm,
+  @ApiOkResponse({ type: WebCodInvoiceCreateResponseVm })
+  public async supplierInvoiceCreate(
+    @Body() payload: WebCodInvoiceCreatePayloadVm,
   ) {
-    // validate data paid supplier invoice
-    return V1WebCodSupplierInvoiceService.supplierInvoiceValidate(payload);
+    return V1WebCodSupplierInvoiceService.supplierInvoiceCreate(payload);
   }
 
   @Post('supplierInvoice/draft')
@@ -214,6 +226,17 @@ export class V1WebAwbCodController {
     return V1WebCodSupplierInvoiceService.supplierInvoiceRemove(payload);
   }
 
+  @Post('supplierInvoice/void')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebCodInvoiceRemoveResponseVm })
+  public async supplierInvoiceVoid(
+    @Body() payload: WebCodInvoiceRemoveAwbPayloadVm,
+  ) {
+    // TODO: update flag void awb
+    return {};
+  }
+
   @Post('supplierInvoice/paid')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
@@ -233,6 +256,7 @@ export class V1WebAwbCodController {
     // list data supplier invoice
     return V1WebCodSupplierInvoiceService.listInvoice(payload);
   }
+  // #endregion SUPPLIER INVOICE
 
   @Post('supplierInvoice/print')
   @HttpCode(HttpStatus.OK)

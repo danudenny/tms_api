@@ -21,19 +21,21 @@ import {
 } from '../../../../queue/services/cod/cod-first-transaction-queue.service';
 import {
     WebCodAwbPayloadVm, WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
-    WebCodFirstTransactionPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm,
+    WebCodFirstTransactionPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodTransactionUpdatePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     PrintCodTransferBranchVm, WebAwbCodBankStatementResponseVm, WebAwbCodListResponseVm,
     WebAwbCodListTransactionResponseVm, WebCodAwbPrintVm, WebCodBankStatementResponseVm,
     WebCodPrintMetaVm, WebCodTransactionDetailResponseVm, WebCodTransferBranchResponseVm,
     WebCodTransferHeadOfficeResponseVm,
+    WebCodTransactionUpdateResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
 import moment = require('moment');
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { CodUpdateTransactionQueueService } from '../../../../queue/services/cod/cod-update-transaction-queue.service';
+import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -170,9 +172,10 @@ export class V1WebAwbCodService {
       codBranchCash.totalCodValue = totalCodValue;
       codBranchCash.totalAwb = totalAwbCash;
       codBranchCash.branchId = permissonPayload.branchId;
+      codBranchCash.userIdDriver = payload.userIdDriver;
       await CodTransaction.save(codBranchCash);
 
-      const userIdDriver = payload.dataCash[0].userIdDriver;
+      const userIdDriver = payload.userIdDriver;
       const metaPrint = await this.generatePrintMeta(
         codBranchCash.transactionCode,
         authMeta.displayName,
@@ -244,9 +247,10 @@ export class V1WebAwbCodService {
       codBranchCashless.totalCodValue = totalCodValue;
       codBranchCashless.totalAwb = totalAwbCashless;
       codBranchCashless.branchId = permissonPayload.branchId;
+      codBranchCashless.userIdDriver = payload.userIdDriver;
       await CodTransaction.save(codBranchCashless);
 
-      const userIdDriver = payload.dataCashless[0].userIdDriver;
+      const userIdDriver = payload.userIdDriver;
       const metaPrint = await this.generatePrintMeta(
         codBranchCashless.transactionCode,
         authMeta.displayName,
@@ -317,6 +321,7 @@ export class V1WebAwbCodService {
   ): Promise<WebAwbCodListTransactionResponseVm> {
     // mapping field
     payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
+    payload.fieldResolverMap['driverName'] = 't5.first_name';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
     payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
@@ -349,6 +354,8 @@ export class V1WebAwbCodService {
       ['t1.total_cod_value', 'totalCodValue'],
       ['t3.branch_name', 'branchName'],
       ['t4.first_name', 'adminName'],
+      ['t1.user_id_driver', 'userIdDriver'],
+      ['t5.first_name', 'driverName'],
     );
 
     q.innerJoin(e => e.transactionStatus, 't2', j =>
@@ -358,6 +365,10 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.userAdmin, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    // TODO: change to inner join
+    q.leftJoin(e => e.userDriver, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -396,6 +407,88 @@ export class V1WebAwbCodService {
     } else {
       throw new BadRequestException('Data tidak ditemukan!');
     }
+  }
+
+  static async transactionBranchUpdate(
+    payload: WebCodTransactionUpdatePayloadVm,
+  ): Promise<WebCodTransactionUpdateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
+    const timestamp = moment().toDate();
+    const dataError = [];
+    let totalSuccess = 0;
+    let totalCodValue = 0;
+
+    const transaction = await CodTransaction.findOne({
+      where: {
+        codTransactionId: payload.transactionId,
+        isDeleted: false,
+      },
+    });
+
+    if (!transaction) {
+      throw new BadRequestException('Data transaction tidak valid!');
+    }
+
+    // TODO: loop data awb and update transaction detail
+    for (const awb of payload.awbNumber) {
+      const transactionDetail = await CodTransactionDetail.findOne({
+        select: ['codTransactionDetailId', 'awbNumber', 'codValue'],
+        where: {
+          awbNumber: awb,
+          codTransactionId: payload.transactionId,
+          transactionStatusId: 31000,
+          isDeleted: false,
+        },
+      });
+      if (transactionDetail) {
+        // remove awb from transaction
+        await CodTransactionDetail.update(
+          {
+            codTransactionDetailId: transactionDetail.codTransactionDetailId,
+          },
+          {
+            codTransactionId: null,
+            transactionStatusId: 30000,
+            updatedTime: timestamp,
+            userIdUpdated: authMeta.userId,
+          },
+        );
+        // sync data to mongodb
+        CodSyncTransactionQueueService.perform(
+          awb,
+          timestamp,
+        );
+        totalCodValue += Number(transactionDetail.codValue);
+        totalSuccess += 1;
+      } else {
+        // error message
+        const errorMessage = `Resi ${awb} tidak valid, sudah di proses!`;
+        dataError.push(errorMessage);
+      }
+    } // end of loop
+    // update data table transaction
+    if (totalSuccess > 0) {
+      const totalAwb = Number(transaction.totalAwb) - totalSuccess;
+      const calculateCodValue = Number(transaction.totalCodValue) - totalCodValue;
+      await CodTransaction.update(
+        {
+          codTransactionId: transaction.codTransactionId,
+        },
+        {
+          totalAwb,
+          totalCodValue: calculateCodValue,
+          updatedTime: timestamp,
+          userIdUpdated: authMeta.userId,
+        },
+      );
+    }
+    const result = new WebCodTransactionUpdateResponseVm();
+    result.status = 'ok';
+    result.message = 'success';
+    result.totalSuccess = totalSuccess;
+    result.dataError = dataError;
+    return result;
   }
 
   static async transferHeadOffice(
@@ -446,6 +539,9 @@ export class V1WebAwbCodService {
         bankStatement.bankAccount = bankAccount;
         bankStatement.attachmentId = attachmentId;
         bankStatement.branchId = permissonPayload.branchId;
+        bankStatement.bankNoReference = payload.bankNoReference;
+        bankStatement.transferDatetime = timestamp;
+        bankStatement.userIdTransfer = authMeta.userId;
         await transactionManager.save(CodBankStatement, bankStatement);
 
         // looping data transaction and update status and bank statement id [create new table] ??
@@ -606,17 +702,12 @@ export class V1WebAwbCodService {
     // mapping field
     payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
+    payload.fieldResolverMap['transferName'] = 't6.first_name';
     payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
     payload.fieldResolverMap['districtId'] = 't3.district_id';
     payload.fieldResolverMap['representativeId'] = 't3.representative_id';
 
-    // mapping search field and operator default ilike
-    // payload.globalSearchFields = [
-    //   {
-    //     field: 'awbNumber',
-    //   },
-    // ];
     if (payload.sortBy === '') {
       payload.sortBy = 'bankStatementDate';
     }
@@ -638,6 +729,9 @@ export class V1WebAwbCodService {
       ['t1.total_cod_value', 'totalCodValue'],
       ['t1.validate_datetime', 'validateDatetime'],
       ['t1.cancel_datetime', 'cancelDatetime'],
+      ['t1.transfer_datetime', 'transferDatetime'],
+      ['t1.user_id_transfer', 'userIdTransfer'],
+      ['t6.first_name', 'transferName'],
       ['t3.branch_name', 'branchName'],
       ['t4.first_name', 'adminName'],
       ['t5.url', 'attachmentUrl'],
@@ -653,6 +747,10 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.attachment, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    // TODO: set to inner join
+    q.leftJoin(e => e.userTransfer, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -701,7 +799,7 @@ export class V1WebAwbCodService {
           },
           {
             transactionStatusId: 40000,
-            bankNoReference: payload.bankNoReference,
+            transferDatetime: moment(payload.transferDatetime).toDate(),
             validateDatetime: timestamp,
             updatedTime: timestamp,
             userIdUpdated: authMeta.userId,

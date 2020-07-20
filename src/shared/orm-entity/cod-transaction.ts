@@ -67,6 +67,12 @@ export class CodTransaction extends TmsBaseEntity {
   })
   branchId: number;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_driver',
+  })
+  userIdDriver: number;
+
   @Column('uuid', {
     nullable: true,
     name: 'cod_bank_statement_id',
@@ -84,6 +90,10 @@ export class CodTransaction extends TmsBaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_created' })
   userAdmin: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_driver' })
+  userDriver: User;
 
   @ManyToOne(() => CodBankStatement, x => x.transactions)
   @JoinColumn({

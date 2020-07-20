@@ -106,11 +106,25 @@ export class WebTransactionBranchDetail {
 
   @ApiModelProperty()
   adminName: string;
+
+  @ApiModelProperty()
+  userIdDriver: number;
+
+  @ApiModelProperty()
+  driverName: string;
 }
 
 export class WebAwbCodListTransactionResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [WebTransactionBranchDetail] })
   data: WebTransactionBranchDetail[];
+}
+
+export class WebCodTransactionUpdateResponseVm extends WebCodSuccessResponseVm {
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  dataError: string[];
 }
 
 export class WebCodBankStatementVm {
@@ -150,11 +164,20 @@ export class WebCodBankStatementVm {
   @ApiModelProperty()
   attachmentUrl: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({ format: 'date-time' })
   validateDatetime: string;
 
-  @ApiModelProperty()
+  @ApiModelProperty({ format: 'date-time' })
   cancelDatetime: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  transferDatetime: string;
+
+  @ApiModelProperty()
+  userIdTransfer: number;
+
+  @ApiModelProperty()
+  transferName: string;
 }
 
 export class WebAwbCodBankStatementResponseVm extends BaseMetaResponseVm {
@@ -272,11 +295,13 @@ export class AwbTransactionDetailVm {
 }
 
 // #region Supplier Invoice
-export class WebCodInvoiceValidateResponseVm extends WebCodSuccessResponseVm {
+export class WebCodInvoiceCreateResponseVm extends WebCodSuccessResponseVm {
   @ApiModelProperty()
   supplierInvoiceId: string;
+
   @ApiModelProperty()
   supplierInvoiceCode: string;
+
   @ApiModelProperty()
   supplierInvoiceDate: string;
 }
@@ -359,6 +384,9 @@ export class WebAwbCodInvoiceResponseVm extends BaseMetaResponseVm {
 }
 
 export class WebCodInvoiceDraftResponseVm {
+  @ApiModelProperty()
+  partnerId: number;
+
   @ApiModelProperty()
   partnerName: string;
 

@@ -9,17 +9,17 @@ import {
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebCodInvoiceValidatePayloadVm, WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm, WebCodInvoiceCreatePayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
     WebAwbCodDetailPartnerResponseVm, WebAwbCodSupplierInvoiceResponseVm,
     WebCodSupplierInvoicePaidResponseVm,
-    WebCodInvoiceValidateResponseVm,
     WebAwbCodInvoiceResponseVm,
     WebCodInvoiceDraftResponseVm,
     WebCodListInvoiceResponseVm,
     WebCodInvoiceAddResponseVm,
     WebCodAwbDelivery,
     WebCodInvoiceRemoveResponseVm,
+    WebCodInvoiceCreateResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 
 import moment = require('moment');
@@ -116,9 +116,9 @@ export class V1WebCodSupplierInvoiceService {
     return result;
   }
 
-  static async supplierInvoiceValidate(
-    payload: WebCodInvoiceValidatePayloadVm,
-  ): Promise<WebCodInvoiceValidateResponseVm> {
+  static async supplierInvoiceCreate(
+    payload: WebCodInvoiceCreatePayloadVm,
+  ): Promise<WebCodInvoiceCreateResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
@@ -161,7 +161,7 @@ export class V1WebCodSupplierInvoiceService {
         authMeta.userId,
         timestamp,
       );
-      const result = new WebCodInvoiceValidateResponseVm();
+      const result = new WebCodInvoiceCreateResponseVm();
       result.supplierInvoiceId = supplierInvoice.codSupplierInvoiceId;
       result.supplierInvoiceCode = supplierInvoice.supplierInvoiceCode;
       result.supplierInvoiceDate = supplierInvoice.supplierInvoiceDate.toDateString();
@@ -312,6 +312,7 @@ export class V1WebCodSupplierInvoiceService {
       let transactionDetail = await CodTransactionDetail.findOne({
         where: {
           awbNumber,
+          partnerId: payload.partnerId,
           isDeleted: false,
         },
       });
@@ -347,7 +348,10 @@ export class V1WebCodSupplierInvoiceService {
         }
       } else {
         // get data awb item attr
-        const awbItem = await this.dataTransaction(awbNumber);
+        const awbItem = await this.dataTransaction(
+          awbNumber,
+          payload.partnerId,
+        );
         if (awbItem) {
           // #region send to background process with bull async
           // const firstTransaction = new WebCodFirstTransactionPayloadVm();
@@ -444,7 +448,7 @@ export class V1WebCodSupplierInvoiceService {
           totalSuccess += 1;
           totalCodValue += Number(awbItem.codValue);
         } else {
-          errorMessage = `Resi ${awbNumber} tidak valid, status belum Delivery!`;
+          errorMessage = `Resi ${awbNumber} tidak valid, status belum DLV / milik partner lain!`;
         }
       }
 
@@ -492,7 +496,7 @@ export class V1WebCodSupplierInvoiceService {
         CodTransactionHistoryQueueService.perform(
           transactionDetail.awbItemId,
           transactionDetail.awbNumber,
-          40500,
+          TRANSACTION_STATUS.CANCEL_DRAFT,
           permissonPayload.branchId,
           authMeta.userId,
           timestamp,
@@ -576,6 +580,7 @@ export class V1WebCodSupplierInvoiceService {
     supplierInvoiceId: string,
   ): Promise<WebCodInvoiceDraftResponseVm> {
     const qb = createQueryBuilder();
+    qb.addSelect('t2.partner_id', 'partnerId');
     qb.addSelect('t2.partner_name', 'partnerName');
     qb.addSelect('t1.supplier_invoice_code', 'supplierInvoiceCode');
     qb.addSelect('t1.supplier_invoice_date', 'supplierInvoiceDate');
@@ -603,6 +608,7 @@ export class V1WebCodSupplierInvoiceService {
 
   private static async dataTransaction(
     awbNumber: string,
+    partnerId: number,
   ): Promise<WebCodAwbDelivery> {
 
     const qb = createQueryBuilder();
@@ -698,6 +704,7 @@ export class V1WebCodSupplierInvoiceService {
     );
     qb.where('t1.awb_number = :awbNumber', { awbNumber });
     qb.andWhere('t1.is_deleted = false');
+    qb.andWhere('t4.partner_id = :partnerId', { partnerId });
 
     return await qb.getRawOne();
   }

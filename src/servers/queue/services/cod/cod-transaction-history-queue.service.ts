@@ -2,6 +2,7 @@ import { QueueBullBoard } from '../queue-bull-board';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transaction-history';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
+import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -57,13 +58,13 @@ export class CodTransactionHistoryQueueService {
         let objUpdate = {};
         // supplier invoice status
         // add draft
-        if (transactionStatusId == 41000) {
+        if (transactionStatusId == TRANSACTION_STATUS.DRAFT_INV) {
           objUpdate = {
             supplierInvoiceStatusId: transactionStatusId,
             updatedTime: data.timestamp,
           };
           // cancel draft
-        } else if (transactionStatusId == 40500) {
+        } else if (transactionStatusId == TRANSACTION_STATUS.CANCEL_DRAFT) {
           objUpdate = {
             codSupplierInvoiceId: null,
             supplierInvoiceStatusId: null,
