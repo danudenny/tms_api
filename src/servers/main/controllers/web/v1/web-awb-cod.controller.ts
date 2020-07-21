@@ -233,8 +233,7 @@ export class V1WebAwbCodController {
   public async supplierInvoiceVoid(
     @Body() payload: WebCodInvoiceRemoveAwbPayloadVm,
   ) {
-    // TODO: update flag void awb
-    return {};
+    return V1WebCodSupplierInvoiceService.supplierInvoiceVoid(payload);
   }
 
   @Post('supplierInvoice/paid')

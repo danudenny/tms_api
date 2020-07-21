@@ -277,7 +277,7 @@ export class V1WebReportCodService {
         // send mail with url path download file
         // SendGridService.testSendEmail(storagePath);
         url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
-        // this.deleteFile(csvConfig.filePath);
+        this.deleteFile(csvConfig.filePath);
       }
 
       return { status: 'OK', url };

@@ -61,6 +61,7 @@ export class CodTransactionHistoryQueueService {
         if (transactionStatusId == TRANSACTION_STATUS.DRAFT_INV) {
           objUpdate = {
             supplierInvoiceStatusId: transactionStatusId,
+            userIdUpdated: data.userId,
             updatedTime: data.timestamp,
           };
           // cancel draft
@@ -68,11 +69,22 @@ export class CodTransactionHistoryQueueService {
           objUpdate = {
             codSupplierInvoiceId: null,
             supplierInvoiceStatusId: null,
+            userIdUpdated: data.userId,
+            updatedTime: data.timestamp,
+          };
+          // awb void
+        } else if (transactionStatusId == TRANSACTION_STATUS.VOID) {
+          objUpdate = {
+            codSupplierInvoiceId: null,
+            supplierInvoiceStatusId: null,
+            isVoid: true,
+            userIdUpdated: data.userId,
             updatedTime: data.timestamp,
           };
         } else {
           objUpdate = {
             transactionStatusId,
+            userIdUpdated: data.userId,
             updatedTime: data.timestamp,
           };
         }

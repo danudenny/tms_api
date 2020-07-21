@@ -51,6 +51,12 @@ export class CodSupplierInvoice extends TmsBaseEntity {
   })
   branchId: number;
 
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'paid_datetime',
+  })
+  paidDatetime: Date;
+
   @ManyToOne(() => TransactionStatus)
   @JoinColumn({ name: 'supplier_invoice_status_id' })
   transactionStatus: TransactionStatus;
@@ -60,7 +66,7 @@ export class CodSupplierInvoice extends TmsBaseEntity {
   branch: Branch;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id_created' })
+  @JoinColumn({ name: 'user_id_updated' })
   userAdmin: User;
 
   @ManyToOne(() => Partner)

@@ -656,7 +656,7 @@ export class V1WebAwbCodService {
     qb.innerJoin(
       'users',
       't4',
-      't1.user_id_created = t4.user_id AND t4.is_deleted = false',
+      't1.user_id_updated = t4.user_id AND t4.is_deleted = false',
     );
     qb.where('t1.cod_bank_statement_id = :id', { id });
     qb.andWhere('t1.is_deleted = false');
