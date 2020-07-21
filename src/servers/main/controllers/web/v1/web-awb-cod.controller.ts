@@ -157,17 +157,6 @@ export class V1WebAwbCodController {
     return V1WebAwbCodService.bankStatementCancel(payload);
   }
 
-  @Post('bankStatement/update')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  // @ApiOkResponse({ type: WebCodBankStatementResponseVm })
-  public async bankStatementUpdate(
-    @Body() payload: WebCodBankStatementValidatePayloadVm,
-  ) {
-    // validate bankStatement
-    return V1WebAwbCodService.bankStatementValidate(payload);
-  }
-
   // #region SUPPLIER INVOICE
   @Post('supplierInvoice')
   @HttpCode(HttpStatus.OK)
