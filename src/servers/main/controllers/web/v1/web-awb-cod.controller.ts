@@ -257,6 +257,15 @@ export class V1WebAwbCodController {
   }
   // #endregion SUPPLIER INVOICE
 
+  @Get('supplierInvoice/export/:supplierInvoiceId')
+  @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceExport(
+    @Param('supplierInvoiceId') supplierInvoiceId: string,
+  ) {
+    return V1WebReportCodService.exportSupplierInvoice(supplierInvoiceId);
+  }
+
   @Post('supplierInvoice/print')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
@@ -267,4 +276,11 @@ export class V1WebAwbCodController {
       filterList,
     );
   }
+
+  // @Get('transaction/sync')
+  // @ResponseSerializerOptions({ disable: true })
+  // public async transactionSync() {
+  //   await V1WebAwbCodService.syncData();
+  //   return { status: 'ok' };
+  // }
 }

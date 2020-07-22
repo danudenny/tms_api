@@ -7,6 +7,8 @@ import { BaseMetaPayloadFilterVm } from '../../../../../shared/models/base-meta-
 import { AwsS3Service } from '../../../../../shared/services/aws-s3.service';
 import { ConfigService } from '../../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../../config/database/mongodb.config';
+import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
+import { BadRequestException } from '@nestjs/common';
 
 export class V1WebReportCodService {
   // filter code
@@ -88,6 +90,7 @@ export class V1WebReportCodService {
     return csvConfig;
   }
 
+  // TODO: add params for custom name file
   static prepareCsvFile(fn, headers): any {
     const appRoot = require('app-root-path');
     const uuidv1 = require('uuid/v1');
@@ -95,7 +98,7 @@ export class V1WebReportCodService {
     const basePath = path.join(appRoot.path, 'dist/public/temps');
     // NOTE: Test only
     // const fileName = `${fn}.csv`; // moment().format('YYYYMMDD') + '_' + fn + '_' + uuidv1() + '.csv';
-    const filePath = basePath + '\\' + fileName;
+    const filePath = basePath + '/' + fileName;
     const urlPath = 'public/temps/' + fileName;
 
     if (!fs.existsSync(basePath)) {
@@ -135,7 +138,7 @@ export class V1WebReportCodService {
         writer.write([
           this.strReplaceFunc(d.partnerName),
           d.awbDate
-            ? moment(d.awbDate).utc().format('YYYY-MM-DD hh:mm A')
+            ? moment(d.awbDate).utc().format('YYYY-MM-DD')
             : null,
           this.strReplaceFunc(d.awbNumber),
           d.parcelValue,
@@ -198,7 +201,7 @@ export class V1WebReportCodService {
   }
 
   // main code
-  static async  printSupplierInvoice(payload, filters) {
+  static async printSupplierInvoice(payload, filters) {
     // TODO: query get data
     // step 1 : query get data by filter
     // prepare generate csv
@@ -267,15 +270,13 @@ export class V1WebReportCodService {
       writer.end();
 
       let url = '';
-      const awsKey = `testing/${csvConfig.fileName}`;
+      const awsKey = `reports/testing/${csvConfig.fileName}`;
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
       );
 
       if (storagePath) {
-        // send mail with url path download file
-        // SendGridService.testSendEmail(storagePath);
         url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
         this.deleteFile(csvConfig.filePath);
       }
@@ -288,4 +289,50 @@ export class V1WebReportCodService {
 
   }
 
+  static async exportSupplierInvoice(id: string) {
+    const dbMongo = await MongoDbConfig.getDbSicepatCod('transaction_detail');
+    const datarow = await dbMongo.find({ codSupplierInvoiceId: id}).toArray();
+
+    const dataRowCount = datarow.length;
+    console.log('## TOTAL DATA :: ', dataRowCount);
+    if (!datarow || datarow.length <= 0) {
+      throw new BadRequestException('Data belum lengkap, coba lagi nanti!');
+    }
+
+    try {
+      const csvConfig = await this.getCSVConfig();
+      const csvWriter = require('csv-write-stream');
+      const writer = csvWriter(csvConfig.config);
+      writer.pipe(
+        fs.createWriteStream(csvConfig.filePath, { flags: 'a' }),
+      );
+
+      // if (dataRowCount > 1048576) {
+      //   throw new Error(
+      //     'Tidak dapat menarik data. Jumlah data yang ditarik lebih dari 1 jt.',
+      //   );
+      // }
+
+      await this.populateDataCsv(writer, datarow);
+      writer.end();
+
+      let url = '';
+      const awsKey = `reports/testing/${csvConfig.fileName}`;
+      const storagePath = await AwsS3Service.uploadFromFilePath(
+        csvConfig.filePath,
+        awsKey,
+      );
+
+      if (storagePath) {
+        url = `${ConfigService.get('cloudStorage.cloudUrl')}/${
+          storagePath.awsKey
+        }`;
+        this.deleteFile(csvConfig.filePath);
+      }
+
+      return { status: 'ok', url };
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
+    }
+  }
 }
