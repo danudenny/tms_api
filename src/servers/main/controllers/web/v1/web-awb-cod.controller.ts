@@ -25,7 +25,7 @@ import {
   WebCodBankStatementResponseVm, WebCodInvoiceAddResponseVm, WebCodInvoiceDraftResponseVm,
   WebCodInvoiceRemoveResponseVm, WebCodListInvoiceResponseVm,
   WebCodSupplierInvoicePaidResponseVm, WebCodTransactionDetailResponseVm,
-  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm,
+  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm, WebAwbCodVoidListResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import {
@@ -45,6 +45,14 @@ export class V1WebAwbCodController {
   @ApiOkResponse({ type: WebAwbCodListResponseVm })
   public async awb(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.awbCod(payload);
+  }
+
+  @Post('awb/void')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebAwbCodVoidListResponseVm })
+  public async awbVoid(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbCodService.awbVoid(payload);
   }
 
   @Post('transferBranch')

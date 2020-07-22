@@ -140,5 +140,8 @@ export class WebCodInvoiceRemoveAwbPayloadVm {
 
   @ApiModelProperty()
   supplierInvoiceId: string;
+
+  @ApiModelProperty()
+  voidNote: string;
 }
 // #endregion

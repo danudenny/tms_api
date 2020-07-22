@@ -524,6 +524,7 @@ export class V1WebCodSupplierInvoiceService {
         }, {
           supplierInvoiceStatusId: null,
           codSupplierInvoiceId: null,
+          voidNote: payload.voidNote,
           isVoid: true,
           userIdUpdated: authMeta.userId,
           updatedTime: timestamp,

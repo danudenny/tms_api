@@ -29,6 +29,7 @@ import {
     WebCodPrintMetaVm, WebCodTransactionDetailResponseVm, WebCodTransferBranchResponseVm,
     WebCodTransferHeadOfficeResponseVm,
     WebCodTransactionUpdateResponseVm,
+    WebAwbCodVoidListResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
@@ -36,6 +37,7 @@ import moment = require('moment');
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { CodUpdateTransactionQueueService } from '../../../../queue/services/cod/cod-update-transaction-queue.service';
 import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
+import { MongoDbConfig } from '../../../config/database/mongodb.config';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -134,6 +136,73 @@ export class V1WebAwbCodService {
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebAwbCodListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async awbVoid(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbCodVoidListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['userHO'] = 't3.first_name';
+    payload.fieldResolverMap['adminName'] = 't4.first_name';
+    payload.fieldResolverMap['driverName'] = 't5.first_name';
+    payload.fieldResolverMap['userIdHO'] = 't2.user_id_updated';
+    payload.fieldResolverMap['userIdAdmin'] = 't1.user_id_updated';
+    payload.fieldResolverMap['transferDatetime'] = 't2.transfer_datetime';
+    payload.fieldResolverMap['voidDatetime'] = 't1.updated_time';
+    payload.fieldResolverMap['manifestedDate'] = 't1.pod_date';
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'voidDatetime';
+    }
+
+    const repo = new OrionRepositoryService(CodTransactionDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_number', 'awbNumber'],
+      ['t1.pod_date', 'manifestedDate'],
+      ['t2.transfer_datetime', 'transferDatetime'],
+      ['t1.updated_time', 'voidDatetime'],
+      ['t1.consignee_name', 'consigneeName'],
+      ['t1.package_type_id', 'packageTypeId'],
+      ['t1.package_type_code', 'packageTypeCode'],
+      ['t1.cod_value', 'codValue'],
+      ['t1.void_note', 'voidNote'],
+      ['t1.user_id_driver', 'userIdDriver'],
+      ['t1.user_id_updated', 'userIdAdmin'],
+      ['t2.user_id_updated', 'userIdHO'],
+      ['t3.first_name', 'userHO'],
+      ['t4.first_name', 'adminName'],
+      ['t5.first_name', 'driverName'],
+    );
+    q.innerJoin(e => e.userAdmin, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.userDriver, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.transactionBranch.bankStatement, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.transactionBranch.bankStatement.userAdmin, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    // TODO: add where is void = true
+    // q.andWhere(e => e.isVoid, w => w.isTrue());
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebAwbCodVoidListResponseVm();
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
@@ -969,6 +1038,51 @@ export class V1WebAwbCodService {
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }
+  }
+
+  // NOTE: for testing only
+  static async syncData() {
+    // get config mongodb
+    const collection = await MongoDbConfig.getDbSicepatCod('transaction_detail');
+    // const items = await collection.find({}).toArray
+
+    const data = await CodTransactionDetail.find();
+    for (const item of data) {
+      delete item['changedValues'];
+      item.userIdCreated = Number(item.userIdCreated);
+      item.userIdUpdated = Number(item.userIdUpdated);
+
+      try {
+        const checkData = await collection.findOne({
+          _id: item.awbNumber,
+        });
+        if (checkData) {
+
+          const objUpdate = {
+            codTransactionId: item.codTransactionId,
+            transactionStatusId: item.transactionStatusId,
+            codSupplierInvoiceId: item.codSupplierInvoiceId,
+            supplierInvoiceStatusId: item.supplierInvoiceStatusId,
+            isVoid: false,
+            updatedTime: item.updatedTime,
+            userIdUpdated: item.userIdUpdated,
+          };
+          await collection.updateOne(
+            { _id: item.awbNumber },
+            {
+              $set: objUpdate,
+            },
+          );
+        } else {
+          console.log('### AWB NUMBER :: ', item.awbNumber);
+          await collection.insertOne({ _id: item.awbNumber, ...item });
+        }
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+    } // end of loop
+    return true;
   }
 
   // func private ==============================================================
