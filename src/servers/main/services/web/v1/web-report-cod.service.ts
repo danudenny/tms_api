@@ -138,18 +138,18 @@ export class V1WebReportCodService {
         writer.write([
           this.strReplaceFunc(d.partnerName),
           d.awbDate
-            ? moment(d.awbDate).utc().format('YYYY-MM-DD')
+            ? moment(d.awbDate).format('YYYY-MM-DD')
             : null,
           this.strReplaceFunc(d.awbNumber),
           d.parcelValue,
+          d.codValue,
           d.codFee,
-          d.parcelValue,
           d.podDate
-            ? moment(d.podDate).utc().format('YYYY-MM-DD hh:mm A')
+            ? moment(d.podDate).format('YYYY-MM-DD HH:mm')
             : null,
           this.strReplaceFunc(d.consigneeName),
           d.createdTime
-            ? moment(d.createdTime).utc().format('YYYY-MM-DD hh:mm A')
+            ? moment(d.createdTime).format('YYYY-MM-DD HH:mm')
             : null,
           'DLV',
           'DLV',
