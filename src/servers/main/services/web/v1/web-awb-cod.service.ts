@@ -92,7 +92,7 @@ export class V1WebAwbCodService {
       ['t4.first_name', 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
       ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
-      [`COALESCE(t8.cod_payment_method, 'cash')`, 'codPaymentMethod'],
+      [`t8.cod_payment_method`, 'codPaymentMethod'],
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
       ['t1.transaction_status_id', 'transactionStatusId'],
