@@ -3,9 +3,6 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 export class SmdAwbSortPayloadVm {
   @ApiModelProperty()
   awbNumber: string;
-
-  @ApiModelProperty({ example: 'subDistrict'})
-  type: string;
 }
 
 export class SmdAwbSortVm {
@@ -19,9 +16,6 @@ export class SmdAwbSortVm {
 export class SmdAwbSortResponseVm {
   @ApiModelProperty()
   awbNumber: string;
-
-  @ApiModelProperty({ example: 'subDistrict'})
-  type: string;
 
   @ApiModelProperty()
   urlSound: string;
