@@ -10,7 +10,7 @@ import { SmdAwbFilterService } from '../../services/integration/smd-awb-filter.s
 @Controller('smd/awb/filter')
 export class AwbFilterSmdController {
   constructor(
-    private readonly smdAwbFilterService: SmdAwbFilterService,
+    // private readonly smdAwbFilterService: SmdAwbFilterService,
   ) {}
   @Post('sortCity')
   @HttpCode(HttpStatus.OK)
@@ -18,6 +18,6 @@ export class AwbFilterSmdController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: SmdAwbSortResponseVm })
   public async findAllAwbSortirList(@Body() payload: SmdAwbSortPayloadVm) {
-    return this.smdAwbFilterService.sortAwbHub(payload);
+    return SmdAwbFilterService.sortAwbHub(payload);
   }
 }

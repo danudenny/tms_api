@@ -9,7 +9,7 @@ import { Awb } from 'src/shared/orm-entity/awb';
 export class SmdAwbFilterService {
   constructor() {}
 
-  async sortAwbHub(
+  static async sortAwbHub(
     payload: SmdAwbSortPayloadVm,
   ): Promise<SmdAwbSortResponseVm> {
     const authMeta = AuthService.getAuthData();
