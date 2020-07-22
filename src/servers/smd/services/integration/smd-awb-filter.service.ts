@@ -97,11 +97,17 @@ export class SmdAwbFilterService {
             qb.addSelect('d.district_name', 'districtName');
             qb.addSelect('c.city_code', 'cityCode');
             qb.addSelect('c.city_name', 'cityName');
+            qb.addSelect('a.attachment_path', 'attachmentPath');
             qb.from('district', 'd');
             qb.innerJoin(
               'city',
               'c',
               'd.city_id = c.city_id AND c.is_deleted = false',
+            );
+            qb.leftJoin(
+              'attachment',
+              'a',
+              'a.attachment_id = c.city_sound_url AND a.is_deleted = false',
             );
             qb.where(
               'd.district_id = :districtId AND d.is_deleted = false',
@@ -112,7 +118,14 @@ export class SmdAwbFilterService {
             qb.limit(1);
             const data = await qb.getRawOne();
             if (data) {
-              // TODO: get data sound city ?
+              // NOTE: sample sound path
+              // https://sicepattesting.s3.amazonaws.com/
+              // city/sound/PSwjOTU_NCwkLCM5MSo5IzcSNCIzOD0oPjkPf2B_YH1mfGF8YBJif2R8YRISLD4pJSM3bRIsMiw7LD5jPT1j
+              if (data.attachmentPath) {
+                result.urlSound = `${ConfigService.get(
+                  'cloudStorage.cloudUrl',
+                )}/${data.attachmentPath}`;
+              }
 
               result.city = {
                 key: data.cityCode,
