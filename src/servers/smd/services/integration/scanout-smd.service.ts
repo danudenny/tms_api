@@ -908,6 +908,14 @@ export class ScanoutSmdService {
           },
         );
       }
+      await DoSmd.update(
+        { doSmdId : payload.do_smd_id },
+        {
+          sealNumberLast: payload.seal_number,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
       const resultDoSmd = await DoSmd.findOne({
         where: {
           doSmdId: payload.do_smd_id,
