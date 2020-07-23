@@ -215,8 +215,6 @@ export class V1WebCodSupplierInvoiceService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    // NOTE: set filter
-    q.andWhere(e => e.supplierInvoiceStatusId, w => w.equals(41000));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
