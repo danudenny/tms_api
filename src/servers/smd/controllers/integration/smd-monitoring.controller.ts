@@ -34,11 +34,4 @@ export class MonitoringSmdController {
     return MonitoringSmdServices.exportExcel(serverResponse, queryParams);
   }
 
-  @Get('smd/export/csv')
-  public async exportCsv(
-    @Query() queryParams: MonitoringPayloadVm,
-    @Response() serverResponse: express.Response,
-  ) {
-    return MonitoringSmdServices.exportCSV(serverResponse, queryParams);
-  }
 }
