@@ -360,73 +360,12 @@ export class MonitoringSmdServices {
     res: express.Response,
     data: any,
   ): Promise<any> {
-    // const rows = [];
-    // const result = [];
-    // const maxRowPerSheet = 65000;
-    // let idx = 1;
-    // // tslint:disable-next-line: no-shadowed-variable
-    // let multiply = 1;
-
-    // // handle multiple sheet for large data
-    // if (data.length > maxRowPerSheet) {
-    //   do {
-    //     const slicedData = data.slice(idx, maxRowPerSheet * multiply);
-    //     result.push(slicedData);
-    //     idx = multiply * slicedData + 1;
-    //     multiply++;
-    //   }
-    //   while (data.length > maxRowPerSheet * multiply);
-    // } else {
-    //   result.push(data);
-    // }
-
-    // // mapping data to row excel
-    // result.map(function(item, index) {
-    //   rows[index] = [];
-    //   item.map(function(detail) {
-    //     const content = {};
-    //     content['Nomor SMD'] = detail.do_smd_code;
-    //     content['Tanggal Berangkat'] = detail.departure_date_time ?
-    //       moment(detail.departure_date_time).format('DD MMM YYYY HH:mm') :
-    //       null;
-    //     content['Tanggal Transit'] = detail.transit_date_time ?
-    //         moment(detail.transit_date_time).format('DD MMM YYYY HH:mm') :
-    //         null;
-    //     content['Tanggal Tiba'] = detail.arrival_date_time ?
-    //       moment(detail.arrival_date_time).format('DD MMM YYYY HH:mm') :
-    //       null;
-    //     content['Rute'] = detail.route;
-    //     content['Nomor Mobil'] = detail.vehicle_number;
-    //     content['Type Truck'] = detail.vehicle_name;
-    //     content['Trip'] = detail.trip;
-    //     content['Actual Berat'] = detail.total_weight ?
-    //       Number(detail.total_weight).toFixed(0) + ' KG' :
-    //       null;
-    //     content['Kapasitas'] = detail.vehicle_capacity ?
-    //       detail.vehicle_capacity + ' KG' :
-    //       null;
-    //     content['Load %'] = detail.percentage_load ?
-    //       Number(detail.percentage_load).toFixed(2) + ' %' :
-    //       null;
-    //     rows[index].push(content);
-    //   });
-    // });
 
     // NOTE: create excel using unique name
     const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.csv';
     try {
       const ws = fs.createWriteStream(fileName);
       fastcsv.write(data, {headers: true}).pipe(ws);
-      // NOTE: create now workbok for storing excel rows
-      // response passed through express response
-      // const newWB = xlsx.utils.book_new();
-      // rows.map((detail, index) => {
-      //   const newWS = xlsx.utils.json_to_sheet(detail);
-      //   xlsx.utils.book_append_sheet(newWB, newWS, (result.length > 1 ?
-      //     `${moment().format('YYYY-MM-DD')}(${index + 1})` :
-      //     moment().format('YYYY-MM-DD')));
-      // });
-      // xlsx.writeFile(newWB, fileName);
 
       const filestream = fs.createReadStream(fileName);
       const mimeType = 'application/vnd.ms-excel';
@@ -452,7 +391,6 @@ export class MonitoringSmdServices {
   static async getQueryExportCSVOnly(
     payload: BaseMetaPayloadVm,
   ): Promise<any> {
-    // payload.fieldFilterManualMap['do_smd_code'] = true;
     const q = payload.buildQueryBuilder();
     q.select('ds.do_smd_code', 'Nomor SMD')
       // .addSelect('ds.do_smd_time', 'do_smd_time')
@@ -461,12 +399,16 @@ export class MonitoringSmdServices {
       .addSelect('ds.vehicle_number', 'Nomor Mobil')
       .addSelect('ds.vehicle_name', 'Type Truck')
       .addSelect(`ds.trip`, 'Trip')
-      .addSelect('ds.total_weight', 'Actual Berat')
-      .addSelect('ds.vehicle_capacity', 'Kapasitas')
-      .addSelect(`((total_weight / vehicle_capacity::integer) * 100)`, 'Load %')
-      .addSelect('ds.departure_date_time', 'Tanggal Berangkat')
-      .addSelect('ds.transit_date_time', 'Tanggal Transit')
-      .addSelect('ds.arrival_date_time', 'Tanggal Tiba')
+      .addSelect('CONCAT(ds.total_weight::integer, \' KG\')', 'Actual Berat')
+      .addSelect('CONCAT(ds.vehicle_capacity, \' KG\')', 'Kapasitas')
+      .addSelect(`
+      CONCAT(
+        CAST(((total_weight / vehicle_capacity::integer) * 100) AS DECIMAL(18,2)),
+        ' %'
+      )`, 'Load %')
+      .addSelect('TO_CHAR(ds.departure_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Berangkat')
+      .addSelect('TO_CHAR(ds.transit_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Transit')
+      .addSelect('TO_CHAR(ds.arrival_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Tiba')
       .from(subQuery => {
         subQuery
           .select('ds.do_smd_code')
