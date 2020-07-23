@@ -2,9 +2,9 @@
 import { BadRequestException } from '@nestjs/common';
 import { createQueryBuilder } from 'typeorm';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { ConfigService } from 'src/shared/services/config.service';
 import { SmdAwbSortPayloadVm, SmdAwbSortResponseVm } from '../../models/smd-awb-sort.vm';
-import { Awb } from 'src/shared/orm-entity/awb';
+import { ConfigService } from '../../../../shared/services/config.service';
+import { Awb } from '../../../../shared/orm-entity/awb';
 // #endregion
 export class SmdAwbFilterService {
   constructor() {}
