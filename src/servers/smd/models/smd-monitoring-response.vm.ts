@@ -28,9 +28,6 @@ export class MonitoringListVm {
     vehicle_name: string;
 
     @ApiModelProperty()
-    seal_number_last: string;
-
-    @ApiModelProperty()
     trip: number;
 
     @ApiModelProperty()
