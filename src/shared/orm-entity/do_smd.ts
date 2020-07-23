@@ -166,6 +166,13 @@ export class DoSmd extends TmsBaseEntity {
   })
   counterTrip: number | null;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+    name: 'seal_number_last',
+  })
+  sealNumberLast: string | null;
+
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
