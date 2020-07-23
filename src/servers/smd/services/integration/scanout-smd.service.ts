@@ -35,6 +35,7 @@ export class ScanoutSmdService {
       payload.smd_date,
       permissonPayload.branchId,
       authMeta.userId,
+      payload.smd_trip,
     );
 
     const paramDoSmdVehicleId = await this.createDoSmdVehicle(
@@ -945,6 +946,14 @@ export class ScanoutSmdService {
           },
         );
       }
+      await DoSmd.update(
+        { doSmdId : payload.do_smd_id },
+        {
+          sealNumberLast: payload.seal_number,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
       const resultDoSmd = await DoSmd.findOne({
         where: {
           doSmdId: payload.do_smd_id,
@@ -1133,6 +1142,15 @@ export class ScanoutSmdService {
           },
         );
 
+        await DoSmdDetail.update(
+          { doSmdId :  payload.do_smd_id, arrivalTime: null},
+          {
+            doSmdStatusIdLast: 1150,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          },
+        );
+
         data.push({
           do_smd_id: resultDoSmd.doSmdId,
           do_smd_code: resultDoSmd.doSmdCode,
@@ -1264,6 +1282,7 @@ export class ScanoutSmdService {
     paramDoSmdTime: Date,
     paramBranchId: number,
     userId: number,
+    paramCounterTrip: number,
   ) {
     const dataDoSmd = DoSmd.create({
       doSmdCode: paramDoSmdCode,
@@ -1272,6 +1291,7 @@ export class ScanoutSmdService {
       branchId: paramBranchId,
       totalVehicle: 1,
       departureScheduleDateTime: paramDoSmdTime,
+      counterTrip: paramCounterTrip,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,
