@@ -283,7 +283,8 @@ export class V1WebCodSupplierInvoiceService {
           authMeta.userId,
           timestamp,
         );
-      });
+      }); // end transaction
+
       // response
       const result = new WebCodSupplierInvoicePaidResponseVm();
       result.status = 'ok';
