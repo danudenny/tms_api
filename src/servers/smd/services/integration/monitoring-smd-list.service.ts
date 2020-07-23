@@ -64,25 +64,32 @@ export class MonitoringSmdServices {
     q.select('ds.do_smd_code', 'do_smd_code')
       .addSelect('ds.do_smd_time', 'do_smd_time')
       .addSelect('ds.branch_id', 'branch_id')
-      .addSelect('ds.route', 'route')
+      .addSelect('ds.branch_name_from', 'branch_name_from')
+      .addSelect('ds.branch_name_to', 'branch_name_to')
       .addSelect('ds.vehicle_number', 'vehicle_number')
       .addSelect('ds.vehicle_name', 'vehicle_name')
       .addSelect(`ds.trip`, 'trip')
+      .addSelect(`ds.smd_trip`, 'smd_trip')
       .addSelect('ds.total_weight', 'total_weight')
+      .addSelect('ds.total_colly', 'total_colly')
       .addSelect('ds.vehicle_capacity', 'vehicle_capacity')
       .addSelect(`((total_weight / vehicle_capacity::integer) * 100)`, 'percentage_load')
       .addSelect('ds.departure_date_time', 'departure_date_time')
       .addSelect('ds.transit_date_time', 'transit_date_time')
       .addSelect('ds.arrival_date_time', 'arrival_date_time')
+      .addSelect(`ds.employee_driver_name`, 'employee_driver_name')
       .from(subQuery => {
         subQuery
           .select('ds.do_smd_code')
           .addSelect(`ds.do_smd_time`, 'do_smd_time')
           .addSelect(`bf.branch_id`, 'branch_id')
-          .addSelect(`bf.branch_name || ' - ' || ds.branch_to_name_list`, 'route')
+          .addSelect(`bf.branch_name`, 'branch_name_from')
+          .addSelect(`ds.branch_to_name_list`, 'branch_name_to')
           .addSelect(`dsv.vehicle_number`, 'vehicle_number')
           .addSelect(`v.vehicle_name`, 'vehicle_name')
           .addSelect(`ds.trip`, 'trip')
+          .addSelect(`'T' || ds.counter_trip`, 'smd_trip')
+          .addSelect(`e.fullname`, 'employee_driver_name')
           .addSelect(`(
                       select
                         sum(bi.weight)
@@ -94,6 +101,15 @@ export class MonitoringSmdServices {
                       group by
                         dsd.do_smd_id
                     )`, 'total_weight')
+          .addSelect(`(
+                      select
+                        sum(dsd.total_bagging + dsd.total_bag)
+                      from do_smd_detail dsd
+                      where
+                        dsd.do_smd_id = ds.do_smd_id
+                      group by
+                        dsd.do_smd_id
+                    )`, 'total_colly')
           .addSelect(`v.vehicle_capacity`, 'vehicle_capacity')
           .addSelect(`ds.departure_date_time`, 'departure_date_time')
           .addSelect(`ds.transit_date_time`, 'transit_date_time')
@@ -113,6 +129,11 @@ export class MonitoringSmdServices {
             'vehicle',
             'v',
             'dsv.vehicle_number = v.vehicle_number and v.is_deleted = false ',
+          )
+          .leftJoin(
+            'employee',
+            'e',
+            'dsv.employee_id_driver = e.employee_id and e.is_deleted = false',
           );
 
         payload.applyFiltersToQueryBuilder(subQuery, ['departure_date_time']);
