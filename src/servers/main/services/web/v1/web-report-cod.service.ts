@@ -20,7 +20,7 @@ export class V1WebReportCodService {
     filters.forEach(filter => {
       if (filter.field == 'periodStart' && filter.value) {
         const summaryDate: string = filter.value;
-        const dStart = moment(summaryDate).toDate();
+        const dStart = moment(summaryDate).add(7, 'hour').toDate();
         filterStart = dStart;
       }
 
