@@ -42,7 +42,7 @@ export class V1WebReportCodService {
 
       if (filter.field == 'supplier' && filter.value) {
         const f = {
-          codSupplierInvoiceId: { $eq: filter.value.toString() },
+          partnerId: { $eq: filter.value },
         };
 
         filterList.push(f);
