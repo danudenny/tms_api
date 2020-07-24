@@ -545,4 +545,7 @@ export class WebCodVoucherSuccessResponseVm {
 
   @ApiModelProperty()
   responseMessage: string;
+
+  @ApiModelProperty()
+  dataError: string[];
 }

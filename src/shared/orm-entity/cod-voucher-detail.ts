@@ -1,16 +1,15 @@
 import {
+  BaseEntity,
   Column,
   Entity,
   PrimaryGeneratedColumn,
   JoinColumn,
   ManyToOne,
 } from 'typeorm';
-import { TmsBaseEntity } from './tms-base';
 import { CodVoucher } from './cod-voucher';
-import { ColumnNumericTransformer } from './column-numeric-transformer';
 
 @Entity('cod_voucher_detail', { schema: 'public' })
-export class CodVoucherDetail extends TmsBaseEntity {
+export class CodVoucherDetail extends BaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'cod_voucher_detail_id',
   })
@@ -35,6 +34,18 @@ export class CodVoucherDetail extends TmsBaseEntity {
     name: 'is_settlement',
   })
   isSettlement: boolean;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'created_time',
+  })
+  createdTime: Date;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'updated_time',
+  })
+  updatedTime: Date;
 
   @ManyToOne(() => CodVoucher, x => x.details)
   @JoinColumn({

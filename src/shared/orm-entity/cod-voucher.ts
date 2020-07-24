@@ -1,14 +1,14 @@
 import {
+  BaseEntity,
   Column,
   Entity,
   PrimaryGeneratedColumn,
   OneToMany,
 } from 'typeorm';
-import { TmsBaseEntity } from './tms-base';
 import { CodVoucherDetail } from './cod-voucher-detail';
 
 @Entity('cod_voucher', { schema: 'public' })
-export class CodVoucher extends TmsBaseEntity {
+export class CodVoucher extends BaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'cod_voucher_id',
   })
@@ -42,6 +42,18 @@ export class CodVoucher extends TmsBaseEntity {
     name: 'amount_transfer',
   })
   amountTransfer: number | null;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'created_time',
+  })
+  createdTime: Date;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'updated_time',
+  })
+  updatedTime: Date;
 
   @OneToMany(() => CodVoucherDetail, x => x.voucherBranch)
   details: CodVoucherDetail[];

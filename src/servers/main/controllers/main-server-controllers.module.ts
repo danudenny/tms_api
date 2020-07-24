@@ -57,6 +57,7 @@ import {PaymentProviderController} from './mobile/mobile-payment-provider.contro
 import {CodPaymentController} from './mobile/mobile-cod-payment.controller';
 import { V1CombinePackageController } from './web/v1/combine-package.controller';
 import { V1WebAwbCodController } from './web/v1/web-awb-cod.controller';
+import { V1WebAwbCodVoucherController } from './web/v1/web-awb-cod-voucher.controller';
 import { TransactionStatusController } from './master/transaction-status.controller';
 import { BankAccountController } from './master/bank-account.controller';
 import { PackageTypeController } from './master/package-type.controller';
@@ -121,6 +122,7 @@ import { PackageTypeController } from './master/package-type.controller';
     CodPaymentController,
     V1CombinePackageController,
     V1WebAwbCodController,
+    V1WebAwbCodVoucherController,
     TransactionStatusController,
     BankAccountController,
     PackageTypeController,
