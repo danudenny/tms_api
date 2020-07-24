@@ -142,3 +142,19 @@ export class WebCodInvoiceRemoveAwbPayloadVm {
   supplierInvoiceId: string;
 }
 // #endregion
+
+export class WebCodVoucherPayloadVm {
+  @ApiModelProperty()
+  amountTransfer: number;
+
+  @ApiModelProperty()
+  codVoucherNo: string;
+
+  @ApiModelProperty()
+  codVoucherDate: Date;
+
+  @IsDefined({message: 'No Resi harus diisi'})
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  awbNumbers: string[];
+}

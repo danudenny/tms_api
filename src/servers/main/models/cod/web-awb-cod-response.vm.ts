@@ -499,3 +499,11 @@ export class PrintCodTransferBranchVm {
   data: WebCodAwbPrintVm[];
 }
 // #endregion for data printing
+
+export class WebCodVoucherSuccessResponseVm {
+  @ApiModelProperty()
+  responseCode: string;
+
+  @ApiModelProperty()
+  responseMessage: string;
+}
