@@ -1,12 +1,17 @@
 import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import {Representative} from './representative';
 import {Branch} from './branch';
-import {BagRepresentativeItem} from './bag-representative-item';
 
-@Entity('bag_representative', { schema: 'public' })
-export class BagRepresentative extends BaseEntity {
+@Entity('bag_representative_history', { schema: 'public' })
+export class BagRepresentativeHistory extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'bag_representative_history_id',
+  })
+  bagRepresentativeHistoryId: string;
+
+  @Column('bigint', {
+    nullable: false,
     name: 'bag_representative_id',
   })
   bagRepresentativeId: string;
@@ -99,7 +104,4 @@ export class BagRepresentative extends BaseEntity {
   })
   @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
   branch: Branch;
-
-  @OneToMany(() => BagRepresentativeItem, e => e.bagRepresentativeItem, { cascade: ['insert'] })
-  bagRepresentativeItems: BagRepresentativeItem[];
 }
