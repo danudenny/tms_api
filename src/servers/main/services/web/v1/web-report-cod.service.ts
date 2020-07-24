@@ -20,15 +20,16 @@ export class V1WebReportCodService {
     filters.forEach(filter => {
       if (filter.field == 'periodStart' && filter.value) {
         const summaryDate: string = filter.value;
-        const dStart = DateHelper.resetMomentTime((summaryDate) ? moment(summaryDate) : DateHelper.getCurrentWibMomentTime()).toDate();
+        const dStart = moment(summaryDate).add(7, 'hour').toDate();
         filterStart = dStart;
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
         const finishDate: string = moment(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00');
-        const dEnd = DateHelper.resetMomentTime((finishDate) ? moment(finishDate) : DateHelper.getCurrentWibMomentTime()).toDate();
+        const dEnd = moment(finishDate).toDate();
         filterEnd = dEnd;
       }
+
 
       if (filterStart && filterEnd) {
         const filterJson = {
@@ -42,7 +43,7 @@ export class V1WebReportCodService {
 
       if (filter.field == 'supplier' && filter.value) {
         const f = {
-          codSupplierInvoiceId: { $eq: filter.value.toString() },
+          partnerId: { $eq: filter.value },
         };
 
         filterList.push(f);
@@ -56,13 +57,14 @@ export class V1WebReportCodService {
         filterList.push(f);
       }
     });
-
+    console.log(filterList, "filter list");
     return filterList;
   }
 
   // csv file code
-  static async getCSVConfig() {
-    const csvHeaders: any = [
+  static async getCSVConfig(cod = true) {
+
+    const csvHeaders: any = cod ? [
       'Partner',
       'Awb Date',
       'Awb',
@@ -84,9 +86,32 @@ export class V1WebReportCodService {
       'Note',
       'Submitted Date',
       'Submitted Number',
-    ];
+    ] : [
+        'Partner',
+        'Awb Date',
+        'Awb',
+        'Package Amount',
+        'Cod Amount',
+        'Amount Transfer',
+        'Pod Datetime',
+        'Recipient',
+        'Status Internal',
+        'Tracking Status',
+        'Cust Package',
+        'Pickup Source',
+        'Current Position',
+        'Destination Code',
+        'Destination',
+        'Package Detail',
+        'Services',
+        'Note',
+        'Submitted Date',
+        'Submitted Number',
+      ];
 
-    const csvConfig = this.prepareCsvFile('COD', csvHeaders);
+    const csvConfig = cod ?
+      this.prepareCsvFile('COD', csvHeaders) :
+      this.prepareCsvFile('COD_nonfee', csvHeaders);
     return csvConfig;
   }
 
@@ -128,13 +153,70 @@ export class V1WebReportCodService {
 
   // private ==================================================================
   static async populateDataCsv(
-    writer, data,
+    writer, data, cod,
   ): Promise<boolean> {
     let count = 0;
     // console.log(data);
     if (data) {
       for (const d of data) {
         // writer.write(d);
+        cod ?
+          writer.write([
+            this.strReplaceFunc(d.partnerName),
+            d.awbDate
+              ? moment(d.awbDate).format('YYYY-MM-DD')
+              : null,
+            this.strReplaceFunc(d.awbNumber),
+            d.parcelValue,
+            d.codFee,
+            d.parcelValue,
+            d.podDate
+              ? moment(d.podDate).format('YYYY-MM-DD HH:mm')
+              : null,
+            this.strReplaceFunc(d.consigneeName),
+            d.createdTime
+              ? moment(d.createdTime).format('YYYY-MM-DD HH:mm')
+              : null,
+            'DLV',
+            'DLV',
+            this.strReplaceFunc(d.custPackage),
+            this.strReplaceFunc(d.pickupSource),
+            this.strReplaceFunc(d.currentPosition),
+            this.strReplaceFunc(d.destinationCode),
+            this.strReplaceFunc(d.destination),
+            this.strReplaceFunc(d.parcelContent),
+            this.strReplaceFunc(d.packageType),
+            this.strReplaceFunc(d.parcelNote),
+            this.strReplaceFunc(d.paymentService),
+            '', '',
+          ]) : writer.write([
+            this.strReplaceFunc(d.partnerName),
+            d.awbDate
+              ? moment(d.awbDate).format('YYYY-MM-DD hh:mm A')
+              : null,
+            this.strReplaceFunc(d.awbNumber),
+            d.parcelValue,
+            d.parcelValue,
+            d.podDate
+              ? moment(d.podDate).format('YYYY-MM-DD hh:mm A')
+              : null,
+            this.strReplaceFunc(d.consigneeName),
+            d.createdTime
+              ? moment(d.createdTime).format('YYYY-MM-DD hh:mm A')
+              : null,
+            'DLV',
+            'DLV',
+            this.strReplaceFunc(d.custPackage),
+            this.strReplaceFunc(d.pickupSource),
+            this.strReplaceFunc(d.currentPosition),
+            this.strReplaceFunc(d.destinationCode),
+            this.strReplaceFunc(d.destination),
+            this.strReplaceFunc(d.parcelContent),
+            this.strReplaceFunc(d.packageType),
+            this.strReplaceFunc(d.parcelNote),
+            this.strReplaceFunc(d.paymentService),
+            '', '',
+          ]);
         writer.write([
           this.strReplaceFunc(d.partnerName),
           d.awbDate
@@ -201,7 +283,7 @@ export class V1WebReportCodService {
   }
 
   // main code
-  static async printSupplierInvoice(payload, filters) {
+  static async  printSupplierInvoice(payload, filters, cod = true) {
     // TODO: query get data
     // step 1 : query get data by filter
     // prepare generate csv
@@ -209,7 +291,7 @@ export class V1WebReportCodService {
     // retrun file/ link downlod
     console.log(JSON.stringify({ ...filters }), 'filter');
 
-    const dbMongo =  await MongoDbConfig.getDbSicepatCod('transaction_detail');
+    const dbMongo = await MongoDbConfig.getDbSicepatCod('transaction_detail');
 
     try {
       const datarow = await dbMongo.aggregate([
@@ -251,7 +333,7 @@ export class V1WebReportCodService {
       if (!datarow || datarow.length <= 0) {
         return null;
       }
-      const csvConfig = await this.getCSVConfig();
+      const csvConfig = await this.getCSVConfig(cod);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
@@ -265,7 +347,7 @@ export class V1WebReportCodService {
       }
 
       for (let index = 0; index <= totalPaging; index++) {
-        await this.populateDataCsv(writer, await datarow.skip(limit * (index)).limit(limit).toArray());
+        await this.populateDataCsv(writer, await datarow.skip(limit * (index)).limit(limit).toArray(), cod);
       }
       writer.end();
 
@@ -291,7 +373,7 @@ export class V1WebReportCodService {
 
   static async exportSupplierInvoice(id: string) {
     const dbMongo = await MongoDbConfig.getDbSicepatCod('transaction_detail');
-    const datarow = await dbMongo.find({ codSupplierInvoiceId: id}).toArray();
+    const datarow = await dbMongo.find({ codSupplierInvoiceId: id }).toArray();
 
     const dataRowCount = datarow.length;
     console.log('## TOTAL DATA :: ', dataRowCount);
@@ -313,7 +395,7 @@ export class V1WebReportCodService {
       //   );
       // }
 
-      await this.populateDataCsv(writer, datarow);
+      await this.populateDataCsv(writer, datarow, true);
       writer.end();
 
       let url = '';
@@ -326,7 +408,7 @@ export class V1WebReportCodService {
       if (storagePath) {
         url = `${ConfigService.get('cloudStorage.cloudUrl')}/${
           storagePath.awsKey
-        }`;
+          }`;
         this.deleteFile(csvConfig.filePath);
       }
 

@@ -285,6 +285,18 @@ export class V1WebAwbCodController {
     );
   }
 
+  @Post('supplierInvoice/noncodfee/print')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceNonCodFeePrint(@Body() payload: ReportBaseMetaPayloadVm) {
+    const filterList = V1WebReportCodService.filterList(
+      payload.filters,
+    );
+
+    return await V1WebReportCodService.printSupplierInvoice(payload, filterList, false);
+  }
+
+
   // @Get('transaction/sync')
   // @ResponseSerializerOptions({ disable: true })
   // public async transactionSync() {
