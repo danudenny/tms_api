@@ -31,7 +31,7 @@ export class MonitoringSmdController {
     @Query() queryParams: MonitoringPayloadVm,
     @Response() serverResponse: express.Response,
   ) {
-    return MonitoringSmdServices.exportExcel(serverResponse, queryParams);
+    return MonitoringSmdServices.exportCSV(serverResponse, queryParams);
   }
 
   @Get('smd/export/csv')
