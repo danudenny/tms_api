@@ -215,8 +215,6 @@ export class V1WebCodSupplierInvoiceService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    // NOTE: set filter
-    q.andWhere(e => e.supplierInvoiceStatusId, w => w.equals(41000));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
@@ -257,6 +255,7 @@ export class V1WebCodSupplierInvoiceService {
           {
             supplierInvoiceStatusId: 45000,
             userIdUpdated: authMeta.userId,
+            paidDatetime: timestamp,
             updatedTime: timestamp,
           },
         );
@@ -284,7 +283,8 @@ export class V1WebCodSupplierInvoiceService {
           authMeta.userId,
           timestamp,
         );
-      });
+      }); // end transaction
+
       // response
       const result = new WebCodSupplierInvoicePaidResponseVm();
       result.status = 'ok';
@@ -353,26 +353,6 @@ export class V1WebCodSupplierInvoiceService {
           payload.partnerId,
         );
         if (awbItem) {
-          // #region send to background process with bull async
-          // const firstTransaction = new WebCodFirstTransactionPayloadVm();
-          // firstTransaction.awbItemId = awbItem.awbItemId;
-          // firstTransaction.awbNumber = awbItem.awbNumber;
-          // firstTransaction.codTransactionId = null;
-          // firstTransaction.transactionStatusId = 30000;
-          // firstTransaction.supplierInvoiceStatusId = 41000;
-          // firstTransaction.codSupplierInvoiceId = payload.supplierInvoiceId;
-          // firstTransaction.paymentMethod = awbItem.paymentMethod;
-          // firstTransaction.paymentService = awbItem.paymentService;
-          // firstTransaction.noReference = awbItem.noReference;
-          // firstTransaction.branchId = permissonPayload.branchId;
-          // firstTransaction.userId = authMeta.userId;
-          // firstTransaction.userIdDriver = awbItem.userIdDriver;
-          // CodFirstTransactionQueueService.perform(
-          //   firstTransaction,
-          //   moment().toDate(),
-          // );
-          // #endregion send to background
-
           // Process Transaction Detail
           // manipulation data
           const weightRounded =
@@ -509,6 +489,61 @@ export class V1WebCodSupplierInvoiceService {
 
       // NOTE: error message
       if (errorMessage) { dataError.push(errorMessage); }
+    } // end of loop
+    const result = new WebCodInvoiceRemoveResponseVm();
+    result.status = 'ok';
+    result.message = 'success';
+    result.totalSuccess = totalSuccess;
+    result.dataError = dataError;
+    return result;
+  }
+
+  static async supplierInvoiceVoid(
+    payload: WebCodInvoiceRemoveAwbPayloadVm,
+  ): Promise<WebCodInvoiceRemoveResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timestamp = moment().toDate();
+    const dataError = [];
+    let totalSuccess = 0;
+    // NOTE: loop payload
+    for (const awbNumber of payload.awbNumber) {
+      const transactionDetail = await CodTransactionDetail.findOne({
+        where: {
+          awbNumber,
+          codSupplierInvoiceId: payload.supplierInvoiceId,
+          isVoid: false,
+          isDeleted: false,
+        },
+      });
+
+      if (transactionDetail) {
+        await CodTransactionDetail.update({
+          codTransactionDetailId: transactionDetail.codTransactionDetailId,
+        }, {
+          supplierInvoiceStatusId: null,
+          codSupplierInvoiceId: null,
+          voidNote: payload.voidNote,
+          isVoid: true,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timestamp,
+        });
+        // NOTE: update transaction history for supplier invoice??
+        CodTransactionHistoryQueueService.perform(
+          transactionDetail.awbItemId,
+          transactionDetail.awbNumber,
+          TRANSACTION_STATUS.VOID,
+          permissonPayload.branchId,
+          authMeta.userId,
+          timestamp,
+          true,
+        );
+        totalSuccess += 1;
+      } else {
+        const errorMessage = `Resi ${awbNumber} tidak valid, sudah pernah void resi!`;
+        dataError.push(errorMessage);
+      }
+
     } // end of loop
     const result = new WebCodInvoiceRemoveResponseVm();
     result.status = 'ok';

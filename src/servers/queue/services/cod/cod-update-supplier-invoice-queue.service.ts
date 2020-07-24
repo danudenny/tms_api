@@ -67,7 +67,6 @@ export class CodUpdateSupplierInvoiceQueueService {
       if (supplierInvoiceStatusId == 41000) {
         query = {
             partnerId: data.partnerId,
-            transactionStatusId: 40000,
             codSupplierInvoiceId: null,
         };
         dataUpdate = {
@@ -76,6 +75,7 @@ export class CodUpdateSupplierInvoiceQueueService {
             supplierInvoiceStatusId,
           },
         };
+        console.log(' ####### UPDATE SUPPLIER INVOICE :: ', data.codSupplierInvoiceId);
       } else {
         // 45000 [PAID]
         // query store the search condition

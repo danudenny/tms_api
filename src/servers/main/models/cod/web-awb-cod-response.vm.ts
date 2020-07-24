@@ -76,6 +76,45 @@ export class WebAwbCodListResponseVm extends BaseMetaResponseVm {
   data: WebItemAwbCodResponseVm[];
 }
 
+export class WebItemAwbCodVoidResponseVM {
+  @ApiModelProperty()
+  awbNumber: string;
+  @ApiModelProperty({ format: 'date-time' })
+  manifestedDate: string;
+  @ApiModelProperty({ format: 'date-time' })
+  voidDatetime: string;
+  @ApiModelProperty()
+  consigneeName: string;
+  @ApiModelProperty()
+  packageTypeId: number;
+  @ApiModelProperty()
+  packageTypeCode: string;
+  @ApiModelProperty()
+  codValue: number;
+  @ApiModelProperty()
+  serIdDriver: number;
+  @ApiModelProperty()
+  userIdAdmin: number;
+
+  @ApiModelProperty()
+  adminName: string;
+  @ApiModelProperty()
+  driverName: string;
+  @ApiModelProperty()
+  voidNote: string;
+
+  @ApiModelPropertyOptional({ format: 'date-time' })
+  transferDatetime: string;
+  @ApiModelPropertyOptional()
+  userIdHO: number;
+  @ApiModelPropertyOptional()
+  userHO: string;
+}
+export class WebAwbCodVoidListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebItemAwbCodVoidResponseVM] })
+  data: WebItemAwbCodVoidResponseVM[];
+}
+
 export class WebTransactionBranchDetail {
   @ApiModelProperty()
   transactionId: string;
