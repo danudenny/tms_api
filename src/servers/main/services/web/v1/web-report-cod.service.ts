@@ -60,7 +60,7 @@ export class V1WebReportCodService {
     return filterList;
   }
 
-  //csv file code
+  // csv file code
   static async getCSVConfig(cod = true) {
 
     const csvHeaders: any = cod ? [
@@ -152,7 +152,7 @@ export class V1WebReportCodService {
 
   // private ==================================================================
   static async populateDataCsv(
-    writer, data, cod
+    writer, data, cod,
   ): Promise<boolean> {
     let count = 0;
     // console.log(data);
@@ -163,21 +163,21 @@ export class V1WebReportCodService {
           writer.write([
             this.strReplaceFunc(d.partnerName),
             d.awbDate
-              ? moment(d.awbDate).utc().format('YYYY-MM-DD hh:mm A')
+              ? moment(d.awbDate).format('YYYY-MM-DD')
               : null,
             this.strReplaceFunc(d.awbNumber),
             d.parcelValue,
             d.codFee,
             d.parcelValue,
             d.podDate
-              ? moment(d.podDate).utc().format('YYYY-MM-DD hh:mm A')
+              ? moment(d.podDate).format('YYYY-MM-DD HH:mm')
               : null,
             this.strReplaceFunc(d.consigneeName),
             d.createdTime
-              ? moment(d.createdTime).utc().format('YYYY-MM-DD hh:mm A')
+              ? moment(d.createdTime).format('YYYY-MM-DD HH:mm')
               : null,
-            "DLV",
-            "DLV",
+            'DLV',
+            'DLV',
             this.strReplaceFunc(d.custPackage),
             this.strReplaceFunc(d.pickupSource),
             this.strReplaceFunc(d.currentPosition),
@@ -187,24 +187,24 @@ export class V1WebReportCodService {
             this.strReplaceFunc(d.packageType),
             this.strReplaceFunc(d.parcelNote),
             this.strReplaceFunc(d.paymentService),
-            "", ""
+            '', '',
           ]) : writer.write([
             this.strReplaceFunc(d.partnerName),
             d.awbDate
-              ? moment(d.awbDate).utc().format('YYYY-MM-DD hh:mm A')
+              ? moment(d.awbDate).format('YYYY-MM-DD hh:mm A')
               : null,
             this.strReplaceFunc(d.awbNumber),
             d.parcelValue,
             d.parcelValue,
             d.podDate
-              ? moment(d.podDate).utc().format('YYYY-MM-DD hh:mm A')
+              ? moment(d.podDate).format('YYYY-MM-DD hh:mm A')
               : null,
             this.strReplaceFunc(d.consigneeName),
             d.createdTime
-              ? moment(d.createdTime).utc().format('YYYY-MM-DD hh:mm A')
+              ? moment(d.createdTime).format('YYYY-MM-DD hh:mm A')
               : null,
-            "DLV",
-            "DLV",
+            'DLV',
+            'DLV',
             this.strReplaceFunc(d.custPackage),
             this.strReplaceFunc(d.pickupSource),
             this.strReplaceFunc(d.currentPosition),
@@ -214,7 +214,7 @@ export class V1WebReportCodService {
             this.strReplaceFunc(d.packageType),
             this.strReplaceFunc(d.parcelNote),
             this.strReplaceFunc(d.paymentService),
-            "", ""
+            '', '',
           ]);
         writer.write([
           this.strReplaceFunc(d.partnerName),
@@ -345,8 +345,7 @@ export class V1WebReportCodService {
         throw new Error('Tidak dapat menarik data. Jumlah data yang ditarik lebih dari 1 jt.');
       }
 
-
-      for (var index = 0; index <= totalPaging; index++) {
+      for (let index = 0; index <= totalPaging; index++) {
         await this.populateDataCsv(writer, await datarow.skip(limit * (index)).limit(limit).toArray(), cod);
       }
       writer.end();

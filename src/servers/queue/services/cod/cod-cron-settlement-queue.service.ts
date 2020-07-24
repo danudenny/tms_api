@@ -1,7 +1,5 @@
-import { ConfigService } from '../../../../shared/services/config.service';
 import { QueueBullBoard } from '../queue-bull-board';
 import moment = require('moment');
-import { throwError } from 'rxjs';
 
 // DOC: this sample Cron with bull
 // https://docs.bullmq.io/guide/jobs/repeatable
