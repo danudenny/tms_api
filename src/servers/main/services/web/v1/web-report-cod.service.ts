@@ -20,15 +20,16 @@ export class V1WebReportCodService {
     filters.forEach(filter => {
       if (filter.field == 'periodStart' && filter.value) {
         const summaryDate: string = filter.value;
-        const dStart = DateHelper.resetMomentTime((summaryDate) ? moment(summaryDate) : DateHelper.getCurrentWibMomentTime()).toDate();
+        const dStart = moment(summaryDate).toDate();
         filterStart = dStart;
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
         const finishDate: string = moment(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00');
-        const dEnd = DateHelper.resetMomentTime((finishDate) ? moment(finishDate) : DateHelper.getCurrentWibMomentTime()).toDate();
+        const dEnd = moment(finishDate).toDate();
         filterEnd = dEnd;
       }
+
 
       if (filterStart && filterEnd) {
         const filterJson = {
@@ -56,7 +57,7 @@ export class V1WebReportCodService {
         filterList.push(f);
       }
     });
-
+    console.log(filterList, "filter list");
     return filterList;
   }
 
