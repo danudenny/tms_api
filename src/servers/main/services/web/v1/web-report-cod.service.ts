@@ -63,8 +63,9 @@ export class V1WebReportCodService {
   }
 
   //csv file code
-  static async getCSVConfig() {
-    const csvHeaders: any = [
+  static async getCSVConfig(cod) {
+
+    const csvHeaders: any = cod ? [
       'Partner',
       'Awb Date',
       'Awb',
@@ -86,9 +87,32 @@ export class V1WebReportCodService {
       'Note',
       'Submitted Date',
       'Submitted Number',
-    ];
+    ] : [
+        'Partner',
+        'Awb Date',
+        'Awb',
+        'Package Amount',
+        'Cod Amount',
+        'Amount Transfer',
+        'Pod Datetime',
+        'Recipient',
+        'Status Internal',
+        'Tracking Status',
+        'Cust Package',
+        'Pickup Source',
+        'Current Position',
+        'Destination Code',
+        'Destination',
+        'Package Detail',
+        'Services',
+        'Note',
+        'Submitted Date',
+        'Submitted Number',
+      ];
 
-    const csvConfig = this.prepareCsvFile('COD', csvHeaders);
+    const csvConfig = cod ?
+      this.prepareCsvFile('COD', csvHeaders) :
+      this.prepareCsvFile('COD_nonfee', csvHeaders);
     return csvConfig;
   }
 
@@ -130,42 +154,70 @@ export class V1WebReportCodService {
 
   // private ==================================================================
   static async populateDataCsv(
-    writer, data
+    writer, data, cod
   ): Promise<boolean> {
     let count = 0;
     console.log(data)
     if (data) {
       for (const d of data) {
         // writer.write(d);
-        writer.write([
-          this.strReplaceFunc(d.partnerName),
-          d.awbDate
-            ? moment(d.awbDate).utc().format('YYYY-MM-DD hh:mm A')
-            : null,
-          this.strReplaceFunc(d.awbNumber),
-          d.parcelValue,
-          d.codFee,
-          d.parcelValue,
-          d.podDate
-            ? moment(d.podDate).utc().format('YYYY-MM-DD hh:mm A')
-            : null,
-          this.strReplaceFunc(d.consigneeName),
-          d.createdTime
-            ? moment(d.createdTime).utc().format('YYYY-MM-DD hh:mm A')
-            : null,
-          "DLV",
-          "DLV",
-          this.strReplaceFunc(d.custPackage),
-          this.strReplaceFunc(d.pickupSource),
-          this.strReplaceFunc(d.currentPosition),
-          this.strReplaceFunc(d.destinationCode),
-          this.strReplaceFunc(d.destination),
-          this.strReplaceFunc(d.parcelContent),
-          this.strReplaceFunc(d.packageType),
-          this.strReplaceFunc(d.parcelNote),
-          this.strReplaceFunc(d.paymentService),
-          "", ""
-        ]);
+        cod ?
+          writer.write([
+            this.strReplaceFunc(d.partnerName),
+            d.awbDate
+              ? moment(d.awbDate).utc().format('YYYY-MM-DD hh:mm A')
+              : null,
+            this.strReplaceFunc(d.awbNumber),
+            d.parcelValue,
+            d.codFee,
+            d.parcelValue,
+            d.podDate
+              ? moment(d.podDate).utc().format('YYYY-MM-DD hh:mm A')
+              : null,
+            this.strReplaceFunc(d.consigneeName),
+            d.createdTime
+              ? moment(d.createdTime).utc().format('YYYY-MM-DD hh:mm A')
+              : null,
+            "DLV",
+            "DLV",
+            this.strReplaceFunc(d.custPackage),
+            this.strReplaceFunc(d.pickupSource),
+            this.strReplaceFunc(d.currentPosition),
+            this.strReplaceFunc(d.destinationCode),
+            this.strReplaceFunc(d.destination),
+            this.strReplaceFunc(d.parcelContent),
+            this.strReplaceFunc(d.packageType),
+            this.strReplaceFunc(d.parcelNote),
+            this.strReplaceFunc(d.paymentService),
+            "", ""
+          ]) : writer.write([
+            this.strReplaceFunc(d.partnerName),
+            d.awbDate
+              ? moment(d.awbDate).utc().format('YYYY-MM-DD hh:mm A')
+              : null,
+            this.strReplaceFunc(d.awbNumber),
+            d.parcelValue,
+            d.parcelValue,
+            d.podDate
+              ? moment(d.podDate).utc().format('YYYY-MM-DD hh:mm A')
+              : null,
+            this.strReplaceFunc(d.consigneeName),
+            d.createdTime
+              ? moment(d.createdTime).utc().format('YYYY-MM-DD hh:mm A')
+              : null,
+            "DLV",
+            "DLV",
+            this.strReplaceFunc(d.custPackage),
+            this.strReplaceFunc(d.pickupSource),
+            this.strReplaceFunc(d.currentPosition),
+            this.strReplaceFunc(d.destinationCode),
+            this.strReplaceFunc(d.destination),
+            this.strReplaceFunc(d.parcelContent),
+            this.strReplaceFunc(d.packageType),
+            this.strReplaceFunc(d.parcelNote),
+            this.strReplaceFunc(d.paymentService),
+            "", ""
+          ]);
 
       }
       count += 1
@@ -210,7 +262,7 @@ export class V1WebReportCodService {
 
 
   // main code
-  static async  printSupplierInvoice(payload, filters) {
+  static async  printSupplierInvoice(payload, filters, cod = true) {
     // TODO: query get data
     // step 1 : query get data by filter
     // prepare generate csv
@@ -262,7 +314,7 @@ export class V1WebReportCodService {
       if (!datarow || datarow.length <= 0) {
         return null;
       }
-      const csvConfig = await this.getCSVConfig();
+      const csvConfig = await this.getCSVConfig(cod);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
@@ -278,7 +330,7 @@ export class V1WebReportCodService {
 
 
       for (var index = 0; index <= totalPaging; index++) {
-        await this.populateDataCsv(writer, await datarow.skip(limit * (index)).limit(limit).toArray());
+        await this.populateDataCsv(writer, await datarow.skip(limit * (index)).limit(limit).toArray(), cod);
       }
       writer.end();
 
