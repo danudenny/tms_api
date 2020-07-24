@@ -156,7 +156,7 @@
   dependencies:
     typeorm "^0.2.18"
 
-"@fast-csv/format@4.3.1":
+"@fast-csv/format@4.3.1", "@fast-csv/format@^4.3.1":
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/@fast-csv/format/-/format-4.3.1.tgz#e550731487002e0d1bac13422dd8506cdfd60f50"
   integrity sha512-Ap6KSt0iJlzrivZU4grQzDGGOQ+vN5kvUeOHLF1BE7nWri1auiodgS3SCffvLe1Zvu79tACe1tw3dyBADk1NsA==
@@ -167,7 +167,7 @@
     lodash.isfunction "^3.0.9"
     lodash.isnil "^4.0.0"
 
-"@fast-csv/parse@4.3.1":
+"@fast-csv/parse@4.3.1", "@fast-csv/parse@^4.3.1":
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/@fast-csv/parse/-/parse-4.3.1.tgz#77db0e1dabb4df2946dca6a325ec334a96a06c6d"
   integrity sha512-C73N77St4IHfVmT8Z2mWvLfvLyHWHyvGZVSG5mbhGefkmg9JztoaYpelf8ciqv99JzZ1ModpfuMWLwKEDTRL9A==
@@ -658,9 +658,9 @@
   integrity sha512-DT25xX/YgyPKiHFOpNuANIQIVvYEwCWXgK2jYYwqgaMrYE6+tq+DtmMwlD3drl6DJbUwtlIDnn0d7tIn/EbXBg==
 
 "@types/node@^14.0.1":
-  version "14.0.24"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.0.24.tgz#b0f86f58564fa02a28b68f8b55d4cdec42e3b9d6"
-  integrity sha512-btt/oNOiDWcSuI721MdL8VQGnjsKjlTMdrKyTcLCKeQp/n4AAMFJ961wMbp+09y8WuGPClDEv07RIItdXKIXAA==
+  version "14.0.25"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.0.25.tgz#7ad8b00a1206d6c9e94810e49f3115f0bcc30456"
+  integrity sha512-okMqUHqrMlGOxfDZliX1yFX5MV6qcd5PpRz96XYtjkM0Ws/hwg23FMUqt6pETrVRZS+EKUB5HY19mmo54EuQbA==
 
 "@types/node@^8.10.36":
   version "8.10.54"
@@ -2643,7 +2643,7 @@ faker@^4.1.0:
   resolved "https://registry.yarnpkg.com/faker/-/faker-4.1.0.tgz#1e45bbbecc6774b3c195fad2835109c6d748cc3f"
   integrity sha1-HkW7vsxndLPBlfrSg1EJxtdIzD8=
 
-fast-csv@^4.3.1:
+fast-csv@4.3.1:
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/fast-csv/-/fast-csv-4.3.1.tgz#be7100756e4a168503e7937cb564f37a0aa58ec8"
   integrity sha512-hCvT77K9fEVvR9iKt8OsOwbci/r1BHn8qcVOghjnllkHaKkpzjrc96IcLHC/2jpuPcPrzXpshk/TOqaRQZK8bA==

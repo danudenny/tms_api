@@ -1,7 +1,6 @@
 import { Injectable, Param, PayloadTooLargeException } from '@nestjs/common';
 import moment = require('moment');
 import express = require('express');
-import fastcsv = require('fast-csv');
 import fs = require('fs');
 import xlsx = require('xlsx');
 import { RedisService } from '../../../../shared/services/redis.service';
@@ -230,7 +229,7 @@ export class MonitoringSmdServices {
     res: express.Response,
     data: any,
   ): Promise<any> {
-
+    const fastcsv = require('fast-csv');
     // NOTE: create excel using unique name
     const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.csv';
     try {
