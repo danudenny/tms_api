@@ -293,8 +293,8 @@ export class MonitoringSmdServices {
       .addSelect(`ds.smd_trip`, 'Trip')
       .addSelect(`
       CASE
-        WHEN ds.smd_trip = 'T1' THEN 'DIRECT HUB'
-        WHEN ds.smd_trip = 'T2' THEN 'TRANSIT'
+        WHEN ds.branch_name_to LIKE '%,%' THEN 'TRANSIT'
+        ELSE 'DIRECT HUB'
       END`, 'Rute')
       .addSelect(`ds.branch_name_from`, 'Hub Asal')
       .addSelect(`ds.branch_name_to`, 'Hub Tujuan')
