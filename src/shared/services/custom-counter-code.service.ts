@@ -98,6 +98,12 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
+  public static async bagCityCodeCounter(dateTime: Date, digit: number = 5) {
+    const prefix = `GSK/${moment(dateTime).format('YYMM')}/`;
+    const last_number = await this.getLastNumber(prefix);
+    return prefix + last_number.toString().padStart(digit, '0');
+  }
+
   // get data on DB
   private static async getLastNumber(prefix: string) {
     const timeNow = moment().toDate();
