@@ -25,7 +25,7 @@ import {
   WebCodBankStatementResponseVm, WebCodInvoiceAddResponseVm, WebCodInvoiceDraftResponseVm,
   WebCodInvoiceRemoveResponseVm, WebCodListInvoiceResponseVm,
   WebCodSupplierInvoicePaidResponseVm, WebCodTransactionDetailResponseVm,
-  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm,
+  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm, WebAwbCodVoidListResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import {
@@ -45,6 +45,14 @@ export class V1WebAwbCodController {
   @ApiOkResponse({ type: WebAwbCodListResponseVm })
   public async awb(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.awbCod(payload);
+  }
+
+  @Post('awb/void')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebAwbCodVoidListResponseVm })
+  public async awbVoid(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbCodService.awbVoid(payload);
   }
 
   @Post('transferBranch')
@@ -148,7 +156,7 @@ export class V1WebAwbCodController {
 
   @Post('bankStatement/cancel')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodBankStatementResponseVm })
   public async bankStatementCancel(
     @Body() payload: WebCodBankStatementCancelPayloadVm,
@@ -233,8 +241,7 @@ export class V1WebAwbCodController {
   public async supplierInvoiceVoid(
     @Body() payload: WebCodInvoiceRemoveAwbPayloadVm,
   ) {
-    // TODO: update flag void awb
-    return {};
+    return V1WebCodSupplierInvoiceService.supplierInvoiceVoid(payload);
   }
 
   @Post('supplierInvoice/paid')
@@ -258,16 +265,26 @@ export class V1WebAwbCodController {
   }
   // #endregion SUPPLIER INVOICE
 
+  @Get('supplierInvoice/export/:supplierInvoiceId')
+  @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceExport(
+    @Param('supplierInvoiceId') supplierInvoiceId: string,
+  ) {
+    return V1WebReportCodService.exportSupplierInvoice(supplierInvoiceId);
+  }
+
   @Post('supplierInvoice/print')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
   public async supplierInvoicePrint(@Body() payload: ReportBaseMetaPayloadVm) {
-    const filterList = V1WebReportCodService.filterList(
-      payload.filters,
+    const filterList = V1WebReportCodService.filterList(payload.filters);
+    return await V1WebReportCodService.printSupplierInvoice(
+      payload,
+      filterList,
     );
-
-    return await V1WebReportCodService.printSupplierInvoice(payload, filterList);
   }
+
   @Post('supplierInvoice/noncodfee/print')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
@@ -279,4 +296,11 @@ export class V1WebAwbCodController {
     return await V1WebReportCodService.printSupplierInvoice(payload, filterList, false);
   }
 
+
+  // @Get('transaction/sync')
+  // @ResponseSerializerOptions({ disable: true })
+  // public async transactionSync() {
+  //   await V1WebAwbCodService.syncData();
+  //   return { status: 'ok' };
+  // }
 }

@@ -11,6 +11,7 @@ import { Partner } from './partner';
 import { TransactionStatus } from './transaction-status';
 import { CodSupplierInvoice } from './cod-supplier-invoice';
 import { ColumnNumericTransformer } from './column-numeric-transformer';
+import { User } from './user';
 
 @Entity('cod_transaction_detail', { schema: 'public' })
 export class CodTransactionDetail extends TmsBaseEntity {
@@ -295,4 +296,12 @@ export class CodTransactionDetail extends TmsBaseEntity {
   @ManyToOne(() => Partner)
   @JoinColumn({ name: 'partner_id' })
   partner: Partner;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_updated' })
+  userAdmin: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_driver' })
+  userDriver: User;
 }

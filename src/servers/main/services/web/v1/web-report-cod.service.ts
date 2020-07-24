@@ -1,29 +1,30 @@
-import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import fs = require('fs');
+import * as moment from 'moment';
 import * as path from 'path';
+
+import { DateHelper } from '../../../../../shared/helpers/date-helpers';
+import { BaseMetaPayloadFilterVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AwsS3Service } from '../../../../../shared/services/aws-s3.service';
 import { ConfigService } from '../../../../../shared/services/config.service';
-import * as moment from 'moment';
-import { filter } from 'minimatch';
-import { DateHelper } from '../../../../../shared/helpers/date-helpers';
-import { DatabaseCodConfig } from '../../../config/db.config';
-
+import { MongoDbConfig } from '../../../config/database/mongodb.config';
+import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
+import { BadRequestException } from '@nestjs/common';
 
 export class V1WebReportCodService {
-  //filter code
-  static filterList(filters: import("../../../../../shared/models/base-meta-payload.vm").BaseMetaPayloadFilterVm[]) {
-    let filterList: any = [];
-    let filterStart: Date = null
-    let filterEnd: Date = null
+  // filter code
+  static filterList(filters: BaseMetaPayloadFilterVm[]) {
+    const filterList: any = [];
+    let filterStart: Date = null;
+    let filterEnd: Date = null;
 
     filters.forEach(filter => {
-      if (filter.field == "periodStart" && filter.value) {
+      if (filter.field == 'periodStart' && filter.value) {
         const summaryDate: string = filter.value;
         const dStart = DateHelper.resetMomentTime((summaryDate) ? moment(summaryDate) : DateHelper.getCurrentWibMomentTime()).toDate();
         filterStart = dStart;
       }
 
-      if (filter.field == "periodEnd" && filter.value) {
+      if (filter.field == 'periodEnd' && filter.value) {
         const finishDate: string = moment(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00');
         const dEnd = DateHelper.resetMomentTime((finishDate) ? moment(finishDate) : DateHelper.getCurrentWibMomentTime()).toDate();
         filterEnd = dEnd;
@@ -31,39 +32,36 @@ export class V1WebReportCodService {
 
       if (filterStart && filterEnd) {
         const filterJson = {
-          "awbDate": {
+          awbDate: {
             $gte: filterStart,
             $lt: filterEnd,
-          }
-        }
+          },
+        };
         filterList.push(filterJson);
       }
 
-
-      if (filter.field == "supplier" && filter.value) {
+      if (filter.field == 'supplier' && filter.value) {
         const f = {
-          'codSupplierInvoiceId': { $eq: filter.value.toString() }
+          codSupplierInvoiceId: { $eq: filter.value.toString() },
         };
 
         filterList.push(f);
       }
 
-      if (filter.field == "status" && filter.value) {
+      if (filter.field == 'status' && filter.value) {
         const f = {
-          "transactionStatusId": { $eq: filter.value.toString() }
+          transactionStatusId: { $eq: filter.value.toString() },
         };
 
         filterList.push(f);
       }
     });
 
-
-
-    return filterList
+    return filterList;
   }
 
   //csv file code
-  static async getCSVConfig(cod) {
+  static async getCSVConfig(cod = true) {
 
     const csvHeaders: any = cod ? [
       'Partner',
@@ -116,6 +114,7 @@ export class V1WebReportCodService {
     return csvConfig;
   }
 
+  // TODO: add params for custom name file
   static prepareCsvFile(fn, headers): any {
     const appRoot = require('app-root-path');
     const uuidv1 = require('uuid/v1');
@@ -123,7 +122,7 @@ export class V1WebReportCodService {
     const basePath = path.join(appRoot.path, 'dist/public/temps');
     // NOTE: Test only
     // const fileName = `${fn}.csv`; // moment().format('YYYYMMDD') + '_' + fn + '_' + uuidv1() + '.csv';
-    const filePath = basePath + '\\' + fileName;
+    const filePath = basePath + '/' + fileName;
     const urlPath = 'public/temps/' + fileName;
 
     if (!fs.existsSync(basePath)) {
@@ -151,13 +150,12 @@ export class V1WebReportCodService {
     };
   }
 
-
   // private ==================================================================
   static async populateDataCsv(
     writer, data, cod
   ): Promise<boolean> {
     let count = 0;
-    console.log(data)
+    // console.log(data);
     if (data) {
       for (const d of data) {
         // writer.write(d);
@@ -218,9 +216,38 @@ export class V1WebReportCodService {
             this.strReplaceFunc(d.paymentService),
             "", ""
           ]);
+        writer.write([
+          this.strReplaceFunc(d.partnerName),
+          d.awbDate
+            ? moment(d.awbDate).format('YYYY-MM-DD')
+            : null,
+          this.strReplaceFunc(d.awbNumber),
+          d.parcelValue,
+          d.codValue,
+          d.codFee,
+          d.podDate
+            ? moment(d.podDate).format('YYYY-MM-DD HH:mm')
+            : null,
+          this.strReplaceFunc(d.consigneeName),
+          d.createdTime
+            ? moment(d.createdTime).format('YYYY-MM-DD HH:mm')
+            : null,
+          'DLV',
+          'DLV',
+          this.strReplaceFunc(d.custPackage),
+          this.strReplaceFunc(d.pickupSource),
+          this.strReplaceFunc(d.currentPosition),
+          this.strReplaceFunc(d.destinationCode),
+          this.strReplaceFunc(d.destination),
+          this.strReplaceFunc(d.parcelContent),
+          this.strReplaceFunc(d.packageType),
+          this.strReplaceFunc(d.parcelNote),
+          this.strReplaceFunc(d.paymentService),
+          '', '',
+        ]);
 
       }
-      count += 1
+      count += 1;
     } // end of while
     writer.on('data', chunk => {
       console.log(`Received ${chunk.length} bytes of data.`);
@@ -238,11 +265,8 @@ export class V1WebReportCodService {
   }
 
   static strReplaceFunc = str => {
-    console.log(str, "string")
     return str ? str.replace('\n', ' ').replace(/;/g, '|') : null;
-  };
-
-
+  }
 
   private static deleteFile(filePath) {
     return new Promise(async (resolve, reject) => {
@@ -257,10 +281,6 @@ export class V1WebReportCodService {
     });
   }
 
-
-
-
-
   // main code
   static async  printSupplierInvoice(payload, filters, cod = true) {
     // TODO: query get data
@@ -268,17 +288,15 @@ export class V1WebReportCodService {
     // prepare generate csv
     // ??upload file csv to aws s3
     // retrun file/ link downlod
-    console.log(JSON.stringify({ ...filters }), "filter")
+    console.log(JSON.stringify({ ...filters }), 'filter');
 
-    const db = await DatabaseCodConfig.getSicepatPickupMonitoringMonggoDb();
-
-    const dbMongo = db.collection("transaction_detail");
+    const dbMongo = await MongoDbConfig.getDbSicepatCod('transaction_detail');
 
     try {
       const datarow = await dbMongo.aggregate([
         {
-          "$match": {
-            "$and": filters,
+          $match: {
+            $and: filters,
           },
         },
         {
@@ -305,10 +323,10 @@ export class V1WebReportCodService {
             podDate: 1,
             transactionStatusId: 1,
             userIdCreated: 1,
-            userIdUpdated: 1
-          }
-        }
-      ])
+            userIdUpdated: 1,
+          },
+        },
+      ]);
 
       const dataRowCount = await datarow.toArray();
       if (!datarow || datarow.length <= 0) {
@@ -322,7 +340,6 @@ export class V1WebReportCodService {
 
       const totalPaging = Math.ceil(dataRowCount.length / limit);
 
-
       console.log(totalPaging, 'start writing');
       if (dataRowCount.length > 1048576) {
         throw new Error('Tidak dapat menarik data. Jumlah data yang ditarik lebih dari 1 jt.');
@@ -335,28 +352,69 @@ export class V1WebReportCodService {
       writer.end();
 
       let url = '';
-      const awsKey = `testing/${csvConfig.fileName}`;
+      const awsKey = `reports/testing/${csvConfig.fileName}`;
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
       );
 
       if (storagePath) {
-        // send mail with url path download file
-        // SendGridService.testSendEmail(storagePath);
         url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
-        // this.deleteFile(csvConfig.filePath);
+        this.deleteFile(csvConfig.filePath);
       }
 
-      return { status: "OK", url: url }
+      return { status: 'OK', url };
     } catch (err) {
       console.log(err);
       throw err;
     }
 
-
-
   }
 
+  static async exportSupplierInvoice(id: string) {
+    const dbMongo = await MongoDbConfig.getDbSicepatCod('transaction_detail');
+    const datarow = await dbMongo.find({ codSupplierInvoiceId: id }).toArray();
 
+    const dataRowCount = datarow.length;
+    console.log('## TOTAL DATA :: ', dataRowCount);
+    if (!datarow || datarow.length <= 0) {
+      throw new BadRequestException('Data belum lengkap, coba lagi nanti!');
+    }
+
+    try {
+      const csvConfig = await this.getCSVConfig();
+      const csvWriter = require('csv-write-stream');
+      const writer = csvWriter(csvConfig.config);
+      writer.pipe(
+        fs.createWriteStream(csvConfig.filePath, { flags: 'a' }),
+      );
+
+      // if (dataRowCount > 1048576) {
+      //   throw new Error(
+      //     'Tidak dapat menarik data. Jumlah data yang ditarik lebih dari 1 jt.',
+      //   );
+      // }
+
+      await this.populateDataCsv(writer, datarow, true);
+      writer.end();
+
+      let url = '';
+      const awsKey = `reports/testing/${csvConfig.fileName}`;
+      const storagePath = await AwsS3Service.uploadFromFilePath(
+        csvConfig.filePath,
+        awsKey,
+      );
+
+      if (storagePath) {
+        url = `${ConfigService.get('cloudStorage.cloudUrl')}/${
+          storagePath.awsKey
+          }`;
+        this.deleteFile(csvConfig.filePath);
+      }
+
+      return { status: 'ok', url };
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
+    }
+  }
 }

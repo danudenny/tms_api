@@ -50,7 +50,10 @@ export class CodSyncTransactionQueueService {
           const checkData = await collection.findOne({
             _id: itemTransaction.awbNumber,
           });
+          console.log('##### SYNC MONGO AWB :: ', data.awbNumber);
+
           if (checkData) {
+            console.log('## UPDATE DATA IN MONGO !!!');
             const objUpdate = {
               codTransactionId: itemTransaction.codTransactionId,
               transactionStatusId: itemTransaction.transactionStatusId,
@@ -64,12 +67,15 @@ export class CodSyncTransactionQueueService {
               },
             );
           } else {
+            console.log('## NEW DATA IN MONGO !!!');
             await collection.insertOne({ _id: itemTransaction.awbNumber, ...itemTransaction });
           }
         } catch (error) {
           console.error(error);
           throw error;
         }
+      } else {
+        console.log('##### DATA SYNC AWB NOT FOUND !! ', data.awbNumber);
       }
       return true;
     });
