@@ -67,8 +67,8 @@ export class CodUpdateTransactionQueueService {
         $set: { transactionStatusId: Number(data.transactionStatusId) },
       };
       try {
+        console.log('## Update MongoDb :: ', dataUpdate);
         const updateMongo = await collection.updateMany(query, dataUpdate);
-        console.log('## Update MongoDb :: ', updateMongo);
       } catch (error) {
         console.error(error);
         throw error;

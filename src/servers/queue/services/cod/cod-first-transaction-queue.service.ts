@@ -6,6 +6,7 @@ import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transact
 import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transaction-history';
 import { WebCodFirstTransactionPayloadVm } from '../../../main/models/cod/web-awb-cod-payload.vm';
 import { CodSyncTransactionQueueService } from './cod-sync-transaction-queue.service';
+import { MongoDbConfig } from '../../config/database/mongodb.config';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -58,6 +59,7 @@ export class CodFirstTransactionQueueService {
               updatedTime: data.timestamp,
             },
           );
+
         } else {
           const codDetail = await this.dataTransaction(data.awbItemId);
           if (codDetail) {
@@ -108,10 +110,13 @@ export class CodFirstTransactionQueueService {
               createdTime: data.timestamp,
               updatedTime: data.timestamp,
             });
-            await transactional.insert(
+            const detail = await transactional.save(
               CodTransactionDetail,
               transactionDetail,
             );
+            // sync first data to mongo
+            await this.insertMongo(detail);
+
           } else {
             isValidData = false;
             console.error('## Data COD Transaction :: Not Found !!! :: ', data);
@@ -174,8 +179,7 @@ export class CodFirstTransactionQueueService {
         }
 
       }); // end transaction
-      // sync data to mongodb
-      CodSyncTransactionQueueService.perform(data.awbNumber, data.timestamp);
+
       return true;
     });
 
@@ -289,5 +293,27 @@ export class CodFirstTransactionQueueService {
     qb.andWhere('t1.is_deleted = false');
 
     return await qb.getRawOne();
+  }
+
+  private static async insertMongo(transaction: CodTransactionDetail): Promise<boolean> {
+    // get config mongodb
+    const collection = await MongoDbConfig.getDbSicepatCod('transaction_detail');
+    delete transaction['changedValues'];
+    transaction.userIdCreated = Number(transaction.userIdCreated);
+    transaction.userIdUpdated = Number(transaction.userIdUpdated);
+
+    console.log('## FIRST DATA IN MONGO :: ', transaction.awbNumber);
+    try {
+      await collection.insertOne({
+        _id: transaction.awbNumber,
+        ...transaction,
+      });
+      console.log(' #### Success first insert data mongo');
+      return true;
+
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   }
 }
