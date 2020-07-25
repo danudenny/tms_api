@@ -52,8 +52,23 @@ export class BagCityService {
       return result;
     }
 
+    rawQuery = `
+      SELECT
+        bri.ref_awb_number
+      FROM bag_representative_item bri
+      WHERE
+        bri.ref_awb_number = '${awbNumber}' AND
+        bri.is_deleted = false
+      LIMIT 1;
+      `;
+    const dataCekAwbScan = await RawQueryService.query(rawQuery);
+    if (dataCekAwbScan.length > 0) {
+      result.message = 'Nomor Resi sudah pernah di scan';
+      return result;
+    }
+
     // NOTE : Cek Representative dari Payload dan data AWB yang dimasukkan 
-    if( (payload.representativeId != "") && (payload.representativeId != dataAwb[0].representative_id) ){
+    if( (payload.representativeId != "null") && (payload.representativeId != dataAwb[0].representative_id) ){
       result.message = 'Representative berbeda';
       return result;
     }
@@ -84,7 +99,7 @@ export class BagCityService {
       const total_weight = (Number(dataAwb[0].weight) + Number(dataBagRepresentative[0].total_weight));
       await BagRepresentative.update(bagRepresentativeId, {
         totalWeight: total_weight.toString(),
-        totalItem: (dataBagRepresentative[0].total_item + 1),
+        totalItem: parseInt(dataBagRepresentative[0].total_item)+1,
       });
     }
 
