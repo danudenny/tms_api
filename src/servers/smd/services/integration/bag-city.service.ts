@@ -68,7 +68,7 @@ export class BagCityService {
     }
 
     // NOTE : Cek Representative dari Payload dan data AWB yang dimasukkan 
-    if( (payload.representativeId != "null") && (payload.representativeId != dataAwb[0].representative_id) ){
+    if( (payload.representativeId) && (payload.representativeId != dataAwb[0].representative_id) ){
       result.message = 'Representative berbeda';
       return result;
     }
