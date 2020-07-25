@@ -27,6 +27,16 @@ export class BagCityService {
       return result;
     }
 
+    if (payload.representativeId == "null") {
+      result.message = 'Representative Id tidak valid';
+      return result;
+    }
+
+    if (payload.bagRepresentativeId == "null") {
+      result.message = 'Bag Representative Id tidak valid';
+      return result;
+    }
+
     let bagRepresentativeId = '';
     let bagRepresentativeCode = '';
 
