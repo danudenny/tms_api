@@ -159,13 +159,13 @@ export class MonitoringSmdServices {
     payload.sortDir = body.sortDir ? body.sortDir : 'desc';
     payload.search = body.search ? body.search : '';
 
-    payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
+    // payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
     payload.fieldResolverMap['branch_id'] = 'ds.branch_id';
     payload.fieldResolverMap['departure_date_time'] = 'ds.departure_date_time';
     payload.fieldResolverMap['arrival_date_time'] = 'ds.arrival_date_time';
 
-    payload.fieldFilterManualMap['do_smd_time'] = true;
+    payload.fieldFilterManualMap['departure_date_time'] = true;
     payload.globalSearchFields = [
       {
         field: 'do_smd_code',
@@ -173,15 +173,15 @@ export class MonitoringSmdServices {
       {
         field: 'branch_id',
       },
-      {
-        field: 'departure_date_time',
-      },
+      // {
+      //   field: 'departure_date_time',
+      // },
       {
         field: 'arrival_date_time',
       },
     ];
     if (!payload.sortBy) {
-      payload.sortBy = 'do_smd_time';
+      payload.sortBy = 'departure_date_time';
     }
 
     const q = await this.getQueryExportCSVOnly(payload);
@@ -264,26 +264,6 @@ export class MonitoringSmdServices {
     q.select('ds.do_smd_code', 'Nomor SMD')
       // .addSelect('ds.do_smd_time', 'do_smd_time')
       // .addSelect('ds.branch_id', 'branch_id')
-      /*
-      .select('ds.do_smd_code', 'do_smd_code')
-      .addSelect('ds.do_smd_time', 'do_smd_time')
-      .addSelect('ds.branch_id', 'branch_id')
-      .addSelect('ds.branch_name_from', 'branch_name_from')
-      .addSelect('ds.branch_name_to', 'branch_name_to')
-      .addSelect('ds.vehicle_number', 'vehicle_number')
-      .addSelect('ds.vehicle_name', 'vehicle_name')
-      .addSelect(`ds.seal_number_last`, 'seal_number_last')
-      .addSelect(`ds.trip`, 'trip')
-      .addSelect(`ds.smd_trip`, 'smd_trip')
-      .addSelect('ds.total_weight', 'total_weight')
-      .addSelect('ds.total_colly', 'total_colly')
-      .addSelect('ds.vehicle_capacity', 'vehicle_capacity')
-      .addSelect(`((total_weight / vehicle_capacity::integer) * 100)`, 'percentage_load')
-      .addSelect('ds.departure_date_time', 'departure_date_time')
-      .addSelect('ds.transit_date_time', 'transit_date_time')
-      .addSelect('ds.arrival_date_time', 'arrival_date_time')
-      .addSelect(`ds.employee_driver_name`, 'employee_driver_name')
-      */
       .addSelect('TO_CHAR(ds.departure_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Berangkat')
       .addSelect('TO_CHAR(ds.transit_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Transit')
       .addSelect('TO_CHAR(ds.arrival_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Tiba')
@@ -293,7 +273,7 @@ export class MonitoringSmdServices {
       .addSelect(`ds.smd_trip`, 'Trip')
       .addSelect(`
       CASE
-        WHEN ds.branch_name_to LIKE '%,%' THEN 'TRANSIT'
+        WHEN ds.branch_name_to   LIKE '%,%' THEN 'TRANSIT'
         ELSE 'DIRECT HUB'
       END`, 'Rute')
       .addSelect(`ds.branch_name_from`, 'Hub Asal')
@@ -303,22 +283,21 @@ export class MonitoringSmdServices {
       .addSelect('CONCAT(ds.total_weight::integer, \' KG\')', 'Actual Berat')
       .addSelect(`
       CONCAT(
-        REPLACE(
+        COALESCE(
           REPLACE(
-            CAST(ds.vehicle_capacity AS money)::VARCHAR,
-            '.00',
-            ''
+            REPLACE(CAST(ds.vehicle_capacity AS money)::VARCHAR, '.00', ''), '$', ''
           ),
-          '$',
-          ''
+          '0'
         ),
         ' KG'
       )`, 'Kapasitas')
       .addSelect(`
-      CONCAT(
-        CAST(((total_weight / vehicle_capacity::integer) * 100) AS DECIMAL(18,2)),
-        ' %'
-      )`, 'Load %')
+      CASE
+        WHEN CONCAT(
+          CAST(((total_weight / vehicle_capacity::integer) * 100) AS DECIMAL(18,2)), ' %'
+        ) = ' %' THEN ''
+      END
+      `, 'Load %')
       .from(subQuery => {
         subQuery
           .select('ds.do_smd_code')
