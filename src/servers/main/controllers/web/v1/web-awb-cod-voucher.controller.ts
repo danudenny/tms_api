@@ -12,6 +12,8 @@ import {
     WebCodVoucherSuccessResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodVoucherService } from '../../../services/web/v1/web-awb-cod-voucher.service';
+import { WebCodMigrationTransferPayloadVm, WebCodMigrationTransferBranchResponseVm } from '../../../models/cod/web-awb-cod-migration.vm';
+import { V1WebCodMigrationService } from '../../../services/web/v1/web-cod-migration.service';
 
 // #endregion import
 
@@ -50,31 +52,33 @@ export class V1WebAwbCodVoucherController {
   @HttpCode(HttpStatus.OK)
   @ApiImplicitHeader({ name: 'auth-key' })
   @UseGuards(AuthKeyCodGuard)
-  // @ApiOkResponse({ type: WebCodTransferBranchResponseVm })
-  public async migrationTransaction(@Body() payload: WebCodTransferPayloadVm) {
-    return {}; // V1WebAwbCodService.transferBranch(payload);
+  @ApiOkResponse({ type: WebCodMigrationTransferBranchResponseVm })
+  public async migrationTransaction(
+    @Body() payload: WebCodMigrationTransferPayloadVm,
+  ) {
+    return V1WebCodMigrationService.transferBranch(payload);
   }
 
-  @Post('migration/bankStatement')
-  @HttpCode(HttpStatus.OK)
-  @ApiImplicitHeader({ name: 'auth-key' })
-  @UseGuards(AuthKeyCodGuard)
-  // @ApiOkResponse({ type: WebCodTransferHeadOfficeResponseVm })
-  public async migrationBankStatement(
-    @Body() payload: WebCodTransferHeadOfficePayloadVm,
-  ) {
-    return {}; // V1WebAwbCodService.transferHeadOffice(payload, file);
-  }
+  // @Post('migration/bankStatement')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiImplicitHeader({ name: 'auth-key' })
+  // @UseGuards(AuthKeyCodGuard)
+  // // @ApiOkResponse({ type: WebCodTransferHeadOfficeResponseVm })
+  // public async migrationBankStatement(
+  //   @Body() payload: WebCodTransferHeadOfficePayloadVm,
+  // ) {
+  //   return {}; // V1WebAwbCodService.transferHeadOffice(payload, file);
+  // }
 
-  @Post('migration/supplierInvoice')
-  @HttpCode(HttpStatus.OK)
-  @ApiImplicitHeader({ name: 'auth-key' })
-  @UseGuards(AuthKeyCodGuard)
-  // @ApiOkResponse({ type: WebCodTransferHeadOfficeResponseVm })
-  public async migrationSupplierInvoice(
-    @Body() payload: WebCodTransferHeadOfficePayloadVm,
-  ) {
-    return {}; // V1WebAwbCodService.transferHeadOffice(payload, file);
-  }
+  // @Post('migration/supplierInvoice')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiImplicitHeader({ name: 'auth-key' })
+  // @UseGuards(AuthKeyCodGuard)
+  // // @ApiOkResponse({ type: WebCodTransferHeadOfficeResponseVm })
+  // public async migrationSupplierInvoice(
+  //   @Body() payload: WebCodTransferHeadOfficePayloadVm,
+  // ) {
+  //   return {}; // V1WebAwbCodService.transferHeadOffice(payload, file);
+  // }
   // #endregion migration data
 }
