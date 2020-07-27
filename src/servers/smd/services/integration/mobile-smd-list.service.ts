@@ -51,6 +51,7 @@ export class MobileSmdListService {
     qb.addSelect('b.address', 'address');
     qb.addSelect('dsd.total_bag', 'total_bag');
     qb.addSelect('dsd.total_bagging', 'total_bagging');
+    qb.addSelect('dsd.total_bag_representative', 'total_bag_representative');
     qb.from('do_smd', 'ds');
     qb.innerJoin(
       'do_smd_detail',
@@ -111,6 +112,7 @@ export class MobileSmdListService {
     qb.addSelect('b.address', 'address');
     qb.addSelect('dsd.total_bag', 'total_bag');
     qb.addSelect('dsd.total_bagging', 'total_bagging');
+    qb.addSelect('dsd.total_bag_representative', 'total_bag_representative');
     qb.addSelect(`(
                     SELECT at.url
                     FROM attachment_tms at
@@ -256,6 +258,39 @@ export class MobileSmdListService {
     return await qb.getRawMany();
   }
 
+  public static async getScanOutMobileListDetailBagRepresentative(do_smd_detail_id?: number) {
+
+    const authMeta = AuthService.getAuthData();
+    const paramUserId =  authMeta.userId;
+    const startDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
+    const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
+
+    const qb = createQueryBuilder();
+    qb.addSelect('dsdi.do_smd_detail_id', 'do_smd_detail_id');
+    qb.addSelect('br.bag_representative_id', 'bag_representative_id');
+    qb.addSelect('br.bag_representative_code', 'bag_representative_number');
+    qb.from('do_smd_detail_item', 'dsdi');
+    qb.innerJoin(
+      'do_smd_detail',
+      'dsd',
+      'dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE',
+    );
+    qb.innerJoin(
+      'bag_representative',
+      'br',
+      'dsdi.bag_representative_id = br.bag_representative_id AND br.is_deleted = FALSE',
+    );
+    qb.where(
+      'dsdi.do_smd_detail_id = :do_smd_detail_id',
+      {
+        do_smd_detail_id,
+      },
+    );
+    qb.andWhere('dsdi.bag_type = 2');
+    qb.andWhere('dsdi.is_deleted = false');
+    return await qb.getRawMany();
+  }
+
   public static async getScanOutMobileListHistory(paramStartDate?: Date, paramEndDate?: Date) {
 
     const authMeta = AuthService.getAuthData();
@@ -275,6 +310,7 @@ export class MobileSmdListService {
     qb.addSelect('b.address', 'address');
     qb.addSelect('dsd.total_bag', 'total_bag');
     qb.addSelect('dsd.total_bagging', 'total_bagging');
+    qb.addSelect('dsd.total_representative', 'total_representative');
     qb.from('do_smd', 'ds');
     qb.innerJoin(
       'do_smd_detail',
