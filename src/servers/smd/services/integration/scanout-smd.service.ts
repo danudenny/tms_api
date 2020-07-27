@@ -530,7 +530,7 @@ export class ScanoutSmdService {
         SELECT
           br.bag_representative_id,
           br.bag_representative_code,
-          r.representative_code,
+          r.representative_code
         FROM bag_representative br
         INNER JOIN representative  r on br.representative_id_to = r.representative_id and r.is_deleted  = FALSE
         WHERE
