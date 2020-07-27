@@ -84,6 +84,9 @@ export class ScanOutItemVm {
   bag_item_id: number;
 
   @ApiModelProperty()
+  bag_representative_id: number;
+
+  @ApiModelProperty()
   bag_type: number;
 
   @ApiModelProperty()
@@ -93,10 +96,16 @@ export class ScanOutItemVm {
   bagging_number: string;
 
   @ApiModelProperty()
+  bag_representative_code: string;
+
+  @ApiModelProperty()
   total_bag: number;
 
   @ApiModelProperty()
   total_bagging: number;
+
+  @ApiModelProperty()
+  total_bag_representative: number;
 
 }
 
@@ -160,6 +169,9 @@ export class ScanOutListVm {
 
   @ApiModelProperty()
   total_bagging: number;
+
+  @ApiModelProperty()
+  total_bag_representative: number;
 
   @ApiModelProperty()
   do_smd_status_title: string;

@@ -14,6 +14,9 @@ export class BagCityResponseVm {
   representativeId: string;
 
   @ApiModelProperty()
+  representativeCode: string;
+
+  @ApiModelProperty()
   bagRepresentativeId: string;
 
   @ApiModelProperty()
