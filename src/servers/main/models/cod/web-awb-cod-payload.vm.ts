@@ -2,6 +2,7 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../shared/e
 import { IsAwbNumber } from '../../../../shared/decorators/custom-validation.decorator';
 import { IsDefined } from 'class-validator';
 import { Type } from 'class-transformer';
+import { dateType } from 'aws-sdk/clients/iam';
 
 export class WebCodAwbPayloadVm {
   @ApiModelProperty()
@@ -145,3 +146,23 @@ export class WebCodInvoiceRemoveAwbPayloadVm {
   voidNote: string;
 }
 // #endregion
+
+export class WebCodVoucherPayloadVm {
+  @ApiModelProperty()
+  amountTransfer: number;
+
+  @ApiModelProperty()
+  codVoucherNo: string;
+
+  @ApiModelProperty({format: 'date-time'})
+  codVoucherDate: string;
+
+  @ApiModelProperty({
+    example: ['000726556611', '000726556612'],
+    skipValidation: true,
+  })
+  @IsDefined({message: 'No Resi harus diisi'})
+  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  awbNumbers: string[];
+}
