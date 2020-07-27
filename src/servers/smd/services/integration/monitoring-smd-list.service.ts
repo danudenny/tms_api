@@ -293,9 +293,12 @@ export class MonitoringSmdServices {
       )`, 'Kapasitas')
       .addSelect(`
       CASE
-        WHEN CONCAT(
+        WHEN
+          CAST(((total_weight / vehicle_capacity::integer) * 100) AS DECIMAL(18,2)) IS NULL
+        THEN ''
+        ELSE CONCAT(
           CAST(((total_weight / vehicle_capacity::integer) * 100) AS DECIMAL(18,2)), ' %'
-        ) = ' %' THEN ''
+        )
       END
       `, 'Load %')
       .from(subQuery => {
