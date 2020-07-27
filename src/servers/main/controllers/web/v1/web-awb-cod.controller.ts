@@ -98,7 +98,6 @@ export class V1WebAwbCodController {
   @Post('transferHeadOffice')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
-  @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodTransferHeadOfficeResponseVm })
   public async deliveryOrderCreate(
@@ -295,7 +294,6 @@ export class V1WebAwbCodController {
 
     return await V1WebReportCodService.printSupplierInvoice(payload, filterList, false);
   }
-
 
   // @Get('transaction/sync')
   // @ResponseSerializerOptions({ disable: true })

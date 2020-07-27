@@ -27,7 +27,8 @@ export class CodCronSettlementQueueService {
         await this.logicCron();
         done();
       } catch (error) {
-        throw new Error(error);
+        console.error(error);
+        done(error);
       }
 
     });
@@ -47,7 +48,7 @@ export class CodCronSettlementQueueService {
     // NOTE: sample cron every minute
     this.queue.add(null, {
       repeat: {
-        cron: '*/1 * * * *',
+        cron: '*/10 * * * *',
       },
     });
   }
@@ -55,6 +56,7 @@ export class CodCronSettlementQueueService {
   private static async logicCron() {
     // TODO: this logic cron process
     console.log('## FUNC HERE !!!');
+    // find table transaction where
   }
 
 }
