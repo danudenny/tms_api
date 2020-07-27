@@ -335,6 +335,39 @@ export class ScanOutDetailBaggingVm {
 
 }
 
+export class ScanOutSmdDetailBagRepresentativeResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailBagRepresentativeVm]})
+  data: ScanOutDetailBagRepresentativeVm[];
+}
+
+export class ScanOutDetailBagRepresentativeVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_representative_code: string;
+
+  @ApiModelProperty()
+  total_awb: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}
+
 export class ScanOutDetailMoreResponseVm extends BaseMetaResponseVm {
 
   @ApiModelProperty({ type: () => [ScanOutDetailMoreVm] })
@@ -371,6 +404,30 @@ export class ScanOutDetailBaggingMoreVm {
 
   @ApiModelProperty()
   total_bag: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+}
+
+export class ScanOutDetailBagRepresentativeMoreResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [ScanOutDetailBagRepresentativeMoreVm] })
+  data: ScanOutDetailBagRepresentativeMoreVm[];
+}
+
+export class ScanOutDetailBagRepresentativeMoreVm {
+
+  @ApiModelProperty()
+  bag_representative_code: string;
+
+  @ApiModelProperty()
+  total_awb: string;
 
   @ApiModelProperty()
   weight: string;
