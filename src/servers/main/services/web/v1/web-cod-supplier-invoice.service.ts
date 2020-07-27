@@ -296,6 +296,7 @@ export class V1WebCodSupplierInvoiceService {
     }
   }
 
+  // TODO: refactoring sync data mongo
   static async supplierInvoiceAdd(
     payload: WebCodInvoiceAddAwbPayloadVm,
   ): Promise<WebCodInvoiceAddResponseVm> {
@@ -404,9 +405,11 @@ export class V1WebCodSupplierInvoiceService {
             createdTime: timestamp,
             updatedTime: timestamp,
           });
-          await CodTransactionDetail.insert(
+
+          await CodTransactionDetail.save(
             transactionDetail,
           );
+
           // supplier invoice status
           const historyInvoice = CodTransactionHistory.create({
             awbItemId: awbItem.awbItemId,
@@ -420,11 +423,13 @@ export class V1WebCodSupplierInvoiceService {
             updatedTime: timestamp,
           });
           await CodTransactionHistory.insert(historyInvoice);
-          // sync data to mongodb
+
+          // NOTE: sync new data from invoice to mongodb
           CodSyncTransactionQueueService.perform(
             awbItem.awbNumber,
             timestamp,
           );
+
           totalSuccess += 1;
           totalCodValue += Number(awbItem.codValue);
         } else {
@@ -610,6 +615,7 @@ export class V1WebCodSupplierInvoiceService {
 
     return result;
   }
+
   // private =======================================================
   private static async getSupplierInvoice(
     supplierInvoiceId: string,
