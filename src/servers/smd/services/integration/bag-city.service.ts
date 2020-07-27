@@ -46,6 +46,7 @@ export class BagCityService {
         a.awb_id,
         a.ref_awb_number,
         r.representative_id,
+        r.representative_code,
         a.total_weight_rounded as weight,
         ai.awb_item_id
       FROM awb a
@@ -147,6 +148,7 @@ export class BagCityService {
     result.status = 'success';
     result.awbNumber = awbNumber;
     result.representativeId = dataAwb[0].representative_id;
+    result.representativeCode = dataAwb[0].representative_code;
     result.bagRepresentativeId = bagRepresentativeId;
     result.bagRepresentativeCode = bagRepresentativeCode;
     result.message = 'Scan gabung paket Kota berhasil';
