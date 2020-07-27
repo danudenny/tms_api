@@ -74,7 +74,7 @@ export class MonitoringSmdServices {
       .addSelect('ds.total_weight', 'total_weight')
       .addSelect('ds.total_colly', 'total_colly')
       .addSelect('ds.vehicle_capacity', 'vehicle_capacity')
-      .addSelect(`((total_weight / vehicle_capacity::integer) * 100)`, 'percentage_load')
+      .addSelect(`COALESCE((total_weight / vehicle_capacity::integer) * 100, 0.00)`, 'percentage_load')
       .addSelect('ds.departure_date_time', 'departure_date_time')
       .addSelect('ds.transit_date_time', 'transit_date_time')
       .addSelect('ds.arrival_date_time', 'arrival_date_time')
@@ -292,14 +292,13 @@ export class MonitoringSmdServices {
         ' KG'
       )`, 'Kapasitas')
       .addSelect(`
-      CASE
-        WHEN
-          CAST(((total_weight / vehicle_capacity::integer) * 100) AS DECIMAL(18,2)) IS NULL
-        THEN ''
-        ELSE CONCAT(
-          CAST(((total_weight / vehicle_capacity::integer) * 100) AS DECIMAL(18,2)), ' %'
-        )
-      END
+      CONCAT(
+        COALESCE(
+          CAST(((total_weight / vehicle_capacity::integer) * 100) AS DECIMAL(18,2)),
+          0.00
+        ),
+        ' %'
+      )
       `, 'Load %')
       .from(subQuery => {
         subQuery
