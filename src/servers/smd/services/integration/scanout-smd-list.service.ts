@@ -10,7 +10,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutDetailMoreResponseVm, ScanOutDetailBaggingMoreResponseVm, ScanOutSmdDetailRepresentativeResponseVm, ScanOutSmdImageResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutDetailMoreResponseVm, ScanOutDetailBaggingMoreResponseVm, ScanOutSmdDetailRepresentativeResponseVm, ScanOutSmdImageResponseVm, ScanOutSmdDetailBagRepresentativeResponseVm, ScanOutDetailBagRepresentativeMoreResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -413,6 +413,69 @@ export class ScanoutSmdListService {
     // }
   }
 
+  static async findScanOutDetailBagRepresentative(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdDetailBagRepresentativeResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+
+    if (payload.bag_type == 2) {
+
+      const resultDoSmdDetail = await DoSmdDetail.findOne({
+        where: {
+          doSmdDetailId: payload.do_smd_detail_id,
+          isDeleted: false,
+        },
+      });
+      if (resultDoSmdDetail ) {
+        // for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+        const rawQuery = `
+          SELECT
+            br.bag_representative_id,
+            br.bag_representative_code,
+            br.total_item
+            CONCAT(br.total_weight::numeric(10,2), ' Kg') AS total_weight,
+            r.representative_code,
+            br.branch_name
+          FROM do_smd_detail_item dsdi
+          INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
+          INNER JOIN bag_representative br ON dsdi.bag_representative_id = br.bag_representative_id AND br.is_deleted = FALSE
+          LEFT JOIN branch b ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
+          LEFT JOIN representative r ON br.representative_id_to = r.representative_id  AND r.is_deleted = FALSE
+          WHERE
+            dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
+            dsdi.bag_type = 2 AND
+            dsdi.is_deleted = FALSE
+          LIMIT 5;
+        `;
+        const resultDataBagRepresentative = await RawQueryService.query(rawQuery);
+        if (resultDataBagRepresentative.length > 0 ) {
+          for (let a = 0; a < resultDataBagRepresentative.length; a++) {
+            data.push({
+              do_smd_detail_id: payload.do_smd_detail_id,
+              bag_representative_code: resultDataBagRepresentative[a].bag_representative_code,
+              total_awb: resultDataBagRepresentative[a].total_item,
+              weight: resultDataBagRepresentative[a].total_weight,
+              representative_code: resultDataBagRepresentative[a].representative_code,
+              branch_name: resultDataBagRepresentative[a].branch_name,
+            });
+          }
+        }
+      // }
+        result.statusCode = HttpStatus.OK;
+        result.message = 'List Bag Representative Success';
+        result.data = data;
+        return result;
+      } else {
+        throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Detail Can't Found !`);
+      }
+    } else {
+      throw new BadRequestException(`This API For Detail Bag Representative Only`);
+    }
+  }
+
   static async findScanOutDetailMore(
     payload: BaseMetaPayloadVm,
   ): Promise<ScanOutDetailMoreResponseVm> {
@@ -531,6 +594,64 @@ export class ScanoutSmdListService {
     const data = await q.getRawMany();
 
     const result = new ScanOutDetailBaggingMoreResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findScanOutDetailBagRepresentativeMore(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutDetailBagRepresentativeMoreResponseVm> {
+
+    payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.do_smd_detail_id';
+
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_detail_id',
+      },
+    ];
+    const repo = new OrionRepositoryService(DoSmdDetailItem, 'dsdi');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['dsdi.do_smd_detail_id', 'do_smd_detail_id'],
+      ['br.bag_representative_id', 'bag_representative_id'],
+      [`br.bag_representative_code`, 'bag_representative_code'],
+      [`br.total_item`, 'total_awb'],
+      [`CONCAT(br.total_weight::numeric(10,2), ' Kg')`, 'weight'],
+      ['r.representative_code', 'representative_code'],
+      ['br.branch_name', 'branch_name'],
+    );
+
+    q.innerJoinRaw(
+      'do_smd_detail',
+      'dsd',
+      'dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE',
+    );
+    q.innerJoinRaw(
+      'bag_representative',
+      'br',
+      'dsdi.bag_representative_id = br.bag_representative_id AND br.is_deleted = FALSE',
+    );
+    q.leftJoinRaw(
+      'representative',
+      'r',
+      'br.representative_id_to = r.representative_id AND r.is_deleted = FALSE',
+    );
+    q.leftJoinRaw(
+      'branch',
+      'br',
+      'dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE',
+    );
+    q.andWhereRaw(`dsdi.bag_type = 2`);
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new ScanOutDetailBagRepresentativeMoreResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
