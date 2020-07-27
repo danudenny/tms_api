@@ -64,6 +64,7 @@ export class ScaninSmdListService {
       ['bt.branch_name', 'branch_to_name'],
       ['dsd.total_bag', 'total_bag'],
       ['dsd.total_bagging', 'total_bagging'],
+      ['dsd.total_bag_representative', 'total_bag_representative'],
       ['dss.do_smd_status_title', 'do_smd_status_title'],
     );
 

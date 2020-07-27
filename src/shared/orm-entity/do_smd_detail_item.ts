@@ -64,6 +64,12 @@ export class DoSmdDetailItem extends TmsBaseEntity {
 
   @Column('bigint', {
     nullable: true,
+    name: 'bag_representative_id',
+  })
+  bagRepresentativeId: number | null;
+
+  @Column('bigint', {
+    nullable: true,
     default: () => 0,
     name: 'bag_type',
   })
