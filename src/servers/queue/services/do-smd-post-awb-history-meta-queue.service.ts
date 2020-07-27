@@ -6,6 +6,7 @@ import { AwbHistory } from '../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
+import { SharedService } from '../../../shared/services/shared.service';
 
 export class DoSmdPostAwbHistoryMetaQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-history-post-meta', {
@@ -135,7 +136,7 @@ export class DoSmdPostAwbHistoryMetaQueueService {
     branchNameNext: string,
     addTime?: number,
   ) {
-    // TODO: IN_HUB AND OUT_HUB
+    // TODO: OUT_HUB
     const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver} ke ${branchNameNext}`;
     const notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
     // provide data
@@ -154,6 +155,41 @@ export class DoSmdPostAwbHistoryMetaQueueService {
       branchIdNext,
     };
 
+    return DoSmdPostAwbHistoryMetaQueueService.queue.add(obj);
+  }
+
+  public static async createJobByScanDoSmd(
+    awbItemId: number,
+    branchId: number,
+    userId: number,
+    awbStatusId: number,
+  ) {
+    // TODO: ONLY IN_HUB
+    let branchName = 'Kantor Pusat';
+    let cityName = 'Jakarta';
+    const branch = await SharedService.getDataBranchCity(branchId);
+    if (branch) {
+      branchName = branch.branchName;
+      cityName = branch.district ? branch.district.city.cityName : '';
+    }
+    const noteInternal = `Paket telah di terima di ${cityName} [${branchName}]`;
+    const notePublic = `Paket telah di terima di ${cityName} [${branchName}]`;
+
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver: null,
+      timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
+      branchIdNext: null,
+    };
     return DoSmdPostAwbHistoryMetaQueueService.queue.add(obj);
   }
 }

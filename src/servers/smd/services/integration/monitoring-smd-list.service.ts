@@ -146,7 +146,8 @@ export class MonitoringSmdServices {
       }, 'ds');
     return q;
   }
-  static async exportExcel(
+
+  static async exportCSV(
     res: express.Response,
     queryParams: MonitoringPayloadVm,
   ): Promise<any> {
@@ -161,6 +162,9 @@ export class MonitoringSmdServices {
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
     payload.fieldResolverMap['branch_id'] = 'ds.branch_id';
+    payload.fieldResolverMap['departure_date_time'] = 'ds.departure_date_time';
+    payload.fieldResolverMap['arrival_date_time'] = 'ds.arrival_date_time';
+
     payload.fieldFilterManualMap['do_smd_time'] = true;
     payload.globalSearchFields = [
       {
@@ -169,101 +173,23 @@ export class MonitoringSmdServices {
       {
         field: 'branch_id',
       },
+      {
+        field: 'departure_date_time',
+      },
+      {
+        field: 'arrival_date_time',
+      },
     ];
     if (!payload.sortBy) {
       payload.sortBy = 'do_smd_time';
     }
 
-    const q = await this.getQuery(payload);
+    const q = await this.getQueryExportCSVOnly(payload);
 
     const data = await q.getRawMany();
-    await this.getExcel(res, data);
+    await this.getCSV(res, data);
   }
 
-  static async getExcel(
-    res: express.Response,
-    data: any,
-  ): Promise<any> {
-    const rows = [];
-    const result = [];
-    const maxRowPerSheet = 65000;
-    let idx = 1;
-    // tslint:disable-next-line: no-shadowed-variable
-    let multiply = 1;
-
-    // handle multiple sheet for large data
-    if (data.length > maxRowPerSheet) {
-      do {
-        const slicedData = data.slice(idx, maxRowPerSheet * multiply);
-        result.push(slicedData);
-        idx = multiply * slicedData + 1;
-        multiply++;
-      }
-      while (data.length > maxRowPerSheet * multiply);
-    } else {
-      result.push(data);
-    }
-
-    // mapping data to row excel
-    result.map(function(item, index) {
-      rows[index] = [];
-      item.map(function(detail) {
-        const content = {};
-        content['Nomor_SMD'] = detail.do_smd_code;
-        content['Tanggal'] = detail.do_smd_time ?
-          moment(detail.do_smd_time).format('DD MMM YYYY HH:mm') :
-          null;
-        content['Rute'] = detail.route;
-        content['Nomor_Mobil'] = detail.vehicle_number;
-        content['Type_Truck'] = detail.vehicle_name;
-        content['Trip'] = detail.trip;
-        content['Actual_Berat'] = detail.total_weight ?
-          Number(detail.total_weight).toFixed(0) + ' KG' :
-          null;
-        content['Kapasitas'] = detail.vehicle_capacity ?
-          detail.vehicle_capacity + ' KG' :
-          null;
-        content['Load'] = detail.percentage_load ?
-          Number(detail.percentage_load).toFixed(2) + ' %' :
-          null;
-        rows[index].push(content);
-      });
-    });
-
-    // NOTE: create excel using unique name
-    const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.xlsx';
-    try {
-      // NOTE: create now workbok for storing excel rows
-      // response passed through express response
-      const newWB = xlsx.utils.book_new();
-      rows.map((detail, index) => {
-        const newWS = xlsx.utils.json_to_sheet(detail);
-        xlsx.utils.book_append_sheet(newWB, newWS, (result.length > 1 ?
-          `${moment().format('YYYY-MM-DD')}(${index + 1})` :
-          moment().format('YYYY-MM-DD')));
-      });
-      xlsx.writeFile(newWB, fileName);
-
-      const filestream = fs.createReadStream(fileName);
-      const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-
-      res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
-      res.setHeader('Content-type', mimeType);
-      filestream.pipe(res);
-    } catch (error) {
-      RequestErrorService.throwObj(
-        {
-          message: 'error ketika download excel Monitoring SMD',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    } finally {
-      // Delete temporary saved-file in server
-      if (fs.existsSync(fileName)) {
-        fs.unlinkSync(fileName);
-      }
-    }
-  }
   static async retrieveGenericData<T = any>(
     identifier: string | number,
   ) {
@@ -297,5 +223,167 @@ export class MonitoringSmdServices {
     return {
       id: identifier,
     };
+  }
+
+  static async getCSV(
+    res: express.Response,
+    data: any,
+  ): Promise<any> {
+    const fastcsv = require('fast-csv');
+    // NOTE: create excel using unique name
+    const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.csv';
+    try {
+      const ws = fs.createWriteStream(fileName);
+      fastcsv.write(data, {headers: true}).pipe(ws);
+
+      const filestream = fs.createReadStream(fileName);
+      const mimeType = 'application/vnd.ms-excel';
+
+      res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
+      res.setHeader('Content-type', mimeType);
+      filestream.pipe(res);
+    } catch (error) {
+      RequestErrorService.throwObj(
+        {
+          message: 'error ketika download excel Monitoring SMD',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    } finally {
+      // Delete temporary saved-file in server
+      if (fs.existsSync(fileName)) {
+        fs.unlinkSync(fileName);
+      }
+    }
+  }
+
+  static async getQueryExportCSVOnly(
+    payload: BaseMetaPayloadVm,
+  ): Promise<any> {
+    const q = payload.buildQueryBuilder();
+    q.select('ds.do_smd_code', 'Nomor SMD')
+      // .addSelect('ds.do_smd_time', 'do_smd_time')
+      // .addSelect('ds.branch_id', 'branch_id')
+      /*
+      .select('ds.do_smd_code', 'do_smd_code')
+      .addSelect('ds.do_smd_time', 'do_smd_time')
+      .addSelect('ds.branch_id', 'branch_id')
+      .addSelect('ds.branch_name_from', 'branch_name_from')
+      .addSelect('ds.branch_name_to', 'branch_name_to')
+      .addSelect('ds.vehicle_number', 'vehicle_number')
+      .addSelect('ds.vehicle_name', 'vehicle_name')
+      .addSelect(`ds.seal_number_last`, 'seal_number_last')
+      .addSelect(`ds.trip`, 'trip')
+      .addSelect(`ds.smd_trip`, 'smd_trip')
+      .addSelect('ds.total_weight', 'total_weight')
+      .addSelect('ds.total_colly', 'total_colly')
+      .addSelect('ds.vehicle_capacity', 'vehicle_capacity')
+      .addSelect(`((total_weight / vehicle_capacity::integer) * 100)`, 'percentage_load')
+      .addSelect('ds.departure_date_time', 'departure_date_time')
+      .addSelect('ds.transit_date_time', 'transit_date_time')
+      .addSelect('ds.arrival_date_time', 'arrival_date_time')
+      .addSelect(`ds.employee_driver_name`, 'employee_driver_name')
+      */
+      .addSelect('TO_CHAR(ds.departure_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Berangkat')
+      .addSelect('TO_CHAR(ds.transit_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Transit')
+      .addSelect('TO_CHAR(ds.arrival_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Tiba')
+      .addSelect('ds.vehicle_number', 'Nomor Polisi')
+      .addSelect('ds.vehicle_name', 'Type Kendaraan')
+      .addSelect(`ds.employee_driver_name`, 'Nama Driver')
+      .addSelect(`ds.smd_trip`, 'Trip')
+      .addSelect(`
+      CASE
+        WHEN ds.branch_name_to LIKE '%,%' THEN 'TRANSIT'
+        ELSE 'DIRECT HUB'
+      END`, 'Rute')
+      .addSelect(`ds.branch_name_from`, 'Hub Asal')
+      .addSelect(`ds.branch_name_to`, 'Hub Tujuan')
+      .addSelect(`ds.seal_number_last`, 'Nomor Segel')
+      .addSelect('ds.total_colly', 'Total Colly')
+      .addSelect('CONCAT(ds.total_weight::integer, \' KG\')', 'Actual Berat')
+      .addSelect(`
+      CONCAT(
+        REPLACE(
+          REPLACE(
+            CAST(ds.vehicle_capacity AS money)::VARCHAR,
+            '.00',
+            ''
+          ),
+          '$',
+          ''
+        ),
+        ' KG'
+      )`, 'Kapasitas')
+      .addSelect(`
+      CONCAT(
+        CAST(((total_weight / vehicle_capacity::integer) * 100) AS DECIMAL(18,2)),
+        ' %'
+      )`, 'Load %')
+      .from(subQuery => {
+        subQuery
+          .select('ds.do_smd_code')
+          .addSelect(`ds.do_smd_time`, 'do_smd_time')
+          .addSelect(`bf.branch_id`, 'branch_id')
+          .addSelect(`bf.branch_name`, 'branch_name_from')
+          .addSelect(`ds.branch_to_name_list`, 'branch_name_to')
+          .addSelect(`dsv.vehicle_number`, 'vehicle_number')
+          .addSelect(`v.vehicle_name`, 'vehicle_name')
+          .addSelect(`ds.seal_number_last`, 'seal_number_last')
+          .addSelect(`ds.trip`, 'trip')
+          .addSelect(`'T' || ds.counter_trip`, 'smd_trip')
+          .addSelect(`e.fullname`, 'employee_driver_name')
+          .addSelect(`(
+                      select
+                        sum(bi.weight)
+                      from do_smd_detail dsd
+                      inner join do_smd_detail_item dsdi on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsdi.is_deleted =false
+                      left join bag_item bi on dsdi.bag_item_id = bi.bag_item_id and bi.is_deleted = false
+                      where
+                        dsd.do_smd_id = ds.do_smd_id
+                      group by
+                        dsd.do_smd_id
+                    )`, 'total_weight')
+          .addSelect(`(
+                      select
+                        sum(dsd.total_bagging + dsd.total_bag)
+                      from do_smd_detail dsd
+                      where
+                        dsd.do_smd_id = ds.do_smd_id
+                      group by
+                        dsd.do_smd_id
+                    )`, 'total_colly')
+          .addSelect(`v.vehicle_capacity`, 'vehicle_capacity')
+          .addSelect(`ds.departure_date_time`, 'departure_date_time')
+          .addSelect(`ds.transit_date_time`, 'transit_date_time')
+          .addSelect(`ds.arrival_date_time`, 'arrival_date_time')
+          .from('do_smd', 'ds')
+          .innerJoin(
+            'do_smd_vehicle',
+            'dsv',
+            'ds.vehicle_id_last = dsv.do_smd_vehicle_id and dsv.is_deleted = false ',
+          )
+          .leftJoin(
+            'branch',
+            'bf',
+            'ds.branch_id = bf.branch_id and bf.is_deleted = false',
+          )
+          .leftJoin(
+            'vehicle',
+            'v',
+            'dsv.vehicle_number = v.vehicle_number and v.is_deleted = false ',
+          )
+          .leftJoin(
+            'employee',
+            'e',
+            'dsv.employee_id_driver = e.employee_id and e.is_deleted = false',
+          );
+
+        payload.applyFiltersToQueryBuilder(subQuery, ['departure_date_time']);
+
+        subQuery
+          .andWhere('ds.is_deleted = false');
+        return subQuery;
+      }, 'ds');
+    return q;
   }
 }

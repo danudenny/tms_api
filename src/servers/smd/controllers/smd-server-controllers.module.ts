@@ -14,6 +14,9 @@ import {MasterDataController} from './integration/masterdata.controller';
 import {SmdPrintController} from './integration/print-smd.controller';
 import { VehicleSmdController } from './integration/vehicle-smd.controller';
 import { MonitoringSmdController } from './integration/smd-monitoring.controller';
+import { ScanOutExportController } from './integration/scanout-export.controller';
+import { AwbFilterSmdController } from './integration/awb-filter-smd.controller';
+import { BagCityController } from './integration/bag-city.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
@@ -30,6 +33,9 @@ import { MonitoringSmdController } from './integration/smd-monitoring.controller
     SmdPrintController,
     VehicleSmdController,
     MonitoringSmdController,
+    ScanOutExportController,
+    AwbFilterSmdController,
+    BagCityController,
   ],
 })
 export class SmdServerControllersModule {}
