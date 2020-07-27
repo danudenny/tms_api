@@ -9,7 +9,7 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { MobileSmdListService } from '../../services/integration/mobile-smd-list.service';
-import { MobileSmdListVm, MobileSmdListDetailBagVm, MobileSmdListDetailBaggingVm } from '../../models/mobile-smd-list.response.vm';
+import { MobileSmdListVm, MobileSmdListDetailBagVm, MobileSmdListDetailBaggingVm, MobileSmdListDetailBagRepresentativeVm } from '../../models/mobile-smd-list.response.vm';
 import { MobileSmdListDetailPayloadVm, MobileSmdListHistoryPayloadVm } from '../../models/mobile-smd.payload.vm';
 
 @ApiUseTags('Mobile SMD')
@@ -60,6 +60,18 @@ export class MobileSmdListController {
   @ApiOkResponse({ type: MobileSmdListDetailBaggingVm })
   public async getScanOutMobileListDetailBagging(@Body() payload: MobileSmdListDetailPayloadVm) {
     return MobileSmdListService.getScanOutMobileListDetailBagging(
+      payload.do_smd_detail_id,
+    );
+  }
+
+  @Post('smd/list/detailBagRepresentative')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  @ApiOkResponse({ type: MobileSmdListDetailBagRepresentativeVm })
+  public async getScanOutMobileListDetailBagRepresentative(@Body() payload: MobileSmdListDetailPayloadVm) {
+    return MobileSmdListService.getScanOutMobileListDetailBagRepresentative(
       payload.do_smd_detail_id,
     );
   }
