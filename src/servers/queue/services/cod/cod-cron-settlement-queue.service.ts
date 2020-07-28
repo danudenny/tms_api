@@ -1,10 +1,10 @@
 import { QueueBullBoard } from '../queue-bull-board';
 import moment = require('moment');
-import { CodBankStatement } from 'src/shared/orm-entity/cod-bank-statement';
-import { CodVoucherDetail } from 'src/shared/orm-entity/cod-voucher-detail';
-import { CodTransactionDetail } from 'src/shared/orm-entity/cod-transaction-detail';
-import { CodTransaction } from 'src/shared/orm-entity/cod-transaction';
-import { CustomCounterCode } from 'src/shared/services/custom-counter-code.service';
+import { CodBankStatement } from '../../../../shared/orm-entity/cod-bank-statement';
+import { CodVoucherDetail } from '../../../../shared/orm-entity/cod-voucher-detail';
+import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transaction-detail';
+import { CodTransaction } from '../../../../shared/orm-entity/cod-transaction';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { getManager } from 'typeorm';
 
 // DOC: this sample Cron with bull

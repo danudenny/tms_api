@@ -16,7 +16,7 @@ import {
 
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
-import { CustomCounterCode } from 'src/shared/services/custom-counter-code.service';
+import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 
 // #endregion
 export class V1WebAwbCodVoucherService {
