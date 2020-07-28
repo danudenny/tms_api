@@ -1,8 +1,7 @@
 // #region import
-import { createQueryBuilder, getManager, Not } from 'typeorm';
+import { getManager } from 'typeorm';
 
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
-import { Branch } from '../../../../../shared/orm-entity/branch';
 import { CodBankStatement } from '../../../../../shared/orm-entity/cod-bank-statement';
 import { CodTransaction } from '../../../../../shared/orm-entity/cod-transaction';
 import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-transaction-detail';
@@ -16,6 +15,8 @@ import {
 } from '../../../models/cod/web-awb-cod-response.vm';
 
 import moment = require('moment');
+import { BadRequestException } from '@nestjs/common';
+import { CustomCounterCode } from 'src/shared/services/custom-counter-code.service';
 
 // #endregion
 export class V1WebAwbCodVoucherService {
@@ -36,8 +37,12 @@ export class V1WebAwbCodVoucherService {
       }) 
     }
 
-    return {
-      data
+    if (data.length) {
+      const result = {};
+      result['data'] = data;
+      return result;
+    } else {
+      throw new BadRequestException('Data tidak ditemukan!');
     }
   }
 
@@ -52,6 +57,7 @@ export class V1WebAwbCodVoucherService {
     let amountTransfer = 0;
     let codVoucherNo = '';
     let codVoucherDate = timeNow.toISOString();
+    let codVoucherId = '';
     let awbNumbers = [];
     let countDuplicatedAwbNumbers = 0;
 
@@ -90,7 +96,6 @@ export class V1WebAwbCodVoucherService {
       dataError.push('awbNumbers is required and not empty array.');
     }
 
-    let codVoucherId = '';
     const voucher = await CodVoucher.findOne({
       where: {
         codVoucherNo: codVoucherNo,
@@ -153,10 +158,49 @@ export class V1WebAwbCodVoucherService {
         const awbDuplicated = await this.isAwbDuplicatedInVoucher(awbNumber);
         if (!awbDuplicated) {
           let isSettlement = false;
-          const transactionExist = await this.isTransactionExistByAwbNumber(awbNumber);
-          if (transactionExist) {
-            isSettlement = true;
-            // TODO: CREATE BANK STATEMENT IF TRANSACTION IS EXISTS
+          const transaction = await this.getTransactionByAwbNumber(awbNumber);
+          if (transaction) {
+            const randomCode = await CustomCounterCode.bankStatement(
+              timeNow,
+            );
+    
+            await getManager().transaction(async transactionManager => {
+              try {
+                // Create Bank Statement
+                const bankStatement = new CodBankStatement();
+                bankStatement.bankStatementCode = randomCode;
+                bankStatement.bankStatementDate = timeNow;
+                bankStatement.transactionStatusId = 35000;
+                bankStatement.totalCodValue = transaction.totalCodValue;
+                bankStatement.totalTransaction = 1;
+                bankStatement.totalAwb = transaction.totalAwb;
+                bankStatement.bankBranchId = 5;
+                bankStatement.bankAccount = 'BCA/000000012435251';
+                bankStatement.branchId = transaction.branchId;
+                bankStatement.transferDatetime = timeNow;
+                bankStatement.userIdTransfer = transaction.userIdCreated;
+                bankStatement.userIdCreated = transaction.userIdCreated;
+                bankStatement.userIdUpdated = transaction.userIdCreated;
+                await transactionManager.save(CodBankStatement, bankStatement);
+
+                isSettlement = true;
+    
+                // Update Cod Bank Statement Id on its Cod Transaction
+                await transactionManager.update(
+                  CodTransaction,
+                  {
+                    codTransactionId: transaction.codTransactionId,
+                  },
+                  {
+                    codBankStatementId: bankStatement.codBankStatementId,
+                    userIdUpdated: transaction.userIdCreated,
+                    updatedTime: timeNow
+                  },
+                );
+              } catch (error) {
+                console.log(error);
+              }
+            });
           }
 
           const paramsVoucherDetail = {
@@ -179,7 +223,7 @@ export class V1WebAwbCodVoucherService {
   }
 
   private static async isAwbDuplicatedInVoucher(awbNumber: number): Promise<boolean> {
-    // check awb status mush valid dlv
+    // check awb is not duplicated
     const awbDuplicated = await CodVoucherDetail.findOne({
       select: ['awbNumber'],
       where: {
@@ -210,20 +254,33 @@ export class V1WebAwbCodVoucherService {
     }
   }
 
-  private static async isTransactionExistByAwbNumber(awbNumber: number): Promise<boolean> {
-    // check awb status mush valid dlv
-    const transactionExist = await CodTransactionDetail.findOne({
-      select: ['awbNumber'],
+  private static async getTransactionByAwbNumber(awbNumber: string): Promise<CodTransaction | null> {
+    // check transaction exists by its awb number
+    const transactionDetail = await CodTransactionDetail.findOne({
+      select: [ 'codTransactionId' ],
       where: {
         awbNumber,
-        isDeleted: false,
+        isDeleted: false
       },
     });
-    if (transactionExist) {
-      return true;
-    } else {
-      return false;
+
+    if (!transactionDetail) return null;
+
+    const transaction = await CodTransaction.findOne({
+      select: [ 'totalCodValue', 'totalAwb', 'branchId', 'userIdCreated', 'codTransactionId' ],
+      where: {
+        codTransactionId: transactionDetail.codTransactionId,
+        codBankStatementId: null,
+        transactionType: 'CASHLESS',
+        isDeleted: false
+      }
+    });
+
+    if (transaction) {
+      return transaction;
     }
+    
+    return null;
   }
 
   public static async getDataVoucher(params: {}): Promise<CodVoucher> {

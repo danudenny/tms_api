@@ -41,7 +41,7 @@ export class CodBankStatement extends TmsBaseEntity {
   transactionStatusId: number;
 
   @Column('character varying', {
-    nullable: false,
+    nullable: true,
     length: 100,
     name: 'bank_account',
   })
@@ -69,13 +69,13 @@ export class CodBankStatement extends TmsBaseEntity {
   totalAwb: number;
 
   @Column('bigint', {
-    nullable: false,
+    nullable: true,
     name: 'bank_branch_id',
   })
   bankBranchId: number;
 
   @Column('bigint', {
-    nullable: false,
+    nullable: true,
     name: 'attachment_id',
   })
   attachmentId: number;
@@ -87,19 +87,19 @@ export class CodBankStatement extends TmsBaseEntity {
   branchId: number;
 
   @Column('timestamp without time zone', {
-    nullable: false,
+    nullable: true,
     name: 'cancel_datetime',
   })
   cancelDatetime: Date;
 
   @Column('timestamp without time zone', {
-    nullable: false,
+    nullable: true,
     name: 'validate_datetime',
   })
   validateDatetime: Date;
 
   @Column('character varying', {
-    nullable: false,
+    nullable: true,
     length: 100,
     name: 'bank_no_reference',
   })
