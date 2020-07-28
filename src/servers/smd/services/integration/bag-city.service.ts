@@ -7,6 +7,7 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { BagRepresentativeItem } from '../../../../shared/orm-entity/bag-representative-item';
+import { BagRepresentativeSmdQueueService } from '../../../queue/services/bag-representative-smd-queue.service';
 
 @Injectable()
 export class BagCityService {
@@ -144,6 +145,10 @@ export class BagCityService {
     bagRepresentativeItem.createdTime = moment().toDate();
     bagRepresentativeItem.updatedTime = moment().toDate();
     BagRepresentativeItem.save(bagRepresentativeItem);
+
+    BagRepresentativeSmdQueueService.perform(
+      dataAwb[0].awb_item_id,
+    );
 
     result.status = 'success';
     result.awbNumber = awbNumber;
