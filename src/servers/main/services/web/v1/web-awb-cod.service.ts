@@ -38,6 +38,7 @@ import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-
 import { CodUpdateTransactionQueueService } from '../../../../queue/services/cod/cod-update-transaction-queue.service';
 import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
 import { MongoDbConfig } from '../../../config/database/mongodb.config';
+import { RedisService } from '../../../../../shared/services/redis.service';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -254,27 +255,32 @@ export class V1WebAwbCodService {
       );
 
       for (const item of payload.dataCash) {
-        const awbValid = await this.validStatusAwb(item.awbItemId);
-        if (awbValid) {
-          totalCodValue += Number(item.codValue);
-          totalCodValueCash += Number(item.codValue);
-          totalAwbCash += 1;
+        // handle race condition
+        const redlock = await RedisService.redlock(`redlock:transaction:${item.awbNumber}`);
+        if (redlock) {
+          const awbValid = await this.validStatusAwb(item.awbItemId);
+          if (awbValid) {
+            totalCodValue += Number(item.codValue);
+            totalCodValueCash += Number(item.codValue);
+            totalAwbCash += 1;
 
-          // send to background process
-          const dataCash = await this.handleAwbCod(
-            item,
-            codBranchCash.codTransactionId,
-            permissonPayload.branchId,
-            authMeta.userId,
-          );
+            // send to background process
+            const dataCash = await this.handleAwbCod(
+              item,
+              codBranchCash.codTransactionId,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
 
-          dataPrintCash.push(dataCash);
+            dataPrintCash.push(dataCash);
+          } else {
+            const errorMessage = `status resi ${
+              item.awbNumber
+            } tidak valid, mohon di cek ulang!`;
+            dataError.push(errorMessage);
+          }
         } else {
-          // NOTE: error message
-          const errorMessage = `status resi ${
-            item.awbNumber
-          } tidak valid, mohon di cek ulang!`;
-          dataError.push(errorMessage);
+          dataError.push(`resi ${item.awbNumber} sedang d proses!!`);
         }
       } // end of loop data cash
 
@@ -329,26 +335,32 @@ export class V1WebAwbCodService {
       );
 
       for (const item of payload.dataCashless) {
-        const awbValid = await this.validStatusAwb(item.awbItemId);
-        if (awbValid) {
-          totalCodValue += Number(item.codValue);
-          totalCodValueCashless += Number(item.codValue);
-          totalAwbCashless += 1;
+        // handle race condition
+        const redlock = await RedisService.redlock(`redlock:transaction:${item.awbNumber}`);
+        if (redlock) {
+          const awbValid = await this.validStatusAwb(item.awbItemId);
+          if (awbValid) {
+            totalCodValue += Number(item.codValue);
+            totalCodValueCashless += Number(item.codValue);
+            totalAwbCashless += 1;
 
-          const dataCashless = await this.handleAwbCod(
-            item,
-            codBranchCashless.codTransactionId,
-            permissonPayload.branchId,
-            authMeta.userId,
-          );
+            const dataCashless = await this.handleAwbCod(
+              item,
+              codBranchCashless.codTransactionId,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
 
-          dataPrintCashless.push(dataCashless);
+            dataPrintCashless.push(dataCashless);
+          } else {
+            // NOTE: error message
+            const errorMessage = `status resi ${
+              item.awbNumber
+            } tidak valid, mohon di cek ulang!`;
+            dataError.push(errorMessage);
+          }
         } else {
-          // NOTE: error message
-          const errorMessage = `status resi ${
-            item.awbNumber
-          } tidak valid, mohon di cek ulang!`;
-          dataError.push(errorMessage);
+          dataError.push(`resi ${item.awbNumber} sedang d proses!!`);
         }
       } // end of loop data cashless
 
@@ -1046,7 +1058,14 @@ export class V1WebAwbCodService {
     const collection = await MongoDbConfig.getDbSicepatCod('transaction_detail');
     // const items = await collection.find({}).toArray
 
-    const data = await CodTransactionDetail.find();
+    const data = await CodTransactionDetail.find(
+      {
+        order: {
+          createdTime: 'DESC',
+        },
+        take: 100,
+      });
+
     for (const item of data) {
       delete item['changedValues'];
       item.userIdCreated = Number(item.userIdCreated);

@@ -13,14 +13,14 @@ export class TransactionStatusService {
     payload: BaseMetaPayloadVm,
   ): Promise<TransactionStatusResponseVm> {
     // mapping search field and operator default ilike
-    // payload.globalSearchFields = [
-    //   {
-    //     field: 'awbStatusName',
-    //   },
-    //   {
-    //     field: 'awbStatusTitle',
-    //   },
-    // ];
+    payload.globalSearchFields = [
+      {
+        field: 'statusName',
+      },
+      {
+        field: 'statusTitle',
+      },
+    ];
 
     const q = RepositoryService.transactionStatus.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
