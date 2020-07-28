@@ -23,26 +23,29 @@ export class CodCronSettlementQueueService {
   );
 
   public static init() {
+    // clean current job delayed
+    this.queue.clean(0, 'delayed');
+
     // NOTE: Concurrency defaults to 1 if not specified.
-    this.queue.process(async (job, done) => {
+    this.queue.process(1, async (job, done) => {
 
       // const data = job.data;
-
       console.log('########## RUN CRON FOR COD VOUCHER DIVA :: timeNow ==============  ', moment().toDate());
       try {
         await this.logicCron();
         done();
       } catch (error) {
-        throw new Error(error);
+        console.error(error);
+        done(error);
       }
 
     });
 
-    this.queue.on('completed', job => {
-      // cleans all jobs that completed over 5 seconds ago.
-      this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
-    });
+    // this.queue.on('completed', job => {
+    //   // cleans all jobs that completed over 5 seconds ago.
+    //   this.queue.clean(5000);
+    //   console.log(`Job with id ${job.id} has been completed`);
+    // });
 
     this.queue.on('cleaned', function(job, type) {
       console.log('Cleaned %s %s jobs', job.length, type);
@@ -50,12 +53,17 @@ export class CodCronSettlementQueueService {
 
     // start cron
     // https://crontab.guru/
-    // NOTE: sample cron every minute
-    this.queue.add(null, {
-      repeat: {
-        cron: '*/1 * * * *',
-      },
-    });
+    // NOTE: sample cron every 10 minute
+    this.queue.add(
+      {},
+      {
+        repeat: {
+          cron: '*/10 * * * *',
+        },
+        removeOnComplete: true,
+        removeOnFail: false,
+      });
+
   }
 
   private static async logicCron() {

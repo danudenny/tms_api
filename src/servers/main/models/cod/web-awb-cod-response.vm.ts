@@ -458,6 +458,9 @@ export class WebCodSupploerInvoiceVm {
   @ApiModelProperty()
   supplierInvoiceStatusId: number;
 
+  @ApiModelProperty({ format: 'date-time' })
+  paidDatetime: string;
+
   @ApiModelProperty()
   totalAwb: number;
 
@@ -476,9 +479,11 @@ export class WebCodListInvoiceResponseVm extends BaseMetaResponseVm {
   data: WebCodSupploerInvoiceVm[];
 }
 
-export class WebCodAwbDelivery extends AwbTransactionDetailVm {
+export class WebCodAwbDelivery {
+  awbItemId: number;
+  awbNumber: string;
+  codValue: number;
   userIdDriver: number;
-  branchIdAssign: number;
   paymentMethod: string;
   paymentService: string;
   noReference: string;

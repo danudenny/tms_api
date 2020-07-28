@@ -49,6 +49,15 @@ export class V1WebReportCodService {
         filterList.push(f);
       }
 
+
+      if (filter.field == 'sigesit' && filter.value) {
+        const f = {
+          userIdDriver: { $eq: filter.value },
+        };
+
+        filterList.push(f);
+      }
+
       if (filter.field == 'status' && filter.value) {
         const f = {
           transactionStatusId: { $eq: filter.value.toString() },
@@ -63,7 +72,7 @@ export class V1WebReportCodService {
 
   // csv file code
   static async getCSVConfig(cod = true) {
-
+    console.log(cod, "getCSVConfig");
     const csvHeaders: any = cod ? [
       'Partner',
       'Awb Date',
@@ -132,7 +141,7 @@ export class V1WebReportCodService {
 
     const csvConfig: any = {
       headers,
-      separator: ';',
+      separator: ',',
       newline: '\n',
     };
 
@@ -163,20 +172,14 @@ export class V1WebReportCodService {
         cod ?
           writer.write([
             this.strReplaceFunc(d.partnerName),
-            d.awbDate
-              ? moment(d.awbDate).format('YYYY-MM-DD')
-              : null,
+            d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD') : null,
             this.strReplaceFunc(d.awbNumber),
             d.parcelValue,
             d.codFee,
             d.parcelValue,
-            d.podDate
-              ? moment(d.podDate).format('YYYY-MM-DD HH:mm')
-              : null,
+            d.parcelValue,
+            d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
             this.strReplaceFunc(d.consigneeName),
-            d.createdTime
-              ? moment(d.createdTime).format('YYYY-MM-DD HH:mm')
-              : null,
             'DLV',
             'DLV',
             this.strReplaceFunc(d.custPackage),
@@ -187,7 +190,6 @@ export class V1WebReportCodService {
             this.strReplaceFunc(d.parcelContent),
             this.strReplaceFunc(d.packageType),
             this.strReplaceFunc(d.parcelNote),
-            this.strReplaceFunc(d.paymentService),
             '', '',
           ]) : writer.write([
             this.strReplaceFunc(d.partnerName),
@@ -197,13 +199,11 @@ export class V1WebReportCodService {
             this.strReplaceFunc(d.awbNumber),
             d.parcelValue,
             d.parcelValue,
+            d.parcelValue,
             d.podDate
               ? moment(d.podDate).format('YYYY-MM-DD hh:mm A')
               : null,
             this.strReplaceFunc(d.consigneeName),
-            d.createdTime
-              ? moment(d.createdTime).format('YYYY-MM-DD hh:mm A')
-              : null,
             'DLV',
             'DLV',
             this.strReplaceFunc(d.custPackage),
@@ -214,38 +214,8 @@ export class V1WebReportCodService {
             this.strReplaceFunc(d.parcelContent),
             this.strReplaceFunc(d.packageType),
             this.strReplaceFunc(d.parcelNote),
-            this.strReplaceFunc(d.paymentService),
             '', '',
           ]);
-        writer.write([
-          this.strReplaceFunc(d.partnerName),
-          d.awbDate
-            ? moment(d.awbDate).format('YYYY-MM-DD')
-            : null,
-          this.strReplaceFunc(d.awbNumber),
-          d.parcelValue,
-          d.codValue,
-          d.codFee,
-          d.podDate
-            ? moment(d.podDate).format('YYYY-MM-DD HH:mm')
-            : null,
-          this.strReplaceFunc(d.consigneeName),
-          d.createdTime
-            ? moment(d.createdTime).format('YYYY-MM-DD HH:mm')
-            : null,
-          'DLV',
-          'DLV',
-          this.strReplaceFunc(d.custPackage),
-          this.strReplaceFunc(d.pickupSource),
-          this.strReplaceFunc(d.currentPosition),
-          this.strReplaceFunc(d.destinationCode),
-          this.strReplaceFunc(d.destination),
-          this.strReplaceFunc(d.parcelContent),
-          this.strReplaceFunc(d.packageType),
-          this.strReplaceFunc(d.parcelNote),
-          this.strReplaceFunc(d.paymentService),
-          '', '',
-        ]);
 
       }
       count += 1;
@@ -333,6 +303,8 @@ export class V1WebReportCodService {
       if (!datarow || datarow.length <= 0) {
         return null;
       }
+
+      console.log(dataRowCount, "data row count");
       const csvConfig = await this.getCSVConfig(cod);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
@@ -341,12 +313,15 @@ export class V1WebReportCodService {
 
       const totalPaging = Math.ceil(dataRowCount.length / limit);
 
-      console.log(totalPaging, 'start writing');
+      console.log(totalPaging, dataRowCount.length, 'start writing');
+
+
       if (dataRowCount.length > 1048576) {
         throw new Error('Tidak dapat menarik data. Jumlah data yang ditarik lebih dari 1 jt.');
       }
 
-      for (let index = 0; index <= totalPaging; index++) {
+      for (let index = 0; index < totalPaging; index++) {
+        console.log(limit * (index), limit)
         await this.populateDataCsv(writer, await datarow.skip(limit * (index)).limit(limit).toArray(), cod);
       }
       writer.end();

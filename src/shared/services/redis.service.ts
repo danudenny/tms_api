@@ -129,6 +129,19 @@ export class RedisService {
     });
   }
 
+  // https://redis.io/topics/distlock
+  public static async redlock(key: string, ttl: number = 3) {
+    try {
+      const lock = await this.setnx(key, 'lock');
+      // set default expire key on redis
+      await this.expire(key, ttl);
+      return !!lock;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+
   public static async locking(key: string, value: string) {
     let countRetry = 1;
     let locking = {};
