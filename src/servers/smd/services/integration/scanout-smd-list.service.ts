@@ -444,7 +444,7 @@ export class ScanoutSmdListService {
           FROM do_smd_detail_item dsdi
           INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
           INNER JOIN bag_representative br ON dsdi.bag_representative_id = br.bag_representative_id AND br.is_deleted = FALSE
-          LEFT JOIN branch b ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
+          LEFT JOIN branch b ON dsd.branch_id_to = b.branch_id AND b.is_deleted = FALSE
           LEFT JOIN representative r ON br.representative_id_to = r.representative_id  AND r.is_deleted = FALSE
           WHERE
             dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
@@ -454,6 +454,7 @@ export class ScanoutSmdListService {
         `;
           const resultDataBagRepresentative = await RawQueryService.query(rawQuery);
           if (resultDataBagRepresentative.length > 0 ) {
+          // tslint:disable-next-line:prefer-for-of
           for (let a = 0; a < resultDataBagRepresentative.length; a++) {
             data.push({
               do_smd_detail_id: payload.do_smd_detail_id,
@@ -625,7 +626,8 @@ export class ScanoutSmdListService {
       [`br.total_item`, 'total_awb'],
       [`CONCAT(br.total_weight::numeric(10,2), ' Kg')`, 'weight'],
       ['r.representative_code', 'representative_code'],
-      ['br.branch_name', 'branch_name'],
+      ['b.branch_name', 'branch_name'],
+      ['dsd.branch_id_to', 'branch_id'],
     );
 
     q.innerJoinRaw(
@@ -645,8 +647,8 @@ export class ScanoutSmdListService {
     );
     q.leftJoinRaw(
       'branch',
-      'br',
-      'dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE',
+      'b',
+      'dsd.branch_id_to = b.branch_id AND b.is_deleted = FALSE',
     );
     q.andWhereRaw(`dsdi.bag_type = 2`);
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -655,6 +657,7 @@ export class ScanoutSmdListService {
     const total = await q.countWithoutTakeAndSkip();
     const result = new ScanOutDetailBagRepresentativeMoreResponseVm();
     result.data = data;
+    
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
