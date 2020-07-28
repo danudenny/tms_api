@@ -530,11 +530,11 @@ export class ScanoutSmdService {
         SELECT
           br.bag_representative_id,
           br.bag_representative_code,
-          r.representative_code,
+          r.representative_code
         FROM bag_representative br
         INNER JOIN representative  r on br.representative_id_to = r.representative_id and r.is_deleted  = FALSE
         WHERE
-          br.bag_representative_code = ${payload.item_number} AND
+          br.bag_representative_code = '${payload.item_number}' AND
           br.is_deleted = FALSE;
       `;
     const resultDataBagRepresentative = await RawQueryService.query(rawQuery);
