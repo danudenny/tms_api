@@ -1,5 +1,5 @@
 import { QueueBullBoard } from '../queue-bull-board';
-import moment = require('moment');
+import moment from 'moment';
 import { CodBankStatement } from 'src/shared/orm-entity/cod-bank-statement';
 import { CodVoucherDetail } from 'src/shared/orm-entity/cod-voucher-detail';
 import { CodTransactionDetail } from 'src/shared/orm-entity/cod-transaction-detail';
@@ -28,6 +28,7 @@ export class CodCronSettlementQueueService {
 
       // const data = job.data;
 
+      // tslint:disable-next-line: no-console
       console.log('########## RUN CRON FOR COD VOUCHER DIVA :: timeNow ==============  ', moment().toDate());
       try {
         await this.logicCron();
@@ -41,10 +42,12 @@ export class CodCronSettlementQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
+      // tslint:disable-next-line: no-console
       console.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
+      // tslint:disable-next-line: no-console
       console.log('Cleaned %s %s jobs', job.length, type);
     });
 
@@ -63,8 +66,8 @@ export class CodCronSettlementQueueService {
     const timestamp = moment().toDate();
     const vouchers = await CodVoucherDetail.find({
       where: {
-        isSettlement: false
-      }
+        isSettlement: false,
+      },
     });
 
     for (const voucher of vouchers) {
@@ -78,6 +81,7 @@ export class CodCronSettlementQueueService {
         await getManager().transaction(async transactionManager => {
           try {
             // Create Bank Statement
+            // tslint:disable-next-line: no-console
             console.log(`Creating Bank Statement for Awb Number === ${voucher.awbNumber}`);
 
             const bankStatement = new CodBankStatement();
@@ -105,7 +109,7 @@ export class CodCronSettlementQueueService {
               {
                 codBankStatementId: bankStatement.codBankStatementId,
                 userIdUpdated: transaction.userIdCreated,
-                updatedTime: timestamp
+                updatedTime: timestamp,
               },
             );
 
@@ -117,16 +121,18 @@ export class CodCronSettlementQueueService {
               },
               {
                 isSettlement: true,
-                updatedTime: timestamp
+                updatedTime: timestamp,
               },
             );
           } catch (error) {
+            // tslint:disable-next-line: no-console
             console.log(error);
           }
         });
       }
     }
 
+    // tslint:disable-next-line: no-console
     console.log('########## STOP CRON FOR COD VOUCHER DIVA :: timeNow ==============  ', moment().toDate());
   }
 
@@ -136,11 +142,13 @@ export class CodCronSettlementQueueService {
       select: [ 'codTransactionId' ],
       where: {
         awbNumber,
-        isDeleted: false
+        isDeleted: false,
       },
     });
 
-    if (!transactionDetail) return null;
+    if (!transactionDetail) {
+      return null;
+    }
 
     const transaction = await CodTransaction.findOne({
       select: [ 'totalCodValue', 'totalAwb', 'branchId', 'userIdCreated', 'codTransactionId' ],
@@ -148,14 +156,14 @@ export class CodCronSettlementQueueService {
         codTransactionId: transactionDetail.codTransactionId,
         codBankStatementId: null,
         transactionType: 'CASHLESS',
-        isDeleted: false
-      }
+        isDeleted: false,
+      },
     });
 
     if (transaction) {
       return transaction;
     }
-    
+
     return null;
   }
 }

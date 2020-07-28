@@ -8,33 +8,33 @@ import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-trans
 import { CodVoucher } from '../../../../../shared/orm-entity/cod-voucher';
 import { CodVoucherDetail } from '../../../../../shared/orm-entity/cod-voucher-detail';
 import {
-    WebCodVoucherPayloadVm
+    WebCodVoucherPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
-    WebCodVoucherSuccessResponseVm
+    WebCodVoucherSuccessResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 
-import moment = require('moment');
+import moment from 'moment';
 import { BadRequestException } from '@nestjs/common';
 import { CustomCounterCode } from 'src/shared/services/custom-counter-code.service';
 
 // #endregion
 export class V1WebAwbCodVoucherService {
 
-  static async getAllVouchers() : Promise<any> {
+  static async getAllVouchers(): Promise<any> {
     const data = [];
     const dataVouchers = await CodVoucher.find();
     for (const voucher of dataVouchers) {
       const dataVoucherDetail = await CodVoucherDetail.find({
         where: {
-          codVoucherId: voucher.codVoucherId
-        }
+          codVoucherId: voucher.codVoucherId,
+        },
       });
 
       data.push({
         ...voucher,
-        voucherDetail: dataVoucherDetail
-      }) 
+        voucherDetail: dataVoucherDetail,
+      });
     }
 
     if (data.length) {
@@ -49,11 +49,11 @@ export class V1WebAwbCodVoucherService {
   static async divaSettlement(
     payload: WebCodVoucherPayloadVm,
   ): Promise<WebCodVoucherSuccessResponseVm> {
-    let dataError = [];
+    const dataError = [];
     let responseCode = '00';
     let responseMessage = 'Success';
     const timeNow = moment().toDate();
-    
+
     let amountTransfer = 0;
     let codVoucherNo = '';
     let codVoucherDate = timeNow.toISOString();
@@ -67,38 +67,38 @@ export class V1WebAwbCodVoucherService {
     awbNumbers = payload.awbNumbers;
 
     if (!amountTransfer) {
-      responseCode = "01";
+      responseCode = '01';
       responseMessage = 'FAILED';
       dataError.push('amountTransfer is required and have to be positive non-zero number');
     }
 
     if (!codVoucherNo) {
-      responseCode = "01";
+      responseCode = '01';
       responseMessage = 'FAILED';
       dataError.push('codVoucherNo is required');
     }
 
     if (!codVoucherDate) {
-      responseCode = "01";
+      responseCode = '01';
       responseMessage = 'FAILED';
       dataError.push('codVoucherDate is required');
     }
-    
+
     if (awbNumbers && !Array.isArray(awbNumbers)) {
-      responseCode = "01";
+      responseCode = '01';
       responseMessage = 'FAILED';
       dataError.push('awbNumbers have to be an array.');
     }
-    
+
     if (awbNumbers && Array.isArray(awbNumbers) && awbNumbers.length < 1) {
-      responseCode = "01";
+      responseCode = '01';
       responseMessage = 'FAILED';
       dataError.push('awbNumbers is required and not empty array.');
     }
 
     const voucher = await CodVoucher.findOne({
       where: {
-        codVoucherNo: codVoucherNo,
+        codVoucherNo,
         isDeleted: false,
       },
     });
@@ -110,7 +110,7 @@ export class V1WebAwbCodVoucherService {
         cod_voucher_service: 'DIVA',
         amount_transfer: amountTransfer,
         created_time: timeNow,
-        updated_time: timeNow
+        updated_time: timeNow,
       };
 
       const dataVoucher = await this.getDataVoucher(paramsVoucher);
@@ -121,8 +121,9 @@ export class V1WebAwbCodVoucherService {
       } else {
         responseCode = '01';
         responseMessage = 'FAILED';
-        let errorMessage = 'Failed when insert voucher to DB';
+        const errorMessage = 'Failed when insert voucher to DB';
         dataError.push(errorMessage);
+        // tslint:disable-next-line: no-console
         console.log(errorMessage);
       }
     } else {
@@ -132,9 +133,12 @@ export class V1WebAwbCodVoucherService {
     if (codVoucherId !== '') {
       await this.createVoucherDetailbyVoucherId(codVoucherId, awbNumbers, timeNow, (errorMessage, isDuplicated) => {
         dataError.push(errorMessage);
-        if (isDuplicated) countDuplicatedAwbNumbers++;
+        if (isDuplicated) {
+          countDuplicatedAwbNumbers++;
+        }
+        // tslint:disable-next-line: no-console
         console.log(errorMessage);
-      })
+      });
     }
 
     if (countDuplicatedAwbNumbers === awbNumbers.length) {
@@ -150,7 +154,7 @@ export class V1WebAwbCodVoucherService {
   }
 
   private static async createVoucherDetailbyVoucherId(
-    codVoucherId:string, awbNumbers:any[], timeNow:Date, cbError:any
+    codVoucherId: string, awbNumbers: any[], timeNow: Date, cbError: any,
   ): Promise<any> {
     for (const awbNumber of awbNumbers) {
       const awbValid = await this.isValidStatusAwb(awbNumber);
@@ -163,7 +167,7 @@ export class V1WebAwbCodVoucherService {
             const randomCode = await CustomCounterCode.bankStatement(
               timeNow,
             );
-    
+
             await getManager().transaction(async transactionManager => {
               try {
                 // Create Bank Statement
@@ -184,7 +188,7 @@ export class V1WebAwbCodVoucherService {
                 await transactionManager.save(CodBankStatement, bankStatement);
 
                 isSettlement = true;
-    
+
                 // Update Cod Bank Statement Id on its Cod Transaction
                 await transactionManager.update(
                   CodTransaction,
@@ -194,10 +198,11 @@ export class V1WebAwbCodVoucherService {
                   {
                     codBankStatementId: bankStatement.codBankStatementId,
                     userIdUpdated: transaction.userIdCreated,
-                    updatedTime: timeNow
+                    updatedTime: timeNow,
                   },
                 );
               } catch (error) {
+                // tslint:disable-next-line: no-console
                 console.log(error);
               }
             });
@@ -208,9 +213,9 @@ export class V1WebAwbCodVoucherService {
             awb_number: awbNumber,
             is_settlement: isSettlement,
             created_time: timeNow,
-            updated_time: timeNow
+            updated_time: timeNow,
           };
-  
+
           const dataVoucherDetail = await this.getDataVoucherDetail(paramsVoucherDetail);
           await CodVoucherDetail.insert(dataVoucherDetail);
         } else {
@@ -260,11 +265,13 @@ export class V1WebAwbCodVoucherService {
       select: [ 'codTransactionId' ],
       where: {
         awbNumber,
-        isDeleted: false
+        isDeleted: false,
       },
     });
 
-    if (!transactionDetail) return null;
+    if (!transactionDetail) {
+       return null;
+    }
 
     const transaction = await CodTransaction.findOne({
       select: [ 'totalCodValue', 'totalAwb', 'branchId', 'userIdCreated', 'codTransactionId' ],
@@ -272,14 +279,14 @@ export class V1WebAwbCodVoucherService {
         codTransactionId: transactionDetail.codTransactionId,
         codBankStatementId: null,
         transactionType: 'CASHLESS',
-        isDeleted: false
-      }
+        isDeleted: false,
+      },
     });
 
     if (transaction) {
       return transaction;
     }
-    
+
     return null;
   }
 
@@ -290,7 +297,7 @@ export class V1WebAwbCodVoucherService {
       codVoucherService: params['cod_voucher_service'],
       amountTransfer: params['amount_transfer'],
       createdTime: params['created_time'],
-      updatedTime: params['updated_time']
+      updatedTime: params['updated_time'],
     });
 
     return voucher;
@@ -302,7 +309,7 @@ export class V1WebAwbCodVoucherService {
       awbNumber: params['awb_number'],
       isSettlement: params['is_settlement'],
       createdTime: params['created_time'],
-      updatedTime: params['updated_time']
+      updatedTime: params['updated_time'],
     });
 
     return voucherDetail;
