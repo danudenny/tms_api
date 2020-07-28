@@ -36,15 +36,12 @@ export class CodTransactionHistoryQueueService {
     this.queue.process(5, async job => {
 
       const data = job.data;
-      // check visibility status by transactionStatusId
-      const visibility = Number(data.transactionStatusId) <= 40000 ? 10 : 20;
       const historyInvoice = CodTransactionHistory.create({
         awbItemId: data.awbItemId,
         awbNumber: data.awbNumber,
         transactionDate: data.timestamp,
         transactionStatusId: data.transactionStatusId,
         branchId: data.branchId,
-        visibility,
         userIdCreated: data.userId,
         userIdUpdated: data.userId,
         createdTime: data.timestamp,

@@ -71,8 +71,8 @@ export class CodCronSettlementQueueService {
     const timestamp = moment().toDate();
     const vouchers = await CodVoucherDetail.find({
       where: {
-        isSettlement: false
-      }
+        isSettlement: false,
+      },
     });
 
     for (const voucher of vouchers) {
@@ -113,7 +113,7 @@ export class CodCronSettlementQueueService {
               {
                 codBankStatementId: bankStatement.codBankStatementId,
                 userIdUpdated: transaction.userIdCreated,
-                updatedTime: timestamp
+                updatedTime: timestamp,
               },
             );
 
@@ -125,7 +125,7 @@ export class CodCronSettlementQueueService {
               },
               {
                 isSettlement: true,
-                updatedTime: timestamp
+                updatedTime: timestamp,
               },
             );
           } catch (error) {
@@ -144,11 +144,11 @@ export class CodCronSettlementQueueService {
       select: [ 'codTransactionId' ],
       where: {
         awbNumber,
-        isDeleted: false
+        isDeleted: false,
       },
     });
 
-    if (!transactionDetail) return null;
+    if (!transactionDetail) { return null; }
 
     const transaction = await CodTransaction.findOne({
       select: [ 'totalCodValue', 'totalAwb', 'branchId', 'userIdCreated', 'codTransactionId' ],
@@ -156,14 +156,14 @@ export class CodCronSettlementQueueService {
         codTransactionId: transactionDetail.codTransactionId,
         codBankStatementId: null,
         transactionType: 'CASHLESS',
-        isDeleted: false
-      }
+        isDeleted: false,
+      },
     });
 
     if (transaction) {
       return transaction;
     }
-    
+
     return null;
   }
 }
