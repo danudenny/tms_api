@@ -431,14 +431,16 @@ export class ScanoutSmdListService {
       });
       if (resultDoSmdDetail ) {
         // for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-        const rawQuery = `
+          // tslint:disable-next-line:no-console
+
+          const rawQuery = `
           SELECT
             br.bag_representative_id,
             br.bag_representative_code,
-            br.total_item
+            br.total_item,
             CONCAT(br.total_weight::numeric(10,2), ' Kg') AS total_weight,
             r.representative_code,
-            br.branch_name
+            b.branch_name
           FROM do_smd_detail_item dsdi
           INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
           INNER JOIN bag_representative br ON dsdi.bag_representative_id = br.bag_representative_id AND br.is_deleted = FALSE
@@ -450,8 +452,8 @@ export class ScanoutSmdListService {
             dsdi.is_deleted = FALSE
           LIMIT 5;
         `;
-        const resultDataBagRepresentative = await RawQueryService.query(rawQuery);
-        if (resultDataBagRepresentative.length > 0 ) {
+          const resultDataBagRepresentative = await RawQueryService.query(rawQuery);
+          if (resultDataBagRepresentative.length > 0 ) {
           for (let a = 0; a < resultDataBagRepresentative.length; a++) {
             data.push({
               do_smd_detail_id: payload.do_smd_detail_id,
@@ -464,10 +466,10 @@ export class ScanoutSmdListService {
           }
         }
       // }
-        result.statusCode = HttpStatus.OK;
-        result.message = 'List Bag Representative Success';
-        result.data = data;
-        return result;
+          result.statusCode = HttpStatus.OK;
+          result.message = 'List Bag Representative Success';
+          result.data = data;
+          return result;
       } else {
         throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Detail Can't Found !`);
       }
