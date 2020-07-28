@@ -1,5 +1,5 @@
 import { QueueBullBoard } from '../queue-bull-board';
-import moment from 'moment';
+import moment = require('moment');
 import { CodBankStatement } from 'src/shared/orm-entity/cod-bank-statement';
 import { CodVoucherDetail } from 'src/shared/orm-entity/cod-voucher-detail';
 import { CodTransactionDetail } from 'src/shared/orm-entity/cod-transaction-detail';

@@ -14,7 +14,7 @@ import {
     WebCodVoucherSuccessResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 
-import moment from 'moment';
+import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { CustomCounterCode } from 'src/shared/services/custom-counter-code.service';
 
