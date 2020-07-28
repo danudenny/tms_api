@@ -1,11 +1,13 @@
-import { QueueBullBoard } from '../queue-bull-board';
-import moment = require('moment');
-import { CodBankStatement } from '../../../../shared/orm-entity/cod-bank-statement';
-import { CodVoucherDetail } from '../../../../shared/orm-entity/cod-voucher-detail';
-import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transaction-detail';
-import { CodTransaction } from '../../../../shared/orm-entity/cod-transaction';
-import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { getManager } from 'typeorm';
+
+import { CodBankStatement } from '../../../../shared/orm-entity/cod-bank-statement';
+import { CodTransaction } from '../../../../shared/orm-entity/cod-transaction';
+import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transaction-detail';
+import { CodVoucherDetail } from '../../../../shared/orm-entity/cod-voucher-detail';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { QueueBullBoard } from '../queue-bull-board';
+
+import moment = require('moment');
 
 // DOC: this sample Cron with bull
 // https://docs.bullmq.io/guide/jobs/repeatable
@@ -149,9 +151,7 @@ export class CodCronSettlementQueueService {
       },
     });
 
-    if (!transactionDetail) {
-      return null;
-    }
+    if (!transactionDetail) { return null; }
 
     const transaction = await CodTransaction.findOne({
       select: [ 'totalCodValue', 'totalAwb', 'branchId', 'userIdCreated', 'codTransactionId' ],

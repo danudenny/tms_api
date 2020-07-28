@@ -132,9 +132,7 @@ export class V1WebAwbCodVoucherService {
     if (codVoucherId !== '') {
       await this.createVoucherDetailbyVoucherId(codVoucherId, awbNumbers, timeNow, (errorMessage, isDuplicated) => {
         dataError.push(errorMessage);
-        if (isDuplicated) {
-          countDuplicatedAwbNumbers++;
-        }
+        if (isDuplicated) { countDuplicatedAwbNumbers++; }
         console.log(errorMessage);
       });
     }
@@ -266,9 +264,7 @@ export class V1WebAwbCodVoucherService {
       },
     });
 
-    if (!transactionDetail) {
-       return null;
-    }
+    if (!transactionDetail) { return null; }
 
     const transaction = await CodTransaction.findOne({
       select: [ 'totalCodValue', 'totalAwb', 'branchId', 'userIdCreated', 'codTransactionId' ],
