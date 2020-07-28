@@ -34,6 +34,7 @@ import { RolePodManualStatus } from '../orm-entity/role-pod-manual-status';
 import { Bagging } from '../orm-entity/bagging';
 import { DoSmd } from '../orm-entity/do_smd';
 import { Vehicle } from '../orm-entity/vehicle';
+import { BagRepresentative } from '../orm-entity/bag-representative';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -144,5 +145,8 @@ export class RepositoryService {
   }
   static get vehicle() {
     return new OrionRepositoryService(Vehicle);
+  }
+  static get bagRepresentative() {
+    return new OrionRepositoryService(BagRepresentative);
   }
 }

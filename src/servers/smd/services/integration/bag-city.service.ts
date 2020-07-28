@@ -1,5 +1,6 @@
 import { Injectable, Param, PayloadTooLargeException } from '@nestjs/common';
 import moment = require('moment');
+import express = require('express');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BagCityResponseVm } from '../../models/bag-city-response.vm';
 import { BagCityPayloadVm } from '../../models/bag-city-payload.vm';
@@ -8,6 +9,10 @@ import { BagRepresentative } from '../../../../shared/orm-entity/bag-representat
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { BagRepresentativeItem } from '../../../../shared/orm-entity/bag-representative-item';
 import { BagRepresentativeSmdQueueService } from '../../../queue/services/bag-representative-smd-queue.service';
+import { PrintBagCityPayloadVm } from '../../models/print-bag-city-payload.vm';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { RepositoryService } from '../../../../shared/services/repository.service';
+import { PrinterService } from '../../../../shared/services/printer.service';
 
 @Injectable()
 export class BagCityService {
@@ -158,5 +163,53 @@ export class BagCityService {
     result.bagRepresentativeCode = bagRepresentativeCode;
     result.message = 'Scan gabung paket Kota berhasil';
     return result;
+  }
+
+  public static async printBagging(
+    res: express.Response,
+    queryParams: PrintBagCityPayloadVm,
+  ) {
+    const bagging = await RepositoryService.bagRepresentative
+      .loadById(queryParams.id)
+      .select({
+        bagRepresentativeId: true, // needs to be selected due to users relations are being included
+        bagRepresentativeCode: true,
+        totalItem: true,
+        totalWeight: true,
+        representative: {
+          representativeCode: true,
+          representativeName: true,
+        },
+      })
+      .exec();
+
+    if (!bagging) {
+      RequestErrorService.throwObj({
+        message: 'Bagging tidak ditemukan',
+      });
+    }
+
+    const rawPrinterCommands =
+      `SIZE 80 mm, 100 mm\n` +
+      `SPEED 3\n` +
+      `DENSITY 8\n` +
+      `DIRECTION 0\n` +
+      `OFFSET 0\n` +
+      `CLS\n` +
+      `TEXT 30,120,"5",0,1,1,0,"GABUNG SORTIR KOTA"\n` +
+      `BARCODE 30,200,"128",100,1,0,3,10,"${bagging.bagRepresentativeCode}"\n` +
+      `TEXT 30,380,"3",0,1,1,"Jumlah koli : ${bagging.totalItem}"\n` +
+      `TEXT 30,420,"3",0,1,1,"Berat : ${bagging.totalWeight}"\n` +
+      `TEXT 30,460,"5",0,1,1,0,"${bagging.representative.representativeCode}"\n` +
+      `TEXT 30,540,"3",0,1,1,"${bagging.representative.representativeName}"\n` +
+      `PRINT 1\n` +
+      `EOP`;
+
+    const printerName = 'BarcodePrinter';
+    PrinterService.responseForRawCommands({
+      res,
+      rawCommands: rawPrinterCommands,
+      printerName,
+    });
   }
 }
