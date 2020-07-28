@@ -598,7 +598,7 @@ export class ScanoutSmdService {
           await DoSmd.update(
             { doSmdId : payload.do_smd_id },
             {
-              totalBagging: Number(resultDoSmd.totalBagging) + 1,
+              totalBagRepresentative: Number(resultDoSmd.totalBagRepresentative) + 1,
               totalItem: Number(resultDoSmd.totalItem) + 1,
               userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
