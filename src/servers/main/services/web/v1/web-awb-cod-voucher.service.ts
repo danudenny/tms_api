@@ -123,7 +123,6 @@ export class V1WebAwbCodVoucherService {
         responseMessage = 'FAILED';
         const errorMessage = 'Failed when insert voucher to DB';
         dataError.push(errorMessage);
-        // tslint:disable-next-line: no-console
         console.log(errorMessage);
       }
     } else {
@@ -136,7 +135,6 @@ export class V1WebAwbCodVoucherService {
         if (isDuplicated) {
           countDuplicatedAwbNumbers++;
         }
-        // tslint:disable-next-line: no-console
         console.log(errorMessage);
       });
     }
@@ -202,7 +200,6 @@ export class V1WebAwbCodVoucherService {
                   },
                 );
               } catch (error) {
-                // tslint:disable-next-line: no-console
                 console.log(error);
               }
             });

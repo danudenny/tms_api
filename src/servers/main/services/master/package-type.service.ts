@@ -11,6 +11,15 @@ export class PackageTypeService {
   static async listData(
     payload: BaseMetaPayloadVm,
   ): Promise<PackageTypeResponseVm> {
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'packageTypeCode',
+      },
+      {
+        field: 'packageTypeName',
+      },
+    ];
 
     const q = RepositoryService.packageType.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);

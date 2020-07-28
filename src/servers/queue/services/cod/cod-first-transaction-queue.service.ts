@@ -47,6 +47,7 @@ export class CodFirstTransactionQueueService {
       // Handle first awb scan
       await getManager().transaction(async transactional => {
 
+        // only transaction
         if (transactionDetail && data.codTransactionId) {
           await transactional.update(
             CodTransactionDetail,
@@ -125,7 +126,24 @@ export class CodFirstTransactionQueueService {
 
         // transaction history
         if (isValidData) {
-          if (data.transactionStatusId == 31000) {
+          if (data.supplierInvoiceStatusId) {
+            // supplier invoice status
+            const historyInvoice = CodTransactionHistory.create({
+              awbItemId: data.awbItemId,
+              awbNumber: data.awbNumber,
+              transactionDate: data.timestamp,
+              transactionStatusId: data.supplierInvoiceStatusId,
+              branchId: data.branchId,
+              userIdCreated: data.userId,
+              userIdUpdated: data.userId,
+              createdTime: data.timestamp,
+              updatedTime: data.timestamp,
+            });
+            await transactional.insert(
+              CodTransactionHistory,
+              historyInvoice,
+            );
+          } else {
             // create transaction history
             const historyDriver = CodTransactionHistory.create({
               awbItemId: data.awbItemId,
@@ -158,23 +176,7 @@ export class CodFirstTransactionQueueService {
               CodTransactionHistory,
               historyBranch,
             );
-          } else {
-            // supplier invoice status
-            const historyInvoice = CodTransactionHistory.create({
-              awbItemId: data.awbItemId,
-              awbNumber: data.awbNumber,
-              transactionDate: data.timestamp,
-              transactionStatusId: data.supplierInvoiceStatusId,
-              branchId: data.branchId,
-              userIdCreated: data.userId,
-              userIdUpdated: data.userId,
-              createdTime: data.timestamp,
-              updatedTime: data.timestamp,
-            });
-            await transactional.insert(
-              CodTransactionHistory,
-              historyInvoice,
-            );
+
           }
         }
 

@@ -2,7 +2,6 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../shared/e
 import { IsAwbNumber } from '../../../../shared/decorators/custom-validation.decorator';
 import { IsDefined } from 'class-validator';
 import { Type } from 'class-transformer';
-import { dateType } from 'aws-sdk/clients/iam';
 
 export class WebCodAwbPayloadVm {
   @ApiModelProperty()
