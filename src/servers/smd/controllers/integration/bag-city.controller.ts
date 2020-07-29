@@ -5,14 +5,34 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import {BagCityService} from '../../services/integration/bag-city.service';
 import {PermissionTokenGuard} from '../../../../shared/guards/permission-token.guard';
 import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
-import {BagCityResponseVm} from '../../models/bag-city-response.vm';
+import {BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm} from '../../models/bag-city-response.vm';
 import {BagCityPayloadVm} from '../../models/bag-city-payload.vm';
 import { PrintBagCityPayloadVm } from '../../models/print-bag-city-payload.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('SMD Bag City')
 @Controller('smd/bag-city')
 export class BagCityController {
   constructor() {}
+
+  @Post('list')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: ListBagCityResponseVm })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  public async listBagging(@Body() payload: BaseMetaPayloadVm) {
+    return BagCityService.listBagging(payload);
+  }
+
+  @Post('list/detail')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: ListDetailBagCityResponseVm })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  public async listDetailBagging(@Body() payload: BaseMetaPayloadVm) {
+    return BagCityService.listDetailBagging(payload);
+  }
+
   @Post('create')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: BagCityResponseVm })
