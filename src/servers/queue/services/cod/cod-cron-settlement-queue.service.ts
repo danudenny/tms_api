@@ -32,6 +32,7 @@ export class CodCronSettlementQueueService {
     this.queue.process(1, async (job, done) => {
 
       // const data = job.data;
+
       console.log('########## RUN CRON FOR COD VOUCHER DIVA :: timeNow ==============  ', moment().toDate());
       try {
         await this.logicCron();

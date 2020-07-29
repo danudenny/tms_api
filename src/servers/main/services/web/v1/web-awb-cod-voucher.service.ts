@@ -157,7 +157,18 @@ export class V1WebAwbCodVoucherService {
       if (awbValid) {
         const awbDuplicated = await this.isAwbDuplicatedInVoucher(awbNumber);
         if (!awbDuplicated) {
-          let isSettlement = false;
+          // Create voucher detail with unsettled status
+          const paramsVoucherDetail = {
+            cod_voucher_id: codVoucherId,
+            awb_number: awbNumber,
+            is_settlement: false,
+            created_time: timeNow,
+            updated_time: timeNow,
+          };
+
+          const dataVoucherDetail = await this.getDataVoucherDetail(paramsVoucherDetail);
+          await CodVoucherDetail.insert(dataVoucherDetail);
+
           const transaction = await this.getTransactionByAwbNumber(awbNumber);
           if (transaction) {
             const randomCode = await CustomCounterCode.bankStatement(
@@ -183,8 +194,6 @@ export class V1WebAwbCodVoucherService {
                 bankStatement.userIdUpdated = transaction.userIdCreated;
                 await transactionManager.save(CodBankStatement, bankStatement);
 
-                isSettlement = true;
-
                 // Update Cod Bank Statement Id on its Cod Transaction
                 await transactionManager.update(
                   CodTransaction,
@@ -197,22 +206,23 @@ export class V1WebAwbCodVoucherService {
                     updatedTime: timeNow,
                   },
                 );
+
+                // Update unsettled Voucher to settled
+                await transactionManager.update(
+                  CodVoucherDetail,
+                  {
+                    codVoucherDetailId: dataVoucherDetail.codVoucherDetailId,
+                  },
+                  {
+                    isSettlement: true,
+                    updatedTime: timeNow,
+                  },
+                );
               } catch (error) {
                 console.log(error);
               }
             });
           }
-
-          const paramsVoucherDetail = {
-            cod_voucher_id: codVoucherId,
-            awb_number: awbNumber,
-            is_settlement: isSettlement,
-            created_time: timeNow,
-            updated_time: timeNow,
-          };
-
-          const dataVoucherDetail = await this.getDataVoucherDetail(paramsVoucherDetail);
-          await CodVoucherDetail.insert(dataVoucherDetail);
         } else {
           cbError(`Awb number for ${awbNumber} is duplicated.`, true);
         }
