@@ -13,6 +13,7 @@ import {
     AwbPhotoResponseVm,
 } from '../../../models/tracking.vm';
 import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
+import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('Web Tracking')
 @Controller('web/v1/tracking')
@@ -20,7 +21,7 @@ import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.serv
 export class V1WebTrackingController {
   @Post('awbNumber')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: TrackingAwbResponseVm })
   public async awbNumber(@Body() payload: TrackingAwbPayloadVm) {
     return V1WebTrackingService.awb(payload);

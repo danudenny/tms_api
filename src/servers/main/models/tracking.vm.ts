@@ -55,6 +55,35 @@ export class AwbHistoryResponseVm {
   notePublic: string;
 }
 
+export class AwbTransactionHistoryResponseVm {
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty({ format: 'date-time' })
+  transactionDate: string;
+
+  @ApiModelProperty()
+  transactionStatusId: number;
+
+  @ApiModelProperty()
+  transactionStatusCode: string;
+
+  @ApiModelProperty()
+  transactionStatusTitle: string;
+
+  @ApiModelProperty()
+  branchId: number;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  employeeNameScan: string;
+
+  @ApiModelProperty()
+  employeeNikScan: string;
+}
+
 export class TrackingAwbResponseVm {
   @ApiModelProperty()
   awbItemId: number;
@@ -163,6 +192,9 @@ export class TrackingAwbResponseVm {
 
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];
+
+  @ApiModelProperty({ type: () => [AwbTransactionHistoryResponseVm] })
+  transactionHistory: AwbTransactionHistoryResponseVm[];
 }
 
 export class BagHistoryResponseVm {

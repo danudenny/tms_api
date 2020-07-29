@@ -6,6 +6,7 @@ import {
   TrackingBagPayloadVm,
   TrackingBagResponseVm,
   AwbPhotoDetailVm,
+  AwbTransactionHistoryResponseVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
@@ -13,11 +14,14 @@ import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
 import { PhotoDetailVm } from '../../../models/bag-order-response.vm';
 import { PhotoResponseVm } from '../../../models/bag-order-detail-response.vm';
 import { createQueryBuilder } from 'typeorm';
+import { AuthService } from '../../../../../shared/services/auth.service';
+import { Branch } from '../../../../../shared/orm-entity/branch';
 
 export class V1WebTrackingService {
   static async awb(
     payload: TrackingAwbPayloadVm,
   ): Promise<TrackingAwbResponseVm> {
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const result = new TrackingAwbResponseVm();
 
     const data = await this.getRawAwb(payload.awbNumber);
@@ -56,9 +60,18 @@ export class V1WebTrackingService {
       result.doReturnAwb               = data.doReturnAwb;
       result.isDoReturnPartner         = data.isDoReturnPartner;
 
+      // TODO: partial load data
       const history = await this.getRawAwbHistory(data.awbItemId);
       if (history && history.length) {
         result.awbHistory = history;
+      }
+      // TODO: partial load data
+      const transactionHistory = await this.getTransactionHistory(
+        data.awbItemId,
+        permissonPayload.branchId,
+      );
+      if (transactionHistory && transactionHistory.length) {
+        result.transactionHistory = transactionHistory;
       }
     }
     return result;
@@ -352,6 +365,65 @@ export class V1WebTrackingService {
       ORDER BY bh.history_date DESC
     `;
     return await RawQueryService.queryWithParams(query, { bagItemId });
+  }
+
+  private static async getTransactionHistory(
+    awbItemId: number,
+    branchId: number,
+  ): Promise<AwbTransactionHistoryResponseVm[]> {
+    // check status level by branch login head office true
+    const branch = await Branch.findOne({
+      cache: 60000, // 1 minute
+      select: ['branchId', 'branchCode'],
+      where: {
+        branchId,
+        isHeadOffice: true,
+        isActive: true,
+        isDeleted: false,
+      },
+    });
+    const statusLevel = branch ? 2 : 1;
+
+    // #region get data query builder
+    const qb = createQueryBuilder();
+    qb.addSelect('t1.awb_item_id', 'awbItemId');
+    qb.addSelect('t1.transaction_date', 'transactionDate');
+    qb.addSelect('t1.transaction_status_id', 'transactionStatusId');
+    qb.addSelect('t2.status_code', 'transactionStatusCode');
+    qb.addSelect('t2.status_title', 'transactionStatusTitle');
+    qb.addSelect('t1.branch_id', 'branchId');
+    qb.addSelect('t3.branch_name', 'branchName');
+    qb.addSelect('t5.fullname', 'employeeNameScan');
+    qb.addSelect('t5.nik', 'employeeNikScan');
+
+    qb.from('cod_transaction_history', 't1');
+    qb.innerJoin(
+      'transaction_status',
+      't2',
+      't1.transaction_status_id = t2.transaction_status_id AND t2.is_deleted = false',
+    );
+    qb.innerJoin(
+      'branch',
+      't3',
+      't1.branch_id = t3.branch_id AND t3.is_deleted = false',
+    );
+    qb.innerJoin(
+      'users',
+      't4',
+      't1.user_id_created = t4.user_id AND t3.is_deleted = false',
+    );
+    qb.innerJoin(
+      'employee',
+      't5',
+      't4.employee_id = t5.employee_id AND t5.is_deleted = false',
+    );
+    qb.where('t1.awb_item_id = :awbItemId AND t1.is_deleted = false', {
+      awbItemId,
+    });
+    qb.andWhere('t2.status_level <= :statusLevel', { statusLevel });
+    // #endregion query
+
+    return await qb.getRawMany();
   }
 
 }
