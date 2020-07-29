@@ -842,11 +842,10 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.userAdmin, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.attachment, 't5', j =>
+    q.leftJoin(e => e.attachment, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // TODO: set to inner join
-    q.leftJoin(e => e.userTransfer, 't6', j =>
+    q.innerJoin(e => e.userTransfer, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
