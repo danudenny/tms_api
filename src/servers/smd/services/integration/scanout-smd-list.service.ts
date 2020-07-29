@@ -430,9 +430,6 @@ export class ScanoutSmdListService {
         },
       });
       if (resultDoSmdDetail ) {
-        // for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-          // tslint:disable-next-line:no-console
-
           const rawQuery = `
           SELECT
             br.bag_representative_id,
@@ -454,7 +451,6 @@ export class ScanoutSmdListService {
         `;
           const resultDataBagRepresentative = await RawQueryService.query(rawQuery);
           if (resultDataBagRepresentative.length > 0 ) {
-          // tslint:disable-next-line:prefer-for-of
           for (let a = 0; a < resultDataBagRepresentative.length; a++) {
             data.push({
               do_smd_detail_id: payload.do_smd_detail_id,
@@ -466,7 +462,6 @@ export class ScanoutSmdListService {
             });
           }
         }
-      // }
           result.statusCode = HttpStatus.OK;
           result.message = 'List Bag Representative Success';
           result.data = data;
@@ -657,7 +652,7 @@ export class ScanoutSmdListService {
     const total = await q.countWithoutTakeAndSkip();
     const result = new ScanOutDetailBagRepresentativeMoreResponseVm();
     result.data = data;
-    
+
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
