@@ -491,6 +491,7 @@ export class V1WebAwbCodService {
     }
   }
 
+  // NOTE: remove awb from transaction
   static async transactionBranchUpdate(
     payload: WebCodTransactionUpdatePayloadVm,
   ): Promise<WebCodTransactionUpdateResponseVm> {
@@ -512,6 +513,7 @@ export class V1WebAwbCodService {
       throw new BadRequestException('Data transaction tidak valid!');
     }
 
+    // TODO: transaction process??
     try {
       // NOTE: loop data awb and update transaction detail
       for (const awb of payload.awbNumber) {
@@ -525,6 +527,12 @@ export class V1WebAwbCodService {
           },
         });
         if (transactionDetail) {
+          await AwbItemAttr.update({
+            awbItemId: transactionDetail.awbItemId,
+          }, {
+            transactionStatusId: null,
+          });
+
           // remove awb from transaction
           await CodTransactionDetail.update(
             {
@@ -537,11 +545,13 @@ export class V1WebAwbCodService {
               userIdUpdated: authMeta.userId,
             },
           );
+
           // sync data to mongodb
           CodSyncTransactionQueueService.perform(
             awb,
             timestamp,
           );
+
           totalCodValue += Number(transactionDetail.codValue);
           totalSuccess += 1;
         } else {

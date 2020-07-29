@@ -26,8 +26,6 @@ import moment = require('moment');
 import { CodSupplierInvoice } from '../../../../../shared/orm-entity/cod-supplier-invoice';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
-import { CodTransactionHistory } from '../../../../../shared/orm-entity/cod-transaction-history';
-import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
 import { CodUpdateSupplierInvoiceQueueService } from '../../../../queue/services/cod/cod-update-supplier-invoice-queue.service';
 import { CodTransactionHistoryQueueService } from '../../../../queue/services/cod/cod-transaction-history-queue.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
