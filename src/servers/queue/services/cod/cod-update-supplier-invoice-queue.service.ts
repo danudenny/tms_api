@@ -66,8 +66,10 @@ export class CodUpdateSupplierInvoiceQueueService {
 
       if (supplierInvoiceStatusId == 41000) {
         query = {
-            partnerId: data.partnerId,
-            codSupplierInvoiceId: null,
+          partnerId: data.partnerId,
+          codSupplierInvoiceId: null,
+          transactionStatusId: 40000,
+          isVoid: false,
         };
         dataUpdate = {
           $set: {
