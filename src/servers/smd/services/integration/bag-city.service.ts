@@ -2,7 +2,7 @@ import { Injectable, Param, PayloadTooLargeException } from '@nestjs/common';
 import moment = require('moment');
 import express = require('express');
 import { AuthService } from '../../../../shared/services/auth.service';
-import { BagCityResponseVm } from '../../models/bag-city-response.vm';
+import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm } from '../../models/bag-city-response.vm';
 import { BagCityPayloadVm } from '../../models/bag-city-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
@@ -13,9 +13,105 @@ import { PrintBagCityPayloadVm } from '../../models/print-bag-city-payload.vm';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { MetaService } from '../../../../shared/services/meta.service';
 
 @Injectable()
 export class BagCityService {
+  static async listBagging(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ListBagCityResponseVm> {
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'representativeCode',
+      },
+      {
+        field: 'bagRepresentativeCode',
+      },
+    ];
+    payload.fieldResolverMap['bagRepresentativeCode'] = 't1.bag_representative_code';
+    payload.fieldResolverMap['bagRepresentativeDate'] = 't1.bag_representative_date';
+    payload.fieldResolverMap['representativeCode'] = 't2.representative_code';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
+    payload.fieldResolverMap['branchBagRepresentative'] = 't3.branch_name';
+    const repo = new OrionRepositoryService(BagRepresentative, 't1');
+
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.bag_representative_code', 'bagRepresentativeCode'],
+      ['t1.bag_representative_id', 'bagRepresentativeId'],
+      ['TO_CHAR(t1.bag_representative_date, \'dd-mm-YYYY HH24:MI:SS\')', 'bagRepresentativeDate'],
+      ['COUNT(t4.bag_representative_item_id)', 'totalItem'],
+      ['t1.total_weight', 'totalWeight'],
+      ['t2.representative_code', 'representativeCode'],
+      ['t2.representative_name', 'representativeName'],
+      ['t3.branch_name', 'branchBagging'],
+    );
+    q.leftJoin(e => e.representative, 't2');
+    q.innerJoin(e => e.branch, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagRepresentativeItems, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw(`
+      t1.bag_representative_id,
+      t1.bag_representative_code,
+      t1.created_time,
+      t1.bag_representative_date,
+      t1.total_weight,
+      t2.representative_code,
+      t3.branch_name,
+      t2.representative_name
+    `);
+
+    q.orderBy({ createdTime: 'DESC' });
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new ListBagCityResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async listDetailBagging(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ListDetailBagCityResponseVm> {
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'bagRepresentativeId',
+      },
+      {
+        field: 'bagRepresentativeItemId',
+      },
+    ];
+    payload.fieldResolverMap['bagRepresentativeId'] = 't1.bag_representative_id';
+    const repo = new OrionRepositoryService(BagRepresentativeItem, 't1');
+
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.bag_representative_id', 'bagRepresentativeId'],
+      ['t1.bag_representative_item_id', 'bagRepresentativeItemId'],
+    );
+    q.orderBy({ createdTime: 'DESC' });
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new ListDetailBagCityResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+  
   static async createBagging(
     payload: BagCityPayloadVm,
   ): Promise<BagCityResponseVm> {
