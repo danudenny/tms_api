@@ -103,7 +103,7 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.awb, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
+    q.leftJoin(e => e.doPodDeliverDetail, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(
@@ -132,6 +132,7 @@ export class V1WebAwbCodService {
     );
 
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
+    q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
