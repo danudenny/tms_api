@@ -27,7 +27,7 @@ export class MongoDbConfig {
 
   public static async getDbSicepatCod(collection: string) {
     const client = await this.getSicepatMonggoClient();
-    return client.db('sicepat-cod').collection(collection);
+    return client.db('sicepat').collection(collection);
   }
 
 }
