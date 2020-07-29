@@ -211,7 +211,7 @@ export class LastMileDeliveryOutService {
           });
 
           if (doPodDeliverDetail) {
-            DoPodDeliverDetail.update(doPodDeliverDetail.doPodDeliverDetailId, {
+            DoPodDeliverDetail.update({ doPodDeliverDetailId: doPodDeliverDetail.doPodDeliverDetailId }, {
               isDeleted: true,
             });
             // NOTE: update awb_item_attr and awb_history
@@ -273,7 +273,7 @@ export class LastMileDeliveryOutService {
         userId: authMeta.userId,
         totalAwb,
       };
-      await DoPodDeliver.update(doPod.doPodDeliverId, updateDoPod);
+      await DoPodDeliver.update({ doPodDeliverId: doPod.doPodDeliverId }, updateDoPod);
 
       // NOTE: insert table audit history
       await this.createAuditDeliveryHistory(doPod.doPodDeliverId);
@@ -360,13 +360,9 @@ export class LastMileDeliveryOutService {
     let totalError = 0;
 
     // find data doPod Deliver
-    // const doPodDeliver = await DoPodDeliver.findOne({
-    //   where: {
-    //     doPodDeliverId: payload.doPodId,
-    //     isDeleted: false,
-    //   },
-    //   lock: { mode: 'pessimistic_write' },
-    // });
+    const doPodDeliver = await DoPodDeliverRepository.getDataById(
+      payload.doPodId,
+    );
 
     for (const awbNumber of payload.awbNumber) {
       const response = new ScanAwbVm();
@@ -394,7 +390,7 @@ export class LastMileDeliveryOutService {
             const statusCode = await AwbService.awbStatusGroup(
               awb.awbStatusIdLast,
             );
-            // save data to awb_troubleß
+            // save data to awb_trouble
             if (statusCode != 'IN') {
               const branchName = awb.branchLast
                 ? awb.branchLast.branchName
@@ -424,11 +420,6 @@ export class LastMileDeliveryOutService {
             if (holdRedis) {
               // AFTER Scan OUT ===============================================
               // #region after scanout
-              // Update do_pod
-              const doPodDeliver = await DoPodDeliverRepository.getDataById(
-                payload.doPodId,
-              );
-
               if (doPodDeliver) {
                 // save table do_pod_detail
                 // NOTE: create data do pod detail per awb number
@@ -462,11 +453,11 @@ export class LastMileDeliveryOutService {
                 response.printDoPodDetailMetadata.awbItem.awb.totalWeight =
                   awb.awbItem.awb.totalWeightFinalRounded;
 
-                // TODO: need improvement counter total scan out
-                const totalAwb = doPodDeliver.totalAwb + 1;
-                await DoPodDeliver.update(doPodDeliver.doPodDeliverId, {
-                  totalAwb,
-                });
+                // NOTE: counter total scan out
+                // const totalAwb = doPodDeliver.totalAwb + 1;
+                // await DoPodDeliver.update({ doPodDeliverId: doPodDeliver.doPodDeliverId }, {
+                //   totalAwb,
+                // });
 
                 // NOTE: queue by Bull ANT
                 let employeeIdDriver;
@@ -521,13 +512,17 @@ export class LastMileDeliveryOutService {
       });
     } // end of loop
 
-    // TODO: need improvement
-    // if (doPodDeliver && totalSuccess > 0) {
-    //   const totalAwb = doPodDeliver.totalAwb + totalSuccess;
-    //   await DoPodDeliver.update(doPod.doPodId, {
-    //     totalAwb,
-    //   });
-    // }
+    // NOTE: counter total scan out
+    if (doPodDeliver && totalSuccess > 0) {
+      const totalAwb = doPodDeliver.totalAwb + totalSuccess;
+      await DoPodDeliver.update(
+        {
+          doPodDeliverId: doPodDeliver.doPodDeliverId,
+        },
+        {
+          totalAwb,
+        });
+    }
 
     // Populate return value
     result.totalData = payload.awbNumber.length;
@@ -638,7 +633,7 @@ export class LastMileDeliveryOutService {
 
                   // TODO: need improvement counter total scan out
                   const totalAwb = doPodDeliver.totalAwb + 1;
-                  await DoPodDeliver.update(doPodDeliver.doPodDeliverId, {
+                  await DoPodDeliver.update({ doPodDeliverId: doPodDeliver.doPodDeliverId }, {
                     totalAwb,
                   });
                   totalSuccess += 1;
@@ -1004,7 +999,7 @@ export class LastMileDeliveryOutService {
             if (holdRedis) {
               // Update data do pod detail per awb number
               // doPodDeliverId;
-              await DoPodDeliverDetail.update(awbDeliver.doPodDeliverDetailId, {
+              await DoPodDeliverDetail.update({ doPodDeliverDetailId: awbDeliver.doPodDeliverDetailId }, {
                 isDeleted: true,
                 userIdUpdated: authMeta.userId,
                 updatedTime: moment().toDate(),
@@ -1168,7 +1163,7 @@ export class LastMileDeliveryOutService {
     });
 
     if (awb) {
-      await AwbItemAttr.update(awb.awbItemAttrId, {
+      await AwbItemAttr.update({ awbItemAttrId: awb.awbItemAttrId }, {
         awbThirdParty: payload.awbThirdParty,
         updatedTime: moment().toDate(),
       });

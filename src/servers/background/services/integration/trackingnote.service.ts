@@ -1,11 +1,15 @@
 import moment = require('moment');
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { TrackingNotePayloadVm } from '../../models/trackingnote.payload.vm';
 import { TrackingNoteResponseVm } from '../../models/trackingnote.response.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { DatabaseConfig } from '../../config/database/db.config';
 import * as sql from 'mssql';
 import { AwbHistoryLastSyncPod } from '../../../../shared/orm-entity/awb-history-last-sync-pod';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { HttpStatus } from '@nestjs/common';
+import { RedisService } from '../../../../shared/services/redis.service';
+import geolib = require('geolib');
 
 export class TrackingNoteService {
 
@@ -14,16 +18,60 @@ export class TrackingNoteService {
   }
 
   static async findLastAwbHistory(
-    payload: BaseMetaPayloadVm,
+    payload: any,
   ): Promise<TrackingNoteResponseVm> {
     const result = new TrackingNoteResponseVm();
 
-    result.data = await this.insertTmsTrackingNote(5);
+    const locking = await RedisService.lockingWithExpire(
+      `hold:trackingnote:sync`,
+      'locking',
+      120,
+    );
+
+    if (locking) {
+      result.message = 'OK';
+    } else {
+      result.message = 'Previous Service Still Running';
+      return result;
+    }
+
+    let rate = 5;
+    if (payload.rate > 0) {
+      rate = payload.rate;
+    }
+    PinoLoggerService.debug(this.logTitle, ' RATE ' + rate);
+
+    result.data = await this.insertTmsTrackingNote(rate, payload);
 
     return result;
   }
 
-  private static async getRawAwbHistory(awbHistoryId: number): Promise<any> {
+  static async findLastAwbHistoryManual(
+    payload: TrackingNotePayloadVm,
+  ): Promise<TrackingNoteResponseVm> {
+    const result = new TrackingNoteResponseVm();
+
+    if (!Array.isArray(payload.arrAwbHistoryId)) {
+      RequestErrorService.throwObj(
+        {
+          message: 'Arr Awb History Id Must Contain Array',
+        },
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    result.data = await this.insertTmsTrackingNote(1, payload, true);
+
+    return result;
+  }
+
+  private static async getRawAwbHistory(awbHistoryId: number, payload: any, isManual: boolean = false): Promise<any> {
+    let additional_where = 'ah.awb_history_id > :awbHistoryId';
+
+    if (isManual) {
+      additional_where = 'ah.awb_history_id IN (' + payload.arrAwbHistoryId.join(',') + ')';
+    }
+
     const query = `
       SELECT
         ah.awb_history_id as "awbHistoryId",
@@ -38,14 +86,17 @@ export class TrackingNoteService {
         ah.note_public as "notePublic",
         ah.awb_note as "noteTms",
         ah.receiver_name as "receiverName",
-        s.awb_visibility as "isPublic"
+        s.awb_visibility as "isPublic",
+        ah.latitude,
+        ah.longitude,
+        ah.reason_name as "reasonName"
       FROM awb_history ah
       INNER JOIN awb_item ai on ai.awb_item_id=ah.awb_item_id and ai.is_deleted=false
       INNER JOIN awb a on a.awb_id=ai.awb_id and a.is_deleted=false
       INNER JOIN awb_status s on ah.awb_status_id=s.awb_status_id and s.send_tracking_note=10 and s.is_deleted=false
-      LEFT JOIN employee e on ah.employee_id_driver=e.employee_id and e.is_deleted=false
-      LEFT JOIN branch b on ah.branch_id=b.branch_id and b.is_deleted=false
-      WHERE ah.awb_history_id > :awbHistoryId and ah.is_deleted=false
+      LEFT JOIN employee e on ah.employee_id_driver=e.employee_id
+      LEFT JOIN branch b on ah.branch_id=b.branch_id
+      WHERE ` + additional_where + ` and ah.is_deleted=false
       ORDER BY awb_history_id
       LIMIT 2000;
     `;
@@ -54,7 +105,7 @@ export class TrackingNoteService {
     });
   }
 
-  private static async insertTmsTrackingNote(counter: number = 0): Promise<any> {
+  private static async insertTmsTrackingNote(counter: number = 0, payload: any, isManual: boolean = false): Promise<any> {
     if (counter > 0) {
       const awbHistoryLastSyncPod = await AwbHistoryLastSyncPod.findOne({
         where: {
@@ -63,8 +114,8 @@ export class TrackingNoteService {
       });
 
       if (awbHistoryLastSyncPod) {
-        const data = await this.getRawAwbHistory(awbHistoryLastSyncPod.awbHistoryId);
-        if (data) {
+        const data = await this.getRawAwbHistory(awbHistoryLastSyncPod.awbHistoryId, payload, isManual);
+        if (data.length > 0) {
           // Connect to POD
           const conn = await DatabaseConfig.getPodDbConn();
           const transaction = new sql.Transaction(conn);
@@ -100,21 +151,43 @@ export class TrackingNoteService {
                 isPublic = 1;
               }
               request.input('IsPublic', sql.Bit, isPublic);
+              let latitude = item.latitude;
+              let longitude = item.longitude;
+              try {
+                    if (latitude != null && longitude != null) {
+                        if (!geolib.isValidCoordinate({ latitude, longitude })) {
+                            latitude = null;
+                            longitude = null;
+                        }
+                    }
+                } catch (error) {
+                    console.log(error);
+                    latitude = null;
+                    longitude = null;
+                }
+              request.input('Latitude', sql.Decimal(12, 9), latitude);
+              request.input('Longitude', sql.Decimal(12, 9), longitude);
+              request.input('ReasonName', sql.NVarChar(255), item.reasonName);
 
               request.query(`
                 insert into TmsTrackingNoteStaging (
-                  AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, NoteInternal, NotePublic, NoteTms, UsrCrt, UsrUpd, DtmCrt, DtmUpd, ReceiverName, IsPublic
+                  AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, NoteInternal, NotePublic, NoteTms,
+                  UsrCrt, UsrUpd, DtmCrt, DtmUpd, ReceiverName, IsPublic, Latitude, Longitude, ReasonName
                   )
                 values (
-                  @AwbHistoryId, @ReceiptNumber, @TrackingDateTime, @AwbStatusId, @TrackingType, @CourierName, @Nik, @BranchCode, @NoteInternal, @NotePublic, @NoteTms, @UsrCrt, @UsrUpd, @DtmCrt, @DtmUpd, @ReceiverName, @IsPublic
+                  @AwbHistoryId, @ReceiptNumber, @TrackingDateTime, @AwbStatusId, @TrackingType, @CourierName, @Nik, @BranchCode, @NoteInternal, @NotePublic, @NoteTms,
+                  @UsrCrt, @UsrUpd, @DtmCrt, @DtmUpd, @ReceiverName, @IsPublic, @Latitude, @Longitude, @ReasonName
                 )`, (err, result) => {
                   if (!err) {
                     ctr++;
                     if (ctr == data.length) {
-                      AwbHistoryLastSyncPod.update(awbHistoryLastSyncPod.awbHistoryLastSyncPodId, {
-                        awbHistoryId: lastSyncId,
-                        updatedTime: new Date(),
-                      });
+                      if (!isManual) {
+                        AwbHistoryLastSyncPod.update(awbHistoryLastSyncPod.awbHistoryLastSyncPodId, {
+                          awbHistoryId: lastSyncId,
+                          updatedTime: new Date(),
+                        });
+                      }
+
                       transaction.commit(err => {
                         if (err) {
                           PinoLoggerService.debug(this.logTitle, '[ERROR TRANSACTION] :: ' + err);
@@ -127,7 +200,7 @@ export class TrackingNoteService {
                           });
                         } else {
                           PinoLoggerService.debug(this.logTitle, '[COMMITTED]===================');
-                          this.insertTmsTrackingNote(counter - 1);
+                          this.insertTmsTrackingNote(counter - 1, payload, isManual);
                         }
                       });
                       PinoLoggerService.debug(this.logTitle, '[ALL SUCCESS] Last awb history id === ' + lastSyncId);
@@ -149,13 +222,18 @@ export class TrackingNoteService {
             }
           });
         } else {
-          PinoLoggerService.debug(this.logTitle, 'Awb History Empty (' + awbHistoryLastSyncPod.awbHistoryId + ')');
+          if (!isManual) { RedisService.del(`hold:trackingnote:sync`); }
+          PinoLoggerService.debug(this.logTitle, 'Awb History Empty (' + awbHistoryLastSyncPod.awbHistoryId + '), Counter ' + counter);
         }
 
         return data;
       } else {
-        PinoLoggerService.debug(this.logTitle, 'Last Awb History Empty');
+        if (!isManual) { RedisService.del(`hold:trackingnote:sync`); }
+        PinoLoggerService.debug(this.logTitle, 'Last Awb History Empty, Counter ' + counter);
       }
+    } else {
+      if (!isManual) { RedisService.del(`hold:trackingnote:sync`); }
+      PinoLoggerService.debug(this.logTitle, 'Finished All, Counter ' + counter);
     }
   }
 }

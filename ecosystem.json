@@ -1,11 +1,12 @@
 {
   "apps": [{
-    "name": "tms-api-jenkins",
+    "name": "sicepat-tms-api",
     "script": "dist/main.js",
     "instances": "max",
     "exec_mode": "cluster",
-    "ignore_watch": ["node_modules"],
+    "node_args": "--max_old_space_size=2048",
     "instance_var": "INSTANCE_ID",
+    "time": true,
     "env": {
       "NODE_ENV": "production",
       "TZ": "Asia/Jakarta"

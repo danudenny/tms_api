@@ -1,5 +1,5 @@
 // #region import
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import moment = require('moment');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -25,6 +25,7 @@ import {
   WebScanInHubSortListResponseVm,
   WebScanInBranchListBagResponseVm,
   WebScanInBranchListAwbResponseVm,
+  WebScanInHubListResponseVm,
 } from '../../models/web-scanin-list.response.vm';
 import {
   WebScanInVm,
@@ -54,6 +55,8 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagTroubleService } from '../../../../shared/services/bag-trouble.service';
 import { DoPodDetailBagRepository } from '../../../../shared/orm-repository/do-pod-detail-bag.repository';
+import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
+import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
 
 // #endregion
 
@@ -372,7 +375,14 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['createdTime'] = 't2.created_time';
     payload.fieldResolverMap['branchId'] = 't3.branch_id';
     payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
+    payload.fieldResolverMap['bagNumberCode'] = '"bagNumberCode"';
+    payload.fieldResolverMap['totalAwb'] = '"totalAwb"';
+    payload.fieldResolverMap['representativeFrom'] =
+      't1.ref_representative_code';
+    payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
+    payload.fieldResolverMap['branchScanId'] = 't1.branch_id';
     payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
+
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -394,21 +404,18 @@ export class WebDeliveryInService {
 
     q.selectRaw(
       [
-        `CASE LENGTH (CAST(t2.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t1.bag_number,'00',t2.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t1.bag_number,'0',t2.bag_seq)
-          ELSE
-            CONCAT (t1.bag_number,t2.bag_seq) END`,
+        `CONCAT(t1.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`,
         'bagNumberCode',
       ],
       ['t1.bag_number', 'bagNumber'],
+      ['t1.ref_representative_code', 'representativeCode'],
       ['t2.bag_seq', 'bagSeq'],
       ['t2.bag_item_id', 'bagItemId'],
       ['t2.created_time', 'createdTime'],
       ['t3.branch_name', 'branchName'],
       ['t3.branch_id', 'branchId'],
+      ['t5.branch_name', 'branchScanName'],
+      ['t5.branch_id', 'branchScanId'],
       ['COUNT (t4.*)', 'totalAwb'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
@@ -422,15 +429,21 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItems.bagItemAwbs, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoin(e => e.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.andWhere(e => e.branchIdTo, w => w.isNotNull);
     q.groupByRaw(`
       t2.created_time,
       t2.bag_seq,
       t2.bag_item_id,
       t1.bag_number,
+      t1.ref_representative_code,
       t2.weight,
       t3.branch_name,
-      t3.branch_id
+      t3.branch_id,
+      t5.branch_id,
+      t5.branch_name
     `);
 
     const data = await q.exec();
@@ -593,13 +606,7 @@ export class WebDeliveryInService {
       ['t5.awb_status_title', 'awbStatusTitle'],
       ['t5.is_problem', 'isProblem'],
       [
-        `CASE LENGTH (CAST(t6.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t7.bag_number,'00',t6.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t7.bag_number,'0',t6.bag_seq)
-          ELSE
-            CONCAT (t7.bag_number,t6.bag_seq) END`,
+        `CONCAT(t7.bag_number, LPAD(t6.bag_seq::text, 3, '0'))`,
         'bagNumber',
       ],
       ['t8.branch_name', 'branchName'],
@@ -1083,7 +1090,7 @@ export class WebDeliveryInService {
           });
           if (bagItem) {
             // update status bagItem
-            await BagItem.update(bagItem.bagItemId, {
+            await BagItem.update({ bagItemId: bagItem.bagItemId}, {
               bagItemStatusIdLast: BAG_STATUS.DO_HUB,
               branchIdLast: permissonPayload.branchId,
               updatedTime: timeNow,
@@ -1098,7 +1105,7 @@ export class WebDeliveryInService {
               // counter total scan in
               doPodDetailBag.doPod.totalScanInBag += 1;
               if (doPodDetailBag.doPod.totalScanInBag == 1) {
-                await DoPod.update(doPodDetailBag.doPodId, {
+                await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
                   firstDateScanIn: timeNow,
                   lastDateScanIn: timeNow,
                   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
@@ -1106,7 +1113,7 @@ export class WebDeliveryInService {
                   userIdUpdated: authMeta.userId,
                 });
               } else {
-                await DoPod.update(doPodDetailBag.doPodId, {
+                await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
                   lastDateScanIn: timeNow,
                   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
                   updatedTime: timeNow,
@@ -1172,6 +1179,11 @@ export class WebDeliveryInService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timeNow = moment().toDate();
 
+    // handle podScanInBranchId
+    if (payload.podScanInBranchId === '') {
+      throw new BadRequestException('PodScanInBranchId NULL');
+    }
+
     if (payload.bagNumberDetail && payload.bagNumberDetail.length) {
       for (const item of payload.bagNumberDetail) {
         const bagData = await BagService.validBagNumber(item.bagNumber);
@@ -1187,11 +1199,14 @@ export class WebDeliveryInService {
           });
           if (podScanInBag) {
             const totalDiff = item.totalAwbInBag - item.totalAwbScan;
-            PodScanInBranchBag.update(podScanInBag.podScanInBranchBagId, {
-              totalAwbScan: item.totalAwbScan,
-              notes: payload.notes,
-              totalDiff,
-            });
+            PodScanInBranchBag.update(
+              { podScanInBranchBagId: podScanInBag.podScanInBranchBagId },
+              {
+                totalAwbScan: item.totalAwbScan,
+                notes: payload.notes,
+                totalDiff,
+              },
+            );
           }
           // NOTE: add to bag trouble
           const bagTroubleCode = await CustomCounterCode.bagTrouble(timeNow);
@@ -1217,7 +1232,7 @@ export class WebDeliveryInService {
     });
 
     if (podScanInBranch) {
-      PodScanInBranch.update(payload.podScanInBranchId, {
+      PodScanInBranch.update({ podScanInBranchId: payload.podScanInBranchId }, {
         transactionStatusId: 700,
       });
     }
@@ -1570,5 +1585,66 @@ export class WebDeliveryInService {
       LEFT JOIN "public"."bag" "bag" ON bag.bag_id = bi.bag_id and bag.is_deleted = false
     `;
     return await RawQueryService.query(rawQuery);
+  }
+
+  async hubScanInList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInHubListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't3.awb_number';
+    payload.fieldResolverMap['branchScanId'] = 't4.branch_id';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['dateScanIn'] = 't1.created_time';
+    payload.fieldResolverMap['branchScanName'] = 't4.branch_name';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'consigneeName',
+      },
+      {
+        field: 'consigneeAddress',
+      },
+      {
+        field: 'awbNumber',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(PodScanInHubDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.created_time', 'dateScanIn'],
+      ['t3.awb_number', 'awbNumber'],
+      ['t3.consignee_name', 'consigneeName'],
+      ['t3.consignee_address', 'consigneeAddress'],
+      ['t4.branch_name', 'branchScanName'],
+      ['t4.branch_id', 'branchScanId'],
+    );
+
+    q.innerJoin(e => e.podScanInHub, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.podScanInHub.branch, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInHubListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 }

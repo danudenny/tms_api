@@ -23,6 +23,9 @@ import moment = require('moment');
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
+import { UploadImagePodQueueService } from '../../../../queue/services/upload-pod-image-queue.service';
+import { ServiceUnavailableException } from '@nestjs/common';
+import { RedisService } from '../../../../../shared/services/redis.service';
 // #endregion
 
 export class V1MobileSyncService {
@@ -33,14 +36,24 @@ export class V1MobileSyncService {
     const result = new MobileSyncDataResponseVm();
     const dataItem: MobileSyncAwbVm [] = [];
     for (const delivery of payload.deliveries) {
+      // Locking redis
+      const holdRedis = await RedisService.locking(
+        `hold:mobileSync:${delivery.awbNumber}`,
+        'locking',
+      );
       const response = {
         process: false,
         message: 'Data Not Valid',
       };
-      const process = await this.syncDeliver(delivery);
-      if (process) {
-        response.process = process;
-        response.message = 'Success';
+
+      if (holdRedis) {
+        const process = await this.syncDeliver(delivery);
+        if (process) {
+          response.process = process;
+          response.message = 'Success';
+        }
+        // remove key holdRedis
+        RedisService.del(`hold:mobileSync:${delivery.awbNumber}`);
       }
 
       // push item
@@ -48,7 +61,8 @@ export class V1MobileSyncService {
         awbNumber: delivery.awbNumber,
         ...response,
       });
-    }
+
+    } // endof loop
 
     result.data = dataItem;
     return result;
@@ -88,98 +102,104 @@ export class V1MobileSyncService {
           ? lastDoPodDeliverHistory.awbStatusDateTime
           : lastDoPodDeliverHistory.syncDateTime;
 
-      const awbdDelivery = await this.getDoPodDeliverDetail(delivery.doPodDeliverDetailId);
-      const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
-      if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
-        const awbStatus = await AwbStatus.findOne(
-          { awbStatusId: lastDoPodDeliverHistory.awbStatusId },
-        );
-
-        // #region transaction data
-        await getManager().transaction(async transactionEntityManager => {
-          await transactionEntityManager.insert(
-            DoPodDeliverHistory,
-            doPodDeliverHistories,
+      try {
+        const awbdDelivery = await this.getDoPodDeliverDetail(delivery.doPodDeliverDetailId);
+        const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
+        if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
+          const awbStatus = await AwbStatus.findOne(
+            { awbStatusId: lastDoPodDeliverHistory.awbStatusId },
           );
 
-          // Update data DoPodDeliverDetail
-          await transactionEntityManager.update(
-            DoPodDeliverDetail,
-            delivery.doPodDeliverDetailId,
-            {
-              awbStatusIdLast: lastDoPodDeliverHistory.awbStatusId,
-              latitudeDeliveryLast: lastDoPodDeliverHistory.latitudeDelivery,
-              longitudeDeliveryLast: lastDoPodDeliverHistory.longitudeDelivery,
-              awbStatusDateTimeLast: lastDoPodDeliverHistory.awbStatusDateTime,
-              reasonIdLast: lastDoPodDeliverHistory.reasonId,
-              syncDateTimeLast: lastDoPodDeliverHistory.syncDateTime,
-              descLast: lastDoPodDeliverHistory.desc,
-              consigneeName: delivery.consigneeNameNote,
-              updatedTime: moment().toDate(),
-            },
-          );
+          // #region transaction data
+          await getManager().transaction(async transactionEntityManager => {
+            await transactionEntityManager.insert(
+              DoPodDeliverHistory,
+              doPodDeliverHistories,
+            );
 
-          const doPodDeliver = await DoPodDeliver.findOne({
-            where: {
-              doPodDeliverId: delivery.doPodDeliverId,
-              isDeleted: false,
-            },
-          });
-          if (doPodDeliver) {
+            // Update data DoPodDeliverDetail
+            await transactionEntityManager.update(
+              DoPodDeliverDetail,
+              delivery.doPodDeliverDetailId,
+              {
+                awbStatusIdLast: lastDoPodDeliverHistory.awbStatusId,
+                latitudeDeliveryLast: lastDoPodDeliverHistory.latitudeDelivery,
+                longitudeDeliveryLast: lastDoPodDeliverHistory.longitudeDelivery,
+                awbStatusDateTimeLast: lastDoPodDeliverHistory.awbStatusDateTime,
+                reasonIdLast: lastDoPodDeliverHistory.reasonId,
+                syncDateTimeLast: lastDoPodDeliverHistory.syncDateTime,
+                descLast: lastDoPodDeliverHistory.desc,
+                consigneeName: delivery.consigneeNameNote,
+                updatedTime: moment().toDate(),
+              },
+            );
 
-            if (awbStatus.isProblem) {
-              await transactionEntityManager.increment(
-                DoPodDeliver,
-                {
-                  doPodDeliverId: delivery.doPodDeliverId,
-                  totalProblem: LessThan(doPodDeliver.totalAwb),
-                },
-                'totalProblem',
-                1,
-              );
-            } else if (awbStatus.isFinalStatus) {
-              await transactionEntityManager.increment(
-                DoPodDeliver,
-                {
-                  doPodDeliverId: delivery.doPodDeliverId,
-                  totalDelivery: LessThan(doPodDeliver.totalAwb),
-                },
-                'totalDelivery',
-                1,
-              );
-              // balance total problem
-              await transactionEntityManager.decrement(
-                DoPodDeliver,
-                {
-                  doPodDeliverId: delivery.doPodDeliverId,
-                  totalProblem: MoreThan(0),
-                },
-                'totalProblem',
-                1,
-              );
+            const doPodDeliver = await DoPodDeliver.findOne({
+              where: {
+                doPodDeliverId: delivery.doPodDeliverId,
+                isDeleted: false,
+              },
+            });
+            if (doPodDeliver) {
+
+              if (awbStatus.isProblem) {
+                await transactionEntityManager.increment(
+                  DoPodDeliver,
+                  {
+                    doPodDeliverId: delivery.doPodDeliverId,
+                    totalProblem: LessThan(doPodDeliver.totalAwb),
+                  },
+                  'totalProblem',
+                  1,
+                );
+              } else if (awbStatus.isFinalStatus) {
+                await transactionEntityManager.increment(
+                  DoPodDeliver,
+                  {
+                    doPodDeliverId: delivery.doPodDeliverId,
+                    totalDelivery: LessThan(doPodDeliver.totalAwb),
+                  },
+                  'totalDelivery',
+                  1,
+                );
+                // balance total problem
+                await transactionEntityManager.decrement(
+                  DoPodDeliver,
+                  {
+                    doPodDeliverId: delivery.doPodDeliverId,
+                    totalProblem: MoreThan(0),
+                  },
+                  'totalProblem',
+                  1,
+                );
+              }
             }
-          }
-        });
-        // #endregion of transaction
+          });
+          // #endregion of transaction
 
-        // NOTE: queue by Bull
-        DoPodDetailPostMetaQueueService.createJobV1MobileSync(
-          awbdDelivery.awbItemId,
-          lastDoPodDeliverHistory.awbStatusId,
-          authMeta.userId,
-          awbdDelivery.branchId,
-          authMeta.userId,
-          delivery.employeeId,
-          lastDoPodDeliverHistory.reasonId,
-          lastDoPodDeliverHistory.desc,
-          delivery.consigneeNameNote,
-          awbStatus.awbStatusName,
-          awbStatus.awbStatusTitle,
-          historyDateTime,
-        );
-        process = true;
-      } else {
-        PinoLoggerService.log('##### Data Not Valid', delivery);
+          // NOTE: queue by Bull
+          DoPodDetailPostMetaQueueService.createJobV1MobileSync(
+            awbdDelivery.awbItemId,
+            lastDoPodDeliverHistory.awbStatusId,
+            authMeta.userId,
+            awbdDelivery.branchId,
+            authMeta.userId,
+            delivery.employeeId,
+            lastDoPodDeliverHistory.reasonId,
+            lastDoPodDeliverHistory.desc,
+            delivery.consigneeNameNote,
+            awbStatus.awbStatusName,
+            awbStatus.awbStatusTitle,
+            historyDateTime,
+            lastDoPodDeliverHistory.latitudeDelivery,
+            lastDoPodDeliverHistory.longitudeDelivery,
+          );
+          process = true;
+        } else {
+          PinoLoggerService.log('##### Data Not Valid', delivery);
+        }
+      } catch (error) {
+        throw new ServiceUnavailableException(error.message);
       }
     } // end of doPodDeliverHistories.length
     return process;
@@ -190,6 +210,8 @@ export class V1MobileSyncService {
     file,
   ): Promise<MobileSyncImageResponseVm> {
     const result = new MobileSyncImageResponseVm();
+    const authMeta = AuthService.getAuthData();
+    PinoLoggerService.log('#### DEBUG USER SYNC IMAGE : ', authMeta);
 
     let url = null;
     let attachmentId = null;
@@ -228,6 +250,13 @@ export class V1MobileSyncService {
       doPodDeliverAttachment.attachmentTmsId = attachmentId;
       doPodDeliverAttachment.type = payload.imageType;
       await DoPodDeliverAttachment.save(doPodDeliverAttachment);
+
+      // send to background reupload s3 with awb number
+      UploadImagePodQueueService.perform(
+        payload.id,
+        url,
+        payload.imageType,
+      );
     }
 
     result.url = url;
@@ -273,16 +302,21 @@ export class V1MobileSyncService {
     // NOTE: insert data array
     let total = 0;
     if (attachmentId && payload.data) {
-      PinoLoggerService.log('#### Payload Data : ', payload.data);
       const data = payload.data.split(';');
       for (const item of data) {
-        PinoLoggerService.log('#### Data Item Id : ', item);
         if (item) {
           const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
           doPodDeliverAttachment.doPodDeliverDetailId = item;
           doPodDeliverAttachment.attachmentTmsId = attachmentId;
           doPodDeliverAttachment.type = payload.imageType;
           await DoPodDeliverAttachment.save(doPodDeliverAttachment);
+
+          // send to background reupload s3 with awb number
+          UploadImagePodQueueService.perform(
+            item,
+            url,
+            payload.imageType,
+          );
           total += 1;
         }
       }
@@ -299,6 +333,7 @@ export class V1MobileSyncService {
   private static async getDoPodDeliverDetail(
     doPodDeliverDetailId: string,
   ): Promise<any> {
+    // TODO: need refactoring query branchId from permissonRole?
     const query = `
       SELECT
         dpdd.awb_status_id_last as "awbStatusIdLast",
@@ -312,7 +347,7 @@ export class V1MobileSyncService {
     `;
     const rawData = await RawQueryService.queryWithParams(query, {
       doPodDeliverDetailId,
-    });
+    }, false);
     return rawData.length ? rawData[0] : null;
   }
 }

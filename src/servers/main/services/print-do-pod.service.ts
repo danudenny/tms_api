@@ -9,6 +9,7 @@ import {
   PrintDoPodReturnPayloadQueryVm,
   PrintDoPodReturnAdmiStorePayloadVm,
 } from '../models/print-do-pod-return.vm';
+import { Branch } from '../../../shared/orm-entity/branch';
 
 export class PrintDoPodService {
   public static async printDoPodByRequest(
@@ -160,53 +161,62 @@ export class PrintDoPodService {
     });
   }
 
-  public static reformatDataDoReturnAdmin(data: any) {
+  public static async reformatDataDoReturnAdmin(data: any) {
     const response = {
-      user: {
-        firstName: null,
-        lastName: null,
+      data: {
+        user: {
+          firstName: null,
+          lastName: null,
+        },
+        userAdmin: {
+          firstName: null,
+          lastName: null,
+        },
+        doReturnAwbs: null,
       },
-      userAdmin: {
-        firstName: null,
-        lastName: null,
+      meta: {
+        branchName: null,
       },
-      doReturnAwbs: null,
     };
     const doReturnAwbs = [];
+    const branch = await Branch.findOne({
+      select: ['branchName'],
+      where: {
+        branchId: data.userDetail.branch,
+      },
+    });
+
+    response.meta.branchName = branch.branchName;
 
     for (let i = 0; i < data.awbDetail.length; i++) {
       const temp = data.awbDetail[i];
       temp.branchTo = {};
-      temp.branchTo.branchName = data.userDetail.branch;
+      temp.branchTo.branchName = branch.branchName;
       doReturnAwbs.push(temp);
     }
-    response.doReturnAwbs = doReturnAwbs;
-    response.user.firstName = data.userDriver.split(' ')[0];
-    response.user.lastName = data.userDriver.split(' ')[1]
-      ? data.userDriver.split(' ')[1]
-      : '';
-    response.userAdmin.firstName = data.userDetail.userName.split(' ')[0];
-    response.userAdmin.lastName = data.userDetail.userName.split(' ')[1]
-      ? data.userDetail.userName.split(' ')[1]
-      : '';
+    response.data.doReturnAwbs = doReturnAwbs;
+    response.data.user.firstName = data.userDriver;
+    response.data.userAdmin.firstName = data.userDetail.userName;
 
     return response;
   }
 
   public static async printDoPodDoReturnAdminByRequest(
     res: express.Response,
-    data: PrintDoPodReturnAdmiStorePayloadVm,
+    data: any,
     queryParams: PrintDoPodReturnPayloadQueryVm,
   ) {
-    const reportParams = this.reformatDataDoReturnAdmin(data);
+    const dataReformat = await this.reformatDataDoReturnAdmin(data);
 
     const m = moment();
+    const branchName = dataReformat.meta.branchName;
     const jsreportParams = {
-      reportParams,
+      data: dataReformat.data,
       meta: {
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
-        totalData: await data.awbDetail,
+        totalData: await data.awbDetail.length,
+        branchName,
       },
     };
 
@@ -215,7 +225,7 @@ export class PrintDoPodService {
       res,
       templates: [
         {
-          templateName: 'ttd-do-balik',
+          templateName: 'ttd-do-balik-admin',
           templateData: jsreportParams,
           printCopy: queryParams.printCopy,
         },

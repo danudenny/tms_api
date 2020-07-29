@@ -11,7 +11,9 @@ export class PartnerMerchantService {
   static async sync(payload: any): Promise<any> {
     const result = [];
 
-    let pid = 41102333;
+    // pid by pickup_request_id start 41102333
+    // pid by work_order_id start 146744249 (30 Juni 2020)
+    let pid = 146744249;
     const configId = 4;
 
     const schedulerConfig = await SchedulerConfig.findOne({
@@ -22,7 +24,12 @@ export class PartnerMerchantService {
       pid = schedulerConfig.workOrderHistoryIdLast;
     }
 
-    const data = await this.getPickupRequest(pid);
+    let isReprocess = false;
+    if (payload.isReprocess == true){
+      isReprocess = true;
+    }
+
+    const data = await this.getPickupRequest(pid, isReprocess);
 
     if (data) {
       let maxPid = -1;
@@ -60,7 +67,7 @@ export class PartnerMerchantService {
 
       PinoLoggerService.debug('##### PREV PID : ' + pid  + ' =======================================================');
 
-      if (maxPid > -1) {
+      if (maxPid > -1 && !isReprocess) {
         PinoLoggerService.debug('##### MAX PID : ' + maxPid  + ' =======================================================');
 
         const timeNow = moment().toDate();
@@ -74,38 +81,62 @@ export class PartnerMerchantService {
     return result;
   }
 
-  private static async getPickupRequest(pid: number): Promise<any> {
+  private static async getPickupRequest(pid: number, isReprocess: boolean = false): Promise<any> {
     const select = 'pr.merchant_code, pr.pickup_request_name, pr.pickup_request_address, pr.pickup_request_email, pr.pickup_request_contact_no, pr.partner_id, branch_id_assigned';
     const select_encrypt = `
       MD5(CONCAT(
         pr.merchant_code, pr.pickup_request_name, MD5(pr.pickup_request_address), pr.pickup_request_email, pr.pickup_request_contact_no, pr.partner_id, branch_id_assigned
       ))
     `;
+    let endpid = pid + 5000;
+    let where = `
+      and w.work_order_id > :pid
+      and w.work_order_id <= :endpid
+    `;
+    let startDate = moment().format('YYYY-MM-DD 00:00:00');
+    let endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
+
+    if (isReprocess){
+      where = `
+        and w.is_reprocess_partner_merchant = true
+        and w.pickup_schedule_date_time >= :startDate
+        and w.pickup_schedule_date_time < :endDate
+      `;
+    }
 
     const query = `
       SELECT
-        MAX(pr.pickup_request_id) as max_pid, ` + select + `,
+        MAX(pr.work_order_id) as max_pid, ` + select + `,
         ` + select_encrypt + ` as partner_merchant_code
       FROM (
-        SELECT pr.pickup_request_id, ` + select + `
-        FROM pickup_request pr
-        INNER JOIN pickup_request_detail prd on pr.pickup_request_id=prd.pickup_request_id and prd.is_deleted=false
-        INNER JOIN work_order w on w.work_order_id=prd.work_order_id_last and w.is_deleted=false
-        LEFT JOIN partner_merchant pm on pm.partner_merchant_code = ` + select_encrypt + ` and pm.is_deleted=false
-        WHERE
-          pm.partner_merchant_id is null
-          and pr.pickup_request_id > :pid
+        SELECT w.work_order_id, ` + select + `
+        FROM work_order w
+        INNER JOIN pickup_request_detail prd on w.work_order_id = prd.work_order_id_last and prd.is_deleted=false
+        INNER JOIN pickup_request pr on
+          pr.pickup_request_id = prd.pickup_request_id
           and pr.pickup_request_name <> ''
           and pr.pickup_request_address <> ''
           and pr.is_deleted = false
-          and (w.work_order_status_id_pick >= 4200 or w.work_order_status_id_last >= 7000 )
-        LIMIT 2500
+        LEFT JOIN partner_merchant pm on
+          pm.merchant_name = pr.pickup_request_name
+          and pm.encrypt_address = pr.encrypt_address255
+          and pm.partner_id = pr.partner_id
+          and pm.branch_id = w.branch_id_assigned
+          and pm.is_deleted=false
+        WHERE
+          pm.partner_merchant_id is null
+          ` + where + `
+          and w.branch_id_assigned is not null
+          and w.is_deleted = false
       ) pr
       GROUP BY ` + select + `
     `;
 
     return await RawQueryService.queryWithParams(query, {
       pid,
+      endpid,
+      startDate,
+      endDate,
     });
   }
 }

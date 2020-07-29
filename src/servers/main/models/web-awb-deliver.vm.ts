@@ -133,9 +133,6 @@ export class WebDeliveryVm {
 }
 
 export class WebAwbDeliverSyncPayloadVm {
-  @ApiModelProperty()
-  role: string;
-
   @ApiModelPropertyOptional()
   isReturn: boolean;
 

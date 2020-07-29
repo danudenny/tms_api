@@ -151,13 +151,12 @@ export class MobileCheckOutService {
       employeeJourney.attachmentIdCheckOut = attachmentId;
 
       await this.employeeJourneyRepository.save(employeeJourney);
-
       const branch = await this.branchRepository.findOne({
         select: ['branchName', 'branchId'],
         where: {
           branchId: payload.branchId
             ? payload.branchId
-            : permissonPayload.branchId,
+            : employeeJourney.branchIdCheckIn,
         },
       });
 

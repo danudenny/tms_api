@@ -65,6 +65,24 @@ export class MobileDeliveryVm {
   @ApiModelProperty()
   isCOD: boolean;
 
+  @ApiModelProperty()
+  isDoReturn: boolean;
+
+  @ApiModelProperty()
+  doReturnNumber: string;
+
+  @ApiModelPropertyOptional()
+  codPaymentMethod: string;
+
+  @ApiModelPropertyOptional()
+  codPaymentService: string;
+
+  @ApiModelPropertyOptional()
+  note: string;
+
+  @ApiModelPropertyOptional()
+  noReference: string;
+
   @ApiModelProperty({ type: [MobileDeliveryHistoryVm] })
   deliveryHistory: MobileDeliveryHistoryVm[];
 }

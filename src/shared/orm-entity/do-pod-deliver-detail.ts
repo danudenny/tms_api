@@ -8,6 +8,7 @@ import { AwbStatus } from './awb-status';
 import { Reason } from './reason';
 import { Awb } from './awb';
 import { DoPodDetail } from './do-pod-detail';
+import { PickupRequestDetail } from './pickup-request-detail';
 
 @Entity('do_pod_deliver_detail', { schema: 'public' })
 export class DoPodDeliverDetail extends TmsBaseEntity {
@@ -122,6 +123,13 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
   doPodDetails: DoPodDetail;
 
   @OneToOne(() => DoPodDeliver)
-  @JoinColumn({ name: 'do_pod_deliver_id', referencedColumnName: 'doPodDeliverId' })
+  @JoinColumn({
+    name: 'do_pod_deliver_id',
+    referencedColumnName: 'doPodDeliverId',
+  })
   doPodDeliverReturn: DoPodDeliver;
+
+  @OneToOne(() => PickupRequestDetail)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  pickupRequestDetail: PickupRequestDetail;
 }

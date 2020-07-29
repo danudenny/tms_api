@@ -25,7 +25,9 @@
     "migration:run": "npm run typeorm migration:run",
     "migration:revert": "npm run typeorm migration:revert",
     "migration:generate": "npm run typeorm migration:generate -- -n",
-    "drakov:start": "drakov -f 'contracts/*.apib' -p 3100 --public --autoOptions --watch"
+    "drakov:start": "drakov -f 'contracts/*.apib' -p 3100 --public --autoOptions --watch",
+    "check-format": "prettier --check \"**/*.ts\"",
+    "format-code": "prettier --write \"**/*.ts\""
   },
   "dependencies": {
     "@nestjs/common": "^6.5.3",
@@ -74,7 +76,9 @@
     "typeorm": "^0.2.18",
     "uuid": "^3.3.3",
     "winston": "^3.2.1",
-    "winston-loggly-bulk": "^3.0.1"
+    "winston-loggly-bulk": "^3.0.1",
+    "xlsx": "^0.16.0",
+    "geolib": "^3.2.1"
   },
   "devDependencies": {
     "@entity-factory/core": "^0.2.1",

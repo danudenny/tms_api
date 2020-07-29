@@ -208,7 +208,7 @@ export class WebDeliveryOutService {
           });
 
           if (doPodDetail) {
-            DoPodDetail.update(doPodDetail.doPodDetailId, {
+            DoPodDetail.update({ doPodDetailId: doPodDetail.doPodDetailId }, {
               isDeleted: true,
             });
             // NOTE: update awb_item_attr and awb_history
@@ -274,7 +274,7 @@ export class WebDeliveryOutService {
         vehicleNumber: payload.vehicleNumber,
         totalScanOutAwb,
       };
-      await DoPod.update(doPod.doPodId, updateDoPod);
+      await DoPod.update({ doPodId: doPod.doPodId }, updateDoPod);
       await this.createAuditHistory(doPod.doPodId);
 
       result.status = 'ok';
@@ -329,7 +329,7 @@ export class WebDeliveryOutService {
             });
 
             if (doPodDetailBag) {
-              DoPodDetailBag.update(doPodDetailBag.doPodDetailBagId, {
+              DoPodDetailBag.update({ doPodDetailBagId: doPodDetailBag.doPodDetailBagId }, {
                 isDeleted: true,
               });
 
@@ -340,7 +340,7 @@ export class WebDeliveryOutService {
                 },
               });
               if (bagItem) {
-                BagItem.update(bagItem.bagItemId, {
+                BagItem.update({ bagItemId: bagItem.bagItemId }, {
                   bagItemStatusIdLast: 2000,
                   branchIdLast: doPod.branchId,
                   branchIdNext: null,
@@ -389,7 +389,7 @@ export class WebDeliveryOutService {
               },
             });
             if (bagItem) {
-              BagItem.update(bagItem.bagItemId, {
+              BagItem.update({ bagItemId: bagItem.bagItemId }, {
                 bagItemStatusIdLast: 1000,
                 branchIdLast: doPod.branchId,
                 branchIdNext: doPod.branchIdTo,
@@ -435,7 +435,7 @@ export class WebDeliveryOutService {
         vehicleNumber: payload.vehicleNumber,
         totalScanOutBag,
       };
-      await DoPod.update(doPod.doPodId, updateDoPod);
+      await DoPod.update({ doPodId: doPod.doPodId }, updateDoPod);
       await this.createAuditHistory(doPod.doPodId);
 
       result.status = 'ok';
@@ -703,7 +703,7 @@ export class WebDeliveryOutService {
             // #region after scanout
             // Update bag_item set bag_item_status_id = 1000
 
-            await BagItem.update(bagData.bagItemId, {
+            await BagItem.update({ bagItemId: bagData.bagItemId }, {
               bagItemStatusIdLast: bagStatus,
               branchIdLast: doPod.branchId,
               branchIdNext: doPod.branchIdTo,
@@ -788,14 +788,14 @@ export class WebDeliveryOutService {
     if (doPod) {
       // counter total scan in
       if (doPod.totalScanOutBag == 0) {
-        await DoPod.update(doPod.doPodId, {
+        await DoPod.update({ doPodId: doPod.doPodId }, {
           totalScanOutBag: totalSuccess,
           firstDateScanOut: timeNow,
           lastDateScanOut: timeNow,
         });
       } else {
         const totalScanOutBag = doPod.totalScanOutBag + totalSuccess;
-        await DoPod.update(doPod.doPodId, {
+        await DoPod.update({ doPodId: doPod.doPodId }, {
           totalScanOutBag,
           lastDateScanOut: timeNow,
         });
@@ -979,6 +979,95 @@ export class WebDeliveryOutService {
     );
 
     q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH_AWB));
+    q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
+
+    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name');
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanOutTransitListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllSortHubTransitList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanOutTransitListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['branchTo'] = 't1.branch_id_to';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
+    payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
+    payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
+    payload.fieldResolverMap['description'] = 't1.description';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['totalAwb'] = 'totalAwb';
+    payload.fieldResolverMap['employeeName'] = 't2.fullname';
+    payload.fieldResolverMap['branchName'] = 't3.branch_name';
+    payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
+    payload.fieldResolverMap['partnerLogisticName'] = `"partnerLogisticName"`;
+    if (payload.sortBy === '') {
+      payload.sortBy = 'doPodDateTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDateTime',
+      },
+      {
+        field: 'doPodCode',
+      },
+      {
+        field: 'branchName',
+      },
+      {
+        field: 'fullname',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPod, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_id', 'doPodId'],
+      ['t1.created_time', 'createdTime'],
+      ['t1.do_pod_code', 'doPodCode'],
+      ['t1.do_pod_date_time', 'doPodDateTime'],
+      ['t1.description', 'description'],
+      ['t2.fullname', 'employeeName'],
+      ['t3.branch_name', 'branchName'],
+      ['COUNT (t4.do_pod_id)', 'totalAwb'],
+      [`
+        CASE
+          WHEN t1.partner_logistic_name IS NOT NULL THEN t1.partner_logistic_name
+          WHEN t1.partner_logistic_id IS NOT NULL AND t1.partner_logistic_name IS NULL THEN t5.partner_logistic_name
+          ELSE
+            'Internal'
+        END
+      `, 'partnerLogisticName'],
+    );
+
+    q.innerJoin(e => e.doPodDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branchTo, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.partnerLogistic, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB_AWB));
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
 
     q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name');
@@ -1205,6 +1294,8 @@ export class WebDeliveryOutService {
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['COALESCE(t1.consignee_name, t2.consignee_name)', 'consigneeName'],
       ['t3.awb_status_title', 'awbStatusTitle'],
+      ['t4.do_return', 'isDoReturn'],
+      ['t4.do_return_number', 'doReturnNumber'],
       [
         'CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))',
         'totalCodValue',
@@ -1215,6 +1306,9 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.awbStatus, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.pickupRequestDetail, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -1292,6 +1386,8 @@ export class WebDeliveryOutService {
   ): Promise<WebDeliveryListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    payload.fieldResolverMap['representativeIdTo'] = 't5.representative_code';
+    payload.fieldResolverMap['totalAwb'] = 'totalAwb';
     payload.fieldResolverMap[
       'bagNumber'
     ] = `CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`;
