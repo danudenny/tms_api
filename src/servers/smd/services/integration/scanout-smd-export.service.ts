@@ -9,13 +9,17 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { ScanoutSmdListService } from './scanout-smd-list.service';
 import { StoreExcelScanOutPayloadVm } from '../../models/scanout-smd.payload.vm';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 
 @Injectable()
 export class ScanoutSmdExportService {
-  static async exportExcel(
+  static async exportCSV(
     res: express.Response,
     queryParams: StoreExcelScanOutPayloadVm,
   ): Promise<any> {
+    // NOTE: get payload json from redis,
+    // retrieve data then convert to CSV
     const body = await this.retrieveData(queryParams.id);
 
     const payload = new BaseMetaPayloadVm();
@@ -27,70 +31,27 @@ export class ScanoutSmdExportService {
     if (!payload.sortBy) {
       payload.sortBy = 'do_smd_time';
     }
-    payload.limit = 100000;
-    const data = await ScanoutSmdListService.getQueryScanoutList(payload, false);
-    await this.getExcel(res, data.data);
+
+    // limit data query, avoid default limit 20 in OrionRepository query
+    payload.limit = 100000000;
+    const data = await this.getQueryCsvOnly(payload);
+    await this.getCSV(res, data.data);
   }
 
-  static async getExcel(
+  static async getCSV(
     res: express.Response,
     data: any,
   ): Promise<any> {
-    const rows = [];
-    const result = [];
-    const maxRowPerSheet = 65000;
-    let idx = 1;
-    // tslint:disable-next-line: no-shadowed-variable
-    let multiply = 1;
-
-    // handle multiple sheet for large data
-    if (data.length > maxRowPerSheet) {
-      do {
-        const slicedData = data.slice(idx, maxRowPerSheet * multiply);
-        result.push(slicedData);
-        idx = multiply * slicedData + 1;
-        multiply++;
-      }
-      while (data.length > maxRowPerSheet * multiply);
-    } else {
-      result.push(data);
-    }
-    // mapping data to row excel
-    result.map(function(item, index) {
-      rows[index] = [];
-      item.map(function(detail) {
-        const content = {};
-        content['Nomor SMD'] = detail.do_smd_code;
-        content['Tanggal di Buat'] = detail.do_smd_time ?
-          moment(detail.do_smd_time).format('DD MMM YYYY HH:mm') :
-          null;
-        content['Handover'] = detail.fullname;
-        content['Kendaraan'] = detail.vehicle_number;
-        content['Gerai Asal'] = detail.branch_from_name;
-        content['Gerai Tujuan'] = detail.branch_to_name;
-        content['Status Terakhir'] = detail.do_smd_status_title;
-        content['Gabung Paket'] = detail.total_bag;
-        content['Bagging'] = detail.total_bagging;
-        rows[index].push(content);
-      });
-    });
+    const fastcsv = require('fast-csv');
 
     // NOTE: create excel using unique name
-    const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.xlsx';
+    const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.csv';
     try {
-      // NOTE: create now workbok for storing excel rows
-      // response passed through express response
-      const newWB = xlsx.utils.book_new();
-      rows.map((detail, index) => {
-        const newWS = xlsx.utils.json_to_sheet(detail);
-        xlsx.utils.book_append_sheet(newWB, newWS, (result.length > 1 ?
-          `${moment().format('YYYY-MM-DD')}(${index + 1})` :
-          moment().format('YYYY-MM-DD')));
-      });
-      xlsx.writeFile(newWB, fileName);
+      const ws = fs.createWriteStream(fileName);
+      fastcsv.write(data, {headers: true}).pipe(ws);
 
       const filestream = fs.createReadStream(fileName);
-      const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const mimeType = 'application/vnd.ms-excel';
 
       res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
       res.setHeader('Content-type', mimeType);
@@ -109,6 +70,73 @@ export class ScanoutSmdExportService {
       }
     }
   }
+
+  static async getQueryCsvOnly(payload: BaseMetaPayloadVm): Promise<any> {
+    payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
+    payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
+    payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
+    payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
+
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_time',
+      },
+      {
+        field: 'branch_id_from',
+      },
+      {
+        field: 'branch_id_to',
+      },
+      {
+        field: 'do_smd_code',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoSmd, 'ds');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+    q.selectRaw(
+      ['ds.do_smd_code', 'Nomor SMD'],
+      ['TO_CHAR(ds.do_smd_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal di Buat'],
+      ['e.fullname', 'Handover'],
+      ['dsv.vehicle_number', 'Kendaraan'],
+      ['b.branch_name', 'Gerai Asal'],
+      ['ds.branch_to_name_list', 'Gerai Tujuan'],
+      ['ds.total_bag', 'Gabung Paket'],
+      ['ds.total_bagging', 'Bagging'],
+      ['dss.do_smd_status_title', 'Status Terakhir'],
+    );
+
+    q.innerJoinRaw(
+      'do_smd_detail',
+      'dsd',
+      'dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE',
+    );
+    q.innerJoin(e => e.doSmdVehicle, 'dsv', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.branch, 'b', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doSmdVehicle.employee, 'e', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoinRaw(
+      'do_smd_status',
+      'dss',
+      'ds.do_smd_status_id_last = dss.do_smd_status_id AND dss.is_deleted = FALSE',
+    );
+    q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, dss.do_smd_status_title');
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    const result = {
+      data: null,
+    };
+    result.data = await q.exec();
+    return result;
+  }
+
+  // NOTE: get data payload json in redis
   static async retrieveGenericData<T = any>(
     identifier: string | number,
   ) {
@@ -125,6 +153,8 @@ export class ScanoutSmdExportService {
     return data;
   }
 
+  // NOTE: store payload before download GET METHOD
+  // payload GET METHOD for download can not receive json except parameter
   static async storeExcelPayload(payloadBody: any) {
     if (!payloadBody) {
       RequestErrorService.throwObj({
@@ -143,5 +173,4 @@ export class ScanoutSmdExportService {
       id: identifier,
     };
   }
-
 }

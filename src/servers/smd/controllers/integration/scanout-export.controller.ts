@@ -23,7 +23,7 @@ export class ScanOutExportController {
     @Query() queryParams: StoreExcelScanOutPayloadVm,
     @Response() serverResponse: express.Response,
   ) {
-    return ScanoutSmdExportService.exportExcel(serverResponse, queryParams);
+    return ScanoutSmdExportService.exportCSV(serverResponse, queryParams);
   }
 
 }

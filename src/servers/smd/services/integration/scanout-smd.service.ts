@@ -19,6 +19,8 @@ import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
+import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
+import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -35,6 +37,7 @@ export class ScanoutSmdService {
       payload.smd_date,
       permissonPayload.branchId,
       authMeta.userId,
+      payload.smd_trip,
     );
 
     const paramDoSmdVehicleId = await this.createDoSmdVehicle(
@@ -508,6 +511,7 @@ export class ScanoutSmdService {
   }
 
   static async scanOutItem(payload: any): Promise<any> {
+    // Bag Type 0 = Bagging, 1 =  Bag / Gab.Paket, 2 = Bag Representative / Gabung Sortir Kota
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
@@ -523,6 +527,19 @@ export class ScanoutSmdService {
       },
     });
 
+    rawQuery = `
+        SELECT
+          br.bag_representative_id,
+          br.bag_representative_code,
+          r.representative_code
+        FROM bag_representative br
+        INNER JOIN representative  r on br.representative_id_to = r.representative_id and r.is_deleted  = FALSE
+        WHERE
+          br.bag_representative_code = '${payload.item_number}' AND
+          br.is_deleted = FALSE;
+      `;
+    const resultDataBagRepresentative = await RawQueryService.query(rawQuery);
+
     const resultDoSmd = await DoSmd.findOne({
       where: {
         doSmdId: payload.do_smd_id,
@@ -530,7 +547,94 @@ export class ScanoutSmdService {
       },
     });
 
-    if (resultBagging) {
+    if (resultDataBagRepresentative.length > 0) {
+      rawQuery = `
+          SELECT
+            do_smd_detail_id ,
+            representative_code_list,
+            total_bag_representative
+          FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+          where
+            s.code  = '${escape(resultDataBagRepresentative[0].representative_code)}' AND
+            do_smd_id = ${payload.do_smd_id} AND
+            is_deleted = FALSE;
+        `;
+      const resultDataRepresentative = await RawQueryService.query(rawQuery);
+      if (resultDataRepresentative.length > 0) {
+        const resultDoSmdDetailItem = await DoSmdDetailItem.findOne({
+          where: {
+            doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
+            bagRepresentativeId: resultDataBagRepresentative[0].bag_representative_id,
+            isDeleted: false,
+          },
+        });
+        if (resultDoSmdDetailItem) {
+          throw new BadRequestException(`Bag Representative Already Scanned`);
+        } else {
+          await this.createDoSmdDetailItem(
+            resultDataRepresentative[0].do_smd_detail_id,
+            permissonPayload.branchId,
+            null,
+            null,
+            null,
+            resultDataBagRepresentative[0].bag_representative_id,
+            2,
+            authMeta.userId,
+          );
+          await DoSmdDetail.update(
+            { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
+            {
+              totalBagRepresentative: resultDataRepresentative[0].total_bag_representative + 1,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            },
+          );
+          const resultDoSmdDetail = await DoSmdDetail.findOne({
+            where: {
+              doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
+              isDeleted: false,
+            },
+          });
+
+          await DoSmd.update(
+            { doSmdId : payload.do_smd_id },
+            {
+              totalBagRepresentative: Number(resultDoSmd.totalBagRepresentative) + 1,
+              totalItem: Number(resultDoSmd.totalItem) + 1,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            },
+          );
+
+          BagRepresentativeScanDoSmdQueueService.perform(
+            resultDataBagRepresentative[0].bag_representative_id,
+            authMeta.userId,
+            permissonPayload.branchId,
+          );
+
+          data.push({
+            do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
+            bagging_id: null,
+            bag_id: null,
+            bag_item_id: null,
+            bag_representative_id: resultDataBagRepresentative[0].bag_representative_id,
+            bag_type: 2,
+            bag_number: null,
+            bagging_number: null,
+            bag_representative_code: payload.item_number,
+            total_bag: resultDoSmdDetail.totalBag,
+            total_bagging: resultDoSmdDetail.totalBagging,
+            total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
+          });
+          result.statusCode = HttpStatus.OK;
+          result.message = 'SMD Item Success Created';
+          result.data = data;
+          return result;
+        }
+      } else {
+        throw new BadRequestException(`Representative To Bag Representative Not Match`);
+      }
+    } else if (resultBagging) {
       rawQuery = `
         SELECT
           bg.bagging_id,
@@ -577,13 +681,14 @@ export class ScanoutSmdService {
             for (let i = 0; i < resultDataBagItem.length; i++) {
               // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
               // customer.awbStatusName = data[i].awbStatusName;
-              //  BAG TYPE 0 = Bagging, 1 = Bag / Gab. Paket
+              //  BAG TYPE 0 = Bagging, 1 = Bag / Gab. Paket, 2 = Bag Representative / Gabung Sortir Kota
               const paramDoSmdDetailItemId = await this.createDoSmdDetailItem(
                 resultDataRepresentative[0].do_smd_detail_id,
                 permissonPayload.branchId,
                 resultDataBagItem[i].bag_item_id,
                 resultDataBagItem[i].bag_id,
                 resultDataBagItem[i].bagging_id,
+                null,
                 0,
                 authMeta.userId,
               );
@@ -611,6 +716,7 @@ export class ScanoutSmdService {
               { doSmdId : payload.do_smd_id },
               {
                 totalBagging: Number(resultDoSmd.totalBagging) + 1,
+                totalItem: Number(resultDoSmd.totalItem) + 1,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
               },
@@ -630,11 +736,14 @@ export class ScanoutSmdService {
               bagging_id: resultDataBagItem[0].bagging_id,
               bag_id: null,
               bag_item_id: null,
+              bag_representative_id: null,
               bag_type: 0,
               bag_number: null,
               bagging_number: payload.item_number,
+              bag_representative_code: null,
               total_bag: resultDoSmdDetail.totalBag,
               total_bagging: resultDoSmdDetail.totalBagging,
+              total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
             });
             result.statusCode = HttpStatus.OK;
             result.message = 'SMD Route Success Created';
@@ -702,6 +811,7 @@ export class ScanoutSmdService {
                 resultDataBag[0].bag_item_id,
                 resultDataBag[0].bag_id,
                 null,
+                null,
                 1,
                 authMeta.userId,
               );
@@ -728,6 +838,7 @@ export class ScanoutSmdService {
                 { doSmdId : payload.do_smd_id },
                 {
                   totalBag: Number(resultDoSmd.totalBag) + 1,
+                  totalItem: Number(resultDoSmd.totalItem) + 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
@@ -747,11 +858,14 @@ export class ScanoutSmdService {
                 bagging_id: null,
                 bag_id: resultDataBag[0].bag_id,
                 bag_item_id: resultDataBag[0].bag_item_id,
+                bag_representative_id: null,
                 bag_type: 1,
                 bag_number: payload.item_number,
                 bagging_number: null,
+                bag_representative_code: null,
                 total_bag: resultDoSmdDetail.totalBag,
                 total_bagging: resultDoSmdDetail.totalBagging,
+                total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
               });
               result.statusCode = HttpStatus.OK;
               result.message = 'SMD Route Success Created';
@@ -816,6 +930,7 @@ export class ScanoutSmdService {
                 resultDataBag[0].bag_item_id,
                 resultDataBag[0].bag_id,
                 null,
+                null,
                 1,
                 authMeta.userId,
               );
@@ -842,6 +957,7 @@ export class ScanoutSmdService {
                 { doSmdId : payload.do_smd_id },
                 {
                   totalBag: Number(resultDoSmd.totalBag) + 1,
+                  totalItem: Number(resultDoSmd.totalItem) + 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
@@ -861,11 +977,14 @@ export class ScanoutSmdService {
                 bagging_id: null,
                 bag_id: resultDataBag[0].bag_id,
                 bag_item_id: resultDataBag[0].bag_item_id,
+                bag_representative_id: null,
                 bag_type: 1,
                 bag_number: payload.item_number,
                 bagging_number: null,
+                bag_representative_code: null,
                 total_bag: resultDoSmdDetail.totalBag,
                 total_bagging: resultDoSmdDetail.totalBagging,
+                total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
               });
               result.statusCode = HttpStatus.OK;
               result.message = 'SMD Route Success Created';
@@ -945,6 +1064,14 @@ export class ScanoutSmdService {
           },
         );
       }
+      await DoSmd.update(
+        { doSmdId : payload.do_smd_id },
+        {
+          sealNumberLast: payload.seal_number,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
       const resultDoSmd = await DoSmd.findOne({
         where: {
           doSmdId: payload.do_smd_id,
@@ -1273,6 +1400,7 @@ export class ScanoutSmdService {
     paramDoSmdTime: Date,
     paramBranchId: number,
     userId: number,
+    paramCounterTrip: number,
   ) {
     const dataDoSmd = DoSmd.create({
       doSmdCode: paramDoSmdCode,
@@ -1281,6 +1409,7 @@ export class ScanoutSmdService {
       branchId: paramBranchId,
       totalVehicle: 1,
       departureScheduleDateTime: paramDoSmdTime,
+      counterTrip: paramCounterTrip,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,
@@ -1350,6 +1479,7 @@ export class ScanoutSmdService {
     paramBagItemId: number,
     paramBagId: number,
     paramBaggingId: number,
+    paramBagRepresetativeId: number,
     paramBagType: number,
     userId: number,
   ) {
@@ -1360,6 +1490,7 @@ export class ScanoutSmdService {
       bagItemId: paramBagItemId,
       bagId: paramBagId,
       baggingId: paramBaggingId,
+      bagRepresentativeId: paramBagRepresetativeId,
       bagType: paramBagType,
       userIdCreated: userId,
       createdTime: moment().toDate(),

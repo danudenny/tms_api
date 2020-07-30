@@ -16,7 +16,10 @@ export class MonitoringListVm {
     do_smd_code: string;
 
     @ApiModelProperty()
-    route: string;
+    branch_name_from: string;
+
+    @ApiModelProperty()
+    branch_name_to: string;
 
     @ApiModelProperty()
     vehicle_number: string;
@@ -25,10 +28,19 @@ export class MonitoringListVm {
     vehicle_name: string;
 
     @ApiModelProperty()
+    seal_number_last: string;
+
+    @ApiModelProperty()
     trip: number;
 
     @ApiModelProperty()
+    smd_trip: number;
+
+    @ApiModelProperty()
     total_weight: number;
+
+    @ApiModelProperty()
+    total_colly: number;
 
     @ApiModelProperty()
     vehicle_capacity: number;
@@ -44,5 +56,8 @@ export class MonitoringListVm {
 
     @ApiModelProperty()
     arrival_date_time: Date;
+
+    @ApiModelProperty()
+    employee_driver_name: string;
 
   }

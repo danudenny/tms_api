@@ -126,6 +126,13 @@ export class DoSmdDetail extends TmsBaseEntity {
   })
   totalBagging: number;
 
+  @Column('bigint', {
+    nullable: false,
+    default: () => 0,
+    name: 'total_bag_representative',
+  })
+  totalBagRepresentative: number;
+
   @Column('character varying', {
     nullable: false,
     length: 255,

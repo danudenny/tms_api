@@ -51,3 +51,15 @@ export class MobileSmdListDetailBaggingVm {
   bagging_number: string;
 
 }
+
+export class MobileSmdListDetailBagRepresentativeVm {
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_representative_id: number;
+
+  @ApiModelProperty()
+  bag_representative_number: string;
+
+}

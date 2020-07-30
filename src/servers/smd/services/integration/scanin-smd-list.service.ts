@@ -64,6 +64,7 @@ export class ScaninSmdListService {
       ['bt.branch_name', 'branch_to_name'],
       ['dsd.total_bag', 'total_bag'],
       ['dsd.total_bagging', 'total_bagging'],
+      ['dsd.total_bag_representative', 'total_bag_representative'],
       ['dss.do_smd_status_title', 'do_smd_status_title'],
     );
 
@@ -235,6 +236,67 @@ export class ScaninSmdListService {
         return result;
       } else {
         throw new BadRequestException(`This API For Detail Bag / Gab.Paket Only`);
+      }
+    } else {
+      throw new BadRequestException(`SMD Detail ID: ` + payload.do_smd_id + ` Can't Found !`);
+    }
+  }
+
+  static async findScanInDetailBagRepresentative(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanInSmdDetailBaggingResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+
+    const resultDoSmdDetail = await DoSmdDetail.findOne({
+      where: {
+        doSmdDetailId: payload.do_smd_detail_id,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmdDetail) {
+      if (payload.bag_type == 2) {
+        const rawQuery = `
+        SELECT
+          br.bag_representative_id,
+          br.bag_representative_code,
+          br.total_item
+          CONCAT(br.total_weight::numeric(10,2), ' Kg') AS total_weight,
+          r.representative_code,
+          br.branch_name
+        FROM do_smd_detail_item dsdi
+        INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
+        INNER JOIN bag_representative br ON dsdi.bag_representative_id = br.bag_representative_id AND br.is_deleted = FALSE
+        LEFT JOIN branch b ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
+        LEFT JOIN representative r ON br.representative_id_to = r.representative_id  AND r.is_deleted = FALSE
+        WHERE
+          dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
+          dsdi.bag_type = 2 AND
+          dsdi.is_deleted = FALSE
+        LIMIT 5;
+        `;
+        const resultDataBagRepresentative = await RawQueryService.query(rawQuery);
+        if (resultDataBagRepresentative.length > 0 ) {
+          for (let a = 0; a < resultDataBagRepresentative.length; a++) {
+            data.push({
+              do_smd_detail_id: payload.do_smd_detail_id,
+              bag_representative_code: resultDataBagRepresentative[a].bag_representative_code,
+              total_awb: resultDataBagRepresentative[a].total_item,
+              weight: resultDataBagRepresentative[a].total_weight,
+              representative_code: resultDataBagRepresentative[a].representative_code,
+              branch_name: resultDataBagRepresentative[a].branch_name,
+            });
+          }
+        }
+
+        result.statusCode = HttpStatus.OK;
+        result.message = 'List Bag Representative Success';
+        result.data = data;
+        return result;
+      } else {
+        throw new BadRequestException(`This API For Detail Bag Representative Only`);
       }
     } else {
       throw new BadRequestException(`SMD Detail ID: ` + payload.do_smd_id + ` Can't Found !`);

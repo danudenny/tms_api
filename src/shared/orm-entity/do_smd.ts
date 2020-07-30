@@ -123,6 +123,13 @@ export class DoSmd extends TmsBaseEntity {
   })
   totalBag: number;
 
+  @Column('bigint', {
+    nullable: false,
+    default: () => 0,
+    name: 'total_bag_representative',
+  })
+  totalBagRepresentative: number;
+
   @Column('character varying', {
     nullable: false,
     length: 255,
@@ -159,6 +166,19 @@ export class DoSmd extends TmsBaseEntity {
     name: 'arrival_date_time',
   })
   arrivalDateTime: Date | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'counter_trip',
+  })
+  counterTrip: number | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+    name: 'seal_number_last',
+  })
+  sealNumberLast: string | null;
 
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
