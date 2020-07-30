@@ -531,7 +531,11 @@ export class ScanoutSmdService {
         SELECT
           br.bag_representative_id,
           br.bag_representative_code,
-          r.representative_code
+          r.representative_code,
+          br.representative_id_to,
+          br.bag_representative_date,
+          br.total_item,
+          br.total_weight
         FROM bag_representative br
         INNER JOIN representative  r on br.representative_id_to = r.representative_id and r.is_deleted  = FALSE
         WHERE
@@ -608,6 +612,11 @@ export class ScanoutSmdService {
 
           BagRepresentativeScanDoSmdQueueService.perform(
             resultDataBagRepresentative[0].bag_representative_id,
+            resultDataBagRepresentative[0].representative_id_to,
+            resultDataBagRepresentative[0].bag_representative_code,
+            resultDataBagRepresentative[0].bag_representative_date,
+            resultDataBagRepresentative[0].total_item,
+            resultDataBagRepresentative[0].total_weight,
             authMeta.userId,
             permissonPayload.branchId,
           );

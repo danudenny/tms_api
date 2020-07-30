@@ -59,8 +59,23 @@ export class BagRepresentativeScanDoSmdQueueService {
       const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
       // TO DO:
-      // 1. add history bag representative, bagRepresentativeHistory?
+      // 1. add history bag representative
       // 2. add history awb IN_HUB
+
+      const historyBag = BagRepresentativeHistory.create();
+      historyBag.bagRepresentativeCode = data.bagRepresentativeCode;
+      historyBag.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
+      historyBag.bagRepresentativeId = data.bagRepresentativeId;
+      historyBag.bagRepresentativeStatusIdLast = '3000';
+      historyBag.branchId = data.branchId;
+      historyBag.representativeIdTo = data.representativeIdTo;
+      historyBag.totalItem = data.totalItem;
+      historyBag.totalWeight = data.totalWeight;
+      historyBag.userIdCreated = data.userId;
+      historyBag.createdTime = moment().toDate();
+      historyBag.userIdUpdated = data.userId;
+      historyBag.updatedTime = moment().toDate();
+      await BagRepresentativeHistory.insert(historyBag);
 
       for (const item of resultDataRepresentative) {
         if (item.awb_item_id && !tempAwb.includes(item.awb_item_id)) {
@@ -91,11 +106,21 @@ export class BagRepresentativeScanDoSmdQueueService {
 
   public static async perform(
     bagRepresentativeId: number | string,
+    representativeIdTo: string,
+    bagRepresentativeCode: string,
+    bagRepresentativeDate: string,
+    totalItem: number,
+    totalWeight: string,
     userId: number,
     branchId: number,
   ) {
     const obj = {
       bagRepresentativeId,
+      representativeIdTo,
+      bagRepresentativeCode,
+      bagRepresentativeDate,
+      totalItem,
+      totalWeight,
       userId,
       branchId,
     };
