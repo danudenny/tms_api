@@ -48,6 +48,7 @@ export class BagRepresentativeSmdQueueService {
       
       const awbHistory = AwbHistory.create();
       awbHistory.awbItemId = data.awbItemId;
+      awbHistory.refAwbNumber = data.refAwbNumber;
       awbHistory.historyDate = moment().toDate();
       awbHistory.awbStatusId = AWB_STATUS.IN_SORTIR;
       awbHistory.userIdCreated = Number(data.userId);
@@ -73,9 +74,13 @@ export class BagRepresentativeSmdQueueService {
   public static async perform(
     // doSmdDetailIds: any,
     awbItemId: any,
+    refAwbNumber: any,
+    userId: number,
   ) {
     const obj = {
       awbItemId,
+      refAwbNumber,
+      userId,
       timestamp: moment().toDate(),
     };
 
