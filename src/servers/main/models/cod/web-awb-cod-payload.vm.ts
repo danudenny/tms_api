@@ -160,8 +160,6 @@ export class WebCodVoucherPayloadVm {
     example: ['000726556611', '000726556612'],
     skipValidation: true,
   })
-  @IsDefined({message: 'No Resi harus diisi'})
-  @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   awbNumbers: string[];
 }

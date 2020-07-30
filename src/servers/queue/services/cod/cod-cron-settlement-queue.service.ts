@@ -3,6 +3,7 @@ import { getManager } from 'typeorm';
 import { CodBankStatement } from '../../../../shared/orm-entity/cod-bank-statement';
 import { CodTransaction } from '../../../../shared/orm-entity/cod-transaction';
 import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transaction-detail';
+import { CodVoucher } from '../../../../shared/orm-entity/cod-voucher';
 import { CodVoucherDetail } from '../../../../shared/orm-entity/cod-voucher-detail';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { QueueBullBoard } from '../queue-bull-board';
@@ -82,6 +83,12 @@ export class CodCronSettlementQueueService {
       const transaction = await this.getTransactionByAwbNumber(voucher.awbNumber);
 
       if (transaction) {
+        const dataVoucher = await CodVoucher.findOne({
+          select: ['codVoucherDate'],
+          where: {
+            codVoucherId: voucher.codVoucherId,
+          },
+        });
         const randomCode = await CustomCounterCode.bankStatement(
           timestamp,
         );
@@ -101,10 +108,10 @@ export class CodCronSettlementQueueService {
             bankStatement.bankBranchId = 5;
             bankStatement.bankAccount = 'BCA/000000012435251';
             bankStatement.branchId = transaction.branchId;
-            bankStatement.transferDatetime = timestamp;
-            bankStatement.userIdTransfer = transaction.userIdCreated;
-            bankStatement.userIdCreated = transaction.userIdCreated;
-            bankStatement.userIdUpdated = transaction.userIdCreated;
+            bankStatement.transferDatetime = dataVoucher.codVoucherDate;
+            bankStatement.userIdTransfer = 4;
+            bankStatement.userIdCreated = 4;
+            bankStatement.userIdUpdated = 4;
             await transactionManager.save(CodBankStatement, bankStatement);
 
             // Update Cod Bank Statement Id on its Cod Transaction
@@ -115,7 +122,7 @@ export class CodCronSettlementQueueService {
               },
               {
                 codBankStatementId: bankStatement.codBankStatementId,
-                userIdUpdated: transaction.userIdCreated,
+                userIdUpdated: 4,
                 updatedTime: timestamp,
               },
             );

@@ -17,6 +17,7 @@ import {
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
+import { error } from 'winston';
 
 // #endregion
 export class V1WebAwbCodVoucherService {
@@ -59,7 +60,6 @@ export class V1WebAwbCodVoucherService {
     let codVoucherDate = timeNow.toISOString();
     let codVoucherId = '';
     let awbNumbers = [];
-    let countDuplicatedAwbNumbers = 0;
 
     amountTransfer = payload.amountTransfer;
     codVoucherNo = payload.codVoucherNo;
@@ -96,50 +96,50 @@ export class V1WebAwbCodVoucherService {
       dataError.push('awbNumbers is required and not empty array.');
     }
 
-    const voucher = await CodVoucher.findOne({
-      where: {
-        codVoucherNo,
-        isDeleted: false,
-      },
-    });
-
-    if (!voucher) {
-      const paramsVoucher = {
-        cod_voucher_no: codVoucherNo,
-        cod_voucher_date: codVoucherDate,
-        cod_voucher_service: 'DIVA',
-        amount_transfer: amountTransfer,
-        created_time: timeNow,
-        updated_time: timeNow,
-      };
-
-      const dataVoucher = await this.getDataVoucher(paramsVoucher);
-      const voucher_log = await CodVoucher.insert(dataVoucher);
-
-      if (voucher_log && voucher_log.identifiers.length > 0) {
-        codVoucherId = voucher_log.identifiers[0].codVoucherId;
-      } else {
-        responseCode = '01';
-        responseMessage = 'FAILED';
-        const errorMessage = 'Failed when insert voucher to DB';
-        dataError.push(errorMessage);
-        console.log(errorMessage);
-      }
-    } else {
-      codVoucherId = voucher.codVoucherId;
-    }
-
-    if (codVoucherId !== '') {
-      await this.createVoucherDetailbyVoucherId(codVoucherId, awbNumbers, timeNow, (errorMessage, isDuplicated) => {
-        dataError.push(errorMessage);
-        if (isDuplicated) { countDuplicatedAwbNumbers++; }
-        console.log(errorMessage);
-      });
-    }
-
-    if (countDuplicatedAwbNumbers === awbNumbers.length) {
+    const isDataVerified = await this.verifyData(awbNumbers, (errorMessage: string) => {
       responseCode = '01';
       responseMessage = 'FAILED';
+      dataError.push(errorMessage);
+      console.log(errorMessage);
+    });
+
+    if (isDataVerified) {
+      const voucher = await CodVoucher.findOne({
+        where: {
+          codVoucherNo,
+          isDeleted: false,
+        },
+      });
+
+      if (!voucher) {
+        const paramsVoucher = {
+          cod_voucher_no: codVoucherNo,
+          cod_voucher_date: codVoucherDate,
+          cod_voucher_service: 'DIVA',
+          amount_transfer: amountTransfer,
+          created_time: timeNow,
+          updated_time: timeNow,
+        };
+
+        const dataVoucher = await this.getDataVoucher(paramsVoucher);
+        const voucher_log = await CodVoucher.insert(dataVoucher);
+
+        if (voucher_log && voucher_log.identifiers.length > 0) {
+          codVoucherId = voucher_log.identifiers[0].codVoucherId;
+        } else {
+          responseCode = '01';
+          responseMessage = 'FAILED';
+          const errorMessage = 'Failed when insert voucher to DB';
+          dataError.push(errorMessage);
+          console.log(errorMessage);
+        }
+      } else {
+        codVoucherId = voucher.codVoucherId;
+      }
+
+      if (codVoucherId !== '') {
+        await this.createVoucherDetailbyVoucherId(codVoucherId, awbNumbers, timeNow, codVoucherDate);
+      }
     }
 
     const result = new WebCodVoucherSuccessResponseVm();
@@ -149,90 +149,36 @@ export class V1WebAwbCodVoucherService {
     return result;
   }
 
-  private static async createVoucherDetailbyVoucherId(
-    codVoucherId: string, awbNumbers: any[], timeNow: Date, cbError: any,
-  ): Promise<any> {
+  private static async verifyData(awbNumbers: any[], cbError: any): Promise<boolean> {
+    const errors = [];
     for (const awbNumber of awbNumbers) {
-      const awbValid = await this.isValidStatusAwb(awbNumber);
-      if (awbValid) {
-        const awbDuplicated = await this.isAwbDuplicatedInVoucher(awbNumber);
-        if (!awbDuplicated) {
-          // Create voucher detail with unsettled status
-          const paramsVoucherDetail = {
-            cod_voucher_id: codVoucherId,
-            awb_number: awbNumber,
-            is_settlement: false,
-            created_time: timeNow,
-            updated_time: timeNow,
-          };
-
-          const dataVoucherDetail = await this.getDataVoucherDetail(paramsVoucherDetail);
-          await CodVoucherDetail.insert(dataVoucherDetail);
-
-          const transaction = await this.getTransactionByAwbNumber(awbNumber);
-          if (transaction) {
-            const randomCode = await CustomCounterCode.bankStatement(
-              timeNow,
-            );
-
-            await getManager().transaction(async transactionManager => {
-              try {
-                // Create Bank Statement
-                const bankStatement = new CodBankStatement();
-                bankStatement.bankStatementCode = randomCode;
-                bankStatement.bankStatementDate = timeNow;
-                bankStatement.transactionStatusId = 35000;
-                bankStatement.totalCodValue = transaction.totalCodValue;
-                bankStatement.totalTransaction = 1;
-                bankStatement.totalAwb = transaction.totalAwb;
-                bankStatement.bankBranchId = 5;
-                bankStatement.bankAccount = 'BCA/000000012435251';
-                bankStatement.branchId = transaction.branchId;
-                bankStatement.transferDatetime = timeNow;
-                bankStatement.userIdTransfer = transaction.userIdCreated;
-                bankStatement.userIdCreated = transaction.userIdCreated;
-                bankStatement.userIdUpdated = transaction.userIdCreated;
-                await transactionManager.save(CodBankStatement, bankStatement);
-
-                // Update Cod Bank Statement Id on its Cod Transaction
-                await transactionManager.update(
-                  CodTransaction,
-                  {
-                    codTransactionId: transaction.codTransactionId,
-                  },
-                  {
-                    codBankStatementId: bankStatement.codBankStatementId,
-                    userIdUpdated: transaction.userIdCreated,
-                    updatedTime: timeNow,
-                  },
-                );
-
-                // Update unsettled Voucher to settled
-                await transactionManager.update(
-                  CodVoucherDetail,
-                  {
-                    codVoucherDetailId: dataVoucherDetail.codVoucherDetailId,
-                  },
-                  {
-                    isSettlement: true,
-                    updatedTime: timeNow,
-                  },
-                );
-              } catch (error) {
-                console.log(error);
-              }
-            });
+      const awbValid = await this.isAwbNumberValid(awbNumber);
+      if (!awbValid) {
+        errors.push(`Error for ${awbNumber}`);
+        cbError(`Awb number for ${awbNumber} is not valid (must be 12 length)`);
+      } else {
+        const awbExist = await this.isAwbNumberExist(awbNumber);
+        if (awbExist) {
+          const awbDuplicated = await this.isAwbNumberDuplicated(awbNumber);
+          if (awbDuplicated) {
+            errors.push(`Error for ${awbNumber}`);
+            cbError(`Awb number for ${awbNumber} is duplicated.`);
           }
         } else {
-          cbError(`Awb number for ${awbNumber} is duplicated.`, true);
+          errors.push(`Error for ${awbNumber}`);
+          cbError(`Awb number for ${awbNumber} is does not exist.`);
         }
-      } else {
-        cbError(`Awb number for ${awbNumber} is does not exist.`, false);
       }
+    }
+
+    if (errors.length > 0) {
+      return false;
+    } else {
+      return true;
     }
   }
 
-  private static async isAwbDuplicatedInVoucher(awbNumber: number): Promise<boolean> {
+  private static async isAwbNumberDuplicated(awbNumber: number): Promise<boolean> {
     // check awb is not duplicated
     const awbDuplicated = await CodVoucherDetail.findOne({
       select: ['awbNumber'],
@@ -248,7 +194,7 @@ export class V1WebAwbCodVoucherService {
     }
   }
 
-  private static async isValidStatusAwb(awbNumber: number): Promise<boolean> {
+  private static async isAwbNumberExist(awbNumber: number): Promise<boolean> {
     // check awb status mush valid dlv
     const awbValid = await AwbItemAttr.findOne({
       select: ['awbNumber'],
@@ -261,6 +207,92 @@ export class V1WebAwbCodVoucherService {
       return true;
     } else {
       return false;
+    }
+  }
+
+  private static async isAwbNumberValid(awbNumber: string): Promise<boolean> {
+    let check = 0;
+    if (awbNumber.length !== 12) {
+      check = 1;
+    }
+
+    if (check === 1) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private static async createVoucherDetailbyVoucherId(
+    codVoucherId: string, awbNumbers: any[], timeNow: Date, codVoucherDate: string,
+  ): Promise<any> {
+    for (const awbNumber of awbNumbers) {
+      // Create voucher detail with unsettled status
+      const paramsVoucherDetail = {
+        cod_voucher_id: codVoucherId,
+        awb_number: awbNumber,
+        is_settlement: false,
+        created_time: timeNow,
+        updated_time: timeNow,
+      };
+
+      const dataVoucherDetail = await this.getDataVoucherDetail(paramsVoucherDetail);
+      await CodVoucherDetail.insert(dataVoucherDetail);
+
+      const transaction = await this.getTransactionByAwbNumber(awbNumber);
+      if (transaction) {
+        const randomCode = await CustomCounterCode.bankStatement(
+          timeNow,
+        );
+
+        await getManager().transaction(async transactionManager => {
+          try {
+            // Create Bank Statement
+            const bankStatement = new CodBankStatement();
+            bankStatement.bankStatementCode = randomCode;
+            bankStatement.bankStatementDate = timeNow;
+            bankStatement.transactionStatusId = 35000;
+            bankStatement.totalCodValue = transaction.totalCodValue;
+            bankStatement.totalTransaction = 1;
+            bankStatement.totalAwb = transaction.totalAwb;
+            bankStatement.bankBranchId = 5;
+            bankStatement.bankAccount = 'BCA/000000012435251';
+            bankStatement.branchId = transaction.branchId;
+            bankStatement.transferDatetime = new Date(codVoucherDate);
+            bankStatement.userIdTransfer = 4;
+            bankStatement.userIdCreated = 4;
+            bankStatement.userIdUpdated = 4;
+            await transactionManager.save(CodBankStatement, bankStatement);
+
+            // Update Cod Bank Statement Id on its Cod Transaction
+            await transactionManager.update(
+              CodTransaction,
+              {
+                codTransactionId: transaction.codTransactionId,
+              },
+              {
+                codBankStatementId: bankStatement.codBankStatementId,
+                userIdUpdated: 4,
+                updatedTime: timeNow,
+              },
+            );
+
+            // Update unsettled Voucher to settled
+            await transactionManager.update(
+              CodVoucherDetail,
+              {
+                codVoucherDetailId: dataVoucherDetail.codVoucherDetailId,
+              },
+              {
+                isSettlement: true,
+                updatedTime: timeNow,
+              },
+            );
+          } catch (error) {
+            console.log(error);
+          }
+        });
+      }
     }
   }
 
