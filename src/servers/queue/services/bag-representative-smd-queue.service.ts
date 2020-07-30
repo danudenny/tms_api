@@ -48,6 +48,7 @@ export class BagRepresentativeSmdQueueService {
       
       const awbHistory = AwbHistory.create();
       awbHistory.awbItemId = data.awbItemId;
+      awbHistory.branchId = data.branchId.toString();
       awbHistory.refAwbNumber = data.refAwbNumber;
       awbHistory.historyDate = moment().toDate();
       awbHistory.awbStatusId = AWB_STATUS.IN_SORTIR;
@@ -76,11 +77,13 @@ export class BagRepresentativeSmdQueueService {
     awbItemId: any,
     refAwbNumber: any,
     userId: number,
+    branchId: number,
   ) {
     const obj = {
       awbItemId,
       refAwbNumber,
       userId,
+      branchId,
       timestamp: moment().toDate(),
     };
 

@@ -254,6 +254,7 @@ export class BagCityService {
       dataAwb[0].awb_item_id,
       dataAwb[0].ref_awb_number,
       authMeta.userId,
+      permissonPayload.branchId,
     );
 
     result.status = 'success';
