@@ -125,6 +125,14 @@ export class V1WebCodSupplierInvoiceService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
+    // handle race condition
+    const redlock = await RedisService.redlock(
+      `redlock:supplierInvoiceCreate:${payload.partnerId}`,
+    );
+
+    if (!redlock) {
+      throw new BadRequestException('Data Supplier Invoice Sedang di proses!');
+    }
 
     try {
       // NOTE: generate supplier invoice by partnerid

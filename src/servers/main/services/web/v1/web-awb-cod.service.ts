@@ -601,7 +601,7 @@ export class V1WebAwbCodService {
     let redlock = true;
     for (const transactionId of payload.dataTransactionId) {
       // handle race condition
-      redlock = await RedisService.redlock(`redlock:transaction:${transactionId}`);
+      redlock = await RedisService.redlock(`redlock:transferHeadOffice:${transactionId}`);
       if (redlock == false) { break; }
     }
     if (!redlock) {
