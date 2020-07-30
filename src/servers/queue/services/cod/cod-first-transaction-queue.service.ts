@@ -7,6 +7,7 @@ import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transac
 import { WebCodFirstTransactionPayloadVm } from '../../../main/models/cod/web-awb-cod-payload.vm';
 import { CodSyncTransactionQueueService } from './cod-sync-transaction-queue.service';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
+import moment = require('moment');
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -148,7 +149,7 @@ export class CodFirstTransactionQueueService {
             const historyDriver = CodTransactionHistory.create({
               awbItemId: data.awbItemId,
               awbNumber: data.awbNumber,
-              transactionDate: data.timestamp,
+              transactionDate: moment(data.timestamp).add(-1, 'minute').toDate(),
               transactionStatusId: 30000,
               branchId: data.branchId,
               userIdCreated: data.userId,

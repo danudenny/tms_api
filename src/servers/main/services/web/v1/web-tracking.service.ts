@@ -421,6 +421,7 @@ export class V1WebTrackingService {
       awbItemId,
     });
     qb.andWhere('t2.status_level <= :statusLevel', { statusLevel });
+    qb.orderBy('t1.transaction_date', 'DESC');
     // #endregion query
 
     return await qb.getRawMany();
