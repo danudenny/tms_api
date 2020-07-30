@@ -173,12 +173,12 @@ export class V1WebReportCodService {
             d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD') : null,
             this.strReplaceFunc(d.awbNumber),
             d.parcelValue,
-            d.CodValue,
+            d.codValue,
             d.codFee,
-            d.CodValue,
+            d.codValue,
             d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
             this.strReplaceFunc(d.consigneeName),
-            'DLV',
+            'DLV', // supplier invoice status
             'DLV',
             this.strReplaceFunc(d.custPackage),
             this.strReplaceFunc(d.pickupSource),
@@ -196,8 +196,8 @@ export class V1WebReportCodService {
               : null,
             this.strReplaceFunc(d.awbNumber),
             d.parcelValue,
-            d.CodValue,
-            d.CodValue,
+            d.codValue,
+            d.codValue,
             d.podDate
               ? moment(d.podDate).format('YYYY-MM-DD hh:mm A')
               : null,
