@@ -34,39 +34,19 @@ export class CodUpdateSupplierInvoiceQueueService {
     this.queue.process(async job => {
       const data = job.data;
 
-      const dataTransaction = await CodTransactionDetail.find({
-        select: ['awbNumber', 'awbItemId'],
-        where: {
-          codSupplierInvoiceId: data.codSupplierInvoiceId,
-          isDeleted: false,
-        },
-      });
-      console.log('##### TOTAL DATA Transaction :: ', dataTransaction.length);
-      if (dataTransaction.length) {
-        for (const item of dataTransaction) {
-          CodTransactionHistoryQueueService.perform(
-            item.awbItemId,
-            item.awbNumber,
-            data.supplierInvoiceStatusId,
-            data.branchId,
-            data.userId,
-            data.timestamp,
-          );
-        } // end of looping
-      }
-
       // Update data mongo
-      // get config mongodb
+      // #region mongodb
       const collection = await MongoDbConfig.getDbSicepatCod(
         'transaction_detail',
       );
       const supplierInvoiceStatusId = Number(data.supplierInvoiceStatusId);
+      const partnerId = Number(data.partnerId);
       let query = {};
       let dataUpdate = {};
 
       if (supplierInvoiceStatusId == 41000) {
         query = {
-          partnerId: data.partnerId,
+          partnerId,
           codSupplierInvoiceId: null,
           transactionStatusId: 40000,
           isVoid: false,
@@ -95,6 +75,31 @@ export class CodUpdateSupplierInvoiceQueueService {
         console.error(error);
         throw error;
       }
+      // #endregion
+
+      const dataTransaction = await CodTransactionDetail.find({
+        select: ['awbNumber', 'awbItemId'],
+        where: {
+          codSupplierInvoiceId: data.codSupplierInvoiceId,
+          isDeleted: false,
+        },
+      });
+
+      console.log('##### TOTAL DATA Transaction :: ', dataTransaction.length);
+      if (dataTransaction.length) {
+        for (const item of dataTransaction) {
+          // update data history supplier invoice
+          CodTransactionHistoryQueueService.perform(
+            item.awbItemId,
+            item.awbNumber,
+            data.supplierInvoiceStatusId,
+            data.branchId,
+            data.userId,
+            data.timestamp,
+          );
+        } // end of looping
+      }
+
       return true;
     });
 

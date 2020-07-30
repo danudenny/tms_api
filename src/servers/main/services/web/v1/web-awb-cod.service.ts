@@ -595,6 +595,19 @@ export class V1WebAwbCodService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
     let attachmentId = null;
+    const dataError = [];
+
+    // validate data
+    let redlock = true;
+    for (const transactionId of payload.dataTransactionId) {
+      // handle race condition
+      redlock = await RedisService.redlock(`redlock:transaction:${transactionId}`);
+      if (redlock == false) { break; }
+    }
+    if (!redlock) {
+      throw new BadRequestException('Data Transaksi sedang di proses!!');
+    }
+
     // upload file to aws s3
     if (file) {
       const attachment = await AttachmentService.uploadFileBufferToS3(
@@ -612,7 +625,6 @@ export class V1WebAwbCodService {
       throw new BadRequestException('Harap inputkan bukti transfer!');
     }
 
-    const dataError = [];
     const randomCode = await CustomCounterCode.bankStatement(
       timestamp,
     );
@@ -712,6 +724,7 @@ export class V1WebAwbCodService {
       result.status = 'ok';
       result.message = 'success';
       result.dataError = dataError;
+
       return result;
 
     } catch (error) {
@@ -1073,7 +1086,7 @@ export class V1WebAwbCodService {
         order: {
           createdTime: 'DESC',
         },
-        take: 100,
+        take: 1000,
       });
 
     for (const item of data) {
@@ -1111,6 +1124,7 @@ export class V1WebAwbCodService {
         throw error;
       }
     } // end of loop
+    console.log(' ###### TOTAL DATA :: ', data.length);
     return true;
   }
 
