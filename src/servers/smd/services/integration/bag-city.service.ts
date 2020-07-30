@@ -91,9 +91,6 @@ export class BagCityService {
       {
         field: 'bagRepresentativeId',
       },
-      {
-        field: 'bagRepresentativeItemId',
-      },
     ];
     payload.fieldResolverMap['bagRepresentativeId'] = 't1.bag_representative_id';
     const repo = new OrionRepositoryService(BagRepresentativeItem, 't1');
@@ -102,8 +99,8 @@ export class BagCityService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.bag_representative_id', 'bagRepresentativeId'],
-      ['t1.bag_representative_item_id', 'bagRepresentativeItemId'],
+      ['t1.ref_awb_number', 'refAwbNumber'],
+      ['CAST(t1.weight AS DECIMAL(18,2))', 'weight'],
     );
     q.orderBy({ createdTime: 'DESC' });
     const data = await q.exec();
@@ -155,16 +152,21 @@ export class BagCityService {
         a.total_weight_rounded as weight,
         ai.awb_item_id
       FROM awb a
-      INNER JOIN representative r ON a.ref_representative_code = r.representative_code
+      LEFT JOIN representative r ON a.ref_representative_code = r.representative_code
       INNER JOIN awb_item ai ON a.awb_id = ai.awb_id
       WHERE
-        a.ref_awb_number = '${awbNumber}' AND
+        a.awb_number = '${awbNumber}' AND
         a.is_deleted = false
       LIMIT 1;
       `;
     const dataAwb = await RawQueryService.query(rawQuery);
     if (dataAwb.length == 0) {
       result.message = 'Nomor Resi tidak ditemukan';
+      return result;
+    }
+
+    if (dataAwb[0].representative_id == null) {
+      result.message = 'Representative pada AWB tidak ditemukan';
       return result;
     }
 
@@ -254,7 +256,7 @@ export class BagCityService {
       dataAwb[0].awb_item_id,
       dataAwb[0].ref_awb_number,
       authMeta.userId,
-      permissonPayload.branchId,
+      permissionPayload.branchId,
     );
 
     result.status = 'success';

@@ -2,6 +2,7 @@ import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, J
 import {Representative} from './representative';
 import {Branch} from './branch';
 import {BagRepresentativeItem} from './bag-representative-item';
+import { DoSmdDetailItem } from './do_smd_detail_item';
 
 @Entity('bag_representative', { schema: 'public' })
 export class BagRepresentative extends BaseEntity {
@@ -102,4 +103,7 @@ export class BagRepresentative extends BaseEntity {
 
   @OneToMany(() => BagRepresentativeItem, e => e.bagRepresentativeItem, { cascade: ['insert'] })
   bagRepresentativeItems: BagRepresentativeItem[];
+
+  @OneToMany(() => DoSmdDetailItem, e => e.bagRepresentativeId, { cascade: ['insert'] })
+  doSmdDetailItem: DoSmdDetailItem[];
 }
