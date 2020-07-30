@@ -1,0 +1,5 @@
+export const BAG_REPRESENTATIVE_STATUS = {
+  CREATED: 500,
+  IN_HUB: 3000,
+  OUT_HUB: 4500,
+};
