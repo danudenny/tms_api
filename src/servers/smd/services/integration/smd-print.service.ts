@@ -181,12 +181,14 @@ export class SmdPrintService {
         },
         totalBagging: true,
         totalBag: true,
+        totalBagRepresentative: true,
         doSmdDetails: {
           doSmdDetailId: true,
           arrivalTime: true,
           sealNumber: true,
           totalBag: true,
           totalBagging: true,
+          totalBagRepresentative: true,
           branchTo: {
             branchId: true,
             branchName: true,
@@ -212,6 +214,7 @@ export class SmdPrintService {
     dataVm.doSmdVehicle = doSmd.doSmdVehicle;
     dataVm.totalBagging = doSmd.totalBagging;
     dataVm.totalBag = doSmd.totalBag;
+    dataVm.totalBagRepresentative= doSmd.totalBagRepresentative;
     const dataSmdDetailsVm: PrintDoSmdDataDoSmdDetailVm[] = [];
 
     const payload = {
@@ -244,6 +247,7 @@ export class SmdPrintService {
       dataSmdDetailVm.branchTo = idDetail[l].branchTo; // set Branch To
       dataSmdDetailVm.totalBag = idDetail[l].totalBag; // set Total gabung paket
       dataSmdDetailVm.totalBagging = idDetail[l].totalBagging; // set total bagging
+      dataSmdDetailVm.totalBagRepresentative = idDetail[l].totalBagRepresentative; // set total bagging
 
       payload.id = idDetail[l].doSmdDetailId;
       const bagDataAll = await this.getBagData(payload);

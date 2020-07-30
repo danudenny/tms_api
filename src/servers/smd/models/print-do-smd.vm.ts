@@ -140,6 +140,9 @@ export class PrintDoSmdDataDoSmdDetailVm {
   totalBag: number;
 
   @ApiModelProperty()
+  totalBagRepresentative: number;
+
+  @ApiModelProperty()
   sealNumber: string;
 
   @ApiModelProperty()
@@ -170,6 +173,9 @@ export class PrintDoSmdDataVm {
 
   @ApiModelProperty()
   totalBag: number;
+
+  @ApiModelProperty()
+  totalBagRepresentative: number;
 
   @ApiModelProperty({ type: () => PrintDoSmdDataUserDriverVm })
   doSmdVehicle: PrintDoSmdDataUserDriverVm = new PrintDoSmdDataUserDriverVm();
