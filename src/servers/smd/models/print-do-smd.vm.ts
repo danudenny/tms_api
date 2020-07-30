@@ -69,6 +69,20 @@ export class PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm {
   representativeCode: string;
 }
 
+export class PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm {
+  @ApiModelProperty()
+  bagRepresentativeId: number;
+
+  @ApiModelProperty()
+  bagRepresentativeCode: string;
+
+  @ApiModelProperty()
+  weight: number;
+
+  @ApiModelProperty()
+  representativeCode: string;
+}
+
 export class PrintDoSmdDataBranchToRepresentativeVm {
   @ApiModelProperty()
   representativeCode: string;
@@ -104,6 +118,17 @@ export class PrintDoSmdDataDoSmdDetailBaggingVm {
   baggingItem: PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm = new PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm();
 }
 
+export class PrintDoSmdDataDoSmdDetailBagRepresentativeVm {
+  @ApiModelProperty()
+  doSmdDetailItemId: number;
+
+  @ApiModelProperty()
+  bagType: number;
+
+  @ApiModelProperty({ type: () => PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm })
+  bagRepresentativeItem: PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm = new PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm();
+}
+
 export class PrintDoSmdDataDoSmdDetailVm {
   @ApiModelProperty()
   doSmdDetailId: number;
@@ -128,6 +153,9 @@ export class PrintDoSmdDataDoSmdDetailVm {
 
   @ApiModelProperty({ type: () => [PrintDoSmdDataDoSmdDetailBaggingVm] })
   doSmdBaggingItems: PrintDoSmdDataDoSmdDetailBaggingVm[] = [];
+
+  @ApiModelProperty({ type: () => [PrintDoSmdDataDoSmdDetailBagRepresentativeVm] })
+  doSmdBagRepresentativeItems: PrintDoSmdDataDoSmdDetailBagRepresentativeVm[] = [];
 }
 
 export class PrintDoSmdDataVm {

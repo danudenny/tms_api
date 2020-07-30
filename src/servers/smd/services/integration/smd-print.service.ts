@@ -5,7 +5,7 @@ import {PrinterService} from '../../../../shared/services/printer.service';
 import {PrintSmdPayloadVm} from '../../models/print-smd-payload.vm';
 import moment = require('moment');
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
-import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm } from '../../models/print-do-smd.vm';
+import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm, PrintDoSmdDataDoSmdDetailBagRepresentativeVm, PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm } from '../../models/print-do-smd.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 
@@ -126,6 +126,39 @@ export class SmdPrintService {
     return result;
   }
 
+  public static async getBagRepresentativeData(payload) {
+    const repo = new OrionRepositoryService(DoSmdDetail, 't1');
+    const v = repo.findAllRaw();
+
+    v.selectRaw(
+      ['t2.bag_representative_id', 'bagRepresentativeId'],
+      ['t1.do_smd_detail_id', 'doSmdDetailId'],
+      ['t2.bag_representative_code', 'bagRepresentativeCode'],
+      [`CONCAT(t2.total_weight::numeric(10,2))`, 'weight'],
+      ['t3.representative_code', 'representativeCode'],
+    );
+    v.leftJoin(e => e.doSmdDetailItems.bagRepresentative, 't2');
+    v.leftJoin(e => e.doSmdDetailItems.bagRepresentative.representative, 't3');
+    v.where(e => e.doSmdDetailId, w => w.equals(payload.id));
+    v.andWhere(e => e.doSmdDetailItems.bagType, w => w.equals(2));
+    v.groupByRaw(`
+      t2.bag_representative_id,
+      t3.representative_code,
+      t1.do_smd_detail_id
+      `);
+    const data = await v.exec();
+    // console.log(data.length);
+    let result = new PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm();
+
+    if (data.length > 0) {
+      result = data;
+    } else {
+      result = null;
+    }
+
+    return result;
+  }
+
   public static async printDoSmdByRequest(
     res: express.Response,
     queryParams: PrintDoSmdPayloadQueryVm,
@@ -191,10 +224,12 @@ export class SmdPrintService {
     for (let l = 0; l < idDetail.length; l++) {
       const dataSmdDetailsBagVm: PrintDoSmdDataDoSmdDetailBagVm[] = [];
       const dataSmdDetailsBaggingVm: PrintDoSmdDataDoSmdDetailBaggingVm[] = [];
+      const dataSmdDetailsBagRepresentativeVm: PrintDoSmdDataDoSmdDetailBagRepresentativeVm[] = [];
 
       const dataSmdDetailVm = new PrintDoSmdDataDoSmdDetailVm();
       const dataSmdDetailBagVm = new PrintDoSmdDataDoSmdDetailBagVm();
       const dataSmdDetailBaggingVm = new PrintDoSmdDataDoSmdDetailBaggingVm();
+      const dataSmdDetailBagRepresentativeVm = new PrintDoSmdDataDoSmdDetailBagRepresentativeVm();
 
       dataSmdDetailVm.doSmdDetailId = idDetail[l].doSmdDetailId; // set ID
 
@@ -224,6 +259,13 @@ export class SmdPrintService {
         dataSmdDetailBaggingVm.bagType = 0;
         dataSmdDetailsBaggingVm.push(dataSmdDetailBaggingVm);
         dataSmdDetailVm.doSmdBaggingItems = dataSmdDetailsBaggingVm;
+      }
+      const bagRepresentativeData = await this.getBagRepresentativeData(payload);
+      if (bagRepresentativeData) {
+        dataSmdDetailBagRepresentativeVm.bagRepresentativeItem = bagRepresentativeData;
+        dataSmdDetailBagRepresentativeVm.bagType = 2;
+        dataSmdDetailsBagRepresentativeVm.push(dataSmdDetailBagRepresentativeVm);
+        dataSmdDetailVm.doSmdBagRepresentativeItems = dataSmdDetailsBagRepresentativeVm;
       }
 
       dataSmdDetailsVm.push(dataSmdDetailVm);
