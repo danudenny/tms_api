@@ -40,7 +40,7 @@ export class CodFirstTransactionQueueService {
     this.queue.process(async job => {
       const data = job.data;
       let isValidData = true;
-      const isNewData = true;
+      let isNewData = false;
 
       let transactionDetail = await CodTransactionDetail.findOne({
         awbItemId: data.awbItemId,
@@ -118,12 +118,7 @@ export class CodFirstTransactionQueueService {
               CodTransactionDetail,
               newTransactionDetail,
             );
-
-            // sync first data to mongo
-            if (transactionDetail) {
-              const newMongo = await this.insertMongo(transactionDetail);
-              console.log(' ### RETURN DATA MONGO :: ', newMongo);
-            }
+            isNewData = true; // flag for insert data mongo
           } else {
             isValidData = false;
             console.error('## Data COD Transaction :: Not Found !!! :: ', data);
@@ -187,6 +182,12 @@ export class CodFirstTransactionQueueService {
         }
       }); // end transaction
 
+      console.log('#### SYNC DATA AWB NUMBER ::: ', data.awbNumber);
+      if (isNewData && transactionDetail) {
+        // sync first data to mongo
+        const newMongo = await this.insertMongo(transactionDetail);
+        console.log(' ### RETURN DATA MONGO :: ', newMongo);
+      }
       return true;
     });
 
