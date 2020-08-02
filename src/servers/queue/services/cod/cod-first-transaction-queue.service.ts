@@ -39,7 +39,8 @@ export class CodFirstTransactionQueueService {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(async job => {
       const data = job.data;
-      let isValidData = true;
+      let isValidData = true
+      ;
       let transactionDetail = await CodTransactionDetail.findOne({
         awbItemId: data.awbItemId,
         isDeleted: false,
@@ -69,7 +70,7 @@ export class CodFirstTransactionQueueService {
             const percentFee = 1; // set on config COD
             const codFee = (Number(codDetail.codValue) * percentFee) / 100;
             // Create data Cod Transaction Detail
-            transactionDetail = CodTransactionDetail.create({
+            const newTransactionDetail = CodTransactionDetail.create({
               codTransactionId: data.codTransactionId,
               transactionStatusId: data.transactionStatusId,
               supplierInvoiceStatusId: data.supplierInvoiceStatusId,
@@ -111,14 +112,16 @@ export class CodFirstTransactionQueueService {
               createdTime: data.timestamp,
               updatedTime: data.timestamp,
             });
-            const detail = await transactional.save(
+            transactionDetail = await transactional.save(
               CodTransactionDetail,
-              transactionDetail,
+              newTransactionDetail,
             );
-            console.log(' ### DETAIL :: ', detail);
+
             // sync first data to mongo
-            const newMongo = await this.insertMongo(detail);
-            console.log(' ### RETURN DATA MONGO :: ', newMongo);
+            if (transactionDetail) {
+              const newMongo = await this.insertMongo(transactionDetail);
+              console.log(' ### RETURN DATA MONGO :: ', newMongo);
+            }
           } else {
             isValidData = false;
             console.error('## Data COD Transaction :: Not Found !!! :: ', data);
@@ -180,7 +183,6 @@ export class CodFirstTransactionQueueService {
 
           }
         }
-
       }); // end transaction
 
       return true;
