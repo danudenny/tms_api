@@ -41,11 +41,12 @@ export class CodFirstTransactionQueueService {
     this.queue.process(async job => {
       const data = job.data;
       let isValidData = true;
-      let isNewData = false;
+      // let isNewData = false;
+
       console.log('#### JOB ID  ::: ', job.id);
       console.log('##################### SYNC DATA AWB NUMBER ::: ', data.awbNumber);
 
-      const transactionDetail = await CodTransactionDetail.findOne({
+      let transactionDetail = await CodTransactionDetail.findOne({
         awbItemId: data.awbItemId,
         isDeleted: false,
       });
@@ -117,11 +118,14 @@ export class CodFirstTransactionQueueService {
               createdTime: data.timestamp,
               updatedTime: data.timestamp,
             });
-            await transactional.insert(
+            transactionDetail = await transactional.save(
               CodTransactionDetail,
               newTransactionDetail,
             );
-            isNewData = true; // flag for insert data mongo
+            // isNewData = true; // flag for insert data mongo
+            // sync first data to mongo
+            const newMongo = await this.insertMongo(transactionDetail);
+
           } else {
             isValidData = false;
             console.error('## Data COD Transaction :: Not Found !!! :: ', data);
@@ -185,15 +189,15 @@ export class CodFirstTransactionQueueService {
         }
       }); // end transaction
 
-      console.log(' ### SYNC DATA MONGO :: NEW DATA ', isNewData);
-      if (isNewData) {
-        // sync first data to mongo
-        // const newMongo = await this.insertMongo(transactionDetail);
-        CodSyncTransactionQueueService.perform(
-          data.awbNumber,
-          data.timestamp,
-        );
-      }
+      // console.log(' ### SYNC DATA MONGO :: NEW DATA ', isNewData);
+      // if (isNewData) {
+      //   // sync first data to mongo
+      //   // const newMongo = await this.insertMongo(transactionDetail);
+      //   CodSyncTransactionQueueService.perform(
+      //     data.awbNumber,
+      //     data.timestamp,
+      //   );
+      // }
       return true;
     });
 
@@ -315,8 +319,8 @@ export class CodFirstTransactionQueueService {
     delete transaction['changedValues'];
     transaction.userIdCreated = Number(transaction.userIdCreated);
     transaction.userIdUpdated = Number(transaction.userIdUpdated);
-
     console.log('## FIRST DATA IN MONGO :: ', transaction.awbNumber);
+
     try {
       await collection.insertOne({
         _id: transaction.awbNumber,
