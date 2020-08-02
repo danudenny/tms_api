@@ -1,4 +1,4 @@
-import { getManager, createQueryBuilder } from 'typeorm';
+import { createQueryBuilder } from 'typeorm';
 import { QueueBullBoard } from '../queue-bull-board';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { AwbTransactionDetailVm } from '../../../main/models/cod/web-awb-cod-response.vm';
@@ -7,7 +7,6 @@ import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transac
 import { WebCodFirstTransactionPayloadVm } from '../../../main/models/cod/web-awb-cod-payload.vm';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import moment = require('moment');
-import { CodSyncTransactionQueueService } from './cod-sync-transaction-queue.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -52,142 +51,128 @@ export class CodFirstTransactionQueueService {
       });
 
       // Handle first awb scan
-      await getManager().transaction(async transactional => {
+      // only transaction
+      if (transactionDetail && data.codTransactionId) {
+        await CodTransactionDetail.update(
+          {
+            awbItemId: data.awbItemId,
+          },
+          {
+            codTransactionId: data.codTransactionId,
+            transactionStatusId: data.transactionStatusId,
+            updatedTime: data.timestamp,
+          },
+        );
 
-        // only transaction
-        if (transactionDetail && data.codTransactionId) {
-          await transactional.update(
-            CodTransactionDetail,
-            {
-              awbItemId: data.awbItemId,
-            },
-            {
-              codTransactionId: data.codTransactionId,
-              transactionStatusId: data.transactionStatusId,
-              updatedTime: data.timestamp,
-            },
+      } else {
+        const codDetail = await this.dataTransaction(data.awbItemId);
+        if (codDetail) {
+          // manipulation data
+          const weightRounded = codDetail.weightRealRounded > 0 ? codDetail.weightRealRounded : codDetail.weightFinalRounded;
+          const percentFee = 1; // set on config COD
+          const codFee = (Number(codDetail.codValue) * percentFee) / 100;
+          // Create data Cod Transaction Detail
+          const newTransactionDetail = CodTransactionDetail.create({
+            codTransactionId: data.codTransactionId,
+            transactionStatusId: data.transactionStatusId,
+            supplierInvoiceStatusId: data.supplierInvoiceStatusId,
+            codSupplierInvoiceId: data.codSupplierInvoiceId,
+            branchId: data.branchId,
+            userIdDriver: data.userIdDriver,
+
+            paymentMethod: data.paymentMethod,
+            paymentService: data.paymentService,
+            noReference: data.noReference,
+
+            awbItemId: codDetail.awbItemId,
+            awbNumber: codDetail.awbNumber,
+            awbDate: codDetail.awbDate,
+            podDate: codDetail.podDate,
+            codValue: codDetail.codValue,
+            parcelValue: codDetail.parcelValue,
+            weightRounded,
+            codFee,
+            pickupSourceId: codDetail.pickupSourceId,
+            pickupSource: codDetail.pickupSource,
+            currentPositionId: codDetail.currentPositionId,
+            currentPosition: codDetail.currentPosition,
+            destinationCode: codDetail.destinationCode,
+            destinationId: codDetail.destinationId,
+            destination: codDetail.destination,
+
+            consigneeName: codDetail.consigneeName,
+            partnerId: codDetail.partnerId,
+            partnerName: codDetail.partnerName,
+            custPackage: codDetail.custPackage,
+            packageTypeId: codDetail.packageTypeId,
+            packageTypeCode: codDetail.packageTypeCode,
+            packageType: codDetail.packageTypeName,
+            parcelContent: codDetail.parcelContent,
+            parcelNote: codDetail.parcelNote,
+            userIdCreated: data.userId,
+            userIdUpdated: data.userId,
+            createdTime: data.timestamp,
+            updatedTime: data.timestamp,
+          });
+          transactionDetail = await CodTransactionDetail.save(
+            newTransactionDetail,
           );
-
+          // isNewData = true; // flag for insert data mongo
+          // sync first data to mongo
+          const newMongo = await this.insertMongo(transactionDetail);
+          console.log(' ############ NEW DATA MONGO :: ', newMongo);
         } else {
-          const codDetail = await this.dataTransaction(data.awbItemId);
-          if (codDetail) {
-            // manipulation data
-            const weightRounded = codDetail.weightRealRounded > 0 ? codDetail.weightRealRounded : codDetail.weightFinalRounded;
-            const percentFee = 1; // set on config COD
-            const codFee = (Number(codDetail.codValue) * percentFee) / 100;
-            // Create data Cod Transaction Detail
-            const newTransactionDetail = CodTransactionDetail.create({
-              codTransactionId: data.codTransactionId,
-              transactionStatusId: data.transactionStatusId,
-              supplierInvoiceStatusId: data.supplierInvoiceStatusId,
-              codSupplierInvoiceId: data.codSupplierInvoiceId,
-              branchId: data.branchId,
-              userIdDriver: data.userIdDriver,
-
-              paymentMethod: data.paymentMethod,
-              paymentService: data.paymentService,
-              noReference: data.noReference,
-
-              awbItemId: codDetail.awbItemId,
-              awbNumber: codDetail.awbNumber,
-              awbDate: codDetail.awbDate,
-              podDate: codDetail.podDate,
-              codValue: codDetail.codValue,
-              parcelValue: codDetail.parcelValue,
-              weightRounded,
-              codFee,
-              pickupSourceId: codDetail.pickupSourceId,
-              pickupSource: codDetail.pickupSource,
-              currentPositionId: codDetail.currentPositionId,
-              currentPosition: codDetail.currentPosition,
-              destinationCode: codDetail.destinationCode,
-              destinationId: codDetail.destinationId,
-              destination: codDetail.destination,
-
-              consigneeName: codDetail.consigneeName,
-              partnerId: codDetail.partnerId,
-              partnerName: codDetail.partnerName,
-              custPackage: codDetail.custPackage,
-              packageTypeId: codDetail.packageTypeId,
-              packageTypeCode: codDetail.packageTypeCode,
-              packageType: codDetail.packageTypeName,
-              parcelContent: codDetail.parcelContent,
-              parcelNote: codDetail.parcelNote,
-              userIdCreated: data.userId,
-              userIdUpdated: data.userId,
-              createdTime: data.timestamp,
-              updatedTime: data.timestamp,
-            });
-            transactionDetail = await transactional.save(
-              CodTransactionDetail,
-              newTransactionDetail,
-            );
-            // isNewData = true; // flag for insert data mongo
-            // sync first data to mongo
-            const newMongo = await this.insertMongo(transactionDetail);
-
-          } else {
-            isValidData = false;
-            console.error('## Data COD Transaction :: Not Found !!! :: ', data);
-          }
+          isValidData = false;
+          console.error('## Data COD Transaction :: Not Found !!! :: ', data);
         }
+      }
 
-        // transaction history
-        if (isValidData) {
-          if (data.supplierInvoiceStatusId) {
-            // supplier invoice status
-            const historyInvoice = CodTransactionHistory.create({
-              awbItemId: data.awbItemId,
-              awbNumber: data.awbNumber,
-              transactionDate: data.timestamp,
-              transactionStatusId: data.supplierInvoiceStatusId,
-              branchId: data.branchId,
-              userIdCreated: data.userId,
-              userIdUpdated: data.userId,
-              createdTime: data.timestamp,
-              updatedTime: data.timestamp,
-            });
-            await transactional.insert(
-              CodTransactionHistory,
-              historyInvoice,
-            );
-          } else {
-            // create transaction history
-            const historyDriver = CodTransactionHistory.create({
-              awbItemId: data.awbItemId,
-              awbNumber: data.awbNumber,
-              transactionDate: moment(data.timestamp).add(-1, 'minute').toDate(),
-              transactionStatusId: 30000,
-              branchId: data.branchId,
-              userIdCreated: data.userId,
-              userIdUpdated: data.userId,
-              createdTime: data.timestamp,
-              updatedTime: data.timestamp,
-            });
-            await transactional.insert(
-              CodTransactionHistory,
-              historyDriver,
-            );
+      // transaction history
+      if (isValidData) {
+        if (data.supplierInvoiceStatusId) {
+          // supplier invoice status
+          const historyInvoice = CodTransactionHistory.create({
+            awbItemId: data.awbItemId,
+            awbNumber: data.awbNumber,
+            transactionDate: data.timestamp,
+            transactionStatusId: data.supplierInvoiceStatusId,
+            branchId: data.branchId,
+            userIdCreated: data.userId,
+            userIdUpdated: data.userId,
+            createdTime: data.timestamp,
+            updatedTime: data.timestamp,
+          });
+          await CodTransactionHistory.insert(historyInvoice);
+        } else {
+          // create transaction history
+          const historyDriver = CodTransactionHistory.create({
+            awbItemId: data.awbItemId,
+            awbNumber: data.awbNumber,
+            transactionDate: moment(data.timestamp).add(-1, 'minute').toDate(),
+            transactionStatusId: 30000,
+            branchId: data.branchId,
+            userIdCreated: data.userId,
+            userIdUpdated: data.userId,
+            createdTime: data.timestamp,
+            updatedTime: data.timestamp,
+          });
+          await CodTransactionHistory.insert(historyDriver);
 
-            const historyBranch = CodTransactionHistory.create({
-              awbItemId: data.awbItemId,
-              awbNumber: data.awbNumber,
-              transactionDate: data.timestamp,
-              transactionStatusId: 31000,
-              branchId: data.branchId,
-              userIdCreated: data.userId,
-              userIdUpdated: data.userId,
-              createdTime: data.timestamp,
-              updatedTime: data.timestamp,
-            });
-            await transactional.insert(
-              CodTransactionHistory,
-              historyBranch,
-            );
+          const historyBranch = CodTransactionHistory.create({
+            awbItemId: data.awbItemId,
+            awbNumber: data.awbNumber,
+            transactionDate: data.timestamp,
+            transactionStatusId: 31000,
+            branchId: data.branchId,
+            userIdCreated: data.userId,
+            userIdUpdated: data.userId,
+            createdTime: data.timestamp,
+            updatedTime: data.timestamp,
+          });
+          await CodTransactionHistory.insert(historyBranch);
 
-          }
         }
-      }); // end transaction
+      }
 
       // console.log(' ### SYNC DATA MONGO :: NEW DATA ', isNewData);
       // if (isNewData) {
