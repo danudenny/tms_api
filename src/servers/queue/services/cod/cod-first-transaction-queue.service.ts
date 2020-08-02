@@ -39,12 +39,14 @@ export class CodFirstTransactionQueueService {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(async job => {
       const data = job.data;
-      let isValidData = true
-      ;
+      let isValidData = true;
+      const isNewData = true;
+
       let transactionDetail = await CodTransactionDetail.findOne({
         awbItemId: data.awbItemId,
         isDeleted: false,
       });
+
       // Handle first awb scan
       await getManager().transaction(async transactional => {
 
