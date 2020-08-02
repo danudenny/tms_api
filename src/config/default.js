@@ -81,6 +81,6 @@ module.exports = {
   },
   mongodb: {
     sicepat:
-      'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-staging-cluster.nrgvr.mongodb.net/test?retryWrites=true&w=majority&readPreference=secondaryPreferred',
+      'mongodb+srv://sicepatcodnew:SicepaTC0DN3W116688_@sicepat-tracking-cluster-nrgvr.mongodb.net/test?retryWrites=true&w=majority&readPreference=secondaryPreferred',
   },
 };
