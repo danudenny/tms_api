@@ -27,6 +27,13 @@ import { UploadImagePodQueueService } from './services/upload-pod-image-queue.se
 import { CreateBagFirstScanHubQueueService } from './services/create-bag-first-scan-hub-queue.service';
 import { CreateBagAwbScanHubQueueService } from './services/create-bag-awb-scan-hub-queue.service';
 import {CodPaymentQueueService} from './services/cod-payment-queue.service';
+import { CodFirstTransactionQueueService } from './services/cod/cod-first-transaction-queue.service';
+import { CodSyncTransactionQueueService } from './services/cod/cod-sync-transaction-queue.service';
+import { CodUpdateTransactionQueueService } from './services/cod/cod-update-transaction-queue.service';
+import { CodTransactionHistoryQueueService } from './services/cod/cod-transaction-history-queue.service';
+import { CodUpdateSupplierInvoiceQueueService } from './services/cod/cod-update-supplier-invoice-queue.service';
+import { CodCronSettlementQueueService } from './services/cod/cod-cron-settlement-queue.service';
+import { MongoDbConfig } from './config/database/mongodb.config';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -111,6 +118,8 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       await app.listen(process.env.PORT || serverConfig.port, serverConfig.host || '0.0.0.0');
     }
 
+    // init connection mongodb
+    MongoDbConfig.getSicepatMonggoClient();
     // init boot Queue
     DoPodDetailPostMetaQueueService.boot();
     BagItemHistoryQueueService.boot();
@@ -123,7 +132,15 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     CreateBagFirstScanHubQueueService.boot();
     CreateBagAwbScanHubQueueService.boot();
     CodPaymentQueueService.boot();
+    CodFirstTransactionQueueService.boot();
+    CodSyncTransactionQueueService.boot();
+    CodUpdateTransactionQueueService.boot();
+    CodTransactionHistoryQueueService.boot();
+    CodUpdateSupplierInvoiceQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
+
+    // init Cron here
+    CodCronSettlementQueueService.init();
   }
 }

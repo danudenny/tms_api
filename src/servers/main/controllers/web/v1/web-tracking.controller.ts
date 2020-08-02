@@ -9,8 +9,11 @@ import { PhotoDetailVm } from '../../../models/bag-order-response.vm';
 import {
     AwbSubstituteResponseVm, TrackingAwbPayloadVm, TrackingAwbResponseVm, TrackingBagPayloadVm,
     TrackingBagResponseVm,
+    AwbPhotoDetailVm,
+    AwbPhotoResponseVm,
 } from '../../../models/tracking.vm';
 import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
+import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('Web Tracking')
 @Controller('web/v1/tracking')
@@ -18,7 +21,7 @@ import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.serv
 export class V1WebTrackingController {
   @Post('awbNumber')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: TrackingAwbResponseVm })
   public async awbNumber(@Body() payload: TrackingAwbPayloadVm) {
     return V1WebTrackingService.awb(payload);
@@ -46,5 +49,13 @@ export class V1WebTrackingController {
   @ApiOkResponse({ type: PhotoResponseVm })
   public async photoDetail(@Body() payload: PhotoDetailVm) {
     return V1WebTrackingService.getPhotoDetail(payload);
+  }
+
+  @Post('awbPhoto')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: AwbPhotoResponseVm })
+  public async awbPhoto(@Body() payload: AwbPhotoDetailVm) {
+    return V1WebTrackingService.awbPhotoDetail(payload);
   }
 }

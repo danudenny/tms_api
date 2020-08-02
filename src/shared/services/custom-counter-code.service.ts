@@ -79,6 +79,27 @@ export class CustomCounterCode {
     return prefix + randomCode.toString();
   }
 
+  public static async transactionCodBranch(dateTime: Date, digit: number = 8) {
+    // Format Code: 1010/2020/XYZA1234
+    const prefix = `${moment(dateTime).format('DDMM/YYYY')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
+    public static async supplierInvoiceCod(dateTime: Date, digit: number = 8) {
+    // Format Code: INV/2706/2020/XYZA1234
+    const prefix = `INV/${moment(dateTime).format('DDMM/YYYY')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
+  public static async bankStatement(dateTime: Date, digit: number = 8) {
+    // Format Code: BS/1010/2020/XYZA1234
+    const prefix = `BS/${moment(dateTime).format('DDMM/YYYY')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
   // get data on DB
   private static async getLastNumber(prefix: string) {
     const timeNow = moment().toDate();

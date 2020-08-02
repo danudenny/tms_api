@@ -72,7 +72,7 @@ export abstract class DatabaseConfig {
   public static async getMySqlDbConn() {
     const conn = mysql.createConnection(this.mysqlDbConnectionString);
 
-    conn.connect(function(err) {
+    conn.connect(function (err) {
       if (err) { throw err; }
       console.log('Connected to Mysql');
     });

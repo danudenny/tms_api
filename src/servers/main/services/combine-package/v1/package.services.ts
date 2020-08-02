@@ -631,11 +631,11 @@ export class V1PackageService {
       // insert data trouble
       // TODO: feature disable
       if (isTrouble) {
-        const dataTrouble = {
-          awbNumber: awb.awbNumber,
-          troubleDesc: join(troubleDesc, ' dan '),
-        };
-        console.error('TROUBLE SCAN GAB SORTIR :: ', dataTrouble);
+        // const dataTrouble = {
+        //   awbNumber: awb.awbNumber,
+        //   troubleDesc: join(troubleDesc, ' dan '),
+        // };
+        // console.error('TROUBLE SCAN GAB SORTIR :: ', dataTrouble);
         // await this.insertAwbTrouble(dataTrouble);
       }
 

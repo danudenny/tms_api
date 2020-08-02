@@ -84,6 +84,8 @@ export class PrintDoPodDeliverService {
     let totalAllCod = null;
     let totalItems = null;
 
+    // TODO: need refactoring ??
+    // sum totalCodValue from object
     if (data && data.doPodDeliverDetails) {
       const awbIds = [];
       data.doPodDeliverDetails.map(function(doPod) {

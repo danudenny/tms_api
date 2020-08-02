@@ -9,6 +9,7 @@ import { Reason } from './reason';
 import { Awb } from './awb';
 import { DoPodDetail } from './do-pod-detail';
 import { PickupRequestDetail } from './pickup-request-detail';
+import { CodPayment } from './cod-payment';
 
 @Entity('do_pod_deliver_detail', { schema: 'public' })
 export class DoPodDeliverDetail extends TmsBaseEntity {
@@ -132,4 +133,11 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
   @OneToOne(() => PickupRequestDetail)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   pickupRequestDetail: PickupRequestDetail;
+
+  @OneToOne(() => CodPayment)
+  @JoinColumn({
+    name: 'do_pod_deliver_detail_id',
+    referencedColumnName: 'doPodDeliverDetailId',
+  })
+  codPayment: CodPayment;
 }
