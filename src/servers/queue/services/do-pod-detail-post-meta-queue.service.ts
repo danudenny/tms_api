@@ -847,6 +847,32 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
+  // NOTE: handle for update awb status COD
+  public static async createJobByCodTransferBranch(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    userId: number,
+    employeeIdDriver: number,
+  ) {
+    // TODO: need to be reviewed awb status cod 40000, 45000
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.DLV,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver,
+      timestamp: moment().toDate(),
+      noteInternal: '',
+      notePublic: '',
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
   // TODO: need refactoring
   private static async getDataUserEmployee(userId: number): Promise<User> {
     const userhRepository = new OrionRepositoryService(User);
