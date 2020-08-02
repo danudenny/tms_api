@@ -141,6 +141,6 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     // GenerateReportQueueService.boot();
 
     // init Cron here
-    CodCronSettlementQueueService.init();
+    // CodCronSettlementQueueService.init();
   }
 }
