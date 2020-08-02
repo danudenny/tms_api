@@ -5,7 +5,6 @@ import { AwbTransactionDetailVm } from '../../../main/models/cod/web-awb-cod-res
 import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transaction-detail';
 import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transaction-history';
 import { WebCodFirstTransactionPayloadVm } from '../../../main/models/cod/web-awb-cod-payload.vm';
-import { CodSyncTransactionQueueService } from './cod-sync-transaction-queue.service';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import moment = require('moment');
 
@@ -116,9 +115,10 @@ export class CodFirstTransactionQueueService {
               CodTransactionDetail,
               transactionDetail,
             );
+            console.log(' ### DETAIL :: ', detail);
             // sync first data to mongo
-            await this.insertMongo(detail);
-
+            const newMongo = await this.insertMongo(detail);
+            console.log(' ### RETURN DATA MONGO :: ', newMongo);
           } else {
             isValidData = false;
             console.error('## Data COD Transaction :: Not Found !!! :: ', data);
