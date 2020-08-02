@@ -7,6 +7,7 @@ import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transac
 import { WebCodFirstTransactionPayloadVm } from '../../../main/models/cod/web-awb-cod-payload.vm';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import moment = require('moment');
+import { CodSyncTransactionQueueService } from './cod-sync-transaction-queue.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -41,14 +42,13 @@ export class CodFirstTransactionQueueService {
       const data = job.data;
       let isValidData = true;
       let isNewData = false;
+      console.log('#### JOB ID  ::: ', job.id);
+      console.log('##################### SYNC DATA AWB NUMBER ::: ', data.awbNumber);
 
-      let transactionDetail = await CodTransactionDetail.findOne({
+      const transactionDetail = await CodTransactionDetail.findOne({
         awbItemId: data.awbItemId,
         isDeleted: false,
       });
-
-      console.log('#### JOB ID  ::: ', job.id);
-      console.log('##################### SYNC DATA AWB NUMBER ::: ', data.awbNumber);
 
       // Handle first awb scan
       await getManager().transaction(async transactional => {
@@ -117,7 +117,7 @@ export class CodFirstTransactionQueueService {
               createdTime: data.timestamp,
               updatedTime: data.timestamp,
             });
-            transactionDetail = await transactional.save(
+            await transactional.insert(
               CodTransactionDetail,
               newTransactionDetail,
             );
@@ -185,10 +185,14 @@ export class CodFirstTransactionQueueService {
         }
       }); // end transaction
 
-      if (isNewData && transactionDetail) {
+      console.log(' ### SYNC DATA MONGO :: NEW DATA ', isNewData);
+      if (isNewData) {
         // sync first data to mongo
-        const newMongo = await this.insertMongo(transactionDetail);
-        console.log(' ### RETURN DATA MONGO :: ', newMongo);
+        // const newMongo = await this.insertMongo(transactionDetail);
+        CodSyncTransactionQueueService.perform(
+          data.awbNumber,
+          data.timestamp,
+        );
       }
       return true;
     });
