@@ -324,7 +324,7 @@ export class V1WebReportCodService {
       writer.end();
 
       let url = '';
-      const awsKey = `reports/testing/${csvConfig.fileName}`;
+      const awsKey = `reports/cod/${csvConfig.fileName}`;
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
@@ -371,7 +371,7 @@ export class V1WebReportCodService {
       writer.end();
 
       let url = '';
-      const awsKey = `reports/testing/${csvConfig.fileName}`;
+      const awsKey = `reports/cod/${csvConfig.fileName}`;
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
