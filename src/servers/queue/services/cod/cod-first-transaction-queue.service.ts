@@ -48,8 +48,7 @@ export class CodFirstTransactionQueueService {
       });
 
       console.log('#### JOB ID  ::: ', job.id);
-      console.log('#### SYNC DATA AWB NUMBER ::: ', data.awbNumber);
-      console.log('#### TRANS DATA  ::: ', transactionDetail);
+      console.log('##################### SYNC DATA AWB NUMBER ::: ', data.awbNumber);
 
       // Handle first awb scan
       await getManager().transaction(async transactional => {

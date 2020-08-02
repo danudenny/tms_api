@@ -33,6 +33,7 @@ import { CodUpdateTransactionQueueService } from './services/cod/cod-update-tran
 import { CodTransactionHistoryQueueService } from './services/cod/cod-transaction-history-queue.service';
 import { CodUpdateSupplierInvoiceQueueService } from './services/cod/cod-update-supplier-invoice-queue.service';
 import { CodCronSettlementQueueService } from './services/cod/cod-cron-settlement-queue.service';
+import { MongoDbConfig } from './config/database/mongodb.config';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -117,6 +118,8 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       await app.listen(process.env.PORT || serverConfig.port, serverConfig.host || '0.0.0.0');
     }
 
+    // init connection mongodb
+    MongoDbConfig.getSicepatMonggoClient();
     // init boot Queue
     DoPodDetailPostMetaQueueService.boot();
     BagItemHistoryQueueService.boot();
