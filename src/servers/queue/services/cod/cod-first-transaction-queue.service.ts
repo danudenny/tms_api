@@ -47,6 +47,10 @@ export class CodFirstTransactionQueueService {
         isDeleted: false,
       });
 
+      console.log('#### JOB ID  ::: ', job.id);
+      console.log('#### SYNC DATA AWB NUMBER ::: ', data.awbNumber);
+      console.log('#### TRANS DATA  ::: ', transactionDetail);
+
       // Handle first awb scan
       await getManager().transaction(async transactional => {
 
@@ -182,7 +186,6 @@ export class CodFirstTransactionQueueService {
         }
       }); // end transaction
 
-      console.log('#### SYNC DATA AWB NUMBER ::: ', data.awbNumber);
       if (isNewData && transactionDetail) {
         // sync first data to mongo
         const newMongo = await this.insertMongo(transactionDetail);
