@@ -100,6 +100,8 @@ export class WebTrackingService {
       const history = await this.getRawBagRepresentativeHistory(data.bagRepresentativeId);
       if (history && history.length) {
         result.bagRepresentativeHistory = history;
+      } else {
+        result.bagRepresentativeHistory = null;
       }
     }
     // result.bagHistory =
