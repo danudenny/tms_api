@@ -35,7 +35,7 @@ export class BagRepresentativeHistory extends BaseEntity {
   })
   representativeIdTo: string;
 
-  @Column('date', {
+  @Column('timestamp without time zone', {
     nullable: false,
     name: 'bag_representative_date',
   })
