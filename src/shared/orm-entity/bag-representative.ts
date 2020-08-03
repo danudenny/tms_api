@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, OneToOne } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import {Representative} from './representative';
 import {Branch} from './branch';
 import {BagRepresentativeItem} from './bag-representative-item';
@@ -31,7 +31,7 @@ export class BagRepresentative extends BaseEntity {
   })
   representativeIdTo: string;
 
-  @Column('date', {
+  @Column('timestamp without time zone', {
     nullable: false,
     name: 'bag_representative_date',
   })
@@ -87,7 +87,7 @@ export class BagRepresentative extends BaseEntity {
     nullable: true,
     name: 'bag_representative_status_id_last',
   })
-  bagRepresentativeStatusIdLast: string | null;
+  bagRepresentativeStatusIdLast: number | null;
 
   @ManyToOne(() => Representative, representative => representative.representativeId, {
     onDelete: 'CASCADE',

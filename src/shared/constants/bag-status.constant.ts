@@ -6,4 +6,5 @@ export const BAG_STATUS = {
   DO_HUB: 3500,
   DO_SORTIR: 4000,
   OUT_HUB: 4500,
+  IN_SORTIR: 13000,
 };
