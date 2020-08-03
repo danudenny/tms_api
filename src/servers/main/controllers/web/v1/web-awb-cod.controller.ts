@@ -288,11 +288,15 @@ export class V1WebAwbCodController {
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
   public async supplierInvoiceNonCodFeePrint(@Body() payload: ReportBaseMetaPayloadVm) {
+    const filterListAwb = V1WebReportCodService.filterListAwb(
+      payload.filters,
+    );
+
     const filterList = V1WebReportCodService.filterList(
       payload.filters,
     );
 
-    return await V1WebReportCodService.printSupplierInvoice(payload, filterList, false);
+    return await V1WebReportCodService.printSupplierInvoice(payload, filterList, false, filterListAwb);
   }
 
   // @Get('transaction/sync')
