@@ -3,6 +3,8 @@ import { ConfigService } from '../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { QueueBullBoard } from '../queue-bull-board';
 import { CodTransactionHistoryQueueService } from './cod-transaction-history-queue.service';
+import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 
 export class CodUpdateTransactionQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -42,8 +44,20 @@ export class CodUpdateTransactionQueueService {
         },
       });
       console.log('##### TOTAL DATA Transaction :: ', dataTransaction.length);
+
       if (dataTransaction.length) {
         for (const item of dataTransaction) {
+
+          // update awb_item_attr transaction status 3500
+          if (Number(data.transactionStatusId) == TRANSACTION_STATUS.TRF) {
+            await AwbItemAttr.update(
+              { awbItemId: item.awbItemId },
+              {
+                transactionStatusId: TRANSACTION_STATUS.TRF,
+              },
+            );
+          }
+
           CodTransactionHistoryQueueService.perform(
             item.awbItemId,
             item.awbNumber,
