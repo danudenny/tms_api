@@ -236,7 +236,7 @@ export class BagCityService {
       createBagRepresentative.userIdUpdated = authMeta.userId.toString();
       createBagRepresentative.createdTime = dateNow;
       createBagRepresentative.updatedTime = dateNow;
-      createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
+      createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR.toString();
       await BagRepresentative.save(createBagRepresentative);
 
       bagRepresentativeId = createBagRepresentative.bagRepresentativeId;
@@ -254,7 +254,7 @@ export class BagCityService {
       createBagRepresentativeHistory.userIdUpdated = authMeta.userId.toString();
       createBagRepresentativeHistory.createdTime = dateNow;
       createBagRepresentativeHistory.updatedTime = dateNow;
-      createBagRepresentativeHistory.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
+      createBagRepresentativeHistory.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR.toString();
       await BagRepresentativeHistory.save(createBagRepresentativeHistory);
     }
 

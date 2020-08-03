@@ -35,7 +35,7 @@ export class BagRepresentativeHistory extends BaseEntity {
   })
   representativeIdTo: string;
 
-  @Column('timestamp without time zone', {
+  @Column('date', {
     nullable: false,
     name: 'bag_representative_date',
   })
@@ -91,7 +91,7 @@ export class BagRepresentativeHistory extends BaseEntity {
     nullable: true,
     name: 'bag_representative_status_id_last',
   })
-  bagRepresentativeStatusIdLast: number | null;
+  bagRepresentativeStatusIdLast: string | null;
 
   @ManyToOne(() => Representative, representative => representative.representativeId, {
     onDelete: 'CASCADE',
