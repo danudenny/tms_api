@@ -868,6 +868,10 @@ export class V1WebAwbCodService {
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(
+      e => e.transactionStatusId,
+      w => w.notEquals(TRANSACTION_STATUS.CANHO),
+    );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
