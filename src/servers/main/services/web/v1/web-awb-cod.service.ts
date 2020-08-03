@@ -202,8 +202,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    // TODO: add where is void = true
-    // q.andWhere(e => e.isVoid, w => w.isTrue());
+    q.andWhere(e => e.isVoid, w => w.isTrue());
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
