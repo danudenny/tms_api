@@ -251,7 +251,7 @@ export class BagScanOutBranchSmdQueueService {
           historyBag.bagRepresentativeCode = item.bag_representative_code;
           historyBag.bagRepresentativeDate = moment(item.bag_representative_date).toDate();
           historyBag.bagRepresentativeId = item.bag_representative_id;
-          historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_HUB.toString();
+          historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_HUB;
           historyBag.branchId = data.branchId.toString();
           historyBag.representativeIdTo = item.representative_id_to;
           historyBag.totalItem = item.total_item;

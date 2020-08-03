@@ -66,7 +66,7 @@ export class BagRepresentativeScanDoSmdQueueService {
       historyBag.bagRepresentativeCode = data.bagRepresentativeCode;
       historyBag.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
       historyBag.bagRepresentativeId = data.bagRepresentativeId;
-      historyBag.bagRepresentativeStatusIdLast = '3000';
+      historyBag.bagRepresentativeStatusIdLast = 3000;
       historyBag.branchId = data.branchId;
       historyBag.representativeIdTo = data.representativeIdTo;
       historyBag.totalItem = data.totalItem;
