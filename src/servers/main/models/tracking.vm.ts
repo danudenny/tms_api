@@ -251,6 +251,12 @@ export class TrackingBagRepresentativeResponseVm {
   @ApiModelProperty()
   bagRepresentativeStatusName: string;
 
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
+
   @ApiModelProperty({ type: () => [BagRepresentativeHistoryResponseVm] })
   bagRepresentativeHistory: BagRepresentativeHistoryResponseVm[];
 }

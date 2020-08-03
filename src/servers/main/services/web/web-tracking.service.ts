@@ -97,6 +97,8 @@ export class WebTrackingService {
       result.bagRepresentativeId = data.bagRepresentativeId;
       result.bagRepresentativeStatusId = data.bagRepresentativeStatusId;
       result.bagRepresentativeStatusName = data.bagRepresentativeStatusName;
+      result.branchName = data.branchName;
+      result.representativeCode = data.representativeCode;
       const history = await this.getRawBagRepresentativeHistory(data.bagRepresentativeId);
       if (history && history.length) {
         result.bagRepresentativeHistory = history;
@@ -278,9 +280,13 @@ export class WebTrackingService {
         br.total_weight::numeric(10,2) as weight,
         br.bag_representative_id as "bagRepresentativeId",
         brs.bag_representative_status_id as "bagRepresentativeStatusId",
-        brs.status_code as "bagRepresentativeStatusName"
+        brs.status_code as "bagRepresentativeStatusName",
+        b.branch_name as "branchName",
+        r.representative_code as "representativeCode"
       FROM bag_representative br
       LEFT JOIN bag_representative_status brs ON br.bag_representative_status_id_last = brs.bag_representative_status_id AND brs.is_deleted = false
+      LEFT JOIN branch b ON br.branch_id = b.branch_id AND b.is_deleted = FALSE
+      LEFT JOIN representative r ON br.representative_id_to = r.representative_id AND r.is_deleted = FALSE
       WHERE
         br.bag_representative_code = :bagRepresentativeNumber
       LIMIT 1
