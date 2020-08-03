@@ -103,15 +103,16 @@ export class MonitoringSmdServices {
                       group by
                         dsd.do_smd_id
                     )`, 'total_weight')
-          .addSelect(`(
-                      select
-                        sum(dsd.total_bagging + dsd.total_bag)
-                      from do_smd_detail dsd
-                      where
-                        dsd.do_smd_id = ds.do_smd_id
-                      group by
-                        dsd.do_smd_id
-                    )`, 'total_colly')
+          // .addSelect(`(
+          //             select
+          //               sum(dsd.total_bagging + dsd.total_bag)
+          //             from do_smd_detail dsd
+          //             where
+          //               dsd.do_smd_id = ds.do_smd_id
+          //             group by
+          //               dsd.do_smd_id
+          //           )`, 'total_colly')
+          .addSelect(`ds.total_item`, 'total_colly')
           .addSelect(`v.vehicle_capacity`, 'vehicle_capacity')
           .addSelect(`ds.departure_date_time`, 'departure_date_time')
           .addSelect(`ds.transit_date_time`, 'transit_date_time')
@@ -324,15 +325,16 @@ export class MonitoringSmdServices {
                       group by
                         dsd.do_smd_id
                     )`, 'total_weight')
-          .addSelect(`(
-                      select
-                        sum(dsd.total_bagging + dsd.total_bag)
-                      from do_smd_detail dsd
-                      where
-                        dsd.do_smd_id = ds.do_smd_id
-                      group by
-                        dsd.do_smd_id
-                    )`, 'total_colly')
+          // .addSelect(`(
+          //             select
+          //               sum(dsd.total_bagging + dsd.total_bag)
+          //             from do_smd_detail dsd
+          //             where
+          //               dsd.do_smd_id = ds.do_smd_id
+          //             group by
+          //               dsd.do_smd_id
+          //           )`, 'total_colly')
+          .addSelect(`ds.total_item`, 'total_colly')
           .addSelect(`v.vehicle_capacity`, 'vehicle_capacity')
           .addSelect(`ds.departure_date_time`, 'departure_date_time')
           .addSelect(`ds.transit_date_time`, 'transit_date_time')
