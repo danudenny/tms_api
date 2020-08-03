@@ -19,6 +19,9 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { RedisService } from '../../../../shared/services/redis.service';
+import { BagRepresentativeHistory } from '../../../../shared/orm-entity/bag-representative-history';
+import { SharedService } from '../../../../shared/services/shared.service';
+import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 
 @Injectable()
 export class BagCityService {
@@ -233,10 +236,26 @@ export class BagCityService {
       createBagRepresentative.userIdUpdated = authMeta.userId.toString();
       createBagRepresentative.createdTime = dateNow;
       createBagRepresentative.updatedTime = dateNow;
+      createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
       await BagRepresentative.save(createBagRepresentative);
 
       bagRepresentativeId = createBagRepresentative.bagRepresentativeId;
       bagRepresentativeCode = createBagRepresentative.bagRepresentativeCode;
+
+      const createBagRepresentativeHistory = BagRepresentativeHistory.create();
+      createBagRepresentativeHistory.bagRepresentativeId = bagRepresentativeId;
+      createBagRepresentativeHistory.representativeIdTo = dataAwb[0].representative_id;
+      createBagRepresentativeHistory.branchId = permissionPayload.branchId.toString();
+      createBagRepresentativeHistory.totalItem = 1;
+      createBagRepresentativeHistory.totalWeight = dataAwb[0].weight.toString();
+      createBagRepresentativeHistory.bagRepresentativeCode = paramBagRepresentativeCode;
+      createBagRepresentativeHistory.bagRepresentativeDate = dateNow;
+      createBagRepresentativeHistory.userIdCreated = authMeta.userId.toString();
+      createBagRepresentativeHistory.userIdUpdated = authMeta.userId.toString();
+      createBagRepresentativeHistory.createdTime = dateNow;
+      createBagRepresentativeHistory.updatedTime = dateNow;
+      createBagRepresentativeHistory.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
+      await BagRepresentativeHistory.save(createBagRepresentativeHistory);
     }
 
     const bagRepresentativeItem = BagRepresentativeItem.create();
@@ -252,11 +271,22 @@ export class BagCityService {
     bagRepresentativeItem.updatedTime = moment().toDate();
     BagRepresentativeItem.save(bagRepresentativeItem);
 
+
+    let branchName = '';
+    let cityName = '';
+    const branch = await SharedService.getDataBranchCity(permissionPayload.branchId);
+    if (branch) {
+      branchName = branch.branchName;
+      cityName = branch.district ? branch.district.city.cityName : '';
+    }
+    
     BagRepresentativeSmdQueueService.perform(
       dataAwb[0].awb_item_id,
       dataAwb[0].ref_awb_number,
       authMeta.userId,
       permissionPayload.branchId,
+      branchName,
+      cityName
     );
 
     result.status = 'success';
