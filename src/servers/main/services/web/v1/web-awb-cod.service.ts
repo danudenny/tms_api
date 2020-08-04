@@ -551,9 +551,14 @@ export class V1WebAwbCodService {
             },
           );
 
-          // sync data to mongodb
+          // sync update data to mongodb
           CodSyncTransactionQueueService.perform(
             awb,
+            null,
+            TRANSACTION_STATUS.SIGESIT,
+            null,
+            null,
+            authMeta.userId,
             timestamp,
           );
 
@@ -1098,10 +1103,9 @@ export class V1WebAwbCodService {
 
     const data = await CodTransactionDetail.find(
       {
-        order: {
-          createdTime: 'DESC',
+        where: {
+          transactionStatusId: 40000,
         },
-        take: 1000,
       });
 
     for (const item of data) {
@@ -1120,7 +1124,7 @@ export class V1WebAwbCodService {
             transactionStatusId: item.transactionStatusId,
             codSupplierInvoiceId: item.codSupplierInvoiceId,
             supplierInvoiceStatusId: item.supplierInvoiceStatusId,
-            isVoid: false,
+            isVoid: item.isVoid,
             updatedTime: item.updatedTime,
             userIdUpdated: item.userIdUpdated,
           };

@@ -3,6 +3,7 @@ import { ConfigService } from '../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { QueueBullBoard } from '../queue-bull-board';
 
+// Sync Update Data Transaction to Mongodb
 export class CodSyncTransactionQueueService {
   public static queue = QueueBullBoard.createQueue.add(
     'cod-sync-transaction-queue',
@@ -30,53 +31,44 @@ export class CodSyncTransactionQueueService {
 
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
-    this.queue.process(5, async job => {
+    this.queue.process(async job => {
 
       const data = job.data;
       // get config mongodb
       const collection = await MongoDbConfig.getDbSicepatCod('transaction_detail');
-      const itemTransaction = await CodTransactionDetail.findOne({
-        where: {
-          awbNumber: data.awbNumber,
-          isDeleted: false,
-        },
-      });
-      if (itemTransaction) {
-        delete itemTransaction['changedValues'];
-        itemTransaction.userIdCreated = Number(itemTransaction.userIdCreated);
-        itemTransaction.userIdUpdated = Number(itemTransaction.userIdUpdated);
 
-        try {
-          const checkData = await collection.findOne({
-            _id: itemTransaction.awbNumber,
-          });
-          console.log('##### SYNC MONGO AWB :: ', data.awbNumber);
+      try {
+        const checkData = await collection.findOne({
+          _id: data.awbNumber,
+        });
+        console.log('##### SYNC MONGO AWB :: ', data.awbNumber);
 
-          if (checkData) {
-            console.log('## UPDATE DATA IN MONGO !!!');
-            const objUpdate = {
-              codTransactionId: itemTransaction.codTransactionId,
-              transactionStatusId: itemTransaction.transactionStatusId,
-              updatedTime: data.timestamp,
-              userIdUpdated: itemTransaction.userIdUpdated,
-            };
-            await collection.updateOne(
-              { _id: itemTransaction.awbNumber },
-              {
-                $set: objUpdate,
-              },
-            );
-          } else {
-            console.log('## NEW DATA IN MONGO !!!');
-            await collection.insertOne({ _id: itemTransaction.awbNumber, ...itemTransaction });
-          }
-        } catch (error) {
-          console.error(error);
-          throw error;
+        if (checkData) {
+          console.log('## UPDATE DATA IN MONGO !!!');
+          const transactionStatusId = data.transactionStatusId ? Number(data.transactionStatusId) : null;
+          const supplierInvoiceStatusId = data.supplierInvoiceStatusId ? Number(data.supplierInvoiceStatusId) : null;
+          const objUpdate = {
+            codTransactionId: data.codTransactionId,
+            transactionStatusId,
+            codSupplierInvoiceId: data.codSupplierInvoiceId,
+            supplierInvoiceStatusId,
+            updatedTime: data.timestamp,
+            userIdUpdated: data.userId,
+          };
+          await collection.updateOne(
+            { _id: data.awbNumber },
+            {
+              $set: objUpdate,
+            },
+          );
+        } else {
+          console.log('## NOT FOUND DATA IN MONGO !!! ', data.awbNumber);
         }
-      } else {
-        console.log('##### DATA SYNC AWB NOT FOUND !! ', data.awbNumber);
+      } catch (error) {
+        console.error(error);
+        throw error;
       }
+
       return true;
     });
 
@@ -93,10 +85,20 @@ export class CodSyncTransactionQueueService {
 
   public static async perform(
     awbNumber: string,
+    codTransactionId: string,
+    transactionStatusId: number,
+    codSupplierInvoiceId: string,
+    supplierInvoiceStatusId: number,
+    userId: number,
     timestamp: Date,
   ) {
     const obj = {
       awbNumber,
+      codTransactionId,
+      transactionStatusId,
+      codSupplierInvoiceId,
+      supplierInvoiceStatusId,
+      userId,
       timestamp,
     };
 
