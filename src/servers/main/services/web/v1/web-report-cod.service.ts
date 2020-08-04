@@ -81,6 +81,13 @@ export class V1WebReportCodService {
       }
 
     });
+
+    const f = {
+      transactionStatusId: { $eq: 45000 },
+    };
+
+    filterList.push(f);
+
     return filterList;
   }
 
@@ -133,6 +140,20 @@ export class V1WebReportCodService {
       if (filter.field == 'branchLast' && filter.value) {
         const f = {
           lastValidTrackingSiteCode: { $eq: filter.value },
+        };
+
+        filterList.push(f);
+      }
+      if (filter.field == 'transactionStatus' && filter.value) {
+        const f = {
+          transactionStatusId: { $eq: filter.value },
+        };
+
+        filterList.push(f);
+      }
+      if (filter.field == 'sigesit' && filter.value) {
+        const f = {
+          userIdDriver: { $eq: filter.value },
         };
 
         filterList.push(f);
@@ -314,8 +335,6 @@ export class V1WebReportCodService {
     let count = 0;
     if (data) {
       for (const d of data) {
-        console.log(d.prtParcelValue, "d.prtParcelValue")
-        // writer.write(d);
         writer.write([
           this.strReplaceFunc(d.partnerName),
           d.awbDate
@@ -345,9 +364,9 @@ export class V1WebReportCodService {
       }
       count += 1;
     } // end of while
-    writer.on('data', chunk => {
-      console.log(`Received ${chunk.length} bytes of data.`);
-    });
+    // writer.on('data', chunk => {
+    //   console.log(`Received ${chunk.length} bytes of data.`);
+    // });
 
     await this.sleep(300);
     console.log(count, 'counter result');
@@ -533,7 +552,7 @@ export class V1WebReportCodService {
 
           const transactionStatusIds = [...new Set(data.map(item => item.transactionStatusId != undefined ? item.transactionStatusId : 0))]
           console.log(transactionStatusIds, "transactionStatusIds")
-          if (transactionStatusIds.length > 0 && transactionStatusIds[0]) {
+          if (transactionStatusIds.length > 0 && transactionStatusIds[0] != undefined) {
             const transactionStatuses = await RawQueryService.query(
               `SELECT 
               transaction_status_id, status_title 
@@ -544,16 +563,16 @@ export class V1WebReportCodService {
               data.filter(e => {
                 return (e.transactionStatusId == status.transaction_status_id)
               }).forEach(e => {
+                console.log("ada status transaksi")
                 e.transactionStatus = status.status_title
               });
             });
           }
 
           data.forEach(e => {
-            console.log(e.transactionStatus != undefined, "transaction status")
-            e.transactionStatus = e.transactionStatus != undefined ? e.transactionStatus : "-"
+            console.log(e.transactionStatusId, "transaction status")
+            e.transactionStatus = e.transactionStatusId != undefined ? e.transactionStatus : "-"
           })
-          console.log(data, "data e");
 
 
           await this.populateDataAwbCsv(writer, data);
