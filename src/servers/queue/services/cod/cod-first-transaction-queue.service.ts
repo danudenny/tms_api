@@ -307,11 +307,31 @@ export class CodFirstTransactionQueueService {
     console.log('## FIRST DATA IN MONGO :: ', transaction.awbNumber);
 
     try {
-      await collection.insertOne({
+      const checkData = await collection.findOne({
         _id: transaction.awbNumber,
-        ...transaction,
       });
-      console.log(' #### Success first insert data mongo');
+      if (checkData) {
+        const objUpdate = {
+          codTransactionId: transaction.codTransactionId,
+          transactionStatusId: transaction.transactionStatusId,
+          supplierInvoiceStatusId: transaction.supplierInvoiceStatusId,
+          codSupplierInvoiceId: transaction.codSupplierInvoiceId,
+          userIdUpdated: transaction.userIdUpdated,
+        };
+        await collection.updateOne(
+          { _id: transaction.awbNumber },
+          {
+            $set: objUpdate,
+          },
+        );
+        console.log('#### Success Update data mongo !!!');
+      } else {
+        await collection.insertOne({
+          _id: transaction.awbNumber,
+          ...transaction,
+        });
+        console.log(' #### Success first insert data mongo');
+      }
       return true;
 
     } catch (error) {
