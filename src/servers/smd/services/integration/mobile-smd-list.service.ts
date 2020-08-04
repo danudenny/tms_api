@@ -310,7 +310,7 @@ export class MobileSmdListService {
     qb.addSelect('b.address', 'address');
     qb.addSelect('dsd.total_bag', 'total_bag');
     qb.addSelect('dsd.total_bagging', 'total_bagging');
-    qb.addSelect('dsd.total_representative', 'total_representative');
+    qb.addSelect('dsd.total_bag_representative', 'total_bag_representative');
     qb.from('do_smd', 'ds');
     qb.innerJoin(
       'do_smd_detail',
