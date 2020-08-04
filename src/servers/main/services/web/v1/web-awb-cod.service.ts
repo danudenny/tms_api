@@ -202,8 +202,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    // TODO: add where is void = true
-    // q.andWhere(e => e.isVoid, w => w.isTrue());
+    q.andWhere(e => e.isVoid, w => w.isTrue());
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
@@ -606,7 +605,7 @@ export class V1WebAwbCodService {
     let redlock = true;
     for (const transactionId of payload.dataTransactionId) {
       // handle race condition
-      redlock = await RedisService.redlock(`redlock:transferHeadOffice:${transactionId}`);
+      redlock = await RedisService.redlock(`redlock:transferHeadOffice:${transactionId}`, 5);
       if (redlock == false) { break; }
     }
     if (!redlock) {
@@ -644,7 +643,7 @@ export class V1WebAwbCodService {
         const bankStatement = new CodBankStatement();
         bankStatement.bankStatementCode = randomCode;
         bankStatement.bankStatementDate = timestamp;
-        bankStatement.transactionStatusId = 35000;
+        bankStatement.transactionStatusId = 33000;
         bankStatement.totalCodValue = totalValue; // init
         bankStatement.totalTransaction = totalData; // init
         bankStatement.totalAwb = totalAwb; // init
@@ -662,6 +661,7 @@ export class V1WebAwbCodService {
           const codBranch = await CodTransaction.findOne({
             where: {
               codTransactionId: transactionId,
+              codBankStatementId: null,
               isDeleted: false,
             },
           });
@@ -703,24 +703,27 @@ export class V1WebAwbCodService {
               timestamp,
             );
           } else {
-            dataError.push(`Transaction Id ${transactionId}, tidak valid!`);
+            dataError.push(`Transaction Id ${transactionId}, tidak valid! / sudah di proses`);
           }
         } // endof loop
 
-        // update data bank statment
-        await transactionManager.update(
-          CodBankStatement,
-          {
-            codBankStatementId: bankStatement.codBankStatementId,
-          },
-          {
-            totalCodValue: totalValue,
-            totalTransaction: totalData,
-            totalAwb,
-            updatedTime: timestamp,
-            userIdUpdated: authMeta.userId,
-          },
-        );
+        if (totalData > 0) {
+          // update data bank statment
+          await transactionManager.update(
+            CodBankStatement,
+            {
+              codBankStatementId: bankStatement.codBankStatementId,
+            },
+            {
+              totalCodValue: totalValue,
+              totalTransaction: totalData,
+              transactionStatusId: TRANSACTION_STATUS.TRF,
+              totalAwb,
+              updatedTime: timestamp,
+              userIdUpdated: authMeta.userId,
+            },
+          );
+        }
       });
       // #endregion of transaction
 
@@ -868,6 +871,10 @@ export class V1WebAwbCodService {
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(
+      e => e.transactionStatusId,
+      w => w.notEquals(TRANSACTION_STATUS.CANHO),
+    );
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -1026,6 +1033,7 @@ export class V1WebAwbCodService {
           },
           {
             transactionStatusId: 32500,
+            codBankStatementId: null,
             updatedTime: timestamp,
             userIdUpdated: authMeta.userId,
           },
