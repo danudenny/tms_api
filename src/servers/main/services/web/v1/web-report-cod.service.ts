@@ -113,8 +113,9 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'supplier' && filter.value) {
+        const filterValue = new RegExp(filter.value);
         const f = {
-          partnerName: { $eq: filter.value },
+          partnerName: filterValue,
         };
 
         filterList.push(f);
