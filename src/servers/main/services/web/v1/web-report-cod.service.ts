@@ -9,6 +9,7 @@ import { ConfigService } from '../../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
 import { BadRequestException } from '@nestjs/common';
+import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 
 export class V1WebReportCodService {
   // filter code
@@ -32,7 +33,7 @@ export class V1WebReportCodService {
 
       if (filterStart && filterEnd) {
         const filterJson = {
-          awbDate: {
+          createdTime: {
             $gte: filterStart,
             $lt: filterEnd,
           },
@@ -327,7 +328,7 @@ export class V1WebReportCodService {
             ? moment(d.lastTrackingDateTime).format('YYYY-MM-DD hh:mm A')
             : null,
           this.strReplaceFunc(d.penerima),
-          '',
+          d.transactionStatus,
           d.lastValidTrackingType,
           this.strReplaceFunc(d.prtCustPackageId),
           this.strReplaceFunc(d.manifestTrackingSiteName),
@@ -394,24 +395,33 @@ export class V1WebReportCodService {
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
-      let totalData = 0;
-      let dataRowCount: number;
       //get data from dbAwb if cod = false
       //start uncomment
       if (cod == false) {
+        console.log("in cod = false")
         //get data from collection transaction_detail
         const dataRowAwbCount = await dbAwb.aggregate([
           {
             $match: {
-              $and: filters,
+              $and: awbFilter,
             },
           }
         ]).toArray();
-        dataRowCount += dataRowAwbCount.length;
+        console.log(dataRowAwbCount.length, "data row count")
+        if (dataRowAwbCount.length <= 0) {
+          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.' }
+        }
+
+        if (dataRowAwbCount.length > 1048576) {
+          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.' }
+        }
+        console.log(awbFilter, "awb filter");
+
+
         const totalPaging = Math.ceil(dataRowAwbCount.length / limit);
         for (let index = 0; index < totalPaging; index++) {
           const usedLimit = totalPaging - 1 == index ? dataRowAwbCount.length : limit
-          console.log("start query mongo")
+          console.log(index, totalPaging, dataRowAwbCount.length, limit, "start query mongo")
           const dataRowAwb = await dbAwb.aggregate([
             {
               $match: {
@@ -459,10 +469,45 @@ export class V1WebReportCodService {
               }
             },
             {
+              $lookup: {
+                from: "transaction_detail",
+                as: "td",
+                let: { awbNumber: "$awbNumber" },
+                pipeline: [
+                  {
+                    // on inner join
+                    $match:
+                    {
+                      $expr:
+                      {
+                        $and:
+                          [
+                            { $eq: ["$awbNumber", "$$awbNumber"] },
+                          ]
+                      }
+                    }
+                  },
+                  {
+                    $project: {
+                      awbNumber: 1,
+                      transactionStatusId: 1
+                    }
+                  }
+                ],
+              }
+            },
+            {
+              $unwind: {
+                path: "$td",
+                preserveNullAndEmptyArrays: true
+              }
+            },
+            {
               $project: {
                 partnerName: 1,
                 awbDate: 1,
                 parcelContent: "$sa.parcelContent",
+                transactionStatusId: "$td.transactionStatusId",
                 awbNumber: 1,
                 prtParcelValue: 1,
                 codNilai: 1,
@@ -478,85 +523,116 @@ export class V1WebReportCodService {
               }
             },
           ]);
+
+          //get array object
           const data = await dataRowAwb.toArray()
-          console.log(data, "data row awb")
+
+          // get id from data object
+
+          const transactionStatusIds = [...new Set(data.map(item => item.transactionStatusId != undefined ? item.transactionStatusId : null))]
+          console.log(transactionStatusIds, "transactionStatusIds")
+          if (transactionStatusIds.length > 0 && transactionStatusIds[0]) {
+            const transactionStatuses = await RawQueryService.query(
+              `SELECT 
+              transaction_status_id, status_title 
+              FROM transaction_status ts  
+              WHERE transaction_status_id IN (${transactionStatusIds.join(',')})`,
+            );
+            transactionStatuses.forEach(status => {
+              data.filter(e => {
+                return (e.transactionStatusId.toString() == status.transaction_status_id)
+              }).forEach(e => {
+                e.transactionStatus = status.status_title
+              });
+            });
+          }
+
+          data.forEach(e => {
+            console.log(e.transactionStatus != undefined, "transaction status")
+            e.transactionStatus = e.transactionStatus != undefined ? e.transactionStatus : "-"
+          })
+          console.log(data, "data e");
+
+
           await this.populateDataAwbCsv(writer, data);
         }
       }
       //uncomment again 
-      //end uncomment
-      //end fill excel awb
-      const dataRowCod = await dbTransactionDetail.aggregate([
-        {
-          $match: {
-            $and: filters,
-          },
-        }
-      ]).toArray();
 
-      const dataRowCodCount = dataRowCod.length;
-      dataRowCount += dataRowCodCount;
-
-      if (dataRowCount <= 0) {
-        return { status: 'error', message: 'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.' }
-      }
-
-      if (dataRowCount > 1048576) {
-        return { status: 'error', message: 'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.' }
-      }
-
-
-      const totalPagingCod = Math.ceil(dataRowCodCount / limit);
-
-
-
-      for (let index = 0; index < totalPagingCod; index++) {
-        const usedLimit = totalPagingCod - 1 == index ? dataRowCodCount : limit
-
-        //get data from collection transaction_detail
-        const datarow = await dbTransactionDetail.aggregate([
+      else {
+        //end uncomment
+        //end fill excel awb
+        const dataRowCod = await dbTransactionDetail.aggregate([
           {
             $match: {
               $and: filters,
             },
-          },
-          {
-            $skip: limit * (index)
-          },
-          {
-            $limit: usedLimit
-          },
-          {
-            $project: {
-              _id: 1,
-              awbDate: 1,
-              awbNumber: 1,
-              codFee: 1,
-              consigneeName: 1,
-              createdTime: 1,
-              currentPosition: 1,
-              custPackage: 1,
-              destination: 1,
-              destinationCode: 1,
-              isDeleted: 1,
-              packageType: 1,
-              parcelContent: 1,
-              parcelNote: 1,
-              parcelValue: 1,
-              partnerId: 1,
-              partnerName: 1,
-              paymentService: 1,
-              pickupSource: 1,
-              podDate: 1,
-              transactionStatusId: 1,
-              userIdCreated: 1,
-              userIdUpdated: 1,
-            },
-          },
-        ]);
+          }
+        ]).toArray();
 
-        const data = await datarow.toArray()
-        await this.populateDataCsv(writer, data, cod);
+        const dataRowCodCount = dataRowCod.length;
+
+        if (dataRowCod.length <= 0) {
+          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.' }
+        }
+
+        if (dataRowCod.length > 1048576) {
+          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.' }
+        }
+
+
+        const totalPagingCod = Math.ceil(dataRowCodCount / limit);
+
+
+
+        for (let index = 0; index < totalPagingCod; index++) {
+          const usedLimit = totalPagingCod - 1 == index ? dataRowCodCount : limit
+
+          //get data from collection transaction_detail
+          const datarow = await dbTransactionDetail.aggregate([
+            {
+              $match: {
+                $and: filters,
+              },
+            },
+            {
+              $skip: limit * (index)
+            },
+            {
+              $limit: usedLimit
+            },
+            {
+              $project: {
+                _id: 1,
+                awbDate: 1,
+                awbNumber: 1,
+                codFee: 1,
+                consigneeName: 1,
+                createdTime: 1,
+                currentPosition: 1,
+                custPackage: 1,
+                destination: 1,
+                destinationCode: 1,
+                isDeleted: 1,
+                packageType: 1,
+                parcelContent: 1,
+                parcelNote: 1,
+                parcelValue: 1,
+                partnerId: 1,
+                partnerName: 1,
+                paymentService: 1,
+                pickupSource: 1,
+                podDate: 1,
+                transactionStatusId: 1,
+                userIdCreated: 1,
+                userIdUpdated: 1,
+              },
+            },
+          ]);
+
+          const data = await datarow.toArray()
+          await this.populateDataCsv(writer, data, cod);
+        }
       }
       writer.end();
 
@@ -570,6 +646,8 @@ export class V1WebReportCodService {
       if (storagePath) {
         url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
         this.deleteFile(csvConfig.filePath);
+
+        console.log(url, "url final")
       }
 
       return { status: 'OK', url };
