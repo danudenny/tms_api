@@ -115,9 +115,9 @@ export class HandoverImagePayloadVm {
 
 export class MobileSmdListHistoryPayloadVm {
   @ApiModelProperty()
-  start_date: Date;
+  start_date: string;
 
  @ApiModelProperty()
-  end_date: Date;
+  end_date: string;
 }
 
