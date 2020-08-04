@@ -7,7 +7,7 @@ import { CodVoucher } from '../../../../shared/orm-entity/cod-voucher';
 import { CodVoucherDetail } from '../../../../shared/orm-entity/cod-voucher-detail';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { QueueBullBoard } from '../queue-bull-board';
-
+import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
 import moment = require('moment');
 
 // DOC: this sample Cron with bull
@@ -101,7 +101,8 @@ export class CodCronSettlementQueueService {
             const bankStatement = new CodBankStatement();
             bankStatement.bankStatementCode = randomCode;
             bankStatement.bankStatementDate = timestamp;
-            bankStatement.transactionStatusId = 35000;
+            bankStatement.bankNoReference = dataVoucher.codVoucherNo;
+            bankStatement.transactionStatusId = TRANSACTION_STATUS.TRF;
             bankStatement.totalCodValue = transaction.totalCodValue;
             bankStatement.totalTransaction = 1;
             bankStatement.totalAwb = transaction.totalAwb;

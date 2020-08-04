@@ -18,6 +18,7 @@ import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { error } from 'winston';
+import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 
 // #endregion
 export class V1WebAwbCodVoucherService {
@@ -138,7 +139,7 @@ export class V1WebAwbCodVoucherService {
       }
 
       if (codVoucherId !== '') {
-        await this.createVoucherDetailbyVoucherId(codVoucherId, awbNumbers, timeNow, codVoucherDate);
+        await this.createVoucherDetailbyVoucherId(codVoucherId, awbNumbers, timeNow, codVoucherDate, codVoucherNo);
       }
     }
 
@@ -187,11 +188,8 @@ export class V1WebAwbCodVoucherService {
         isDeleted: false,
       },
     });
-    if (awbDuplicated) {
-      return true;
-    } else {
-      return false;
-    }
+
+    return !!awbDuplicated;
   }
 
   private static async isAwbNumberExist(awbNumber: number): Promise<boolean> {
@@ -203,11 +201,8 @@ export class V1WebAwbCodVoucherService {
         isDeleted: false,
       },
     });
-    if (awbValid) {
-      return true;
-    } else {
-      return false;
-    }
+
+    return !!awbValid;
   }
 
   private static async isAwbNumberValid(awbNumber: string): Promise<boolean> {
@@ -224,7 +219,7 @@ export class V1WebAwbCodVoucherService {
   }
 
   private static async createVoucherDetailbyVoucherId(
-    codVoucherId: string, awbNumbers: any[], timeNow: Date, codVoucherDate: string,
+    codVoucherId: string, awbNumbers: any[], timeNow: Date, codVoucherDate: string, codVoucherNo: string,
   ): Promise<any> {
     for (const awbNumber of awbNumbers) {
       // Create voucher detail with unsettled status
@@ -251,7 +246,8 @@ export class V1WebAwbCodVoucherService {
             const bankStatement = new CodBankStatement();
             bankStatement.bankStatementCode = randomCode;
             bankStatement.bankStatementDate = timeNow;
-            bankStatement.transactionStatusId = 35000;
+            bankStatement.bankNoReference = codVoucherNo;
+            bankStatement.transactionStatusId = TRANSACTION_STATUS.TRF;
             bankStatement.totalCodValue = transaction.totalCodValue;
             bankStatement.totalTransaction = 1;
             bankStatement.totalAwb = transaction.totalAwb;
