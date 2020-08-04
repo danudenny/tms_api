@@ -213,6 +213,9 @@ export class WebCodBankStatementVm {
   transferDatetime: string;
 
   @ApiModelProperty()
+  bankNoReference: string;
+
+  @ApiModelProperty()
   userIdTransfer: number;
 
   @ApiModelProperty()

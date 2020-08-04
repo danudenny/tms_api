@@ -522,7 +522,7 @@ export class V1WebAwbCodService {
       // NOTE: loop data awb and update transaction detail
       for (const awb of payload.awbNumber) {
         const transactionDetail = await CodTransactionDetail.findOne({
-          select: ['codTransactionDetailId', 'awbNumber', 'codValue'],
+          select: ['codTransactionDetailId', 'awbNumber', 'codValue', 'awbItemId'],
           where: {
             awbNumber: awb,
             codTransactionId: payload.transactionId,
@@ -531,6 +531,7 @@ export class V1WebAwbCodService {
           },
         });
         if (transactionDetail) {
+
           await AwbItemAttr.update({
             awbItemId: transactionDetail.awbItemId,
           }, {
@@ -841,6 +842,7 @@ export class V1WebAwbCodService {
       ['t1.transaction_status_id', 'transactionStatusId'],
       ['t1.bank_account', 'bankAccount'],
       ['t2.status_title', 'transactionStatus'],
+      ['t1.bank_no_reference', 'bankNoReference'],
       ['t1.total_transaction', 'totalTransaction'],
       ['t1.total_awb', 'totalAwb'],
       ['t1.total_cod_value', 'totalCodValue'],

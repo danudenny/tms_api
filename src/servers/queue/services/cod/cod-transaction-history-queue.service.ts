@@ -71,13 +71,13 @@ export class CodTransactionHistoryQueueService {
             codSupplierInvoiceId: null,
             supplierInvoiceStatusId: null,
             isVoid: true,
-            userIdUpdated: data.userId,
+            userIdUpdated: Number(data.userId),
             updatedTime: data.timestamp,
           };
         } else {
           objUpdate = {
             transactionStatusId,
-            userIdUpdated: data.userId,
+            userIdUpdated: Number(data.userId),
             updatedTime: data.timestamp,
           };
         }
