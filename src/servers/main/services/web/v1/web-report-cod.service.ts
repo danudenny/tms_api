@@ -133,7 +133,6 @@ export class V1WebReportCodService {
         const f = {
           lastTrackingType: { $eq: filter.value },
         };
-
         filterList.push(f);
       }
 
@@ -141,21 +140,20 @@ export class V1WebReportCodService {
         const f = {
           lastValidTrackingSiteCode: { $eq: filter.value },
         };
-
         filterList.push(f);
       }
+
       if (filter.field == 'transactionStatus' && filter.value) {
         const f = {
           transactionStatusId: { $eq: filter.value },
         };
-
         filterList.push(f);
       }
+
       if (filter.field == 'sigesit' && filter.value) {
         const f = {
           userIdDriver: { $eq: filter.value },
         };
-
         filterList.push(f);
       }
 
@@ -574,7 +572,6 @@ export class V1WebReportCodService {
             e.transactionStatus = e.transactionStatusId != undefined ? e.transactionStatus : "-"
           })
 
-
           await this.populateDataAwbCsv(writer, data);
         }
       }
@@ -601,9 +598,7 @@ export class V1WebReportCodService {
           return { status: 'error', message: 'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.' }
         }
 
-
         const totalPagingCod = Math.ceil(dataRowCodCount / limit);
-
 
 
         for (let index = 0; index < totalPagingCod; index++) {
