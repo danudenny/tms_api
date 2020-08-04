@@ -529,7 +529,7 @@ export class V1WebReportCodService {
 
           // get id from data object
 
-          const transactionStatusIds = [...new Set(data.map(item => item.transactionStatusId != undefined ? item.transactionStatusId : null))]
+          const transactionStatusIds = [...new Set(data.map(item => item.transactionStatusId != undefined ? item.transactionStatusId : 0))]
           console.log(transactionStatusIds, "transactionStatusIds")
           if (transactionStatusIds.length > 0 && transactionStatusIds[0]) {
             const transactionStatuses = await RawQueryService.query(
@@ -540,7 +540,7 @@ export class V1WebReportCodService {
             );
             transactionStatuses.forEach(status => {
               data.filter(e => {
-                return (e.transactionStatusId.toString() == status.transaction_status_id)
+                return (e.transactionStatusId == status.transaction_status_id)
               }).forEach(e => {
                 e.transactionStatus = status.status_title
               });
