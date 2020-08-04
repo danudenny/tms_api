@@ -104,7 +104,7 @@ export class V1WebReportCodService {
 
       if (filterStart && filterEnd) {
         const filterJson = {
-          awbDate: {
+          lastTrackingDateTime: {
             $gte: filterStart,
             $lt: filterEnd,
           },
@@ -114,7 +114,7 @@ export class V1WebReportCodService {
 
       if (filter.field == 'supplier' && filter.value) {
         const f = {
-          partnerId: { $eq: filter.value },
+          partnerName: { $eq: filter.value },
         };
 
         filterList.push(f);
@@ -398,6 +398,9 @@ export class V1WebReportCodService {
       //get data from dbAwb if cod = false
       //start uncomment
       if (cod == false) {
+        console.log(awbFilter, "awb filter");
+
+
         console.log("in cod = false")
         //get data from collection transaction_detail
         const dataRowAwbCount = await dbAwb.aggregate([
@@ -415,8 +418,6 @@ export class V1WebReportCodService {
         if (dataRowAwbCount.length > 1048576) {
           return { status: 'error', message: 'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.' }
         }
-        console.log(awbFilter, "awb filter");
-
 
         const totalPaging = Math.ceil(dataRowAwbCount.length / limit);
         for (let index = 0; index < totalPaging; index++) {
