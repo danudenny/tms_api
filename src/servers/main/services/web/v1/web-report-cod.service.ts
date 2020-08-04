@@ -51,7 +51,7 @@ export class V1WebReportCodService {
 
       if (filter.field == 'awbStatus' && filter.value) {
         const f = {
-          lastTrackingType: { $eq: filter.value },
+          supplierInvoiceStatusId: { $eq: filter.value },
         };
 
         filterList.push(f);
@@ -59,7 +59,7 @@ export class V1WebReportCodService {
 
       if (filter.field == 'branchLast' && filter.value) {
         const f = {
-          lastValidTrackingSiteCode: { $eq: filter.value },
+          branchId: { $eq: filter.value },
         };
 
         filterList.push(f);
@@ -606,6 +606,7 @@ export class V1WebReportCodService {
                 _id: 1,
                 awbDate: 1,
                 awbNumber: 1,
+                codValue: 1,
                 codFee: 1,
                 consigneeName: 1,
                 createdTime: 1,
