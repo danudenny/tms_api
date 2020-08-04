@@ -31,11 +31,4 @@ export class WebTrackingController {
   public async bagNumber(@Body() payload: TrackingBagPayloadVm) {
     return WebTrackingService.bag(payload);
   }
-
-  @Post('bagRepresentative')
-  @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: TrackingBagRepresentativeResponseVm })
-  public async bagRepresentative(@Body() payload: TrackingBagRepresentativePayloadVm) {
-    return WebTrackingService.bagRepresentative(payload);
-  }
 }

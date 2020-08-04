@@ -2,6 +2,8 @@ import {
   TrackingAwbPayloadVm,
   TrackingAwbResponseVm,
   AwbSubstituteResponseVm,
+  TrackingBagRepresentativeResponseVm,
+  TrackingBagRepresentativePayloadVm,
 } from '../../../models/tracking.vm';
 import {
   ApiUseTags,
@@ -41,5 +43,12 @@ export class V1WebTrackingController {
   @ApiOkResponse({ type: PhotoResponseVm })
   public async photoDetail(@Body() payload: PhotoDetailVm) {
     return V1WebTrackingService.getPhotoDetail(payload);
+  }
+
+  @Post('bagRepresentative')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: TrackingBagRepresentativeResponseVm })
+  public async bagRepresentative(@Body() payload: TrackingBagRepresentativePayloadVm) {
+    return V1WebTrackingService.bagRepresentative(payload);
   }
 }
