@@ -26,6 +26,9 @@ export class MobileSmdListVm {
   @ApiModelProperty()
   total_bagging: number;
 
+  @ApiModelProperty()
+  total_bag_representative: number;
+
 }
 
 export class MobileSmdListDetailBagVm {
