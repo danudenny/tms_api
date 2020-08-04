@@ -1025,20 +1025,6 @@ export class V1WebAwbCodService {
           },
         );
 
-        // update transaction branch
-        await transactionManager.update(
-          CodTransaction,
-          {
-            codBankStatementId: payload.bankStatementId,
-          },
-          {
-            transactionStatusId: 32500,
-            codBankStatementId: null,
-            updatedTime: timestamp,
-            userIdUpdated: authMeta.userId,
-          },
-        );
-
         // looping data transaction branch
         const transactionsBranch = await transactionManager.find(
           CodTransaction,
@@ -1074,6 +1060,20 @@ export class V1WebAwbCodService {
               timestamp,
             );
           }
+
+          // update transaction branch
+          await transactionManager.update(
+            CodTransaction,
+            {
+              codBankStatementId: payload.bankStatementId,
+            },
+            {
+              transactionStatusId: 32500,
+              codBankStatementId: null,
+              updatedTime: timestamp,
+              userIdUpdated: authMeta.userId,
+            },
+          );
         }
       });
       // #endregion of transaction
