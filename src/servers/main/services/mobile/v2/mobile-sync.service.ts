@@ -122,10 +122,35 @@ export class V2MobileSyncService {
             },
           );
 
-          if (delivery.isCOD) {
-            await transactionEntityManager.insert(
+          if (delivery.isCOD && lastDoPodDeliverHistory.awbStatusId == AWB_STATUS.DLV) {
+            // find and update
+            const codPayment = await transactionEntityManager.findOne(
               CodPayment,
               {
+                where: {
+                  doPodDeliverDetailId: delivery.doPodDeliverDetailId,
+                },
+              },
+            );
+            if (codPayment) {
+              // update data
+              await transactionEntityManager.update(
+                CodPayment,
+                {
+                  codPaymentId: codPayment.codPaymentId,
+                },
+                {
+                  codValue: delivery.totalCodValue,
+                  codPaymentMethod: delivery.codPaymentMethod,
+                  codPaymentService: delivery.codPaymentService,
+                  note: delivery.note,
+                  noReference: delivery.noReference,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: moment().toDate(),
+                },
+              );
+            } else {
+              await transactionEntityManager.insert(CodPayment, {
                 awbNumber: delivery.awbNumber,
                 codValue: delivery.totalCodValue,
                 codPaymentMethod: delivery.codPaymentMethod,
@@ -137,10 +162,9 @@ export class V2MobileSyncService {
                 userIdUpdated: authMeta.userId,
                 createdTime: moment().toDate(),
                 updatedTime: moment().toDate(),
-              },
-            );
-
-            CodPaymentQueueService.perform(delivery.awbNumber, delivery.noReference);
+              });
+            }
+            // CodPaymentQueueService.perform(delivery.awbNumber, delivery.noReference);
           }
 
           const doPodDeliver = await DoPodDeliver.findOne({

@@ -72,19 +72,21 @@ export class CodFirstTransactionQueueService {
           const percentFee = 1; // set on config COD
           const codFee = (Number(codDetail.codValue) * percentFee) / 100;
           // Create data Cod Transaction Detail
+          const transactionStatusId = data.transactionStatusId ? Number(data.transactionStatusId) : 31000;
+          const supplierInvoiceStatusId = data.supplierInvoiceStatusId ? Number(data.supplierInvoiceStatusId) : null;
           const newTransactionDetail = CodTransactionDetail.create({
             codTransactionId: data.codTransactionId,
-            transactionStatusId: data.transactionStatusId,
-            supplierInvoiceStatusId: data.supplierInvoiceStatusId,
+            transactionStatusId,
+            supplierInvoiceStatusId,
             codSupplierInvoiceId: data.codSupplierInvoiceId,
-            branchId: data.branchId,
-            userIdDriver: data.userIdDriver,
+            branchId: Number(data.branchId),
+            userIdDriver: Number(data.userIdDriver),
 
             paymentMethod: data.paymentMethod,
             paymentService: data.paymentService,
             noReference: data.noReference,
 
-            awbItemId: codDetail.awbItemId,
+            awbItemId: Number(codDetail.awbItemId),
             awbNumber: codDetail.awbNumber,
             awbDate: codDetail.awbDate,
             podDate: codDetail.podDate,
@@ -104,15 +106,15 @@ export class CodFirstTransactionQueueService {
             partnerId: codDetail.partnerId,
             partnerName: codDetail.partnerName,
             custPackage: codDetail.custPackage,
-            packageTypeId: codDetail.packageTypeId,
+            packageTypeId: Number(codDetail.packageTypeId),
             packageTypeCode: codDetail.packageTypeCode,
             packageType: codDetail.packageTypeName,
             parcelContent: codDetail.parcelContent,
             parcelNote: codDetail.parcelNote,
-            userIdCreated: data.userId,
-            userIdUpdated: data.userId,
-            createdTime: data.timestamp,
-            updatedTime: data.timestamp,
+            userIdCreated: Number(data.userId),
+            userIdUpdated: Number(data.userId),
+            createdTime: moment(data.timestamp).toDate(),
+            updatedTime: moment(data.timestamp).toDate(),
           });
           transactionDetail = await CodTransactionDetail.save(
             newTransactionDetail,
@@ -307,11 +309,31 @@ export class CodFirstTransactionQueueService {
     console.log('## FIRST DATA IN MONGO :: ', transaction.awbNumber);
 
     try {
-      await collection.insertOne({
+      const checkData = await collection.findOne({
         _id: transaction.awbNumber,
-        ...transaction,
       });
-      console.log(' #### Success first insert data mongo');
+      if (checkData) {
+        const objUpdate = {
+          codTransactionId: transaction.codTransactionId,
+          transactionStatusId: transaction.transactionStatusId,
+          supplierInvoiceStatusId: transaction.supplierInvoiceStatusId,
+          codSupplierInvoiceId: transaction.codSupplierInvoiceId,
+          userIdUpdated: transaction.userIdUpdated,
+        };
+        await collection.updateOne(
+          { _id: transaction.awbNumber },
+          {
+            $set: objUpdate,
+          },
+        );
+        console.log('#### Success Update data mongo !!!');
+      } else {
+        await collection.insertOne({
+          _id: transaction.awbNumber,
+          ...transaction,
+        });
+        console.log(' #### Success first insert data mongo');
+      }
       return true;
 
     } catch (error) {
