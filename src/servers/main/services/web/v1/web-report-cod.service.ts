@@ -128,7 +128,6 @@ export class V1WebReportCodService {
         filterList.push(f);
       }
 
-
       if (filter.field == 'awbStatus' && filter.value) {
         const f = {
           lastTrackingType: { $eq: filter.value },
@@ -260,6 +259,7 @@ export class V1WebReportCodService {
   // private ==================================================================
   static async populateDataCsv(
     writer, data, cod,
+    draft: boolean = false,
   ): Promise<boolean> {
     let count = 0;
     if (data) {
@@ -276,7 +276,7 @@ export class V1WebReportCodService {
             d.codValue,
             d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
             this.strReplaceFunc(d.consigneeName),
-            'DLV', // supplier invoice status
+            draft ? 'DRAFT INVOICE' : 'PAID', // supplier invoice status
             'DLV',
             this.strReplaceFunc(d.custPackage),
             this.strReplaceFunc(d.pickupSource),
@@ -325,10 +325,9 @@ export class V1WebReportCodService {
     return true;
   }
 
-
   // private ==================================================================
   static async populateDataAwbCsv(
-    writer, data
+    writer, data,
   ): Promise<boolean> {
     let count = 0;
     if (data) {
@@ -413,34 +412,33 @@ export class V1WebReportCodService {
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
-      //get data from dbAwb if cod = false
-      //start uncomment
+      // get data from dbAwb if cod = false
+      // start uncomment
       if (cod == false) {
-        console.log(awbFilter, "awb filter");
+        console.log(awbFilter, 'awb filter');
 
-
-        console.log("in cod = false")
-        //get data from collection transaction_detail
+        console.log('in cod = false');
+        // get data from collection transaction_detail
         const dataRowAwbCount = await dbAwb.aggregate([
           {
             $match: {
               $and: awbFilter,
             },
-          }
+          },
         ]).toArray();
-        console.log(dataRowAwbCount.length, "data row count")
+        console.log(dataRowAwbCount.length, 'data row count');
         if (dataRowAwbCount.length <= 0) {
-          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.' }
+          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.' };
         }
 
         if (dataRowAwbCount.length > 1048576) {
-          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.' }
+          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.' };
         }
 
         const totalPaging = Math.ceil(dataRowAwbCount.length / limit);
         for (let index = 0; index < totalPaging; index++) {
-          const usedLimit = totalPaging - 1 == index ? dataRowAwbCount.length : limit
-          console.log(index, totalPaging, dataRowAwbCount.length, limit, "start query mongo")
+          const usedLimit = totalPaging - 1 == index ? dataRowAwbCount.length : limit;
+          console.log(index, totalPaging, dataRowAwbCount.length, limit, 'start query mongo');
           const dataRowAwb = await dbAwb.aggregate([
             {
               $match: {
@@ -448,16 +446,16 @@ export class V1WebReportCodService {
               },
             },
             {
-              $skip: limit * (index)
+              $skip: limit * (index),
             },
             {
-              $limit: usedLimit
+              $limit: usedLimit,
             },
             {
               $lookup: {
-                from: "spartan_awb_summary",
-                as: "sa",
-                let: { awbNumber: "$awbNumber" },
+                from: 'spartan_awb_summary',
+                as: 'sa',
+                let: { awbNumber: '$awbNumber' },
                 pipeline: [
                   {
                     // on inner join
@@ -467,31 +465,31 @@ export class V1WebReportCodService {
                       {
                         $and:
                           [
-                            { $eq: ["$awbNumber", "$$awbNumber"] },
-                          ]
-                      }
-                    }
+                            { $eq: ['$awbNumber', '$$awbNumber'] },
+                          ],
+                      },
+                    },
                   },
                   {
                     $project: {
                       awbNumber: 1,
                       parcelContent: 1,
-                    }
-                  }
+                    },
+                  },
                 ],
-              }
+              },
             },
             {
               $unwind: {
-                path: "$sa",
-                preserveNullAndEmptyArrays: true
-              }
+                path: '$sa',
+                preserveNullAndEmptyArrays: true,
+              },
             },
             {
               $lookup: {
-                from: "transaction_detail",
-                as: "td",
-                let: { awbNumber: "$awbNumber" },
+                from: 'transaction_detail',
+                as: 'td',
+                let: { awbNumber: '$awbNumber' },
                 pipeline: [
                   {
                     // on inner join
@@ -501,32 +499,32 @@ export class V1WebReportCodService {
                       {
                         $and:
                           [
-                            { $eq: ["$awbNumber", "$$awbNumber"] },
-                          ]
-                      }
-                    }
+                            { $eq: ['$awbNumber', '$$awbNumber'] },
+                          ],
+                      },
+                    },
                   },
                   {
                     $project: {
                       awbNumber: 1,
-                      transactionStatusId: 1
-                    }
-                  }
+                      transactionStatusId: 1,
+                    },
+                  },
                 ],
-              }
+              },
             },
             {
               $unwind: {
-                path: "$td",
-                preserveNullAndEmptyArrays: true
-              }
+                path: '$td',
+                preserveNullAndEmptyArrays: true,
+              },
             },
             {
               $project: {
                 partnerName: 1,
                 awbDate: 1,
-                parcelContent: "$sa.parcelContent",
-                transactionStatusId: "$td.transactionStatusId",
+                parcelContent: '$sa.parcelContent',
+                transactionStatusId: '$td.transactionStatusId',
                 awbNumber: 1,
                 prtParcelValue: 1,
                 codNilai: 1,
@@ -538,73 +536,69 @@ export class V1WebReportCodService {
                 lastValidTrackingSiteName: 1,
                 prtDestinationCode: 1,
                 layanan: 1,
-                receiverRemark: 1
-              }
+                receiverRemark: 1,
+              },
             },
           ]);
 
-          //get array object
-          const data = await dataRowAwb.toArray()
+          // get array object
+          const data = await dataRowAwb.toArray();
 
           // get id from data object
 
-          const transactionStatusIds = [...new Set(data.map(item => item.transactionStatusId != undefined ? item.transactionStatusId : 0))]
-          console.log(transactionStatusIds, "transactionStatusIds")
+          const transactionStatusIds = [...new Set(data.map(item => item.transactionStatusId != undefined ? item.transactionStatusId : 0))];
+          console.log(transactionStatusIds, 'transactionStatusIds');
           if (transactionStatusIds.length > 0 && transactionStatusIds[0] != undefined) {
             const transactionStatuses = await RawQueryService.query(
-              `SELECT 
-              transaction_status_id, status_title 
-              FROM transaction_status ts  
+              `SELECT
+              transaction_status_id, status_title
+              FROM transaction_status ts
               WHERE transaction_status_id IN (${transactionStatusIds.join(',')})`,
             );
             transactionStatuses.forEach(status => {
               data.filter(e => {
-                return (e.transactionStatusId == status.transaction_status_id)
+                return (e.transactionStatusId == status.transaction_status_id);
               }).forEach(e => {
-                console.log("ada status transaksi")
-                e.transactionStatus = status.status_title
+                console.log('ada status transaksi');
+                e.transactionStatus = status.status_title;
               });
             });
           }
 
           data.forEach(e => {
-            console.log(e.transactionStatusId, "transaction status")
-            e.transactionStatus = e.transactionStatusId != undefined ? e.transactionStatus : "-"
-          })
+            console.log(e.transactionStatusId, 'transaction status');
+            e.transactionStatus = e.transactionStatusId != undefined ? e.transactionStatus : '-';
+          });
 
           await this.populateDataAwbCsv(writer, data);
         }
-      }
-      //uncomment again 
-
-      else {
-        //end uncomment
-        //end fill excel awb
+      } else {
+        // end uncomment
+        // end fill excel awb
         const dataRowCod = await dbTransactionDetail.aggregate([
           {
             $match: {
               $and: filters,
             },
-          }
+          },
         ]).toArray();
 
         const dataRowCodCount = dataRowCod.length;
 
         if (dataRowCod.length <= 0) {
-          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.' }
+          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.' };
         }
 
         if (dataRowCod.length > 1048576) {
-          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.' }
+          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.' };
         }
 
         const totalPagingCod = Math.ceil(dataRowCodCount / limit);
 
-
         for (let index = 0; index < totalPagingCod; index++) {
-          const usedLimit = totalPagingCod - 1 == index ? dataRowCodCount : limit
+          const usedLimit = totalPagingCod - 1 == index ? dataRowCodCount : limit;
 
-          //get data from collection transaction_detail
+          // get data from collection transaction_detail
           const datarow = await dbTransactionDetail.aggregate([
             {
               $match: {
@@ -612,10 +606,10 @@ export class V1WebReportCodService {
               },
             },
             {
-              $skip: limit * (index)
+              $skip: limit * (index),
             },
             {
-              $limit: usedLimit
+              $limit: usedLimit,
             },
             {
               $project: {
@@ -647,7 +641,7 @@ export class V1WebReportCodService {
             },
           ]);
 
-          const data = await datarow.toArray()
+          const data = await datarow.toArray();
           await this.populateDataCsv(writer, data, cod);
         }
       }
@@ -664,7 +658,7 @@ export class V1WebReportCodService {
         url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
         this.deleteFile(csvConfig.filePath);
 
-        console.log(url, "url final")
+        console.log(url, 'url final');
       }
 
       return { status: 'OK', url };
@@ -674,7 +668,6 @@ export class V1WebReportCodService {
     }
 
   }
-
 
   static async exportSupplierInvoice(id: string) {
     const dbMongo = await MongoDbConfig.getDbSicepatCod('transaction_detail');
@@ -700,7 +693,7 @@ export class V1WebReportCodService {
       //   );
       // }
 
-      await this.populateDataCsv(writer, datarow, true);
+      await this.populateDataCsv(writer, datarow, true, true);
       writer.end();
 
       let url = '';
