@@ -83,7 +83,7 @@ export class V1WebReportCodService {
     });
 
     const f = {
-      transactionStatusId: { $eq: 45000 },
+      supplierInvoiceStatusId: { $eq: 45000 },
     };
 
     filterList.push(f);
