@@ -842,6 +842,7 @@ export class V1WebAwbCodService {
       ['t1.transaction_status_id', 'transactionStatusId'],
       ['t1.bank_account', 'bankAccount'],
       ['t2.status_title', 'transactionStatus'],
+      ['t1.bank_no_reference', 'bankNoReference'],
       ['t1.total_transaction', 'totalTransaction'],
       ['t1.total_awb', 'totalAwb'],
       ['t1.total_cod_value', 'totalCodValue'],
