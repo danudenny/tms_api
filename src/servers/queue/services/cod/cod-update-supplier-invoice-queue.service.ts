@@ -40,7 +40,7 @@ export class CodUpdateSupplierInvoiceQueueService {
         'transaction_detail',
       );
       const supplierInvoiceStatusId = Number(data.supplierInvoiceStatusId);
-      const partnerId = Number(data.partnerId);
+      const partnerId = data.partnerId.toString();
       let query = {};
       let dataUpdate = {};
 

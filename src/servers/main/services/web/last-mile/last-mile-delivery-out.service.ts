@@ -422,6 +422,30 @@ export class LastMileDeliveryOutService {
               // #region after scanout
               if (doPodDeliver) {
                 // save table do_pod_detail
+                // NOTE: check data double DoPodDeliverDetail by awb item id
+                // if found update flag is deleted true;
+                const oldData = await DoPodDeliverDetail.findOne(
+                  {
+                    select: ['doPodDeliverDetailId'],
+                    where: {
+                      awbNumber,
+                      isDeleted: false,
+                    },
+                  },
+                );
+                if (oldData) {
+                  await DoPodDeliverDetail.update(
+                    {
+                      doPodDeliverDetailId: oldData.doPodDeliverDetailId,
+                    },
+                    {
+                      isDeleted: true,
+                      userIdUpdated: authMeta.userId,
+                      updatedTime: moment().toDate(),
+                    },
+                  );
+                }
+
                 // NOTE: create data do pod detail per awb number
                 const doPodDeliverDetail = DoPodDeliverDetail.create();
                 doPodDeliverDetail.doPodDeliverId = payload.doPodId;
