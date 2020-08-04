@@ -291,14 +291,34 @@ export class MobileSmdListService {
     return await qb.getRawMany();
   }
 
-  public static async getScanOutMobileListHistory(paramStartDate?: Date, paramEndDate?: Date) {
+  public static async getScanOutMobileListHistory(paramStartDate?: string, paramEndDate?: string) {
 
     const authMeta = AuthService.getAuthData();
     const paramUserId =  authMeta.userId;
-    // const startDate = moment().add(-1, 'days').format('YYYY-MM-DD 00:00:00');
-    // const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
-    const startDate = paramStartDate;
-    const endDate = paramEndDate;
+    let dateFrom = null;
+    let dateTo = null;
+    if (paramStartDate && paramEndDate) {
+      if (moment(paramStartDate, 'ddd MMM DD YYYY', true).isValid()) {
+        dateFrom = moment(paramStartDate, 'ddd MMM DD YYYY');
+        dateTo = moment(paramEndDate, 'ddd MMM DD YYYY');
+      } else if (moment(paramStartDate, 'DD MMM YYYY', true).isValid()) {
+        dateFrom = moment(paramStartDate, 'DD MMM YYYY');
+        dateTo = moment(paramEndDate, 'DD MMM YYYY');
+      } else {
+        dateFrom = moment(paramStartDate);
+        dateTo = moment(paramEndDate);
+      }
+    }
+
+    const startDate = dateFrom
+      ? dateFrom.format('YYYY-MM-DD 00:00:00')
+      : moment().format('YYYY-MM-DD 00:00:00');
+    const endDate = dateTo
+      ? dateTo.format('YYYY-MM-DD 23:59:59')
+      : moment().format('YYYY-MM-DD 23:59:59');
+
+    // const startDate = paramStartDate;
+    // const endDate =  paramEndDate ;
 
     const qb = createQueryBuilder();
     qb.addSelect('ds.do_smd_id', 'do_smd_id');
