@@ -79,6 +79,7 @@ export class CodCronSettlementQueueService {
         transactionType: 'CASHLESS',
         isDeleted: false,
       },
+      take: 100,
     });
 
     for (const transaction of transactions) {
@@ -93,9 +94,12 @@ export class CodCronSettlementQueueService {
         WHERE ctd.cod_transaction_id = '${transaction.codTransactionId}'
         ;
       `;
+      // TODO: handle if query return null
+      // change method, RawQueryService.queryWithParams(query, {codTransactionId})
       const dataTotalMatch = (await RawQueryService.query(totalMatchQuery))[0];
       if (dataTotalMatch && dataTotalMatch.totalVoucher === dataTotalMatch.totalData) {
         const transactionDetails = await CodTransactionDetail.find({
+          select: ['codTransactionDetailId', 'awbNumber'],
           where: {
             codTransactionId: transaction.codTransactionId,
             isDeleted: false,
@@ -131,6 +135,8 @@ export class CodCronSettlementQueueService {
             );
           }
         }
+      } else {
+        console.log('### Skip Process Transaction Data not complete :: ', transaction.transactionCode);
       }
     }
 
@@ -139,7 +145,7 @@ export class CodCronSettlementQueueService {
 
   private static async createBankStatement(voucher: CodVoucherDetail, transaction: CodTransaction, timestamp: Date): Promise<any> {
     const dataVoucher = await CodVoucher.findOne({
-      select: ['codVoucherDate'],
+      select: ['codVoucherDate', 'codVoucherNo'],
       where: {
         codVoucherId: voucher.codVoucherId,
       },
@@ -159,12 +165,13 @@ export class CodCronSettlementQueueService {
         bankStatement.bankNoReference = dataVoucher.codVoucherNo;
         bankStatement.transactionStatusId = TRANSACTION_STATUS.TRF;
         bankStatement.totalCodValue = transaction.totalCodValue;
-        bankStatement.totalTransaction = 1;
         bankStatement.totalAwb = transaction.totalAwb;
-        bankStatement.bankBranchId = 5;
-        bankStatement.bankAccount = 'BCA/000000012435251';
         bankStatement.branchId = transaction.branchId;
         bankStatement.transferDatetime = dataVoucher.codVoucherDate;
+        // hardcode value, set default
+        bankStatement.bankAccount = 'BCA/2703935656';
+        bankStatement.totalTransaction = 1;
+        bankStatement.bankBranchId = 5;
         bankStatement.userIdTransfer = 4;
         bankStatement.userIdCreated = 4;
         bankStatement.userIdUpdated = 4;
