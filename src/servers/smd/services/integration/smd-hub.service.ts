@@ -19,7 +19,7 @@ import { BagDropoffHubQueueService } from '../../../queue/services/bag-dropoff-h
 import { DoPodDetailBagRepository } from '../../../../shared/orm-repository/do-pod-detail-bag.repository';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
 import { WebScanInBaggingVm, WebScanInBagRepresentativeVm } from '../../models/scanin-hub-smd.payload.vm';
-import { WebScanInBaggingResponseVm, WebScanInBagRepresentativeResponseVm } from '../../models/scanin-hub-smd.response.vm';
+import { WebScanInBaggingResponseVm, WebScanInBagRepresentativeResponseVm, WebScanInHubBagRepresentativeSortListResponseVm, WebScanInHubBagRepresentativeDetailSortListResponseVm } from '../../models/scanin-hub-smd.response.vm';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { DropoffHubBagging } from '../../../../shared/orm-entity/dropoff_hub_bagging';
@@ -28,6 +28,8 @@ import { BagRepresentative } from '../../../../shared/orm-entity/bag-representat
 import { BAG_REPRESENTATIVE_STATUS } from '../../../../shared/constants/bag-representative-status.constant';
 import { DropoffHubBagRepresentative } from '../../../../shared/orm-entity/dropoff_hub_bag_representative';
 import { BagRepresentativeDropoffHubQueueService } from '../../../queue/services/bag-representative-dropoff-hub-queue.service';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { DropoffHubDetailBagRepresentative } from '../../../../shared/orm-entity/dropoff_hub_detail_bag_representative';
 
 @Injectable()
 export class SmdHubService {
@@ -403,6 +405,124 @@ export class SmdHubService {
     result.totalSuccess = totalSuccess;
     result.totalError = totalError;
     result.data = dataItem;
+
+    return result;
+  }
+
+  static async getDropOffBagRepresentativeList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInHubBagRepresentativeSortListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 'e.created_time';
+    payload.fieldResolverMap['branchIdScan'] = 'b.branch_id';
+    payload.fieldResolverMap['branchIdFrom'] = 'b2.branch_id';
+    payload.fieldResolverMap['representativeFrom'] = 'r.representative_code';
+    payload.fieldResolverMap['bagRepresentativeCode'] = 'br.bag_representative_code';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+      {
+        field: 'bagRepresentativeCode',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffHubBagRepresentative, 'e');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+    q.selectRaw(
+      ['e.dropoff_hub_bag_representative_id', 'dropoffHubBagRepresentativeId'],
+      [`br.bag_representative_code`, 'bagRepresentativeCode'],
+      ['e.created_time', 'createdTime'],
+      ['r.representative_code', 'representativeFrom'],
+      ['b.branch_id', 'branchIdScan'],
+      ['b.branch_name', 'branchNameScan'],
+      ['b2.branch_id', 'branchIdFrom'],
+      ['b2.branch_name', 'branchNameFrom'],
+      ['br.total_item', 'totalAwb'],
+      [`CONCAT(CAST(br.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+    );
+
+    q.innerJoinRaw(
+      'bag_representative',
+      'br',
+      'e.bag_representative_id = br.bag_representative_id and br.is_deleted = false',
+    );
+    q.leftJoinRaw(
+      'representative',
+      'r',
+      'br.representative_id_to = r.representative_id and r.is_deleted = false',
+    );
+    q.leftJoinRaw(
+      'branch',
+      'b',
+      'e.branch_id = b.branch_id and b.is_deleted = false',
+    );
+    q.leftJoinRaw(
+      'branch',
+      'b2',
+      'br.branch_id = b2.branch_id  and b2.is_deleted = false',
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInHubBagRepresentativeSortListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async getDropOffBagRepresentativeDetailList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInHubBagRepresentativeDetailSortListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['dropOffHubBagRepresentativeId'] = 't1.dropoff_hub_bag_representative_id';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'dropOffHubBagRepresentativeId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffHubDetailBagRepresentative, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t2.awb_number', 'awbNumber'],
+      ['t3.consignee_name', 'consigneeName'],
+      ['t3.consignee_address', 'consigneeAddress'],
+      ['t4.district_name', 'districtName'],
+    );
+
+    q.innerJoin(e => e.awbItemAttr, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.districtTo, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInHubBagRepresentativeDetailSortListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
