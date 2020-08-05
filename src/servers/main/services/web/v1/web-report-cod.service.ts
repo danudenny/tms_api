@@ -10,8 +10,41 @@ import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
+import { CodExportMongoQueueService } from '../../../../queue/services/cod/cod-export-queue.service';
+import { RedisService } from '../../../../../shared/services/redis.service';
+import uuid = require('uuid');
 
 export class V1WebReportCodService {
+  static expireOnSeconds = 300; // 5 minute
+
+  static async addQueueBullPrint(filters, cod = true, awbFilter = null) {
+    const uuidv1 = require('uuid/v1');
+    const uuidString = uuidv1();
+    const reportKey = `reportKeyCOD:${uuidString}`;
+
+    // send to background process generate report
+    CodExportMongoQueueService.perform(filters, cod, awbFilter, reportKey);
+
+    const result = {
+      reportKey,
+      status: 'ok',
+      message: 'on Process Generate Report',
+    };
+    // init set data on redis
+    await RedisService.setex(
+      reportKey,
+      JSON.stringify(result),
+      this.expireOnSeconds,
+    );
+
+    return result;
+  }
+
+  static async getuuidString(reportKey) {
+    const dataRedis = await RedisService.get(reportKey, true);
+    return dataRedis;
+  }
+
   // filter code
   static filterList(filters: BaseMetaPayloadFilterVm[]) {
     const filterList: any = [];
@@ -317,7 +350,7 @@ export class V1WebReportCodService {
       count += 1;
     } // end of while
     writer.on('data', chunk => {
-      console.log(`Received ${chunk.length} bytes of data.`);
+      // console.log(`Received ${chunk.length} bytes of data.`);
     });
 
     await this.sleep(300);
@@ -394,7 +427,7 @@ export class V1WebReportCodService {
   }
 
   // main code
-  static async  printSupplierInvoice(payload, filters, cod = true, awbFilter = null) {
+  static async  printSupplierInvoice(filters, cod = true, awbFilter = null, uuid: string = '') {
     // TODO: query get data
     // step 1 : query get data by filter
     // prepare generate csv
@@ -403,6 +436,7 @@ export class V1WebReportCodService {
 
     const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod('transaction_detail');
     const dbAwb = await MongoDbConfig.getDbSicepatCod('awb');
+    let result: any;
 
     try {
 
@@ -428,11 +462,36 @@ export class V1WebReportCodService {
         ]).toArray();
         console.log(dataRowAwbCount.length, 'data row count');
         if (dataRowAwbCount.length <= 0) {
-          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.' };
+          if (uuid != '') {
+            const payload = {
+              status: 'error',
+              message:
+                'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.',
+            };
+            await RedisService.setex(
+              uuid,
+              JSON.stringify(payload),
+              this.expireOnSeconds,
+            );
+          }
+          // result = { status: 'error', message: 'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.' };
+          return;
         }
 
         if (dataRowAwbCount.length > 1048576) {
-          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.' };
+          if (uuid != '') {
+            const payload = {
+              status: 'error',
+              message:
+                'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.',
+            };
+            await RedisService.setex(
+              uuid,
+              JSON.stringify(payload),
+              this.expireOnSeconds,
+            );
+          }
+          return;
         }
 
         const totalPaging = Math.ceil(dataRowAwbCount.length / limit);
@@ -587,11 +646,35 @@ export class V1WebReportCodService {
         const dataRowCodCount = dataRowCod.length;
 
         if (dataRowCod.length <= 0) {
-          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.' };
+          if (uuid !== '') {
+            const payload = {
+              status: 'error',
+              message:
+                'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.',
+            };
+            await RedisService.setex(
+              uuid,
+              JSON.stringify(payload),
+              this.expireOnSeconds,
+            );
+          }
+          return;
         }
 
         if (dataRowCod.length > 1048576) {
-          return { status: 'error', message: 'Tidak dapat menarik data.<br /> Jumlah data yang ditarik lebih dari 1 jt.' };
+          if (uuid !== '') {
+            const payload = {
+              status: 'error',
+              message:
+                'Tidak dapat menarik data.<br /> Tidak ada data yang dapat di tarik.',
+            };
+            await RedisService.setex(
+              uuid,
+              JSON.stringify(payload),
+              this.expireOnSeconds,
+            );
+          }
+          return;
         }
 
         const totalPagingCod = Math.ceil(dataRowCodCount / limit);
@@ -662,7 +745,19 @@ export class V1WebReportCodService {
         console.log(url, 'url final');
       }
 
-      return { status: 'OK', url };
+      if (uuid != '') {
+        const payload = {
+          status: 'ok',
+          url,
+        };
+        await RedisService.setex(
+          uuid,
+          JSON.stringify(payload),
+          this.expireOnSeconds,
+        );
+      }
+
+      return;
     } catch (err) {
       console.log(err);
       throw err;
@@ -712,6 +807,7 @@ export class V1WebReportCodService {
       }
 
       return { status: 'ok', url };
+
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }
