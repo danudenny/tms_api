@@ -278,25 +278,61 @@ export class V1WebAwbCodController {
   @ResponseSerializerOptions({ disable: true })
   public async supplierInvoicePrint(@Body() payload: ReportBaseMetaPayloadVm) {
     const filterList = V1WebReportCodService.filterList(payload.filters);
-    return await V1WebReportCodService.printSupplierInvoice(
-      payload,
-      filterList,
-    );
+    return await V1WebReportCodService.printSupplierInvoice(filterList);
   }
 
   @Post('supplierInvoice/noncodfee/print')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
-  public async supplierInvoiceNonCodFeePrint(@Body() payload: ReportBaseMetaPayloadVm) {
-    const filterListAwb = V1WebReportCodService.filterListAwb(
-      payload.filters,
-    );
+  public async supplierInvoiceNonCodFeePrint(
+    @Body() payload: ReportBaseMetaPayloadVm,
+  ) {
+    const filterListAwb = V1WebReportCodService.filterListAwb(payload.filters);
 
-    const filterList = V1WebReportCodService.filterList(
-      payload.filters,
-    );
+    const filterList = V1WebReportCodService.filterList(payload.filters);
 
-    return await V1WebReportCodService.printSupplierInvoice(payload, filterList, false, filterListAwb);
+    return await V1WebReportCodService.printSupplierInvoice(
+      filterList,
+      false,
+      filterListAwb,
+    );
+  }
+
+  @Post('supplierInvoice/bull/print')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceBullPrint(
+    @Body() payload: ReportBaseMetaPayloadVm,
+  ) {
+    const filterList = V1WebReportCodService.filterList(payload.filters);
+
+    return await V1WebReportCodService.addQueueBullPrint(filterList);
+  }
+
+  @Post('supplierInvoice/noncodfee/bull/print')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceBullNonCodFeePrint(
+    @Body() payload: ReportBaseMetaPayloadVm,
+  ) {
+    const filterListAwb = V1WebReportCodService.filterListAwb(payload.filters);
+
+    const filterList = V1WebReportCodService.filterList(payload.filters);
+
+    return await V1WebReportCodService.addQueueBullPrint(
+      filterList,
+      false,
+      filterListAwb,
+    );
+  }
+
+  @Get('supplierInvoice/checkReport/:reportKey')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierinvoiceCheckUUID(
+    @Param('reportKey') reportKey: string,
+  ) {
+    return await V1WebReportCodService.getuuidString(reportKey);
   }
 
   // @Get('transaction/sync')
