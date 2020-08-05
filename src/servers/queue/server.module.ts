@@ -34,6 +34,7 @@ import { CodTransactionHistoryQueueService } from './services/cod/cod-transactio
 import { CodUpdateSupplierInvoiceQueueService } from './services/cod/cod-update-supplier-invoice-queue.service';
 import { CodCronSettlementQueueService } from './services/cod/cod-cron-settlement-queue.service';
 import { MongoDbConfig } from './config/database/mongodb.config';
+import { CodExportMongoQueueService } from './services/cod/cod-export-queue.service';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -137,6 +138,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     CodUpdateTransactionQueueService.boot();
     CodTransactionHistoryQueueService.boot();
     CodUpdateSupplierInvoiceQueueService.boot();
+    CodExportMongoQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
 

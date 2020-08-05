@@ -3,6 +3,7 @@ import { ConfigService } from '../../../../shared/services/config.service';
 import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transaction-history';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
+import moment = require('moment');
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -62,8 +63,8 @@ export class CodTransactionHistoryQueueService {
           objUpdate = {
             codSupplierInvoiceId: null,
             supplierInvoiceStatusId: null,
-            userIdUpdated: data.userId,
-            updatedTime: data.timestamp,
+            userIdUpdated: Number(data.userId),
+            updatedTime: moment(data.timestamp).toDate(),
           };
           // awb void
         } else if (transactionStatusId == TRANSACTION_STATUS.VOID) {
@@ -72,13 +73,13 @@ export class CodTransactionHistoryQueueService {
             supplierInvoiceStatusId: null,
             isVoid: true,
             userIdUpdated: Number(data.userId),
-            updatedTime: data.timestamp,
+            updatedTime: moment(data.timestamp).toDate(),
           };
         } else {
           objUpdate = {
             transactionStatusId,
             userIdUpdated: Number(data.userId),
-            updatedTime: data.timestamp,
+            updatedTime: moment(data.timestamp).toDate(),
           };
         }
 
