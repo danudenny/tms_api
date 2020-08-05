@@ -220,8 +220,8 @@ export class V1WebReportCodService {
           d.prtParcelValue,
           d.codNilai,
           d.codNilai,
-          d.lastTrackingDateTime
-            ? moment(d.lastTrackingDateTime).format('YYYY-MM-DD hh:mm A')
+          d.lastValidTrackingDateTime
+            ? moment(d.lastValidTrackingDateTime).format('YYYY-MM-DD hh:mm A')
             : null,
           this.strReplaceFunc(d.penerima),
           d.transactionStatus,
@@ -281,12 +281,12 @@ export class V1WebReportCodService {
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour').toDate();
+        const d = moment(moment(filter.value).format("YYYY-MM-DD 00:00:00")).toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour').add(1, 'days').toDate();
+        const d = moment(moment(filter.value).add(1, 'days').format("YYYY-MM-DD 00:00:00")).toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
       }
 
@@ -316,7 +316,7 @@ export class V1WebReportCodService {
     }
 
     const skip = limit * (pageNumber - 1);
-    console.log(skip, limit, filters, 'coding skip limit');
+    console.log(skip, limit, spartanFilter, 'coding skip limit');
     const datas = await coll
       .aggregate([
         {
