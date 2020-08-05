@@ -9,7 +9,7 @@ import { CustomCounterCode } from '../../../../shared/services/custom-counter-co
 import { QueueBullBoard } from '../queue-bull-board';
 import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
 import moment = require('moment');
-import { RawQueryService } from 'src/shared/services/raw-query.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 // DOC: this sample Cron with bull
 // https://docs.bullmq.io/guide/jobs/repeatable
