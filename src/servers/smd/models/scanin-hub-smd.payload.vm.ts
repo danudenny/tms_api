@@ -14,3 +14,16 @@ export class WebScanInBaggingVm  {
   @Type(() => String)
   baggingNumber: string[];
 }
+
+export class WebScanInBagRepresentativeVm  {
+
+  @ApiModelProperty({
+    example: ['GSK/12321', 'GSK/1120394'],
+    skipValidation: true,
+  })
+  // TODO: validation if array length = 0
+  @IsDefined({message: 'No Gabung Sortir Kota harus diisi'})
+  @Type(() => String)
+  bagRepresentativeNumber: string[];
+}
+

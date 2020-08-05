@@ -4,19 +4,19 @@ import { TmsBaseEntity } from './tms-base';
 import { AwbItemAttr } from './awb-item-attr';
 import { Awb } from './awb';
 import { Branch } from './branch';
-import { DropoffHubBagging } from './dropoff_hub_bagging';
+import { DropoffHubBagRepresentative } from './dropoff_hub_bag_representative';
 
-@Entity('dropoff_hub_bagging_detail', { schema: 'public' })
-export class DropoffHubDetailBagging extends TmsBaseEntity {
+@Entity('dropoff_hub_bag_representative_detail', { schema: 'public' })
+export class DropoffHubDetailBagRepresentative extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
-    name: 'dropoff_hub_bagging_detail_id',
+    name: 'dropoff_hub_bag_representative_detail_id',
   })
-  dropoffHubDetailBaggingId: string;
+  dropoffHubDetailBagRepresentativeId: string;
 
   @Column('character varying', {
-    name: 'dropoff_hub_bagging_id',
+    name: 'dropoff_hub_bag_representative_id',
   })
-  dropoffHubBaggingId: string;
+  dropoffHubBagRepresentativeId: string;
 
   @Column('bigint', {
     nullable: true,
@@ -47,11 +47,11 @@ export class DropoffHubDetailBagging extends TmsBaseEntity {
   @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
   branch: Branch;
 
-  @ManyToOne(() => DropoffHubBagging, e => e.dropoffHubBaggingDetails, {
+  @ManyToOne(() => DropoffHubBagRepresentative, e => e.dropoffHubBagRepresentativeDetails, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'dropoff_hub_bagging_id', referencedColumnName: 'dropoffHubBaggingId' })
-  dropoffHubBagging: DropoffHubBagging;
+  @JoinColumn({ name: 'dropoff_hub_bag_representative_id', referencedColumnName: 'dropoffHubBagRepresentativeId' })
+  dropoffHubBagRepresentative: DropoffHubBagRepresentative;
 
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })

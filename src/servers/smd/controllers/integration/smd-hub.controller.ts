@@ -14,8 +14,8 @@ import { MobileSmdListDetailPayloadVm, MobileSmdListHistoryPayloadVm } from '../
 import { WebScanInBagResponseVm } from '../../../main/models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../../main/models/web-scanin-bag.vm';
 import { SmdHubService } from '../../services/integration/smd-hub.service';
-import { WebScanInBaggingResponseVm } from '../../models/scanin-hub-smd.response.vm';
-import { WebScanInBaggingVm } from '../../models/scanin-hub-smd.payload.vm';
+import { WebScanInBaggingResponseVm, WebScanInBagRepresentativeResponseVm } from '../../models/scanin-hub-smd.response.vm';
+import { WebScanInBaggingVm, WebScanInBagRepresentativeVm } from '../../models/scanin-hub-smd.payload.vm';
 
 @ApiUseTags('SMD HUB')
 @Controller('smd')
@@ -30,12 +30,23 @@ export class SmdHubController {
   }
 
   @Post('dropoff/bagging')
+  @Transactional()
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebScanInBaggingResponseVm })
   public async scanInBaggingHub(@Body() payload: WebScanInBaggingVm) {
     return SmdHubService.scanInBaggingHub(payload);
+  }
+
+  @Post('dropoff/bagRepresentative')
+  @Transactional()
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanInBagRepresentativeResponseVm })
+  public async scanInBagRepresentativeHub(@Body() payload: WebScanInBagRepresentativeVm) {
+    return SmdHubService.scanInBagRepresentativeHub(payload);
   }
 
 }

@@ -18,12 +18,16 @@ import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-his
 import { BagDropoffHubQueueService } from '../../../queue/services/bag-dropoff-hub-queue.service';
 import { DoPodDetailBagRepository } from '../../../../shared/orm-repository/do-pod-detail-bag.repository';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
-import { WebScanInBaggingVm } from '../../models/scanin-hub-smd.payload.vm';
-import { WebScanInBaggingResponseVm } from '../../models/scanin-hub-smd.response.vm';
+import { WebScanInBaggingVm, WebScanInBagRepresentativeVm } from '../../models/scanin-hub-smd.payload.vm';
+import { WebScanInBaggingResponseVm, WebScanInBagRepresentativeResponseVm } from '../../models/scanin-hub-smd.response.vm';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { DropoffHubBagging } from '../../../../shared/orm-entity/dropoff_hub_bagging';
 import { BaggingDropoffHubQueueService } from '../../../queue/services/bagging-dropoff-hub-queue.service';
+import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
+import { BAG_REPRESENTATIVE_STATUS } from '../../../../shared/constants/bag-representative-status.constant';
+import { DropoffHubBagRepresentative } from '../../../../shared/orm-entity/dropoff_hub_bag_representative';
+import { BagRepresentativeDropoffHubQueueService } from '../../../queue/services/bag-representative-dropoff-hub-queue.service';
 
 @Injectable()
 export class SmdHubService {
@@ -310,6 +314,92 @@ export class SmdHubService {
     } // end of loop
 
     result.totalData = payload.baggingNumber.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    result.data = dataItem;
+
+    return result;
+  }
+
+  static async scanInBagRepresentativeHub(payload: WebScanInBagRepresentativeVm): Promise<WebScanInBagRepresentativeResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataItem = [];
+    const timeNow = moment().toDate();
+    const result = new WebScanInBagRepresentativeResponseVm();
+
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    for (const bagRepresentativeNumber of payload.bagRepresentativeNumber) {
+      const response = {
+        status: 'ok',
+        trouble: false,
+        message: 'Success',
+      };
+
+      const bagRepresentativeData = await BagRepresentative.findOne({
+        where: {
+          bagRepresentativeCode: bagRepresentativeNumber,
+          isDeleted: false,
+        },
+      });
+      if (bagRepresentativeData) {
+        const holdRedis = await RedisService.locking(
+          `hold:dropoff:bagrepresentative:${bagRepresentativeData.bagRepresentativeId}`,
+          'locking',
+        );
+        // NOTE: check condition disable on check branchIdNext
+        // status bagItemStatusIdLast ??
+        const notScan =  bagRepresentativeData.bagRepresentativeStatusIdLast != BAG_REPRESENTATIVE_STATUS.DO_HUB ? true : false;
+
+        if (notScan && holdRedis) {
+          // update status bagRepresentative
+          await BagRepresentative.update({ bagRepresentativeId: bagRepresentativeData.bagRepresentativeId }, {
+            bagRepresentativeStatusIdLast: BAG_REPRESENTATIVE_STATUS.DO_HUB,
+            updatedTime: timeNow,
+            userIdUpdated: authMeta.userId,
+          });
+
+          // create data dropoff hub
+          const dropoffHubBagRepresentative = DropoffHubBagRepresentative.create();
+          dropoffHubBagRepresentative.branchId = permissonPayload.branchId;
+          dropoffHubBagRepresentative.bagRepresentativeId = bagRepresentativeData.bagRepresentativeId;
+          dropoffHubBagRepresentative.bagRepresentativeCode = bagRepresentativeData.bagRepresentativeCode;
+          await DropoffHubBagRepresentative.save(dropoffHubBagRepresentative);
+
+          // NOTE:
+          // refactor send to background job for loop awb
+          // update status DO_HUB (12600: drop off hub)
+          BagRepresentativeDropoffHubQueueService.perform(
+            dropoffHubBagRepresentative.dropoffHubBagRepresentativeId,
+            bagRepresentativeData.bagRepresentativeId,
+            authMeta.userId,
+            permissonPayload.branchId,
+          );
+
+          totalSuccess += 1;
+          // remove key holdRedis
+          RedisService.del(`hold:dropoff:bagrepresentative:${bagRepresentativeData.bagRepresentativeId}`);
+        } else {
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Gabung Sortir Kota ${bagRepresentativeNumber} Sudah di proses.`;
+        }
+      } else {
+        totalError += 1;
+        response.status = 'error';
+        response.message = `Gabung Sortir Kota ${bagRepresentativeNumber} Tidak di Temukan`;
+      }
+      // push item
+      dataItem.push({
+        bagRepresentativeNumber,
+        ...response,
+      });
+    } // end of loop
+
+    result.totalData = payload.bagRepresentativeNumber.length;
     result.totalSuccess = totalSuccess;
     result.totalError = totalError;
     result.data = dataItem;
