@@ -9,7 +9,7 @@ export class BagRepresentative extends BaseEntity {
     type: 'bigint',
     name: 'bag_representative_id',
   })
-  bagRepresentativeId: string;
+  bagRepresentativeId: number;
 
   @Column('character varying', {
     nullable: false,
@@ -49,13 +49,13 @@ export class BagRepresentative extends BaseEntity {
     scale: 5,
     name: 'total_weight',
   })
-  totalWeight: string | null;
-  
+  totalWeight: number | null;
+
   @Column('bigint', {
     nullable: false,
     name: 'user_id_created',
   })
-  userIdCreated: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -67,7 +67,7 @@ export class BagRepresentative extends BaseEntity {
     nullable: false,
     name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -86,7 +86,7 @@ export class BagRepresentative extends BaseEntity {
     nullable: true,
     name: 'bag_representative_status_id_last',
   })
-  bagRepresentativeStatusIdLast: string | null;
+  bagRepresentativeStatusIdLast: number | null;
 
   @ManyToOne(() => Representative, representative => representative.representativeId, {
     onDelete: 'CASCADE',

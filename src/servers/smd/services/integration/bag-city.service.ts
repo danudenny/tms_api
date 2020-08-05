@@ -33,17 +33,17 @@ export class BagCityService {
       return result;
     }
 
-    if (payload.representativeId == "null") {
+    if (payload.representativeId == 'null') {
       result.message = 'Representative Id tidak valid';
       return result;
     }
 
-    if (payload.bagRepresentativeId == "null") {
+    if (payload.bagRepresentativeId == 'null') {
       result.message = 'Bag Representative Id tidak valid';
       return result;
     }
 
-    let bagRepresentativeId = '';
+    let bagRepresentativeId;
     let bagRepresentativeCode = '';
 
     // NOTE : ambil data AWB dan Representative nya
@@ -84,8 +84,8 @@ export class BagCityService {
       return result;
     }
 
-    // NOTE : Cek Representative dari Payload dan data AWB yang dimasukkan 
-    if( (payload.representativeId) && (payload.representativeId != dataAwb[0].representative_id) ){
+    // NOTE : Cek Representative dari Payload dan data AWB yang dimasukkan
+    if ( (payload.representativeId) && (payload.representativeId != dataAwb[0].representative_id) ) {
       result.message = 'Representative berbeda';
       return result;
     }
@@ -115,8 +115,8 @@ export class BagCityService {
 
       const total_weight = (Number(dataAwb[0].weight) + Number(dataBagRepresentative[0].total_weight));
       await BagRepresentative.update(bagRepresentativeId, {
-        totalWeight: total_weight.toString(),
-        totalItem: parseInt(dataBagRepresentative[0].total_item)+1,
+        totalWeight: total_weight,
+        totalItem: parseInt(dataBagRepresentative[0].total_item) + 1,
       });
     }
 
@@ -128,8 +128,8 @@ export class BagCityService {
       createBagRepresentative.totalWeight = dataAwb[0].weight.toString();
       createBagRepresentative.bagRepresentativeCode = paramBagRepresentativeCode;
       createBagRepresentative.bagRepresentativeDate = dateNow;
-      createBagRepresentative.userIdCreated = authMeta.userId.toString();
-      createBagRepresentative.userIdUpdated = authMeta.userId.toString();
+      createBagRepresentative.userIdCreated = authMeta.userId;
+      createBagRepresentative.userIdUpdated = authMeta.userId;
       createBagRepresentative.createdTime = dateNow;
       createBagRepresentative.updatedTime = dateNow;
       await BagRepresentative.save(createBagRepresentative);
@@ -145,8 +145,8 @@ export class BagCityService {
     bagRepresentativeItem.awbItemId = dataAwb[0].awb_item_id;
     bagRepresentativeItem.weight = dataAwb[0].weight;
     bagRepresentativeItem.representativeIdTo = dataAwb[0].representative_id;
-    bagRepresentativeItem.userIdCreated = authMeta.userId.toString();
-    bagRepresentativeItem.userIdUpdated = authMeta.userId.toString();
+    bagRepresentativeItem.userIdCreated = authMeta.userId;
+    bagRepresentativeItem.userIdUpdated = authMeta.userId;
     bagRepresentativeItem.createdTime = moment().toDate();
     bagRepresentativeItem.updatedTime = moment().toDate();
     BagRepresentativeItem.save(bagRepresentativeItem);

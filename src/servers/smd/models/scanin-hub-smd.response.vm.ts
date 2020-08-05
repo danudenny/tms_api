@@ -28,3 +28,31 @@ export class WebScanInBaggingResponseVm  {
   data: ScanBaggingVm[];
 }
 
+export class ScanBagRepresentativeVm {
+  @ApiModelProperty()
+  bagRepresentativeNumber: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+export class WebScanInBagRepresentativeResponseVm  {
+
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({ type: [ScanBagRepresentativeVm] })
+  data: ScanBagRepresentativeVm[];
+}
+

@@ -7,13 +7,13 @@ export class BagRepresentativeItem extends BaseEntity {
     type: 'bigint',
     name: 'bag_representative_item_id',
   })
-  bagRepresentativeItemId: string;
+  bagRepresentativeItemId: number;
 
   @Column('bigint', {
     nullable: false,
     name: 'bag_representative_id',
   })
-  bagRepresentativeId: string;
+  bagRepresentativeId: number;
 
   @Column('character varying', {
     nullable: false,
@@ -26,13 +26,13 @@ export class BagRepresentativeItem extends BaseEntity {
     nullable: true,
     name: 'awb_id',
   })
-  awbId: string;
+  awbId: number | null;
 
   @Column('bigint', {
     nullable: true,
     name: 'awb_item_id',
   })
-  awbItemId: string;
+  awbItemId: number;
 
   @Column('numeric', {
     nullable: true,
@@ -46,13 +46,13 @@ export class BagRepresentativeItem extends BaseEntity {
     nullable: false,
     name: 'representative_id_to',
   })
-  representativeIdTo: string;
+  representativeIdTo: number;
 
   @Column('bigint', {
     nullable: false,
     name: 'user_id_created',
   })
-  userIdCreated: string;
+  userIdCreated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -64,7 +64,7 @@ export class BagRepresentativeItem extends BaseEntity {
     nullable: false,
     name: 'user_id_updated',
   })
-  userIdUpdated: string;
+  userIdUpdated: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
