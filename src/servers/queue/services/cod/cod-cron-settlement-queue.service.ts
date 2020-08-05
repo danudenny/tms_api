@@ -93,7 +93,7 @@ export class CodCronSettlementQueueService {
         FROM
           cod_voucher_detail cvd
           LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
-        WHERE ctd.cod_transaction_id = '${codTransactionId}'
+        WHERE ctd.cod_transaction_id = '${codTransactionId}' AND cvd.is_settlement = false
         ;
       `;
 
@@ -123,17 +123,17 @@ export class CodCronSettlementQueueService {
             },
           });
 
-          const dataVoucher = await CodVoucher.findOne({
-            select: ['codVoucherDate', 'codVoucherNo'],
-            where: {
-              codVoucherId: voucher.codVoucherId,
-            },
-          });
-          const randomCode = await CustomCounterCode.bankStatement(
-            timestamp,
-          );
+          if (voucher) {
+            const dataVoucher = await CodVoucher.findOne({
+              select: ['codVoucherDate', 'codVoucherNo'],
+              where: {
+                codVoucherId: voucher.codVoucherId,
+              },
+            });
+            const randomCode = await CustomCounterCode.bankStatement(
+              timestamp,
+            );
 
-          if (voucher && dataVoucher) {
             await getManager().transaction(async transactionManager => {
               try {
                 if (!isBankStatementCreated) {
