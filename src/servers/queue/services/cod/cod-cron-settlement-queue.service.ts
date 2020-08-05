@@ -74,6 +74,7 @@ export class CodCronSettlementQueueService {
   private static async logicCron() {
 
     const transactions = await CodTransaction.find({
+      select: ['codTransactionId', 'transactionCode', 'totalCodValue', 'totalAwb', 'branchId'],
       where: {
         codBankStatementId: null,
         transactionType: 'CASHLESS',
@@ -84,6 +85,7 @@ export class CodCronSettlementQueueService {
 
     for (const transaction of transactions) {
       const timestamp = moment().toDate();
+      const codTransactionId = transaction.codTransactionId;
       const totalMatchQuery = `
         SELECT
           count(cvd.awb_number) AS "totalVoucher",
@@ -91,17 +93,21 @@ export class CodCronSettlementQueueService {
         FROM
           cod_voucher_detail cvd
           LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
-        WHERE ctd.cod_transaction_id = '${transaction.codTransactionId}'
+        WHERE ctd.cod_transaction_id = '${codTransactionId}'
         ;
       `;
-      // TODO: handle if query return null
-      // change method, RawQueryService.queryWithParams(query, {codTransactionId})
-      const dataTotalMatch = (await RawQueryService.query(totalMatchQuery))[0];
+
+      const dataTotalMatchQuery = await RawQueryService.query(totalMatchQuery);
+      let dataTotalMatch = dataTotalMatchQuery ? dataTotalMatchQuery[0] : null;
+      if (!dataTotalMatch) {
+        dataTotalMatch = await RawQueryService.queryWithParams(totalMatchQuery, { codTransactionId });
+      }
+
       if (dataTotalMatch && dataTotalMatch.totalVoucher === dataTotalMatch.totalData) {
         const transactionDetails = await CodTransactionDetail.find({
           select: ['codTransactionDetailId', 'awbNumber'],
           where: {
-            codTransactionId: transaction.codTransactionId,
+            codTransactionId,
             isDeleted: false,
           },
         });
@@ -110,29 +116,83 @@ export class CodCronSettlementQueueService {
 
         for (const transactionDetail of transactionDetails) {
           const voucher = await CodVoucherDetail.findOne({
+            select: ['codVoucherDetailId', 'codVoucherId', 'awbNumber'],
             where: {
               awbNumber: transactionDetail.awbNumber,
               isSettlement: false,
             },
           });
 
-          if (!isBankStatementCreated) {
-            isBankStatementCreated = await this.isBankStatementCreated(transaction.codTransactionId);
-          }
+          const dataVoucher = await CodVoucher.findOne({
+            select: ['codVoucherDate', 'codVoucherNo'],
+            where: {
+              codVoucherId: voucher.codVoucherId,
+            },
+          });
+          const randomCode = await CustomCounterCode.bankStatement(
+            timestamp,
+          );
 
-          if (!isBankStatementCreated) {
-            await this.createBankStatement(voucher, transaction, timestamp);
+          if (voucher && dataVoucher) {
+            await getManager().transaction(async transactionManager => {
+              try {
+                if (!isBankStatementCreated) {
+                  isBankStatementCreated = await this.isBankStatementCreated(codTransactionId);
+                }
+
+                if (!isBankStatementCreated) {
+                  // Create Bank Statement
+                  console.log(`Creating Bank Statement for Awb Number === ${voucher.awbNumber}`);
+
+                  const bankStatement = new CodBankStatement();
+                  bankStatement.bankStatementCode = randomCode;
+                  bankStatement.bankStatementDate = timestamp;
+                  bankStatement.bankNoReference = dataVoucher.codVoucherNo;
+                  bankStatement.transactionStatusId = TRANSACTION_STATUS.TRF;
+                  bankStatement.totalCodValue = transaction.totalCodValue;
+                  bankStatement.totalAwb = transaction.totalAwb;
+                  bankStatement.branchId = transaction.branchId;
+                  bankStatement.transferDatetime = dataVoucher.codVoucherDate;
+                  // hardcode value, set default
+                  bankStatement.bankAccount = 'BCA/2703935656';
+                  bankStatement.totalTransaction = 1;
+                  bankStatement.bankBranchId = 5;
+                  bankStatement.userIdTransfer = 4;
+                  bankStatement.userIdCreated = 4;
+                  bankStatement.userIdUpdated = 4;
+                  await transactionManager.save(CodBankStatement, bankStatement);
+
+                  // Update Cod Bank Statement Id on its Cod Transaction
+                  await transactionManager.update(
+                    CodTransaction,
+                    {
+                      codTransactionId: transaction.codTransactionId,
+                    },
+                    {
+                      codBankStatementId: bankStatement.codBankStatementId,
+                      userIdUpdated: 4,
+                      updatedTime: timestamp,
+                    },
+                  );
+                }
+
+                // Update Settlement Status on its Cod Voucher
+                await transactionManager.update(
+                  CodVoucherDetail,
+                  {
+                    codVoucherDetailId: voucher.codVoucherDetailId,
+                  },
+                  {
+                    isSettlement: true,
+                    updatedTime: timestamp,
+                  },
+                );
+              } catch (error) {
+                console.log(error);
+              }
+            });
           } else {
-            // If bank statement created then
-            // Update Settlement Status on its Cod Voucher
-            await CodVoucherDetail.update({
-                codVoucherDetailId: voucher.codVoucherDetailId,
-              },
-              {
-                isSettlement: true,
-                updatedTime: timestamp,
-              },
-            );
+            console.log('### Voucher does not exist for awb number :: ', transactionDetail.awbNumber);
           }
         }
       } else {
@@ -143,72 +203,9 @@ export class CodCronSettlementQueueService {
     console.log('########## STOP CRON FOR COD VOUCHER DIVA :: timeNow ==============  ', moment().toDate());
   }
 
-  private static async createBankStatement(voucher: CodVoucherDetail, transaction: CodTransaction, timestamp: Date): Promise<any> {
-    const dataVoucher = await CodVoucher.findOne({
-      select: ['codVoucherDate', 'codVoucherNo'],
-      where: {
-        codVoucherId: voucher.codVoucherId,
-      },
-    });
-    const randomCode = await CustomCounterCode.bankStatement(
-      timestamp,
-    );
-
-    await getManager().transaction(async transactionManager => {
-      try {
-        // Create Bank Statement
-        console.log(`Creating Bank Statement for Awb Number === ${voucher.awbNumber}`);
-
-        const bankStatement = new CodBankStatement();
-        bankStatement.bankStatementCode = randomCode;
-        bankStatement.bankStatementDate = timestamp;
-        bankStatement.bankNoReference = dataVoucher.codVoucherNo;
-        bankStatement.transactionStatusId = TRANSACTION_STATUS.TRF;
-        bankStatement.totalCodValue = transaction.totalCodValue;
-        bankStatement.totalAwb = transaction.totalAwb;
-        bankStatement.branchId = transaction.branchId;
-        bankStatement.transferDatetime = dataVoucher.codVoucherDate;
-        // hardcode value, set default
-        bankStatement.bankAccount = 'BCA/2703935656';
-        bankStatement.totalTransaction = 1;
-        bankStatement.bankBranchId = 5;
-        bankStatement.userIdTransfer = 4;
-        bankStatement.userIdCreated = 4;
-        bankStatement.userIdUpdated = 4;
-        await transactionManager.save(CodBankStatement, bankStatement);
-
-        // Update Cod Bank Statement Id on its Cod Transaction
-        await transactionManager.update(
-          CodTransaction,
-          {
-            codTransactionId: transaction.codTransactionId,
-          },
-          {
-            codBankStatementId: bankStatement.codBankStatementId,
-            userIdUpdated: 4,
-            updatedTime: timestamp,
-          },
-        );
-
-        // Update Settlement Status on its Cod Voucher
-        await transactionManager.update(
-          CodVoucherDetail,
-          {
-            codVoucherDetailId: voucher.codVoucherDetailId,
-          },
-          {
-            isSettlement: true,
-            updatedTime: timestamp,
-          },
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    });
-  }
-
   private static async isBankStatementCreated(codTransactionId: string): Promise<boolean> {
     const transaction = await CodTransaction.findOne({
+      select: ['codBankStatementId'],
       where: {
         codTransactionId,
       },
