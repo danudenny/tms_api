@@ -114,7 +114,7 @@ export class BagCityService {
 
     return result;
   }
-  
+
   static async createBagging(
     payload: BagCityPayloadVm,
   ): Promise<BagCityResponseVm> {
@@ -236,7 +236,7 @@ export class BagCityService {
       createBagRepresentative.userIdUpdated = authMeta.userId;
       createBagRepresentative.createdTime = dateNow;
       createBagRepresentative.updatedTime = dateNow;
-      createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR.toString();
+      createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
       await BagRepresentative.save(createBagRepresentative);
 
       bagRepresentativeId = createBagRepresentative.bagRepresentativeId;
@@ -271,7 +271,6 @@ export class BagCityService {
     bagRepresentativeItem.updatedTime = moment().toDate();
     BagRepresentativeItem.save(bagRepresentativeItem);
 
-
     let branchName = '';
     let cityName = '';
     const branch = await SharedService.getDataBranchCity(permissionPayload.branchId);
@@ -279,14 +278,14 @@ export class BagCityService {
       branchName = branch.branchName;
       cityName = branch.district ? branch.district.city.cityName : '';
     }
-    
+
     BagRepresentativeSmdQueueService.perform(
       dataAwb[0].awb_item_id,
       dataAwb[0].ref_awb_number,
       authMeta.userId,
       permissionPayload.branchId,
       branchName,
-      cityName
+      cityName,
     );
 
     result.status = 'success';
