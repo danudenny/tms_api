@@ -14,7 +14,6 @@ import { RawQueryService } from '../../../../../shared/services/raw-query.servic
 import { CodExportMongoQueueService } from '../../../../queue/services/cod/cod-export-queue.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import uuid = require('uuid');
-import { DatabaseConfig } from 'src/servers/background/config/database/db.config';
 
 export class V1WebReportCodService {
   static expireOnSeconds = 300; // 5 minute
@@ -277,35 +276,35 @@ export class V1WebReportCodService {
 
   static async getNonCodSupplierInvoiceData(coll, transactionStatuses, filters, limit, pageNumber) {
     const spartanFilter: any = [{ isCod: true }];
-    const siteFilter: any = [{ $eq: ["$id", "$$trackingSiteId"] }];
+    const siteFilter: any = [{ $eq: ['$id', '$$trackingSiteId'] }];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment(filter.value).add(7, "hour").toDate();
+        const d = moment(filter.value).add(7, 'hour').toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment(filter.value).add(7, "hour").add(1, 'days').toDate();
+        const d = moment(filter.value).add(7, 'hour').add(1, 'days').toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
       }
 
       if (filter.field == 'awbStatus' && filter.value) {
-        spartanFilter.push({ lastValidTrackingType: { $eq: filter.value }, });
+        spartanFilter.push({ lastValidTrackingType: { $eq: filter.value } });
       }
 
       if (filter.field == 'supplier' && filter.value) {
-        const regex = new RegExp(`^${filter.value.toLowerCase()}`, "i");
+        const regex = new RegExp(`^${filter.value.toLowerCase()}`, 'i');
         spartanFilter.push({ partnerName: regex });
       }
 
       if (filter.field == 'branchLast' && filter.value) {
-        siteFilter.push({ $eq: ["$siteCode", filter.value] });
+        siteFilter.push({ $eq: ['$siteCode', filter.value] });
       }
 
       if (filter.field == 'transactionStatus' && filter.value) {
-        tdFilter.push({ $eq: ["$transactionStatusId", filter.value] });
+        tdFilter.push({ $eq: ['$transactionStatusId', filter.value] });
       }
 
       // if (filter.field == 'sigesit' && filter.value) {
@@ -313,11 +312,11 @@ export class V1WebReportCodService {
       //     userIdDriver: { $eq: filter.value },
       //   };
       //   spartanFilter.push(f);
-      // } 
+      // }
     }
 
     const skip = limit * (pageNumber - 1);
-    console.log(skip, limit, filters, "coding skip limit")
+    console.log(skip, limit, filters, 'coding skip limit');
     const datas = await coll
       .aggregate([
         {
@@ -346,32 +345,32 @@ export class V1WebReportCodService {
               },
               {
                 $lookup: {
-                  from: "destination",
-                  as: "destination",
-                  let: { code: "$tujuan" },
+                  from: 'destination',
+                  as: 'destination',
+                  let: { code: '$tujuan' },
                   pipeline: [
                     {
                       $match:
                       {
                         $expr:
                         {
-                          $and: [{ $eq: ["$code", "$$code"] }]
-                        }
-                      }
+                          $and: [{ $eq: ['$code', '$$code'] }],
+                        },
+                      },
                     },
                     {
                       $project: {
                         subdistrict: 1,
-                      }
+                      },
                     },
                   ],
-                }
+                },
               },
               {
                 $unwind: {
-                  path: "$destination",
-                  preserveNullAndEmptyArrays: true
-                }
+                  path: '$destination',
+                  preserveNullAndEmptyArrays: true,
+                },
               },
             ],
           },
@@ -443,9 +442,9 @@ export class V1WebReportCodService {
 
         {
           $lookup: {
-            from: "tracking_site",
-            as: "manifestTrackingSite",
-            let: { trackingSiteId: "$manifestTrackingSiteId" },
+            from: 'tracking_site',
+            as: 'manifestTrackingSite',
+            let: { trackingSiteId: '$manifestTrackingSiteId' },
             pipeline: [
               {
                 $match:
@@ -454,58 +453,57 @@ export class V1WebReportCodService {
                   {
                     $and:
                       [
-                        { $eq: ["$id", "$$trackingSiteId"] },
-                      ]
-                  }
-                }
+                        { $eq: ['$id', '$$trackingSiteId'] },
+                      ],
+                  },
+                },
               },
               {
                 $project: {
                   city: 1,
                   name: 1,
-                }
+                },
               },
             ],
-          }
+          },
         },
         {
           $unwind: {
-            path: "$manifestTrackingSite",
-            preserveNullAndEmptyArrays: true
-          }
+            path: '$manifestTrackingSite',
+            preserveNullAndEmptyArrays: true,
+          },
         },
 
         {
           $lookup: {
-            from: "tracking_site",
-            as: "lastValidTrackingSite",
-            let: { trackingSiteId: "$lastValidTrackingSiteId" },
+            from: 'tracking_site',
+            as: 'lastValidTrackingSite',
+            let: { trackingSiteId: '$lastValidTrackingSiteId' },
             pipeline: [
               {
                 $match:
                 {
                   $expr:
                   {
-                    $and: siteFilter
-                  }
-                }
+                    $and: siteFilter,
+                  },
+                },
               },
               {
                 $project: {
                   city: 1,
                   name: 1,
-                }
+                },
               },
             ],
-          }
+          },
         },
         {
           $unwind: {
-            path: "$lastValidTrackingSite",
-            preserveNullAndEmptyArrays: true
-          }
+            path: '$lastValidTrackingSite',
+            preserveNullAndEmptyArrays: true,
+          },
         },
-
 
         {
           $project: {
@@ -533,7 +531,7 @@ export class V1WebReportCodService {
     for (const d of datas) {
       d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId), 'status_title') || '-';
     }
-    console.log(datas)
+    console.log(datas);
 
     return datas;
   }
@@ -602,7 +600,7 @@ export class V1WebReportCodService {
         );
       }
 
-      return { status: 'ok', url: url };
+      return { status: 'ok', url };
     } catch (err) {
       console.log(err);
       throw err;
@@ -618,12 +616,12 @@ export class V1WebReportCodService {
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment(filter.value).add(7, "hour").toDate();
+        const d = moment(filter.value).add(7, 'hour').toDate();
         filterList.push({ createdTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment(filter.value).add(7, "hour")
+        const d = moment(filter.value).add(7, 'hour')
           .add(1, 'days').toDate();
         filterList.push({ createdTime: { $lt: d } });
       }
@@ -651,7 +649,7 @@ export class V1WebReportCodService {
     }
 
     const skip = limit * (pageNumber - 1);
-    console.log(limit, skip, filterList, "awb")
+    console.log(limit, skip, filterList, 'awb');
     const datas = await coll
       .aggregate([
         {
@@ -694,7 +692,7 @@ export class V1WebReportCodService {
           },
         },
       ]).toArray();
-    console.log(datas.length, "data array")
+    console.log(datas.length, 'data array');
     return datas;
   }
 
@@ -724,7 +722,7 @@ export class V1WebReportCodService {
           while (!finish) {
             const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber);
 
-            console.log(!responseDatas, limit, finish, responseDatas.length < limit, "response data length")
+            console.log(!responseDatas, limit, finish, responseDatas.length < limit, 'response data length');
             if (responseDatas.length < limit) {
               finish = true;
             }
@@ -763,7 +761,7 @@ export class V1WebReportCodService {
         );
       }
 
-      return { status: 'ok', url: url };
+      return { status: 'ok', url };
     } catch (err) {
       console.log(err);
       throw err;
@@ -771,7 +769,7 @@ export class V1WebReportCodService {
 
   }
 
-  //#endregion COD  
+  //#endregion COD
 
   //#region OLD_DATA
 
@@ -979,12 +977,6 @@ export class V1WebReportCodService {
   //           counter++;
   //         }
 
-
-
-
-
-
-
   //         if (dataRowAwbCount.length <= 0) {
   //           if (uuid != '') {
   //             const payload = {
@@ -1191,9 +1183,9 @@ export class V1WebReportCodService {
   //     throw err;
   //   }
 
-  // }    
+  // }
 
-  //#endregion OLD_DATA  
+  //#endregion OLD_DATA
 
   static async exportSupplierInvoice(id: string) {
     const dbMongo = await MongoDbConfig.getDbSicepatCod('transaction_detail');
