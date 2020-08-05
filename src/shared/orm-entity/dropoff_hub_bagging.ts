@@ -5,6 +5,7 @@ import { Bag } from './bag';
 import { BagItem } from './bag-item';
 import { Branch } from './branch';
 import { DropoffHubDetailBagging } from './dropoff_hub_detail_bagging';
+import { Bagging } from './bagging';
 
 @Entity('dropoff_hub_bagging', { schema: 'public' })
 export class DropoffHubBagging extends TmsBaseEntity {
@@ -56,6 +57,12 @@ export class DropoffHubBagging extends TmsBaseEntity {
   })
   @JoinColumn({ name: 'bag_item_id', referencedColumnName: 'bagItemId' })
   bagItem: BagItem;
+
+  @ManyToOne(() => Bagging, bagging => bagging.dropoffHub, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'bagging_id', referencedColumnName: 'baggingId' })
+  bagging: Bagging;
 
   @OneToMany(() => DropoffHubDetailBagging, e => e.dropoffHubBagging, { cascade: ['insert'] })
   dropoffHubBaggingDetails: DropoffHubDetailBagging[];

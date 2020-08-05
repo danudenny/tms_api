@@ -120,3 +120,57 @@ export class WebScanInHubBagRepresentativeDetailSortResponseVm {
   districtName: string;
 
 }
+
+export class SmdHubBaggingListDataResponseVm {
+  @ApiModelProperty()
+  baggingCode: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
+
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  dropoffHubBaggingId: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  branchScanName: string;
+
+  @ApiModelProperty()
+  totalAwb: string;
+
+  @ApiModelProperty()
+  weight: string;
+}
+
+export class SmdHubBaggingListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [SmdHubBaggingListDataResponseVm] })
+  data: SmdHubBaggingListDataResponseVm[];
+}
+
+export class SmdHubBaggingDetailResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [SmdHubBaggingDetailDataResponseVm] })
+  data: SmdHubBaggingDetailDataResponseVm[];
+}
+
+export class SmdHubBaggingDetailDataResponseVm {
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  districtName: string;
+}

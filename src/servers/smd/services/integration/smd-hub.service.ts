@@ -19,7 +19,7 @@ import { BagDropoffHubQueueService } from '../../../queue/services/bag-dropoff-h
 import { DoPodDetailBagRepository } from '../../../../shared/orm-repository/do-pod-detail-bag.repository';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
 import { WebScanInBaggingVm, WebScanInBagRepresentativeVm } from '../../models/scanin-hub-smd.payload.vm';
-import { WebScanInBaggingResponseVm, WebScanInBagRepresentativeResponseVm, WebScanInHubBagRepresentativeSortListResponseVm, WebScanInHubBagRepresentativeDetailSortListResponseVm } from '../../models/scanin-hub-smd.response.vm';
+import { WebScanInBaggingResponseVm, WebScanInBagRepresentativeResponseVm, WebScanInHubBagRepresentativeSortListResponseVm, WebScanInHubBagRepresentativeDetailSortListResponseVm, SmdHubBaggingListResponseVm, SmdHubBaggingDetailResponseVm } from '../../models/scanin-hub-smd.response.vm';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { DropoffHubBagging } from '../../../../shared/orm-entity/dropoff_hub_bagging';
@@ -30,6 +30,7 @@ import { DropoffHubBagRepresentative } from '../../../../shared/orm-entity/dropo
 import { BagRepresentativeDropoffHubQueueService } from '../../../queue/services/bag-representative-dropoff-hub-queue.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { DropoffHubDetailBagRepresentative } from '../../../../shared/orm-entity/dropoff_hub_detail_bag_representative';
+import { DropoffHubDetailBagging } from '../../../../shared/orm-entity/dropoff_hub_detail_bagging';
 
 @Injectable()
 export class SmdHubService {
@@ -527,4 +528,127 @@ export class SmdHubService {
     return result;
   }
 
+  static async getDropOffListBagging(
+    payload: BaseMetaPayloadVm,
+  ): Promise<SmdHubBaggingListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
+    payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
+    payload.fieldResolverMap['representativeFrom'] = 't7.representative_code';
+    payload.fieldResolverMap['representativeCode'] = 't7.representative_code';
+    payload.fieldResolverMap['baggingCode'] = 't2.bagging_code';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+      {
+        field: 'representativeCode',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffHubBagging, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+    q.selectRaw(
+      [`t2.bagging_code`, 'baggingCode'],
+      ['t7.representative_code', 'representativeCode'],
+      ['t1.created_time', 'createdTime'],
+      ['t1.dropoff_hub_bagging_id', 'dropoffHubBaggingId'],
+      ['t5.branch_name', 'branchName'],
+      ['t6.branch_name', 'branchScanName'],
+      ['COUNT (t4.*)', 'totalAwb'],
+      [`CONCAT(t2.total_weight,' Kg')`, 'weight'],
+    );
+
+    q.innerJoin(e => e.bagging, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.dropoffHubBaggingDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagging.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagging.representative, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw(`
+      t1.dropoff_hub_bagging_id,
+      t2.bagging_code,
+      t7.representative_code,
+      t1.created_time,
+      t5.branch_name,
+      t6.branch_name,
+      t2.total_weight
+    `);
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new SmdHubBaggingListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async getDropOffHubBaggingListDetail(
+    payload: BaseMetaPayloadVm,
+  ): Promise<SmdHubBaggingDetailResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['dropOffHubBaggingId'] = 't1.dropoff_hub_bagging_id';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'dropOffHubBaggingId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DropoffHubDetailBagging, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t2.awb_number', 'awbNumber'],
+      ['t3.consignee_name', 'consigneeName'],
+      ['t3.consignee_address', 'consigneeAddress'],
+      ['t4.district_name', 'districtName'],
+    );
+
+    q.innerJoin(e => e.awbItemAttr, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.districtTo, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new SmdHubBaggingDetailResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
 }
