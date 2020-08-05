@@ -3,6 +3,7 @@ import { ConfigService } from '../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { QueueBullBoard } from '../queue-bull-board';
 import { CodTransactionHistoryQueueService } from './cod-transaction-history-queue.service';
+import moment = require('moment');
 
 export class CodUpdateSupplierInvoiceQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -55,6 +56,8 @@ export class CodUpdateSupplierInvoiceQueueService {
           $set: {
             codSupplierInvoiceId: data.codSupplierInvoiceId,
             supplierInvoiceStatusId,
+            userIdUpdated: Number(data.userId),
+            updatedTime: moment(data.timestamp).toDate(),
           },
         };
         console.log(' ####### UPDATE SUPPLIER INVOICE :: ', data.codSupplierInvoiceId);
@@ -64,7 +67,11 @@ export class CodUpdateSupplierInvoiceQueueService {
         query = { codSupplierInvoiceId: data.codSupplierInvoiceId };
         // data stores the updated value
         dataUpdate = {
-          $set: { supplierInvoiceStatusId },
+          $set: {
+            supplierInvoiceStatusId,
+            userIdUpdated: Number(data.userId),
+            updatedTime: moment(data.timestamp).toDate(),
+          },
         };
       }
 

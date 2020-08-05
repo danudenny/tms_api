@@ -359,6 +359,7 @@ export class V1WebCodSupplierInvoiceService {
                 permissonPayload.branchId,
                 authMeta.userId,
                 timestamp,
+                true,
               );
               totalSuccess += 1;
               totalCodValue += Number(transactionDetail.codValue);

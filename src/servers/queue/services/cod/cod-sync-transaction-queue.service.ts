@@ -1,7 +1,7 @@
-import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transaction-detail';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { QueueBullBoard } from '../queue-bull-board';
+import moment = require('moment');
 
 // Sync Update Data Transaction to Mongodb
 export class CodSyncTransactionQueueService {
@@ -52,8 +52,8 @@ export class CodSyncTransactionQueueService {
             transactionStatusId,
             codSupplierInvoiceId: data.codSupplierInvoiceId,
             supplierInvoiceStatusId,
-            updatedTime: data.timestamp,
-            userIdUpdated: data.userId,
+            updatedTime: moment(data.timestamp).toDate(),
+            userIdUpdated: Number(data.userId),
           };
           await collection.updateOne(
             { _id: data.awbNumber },
