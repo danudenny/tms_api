@@ -28,7 +28,7 @@ export class V1WebReportCodService {
 
     const result = {
       reportKey,
-      status: 'ok',
+      status: 'OK',
       message: 'on Process Generate Report',
     };
     // init set data on redis
@@ -590,7 +590,7 @@ export class V1WebReportCodService {
 
       if (uuid != '') {
         const payload = {
-          status: 'ok',
+          status: 'OK',
           url,
         };
         await RedisService.setex(
@@ -600,7 +600,7 @@ export class V1WebReportCodService {
         );
       }
 
-      return { status: 'ok', url };
+      return { status: 'OK', url };
     } catch (err) {
       console.log(err);
       throw err;
@@ -751,7 +751,7 @@ export class V1WebReportCodService {
 
       if (uuid != '') {
         const payload = {
-          status: 'ok',
+          status: 'OK',
           url,
         };
         await RedisService.setex(
@@ -761,7 +761,7 @@ export class V1WebReportCodService {
         );
       }
 
-      return { status: 'ok', url };
+      return { status: 'OK', url };
     } catch (err) {
       console.log(err);
       throw err;
@@ -1167,7 +1167,7 @@ export class V1WebReportCodService {
 
   //     if (uuid != '') {
   //       const payload = {
-  //         status: 'ok',
+  //         status: 'OK',
   //         url,
   //       };
   //       await RedisService.setex(
@@ -1228,7 +1228,7 @@ export class V1WebReportCodService {
         this.deleteFile(csvConfig.filePath);
       }
 
-      return { status: 'ok', url };
+      return { status: 'OK', url };
 
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
