@@ -93,14 +93,14 @@ export class BagRepresentativeDropoffHubQueueService {
   }
 
   public static async perform(
-    dropoffHubId: string,
-    bagItemId: number,
+    dropoffHubBagRepresentativeId: string,
+    bagRepresentativeId: number,
     userId: number,
     branchId: number,
   ) {
     const obj = {
-      dropoffHubId,
-      bagItemId,
+      dropoffHubBagRepresentativeId,
+      bagRepresentativeId,
       userId,
       branchId,
       timestamp: moment().toDate(),
