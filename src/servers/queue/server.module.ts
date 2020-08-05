@@ -31,6 +31,9 @@ import { BagScanDoSmdQueueService } from './services/bag-scan-do-smd-queue.servi
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from './services/bag-awb-delete-history-in-hub-from-smd-queue.service';
 import { BagRepresentativeSmdQueueService } from './services/bag-representative-smd-queue.service';
 import {BagRepresentativeScanDoSmdQueueService} from './services/bag-representative-scan-do-smd-queue.service';
+import { BagRepresentativeDropoffHubQueueService } from './services/bag-representative-dropoff-hub-queue.service';
+import { BaggingDropoffHubQueueService } from './services/bagging-dropoff-hub-queue.service';
+
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -131,6 +134,8 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     BagRepresentativeScanDoSmdQueueService.boot();
     BagAwbDeleteHistoryInHubFromSmdQueueService.boot();
     BagRepresentativeSmdQueueService.boot();
+    BaggingDropoffHubQueueService.boot();
+    BagRepresentativeDropoffHubQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
   }

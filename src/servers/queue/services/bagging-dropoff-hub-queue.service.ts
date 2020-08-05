@@ -99,13 +99,13 @@ export class BaggingDropoffHubQueueService {
   }
 
   public static async perform(
-    dropoffHubId: string,
+    dropoffHubBaggingId: string,
     bagItemId: number,
     userId: number,
     branchId: number,
   ) {
     const obj = {
-      dropoffHubId,
+      dropoffHubBaggingId,
       bagItemId,
       userId,
       branchId,
