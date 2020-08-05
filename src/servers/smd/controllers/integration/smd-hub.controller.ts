@@ -14,7 +14,7 @@ import { MobileSmdListDetailPayloadVm, MobileSmdListHistoryPayloadVm } from '../
 import { WebScanInBagResponseVm } from '../../../main/models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../../main/models/web-scanin-bag.vm';
 import { SmdHubService } from '../../services/integration/smd-hub.service';
-import { WebScanInBaggingResponseVm, WebScanInBagRepresentativeResponseVm } from '../../models/scanin-hub-smd.response.vm';
+import { WebScanInBaggingResponseVm, WebScanInBagRepresentativeResponseVm, WebScanInHubBagRepresentativeSortListResponseVm, WebScanInHubBagRepresentativeDetailSortListResponseVm } from '../../models/scanin-hub-smd.response.vm';
 import { WebScanInBaggingVm, WebScanInBagRepresentativeVm } from '../../models/scanin-hub-smd.payload.vm';
 
 @ApiUseTags('SMD HUB')
@@ -47,6 +47,20 @@ export class SmdHubController {
   @ApiOkResponse({ type: WebScanInBagRepresentativeResponseVm })
   public async scanInBagRepresentativeHub(@Body() payload: WebScanInBagRepresentativeVm) {
     return SmdHubService.scanInBagRepresentativeHub(payload);
+  }
+
+  @Post('dropOffList/bagRepresentative')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanInHubBagRepresentativeSortListResponseVm })
+  public async loadDropOffHubList(@Body() payload: BaseMetaPayloadVm) {
+    return SmdHubService.getDropOffBagRepresentativeList(payload);
+  }
+
+  @Post('dropOffListDetail/bagRepresentative')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanInHubBagRepresentativeDetailSortListResponseVm })
+  public async loadDropOffHubListDetail(@Body() payload: BaseMetaPayloadVm) {
+    return SmdHubService.getDropOffBagRepresentativeDetailList(payload);
   }
 
 }
