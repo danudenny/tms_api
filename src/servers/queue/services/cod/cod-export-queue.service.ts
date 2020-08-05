@@ -37,7 +37,7 @@ export class CodExportMongoQueueService {
       const uuid = data.uuid;
 
       try {
-        await V1WebReportCodService.printSupplierInvoice(filter, codType, awbFilter, uuid);
+        await V1WebReportCodService.printNonCodSupplierInvoice(filter, codType, awbFilter, uuid);
       } catch (error) {
         throw(error);
       }
