@@ -114,7 +114,7 @@ export class BagCityService {
 
     return result;
   }
-
+  
   static async createBagging(
     payload: BagCityPayloadVm,
   ): Promise<BagCityResponseVm> {
@@ -149,7 +149,7 @@ export class BagCityService {
     let rawQuery = `
       SELECT
         a.awb_id,
-        a.ref_awb_number,
+        a.awb_number as ref_awb_number,
         r.representative_id,
         r.representative_code,
         a.total_weight_rounded as weight,
@@ -278,14 +278,14 @@ export class BagCityService {
       branchName = branch.branchName;
       cityName = branch.district ? branch.district.city.cityName : '';
     }
-
+    
     BagRepresentativeSmdQueueService.perform(
       dataAwb[0].awb_item_id,
       dataAwb[0].ref_awb_number,
       authMeta.userId,
       permissionPayload.branchId,
       branchName,
-      cityName,
+      cityName
     );
 
     result.status = 'success';
