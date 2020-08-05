@@ -37,9 +37,9 @@ export class CodExportMongoQueueService {
       const uuid = data.uuid;
 
       try {
-        await V1WebReportCodService.printNonCodSupplierInvoice(filter, codType, awbFilter, uuid);
+        await V1WebReportCodService.printNonCodSupplierInvoice(filter, codType);
       } catch (error) {
-        throw(error);
+        throw (error);
       }
 
       return true;
@@ -51,7 +51,7 @@ export class CodExportMongoQueueService {
       console.log(`Job with id ${job.id} has been completed`);
     });
 
-    this.queue.on('cleaned', function(job, type) {
+    this.queue.on('cleaned', function (job, type) {
       console.log('Cleaned %s %s jobs', job.length, type);
     });
   }

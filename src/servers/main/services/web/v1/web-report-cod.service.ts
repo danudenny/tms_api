@@ -282,12 +282,12 @@ export class V1WebReportCodService {
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment(moment(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment(filter.value).add(7, "hour").toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment(moment(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment(filter.value).add(7, "hour").add(1, 'days').toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
       }
 
@@ -317,6 +317,7 @@ export class V1WebReportCodService {
     }
 
     const skip = limit * (pageNumber - 1);
+    console.log(skip, limit, filters, "coding skip limit")
     const datas = await coll
       .aggregate([
         {
@@ -532,6 +533,7 @@ export class V1WebReportCodService {
     for (const d of datas) {
       d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId), 'status_title') || '-';
     }
+    console.log(datas)
 
     return datas;
   }
@@ -600,7 +602,7 @@ export class V1WebReportCodService {
         );
       }
 
-      return;
+      return { status: 'ok', url: url };
     } catch (err) {
       console.log(err);
       throw err;
@@ -616,12 +618,13 @@ export class V1WebReportCodService {
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment(moment(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment(filter.value).add(7, "hour").toDate();
         filterList.push({ createdTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment(moment(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment(filter.value).add(7, "hour")
+          .add(1, 'days').toDate();
         filterList.push({ createdTime: { $lt: d } });
       }
 
@@ -648,6 +651,7 @@ export class V1WebReportCodService {
     }
 
     const skip = limit * (pageNumber - 1);
+    console.log(limit, skip, filterList, "awb")
     const datas = await coll
       .aggregate([
         {
@@ -690,7 +694,7 @@ export class V1WebReportCodService {
           },
         },
       ]).toArray();
-
+    console.log(datas.length, "data array")
     return datas;
   }
 
@@ -716,15 +720,16 @@ export class V1WebReportCodService {
         let pageNumber = 1;
         let finish = false;
         while (!finish) {
-          let pageNumber = 1;
-          let finish = false;
+
           while (!finish) {
             const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber);
-            if (!responseDatas || responseDatas.length < limit) {
+
+            console.log(!responseDatas, limit, finish, responseDatas.length < limit, "response data length")
+            if (responseDatas.length < limit) {
               finish = true;
             }
-
             await this.populateDataCsv(writer, responseDatas, true);
+
             pageNumber++;
           }
         }
@@ -758,7 +763,7 @@ export class V1WebReportCodService {
         );
       }
 
-      return;
+      return { status: 'ok', url: url };
     } catch (err) {
       console.log(err);
       throw err;

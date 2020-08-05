@@ -294,33 +294,33 @@ export class V1WebAwbCodController {
     return await V1WebReportCodService.printNonCodSupplierInvoice(payload.filters);
   }
 
-  @Post('supplierInvoice/bull/print')
-  @HttpCode(HttpStatus.OK)
-  @ResponseSerializerOptions({ disable: true })
-  public async supplierInvoiceBullPrint(
-    @Body() payload: ReportBaseMetaPayloadVm,
-  ) {
-    const filterList = V1WebReportCodService.filterList(payload.filters);
+  // @Post('supplierInvoice/bull/print')
+  // @HttpCode(HttpStatus.OK)
+  // @ResponseSerializerOptions({ disable: true })
+  // public async supplierInvoiceBullPrint(
+  //   @Body() payload: ReportBaseMetaPayloadVm,
+  // ) {
+  //   const filterList = V1WebReportCodService.filterList(payload.filters);
 
-    return await V1WebReportCodService.addQueueBullPrint(filterList);
-  }
+  //   return await V1WebReportCodService.addQueueBullPrint(filterList);
+  // }
 
-  @Post('supplierInvoice/noncodfee/bull/print')
-  @HttpCode(HttpStatus.OK)
-  @ResponseSerializerOptions({ disable: true })
-  public async supplierInvoiceBullNonCodFeePrint(
-    @Body() payload: ReportBaseMetaPayloadVm,
-  ) {
-    const filterListAwb = V1WebReportCodService.filterListAwb(payload.filters);
+  // @Post('supplierInvoice/noncodfee/bull/print')
+  // @HttpCode(HttpStatus.OK)
+  // @ResponseSerializerOptions({ disable: true })
+  // public async supplierInvoiceBullNonCodFeePrint(
+  //   @Body() payload: ReportBaseMetaPayloadVm,
+  // ) {
+  //   const filterListAwb = V1WebReportCodService.filterListAwb(payload.filters);
 
-    const filterList = V1WebReportCodService.filterList(payload.filters);
+  //   const filterList = V1WebReportCodService.filterList(payload.filters);
 
-    return await V1WebReportCodService.addQueueBullPrint(
-      filterList,
-      false,
-      filterListAwb,
-    );
-  }
+  //   return await V1WebReportCodService.addQueueBullPrint(
+  //     filterList,
+  //     false,
+  //     filterListAwb,
+  //   );
+  // }
 
   @Get('supplierInvoice/checkReport/:reportKey')
   @HttpCode(HttpStatus.OK)
