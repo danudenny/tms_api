@@ -220,8 +220,8 @@ export class V1WebReportCodService {
           d.prtParcelValue,
           d.codNilai,
           d.codNilai,
-          d.lastTrackingDateTime
-            ? moment(d.lastTrackingDateTime).format('YYYY-MM-DD hh:mm A')
+          d.lastValidTrackingDateTime
+            ? moment(d.lastValidTrackingDateTime).format('YYYY-MM-DD hh:mm A')
             : null,
           this.strReplaceFunc(d.penerima),
           d.transactionStatus,
