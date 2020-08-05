@@ -277,8 +277,8 @@ export class V1WebAwbCodController {
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
   public async supplierInvoicePrint(@Body() payload: ReportBaseMetaPayloadVm) {
-    const filterList = V1WebReportCodService.filterList(payload.filters);
-    return await V1WebReportCodService.printSupplierInvoice(filterList);
+    // const filterList = V1WebReportCodService.filterList(payload.filters);
+    return await V1WebReportCodService.printCodSupplierInvoice(payload.filters);
   }
 
   @Post('supplierInvoice/noncodfee/print')
@@ -287,15 +287,11 @@ export class V1WebAwbCodController {
   public async supplierInvoiceNonCodFeePrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-    const filterListAwb = V1WebReportCodService.filterListAwb(payload.filters);
+    // const filterListAwb = V1WebReportCodService.filterListAwb(payload.filters);
 
-    const filterList = V1WebReportCodService.filterList(payload.filters);
+    // const filterList = V1WebReportCodService.filterList(payload.filters);
 
-    return await V1WebReportCodService.printSupplierInvoice(
-      filterList,
-      false,
-      filterListAwb,
-    );
+    return await V1WebReportCodService.printNonCodSupplierInvoice(payload.filters);
   }
 
   @Post('supplierInvoice/bull/print')
