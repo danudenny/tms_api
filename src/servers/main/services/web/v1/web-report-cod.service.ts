@@ -689,7 +689,6 @@ export class V1WebReportCodService {
 
   static async getNonCodSupplierInvoiceData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
     const spartanFilter: any = [{ isCod: true }];
-    const siteFilter: any = [{ $eq: ['$id', '$$trackingSiteId'] }];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
 
@@ -838,7 +837,7 @@ export class V1WebReportCodService {
         key,
         startTime: startMoment.toDate(),
         endTime: endMoment.toDate(),
-        duration
+        duration,
       });
     } catch (error) {
       console.log(error);
@@ -846,7 +845,7 @@ export class V1WebReportCodService {
 
     return {
       data: response,
-      duration
+      duration,
     };
   }
 
@@ -906,7 +905,7 @@ export class V1WebReportCodService {
 
             const payload = {
               status: 'Error',
-              Message: 'Tidak ada data yang di ambil'
+              Message: 'Tidak ada data yang di ambil',
             };
 
             await RedisService.setex(
@@ -1097,7 +1096,7 @@ export class V1WebReportCodService {
 
             const payload = {
               status: 'Error',
-              Message: 'Tidak ada data yang di ambil'
+              Message: 'Tidak ada data yang di ambil',
             };
 
             await RedisService.setex(
