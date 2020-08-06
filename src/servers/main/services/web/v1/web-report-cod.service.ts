@@ -83,7 +83,7 @@ export class V1WebReportCodService {
         'Recipient',
         'Status Internal',
         'Tracking Status',
-        'Supplier Invoice',
+        'Status Invoice',
         'Cust Package',
         'Pickup Source',
         'Current Position',
@@ -729,12 +729,13 @@ export class V1WebReportCodService {
         allowNullTd = false;
       }
 
-      // if (filter.field == 'sigesit' && filter.value) {
-      //   const f = {
-      //     userIdDriver: { $eq: filter.value },
-      //   };
-      //   spartanFilter.push(f);
-      // }
+      if (filter.field == 'sigesit' && filter.value) {
+        // const f = {
+        //   userIdDriver: { $eq: filter.value },
+        // };
+        tdFilter.push({ $eq: ["$userIdDriver", filter.value] });
+        allowNullTd = false;
+      }
     }
 
     const skip = limit * (pageNumber - 1);
