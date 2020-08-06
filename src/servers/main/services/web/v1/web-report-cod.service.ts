@@ -16,7 +16,7 @@ import { RedisService } from '../../../../../shared/services/redis.service';
 import uuid = require('uuid');
 
 export class V1WebReportCodService {
-  static expireOnSeconds = 300; // 5 minute
+  static expireOnSeconds = 600; // 5 minute
 
 
   static async addQueueBullPrint(filters, noncodfee) {
@@ -34,10 +34,9 @@ export class V1WebReportCodService {
       message: 'on Process Generate Report',
     };
     // init set data on redis
-    await RedisService.setex(
+    await RedisService.set(
       reportKey,
       JSON.stringify(result),
-      this.expireOnSeconds,
     );
 
     return result;
@@ -665,7 +664,9 @@ export class V1WebReportCodService {
         console.log(url, 'url final');
       }
 
-      if (uuid != '') {
+      console.log(uuid, uuid.toString() !== '', "uuid")
+      if (uuid.toString() !== '') {
+        console.log("inside uuid");
         const payload = {
           status: 'OK',
           url,
@@ -825,7 +826,8 @@ export class V1WebReportCodService {
         console.log(url, 'url final');
       }
       console.log(uuid)
-      if (uuid != '') {
+      if (uuid.toString() != '') {
+        console.log(uuid, "inside uuid")
         const payload = {
           status: 'OK',
           url,
