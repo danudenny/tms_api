@@ -18,14 +18,13 @@ import uuid = require('uuid');
 export class V1WebReportCodService {
   static expireOnSeconds = 600; // 5 minute
 
-
   static async addQueueBullPrint(filters, noncodfee) {
     const uuidv1 = require('uuid/v1');
     const uuidString = uuidv1();
     const reportKey = `reportKeyCOD:${uuidString}`;
 
     // send to background process generate report
-    console.log(filters, noncodfee, "non code fee")
+    console.log(filters, noncodfee, 'non code fee');
     CodExportMongoQueueService.perform(filters, noncodfee, uuidString);
 
     const result = {
@@ -37,7 +36,7 @@ export class V1WebReportCodService {
     await RedisService.setex(
       reportKey,
       JSON.stringify(result),
-      this.expireOnSeconds
+      this.expireOnSeconds,
     );
 
     return result;
@@ -696,12 +695,12 @@ export class V1WebReportCodService {
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).format("YYYY-MM-DD 00:00:00")).toDate();
+        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format("YYYY-MM-DD 00:00:00")).toDate();
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
       }
 
@@ -720,12 +719,12 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'transactionStatus' && filter.value) {
-        tdFilter.push({ $eq: ["$transactionStatusId", filter.value] });
+        tdFilter.push({ $eq: ['$transactionStatusId', filter.value] });
         allowNullTd = false;
       }
 
       if (filter.field == 'supplierInvoiceStatus' && filter.value) {
-        tdFilter.push({ $eq: ["$supplierInvoiceStatusId", filter.value] });
+        tdFilter.push({ $eq: ['$supplierInvoiceStatusId', filter.value] });
         allowNullTd = false;
       }
 
@@ -733,7 +732,7 @@ export class V1WebReportCodService {
         // const f = {
         //   userIdDriver: { $eq: filter.value },
         // };
-        tdFilter.push({ $eq: ["$userIdDriver", filter.value] });
+        tdFilter.push({ $eq: ['$userIdDriver', filter.value] });
         allowNullTd = false;
       }
     }
@@ -763,11 +762,12 @@ export class V1WebReportCodService {
                 },
               },
             },
+            { $limit: 1 },
             {
               $project: {
                 awbNumber: 1,
                 transactionStatusId: 1,
-                supplierInvoiceStatusId: 1
+                supplierInvoiceStatusId: 1,
               },
             },
           ],
@@ -805,9 +805,9 @@ export class V1WebReportCodService {
           receiverRemark: 1,
         },
       },
-    ]
+    ];
 
-    console.log(JSON.stringify(q), "query")
+    console.log(JSON.stringify(q), 'query');
     const query = coll
       .aggregate(q);
 
@@ -835,10 +835,10 @@ export class V1WebReportCodService {
     try {
       const collection = await MongoDbConfig.getDbSicepatCod('time_log_cod');
       await collection.insertOne({
-        key: key,
+        key,
         startTime: startMoment.toDate(),
         endTime: endMoment.toDate(),
-        duration: duration
+        duration
       });
     } catch (error) {
       console.log(error);
@@ -846,8 +846,8 @@ export class V1WebReportCodService {
 
     return {
       data: response,
-      duration: duration
-    }
+      duration
+    };
   }
 
   static async printNonCodSupplierInvoice(filters, uuid: string = '') {
@@ -856,7 +856,7 @@ export class V1WebReportCodService {
     // prepare generate csv
     // ??upload file csv to aws s3
     // retrun ffile/ link downlod
-    console.log(uuid, "uuid")
+    console.log(uuid, 'uuid');
     const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod('transaction_detail');
     const dbAwb = await MongoDbConfig.getDbSicepatCod('cod_awb');
     let result: any;
@@ -878,7 +878,7 @@ export class V1WebReportCodService {
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
       try {
         let pageNumber = 1;
-        let datas = [];
+        const datas = [];
         let finish = false;
         while (!finish) {
           // const promises = [];
@@ -901,18 +901,18 @@ export class V1WebReportCodService {
           const rawResponseData = await this.timeResponse('time_log_cod_read', this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
           const responseDatas = rawResponseData.data;
 
-          console.log(responseDatas.length, "response datas")
+          console.log(responseDatas.length, 'response datas');
           if (responseDatas.length <= 0) {
 
             const payload = {
               status: 'Error',
-              Message: "Tidak ada data yang di ambil"
+              Message: 'Tidak ada data yang di ambil'
             };
 
             await RedisService.setex(
               uuid,
               JSON.stringify(payload),
-              this.expireOnSeconds)
+              this.expireOnSeconds);
             return;
           }
 
@@ -954,9 +954,9 @@ export class V1WebReportCodService {
         console.log(url, 'url final');
       }
 
-      console.log(uuid, uuid.toString() !== '', "uuid")
+      console.log(uuid, uuid.toString() !== '', 'uuid');
       if (uuid.toString() !== '') {
-        console.log("inside uuid");
+        console.log('inside uuid');
         const payload = {
           status: 'OK',
           url,
@@ -964,7 +964,7 @@ export class V1WebReportCodService {
         await RedisService.setex(
           uuid,
           JSON.stringify(payload),
-          this.expireOnSeconds
+          this.expireOnSeconds,
         );
       }
 
@@ -1058,7 +1058,7 @@ export class V1WebReportCodService {
           userIdUpdated: 1,
         },
       },
-    ]
+    ];
     console.log(JSON.stringify(queryParam), 'awb');
     const datas = await coll
       .aggregate(queryParam).toArray();
@@ -1097,13 +1097,13 @@ export class V1WebReportCodService {
 
             const payload = {
               status: 'Error',
-              Message: "Tidak ada data yang di ambil"
+              Message: 'Tidak ada data yang di ambil'
             };
 
             await RedisService.setex(
               uuid,
               JSON.stringify(payload),
-              this.expireOnSeconds)
+              this.expireOnSeconds);
             return;
           }
 
@@ -1132,9 +1132,9 @@ export class V1WebReportCodService {
 
         console.log(url, 'url final');
       }
-      console.log(uuid)
+      console.log(uuid);
       if (uuid.toString() != '') {
-        console.log(uuid, "inside uuid")
+        console.log(uuid, 'inside uuid');
         const payload = {
           status: 'OK',
           url,
@@ -1142,7 +1142,7 @@ export class V1WebReportCodService {
         await RedisService.setex(
           uuid,
           JSON.stringify(payload),
-          this.expireOnSeconds
+          this.expireOnSeconds,
         );
       }
 
