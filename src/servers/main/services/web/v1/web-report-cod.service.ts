@@ -83,6 +83,7 @@ export class V1WebReportCodService {
         'Recipient',
         'Status Internal',
         'Tracking Status',
+        'Status Invoice',
         'Cust Package',
         'Pickup Source',
         'Current Position',
@@ -228,6 +229,7 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.penerima),
           d.transactionStatus,
           d.lastValidTrackingType,
+          d.supplierInvoiceStatus,
           this.strReplaceFunc(d.prtCustPackageId),
           this.strReplaceFunc(d.manifestTrackingSiteName),
           this.strReplaceFunc(d.lastValidTrackingSiteName),
@@ -727,90 +729,98 @@ export class V1WebReportCodService {
         allowNullTd = false;
       }
 
-      // if (filter.field == 'sigesit' && filter.value) {
-      //   const f = {
-      //     userIdDriver: { $eq: filter.value },
-      //   };
-      //   spartanFilter.push(f);
-      // }
+      if (filter.field == 'sigesit' && filter.value) {
+        // const f = {
+        //   userIdDriver: { $eq: filter.value },
+        // };
+        tdFilter.push({ $eq: ["$userIdDriver", filter.value] });
+        allowNullTd = false;
+      }
     }
 
     const skip = limit * (pageNumber - 1);
-    console.log(skip, limit, spartanFilter, 'coding skip limit');
-    const query = coll
-      .aggregate([
-        {
-          $match: {
-            $and: spartanFilter,
-          },
-        },
 
-        {
-          $lookup: {
-            from: 'transaction_detail',
-            as: 'td',
-            let: { awbNumber: '$awbNumber' },
-            pipeline: [
+    const q = [
+      {
+        $match: {
+          $and: spartanFilter,
+        },
+      },
+
+      {
+        $lookup: {
+          from: 'transaction_detail',
+          as: 'td',
+          let: { awbNumber: '$awbNumber' },
+          pipeline: [
+            {
+              // on inner join
+              $match:
               {
-                // on inner join
-                $match:
+                $expr:
                 {
-                  $expr:
-                  {
-                    $and: tdFilter,
-                  },
+                  $and: tdFilter,
                 },
               },
-              {
-                $project: {
-                  awbNumber: 1,
-                  transactionStatusId: 1,
-                },
+            },
+            {
+              $project: {
+                awbNumber: 1,
+                transactionStatusId: 1,
+                supplierInvoiceStatusId: 1
               },
-            ],
-          },
+            },
+          ],
         },
-        {
-          $unwind: {
-            path: '$td',
-            preserveNullAndEmptyArrays: allowNullTd,
-          },
+      },
+      {
+        $unwind: {
+          path: '$td',
+          preserveNullAndEmptyArrays: allowNullTd,
         },
+      },
 
-        { $skip: skip },
-        { $limit: limit },
+      { $skip: skip },
+      { $limit: limit },
 
-        {
-          $project: {
-            partnerName: 1,
-            awbNumber: 1,
-            awbDate: 1,
-            parcelContent: '$prtParcelContent',
-            prtParcelValue: '$prtParcelValue',
-            prtCustPackageId: '$prtCustPackageId',
-            transactionStatusId: '$td.transactionStatusId',
-            layanan: 1,
-            penerima: 1,
-            codNilai: 1,
-            lastValidTrackingDateTime: 1,
-            lastValidTrackingType: 1,
-            tujuanKecamatan: 1,
-            prtDestinationCode: '$tujuan',
-            manifestTrackingSiteName: '$manifestTrackingSiteName',
-            lastValidTrackingSiteName: '$lastValidTrackingSiteName',
-            receiverRemark: 1,
-          },
+      {
+        $project: {
+          partnerName: 1,
+          awbNumber: 1,
+          awbDate: 1,
+          parcelContent: '$prtParcelContent',
+          prtParcelValue: '$prtParcelValue',
+          prtCustPackageId: '$prtCustPackageId',
+          transactionStatusId: '$td.transactionStatusId',
+          layanan: 1,
+          supplierInvoiceStatusId: '$td.supplierInvoiceStatusId',
+          penerima: 1,
+          codNilai: 1,
+          lastValidTrackingDateTime: 1,
+          lastValidTrackingType: 1,
+          tujuanKecamatan: 1,
+          prtDestinationCode: '$tujuan',
+          manifestTrackingSiteName: '$manifestTrackingSiteName',
+          lastValidTrackingSiteName: '$lastValidTrackingSiteName',
+          receiverRemark: 1,
         },
-      ]);
+      },
+    ]
 
-    console.log(query);
+    console.log(JSON.stringify(q), "query")
+    const query = coll
+      .aggregate(q);
+
+    // console.log(query);
     const datas = await query.toArray();
 
     for (const d of datas) {
-      d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId), 'status_title') || '-';
+      d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
+
+      d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
     }
 
-    console.log(datas);
+    // console.log(datas);
 
     arrDatas.push(...datas);
     return datas;
@@ -975,13 +985,13 @@ export class V1WebReportCodService {
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
         const d = moment(filter.value).add(7, 'hour').toDate();
-        filterList.push({ createdTime: { $gte: d } });
+        filterList.push({ updatedTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment(filter.value).add(7, 'hour')
           .add(1, 'days').toDate();
-        filterList.push({ createdTime: { $lt: d } });
+        filterList.push({ updatedTime: { $lt: d } });
       }
 
       filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
@@ -1007,49 +1017,51 @@ export class V1WebReportCodService {
     }
 
     const skip = limit * (pageNumber - 1);
-    console.log(limit, skip, filterList, 'awb');
+
+    const queryParam = [
+      {
+        $match: {
+          $and: filterList,
+        },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+      {
+        $project: {
+          _id: 1,
+          awbDate: 1,
+          awbNumber: 1,
+          codValue: 1,
+          codFee: 1,
+          consigneeName: 1,
+          createdTime: 1,
+          currentPosition: 1,
+          custPackage: 1,
+          destination: 1,
+          destinationCode: 1,
+          isDeleted: 1,
+          packageType: 1,
+          parcelContent: 1,
+          parcelNote: 1,
+          parcelValue: 1,
+          partnerId: 1,
+          partnerName: 1,
+          paymentService: 1,
+          pickupSource: 1,
+          podDate: 1,
+          transactionStatusId: 1,
+          userIdCreated: 1,
+          userIdUpdated: 1,
+        },
+      },
+    ]
+    console.log(JSON.stringify(queryParam), 'awb');
     const datas = await coll
-      .aggregate([
-        {
-          $match: {
-            $and: filterList,
-          },
-        },
-        {
-          $skip: skip,
-        },
-        {
-          $limit: limit,
-        },
-        {
-          $project: {
-            _id: 1,
-            awbDate: 1,
-            awbNumber: 1,
-            codValue: 1,
-            codFee: 1,
-            consigneeName: 1,
-            createdTime: 1,
-            currentPosition: 1,
-            custPackage: 1,
-            destination: 1,
-            destinationCode: 1,
-            isDeleted: 1,
-            packageType: 1,
-            parcelContent: 1,
-            parcelNote: 1,
-            parcelValue: 1,
-            partnerId: 1,
-            partnerName: 1,
-            paymentService: 1,
-            pickupSource: 1,
-            podDate: 1,
-            transactionStatusId: 1,
-            userIdCreated: 1,
-            userIdUpdated: 1,
-          },
-        },
-      ]).toArray();
+      .aggregate(queryParam).toArray();
     console.log(datas.length, 'data array');
     return datas;
   }
