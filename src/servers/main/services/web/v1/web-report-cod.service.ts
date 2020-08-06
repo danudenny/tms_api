@@ -34,9 +34,10 @@ export class V1WebReportCodService {
       message: 'on Process Generate Report',
     };
     // init set data on redis
-    await RedisService.set(
+    await RedisService.setex(
       reportKey,
       JSON.stringify(result),
+      this.expireOnSeconds
     );
 
     return result;
@@ -671,9 +672,10 @@ export class V1WebReportCodService {
           status: 'OK',
           url,
         };
-        await RedisService.set(
+        await RedisService.setex(
           uuid,
-          JSON.stringify(payload)
+          JSON.stringify(payload),
+          this.expireOnSeconds
         );
       }
 
@@ -832,9 +834,10 @@ export class V1WebReportCodService {
           status: 'OK',
           url,
         };
-        await RedisService.set(
+        await RedisService.setex(
           uuid,
-          JSON.stringify(payload)
+          JSON.stringify(payload),
+          this.expireOnSeconds
         );
       }
 
