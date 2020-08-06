@@ -278,6 +278,7 @@ export class V1WebReportCodService {
     const spartanFilter: any = [{ isCod: true }];
     const siteFilter: any = [{ $eq: ['$id', '$$trackingSiteId'] }];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
+    let allowNullTd = true;
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
@@ -304,7 +305,8 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'transactionStatus' && filter.value) {
-        tdFilter.push({ $eq: ['$transactionStatusId', filter.value] });
+        tdFilter.push({ $eq: ["$transactionStatusId", filter.value] });
+        allowNullTd = false;
       }
 
       // if (filter.field == 'sigesit' && filter.value) {
@@ -436,7 +438,7 @@ export class V1WebReportCodService {
         {
           $unwind: {
             path: '$td',
-            preserveNullAndEmptyArrays: true,
+            preserveNullAndEmptyArrays: allowNullTd,
           },
         },
 
