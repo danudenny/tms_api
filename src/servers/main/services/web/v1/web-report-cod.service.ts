@@ -293,7 +293,8 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'awbStatus' && filter.value) {
-        spartanFilter.push({ lastValidTrackingType: { $eq: filter.value } });
+        const fv = (filter.value === 'IN_BRANCH') ? 'IN' : filter.value;
+        spartanFilter.push({ lastValidTrackingType: { $eq: fv } });
       }
 
       if (filter.field == 'supplier' && filter.value) {
