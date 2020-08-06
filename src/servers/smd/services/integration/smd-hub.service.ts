@@ -31,6 +31,7 @@ import { BagRepresentativeDropoffHubQueueService } from '../../../queue/services
 import { MetaService } from '../../../../shared/services/meta.service';
 import { DropoffHubDetailBagRepresentative } from '../../../../shared/orm-entity/dropoff_hub_detail_bag_representative';
 import { DropoffHubDetailBagging } from '../../../../shared/orm-entity/dropoff_hub_detail_bagging';
+import { BagRepresentativeHistory } from '../../../../shared/orm-entity/bag-representative-history';
 
 @Injectable()
 export class SmdHubService {
@@ -377,6 +378,21 @@ export class SmdHubService {
             updatedTime: timeNow,
             userIdUpdated: authMeta.userId,
           });
+
+          const historyBagRepresentative = BagRepresentativeHistory.create();
+          historyBagRepresentative.bagRepresentativeCode = bagRepresentativeData.bagRepresentativeCode;
+          historyBagRepresentative.bagRepresentativeDate = moment(bagRepresentativeData.bagRepresentativeDate).toDate();
+          historyBagRepresentative.bagRepresentativeId = bagRepresentativeData.bagRepresentativeId.toString();
+          historyBagRepresentative.bagRepresentativeStatusIdLast = '3500';
+          historyBagRepresentative.branchId = permissonPayload.branchId.toString();
+          historyBagRepresentative.representativeIdTo = bagRepresentativeData.representativeIdTo;
+          historyBagRepresentative.totalItem = bagRepresentativeData.totalItem;
+          historyBagRepresentative.totalWeight = bagRepresentativeData.totalWeight.toString();
+          historyBagRepresentative.userIdCreated = authMeta.userId.toString();
+          historyBagRepresentative.createdTime = moment().toDate();
+          historyBagRepresentative.userIdUpdated = authMeta.userId.toString();
+          historyBagRepresentative.updatedTime = moment().toDate();
+          await BagRepresentativeHistory.insert(historyBagRepresentative);
 
           // create data dropoff hub
           const dropoffHubBagRepresentative = DropoffHubBagRepresentative.create();
