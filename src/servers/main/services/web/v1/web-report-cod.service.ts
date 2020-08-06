@@ -283,12 +283,12 @@ export class V1WebReportCodService {
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment(moment(filter.value).format("YYYY-MM-DD 00:00:00")).toDate();
+        const d = moment.utc(moment.utc(filter.value).format("YYYY-MM-DD 00:00:00")).toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment(moment(filter.value).add(1, 'days').format("YYYY-MM-DD 00:00:00")).toDate();
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format("YYYY-MM-DD 00:00:00")).toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
       }
 
