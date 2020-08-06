@@ -536,6 +536,7 @@ export class V1WebReportCodService {
     for (const d of datas) {
       d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId), 'status_title') || '-';
     }
+
     console.log(datas);
 
     return datas;
@@ -556,6 +557,10 @@ export class V1WebReportCodService {
       const transactionStatuses = await RawQueryService.query(
         `SELECT transaction_status_id, status_title FROM transaction_status ts`,
       );
+
+      for (const transactionStatus of transactionStatuses) {
+        transactionStatus.transaction_status_id = parseInt(`${transactionStatus.transaction_status_id}`, 10);
+      }
 
       // prepare csv file
       const limit = 3000;
