@@ -48,9 +48,13 @@ export class ScaninSmdService {
         throw new BadRequestException('Bag Number Not Found');
       } else {
         const bag = await Bag.findOne({
+          select: ['bagId'],
           where: {
             bagNumber: paramBagNumber,
             isDeleted: false,
+          },
+          order: {
+            createdTime: 'DESC',
           },
         });
 
@@ -233,9 +237,13 @@ export class ScaninSmdService {
         throw new BadRequestException('Bag Number Not Found');
       } else {
         const bag = await Bag.findOne({
+          select: ['bagId'],
           where: {
             bagNumber: paramBagNumber,
             isDeleted: false,
+          },
+          order: {
+            createdTime: 'DESC',
           },
         });
 
