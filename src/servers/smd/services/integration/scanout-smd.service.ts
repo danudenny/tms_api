@@ -20,6 +20,7 @@ import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
+import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -530,7 +531,11 @@ export class ScanoutSmdService {
         SELECT
           br.bag_representative_id,
           br.bag_representative_code,
-          r.representative_code
+          r.representative_code,
+          br.representative_id_to,
+          br.bag_representative_date,
+          br.total_item,
+          br.total_weight
         FROM bag_representative br
         INNER JOIN representative  r on br.representative_id_to = r.representative_id and r.is_deleted  = FALSE
         WHERE
@@ -604,6 +609,18 @@ export class ScanoutSmdService {
               updatedTime: timeNow,
             },
           );
+
+          BagRepresentativeScanDoSmdQueueService.perform(
+            resultDataBagRepresentative[0].bag_representative_id,
+            resultDataBagRepresentative[0].representative_id_to,
+            resultDataBagRepresentative[0].bag_representative_code,
+            resultDataBagRepresentative[0].bag_representative_date,
+            resultDataBagRepresentative[0].total_item,
+            resultDataBagRepresentative[0].total_weight,
+            authMeta.userId,
+            permissonPayload.branchId,
+          );
+
           data.push({
             do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
             bagging_id: null,

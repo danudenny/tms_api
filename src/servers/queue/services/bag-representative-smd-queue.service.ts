@@ -1,13 +1,7 @@
 import moment = require('moment');
 import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
-import { BagItemAwb } from '../../../shared/orm-entity/bag-item-awb';
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
-import { SharedService } from '../../../shared/services/shared.service';
-import { RawQueryService } from '../../../shared/services/raw-query.service';
-import { BAG_STATUS } from '../../../shared/constants/bag-status.constant';
-import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
-import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-meta-queue.service';
 import { AwbHistory } from '../../../shared/orm-entity/awb-history';
 
 // DOC: https://optimalbits.github.io/bull/
@@ -48,8 +42,12 @@ export class BagRepresentativeSmdQueueService {
       
       const awbHistory = AwbHistory.create();
       awbHistory.awbItemId = data.awbItemId;
+      awbHistory.branchId = data.branchId.toString();
+      awbHistory.refAwbNumber = data.refAwbNumber;
       awbHistory.historyDate = moment().toDate();
       awbHistory.awbStatusId = AWB_STATUS.IN_SORTIR;
+      awbHistory.userId= data.userId;
+      awbHistory.noteInternal= data.noteInternal;
       awbHistory.userIdCreated = Number(data.userId);
       awbHistory.createdTime = moment().toDate();
       awbHistory.userIdUpdated = Number(data.userId);
@@ -73,9 +71,19 @@ export class BagRepresentativeSmdQueueService {
   public static async perform(
     // doSmdDetailIds: any,
     awbItemId: any,
+    refAwbNumber: any,
+    userId: number,
+    branchId: number,
+    branchName: string,
+    cityName: string,
   ) {
+    const noteInternal = `Paket telah di terima di ${cityName} [${branchName}]`;
     const obj = {
       awbItemId,
+      refAwbNumber,
+      userId,
+      branchId,
+      noteInternal,
       timestamp: moment().toDate(),
     };
 

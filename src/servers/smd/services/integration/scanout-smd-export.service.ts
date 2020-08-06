@@ -76,7 +76,9 @@ export class ScanoutSmdExportService {
     payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
-
+    if (!payload.sortDir) {
+      payload.sortDir = 'desc';
+    }
     payload.globalSearchFields = [
       {
         field: 'do_smd_time',
@@ -106,6 +108,7 @@ export class ScanoutSmdExportService {
       ['ds.total_bag', 'Gabung Paket'],
       ['ds.total_bagging', 'Bagging'],
       ['dss.do_smd_status_title', 'Status Terakhir'],
+      ['ds.total_bag_representative', 'Gabung Kota'],
     );
 
     q.innerJoinRaw(
@@ -127,7 +130,7 @@ export class ScanoutSmdExportService {
       'dss',
       'ds.do_smd_status_id_last = dss.do_smd_status_id AND dss.is_deleted = FALSE',
     );
-    q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, dss.do_smd_status_title');
+    q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, ds.total_bag_representative, dss.do_smd_status_title');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     const result = {
       data: null,

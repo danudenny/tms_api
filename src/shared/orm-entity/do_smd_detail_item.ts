@@ -12,6 +12,7 @@ import { User } from './user';
 import { DoSmdDetail } from './do_smd_detail';
 import { BagItem } from './bag-item';
 import { Bagging } from './bagging';
+import { BagRepresentative } from './bag-representative';
 
 @Entity('do_smd_detail_item', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
@@ -125,4 +126,8 @@ export class DoSmdDetailItem extends TmsBaseEntity {
   @ManyToOne(() => Bagging, e => e.doSmdDetailItem)
   @JoinColumn({ name: 'bagging_id', referencedColumnName: 'baggingId' })
   bagging: Bagging;
+
+  @ManyToOne(() => BagRepresentative, e => e.doSmdDetailItem)
+  @JoinColumn({ name: 'bag_representative_id', referencedColumnName: 'bagRepresentativeId' })
+  bagRepresentative: BagRepresentative;
 }
