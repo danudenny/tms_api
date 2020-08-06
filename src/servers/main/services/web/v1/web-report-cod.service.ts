@@ -213,7 +213,7 @@ export class V1WebReportCodService {
     let count = 0;
     if (data) {
       for (const d of data) {
-        writer.write([
+        await writer.write([
           this.strReplaceFunc(d.partnerName),
           d.awbDate
             ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm')
