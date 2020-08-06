@@ -203,107 +203,120 @@ export class SmdHubService {
         },
       });
       if (baggingData) {
-        const holdRedisBagging = await RedisService.locking(
-          `hold:dropoff:bagging:${baggingData.baggingId}`,
-          'locking',
-        );
-        // NOTE: check condition disable on check branchIdNext
-        // status bagItemStatusIdLast ??
-        const rawQuery = `
-            SELECT
-              bg.bagging_code,
-              bit.bag_item_id,
-              bit.bag_item_status_id_last,
-              bit.branch_id_next,
-              b.bag_number,
-              b.bag_id
-            FROM bagging bg
-            INNER JOIN bagging_item bi ON bg.bagging_id = bi.bagging_id AND bi.is_deleted = FALSE
-            INNER JOIN bag_item bit ON bi.bag_item_id = bit.bag_item_id AND bit.is_deleted = FALSE
-            INNER JOIN bag b ON bit.bag_id = b.bag_id AND b.is_deleted = FAlSE
-            where
-              bg.bagging_id = ${baggingData.baggingId} AND
-              bg.is_deleted = FALSE;
-          `;
-        const resultDataBag = await RawQueryService.query(rawQuery);
-        for (const resultBag of resultDataBag) {
-          const notScan =  resultBag.bag_item_status_id_last != BAG_STATUS.DO_HUB ? true : false;
-          // Add Locking setnx redis
-          const holdRedis = await RedisService.locking(
-            `hold:dropoff:${resultBag.bag_item_id}`,
+        const dropoffHubBaggingData = await DropoffHubBagging.findOne({
+          where: {
+            baggingId: baggingData.baggingId,
+            branchId: permissonPayload.branchId,
+            isDeleted: false,
+          },
+        });
+        if (dropoffHubBaggingData) {
+          totalError += 1;
+          response.status = 'failed';
+          response.message = `Bagging ${baggingNumber} Sudah Pernah di Scan di branch ini`;
+        } else {
+          const holdRedisBagging = await RedisService.locking(
+            `hold:dropoff:bagging:${baggingData.baggingId}`,
             'locking',
           );
-          if (notScan && holdRedis) {
-            // validate scan branch ??
-            const notScanBranch = resultBag.brach_id_next != permissonPayload.branchId ? true : false;
-            // create bag trouble ==========================
-            if (
-              resultBag.bag_item_status_id_last != BAG_STATUS.OUT_BRANCH ||
-              notScanBranch
-            ) {
-              const desc = notScanBranch ? 'Gerai tidak sesuai' : 'Status bag tidak sesuai';
-              BagTroubleService.create(
-                resultBag.bag_number,
-                resultBag.bag_item_status_id_last,
-                100, // IN HUB
-                desc,
-              );
-            }
-            // ==================================================================
+          // NOTE: check condition disable on check branchIdNext
+          // status bagItemStatusIdLast ??
+          const rawQuery = `
+              SELECT
+                bg.bagging_code,
+                bit.bag_item_id,
+                bit.bag_item_status_id_last,
+                bit.branch_id_next,
+                b.bag_number,
+                b.bag_id
+              FROM bagging bg
+              INNER JOIN bagging_item bi ON bg.bagging_id = bi.bagging_id AND bi.is_deleted = FALSE
+              INNER JOIN bag_item bit ON bi.bag_item_id = bit.bag_item_id AND bit.is_deleted = FALSE
+              INNER JOIN bag b ON bit.bag_id = b.bag_id AND b.is_deleted = FAlSE
+              where
+                bg.bagging_id = ${baggingData.baggingId} AND
+                bg.is_deleted = FALSE;
+            `;
+          const resultDataBag = await RawQueryService.query(rawQuery);
+          for (const resultBag of resultDataBag) {
+            const notScan =  resultBag.bag_item_status_id_last != BAG_STATUS.DO_HUB ? true : false;
+            // Add Locking setnx redis
+            const holdRedis = await RedisService.locking(
+              `hold:dropoff:${resultBag.bag_item_id}`,
+              'locking',
+            );
+            if (notScan && holdRedis) {
+              // validate scan branch ??
+              const notScanBranch = resultBag.brach_id_next != permissonPayload.branchId ? true : false;
+              // create bag trouble ==========================
+              if (
+                resultBag.bag_item_status_id_last != BAG_STATUS.OUT_BRANCH ||
+                notScanBranch
+              ) {
+                const desc = notScanBranch ? 'Gerai tidak sesuai' : 'Status bag tidak sesuai';
+                BagTroubleService.create(
+                  resultBag.bag_number,
+                  resultBag.bag_item_status_id_last,
+                  100, // IN HUB
+                  desc,
+                );
+              }
+              // ==================================================================
 
-            const bagItem = await BagItem.findOne({
-              where: {
-                bagItemId: resultBag.bag_item_id,
-              },
-            });
-            if (bagItem) {
-              // update status bagItem
-              await BagItem.update({ bagItemId: bagItem.bagItemId }, {
-                bagItemStatusIdLast: BAG_STATUS.DO_HUB,
-                branchIdLast: permissonPayload.branchId,
-                updatedTime: timeNow,
-                userIdUpdated: authMeta.userId,
+              const bagItem = await BagItem.findOne({
+                where: {
+                  bagItemId: resultBag.bag_item_id,
+                },
               });
+              if (bagItem) {
+                // update status bagItem
+                await BagItem.update({ bagItemId: bagItem.bagItemId }, {
+                  bagItemStatusIdLast: BAG_STATUS.DO_HUB,
+                  branchIdLast: permissonPayload.branchId,
+                  updatedTime: timeNow,
+                  userIdUpdated: authMeta.userId,
+                });
 
-              // create data dropoff hub
-              const dropoffHubBagging = DropoffHubBagging.create();
-              dropoffHubBagging.branchId = permissonPayload.branchId;
-              dropoffHubBagging.baggingId = Number(baggingData.baggingId);
-              dropoffHubBagging.bagId = resultBag.bag_id;
-              dropoffHubBagging.bagItemId = resultBag.bag_item_id;
-              dropoffHubBagging.bagNumber = resultBag.bag_number;
-              await DropoffHubBagging.save(dropoffHubBagging);
+                // create data dropoff hub
+                const dropoffHubBagging = DropoffHubBagging.create();
+                dropoffHubBagging.branchId = permissonPayload.branchId;
+                dropoffHubBagging.baggingId = Number(baggingData.baggingId);
+                dropoffHubBagging.bagId = resultBag.bag_id;
+                dropoffHubBagging.bagItemId = resultBag.bag_item_id;
+                dropoffHubBagging.bagNumber = resultBag.bag_number;
+                await DropoffHubBagging.save(dropoffHubBagging);
 
-              // NOTE: background job for insert bag item history
-              BagItemHistoryQueueService.addData(
-                resultBag.bag_item_id,
-                BAG_STATUS.DO_HUB,
-                permissonPayload.branchId,
-                authMeta.userId,
-              );
+                // NOTE: background job for insert bag item history
+                BagItemHistoryQueueService.addData(
+                  resultBag.bag_item_id,
+                  BAG_STATUS.DO_HUB,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                );
 
-              // NOTE:
-              // refactor send to background job for loop awb
-              // update status DO_HUB (12600: drop off hub)
-              BaggingDropoffHubQueueService.perform(
-                dropoffHubBagging.dropoffHubBaggingId,
-                resultBag.bag_item_id,
-                authMeta.userId,
-                permissonPayload.branchId,
-              );
+                // NOTE:
+                // refactor send to background job for loop awb
+                // update status DO_HUB (12600: drop off hub)
+                BaggingDropoffHubQueueService.perform(
+                  dropoffHubBagging.dropoffHubBaggingId,
+                  resultBag.bag_item_id,
+                  authMeta.userId,
+                  permissonPayload.branchId,
+                );
 
-              totalSuccess += 1;
+                totalSuccess += 1;
+              }
+              // remove key holdRedis
+              RedisService.del(`hold:dropoff:${resultBag.bag_item_id}`);
             }
-            // remove key holdRedis
-            RedisService.del(`hold:dropoff:${resultBag.bag_item_id}`);
+            // else {
+            //   totalError += 1;
+            //   response.status = 'error';
+            //   response.message = `Gabung paket ${bagNumber} Sudah di proses.`;
+            // }
           }
-          // else {
-          //   totalError += 1;
-          //   response.status = 'error';
-          //   response.message = `Gabung paket ${bagNumber} Sudah di proses.`;
-          // }
+          RedisService.del(`hold:dropoff:bagging:${baggingData.baggingId}`);
         }
-        RedisService.del(`hold:dropoff:bagging:${baggingData.baggingId}`);
       } else {
         totalError += 1;
         response.status = 'error';
