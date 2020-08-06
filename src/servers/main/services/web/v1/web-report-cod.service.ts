@@ -312,6 +312,11 @@ export class V1WebReportCodService {
         allowNullTd = false;
       }
 
+      if (filter.field == 'supplierInvoiceStatus' && filter.value) {
+        tdFilter.push({ $eq: ["$supplierInvoiceStatusId", filter.value] });
+        allowNullTd = false;
+      }
+
       // if (filter.field == 'sigesit' && filter.value) {
       //   const f = {
       //     userIdDriver: { $eq: filter.value },
@@ -329,8 +334,6 @@ export class V1WebReportCodService {
             $and: spartanFilter,
           },
         },
-        { $skip: skip },
-        { $limit: limit },
 
         {
           $lookup: {
@@ -509,6 +512,9 @@ export class V1WebReportCodService {
             preserveNullAndEmptyArrays: allowNullSite,
           },
         },
+
+        { $skip: skip },
+        { $limit: limit },
 
         {
           $project: {
