@@ -147,13 +147,13 @@ export class V1WebReportCodService {
         cod ?
           writer.write([
             this.strReplaceFunc(d.partnerName),
-            d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD') : null,
+            d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD') : null,
             this.strReplaceFunc(d.awbNumber),
             d.parcelValue,
             d.codValue,
             d.codFee,
             d.codValue,
-            d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+            d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
             this.strReplaceFunc(d.consigneeName),
             draft ? 'DRAFT INVOICE' : 'PAID', // supplier invoice status
             'DLV',
@@ -169,14 +169,14 @@ export class V1WebReportCodService {
           ]) : writer.write([
             this.strReplaceFunc(d.partnerName),
             d.awbDate
-              ? moment(d.awbDate).format('YYYY-MM-DD HH:mm')
+              ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm')
               : null,
             this.strReplaceFunc(d.awbNumber),
             d.parcelValue,
             d.codValue,
             d.codValue,
             d.podDate
-              ? moment(d.podDate).format('YYYY-MM-DD HH:mm')
+              ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm')
               : null,
             this.strReplaceFunc(d.consigneeName),
             'DLV',
@@ -214,14 +214,14 @@ export class V1WebReportCodService {
         writer.write([
           this.strReplaceFunc(d.partnerName),
           d.awbDate
-            ? moment(d.awbDate).format('YYYY-MM-DD HH:mm')
+            ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm')
             : null,
           this.strReplaceFunc(d.awbNumber),
           d.prtParcelValue,
           d.codNilai,
           d.codNilai,
           d.lastValidTrackingDateTime
-            ? moment(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
+            ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
             : null,
           this.strReplaceFunc(d.penerima),
           d.transactionStatus,
