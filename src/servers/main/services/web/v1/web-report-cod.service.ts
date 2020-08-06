@@ -706,7 +706,7 @@ export class V1WebReportCodService {
       if (filter.field == 'awbStatus' && filter.value) {
         const fv = (filter.value === 'IN_BRANCH') ? 'IN' : filter.value;
         spartanFilter.push({ lastValidTrackingType: { $eq: fv } });
-      }      
+      }
 
       if (filter.field == 'branchLast' && filter.value) {
         spartanFilter.push({ $eq: ['$lastValidTrackingSiteCode', filter.value] });
@@ -743,7 +743,7 @@ export class V1WebReportCodService {
           $match: {
             $and: spartanFilter,
           },
-        },        
+        },
 
         {
           $lookup: {
@@ -775,7 +775,7 @@ export class V1WebReportCodService {
             path: '$td',
             preserveNullAndEmptyArrays: allowNullTd,
           },
-        },        
+        },
 
         { $skip: skip },
         { $limit: limit },
@@ -861,7 +861,7 @@ export class V1WebReportCodService {
       }
 
       // prepare csv file
-      const limit = 30000;
+      const limit = 10000;
       const csvConfig = await this.getCSVConfig(false);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
@@ -891,6 +891,21 @@ export class V1WebReportCodService {
           const rawResponseData = await this.timeResponse('time_log_cod_read', this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
           const responseDatas = rawResponseData.data;
 
+          console.log(responseDatas.length, "response datas")
+          if (responseDatas.length <= 0) {
+
+            const payload = {
+              status: 'Error',
+              Message: "Tidak ada data yang di ambil"
+            };
+
+            await RedisService.setex(
+              uuid,
+              JSON.stringify(payload),
+              this.expireOnSeconds)
+            return;
+          }
+
           await this.timeResponse('time_log_cod_write_csv', this.populateDataAwbCsv(writer, responseDatas));
 
           pageNumber++;
@@ -910,7 +925,9 @@ export class V1WebReportCodService {
           // pageNumber++;
         }
       } finally {
-        writer.end();
+        await writer.on('finish', () => {
+          writer.end();
+        });
       }
 
       let url = '';
@@ -1049,7 +1066,7 @@ export class V1WebReportCodService {
 
     try {
       // prepare csv file
-      const limit = 3000;
+      const limit = 10000;
       const csvConfig = await this.getCSVConfig(true);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
@@ -1060,20 +1077,34 @@ export class V1WebReportCodService {
         let finish = false;
         while (!finish) {
 
-          while (!finish) {
-            const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber);
+          const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber);
 
-            console.log(!responseDatas, limit, finish, responseDatas.length < limit, 'response data length');
-            if (responseDatas.length < limit) {
-              finish = true;
-            }
-            await this.populateDataCsv(writer, responseDatas, true);
+          console.log(!responseDatas, limit, finish, responseDatas.length < limit, 'response data length');
 
-            pageNumber++;
+          if (responseDatas.length <= 0) {
+
+            const payload = {
+              status: 'Error',
+              Message: "Tidak ada data yang di ambil"
+            };
+
+            await RedisService.setex(
+              uuid,
+              JSON.stringify(payload),
+              this.expireOnSeconds)
+            return;
           }
+
+          if (responseDatas.length < limit) {
+            finish = true;
+          }
+          await this.populateDataCsv(writer, responseDatas, true);
+          pageNumber++;
         }
       } finally {
-        writer.end();
+        await writer.on('finish', () => {
+          writer.end();
+        });
       }
 
       let url = '';
