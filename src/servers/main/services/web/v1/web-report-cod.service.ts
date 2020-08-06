@@ -711,7 +711,7 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'branchLast' && filter.value) {
-        spartanFilter.push({ $eq: ['$lastValidTrackingSiteCode', filter.value] });
+        spartanFilter.push({ lastValidTrackingSiteCode: { $eq: filter.value } });
       }
 
       if (filter.field == 'supplier' && filter.value) {
