@@ -585,22 +585,23 @@ export class V1WebReportCodService {
         while (!finish) {
           const promises = [];
           let counter = 0;
+          let maxCount = 0;
           while (counter < 10) {
             const pn = pageNumber;
             const prom = this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pn);
             promises.push(prom);
             counter++;
             pageNumber++;
+            maxCount += limit;
           }
           
           await Promise.all(promises);
-          if (!datas || datas.length < (limit * 3)) {
+          if (!datas || datas.length < maxCount) {
             finish = true;
           }
 
           await this.populateDataAwbCsv(writer, datas);
           datas = [];
-          pageNumber++;
 
           // const responseDatas = await this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
           // if (!responseDatas || responseDatas.length < limit) {
