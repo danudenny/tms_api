@@ -274,7 +274,7 @@ export class V1WebReportCodService {
 
   //#region NON_COD
 
-  static async getNonCodSupplierInvoiceData(coll, transactionStatuses, filters, limit, pageNumber) {
+  static async getNonCodSupplierInvoiceData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
     const spartanFilter: any = [{ isCod: true }];
     const siteFilter: any = [{ $eq: ['$id', '$$trackingSiteId'] }];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
@@ -539,6 +539,7 @@ export class V1WebReportCodService {
 
     console.log(datas);
 
+    arrDatas.push(...datas);
     return datas;
   }
 
@@ -570,15 +571,32 @@ export class V1WebReportCodService {
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
       try {
         let pageNumber = 1;
+        let datas = [];
         let finish = false;
         while (!finish) {
-          const responseDatas = await this.getNonCodSupplierInvoiceData(dbAwb, transactionStatuses, filters, limit, pageNumber);
-          if (!responseDatas || responseDatas.length < limit) {
+          const prom1 = this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
+          pageNumber++;
+          const prom2 = this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
+          pageNumber++;
+          const prom3 = this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
+          pageNumber++;
+
+          await Promise.all([prom1, prom2, prom3]);
+          if (!datas || datas.length < (limit*3)) {
             finish = true;
           }
 
-          await this.populateDataAwbCsv(writer, responseDatas);
+          await this.populateDataAwbCsv(writer, datas);
+          datas = [];
           pageNumber++;
+          
+          // const responseDatas = await this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
+          // if (!responseDatas || responseDatas.length < limit) {
+          //   finish = true;
+          // }
+
+          // await this.populateDataAwbCsv(writer, responseDatas);
+          // pageNumber++;
         }
       } finally {
         writer.end();
