@@ -573,7 +573,7 @@ export class V1WebReportCodService {
       }
 
       // prepare csv file
-      const limit = 3000;
+      const limit = 200;
       const csvConfig = await this.getCSVConfig(false);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
@@ -583,14 +583,17 @@ export class V1WebReportCodService {
         let datas = [];
         let finish = false;
         while (!finish) {
-          const prom1 = this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
-          pageNumber++;
-          const prom2 = this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
-          pageNumber++;
-          const prom3 = this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
-          pageNumber++;
-
-          await Promise.all([prom1, prom2, prom3]);
+          const promises = [];
+          let counter = 0;
+          while (counter < 10) {
+            const pn = pageNumber;
+            const prom = this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pn);
+            promises.push(prom);
+            counter++;
+            pageNumber++;
+          }
+          
+          await Promise.all(promises);
           if (!datas || datas.length < (limit * 3)) {
             finish = true;
           }
