@@ -169,14 +169,14 @@ export class V1WebReportCodService {
           ]) : writer.write([
             this.strReplaceFunc(d.partnerName),
             d.awbDate
-              ? moment(d.awbDate).format('YYYY-MM-DD hh:mm A')
+              ? moment(d.awbDate).format('YYYY-MM-DD HH:mm')
               : null,
             this.strReplaceFunc(d.awbNumber),
             d.parcelValue,
             d.codValue,
             d.codValue,
             d.podDate
-              ? moment(d.podDate).format('YYYY-MM-DD hh:mm A')
+              ? moment(d.podDate).format('YYYY-MM-DD HH:mm')
               : null,
             this.strReplaceFunc(d.consigneeName),
             'DLV',
@@ -214,14 +214,14 @@ export class V1WebReportCodService {
         writer.write([
           this.strReplaceFunc(d.partnerName),
           d.awbDate
-            ? moment(d.awbDate).format('YYYY-MM-DD hh:mm A')
+            ? moment(d.awbDate).format('YYYY-MM-DD HH:mm')
             : null,
           this.strReplaceFunc(d.awbNumber),
           d.prtParcelValue,
           d.codNilai,
           d.codNilai,
           d.lastValidTrackingDateTime
-            ? moment(d.lastValidTrackingDateTime).format('YYYY-MM-DD hh:mm A')
+            ? moment(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
             : null,
           this.strReplaceFunc(d.penerima),
           d.transactionStatus,
@@ -511,7 +511,7 @@ export class V1WebReportCodService {
           $project: {
             partnerName: 1,
             awbNumber: 1,
-            awbDate: 1,
+            awbDate: '$transactionDate',
             parcelContent: 1,
             prtParcelValue: '$pr.parcelValue',
             prtCustPackageId: '$pr.custPackageId',
