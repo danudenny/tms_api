@@ -573,7 +573,7 @@ export class V1WebReportCodService {
       }
 
       // prepare csv file
-      const limit = 200;
+      const limit = 30000;
       const csvConfig = await this.getCSVConfig(false);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
@@ -583,24 +583,33 @@ export class V1WebReportCodService {
         let datas = [];
         let finish = false;
         while (!finish) {
-          const promises = [];
-          let counter = 0;
-          while (counter < 10) {
-            const pn = pageNumber;
-            const prom = this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pn);
-            promises.push(prom);
-            counter++;
-            pageNumber++;
-          }
-          
-          await Promise.all(promises);
-          if (!datas || datas.length < (limit * 3)) {
+          // const promises = [];
+          // let counter = 0;
+          // let maxCount = 0;
+          // while (counter < 10) {
+          //   const pn = pageNumber;
+          //   const prom = this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pn);
+          //   promises.push(prom);
+          //   counter++;
+          //   pageNumber++;
+          //   maxCount += limit;
+          // }
+
+          // await Promise.all(promises);
+          // if (!datas || datas.length < maxCount) {
+          //   finish = true;
+          // }
+
+          const responseDatas = await this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
+          await this.populateDataAwbCsv(writer, responseDatas);
+
+          pageNumber++;                    
+
+          if (!responseDatas || responseDatas.length < limit) {
             finish = true;
           }
 
-          await this.populateDataAwbCsv(writer, datas);
-          datas = [];
-          pageNumber++;
+          // datas = [];
 
           // const responseDatas = await this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
           // if (!responseDatas || responseDatas.length < limit) {
