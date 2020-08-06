@@ -16,6 +16,9 @@ export class TransactionStatusVm {
 
   @ApiModelProperty()
   statusName: string;
+
+  @ApiModelProperty()
+  statusLevel: number;
 }
 
 // response
