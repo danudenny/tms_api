@@ -278,6 +278,7 @@ export class V1WebReportCodService {
     const spartanFilter: any = [{ isCod: true }];
     const siteFilter: any = [{ $eq: ['$id', '$$trackingSiteId'] }];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
+    let allowNullSite = true;
     let allowNullTd = true;
 
     for (const filter of filters) {
@@ -292,7 +293,8 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'awbStatus' && filter.value) {
-        spartanFilter.push({ lastValidTrackingType: { $eq: filter.value } });
+        const fv = (filter.value === 'IN_BRANCH') ? 'IN' : filter.value;
+        spartanFilter.push({ lastValidTrackingType: { $eq: fv } });
       }
 
       if (filter.field == 'supplier' && filter.value) {
@@ -302,6 +304,7 @@ export class V1WebReportCodService {
 
       if (filter.field == 'branchLast' && filter.value) {
         siteFilter.push({ $eq: ['$siteCode', filter.value] });
+        allowNullSite = false;
       }
 
       if (filter.field == 'transactionStatus' && filter.value) {
@@ -503,7 +506,7 @@ export class V1WebReportCodService {
         {
           $unwind: {
             path: '$lastValidTrackingSite',
-            preserveNullAndEmptyArrays: true,
+            preserveNullAndEmptyArrays: allowNullSite,
           },
         },
 
