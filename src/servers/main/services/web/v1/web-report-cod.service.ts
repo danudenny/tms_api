@@ -322,7 +322,7 @@ export class V1WebReportCodService {
 
     const skip = limit * (pageNumber - 1);
     console.log(skip, limit, spartanFilter, 'coding skip limit');
-    const datas = await coll
+    const query = coll
       .aggregate([
         {
           $match: {
@@ -531,7 +531,10 @@ export class V1WebReportCodService {
             receiverRemark: 1,
           },
         },
-      ]).toArray();
+      ]);
+
+    console.log(query);
+    const datas = await query.toArray();
 
     for (const d of datas) {
       d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId), 'status_title') || '-';
@@ -582,14 +585,14 @@ export class V1WebReportCodService {
           pageNumber++;
 
           await Promise.all([prom1, prom2, prom3]);
-          if (!datas || datas.length < (limit*3)) {
+          if (!datas || datas.length < (limit * 3)) {
             finish = true;
           }
 
           await this.populateDataAwbCsv(writer, datas);
           datas = [];
           pageNumber++;
-          
+
           // const responseDatas = await this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
           // if (!responseDatas || responseDatas.length < limit) {
           //   finish = true;
