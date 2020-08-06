@@ -31,6 +31,7 @@ export class TransactionStatusService {
       ['status_code', 'statusCode'],
       ['status_title', 'statusTitle'],
       ['status_name', 'statusName'],
+      ['status_level', 'statusLevel'],
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 

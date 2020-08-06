@@ -32,12 +32,16 @@ export class CodExportMongoQueueService {
     this.queue.process(async job => {
       const data = job.data;
       const filter = data.filter;
-      const codType = data.codType;
-      const awbFilter = data.awbFilter;
+      const noncodfee = data.noncodfee;
       const uuid = data.uuid;
 
       try {
-        await V1WebReportCodService.printNonCodSupplierInvoice(filter, codType);
+        console.log(noncodfee, uuid, "codtype");
+        if (noncodfee === "noncodfee")
+          await V1WebReportCodService.printNonCodSupplierInvoice(filter, uuid);
+        else {
+          await V1WebReportCodService.printCodSupplierInvoice(filter, uuid);
+        }
       } catch (error) {
         throw (error);
       }
@@ -57,10 +61,10 @@ export class CodExportMongoQueueService {
   }
 
   public static async perform(
-    filter, codType, awbFilter, uuid,
+    filter, noncodfee, uuid
   ) {
     const obj = {
-      filter, codType, awbFilter, uuid,
+      filter, noncodfee, uuid
     };
 
     return CodExportMongoQueueService.queue.add(obj);

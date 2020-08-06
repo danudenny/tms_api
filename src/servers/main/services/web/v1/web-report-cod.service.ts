@@ -16,15 +16,17 @@ import { RedisService } from '../../../../../shared/services/redis.service';
 import uuid = require('uuid');
 
 export class V1WebReportCodService {
-  static expireOnSeconds = 300; // 5 minute
+  static expireOnSeconds = 600; // 5 minute
 
-  static async addQueueBullPrint(filters, cod = true, awbFilter = null) {
+
+  static async addQueueBullPrint(filters, noncodfee) {
     const uuidv1 = require('uuid/v1');
     const uuidString = uuidv1();
     const reportKey = `reportKeyCOD:${uuidString}`;
 
     // send to background process generate report
-    CodExportMongoQueueService.perform(filters, cod, awbFilter, reportKey);
+    console.log(filters, noncodfee, "non code fee")
+    CodExportMongoQueueService.perform(filters, noncodfee, uuidString);
 
     const result = {
       reportKey,
@@ -35,7 +37,7 @@ export class V1WebReportCodService {
     await RedisService.setex(
       reportKey,
       JSON.stringify(result),
-      this.expireOnSeconds,
+      this.expireOnSeconds
     );
 
     return result;
@@ -211,7 +213,7 @@ export class V1WebReportCodService {
     let count = 0;
     if (data) {
       for (const d of data) {
-        writer.write([
+        await writer.write([
           this.strReplaceFunc(d.partnerName),
           d.awbDate
             ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm')
@@ -274,11 +276,420 @@ export class V1WebReportCodService {
 
   //#region NON_COD
 
+  // static async getNonCodSupplierInvoiceData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
+  //   const spartanFilter: any = [{ isCod: true }];
+  //   const siteFilter: any = [{ $eq: ['$id', '$$trackingSiteId'] }];
+  //   const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
+  //   let allowNullSite = true;
+  //   let allowNullTd = true;
+
+  //   for (const filter of filters) {
+  //     if (filter.field == 'periodStart' && filter.value) {
+  //       const d = moment.utc(moment.utc(filter.value).format("YYYY-MM-DD 00:00:00")).toDate();
+  //       spartanFilter.push({ lastValidTrackingDateTime: { $gte: d } });
+  //     }
+
+  //     if (filter.field == 'periodEnd' && filter.value) {
+  //       const d = moment.utc(moment.utc(filter.value).add(1, 'days').format("YYYY-MM-DD 00:00:00")).toDate();
+  //       spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
+  //     }
+
+  //     if (filter.field == 'awbStatus' && filter.value) {
+  //       const fv = (filter.value === 'IN_BRANCH') ? 'IN' : filter.value;
+  //       spartanFilter.push({ lastValidTrackingType: { $eq: fv } });
+  //     }
+
+  //     if (filter.field == 'supplier' && filter.value) {
+  //       const regex = new RegExp(`^${filter.value.toLowerCase()}`, 'i');
+  //       spartanFilter.push({ partnerName: regex });
+  //     }
+
+  //     if (filter.field == 'branchLast' && filter.value) {
+  //       siteFilter.push({ $eq: ['$siteCode', filter.value] });
+  //       allowNullSite = false;
+  //     }
+
+  //     if (filter.field == 'transactionStatus' && filter.value) {
+  //       tdFilter.push({ $eq: ["$transactionStatusId", filter.value] });
+  //       allowNullTd = false;
+  //     }
+
+  //     if (filter.field == 'supplierInvoiceStatus' && filter.value) {
+  //       tdFilter.push({ $eq: ["$supplierInvoiceStatusId", filter.value] });
+  //       allowNullTd = false;
+  //     }
+
+  //     // if (filter.field == 'sigesit' && filter.value) {
+  //     //   const f = {
+  //     //     userIdDriver: { $eq: filter.value },
+  //     //   };
+  //     //   spartanFilter.push(f);
+  //     // }
+  //   }
+
+  //   const skip = limit * (pageNumber - 1);
+  //   console.log(skip, limit, spartanFilter, 'coding skip limit');
+  //   const query = coll
+  //     .aggregate([
+  //       {
+  //         $match: {
+  //           $and: spartanFilter,
+  //         },
+  //       },
+
+  //       {
+  //         $lookup: {
+  //           from: 'stt',
+  //           as: 'stt',
+  //           let: { awbNumber: '$awbNumber' },
+  //           pipeline: [
+  //             {
+  //               // on inner join
+  //               $match:
+  //               {
+  //                 $expr:
+  //                 {
+  //                   $and: [{ $eq: ['$nostt', '$$awbNumber'] }],
+  //                 },
+  //               },
+  //             },
+  //             {
+  //               $lookup: {
+  //                 from: 'destination',
+  //                 as: 'destination',
+  //                 let: { code: '$tujuan' },
+  //                 pipeline: [
+  //                   {
+  //                     $match:
+  //                     {
+  //                       $expr:
+  //                       {
+  //                         $and: [{ $eq: ['$code', '$$code'] }],
+  //                       },
+  //                     },
+  //                   },
+  //                   {
+  //                     $project: {
+  //                       subdistrict: 1,
+  //                     },
+  //                   },
+  //                 ],
+  //               },
+  //             },
+  //             {
+  //               $unwind: {
+  //                 path: '$destination',
+  //                 preserveNullAndEmptyArrays: true,
+  //               },
+  //             },
+  //           ],
+  //         },
+  //       },
+  //       {
+  //         $unwind: {
+  //           path: '$stt',
+  //           preserveNullAndEmptyArrays: true,
+  //         },
+  //       },
+
+  //       {
+  //         $lookup: {
+  //           from: 'partner_request',
+  //           as: 'pr',
+  //           let: { awbNumber: '$awbNumber' },
+  //           pipeline: [
+  //             {
+  //               // on inner join
+  //               $match:
+  //               {
+  //                 $expr:
+  //                 {
+  //                   $and: [{ $eq: ['$awbNumber', '$$awbNumber'] }],
+  //                 },
+  //               },
+  //             },
+  //           ],
+  //         },
+  //       },
+  //       {
+  //         $unwind: {
+  //           path: '$pr',
+  //           preserveNullAndEmptyArrays: true,
+  //         },
+  //       },
+
+  //       {
+  //         $lookup: {
+  //           from: 'transaction_detail',
+  //           as: 'td',
+  //           let: { awbNumber: '$awbNumber' },
+  //           pipeline: [
+  //             {
+  //               // on inner join
+  //               $match:
+  //               {
+  //                 $expr:
+  //                 {
+  //                   $and: tdFilter,
+  //                 },
+  //               },
+  //             },
+  //             {
+  //               $project: {
+  //                 awbNumber: 1,
+  //                 transactionStatusId: 1,
+  //               },
+  //             },
+  //           ],
+  //         },
+  //       },
+  //       {
+  //         $unwind: {
+  //           path: '$td',
+  //           preserveNullAndEmptyArrays: allowNullTd,
+  //         },
+  //       },
+
+  //       {
+  //         $lookup: {
+  //           from: 'tracking_site',
+  //           as: 'manifestTrackingSite',
+  //           let: { trackingSiteId: '$manifestTrackingSiteId' },
+  //           pipeline: [
+  //             {
+  //               $match:
+  //               {
+  //                 $expr:
+  //                 {
+  //                   $and:
+  //                     [
+  //                       { $eq: ['$id', '$$trackingSiteId'] },
+  //                     ],
+  //                 },
+  //               },
+  //             },
+  //             {
+  //               $project: {
+  //                 city: 1,
+  //                 name: 1,
+  //               },
+  //             },
+  //           ],
+  //         },
+  //       },
+  //       {
+  //         $unwind: {
+  //           path: '$manifestTrackingSite',
+  //           preserveNullAndEmptyArrays: true,
+  //         },
+  //       },
+
+  //       {
+  //         $lookup: {
+  //           from: 'tracking_site',
+  //           as: 'lastValidTrackingSite',
+  //           let: { trackingSiteId: '$lastValidTrackingSiteId' },
+  //           pipeline: [
+  //             {
+  //               $match:
+  //               {
+  //                 $expr:
+  //                 {
+  //                   $and: siteFilter,
+  //                 },
+  //               },
+  //             },
+  //             {
+  //               $project: {
+  //                 city: 1,
+  //                 name: 1,
+  //               },
+  //             },
+  //           ],
+  //         },
+  //       },
+  //       {
+  //         $unwind: {
+  //           path: '$lastValidTrackingSite',
+  //           preserveNullAndEmptyArrays: allowNullSite,
+  //         },
+  //       },
+
+  //       { $skip: skip },
+  //       { $limit: limit },
+
+  //       {
+  //         $project: {
+  //           partnerName: 1,
+  //           awbNumber: 1,
+  //           awbDate: '$transactionDate',
+  //           parcelContent: 1,
+  //           prtParcelValue: '$pr.parcelValue',
+  //           prtCustPackageId: '$pr.custPackageId',
+  //           transactionStatusId: '$td.transactionStatusId',
+  //           layanan: '$stt.layanan',
+  //           penerima: '$stt.penerima',
+  //           codNilai: '$stt.codNilai',
+  //           lastValidTrackingDateTime: 1,
+  //           lastValidTrackingType: 1,
+  //           tujuanKecamatan: '$stt.destination.subdistrict',
+  //           prtDestinationCode: '$stt.tujuan',
+  //           manifestTrackingSiteName: '$manifestTrackingSite.name',
+  //           lastValidTrackingSiteName: '$lastValidTrackingSite.name',
+  //           receiverRemark: 1,
+  //         },
+  //       },
+  //     ]);
+
+  //   console.log(query);
+  //   const datas = await query.toArray();
+
+  //   for (const d of datas) {
+  //     d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId), 'status_title') || '-';
+  //   }
+
+  //   console.log(datas);
+
+  //   arrDatas.push(...datas);
+  //   return datas;
+  // }
+
+  // static async timeResponse(key, promise) {
+  //   const startMoment = moment.utc();
+  //   const response = await promise;
+  //   const endMoment = moment.utc();
+  //   const duration = endMoment.diff(startMoment);
+
+  //   try {
+  //     const collection = await MongoDbConfig.getDbSicepatCod('time_log_cod');
+  //     await collection.insertOne({
+  //       key: key,
+  //       startTime: startMoment.toDate(),
+  //       endTime: endMoment.toDate(),
+  //       duration: duration
+  //     });
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+
+  //   return {
+  //     data: response,
+  //     duration: duration
+  //   }
+  // }
+
+  // static async printNonCodSupplierInvoice(filters, uuid: string = '') {
+  //   // TODO: query get data
+  //   // step 1 : query get data by filter
+  //   // prepare generate csv
+  //   // ??upload file csv to aws s3
+  //   // retrun ffile/ link downlod
+  //   console.log(uuid, "uuid")
+  //   const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod('transaction_detail');
+  //   const dbAwb = await MongoDbConfig.getDbSicepatCod('spartan_awb_summary');
+  //   let result: any;
+
+  //   try {
+  //     const transactionStatuses = await RawQueryService.query(
+  //       `SELECT transaction_status_id, status_title FROM transaction_status ts`,
+  //     );
+
+  //     for (const transactionStatus of transactionStatuses) {
+  //       transactionStatus.transaction_status_id = parseInt(`${transactionStatus.transaction_status_id}`, 10);
+  //     }
+
+  //     // prepare csv file
+  //     const limit = 30000;
+  //     const csvConfig = await this.getCSVConfig(false);
+  //     const csvWriter = require('csv-write-stream');
+  //     const writer = csvWriter(csvConfig.config);
+  //     writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
+  //     try {
+  //       let pageNumber = 1;
+  //       let datas = [];
+  //       let finish = false;
+  //       while (!finish) {
+  //         // const promises = [];
+  //         // let counter = 0;
+  //         // let maxCount = 0;
+  //         // while (counter < 10) {
+  //         //   const pn = pageNumber;
+  //         //   const prom = this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pn);
+  //         //   promises.push(prom);
+  //         //   counter++;
+  //         //   pageNumber++;
+  //         //   maxCount += limit;
+  //         // }
+
+  //         // await Promise.all(promises);
+  //         // if (!datas || datas.length < maxCount) {
+  //         //   finish = true;
+  //         // }
+
+  //         const rawResponseData = await this.timeResponse('time_log_cod_read', this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
+  //         const responseDatas = rawResponseData.data;
+
+  //         await this.timeResponse('time_log_cod_write_csv', this.populateDataAwbCsv(writer, responseDatas));
+
+  //         pageNumber++;
+
+  //         if (!responseDatas || responseDatas.length < limit) {
+  //           finish = true;
+  //         }
+
+  //         // datas = [];
+
+  //         // const responseDatas = await this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
+  //         // if (!responseDatas || responseDatas.length < limit) {
+  //         //   finish = true;
+  //         // }
+
+  //         // await this.populateDataAwbCsv(writer, responseDatas);
+  //         // pageNumber++;
+  //       }
+  //     } finally {
+  //       writer.end();
+  //     }
+
+  //     let url = '';
+  //     const awsKey = `reports/cod/${csvConfig.fileName}`;
+  //     const storagePath = await AwsS3Service.uploadFromFilePath(
+  //       csvConfig.filePath,
+  //       awsKey,
+  //     );
+
+  //     if (storagePath) {
+  //       url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
+  //       this.deleteFile(csvConfig.filePath);
+
+  //       console.log(url, 'url final');
+  //     }
+
+  //     console.log(uuid, uuid.toString() !== '', "uuid")
+  //     if (uuid.toString() !== '') {
+  //       console.log("inside uuid");
+  //       const payload = {
+  //         status: 'OK',
+  //         url,
+  //       };
+  //       await RedisService.setex(
+  //         uuid,
+  //         JSON.stringify(payload),
+  //         this.expireOnSeconds
+  //       );
+  //     }
+
+  //     return { status: 'OK', url };
+  //   } catch (err) {
+  //     console.log(err);
+  //     throw err;
+  //   }
+  // }
+
   static async getNonCodSupplierInvoiceData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
     const spartanFilter: any = [{ isCod: true }];
     const siteFilter: any = [{ $eq: ['$id', '$$trackingSiteId'] }];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
-    let allowNullSite = true;
     let allowNullTd = true;
 
     for (const filter of filters) {
@@ -297,14 +708,13 @@ export class V1WebReportCodService {
         spartanFilter.push({ lastValidTrackingType: { $eq: fv } });
       }
 
+      if (filter.field == 'branchLast' && filter.value) {
+        spartanFilter.push({ $eq: ['$lastValidTrackingSiteCode', filter.value] });
+      }
+
       if (filter.field == 'supplier' && filter.value) {
         const regex = new RegExp(`^${filter.value.toLowerCase()}`, 'i');
         spartanFilter.push({ partnerName: regex });
-      }
-
-      if (filter.field == 'branchLast' && filter.value) {
-        siteFilter.push({ $eq: ['$siteCode', filter.value] });
-        allowNullSite = false;
       }
 
       if (filter.field == 'transactionStatus' && filter.value) {
@@ -332,87 +742,6 @@ export class V1WebReportCodService {
         {
           $match: {
             $and: spartanFilter,
-          },
-        },
-
-        {
-          $lookup: {
-            from: 'stt',
-            as: 'stt',
-            let: { awbNumber: '$awbNumber' },
-            pipeline: [
-              {
-                // on inner join
-                $match:
-                {
-                  $expr:
-                  {
-                    $and: [{ $eq: ['$nostt', '$$awbNumber'] }],
-                  },
-                },
-              },
-              {
-                $lookup: {
-                  from: 'destination',
-                  as: 'destination',
-                  let: { code: '$tujuan' },
-                  pipeline: [
-                    {
-                      $match:
-                      {
-                        $expr:
-                        {
-                          $and: [{ $eq: ['$code', '$$code'] }],
-                        },
-                      },
-                    },
-                    {
-                      $project: {
-                        subdistrict: 1,
-                      },
-                    },
-                  ],
-                },
-              },
-              {
-                $unwind: {
-                  path: '$destination',
-                  preserveNullAndEmptyArrays: true,
-                },
-              },
-            ],
-          },
-        },
-        {
-          $unwind: {
-            path: '$stt',
-            preserveNullAndEmptyArrays: true,
-          },
-        },
-
-        {
-          $lookup: {
-            from: 'partner_request',
-            as: 'pr',
-            let: { awbNumber: '$awbNumber' },
-            pipeline: [
-              {
-                // on inner join
-                $match:
-                {
-                  $expr:
-                  {
-                    $and: [{ $eq: ['$awbNumber', '$$awbNumber'] }],
-                  },
-                },
-              },
-            ],
-          },
-        },
-        {
-          $unwind: {
-            path: '$pr',
-            preserveNullAndEmptyArrays: true,
           },
         },
 
@@ -448,71 +777,6 @@ export class V1WebReportCodService {
           },
         },
 
-        {
-          $lookup: {
-            from: 'tracking_site',
-            as: 'manifestTrackingSite',
-            let: { trackingSiteId: '$manifestTrackingSiteId' },
-            pipeline: [
-              {
-                $match:
-                {
-                  $expr:
-                  {
-                    $and:
-                      [
-                        { $eq: ['$id', '$$trackingSiteId'] },
-                      ],
-                  },
-                },
-              },
-              {
-                $project: {
-                  city: 1,
-                  name: 1,
-                },
-              },
-            ],
-          },
-        },
-        {
-          $unwind: {
-            path: '$manifestTrackingSite',
-            preserveNullAndEmptyArrays: true,
-          },
-        },
-
-        {
-          $lookup: {
-            from: 'tracking_site',
-            as: 'lastValidTrackingSite',
-            let: { trackingSiteId: '$lastValidTrackingSiteId' },
-            pipeline: [
-              {
-                $match:
-                {
-                  $expr:
-                  {
-                    $and: siteFilter,
-                  },
-                },
-              },
-              {
-                $project: {
-                  city: 1,
-                  name: 1,
-                },
-              },
-            ],
-          },
-        },
-        {
-          $unwind: {
-            path: '$lastValidTrackingSite',
-            preserveNullAndEmptyArrays: allowNullSite,
-          },
-        },
-
         { $skip: skip },
         { $limit: limit },
 
@@ -520,20 +784,20 @@ export class V1WebReportCodService {
           $project: {
             partnerName: 1,
             awbNumber: 1,
-            awbDate: '$transactionDate',
-            parcelContent: 1,
-            prtParcelValue: '$pr.parcelValue',
-            prtCustPackageId: '$pr.custPackageId',
+            awbDate: 1,
+            parcelContent: '$prtParcelContent',
+            prtParcelValue: '$prtParcelValue',
+            prtCustPackageId: '$prtCustPackageId',
             transactionStatusId: '$td.transactionStatusId',
-            layanan: '$stt.layanan',
-            penerima: '$stt.penerima',
-            codNilai: '$stt.codNilai',
+            layanan: 1,
+            penerima: 1,
+            codNilai: 1,
             lastValidTrackingDateTime: 1,
             lastValidTrackingType: 1,
-            tujuanKecamatan: '$stt.destination.subdistrict',
-            prtDestinationCode: '$stt.tujuan',
-            manifestTrackingSiteName: '$manifestTrackingSite.name',
-            lastValidTrackingSiteName: '$lastValidTrackingSite.name',
+            tujuanKecamatan: 1,
+            prtDestinationCode: '$tujuan',
+            manifestTrackingSiteName: '$manifestTrackingSiteName',
+            lastValidTrackingSiteName: '$lastValidTrackingSiteName',
             receiverRemark: 1,
           },
         },
@@ -559,22 +823,22 @@ export class V1WebReportCodService {
     const duration = endMoment.diff(startMoment);
 
     try {
-        const collection = await MongoDbConfig.getDbSicepatCod('time_log_cod');        
-        await collection.insertOne({
-            key: key,
-            startTime: startMoment.toDate(),
-            endTime: endMoment.toDate(),
-            duration: duration
-        });
+      const collection = await MongoDbConfig.getDbSicepatCod('time_log_cod');
+      await collection.insertOne({
+        key: key,
+        startTime: startMoment.toDate(),
+        endTime: endMoment.toDate(),
+        duration: duration
+      });
     } catch (error) {
-        console.log(error);
+      console.log(error);
     }
 
     return {
-        data: response,
-        duration: duration
+      data: response,
+      duration: duration
     }
-}
+  }
 
   static async printNonCodSupplierInvoice(filters, uuid: string = '') {
     // TODO: query get data
@@ -582,9 +846,9 @@ export class V1WebReportCodService {
     // prepare generate csv
     // ??upload file csv to aws s3
     // retrun ffile/ link downlod
-
+    console.log(uuid, "uuid")
     const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod('transaction_detail');
-    const dbAwb = await MongoDbConfig.getDbSicepatCod('spartan_awb_summary');
+    const dbAwb = await MongoDbConfig.getDbSicepatCod('cod_awb');
     let result: any;
 
     try {
@@ -597,7 +861,7 @@ export class V1WebReportCodService {
       }
 
       // prepare csv file
-      const limit = 30000;
+      const limit = 10000;
       const csvConfig = await this.getCSVConfig(false);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
@@ -627,9 +891,24 @@ export class V1WebReportCodService {
           const rawResponseData = await this.timeResponse('time_log_cod_read', this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
           const responseDatas = rawResponseData.data;
 
+          console.log(responseDatas.length, "response datas")
+          if (responseDatas.length <= 0) {
+
+            const payload = {
+              status: 'Error',
+              Message: "Tidak ada data yang di ambil"
+            };
+
+            await RedisService.setex(
+              uuid,
+              JSON.stringify(payload),
+              this.expireOnSeconds)
+            return;
+          }
+
           await this.timeResponse('time_log_cod_write_csv', this.populateDataAwbCsv(writer, responseDatas));
 
-          pageNumber++;                    
+          pageNumber++;
 
           if (!responseDatas || responseDatas.length < limit) {
             finish = true;
@@ -646,7 +925,9 @@ export class V1WebReportCodService {
           // pageNumber++;
         }
       } finally {
-        writer.end();
+        await writer.on('finish', () => {
+          writer.end();
+        });
       }
 
       let url = '';
@@ -663,7 +944,9 @@ export class V1WebReportCodService {
         console.log(url, 'url final');
       }
 
-      if (uuid != '') {
+      console.log(uuid, uuid.toString() !== '', "uuid")
+      if (uuid.toString() !== '') {
+        console.log("inside uuid");
         const payload = {
           status: 'OK',
           url,
@@ -671,7 +954,7 @@ export class V1WebReportCodService {
         await RedisService.setex(
           uuid,
           JSON.stringify(payload),
-          this.expireOnSeconds,
+          this.expireOnSeconds
         );
       }
 
@@ -783,7 +1066,7 @@ export class V1WebReportCodService {
 
     try {
       // prepare csv file
-      const limit = 3000;
+      const limit = 10000;
       const csvConfig = await this.getCSVConfig(true);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
@@ -794,20 +1077,34 @@ export class V1WebReportCodService {
         let finish = false;
         while (!finish) {
 
-          while (!finish) {
-            const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber);
+          const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber);
 
-            console.log(!responseDatas, limit, finish, responseDatas.length < limit, 'response data length');
-            if (responseDatas.length < limit) {
-              finish = true;
-            }
-            await this.populateDataCsv(writer, responseDatas, true);
+          console.log(!responseDatas, limit, finish, responseDatas.length < limit, 'response data length');
 
-            pageNumber++;
+          if (responseDatas.length <= 0) {
+
+            const payload = {
+              status: 'Error',
+              Message: "Tidak ada data yang di ambil"
+            };
+
+            await RedisService.setex(
+              uuid,
+              JSON.stringify(payload),
+              this.expireOnSeconds)
+            return;
           }
+
+          if (responseDatas.length < limit) {
+            finish = true;
+          }
+          await this.populateDataCsv(writer, responseDatas, true);
+          pageNumber++;
         }
       } finally {
-        writer.end();
+        await writer.on('finish', () => {
+          writer.end();
+        });
       }
 
       let url = '';
@@ -823,8 +1120,9 @@ export class V1WebReportCodService {
 
         console.log(url, 'url final');
       }
-
-      if (uuid != '') {
+      console.log(uuid)
+      if (uuid.toString() != '') {
+        console.log(uuid, "inside uuid")
         const payload = {
           status: 'OK',
           url,
@@ -832,7 +1130,7 @@ export class V1WebReportCodService {
         await RedisService.setex(
           uuid,
           JSON.stringify(payload),
-          this.expireOnSeconds,
+          this.expireOnSeconds
         );
       }
 
