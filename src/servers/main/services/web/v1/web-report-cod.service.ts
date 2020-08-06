@@ -552,6 +552,30 @@ export class V1WebReportCodService {
     return datas;
   }
 
+  static async timeResponse(key, promise) {
+    const startMoment = moment.utc();
+    const response = await promise;
+    const endMoment = moment.utc();
+    const duration = endMoment.diff(startMoment);
+
+    try {
+        const collection = await MongoDbConfig.getDbSicepatCod('time_log_cod');        
+        await collection.insertOne({
+            key: key,
+            startTime: startMoment.toDate(),
+            endTime: endMoment.toDate(),
+            duration: duration
+        });
+    } catch (error) {
+        console.log(error);
+    }
+
+    return {
+        data: response,
+        duration: duration
+    }
+}
+
   static async printNonCodSupplierInvoice(filters, uuid: string = '') {
     // TODO: query get data
     // step 1 : query get data by filter
@@ -600,8 +624,10 @@ export class V1WebReportCodService {
           //   finish = true;
           // }
 
-          const responseDatas = await this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber);
-          await this.populateDataAwbCsv(writer, responseDatas);
+          const rawResponseData = await this.timeResponse('time_log_cod_read', this.getNonCodSupplierInvoiceData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
+          const responseDatas = rawResponseData.data;
+
+          await this.timeResponse('time_log_cod_write_csv', this.populateDataAwbCsv(writer, responseDatas));
 
           pageNumber++;                    
 
