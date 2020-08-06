@@ -18,13 +18,15 @@ import uuid = require('uuid');
 export class V1WebReportCodService {
   static expireOnSeconds = 300; // 5 minute
 
-  static async addQueueBullPrint(filters, cod = true, awbFilter = null) {
+
+  static async addQueueBullPrint(filters, noncodfee) {
     const uuidv1 = require('uuid/v1');
     const uuidString = uuidv1();
     const reportKey = `reportKeyCOD:${uuidString}`;
 
     // send to background process generate report
-    CodExportMongoQueueService.perform(filters, cod, awbFilter, reportKey);
+    console.log(filters, noncodfee, "non code fee")
+    CodExportMongoQueueService.perform(filters, noncodfee, uuidString);
 
     const result = {
       reportKey,
@@ -559,22 +561,22 @@ export class V1WebReportCodService {
     const duration = endMoment.diff(startMoment);
 
     try {
-        const collection = await MongoDbConfig.getDbSicepatCod('time_log_cod');        
-        await collection.insertOne({
-            key: key,
-            startTime: startMoment.toDate(),
-            endTime: endMoment.toDate(),
-            duration: duration
-        });
+      const collection = await MongoDbConfig.getDbSicepatCod('time_log_cod');
+      await collection.insertOne({
+        key: key,
+        startTime: startMoment.toDate(),
+        endTime: endMoment.toDate(),
+        duration: duration
+      });
     } catch (error) {
-        console.log(error);
+      console.log(error);
     }
 
     return {
-        data: response,
-        duration: duration
+      data: response,
+      duration: duration
     }
-}
+  }
 
   static async printNonCodSupplierInvoice(filters, uuid: string = '') {
     // TODO: query get data
@@ -582,7 +584,7 @@ export class V1WebReportCodService {
     // prepare generate csv
     // ??upload file csv to aws s3
     // retrun ffile/ link downlod
-
+    console.log(uuid, "uuid")
     const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod('transaction_detail');
     const dbAwb = await MongoDbConfig.getDbSicepatCod('spartan_awb_summary');
     let result: any;
@@ -629,7 +631,7 @@ export class V1WebReportCodService {
 
           await this.timeResponse('time_log_cod_write_csv', this.populateDataAwbCsv(writer, responseDatas));
 
-          pageNumber++;                    
+          pageNumber++;
 
           if (!responseDatas || responseDatas.length < limit) {
             finish = true;
@@ -668,10 +670,9 @@ export class V1WebReportCodService {
           status: 'OK',
           url,
         };
-        await RedisService.setex(
+        await RedisService.set(
           uuid,
-          JSON.stringify(payload),
-          this.expireOnSeconds,
+          JSON.stringify(payload)
         );
       }
 
@@ -823,16 +824,15 @@ export class V1WebReportCodService {
 
         console.log(url, 'url final');
       }
-
+      console.log(uuid)
       if (uuid != '') {
         const payload = {
           status: 'OK',
           url,
         };
-        await RedisService.setex(
+        await RedisService.set(
           uuid,
-          JSON.stringify(payload),
-          this.expireOnSeconds,
+          JSON.stringify(payload)
         );
       }
 
