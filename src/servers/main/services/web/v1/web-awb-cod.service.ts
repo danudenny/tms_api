@@ -222,7 +222,7 @@ export class V1WebAwbCodService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
-    let totalCodValue = 0;
+    const totalCodValue = 0;
     let totalAwbCash = 0;
     let totalAwbCashless = 0;
     const dataError = [];
@@ -261,11 +261,11 @@ export class V1WebAwbCodService {
 
       for (const item of payload.dataCash) {
         // handle race condition
-        const redlock = await RedisService.redlock(`redlock:transaction:${item.awbNumber}`);
+        const redlock = await RedisService.redlock(`redlock:transaction:${item.awbNumber}`, 10);
         if (redlock) {
           const awbValid = await this.validStatusAwb(item.awbItemId);
           if (awbValid) {
-            totalCodValue += Number(item.codValue);
+            // totalCodValue += Number(item.codValue);
             totalCodValueCash += Number(item.codValue);
             totalAwbCash += 1;
 
@@ -305,7 +305,7 @@ export class V1WebAwbCodService {
             codTransactionId: codBranchCash.codTransactionId,
           },
           {
-            totalCodValue,
+            totalCodValue: totalCodValueCash,
             totalAwb: totalAwbCash,
             transactionStatusId: 31000,
           },
@@ -341,11 +341,11 @@ export class V1WebAwbCodService {
 
       for (const item of payload.dataCashless) {
         // handle race condition
-        const redlock = await RedisService.redlock(`redlock:transaction:${item.awbNumber}`);
+        const redlock = await RedisService.redlock(`redlock:transaction:${item.awbNumber}`, 10);
         if (redlock) {
           const awbValid = await this.validStatusAwb(item.awbItemId);
           if (awbValid) {
-            totalCodValue += Number(item.codValue);
+            // totalCodValue += Number(item.codValue);
             totalCodValueCashless += Number(item.codValue);
             totalAwbCashless += 1;
 
@@ -385,7 +385,7 @@ export class V1WebAwbCodService {
             codTransactionId: codBranchCashless.codTransactionId,
           },
           {
-            totalCodValue,
+            totalCodValue: totalCodValueCashless,
             totalAwb: totalAwbCashless,
             transactionStatusId: 35000,
           },
