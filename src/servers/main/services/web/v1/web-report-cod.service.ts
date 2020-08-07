@@ -713,8 +713,7 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'supplier' && filter.value) {
-        const regex = new RegExp(`^${filter.value.toLowerCase()}`, 'i');
-        spartanFilter.push({ partnerName: regex });
+        spartanFilter.push({ partnerId: filter.value });
       }
 
       if (filter.field == 'transactionStatus' && filter.value) {
