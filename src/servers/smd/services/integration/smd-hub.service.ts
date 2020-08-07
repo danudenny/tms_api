@@ -644,7 +644,8 @@ export class SmdHubService {
       t1.created_time,
       t5.branch_name,
       t6.branch_name,
-      t2.total_weight
+      t2.total_weight,
+      t2.total_item
     `);
 
     const data = await q.exec();
