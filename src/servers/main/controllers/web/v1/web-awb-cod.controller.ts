@@ -32,6 +32,7 @@ import {
   V1WebCodSupplierInvoiceService,
 } from '../../../services/web/v1/web-cod-supplier-invoice.service';
 import { V1WebReportCodService } from '../../../services/web/v1/web-report-cod.service';
+import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sql-cod.service';
 
 // #endregion import
 
@@ -264,6 +265,7 @@ export class V1WebAwbCodController {
   }
   // #endregion SUPPLIER INVOICE
 
+  // #region report COD
   @Get('supplierInvoice/export/:supplierInvoiceId')
   @UseGuards(AuthenticatedGuard)
   @ResponseSerializerOptions({ disable: true })
@@ -271,6 +273,7 @@ export class V1WebAwbCodController {
     @Param('supplierInvoiceId') supplierInvoiceId: string,
   ) {
     return V1WebReportCodService.exportSupplierInvoice(supplierInvoiceId);
+    // return V1WebReportSqlCodService.exportSupplierInvoice(supplierInvoiceId);
   }
 
   @Post('supplierInvoice/print')
@@ -287,10 +290,6 @@ export class V1WebAwbCodController {
   public async supplierInvoiceNonCodFeePrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-    // const filterListAwb = V1WebReportCodService.filterListAwb(payload.filters);
-
-    // const filterList = V1WebReportCodService.filterList(payload.filters);
-
     return await V1WebReportCodService.printNonCodSupplierInvoice(payload.filters);
   }
 
@@ -300,9 +299,7 @@ export class V1WebAwbCodController {
   public async supplierInvoiceBullPrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-    // const filterList = V1WebReportCodService.filterList(payload.filters);
-
-    return await V1WebReportCodService.addQueueBullPrint(payload.filters, "codfee");
+    return await V1WebReportCodService.addQueueBullPrint(payload.filters, 'codfee');
   }
 
   @Post('supplierInvoice/noncodfee/bull/print')
@@ -311,12 +308,7 @@ export class V1WebAwbCodController {
   public async supplierInvoiceBullNonCodFeePrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-
-    // const filterListAwb = V1WebReportCodService.filterListAwb(payload.filters);
-
-    // const filterList = V1WebReportCodService.filterList(payload.filters);
-
-    return await V1WebReportCodService.addQueueBullPrint(payload.filters, "noncodfee");
+    return await V1WebReportCodService.addQueueBullPrint(payload.filters, 'noncodfee');
   }
 
   @Get('supplierInvoice/checkReport/:reportKey')
@@ -327,6 +319,8 @@ export class V1WebAwbCodController {
   ) {
     return await V1WebReportCodService.getuuidString(reportKey);
   }
+
+  // #endregion report COD
 
   // @Get('transaction/sync')
   // @ResponseSerializerOptions({ disable: true })

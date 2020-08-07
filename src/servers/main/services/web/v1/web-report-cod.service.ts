@@ -1611,7 +1611,7 @@ export class V1WebReportCodService {
         this.deleteFile(csvConfig.filePath);
       }
 
-      return { status: 'OK', url };
+      return { status: 'ok', url };
 
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
