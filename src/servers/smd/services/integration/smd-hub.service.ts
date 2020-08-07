@@ -578,6 +578,7 @@ export class SmdHubService {
     payload.fieldResolverMap['representativeFrom'] = 't7.representative_code';
     payload.fieldResolverMap['representativeCode'] = 't7.representative_code';
     payload.fieldResolverMap['baggingCode'] = 't2.bagging_code';
+    payload.fieldResolverMap['totalAwb'] = 't2.total_item';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
       payload.sortBy = 'branchName';
