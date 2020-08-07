@@ -453,7 +453,12 @@ export class SmdHubService {
   ): Promise<WebScanInHubBagRepresentativeSortListResponseVm> {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 'e.created_time';
+    payload.fieldResolverMap['dropoffHubBagRepresentativeId'] = 'e.dropoff_hub_bag_representative_id';
     payload.fieldResolverMap['branchIdScan'] = 'b.branch_id';
+    payload.fieldResolverMap['branchNameScan'] = 'b.branch_name';
+    payload.fieldResolverMap['branchNameFrom'] = 'b2.branch_name';
+    payload.fieldResolverMap['totalAwb'] = 'br.total_item';
+    payload.fieldResolverMap['weight'] = 'br.total_weight';
     payload.fieldResolverMap['branchIdFrom'] = 'b2.branch_id';
     payload.fieldResolverMap['representativeFrom'] = 'r.representative_code';
     payload.fieldResolverMap['bagRepresentativeCode'] = 'br.bag_representative_code';
@@ -525,7 +530,9 @@ export class SmdHubService {
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     payload.fieldResolverMap['dropOffHubBagRepresentativeId'] = 't1.dropoff_hub_bag_representative_id';
-
+    payload.fieldResolverMap['consigneeName'] = 't3.consignee_name';
+    payload.fieldResolverMap['consigneeAddress'] = 't3.consignee_address';
+    payload.fieldResolverMap['districtName'] = 't4.district_name';
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
@@ -655,7 +662,9 @@ export class SmdHubService {
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     payload.fieldResolverMap['dropOffHubBaggingId'] = 't1.dropoff_hub_bagging_id';
-
+    payload.fieldResolverMap['consigneeName'] = 't3.consignee_name';
+    payload.fieldResolverMap['consigneeAddress'] = 't3.consignee_address';
+    payload.fieldResolverMap['districtName'] = 't4.district_name';
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
