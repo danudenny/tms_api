@@ -454,13 +454,6 @@ export class SmdHubService {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 'e.created_time';
     payload.fieldResolverMap['branchIdScan'] = 'b.branch_id';
-    payload.fieldResolverMap['branchScanName'] = 'b.branch_name';
-    payload.fieldResolverMap['branchNameScan'] = 'b.branch_name';
-    payload.fieldResolverMap['branchFromName'] = 'b2.branch_name';
-    payload.fieldResolverMap['branchNameFrom'] = 'b2.branch_name';
-    payload.fieldResolverMap['totalAwb'] = 'br.total_item';
-    payload.fieldResolverMap['weight'] = 'br.total_weight';
-    payload.fieldResolverMap['dropoffHubBagRepresentativeId'] = 'e.dropoff_hub_bag_representative_id';
     payload.fieldResolverMap['branchIdFrom'] = 'b2.branch_id';
     payload.fieldResolverMap['representativeFrom'] = 'r.representative_code';
     payload.fieldResolverMap['bagRepresentativeCode'] = 'br.bag_representative_code';
@@ -579,19 +572,16 @@ export class SmdHubService {
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
-    payload.fieldResolverMap['branchScanName'] = 't6.branch_name';
-    payload.fieldResolverMap['branchNameScan'] = 't6.branch_name';
-    payload.fieldResolverMap['branchNameFrom'] = 't2.branch_name';
-    payload.fieldResolverMap['branchFromName'] = 't2.branch_name';
-    payload.fieldResolverMap['totalAwb'] = 't2.total_item';
-    payload.fieldResolverMap['weight'] = 't2.total_weight';
-    payload.fieldResolverMap['dropoffHubBaggingId'] = 't1.dropoff_hub_bagging_id';
     payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
+    payload.fieldResolverMap['branchScanName'] = 't6.branch_name';
     payload.fieldResolverMap['representativeFrom'] = 't7.representative_code';
     payload.fieldResolverMap['representativeCode'] = 't7.representative_code';
     payload.fieldResolverMap['baggingCode'] = 't2.bagging_code';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
+      payload.sortBy = 'branchName';
+      payload.sortBy = 'branchScanName';
     }
 
     // mapping search field and operator default ilike
@@ -615,7 +605,7 @@ export class SmdHubService {
       ['t1.dropoff_hub_bagging_id', 'dropoffHubBaggingId'],
       ['t5.branch_name', 'branchName'],
       ['t6.branch_name', 'branchScanName'],
-      ['t2.total_item', 'totalAwb'],
+      ['COUNT (t4.*)', 'totalAwb'],
       [`CONCAT(t2.total_weight,' Kg')`, 'weight'],
     );
 
@@ -644,8 +634,7 @@ export class SmdHubService {
       t1.created_time,
       t5.branch_name,
       t6.branch_name,
-      t2.total_weight,
-      t2.total_item
+      t2.total_weight
     `);
 
     const data = await q.exec();
