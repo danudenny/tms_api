@@ -605,7 +605,7 @@ export class SmdHubService {
       ['t1.dropoff_hub_bagging_id', 'dropoffHubBaggingId'],
       ['t5.branch_name', 'branchName'],
       ['t6.branch_name', 'branchScanName'],
-      ['COUNT (t4.*)', 'totalAwb'],
+      ['t2.total_item', 'totalAwb'],
       [`CONCAT(t2.total_weight,' Kg')`, 'weight'],
     );
 
@@ -634,7 +634,8 @@ export class SmdHubService {
       t1.created_time,
       t5.branch_name,
       t6.branch_name,
-      t2.total_weight
+      t2.total_weight,
+      t2.total_item
     `);
 
     const data = await q.exec();
