@@ -90,7 +90,7 @@ export class BagScanInBranchSmdQueueService {
               awbHistory.branchId = data.branchId.toString();
               awbHistory.refAwbNumber = awbItemAttr.awbNumber;
               awbHistory.historyDate = moment().toDate();
-              awbHistory.awbStatusId = AWB_STATUS.DO_SORTIR;
+              awbHistory.awbStatusId = AWB_STATUS.DO_HUB;
               awbHistory.userId = data.userId;
               awbHistory.noteInternal = noteInternal;
               awbHistory.notePublic = null;
