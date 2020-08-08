@@ -77,28 +77,29 @@ export class BagScanInBranchSmdQueueService {
         const noteInternal = `Paket masuk ke ${cityName} [${branchName}]`;
         for (const itemAwb of bagItemsAwb) {
           if (itemAwb.awbItemId) {
-            // const awbItemAttr = await AwbItemAttr.findOne({
-            //   where: {
-            //     awbItemId: itemAwb.awbItemId,
-            //     isDeleted: false,
-            //   },
-            // });
-            // console.log(awbItemAttr);
-            // if (awbItemAttr) {
-            //   const awbHistory = AwbHistory.create();
-            //   awbHistory.awbItemId = itemAwb.awbItemId;
-            //   awbHistory.branchId = data.branchId.toString();
-            //   awbHistory.refAwbNumber = awbItemAttr.awbNumber;
-            //   awbHistory.historyDate = moment().toDate();
-            //   awbHistory.awbStatusId = AWB_STATUS.DO_HUB;
-            //   awbHistory.userId = data.userId;
-            //   awbHistory.noteInternal = noteInternal;
-            //   awbHistory.userIdCreated = Number(data.userId);
-            //   awbHistory.createdTime = moment().toDate();
-            //   awbHistory.userIdUpdated = Number(data.userId);
-            //   awbHistory.updatedTime = moment().toDate();
-            //   await AwbHistory.insert(awbHistory);
-            // }
+            const awbItemAttr = await AwbItemAttr.findOne({
+              where: {
+                awbItemId: itemAwb.awbItemId,
+                isDeleted: false,
+              },
+            });
+            console.log(awbItemAttr);
+            if (awbItemAttr) {
+              const awbHistory = AwbHistory.create();
+              awbHistory.awbItemId = itemAwb.awbItemId;
+              awbHistory.branchId = data.branchId.toString();
+              awbHistory.refAwbNumber = awbItemAttr.awbNumber;
+              awbHistory.historyDate = moment().toDate();
+              awbHistory.awbStatusId = AWB_STATUS.DO_HUB;
+              awbHistory.userId = data.userId;
+              awbHistory.noteInternal = noteInternal;
+              awbHistory.notePublic = null;
+              awbHistory.userIdCreated = Number(data.userId);
+              awbHistory.createdTime = moment().toDate();
+              awbHistory.userIdUpdated = Number(data.userId);
+              awbHistory.updatedTime = moment().toDate();
+              await AwbHistory.insert(awbHistory);
+            }
           }
         }
       } else {
