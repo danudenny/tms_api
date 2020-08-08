@@ -37,4 +37,10 @@ export class TransactionStatus extends TmsBaseEntity {
     name: 'status_name',
   })
   statusName: string;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'status_level',
+  })
+  statusLevel: number | null;
 }

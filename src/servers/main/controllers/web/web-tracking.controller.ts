@@ -17,6 +17,7 @@ import { WebTrackingService } from '../../services/web/web-tracking.service';
 @ApiUseTags('Web Tracking')
 @Controller('web/tracking')
 // @ApiBearerAuth()
+// TODO: take down this endpoint not valid
 export class WebTrackingController {
   @Post('awbNumber')
   @HttpCode(HttpStatus.OK)

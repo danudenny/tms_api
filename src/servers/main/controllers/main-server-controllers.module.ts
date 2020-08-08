@@ -29,7 +29,6 @@ import { WebDeliveryInController } from './web/web-delivery-in.controller';
 import { WebDeliveryOutController } from './web/web-delivery-out.controller';
 import { WebFirstMileController } from './web/web-first-mile.controller';
 import { WebMonitoringController } from './web/web-monitoring.controller';
-import { WebTrackingController } from './web/web-tracking.controller';
 import { ProvincesController } from './master/provinces.controller';
 import { CitiesController } from './master/cities.controller';
 import { DistrictsController } from './master/districts.controller';
@@ -52,8 +51,17 @@ import { WebHubController } from './web/web-hub.controller';
 import { V1MobileAttendanceController } from './mobile/v1/mobile-attendance.controller';
 import { V1WebTrackingController } from './web/v1/web-tracking.controller';
 import { SmsTrackingController } from './web/sms-tracking.controller';
+import { V2MobileSyncController } from './mobile/v2/mobile-sync.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
 import {DoSmdController} from './master/do-smd.controller';
+import {PaymentProviderController} from './mobile/mobile-payment-provider.controller';
+import {CodPaymentController} from './mobile/mobile-cod-payment.controller';
+import { V1CombinePackageController } from './web/v1/combine-package.controller';
+import { V1WebAwbCodController } from './web/v1/web-awb-cod.controller';
+import { V1WebAwbCodVoucherController } from './web/v1/web-awb-cod-voucher.controller';
+import { TransactionStatusController } from './master/transaction-status.controller';
+import { BankAccountController } from './master/bank-account.controller';
+import { PackageTypeController } from './master/package-type.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -88,7 +96,6 @@ import {DoSmdController} from './master/do-smd.controller';
     WebMonitoringController,
     WebAwbUpdateStatusController,
     WebAwbCountController,
-    WebTrackingController,
     WebFirstMileController,
     WebAwbReturnController,
     ProvincesController,
@@ -106,12 +113,21 @@ import {DoSmdController} from './master/do-smd.controller';
     DoReturnController,
     V1MobileInitController,
     V1MobileSyncController,
+    V2MobileSyncController,
     V1MobileAttendanceController,
     WebHubController,
     V1WebTrackingController,
     SmsTrackingController,
     RolePodManualController,
     DoSmdController,
+    PaymentProviderController,
+    CodPaymentController,
+    V1CombinePackageController,
+    V1WebAwbCodController,
+    V1WebAwbCodVoucherController,
+    TransactionStatusController,
+    BankAccountController,
+    PackageTypeController,
   ],
 })
 export class MainServerControllersModule {}

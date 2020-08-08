@@ -15,7 +15,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const request = ctx.getRequest();
     let requestErrorResponse = exception;
 
-    SentryService.trackFromExceptionAndNestHostOrContext(exception, host);
     if (request && response) {
       let status = HttpStatus.INTERNAL_SERVER_ERROR;
       if (exception instanceof HttpException) {
@@ -32,6 +31,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           exception,
           host,
         );
+        SentryService.trackFromExceptionAndNestHostOrContext(exception, host);
         PinoLoggerService.error(exception);
       } else {
         PinoLoggerService.warn(requestErrorResponse);

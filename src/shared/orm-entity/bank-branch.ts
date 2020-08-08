@@ -1,7 +1,9 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Bank } from './bank';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('bank_branch', { schema: 'public' })
-export class BankBranch extends BaseEntity {
+export class BankBranch extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
     name: 'bank_branch_id',
@@ -26,34 +28,7 @@ export class BankBranch extends BaseEntity {
   })
   address: string | null;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_created',
-  })
-  userIdCreated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'created_time',
-  })
-  createdTime: Date;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_updated',
-  })
-  userIdUpdated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'updated_time',
-  })
-  updatedTime: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
+  @ManyToOne(() => Bank)
+  @JoinColumn({ name: 'bank_id', referencedColumnName: 'bankId' })
+  bank: Bank;
 }

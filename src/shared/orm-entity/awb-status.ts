@@ -1,9 +1,8 @@
-import { BaseEntity, Column, Entity, OneToOne, JoinColumn } from 'typeorm';
-import { RolePodManualStatus } from '../orm-entity/role-pod-manual-status'
-
+import { Column, Entity } from 'typeorm';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('awb_status', { schema: 'public' })
-export class AwbStatus extends BaseEntity {
+export class AwbStatus extends TmsBaseEntity {
   @Column('integer', {
     nullable: false,
     primary: true,
@@ -43,37 +42,6 @@ export class AwbStatus extends BaseEntity {
   })
   awbDesc: string | null;
 
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_created',
-  })
-  userIdCreated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'created_time',
-  })
-  createdTime: Date;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_updated',
-  })
-  userIdUpdated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'updated_time',
-  })
-  updatedTime: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
-
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
@@ -102,4 +70,10 @@ export class AwbStatus extends BaseEntity {
   })
   isReturn: boolean | null;
 
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_cod',
+  })
+  isCod: boolean | null;
 }

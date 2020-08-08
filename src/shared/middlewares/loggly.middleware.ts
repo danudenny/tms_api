@@ -4,11 +4,12 @@ import { WinstonLogglyService } from '../services/winston-loggly.service';
 @Injectable()
 export class LogglyMiddleware implements NestMiddleware {
   use(req: any, res: any, next: () => void) {
-    const oldSend = res.send.bind(res);
-    res.send = (data) => {
-        WinstonLogglyService.info(data);
-        return oldSend(data);
-      };
+    // NOTE: disable log response data
+    // const oldSend = res.send.bind(res);
+    // res.send = (data) => {
+    //     WinstonLogglyService.info(data);
+    //     return oldSend(data);
+    //   };
     next();
   }
 }

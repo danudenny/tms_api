@@ -1,21 +1,24 @@
-import {
-  TrackingAwbPayloadVm,
-  TrackingAwbResponseVm,
-  AwbSubstituteResponseVm,
-  TrackingBagRepresentativeResponseVm,
-  TrackingBagRepresentativePayloadVm,
-} from '../../../models/tracking.vm';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import {
   ApiUseTags,
   ApiOkResponse,
   ApiBearerAuth,
+    ApiBearerAuth, ApiOkResponse, ApiUseTags,
 } from '../../../../../shared/external/nestjs-swagger';
-import { Controller, Post, HttpCode, HttpStatus, Body, UseGuards } from '@nestjs/common';
-import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
-import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
-import { PhotoDetailVm } from '../../../models/bag-order-response.vm';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { PhotoResponseVm } from '../../../models/bag-order-detail-response.vm';
+import { PhotoDetailVm } from '../../../models/bag-order-response.vm';
+import {
+    AwbSubstituteResponseVm, TrackingAwbPayloadVm, TrackingAwbResponseVm, TrackingBagPayloadVm,
+    TrackingBagResponseVm,
+    AwbPhotoDetailVm,
+    AwbPhotoResponseVm,
+    TrackingBagRepresentativeResponseVm,
+  	TrackingBagRepresentativePayloadVm,
+} from '../../../models/tracking.vm';
+import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
+import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('Web Tracking')
 @Controller('web/v1/tracking')
@@ -23,10 +26,18 @@ import { PhotoResponseVm } from '../../../models/bag-order-detail-response.vm';
 export class V1WebTrackingController {
   @Post('awbNumber')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: TrackingAwbResponseVm })
   public async awbNumber(@Body() payload: TrackingAwbPayloadVm) {
     return V1WebTrackingService.awb(payload);
+  }
+
+  @Post('bagNumber')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: TrackingBagResponseVm })
+  public async bagNumber(@Body() payload: TrackingBagPayloadVm) {
+    return V1WebTrackingService.bag(payload);
   }
 
   @Post('awbSubstitute')
@@ -45,10 +56,18 @@ export class V1WebTrackingController {
     return V1WebTrackingService.getPhotoDetail(payload);
   }
 
-  @Post('bagRepresentative')
+@Post('bagRepresentative')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: TrackingBagRepresentativeResponseVm })
   public async bagRepresentative(@Body() payload: TrackingBagRepresentativePayloadVm) {
     return V1WebTrackingService.bagRepresentative(payload);
+  }
+  
+  @Post('awbPhoto')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: AwbPhotoResponseVm })
+  public async awbPhoto(@Body() payload: AwbPhotoDetailVm) {
+    return V1WebTrackingService.awbPhotoDetail(payload);
   }
 }

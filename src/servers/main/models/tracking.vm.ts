@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 // Payload
@@ -58,6 +58,35 @@ export class AwbHistoryResponseVm {
 
   @ApiModelProperty()
   notePublic: string;
+}
+
+export class AwbTransactionHistoryResponseVm {
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty({ format: 'date-time' })
+  transactionDate: string;
+
+  @ApiModelProperty()
+  transactionStatusId: number;
+
+  @ApiModelProperty()
+  transactionStatusCode: string;
+
+  @ApiModelProperty()
+  transactionStatusTitle: string;
+
+  @ApiModelProperty()
+  branchId: number;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  employeeNameScan: string;
+
+  @ApiModelProperty()
+  employeeNikScan: string;
 }
 
 export class TrackingAwbResponseVm {
@@ -168,6 +197,9 @@ export class TrackingAwbResponseVm {
 
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];
+
+  @ApiModelProperty({ type: () => [AwbTransactionHistoryResponseVm] })
+  transactionHistory: AwbTransactionHistoryResponseVm[];
 }
 
 export class BagHistoryResponseVm {
@@ -214,6 +246,9 @@ export class TrackingBagResponseVm {
 
   @ApiModelProperty()
   branchNameNext: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
 
   @ApiModelProperty({ type: () => [BagHistoryResponseVm] })
   bagHistory: BagHistoryResponseVm[];
@@ -280,4 +315,27 @@ export class BagRepresentativeHistoryResponseVm {
 
   @ApiModelProperty({ format: 'date-time' })
   historyDate: string;
+}
+export class AwbPhotoDetailVm {
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelPropertyOptional({ example: 'photo, photoCod, signature'})
+  attachmentType: string;
+}
+
+export class AwbPhotoDetailResponseVm {
+  @ApiModelProperty()
+  url: string;
+
+  @ApiModelProperty()
+  type: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+}
+
+export class AwbPhotoResponseVm {
+  @ApiModelProperty({ type: () => [AwbPhotoDetailResponseVm] })
+  data: AwbPhotoDetailResponseVm[];
 }

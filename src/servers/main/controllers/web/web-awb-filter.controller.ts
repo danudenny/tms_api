@@ -9,8 +9,7 @@ import { WebAwbFilterScanBagVm, WebAwbFilterScanAwbVm, WebAwbFilterFinishScanVm 
 import { WebAwbFilterScanBagResponseVm, WebAwbFilterScanAwbResponseVm, WebAwbFilterFinishScanResponseVm, WebAwbFilterGetLatestResponseVm } from '../../models/web-awb-filter-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
-import { WebAwbSortirResponseVm } from '../../models/web-awb-sortir-response.vm';
-import { BaseMetaSortirPayloadVm } from '../../../../shared/models/base-filter-search.payload.vm';
+import { WebAwbSortResponseVm, WebAwbSortPayloadVm } from '../../models/web-awb-sort.vm';
 
 @ApiUseTags('Web Awb Filter')
 @Controller('web/pod/awb/filter')
@@ -67,13 +66,13 @@ export class WebAwbFilterController {
     return this.webAwbFilterService.loadScanFiltered();
   }
 
-  @Post('sortir')
+  // handle data sort awb on hub by params type
+  @Post('sortHub')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebAwbSortirResponseVm })
-  public async findAllAwbSortirList(@Body() payload: BaseMetaSortirPayloadVm) {
-    return this.webAwbFilterService.findAllAwbSortirList(payload);
+  @ApiOkResponse({ type: WebAwbSortResponseVm })
+  public async findAllAwbSortirList(@Body() payload: WebAwbSortPayloadVm) {
+    return this.webAwbFilterService.sortAwbHub(payload);
   }
-
 }
