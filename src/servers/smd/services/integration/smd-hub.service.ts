@@ -589,8 +589,6 @@ export class SmdHubService {
     payload.fieldResolverMap['dropoffHubBaggingId'] = 't2.dropoff_hub_bagging_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
-      payload.sortBy = 'branchName';
-      payload.sortBy = 'branchScanName';
     }
 
     // mapping search field and operator default ilike
@@ -624,6 +622,7 @@ export class SmdHubService {
           dhb.bagging_id,
           dhb.created_time,
           dhb.dropoff_hub_bagging_id,
+          dhb.branch_id,
           RANK () OVER (PARTITION BY bagging_id ORDER BY dropoff_hub_bagging_id DESC) AS rank
         FROM dropoff_hub_bagging dhb
       )`,
