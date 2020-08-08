@@ -93,7 +93,7 @@ export class BagScanInBranchSmdQueueService {
               awbHistory.awbStatusId = AWB_STATUS.DO_HUB;
               awbHistory.userId = data.userId;
               awbHistory.noteInternal = noteInternal;
-              awbHistory.notePublic = null;
+              awbHistory.notePublic = '-';
               awbHistory.userIdCreated = Number(data.userId);
               awbHistory.createdTime = moment().toDate();
               awbHistory.userIdUpdated = Number(data.userId);
