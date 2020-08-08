@@ -7,6 +7,8 @@ import { DoPodDetailPostMetaQueueService } from './do-pod-detail-post-meta-queue
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
 import { SharedService } from '../../../shared/services/shared.service';
 import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-meta-queue.service';
+import {AwbHistory} from '../../../shared/orm-entity/awb-history';
+import {AwbItemAttr} from '../../../shared/orm-entity/awb-item-attr';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -72,20 +74,31 @@ export class BagScanInBranchSmdQueueService {
           branchName = branch.branchName;
           cityName = branch.district ? branch.district.city.cityName : '';
         }
-
+        const noteInternal = `Paket masuk ke ${cityName} [${branchName}]`;
         for (const itemAwb of bagItemsAwb) {
           if (itemAwb.awbItemId) {
-            // NOTE: queue bull
-            DoSmdPostAwbHistoryMetaQueueService.createJobByScanInBag(
-              itemAwb.awbItemId,
-              data.branchId,
-              data.userId,
-              employeeIdDriver,
-              AWB_STATUS.DO_HUB,
-              branchName,
-              cityName,
-              data.branchIdNext,
-            );
+            const awbItemAttr = await AwbItemAttr.findOne({
+              where: {
+                awbItemId: itemAwb.awbItemId,
+                isDeleted: false,
+              },
+            });
+            console.log(awbItemAttr);
+            if (awbItemAttr) {
+              const awbHistory = AwbHistory.create();
+              awbHistory.awbItemId = itemAwb.awbItemId;
+              awbHistory.branchId = data.branchId.toString();
+              awbHistory.refAwbNumber = awbItemAttr.awbNumber;
+              awbHistory.historyDate = moment().toDate();
+              awbHistory.awbStatusId = AWB_STATUS.DO_HUB;
+              awbHistory.userId = data.userId;
+              awbHistory.noteInternal = noteInternal;
+              awbHistory.userIdCreated = Number(data.userId);
+              awbHistory.createdTime = moment().toDate();
+              awbHistory.userIdUpdated = Number(data.userId);
+              awbHistory.updatedTime = moment().toDate();
+              await AwbHistory.insert(awbHistory);
+            }
           }
         }
       } else {
