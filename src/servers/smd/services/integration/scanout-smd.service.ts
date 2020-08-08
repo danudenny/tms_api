@@ -1718,13 +1718,28 @@ export class ScanoutSmdService {
           response.data.status = 'error';
           response.data.message = `Tujuan Gabung Paket ${item_number} Tidak Cocok Dengan Surat Jalan ${assigningSMD[0].do_smd_code}`;
         } else {
+          const countDetailSmdAssigning = await RawQueryService.query(`
+            SELECT
+              COUNT(b.bag_id) AS total_bag
+            FROM do_smd_detail_item dsdi
+            INNER JOIN bag b ON b.bag_id = dsdi.bag_id AND b.is_deleted = FALSE
+            WHERE do_smd_detail_id = '${assigningSMD[0].do_smd_detail_id}' AND dsdi.is_deleted = FALSE
+          `);
 
+          const countDetailSmdUnassigning = await RawQueryService.query(`
+            SELECT
+              COUNT(b.bag_id) AS total_bag
+            FROM do_smd_detail_item dsdi
+            INNER JOIN bag b ON b.bag_id = dsdi.bag_id AND b.is_deleted = FALSE
+            WHERE do_smd_detail_id = '${unassigningSMD[0].do_smd_detail_id}' AND dsdi.is_deleted = FALSE
+          `);
           // Update Bag and SMD/DO_SMD Data
           // increase amount Assign Bag
           await DoSmdDetail.update(
             { doSmdDetailId : assigningSMD[0].do_smd_detail_id },
             {
-              totalBag: Number(assigningSMD[0].total_bag) + 1,
+              totalBag: !countDetailSmdAssigning[0].total_bag ? 1 :
+                (Number(countDetailSmdAssigning[0].total_bag) + 1),
               userIdUpdated: userId,
               updatedTime: time,
             },
@@ -1732,7 +1747,7 @@ export class ScanoutSmdService {
           await DoSmd.update(
             { doSmdId : assigningSMD[0].do_smd_id },
             {
-              totalBag: Number(assigningSMD[0].total_bag_header) + 1,
+              totalBag: (Number(assigningSMD[0].total_bag_header) + 1),
               userIdUpdated: userId,
               updatedTime: time,
             },
@@ -1742,8 +1757,8 @@ export class ScanoutSmdService {
           await DoSmdDetail.update(
             { doSmdDetailId : unassigningSMD[0].do_smd_detail_id },
             {
-              totalBag: (unassigningSMD[0].total_bag == 0) ? 0 :
-                Number(unassigningSMD[0].total_bag) - 1,
+              totalBag: !countDetailSmdUnassigning[0].total_bag ? 0 :
+                (Number(countDetailSmdUnassigning[0].total_bag) - 1),
               userIdUpdated: userId,
               updatedTime: time,
             },
@@ -1752,7 +1767,7 @@ export class ScanoutSmdService {
             { doSmdId : unassigningSMD[0].do_smd_id },
             {
               totalBag: (unassigningSMD[0].total_bag_header == 0) ? 0 :
-                Number(unassigningSMD[0].total_bag_header) - 1,
+                (Number(unassigningSMD[0].total_bag_header) - 1),
               userIdUpdated: userId,
               updatedTime: time,
             },
@@ -1899,12 +1914,21 @@ export class ScanoutSmdService {
           response.data.status = 'error';
           response.data.message = `Tujuan Bagging ${item_number} Tidak Cocok Dengan Surat Jalan ${assigningSMD[0].do_smd_code}`;
         } else {
+          const countDetailSmdAssigning = await RawQueryService.query(`
+            SELECT
+              COUNT(ba.bagging_id) AS total_bagging
+            FROM do_smd_detail_item dsdi
+            INNER JOIN bagging ba ON ba.bagging_id = dsdi.bagging_id AND ba.is_deleted = FALSE
+            WHERE do_smd_detail_id = '${assigningSMD[0].do_smd_detail_id}' AND dsdi.is_deleted = FALSE
+          `);
+
           // Update Bagging and SMD/DO_SMD Data
           // increase amount Assign Bagging
           await DoSmdDetail.update(
             { doSmdDetailId : assigningSMD[0].do_smd_detail_id },
             {
-              totalBagging: Number(assigningSMD[0].total_bagging) + 1,
+              totalBagging: !countDetailSmdAssigning[0].total_bagging ? 1 :
+                (Number(countDetailSmdAssigning[0].total_bagging) + 1),
               userIdUpdated: userId,
               updatedTime: time,
             },
@@ -1912,7 +1936,7 @@ export class ScanoutSmdService {
           await DoSmd.update(
             { doSmdId : assigningSMD[0].do_smd_id },
             {
-              totalBagging: Number(assigningSMD[0].total_bagging_header) + 1,
+              totalBagging: (Number(assigningSMD[0].total_bagging_header) + 1),
               userIdUpdated: userId,
               updatedTime: time,
             },
@@ -1920,12 +1944,24 @@ export class ScanoutSmdService {
 
           // decrease amount Unassign Bagging
           // decrease amount SMD of bagging and its combine package
+          const tempId = [];
           for (const item of unassigningSMD) {
+            if (tempId.includes(item.do_smd_detail_id)) {
+              continue;
+            }
+            tempId.push(item.do_smd_detail_id); // handle duplicate
+            const countDetailSmdUnassigning = await RawQueryService.query(`
+              SELECT
+                COUNT(ba.bagging_id) AS total_bagging
+              FROM do_smd_detail_item dsdi
+              INNER JOIN bagging ba ON ba.bagging_id = dsdi.bagging_id AND ba.is_deleted = FALSE
+              WHERE do_smd_detail_id = '${item.do_smd_detail_id}' AND dsdi.is_deleted = FALSE
+            `);
             await DoSmdDetail.update(
               { doSmdDetailId : item.do_smd_detail_id },
               {
-                totalBagging: (item.total_bagging == 0) ? 0 :
-                  (Number(item.total_bagging) - 1),
+                totalBagging: !countDetailSmdUnassigning[0].total_bagging ? 0 :
+                  (Number(countDetailSmdUnassigning[0].total_bagging) - 1),
                 userIdUpdated: userId,
                 updatedTime: time,
               },
@@ -1934,7 +1970,7 @@ export class ScanoutSmdService {
               { doSmdId : item.do_smd_id },
               {
                 totalBagging: (item.total_bagging_header == 0) ? 0 :
-                  Number(item.total_bagging_header) - 1,
+                  (Number(item.total_bagging_header) - 1),
                 userIdUpdated: userId,
                 updatedTime: time,
               },
