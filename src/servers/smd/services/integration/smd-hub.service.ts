@@ -660,7 +660,7 @@ export class SmdHubService {
     payload: BaseMetaPayloadVm,
   ): Promise<SmdHubBaggingDetailResponseVm> {
     // mapping field
-    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['dropOffHubBaggingId'] = 't1.dropoff_hub_bagging_id';
     payload.fieldResolverMap['consigneeName'] = 't3.consignee_name';
     payload.fieldResolverMap['consigneeAddress'] = 't3.consignee_address';
@@ -678,15 +678,13 @@ export class SmdHubService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t2.awb_number', 'awbNumber'],
+      ['t1.dropoff_hub_bagging_id', 'dropOffHubBaggingId'],
+      ['t1.awb_number', 'awbNumber'],
       ['t3.consignee_name', 'consigneeName'],
       ['t3.consignee_address', 'consigneeAddress'],
       ['t4.district_name', 'districtName'],
     );
 
-    q.innerJoin(e => e.awbItemAttr, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
     q.innerJoin(e => e.awb, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
