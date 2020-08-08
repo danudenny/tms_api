@@ -102,7 +102,7 @@ export class DoSmdPostAwbHistoryMetaQueueService {
   ) {
     // TODO: ONLY DO_HUB
     const noteInternal = `Paket masuk ke ${cityName} [${branchName}]`;
-    const notePublic = `Paket masuk ke ${cityName} [${branchName}]`;
+    // const notePublic = `Paket masuk ke ${cityName} [${branchName}]`;
 
     // provide data
     const obj = {
@@ -116,7 +116,7 @@ export class DoSmdPostAwbHistoryMetaQueueService {
       employeeIdDriver,
       timestamp: addTime ? moment().add(addTime, 'minutes').toDate() : moment().toDate(),
       noteInternal,
-      notePublic,
+      // notePublic,
       branchIdNext,
     };
 
