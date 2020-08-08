@@ -138,6 +138,7 @@ export class BaggingSmdService {
       result.message = 'Resi gabung paket tidak ditemukan';
       return result;
     } else if (dataPackage[0].bagging_item_id) {
+      result.status = 'failed';
       result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
       return result;
     }
