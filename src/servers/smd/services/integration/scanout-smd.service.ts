@@ -1683,6 +1683,7 @@ export class ScanoutSmdService {
       LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
       WHERE
         ds.do_smd_id = '${do_smd_id}' AND
+        dsd.branch_id_to = '${unassigningSMD[0].branch_id_to}' AND
         ds.is_deleted = FALSE
       ORDER BY dsh.created_time DESC
       LIMIT 1;
@@ -1864,6 +1865,7 @@ export class ScanoutSmdService {
         LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
         WHERE
           ds.do_smd_id = '${do_smd_id}' AND
+          dsd.branch_id_to = '${unassigningSMD[0].branch_id_to}' AND
           ds.is_deleted = FALSE
         ORDER BY dsh.created_time DESC
         LIMIT 1;
