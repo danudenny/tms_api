@@ -36,6 +36,10 @@ module.exports = {
       retryDelayMs: 2 * 60 * 1000, // 2 minutes
       keepRetryInHours: 24, // keep retrying in 1 day
     },
+    doSmdDetailPostMeta: {
+      retryDelayMs: 2 * 60 * 1000, // 2 minutes
+      keepRetryInHours: 24, // keep retrying in 1 day
+    },
   },
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent
@@ -70,6 +74,7 @@ module.exports = {
   },
   korwil: {
     korwilRoleId: 38,
+    smdRoleId: 117,
     palkurRoleId: [40, 41],
   },
   masterData: {

@@ -2,6 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'ty
 
 import { TmsBaseEntity } from './tms-base';
 import { District } from './district';
+import { Representative } from './representative';
 
 @Entity('branch', { schema: 'public' })
 export class Branch extends TmsBaseEntity {
@@ -159,6 +160,10 @@ export class Branch extends TmsBaseEntity {
   @OneToOne(() => District)
   @JoinColumn({ name: 'district_id' })
   district: District;
+
+  @OneToOne(() => Representative)
+  @JoinColumn({ name: 'representative_id' })
+  representative: Representative;
 
   // TODO: mapping for join on scaninlist
   // @OneToOne(() => PodScan)

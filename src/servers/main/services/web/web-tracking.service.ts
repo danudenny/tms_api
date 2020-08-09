@@ -4,6 +4,8 @@ import {
   TrackingBagPayloadVm,
   TrackingAwbResponseVm,
   TrackingBagResponseVm,
+  TrackingBagRepresentativePayloadVm,
+  TrackingBagRepresentativeResponseVm,
 } from '../../models/tracking.vm';
 
 export class WebTrackingService {
@@ -246,4 +248,6 @@ export class WebTrackingService {
     `;
     return await RawQueryService.queryWithParams(query, { bagItemId });
   }
+
+
 }
