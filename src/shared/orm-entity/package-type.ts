@@ -2,148 +2,111 @@ import {
   BaseEntity,
   Column,
   Entity,
-  Index,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
   OneToMany,
-  OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
-  RelationId,
 } from 'typeorm';
 import { PackagePrice } from './package-price';
 import { PackagePriceSpecial } from './package-price-special';
+import { TmsBaseEntity } from './tms-base';
 
+// TODO: change name field to camel case
 @Entity('package_type', { schema: 'public' })
-export class PackageType extends BaseEntity {
+export class PackageType extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'package_type_id',
   })
-  package_type_id: string;
+  packageTypeId: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name: 'package_type_code',
   })
-  package_type_code: string;
+  packageTypeCode: string;
 
   @Column('character varying', {
     nullable: false,
     length: 255,
-
+    name: 'package_type_name',
   })
-  package_type_name: string;
+  packageTypeName: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-
+    name: 'min_weight',
   })
-  min_weight: string;
+  minWeight: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-
+    name: 'weight_rounding_const',
   })
-  weight_rounding_const: string;
+  weightRoundingConst: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-
+    name: 'weight_rounding_up_global',
   })
-  weight_rounding_up_global: string;
+  weightRoundingUpGlobal: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-
+    name: 'weight_rounding_up_detail',
   })
-  weight_rounding_up_detail: string;
+  weightRoundingUpDetail: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-
+    name: 'divider_volume',
   })
-  divider_volume: string;
+  dividerVolume: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-
+    name: 'lead_time_min_days',
   })
-  lead_time_min_days: string;
+  leadTimeMinDays: string;
 
   @Column('numeric', {
     nullable: false,
     precision: 10,
     scale: 5,
-
+    name: 'lead_time_max_days',
   })
-  lead_time_max_days: string;
-
-  @Column('bigint', {
-    nullable: false,
-
-  })
-  user_id_created: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-
-  })
-  created_time: Date;
-
-  @Column('bigint', {
-    nullable: false,
-
-  })
-  user_id_updated: string;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-
-  })
-  updated_time: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-
-  })
-  is_deleted: boolean;
+  leadTimeMaxDays: string;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-
+    name: 'weight_rounding_up_global_bool',
   })
-  weight_rounding_up_global_bool: boolean | null;
+  weightRoundingUpGlobalBool: boolean | null;
 
   @Column('boolean', {
     nullable: true,
     default: () => 'false',
-
+    name: 'weight_rounding_up_detail_bool',
   })
-  weight_rounding_up_detail_bool: boolean | null;
+  weightRoundingUpDetailBool: boolean | null;
 
-  @OneToMany(type => PackagePrice, package_price => package_price.packageType)
+  @OneToMany(() => PackagePrice, package_price => package_price.packageType)
   packagePrices: PackagePrice[];
 
   @OneToMany(
-    type => PackagePriceSpecial,
+    () => PackagePriceSpecial,
     package_price_special => package_price_special.packageType,
   )
   packagePriceSpecials: PackagePriceSpecial[];

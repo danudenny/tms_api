@@ -74,7 +74,7 @@ export class PrintBagItemPaperService {
     },
   ) {
     const currentUser = await RepositoryService.user
-      .loadById(metaQuery.userId)
+      .loadById(Number(metaQuery.userId))
       .select({
         userId: true, // needs to be selected due to users relations are being included
         employee: {
@@ -89,7 +89,7 @@ export class PrintBagItemPaperService {
     }
 
     const currentBranch = await RepositoryService.branch
-      .loadById(metaQuery.branchId)
+      .loadById(Number(metaQuery.branchId))
       .select({
         branchName: true,
       });

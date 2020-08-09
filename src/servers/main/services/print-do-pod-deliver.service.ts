@@ -2,7 +2,7 @@ import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-
 import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
 import { PrintDoPodDeliverDataVm } from '../models/print-do-pod-deliver.vm';
-import { map } from 'lodash';
+import { map, isEmpty } from 'lodash';
 import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { PrinterService } from '../../../shared/services/printer.service';
 import express = require('express');
@@ -84,12 +84,20 @@ export class PrintDoPodDeliverService {
     let totalAllCod = null;
     let totalItems = null;
 
+    // TODO: need refactoring ??
+    // sum totalCodValue from object
     if (data && data.doPodDeliverDetails) {
-      const awbIds = map(
-        data.doPodDeliverDetails,
-        doPodDeliverDetail => (doPodDeliverDetail && doPodDeliverDetail.awbItem && doPodDeliverDetail.awbItem.awb) ?
-                                doPodDeliverDetail.awbItem.awb.awbId : null,
-      );
+      const awbIds = [];
+      data.doPodDeliverDetails.map(function(doPod) {
+        if (doPod && doPod.awbItem && doPod.awbItem.awb && doPod.awbItem.awb.awbId) {
+          awbIds.push(doPod.awbItem.awb.awbId);
+        }
+      });
+      if (isEmpty(awbIds)) {
+        RequestErrorService.throwObj({
+          message: 'Surat jalan tidak ditemukan',
+        });
+      }
       const result = await RawQueryService.query(
         `SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(
           ',',

@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 import { IsDefined } from 'class-validator';
 import {BaseMetaPayloadVm} from '../../../shared/models/base-meta-payload.vm';
@@ -122,13 +122,18 @@ export class SmsTrackingDeleteMessagePayloadVm {
 }
 
 export class GenerateReportSmsTrackingPayloadVm {
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: '2020-02-28',
   })
   date: string;
 
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: 20020003,
   })
   smsTrackingShiftId: number;
+
+  @ApiModelPropertyOptional({
+    example: '123456789101, 234567892387,213234568091',
+  })
+  awbNumber: string;
 }

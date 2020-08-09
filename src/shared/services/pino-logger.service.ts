@@ -128,6 +128,6 @@ export class PinoLoggerService implements LoggerService {
   }
 
   private static getTimestamp() {
-    return moment().format('DD/MM/YYYY HH:MM:ss.SSS');
+    return moment().format('DD/MM/YYYY HH:mm:ss.SSS');
   }
 }

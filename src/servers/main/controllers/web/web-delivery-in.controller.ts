@@ -1,15 +1,13 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
-import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { BagRepository } from '../../../../shared/orm-repository/bag.repository';
-import { WebScanInAwbResponseVm, WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
+import { WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInListResponseVm, WebScanInBagListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm, WebScanInBranchListBagResponseVm, WebScanInBranchListAwbResponseVm, WebScanInHubListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInVm, WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebScanInBagBranchVm, WebScanInLoadBranchResponseVm, WebScanInBranchLoadResponseVm } from '../../models/web-scanin.vm';
+import { WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebScanInBagBranchVm, WebScanInBranchLoadResponseVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
@@ -19,19 +17,19 @@ import { LastMileDeliveryInService } from '../../services/web/last-mile/last-mil
 @Controller('web/pod/scanIn')
 export class WebDeliveryInController {
   constructor(
-    private readonly bagRepository: BagRepository,
     private readonly webDeliveryService: WebDeliveryInService,
   ) {}
 
-  @Post('awb')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebScanInAwbResponseVm })
-  @Transactional()
-  public async scanIn(@Body() payload: WebScanInVm) {
-    return this.webDeliveryService.scanInAwb(payload);
-  }
+  // NOTE: not used now
+  // @Post('awb')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ApiOkResponse({ type: WebScanInAwbResponseVm })
+  // @Transactional()
+  // public async scanIn(@Body() payload: WebScanInVm) {
+  //   return this.webDeliveryService.scanInAwb(payload);
+  // }
 
   @Post('list')
   @HttpCode(HttpStatus.OK)
@@ -132,6 +130,7 @@ export class WebDeliveryInController {
     return this.webDeliveryService.scanInBagHub(payload);
   }
 
+  // NOTE: endpoint scan in branch, handle bag number or awb number
   @Post('branch')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

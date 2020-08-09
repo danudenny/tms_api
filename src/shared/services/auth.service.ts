@@ -220,7 +220,7 @@ export class AuthService {
       // Role Id Korwil 38, role Id palkur 40, role Id SMD Driver 117
       if (roleId == configKorwil.korwilRoleId) {
         result.isKorwil = true;
-      } else if (roleId == configKorwil.palkurRoleId) {
+      } else if (configKorwil.palkurRoleId.includes(Number(roleId))) {
         result.isPalkur = true;
       }
       if (roleId == configKorwil.smdRoleId) {

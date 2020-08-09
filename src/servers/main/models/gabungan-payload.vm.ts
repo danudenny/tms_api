@@ -54,7 +54,7 @@ export class PackagePayloadVm {
   @ApiModelPropertyOptional({
     example: '112',
   })
-  podScanInHubId?: number;
+  podScanInHubId?: string;
 }
 
 export class PackageBackupPayloadVm {
