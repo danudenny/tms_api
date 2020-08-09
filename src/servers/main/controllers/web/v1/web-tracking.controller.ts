@@ -1,8 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import {
-  ApiUseTags,
-  ApiOkResponse,
-  ApiBearerAuth,
     ApiBearerAuth, ApiOkResponse, ApiUseTags,
 } from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
@@ -15,7 +12,7 @@ import {
     AwbPhotoDetailVm,
     AwbPhotoResponseVm,
     TrackingBagRepresentativeResponseVm,
-  	TrackingBagRepresentativePayloadVm,
+    TrackingBagRepresentativePayloadVm,
 } from '../../../models/tracking.vm';
 import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
@@ -62,7 +59,7 @@ export class V1WebTrackingController {
   public async bagRepresentative(@Body() payload: TrackingBagRepresentativePayloadVm) {
     return V1WebTrackingService.bagRepresentative(payload);
   }
-  
+
   @Post('awbPhoto')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)

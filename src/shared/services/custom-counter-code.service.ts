@@ -79,22 +79,13 @@ export class CustomCounterCode {
     return prefix + randomCode.toString();
   }
 
-
-  // SMD
+  // #region SMD
     public static async receivedBagCodeRandom(dateTime: Date, digit: number = 8) {
     const prefix = `TB/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
   }
-  
-  public static async transactionCodBranch(dateTime: Date, digit: number = 8) {
-    // Format Code: 1010/2020/XYZA1234
-    const prefix = `${moment(dateTime).format('DDMM/YYYY')}/`;
-    const randomCode = this.randomCode(digit);
-    return prefix + randomCode.toString();
-  }
 
-<
   public static async receivedBagCodeCounter(dateTime: Date, digit: number = 5) {
     const prefix = `TB/${moment(dateTime).format('YYMM')}/`;
     const last_number = await this.getLastNumber(prefix);
@@ -107,13 +98,22 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
-   public static async bagCityCodeCounter(dateTime: Date, digit: number = 5) {
+  public static async bagCityCodeCounter(dateTime: Date, digit: number = 5) {
     const prefix = `GSK/${moment(dateTime).format('YYMM')}/`;
     const last_number = await this.getLastNumber(prefix);
     return prefix + last_number.toString().padStart(digit, '0');
   }
+  // #endregion SMD
 
-    public static async supplierInvoiceCod(dateTime: Date, digit: number = 8) {
+  // #region COD
+  public static async transactionCodBranch(dateTime: Date, digit: number = 8) {
+    // Format Code: 1010/2020/XYZA1234
+    const prefix = `${moment(dateTime).format('DDMM/YYYY')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
+  public static async supplierInvoiceCod(dateTime: Date, digit: number = 8) {
     // Format Code: INV/2706/2020/XYZA1234
     const prefix = `INV/${moment(dateTime).format('DDMM/YYYY')}/`;
     const randomCode = this.randomCode(digit);
@@ -126,6 +126,7 @@ export class CustomCounterCode {
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
   }
+  // #endregion COD
 
   // get data on DB
   private static async getLastNumber(prefix: string) {
