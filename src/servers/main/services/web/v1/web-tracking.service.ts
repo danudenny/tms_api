@@ -105,7 +105,7 @@ export class V1WebTrackingService {
   }
 
   static async getAwbSubstitute(payload: BaseMetaPayloadVm): Promise <AwbSubstituteResponseVm> {
-    payload.fieldResolverMap['awbSubstitute']     = 't1.awbSubstitute';
+    payload.fieldResolverMap['awbSubstitute'] = 't1.awb_substitute';
     payload.fieldResolverMap['awbNumber']         = 't1.awb_number';
     payload.fieldResolverMap['awbItemId']         = 't1.awb_item_id';
     payload.fieldResolverMap['awbSubstituteType'] = '"awbSubstituteType"';
@@ -339,7 +339,6 @@ export class V1WebTrackingService {
     return await RawQueryService.queryWithParams(query, { awbItemId });
   }
 
-
   private static async getRawBagRepresentative(bagRepresentativeNumber: string): Promise<any> {
     const query = `
       SELECT
@@ -385,7 +384,7 @@ export class V1WebTrackingService {
     `;
     return await RawQueryService.queryWithParams(query, { bagRepresentativeId });
   }
-  
+
   private static async getRawBag(bagNumberSeq: string): Promise<any> {
     const regexNumber = /^[0-9]+$/;
     if (regexNumber.test(bagNumberSeq.substring(7, 10))) {
