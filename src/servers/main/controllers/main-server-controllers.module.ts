@@ -53,6 +53,7 @@ import { V1WebTrackingController } from './web/v1/web-tracking.controller';
 import { SmsTrackingController } from './web/sms-tracking.controller';
 import { V2MobileSyncController } from './mobile/v2/mobile-sync.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
+import {DoSmdController} from './master/do-smd.controller';
 import {PaymentProviderController} from './mobile/mobile-payment-provider.controller';
 import {CodPaymentController} from './mobile/mobile-cod-payment.controller';
 import { V1CombinePackageController } from './web/v1/combine-package.controller';
@@ -118,6 +119,7 @@ import { PackageTypeController } from './master/package-type.controller';
     V1WebTrackingController,
     SmsTrackingController,
     RolePodManualController,
+    DoSmdController,
     PaymentProviderController,
     CodPaymentController,
     V1CombinePackageController,

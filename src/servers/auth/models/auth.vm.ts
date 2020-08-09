@@ -147,6 +147,9 @@ export class PermissionAccessResponseVM {
 
   @ApiModelProperty()
   isPalkur: boolean;
+
+  @ApiModelProperty()
+  isSmd: boolean;
 }
 
 // #endregion

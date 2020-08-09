@@ -30,6 +30,8 @@
     "format-code": "prettier --write \"**/*.ts\""
   },
   "dependencies": {
+    "@fast-csv/format": "^4.3.1",
+    "@fast-csv/parse": "^4.3.1",
     "@nestjs/common": "^6.5.3",
     "@nestjs/core": "^6.5.3",
     "@nestjs/jwt": "^6.1.1",
@@ -49,6 +51,7 @@
     "config": "^3.1.0",
     "csv-write-stream": "^2.0.0",
     "express": "^4.16.4",
+    "fast-csv": "4.3.1",
     "fclone": "^1.0.11",
     "geolib": "^3.2.1",
     "glob": "^7.1.3",

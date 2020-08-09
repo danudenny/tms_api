@@ -13,6 +13,11 @@ export class TrackingBagPayloadVm {
   bagNumber: string;
 }
 
+export class TrackingBagRepresentativePayloadVm {
+  @ApiModelProperty()
+  bagRepresentativeNumber: string;
+}
+
 // Response
 export class AwbHistoryResponseVm {
   @ApiModelProperty()
@@ -265,6 +270,52 @@ export class AwbSubstituteResponseVm extends BaseMetaResponseVm {
   data: AwbSubstituteListData[];
 }
 
+export class TrackingBagRepresentativeResponseVm {
+  @ApiModelProperty()
+  bagRepresentativeCode: string;
+
+  @ApiModelProperty()
+  weight: number;
+
+  @ApiModelProperty()
+  bagRepresentativeId: number;
+
+  @ApiModelProperty()
+  bagRepresentativeStatusId: number;
+
+  @ApiModelProperty()
+  bagRepresentativeStatusName: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
+
+  @ApiModelProperty({ type: () => [BagRepresentativeHistoryResponseVm] })
+  bagRepresentativeHistory: BagRepresentativeHistoryResponseVm[];
+}
+
+export class BagRepresentativeHistoryResponseVm {
+
+  @ApiModelProperty()
+  bagRepresentativeHistoryId: number;
+
+  @ApiModelProperty()
+  bagRepresentativeStatusId: number;
+
+  @ApiModelProperty()
+  bagRepresentativeStatusName: string;
+
+  @ApiModelProperty()
+  username: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  historyDate: string;
+}
 export class AwbPhotoDetailVm {
   @ApiModelProperty()
   awbItemId: number;

@@ -3,6 +3,8 @@ import {
   TrackingAwbPayloadVm,
   TrackingAwbResponseVm,
   AwbSubstituteResponseVm,
+  TrackingBagRepresentativePayloadVm,
+  TrackingBagRepresentativeResponseVm,
   TrackingBagPayloadVm,
   TrackingBagResponseVm,
   AwbPhotoDetailVm,
@@ -201,6 +203,30 @@ export class V1WebTrackingService {
     return result;
   }
 
+  static async bagRepresentative(
+    payload: TrackingBagRepresentativePayloadVm,
+  ): Promise<TrackingBagRepresentativeResponseVm> {
+    const result = new TrackingBagRepresentativeResponseVm();
+    const data = await this.getRawBagRepresentative(payload.bagRepresentativeNumber);
+    if (data) {
+      result.bagRepresentativeCode = data.bagRepresentativeCode;
+      result.weight = data.weight;
+      result.bagRepresentativeId = data.bagRepresentativeId;
+      result.bagRepresentativeStatusId = data.bagRepresentativeStatusId;
+      result.bagRepresentativeStatusName = data.bagRepresentativeStatusName;
+      result.branchName = data.branchName;
+      result.representativeCode = data.representativeCode;
+      const history = await this.getRawBagRepresentativeHistory(data.bagRepresentativeId);
+      if (history && history.length) {
+        result.bagRepresentativeHistory = history;
+      } else {
+        result.bagRepresentativeHistory = null;
+      }
+    }
+    // result.bagHistory =
+    return result;
+  }
+
   // private method
   private static async getRawAwb(awbNumber: string): Promise<any> {
     const query = `
@@ -313,6 +339,53 @@ export class V1WebTrackingService {
     return await RawQueryService.queryWithParams(query, { awbItemId });
   }
 
+
+  private static async getRawBagRepresentative(bagRepresentativeNumber: string): Promise<any> {
+    const query = `
+      SELECT
+        br.bag_representative_code as "bagRepresentativeCode",
+        br.total_weight::numeric(10,2) as weight,
+        br.bag_representative_id as "bagRepresentativeId",
+        brs.bag_representative_status_id as "bagRepresentativeStatusId",
+        brs.status_code as "bagRepresentativeStatusName",
+        b.branch_name as "branchName",
+        r.representative_code as "representativeCode"
+      FROM bag_representative br
+      LEFT JOIN bag_representative_status brs ON br.bag_representative_status_id_last = brs.bag_representative_status_id AND brs.is_deleted = false
+      LEFT JOIN branch b ON br.branch_id = b.branch_id AND b.is_deleted = FALSE
+      LEFT JOIN representative r ON br.representative_id_to = r.representative_id AND r.is_deleted = FALSE
+      WHERE
+        br.bag_representative_code = :bagRepresentativeNumber
+      LIMIT 1
+    `;
+    const rawData = await RawQueryService.queryWithParams(query, {
+      bagRepresentativeNumber,
+    });
+    return rawData ? rawData[0] : null;
+  }
+
+  private static async getRawBagRepresentativeHistory(bagRepresentativeId: number): Promise<any> {
+    const query = `
+      SELECT
+        brh.bag_representative_history_id as "bagRepresentativeHistoryId",
+        brs.bag_representative_status_id as "bagRepresentativeStatusId",
+        brs.status_code as "bagRepresentativeStatusName",
+        brh.created_time as "historyDate",
+        b.branch_name as "branchName",
+        u.username
+      FROM bag_representative_history brh
+      LEFT JOIN branch b ON brh.branch_id = b.branch_id AND b.is_deleted = FALSE
+      LEFT JOIN users u ON brh.user_id_created = u.user_id AND u.is_deleted = FALSE
+      LEFT JOIN bag_representative_status brs ON brh.bag_representative_status_id_last = brs.bag_representative_status_id AND brs.is_deleted = FALSE
+      WHERE
+        brh.bag_representative_id = :bagRepresentativeId AND
+        brh.is_deleted = false
+      ORDER BY
+        brh.created_time DESC
+    `;
+    return await RawQueryService.queryWithParams(query, { bagRepresentativeId });
+  }
+  
   private static async getRawBag(bagNumberSeq: string): Promise<any> {
     const regexNumber = /^[0-9]+$/;
     if (regexNumber.test(bagNumberSeq.substring(7, 10))) {
