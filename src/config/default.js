@@ -74,7 +74,7 @@ module.exports = {
   },
   korwil: {
     korwilRoleId: 38,
-    smdRoleId: 117,
+    smdRoleId: 104, // Live 104, Staging 117
     palkurRoleId: [40, 41],
   },
   masterData: {
