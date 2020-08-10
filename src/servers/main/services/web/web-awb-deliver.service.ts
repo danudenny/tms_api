@@ -41,7 +41,7 @@ export class WebAwbDeliverService {
         const awb = await AwbService.validAwbNumber(delivery.awbNumber);
         if (awb) {
           // check awb is cod
-          if (awb.awbItem.awb.isCod) {
+          if (!awb.awbItem.awb.isCod) {
             // const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
             const awbDeliver = await this.getDeliverDetail(delivery.awbNumber);
             if (awbDeliver) {
