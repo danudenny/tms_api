@@ -44,7 +44,7 @@ export class BagAwbDeleteHistoryInHubFromSmdQueueService {
       // }); // end transaction
       console.log('### DELETE HISTORY BAG AND AWB SMD IN_HUB JOB ID =========', job.id);
       const data = job.data;
-      const bagItemIds = [];
+      const bagItemIds = new Set(); // unique data
       const awbItemIds = [];
 
       // GET bag_item_id FROM COMBINE PACKAGE SMD
@@ -69,45 +69,33 @@ export class BagAwbDeleteHistoryInHubFromSmdQueueService {
       );
 
       for (const bagItem of resultBagItemFromCombinePackageSMD) {
-        bagItemIds.push(bagItem.bag_item_id);
+        bagItemIds.add(bagItem.bag_item_id);
       }
       for (const bagItem of resultBagItemFromBaggingSMD) {
-        bagItemIds.push(bagItem.bag_item_id);
+        bagItemIds.add(bagItem.bag_item_id);
       }
 
-      // DELETE BAG HISTORY ONLY STATUS IN_HUB
-      await BagItemHistory.update({
-        bagItemId: In(bagItemIds),
-        bagItemStatusId: BAG_STATUS.IN_HUB.toString(),
-        isDeleted: false,
-      }, {
-        isDeleted: true,
-        updatedTime: data.timestamp,
-        userIdUpdated: data.userId,
-      });
+      for (const bagItemId of bagItemIds) {
+        // DELETE BAG HISTORY ONLY STATUS IN_HUB
+        if (bagItemId) {
+          await this.updateBagItemHistory(bagItemId.toString(), data);
 
-      const bagItemsAwb = await BagItemAwb.find({
-        select: ['awbItemId'],
-        where: {
-          bagItemId: In(bagItemIds),
-          isDeleted: false,
-        },
-      });
+          const bagItemsAwb = await BagItemAwb.find({
+            select: ['awbItemId'],
+            where: {
+              bagItemId,
+              isDeleted: false,
+            },
+          });
 
-      for (const itemAwb of bagItemsAwb) {
-        awbItemIds.push(itemAwb.awbItemId);
+          for (const awbItemId of bagItemsAwb) {
+            if (awbItemId.awbItemId) {
+            // DELETE AWB HISTORY ONLY STATUS IN_HUB
+              await this.updateAwbHistory(awbItemId.awbItemId, data);
+            }
+          }
+        }
       }
-
-      // DELETE AWB HISTORY ONLY STATUS IN_HUB
-      await AwbHistory.update({
-        awbItemId: In(awbItemIds),
-        awbStatusId: AWB_STATUS.IN_HUB,
-        isDeleted: false,
-      }, {
-        isDeleted: true,
-        updatedTime: data.timestamp,
-        userIdUpdated: data.userId,
-      });
 
       return true;
     });
@@ -120,6 +108,30 @@ export class BagAwbDeleteHistoryInHubFromSmdQueueService {
 
     this.queue.on('cleaned', function(job, type) {
       console.log('Cleaned %s %s jobs', job.length, type);
+    });
+  }
+
+  private static async updateBagItemHistory(id: string, data: any) {
+    await BagItemHistory.update({
+      bagItemId: id,
+      bagItemStatusId: BAG_STATUS.IN_HUB.toString(),
+      isDeleted: false,
+    }, {
+      isDeleted: true,
+      updatedTime: data.timestamp,
+      userIdUpdated: data.userId,
+    });
+  }
+
+  private static async updateAwbHistory(id: number, data: any) {
+    await AwbHistory.update({
+      awbItemId: id,
+      awbStatusId: AWB_STATUS.IN_HUB,
+      isDeleted: false,
+    }, {
+      isDeleted: true,
+      updatedTime: data.timestamp,
+      userIdUpdated: data.userId,
     });
   }
 

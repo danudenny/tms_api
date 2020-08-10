@@ -2,12 +2,13 @@ import express = require('express');
 import {RepositoryService} from '../../../../shared/services/repository.service';
 import {RequestErrorService} from '../../../../shared/services/request-error.service';
 import {PrinterService} from '../../../../shared/services/printer.service';
-import {PrintSmdPayloadVm} from '../../models/print-smd-payload.vm';
+import {PrintSmdPayloadVm, PrintBaggingPaperPayloadVm} from '../../models/print-smd-payload.vm';
 import moment = require('moment');
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
 import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm, PrintDoSmdDataDoSmdDetailBagRepresentativeVm, PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm } from '../../models/print-do-smd.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
+import { Bagging } from '../../../../shared/orm-entity/bagging';
 
 export class SmdPrintService {
   public static async printBagging(
@@ -56,6 +57,68 @@ export class SmdPrintService {
       rawCommands: rawPrinterCommands,
       printerName,
     });
+  }
+
+  public static async printBaggingForPaper(
+    res: express.Response,
+    payload: PrintBaggingPaperPayloadVm,
+  ) {
+    const repo = new OrionRepositoryService(Bagging, 't1');
+    const q = repo.findAllRaw();
+
+    q.selectRaw(
+      ['t1.bagging_code', 'baggingCode'],
+      ['t1.created_time', 'createdTime'],
+      [`CONCAT(t4.bag_number, LPAD(t3.bag_seq::text, 3, \'0\'))`, 'bagNumber'],
+      ['CONCAT(t3.weight::numeric(10,2))', 'weight'],
+      ['t5.representative_code', 'representativeCode'],
+    );
+    q.innerJoinRaw(
+      'bagging_item',
+      't2',
+      't2.bagging_id = t1.bagging_id AND t2.is_deleted = false',
+    );
+    q.innerJoinRaw(
+      'bag_item',
+      't3',
+      't3.bag_item_id = t2.bag_item_id AND t3.is_deleted = false',
+    );
+    q.innerJoinRaw(
+      'bag',
+      't4',
+      't4.bag_id = t3.bag_id AND t4.is_deleted = false',
+    );
+    q.innerJoinRaw(
+      'representative',
+      't5',
+      't5.representative_id = t1.representative_id_to AND t5.is_deleted = false',
+    );
+    q.where(e => e.baggingId, w => w.equals(payload.id));
+    // if (payload.branchId) {
+    //   q.where(e => e.branchId, w => w.equals(payload.branchId));
+    // }
+    const data = await q.exec();
+
+    if (data.length > 0) {
+      const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+      const date = moment(data[0].createdTime).format('YYYY-MM-DD HH:mm:ss');
+      PrinterService.responseForJsReport({
+        res,
+        templates: [
+          {
+            templateName: 'bagging-surat-muatan-darat',
+            templateData: {
+              data,
+              meta: {
+                createdTime: date,
+              },
+            },
+            printCopy: payload.printCopy ? payload.printCopy : 1,
+          },
+        ],
+        listPrinterName,
+      });
+    }
   }
 
   public static async getBaggingData(payload) {
@@ -174,6 +237,7 @@ export class SmdPrintService {
         doSmdCode: true,
         doSmdVehicle: {
           doSmdVehicleId: true,
+          vehicleNumber: true,
           employee: {
             nik: true,
             nickname: true,
@@ -214,7 +278,7 @@ export class SmdPrintService {
     dataVm.doSmdVehicle = doSmd.doSmdVehicle;
     dataVm.totalBagging = doSmd.totalBagging;
     dataVm.totalBag = doSmd.totalBag;
-    dataVm.totalBagRepresentative= doSmd.totalBagRepresentative;
+    dataVm.totalBagRepresentative = doSmd.totalBagRepresentative;
     const dataSmdDetailsVm: PrintDoSmdDataDoSmdDetailVm[] = [];
 
     const payload = {

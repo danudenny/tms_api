@@ -7,3 +7,17 @@ export class PrintSmdPayloadVm {
   @ApiModelPropertyOptional()
   printCopy: number;
 }
+
+export class PrintBaggingPaperPayloadVm {
+  @ApiModelProperty()
+  id: number;
+
+  @ApiModelPropertyOptional()
+  printCopy: number;
+
+  @ApiModelPropertyOptional()
+  userId: number;
+
+  @ApiModelPropertyOptional()
+  branchId: number;
+}
