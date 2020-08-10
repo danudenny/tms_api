@@ -844,8 +844,9 @@ export class V1WebReportCodService {
       console.log(unique, "unique driver");
 
     if (unique.length > 0) {
-      const query = `SELECT employee_id, e.fullname 
-      FROM employee e WHERE e.employee_id IN (${unique.join(',')})`
+      const query = `SELECT u.user_id employee_id , concat( e.nik, ' - ' ,  e.fullname ) fullname FROM users u  
+      INNER JOIN employee e ON e.employee_id = u.employee_id 
+      WHERE user_id  IN (${unique.join(',')})`
       const data = await RawQueryService.query(query)
       console.log(data)
       return data;
