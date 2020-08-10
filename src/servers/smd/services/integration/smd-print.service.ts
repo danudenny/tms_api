@@ -174,6 +174,7 @@ export class SmdPrintService {
         doSmdCode: true,
         doSmdVehicle: {
           doSmdVehicleId: true,
+          vehicleNumber: true,
           employee: {
             nik: true,
             nickname: true,
