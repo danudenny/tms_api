@@ -7,6 +7,9 @@ export class PartnerVm {
 
   @ApiModelProperty()
   partnerName: string;
+
+  @ApiModelProperty()
+  partnerIdSur: string;
 }
 
 export class PartnerSearchVm {

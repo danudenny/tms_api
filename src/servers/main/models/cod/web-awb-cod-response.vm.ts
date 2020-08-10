@@ -144,6 +144,9 @@ export class WebTransactionBranchDetail {
   branchName: string;
 
   @ApiModelProperty()
+  adminId: number;
+
+  @ApiModelProperty()
   adminName: string;
 
   @ApiModelProperty()

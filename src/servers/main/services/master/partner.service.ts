@@ -24,6 +24,7 @@ export class PartnerService {
     q.selectRaw(
       ['partner_id', 'partnerId'],
       ['partner_name', 'partnerName'],
+      ['partner_id_sur', 'partnerIdSur'],
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 

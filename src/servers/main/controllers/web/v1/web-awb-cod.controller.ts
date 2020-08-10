@@ -272,8 +272,8 @@ export class V1WebAwbCodController {
   public async supplierInvoiceExport(
     @Param('supplierInvoiceId') supplierInvoiceId: string,
   ) {
-    return V1WebReportCodService.exportSupplierInvoice(supplierInvoiceId);
-    // return V1WebReportSqlCodService.exportSupplierInvoice(supplierInvoiceId);
+    // return V1WebReportCodService.exportSupplierInvoice(supplierInvoiceId);
+    return V1WebReportSqlCodService.exportSupplierInvoice(supplierInvoiceId);
   }
 
   @Post('supplierInvoice/print')
