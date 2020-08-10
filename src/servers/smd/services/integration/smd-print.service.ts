@@ -94,9 +94,9 @@ export class SmdPrintService {
       't5.representative_id = t1.representative_id_to AND t5.is_deleted = false',
     );
     q.where(e => e.baggingId, w => w.equals(payload.id));
-    if (payload.branchId) {
-      q.where(e => e.branchId, w => w.equals(payload.branchId));
-    }
+    // if (payload.branchId) {
+    //   q.where(e => e.branchId, w => w.equals(payload.branchId));
+    // }
     const data = await q.exec();
 
     const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
@@ -272,7 +272,7 @@ export class SmdPrintService {
     dataVm.doSmdVehicle = doSmd.doSmdVehicle;
     dataVm.totalBagging = doSmd.totalBagging;
     dataVm.totalBag = doSmd.totalBag;
-    dataVm.totalBagRepresentative= doSmd.totalBagRepresentative;
+    dataVm.totalBagRepresentative = doSmd.totalBagRepresentative;
     const dataSmdDetailsVm: PrintDoSmdDataDoSmdDetailVm[] = [];
 
     const payload = {
