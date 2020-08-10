@@ -99,20 +99,26 @@ export class SmdPrintService {
     // }
     const data = await q.exec();
 
-    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
-    PrinterService.responseForJsReport({
-      res,
-      templates: [
-        {
-          templateName: 'bagging-surat-muatan-darat',
-          templateData: {
-            data,
+    if (data.length > 0) {
+      const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+      const date = moment(data[0].createdTime).format('YYYY-MM-DD HH:mm:ss');
+      PrinterService.responseForJsReport({
+        res,
+        templates: [
+          {
+            templateName: 'bagging-surat-muatan-darat',
+            templateData: {
+              data,
+              meta: {
+                createdTime: date,
+              },
+            },
+            printCopy: payload.printCopy ? payload.printCopy : 1,
           },
-          printCopy: payload.printCopy ? payload.printCopy : 1,
-        },
-      ],
-      listPrinterName,
-    });
+        ],
+        listPrinterName,
+      });
+    }
   }
 
   public static async getBaggingData(payload) {
