@@ -13,7 +13,7 @@ export class PrintDoSmdDataUserDriverVm {
   doSmdVehicleId: number;
 
   @ApiModelProperty()
-  vehicleNumber: number;
+  vehicleNumber: string;
 
   @ApiModelProperty({ type: () => PrintDoSmdDataUserDriverEmployeeVm })
   employee: PrintDoSmdDataUserDriverEmployeeVm = new PrintDoSmdDataUserDriverEmployeeVm();
