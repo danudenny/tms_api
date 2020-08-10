@@ -118,9 +118,9 @@ export class Partner extends TmsBaseEntity {
   })
   validation: Object | null;
 
-  @Column('character varying', {
+  @Column('integer', {
     nullable: true,
     name: 'partner_id_sur',
   })
-  partnerIdSur: string | null;
+  partnerIdSur: number | null;
 }

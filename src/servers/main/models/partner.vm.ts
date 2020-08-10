@@ -9,7 +9,7 @@ export class PartnerVm {
   partnerName: string;
 
   @ApiModelProperty()
-  partnerIdSur: string;
+  partnerIdSur: number;
 }
 
 export class PartnerSearchVm {
