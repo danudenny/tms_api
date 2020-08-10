@@ -3,7 +3,7 @@ import express = require('express');
 import { ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
 import {SmdPrintService} from '../../services/integration/smd-print.service';
-import {PrintSmdPayloadVm} from '../../models/print-smd-payload.vm';
+import {PrintSmdPayloadVm, PrintBaggingPaperPayloadVm} from '../../models/print-smd-payload.vm';
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
 
 @ApiUseTags('SMD printing')
@@ -18,6 +18,16 @@ export class SmdPrintController {
     @Response() serverResponse: express.Response,
   ) {
     return SmdPrintService.printBagging(serverResponse, queryParams);
+  }
+
+  @Get('bagging-paper') // print struk
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printBaggingForPaper(
+    @Query() queryParams: PrintBaggingPaperPayloadVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return SmdPrintService.printBaggingForPaper(serverResponse, queryParams);
   }
 
   @Get('do-smd')
