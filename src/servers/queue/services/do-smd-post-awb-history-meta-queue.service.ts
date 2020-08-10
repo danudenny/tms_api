@@ -102,7 +102,7 @@ export class DoSmdPostAwbHistoryMetaQueueService {
   ) {
     // TODO: ONLY DO_HUB
     const noteInternal = `Paket masuk ke ${cityName} [${branchName}]`;
-    const notePublic = `Paket masuk ke ${cityName} [${branchName}]`;
+    const notePublic = null;
 
     // provide data
     const obj = {

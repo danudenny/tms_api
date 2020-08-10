@@ -150,5 +150,5 @@ export class Bagging extends BaseEntity {
   doSmdDetailItem: DoSmdDetailItem[];
 
   @OneToMany(() => DropoffHubBagging, e => e.bagging, { cascade: ['insert'] })
-  dropoffHub: DropoffHubBagging[];
+  dropoffHubBagging: DropoffHubBagging[];
 }

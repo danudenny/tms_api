@@ -19,7 +19,9 @@ import {
   PrintDoPodReturnAdmiStorePayloadVm,
   PrintDoPodReturnPayloadQueryVm,
 } from '../models/print-do-pod-return.vm';
-import { PrintService } from './print.service';
+import { PrintCodTransferBranchPayloadQueryVm } from '../models/print/print-cod-transfer-branch-payload.vm';
+import { PrintCodTransferBranchVm } from '../models/cod/web-awb-cod-response.vm';
+import { PrintCodTransferBranchService } from './print/print-cod-transfer-branch.service';
 
 export class PrintByStoreService {
   static async retrieveGenericPrintData<T = any>(
@@ -245,5 +247,40 @@ export class PrintByStoreService {
       printPayload,
       queryParams,
     );
+  }
+
+  // execute print for COD
+  static async executePrintCodTransferBranchCash(
+    res: express.Response,
+    queryParams: PrintCodTransferBranchPayloadQueryVm,
+  ) {
+    const printPayload = await this.retrieveGenericPrintData<
+      PrintCodTransferBranchVm
+    >('cod-transfer-branch', queryParams.id);
+
+    if (!printPayload || (printPayload && !printPayload.data)) {
+      RequestErrorService.throwObj({
+        message: 'data tidak ditemukan!',
+      });
+    }
+
+    return PrintCodTransferBranchService.printCashStore(res, printPayload, queryParams.printCopy);
+  }
+
+  static async executePrintCodTransferBranchCashless(
+    res: express.Response,
+    queryParams: PrintCodTransferBranchPayloadQueryVm,
+  ) {
+    const printPayload = await this.retrieveGenericPrintData<
+      PrintCodTransferBranchVm
+    >('cod-transfer-branch', queryParams.id);
+
+    if (!printPayload || (printPayload && !printPayload.data)) {
+      RequestErrorService.throwObj({
+        message: 'data tidak ditemukan!',
+      });
+    }
+
+    return PrintCodTransferBranchService.printCashlessStore(res, printPayload, queryParams.printCopy);
   }
 }

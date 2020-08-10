@@ -127,7 +127,7 @@ export class AwsS3Service {
     if (!bucketName && ConfigService.has('cloudStorage.cloudBucket')) {
       bucketName = ConfigService.get('cloudStorage.cloudBucket');
     }
-    const awsKey = `reports/${fileName}`;
+    const awsKey = fileName;
     try {
       // upload file to S3
       return AWS_S3.putObject({

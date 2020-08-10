@@ -58,7 +58,7 @@ export class DropoffHubBagging extends TmsBaseEntity {
   @JoinColumn({ name: 'bag_item_id', referencedColumnName: 'bagItemId' })
   bagItem: BagItem;
 
-  @ManyToOne(() => Bagging, bagging => bagging.dropoffHub, {
+  @ManyToOne(() => Bagging, bagging => bagging.dropoffHubBagging, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'bagging_id', referencedColumnName: 'baggingId' })

@@ -45,7 +45,8 @@ module.exports = {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
   sentry: {
-    dsn: 'http://8d763ea5cbaf4321ad5d58778e08d589@sentry.sicepat.com/2',
+    dsn:
+      'https://cd146c2621d24fc5b937d3ec598328da@o392502.ingest.sentry.io/5245618',
   },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
@@ -67,10 +68,14 @@ module.exports = {
     passKey: '2e8a7f4d5ef4b746a503ef270ce2a98e562bc77e2dd6c19bf10e3d95e3390393',
     shipmentMethod: 'Instant',
   },
+  odoo: {
+    baseUrl: 'http://52.77.199.252:5168/',
+    authKey: '5a71a345b4eaa9d23b4d4c745e7785e9',
+  },
   korwil: {
     korwilRoleId: 38,
-    palkurRoleId: 40,
     smdRoleId: 117,
+    palkurRoleId: [40, 41],
   },
   masterData: {
     apiKey:
@@ -78,5 +83,9 @@ module.exports = {
   },
   cps: {
     apiKey: '371b74e652119491854b78ce6f6bf03b',
+  },
+  mongodb: {
+    sicepat:
+      'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-staging-cluster.nrgvr.mongodb.net/test?retryWrites=true&w=majority&readPreference=secondaryPreferred',
   },
 };

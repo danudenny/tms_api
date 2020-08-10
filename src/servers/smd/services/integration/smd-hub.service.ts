@@ -586,10 +586,9 @@ export class SmdHubService {
     payload.fieldResolverMap['representativeCode'] = 't7.representative_code';
     payload.fieldResolverMap['baggingCode'] = 't2.bagging_code';
     payload.fieldResolverMap['totalAwb'] = 't2.total_item';
+    payload.fieldResolverMap['dropoffHubBaggingId'] = 't2.dropoff_hub_bagging_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
-      payload.sortBy = 'branchName';
-      payload.sortBy = 'branchScanName';
     }
 
     // mapping search field and operator default ilike
@@ -602,7 +601,7 @@ export class SmdHubService {
       },
     ];
 
-    const repo = new OrionRepositoryService(DropoffHubBagging, 't1');
+    const repo = new OrionRepositoryService(Bagging, 't2');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -617,24 +616,29 @@ export class SmdHubService {
       [`CONCAT(t2.total_weight,' Kg')`, 'weight'],
     );
 
-    q.innerJoin(e => e.bagging, 't2', j =>
+    q.innerJoinRaw(
+      `(
+        SELECT
+          dhb.bagging_id,
+          dhb.created_time,
+          dhb.dropoff_hub_bagging_id,
+          dhb.branch_id,
+          RANK () OVER (PARTITION BY bagging_id ORDER BY dropoff_hub_bagging_id DESC) AS rank
+        FROM dropoff_hub_bagging dhb
+      )`,
+      't1',
+      't1.bagging_id = t2.bagging_id',
+    );
+    q.innerJoin(e => e.branch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.bagItem, 't3', j =>
+    q.innerJoin(e => e.dropoffHubBagging.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.dropoffHubBaggingDetails, 't4', j =>
+    q.innerJoin(e => e.representative, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.bagging.branch, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.branch, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.bagging.representative, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.andWhereRaw('t1.rank = 1');
     q.groupByRaw(`
       t1.dropoff_hub_bagging_id,
       t2.bagging_code,

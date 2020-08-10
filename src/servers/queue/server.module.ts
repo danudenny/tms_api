@@ -33,7 +33,17 @@ import { BagRepresentativeSmdQueueService } from './services/bag-representative-
 import {BagRepresentativeScanDoSmdQueueService} from './services/bag-representative-scan-do-smd-queue.service';
 import { BagRepresentativeDropoffHubQueueService } from './services/bag-representative-dropoff-hub-queue.service';
 import { BaggingDropoffHubQueueService } from './services/bagging-dropoff-hub-queue.service';
-
+import { CreateBagFirstScanHubQueueService } from './services/create-bag-first-scan-hub-queue.service';
+import { CreateBagAwbScanHubQueueService } from './services/create-bag-awb-scan-hub-queue.service';
+import {CodPaymentQueueService} from './services/cod-payment-queue.service';
+import { CodFirstTransactionQueueService } from './services/cod/cod-first-transaction-queue.service';
+import { CodSyncTransactionQueueService } from './services/cod/cod-sync-transaction-queue.service';
+import { CodUpdateTransactionQueueService } from './services/cod/cod-update-transaction-queue.service';
+import { CodTransactionHistoryQueueService } from './services/cod/cod-transaction-history-queue.service';
+import { CodUpdateSupplierInvoiceQueueService } from './services/cod/cod-update-supplier-invoice-queue.service';
+import { CodCronSettlementQueueService } from './services/cod/cod-cron-settlement-queue.service';
+import { MongoDbConfig } from './config/database/mongodb.config';
+import { CodExportMongoQueueService } from './services/cod/cod-export-queue.service';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -118,6 +128,8 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       await app.listen(process.env.PORT || serverConfig.port, serverConfig.host || '0.0.0.0');
     }
 
+    // init connection mongodb
+    MongoDbConfig.getSicepatMonggoClient();
     // init boot Queue
     DoPodDetailPostMetaQueueService.boot();
     BagItemHistoryQueueService.boot();
@@ -136,7 +148,19 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     BagRepresentativeSmdQueueService.boot();
     BaggingDropoffHubQueueService.boot();
     BagRepresentativeDropoffHubQueueService.boot();
+    CreateBagFirstScanHubQueueService.boot();
+    CreateBagAwbScanHubQueueService.boot();
+    CodPaymentQueueService.boot();
+    CodFirstTransactionQueueService.boot();
+    CodSyncTransactionQueueService.boot();
+    CodUpdateTransactionQueueService.boot();
+    CodTransactionHistoryQueueService.boot();
+    CodUpdateSupplierInvoiceQueueService.boot();
+    CodExportMongoQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
+
+    // init Cron here
+    CodCronSettlementQueueService.init();
   }
 }

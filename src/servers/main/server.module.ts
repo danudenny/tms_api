@@ -62,8 +62,8 @@ export class MainServerModule extends MultiServerAppModule implements NestModule
     this.app = app;
     // NOTE: The default limit defined by body-parser is 100kb
     // https://github.com/expressjs/body-parser/blob/0632e2f378d53579b6b2e4402258f4406e62ac6f/lib/types/json.js#L53-L55
-    app.use(json({ limit: '1mb' }));
-    app.use(urlencoded({ extended: true, limit: '1mb' }));
+    app.use(json({ limit: '10mb' }));
+    app.use(urlencoded({ extended: true, limit: '10mb' }));
     app.enableCors();
     app.use(RequestContextMiddleware.rawExpressMiddleware);
     app.useGlobalPipes(
