@@ -78,6 +78,7 @@ export class CodCronSettlementQueueService {
       where: {
         isSettlement: false,
       },
+      take: 100,
     });
 
     for (const voucher of vouchers) {
