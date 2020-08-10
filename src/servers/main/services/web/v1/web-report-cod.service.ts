@@ -67,14 +67,14 @@ export class V1WebReportCodService {
       'Destination Code',
       'Destination',
       'Perwakilan',
-      'sigesit',
+      // 'sigesit',
       'Package Detail',
       'Services',
       'Note',
       'Submitted Date',
       'Submitted Number',
-      'Date Created',
-      'User Created',
+      // 'Date Created',
+      // 'User Created',
     ] : [
         'Partner',
         'Awb Date',
@@ -93,14 +93,14 @@ export class V1WebReportCodService {
         'Destination Code',
         'Destination',
         'Perwakilan',
-        'sigesit',
+        // 'sigesit',
         'Package Detail',
         'Services',
         'Note',
         'Submitted Date',
         'Submitted Number',
-        'Date Created',
-        'User Created',
+        // 'Date Created',
+        // 'User Created',
       ];
 
     const csvConfig = cod ?
@@ -172,13 +172,13 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.destinationCode),
           this.strReplaceFunc(d.destination),
           d.perwakilan,
-          d.sigesit,
+          // d.sigesit,
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.packageType),
           this.strReplaceFunc(d.parcelNote),
           '', '',
-          d.updatedTime ? moment.utc(d.updatedTime).format('YYYY-MM-DD') : null,
-          d.username,
+          // d.updatedTime ? moment.utc(d.updatedTime).format('YYYY-MM-DD') : null,
+          // d.username,
         ]);
 
       }
@@ -222,13 +222,13 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.prtDestinationCode),
           this.strReplaceFunc(d.tujuanKecamatan),
           this.strReplaceFunc(d.perwakilan),
-          this.strReplaceFunc(d.sigesit),
+          // this.strReplaceFunc(d.sigesit),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
           this.strReplaceFunc(d.receiverRemark),
           '', '',
-          d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD') : null,
-          this.strReplaceFunc(d.username),
+          // d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD') : null,
+          // this.strReplaceFunc(d.username),
         ]);
 
       }
@@ -843,14 +843,14 @@ export class V1WebReportCodService {
     if (type == "driver")
       console.log(unique, "unique driver");
 
-    if (unique.length > 0) {
-      const query = `SELECT u.user_id employee_id , concat( e.nik, ' - ' ,  e.fullname ) fullname FROM users u  
-      INNER JOIN employee e ON e.employee_id = u.employee_id 
-      WHERE user_id  IN (${unique.join(',')})`
-      const data = await RawQueryService.query(query)
-      console.log(data)
-      return data;
-    }
+    // if (unique.length > 0) {
+    //   const query = `SELECT u.user_id employee_id , concat( e.nik, ' - ' ,  e.fullname ) fullname FROM users u  
+    //   INNER JOIN employee e ON e.employee_id = u.employee_id 
+    //   WHERE user_id  IN (${unique.join(',')})`
+    //   const data = await RawQueryService.query(query)
+    //   console.log(data)
+    //   return data;
+    // }
 
 
     return []
