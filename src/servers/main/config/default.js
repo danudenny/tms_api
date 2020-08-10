@@ -1,6 +1,6 @@
 module.exports = {
   enabled: true,
-  port: 7009,
+  port: 4001,
   swagger: {
     enabled: true,
     title: "SiCepat TMS Main",

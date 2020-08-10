@@ -26,7 +26,7 @@ import { BagDropoffHubQueueService } from './services/bag-dropoff-hub-queue.serv
 import { UploadImagePodQueueService } from './services/upload-pod-image-queue.service';
 import { CreateBagFirstScanHubQueueService } from './services/create-bag-first-scan-hub-queue.service';
 import { CreateBagAwbScanHubQueueService } from './services/create-bag-awb-scan-hub-queue.service';
-import { CodPaymentQueueService } from './services/cod-payment-queue.service';
+import {CodPaymentQueueService} from './services/cod-payment-queue.service';
 import { CodFirstTransactionQueueService } from './services/cod/cod-first-transaction-queue.service';
 import { CodSyncTransactionQueueService } from './services/cod/cod-sync-transaction-queue.service';
 import { CodUpdateTransactionQueueService } from './services/cod/cod-update-transaction-queue.service';
@@ -143,6 +143,6 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     // GenerateReportQueueService.boot();
 
     // init Cron here
-    // CodCronSettlementQueueService.init();
+    CodCronSettlementQueueService.init();
   }
 }
