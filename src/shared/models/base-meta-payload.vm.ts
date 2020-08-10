@@ -50,6 +50,56 @@ export class BaseMetaPayloadFilterVm {
   }
 }
 
+export class ReportBaseMetaPayloadVm {
+  @ApiModelProperty()
+  @Transform(value => value || 1) // Transform imprted from 'class-transformer', set to 1 if value is undefined
+  page: number;
+
+  @ApiModelProperty()
+  @Transform(value => value || 10) // Transform imprted from 'class-transformer', set to 10 if value is undefined
+  limit: number;
+
+  @ApiModelPropertyOptional()
+  sortBy: string;
+
+  @ApiModelPropertyOptional({ enum: ['asc', 'desc'] })
+  sortDir: 'asc' | 'desc';
+
+  @ApiModelPropertyOptional({ enum: ['list', 'csv'] })
+  exportType: 'list' | 'csv';
+
+  @ApiModelPropertyOptional({ type: [BaseMetaPayloadFilterVm] })
+  filters: BaseMetaPayloadFilterVm[] = [];
+
+  @ApiModelPropertyOptional()
+  search: string;
+
+  autoConvertFieldsToSnakeCase: boolean = true;
+  fieldResolverMap: { [key: string]: string } = {};
+  fieldFilterManualMap: { [key: string]: boolean } = {};
+
+  private _globalSearchFields: BaseMetaPayloadVmGlobalSearchField[] = [];
+  get globalSearchFields() {
+    return this._globalSearchFields;
+  }
+  set globalSearchFields(
+    newGlobalSearchFields: BaseMetaPayloadVmGlobalSearchField[],
+  ) {
+    for (const newGlobalSearchField of newGlobalSearchFields) {
+      const existingGlobalSearchFieldIdx = findIndex(this._globalSearchFields, {
+        field: newGlobalSearchField.field,
+      });
+      if (existingGlobalSearchFieldIdx > -1) {
+        this._globalSearchFields[
+          existingGlobalSearchFieldIdx
+        ] = newGlobalSearchField;
+      } else {
+        this._globalSearchFields.push(newGlobalSearchField);
+      }
+    }
+  }
+}
+
 export class BaseMetaPayloadVm {
   @ApiModelProperty()
   @Transform(value => value || 1) // Transform imprted from 'class-transformer', set to 1 if value is undefined

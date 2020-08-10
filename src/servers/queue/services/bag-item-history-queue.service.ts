@@ -32,8 +32,6 @@ export class BagItemHistoryQueueService {
     this.queue.process(5, async job => {
       // await getManager().transaction(async transactionalEntityManager => {
       // }); // end transaction
-      console.log('### JOB ID =========', job.id);
-      console.log('### DATA =========', job.data);
       const data = job.data;
 
       const bagItemHistory = BagItemHistory.create();

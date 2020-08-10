@@ -174,6 +174,7 @@ export class DoReturnService {
     // conenct mongodb get price
     const db = await DatabaseConfig.getSicepatMonggoDb();
     const configCollection = db.collection('pricelist');
+    const originCollection = db.collection('origin');
 
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
@@ -238,8 +239,8 @@ export class DoReturnService {
     const asyncForEach = async () => {
       const listCustomer: DoReturnFinanceResponseVm[] = [];
       for (let i = 0; i < data.length; i++) {
-
-        const configData = await configCollection.findOne({ origin_code: data[i].originCode, destination_code: data[i].destinationCode, service_type: 'REG' });
+        const originData = await originCollection.findOne({ code: data[i].originCode});
+        const configData = await configCollection.findOne({ origin_code: originData.pricelist_code , destination_code: data[i].destinationCode, service_type: 'REG' });
         const customer: DoReturnFinanceResponseVm = data[i];
         customer.awbStatusName = data[i].awbStatusName;
         customer.originCode = data[i].originCode;

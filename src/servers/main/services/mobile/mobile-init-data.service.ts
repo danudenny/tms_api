@@ -15,13 +15,16 @@ import { AttachmentService } from '../../../../shared/services/attachment.servic
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { WebScanInBranchListResponseVm } from '../../models/web-scanin-list.response.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 
 export class MobileInitDataService {
+
   public static async getInitDataByRequest(
     fromDate?: string,
   ): Promise<MobileInitDataResponseVm> {
     const authMeta = AuthService.getAuthData();
     const result = new MobileInitDataResponseVm();
+    PinoLoggerService.log('#### DEBUG USER INIT DATA OLD : ', authMeta);
 
     result.reason = await this.getReason(fromDate);
     result.awbStatus = await this.getAwbStatus(fromDate);
@@ -274,7 +277,7 @@ export class MobileInitDataService {
     qb.andWhere(
       'do_pod_deliver.do_pod_deliver_date_time BETWEEN :currentDateTimeStart AND :currentDateTimeEnd',
       {
-        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 06:00:00'),
+        currentDateTimeStart: currentMoment.format('YYYY-MM-DD 00:00:00'),
         currentDateTimeEnd: currentMoment.format('YYYY-MM-DD 23:59:59'),
       },
     );

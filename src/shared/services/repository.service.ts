@@ -35,6 +35,8 @@ import { Bagging } from '../orm-entity/bagging';
 import { DoSmd } from '../orm-entity/do_smd';
 import { Vehicle } from '../orm-entity/vehicle';
 import { BagRepresentative } from '../orm-entity/bag-representative';
+import { TransactionStatus } from '../orm-entity/transaction-status';
+import { PackageType } from '../orm-entity/package-type';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -148,5 +150,11 @@ export class RepositoryService {
   }
   static get bagRepresentative() {
     return new OrionRepositoryService(BagRepresentative);
+  }
+  static get transactionStatus() {
+    return new OrionRepositoryService(TransactionStatus);
+  }
+  static get packageType() {
+    return new OrionRepositoryService(PackageType);
   }
 }

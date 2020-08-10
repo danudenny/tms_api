@@ -82,7 +82,7 @@ export class WebTrackingService {
         result.bagHistory = history;
       }
     }
-    // result.bagHistory =
+
     return result;
   }
 

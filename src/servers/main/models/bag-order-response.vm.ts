@@ -25,4 +25,7 @@ export class BagDeliveryDetailVm {
 export class PhotoDetailVm {
   @ApiModelProperty()
   doPodDeliverDetailId: string;
+
+  @ApiModelPropertyOptional({ example: 'photo, photoCod, signature'})
+  attachmentType: string;
 }

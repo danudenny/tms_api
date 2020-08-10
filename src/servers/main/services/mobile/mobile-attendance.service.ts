@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import moment = require('moment');
-import { IsNull } from 'typeorm';
+import { IsNull, In } from 'typeorm';
 
 import { BranchRepository } from '../../../../shared/orm-repository/branch.repository';
 import { EmployeeJourneyRepository } from '../../../../shared/orm-repository/employee-journey.repository';
@@ -140,6 +140,7 @@ export class MobileAttendanceService {
 
     const repo = new OrionRepositoryService(EmployeeJourney, 't1');
     const q = repo.findAllRaw();
+    const roleIdAbsensi = [34, 51]; // ops driver & ops Driver Bandara
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
@@ -157,6 +158,7 @@ export class MobileAttendanceService {
       ['t1.created_time', 'createdTime'],
       ['t2.url', 'urlCheckIn'],
       ['t5.url', 'urlCheckOut'],
+      ['t8.role_id', 'roleId'],
       ['t7.branch_name', 'branchAsalDriver'],
     );
 
@@ -166,6 +168,9 @@ export class MobileAttendanceService {
 
     q.leftJoin(e => e.employee, 't3');
 
+    q.innerJoin(e => e.employee.user.userRoles, 't8', j =>
+      j.andWhere(e => e.roleId, w => w.in(roleIdAbsensi)),
+    );
     q.leftJoin(e => e.employee.branch, 't7');
 
     q.leftJoin(e => e.attachmentCheckIn, 't2');
