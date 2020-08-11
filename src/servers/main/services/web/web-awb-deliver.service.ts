@@ -65,12 +65,15 @@ export class WebAwbDeliverService {
               const statusFinal = [AWB_STATUS.DLV];
               if (statusFinal.includes(awb.awbStatusIdLast)) {
                 response.status = 'error';
-                response.message = `Resi ${
-                  delivery.awbNumber
-                } sudah Final Status !`;
+                response.message = `Resi ${delivery.awbNumber} sudah Final Status !`;
               } else {
                 // check awb is cod
-                if (!awb.awbItem.awb.isCod) {
+                if (awb.awbItem.awb.isCod == true && delivery.awbStatusId == AWB_STATUS.DLV) {
+                  response.status = 'error';
+                  response.message = `Resi ${
+                    delivery.awbNumber
+                  }, adalah resi COD, tidak dapat melakukan POD Manual!`;
+                } else {
                   // set data deliver
                   delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
                   delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
@@ -88,11 +91,6 @@ export class WebAwbDeliverService {
                   }
                   response.status = 'ok';
                   response.message = 'success';
-                } else {
-                  response.status = 'error';
-                  response.message = `Resi ${
-                    delivery.awbNumber
-                  }, adalah resi COD, tidak dapat melakukan POD Manual!`;
                 }
               }
             } else {
