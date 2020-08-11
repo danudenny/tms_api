@@ -12,6 +12,7 @@ import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingRespo
 import { SmdScanBaggingPayloadVm } from '../../models/smd-bagging-payload.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 
 @Injectable()
 export class BaggingSmdService {
@@ -261,7 +262,7 @@ export class BaggingSmdService {
       createBagging.branchId = permissionPayload.branchId.toString();
       createBagging.totalItem = 1;
       createBagging.totalWeight = dataPackage[0].weight.toString();
-      createBagging.baggingCode = await this.generateCode();
+      createBagging.baggingCode = await CustomCounterCode.baggingCodeCounter(moment().toDate());
       createBagging.baggingDate = baggingDate;
       createBagging.userIdCreated = authMeta.userId.toString();
       createBagging.userIdUpdated = authMeta.userId.toString();
@@ -295,7 +296,7 @@ export class BaggingSmdService {
   }
 
   static async generateCode() {
-    const codeAlike = 'BGG/' + moment().format('YYMM') + '/';
+    const codeAlike = 'BGX/' + moment().format('YYMM') + '/';
     const qb = createQueryBuilder();
     const rawQuery = `
       SELECT
