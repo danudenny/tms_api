@@ -127,7 +127,7 @@ export class BaggingSmdService {
       LEFT JOIN bagging_item bai ON bi.bag_item_id = bai.bag_item_id AND bai.is_deleted = false
       LEFT JOIN bagging ba ON ba.bagging_id = bai.bagging_id AND ba.is_deleted = false
       WHERE
-        b.bag_number = '${bagNumber}' AND
+        b.bag_number = upper('${bagNumber}') AND
         bi.bag_seq = '${bagSeq}' AND
         b.is_deleted = false
       ORDER BY b.created_time DESC
