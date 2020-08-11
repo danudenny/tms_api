@@ -100,7 +100,7 @@ export class CodCronSettlementQueueService {
         const transactionDetailQuery = `
           SELECT
             cvd.awb_number AS "awbVoucher",
-            ctd.*
+            ctd.cod_transaction_detail_id AS "codTransactionDetailId"
           FROM
             cod_voucher_detail cvd
             LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
@@ -133,11 +133,11 @@ export class CodCronSettlementQueueService {
               await transactionManager.save(CodTransaction, newTransaction);
 
               for (const transaction of transactionDetails) {
-                if (transaction['cod_transaction_detail_id']) {
+                if (transaction.codTransactionDetailId) {
                   await transactionManager.update(
                     CodTransactionDetail,
                     {
-                      codTransactionDetailId: transaction['cod_transaction_detail_id'],
+                      codTransactionDetailId: transaction.codTransactionDetailId,
                     },
                     {
                       codTransactionId: newTransaction.codTransactionId,
