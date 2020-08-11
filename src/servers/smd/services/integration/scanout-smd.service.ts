@@ -38,6 +38,7 @@ export class ScanoutSmdService {
       permissonPayload.branchId,
       authMeta.userId,
       payload.smd_trip,
+      payload.description,
     );
 
     const paramDoSmdVehicleId = await this.createDoSmdVehicle(
@@ -1410,6 +1411,7 @@ export class ScanoutSmdService {
     paramBranchId: number,
     userId: number,
     paramCounterTrip: number,
+    description: string,
   ) {
     const dataDoSmd = DoSmd.create({
       doSmdCode: paramDoSmdCode,
@@ -1419,6 +1421,7 @@ export class ScanoutSmdService {
       totalVehicle: 1,
       departureScheduleDateTime: paramDoSmdTime,
       counterTrip: paramCounterTrip,
+      doSmdNote: description,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,

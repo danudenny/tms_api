@@ -235,6 +235,7 @@ export class SmdPrintService {
       .select({
         doSmdId: true, // needs to be selected due to do_smd relations are being included
         doSmdCode: true,
+        doSmdNote: true,
         doSmdVehicle: {
           doSmdVehicleId: true,
           vehicleNumber: true,
@@ -275,6 +276,7 @@ export class SmdPrintService {
     const dataVm = new PrintDoSmdDataVm();
     dataVm.doSmdId = doSmd.doSmdId;
     dataVm.doSmdCode = doSmd.doSmdCode;
+    dataVm.doSmdNote = doSmd.doSmdNote;
     dataVm.doSmdVehicle = doSmd.doSmdVehicle;
     dataVm.totalBagging = doSmd.totalBagging;
     dataVm.totalBag = doSmd.totalBag;
