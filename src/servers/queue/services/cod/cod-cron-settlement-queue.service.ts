@@ -126,6 +126,10 @@ export class CodCronSettlementQueueService {
               newTransaction.transactionType = 'CASHLESS';
               newTransaction.branchId = 121;
               newTransaction.userIdDriver = 1;
+              newTransaction.userIdCreated = 4;
+              newTransaction.userIdUpdated = 4;
+              newTransaction.updatedTime = timestamp;
+              newTransaction.createdTime = timestamp;
               await transactionManager.save(CodTransaction, newTransaction);
 
               for (const transaction of transactionDetails) {
@@ -169,6 +173,8 @@ export class CodCronSettlementQueueService {
               bankStatement.userIdTransfer = 4;
               bankStatement.userIdCreated = 4;
               bankStatement.userIdUpdated = 4;
+              bankStatement.updatedTime = timestamp;
+              bankStatement.createdTime = timestamp;
               await transactionManager.save(CodBankStatement, bankStatement);
 
               // Update Cod Bank Statement Id for its Cod Transaction
