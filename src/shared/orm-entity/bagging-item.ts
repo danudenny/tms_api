@@ -1,4 +1,6 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
+import {Bagging} from './bagging';
+import {BagItem} from './bag-item';
 
 @Entity('bagging_item', { schema: 'public' })
 export class BaggingItem extends BaseEntity {
@@ -50,4 +52,16 @@ export class BaggingItem extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @ManyToOne(() => Bagging, bagging => bagging.baggingItems, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'bagging_id',
+  })
+  bagging: Bagging;
+
+  @OneToOne(() => BagItem)
+  @JoinColumn({ name: 'bag_item_id' })
+  bagItem: BagItem;
 }

@@ -3,6 +3,8 @@ import {
   TrackingBagPayloadVm,
   TrackingAwbResponseVm,
   TrackingBagResponseVm,
+  TrackingBagRepresentativePayloadVm,
+  TrackingBagRepresentativeResponseVm,
 } from '../../models/tracking.vm';
 import {
   ApiUseTags,
