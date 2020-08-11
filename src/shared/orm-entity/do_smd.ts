@@ -25,6 +25,13 @@ export class DoSmd extends TmsBaseEntity {
   })
   doSmdCode: string;
 
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'do_smd_note',
+  })
+  doSmdNote: string;
+
   @Column('timestamp without time zone', {
     nullable: false,
     name: 'do_smd_time',
