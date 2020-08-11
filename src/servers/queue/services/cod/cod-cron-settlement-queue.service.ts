@@ -85,9 +85,9 @@ export class CodCronSettlementQueueService {
       const codVoucherId = voucher.codVoucherId;
       const totalMatchQuery = `
         SELECT
-          count(cvd.awb_number) AS “totalVoucher”,
-          count(ctd.awb_number) AS “totalData”,
-          sum(ctd.cod_value) AS “totalCodValue”
+          count(cvd.awb_number) AS "totalVoucher",
+          count(ctd.awb_number) AS "totalData",
+          sum(ctd.cod_value) AS "totalCodValue"
         FROM
           cod_voucher_detail cvd
           LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
@@ -96,10 +96,11 @@ export class CodCronSettlementQueueService {
 
       const dataTotalMatch = await RawQueryService.queryWithParams(totalMatchQuery, { codVoucherId });
       const dataTotal = dataTotalMatch ? dataTotalMatch[0] : null;
+      console.log(dataTotal);
       if (dataTotal && dataTotal.totalVoucher === dataTotal.totalData) {
         const transactionDetailQuery = `
           SELECT
-            cvd.awb_number AS “awbVoucher”,
+            cvd.awb_number AS "awbVoucher",
             ctd.*
           FROM
             cod_voucher_detail cvd
@@ -133,11 +134,11 @@ export class CodCronSettlementQueueService {
               await transactionManager.save(CodTransaction, newTransaction);
 
               for (const transaction of transactionDetails) {
-                if (transaction.codTransactionDetailId) {
+                if (transaction['cod_transaction_detail_id']) {
                   await transactionManager.update(
                     CodTransactionDetail,
                     {
-                      codTransactionDetailId: transaction.codTransactionDetailId,
+                      codTransactionDetailId: transaction['cod_transaction_detail_id'],
                     },
                     {
                       codTransactionId: newTransaction.codTransactionId,
