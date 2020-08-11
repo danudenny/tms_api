@@ -14,7 +14,7 @@ export class ScanOutSmdVehiclePayloadVm {
   @ApiModelProperty()
   smd_trip: number;
 
-  @ApiModelProperty()
+  @ApiModelPropertyOptional()
   description: string;
 }
 
