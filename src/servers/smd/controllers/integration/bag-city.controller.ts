@@ -7,7 +7,7 @@ import {PermissionTokenGuard} from '../../../../shared/guards/permission-token.g
 import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
 import {BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm} from '../../models/bag-city-response.vm';
 import {BagCityPayloadVm, BagCityExportPayloadVm} from '../../models/bag-city-payload.vm';
-import { PrintBagCityPayloadVm } from '../../models/print-bag-city-payload.vm';
+import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm } from '../../models/print-bag-city-payload.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('SMD Bag City')
@@ -51,6 +51,16 @@ export class BagCityController {
     @Response() serverResponse: express.Response,
   ) {
     return BagCityService.printBagging(serverResponse, queryParams);
+  }
+
+  @Get('print-paper')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printBagCityForPaper(
+    @Query() queryParams: PrintBagCityForPaperPayloadVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return BagCityService.printBagCityForPaper(serverResponse, queryParams);
   }
 
   @Post('excel/store')

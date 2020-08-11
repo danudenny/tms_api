@@ -225,7 +225,7 @@ export class ScaninSmdService {
         throw new BadRequestException(errMessage);
       }
     } else if (payload.bag_item_number.length == 10) {
-      const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 3 );
+      const paramBagNumber = (payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 3 )).toUpperCase();
       // const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
       const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 3 , 3);
       const paramSeq = await paramBagSeq * 1;
