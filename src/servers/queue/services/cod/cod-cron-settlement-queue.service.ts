@@ -96,7 +96,6 @@ export class CodCronSettlementQueueService {
 
       const dataTotalMatch = await RawQueryService.queryWithParams(totalMatchQuery, { codVoucherId });
       const dataTotal = dataTotalMatch ? dataTotalMatch[0] : null;
-      console.log(dataTotal);
       if (dataTotal && dataTotal.totalVoucher === dataTotal.totalData) {
         const transactionDetailQuery = `
           SELECT
