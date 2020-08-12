@@ -7,7 +7,7 @@ import { PermissionTokenGuard } from '../../../../shared/guards/permission-token
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import {MasterDataService} from '../../services/integration/masterdata.service';
-import {MappingDoSmdResponseVm} from '../../models/mapping-do-smd.response.vm';
+import {MappingDoSmdResponseVm, MappingVendorResponseVm} from '../../models/mapping-do-smd.response.vm';
 
 @ApiUseTags('MASTER DATA')
 @Controller('smd/masterdata')
@@ -36,5 +36,14 @@ export class MasterDataController {
       payload,
       branchId,
     );
+  }
+
+  @Post('vendor/list')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: MappingVendorResponseVm })
+  public async mappingVendor(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
+    return MasterDataService.mappingVendor(payload);
   }
 }
