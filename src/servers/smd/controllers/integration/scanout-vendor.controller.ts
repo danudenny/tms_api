@@ -9,7 +9,7 @@ import { ScanoutSmdVendorService } from '../../services/integration/scanout-smd-
 
 @ApiUseTags('SCAN OUT SMD')
 @Controller('smd/vendor')
-export class ScanOutController {
+export class ScanOutVendorController {
   constructor() {}
 
   @Post('scanOut/route')
