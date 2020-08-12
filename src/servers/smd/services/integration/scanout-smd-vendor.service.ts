@@ -546,7 +546,7 @@ export class ScanoutSmdVendorService {
 
   }
 
-  static async scanOutItem(payload: any): Promise<any> {
+  static async scanOutVendorItem(payload: any): Promise<any> {
     // Bag Type 0 = Bagging, 1 =  Bag / Gab.Paket, 2 = Bag Representative / Gabung Sortir Kota
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();

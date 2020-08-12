@@ -23,7 +23,7 @@ export class ScanOutVendorController {
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async scanOutVendorItem(@Req() request: any, @Body() payload: ScanOutSmdVendorItemPayloadVm) {
-    return ScanoutSmdVendorService.scanOutItem(payload);
+    return ScanoutSmdVendorService.scanOutVendorItem(payload);
   }
 
 }
