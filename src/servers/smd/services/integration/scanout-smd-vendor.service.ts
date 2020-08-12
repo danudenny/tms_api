@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, PayloadTooLargeException } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -21,6 +21,8 @@ import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
+import { Vendor } from '../../../../shared/orm-entity/vendor';
+import { ScanOutSmdVendorRouteResponseVm } from '../../models/scanout-smd-vendor.response.vm';
 
 @Injectable()
 export class ScanoutSmdVendorService {
@@ -28,29 +30,26 @@ export class ScanoutSmdVendorService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const result = new ScanOutSmdVehicleResponseVm();
+    const result = new ScanOutSmdVendorRouteResponseVm();
     const timeNow = moment().toDate();
     const data = [];
-    if (payload.do_smd_id) {
-      const resultDoSmd = await DoSmd.findOne({
-        where: {
-          doSmdId: payload.do_smd_id,
-          isDeleted: false,
-        },
-      });
-      if (resultDoSmd) {
-      } else {
-        throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
-      }
+    let paramDoSmdId;
+    let paramsresultDoSmdDetailId;
+    paramDoSmdId = payload.do_smd_id;
+    if (paramDoSmdId) {
+      // Update
     } else {
+      // Insert
       const paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
 
-      const paramDoSmdId = await this.createDoSmd(
+      paramDoSmdId = await this.createDoSmd(
         paramDoSmdCode,
         timeNow,
         permissonPayload.branchId,
         authMeta.userId,
         1,
+        payload.vendor_id,
+        payload.vendor_name,
       );
 
       const paramDoSmdHistoryId = await this.createDoSmdHistory(
@@ -67,17 +66,240 @@ export class ScanoutSmdVendorService {
         authMeta.userId,
       );
 
-      data.push({
-        do_smd_id: paramDoSmdId,
-        do_smd_code: paramDoSmdCode,
-        departure_schedule_date_time: timeNow,
-      });
+      // data.push({
+      //   do_smd_id: paramDoSmdId,
+      //   do_smd_code: paramDoSmdCode,
+      //   departure_schedule_date_time: timeNow,
+      // });
     }
 
-    result.statusCode = HttpStatus.OK;
-    result.message = 'SMD Success Created';
-    result.data = data;
-    return result;
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: paramDoSmdId,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmd) {
+      // Cek Representative code
+      const resultRepresentative = await Representative.findOne({
+        where: {
+          representativeCode: payload.representative_code,
+          isDeleted: false,
+        },
+      });
+      if (resultRepresentative) {
+        const representaiverawQuery = `
+          SELECT
+            representative_code
+          FROM representative
+          where
+            representative_smd_id_parent  = ${resultRepresentative.representativeId} AND
+            is_deleted = FALSE;
+        `;
+        const resultDataRepresentativeChild = await RawQueryService.query(representaiverawQuery);
+        if (resultDataRepresentativeChild.length > 0) {
+          // For
+          for (let i = 0; i < resultDataRepresentativeChild.length; i++) {
+
+            const resultDoSmdDetail = await DoSmdDetail.findOne({
+              where: {
+                doSmdId: paramDoSmdId,
+                isDeleted: false,
+              },
+            });
+            if (resultDoSmdDetail) {
+                // Update Detail
+                paramsresultDoSmdDetailId = resultDoSmdDetail.doSmdDetailId;
+                const rawQuery = `
+                SELECT
+                  do_smd_detail_id ,
+                  representative_code_list
+                FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+                where
+                  s.code  = '${escape(resultDataRepresentativeChild[i].representative_code)}' AND
+                  do_smd_id = ${paramDoSmdId} AND
+                  is_deleted = FALSE;
+              `;
+                const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+                if (resultDataRepresentative.length > 0) {
+                throw new BadRequestException(`Representative Code already scan !!`);
+              } else {
+                await DoSmdDetail.update(
+                  { doSmdDetailId : resultDoSmdDetail.doSmdDetailId },
+                  {
+                    representativeCodeList: resultDoSmdDetail.representativeCodeList + ',' + resultDataRepresentativeChild[i].representative_code,
+                    userIdUpdated: authMeta.userId,
+                    updatedTime: timeNow,
+                  },
+                );
+
+              }
+            } else {
+              // Insert Detail
+              const rawQuery = `
+                SELECT
+                  do_smd_detail_id ,
+                  representative_code_list
+                FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+                where
+                  s.code  = '${escape(resultDataRepresentativeChild[i].representative_code)}' AND
+                  do_smd_id = ${paramDoSmdId} AND
+                  is_deleted = FALSE;
+              `;
+              const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+              if (resultDataRepresentative.length > 0) {
+                throw new BadRequestException(`Representative Code already scan !!`);
+              } else {
+                const paramDoSmdDetailId = await this.createDoSmdDetail(
+                  paramDoSmdId,
+                  null,
+                  payload.representative_code,
+                  resultDoSmd.doSmdTime,
+                  permissonPayload.branchId,
+                  null,
+                  authMeta.userId,
+                  payload.vendor_id,
+                  payload.vendor_name,
+                );
+
+                await DoSmd.update(
+                  { doSmdId : resultDoSmd.doSmdId },
+                  {
+                    doSmdDetailIdLast: paramDoSmdDetailId,
+                    totalDetail: resultDoSmd.totalDetail + 1,
+                    trip: Number(resultDoSmd.trip) + 1,
+                    userIdUpdated: authMeta.userId,
+                    updatedTime: timeNow,
+                  },
+                );
+              }
+            }
+          }
+          const resultDoSmdDetail = await DoSmdDetail.findOne({
+            where: {
+              doSmdDetailId:  paramsresultDoSmdDetailId,
+              isDeleted: false,
+            },
+          });
+          data.push({
+            do_smd_id: resultDoSmd.doSmdId,
+            do_smd_code: resultDoSmd.doSmdCode,
+            do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+            vendor_name: payload.vendor_name,
+            representative_code_list: resultDoSmdDetail.representativeCodeList,
+          });
+          result.statusCode = HttpStatus.OK;
+          result.message = 'SMD Route Success Created';
+          result.data = data;
+          return result;
+
+        } else {
+          const resultDoSmdDetail = await DoSmdDetail.findOne({
+            where: {
+              doSmdId: resultDoSmd.doSmdId,
+              isDeleted: false,
+            },
+          });
+          if (resultDoSmdDetail) {
+            const rawQuery = `
+              SELECT
+                do_smd_detail_id ,
+                representative_code_list
+              FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+              where
+                s.code  = '${escape(payload.representative_code)}' AND
+                do_smd_id = ${paramDoSmdId} AND
+                is_deleted = FALSE;
+            `;
+            const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+            if (resultDataRepresentative.length > 0) {
+              throw new BadRequestException(`Representative Code already scan !!`);
+            } else {
+              await DoSmdDetail.update(
+                { doSmdDetailId : resultDoSmdDetail.doSmdDetailId },
+                {
+
+                  representativeCodeList: resultDoSmdDetail.representativeCodeList + ',' + payload.representative_code,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+
+              data.push({
+                do_smd_id: resultDoSmd.doSmdId,
+                do_smd_code: resultDoSmd.doSmdCode,
+                do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+                vendor_name: payload.vendor_name,
+                representative_code_list: resultDoSmdDetail.representativeCodeList + ',' + payload.representative_code,
+              });
+              result.statusCode = HttpStatus.OK;
+              result.message = 'SMD Route Success Upated';
+              result.data = data;
+              return result;
+            }
+          } else {
+            const rawQuery = `
+              SELECT
+                do_smd_detail_id ,
+                representative_code_list
+              FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+              where
+                s.code  = '${escape(payload.representative_code)}' AND
+                do_smd_id = ${payload.do_smd_id} AND
+                is_deleted = FALSE;
+            `;
+            const resultDataRepresentative = await RawQueryService.query(rawQuery);
+
+            if (resultDataRepresentative.length > 0) {
+              throw new BadRequestException(`Representative Code already scan !!`);
+            } else {
+              const paramDoSmdDetailId = await this.createDoSmdDetail(
+                resultDoSmd.doSmdId,
+                null,
+                payload.representative_code,
+                resultDoSmd.doSmdTime,
+                permissonPayload.branchId,
+                null,
+                authMeta.userId,
+                payload.vendor_id,
+                payload.vendor_name,
+              );
+
+              await DoSmd.update(
+                { doSmdId : resultDoSmd.doSmdId },
+                {
+                  branchToNameList: (resultDoSmd.branchToNameList) ? resultDoSmd.branchToNameList + ',' + resultbranchTo.branchName : resultbranchTo.branchName,
+                  doSmdDetailIdLast: paramDoSmdDetailId,
+                  totalDetail: resultDoSmd.totalDetail + 1,
+                  trip: Number(resultDoSmd.trip) + 1,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                },
+              );
+
+              data.push({
+                do_smd_id: resultDoSmd.doSmdId,
+                do_smd_code: resultDoSmd.doSmdCode,
+                do_smd_detail_id: paramDoSmdDetailId,
+                vendor_name: payload.vendor_name,
+                representative_code_list: payload.representative_code,
+              });
+              result.statusCode = HttpStatus.OK;
+              result.message = 'SMD Route Success Created';
+              result.data = data;
+              return result;
+            }
+          }
+        }
+      } else {
+        throw new BadRequestException(`Can't Find  Representative Code : ` + payload.representative_code);
+      }
+    } else {
+      throw new BadRequestException(`Can't Find Do SMD ID :` + paramDoSmdId);
+    }
 
   }
 
@@ -870,388 +1092,14 @@ export class ScanoutSmdVendorService {
     await BagItemHistory.insert(resultbagItemHistory);
   }
 
-  static async scanOutSeal(payload: any): Promise<any> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-
-    const result = new ScanOutSmdSealResponseVm();
-    const timeNow = moment().toDate();
-    const data = [];
-    let rawQuery;
-
-    if (payload.seal_seq == 1) {
-      rawQuery = `
-        SELECT
-          do_smd_detail_id
-        FROM do_smd_detail
-        WHERE
-          do_smd_id = ${payload.do_smd_id} AND
-          arrival_time IS NULL AND
-          seal_number IS NULL AND
-          is_deleted = FALSE
-        ;
-      `;
-    } else {
-      rawQuery = `
-        SELECT
-          do_smd_detail_id
-        FROM do_smd_detail
-        WHERE
-          do_smd_id = ${payload.do_smd_id} AND
-          arrival_time IS NULL AND
-          is_deleted = FALSE
-        ;
-      `;
-    }
-    const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
-    if (resultDataDoSmdDetail.length > 0 ) {
-      for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-        await DoSmdDetail.update(
-          { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
-          {
-            sealNumber: payload.seal_number,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
-          },
-        );
-      }
-      await DoSmd.update(
-        { doSmdId : payload.do_smd_id },
-        {
-          sealNumberLast: payload.seal_number,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
-      const resultDoSmd = await DoSmd.findOne({
-        where: {
-          doSmdId: payload.do_smd_id,
-          isDeleted: false,
-        },
-      });
-      let paramStatusId;
-      if (payload.seal_seq == 1) {
-        // Untuk Seal Pertama X
-        paramStatusId = 2000;
-      } else {
-        //  Untuk Ganti Seal
-        paramStatusId = 1200;
-      }
-      const paramDoSmdHistoryId = await this.createDoSmdHistory(
-        resultDoSmd.doSmdId,
-        null,
-        resultDoSmd.doSmdVehicleIdLast,
-        null,
-        null,
-        resultDoSmd.doSmdTime,
-        permissonPayload.branchId,
-        paramStatusId,
-        payload.seal_number,
-        null,
-        authMeta.userId,
-      );
-      data.push({
-        do_smd_id: resultDoSmd.doSmdId,
-        do_smd_code: resultDoSmd.doSmdCode,
-        seal_number: payload.seal_number,
-      });
-      result.statusCode = HttpStatus.OK;
-      result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' With Seal ' + payload.seal_number + ' Success Created';
-      result.data = data;
-      return result;
-    } else {
-      throw new BadRequestException(`Updated Seal Fail`);
-    }
-  }
-
-  public static async deleteSmd(paramdoSmdId: number) {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-
-    const resultDoSmd = await DoSmd.findOne({
-      where: {
-        doSmdId: paramdoSmdId,
-        isDeleted: false,
-      },
-    });
-    if (resultDoSmd) {
-      await DoSmd.update(
-        { doSmdId : paramdoSmdId },
-        {
-          isDeleted: true,
-          userIdUpdated: authMeta.userId,
-          updatedTime: moment().toDate(),
-        },
-      );
-      const rawQuery = `
-        SELECT
-          do_smd_detail_id
-        FROM do_smd_detail
-        WHERE
-          do_smd_id = ${paramdoSmdId} AND
-          is_deleted = FALSE;
-      `;
-      const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
-      if (resultDataDoSmdDetail.length > 0 ) {
-        await DoSmdDetail.update(
-          { doSmdId : paramdoSmdId },
-          {
-            isDeleted: true,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-        await DoSmdVehicle.update(
-          { doSmdId : paramdoSmdId },
-          {
-            isDeleted: true,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-          await DoSmdDetailItem.update(
-            { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
-            {
-              isDeleted: true,
-              userIdUpdated: authMeta.userId,
-              updatedTime: moment().toDate(),
-            },
-          );
-        }
-        const paramDoSmdHistoryId = await this.createDoSmdHistory(
-          resultDoSmd.doSmdId,
-          null,
-          resultDoSmd.doSmdVehicleIdLast,
-          null,
-          null,
-          resultDoSmd.doSmdTime,
-          permissonPayload.branchId,
-          7000,
-          null,
-          null,
-          authMeta.userId,
-        );
-        BagAwbDeleteHistoryInHubFromSmdQueueService.perform(
-          paramdoSmdId,
-          authMeta.userId,
-        );
-      }
-    } else {
-      throw new BadRequestException(`SMD ID: ` + paramdoSmdId + ` Can't Found !`);
-    }
-  }
-
-  static async scanOutHandover(payload: any): Promise<any> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-
-    const result = new ScanOutSmdHandoverResponseVm();
-    const timeNow = moment().toDate();
-    const data = [];
-
-    const resultDoSmd = await DoSmd.findOne({
-      where: {
-        doSmdId: payload.do_smd_id,
-        doSmdStatusIdLast: 8000,
-        isDeleted: false,
-      },
-    });
-    if (resultDoSmd) {
-      const rawQuery = `
-        SELECT
-          do_smd_vehicle_id
-        FROM do_smd_vehicle
-        WHERE
-          do_smd_vehicle_id = ${resultDoSmd.doSmdVehicleIdLast} AND
-          is_active = TRUE AND
-          reason_id IS NOT NULL AND
-          is_deleted = FALSE;
-      `;
-      const resultDataDoSmdVehicle = await RawQueryService.query(rawQuery);
-      if (resultDataDoSmdVehicle.length > 0 ) {
-        // Set Active False yang lama
-        await DoSmdVehicle.update(
-          { doSmdVehicleId : resultDataDoSmdVehicle[0].do_smd_vehicle_id },
-          {
-            isActive: false,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-        // Create Vehicle Dulu dan jangan update ke do_smd
-        const paramDoSmdVehicleId = await this.createDoSmdVehicle(
-          payload.do_smd_id,
-          payload.vehicle_number,
-          payload.employee_id_driver,
-          permissonPayload.branchId,
-          authMeta.userId,
-        );
-
-        const paramDoSmdHistoryId = await this.createDoSmdHistory(
-          resultDoSmd.doSmdId,
-          null,
-          resultDoSmd.doSmdVehicleIdLast,
-          null,
-          null,
-          resultDoSmd.doSmdTime,
-          permissonPayload.branchId,
-          1150,
-          null,
-          null,
-          authMeta.userId,
-        );
-
-        await DoSmd.update(
-          { doSmdId :  payload.do_smd_id},
-          {
-            doSmdStatusIdLast: 1150,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-
-        await DoSmdDetail.update(
-          { doSmdId :  payload.do_smd_id, arrivalTime: null},
-          {
-            doSmdStatusIdLast: 1150,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-
-        data.push({
-          do_smd_id: resultDoSmd.doSmdId,
-          do_smd_code: resultDoSmd.doSmdCode,
-          do_smd_vehicle_id: paramDoSmdVehicleId,
-        });
-
-        result.statusCode = HttpStatus.OK;
-        result.message = 'SMD Code ' + resultDoSmd.doSmdCode + 'Success Handover';
-        result.data = data;
-        return result;
-      } else {
-        throw new BadRequestException(`Can't Found Trouble Reason For SMD: ` + resultDoSmd.doSmdCode);
-      }
-    } else {
-      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
-    }
-  }
-
-  static async scanOutChangeVehicle(payload: any): Promise<any> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-
-    const result = new ScanOutSmdHandoverResponseVm();
-    const timeNow = moment().toDate();
-    const data = [];
-    let paramDoSmdStatus;
-
-    const resultDoSmd = await DoSmd.findOne({
-      where: {
-        doSmdId: payload.do_smd_id,
-        doSmdStatusIdLast: In([1000, 2000]),
-        isDeleted: false,
-      },
-    });
-    if (resultDoSmd) {
-      const rawQuery = `
-        SELECT
-          do_smd_vehicle_id,
-          vehicle_number,
-          employee_id_driver
-        FROM do_smd_vehicle
-        WHERE
-          do_smd_vehicle_id = ${resultDoSmd.doSmdVehicleIdLast} AND
-          is_active = TRUE AND
-          is_deleted = FALSE;
-      `;
-      const resultDataDoSmdVehicle = await RawQueryService.query(rawQuery);
-      if (resultDataDoSmdVehicle.length > 0 ) {
-        // Set Active False yang lama
-        await DoSmdVehicle.update(
-          { doSmdVehicleId : resultDataDoSmdVehicle[0].do_smd_vehicle_id },
-          {
-            isActive: false,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-        // Create Vehicle Dulu dan jangan update ke do_smd
-        const paramDoSmdVehicleId = await this.createDoSmdVehicle(
-          payload.do_smd_id,
-          payload.vehicle_number,
-          payload.employee_id_driver,
-          permissonPayload.branchId,
-          authMeta.userId,
-        );
-
-        // await DoSmd.update(
-        //   { doSmdId : payload.do_smd_id},
-        //   {
-        //     doSmdVehicleIdLast: paramDoSmdVehicleId,
-        //     userIdUpdated: authMeta.userId,
-        //     updatedTime: moment().toDate(),
-        //   },
-        // );
-        if (resultDataDoSmdVehicle[0].employee_id_driver == payload.employee_id_driver) {
-          paramDoSmdStatus = 1100;
-        } else {
-          paramDoSmdStatus = 1050;
-        }
-
-        await DoSmd.update(
-          { doSmdId : payload.do_smd_id},
-          {
-            doSmdVehicleIdLast: paramDoSmdVehicleId,
-            doSmdStatusIdLast: paramDoSmdStatus,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-        const paramDoSmdHistoryId = await this.createDoSmdHistory(
-          resultDoSmd.doSmdId,
-          null,
-          paramDoSmdVehicleId,
-          null,
-          null,
-          resultDoSmd.doSmdTime,
-          permissonPayload.branchId,
-          paramDoSmdStatus,
-          null,
-          null,
-          authMeta.userId,
-        );
-
-        data.push({
-          do_smd_id: resultDoSmd.doSmdId,
-          do_smd_code: resultDoSmd.doSmdCode,
-          do_smd_vehicle_id: paramDoSmdVehicleId,
-        });
-
-        result.statusCode = HttpStatus.OK;
-        if (paramDoSmdStatus == 1100) {
-          result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' Vehicle Success Changed ';
-        } else {
-          result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' Driver Success Changed ';
-        }
-
-        result.data = data;
-        return result;
-      } else {
-        throw new BadRequestException(`Can't Found Trouble Reason For SMD: ` + resultDoSmd.doSmdCode);
-      }
-    } else {
-      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
-    }
-  }
-
   private static async createDoSmd(
     paramDoSmdCode: string,
     paramDoSmdTime: Date,
     paramBranchId: number,
     userId: number,
     paramCounterTrip: number,
+    paramVendorId: number,
+    paramVendorName: string,
   ) {
     const dataDoSmd = DoSmd.create({
       doSmdCode: paramDoSmdCode,
@@ -1261,6 +1109,9 @@ export class ScanoutSmdVendorService {
       totalVehicle: 1,
       departureScheduleDateTime: paramDoSmdTime,
       counterTrip: paramCounterTrip,
+      vendorId: paramVendorId,
+      vendorName: paramVendorName,
+      isVendor: true,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,
@@ -1303,6 +1154,8 @@ export class ScanoutSmdVendorService {
     paramBranchId: number,
     paramBranchIdTo: number,
     userId: number,
+    paramVendorId: number,
+    paramVendorName: string,
   ) {
     const dataDoSmdDetail = DoSmdDetail.create({
       doSmdId: paramDoSmdId,
@@ -1313,6 +1166,9 @@ export class ScanoutSmdVendorService {
       branchIdTo: paramBranchIdTo,
       representativeCodeList: paramrepresentativeCode,
       departureScheduleDateTime: paramDoSmdDepartureScheduleDate,
+      vendorId: paramVendorId,
+      vendorName: paramVendorName,
+      isVendor: true,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,
