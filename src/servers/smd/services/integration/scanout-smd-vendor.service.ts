@@ -29,6 +29,7 @@ import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { BagRepresentativeScanOutHubQueueService } from '../../../queue/services/bag-representative-scan-out-hub-queue.service';
 
+
 @Injectable()
 export class ScanoutSmdVendorService {
   static async scanOutVendorRoute(payload: any): Promise<any> {
