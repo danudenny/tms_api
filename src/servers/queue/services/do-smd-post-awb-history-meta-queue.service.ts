@@ -193,12 +193,13 @@ export class DoSmdPostAwbHistoryMetaQueueService {
     return DoSmdPostAwbHistoryMetaQueueService.queue.add(obj);
   }
 
-  public static async createJobByOutHubGSK(
+  public static async createJobByVendorSmd(
     awbItemId: number,
     branchId: number,
     userId: number,
     awbStatusId: number,
     vendorName: string,
+    date?: Date,
   ) {
     // TODO: ONLY OUT_HUB GSK
     let branchName = 'Kantor Pusat';
@@ -221,7 +222,7 @@ export class DoSmdPostAwbHistoryMetaQueueService {
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver: null,
-      timestamp: moment().toDate(),
+      timestamp: date ? date : moment().toDate(),
       noteInternal,
       notePublic,
       branchIdNext: null,

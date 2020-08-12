@@ -28,7 +28,7 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { BagRepresentativeScanOutHubQueueService } from '../../../queue/services/bag-representative-scan-out-hub-queue.service';
-
+import {BagScanVendorQueueService} from '../../../queue/services/bag-scan-vendor-queue.service';
 
 @Injectable()
 export class ScanoutSmdVendorService {
@@ -652,18 +652,6 @@ export class ScanoutSmdVendorService {
               updatedTime: timeNow,
             },
           );
-
-          BagRepresentativeScanDoSmdQueueService.perform(
-            resultDataBagRepresentative[0].bag_representative_id,
-            resultDataBagRepresentative[0].representative_id_to,
-            resultDataBagRepresentative[0].bag_representative_code,
-            resultDataBagRepresentative[0].bag_representative_date,
-            resultDataBagRepresentative[0].total_item,
-            resultDataBagRepresentative[0].total_weight,
-            authMeta.userId,
-            permissonPayload.branchId,
-          );
-
           BagRepresentativeScanOutHubQueueService.perform(
             resultDataBagRepresentative[0].bag_representative_id,
             resultDataBagRepresentative[0].representative_id_to,
@@ -723,7 +711,8 @@ export class ScanoutSmdVendorService {
           SELECT
             do_smd_detail_id ,
             representative_code_list,
-            total_bagging
+            total_bagging,
+            vendor_name
           FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
           where
             s.code  = '${escape(resultDataBagItem[0].representative_code)}' AND
@@ -787,12 +776,13 @@ export class ScanoutSmdVendorService {
             );
 
             // Generate history bag and its awb IN_HUB
-            BagScanDoSmdQueueService.perform(
+            BagScanVendorQueueService.perform(
               null,
               authMeta.userId,
               permissonPayload.branchId,
               arrBagItemId,
               true,
+              resultDataRepresentative[0].vendor_name,
             );
 
             data.push({
@@ -855,7 +845,8 @@ export class ScanoutSmdVendorService {
             SELECT
               do_smd_detail_id ,
               representative_code_list,
-              total_bag
+              total_bag,
+              vendor_name
             FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
             where
               s.code  = '${escape(resultDataBag[0].representative_code)}' AND
@@ -911,10 +902,13 @@ export class ScanoutSmdVendorService {
               await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
 
               // Generate history bag and its awb IN_HUB
-              BagScanDoSmdQueueService.perform(
+              BagScanVendorQueueService.perform(
                 Number(resultDataBag[0].bag_item_id),
                 authMeta.userId,
                 permissonPayload.branchId,
+                null,
+                true,
+                resultDataRepresentative[0].vendor_name,
               );
 
               data.push({
@@ -974,7 +968,8 @@ export class ScanoutSmdVendorService {
             SELECT
               do_smd_detail_id ,
               representative_code_list,
-              total_bag
+              total_bag,
+              vendor_name
             FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
             where
               s.code  = '${escape(resultDataBag[0].representative_code)}' AND
@@ -1030,10 +1025,13 @@ export class ScanoutSmdVendorService {
               await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
 
               // Generate history bag and its awb IN_HUB
-              BagScanDoSmdQueueService.perform(
+              BagScanVendorQueueService.perform(
                 Number(resultDataBag[0].bag_item_id),
                 authMeta.userId,
                 permissonPayload.branchId,
+                null,
+                true,
+                resultDataRepresentative[0].vendor_name,
               );
 
               data.push({
