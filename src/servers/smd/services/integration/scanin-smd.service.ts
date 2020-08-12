@@ -435,6 +435,7 @@ export class ScaninSmdService {
         LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
         WHERE
           doPod.do_pod_code = '${payload.bag_item_number}' AND
+          doPodDetailBag.is_deleted = false AND
           (bih.bag_item_status_id = 4500 OR bih.bag_item_status_id = 500 OR bih.bag_item_status_id IS NULL)
         GROUP BY bagnumber
         `;
@@ -450,6 +451,7 @@ export class ScaninSmdService {
         LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
         WHERE
           doPod.do_pod_code =  '${payload.bag_item_number}' AND
+          doPodDetailBag.is_deleted = false AND
           (bih.bag_item_status_id <> 4500 AND bih.bag_item_status_id <> 500 AND bih.bag_item_status_id IS NOT NULL)
         GROUP BY bagnumber
         `;
