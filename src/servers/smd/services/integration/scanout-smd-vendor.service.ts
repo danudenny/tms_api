@@ -23,7 +23,8 @@ import { Vendor } from '../../../../shared/orm-entity/vendor';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { ScanOutSmdVendorRouteResponseVm, ScanOutSmdVendorListResponseVm,ScanOutSmdVendorEndResponseVm, ScanOutSmdVendorItemResponseVm } from '../../models/scanout-smd-vendor.response.vm';
+import { ScanOutSmdVendorRouteResponseVm, ScanOutSmdVendorListResponseVm, ScanOutSmdVendorEndResponseVm, ScanOutSmdVendorItemResponseVm } from '../../models/scanout-smd-vendor.response.vm';
+import { BagRepresentativeScanOutHubQueueService } from '../../../queue/services/bag-representative-scan-out-hub-queue.service';
 
 @Injectable()
 export class ScanoutSmdVendorService {
@@ -593,8 +594,9 @@ export class ScanoutSmdVendorService {
           SELECT
             do_smd_detail_id ,
             representative_code_list,
-            total_bag_representative
-          FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+            total_bag_representative,
+            vendor_name
+          FROM do_smd_detail, unnest(string_to_array(representative_code_list , ','))  s(code)
           where
             s.code  = '${escape(resultDataBagRepresentative[0].representative_code)}' AND
             do_smd_id = ${payload.do_smd_id} AND
@@ -656,6 +658,18 @@ export class ScanoutSmdVendorService {
             resultDataBagRepresentative[0].total_weight,
             authMeta.userId,
             permissonPayload.branchId,
+          );
+
+          BagRepresentativeScanOutHubQueueService.perform(
+            resultDataBagRepresentative[0].bag_representative_id,
+            resultDataBagRepresentative[0].representative_id_to,
+            resultDataBagRepresentative[0].bag_representative_code,
+            resultDataBagRepresentative[0].bag_representative_date,
+            resultDataBagRepresentative[0].total_item,
+            resultDataBagRepresentative[0].total_weight,
+            authMeta.userId,
+            permissonPayload.branchId,
+            resultDataRepresentative[0].vendor_name,
           );
 
           data.push({
