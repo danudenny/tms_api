@@ -85,9 +85,9 @@ export class CodCronSettlementQueueService {
       const codVoucherId = voucher.codVoucherId;
       const totalMatchQuery = `
         SELECT
-          count(cvd.awb_number) AS “totalVoucher”,
-          count(ctd.awb_number) AS “totalData”,
-          sum(ctd.cod_value) AS “totalCodValue”
+          count(cvd.awb_number) AS "totalVoucher",
+          count(ctd.awb_number) AS "totalData",
+          sum(ctd.cod_value) AS "totalCodValue"
         FROM
           cod_voucher_detail cvd
           LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
@@ -99,8 +99,8 @@ export class CodCronSettlementQueueService {
       if (dataTotal && dataTotal.totalVoucher === dataTotal.totalData) {
         const transactionDetailQuery = `
           SELECT
-            cvd.awb_number AS “awbVoucher”,
-            ctd.*
+            cvd.awb_number AS "awbVoucher",
+            ctd.cod_transaction_detail_id AS "codTransactionDetailId"
           FROM
             cod_voucher_detail cvd
             LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
