@@ -462,6 +462,7 @@ export class SmdPrintService {
         doSmdTime: true,
         totalBagging: true,
         totalBag: true,
+        vendorName: true,
         totalBagRepresentative: true,
         doSmdDetails: {
           doSmdDetailId: true,
@@ -470,11 +471,6 @@ export class SmdPrintService {
           totalBag: true,
           totalBagging: true,
           totalBagRepresentative: true,
-        },
-        vendor: {
-          vendorId: true,
-          vendorCode: true,
-          vendorName: true,
         },
       })
       .where(e => e.doSmdId, w => w.equals(queryParams.id))
