@@ -470,13 +470,6 @@ export class SmdPrintService {
           totalBag: true,
           totalBagging: true,
           totalBagRepresentative: true,
-          branchTo: {
-            branchId: true,
-            branchName: true,
-            representative: {
-              representativeCode: true,
-            },
-          },
         },
         vendor: {
           vendorId: true,
