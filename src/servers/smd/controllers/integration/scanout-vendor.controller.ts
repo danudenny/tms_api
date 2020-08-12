@@ -4,7 +4,7 @@ import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { ScanOutSmdVendorRoutePayloadVm, ScanOutSmdVendorItemPayloadVm } from '../../models/scanout-smd-vendor.payload.vm';
+import { ScanOutSmdVendorRoutePayloadVm, ScanOutSmdVendorItemPayloadVm, ScanOutSmdVendorEndPayloadVm } from '../../models/scanout-smd-vendor.payload.vm';
 import { ScanoutSmdVendorService } from '../../services/integration/scanout-smd-vendor.service';
 
 @ApiUseTags('SCAN OUT SMD')
@@ -26,4 +26,10 @@ export class ScanOutVendorController {
     return ScanoutSmdVendorService.scanOutVendorItem(payload);
   }
 
+  @Post('scanOut/end')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async scanOutSeal(@Req() request: any, @Body() payload: ScanOutSmdVendorEndPayloadVm) {
+    return ScanoutSmdVendorService.scanOutVendorEnd(payload);
+  }
 }
