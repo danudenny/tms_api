@@ -437,3 +437,37 @@ export class ScanOutImageVm {
   @ApiModelProperty()
   image_type: string;
 }
+
+export class ScanOutSmdVendorListDetailResponseVm {
+  @ApiModelProperty()
+  vendorId: number;
+
+  @ApiModelProperty()
+  vendorName: string;
+
+  @ApiModelProperty()
+  vendorCode: string;
+
+  @ApiModelProperty()
+  doSmdId: string;
+
+  @ApiModelProperty()
+  doSmdCode: string;
+
+  @ApiModelProperty()
+  doSmdTime: string;
+
+  @ApiModelProperty()
+  totalBag: string;
+
+  @ApiModelProperty()
+  totalBagging: string;
+
+  @ApiModelProperty()
+  totalBagRepresentative: string;
+}
+
+export class ScanOutSmdVendorListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [ScanOutSmdVendorListDetailResponseVm] })
+  data: ScanOutSmdVendorListDetailResponseVm[];
+}
