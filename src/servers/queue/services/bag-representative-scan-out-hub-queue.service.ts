@@ -10,6 +10,7 @@ import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
 import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-meta-queue.service';
 import {In} from 'typeorm';
 import {BagRepresentativeHistory} from '../../../shared/orm-entity/bag-representative-history';
+import {BAG_REPRESENTATIVE_STATUS} from '../../../shared/constants/bag-representative-status.constant';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -66,7 +67,7 @@ export class BagRepresentativeScanOutHubQueueService {
       historyBag.bagRepresentativeCode = data.bagRepresentativeCode;
       historyBag.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
       historyBag.bagRepresentativeId = data.bagRepresentativeId;
-      historyBag.bagRepresentativeStatusIdLast = BAG_STATUS.OUT_HUB.toString();
+      historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.IN_HUB.toString();
       historyBag.branchId = data.branchId;
       historyBag.representativeIdTo = data.representativeIdTo;
       historyBag.totalItem = data.totalItem;
@@ -77,18 +78,42 @@ export class BagRepresentativeScanOutHubQueueService {
       historyBag.updatedTime = moment().toDate();
       await BagRepresentativeHistory.insert(historyBag);
 
+      const historyBagOut = BagRepresentativeHistory.create();
+      historyBagOut.bagRepresentativeCode = data.bagRepresentativeCode;
+      historyBagOut.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
+      historyBagOut.bagRepresentativeId = data.bagRepresentativeId;
+      historyBagOut.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_HUB.toString();
+      historyBagOut.branchId = data.branchId;
+      historyBagOut.representativeIdTo = data.representativeIdTo;
+      historyBagOut.totalItem = data.totalItem;
+      historyBagOut.totalWeight = data.totalWeight;
+      historyBagOut.userIdCreated = data.userId;
+      historyBagOut.createdTime = moment().add(1, 'minutes').toDate();
+      historyBagOut.userIdUpdated = data.userId;
+      historyBagOut.updatedTime = moment().add(1, 'minutes').toDate();
+      await BagRepresentativeHistory.insert(historyBagOut);
+
       for (const item of resultDataRepresentative) {
         if (item.awb_item_id && !tempAwb.includes(item.awb_item_id)) {
           // handle duplicate awb item id
           tempAwb.push(item.awb_item_id);
 
-          DoSmdPostAwbHistoryMetaQueueService.createJobByOutHubGSK(
+          DoSmdPostAwbHistoryMetaQueueService.createJobByVendorSmd(
+            Number(item.awb_item_id),
+            Number(data.branchId),
+            Number(data.userId),
+            AWB_STATUS.IN_HUB,
+            data.vendorName,
+          );
+          DoSmdPostAwbHistoryMetaQueueService.createJobByVendorSmd(
             Number(item.awb_item_id),
             Number(data.branchId),
             Number(data.userId),
             AWB_STATUS.OUT_HUB,
             data.vendorName,
+            moment().add(1, 'minutes').toDate(),
           );
+
         }
       }
       return true;
