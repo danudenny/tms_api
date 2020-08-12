@@ -28,7 +28,7 @@ export class Vendor extends TmsBaseEntity {
     length: 255,
     name: 'address',
   })
-  address: Date;
+  address: string;
 
   @Column('bigint', {
     nullable: false,
@@ -47,7 +47,7 @@ export class Vendor extends TmsBaseEntity {
     length: 255,
     name: 'note',
   })
-  note: Date;
+  note: string;
 
   @Column('bigint', {
     nullable: false,
