@@ -271,7 +271,6 @@ export class ScanoutSmdVendorService {
               await DoSmd.update(
                 { doSmdId : resultDoSmd.doSmdId },
                 {
-                  branchToNameList: (resultDoSmd.branchToNameList) ? resultDoSmd.branchToNameList + ',' + resultbranchTo.branchName : resultbranchTo.branchName,
                   doSmdDetailIdLast: paramDoSmdDetailId,
                   totalDetail: resultDoSmd.totalDetail + 1,
                   trip: Number(resultDoSmd.trip) + 1,
@@ -380,18 +379,6 @@ export class ScanoutSmdVendorService {
                       updatedTime: timeNow,
                     },
                   );
-
-                  // data.push({
-                  //   do_smd_id: resultDoSmd.doSmdId,
-                  //   do_smd_code: resultDoSmd.doSmdCode,
-                  //   do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
-                  //   branch_name: resultbranchTo.branchName,
-                  //   representative_code_list: resultDoSmdDetail.representativeCodeList + ',' + resultDataRepresentativeChild[i].representative_code,
-                  // });
-                  // result.statusCode = HttpStatus.OK;
-                  // result.message = 'SMD Route Success Upated';
-                  // result.data = data;
-                  // return result;
                 }
               } else {
                 const rawQuery = `
@@ -417,6 +404,8 @@ export class ScanoutSmdVendorService {
                     permissonPayload.branchId,
                     resultbranchTo.branchId,
                     authMeta.userId,
+                    payload.vendor_id,
+                    payload.vendor_name,
                   );
 
                   await DoSmd.update(
@@ -430,18 +419,6 @@ export class ScanoutSmdVendorService {
                       updatedTime: timeNow,
                     },
                   );
-
-                  // data.push({
-                  //   do_smd_id: resultDoSmd.doSmdId,
-                  //   do_smd_code: resultDoSmd.doSmdCode,
-                  //   do_smd_detail_id: paramDoSmdDetailId,
-                  //   branch_name: resultbranchTo.branchName,
-                  //   representative_code_list: payload.representative_code,
-                  // });
-                  // result.statusCode = HttpStatus.OK;
-                  // result.message = 'SMD Route Success Created';
-                  // result.data = data;
-                  // return result;
                 }
               }
             }
@@ -532,6 +509,8 @@ export class ScanoutSmdVendorService {
                   permissonPayload.branchId,
                   resultbranchTo.branchId,
                   authMeta.userId,
+                  payload.vendor_id,
+                  payload.vendor_name,
                 );
 
                 await DoSmd.update(
