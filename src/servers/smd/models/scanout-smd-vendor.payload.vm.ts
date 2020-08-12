@@ -24,3 +24,9 @@ export class ScanOutSmdVendorItemPayloadVm {
   item_number: string;
 
 }
+
+export class ScanOutSmdVendorEndPayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+}

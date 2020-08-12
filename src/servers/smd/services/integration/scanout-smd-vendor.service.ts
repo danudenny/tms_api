@@ -18,15 +18,12 @@ import { DoSmdVehicle } from '../../../../shared/orm-entity/do_smd_vehicle';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
-import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 import { Vendor } from '../../../../shared/orm-entity/vendor';
-import { ScanOutSmdVendorRouteResponseVm } from '../../models/scanout-smd-vendor.response.vm';
-import { ScanOutSmdVendorListResponseVm } from '../../models/scanout-smd-vendor.response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { ScanOutSmdVendorRouteResponseVm, ScanOutSmdVendorListResponseVm ,ScanOutSmdVendorEndResponseVm, ScanOutSmdVendorItemResponseVm } from '../../models/scanout-smd-vendor.response.vm';
 
 @Injectable()
 export class ScanoutSmdVendorService {
@@ -550,12 +547,12 @@ export class ScanoutSmdVendorService {
 
   }
 
-  static async scanOutItem(payload: any): Promise<any> {
+  static async scanOutVendorItem(payload: any): Promise<any> {
     // Bag Type 0 = Bagging, 1 =  Bag / Gab.Paket, 2 = Bag Representative / Gabung Sortir Kota
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const result = new ScanOutSmdItemResponseVm();
+    const result = new ScanOutSmdVendorItemResponseVm();
     const timeNow = moment().toDate();
     const arrBagItemId = [];
     const data = [];
@@ -795,7 +792,7 @@ export class ScanoutSmdVendorService {
               total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Route Success Created';
+            result.message = 'SMD Item Success Created';
             result.data = data;
             return result;
           }
@@ -917,7 +914,7 @@ export class ScanoutSmdVendorService {
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Route Success Created';
+              result.message = 'SMD Item Success Created';
               result.data = data;
               return result;
           } else {
@@ -1036,7 +1033,7 @@ export class ScanoutSmdVendorService {
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Route Success Created';
+              result.message = 'SMD Item Success Created';
               result.data = data;
               return result;
           } else {
@@ -1050,6 +1047,49 @@ export class ScanoutSmdVendorService {
       } else {
         throw new BadRequestException(`Bagging / Bag Not Found`);
       }
+    }
+
+  }
+
+  static async scanOutVendorEnd(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdVendorEndResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmd) {
+      const paramDoSmdHistoryId = await this.createDoSmdHistory(
+        resultDoSmd.doSmdId,
+        null,
+        resultDoSmd.doSmdVehicleIdLast,
+        null,
+        null,
+        resultDoSmd.doSmdTime,
+        permissonPayload.branchId,
+        2050,
+        payload.seal_number,
+        null,
+        authMeta.userId,
+      );
+      data.push({
+        do_smd_id: resultDoSmd.doSmdId,
+        do_smd_code: resultDoSmd.doSmdCode,
+        vendor_name: resultDoSmd.vendorName,
+      });
+      result.statusCode = HttpStatus.OK;
+      result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' With Vendor ( ' + resultDoSmd.vendorName + ' ) Success Created';
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
     }
 
   }
