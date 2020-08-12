@@ -36,10 +36,9 @@ export class ScanoutSmdVendorService {
     let paramDoSmdId;
     let paramsresultDoSmdDetailId;
     paramDoSmdId = payload.do_smd_id;
-    if (paramDoSmdId) {
-      // Update
-    } else {
-      // Insert
+
+    if (!paramDoSmdId) {
+      // Insert New Darat MP
       const paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
 
       paramDoSmdId = await this.createDoSmd(
@@ -65,12 +64,6 @@ export class ScanoutSmdVendorService {
         null,
         authMeta.userId,
       );
-
-      // data.push({
-      //   do_smd_id: paramDoSmdId,
-      //   do_smd_code: paramDoSmdCode,
-      //   departure_schedule_date_time: timeNow,
-      // });
     }
 
     const resultDoSmd = await DoSmd.findOne({
@@ -248,7 +241,7 @@ export class ScanoutSmdVendorService {
               FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
               where
                 s.code  = '${escape(payload.representative_code)}' AND
-                do_smd_id = ${payload.do_smd_id} AND
+                do_smd_id = ${paramDoSmdId} AND
                 is_deleted = FALSE;
             `;
             const resultDataRepresentative = await RawQueryService.query(rawQuery);
@@ -1085,7 +1078,7 @@ export class ScanoutSmdVendorService {
       doSmdTime: paramDoSmdTime,
       userId,
       branchId: paramBranchId,
-      totalVehicle: 1,
+      totalVehicle: 0,
       departureScheduleDateTime: paramDoSmdTime,
       counterTrip: paramCounterTrip,
       vendorId: paramVendorId,
