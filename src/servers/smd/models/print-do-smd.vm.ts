@@ -206,6 +206,9 @@ export class PrintVendorDataVm {
   doSmdNote: string;
 
   @ApiModelProperty()
+  vendorName: string;
+
+  @ApiModelProperty()
   doSmdTime: string;
 
   @ApiModelProperty()

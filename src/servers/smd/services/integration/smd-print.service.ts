@@ -487,6 +487,7 @@ export class SmdPrintService {
     dataVm.doSmdId = doSmd.doSmdId;
     dataVm.doSmdCode = doSmd.doSmdCode;
     dataVm.doSmdNote = doSmd.doSmdNote;
+    dataVm.vendorName = doSmd.vendorName;
     dataVm.doSmdTime = doSmd.doSmdTime.toString();
     dataVm.doSmdVehicle = doSmd.doSmdVehicle;
     dataVm.totalBagging = doSmd.totalBagging;
