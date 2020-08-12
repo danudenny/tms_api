@@ -172,6 +172,9 @@ export class PrintDoSmdDataVm {
   doSmdCode: string;
 
   @ApiModelProperty()
+  doSmdNote: string;
+
+  @ApiModelProperty()
   totalBagging: number;
 
   @ApiModelProperty()
