@@ -11,7 +11,7 @@ import { BagRepresentative } from '../../../../shared/orm-entity/bag-representat
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { BagRepresentativeItem } from '../../../../shared/orm-entity/bag-representative-item';
 import { BagRepresentativeSmdQueueService } from '../../../queue/services/bag-representative-smd-queue.service';
-import { PrintBagCityPayloadVm } from '../../models/print-bag-city-payload.vm';
+import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm } from '../../models/print-bag-city-payload.vm';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
@@ -114,7 +114,7 @@ export class BagCityService {
 
     return result;
   }
-  
+
   static async createBagging(
     payload: BagCityPayloadVm,
   ): Promise<BagCityResponseVm> {
@@ -278,7 +278,7 @@ export class BagCityService {
       branchName = branch.branchName;
       cityName = branch.district ? branch.district.city.cityName : '';
     }
-    
+
     BagRepresentativeSmdQueueService.perform(
       dataAwb[0].awb_item_id,
       dataAwb[0].ref_awb_number,
@@ -343,6 +343,58 @@ export class BagCityService {
       res,
       rawCommands: rawPrinterCommands,
       printerName,
+    });
+  }
+
+  public static async printBagCityForPaper(
+    res: express.Response,
+    queryParams: PrintBagCityForPaperPayloadVm,
+  ) {
+    const q = RepositoryService.bagRepresentative.findOne();
+    q.innerJoin(e => e.bagRepresentativeItems);
+    q.leftJoin(e => e.representative);
+
+    const bagRepresentative = await q
+      .select({
+        bagRepresentativeId: true, // needs to be selected due to do_smd relations are being included
+        bagRepresentativeCode: true,
+        bagRepresentativeDate: true,
+        representative: {
+          representativeId: true,
+          representativeCode: true,
+        },
+        bagRepresentativeItems: {
+          bagRepresentativeItemId: true,
+          refAwbNumber: true,
+          weight: true,
+        },
+      })
+      .where(e => e.bagRepresentativeId, w => w.equals(queryParams.id))
+      .andWhere(e => e.isDeleted, w => w.isFalse())
+      .andWhere(e => e.bagRepresentativeItems.isDeleted, w => w.isFalse());
+    if (!bagRepresentative) {
+      RequestErrorService.throwObj({
+        message: 'Gabung Kota tidak ditemukan',
+      });
+    }
+    const date = moment(bagRepresentative.bagRepresentativeDate).format('YYYY-MM-DD HH:mm:ss');
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'bag-representative',
+          templateData: {
+            data: bagRepresentative,
+            meta: {
+              createdTime: date,
+            },
+          },
+          printCopy: queryParams.printCopy ? queryParams.printCopy : 3,
+        },
+      ],
+      listPrinterName,
     });
   }
 
