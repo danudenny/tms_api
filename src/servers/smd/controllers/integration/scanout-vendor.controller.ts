@@ -31,4 +31,15 @@ export class ScanOutVendorController {
   public async scanOutSeal(@Req() request: any, @Body() payload: ScanOutSmdVendorEndPayloadVm) {
     return ScanoutSmdVendorService.scanOutVendorEnd(payload);
   }
+
+  @Delete('scanOut/deleted/:id')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async deleteAttachment(@Param('id') attachmentId: number) {
+    await ScanoutSmdVendorService.deleteSmdVendor(attachmentId);
+
+    return {
+      message: 'SMD ID: ' + attachmentId + ' Deleted' ,
+      statusCode: 200,
+    };
+  }
 }
