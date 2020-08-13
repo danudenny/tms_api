@@ -65,11 +65,11 @@ export class ScanoutSmdVendorListService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.doSmdDetails, 't3', j =>
+    q.innerJoin(e => e.doSmdDetails, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.branch, 't4', j =>
+    q.innerJoin(e => e.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
