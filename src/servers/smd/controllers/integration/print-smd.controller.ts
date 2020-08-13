@@ -39,4 +39,14 @@ export class SmdPrintController {
   ) {
     return SmdPrintService.printDoSmdByRequest(serverResponse, queryParams);
   }
+
+  @Get('vendor')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printVendorForPaper(
+    @Query() queryParams: PrintBaggingPaperPayloadVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return SmdPrintService.printVendorForPaper(serverResponse, queryParams);
+  }
 }

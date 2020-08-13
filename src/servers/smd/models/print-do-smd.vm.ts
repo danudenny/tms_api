@@ -194,3 +194,72 @@ export class PrintDoSmdVm {
   @ApiModelProperty({ type: () => PrintDoSmdDataVm })
   data: PrintDoSmdDataVm = new PrintDoSmdDataVm();
 }
+
+export class PrintVendorDataVm {
+  @ApiModelProperty()
+  doSmdId: number;
+
+  @ApiModelProperty()
+  doSmdCode: string;
+
+  @ApiModelProperty()
+  doSmdNote: string;
+
+  @ApiModelProperty()
+  vendorName: string;
+
+  @ApiModelProperty()
+  doSmdTime: string;
+
+  @ApiModelProperty()
+  totalBagging: number;
+
+  @ApiModelProperty()
+  totalBag: number;
+
+  @ApiModelProperty()
+  totalBagRepresentative: number;
+
+  @ApiModelProperty({ type: () => PrintDoSmdDataUserDriverVm })
+  doSmdVehicle: PrintDoSmdDataUserDriverVm = new PrintDoSmdDataUserDriverVm();
+
+  @ApiModelProperty({ type: () => [PrintDoSmdDataDoSmdDetailVm] })
+  doSmdDetails: PrintDoSmdDataDoSmdDetailVm[] = [];
+}
+
+export class PrintVendorVm {
+  @ApiModelProperty({ type: () => PrintVendorDataVm })
+  data: PrintVendorDataVm = new PrintVendorDataVm();
+}
+
+export class PrintVendorDataVendorDetailVm {
+  @ApiModelProperty()
+  doSmdDetailId: number;
+
+  @ApiModelProperty()
+  totalBagging: number;
+
+  @ApiModelProperty()
+  totalBag: number;
+
+  @ApiModelProperty()
+  totalBagRepresentative: number;
+
+  @ApiModelProperty()
+  sealNumber: string;
+
+  @ApiModelProperty()
+  arrivalTime: Date;
+
+  @ApiModelProperty({ type: () => PrintDoSmdDataBranchToVm })
+  branchTo: PrintDoSmdDataBranchToVm = new PrintDoSmdDataBranchToVm();
+
+  @ApiModelProperty({ type: () => [PrintDoSmdDataDoSmdDetailBagVm] })
+  doSmdDetailItems: PrintDoSmdDataDoSmdDetailBagVm[] = [];
+
+  @ApiModelProperty({ type: () => [PrintDoSmdDataDoSmdDetailBaggingVm] })
+  doSmdBaggingItems: PrintDoSmdDataDoSmdDetailBaggingVm[] = [];
+
+  @ApiModelProperty({ type: () => [PrintDoSmdDataDoSmdDetailBagRepresentativeVm] })
+  doSmdBagRepresentativeItems: PrintDoSmdDataDoSmdDetailBagRepresentativeVm[] = [];
+}
