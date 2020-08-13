@@ -111,34 +111,34 @@ export class ScanOutVendorEndVm {
 
 export class ScanOutSmdVendorListDetailResponseVm {
   @ApiModelProperty()
-  vendorId: number;
+  vendor_id: number;
 
   @ApiModelProperty()
-  vendorName: string;
+  vendor_name: string;
 
   @ApiModelProperty()
-  vendorCode: string;
+  vendor_code: string;
 
   @ApiModelProperty()
-  doSmdId: string;
+  doSmd_id: string;
 
   @ApiModelProperty()
-  doSmdDetailId: string;
+  do_smd_detail_id: string;
 
   @ApiModelProperty()
-  doSmdCode: string;
+  do_smd_code: string;
 
   @ApiModelProperty()
-  doSmdTime: string;
+  do_smd_time: string;
 
   @ApiModelProperty()
-  totalBag: string;
+  total_bag: string;
 
   @ApiModelProperty()
-  totalBagging: string;
+  total_bagging: string;
 
   @ApiModelProperty()
-  totalBagRepresentative: string;
+  total_bag_representative: string;
 }
 
 export class ScanOutSmdVendorListResponseVm extends BaseMetaResponseVm {

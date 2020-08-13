@@ -15,16 +15,16 @@ export class ScanoutSmdVendorListService {
   static async scanOutVendorList(payload: BaseMetaPayloadVm): Promise<ScanOutSmdVendorListResponseVm> {
 
     // mapping search field and operator default ilike
-    payload.fieldResolverMap['vendorId'] = 't2.vendor_id';
-    payload.fieldResolverMap['vendorName'] = 't2.vendor_name';
-    payload.fieldResolverMap['vendorCode'] = 't2.vendor_code';
-    payload.fieldResolverMap['doSmdId'] = 't1.do_smd_id';
-    payload.fieldResolverMap['doSmdCode'] = 't1.do_smd_code';
-    payload.fieldResolverMap['doSmdTime'] = 't1.do_smd_time';
-    payload.fieldResolverMap['totalBag'] = 't1.total_bag';
-    payload.fieldResolverMap['totalBagging'] = 't1.total_bagging';
-    payload.fieldResolverMap['doSmdDetailId'] = 't3.do_smd_detail_id';
-    payload.fieldResolverMap['totalBagRepresentative'] = 't1.total_bag_representative';
+    payload.fieldResolverMap['vendor_id'] = 't2.vendor_id';
+    payload.fieldResolverMap['vendor_name'] = 't2.vendor_name';
+    payload.fieldResolverMap['vendor_code'] = 't2.vendor_code';
+    payload.fieldResolverMap['do_smd_id'] = 't1.do_smd_id';
+    payload.fieldResolverMap['do_smd_code'] = 't1.do_smd_code';
+    payload.fieldResolverMap['do_smd_time'] = 't1.do_smd_time';
+    payload.fieldResolverMap['total_bag'] = 't1.total_bag';
+    payload.fieldResolverMap['total_bagging'] = 't1.total_bagging';
+    payload.fieldResolverMap['do_smd_detail_id'] = 't3.do_smd_detail_id';
+    payload.fieldResolverMap['total_bag_representative'] = 't1.total_bag_representative';
 
     payload.globalSearchFields = [
       {
@@ -44,16 +44,16 @@ export class ScanoutSmdVendorListService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.vendor_id', 'vendorId'],
-      ['t1.vendor_name', 'vendorName'],
-      ['t2.vendor_code', 'vendorCode'],
-      ['t3.do_smd_detail_id', 'doSmdDetailId'],
-      ['t1.do_smd_id', 'doSmdId'],
-      ['t1.do_smd_code', 'doSmdCode'],
-      ['t1.do_smd_time', 'doSmdTime'],
-      ['t1.total_bag', 'totalBag'],
-      ['t1.total_bagging', 'totalBagging'],
-      ['t1.total_bag_representative', 'totalBagRepresentative'],
+      ['t1.vendor_id', 'vendor_id'],
+      ['t1.vendor_name', 'vendor_name'],
+      ['t2.vendor_code', 'vendor_code'],
+      ['t3.do_smd_detail_id', 'do_smd_detail_id'],
+      ['t1.do_smd_id', 'do_smd_id'],
+      ['t1.do_smd_code', 'do_smd_code'],
+      ['t1.do_smd_time', 'do_smd_time'],
+      ['t1.total_bag', 'total_bag'],
+      ['t1.total_bagging', 'total_bagging'],
+      ['t1.total_bag_representative', 'total_bag_representative'],
     );
 
     q.leftJoin(e => e.vendor, 't2', j =>
