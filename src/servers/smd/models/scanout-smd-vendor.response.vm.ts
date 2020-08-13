@@ -129,6 +129,9 @@ export class ScanOutSmdVendorListDetailResponseVm {
   branch_name: string;
 
   @ApiModelProperty()
+  branch_id: string;
+
+  @ApiModelProperty()
   do_smd_code: string;
 
   @ApiModelProperty()
