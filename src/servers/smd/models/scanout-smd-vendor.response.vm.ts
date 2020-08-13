@@ -247,3 +247,39 @@ export class ScanOutDetailBagRepresentativeVendorVm {
   branch_name: string;
 
 }
+
+export class ScanOutVendorHistoryResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [ScanOutVendorHistoryVm] })
+  data: ScanOutVendorHistoryVm[];
+}
+
+export class ScanOutVendorHistoryVm {
+  @ApiModelProperty()
+  do_smd_history_id: number;
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_code: number;
+
+  @ApiModelProperty()
+  history_date: Date;
+
+  @ApiModelProperty()
+  do_smd_status_id: number;
+
+  @ApiModelProperty()
+  history_status: String;
+
+  @ApiModelProperty()
+  username: String;
+
+  @ApiModelProperty()
+  assigne: String;
+
+  @ApiModelProperty()
+  vendor_name: String;
+
+}
