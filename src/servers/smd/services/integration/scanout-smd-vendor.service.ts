@@ -896,7 +896,7 @@ export class ScanoutSmdVendorService {
                 },
               );
 
-              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
 
               // Generate history bag and its awb IN_HUB
               BagScanVendorQueueService.perform(
@@ -1019,7 +1019,7 @@ export class ScanoutSmdVendorService {
                 },
               );
 
-              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
 
               // Generate history bag and its awb IN_HUB
               BagScanVendorQueueService.perform(
