@@ -43,9 +43,10 @@ export class BagScanVendorQueueService {
     this.queue.process(5, async job => {
       // await getManager().transaction(async transactionalEntityManager => {
       // }); // end transaction
-      console.log('### SCAN DO SMD JOB ID =========', job.id);
+      console.log('### SCAN DO SMD VENDOR BAG JOB ID =========', job.id);
       const data = job.data;
       const tempAwb = [];
+      const tempBag = [];
 
       const bagItemsAwb = await BagItemAwb.find({
         where: {
@@ -63,6 +64,10 @@ export class BagScanVendorQueueService {
           bagItemIds = data.arrBagItemId;
         }
         for (const bagItemIdEach of bagItemIds) {
+          if (tempBag.includes(bagItemIdEach)) {
+            continue;
+          }
+          tempBag.push(bagItemIdEach);
           const resultbagItemHistory = BagItemHistory.create();
           resultbagItemHistory.bagItemId = bagItemIdEach.toString();
           resultbagItemHistory.userId = data.userId.toString();
