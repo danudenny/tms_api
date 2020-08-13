@@ -436,6 +436,7 @@ export class V1WebAwbCodService {
       ['t1.transaction_code', 'transactionCode'],
       ['t1.transaction_date', 'transactionDate'],
       ['t1.transaction_type', 'transactionType'],
+      ['t1.transaction_note', 'transactionNote'],
       ['t1.transaction_status_id', 'transactionStatusId'],
       ['t2.status_title', 'transactionStatus'],
       ['t1.total_awb', 'totalAwb'],
@@ -642,6 +643,7 @@ export class V1WebAwbCodService {
       timestamp,
     );
     const bankAccount = await this.getBankAccount(payload.bankBranchId);
+    const bankStatementNote = payload.bankStatementNote ? payload.bankStatementNote : null;
     let totalValue = 0;
     let totalData = 0;
     let totalAwb = 0;
@@ -652,6 +654,7 @@ export class V1WebAwbCodService {
         const bankStatement = new CodBankStatement();
         bankStatement.bankStatementCode = randomCode;
         bankStatement.bankStatementDate = timestamp;
+        bankStatement.bankStatementNote = bankStatementNote;
         bankStatement.transactionStatusId = 33000;
         bankStatement.totalCodValue = totalValue; // init
         bankStatement.totalTransaction = totalData; // init
@@ -847,6 +850,7 @@ export class V1WebAwbCodService {
       ['t1.cod_bank_statement_id', 'bankStatementId'],
       ['t1.bank_statement_code', 'bankStatementCode'],
       ['t1.bank_statement_date', 'bankStatementDate'],
+      ['t1.bank_statement_note', 'bankStatementNote'],
       ['t1.transaction_status_id', 'transactionStatusId'],
       ['t1.bank_account', 'bankAccount'],
       ['t2.status_title', 'transactionStatus'],
@@ -917,6 +921,8 @@ export class V1WebAwbCodService {
       throw new BadRequestException('Data tidak ditemukan/sudah di proses!');
     }
 
+    const transactionNote = payload.transactionNote ? payload.transactionNote : null;
+
     try {
       // TODO: process validate bank statement
       // #region transaction data
@@ -944,6 +950,7 @@ export class V1WebAwbCodService {
           },
           {
             transactionStatusId: 40000,
+            transactionNote,
             updatedTime: timestamp,
             userIdUpdated: authMeta.userId,
           },
@@ -1017,6 +1024,11 @@ export class V1WebAwbCodService {
       throw new BadRequestException('Data tidak ditemukan/sudah di proses!');
     }
 
+    const transactionNote = payload.transactionNote ? payload.transactionNote : null;
+    if (!transactionNote) {
+      throw new BadRequestException('transactionNote tidak disediakan!');
+    }
+
     try {
       // TODO: process cancel bank statement
       // #region transaction data
@@ -1080,6 +1092,7 @@ export class V1WebAwbCodService {
             {
               transactionStatusId: 32500,
               codBankStatementId: null,
+              transactionNote,
               updatedTime: timestamp,
               userIdUpdated: authMeta.userId,
             },
