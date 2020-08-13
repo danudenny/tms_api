@@ -108,3 +108,142 @@ export class ScanOutVendorEndVm {
   vendor_name: string;
 
 }
+
+export class ScanOutSmdVendorListDetailResponseVm {
+  @ApiModelProperty()
+  vendor_id: number;
+
+  @ApiModelProperty()
+  vendor_name: string;
+
+  @ApiModelProperty()
+  vendor_code: string;
+
+  @ApiModelProperty()
+  doSmd_id: string;
+
+  @ApiModelProperty()
+  do_smd_detail_id: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+  @ApiModelProperty()
+  branch_id: string;
+
+  @ApiModelProperty()
+  do_smd_code: string;
+
+  @ApiModelProperty()
+  do_smd_time: string;
+
+  @ApiModelProperty()
+  total_bag: string;
+
+  @ApiModelProperty()
+  total_bagging: string;
+
+  @ApiModelProperty()
+  total_bag_representative: string;
+}
+
+export class ScanOutSmdVendorListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [ScanOutSmdVendorListDetailResponseVm] })
+  data: ScanOutSmdVendorListDetailResponseVm[];
+}
+
+export class ScanOutSmdDetailVendorResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailVendorVm]})
+  data: ScanOutDetailVendorVm[];
+}
+
+export class ScanOutDetailVendorVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_number: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}
+
+export class ScanOutSmdDetailBaggingVendorResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailBaggingVendorVm]})
+  data: ScanOutDetailBaggingVendorVm[];
+}
+
+export class ScanOutDetailBaggingVendorVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bagging_number: string;
+
+  @ApiModelProperty()
+  total_bag: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}
+
+export class ScanOutSmdDetailBagRepresentativeVendorResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailBagRepresentativeVendorVm]})
+  data: ScanOutDetailBagRepresentativeVendorVm[];
+}
+
+export class ScanOutDetailBagRepresentativeVendorVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_representative_code: string;
+
+  @ApiModelProperty()
+  total_awb: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}

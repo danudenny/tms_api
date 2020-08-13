@@ -4,6 +4,7 @@ import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { QueueBullBoard } from '../queue-bull-board';
 import { CodTransactionHistoryQueueService } from './cod-transaction-history-queue.service';
 import moment = require('moment');
+import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
 
 export class CodUpdateSupplierInvoiceQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -35,52 +36,36 @@ export class CodUpdateSupplierInvoiceQueueService {
     this.queue.process(async job => {
       const data = job.data;
 
+      let partialDraftInvoice: boolean = false;
       // Update data mongo
       // #region mongodb
       const collection = await MongoDbConfig.getDbSicepatCod(
         'transaction_detail',
       );
       const supplierInvoiceStatusId = Number(data.supplierInvoiceStatusId);
-      const partnerId = data.partnerId.toString();
-      let query = {};
-      let dataUpdate = {};
-
-      if (supplierInvoiceStatusId == 41000) {
-        query = {
-          partnerId,
-          codSupplierInvoiceId: null,
-          transactionStatusId: 40000,
-          isVoid: false,
-        };
-        dataUpdate = {
-          $set: {
-            codSupplierInvoiceId: data.codSupplierInvoiceId,
-            supplierInvoiceStatusId,
-            userIdUpdated: Number(data.userId),
-            updatedTime: moment(data.timestamp).toDate(),
-          },
-        };
-        console.log(' ####### UPDATE SUPPLIER INVOICE :: ', data.codSupplierInvoiceId);
-      } else {
-        // 45000 [PAID]
+      // Update Many for status invoice 45000 [PAID]
+      if (supplierInvoiceStatusId == TRANSACTION_STATUS.PAIDHO) {
         // query store the search condition
-        query = { codSupplierInvoiceId: data.codSupplierInvoiceId };
+        const query = { codSupplierInvoiceId: data.codSupplierInvoiceId };
         // data stores the updated value
-        dataUpdate = {
+        const dataUpdate = {
           $set: {
             supplierInvoiceStatusId,
             userIdUpdated: Number(data.userId),
             updatedTime: moment(data.timestamp).toDate(),
           },
         };
-      }
+        try {
+          console.log('## Update MongoDb :: ', dataUpdate);
+          await collection.updateMany(query, dataUpdate);
+        } catch (error) {
+          console.error(error);
+          throw error;
+        }
 
-      try {
-        console.log('## Update MongoDb :: ', dataUpdate);
-        const updateMongo = await collection.updateMany(query, dataUpdate);
-      } catch (error) {
-        console.error(error);
-        throw error;
+      } else {
+        // Draft Invoice partial update data sync to mongo 41000 [DRAFT]
+        partialDraftInvoice = true;
       }
       // #endregion
 
@@ -92,9 +77,31 @@ export class CodUpdateSupplierInvoiceQueueService {
         },
       });
 
-      console.log('##### TOTAL DATA Transaction :: ', dataTransaction.length);
-      if (dataTransaction.length) {
+      if (dataTransaction && dataTransaction.length) {
+        console.log('##### TOTAL DATA Transaction :: ', dataTransaction.length);
+        // object update for draft invoice
+        const objUpdate = {
+          codSupplierInvoiceId: data.codSupplierInvoiceId,
+          supplierInvoiceStatusId,
+          userIdUpdated: Number(data.userId),
+          updatedTime: moment(data.timestamp).toDate(),
+        };
+
         for (const item of dataTransaction) {
+          // update data mongo draft invoice
+          if (partialDraftInvoice) {
+            try {
+              const res = await collection.findOneAndUpdate(
+                { _id: item.awbNumber },
+                {
+                  $set: objUpdate,
+                },
+              );
+            } catch (error) {
+              console.error(error);
+            }
+          }
+
           // update data history supplier invoice
           CodTransactionHistoryQueueService.perform(
             item.awbItemId,

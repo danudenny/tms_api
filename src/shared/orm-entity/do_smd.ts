@@ -1,9 +1,10 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { Representative } from './representative';
 import { Branch } from './branch';
 import { DoSmdDetail } from './do_smd_detail';
 import { DoSmdVehicle } from './do_smd_vehicle';
+import {Vendor} from './vendor';
 
 @Entity('do_smd', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
@@ -217,4 +218,8 @@ export class DoSmd extends TmsBaseEntity {
   @OneToOne(() => DoSmdVehicle)
   @JoinColumn({ name: 'vehicle_id_last', referencedColumnName: 'doSmdVehicleId' })
   doSmdVehicle: DoSmdVehicle;
+
+  @ManyToOne(() => Vendor)
+  @JoinColumn({ name: 'vendor_id', referencedColumnName: 'vendorId' })
+  vendor: Vendor;
 }

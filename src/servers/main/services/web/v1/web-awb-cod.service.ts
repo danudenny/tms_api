@@ -408,7 +408,9 @@ export class V1WebAwbCodService {
     // mapping field
     payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
     payload.fieldResolverMap['driverName'] = 't5.first_name';
+    payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
+    payload.fieldResolverMap['adminId'] = 't1.user_id_updated';
     payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
     payload.fieldResolverMap['districtId'] = 't3.district_id';
@@ -439,6 +441,7 @@ export class V1WebAwbCodService {
       ['t1.total_awb', 'totalAwb'],
       ['t1.total_cod_value', 'totalCodValue'],
       ['t3.branch_name', 'branchName'],
+      ['t1.user_id_updated', 'adminId'],
       ['t4.first_name', 'adminName'],
       ['t1.user_id_driver', 'userIdDriver'],
       ['t5.first_name', 'driverName'],

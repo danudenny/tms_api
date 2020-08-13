@@ -192,4 +192,41 @@ export class DoSmdPostAwbHistoryMetaQueueService {
     };
     return DoSmdPostAwbHistoryMetaQueueService.queue.add(obj);
   }
+
+  public static async createJobByVendorSmd(
+    awbItemId: number,
+    branchId: number,
+    userId: number,
+    awbStatusId: number,
+    vendorName: string,
+    date?: Date,
+  ) {
+    // TODO: ONLY OUT_HUB GSK
+    let branchName = 'Kantor Pusat';
+    let cityName = 'Jakarta';
+    const branch = await SharedService.getDataBranchCity(branchId);
+    if (branch) {
+      branchName = branch.branchName;
+      cityName = branch.district ? branch.district.city.cityName : '';
+    }
+    const noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Vendor: ${vendorName}`;
+    const notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
+
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver: null,
+      timestamp: date ? date : moment().toDate(),
+      noteInternal,
+      notePublic,
+      branchIdNext: null,
+    };
+    return DoSmdPostAwbHistoryMetaQueueService.queue.add(obj);
+  }
 }

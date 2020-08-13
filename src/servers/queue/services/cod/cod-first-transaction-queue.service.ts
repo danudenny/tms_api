@@ -7,6 +7,7 @@ import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transac
 import { WebCodFirstTransactionPayloadVm } from '../../../main/models/cod/web-awb-cod-payload.vm';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import moment = require('moment');
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -295,6 +296,7 @@ export class CodFirstTransactionQueueService {
       't2.to_id = t9.district_id AND t8.is_deleted = false',
     );
     qb.where('t1.awb_item_id = :awbItemId', { awbItemId });
+    qb.andWhere('t1.awb_status_id_last = :statusDLV', { statusDLV: AWB_STATUS.DLV });
     qb.andWhere('t1.is_deleted = false');
 
     return await qb.getRawOne();

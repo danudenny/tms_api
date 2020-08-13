@@ -20,7 +20,12 @@ import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 import { Vendor } from '../../../../shared/orm-entity/vendor';
-import { ScanOutSmdVendorRouteResponseVm, ScanOutSmdVendorEndResponseVm, ScanOutSmdVendorItemResponseVm } from '../../models/scanout-smd-vendor.response.vm';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { MetaService } from '../../../../shared/services/meta.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { ScanOutSmdVendorRouteResponseVm, ScanOutSmdVendorListResponseVm, ScanOutSmdVendorEndResponseVm, ScanOutSmdVendorItemResponseVm } from '../../models/scanout-smd-vendor.response.vm';
+import { BagRepresentativeScanOutHubQueueService } from '../../../queue/services/bag-representative-scan-out-hub-queue.service';
+import {BagScanVendorQueueService} from '../../../queue/services/bag-scan-vendor-queue.service';
 
 @Injectable()
 export class ScanoutSmdVendorService {
@@ -590,8 +595,9 @@ export class ScanoutSmdVendorService {
           SELECT
             do_smd_detail_id ,
             representative_code_list,
-            total_bag_representative
-          FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+            total_bag_representative,
+            vendor_name
+          FROM do_smd_detail, unnest(string_to_array(representative_code_list , ','))  s(code)
           where
             s.code  = '${escape(resultDataBagRepresentative[0].representative_code)}' AND
             do_smd_id = ${payload.do_smd_id} AND
@@ -643,8 +649,7 @@ export class ScanoutSmdVendorService {
               updatedTime: timeNow,
             },
           );
-
-          BagRepresentativeScanDoSmdQueueService.perform(
+          BagRepresentativeScanOutHubQueueService.perform(
             resultDataBagRepresentative[0].bag_representative_id,
             resultDataBagRepresentative[0].representative_id_to,
             resultDataBagRepresentative[0].bag_representative_code,
@@ -653,6 +658,7 @@ export class ScanoutSmdVendorService {
             resultDataBagRepresentative[0].total_weight,
             authMeta.userId,
             permissonPayload.branchId,
+            resultDataRepresentative[0].vendor_name,
           );
 
           data.push({
@@ -702,7 +708,8 @@ export class ScanoutSmdVendorService {
           SELECT
             do_smd_detail_id ,
             representative_code_list,
-            total_bagging
+            total_bagging,
+            vendor_name
           FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
           where
             s.code  = '${escape(resultDataBagItem[0].representative_code)}' AND
@@ -766,12 +773,13 @@ export class ScanoutSmdVendorService {
             );
 
             // Generate history bag and its awb IN_HUB
-            BagScanDoSmdQueueService.perform(
+            BagScanVendorQueueService.perform(
               null,
               authMeta.userId,
               permissonPayload.branchId,
               arrBagItemId,
               true,
+              resultDataRepresentative[0].vendor_name,
             );
 
             data.push({
@@ -834,7 +842,8 @@ export class ScanoutSmdVendorService {
             SELECT
               do_smd_detail_id ,
               representative_code_list,
-              total_bag
+              total_bag,
+              vendor_name
             FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
             where
               s.code  = '${escape(resultDataBag[0].representative_code)}' AND
@@ -887,13 +896,16 @@ export class ScanoutSmdVendorService {
                 },
               );
 
-              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
 
               // Generate history bag and its awb IN_HUB
-              BagScanDoSmdQueueService.perform(
+              BagScanVendorQueueService.perform(
                 Number(resultDataBag[0].bag_item_id),
                 authMeta.userId,
                 permissonPayload.branchId,
+                null,
+                true,
+                resultDataRepresentative[0].vendor_name,
               );
 
               data.push({
@@ -953,7 +965,8 @@ export class ScanoutSmdVendorService {
             SELECT
               do_smd_detail_id ,
               representative_code_list,
-              total_bag
+              total_bag,
+              vendor_name
             FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
             where
               s.code  = '${escape(resultDataBag[0].representative_code)}' AND
@@ -1006,13 +1019,16 @@ export class ScanoutSmdVendorService {
                 },
               );
 
-              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
 
               // Generate history bag and its awb IN_HUB
-              BagScanDoSmdQueueService.perform(
+              BagScanVendorQueueService.perform(
                 Number(resultDataBag[0].bag_item_id),
                 authMeta.userId,
                 permissonPayload.branchId,
+                null,
+                true,
+                resultDataRepresentative[0].vendor_name,
               );
 
               data.push({
@@ -1258,439 +1274,5 @@ export class ScanoutSmdVendorService {
     return doSmdHistory.identifiers.length
       ? doSmdHistory.identifiers[0].doSmdHistoryId
       : null;
-  }
-
-  public static async scanOutReassignItem(payload: any) {
-    const authMeta = AuthService.getAuthData();
-    const timeNow = moment().toDate();
-    let totalSuccess = 0;
-    let totalError = 0;
-    const result = {
-      totalData: null,
-      totalSuccess: null,
-      totalError: null,
-      data: [],
-    };
-    const dataItem = [];
-    // const result = new ScanOutSmdRouteResponseVm();
-
-    for (const itemNumber of payload.item_number) {
-      if (itemNumber.length == 15 || itemNumber.length == 10) {
-        const response = await this.reassignBag(itemNumber, payload.do_smd_id, authMeta.userId, timeNow);
-        dataItem.push({
-          itemNumber,
-          ...response.data,
-        });
-        totalError += response.total.totalError;
-        totalSuccess += response.total.totalSuccess;
-      } else if (itemNumber.length == 14) {
-        const response = await this.reassignBagging(itemNumber, payload.do_smd_id, authMeta.userId, timeNow);
-        dataItem.push({
-          itemNumber,
-          ...response.data,
-        });
-        totalError += response.total.totalError;
-        totalSuccess += response.total.totalSuccess;
-      } else {
-        totalError += 1;
-        dataItem.push({
-          itemNumber,
-          status: 'error',
-          message: 'Nomor Gabung Paket Tidak Valid',
-        });
-      }
-    }
-
-    // Populate return value
-    result.totalData = payload.item_number.length;
-    result.totalSuccess = totalSuccess;
-    result.totalError = totalError;
-    result.data = dataItem;
-    return result;
-  }
-
-  public static async reassignBag(
-    item_number: string,
-    do_smd_id: string,
-    userId: number,
-    time: any,
-  ): Promise<any> {
-    const paramBagNumber = item_number.substr( 0, 7 );
-    const paramWeightStr = item_number.substr(10);
-    const paramBagSeq = item_number.substr(7, 3);
-    const paramSeq = Number(paramBagSeq);
-    let totalError = 0;
-    let totalSuccess = 0;
-    const response = {
-      data: {
-        status: 'ok',
-        message: 'Assign Ulang Gabung Paket Berhasil',
-      },
-      total: null,
-    };
-    // get unassigning do_smd data
-    let rawQuery = `
-      SELECT
-        ds.do_smd_id,
-        ds.do_smd_code,
-        dsd.do_smd_detail_id,
-        dsd.total_bagging,
-        dsd.total_bag,
-        ds.total_bag as total_bag_header,
-        dsdi.do_smd_detail_item_id,
-        dsh.do_smd_status_id as status_last,
-        r.representative_code,
-        dsd.branch_id_to
-      FROM do_smd_detail_item dsdi
-      INNER JOIN do_smd_detail dsd on dsd.do_smd_detail_id = dsdi.do_smd_detail_id AND dsd.is_deleted  = FALSE
-      INNER JOIN bag b ON b.bag_id = dsdi.bag_id AND b.is_deleted = FALSE
-      INNER JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
-      INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
-      LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
-      LEFT JOIN representative r ON b.representative_id_to = r.representative_id
-      WHERE
-        b.bag_number = '${escape(paramBagNumber)}' AND
-        bi.bag_seq = '${paramSeq}' AND
-        dsdi.is_deleted = FALSE
-      ORDER BY case when ds.do_smd_id = '${do_smd_id}' then 1 else 2 end, ds.created_time, dsh.created_time DESC;
-    `;
-    const unassigningSMD = await RawQueryService.query(rawQuery);
-
-    const codes = await this.getSmdCodeByRequestData(unassigningSMD);
-    if (codes.doSmdCode.length > 1) {
-      totalError += 1;
-      response.data.status = 'error';
-      response.data.message = `Gabung Paket ${item_number} Lebih dari 1 Surat Jalan: ${codes.doSmdCode.join(', ')}`;
-    } else if (unassigningSMD.length == 0) {
-      totalError += 1;
-      response.data.status = 'error';
-      response.data.message = `Surat jalan dari resi ` + item_number + ` tidak ditemukan`;
-    } else if (unassigningSMD[0].status_last >= 3000) {
-      totalError += 1;
-      response.data.status = 'error';
-      response.data.message = `Gabung Paket ` + item_number + ` Sudah Berada di Jalan/Tujuan`;
-    } else if (unassigningSMD[0].do_smd_id == do_smd_id) {
-      totalError += 1;
-      response.data.status = 'error';
-      response.data.message = `Gabung Paket ` + item_number + ` Sudah Berada di Surat jalan ` + unassigningSMD[0].do_smd_code;
-    } else if (!unassigningSMD[0].representative_code || !unassigningSMD[0].branch_id_to) {
-      totalError += 1;
-      response.data.status = 'error';
-      response.data.message = `Tujuan Gabung Paket ` + item_number + ` tidak ditemukan`;
-    } else {
-      // get assigning do_smd data
-      rawQuery = `
-      SELECT
-        ds.do_smd_id,
-        ds.do_smd_code,
-        dsd.do_smd_detail_id,
-        dsd.total_bagging,
-        dsd.total_bag,
-        ds.total_bag as total_bag_header,
-        ds.total_bagging as total_bagging_header,
-        dsh.do_smd_status_id as status_last
-      FROM do_smd ds
-      INNER JOIN do_smd_detail dsd ON ds.do_smd_id = dsd.do_smd_id and dsd.is_deleted  = FALSE
-      LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
-      WHERE
-        ds.do_smd_id = '${do_smd_id}' AND
-        dsd.branch_id_to = '${unassigningSMD[0].branch_id_to}' AND
-        ds.is_deleted = FALSE
-      ORDER BY dsh.created_time DESC
-      LIMIT 1;
-      `;
-      const assigningSMD = await RawQueryService.query(rawQuery);
-
-      if (assigningSMD.length == 0) {
-        totalError += 1;
-        response.data.status = 'error';
-        response.data.message = `Surat Jalan yang Akan Di-assign Tidak Ditemukan`;
-      } else if (assigningSMD[0].status_last >= 3000) {
-        totalError += 1;
-        response.data.status = 'error';
-        response.data.message = `Gabung Paket dari Surat Jalan ` + assigningSMD[0].do_smd_code + ` Sudah Berada di Jalan`;
-      } else {
-        // Validasi tujuan gabung paket harus sama dengan surat jalan yang di-assign
-        rawQuery = `
-        SELECT
-          dsd.do_smd_detail_id
-        FROM do_smd_detail dsd
-        LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
-        LEFT JOIN bag b ON b.bag_id = dsdi.bag_id AND b.is_deleted = FALSE
-        LEFT JOIN representative r ON b.representative_id_to = r.representative_id AND r.is_deleted = FALSE
-        WHERE
-          dsd.branch_id_to IN (${codes.branchIdTos.join(',')}) AND
-          dsd.do_smd_id = '${do_smd_id}'
-        LIMIT 1;
-        `;
-        const validDestination = await RawQueryService.query(rawQuery);
-        if (validDestination.length == 0) {
-          totalError += 1;
-          response.data.status = 'error';
-          response.data.message = `Tujuan Gabung Paket ${item_number} Tidak Cocok Dengan Surat Jalan ${assigningSMD[0].do_smd_code}`;
-        } else {
-
-          // Update Bag and SMD/DO_SMD Data
-          // increase amount Assign Bag
-          await DoSmdDetail.update(
-            { doSmdDetailId : assigningSMD[0].do_smd_detail_id },
-            {
-              totalBag: Number(assigningSMD[0].total_bag) + 1,
-              userIdUpdated: userId,
-              updatedTime: time,
-            },
-          );
-          await DoSmd.update(
-            { doSmdId : assigningSMD[0].do_smd_id },
-            {
-              totalBag: Number(assigningSMD[0].total_bag_header) + 1,
-              userIdUpdated: userId,
-              updatedTime: time,
-            },
-          );
-
-          // decrease amount Unassign Bag
-          await DoSmdDetail.update(
-            { doSmdDetailId : unassigningSMD[0].do_smd_detail_id },
-            {
-              totalBag: (unassigningSMD[0].total_bag == 0) ? 0 :
-                Number(unassigningSMD[0].total_bag) - 1,
-              userIdUpdated: userId,
-              updatedTime: time,
-            },
-          );
-          await DoSmd.update(
-            { doSmdId : unassigningSMD[0].do_smd_id },
-            {
-              totalBag: (unassigningSMD[0].total_bag_header == 0) ? 0 :
-                Number(unassigningSMD[0].total_bag_header) - 1,
-              userIdUpdated: userId,
-              updatedTime: time,
-            },
-          );
-          // Reassign do_smd_detail_item to new assigned-smd
-          await this.updateDoSmdDetailItem(codes.doSmdDetailItem, validDestination[0].do_smd_detail_id, userId, time);
-          totalSuccess += 1;
-        }
-      }
-    }
-    response.total = {
-      totalSuccess, totalError,
-    };
-    return response;
-  }
-
-  public static async reassignBagging(
-    item_number: string,
-    do_smd_id: string,
-    userId: number,
-    time: any,
-  ): Promise<any> {
-    let totalError = 0;
-    let totalSuccess = 0;
-    const response = {
-      data: {
-        status: 'ok',
-        message: 'Assign Ulang Bagging Berhasil',
-      },
-      total: null,
-    };
-    // get unassigning do_smd data
-    let rawQuery = `
-      SELECT
-        ds.do_smd_id,
-        ds.do_smd_code,
-        dsd.do_smd_detail_id,
-        dsd.total_bagging,
-        dsd.total_bag,
-        ds.total_bagging as total_bagging_header,
-        ds.total_bag as total_bag_header,
-        dsdi.do_smd_detail_item_id,
-        dsdi.bagging_id,
-        dsh.do_smd_status_id as status_last,
-        r.representative_code,
-        dsd.branch_id_to
-      FROM do_smd_detail_item dsdi
-      INNER JOIN bagging ba ON ba.bagging_id = dsdi.bagging_id AND ba.is_deleted = FALSE
-      INNER JOIN do_smd_detail dsd on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsd.is_deleted  = FALSE
-      INNER JOIN do_smd ds ON ds.do_smd_id = dsd.do_smd_id AND ds.is_deleted = FALSE
-      LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
-      LEFT JOIN representative r ON ba.representative_id_to = r.representative_id AND r.is_deleted = FALSE
-      WHERE
-        ba.bagging_code = '${item_number}' AND
-        dsdi.is_deleted = FALSE
-      ORDER BY case when ds.do_smd_id = '${do_smd_id}' then 1 else 2 end, ds.created_time, dsh.created_time DESC;
-    `;
-    const unassigningSMD = await RawQueryService.query(rawQuery);
-    const codes = await this.getSmdCodeByRequestData(unassigningSMD);
-
-    if (codes.doSmdCode.length > 1) {
-      totalError += 1;
-      response.data.status = 'error';
-      response.data.message = `Bagging ${item_number} Lebih dari 1 Surat Jalan: ${codes.doSmdCode.join(', ')}`;
-    } else if (unassigningSMD.length == 0) {
-      totalError += 1;
-      response.data.status = 'error';
-      response.data.message = `Surat jalan dari Bagging ${item_number} Tidak Ditemukan`;
-    } else if (unassigningSMD[0].do_smd_id == do_smd_id) {
-      totalError += 1;
-      response.data.status = 'error';
-      response.data.message = `Bagging ` + item_number + ` Sudah Berada di Surat jalan ` + unassigningSMD[0].do_smd_code;
-    } else if (unassigningSMD[0].status_last >= 3000) {
-      totalError += 1;
-      response.data.status = 'error';
-      response.data.message = `Bagging ` + item_number + ` Sudah Berada di Jalan/Tujuan`;
-    } else if (!unassigningSMD[0].representative_code || !unassigningSMD[0].branch_id_to) {
-      totalError += 1;
-      response.data.status = 'error';
-      response.data.message = `Tujuan Bagging ` + item_number + ` tidak ditemukan`;
-    } else {
-      rawQuery = `
-        SELECT
-          ba.bagging_id
-        FROM bagging ba
-        WHERE
-          ba.bagging_code = '${item_number}' AND
-          ba.is_deleted = FALSE
-        LIMIT 1;
-      `;
-      const bagging = await RawQueryService.query(rawQuery);
-      if (bagging.length == 0) {
-        totalError += 1;
-        response.data.status = 'error';
-        response.data.message = `Bagging ` + item_number + ` Tidak Ditemukan`;
-      } else {
-        // get assigning do_smd data
-        rawQuery = `
-        SELECT
-          ds.do_smd_id,
-          ds.do_smd_code,
-          dsd.do_smd_detail_id,
-          dsd.total_bagging,
-          dsd.total_bag,
-          ds.total_bag as total_bag_header,
-          ds.total_bagging as total_bagging_header,
-          dsh.do_smd_status_id as status_last
-        FROM do_smd ds
-        INNER JOIN do_smd_detail dsd ON ds.do_smd_id = dsd.do_smd_id and dsd.is_deleted  = FALSE
-        LEFT JOIN do_smd_history dsh ON dsh.do_smd_id = ds.do_smd_id AND dsh.is_deleted = FALSE
-        WHERE
-          ds.do_smd_id = '${do_smd_id}' AND
-          dsd.branch_id_to = '${unassigningSMD[0].branch_id_to}' AND
-          ds.is_deleted = FALSE
-        ORDER BY dsh.created_time DESC
-        LIMIT 1;
-        `;
-        const assigningSMD = await RawQueryService.query(rawQuery);
-
-        // Validasi tujuan Bagging harus sama dengan surat jalan yang di-assign
-        rawQuery = `
-          SELECT
-            dsd.do_smd_detail_id
-          FROM do_smd_detail dsd
-          LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
-          LEFT JOIN bagging ba ON ba.bagging_id = dsdi.bagging_id AND ba.is_deleted = FALSE
-          LEFT JOIN representative r ON ba.representative_id_to = r.representative_id AND r.is_deleted = FALSE
-          WHERE
-            dsd.branch_id_to IN (${codes.branchIdTos.join(',')}) AND
-            dsd.do_smd_id = '${do_smd_id}'
-          LIMIT 1;
-        `;
-        const validDestination = await RawQueryService.query(rawQuery);
-        if (assigningSMD.length == 0) {
-          totalError += 1;
-          response.data.status = 'error';
-          response.data.message = `Surat Jalan yang Akan Di-assign Tidak Ditemukan`;
-        } else if (assigningSMD[0].status_last >= 3000) {
-          totalError += 1;
-          response.data.status = 'error';
-          response.data.message = `Bagging dari Surat Jalan ` + assigningSMD[0].do_smd_code + ` Sudah Berada di Jalan/Tujuan`;
-        } else if (validDestination.length == 0) {
-          totalError += 1;
-          response.data.status = 'error';
-          response.data.message = `Tujuan Bagging ${item_number} Tidak Cocok Dengan Surat Jalan ${assigningSMD[0].do_smd_code}`;
-        } else {
-          // Update Bagging and SMD/DO_SMD Data
-          // increase amount Assign Bagging
-          await DoSmdDetail.update(
-            { doSmdDetailId : assigningSMD[0].do_smd_detail_id },
-            {
-              totalBagging: Number(assigningSMD[0].total_bagging) + 1,
-              userIdUpdated: userId,
-              updatedTime: time,
-            },
-          );
-          await DoSmd.update(
-            { doSmdId : assigningSMD[0].do_smd_id },
-            {
-              totalBagging: Number(assigningSMD[0].total_bagging_header) + 1,
-              userIdUpdated: userId,
-              updatedTime: time,
-            },
-          );
-
-          // decrease amount Unassign Bagging
-          // decrease amount SMD of bagging and its combine package
-          for (const item of unassigningSMD) {
-            await DoSmdDetail.update(
-              { doSmdDetailId : item.do_smd_detail_id },
-              {
-                totalBagging: (item.total_bagging == 0) ? 0 :
-                  (Number(item.total_bagging) - 1),
-                userIdUpdated: userId,
-                updatedTime: time,
-              },
-            );
-            await DoSmd.update(
-              { doSmdId : item.do_smd_id },
-              {
-                totalBagging: (item.total_bagging_header == 0) ? 0 :
-                  Number(item.total_bagging_header) - 1,
-                userIdUpdated: userId,
-                updatedTime: time,
-              },
-            );
-          }
-          // Reassign do_smd_detail_item to new assigned-smd
-          await this.updateDoSmdDetailItem(codes.doSmdDetailItem, validDestination[0].do_smd_detail_id, userId, time);
-          totalSuccess += 1;
-        }
-      }
-    }
-    response.total = {
-      totalSuccess, totalError,
-    };
-    return response;
-  }
-
-  static async getSmdCodeByRequestData(data: any): Promise<any> {
-    const arrSmdCode = [];
-    const arrSmdItem = [];
-    const arrBranchIdTo = [];
-    for (const item of data) {
-      arrSmdItem.push(item.do_smd_detail_item_id);
-      arrBranchIdTo.push(item.branch_id_to);
-      if (arrSmdCode.includes(item.do_smd_code)) {
-        continue;
-      }
-      arrSmdCode.push(item.do_smd_code);
-    }
-    return {
-      doSmdCode: arrSmdCode,
-      doSmdDetailItem: arrSmdItem,
-      branchIdTos: arrBranchIdTo,
-    };
-  }
-
-  static async updateDoSmdDetailItem(id: any, updatedId, userId, time) {
-    // Reassign do_smd_detail_item to new assigned-smd
-    await DoSmdDetailItem.update(
-      { doSmdDetailItemId : In(id) },
-      {
-        doSmdDetailId: updatedId,
-        userIdUpdated: userId,
-        updatedTime: time,
-      },
-    );
   }
 }
