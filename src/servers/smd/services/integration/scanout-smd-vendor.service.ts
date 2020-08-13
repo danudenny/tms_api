@@ -168,7 +168,7 @@ export class ScanoutSmdVendorService {
               }
             }
           }
-          const resultDoSmdDetail = await DoSmdDetail.findOne({
+          const resultDoSmdDetaila = await DoSmdDetail.findOne({
             where: {
               doSmdDetailId:  paramsresultDoSmdDetailId,
               isDeleted: false,
@@ -177,9 +177,9 @@ export class ScanoutSmdVendorService {
           data.push({
             do_smd_id: resultDoSmd.doSmdId,
             do_smd_code: resultDoSmd.doSmdCode,
-            do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+            do_smd_detail_id: resultDoSmdDetaila.doSmdDetailId,
             vendor_name: payload.vendor_name,
-            representative_code_list: resultDoSmdDetail.representativeCodeList,
+            representative_code_list: resultDoSmdDetaila.representativeCodeList,
           });
           result.statusCode = HttpStatus.OK;
           result.message = 'SMD Route Success Created';
