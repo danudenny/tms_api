@@ -120,7 +120,7 @@ export class ScanOutSmdVendorListDetailResponseVm {
   vendor_code: string;
 
   @ApiModelProperty()
-  doSmd_id: string;
+  do_smd_id: string;
 
   @ApiModelProperty()
   do_smd_detail_id: string;
