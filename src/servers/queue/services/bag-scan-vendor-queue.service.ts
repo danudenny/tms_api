@@ -14,7 +14,7 @@ import {In} from 'typeorm';
 
 export class BagScanVendorQueueService {
   public static queue = QueueBullBoard.createQueue.add(
-    'bag-scan-do-smd-queue',
+    'bag-scan-vendor-queue',
     {
       defaultJobOptions: {
         timeout: 0,
