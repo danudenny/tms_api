@@ -145,7 +145,6 @@ export class V1WebAwbCodVoucherService {
           const paramsVoucherDetail = {
             cod_voucher_id: codVoucherId,
             awb_number: awbNumber,
-            is_settlement: false,
             created_time: timeNow,
             updated_time: timeNow,
           };
@@ -247,7 +246,6 @@ export class V1WebAwbCodVoucherService {
     const voucherDetail = await CodVoucherDetail.create({
       codVoucherId: params['cod_voucher_id'],
       awbNumber: params['awb_number'],
-      isSettlement: params['is_settlement'],
       createdTime: params['created_time'],
       updatedTime: params['updated_time'],
     });
