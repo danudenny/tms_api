@@ -21,6 +21,7 @@ export class ScanoutSmdVendorListService {
     payload.fieldResolverMap['vendor_name'] = 't2.vendor_name';
     payload.fieldResolverMap['vendor_code'] = 't2.vendor_code';
     payload.fieldResolverMap['do_smd_id'] = 't1.do_smd_id';
+    payload.fieldResolverMap['branch_id'] = 't4.branch_id';
     payload.fieldResolverMap['do_smd_code'] = 't1.do_smd_code';
     payload.fieldResolverMap['do_smd_time'] = 't1.do_smd_time';
     payload.fieldResolverMap['total_bag'] = 't1.total_bag';
@@ -55,6 +56,7 @@ export class ScanoutSmdVendorListService {
       ['t2.vendor_code', 'vendor_code'],
       ['t3.do_smd_detail_id', 'do_smd_detail_id'],
       ['t4.branch_name', 'branch_name'],
+      ['t4.branch_id', 'branch_id'],
       ['t1.do_smd_id', 'do_smd_id'],
       ['t1.do_smd_code', 'do_smd_code'],
       ['t1.do_smd_time', 'do_smd_time'],
