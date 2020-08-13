@@ -77,7 +77,7 @@ export class ScanoutSmdVendorListService {
     q.innerJoin(e => e.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
+    q.andWhereRaw('t1.is_deleted = false');
     q.andWhere(e => e.isVendor, w => w.isTrue());
 
     q.orderBy({ createdTime: 'DESC' });
