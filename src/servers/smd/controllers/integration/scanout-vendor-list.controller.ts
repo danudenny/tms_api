@@ -62,4 +62,10 @@ export class ScanOutVendorListController {
   public async FindscanOutDetailBagRepresentativeMore(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
     return ScanoutSmdVendorListService.findScanOutDetailBagRepresentativeMore(payload);
   }
+
+  @Post('scanOut/history')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async FindscanOutHistory(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
+    return ScanoutSmdVendorListService.findScanOutVendorHistory(payload);
+  }
 }
