@@ -1108,7 +1108,7 @@ export class ScanoutSmdVendorService {
 
   }
 
-  public static async deleteSmd(paramdoSmdId: number) {
+  public static async deleteSmdVendor(paramdoSmdId: number) {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
@@ -1145,7 +1145,7 @@ export class ScanoutSmdVendorService {
             updatedTime: moment().toDate(),
           },
         );
-        );
+        )
         for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
           await DoSmdDetailItem.update(
             { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
