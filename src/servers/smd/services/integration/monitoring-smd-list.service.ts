@@ -142,6 +142,8 @@ export class MonitoringSmdServices {
         payload.applyFiltersToQueryBuilder(subQuery, ['departure_date_time']);
 
         subQuery
+          .andWhere('ds.is_vendor = false');
+        subQuery
           .andWhere('ds.is_deleted = false');
         return subQuery;
       }, 'ds');
