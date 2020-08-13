@@ -1,276 +1,106 @@
-import { Injectable, Param, PayloadTooLargeException } from '@nestjs/common';
+import { Injectable, PayloadTooLargeException, HttpStatus, BadRequestException } from '@nestjs/common';
 import moment = require('moment');
-import { BadRequestException } from '@nestjs/common';
-import axios from 'axios';
-import { RedisService } from '../../../../shared/services/redis.service';
-import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { SysCounter } from '../../../../shared/orm-entity/sys-counter';
-import { Bag } from '../../../../shared/orm-entity/bag';
-import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
-import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
-import { BagItem } from '../../../../shared/orm-entity/bag-item';
-import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutDetailMoreResponseVm, ScanOutDetailBaggingMoreResponseVm, ScanOutSmdDetailRepresentativeResponseVm, ScanOutSmdImageResponseVm, ScanOutSmdDetailBagRepresentativeResponseVm, ScanOutDetailBagRepresentativeMoreResponseVm } from '../../models/scanout-smd.response.vm';
-import { HttpStatus } from '@nestjs/common';
-import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
-import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
-import { AuthService } from '../../../../shared/services/auth.service';
+import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { WebScanInHubSortListResponseVm } from '../../../main/models/web-scanin-list.response.vm';
-import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
-import { DoSmd } from '../../../../shared/orm-entity/do_smd';
-import { DoSmdVehicle } from '../../../../shared/orm-entity/do_smd_vehicle';
-import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
-import { Branch } from '../../../../shared/orm-entity/branch';
-import { Representative } from '../../../../shared/orm-entity/representative';
-import { Bagging } from '../../../../shared/orm-entity/bagging';
-import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
-import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
+import { ScanOutSmdVendorListResponseVm, ScanOutSmdDetailVendorResponseVm, ScanOutSmdDetailBaggingVendorResponseVm, ScanOutSmdDetailBagRepresentativeVendorResponseVm, ScanOutVendorHistoryResponseVm } from '../../models/scanout-smd-vendor.response.vm';
+import {AuthService} from '../../../../shared/services/auth.service';
+import {ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdDetailBagRepresentativeResponseVm, ScanOutDetailMoreResponseVm, ScanOutDetailBaggingMoreResponseVm, ScanOutDetailBagRepresentativeMoreResponseVm} from '../../models/scanout-smd.response.vm';
+import {DoSmdDetail} from '../../../../shared/orm-entity/do_smd_detail';
+import {RawQueryService} from '../../../../shared/services/raw-query.service';
+import {DoSmdDetailItem} from '../../../../shared/orm-entity/do_smd_detail_item';
+import {QueryBuilderService} from '../../../../shared/services/query-builder.service';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 
 @Injectable()
-export class ScanoutSmdListService {
-  static async findScanOutList(
-    payload: BaseMetaPayloadVm,
-  ): Promise<ScanOutListResponseVm> {
-    // ScanInListResponseVm
-    // payload.fieldResolverMap['baggingDateTime'] = 'b.created_time';
-    // payload.fieldResolverMap['branchId'] = 'bhin.branch_id';
-    const data = await this.getQueryScanoutList(payload);
+export class ScanoutSmdVendorListService {
+  static async scanOutVendorList(payload: BaseMetaPayloadVm): Promise<ScanOutSmdVendorListResponseVm> {
 
-    const result = new ScanOutListResponseVm();
-
-    result.data = data.data;
-    result.paging = MetaService.set(payload.page, payload.limit, data.total);
-
-    return result;
-  }
-
-  static async getQueryScanoutList(payload: BaseMetaPayloadVm, isGetTotal = true): Promise<any> {
-    payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
-    payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
-    payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
-    payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
+    // mapping search field and operator default ilike
+    payload.fieldResolverMap['vendor_id'] = 't2.vendor_id';
+    payload.fieldResolverMap['vendor_name'] = 't2.vendor_name';
+    payload.fieldResolverMap['vendor_code'] = 't2.vendor_code';
+    payload.fieldResolverMap['do_smd_id'] = 't1.do_smd_id';
+    payload.fieldResolverMap['branch_id'] = 't4.branch_id';
+    payload.fieldResolverMap['do_smd_code'] = 't1.do_smd_code';
+    payload.fieldResolverMap['do_smd_time'] = 't1.do_smd_time';
+    payload.fieldResolverMap['total_bag'] = 't1.total_bag';
+    payload.fieldResolverMap['total_bagging'] = 't1.total_bagging';
+    payload.fieldResolverMap['do_smd_detail_id'] = 't3.do_smd_detail_id';
+    payload.fieldResolverMap['branch_name'] = 't4.branch_name';
+    payload.fieldResolverMap['total_bag_representative'] = 't1.total_bag_representative';
 
     payload.globalSearchFields = [
       {
-        field: 'do_smd_time',
+        field: 'vendorName',
       },
       {
-        field: 'branch_id_from',
+        field: 'branchName',
       },
       {
-        field: 'branch_id_to',
+        field: 'vendorCode',
       },
       {
-        field: 'do_smd_code',
+        field: 'doSmdCode',
       },
     ];
 
-    const repo = new OrionRepositoryService(DoSmd, 'ds');
-    const q = repo.findAllRaw();
+    const repo = new OrionRepositoryService(DoSmd, 't1');
 
+    const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['ds.do_smd_id', 'do_smd_id'],
-      ['ds.do_smd_code', 'do_smd_code'],
-      ['ds.do_smd_time', 'do_smd_time'],
-      ['e.fullname', 'fullname'],
-      ['e.employee_id', 'employee_id'],
-      ['dsv.vehicle_number', 'vehicle_number'],
-      ['b.branch_name', 'branch_from_name'],
-      ['ds.branch_to_name_list', 'branch_to_name'],
-      ['ds.total_bag', 'total_bag'],
-      ['ds.total_bagging', 'total_bagging'],
-      ['ds.total_bag_representative', 'total_bag_representative'],
-      ['dss.do_smd_status_title', 'do_smd_status_title'],
+      ['t1.vendor_id', 'vendor_id'],
+      ['t1.vendor_name', 'vendor_name'],
+      ['t2.vendor_code', 'vendor_code'],
+      ['t3.do_smd_detail_id', 'do_smd_detail_id'],
+      ['t4.branch_name', 'branch_name'],
+      ['t4.branch_id', 'branch_id'],
+      ['t1.do_smd_id', 'do_smd_id'],
+      ['t1.do_smd_code', 'do_smd_code'],
+      ['t1.do_smd_time', 'do_smd_time'],
+      ['t1.total_bag', 'total_bag'],
+      ['t1.total_bagging', 'total_bagging'],
+      ['t1.total_bag_representative', 'total_bag_representative'],
     );
 
-    q.innerJoinRaw(
-      'do_smd_detail',
-      'dsd',
-      'dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE',
-    );
-    // q.innerJoin(e => e.doSmdDetail, 'dsd', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
-    q.innerJoin(e => e.doSmdVehicle, 'dsv', j =>
+    q.leftJoin(e => e.vendor, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.branch, 'b', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.doSmdVehicle.employee, 'e', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoinRaw(
-      'do_smd_status',
-      'dss',
-      'ds.do_smd_status_id_last = dss.do_smd_status_id AND dss.is_deleted = FALSE',
-    );
-    q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, ds.total_bag_representative, dss.do_smd_status_title');
-    q.andWhereRaw('ds.is_deleted = FALSE');
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-    const result = {
-      data: null,
-      total: null,
-    };
-    result.data = await q.exec();
-    if (isGetTotal) {
-      result.total = await q.countWithoutTakeAndSkip();
-    }
-    return result;
-  }
-
-  static async findScanOutHistory(
-    payload: BaseMetaPayloadVm,
-  ): Promise<ScanOutHistoryResponseVm> {
-
-    payload.fieldResolverMap['do_smd_id'] = 'ds.do_smd_id';
-
-    payload.globalSearchFields = [
-      {
-        field: 'do_smd_id',
-      },
-    ];
-
-    const repo = new OrionRepositoryService(DoSmdHistory, 'dsh');
-    const q = repo.findAllRaw();
-
-    payload.applyToOrionRepositoryQuery(q, true);
-
-    q.selectRaw(
-      ['dsh.do_smd_history_id', 'do_smd_history_id'],
-      ['ds.do_smd_id', 'do_smd_id'],
-      ['ds.do_smd_code', 'do_smd_code'],
-      ['b.branch_name', 'branch_from_name'],
-      ['ds.branch_to_name_list', 'branch_to_name'],
-      ['dsh.created_time', 'history_date'],
-      ['dsh.do_smd_status_id', 'do_smd_status_id'],
-      ['dss.do_smd_status_title', 'history_status'],
-      ['dsh.seal_number', 'seal_number'],
-      ['', 'photo_url'],
-      [`CONCAT(u.first_name, ' ', u.last_name )`, 'username'],
-      ['e.fullname', 'assigne'],
-      ['dsh.reason_notes', 'reason_notes'],
     );
 
-    q.innerJoin(e => e.doSmd, 'ds', j =>
+    q.innerJoin(e => e.doSmdDetails, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.doSmdStatus, 'dss', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.doSmdVehicle, 'dsv', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    // q.leftJoinRaw(
-    //   'do_smd_vehicle_attachment',
-    //   'dsva',
-    //   'dsva.do_smd_vehicle_id = dsv.do_smd_vehicle_id AND dsva.is_deleted = FALSE',
-    // );
-    q.leftJoin(e => e.doSmdVehicle.employee, 'e', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.user, 'u', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    // q.leftJoin(e => e.reason, 'r', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
-    q.leftJoin(e => e.branch, 'b', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.orderByRaw('dsh.created_time', 'ASC');
 
+    q.innerJoin(e => e.branch, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isVendor, w => w.isTrue());
+
+    q.orderBy({ createdTime: 'DESC' });
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
-    const result = new ScanOutHistoryResponseVm();
-
+    const result = new ScanOutSmdVendorListResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
 
-  static async findScanOutDetailRepresentative(payload: any): Promise<any> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-
-    const result = new ScanOutSmdDetailRepresentativeResponseVm();
-    const timeNow = moment().toDate();
-    const data = [];
-
-    const resultDoSmd = await DoSmd.findOne({
-      where: {
-        doSmdId: payload.do_smd_id,
-        isVendor: false,
-        isDeleted: false,
-      },
-    });
-    if (resultDoSmd) {
-      const rawQuerySmdDetail = `
-        SELECT
-          dsd.do_smd_detail_id,
-          b.branch_name
-        FROM do_smd_detail dsd
-        INNER JOIN branch b ON dsd.branch_id_to = b.branch_id AND b.is_deleted = FALSE
-        WHERE
-          dsd.do_smd_id= ${payload.do_smd_id} AND
-          dsd.is_deleted = FALSE;
-      `;
-      const resultDataDoSmdDetail = await RawQueryService.query(rawQuerySmdDetail);
-      if (resultDataDoSmdDetail.length > 0 ) {
-        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-          data.push({
-            do_smd_detail_id: resultDataDoSmdDetail[i].do_smd_detail_id,
-            branch_name: resultDataDoSmdDetail[i].branch_name,
-          });
-        }
-        result.statusCode = HttpStatus.OK;
-        result.message = 'List Representative Success';
-        result.data = data;
-        return result;
-      } else {
-        throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Detail Can't Found !`);
-      }
-    } else {
-      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
-    }
-  }
-
   static async findScanOutDetail(payload: any): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const result = new ScanOutSmdDetailResponseVm();
+    const result = new ScanOutSmdDetailVendorResponseVm();
     const timeNow = moment().toDate();
     const data = [];
 
-    // const resultDoSmd = await DoSmd.findOne({
-    //   where: {
-    //     doSmdId: payload.do_smd_id,
-    //     isDeleted: false,
-    //   },
-    // });
-    // if (resultDoSmd) {
     if (payload.bag_type == 1) {
-      // Detail Gabung Paket
-      // const rawQuerySmdDetail = `
-      //   SELECT
-      //     do_smd_detail_id
-      //   FROM do_smd_detail
-      //   WHERE
-      //     do_smd_id= ${payload.do_smd_id} AND
-      //     is_deleted = FALSE;
-      // `;
-      // const resultDataDoSmdDetail = await RawQueryService.query(rawQuerySmdDetail);
+
       const resultDoSmdDetail = await DoSmdDetail.findOne({
           where: {
             doSmdDetailId: payload.do_smd_detail_id,
@@ -278,7 +108,6 @@ export class ScanoutSmdListService {
           },
         });
       if (resultDoSmdDetail) {
-        // for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
         const rawQuery = `
           SELECT
             b.bag_id,
@@ -293,7 +122,6 @@ export class ScanoutSmdListService {
           LEFT JOIN representative r ON b.representative_id_to = r.representative_id AND r.is_deleted = FALSE
           LEFT JOIN branch br ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
           WHERE
-            dsd.is_vendor = FALSE AND
             dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
             dsdi.bag_type = 1 AND
             dsdi.is_deleted = FALSE
@@ -311,7 +139,6 @@ export class ScanoutSmdListService {
             });
           }
         }
-        // }
         result.statusCode = HttpStatus.OK;
         result.message = 'List Bag Success';
         result.data = data;
@@ -322,36 +149,16 @@ export class ScanoutSmdListService {
     } else {
       throw new BadRequestException(`This API For Detail Bag / Gab.Paket Only`);
     }
-    // } else {
-    //   throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
-    // }
   }
 
   static async findScanOutDetailBagging(payload: any): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const result = new ScanOutSmdDetailBaggingResponseVm();
+    const result = new ScanOutSmdDetailBaggingVendorResponseVm();
     const timeNow = moment().toDate();
     const data = [];
-    // const resultDoSmd = await DoSmd.findOne({
-    //   where: {
-    //     doSmdId: payload.do_smd_id,
-    //     isDeleted: false,
-    //   },
-    // });
-    // if (resultDoSmd) {
     if (payload.bag_type == 0) {
-      // Detail Bagging
-      // const rawQuerySmdDetail = `
-      //   SELECT
-      //     do_smd_detail_id
-      //   FROM do_smd_detail
-      //   WHERE
-      //     do_smd_id= ${payload.do_smd_id} AND
-      //     is_deleted = FALSE;
-      // `;
-      // const resultDataDoSmdDetail = await RawQueryService.query(rawQuerySmdDetail);
       const resultDoSmdDetail = await DoSmdDetail.findOne({
         where: {
           doSmdDetailId: payload.do_smd_detail_id,
@@ -375,7 +182,6 @@ export class ScanoutSmdListService {
             FROM do_smd_detail_item dsdi
             INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
             WHERE
-              dsd.is_vendor = FALSE AND
               dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
               dsdi.bag_type = 0 AND
               dsdi.is_deleted = FALSE
@@ -412,16 +218,13 @@ export class ScanoutSmdListService {
     } else {
       throw new BadRequestException(`This API For Detail Bagging Only`);
     }
-    // } else {
-    //   throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
-    // }
   }
 
   static async findScanOutDetailBagRepresentative(payload: any): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const result = new ScanOutSmdDetailBagRepresentativeResponseVm();
+    const result = new ScanOutSmdDetailBagRepresentativeVendorResponseVm();
     const timeNow = moment().toDate();
     const data = [];
 
@@ -448,7 +251,6 @@ export class ScanoutSmdListService {
           LEFT JOIN branch b ON dsd.branch_id_to = b.branch_id AND b.is_deleted = FALSE
           LEFT JOIN representative r ON br.representative_id_to = r.representative_id  AND r.is_deleted = FALSE
           WHERE
-            dsd.is_vendor = FALSE AND
             dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
             dsdi.bag_type = 2 AND
             dsdi.is_deleted = FALSE
@@ -663,65 +465,61 @@ export class ScanoutSmdListService {
     return result;
   }
 
-  static async findScanOutImage(payload: any): Promise<any> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+  static async findScanOutVendorHistory(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutVendorHistoryResponseVm> {
 
-    const result = new ScanOutSmdImageResponseVm();
-    const timeNow = moment().toDate();
-    const data = [];
-    // let paramImageType;
-    let paramWhere;
+    payload.fieldResolverMap['do_smd_id'] = 'ds.do_smd_id';
 
-    const resultDoSmdHistory = await DoSmdHistory.findOne({
-      where: {
-        doSmdHistoryId: payload.do_smd_history_id,
-        isDeleted: false,
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_id',
       },
-    });
+    ];
 
-    if (resultDoSmdHistory ) {
-      if (payload.do_smd_status_id == 8000) {
-        // paramImageType = 'problem';
-        paramWhere = `d.do_smd_vehicle_id = ` + resultDoSmdHistory.doSmdVehicleId + ` AND lower(d.attachment_type) = 'problem'`;
-      } else if (payload.do_smd_status_id == 1150) {
-        // paramImageType = 'handover';
-        paramWhere = `d.do_smd_vehicle_id = ` + resultDoSmdHistory.doSmdVehicleId + ` AND lower(d.attachment_type) in('handover', 'handover_ttd')`;
-      } else {
-        // paramImageType = 'photo';
-        paramWhere = `d.do_smd_detail_id = ` + resultDoSmdHistory.doSmdDetailId + ` AND lower(d.attachment_type) in('signature', 'photo')`;
-      }
+    const repo = new OrionRepositoryService(DoSmdHistory, 'dsh');
+    const q = repo.findAllRaw();
 
-      const rawQuery = `
-        SELECT
-          d.do_smd_detail_attachment_id,
-          a.url,
-          d.attachment_type
-        FROM do_smd_detail_attachment d
-        INNER JOIN attachment_tms a on d.attachment_tms_id = a.attachment_tms_id and a.is_deleted = false
-        WHERE
-          ${paramWhere}
-          AND d.is_deleted = false
-        ;
-      `;
-      const resultDataAttachment = await RawQueryService.query(rawQuery);
-      if (resultDataAttachment.length > 0 ) {
-        for (let a = 0; a < resultDataAttachment.length; a++) {
-          data.push({
-            do_smd_detail_attachment_id: resultDataAttachment[a].do_smd_detail_attachment_id,
-            image_url: resultDataAttachment[a].url,
-            image_type: resultDataAttachment[a].attachment_type,
-          });
-        }
-      }
+    payload.applyToOrionRepositoryQuery(q, true);
 
-      result.statusCode = HttpStatus.OK;
-      result.message = 'List Image Success';
-      result.data = data;
-      return result;
-    } else {
-      throw new BadRequestException(`SMD History Id: ` + payload.do_smd_histroy_id + ` Can't Found !`);
-    }
+    q.selectRaw(
+      ['dsh.do_smd_history_id', 'do_smd_history_id'],
+      ['ds.do_smd_id', 'do_smd_id'],
+      ['ds.do_smd_code', 'do_smd_code'],
+      ['ds.vendor_name', 'vendor_name'],
+      ['b.branch_name', 'branch_from_name'],
+      ['dsh.created_time', 'history_date'],
+      ['dsh.do_smd_status_id', 'do_smd_status_id'],
+      ['dss.do_smd_status_title', 'history_status'],
+      [`CONCAT(u.first_name, ' ', u.last_name )`, 'username'],
+    );
+
+    q.innerJoin(e => e.doSmd, 'ds', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doSmdStatus, 'dss', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doSmdVehicle, 'dsv', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.user, 'u', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.branch, 'b', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.orderByRaw('dsh.created_time', 'ASC');
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new ScanOutVendorHistoryResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
-
 }

@@ -66,11 +66,15 @@ export class V1WebReportCodService {
       'Current Position',
       'Destination Code',
       'Destination',
+      'Perwakilan',
+      // 'sigesit',
       'Package Detail',
       'Services',
       'Note',
       'Submitted Date',
       'Submitted Number',
+      // 'Date Created',
+      // 'User Created',
     ] : [
         'Partner',
         'Awb Date',
@@ -88,11 +92,15 @@ export class V1WebReportCodService {
         'Current Position',
         'Destination Code',
         'Destination',
+        'Perwakilan',
+        // 'sigesit',
         'Package Detail',
         'Services',
         'Note',
         'Submitted Date',
         'Submitted Number',
+        // 'Date Created',
+        // 'User Created',
       ];
 
     const csvConfig = cod ?
@@ -146,53 +154,32 @@ export class V1WebReportCodService {
     if (data) {
       for (const d of data) {
         // writer.write(d);
-        cod ?
-          writer.write([
-            this.strReplaceFunc(d.partnerName),
-            d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD') : null,
-            this.strReplaceFunc(d.awbNumber),
-            d.parcelValue,
-            d.codValue,
-            d.codFee,
-            d.codValue,
-            d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
-            this.strReplaceFunc(d.consigneeName),
-            draft ? 'DRAFT INVOICE' : 'PAID', // supplier invoice status
-            'DLV',
-            this.strReplaceFunc(d.custPackage),
-            this.strReplaceFunc(d.pickupSource),
-            this.strReplaceFunc(d.currentPosition),
-            this.strReplaceFunc(d.destinationCode),
-            this.strReplaceFunc(d.destination),
-            this.strReplaceFunc(d.parcelContent),
-            this.strReplaceFunc(d.packageType),
-            this.strReplaceFunc(d.parcelNote),
-            '', '',
-          ]) : writer.write([
-            this.strReplaceFunc(d.partnerName),
-            d.awbDate
-              ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm')
-              : null,
-            this.strReplaceFunc(d.awbNumber),
-            d.parcelValue,
-            d.codValue,
-            d.codValue,
-            d.podDate
-              ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm')
-              : null,
-            this.strReplaceFunc(d.consigneeName),
-            'DLV',
-            'DLV',
-            this.strReplaceFunc(d.custPackage),
-            this.strReplaceFunc(d.pickupSource),
-            this.strReplaceFunc(d.currentPosition),
-            this.strReplaceFunc(d.destinationCode),
-            this.strReplaceFunc(d.destination),
-            this.strReplaceFunc(d.parcelContent),
-            this.strReplaceFunc(d.packageType),
-            this.strReplaceFunc(d.parcelNote),
-            '', '',
-          ]);
+        writer.write([
+          this.strReplaceFunc(d.partnerName),
+          d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD') : null,
+          this.strReplaceFunc(d.awbNumber),
+          d.parcelValue,
+          d.codValue,
+          d.codFee,
+          d.codValue,
+          d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+          this.strReplaceFunc(d.consigneeName),
+          draft ? 'DRAFT INVOICE' : 'PAID', // supplier invoice status
+          'DLV',
+          this.strReplaceFunc(d.custPackage),
+          this.strReplaceFunc(d.pickupSource),
+          this.strReplaceFunc(d.currentPosition),
+          this.strReplaceFunc(d.destinationCode),
+          this.strReplaceFunc(d.destination),
+          d.perwakilan,
+          // d.sigesit,
+          this.strReplaceFunc(d.parcelContent),
+          this.strReplaceFunc(d.packageType),
+          this.strReplaceFunc(d.parcelNote),
+          '', '',
+          // d.updatedTime ? moment.utc(d.updatedTime).format('YYYY-MM-DD') : null,
+          // d.username,
+        ]);
 
       }
       count += 1;
@@ -234,10 +221,14 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.lastValidTrackingSiteName),
           this.strReplaceFunc(d.prtDestinationCode),
           this.strReplaceFunc(d.tujuanKecamatan),
+          this.strReplaceFunc(d.perwakilan),
+          // this.strReplaceFunc(d.sigesit),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
           this.strReplaceFunc(d.receiverRemark),
           '', '',
+          // d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD') : null,
+          // this.strReplaceFunc(d.username),
         ]);
 
       }
@@ -713,8 +704,7 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'supplier' && filter.value) {
-        const regex = new RegExp(`^${filter.value.toLowerCase()}`, 'i');
-        spartanFilter.push({ partnerName: regex });
+        spartanFilter.push({ partnerId: filter.value });
       }
 
       if (filter.field == 'transactionStatus' && filter.value) {
@@ -767,6 +757,10 @@ export class V1WebReportCodService {
                 awbNumber: 1,
                 transactionStatusId: 1,
                 supplierInvoiceStatusId: 1,
+                userIdDriver: 1,
+                userIdUpdated: 1,
+                updatedTime: 1
+
               },
             },
           ],
@@ -791,6 +785,10 @@ export class V1WebReportCodService {
           prtParcelValue: '$prtParcelValue',
           prtCustPackageId: '$prtCustPackageId',
           transactionStatusId: '$td.transactionStatusId',
+          userIdDriver: '$td.userIdDriver',
+          userIdUpdated: "$td.userIdUpdated",
+          dateUpdated: "$td.updatedTime",
+          perwakilan: 1,
           layanan: 1,
           supplierInvoiceStatusId: '$td.supplierInvoiceStatusId',
           penerima: 1,
@@ -813,16 +811,50 @@ export class V1WebReportCodService {
     // console.log(query);
     const datas = await query.toArray();
 
+
+    const arrDriver = await this.getUserProps(datas, "driver");
+    const arrUser = await this.getUserProps(datas, "user");
+    console.log(arrUser, "array");
     for (const d of datas) {
       d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
-
       d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
+      if (d.userIdDriver && arrDriver.length > 0) {
+        d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
+      }
+
+      if (d.userIdUpdated && arrUser.length > 0)
+        d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
     }
+
 
     // console.log(datas);
 
     arrDatas.push(...datas);
     return datas;
+  }
+  static async getUserProps(datas, type) {
+    const unique = type == "driver" ? [...new Set(datas.filter(item => {
+      return typeof item.userIdDriver === "number" || typeof item.userIdDriver === "string"
+    }).map(item => item.userIdDriver))] :
+      [...new Set(datas.filter(item => {
+        return typeof item.userIdUpdated === "number"
+      }).map(item => item.userIdUpdated))];
+
+    if (type == "driver")
+      console.log(unique, "unique driver");
+
+    // if (unique.length > 0) {
+    //   const query = `SELECT u.user_id employee_id , concat( e.nik, ' - ' ,  e.fullname ) fullname FROM users u  
+    //   INNER JOIN employee e ON e.employee_id = u.employee_id 
+    //   WHERE user_id  IN (${unique.join(',')})`
+    //   const data = await RawQueryService.query(query)
+    //   console.log(data)
+    //   return data;
+    // }
+
+
+    return []
+
   }
 
   static async timeResponse(key, promise) {
@@ -1030,6 +1062,34 @@ export class V1WebReportCodService {
         $limit: limit,
       },
       {
+        $lookup: {
+          from: 'cod_awb',
+          as: 'ca',
+          let: { awbNumber: '$awbNumber' },
+          pipeline: [
+            {
+              // on inner join
+              $match:
+              {
+                $expr:
+                {
+                  $and: [{
+                    $eq: ['$awbNumber', '$$awbNumber']
+                  }],
+                },
+              },
+            },
+            { $limit: 1 },
+            {
+              $project: {
+                awbNumber: 1,
+                perwakilan: 1
+              },
+            },
+          ],
+        },
+      },
+      {
         $project: {
           _id: 1,
           awbDate: 1,
@@ -1053,7 +1113,9 @@ export class V1WebReportCodService {
           pickupSource: 1,
           podDate: 1,
           transactionStatusId: 1,
-          userIdCreated: 1,
+          perwakilan: "$ca.perwakilan",
+          userIdDriver: 1,
+          updatedTime: 1,
           userIdUpdated: 1,
         },
       },
@@ -1061,7 +1123,17 @@ export class V1WebReportCodService {
     console.log(JSON.stringify(queryParam), 'awb');
     const datas = await coll
       .aggregate(queryParam).toArray();
-    console.log(datas.length, 'data array');
+    console.log(datas, 'data array');
+
+    const arrDriver = await this.getUserProps(datas, "driver");
+    const arrUser = await this.getUserProps(datas, "user");
+    console.log(arrDriver, "arrDriver")
+    for (const d of datas) {
+      if (d.userIdDriver && arrDriver.length > 0)
+        d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
+      if (d.userIdUpdated && arrUser.length > 0)
+        d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
+    }
     return datas;
   }
 
