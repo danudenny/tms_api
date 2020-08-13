@@ -1145,7 +1145,6 @@ export class ScanoutSmdVendorService {
             updatedTime: moment().toDate(),
           },
         );
-        )
         for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
           await DoSmdDetailItem.update(
             { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
