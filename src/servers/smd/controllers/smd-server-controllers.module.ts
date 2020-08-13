@@ -19,6 +19,7 @@ import { AwbFilterSmdController } from './integration/awb-filter-smd.controller'
 import { BagCityController } from './integration/bag-city.controller';
 import { SmdHubController } from './integration/smd-hub.controller';
 import { ScanOutVendorController } from './integration/scanout-vendor.controller';
+import { ScanOutVendorListController } from './integration/scanout-vendor-list.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
@@ -40,6 +41,7 @@ import { ScanOutVendorController } from './integration/scanout-vendor.controller
     BagCityController,
     SmdHubController,
     ScanOutVendorController,
+    ScanOutVendorListController,
   ],
 })
 export class SmdServerControllersModule {}
