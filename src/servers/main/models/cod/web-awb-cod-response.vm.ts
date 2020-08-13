@@ -126,6 +126,9 @@ export class WebTransactionBranchDetail {
   transactionDate: string;
 
   @ApiModelProperty()
+  transactionNote: string;
+
+  @ApiModelProperty()
   transactionStatus: string;
 
   @ApiModelProperty()
@@ -178,6 +181,9 @@ export class WebCodBankStatementVm {
 
   @ApiModelProperty({ format: 'date-time' })
   bankStatementDate: string;
+
+  @ApiModelProperty()
+  bankStatementNote: string;
 
   @ApiModelProperty()
   transactionStatusId: number;
