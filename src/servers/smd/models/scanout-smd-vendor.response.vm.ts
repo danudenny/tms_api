@@ -41,8 +41,8 @@ export class ScanOutSmdVendorItemResponseVm {
   @ApiModelProperty()
   message: string;
 
-  @ApiModelProperty({type: () => [ScanOutItemVm]})
-  data: ScanOutItemVm[];
+  @ApiModelProperty({type: () => [ScanOutVendorItemVm]})
+  data: ScanOutVendorItemVm[];
 }
 
 export class ScanOutVendorItemVm {

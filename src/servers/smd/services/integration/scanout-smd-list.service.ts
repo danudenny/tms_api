@@ -113,6 +113,7 @@ export class ScanoutSmdListService {
       'ds.do_smd_status_id_last = dss.do_smd_status_id AND dss.is_deleted = FALSE',
     );
     q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, ds.total_bag_representative, dss.do_smd_status_title');
+    q.andWhereRaw('ds.is_deleted = FALSE');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     const result = {
       data: null,
@@ -209,6 +210,7 @@ export class ScanoutSmdListService {
     const resultDoSmd = await DoSmd.findOne({
       where: {
         doSmdId: payload.do_smd_id,
+        isVendor: false,
         isDeleted: false,
       },
     });
@@ -291,6 +293,7 @@ export class ScanoutSmdListService {
           LEFT JOIN representative r ON b.representative_id_to = r.representative_id AND r.is_deleted = FALSE
           LEFT JOIN branch br ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
           WHERE
+            dsd.is_vendor = FALSE AND
             dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
             dsdi.bag_type = 1 AND
             dsdi.is_deleted = FALSE
@@ -372,6 +375,7 @@ export class ScanoutSmdListService {
             FROM do_smd_detail_item dsdi
             INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
             WHERE
+              dsd.is_vendor = FALSE AND
               dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
               dsdi.bag_type = 0 AND
               dsdi.is_deleted = FALSE
@@ -444,6 +448,7 @@ export class ScanoutSmdListService {
           LEFT JOIN branch b ON dsd.branch_id_to = b.branch_id AND b.is_deleted = FALSE
           LEFT JOIN representative r ON br.representative_id_to = r.representative_id  AND r.is_deleted = FALSE
           WHERE
+            dsd.is_vendor = FALSE AND
             dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
             dsdi.bag_type = 2 AND
             dsdi.is_deleted = FALSE
