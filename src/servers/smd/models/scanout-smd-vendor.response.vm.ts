@@ -123,6 +123,9 @@ export class ScanOutSmdVendorListDetailResponseVm {
   doSmdId: string;
 
   @ApiModelProperty()
+  doSmdDetailId: string;
+
+  @ApiModelProperty()
   doSmdCode: string;
 
   @ApiModelProperty()
@@ -141,4 +144,100 @@ export class ScanOutSmdVendorListDetailResponseVm {
 export class ScanOutSmdVendorListResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [ScanOutSmdVendorListDetailResponseVm] })
   data: ScanOutSmdVendorListDetailResponseVm[];
+}
+
+export class ScanOutSmdDetailVendorResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailVendorVm]})
+  data: ScanOutDetailVendorVm[];
+}
+
+export class ScanOutDetailVendorVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_number: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}
+
+export class ScanOutSmdDetailBaggingVendorResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailBaggingVendorVm]})
+  data: ScanOutDetailBaggingVendorVm[];
+}
+
+export class ScanOutDetailBaggingVendorVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bagging_number: string;
+
+  @ApiModelProperty()
+  total_bag: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+}
+
+export class ScanOutSmdDetailBagRepresentativeVendorResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutDetailBagRepresentativeVendorVm]})
+  data: ScanOutDetailBagRepresentativeVendorVm[];
+}
+
+export class ScanOutDetailBagRepresentativeVendorVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_representative_code: string;
+
+  @ApiModelProperty()
+  total_awb: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  representative_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
 }

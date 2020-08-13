@@ -30,3 +30,11 @@ export class ScanOutSmdVendorEndPayloadVm {
   do_smd_id: number;
 
 }
+
+export class ScanOutSmdDetailVendorPayloadVm {
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_type: number;
+}
