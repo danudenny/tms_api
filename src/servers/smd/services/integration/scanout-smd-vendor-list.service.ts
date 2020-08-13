@@ -6,9 +6,11 @@ import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { ScanOutSmdVendorListResponseVm, ScanOutSmdDetailVendorResponseVm, ScanOutSmdDetailBaggingVendorResponseVm, ScanOutSmdDetailBagRepresentativeVendorResponseVm } from '../../models/scanout-smd-vendor.response.vm';
 import {AuthService} from '../../../../shared/services/auth.service';
-import {ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdDetailBagRepresentativeResponseVm} from '../../models/scanout-smd.response.vm';
+import {ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdDetailBagRepresentativeResponseVm, ScanOutDetailMoreResponseVm, ScanOutDetailBaggingMoreResponseVm, ScanOutDetailBagRepresentativeMoreResponseVm} from '../../models/scanout-smd.response.vm';
 import {DoSmdDetail} from '../../../../shared/orm-entity/do_smd_detail';
 import {RawQueryService} from '../../../../shared/services/raw-query.service';
+import {DoSmdDetailItem} from '../../../../shared/orm-entity/do_smd_detail_item';
+import {QueryBuilderService} from '../../../../shared/services/query-builder.service';
 
 @Injectable()
 export class ScanoutSmdVendorListService {
@@ -274,5 +276,189 @@ export class ScanoutSmdVendorListService {
     } else {
       throw new BadRequestException(`This API For Detail Bag Representative Only`);
     }
+  }
+
+  static async findScanOutDetailMore(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutDetailMoreResponseVm> {
+
+    payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.do_smd_detail_id';
+
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_detail_id',
+      },
+    ];
+    const repo = new OrionRepositoryService(DoSmdDetailItem, 'dsdi');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['dsdi.do_smd_detail_id', 'do_smd_detail_id'],
+      ['b.bag_id', 'bag_id'],
+      [`CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0'))`, 'bag_number'],
+      [`CONCAT(bi.weight::numeric(10,2), ' Kg')`, 'weight'],
+      ['r.representative_code', 'representative_code'],
+      ['br.branch_name', 'branch_name'],
+    );
+
+    q.innerJoinRaw(
+      'do_smd_detail',
+      'dsd',
+      'dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE',
+    );
+    q.innerJoinRaw(
+      'bag',
+      'b',
+      'dsdi.bag_id = b.bag_id AND b.is_deleted = FALSE',
+    );
+    q.innerJoinRaw(
+      'bag_item',
+      'bi',
+      'dsdi.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE',
+    );
+    q.leftJoinRaw(
+      'representative',
+      'r',
+      'b.representative_id_to = r.representative_id AND r.is_deleted = FALSE',
+    );
+    q.leftJoinRaw(
+      'branch',
+      'br',
+      'dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE',
+    );
+    q.andWhereRaw(`dsdi.bag_type = 1`);
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new ScanOutDetailMoreResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findScanOutDetailBaggingMore(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutDetailBaggingMoreResponseVm> {
+
+    payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.do_smd_detail_id';
+    payload.fieldFilterManualMap['do_smd_detail_id'] = true;
+    const q = payload.buildQueryBuilder();
+
+    q.select('d.bagging_id', 'bagging_id')
+      .addSelect('bg.bagging_code', 'bagging_number')
+      .addSelect('bg.total_item', 'total_bag')
+      .addSelect(`CONCAT(bg.total_weight::numeric(10,2), ' Kg')`, 'weight')
+      .addSelect('r.representative_code', 'representative_code')
+      .addSelect('br.branch_name', 'branch_name')
+      .from(subQuery => {
+        subQuery
+          .select('dsdi.bagging_id')
+          .addSelect('dsd.branch_id')
+          .from('do_smd_detail_item', 'dsdi')
+          .innerJoin(
+            'do_smd_detail',
+            'dsd',
+            'dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE',
+          );
+
+        payload.applyFiltersToQueryBuilder(subQuery, ['do_smd_detail_id']);
+
+        subQuery
+          .andWhere('dsdi.bag_type = 0')
+          .andWhere('dsdi.is_deleted = false')
+          .groupBy('dsdi.bagging_id')
+          .addGroupBy('dsd.branch_id');
+
+        return subQuery;
+      }, 'd')
+      .innerJoin(
+        'bagging',
+        'bg',
+        'bg.bagging_id = d.bagging_id AND bg.is_deleted = FALSE',
+      )
+      .leftJoin(
+        'branch',
+        'br',
+        'd.branch_id = br.branch_id AND br.is_deleted = FALSE',
+      )
+      .leftJoin(
+        'representative',
+        'r',
+        'bg.representative_id_to = r.representative_id  AND r.is_deleted = FALSE',
+      );
+
+    const total = await QueryBuilderService.count(q, '1');
+    payload.applyRawPaginationToQueryBuilder(q);
+    const data = await q.getRawMany();
+
+    const result = new ScanOutDetailBaggingMoreResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findScanOutDetailBagRepresentativeMore(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutDetailBagRepresentativeMoreResponseVm> {
+
+    payload.fieldResolverMap['do_smd_detail_id'] = 'dsdi.do_smd_detail_id';
+
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_detail_id',
+      },
+    ];
+    const repo = new OrionRepositoryService(DoSmdDetailItem, 'dsdi');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['dsdi.do_smd_detail_id', 'do_smd_detail_id'],
+      ['br.bag_representative_id', 'bag_representative_id'],
+      [`br.bag_representative_code`, 'bag_representative_code'],
+      [`br.total_item`, 'total_awb'],
+      [`CONCAT(br.total_weight::numeric(10,2), ' Kg')`, 'weight'],
+      ['r.representative_code', 'representative_code'],
+      ['b.branch_name', 'branch_name'],
+      ['dsd.branch_id_to', 'branch_id'],
+    );
+
+    q.innerJoinRaw(
+      'do_smd_detail',
+      'dsd',
+      'dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE',
+    );
+    q.innerJoinRaw(
+      'bag_representative',
+      'br',
+      'dsdi.bag_representative_id = br.bag_representative_id AND br.is_deleted = FALSE',
+    );
+    q.leftJoinRaw(
+      'representative',
+      'r',
+      'br.representative_id_to = r.representative_id AND r.is_deleted = FALSE',
+    );
+    q.leftJoinRaw(
+      'branch',
+      'b',
+      'dsd.branch_id_to = b.branch_id AND b.is_deleted = FALSE',
+    );
+    q.andWhereRaw(`dsdi.bag_type = 2`);
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new ScanOutDetailBagRepresentativeMoreResponseVm();
+    result.data = data;
+
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 }
