@@ -44,4 +44,22 @@ export class ScanOutVendorListController {
   public async FindscanOutDetailBagRepresentative(@Req() request: any, @Body() payload: ScanOutSmdDetailVendorPayloadVm) {
     return ScanoutSmdVendorListService.findScanOutDetailBagRepresentative(payload);
   }
+
+  @Post('scanOut/detailBag/more')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async FindscanOutDetailMore(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
+    return ScanoutSmdVendorListService.findScanOutDetailMore(payload);
+  }
+
+  @Post('scanOut/detailBagging/more')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async FindscanOutDetailBaggingMore(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
+    return ScanoutSmdVendorListService.findScanOutDetailBaggingMore(payload);
+  }
+
+  @Post('scanOut/detailBagRepresentative/more')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async FindscanOutDetailBagRepresentativeMore(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
+    return ScanoutSmdVendorListService.findScanOutDetailBagRepresentativeMore(payload);
+  }
 }
