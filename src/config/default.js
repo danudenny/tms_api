@@ -72,6 +72,14 @@ module.exports = {
     baseUrl: 'http://52.77.199.252:5168/',
     authKey: '5a71a345b4eaa9d23b4d4c745e7785e9',
   },
+  divaPayment: {
+    sicepatKlikUrl: 'http://sicepatklik.com/apps/pubext/web/index.php?r=cod',
+    apiKey: '91e3a6d02ac4f6054479c9ee03854a22',
+    urlQR: 'https://apiv2.mdd.co.id:30307',
+    codToken: '3912c6563e01ac7d1aad9ca9a24bbf15',
+    codMid: '162794f3305786ba73548a58b8945e82',
+    codTid: 'Mobile-POD',
+  },
   korwil: {
     korwilRoleId: 38,
     smdRoleId: 117,

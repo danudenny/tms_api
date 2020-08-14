@@ -3,34 +3,56 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
-  Get,
   Post,
   Body,
 } from '@nestjs/common';
 
 import {
   ApiBearerAuth,
-  ApiOkResponse,
   ApiUseTags,
 } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { MobileProviderPaymentDivaResponseVm } from '../../models/payment-provider-response.vm';
-import { MobileProviderPaymentDivaPayloadVm } from '../../models/payment-provider-payload';
-import {PaymentService} from '../../services/web/payment.service';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
+import { V1MobileDivaPaymentService } from '../../services/mobile/v1/mobile-diva-payment.service';
 
-@ApiUseTags('Cod Payment')
+@ApiUseTags('Cod Diva Payment')
 @Controller('mobile/cod-payment')
+@ApiBearerAuth()
 export class CodPaymentController {
   constructor() {}
 
-  @Post()
+  // @Post()
+  // @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard)
+  // @ApiOkResponse({ type: MobileProviderPaymentDivaResponseVm })
+  // public async sendPaymentToOdooDiva(
+  //   @Body() payload: MobileProviderPaymentDivaPayloadVm,
+  // ) {
+  //   return PaymentService.sendPayment(payload);
+  // }
+
+  @Post('diva/getQR')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: MobileProviderPaymentDivaResponseVm })
-  public async sendPaymentToOdooDiva(
-    @Body() payload: MobileProviderPaymentDivaPayloadVm,
-  ) {
-    return PaymentService.sendPayment(payload);
+  @ResponseSerializerOptions({ disable: true })
+  public async divaPaymentGetQR(@Body() payload: any) {
+    return V1MobileDivaPaymentService.getQr(payload);
+  }
+
+  @Post('diva/sendQR')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async divaPaymentSendQR(@Body() payload: any) {
+    return V1MobileDivaPaymentService.sendQr(payload);
+  }
+
+  @Post('diva/paymentStatus')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async divaPaymentStatus(@Body() payload: any) {
+    return V1MobileDivaPaymentService.paymentStatus(payload);
   }
 }
