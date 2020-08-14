@@ -154,12 +154,12 @@ export class BagCityService {
         r.representative_code,
         a.total_weight_rounded as weight,
         ai.awb_item_id
-      FROM awb a
-      LEFT JOIN representative r ON a.ref_representative_code = r.representative_code
+      FROM temp_stt ts
+      INNER JOIN awb a ON ts.nostt = a.awb_number AND a.is_deleted = false
       INNER JOIN awb_item ai ON a.awb_id = ai.awb_id
+      LEFT JOIN representative r ON ts.perwakilan = r.representative_code
       WHERE
-        a.awb_number = '${awbNumber}' AND
-        a.is_deleted = false
+        ts.nostt = '${awbNumber}'
       LIMIT 1;
       `;
     const dataAwb = await RawQueryService.query(rawQuery);
@@ -285,7 +285,7 @@ export class BagCityService {
       authMeta.userId,
       permissionPayload.branchId,
       branchName,
-      cityName
+      cityName,
     );
 
     result.status = 'success';
