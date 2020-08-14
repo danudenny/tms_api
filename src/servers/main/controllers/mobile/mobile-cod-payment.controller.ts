@@ -14,23 +14,13 @@ import {
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { V1MobileDivaPaymentService } from '../../services/mobile/v1/mobile-diva-payment.service';
+import { ResponseMaintenanceService } from '../../../../shared/services/response-maintenance.service';
 
 @ApiUseTags('Cod Diva Payment')
 @Controller('mobile/cod-payment')
 @ApiBearerAuth()
 export class CodPaymentController {
   constructor() {}
-
-  // @Post()
-  // @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  // @ApiOkResponse({ type: MobileProviderPaymentDivaResponseVm })
-  // public async sendPaymentToOdooDiva(
-  //   @Body() payload: MobileProviderPaymentDivaPayloadVm,
-  // ) {
-  //   return PaymentService.sendPayment(payload);
-  // }
 
   @Post('diva/getQR')
   @HttpCode(HttpStatus.OK)
@@ -45,6 +35,8 @@ export class CodPaymentController {
   @UseGuards(AuthenticatedGuard)
   @ResponseSerializerOptions({ disable: true })
   public async divaPaymentSendQR(@Body() payload: any) {
+    // NOTE: handle for message disable this service
+    ResponseMaintenanceService.divaPaymentService();
     return V1MobileDivaPaymentService.sendQr(payload);
   }
 
@@ -53,6 +45,8 @@ export class CodPaymentController {
   @UseGuards(AuthenticatedGuard)
   @ResponseSerializerOptions({ disable: true })
   public async divaPaymentStatus(@Body() payload: any) {
+    // NOTE: handle for message disable this service
+    ResponseMaintenanceService.divaPaymentService();
     return V1MobileDivaPaymentService.paymentStatus(payload);
   }
 }

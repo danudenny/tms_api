@@ -24,7 +24,7 @@ export class V1MobileDivaPaymentService {
     }
 
     const provider: string = payload.provider;
-    const amount = payload.amount;
+    const amount: number = Number(payload.amount);
 
     const now = Date.now();
     const randomNum = Math.floor(Math.random() * 1000); // random 3 digit
