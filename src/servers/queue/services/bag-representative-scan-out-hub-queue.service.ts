@@ -11,6 +11,8 @@ import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-m
 import {In} from 'typeorm';
 import {BagRepresentativeHistory} from '../../../shared/orm-entity/bag-representative-history';
 import {BAG_REPRESENTATIVE_STATUS} from '../../../shared/constants/bag-representative-status.constant';
+import { Awb } from '../../../shared/orm-entity/awb';
+import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -113,7 +115,14 @@ export class BagRepresentativeScanOutHubQueueService {
             data.vendorName,
             moment().add(1, 'minutes').toDate(),
           );
-
+            // Update Internal Process Type
+          await AwbItemAttr.update(
+            { awbItemId : item.awb_item_id },
+            {
+              internalProcessType: 'DARAT_MP',
+              updatedTime:  moment().add(1, 'minutes').toDate(),
+            },
+          );
         }
       }
       return true;
