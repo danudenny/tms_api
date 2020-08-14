@@ -116,6 +116,7 @@ export class BagRepresentativeScanOutHubQueueService {
             moment().add(1, 'minutes').toDate(),
           );
             // Update Internal Process Type
+            //
           await AwbItemAttr.update(
             { awbItemId : item.awb_item_id },
             {
