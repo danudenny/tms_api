@@ -121,7 +121,7 @@ export class BagCityService {
     const result = new BagCityResponseVm();
     const awbNumber = payload.awbNumber;
     const dateNow = moment().toDate();
-    const paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeCounter(dateNow);
+    let paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeCounter(dateNow);
     const permissionPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
 
@@ -154,12 +154,12 @@ export class BagCityService {
         r.representative_code,
         a.total_weight_rounded as weight,
         ai.awb_item_id
-      FROM awb a
-      LEFT JOIN representative r ON a.ref_representative_code = r.representative_code
+      FROM temp_stt ts
+      INNER JOIN awb a ON ts.nostt = a.awb_number AND a.is_deleted = false
       INNER JOIN awb_item ai ON a.awb_id = ai.awb_id
+      LEFT JOIN representative r ON ts.perwakilan = r.representative_code
       WHERE
-        a.awb_number = '${awbNumber}' AND
-        a.is_deleted = false
+        ts.nostt = '${awbNumber}'
       LIMIT 1;
       `;
     const dataAwb = await RawQueryService.query(rawQuery);
@@ -225,6 +225,15 @@ export class BagCityService {
     }
 
     if (!payload.bagRepresentativeId) {
+      const cekDoubleCode = await BagRepresentative.findOne({
+        where: {
+          bagRepresentativeCode: paramBagRepresentativeCode,
+          isDeleted: false,
+        },
+      });
+      if (cekDoubleCode) {
+        paramBagRepresentativeCode =  await CustomCounterCode.bagCityCodeCounter(dateNow);
+      }
       const createBagRepresentative = BagRepresentative.create();
       createBagRepresentative.representativeIdTo = dataAwb[0].representative_id;
       createBagRepresentative.branchId = permissionPayload.branchId.toString();
@@ -285,7 +294,7 @@ export class BagCityService {
       authMeta.userId,
       permissionPayload.branchId,
       branchName,
-      cityName
+      cityName,
     );
 
     result.status = 'success';
