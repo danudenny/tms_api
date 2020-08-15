@@ -43,7 +43,17 @@ export class ScanoutSmdVendorService {
 
     if (!paramDoSmdId) {
       // Insert New Darat MP
-      const paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+      let paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+      const cekDoubleCode = await DoSmd.findOne({
+        where: {
+          doSmdCode: paramDoSmdCode,
+          isDeleted: false,
+        },
+      });
+
+      if (cekDoubleCode) {
+        paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+      }
 
       paramDoSmdId = await this.createDoSmd(
         paramDoSmdCode,

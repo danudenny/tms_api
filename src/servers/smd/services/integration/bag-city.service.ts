@@ -121,7 +121,7 @@ export class BagCityService {
     const result = new BagCityResponseVm();
     const awbNumber = payload.awbNumber;
     const dateNow = moment().toDate();
-    const paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeCounter(dateNow);
+    let paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeCounter(dateNow);
     const permissionPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
 
@@ -225,6 +225,15 @@ export class BagCityService {
     }
 
     if (!payload.bagRepresentativeId) {
+      const cekDoubleCode = await BagRepresentative.findOne({
+        where: {
+          bagRepresentativeCode: paramBagRepresentativeCode,
+          isDeleted: false,
+        },
+      });
+      if (cekDoubleCode) {
+        paramBagRepresentativeCode =  await CustomCounterCode.bagCityCodeCounter(dateNow);
+      }
       const createBagRepresentative = BagRepresentative.create();
       createBagRepresentative.representativeIdTo = dataAwb[0].representative_id;
       createBagRepresentative.branchId = permissionPayload.branchId.toString();

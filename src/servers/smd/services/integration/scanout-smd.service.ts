@@ -30,7 +30,18 @@ export class ScanoutSmdService {
 
     const result = new ScanOutSmdVehicleResponseVm();
     const timeNow = moment().toDate();
-    const paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+    let  paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+
+    const cekDoubleCode = await DoSmd.findOne({
+      where: {
+        doSmdCode: paramDoSmdCode,
+        isDeleted: false,
+      },
+    });
+
+    if (cekDoubleCode) {
+      paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+    }
 
     const paramDoSmdId = await this.createDoSmd(
       paramDoSmdCode,
