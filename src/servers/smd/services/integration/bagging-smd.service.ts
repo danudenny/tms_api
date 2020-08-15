@@ -255,6 +255,18 @@ export class BaggingSmdService {
     if (!payload.baggingId) {
       const baggingDate = await this.dateMinus1day(moment().toDate());
       const maxBagSeq = await this.getMaxBaggingSeq(dataPackage[0].representative_id_to, baggingDate, permissionPayload.branchId);
+      let paramBaggingCode = await CustomCounterCode.baggingCodeCounter(moment().toDate());
+
+      const cekDoubleCode = await Bagging.findOne({
+        where: {
+          baggingCode: paramBaggingCode,
+          isDeleted: false,
+        },
+      });
+
+      if (cekDoubleCode) {
+        paramBaggingCode = await CustomCounterCode.baggingCodeCounter(moment().toDate());
+      }
 
       const createBagging = Bagging.create();
       createBagging.userId = authMeta.userId.toString();
@@ -262,7 +274,7 @@ export class BaggingSmdService {
       createBagging.branchId = permissionPayload.branchId.toString();
       createBagging.totalItem = 1;
       createBagging.totalWeight = dataPackage[0].weight.toString();
-      createBagging.baggingCode = await CustomCounterCode.baggingCodeCounter(moment().toDate());
+      createBagging.baggingCode = paramBaggingCode;
       createBagging.baggingDate = baggingDate;
       createBagging.userIdCreated = authMeta.userId.toString();
       createBagging.userIdUpdated = authMeta.userId.toString();
