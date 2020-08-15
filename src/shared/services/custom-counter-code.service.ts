@@ -151,7 +151,7 @@ export class CustomCounterCode {
       nextCounter = Number(customCounter.counter) + 1;
       customCounter.counter = nextCounter;
       customCounter.updatedTime = timeNow;
-      SysCounter.save(customCounter);
+      await SysCounter.save(customCounter);
     } else {
       // # Insert Data
       customCounter = SysCounter.create();
@@ -159,7 +159,7 @@ export class CustomCounterCode {
       customCounter.counter = nextCounter;
       customCounter.createdTime = timeNow;
       customCounter.updatedTime = timeNow;
-      SysCounter.save(customCounter);
+      await SysCounter.save(customCounter);
     }
 
     return nextCounter;
