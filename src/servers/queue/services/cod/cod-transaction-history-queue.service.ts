@@ -3,6 +3,7 @@ import { ConfigService } from '../../../../shared/services/config.service';
 import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transaction-history';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
+import { User } from '../../../../shared/orm-entity/user';
 import moment = require('moment');
 
 // DOC: https://optimalbits.github.io/bull/
@@ -56,6 +57,15 @@ export class CodTransactionHistoryQueueService {
         const collection = await MongoDbConfig.getDbSicepatCod(
           'transaction_detail',
         );
+        // Get user updated
+        const userUpdated = await User.findOne({
+          select: ['firstName', 'username'],
+          where: {
+            userId: Number(data.userId),
+            isDeleted: false,
+          },
+          cache: true,
+        });
         let objUpdate = {};
         // supplier invoice status
         // cancel draft
@@ -65,6 +75,8 @@ export class CodTransactionHistoryQueueService {
             supplierInvoiceStatusId: null,
             userIdUpdated: Number(data.userId),
             updatedTime: moment(data.timestamp).toDate(),
+            adminName: userUpdated.firstName,
+            nikAdmin: userUpdated.username,
           };
           // awb void
         } else if (transactionStatusId == TRANSACTION_STATUS.VOID) {
@@ -74,12 +86,16 @@ export class CodTransactionHistoryQueueService {
             isVoid: true,
             userIdUpdated: Number(data.userId),
             updatedTime: moment(data.timestamp).toDate(),
+            adminName: userUpdated.firstName,
+            nikAdmin: userUpdated.username,
           };
         } else {
           objUpdate = {
             transactionStatusId,
             userIdUpdated: Number(data.userId),
             updatedTime: moment(data.timestamp).toDate(),
+            adminName: userUpdated.firstName,
+            nikAdmin: userUpdated.username,
           };
         }
 

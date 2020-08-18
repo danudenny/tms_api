@@ -316,6 +316,7 @@ export class CodFirstTransactionQueueService {
         userId: transaction.userIdUpdated,
         isDeleted: false,
       },
+      cache: true,
     });
 
     transaction['adminName'] = userUpdated.firstName;
@@ -327,6 +328,7 @@ export class CodFirstTransactionQueueService {
         userId: transaction.userIdDriver,
         isDeleted: false,
       },
+      cache: true,
     });
 
     transaction['sigesit'] = userSigesit.firstName;
