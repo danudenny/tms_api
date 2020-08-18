@@ -50,6 +50,7 @@ export class CodUpdateSupplierInvoiceQueueService {
           userId: Number(data.userId),
           isDeleted: false,
         },
+        cache: true,
       });
       const supplierInvoiceStatusId = Number(data.supplierInvoiceStatusId);
       // Update Many for status invoice 45000 [PAID]

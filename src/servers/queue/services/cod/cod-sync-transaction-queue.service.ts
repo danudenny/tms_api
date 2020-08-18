@@ -53,6 +53,7 @@ export class CodSyncTransactionQueueService {
               userId: Number(data.userId),
               isDeleted: false,
             },
+            cache: true,
           });
           const transactionStatusId = data.transactionStatusId ? Number(data.transactionStatusId) : null;
           const supplierInvoiceStatusId = data.supplierInvoiceStatusId ? Number(data.supplierInvoiceStatusId) : null;

@@ -64,6 +64,7 @@ export class CodTransactionHistoryQueueService {
             userId: Number(data.userId),
             isDeleted: false,
           },
+          cache: true,
         });
         let objUpdate = {};
         // supplier invoice status

@@ -83,6 +83,7 @@ export class CodUpdateTransactionQueueService {
           userId: Number(data.userId),
           isDeleted: false,
         },
+        cache: true,
       });
       // query store the search condition
       const query = { codTransactionId: data.codTransactionId };
