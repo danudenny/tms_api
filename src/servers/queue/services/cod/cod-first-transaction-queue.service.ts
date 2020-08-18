@@ -311,7 +311,7 @@ export class CodFirstTransactionQueueService {
     transaction.userIdUpdated = Number(transaction.userIdUpdated);
 
     const userUpdated = await User.findOne({
-      select: ['firstName', 'username'],
+      select: ['userId', 'firstName', 'username'],
       where: {
         userId: transaction.userIdUpdated,
         isDeleted: false,
@@ -323,7 +323,7 @@ export class CodFirstTransactionQueueService {
     transaction['nikAdmin'] = userUpdated.username;
 
     const userSigesit = await User.findOne({
-      select: ['firstName', 'username'],
+      select: ['userId', 'firstName', 'username'],
       where: {
         userId: transaction.userIdDriver,
         isDeleted: false,

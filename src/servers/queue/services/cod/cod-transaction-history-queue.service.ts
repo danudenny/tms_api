@@ -59,7 +59,7 @@ export class CodTransactionHistoryQueueService {
         );
         // Get user updated
         const userUpdated = await User.findOne({
-          select: ['firstName', 'username'],
+          select: ['userId', 'firstName', 'username'],
           where: {
             userId: Number(data.userId),
             isDeleted: false,
