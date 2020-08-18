@@ -106,8 +106,9 @@ export class V1PackageService {
           },
         });
         if (branch) {
+          payload.branchId = branch.branchId;
           // create new bag number sortir
-          const genBagNumber = await this.createBagNumber(payload);
+          const genBagNumber = await this.createBagNumber(payload, branch.branchCode);
           if (genBagNumber) {
             result.bagNumber = genBagNumber.bagNumber;
             result.bagItemId = genBagNumber.bagItemId;
@@ -391,10 +392,14 @@ export class V1PackageService {
     }
   }
 
-  private static async createBagNumber(payload): Promise<CreateBagNumberResponseVM> {
+  private static async createBagNumber(
+    payload,
+    branchCode: string,
+  ): Promise<CreateBagNumberResponseVM> {
     const result = new CreateBagNumberResponseVM();
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timestamp = moment().toDate();
     const branchId = payload.branchId;
 
     let bagId: number;
@@ -432,7 +437,7 @@ export class V1PackageService {
       const representative = await Representative.findOne({
         where: { isDeleted: false, representativeCode },
       });
-      const refBranchCode = payload.branchDetail ? payload.branchDetail.branchCode : '';
+
       const bagDetail = Bag.create({
         bagNumber: randomBagNumber,
         branchIdTo: branchId,
@@ -442,13 +447,13 @@ export class V1PackageService {
         representativeIdTo: representative
           ? representative.representativeId
           : null,
-        refBranchCode,
+        refBranchCode: branchCode,
         bagType: 'branch',
         branchId: permissonPayload.branchId,
         bagDate: moment().format('YYYY-MM-DD'),
-        bagDateReal: moment().toDate(),
-        createdTime: moment().toDate(),
-        updatedTime: moment().toDate(),
+        bagDateReal: timestamp,
+        createdTime: timestamp,
+        updatedTime: timestamp,
         userIdCreated: authMeta.userId,
         userIdUpdated: authMeta.userId,
         isSortir: true,
@@ -473,8 +478,8 @@ export class V1PackageService {
       bagItemStatusIdLast: 3000,
       userIdCreated: authMeta.userId,
       weight: 0,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
+      createdTime: timestamp,
+      updatedTime: timestamp,
       userIdUpdated: authMeta.userId,
       isSortir: true,
     });
