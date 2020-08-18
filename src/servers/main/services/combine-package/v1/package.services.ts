@@ -182,28 +182,34 @@ export class V1PackageService {
       let branchCode;
       let bagSeq;
       let bagWeight;
+      // TODO: refactoring
+      if (data) {
+        bagNumber = `${data[0].bagNumber}${data[0].bagSeq
+          .toString()
+          .padStart(3, '0')}`;
+        branchId = data[0].branchId;
+        branchName = data[0].branchName;
+        branchCode = data[0].branchCode;
+        bagItemId = data[0].bagItemId;
+        bagWeight = data[0].bagWeight;
+        bagSeq = data[0].bagSeq;
 
-      bagNumber = `${data[0].bagNumber}${data[0].bagSeq
-        .toString()
-        .padStart(3, '0')}`;
-      branchId = data[0].branchId;
-      branchName = data[0].branchName;
-      branchCode = data[0].branchCode;
-      bagItemId = data[0].bagItemId;
-      bagWeight = data[0].bagWeight;
-      bagSeq = data[0].bagSeq;
-
-      result.bagNumber = bagNumber;
-      result.branchId = branchId;
-      result.branchName = branchName;
-      result.branchCode = branchCode;
-      result.bagSeq = bagSeq;
-      result.bagWeight = bagWeight;
-      result.podScanInHubId = podScanInHubId;
-      result.bagItemId = bagItemId;
-      result.dataBag = data;
+        result.bagNumber = bagNumber;
+        result.branchId = branchId;
+        result.branchName = branchName;
+        result.branchCode = branchCode;
+        result.bagSeq = bagSeq;
+        result.bagWeight = bagWeight;
+        result.podScanInHubId = podScanInHubId;
+        result.bagItemId = bagItemId;
+        result.dataBag = data;
+        return result;
+      } else {
+        throw new BadRequestException('Data tidak ditemukan / sudah di proses!');
+      }
+    } else {
+        throw new BadRequestException('Data Sortir sudah di proses!');
     }
-    return result;
   }
 
   static async unloadAwb(payload: UnloadAwbPayloadVm): Promise <UnloadAwbResponseVm> {
@@ -813,7 +819,7 @@ export class V1PackageService {
     qb.addSelect('t2.to_id', 'toId');
     qb.addSelect('t2.total_weight_real_rounded', 'totalWeightRealRounded');
     qb.addSelect('t2.consignee_name', 'consigneeName');
-    qb.addSelect('t2.consignee_number', 'consigneeNumber');
+    qb.addSelect('t2.consignee_phone', 'consigneeNumber');
     qb.addSelect('t2.customer_account_id', 'customerAccountId');
     qb.addSelect('t2.pickup_merchant', 'pickupMerchant');
     qb.addSelect('t2.ref_reseller', 'refReseller');
