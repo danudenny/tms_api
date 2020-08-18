@@ -2,6 +2,7 @@ import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transact
 import { ConfigService } from '../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { QueueBullBoard } from '../queue-bull-board';
+import { User } from '../../../../shared/orm-entity/user';
 import { CodTransactionHistoryQueueService } from './cod-transaction-history-queue.service';
 import moment = require('moment');
 import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
@@ -42,6 +43,14 @@ export class CodUpdateSupplierInvoiceQueueService {
       const collection = await MongoDbConfig.getDbSicepatCod(
         'transaction_detail',
       );
+      // Get user updated
+      const userUpdated = await User.findOne({
+        select: ['firstName', 'username'],
+        where: {
+          userId: Number(data.userId),
+          isDeleted: false,
+        },
+      });
       const supplierInvoiceStatusId = Number(data.supplierInvoiceStatusId);
       // Update Many for status invoice 45000 [PAID]
       if (supplierInvoiceStatusId == TRANSACTION_STATUS.PAIDHO) {
@@ -53,6 +62,8 @@ export class CodUpdateSupplierInvoiceQueueService {
             supplierInvoiceStatusId,
             userIdUpdated: Number(data.userId),
             updatedTime: moment(data.timestamp).toDate(),
+            adminName: userUpdated.firstName,
+            nikAdmin: userUpdated.username,
           },
         };
         try {
@@ -85,6 +96,8 @@ export class CodUpdateSupplierInvoiceQueueService {
           supplierInvoiceStatusId,
           userIdUpdated: Number(data.userId),
           updatedTime: moment(data.timestamp).toDate(),
+          adminName: userUpdated.firstName,
+          nikAdmin: userUpdated.username,
         };
 
         for (const item of dataTransaction) {

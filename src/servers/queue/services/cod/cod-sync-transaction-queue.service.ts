@@ -1,6 +1,7 @@
 import { ConfigService } from '../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { QueueBullBoard } from '../queue-bull-board';
+import { User } from '../../../../shared/orm-entity/user';
 import moment = require('moment');
 
 // Sync Update Data Transaction to Mongodb
@@ -45,6 +46,14 @@ export class CodSyncTransactionQueueService {
 
         if (checkData) {
           console.log('## UPDATE DATA IN MONGO !!!');
+          // Get user updated
+          const userUpdated = await User.findOne({
+            select: ['firstName', 'username'],
+            where: {
+              userId: Number(data.userId),
+              isDeleted: false,
+            },
+          });
           const transactionStatusId = data.transactionStatusId ? Number(data.transactionStatusId) : null;
           const supplierInvoiceStatusId = data.supplierInvoiceStatusId ? Number(data.supplierInvoiceStatusId) : null;
           const objUpdate = {
@@ -54,6 +63,8 @@ export class CodSyncTransactionQueueService {
             supplierInvoiceStatusId,
             updatedTime: moment(data.timestamp).toDate(),
             userIdUpdated: Number(data.userId),
+            adminName: userUpdated.firstName,
+            nikAdmin: userUpdated.username,
           };
           await collection.updateOne(
             { _id: data.awbNumber },
