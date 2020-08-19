@@ -39,6 +39,7 @@ export class BagCityController {
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: BagCityResponseVm })
   @ApiBearerAuth()
+  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
   public async createBagging(@Body() payload: BagCityPayloadVm) {
