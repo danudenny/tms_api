@@ -230,7 +230,7 @@ export class V1WebReportCodService {
           '',
           '',
           d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD') : null,
-          this.strReplaceFunc(d.userUpdatedNik) + " - " + this.strReplaceFunc(d.userUpdatedName),
+          this.strReplaceFunc(d.userIdUpdatedNik) + " - " + this.strReplaceFunc(d.userIdUpdatedName),
         ]);
 
       }
@@ -998,40 +998,40 @@ export class V1WebReportCodService {
       {
         $limit: limit,
       },
-      {
-        $lookup: {
-          from: 'cod_awb',
-          as: 'ca',
-          let: { awbNumber: '$awbNumber' },
-          pipeline: [
-            {
-              // on inner join
-              $match:
-              {
-                $expr:
-                {
-                  $and: [{
-                    $eq: ['$awbNumber', '$$awbNumber']
-                  }],
-                },
-              },
-            },
-            { $limit: 1 },
-            {
-              $project: {
-                awbNumber: 1,
-                perwakilan: 1
-              },
-            },
-          ],
-        },
-      },
-      {
-        $unwind: {
-          path: '$ca',
-          preserveNullAndEmptyArrays: allowNullTd,
-        },
-      },
+      // {
+      //   $lookup: {
+      //     from: 'cod_awb',
+      //     as: 'ca',
+      //     let: { awbNumber: '$awbNumber' },
+      //     pipeline: [
+      //       {
+      //         // on inner join
+      //         $match:
+      //         {
+      //           $expr:
+      //           {
+      //             $and: [{
+      //               $eq: ['$awbNumber', '$$awbNumber']
+      //             }],
+      //           },
+      //         },
+      //       },
+      //       { $limit: 1 },
+      //       {
+      //         $project: {
+      //           awbNumber: 1,
+      //           perwakilan: 1
+      //         },
+      //       },
+      //     ],
+      //   },
+      // },
+      // {
+      //   $unwind: {
+      //     path: '$ca',
+      //     preserveNullAndEmptyArrays: allowNullTd,
+      //   },
+      // },
       {
         $project: {
           _id: 1,
@@ -1063,13 +1063,11 @@ export class V1WebReportCodService {
           pickupSource: 1,
           podDate: 1,
           transactionStatusId: 1,
-          perwakilan: "$ca.perwakilan",
-          userIdDriver: '$ca.courierUserId',
-          userIdDriverNik: '$ca.courierNik',
-          userIdDriverName: '$ca.courierName',
-          userIdUpdatedNik: "$ca.userUpdatedNik",
-          userIdUpdatedName: "$ca.userUpdatedName",
-          dateUpdated: "$ca.history_date",
+          userIdDriverNik: '$nikSigesit',
+          userIdDriverName: '$sigesit',
+          userIdUpdatedNik: "$nikAdmin",
+          userIdUpdatedName: "$adminName",
+          dateUpdated: "$updatedTime",
           updatedTime: 1,
           userIdUpdated: 1,
         },
