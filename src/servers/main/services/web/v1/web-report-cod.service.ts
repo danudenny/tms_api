@@ -68,14 +68,14 @@ export class V1WebReportCodService {
       'Destination Code',
       'Destination',
       'Perwakilan',
-      'sigesit',
+      'Sigesit',
       'Package Detail',
       'Services',
       'Note',
       'Submitted Date',
       'Submitted Number',
-      'Date Created',
-      'User Created',
+      'Date Updated',
+      'User Updated',
     ] : [
         'Partner',
         'Awb Date',
@@ -94,14 +94,14 @@ export class V1WebReportCodService {
         'Destination Code',
         'Destination',
         'Perwakilan',
-        'sigesit',
+        'Sigesit',
         'Package Detail',
         'Services',
         'Note',
         'Submitted Date',
         'Submitted Number',
-        'Date Created',
-        'User Created',
+        'Date Updated',
+        'User Updated',
       ];
 
     const csvConfig = cod ?
@@ -1043,6 +1043,7 @@ export class V1WebReportCodService {
           createdTime: 1,
           currentPosition: 1,
           isDeleted: 1,
+          supplierInvoiceStatusId: 1,
           prtParcelValue: '$parcelValue',
           codNilai: '$codValue',
           lastValidTrackingDateTime: '$podDate',
@@ -1087,6 +1088,8 @@ export class V1WebReportCodService {
     // console.log(arrUser, "array");
     for (const d of datas) {
       d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
+      d.lastValidTrackingType = "DLV"
+
       d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
       // if (d.userIdDriver && arrDriver.length > 0) {
       //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
