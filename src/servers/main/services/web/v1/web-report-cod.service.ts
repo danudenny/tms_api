@@ -227,7 +227,8 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
           this.strReplaceFunc(d.receiverRemark),
-          '', '',
+          '',
+          '',
           d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD') : null,
           this.strReplaceFunc(d.userUpdatedNik) + " - " + this.strReplaceFunc(d.userUpdatedName),
         ]);
@@ -1041,10 +1042,17 @@ export class V1WebReportCodService {
           consigneeName: 1,
           createdTime: 1,
           currentPosition: 1,
-          custPackage: 1,
-          destination: 1,
-          destinationCode: 1,
           isDeleted: 1,
+          prtParcelValue: '$parcelValue',
+          codNilai: '$codValue',
+          lastValidTrackingDateTime: '$podDate',
+          penerima: '$consigneeName',
+          receiverRemark: "$parcelNote",
+          layanan: "$packageType",
+          tujuanKecamatan: "$destination",
+          prtDestinationCode: "$destinationCode",
+          lastValidTrackingSiteName: "$currentPosition",
+          manifestTrackingSiteName: "$pickupSource",
           packageType: 1,
           parcelContent: 1,
           parcelNote: 1,
@@ -1149,10 +1157,6 @@ export class V1WebReportCodService {
 
   static async printNonCodSupplierInvoice(filters, uuid: string = '') {
     // TODO: query get data
-    // step 1 : query get data by filter
-    // prepare generate csv
-    // ??upload file csv to aws s3
-    // retrun ffile/ link downlod
     console.log(uuid, 'uuid');
     const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod('transaction_detail');
     const dbAwb = await MongoDbConfig.getDbSicepatCod('cod_awb');
