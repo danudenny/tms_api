@@ -83,6 +83,7 @@ export class V1WebReportCodService {
         'Awb',
         'Package Amount',
         'Cod Amount',
+        'Cod Fee',
         'Amount Transfer',
         'Pod Datetime',
         'Recipient',
@@ -212,6 +213,7 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.awbNumber),
           d.prtParcelValue,
           d.codNilai,
+          d.codFee ? d.codFee : "-",
           d.codNilai,
           d.lastValidTrackingDateTime
             ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
@@ -777,7 +779,8 @@ export class V1WebReportCodService {
                 userIdDriver: 1,
                 userIdUpdated: 1,
                 updatedTime: 1,
-                paymentMethod: 1
+                paymentMethod: 1,
+                codFee: 1
 
               },
             },
@@ -799,6 +802,7 @@ export class V1WebReportCodService {
           partnerName: 1,
           awbNumber: 1,
           awbDate: 1,
+          codFee: "$td.codFee",
           parcelContent: '$prtParcelContent',
           prtParcelValue: '$prtParcelValue',
           prtCustPackageId: '$prtCustPackageId',
@@ -822,7 +826,6 @@ export class V1WebReportCodService {
           manifestTrackingSiteName: '$manifestTrackingSiteName',
           lastValidTrackingSiteName: '$lastValidTrackingSiteName',
           receiverRemark: 1,
-
         },
       },
     ];
@@ -975,13 +978,17 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'transactionStatus' && filter.value) {
-        tdFilter.push({ $eq: ['$transactionStatusId', filter.value] });
-        allowNullTd = false;
+        filterList.push({ transactionStatusId: { $eq: filter.value } });
+
+        // tdFilter.push({ $eq: ['$transactionStatusId', filter.value] });
+        // allowNullTd = false;
       }
 
       if (filter.field == 'supplierInvoiceStatus' && filter.value) {
-        tdFilter.push({ $eq: ['$supplierInvoiceStatusId', filter.value] });
-        allowNullTd = false;
+        filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
+
+        // tdFilter.push({ $eq: ['$supplierInvoiceStatusId', filter.value] });
+        // allowNullTd = false;
       }
 
       if (filter.field == 'sigesit' && filter.value) {
@@ -1333,7 +1340,6 @@ export class V1WebReportCodService {
         filterList.push({ updatedTime: { $lt: d } });
       }
 
-      filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
 
       if (filter.field == 'supplier' && filter.value) {
         filterList.push({ partnerId: { $eq: filter.value } });
@@ -1354,6 +1360,9 @@ export class V1WebReportCodService {
         filterList.push({ userIdDriver: { $eq: filter.value } });
       }
     }
+
+    filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
+
 
     const skip = limit * (pageNumber - 1);
 
