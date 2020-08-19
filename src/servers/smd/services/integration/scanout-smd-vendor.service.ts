@@ -938,7 +938,7 @@ export class ScanoutSmdVendorService {
               result.data = data;
               return result;
           } else {
-            throw new BadRequestException(`Representative To Bag Not Match`);
+            throw new BadRequestException(`Representative To ` + resultDataBag[0].representative_code + ` Bag 15 Not Match`);
           }
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
           throw new BadRequestException(`Bag Not Scan In Yet`);
@@ -1061,12 +1061,12 @@ export class ScanoutSmdVendorService {
               result.data = data;
               return result;
           } else {
-            throw new BadRequestException(`Representative To Bag Not Match`);
+            throw new BadRequestException(`Representative To ` + resultDataBag[0].representative_code + `  Bag 10 Not Match`);
           }
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          throw new BadRequestException(`Bag Not Scan In Yet`);
+          throw new BadRequestException(`Bag 10 Not Scan In Yet`);
         } else {
-          throw new BadRequestException(`Bag Not Found`);
+          throw new BadRequestException(`Bag 10 Not Found`);
         }
       } else {
         throw new BadRequestException(`Bagging / Bag Not Found`);
