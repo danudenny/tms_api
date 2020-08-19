@@ -124,15 +124,20 @@ export class ScaninSmdService {
             paramTotalBagWeight = weight;
             const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
             // const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
-            paramReceivedBagId = await this.createReceivedBag(
-              dataReceivedBagCode,
-              authMeta.employeeId,
-              authMeta.userId,
-              permissonPayload.branchId,
-              paramTotalSeq,
-              paramTotalBagWeight,
-              timeNow,
-            );
+            const redlock = await RedisService.redlock(`redlock:receivedBag:${dataReceivedBagCode}`, 10);
+            if (redlock) {
+              paramReceivedBagId = await this.createReceivedBag(
+                dataReceivedBagCode,
+                authMeta.employeeId,
+                authMeta.userId,
+                permissonPayload.branchId,
+                paramTotalSeq,
+                paramTotalBagWeight,
+                timeNow,
+              );
+            } else {
+              throw new BadRequestException('Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat');
+            }
           } else {
             paramTotalSeq = paramTotalSeq + 1;
             paramTotalBagWeight = paramTotalBagWeight + weight ;
@@ -315,15 +320,20 @@ export class ScaninSmdService {
             paramTotalBagWeight = weight;
             const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
             // const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
-            paramReceivedBagId = await this.createReceivedBag(
-              dataReceivedBagCode,
-              authMeta.employeeId,
-              authMeta.userId,
-              permissonPayload.branchId,
-              paramTotalSeq,
-              paramTotalBagWeight,
-              timeNow,
-            );
+            const redlock = await RedisService.redlock(`redlock:receivedBag:${dataReceivedBagCode}`, 10);
+            if (redlock) {
+              paramReceivedBagId = await this.createReceivedBag(
+                dataReceivedBagCode,
+                authMeta.employeeId,
+                authMeta.userId,
+                permissonPayload.branchId,
+                paramTotalSeq,
+                paramTotalBagWeight,
+                timeNow,
+              );
+            } else {
+              throw new BadRequestException('Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat');
+            }
           } else {
             paramTotalSeq = paramTotalSeq + 1;
             paramTotalBagWeight = paramTotalBagWeight + weight ;

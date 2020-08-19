@@ -27,6 +27,7 @@ import { ScanOutSmdVendorRouteResponseVm, ScanOutSmdVendorListResponseVm, ScanOu
 import { BagRepresentativeScanOutHubQueueService } from '../../../queue/services/bag-representative-scan-out-hub-queue.service';
 import {BagScanVendorQueueService} from '../../../queue/services/bag-scan-vendor-queue.service';
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 @Injectable()
 export class ScanoutSmdVendorService {
@@ -43,18 +44,14 @@ export class ScanoutSmdVendorService {
 
     if (!paramDoSmdId) {
       // Insert New Darat MP
-      let paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
-      const cekDoubleCode = await DoSmd.findOne({
-        where: {
-          doSmdCode: paramDoSmdCode,
-          isDeleted: false,
-        },
-      });
+      // let paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+      const paramDoSmdCode = await CustomCounterCode.doSmdCodeRandomCounter(timeNow);
 
-      if (cekDoubleCode) {
-        paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+      const redlock = await RedisService.redlock(`redlock:doSmdVendor:${paramDoSmdCode}`, 10);
+      if (!redlock) {
+        throw new BadRequestException(`Data Darat MP Sedang di proses, Silahkan Coba Beberapa Saat`);
       }
-
+      
       paramDoSmdId = await this.createDoSmd(
         paramDoSmdCode,
         timeNow,
@@ -938,7 +935,7 @@ export class ScanoutSmdVendorService {
               result.data = data;
               return result;
           } else {
-            throw new BadRequestException(`Representative To Bag Not Match`);
+            throw new BadRequestException(`Representative To ` + resultDataBag[0].representative_code + ` Bag 15 Not Match`);
           }
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
           throw new BadRequestException(`Bag Not Scan In Yet`);
@@ -1061,12 +1058,12 @@ export class ScanoutSmdVendorService {
               result.data = data;
               return result;
           } else {
-            throw new BadRequestException(`Representative To Bag Not Match`);
+            throw new BadRequestException(`Representative To ` + resultDataBag[0].representative_code + `  Bag 10 Not Match`);
           }
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          throw new BadRequestException(`Bag Not Scan In Yet`);
+          throw new BadRequestException(`Bag 10 Not Scan In Yet`);
         } else {
-          throw new BadRequestException(`Bag Not Found`);
+          throw new BadRequestException(`Bag 10 Not Found`);
         }
       } else {
         throw new BadRequestException(`Bagging / Bag Not Found`);
