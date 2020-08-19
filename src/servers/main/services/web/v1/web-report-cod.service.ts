@@ -60,6 +60,7 @@ export class V1WebReportCodService {
       'Amount Transfer',
       'Pod Datetime',
       'Recipient',
+      'Tipe Pembayaran',
       'Status Internal',
       'Tracking Status',
       'Cust Package',
@@ -85,6 +86,7 @@ export class V1WebReportCodService {
         'Amount Transfer',
         'Pod Datetime',
         'Recipient',
+        'Tipe Pembayaran',
         'Status Internal',
         'Tracking Status',
         'Status Invoice',
@@ -165,6 +167,7 @@ export class V1WebReportCodService {
           d.codValue,
           d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
           this.strReplaceFunc(d.consigneeName),
+          this.strReplaceFunc(d.paymentMethod),
           draft ? 'DRAFT INVOICE' : 'PAID', // supplier invoice status
           'DLV',
           this.strReplaceFunc(d.custPackage),
@@ -214,6 +217,7 @@ export class V1WebReportCodService {
             ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
             : null,
           this.strReplaceFunc(d.penerima),
+          d.paymentMethod,
           d.transactionStatus,
           d.lastValidTrackingType,
           d.supplierInvoiceStatus,
@@ -223,14 +227,14 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.prtDestinationCode),
           this.strReplaceFunc(d.tujuanKecamatan),
           this.strReplaceFunc(d.perwakilan),
-          this.strReplaceFunc(d.userIdDriverNik) + " - " + d.userIdDriverName,
+          (d.userIdDriverNik ? d.userIdDriverNik : "") + " - " + (d.userIdDriverName ? d.userIdDriverName : ""),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
           this.strReplaceFunc(d.receiverRemark),
           '',
           '',
           d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD') : null,
-          this.strReplaceFunc(d.userIdUpdatedNik) + " - " + this.strReplaceFunc(d.userIdUpdatedName),
+          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : "") + " - " + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ""),
         ]);
 
       }
@@ -772,7 +776,8 @@ export class V1WebReportCodService {
                 supplierInvoiceStatusId: 1,
                 userIdDriver: 1,
                 userIdUpdated: 1,
-                updatedTime: 1
+                updatedTime: 1,
+                paymentMethod: 1
 
               },
             },
@@ -806,6 +811,7 @@ export class V1WebReportCodService {
           dateUpdated: "$history_date",
           perwakilan: 1,
           layanan: 1,
+          paymentMethod: "$td.paymentMethod",
           supplierInvoiceStatusId: '$td.supplierInvoiceStatusId',
           penerima: 1,
           codNilai: 1,
@@ -1043,6 +1049,7 @@ export class V1WebReportCodService {
           createdTime: 1,
           currentPosition: 1,
           isDeleted: 1,
+          paymentMethod: 1,
           supplierInvoiceStatusId: 1,
           prtParcelValue: '$parcelValue',
           codNilai: '$codValue',
@@ -1193,7 +1200,7 @@ export class V1WebReportCodService {
             const rawResponseData = await this.timeResponse('time_log_cod_read_join', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
             responseDatas = rawResponseData.data;
           } else if (reportType.filterAwb === true) {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceAwbData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
+            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
             responseDatas = rawResponseData.data;
           } else if (reportType.filterTransaction == true) {
             const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, transactionStatuses, filters, limit, pageNumber));
