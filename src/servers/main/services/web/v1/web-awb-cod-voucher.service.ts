@@ -118,6 +118,7 @@ export class V1WebAwbCodVoucherService {
           cod_voucher_date: codVoucherDate,
           cod_voucher_service: 'DIVA',
           amount_transfer: amountTransfer,
+          is_settlement: false,
           created_time: timeNow,
           updated_time: timeNow,
         };
@@ -138,8 +139,18 @@ export class V1WebAwbCodVoucherService {
         codVoucherId = voucher.codVoucherId;
       }
 
-      if (codVoucherId !== '') {
-        await this.createVoucherDetailbyVoucherId(codVoucherId, awbNumbers, timeNow, codVoucherDate, codVoucherNo);
+      if (codVoucherId) {
+        for (const awbNumber of awbNumbers) {
+          // Create voucher detail with unsettled status
+          const paramsVoucherDetail = {
+            cod_voucher_id: codVoucherId,
+            awb_number: awbNumber,
+            created_time: timeNow,
+            updated_time: timeNow,
+          };
+          const dataVoucherDetail = await this.getDataVoucherDetail(paramsVoucherDetail);
+          await CodVoucherDetail.insert(dataVoucherDetail);
+        }
       }
     }
 
@@ -218,109 +229,6 @@ export class V1WebAwbCodVoucherService {
     return true;
   }
 
-  private static async createVoucherDetailbyVoucherId(
-    codVoucherId: string, awbNumbers: any[], timeNow: Date, codVoucherDate: string, codVoucherNo: string,
-  ): Promise<any> {
-    for (const awbNumber of awbNumbers) {
-      // Create voucher detail with unsettled status
-      const paramsVoucherDetail = {
-        cod_voucher_id: codVoucherId,
-        awb_number: awbNumber,
-        is_settlement: false,
-        created_time: timeNow,
-        updated_time: timeNow,
-      };
-
-      const dataVoucherDetail = await this.getDataVoucherDetail(paramsVoucherDetail);
-      await CodVoucherDetail.insert(dataVoucherDetail);
-
-      const transaction = await this.getTransactionByAwbNumber(awbNumber);
-      if (transaction) {
-        const randomCode = await CustomCounterCode.bankStatement(
-          timeNow,
-        );
-
-        await getManager().transaction(async transactionManager => {
-          try {
-            // Create Bank Statement
-            const bankStatement = new CodBankStatement();
-            bankStatement.bankStatementCode = randomCode;
-            bankStatement.bankStatementDate = timeNow;
-            bankStatement.bankNoReference = codVoucherNo;
-            bankStatement.transactionStatusId = TRANSACTION_STATUS.TRF;
-            bankStatement.totalCodValue = transaction.totalCodValue;
-            bankStatement.totalTransaction = 1;
-            bankStatement.totalAwb = transaction.totalAwb;
-            bankStatement.bankBranchId = 5;
-            bankStatement.bankAccount = 'BCA/000000012435251';
-            bankStatement.branchId = transaction.branchId;
-            bankStatement.transferDatetime = new Date(codVoucherDate);
-            bankStatement.userIdTransfer = 4;
-            bankStatement.userIdCreated = 4;
-            bankStatement.userIdUpdated = 4;
-            await transactionManager.save(CodBankStatement, bankStatement);
-
-            // Update Cod Bank Statement Id on its Cod Transaction
-            await transactionManager.update(
-              CodTransaction,
-              {
-                codTransactionId: transaction.codTransactionId,
-              },
-              {
-                codBankStatementId: bankStatement.codBankStatementId,
-                userIdUpdated: 4,
-                updatedTime: timeNow,
-              },
-            );
-
-            // Update unsettled Voucher to settled
-            await transactionManager.update(
-              CodVoucherDetail,
-              {
-                codVoucherDetailId: dataVoucherDetail.codVoucherDetailId,
-              },
-              {
-                isSettlement: true,
-                updatedTime: timeNow,
-              },
-            );
-          } catch (error) {
-            console.log(error);
-          }
-        });
-      }
-    }
-  }
-
-  private static async getTransactionByAwbNumber(awbNumber: string): Promise<CodTransaction | null> {
-    // check transaction exists by its awb number
-    const transactionDetail = await CodTransactionDetail.findOne({
-      select: [ 'codTransactionId' ],
-      where: {
-        awbNumber,
-        isDeleted: false,
-      },
-    });
-
-    if (!transactionDetail) { return null; }
-
-    const transaction = await CodTransaction.findOne({
-      select: [ 'totalCodValue', 'totalAwb', 'branchId', 'userIdCreated', 'codTransactionId' ],
-      where: {
-        codTransactionId: transactionDetail.codTransactionId,
-        codBankStatementId: null,
-        transactionType: 'CASHLESS',
-        isDeleted: false,
-      },
-    });
-
-    if (transaction) {
-      return transaction;
-    }
-
-    return null;
-  }
-
   public static async getDataVoucher(params: {}): Promise<CodVoucher> {
     const voucher = await CodVoucher.create({
       codVoucherNo: params['cod_voucher_no'],
@@ -338,7 +246,6 @@ export class V1WebAwbCodVoucherService {
     const voucherDetail = await CodVoucherDetail.create({
       codVoucherId: params['cod_voucher_id'],
       awbNumber: params['awb_number'],
-      isSettlement: params['is_settlement'],
       createdTime: params['created_time'],
       updatedTime: params['updated_time'],
     });
