@@ -139,8 +139,8 @@ export class ScaninSmdService {
               throw new BadRequestException('Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat');
             }
           } else {
-            paramTotalSeq = paramTotalSeq + 1;
-            paramTotalBagWeight = paramTotalBagWeight + weight ;
+            paramTotalSeq = Number(paramTotalSeq) + 1;
+            paramTotalBagWeight = Number(paramTotalBagWeight) + Number(weight) ;
             await ReceivedBag.update(
               { receivedBagId: paramReceivedBagId },
               {
@@ -335,8 +335,8 @@ export class ScaninSmdService {
               throw new BadRequestException('Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat');
             }
           } else {
-            paramTotalSeq = paramTotalSeq + 1;
-            paramTotalBagWeight = paramTotalBagWeight + weight ;
+            paramTotalSeq = Number(paramTotalSeq) + 1;
+            paramTotalBagWeight = Number(paramTotalBagWeight) + Number(weight) ;
             await ReceivedBag.update(
               { receivedBagId: paramReceivedBagId },
               {
