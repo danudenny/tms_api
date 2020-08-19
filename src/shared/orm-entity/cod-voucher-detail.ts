@@ -28,13 +28,6 @@ export class CodVoucherDetail extends BaseEntity {
   })
   awbNumber: string;
 
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_settlement',
-  })
-  isSettlement: boolean;
-
   @Column('timestamp without time zone', {
     nullable: false,
     name: 'created_time',

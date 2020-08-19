@@ -33,6 +33,13 @@ export class CodTransaction extends TmsBaseEntity {
   })
   transactionDate: Date;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'transaction_note',
+  })
+  transactionNote: string | null;
+
   @Column('bigint', {
     nullable: false,
     name: 'transaction_status_id',
