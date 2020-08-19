@@ -797,9 +797,12 @@ export class V1WebReportCodService {
           prtParcelValue: '$prtParcelValue',
           prtCustPackageId: '$prtCustPackageId',
           transactionStatusId: '$td.transactionStatusId',
-          userIdDriver: '$td.userIdDriver',
-          userIdUpdated: "$td.userIdUpdated",
-          dateUpdated: "$td.updatedTime",
+          userIdDriver: '$courierUserId',
+          userIdDriverNik: '$courierNik',
+          userIdDriverName: '$courierName',
+          userIdUpdatedNik: "$userUpdatedNik",
+          userIdUpdatedName: "$userUpdatedName",
+          dateUpdated: "$history_date",
           perwakilan: 1,
           layanan: 1,
           supplierInvoiceStatusId: '$td.supplierInvoiceStatusId',
@@ -812,6 +815,7 @@ export class V1WebReportCodService {
           manifestTrackingSiteName: '$manifestTrackingSiteName',
           lastValidTrackingSiteName: '$lastValidTrackingSiteName',
           receiverRemark: 1,
+
         },
       },
     ];
