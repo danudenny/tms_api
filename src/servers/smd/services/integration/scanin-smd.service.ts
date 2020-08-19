@@ -173,7 +173,6 @@ export class ScaninSmdService {
               { bagItemId : paramBagItemId },
               {
                 bagSeq: paramSeq,
-                weight,
                 bagId: paramBagId,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
@@ -369,7 +368,6 @@ export class ScaninSmdService {
               { bagItemId : paramBagItemId },
               {
                 bagSeq: paramSeq,
-                weight,
                 bagId: paramBagId,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
