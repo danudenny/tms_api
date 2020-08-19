@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus, BadRequestException } from '@nestjs/common';
 import moment = require('moment');
 import express = require('express');
 import xlsx = require('xlsx');
@@ -121,7 +121,8 @@ export class BagCityService {
     const result = new BagCityResponseVm();
     const awbNumber = payload.awbNumber;
     const dateNow = moment().toDate();
-    let paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeCounter(dateNow);
+    // let paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeCounter(dateNow);
+
     const permissionPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
 
@@ -225,46 +226,53 @@ export class BagCityService {
     }
 
     if (!payload.bagRepresentativeId) {
-      const cekDoubleCode = await BagRepresentative.findOne({
-        where: {
-          bagRepresentativeCode: paramBagRepresentativeCode,
-          isDeleted: false,
-        },
-      });
-      if (cekDoubleCode) {
-        paramBagRepresentativeCode =  await CustomCounterCode.bagCityCodeCounter(dateNow);
+      const paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeRandomCounter(dateNow);
+      const redlock = await RedisService.redlock(`redlock:bagRepresentative:${paramBagRepresentativeCode}`, 10);
+      if (redlock) {
+        const createBagRepresentative = BagRepresentative.create();
+        createBagRepresentative.representativeIdTo = dataAwb[0].representative_id;
+        createBagRepresentative.branchId = permissionPayload.branchId.toString();
+        createBagRepresentative.totalItem = 1;
+        createBagRepresentative.totalWeight = dataAwb[0].weight.toString();
+        createBagRepresentative.bagRepresentativeCode = paramBagRepresentativeCode;
+        createBagRepresentative.bagRepresentativeDate = dateNow;
+        createBagRepresentative.userIdCreated = authMeta.userId;
+        createBagRepresentative.userIdUpdated = authMeta.userId;
+        createBagRepresentative.createdTime = dateNow;
+        createBagRepresentative.updatedTime = dateNow;
+        createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
+        await BagRepresentative.save(createBagRepresentative);
+
+        bagRepresentativeId = createBagRepresentative.bagRepresentativeId;
+        bagRepresentativeCode = createBagRepresentative.bagRepresentativeCode;
+
+        const createBagRepresentativeHistory = BagRepresentativeHistory.create();
+        createBagRepresentativeHistory.bagRepresentativeId = bagRepresentativeId;
+        createBagRepresentativeHistory.representativeIdTo = dataAwb[0].representative_id;
+        createBagRepresentativeHistory.branchId = permissionPayload.branchId.toString();
+        createBagRepresentativeHistory.totalItem = 1;
+        createBagRepresentativeHistory.totalWeight = dataAwb[0].weight.toString();
+        createBagRepresentativeHistory.bagRepresentativeCode = paramBagRepresentativeCode;
+        createBagRepresentativeHistory.bagRepresentativeDate = dateNow;
+        createBagRepresentativeHistory.userIdCreated = authMeta.userId.toString();
+        createBagRepresentativeHistory.userIdUpdated = authMeta.userId.toString();
+        createBagRepresentativeHistory.createdTime = dateNow;
+        createBagRepresentativeHistory.updatedTime = dateNow;
+        createBagRepresentativeHistory.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR.toString();
+        await BagRepresentativeHistory.save(createBagRepresentativeHistory);
+      } else {
+        throw new BadRequestException('Data Gabung Sortir Kota Sedang di proses, Silahkan Coba Beberapa Saat');
       }
-      const createBagRepresentative = BagRepresentative.create();
-      createBagRepresentative.representativeIdTo = dataAwb[0].representative_id;
-      createBagRepresentative.branchId = permissionPayload.branchId.toString();
-      createBagRepresentative.totalItem = 1;
-      createBagRepresentative.totalWeight = dataAwb[0].weight.toString();
-      createBagRepresentative.bagRepresentativeCode = paramBagRepresentativeCode;
-      createBagRepresentative.bagRepresentativeDate = dateNow;
-      createBagRepresentative.userIdCreated = authMeta.userId;
-      createBagRepresentative.userIdUpdated = authMeta.userId;
-      createBagRepresentative.createdTime = dateNow;
-      createBagRepresentative.updatedTime = dateNow;
-      createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
-      await BagRepresentative.save(createBagRepresentative);
+      // const cekDoubleCode = await BagRepresentative.findOne({
+      //   where: {
+      //     bagRepresentativeCode: paramBagRepresentativeCode,
+      //     isDeleted: false,
+      //   },
+      // });
+      // if (cekDoubleCode) {
+      //   paramBagRepresentativeCode =  await CustomCounterCode.bagCityCodeRandomCounter(dateNow);
+      // }
 
-      bagRepresentativeId = createBagRepresentative.bagRepresentativeId;
-      bagRepresentativeCode = createBagRepresentative.bagRepresentativeCode;
-
-      const createBagRepresentativeHistory = BagRepresentativeHistory.create();
-      createBagRepresentativeHistory.bagRepresentativeId = bagRepresentativeId;
-      createBagRepresentativeHistory.representativeIdTo = dataAwb[0].representative_id;
-      createBagRepresentativeHistory.branchId = permissionPayload.branchId.toString();
-      createBagRepresentativeHistory.totalItem = 1;
-      createBagRepresentativeHistory.totalWeight = dataAwb[0].weight.toString();
-      createBagRepresentativeHistory.bagRepresentativeCode = paramBagRepresentativeCode;
-      createBagRepresentativeHistory.bagRepresentativeDate = dateNow;
-      createBagRepresentativeHistory.userIdCreated = authMeta.userId.toString();
-      createBagRepresentativeHistory.userIdUpdated = authMeta.userId.toString();
-      createBagRepresentativeHistory.createdTime = dateNow;
-      createBagRepresentativeHistory.updatedTime = dateNow;
-      createBagRepresentativeHistory.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR.toString();
-      await BagRepresentativeHistory.save(createBagRepresentativeHistory);
     }
 
     const bagRepresentativeItem = BagRepresentativeItem.create();
