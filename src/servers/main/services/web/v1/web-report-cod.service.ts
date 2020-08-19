@@ -60,6 +60,7 @@ export class V1WebReportCodService {
       'Amount Transfer',
       'Pod Datetime',
       'Recipient',
+      'Tipe Pembayaran',
       'Status Internal',
       'Tracking Status',
       'Cust Package',
@@ -68,23 +69,25 @@ export class V1WebReportCodService {
       'Destination Code',
       'Destination',
       'Perwakilan',
-      'sigesit',
+      'Sigesit',
       'Package Detail',
       'Services',
       'Note',
       'Submitted Date',
       'Submitted Number',
-      'Date Created',
-      'User Created',
+      'Date Updated',
+      'User Updated',
     ] : [
         'Partner',
         'Awb Date',
         'Awb',
         'Package Amount',
         'Cod Amount',
+        'Cod Fee',
         'Amount Transfer',
         'Pod Datetime',
         'Recipient',
+        'Tipe Pembayaran',
         'Status Internal',
         'Tracking Status',
         'Status Invoice',
@@ -94,14 +97,14 @@ export class V1WebReportCodService {
         'Destination Code',
         'Destination',
         'Perwakilan',
-        'sigesit',
+        'Sigesit',
         'Package Detail',
         'Services',
         'Note',
         'Submitted Date',
         'Submitted Number',
-        'Date Created',
-        'User Created',
+        'Date Updated',
+        'User Updated',
       ];
 
     const csvConfig = cod ?
@@ -165,6 +168,7 @@ export class V1WebReportCodService {
           d.codValue,
           d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
           this.strReplaceFunc(d.consigneeName),
+          this.strReplaceFunc(d.paymentMethod),
           draft ? 'DRAFT INVOICE' : 'PAID', // supplier invoice status
           'DLV',
           this.strReplaceFunc(d.custPackage),
@@ -209,11 +213,13 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.awbNumber),
           d.prtParcelValue,
           d.codNilai,
+          d.codFee ? d.codFee : "-",
           d.codNilai,
           d.lastValidTrackingDateTime
             ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
             : null,
           this.strReplaceFunc(d.penerima),
+          d.paymentMethod,
           d.transactionStatus,
           d.lastValidTrackingType,
           d.supplierInvoiceStatus,
@@ -223,13 +229,14 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.prtDestinationCode),
           this.strReplaceFunc(d.tujuanKecamatan),
           this.strReplaceFunc(d.perwakilan),
-          this.strReplaceFunc(d.userIdDriverNik) + " - " + d.userIdDriverName,
+          (d.userIdDriverNik ? d.userIdDriverNik : "") + " - " + (d.userIdDriverName ? d.userIdDriverName : ""),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
           this.strReplaceFunc(d.receiverRemark),
-          '', '',
+          '',
+          '',
           d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD') : null,
-          this.strReplaceFunc(d.userUpdatedNik) + " - " + this.strReplaceFunc(d.userUpdatedName),
+          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : "") + " - " + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ""),
         ]);
 
       }
@@ -771,7 +778,9 @@ export class V1WebReportCodService {
                 supplierInvoiceStatusId: 1,
                 userIdDriver: 1,
                 userIdUpdated: 1,
-                updatedTime: 1
+                updatedTime: 1,
+                paymentMethod: 1,
+                codFee: 1
 
               },
             },
@@ -793,6 +802,7 @@ export class V1WebReportCodService {
           partnerName: 1,
           awbNumber: 1,
           awbDate: 1,
+          codFee: "$td.codFee",
           parcelContent: '$prtParcelContent',
           prtParcelValue: '$prtParcelValue',
           prtCustPackageId: '$prtCustPackageId',
@@ -805,6 +815,7 @@ export class V1WebReportCodService {
           dateUpdated: "$history_date",
           perwakilan: 1,
           layanan: 1,
+          paymentMethod: "$td.paymentMethod",
           supplierInvoiceStatusId: '$td.supplierInvoiceStatusId',
           penerima: 1,
           codNilai: 1,
@@ -815,7 +826,6 @@ export class V1WebReportCodService {
           manifestTrackingSiteName: '$manifestTrackingSiteName',
           lastValidTrackingSiteName: '$lastValidTrackingSiteName',
           receiverRemark: 1,
-
         },
       },
     ];
@@ -968,13 +978,17 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'transactionStatus' && filter.value) {
-        tdFilter.push({ $eq: ['$transactionStatusId', filter.value] });
-        allowNullTd = false;
+        filterList.push({ transactionStatusId: { $eq: filter.value } });
+
+        // tdFilter.push({ $eq: ['$transactionStatusId', filter.value] });
+        // allowNullTd = false;
       }
 
       if (filter.field == 'supplierInvoiceStatus' && filter.value) {
-        tdFilter.push({ $eq: ['$supplierInvoiceStatusId', filter.value] });
-        allowNullTd = false;
+        filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
+
+        // tdFilter.push({ $eq: ['$supplierInvoiceStatusId', filter.value] });
+        // allowNullTd = false;
       }
 
       if (filter.field == 'sigesit' && filter.value) {
@@ -997,40 +1011,40 @@ export class V1WebReportCodService {
       {
         $limit: limit,
       },
-      {
-        $lookup: {
-          from: 'cod_awb',
-          as: 'ca',
-          let: { awbNumber: '$awbNumber' },
-          pipeline: [
-            {
-              // on inner join
-              $match:
-              {
-                $expr:
-                {
-                  $and: [{
-                    $eq: ['$awbNumber', '$$awbNumber']
-                  }],
-                },
-              },
-            },
-            { $limit: 1 },
-            {
-              $project: {
-                awbNumber: 1,
-                perwakilan: 1
-              },
-            },
-          ],
-        },
-      },
-      {
-        $unwind: {
-          path: '$ca',
-          preserveNullAndEmptyArrays: allowNullTd,
-        },
-      },
+      // {
+      //   $lookup: {
+      //     from: 'cod_awb',
+      //     as: 'ca',
+      //     let: { awbNumber: '$awbNumber' },
+      //     pipeline: [
+      //       {
+      //         // on inner join
+      //         $match:
+      //         {
+      //           $expr:
+      //           {
+      //             $and: [{
+      //               $eq: ['$awbNumber', '$$awbNumber']
+      //             }],
+      //           },
+      //         },
+      //       },
+      //       { $limit: 1 },
+      //       {
+      //         $project: {
+      //           awbNumber: 1,
+      //           perwakilan: 1
+      //         },
+      //       },
+      //     ],
+      //   },
+      // },
+      // {
+      //   $unwind: {
+      //     path: '$ca',
+      //     preserveNullAndEmptyArrays: allowNullTd,
+      //   },
+      // },
       {
         $project: {
           _id: 1,
@@ -1041,10 +1055,19 @@ export class V1WebReportCodService {
           consigneeName: 1,
           createdTime: 1,
           currentPosition: 1,
-          custPackage: 1,
-          destination: 1,
-          destinationCode: 1,
           isDeleted: 1,
+          paymentMethod: 1,
+          supplierInvoiceStatusId: 1,
+          prtParcelValue: '$parcelValue',
+          codNilai: '$codValue',
+          lastValidTrackingDateTime: '$podDate',
+          penerima: '$consigneeName',
+          receiverRemark: "$parcelNote",
+          layanan: "$packageType",
+          tujuanKecamatan: "$destination",
+          prtDestinationCode: "$destinationCode",
+          lastValidTrackingSiteName: "$currentPosition",
+          manifestTrackingSiteName: "$pickupSource",
           packageType: 1,
           parcelContent: 1,
           parcelNote: 1,
@@ -1055,13 +1078,11 @@ export class V1WebReportCodService {
           pickupSource: 1,
           podDate: 1,
           transactionStatusId: 1,
-          perwakilan: "$ca.perwakilan",
-          userIdDriver: '$ca.courierUserId',
-          userIdDriverNik: '$ca.courierNik',
-          userIdDriverName: '$ca.courierName',
-          userIdUpdatedNik: "$ca.userUpdatedNik",
-          userIdUpdatedName: "$ca.userUpdatedName",
-          dateUpdated: "$ca.history_date",
+          userIdDriverNik: '$nikSigesit',
+          userIdDriverName: '$sigesit',
+          userIdUpdatedNik: "$nikAdmin",
+          userIdUpdatedName: "$adminName",
+          dateUpdated: "$updatedTime",
           updatedTime: 1,
           userIdUpdated: 1,
         },
@@ -1081,6 +1102,8 @@ export class V1WebReportCodService {
     // console.log(arrUser, "array");
     for (const d of datas) {
       d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
+      d.lastValidTrackingType = "DLV"
+
       d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
       // if (d.userIdDriver && arrDriver.length > 0) {
       //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
@@ -1149,10 +1172,6 @@ export class V1WebReportCodService {
 
   static async printNonCodSupplierInvoice(filters, uuid: string = '') {
     // TODO: query get data
-    // step 1 : query get data by filter
-    // prepare generate csv
-    // ??upload file csv to aws s3
-    // retrun ffile/ link downlod
     console.log(uuid, 'uuid');
     const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod('transaction_detail');
     const dbAwb = await MongoDbConfig.getDbSicepatCod('cod_awb');
@@ -1188,7 +1207,7 @@ export class V1WebReportCodService {
             const rawResponseData = await this.timeResponse('time_log_cod_read_join', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
             responseDatas = rawResponseData.data;
           } else if (reportType.filterAwb === true) {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceAwbData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
+            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
             responseDatas = rawResponseData.data;
           } else if (reportType.filterTransaction == true) {
             const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, transactionStatuses, filters, limit, pageNumber));
@@ -1321,7 +1340,6 @@ export class V1WebReportCodService {
         filterList.push({ updatedTime: { $lt: d } });
       }
 
-      filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
 
       if (filter.field == 'supplier' && filter.value) {
         filterList.push({ partnerId: { $eq: filter.value } });
@@ -1342,6 +1360,9 @@ export class V1WebReportCodService {
         filterList.push({ userIdDriver: { $eq: filter.value } });
       }
     }
+
+    filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
+
 
     const skip = limit * (pageNumber - 1);
 
