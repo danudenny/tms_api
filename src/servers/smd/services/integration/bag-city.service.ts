@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus, BadRequestException } from '@nestjs/common';
 import moment = require('moment');
 import express = require('express');
 import xlsx = require('xlsx');
@@ -121,7 +121,8 @@ export class BagCityService {
     const result = new BagCityResponseVm();
     const awbNumber = payload.awbNumber;
     const dateNow = moment().toDate();
-    const paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeCounter(dateNow);
+    // let paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeCounter(dateNow);
+
     const permissionPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
 
@@ -154,12 +155,12 @@ export class BagCityService {
         r.representative_code,
         a.total_weight_rounded as weight,
         ai.awb_item_id
-      FROM awb a
-      LEFT JOIN representative r ON a.ref_representative_code = r.representative_code
+      FROM temp_stt ts
+      INNER JOIN awb a ON ts.nostt = a.awb_number AND a.is_deleted = false
       INNER JOIN awb_item ai ON a.awb_id = ai.awb_id
+      LEFT JOIN representative r ON ts.perwakilan = r.representative_code
       WHERE
-        a.awb_number = '${awbNumber}' AND
-        a.is_deleted = false
+        ts.nostt = '${awbNumber}'
       LIMIT 1;
       `;
     const dataAwb = await RawQueryService.query(rawQuery);
@@ -225,37 +226,53 @@ export class BagCityService {
     }
 
     if (!payload.bagRepresentativeId) {
-      const createBagRepresentative = BagRepresentative.create();
-      createBagRepresentative.representativeIdTo = dataAwb[0].representative_id;
-      createBagRepresentative.branchId = permissionPayload.branchId.toString();
-      createBagRepresentative.totalItem = 1;
-      createBagRepresentative.totalWeight = dataAwb[0].weight.toString();
-      createBagRepresentative.bagRepresentativeCode = paramBagRepresentativeCode;
-      createBagRepresentative.bagRepresentativeDate = dateNow;
-      createBagRepresentative.userIdCreated = authMeta.userId;
-      createBagRepresentative.userIdUpdated = authMeta.userId;
-      createBagRepresentative.createdTime = dateNow;
-      createBagRepresentative.updatedTime = dateNow;
-      createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
-      await BagRepresentative.save(createBagRepresentative);
+      const paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeRandomCounter(dateNow);
+      const redlock = await RedisService.redlock(`redlock:bagRepresentative:${paramBagRepresentativeCode}`, 10);
+      if (redlock) {
+        const createBagRepresentative = BagRepresentative.create();
+        createBagRepresentative.representativeIdTo = dataAwb[0].representative_id;
+        createBagRepresentative.branchId = permissionPayload.branchId.toString();
+        createBagRepresentative.totalItem = 1;
+        createBagRepresentative.totalWeight = dataAwb[0].weight.toString();
+        createBagRepresentative.bagRepresentativeCode = paramBagRepresentativeCode;
+        createBagRepresentative.bagRepresentativeDate = dateNow;
+        createBagRepresentative.userIdCreated = authMeta.userId;
+        createBagRepresentative.userIdUpdated = authMeta.userId;
+        createBagRepresentative.createdTime = dateNow;
+        createBagRepresentative.updatedTime = dateNow;
+        createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
+        await BagRepresentative.save(createBagRepresentative);
 
-      bagRepresentativeId = createBagRepresentative.bagRepresentativeId;
-      bagRepresentativeCode = createBagRepresentative.bagRepresentativeCode;
+        bagRepresentativeId = createBagRepresentative.bagRepresentativeId;
+        bagRepresentativeCode = createBagRepresentative.bagRepresentativeCode;
 
-      const createBagRepresentativeHistory = BagRepresentativeHistory.create();
-      createBagRepresentativeHistory.bagRepresentativeId = bagRepresentativeId;
-      createBagRepresentativeHistory.representativeIdTo = dataAwb[0].representative_id;
-      createBagRepresentativeHistory.branchId = permissionPayload.branchId.toString();
-      createBagRepresentativeHistory.totalItem = 1;
-      createBagRepresentativeHistory.totalWeight = dataAwb[0].weight.toString();
-      createBagRepresentativeHistory.bagRepresentativeCode = paramBagRepresentativeCode;
-      createBagRepresentativeHistory.bagRepresentativeDate = dateNow;
-      createBagRepresentativeHistory.userIdCreated = authMeta.userId.toString();
-      createBagRepresentativeHistory.userIdUpdated = authMeta.userId.toString();
-      createBagRepresentativeHistory.createdTime = dateNow;
-      createBagRepresentativeHistory.updatedTime = dateNow;
-      createBagRepresentativeHistory.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR.toString();
-      await BagRepresentativeHistory.save(createBagRepresentativeHistory);
+        const createBagRepresentativeHistory = BagRepresentativeHistory.create();
+        createBagRepresentativeHistory.bagRepresentativeId = bagRepresentativeId;
+        createBagRepresentativeHistory.representativeIdTo = dataAwb[0].representative_id;
+        createBagRepresentativeHistory.branchId = permissionPayload.branchId.toString();
+        createBagRepresentativeHistory.totalItem = 1;
+        createBagRepresentativeHistory.totalWeight = dataAwb[0].weight.toString();
+        createBagRepresentativeHistory.bagRepresentativeCode = paramBagRepresentativeCode;
+        createBagRepresentativeHistory.bagRepresentativeDate = dateNow;
+        createBagRepresentativeHistory.userIdCreated = authMeta.userId.toString();
+        createBagRepresentativeHistory.userIdUpdated = authMeta.userId.toString();
+        createBagRepresentativeHistory.createdTime = dateNow;
+        createBagRepresentativeHistory.updatedTime = dateNow;
+        createBagRepresentativeHistory.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR.toString();
+        await BagRepresentativeHistory.save(createBagRepresentativeHistory);
+      } else {
+        throw new BadRequestException('Data Gabung Sortir Kota Sedang di proses, Silahkan Coba Beberapa Saat');
+      }
+      // const cekDoubleCode = await BagRepresentative.findOne({
+      //   where: {
+      //     bagRepresentativeCode: paramBagRepresentativeCode,
+      //     isDeleted: false,
+      //   },
+      // });
+      // if (cekDoubleCode) {
+      //   paramBagRepresentativeCode =  await CustomCounterCode.bagCityCodeRandomCounter(dateNow);
+      // }
+
     }
 
     const bagRepresentativeItem = BagRepresentativeItem.create();
@@ -285,7 +302,7 @@ export class BagCityService {
       authMeta.userId,
       permissionPayload.branchId,
       branchName,
-      cityName
+      cityName,
     );
 
     result.status = 'success';

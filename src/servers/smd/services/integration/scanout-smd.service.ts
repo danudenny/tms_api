@@ -21,6 +21,7 @@ import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -30,60 +31,65 @@ export class ScanoutSmdService {
 
     const result = new ScanOutSmdVehicleResponseVm();
     const timeNow = moment().toDate();
-    const paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
-
-    const paramDoSmdId = await this.createDoSmd(
-      paramDoSmdCode,
-      payload.smd_date,
-      permissonPayload.branchId,
-      authMeta.userId,
-      payload.smd_trip,
-      payload.description,
-    );
-
-    const paramDoSmdVehicleId = await this.createDoSmdVehicle(
-      paramDoSmdId,
-      payload.vehicle_number,
-      payload.employee_id_driver,
-      permissonPayload.branchId,
-      authMeta.userId,
-    );
-
-    await DoSmd.update(
-      { doSmdId : paramDoSmdId },
-      {
-        doSmdVehicleIdLast: paramDoSmdVehicleId,
-        userIdUpdated: authMeta.userId,
-        updatedTime: timeNow,
-      },
-    );
-
-    const paramDoSmdHistoryId = await this.createDoSmdHistory(
-      paramDoSmdId,
-      null,
-      paramDoSmdVehicleId,
-      null,
-      null,
-      payload.smd_date,
-      permissonPayload.branchId,
-      1000,
-      null,
-      null,
-      authMeta.userId,
-    );
-
+    // let  paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+    const  paramDoSmdCode = await CustomCounterCode.doSmdCodeRandomCounter(timeNow);
     const data = [];
-    data.push({
-      do_smd_id: paramDoSmdId,
-      do_smd_code: paramDoSmdCode,
-      do_smd_vehicle_id: paramDoSmdVehicleId,
-      departure_schedule_date_time: payload.do_smd_time,
-    });
+
+    const redlock = await RedisService.redlock(`redlock:doSmd:${paramDoSmdCode}`, 10);
+    if (redlock) {
+      const paramDoSmdId = await this.createDoSmd(
+        paramDoSmdCode,
+        payload.smd_date,
+        permissonPayload.branchId,
+        authMeta.userId,
+        payload.smd_trip,
+        payload.description,
+      );
+
+      const paramDoSmdVehicleId = await this.createDoSmdVehicle(
+        paramDoSmdId,
+        payload.vehicle_number,
+        payload.employee_id_driver,
+        permissonPayload.branchId,
+        authMeta.userId,
+      );
+
+      await DoSmd.update(
+        { doSmdId : paramDoSmdId },
+        {
+          doSmdVehicleIdLast: paramDoSmdVehicleId,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      const paramDoSmdHistoryId = await this.createDoSmdHistory(
+        paramDoSmdId,
+        null,
+        paramDoSmdVehicleId,
+        null,
+        null,
+        payload.smd_date,
+        permissonPayload.branchId,
+        1000,
+        null,
+        null,
+        authMeta.userId,
+      );
+      data.push({
+        do_smd_id: paramDoSmdId,
+        do_smd_code: paramDoSmdCode,
+        do_smd_vehicle_id: paramDoSmdVehicleId,
+        departure_schedule_date_time: payload.do_smd_time,
+      });
+    } else {
+      throw new BadRequestException('Data Surat Muatan Darat Sedang di proses, Silahkan Coba Beberapa Saat');
+    }
+
     result.statusCode = HttpStatus.OK;
     result.message = 'SMD Success Created';
     result.data = data;
     return result;
-
   }
 
   static async scanOutRouteOld(payload: any): Promise<any> {

@@ -9,6 +9,7 @@ import { BAG_STATUS } from '../../../shared/constants/bag-status.constant';
 import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
 import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-meta-queue.service';
 import {In} from 'typeorm';
+import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -116,6 +117,15 @@ export class BagScanVendorQueueService {
               AWB_STATUS.OUT_HUB,
               data.vendorName,
               moment().add(1, 'minutes').toDate(),
+            );
+
+            // Update Internal Process Type
+            await AwbItemAttr.update(
+              { awbItemId : itemAwb.awbItemId },
+              {
+                internalProcessType: 'DARAT_MP',
+                updatedTime:  moment().add(1, 'minutes').toDate(),
+              },
             );
           }
         }

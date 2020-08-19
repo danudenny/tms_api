@@ -4,13 +4,14 @@ import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { ScanOutSmdVendorListResponseVm, ScanOutSmdDetailVendorResponseVm, ScanOutSmdDetailBaggingVendorResponseVm, ScanOutSmdDetailBagRepresentativeVendorResponseVm } from '../../models/scanout-smd-vendor.response.vm';
+import { ScanOutSmdVendorListResponseVm, ScanOutSmdDetailVendorResponseVm, ScanOutSmdDetailBaggingVendorResponseVm, ScanOutSmdDetailBagRepresentativeVendorResponseVm, ScanOutVendorHistoryResponseVm } from '../../models/scanout-smd-vendor.response.vm';
 import {AuthService} from '../../../../shared/services/auth.service';
 import {ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdDetailBagRepresentativeResponseVm, ScanOutDetailMoreResponseVm, ScanOutDetailBaggingMoreResponseVm, ScanOutDetailBagRepresentativeMoreResponseVm} from '../../models/scanout-smd.response.vm';
 import {DoSmdDetail} from '../../../../shared/orm-entity/do_smd_detail';
 import {RawQueryService} from '../../../../shared/services/raw-query.service';
 import {DoSmdDetailItem} from '../../../../shared/orm-entity/do_smd_detail_item';
 import {QueryBuilderService} from '../../../../shared/services/query-builder.service';
+import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 
 @Injectable()
 export class ScanoutSmdVendorListService {
@@ -76,7 +77,7 @@ export class ScanoutSmdVendorListService {
     q.innerJoin(e => e.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
+    q.andWhereRaw('t1.is_deleted = false');
     q.andWhere(e => e.isVendor, w => w.isTrue());
 
     q.orderBy({ createdTime: 'DESC' });
@@ -459,6 +460,64 @@ export class ScanoutSmdVendorListService {
     const result = new ScanOutDetailBagRepresentativeMoreResponseVm();
     result.data = data;
 
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findScanOutVendorHistory(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutVendorHistoryResponseVm> {
+
+    payload.fieldResolverMap['do_smd_id'] = 'ds.do_smd_id';
+
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_id',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoSmdHistory, 'dsh');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['dsh.do_smd_history_id', 'do_smd_history_id'],
+      ['ds.do_smd_id', 'do_smd_id'],
+      ['ds.do_smd_code', 'do_smd_code'],
+      ['ds.vendor_name', 'vendor_name'],
+      ['b.branch_name', 'branch_from_name'],
+      ['dsh.created_time', 'history_date'],
+      ['dsh.do_smd_status_id', 'do_smd_status_id'],
+      ['dss.do_smd_status_title', 'history_status'],
+      [`CONCAT(u.first_name, ' ', u.last_name )`, 'username'],
+    );
+
+    q.innerJoin(e => e.doSmd, 'ds', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doSmdStatus, 'dss', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doSmdVehicle, 'dsv', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.user, 'u', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.branch, 'b', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.orderByRaw('dsh.created_time', 'ASC');
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new ScanOutVendorHistoryResponseVm();
+
+    result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;

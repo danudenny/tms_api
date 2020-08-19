@@ -26,6 +26,8 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { ScanOutSmdVendorRouteResponseVm, ScanOutSmdVendorListResponseVm, ScanOutSmdVendorEndResponseVm, ScanOutSmdVendorItemResponseVm } from '../../models/scanout-smd-vendor.response.vm';
 import { BagRepresentativeScanOutHubQueueService } from '../../../queue/services/bag-representative-scan-out-hub-queue.service';
 import {BagScanVendorQueueService} from '../../../queue/services/bag-scan-vendor-queue.service';
+import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 @Injectable()
 export class ScanoutSmdVendorService {
@@ -42,8 +44,14 @@ export class ScanoutSmdVendorService {
 
     if (!paramDoSmdId) {
       // Insert New Darat MP
-      const paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+      // let paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+      const paramDoSmdCode = await CustomCounterCode.doSmdCodeRandomCounter(timeNow);
 
+      const redlock = await RedisService.redlock(`redlock:doSmdVendor:${paramDoSmdCode}`, 10);
+      if (!redlock) {
+        throw new BadRequestException(`Data Darat MP Sedang di proses, Silahkan Coba Beberapa Saat`);
+      }
+      
       paramDoSmdId = await this.createDoSmd(
         paramDoSmdCode,
         timeNow,
@@ -173,18 +181,18 @@ export class ScanoutSmdVendorService {
               }
             }
           }
-          const resultDoSmdDetaila = await DoSmdDetail.findOne({
+          const resultDoSmdDetail = await DoSmdDetail.findOne({
             where: {
-              doSmdDetailId:  paramsresultDoSmdDetailId,
+              doSmdId: paramDoSmdId,
               isDeleted: false,
             },
           });
           data.push({
             do_smd_id: resultDoSmd.doSmdId,
             do_smd_code: resultDoSmd.doSmdCode,
-            do_smd_detail_id: resultDoSmdDetaila.doSmdDetailId,
+            do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
             vendor_name: payload.vendor_name,
-            representative_code_list: resultDoSmdDetaila.representativeCodeList,
+            representative_code_list: resultDoSmdDetail.representativeCodeList,
           });
           result.statusCode = HttpStatus.OK;
           result.message = 'SMD Route Success Created';
@@ -927,7 +935,7 @@ export class ScanoutSmdVendorService {
               result.data = data;
               return result;
           } else {
-            throw new BadRequestException(`Representative To Bag Not Match`);
+            throw new BadRequestException(`Representative To ` + resultDataBag[0].representative_code + ` Bag 15 Not Match`);
           }
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
           throw new BadRequestException(`Bag Not Scan In Yet`);
@@ -1050,12 +1058,12 @@ export class ScanoutSmdVendorService {
               result.data = data;
               return result;
           } else {
-            throw new BadRequestException(`Representative To Bag Not Match`);
+            throw new BadRequestException(`Representative To ` + resultDataBag[0].representative_code + `  Bag 10 Not Match`);
           }
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          throw new BadRequestException(`Bag Not Scan In Yet`);
+          throw new BadRequestException(`Bag 10 Not Scan In Yet`);
         } else {
-          throw new BadRequestException(`Bag Not Found`);
+          throw new BadRequestException(`Bag 10 Not Found`);
         }
       } else {
         throw new BadRequestException(`Bagging / Bag Not Found`);
@@ -1105,6 +1113,76 @@ export class ScanoutSmdVendorService {
       throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
     }
 
+  }
+
+  public static async deleteSmdVendor(paramdoSmdId: number) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: paramdoSmdId,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmd) {
+      await DoSmd.update(
+        { doSmdId : paramdoSmdId },
+        {
+          isDeleted: true,
+          userIdUpdated: authMeta.userId,
+          updatedTime: moment().toDate(),
+        },
+      );
+      const rawQuery = `
+        SELECT
+          do_smd_detail_id
+        FROM do_smd_detail
+        WHERE
+          do_smd_id = ${paramdoSmdId} AND
+          is_deleted = FALSE;
+      `;
+      const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
+      if (resultDataDoSmdDetail.length > 0 ) {
+        await DoSmdDetail.update(
+          { doSmdId : paramdoSmdId },
+          {
+            isDeleted: true,
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+          },
+        );
+        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+          await DoSmdDetailItem.update(
+            { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+            {
+              isDeleted: true,
+              userIdUpdated: authMeta.userId,
+              updatedTime: moment().toDate(),
+            },
+          );
+        }
+        const paramDoSmdHistoryId = await this.createDoSmdHistory(
+          resultDoSmd.doSmdId,
+          null,
+          resultDoSmd.doSmdVehicleIdLast,
+          null,
+          null,
+          resultDoSmd.doSmdTime,
+          permissonPayload.branchId,
+          7000,
+          null,
+          null,
+          authMeta.userId,
+        );
+        BagAwbDeleteHistoryInHubFromSmdQueueService.perform(
+          paramdoSmdId,
+          authMeta.userId,
+        );
+      }
+    } else {
+      throw new BadRequestException(`SMD ID: ` + paramdoSmdId + ` Can't Found !`);
+    }
   }
 
   static async createBagItemHistory(bagItemId: number, userId: number, branchId: number, bagStatus: number) {
