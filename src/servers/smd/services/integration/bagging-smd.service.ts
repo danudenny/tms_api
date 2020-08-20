@@ -102,6 +102,7 @@ export class BaggingSmdService {
     let totalError = 0;
     p.baggingId = payload.baggingId;
     p.representativeCode = payload.representativeCode;
+    result.data = [];
 
     // TODO:
     // 1. get response createBagging of each bagNumber
