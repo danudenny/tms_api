@@ -18,6 +18,20 @@ export class SmdScanBaggingResponseVm {
   validRepresentativeCode: string;
 }
 
+export class SmdScanBaggingMoreResponseVm {
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({ type: [SmdScanBaggingResponseVm] })
+  data: SmdScanBaggingResponseVm[];
+}
+
 export class ListBaggingDetailVm {
   @ApiModelProperty()
   baggingId: string;
