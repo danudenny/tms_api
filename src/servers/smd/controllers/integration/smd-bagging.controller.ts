@@ -25,7 +25,7 @@ export class SmdBaggingController {
     return BaggingSmdService.createBagging(payload);
   }
 
-  @Post('create/more')
+  @Post('create/manual-input')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: SmdScanBaggingMoreResponseVm })
   @ApiBearerAuth()
