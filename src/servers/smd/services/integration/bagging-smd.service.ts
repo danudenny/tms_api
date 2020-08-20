@@ -114,7 +114,10 @@ export class BaggingSmdService {
 
       p.baggingId = p.baggingId ? p.baggingId : res.baggingId;
       p.representativeCode = p.representativeCode ? p.representativeCode : res.validRepresentativeCode;
-      result.data.push(res);
+      result.data.push({
+        ...res,
+        bagNumber,
+      });
 
       if (res.status == 'success') {
         totalSuccess++;
