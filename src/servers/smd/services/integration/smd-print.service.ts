@@ -42,12 +42,12 @@ export class SmdPrintService {
       `DIRECTION 0\n` +
       `OFFSET 0\n` +
       `CLS\n` +
-      `TEXT 15,120,"5",0,1,1,0,"BAGGING DARAT"\n` +
-      `BARCODE 15,200,"128",100,1,0,3,10,"${bagging.baggingCode}"\n` +
-      `TEXT 15,380,"3",0,1,1,"Jumlah koli : ${bagging.totalItem}"\n` +
-      `TEXT 15,420,"3",0,1,1,"Berat : ${bagging.totalWeight}"\n` +
-      `TEXT 15,460,"5",0,1,1,0,"${bagging.representative.representativeCode}"\n` +
-      `TEXT 15,540,"3",0,1,1,"${bagging.representative.representativeName}"\n` +
+      `TEXT 10,120,"5",0,1,1,0,"BAGGING DARAT"\n` +
+      `BARCODE 10,200,"128",100,1,0,3,10,"${bagging.baggingCode}"\n` +
+      `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${bagging.totalItem}"\n` +
+      `TEXT 10,420,"3",0,1,1,"Berat : ${bagging.totalWeight}"\n` +
+      `TEXT 10,460,"5",0,1,1,0,"${bagging.representative.representativeCode}"\n` +
+      `TEXT 10,540,"3",0,1,1,"${bagging.representative.representativeName}"\n` +
       `PRINT 1\n` +
       `EOP`;
 
