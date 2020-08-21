@@ -5,6 +5,7 @@ import {
   UseGuards,
   Post,
   Body,
+  Get,
 } from '@nestjs/common';
 
 import {
@@ -21,6 +22,12 @@ import { ResponseMaintenanceService } from '../../../../shared/services/response
 @ApiBearerAuth()
 export class CodPaymentController {
   constructor() {}
+
+  @Get('diva/pingQR')
+  @ResponseSerializerOptions({ disable: true })
+  public async divaPaymentPingQR() {
+    return V1MobileDivaPaymentService.pingQR();
+  }
 
   @Post('diva/getQR')
   @HttpCode(HttpStatus.OK)

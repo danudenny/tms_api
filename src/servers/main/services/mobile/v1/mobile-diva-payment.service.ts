@@ -17,6 +17,20 @@ export class V1MobileDivaPaymentService {
     };
   }
 
+  static async pingQR() {
+    try {
+      const url = `${ConfigService.get('divaPayment.urlQR')}v1`;
+      const response = await axios.get(url, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
+    }
+  }
+
   static async getQr(payload: any): Promise<any> {
     // validate
     if (!payload.provider || !payload.amount) {
@@ -29,11 +43,6 @@ export class V1MobileDivaPaymentService {
     const now = Date.now();
     const randomNum = Math.floor(Math.random() * 1000); // random 3 digit
     const url = `${ConfigService.get('divaPayment.urlQR')}${provider}`;
-    const configOpt = {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    };
 
     const requestData = {
       token: ConfigService.get('divaPayment.codToken'),
@@ -42,20 +51,26 @@ export class V1MobileDivaPaymentService {
       amount,
       reff_no: `POD-MOBILE-${now}${randomNum}`,
     };
+
     try {
       console.log('### URL :: ', url);
       console.log('### DATA :: ', requestData);
-      console.log('### Option :: ', configOpt);
 
-      const response = await axios.post(url, requestData, configOpt);
+      const response = await axios.post(url, requestData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       // add Loggly data
       WinstonLogglyService.info({ requestData, responseData: response.data });
+      console.log(' ### RESPONSE :: ', response.data);
       return response.data;
     } catch (error) {
       // return {
       //   status: error.response.status,
       //   ...error.response.data,
       // };
+      console.log(' ### ERROR RESPONSE :: ', error.response.data);
       // WinstonLogglyService.error({ requestData, error });
       throw new ServiceUnavailableException(error.message);
     }
