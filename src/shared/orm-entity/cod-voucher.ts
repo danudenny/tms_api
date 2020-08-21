@@ -43,6 +43,13 @@ export class CodVoucher extends BaseEntity {
   })
   amountTransfer: number | null;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_settlement',
+  })
+  isSettlement: boolean;
+
   @Column('timestamp without time zone', {
     nullable: false,
     name: 'created_time',

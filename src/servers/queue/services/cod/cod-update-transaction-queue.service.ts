@@ -5,6 +5,8 @@ import { QueueBullBoard } from '../queue-bull-board';
 import { CodTransactionHistoryQueueService } from './cod-transaction-history-queue.service';
 import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { User } from '../../../../shared/orm-entity/user';
+import moment = require('moment');
 
 export class CodUpdateTransactionQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -74,11 +76,26 @@ export class CodUpdateTransactionQueueService {
         'transaction_detail',
       );
       // Update data mongo
+      // Get user updated
+      const userUpdated = await User.findOne({
+        select: ['userId', 'firstName', 'username'],
+        where: {
+          userId: Number(data.userId),
+          isDeleted: false,
+        },
+        cache: true,
+      });
       // query store the search condition
       const query = { codTransactionId: data.codTransactionId };
       // data stores the updated value
       const dataUpdate = {
-        $set: { transactionStatusId: Number(data.transactionStatusId) },
+        $set: {
+          transactionStatusId: Number(data.transactionStatusId),
+          userIdUpdated: Number(data.userId),
+          updatedTime: moment(data.timestamp).toDate(),
+          adminName: userUpdated.firstName,
+          nikAdmin: userUpdated.username,
+        },
       };
       try {
         console.log('## Update MongoDb :: ', dataUpdate);
