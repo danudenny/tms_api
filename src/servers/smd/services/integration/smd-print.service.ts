@@ -2,10 +2,10 @@ import express = require('express');
 import {RepositoryService} from '../../../../shared/services/repository.service';
 import {RequestErrorService} from '../../../../shared/services/request-error.service';
 import {PrinterService} from '../../../../shared/services/printer.service';
-import {PrintSmdPayloadVm, PrintBaggingPaperPayloadVm} from '../../models/print-smd-payload.vm';
+import {PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm} from '../../models/print-smd-payload.vm';
 import moment = require('moment');
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
-import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm, PrintDoSmdDataDoSmdDetailBagRepresentativeVm, PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm } from '../../models/print-do-smd.vm';
+import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm, PrintDoSmdDataDoSmdDetailBagRepresentativeVm, PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm, PrintVendorDataVm, PrintVendorVm, PrintVendorDataVendorDetailVm } from '../../models/print-do-smd.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
@@ -439,6 +439,215 @@ export class SmdPrintService {
       templates: [
         {
           templateName: 'surat-muatan-darat',
+          templateData: jsreportParams,
+          printCopy: templateConfig.printCopy,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  public static async printVendorForPaper(
+    res: express.Response,
+    queryParams: PrintVendorPaperPayloadVm,
+  ) {
+    const q = RepositoryService.doSmd.findOne();
+    q.leftJoin(e => e.doSmdDetails);
+    q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
+
+    const doSmd = await q
+      .select({
+        doSmdId: true, // needs to be selected due to do_smd relations are being included
+        doSmdCode: true,
+        doSmdTime: true,
+        totalBagging: true,
+        totalBag: true,
+        vendorName: true,
+        totalBagRepresentative: true,
+        doSmdDetails: {
+          doSmdDetailId: true,
+          arrivalTime: true,
+          sealNumber: true,
+          totalBag: true,
+          totalBagging: true,
+          totalBagRepresentative: true,
+        },
+      })
+      .where(e => e.doSmdId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doSmdDetails.isDeleted, w => w.isFalse());
+
+    if (!doSmd) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    const response = new PrintVendorVm();
+    const dataVm = new PrintVendorDataVm();
+    dataVm.doSmdId = doSmd.doSmdId;
+    dataVm.doSmdCode = doSmd.doSmdCode;
+    dataVm.doSmdNote = doSmd.doSmdNote;
+    dataVm.vendorName = doSmd.vendorName;
+    dataVm.doSmdTime = doSmd.doSmdTime.toString();
+    dataVm.doSmdVehicle = doSmd.doSmdVehicle;
+    dataVm.totalBagging = doSmd.totalBagging;
+    dataVm.totalBag = doSmd.totalBag;
+    dataVm.totalBagRepresentative = doSmd.totalBagRepresentative;
+    const dataSmdDetailsVm: PrintVendorDataVendorDetailVm[] = [];
+
+    const payload = {
+      id: null,
+    };
+
+    const idDetail = doSmd.doSmdDetails.filter(e => e.doSmdDetailId);
+
+    // tslint:disable-next-line: prefer-for-of
+    for (let l = 0; l < idDetail.length; l++) {
+      const dataSmdDetailsBagVm: PrintDoSmdDataDoSmdDetailBagVm[] = [];
+      const dataSmdDetailsBaggingVm: PrintDoSmdDataDoSmdDetailBaggingVm[] = [];
+      const dataSmdDetailsBagRepresentativeVm: PrintDoSmdDataDoSmdDetailBagRepresentativeVm[] = [];
+
+      const dataSmdDetailVm = new PrintVendorDataVendorDetailVm();
+      const dataSmdDetailBagVm = new PrintDoSmdDataDoSmdDetailBagVm();
+      const dataSmdDetailBaggingVm = new PrintDoSmdDataDoSmdDetailBaggingVm();
+      const dataSmdDetailBagRepresentativeVm = new PrintDoSmdDataDoSmdDetailBagRepresentativeVm();
+
+      dataSmdDetailVm.doSmdDetailId = idDetail[l].doSmdDetailId; // set ID
+
+      if (!idDetail[l].arrivalTime) {
+        dataSmdDetailVm.sealNumber = idDetail[l].sealNumber; // set Seal number
+        dataSmdDetailVm.arrivalTime = idDetail[l].arrivalTime; // set Arrival time
+      } else {
+        dataSmdDetailVm.sealNumber = '-';
+        dataSmdDetailVm.arrivalTime = idDetail[l].arrivalTime;
+      }
+
+      dataSmdDetailVm.branchTo = idDetail[l].branchTo; // set Branch To
+      dataSmdDetailVm.totalBag = idDetail[l].totalBag; // set Total gabung paket
+      dataSmdDetailVm.totalBagging = idDetail[l].totalBagging; // set total bagging
+      dataSmdDetailVm.totalBagRepresentative = idDetail[l].totalBagRepresentative; // set total bagging
+
+      payload.id = idDetail[l].doSmdDetailId;
+      const bagDataAll = await this.getBagData(payload);
+      if (bagDataAll) {
+        dataSmdDetailBagVm.bagItem = bagDataAll;
+        dataSmdDetailBagVm.bagType = 1;
+        dataSmdDetailsBagVm.push(dataSmdDetailBagVm);
+        dataSmdDetailVm.doSmdDetailItems = dataSmdDetailsBagVm;
+      }
+      const baggingData = await this.getBaggingData(payload);
+      if (baggingData) {
+        dataSmdDetailBaggingVm.baggingItem = baggingData;
+        dataSmdDetailBaggingVm.bagType = 0;
+        dataSmdDetailsBaggingVm.push(dataSmdDetailBaggingVm);
+        dataSmdDetailVm.doSmdBaggingItems = dataSmdDetailsBaggingVm;
+      }
+      const bagRepresentativeData = await this.getBagRepresentativeData(payload);
+      if (bagRepresentativeData) {
+        dataSmdDetailBagRepresentativeVm.bagRepresentativeItem = bagRepresentativeData;
+        dataSmdDetailBagRepresentativeVm.bagType = 2;
+        dataSmdDetailsBagRepresentativeVm.push(dataSmdDetailBagRepresentativeVm);
+        dataSmdDetailVm.doSmdBagRepresentativeItems = dataSmdDetailsBagRepresentativeVm;
+      }
+
+      dataSmdDetailsVm.push(dataSmdDetailVm);
+    }
+
+    dataVm.doSmdDetails = dataSmdDetailsVm;
+    response.data = dataVm;
+    this.printVendorAndQueryMeta(
+      res,
+      dataVm as any,
+      {
+        userId: queryParams.userId,
+        branchId: queryParams.branchId,
+      },
+      {
+        printCopy: queryParams.printCopy,
+      },
+    );
+  }
+
+  public static async printVendorAndQueryMeta(
+    res: express.Response,
+    data: Partial<PrintVendorDataVm>,
+    metaQuery: {
+      userId: number;
+      branchId: number;
+    },
+    templateConfig: {
+      printCopy?: number;
+    } = {
+      printCopy: 1,
+    },
+  ) {
+    const currentUser = await RepositoryService.user
+      .loadById(metaQuery.userId)
+      .select({
+        userId: true, // needs to be selected due to users relations are being included
+        employee: {
+          nickname: true,
+        },
+      })
+      .exec();
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
+    const currentBranch = await RepositoryService.branch
+      .loadById(metaQuery.branchId)
+      .select({
+        branchName: true,
+      });
+
+    if (!currentBranch) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
+
+    return this.printVendor(
+      res,
+      data,
+      {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: moment(data.doSmdTime).format('DD/MM/YY'),
+        time: moment(data.doSmdTime).format('HH:mm'),
+      },
+      templateConfig,
+    );
+  }
+
+  public static async printVendor(
+    res: express.Response,
+    data: Partial<PrintVendorDataVm>,
+    meta: {
+      currentUserName: string;
+      currentBranchName: string;
+      date: string;
+      time: string;
+    },
+    templateConfig: {
+      printCopy?: number;
+    } = {
+      printCopy: 1,
+    },
+  ) {
+    const jsreportParams = {
+      data,
+      meta,
+    };
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'vendor-surat-muatan-darat',
           templateData: jsreportParams,
           printCopy: templateConfig.printCopy,
         },

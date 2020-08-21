@@ -124,18 +124,23 @@ export class ScaninSmdService {
             paramTotalBagWeight = weight;
             const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
             // const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
-            paramReceivedBagId = await this.createReceivedBag(
-              dataReceivedBagCode,
-              authMeta.employeeId,
-              authMeta.userId,
-              permissonPayload.branchId,
-              paramTotalSeq,
-              paramTotalBagWeight,
-              timeNow,
-            );
+            const redlock = await RedisService.redlock(`redlock:receivedBag:${dataReceivedBagCode}`, 10);
+            if (redlock) {
+              paramReceivedBagId = await this.createReceivedBag(
+                dataReceivedBagCode,
+                authMeta.employeeId,
+                authMeta.userId,
+                permissonPayload.branchId,
+                paramTotalSeq,
+                paramTotalBagWeight,
+                timeNow,
+              );
+            } else {
+              throw new BadRequestException('Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat');
+            }
           } else {
-            paramTotalSeq = paramTotalSeq + 1;
-            paramTotalBagWeight = paramTotalBagWeight + weight ;
+            paramTotalSeq = Number(paramTotalSeq) + 1;
+            paramTotalBagWeight = Number(paramTotalBagWeight) + Number(weight) ;
             await ReceivedBag.update(
               { receivedBagId: paramReceivedBagId },
               {
@@ -168,7 +173,6 @@ export class ScaninSmdService {
               { bagItemId : paramBagItemId },
               {
                 bagSeq: paramSeq,
-                weight,
                 bagId: paramBagId,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
@@ -315,18 +319,23 @@ export class ScaninSmdService {
             paramTotalBagWeight = weight;
             const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
             // const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
-            paramReceivedBagId = await this.createReceivedBag(
-              dataReceivedBagCode,
-              authMeta.employeeId,
-              authMeta.userId,
-              permissonPayload.branchId,
-              paramTotalSeq,
-              paramTotalBagWeight,
-              timeNow,
-            );
+            const redlock = await RedisService.redlock(`redlock:receivedBag:${dataReceivedBagCode}`, 10);
+            if (redlock) {
+              paramReceivedBagId = await this.createReceivedBag(
+                dataReceivedBagCode,
+                authMeta.employeeId,
+                authMeta.userId,
+                permissonPayload.branchId,
+                paramTotalSeq,
+                paramTotalBagWeight,
+                timeNow,
+              );
+            } else {
+              throw new BadRequestException('Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat');
+            }
           } else {
-            paramTotalSeq = paramTotalSeq + 1;
-            paramTotalBagWeight = paramTotalBagWeight + weight ;
+            paramTotalSeq = Number(paramTotalSeq) + 1;
+            paramTotalBagWeight = Number(paramTotalBagWeight) + Number(weight) ;
             await ReceivedBag.update(
               { receivedBagId: paramReceivedBagId },
               {
@@ -359,7 +368,6 @@ export class ScaninSmdService {
               { bagItemId : paramBagItemId },
               {
                 bagSeq: paramSeq,
-                weight,
                 bagId: paramBagId,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
@@ -435,6 +443,7 @@ export class ScaninSmdService {
         LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
         WHERE
           doPod.do_pod_code = '${payload.bag_item_number}' AND
+          doPodDetailBag.is_deleted = false AND
           (bih.bag_item_status_id = 4500 OR bih.bag_item_status_id = 500 OR bih.bag_item_status_id IS NULL)
         GROUP BY bagnumber
         `;
@@ -450,6 +459,7 @@ export class ScaninSmdService {
         LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
         WHERE
           doPod.do_pod_code =  '${payload.bag_item_number}' AND
+          doPodDetailBag.is_deleted = false AND
           (bih.bag_item_status_id <> 4500 AND bih.bag_item_status_id <> 500 AND bih.bag_item_status_id IS NOT NULL)
         GROUP BY bagnumber
         `;

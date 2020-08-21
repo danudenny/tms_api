@@ -186,6 +186,26 @@ export class DoSmdDetail extends TmsBaseEntity {
   })
   isDeleted: boolean;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'vendor_id',
+  })
+  vendorId: number| null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'vendor_name',
+  })
+  vendorName: string | null;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_vendor',
+  })
+  isVendor: boolean;
+
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;

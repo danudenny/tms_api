@@ -197,74 +197,77 @@ export class CpsService {
 
     const conn = await DatabaseConfig.getMySqlDbConn();
 
-    const data = await this.getStt('mysql');
-    if (data) {
-      for (const item of data) {
-        await conn.query('SELECT nostt FROM stt WHERE nostt = ' + conn.escape(item.nostt),  async function(err, results) {
-          PinoLoggerService.debug(logTitle, this.sql);
-          if (!err) {
-            let query = `INSERT INTO stt (
-                nostt, gerai, asal, tujuan, codNilai, codBiaya, packingBiaya, asuransiNilai, asuransiBiaya, koli, berat, biaya, totalbiaya,
-                tglinput, tgltransaksi, keterangan, asuransiAdm, harga, username, hub, nohppenerima, pengirim, penerima, beratAsli, TglFoto,
-                Perwakilan, zonatujuan, reseller, nohpreseller, resiJne, noKonfirmasi, hubkirim, diskon, Layanan, TglPending, TglManifested,
-                BeratVolume, KetVolume, GroupPOD, GroupAnalisa, GroupTujuan, ETA1, ETA2, Sync, is_void, masalah
-              ) VALUES ?`
-            ;
+    for (let i = 0 ; i < 3; i++) {
+      const data = await this.getStt('mysql');
+      if (data) {
+        for (const item of data) {
+          await conn.query('SELECT nostt FROM stt WHERE nostt = ' + conn.escape(item.nostt),  async function(err, results) {
+            PinoLoggerService.debug(logTitle, this.sql);
+            if (!err) {
+              let query = `INSERT INTO stt (
+                  nostt, gerai, asal, tujuan, codNilai, codBiaya, packingBiaya, asuransiNilai, asuransiBiaya, koli, berat, biaya, totalbiaya,
+                  tglinput, tgltransaksi, keterangan, asuransiAdm, harga, username, hub, nohppenerima, pengirim, penerima, beratAsli, TglFoto,
+                  Perwakilan, zonatujuan, reseller, nohpreseller, resiJne, noKonfirmasi, hubkirim, diskon, Layanan, TglPending, TglManifested,
+                  BeratVolume, KetVolume, GroupPOD, GroupAnalisa, GroupTujuan, ETA1, ETA2, Sync, is_void, masalah
+                ) VALUES ?`
+              ;
 
-            let values = [[
-                item.nostt, item.gerai, item.asal, item.tujuan, item.codnilai, item.codbiaya, item.packingbiaya,
-                item.asuransinilai, item.asuransibiaya, item.koli, item.berat, item.biaya, item.totalbiaya,
-                item.tglinput, item.tgltransaksi, item.keterangan, item.asuransiadm, item.harga, item.username,
-                item.hub, item.nohppenerima, item.pengirim, item.penerima, item.beratasli, item.tglfoto,
-                item.perwakilan, item.zonatujuan, item.reseller, item.nohpreseller, item.resijne,
-                item.nokonfirmasi, item.hubkirim, item.diskon, item.layanan, item.tglpending, item.tglmanifested,
-                item.beratvolume, item.ketvolume, item.grouppod, item.groupanalisa, item.grouptujuan, item.eta1,
-                item.eta2, 1, item.is_void, item.masalah,
-            ]];
-            PinoLoggerService.debug('===========', results);
-            if (results.length > 0) {
-              // Stt Exist
-              query = `UPDATE stt SET
-                gerai=?, asal=?, tujuan=?, codNilai=?, codBiaya=?, packingBiaya=?, asuransiNilai=?, asuransiBiaya=?, koli=?, berat=?, biaya=?, totalbiaya=?,
-                tglinput=?, tgltransaksi=?, keterangan=?, asuransiAdm=?, harga=?, username=?, hub=?, nohppenerima=?, pengirim=?, penerima=?, beratAsli=?, TglFoto=?,
-                Perwakilan=?, zonatujuan=?, reseller=?, nohpreseller=?, resiJne=?, noKonfirmasi=?, hubkirim=?, diskon=?, Layanan=?, TglPending=?, TglManifested=?,
-                BeratVolume=?, KetVolume=?, GroupPOD=?, GroupAnalisa=?, GroupTujuan=?, ETA1=?, ETA2=?, Sync=?, is_void=?, masalah=?
-                WHERE nostt=?
-              `;
-              values = values[0];
-              values.shift();
-              values.push(item.nostt);
+              let values = [[
+                  item.nostt, item.gerai, item.asal, item.tujuan, item.codnilai, item.codbiaya, item.packingbiaya,
+                  item.asuransinilai, item.asuransibiaya, item.koli, item.berat, item.biaya, item.totalbiaya,
+                  item.tglinput, item.tgltransaksi, item.keterangan, item.asuransiadm, item.harga, item.username,
+                  item.hub, item.nohppenerima, item.pengirim, item.penerima, item.beratasli, item.tglfoto,
+                  item.perwakilan, item.zonatujuan, item.reseller, item.nohpreseller, item.resijne,
+                  item.nokonfirmasi, item.hubkirim, item.diskon, item.layanan, item.tglpending, item.tglmanifested,
+                  item.beratvolume, item.ketvolume, item.grouppod, item.groupanalisa, item.grouptujuan, item.eta1,
+                  item.eta2, 1, item.is_void, item.masalah,
+              ]];
+              PinoLoggerService.debug('===========', results);
+              if (results.length > 0) {
+                // Stt Exist
+                query = `UPDATE stt SET
+                  gerai=?, asal=?, tujuan=?, codNilai=?, codBiaya=?, packingBiaya=?, asuransiNilai=?, asuransiBiaya=?, koli=?, berat=?, biaya=?, totalbiaya=?,
+                  tglinput=?, tgltransaksi=?, keterangan=?, asuransiAdm=?, harga=?, username=?, hub=?, nohppenerima=?, pengirim=?, penerima=?, beratAsli=?, TglFoto=?,
+                  Perwakilan=?, zonatujuan=?, reseller=?, nohpreseller=?, resiJne=?, noKonfirmasi=?, hubkirim=?, diskon=?, Layanan=?, TglPending=?, TglManifested=?,
+                  BeratVolume=?, KetVolume=?, GroupPOD=?, GroupAnalisa=?, GroupTujuan=?, ETA1=?, ETA2=?, Sync=?, is_void=?, masalah=?
+                  WHERE nostt=?
+                `;
+                values = values[0];
+                values.shift();
+                values.push(item.nostt);
 
-              await conn.query(query, values, async function(err) {
-                PinoLoggerService.debug(logTitle, this.sql);
-                if (!err) {
-                  await TempStt.update(item.nostt, {
-                    is_sync_mysql: true,
-                  });
-                } else {
-                  PinoLoggerService.error(logTitle, err.message);
-                }
-              });
+                await conn.query(query, values, async function(err) {
+                  PinoLoggerService.debug(logTitle, this.sql);
+                  if (!err) {
+                    await TempStt.update(item.nostt, {
+                      is_sync_mysql: true,
+                    });
+                  } else {
+                    PinoLoggerService.error(logTitle, err.message);
+                  }
+                });
+              } else {
+                await conn.query(query, [values], async function(err) {
+                  PinoLoggerService.debug(logTitle, this.sql);
+                  if (!err) {
+                    await TempStt.update(item.nostt, {
+                      is_sync_mysql: true,
+                    });
+                  } else {
+                    PinoLoggerService.error(logTitle, err.message);
+                  }
+                });
+              }
+
             } else {
-              await conn.query(query, [values], async function(err) {
-                PinoLoggerService.debug(logTitle, this.sql);
-                if (!err) {
-                  await TempStt.update(item.nostt, {
-                    is_sync_mysql: true,
-                  });
-                } else {
-                  PinoLoggerService.error(logTitle, err.message);
-                }
-              });
+              PinoLoggerService.error(logTitle, err.message);
             }
-
-          } else {
-            PinoLoggerService.error(logTitle, err.message);
-          }
-        });
-        result.push(item.nostt);
+          });
+          result.push(item.nostt);
+        }
       }
     }
+
     return result;
   }
 
