@@ -50,7 +50,7 @@ export class V1MobileDivaPaymentService {
       const response = await axios.post(url, requestData, configOpt);
       // add Loggly data
       WinstonLogglyService.info({ requestData, responseData: response.data });
-      return { status: response.status, ...response.data };
+      return response.data;
     } catch (error) {
       // return {
       //   status: error.response.status,
@@ -67,7 +67,7 @@ export class V1MobileDivaPaymentService {
       const response = await axios.post(url, requestData, this.sicepatKlikConfig);
       // add Loggly data
       WinstonLogglyService.info({requestData, responseData: response.data});
-      return { status: response.status, ...response.data };
+      return response.data;
     } catch (error) {
       // WinstonLogglyService.error({ requestData, error });
       throw new ServiceUnavailableException(error.message);
@@ -80,7 +80,7 @@ export class V1MobileDivaPaymentService {
       const response = await axios.post(url, requestData, this.sicepatKlikConfig);
       // add Loggly data
       WinstonLogglyService.info({ requestData, responseData: response.data });
-      return { status: response.status, ...response.data };
+      return response.data;
     } catch (error) {
       // WinstonLogglyService.error({ requestData, error });
       throw new ServiceUnavailableException(error.message);
