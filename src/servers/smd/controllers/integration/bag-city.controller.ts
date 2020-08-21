@@ -56,6 +56,16 @@ export class BagCityController {
     return BagCityService.printBagging(serverResponse, queryParams);
   }
 
+  @Get('print-from-jsreport')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printBaggingFromJsreport(
+    @Query() queryParams: PrintBagCityPayloadVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return BagCityService.printBaggingFromJsreport(serverResponse, queryParams);
+  }
+
   @Get('print-paper')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
