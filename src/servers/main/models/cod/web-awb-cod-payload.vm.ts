@@ -66,6 +66,9 @@ export class WebCodTransferHeadOfficePayloadVm {
 
   @ApiModelProperty()
   bankNoReference: string;
+
+  @ApiModelPropertyOptional()
+  bankStatementNote: string;
 }
 
 export class WebCodBankStatementValidatePayloadVm {
@@ -74,11 +77,17 @@ export class WebCodBankStatementValidatePayloadVm {
 
   @ApiModelProperty({format: 'date-time'})
   transferDatetime: string;
+
+  @ApiModelPropertyOptional()
+  transactionNote: string;
 }
 
 export class WebCodBankStatementCancelPayloadVm {
   @ApiModelProperty()
   bankStatementId: string;
+
+  @ApiModelPropertyOptional()
+  transactionNote: string;
 }
 
 export class WebCodFirstTransactionPayloadVm {
