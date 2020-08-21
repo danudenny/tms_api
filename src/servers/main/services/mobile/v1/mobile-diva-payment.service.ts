@@ -24,23 +24,28 @@ export class V1MobileDivaPaymentService {
       },
     };
     const now = Date.now();
-    try {
-      const response = await axios.post(
-        `${ConfigService.get('divaPayment.urlQR')}/v1/shopee/get-qr`,
+    axios
+      .post(
+        'https://apiv2.mdd.co.id:51347/v1/shopee/get-qr',
         {
-          token: ConfigService.get('divaPayment.codToken'),
-          mid: ConfigService.get('divaPayment.codMid'),
-          tid: ConfigService.get('divaPayment.codTid'),
+          token: 'f66046c79e4047c299fbf8abdf6cb3b2',
+          mid: '5b4e9699dd603e1aa6687f1d2fe4db95',
+          tid: 'sicepat-001',
           amount: 10,
-          reff_no: `POD-MOBILE-${now}`,
+          reff_no: `POD-TEST-MOBILE-${now}`,
         },
         config,
+      )
+      .then(
+        response => {
+          console.log('### RESPONSE ::: ', response);
+          return response.data;
+        },
+        error => {
+          console.log('### ERROR RESPONSE ::: ', error);
+          return error.response.data;
+        },
       );
-      return response.data;
-    } catch (err) {
-      WinstonLogglyService.error({error: err.response.data});
-      return err.response.data;
-    }
   }
 
   static async pingQR() {
