@@ -191,6 +191,13 @@ export class AwbItemAttr extends BaseEntity {
   })
   transactionStatusId: number;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'internal_process_type',
+  })
+  internalProcessType: string | null;
+
   // relation
   @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id_last' })
