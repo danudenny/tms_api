@@ -3,6 +3,7 @@ import moment = require('moment');
 import { ConfigService } from '../../../../../shared/services/config.service';
 import { ServiceUnavailableException, BadRequestException } from '@nestjs/common';
 import { WinstonLogglyService } from '../../../../../shared/services/winston-loggly.service';
+import request = require('request');
 
 export class V1MobileDivaPaymentService {
   constructor() {
@@ -24,8 +25,9 @@ export class V1MobileDivaPaymentService {
       },
     };
     const now = Date.now();
-    axios
-      .post(
+    console.log('####### TEST REFF NO ::: ', `POD-TEST-MOBILE-${now}`);
+    try {
+      const response = await axios.post(
         'https://apiv2.mdd.co.id:51347/v1/shopee/get-qr',
         {
           token: 'f66046c79e4047c299fbf8abdf6cb3b2',
@@ -35,17 +37,36 @@ export class V1MobileDivaPaymentService {
           reff_no: `POD-TEST-MOBILE-${now}`,
         },
         config,
-      )
-      .then(
-        response => {
-          console.log('### RESPONSE ::: ', response);
-          return response.data;
-        },
-        error => {
-          console.log('### ERROR RESPONSE ::: ', error);
-          return error.response.data;
-        },
       );
+      return response.data;
+    } catch (error) {
+      return error.response.data;
+    }
+  }
+
+  static async checkQR(reff_no: string): Promise<any> {
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+    const now = Date.now();
+    try {
+      const response = await axios.post(
+        'https://apiv2.mdd.co.id:51347/v1/shopee/get-qr',
+        {
+          token: 'f66046c79e4047c299fbf8abdf6cb3b2',
+          mid: '5b4e9699dd603e1aa6687f1d2fe4db95',
+          tid: 'sicepat-001',
+          amount: 10,
+          reff_no,
+        },
+        config,
+      );
+      return response.data;
+    } catch (error) {
+      return error.response.data;
+    }
   }
 
   static async pingQR() {
