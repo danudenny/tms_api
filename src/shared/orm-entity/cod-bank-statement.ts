@@ -34,6 +34,13 @@ export class CodBankStatement extends TmsBaseEntity {
   })
   bankStatementDate: Date;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'bank_statement_note',
+  })
+  bankStatementNote: string | null;
+
   @Column('bigint', {
     nullable: false,
     name: 'transaction_status_id',
