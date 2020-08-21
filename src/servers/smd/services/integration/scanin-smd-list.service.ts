@@ -98,6 +98,7 @@ export class ScaninSmdListService {
       'dss',
       'dsd.do_smd_status_id_last = dss.do_smd_status_id and dss.is_deleted = false',
     );
+    q.andWhereRaw('ds.is_vendor = false');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
@@ -142,6 +143,7 @@ export class ScaninSmdListService {
           LEFT JOIN representative r ON b.representative_id_to = r.representative_id AND r.is_deleted = FALSE
           LEFT JOIN branch br ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
           WHERE
+            dsd.is_vendor = FALSE AND
             dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
             dsdi.bag_type = 1 AND
             dsdi.is_deleted = FALSE
@@ -204,6 +206,7 @@ export class ScaninSmdListService {
             FROM do_smd_detail_item dsdi
             INNER JOIN do_smd_detail dsd ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsd.is_deleted = FALSE
             WHERE
+              dsd.is_vendor = FALSE AND
               dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
               dsdi.bag_type = 0 AND
               dsdi.is_deleted = FALSE
@@ -272,6 +275,7 @@ export class ScaninSmdListService {
         LEFT JOIN branch b ON dsd.branch_id_to = br.branch_id AND br.is_deleted = FALSE
         LEFT JOIN representative r ON br.representative_id_to = r.representative_id  AND r.is_deleted = FALSE
         WHERE
+          dsd.is_vendor = FALSE AND
           dsdi.do_smd_detail_id = ${payload.do_smd_detail_id} AND
           dsdi.bag_type = 2 AND
           dsdi.is_deleted = FALSE

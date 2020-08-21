@@ -9,6 +9,8 @@ import {BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm} f
 import {BagCityPayloadVm, BagCityExportPayloadVm} from '../../models/bag-city-payload.vm';
 import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm } from '../../models/print-bag-city-payload.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { Transaction } from 'typeorm';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 
 @ApiUseTags('SMD Bag City')
 @Controller('smd/bag-city')
@@ -37,6 +39,7 @@ export class BagCityController {
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: BagCityResponseVm })
   @ApiBearerAuth()
+  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
   public async createBagging(@Body() payload: BagCityPayloadVm) {

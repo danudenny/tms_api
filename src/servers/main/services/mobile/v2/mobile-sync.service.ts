@@ -25,7 +25,8 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { UploadImagePodQueueService } from '../../../../queue/services/upload-pod-image-queue.service';
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
-import {CodPaymentQueueService} from '../../../../queue/services/cod-payment-queue.service';
+import { ServiceUnavailableException } from '@nestjs/common';
+import { RedisService } from '../../../../../shared/services/redis.service';
 // #endregion
 
 export class V2MobileSyncService {
@@ -36,14 +37,24 @@ export class V2MobileSyncService {
     const result = new MobileSyncDataResponseVm();
     const dataItem: MobileSyncAwbVm[] = [];
     for (const delivery of payload.deliveries) {
+      // Locking redis
+      const holdRedis = await RedisService.redlock(
+        `hold:mobileSync:${delivery.awbNumber}`,
+        10,
+      );
       const response = {
         process: false,
         message: 'Data Not Valid',
       };
-      const process = await this.syncDeliver(delivery);
-      if (process) {
-        response.process = process;
-        response.message = 'Success';
+
+      if (holdRedis) {
+        const process = await this.syncDeliver(delivery);
+        if (process) {
+          response.process = process;
+          response.message = 'Success';
+        }
+        // remove key holdRedis
+        RedisService.del(`hold:mobileSync:${delivery.awbNumber}`);
       }
 
       // push item
@@ -51,7 +62,8 @@ export class V2MobileSyncService {
         awbNumber: delivery.awbNumber,
         ...response,
       });
-    }
+
+    } // endof loop
 
     result.data = dataItem;
     return result;
@@ -91,143 +103,151 @@ export class V2MobileSyncService {
           ? lastDoPodDeliverHistory.awbStatusDateTime
           : lastDoPodDeliverHistory.syncDateTime;
 
-      const awbdDelivery = await this.getDoPodDeliverDetail(delivery.doPodDeliverDetailId);
-      const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
-      if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
-        const awbStatus = await AwbStatus.findOne(
-          { awbStatusId: lastDoPodDeliverHistory.awbStatusId },
-        );
-
-        // #region transaction data
-        await getManager().transaction(async transactionEntityManager => {
-          await transactionEntityManager.insert(
-            DoPodDeliverHistory,
-            doPodDeliverHistories,
+      try {
+        const awbdDelivery = await this.getDoPodDeliverDetail(delivery.doPodDeliverDetailId);
+        const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
+        if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
+          const awbStatus = await AwbStatus.findOne(
+            { awbStatusId: lastDoPodDeliverHistory.awbStatusId },
+            { cache: true },
           );
 
-          // Update data DoPodDeliverDetail
-          await transactionEntityManager.update(
-            DoPodDeliverDetail,
-            delivery.doPodDeliverDetailId,
-            {
-              awbStatusIdLast: lastDoPodDeliverHistory.awbStatusId,
-              latitudeDeliveryLast: lastDoPodDeliverHistory.latitudeDelivery,
-              longitudeDeliveryLast: lastDoPodDeliverHistory.longitudeDelivery,
-              awbStatusDateTimeLast: lastDoPodDeliverHistory.awbStatusDateTime,
-              reasonIdLast: lastDoPodDeliverHistory.reasonId,
-              syncDateTimeLast: lastDoPodDeliverHistory.syncDateTime,
-              descLast: lastDoPodDeliverHistory.desc,
-              consigneeName: delivery.consigneeNameNote,
-              updatedTime: moment().toDate(),
-            },
-          );
+          // #region transaction data
+          await getManager().transaction(async transactionEntityManager => {
+            await transactionEntityManager.insert(
+              DoPodDeliverHistory,
+              doPodDeliverHistories,
+            );
 
-          if (delivery.isCOD && lastDoPodDeliverHistory.awbStatusId == AWB_STATUS.DLV) {
-            // find and update
-            const codPayment = await transactionEntityManager.findOne(
-              CodPayment,
+            // Update data DoPodDeliverDetail
+            await transactionEntityManager.update(
+              DoPodDeliverDetail,
+              delivery.doPodDeliverDetailId,
               {
-                where: {
-                  doPodDeliverDetailId: delivery.doPodDeliverDetailId,
-                },
+                awbStatusIdLast: lastDoPodDeliverHistory.awbStatusId,
+                latitudeDeliveryLast: lastDoPodDeliverHistory.latitudeDelivery,
+                longitudeDeliveryLast: lastDoPodDeliverHistory.longitudeDelivery,
+                awbStatusDateTimeLast: lastDoPodDeliverHistory.awbStatusDateTime,
+                reasonIdLast: lastDoPodDeliverHistory.reasonId,
+                syncDateTimeLast: lastDoPodDeliverHistory.syncDateTime,
+                descLast: lastDoPodDeliverHistory.desc,
+                consigneeName: delivery.consigneeNameNote,
+                updatedTime: moment().toDate(),
               },
             );
-            if (codPayment) {
-              // update data
-              await transactionEntityManager.update(
+
+            // only awb COD and DLV
+            if (delivery.isCOD && lastDoPodDeliverHistory.awbStatusId == AWB_STATUS.DLV) {
+              // find and update
+              const codPayment = await transactionEntityManager.findOne(
                 CodPayment,
                 {
-                  codPaymentId: codPayment.codPaymentId,
+                  where: {
+                    doPodDeliverDetailId: delivery.doPodDeliverDetailId,
+                  },
                 },
-                {
+              );
+              if (codPayment) {
+                // update data
+                await transactionEntityManager.update(
+                  CodPayment,
+                  {
+                    codPaymentId: codPayment.codPaymentId,
+                  },
+                  {
+                    codValue: delivery.totalCodValue,
+                    codPaymentMethod: delivery.codPaymentMethod,
+                    codPaymentService: delivery.codPaymentService,
+                    note: delivery.note,
+                    noReference: delivery.noReference,
+                    userIdUpdated: authMeta.userId,
+                    updatedTime: moment().toDate(),
+                  },
+                );
+              } else {
+                await transactionEntityManager.insert(CodPayment, {
+                  awbNumber: delivery.awbNumber,
                   codValue: delivery.totalCodValue,
                   codPaymentMethod: delivery.codPaymentMethod,
                   codPaymentService: delivery.codPaymentService,
                   note: delivery.note,
                   noReference: delivery.noReference,
+                  doPodDeliverDetailId: delivery.doPodDeliverDetailId,
+                  userIdCreated: authMeta.userId,
                   userIdUpdated: authMeta.userId,
+                  createdTime: moment().toDate(),
                   updatedTime: moment().toDate(),
-                },
-              );
-            } else {
-              await transactionEntityManager.insert(CodPayment, {
-                awbNumber: delivery.awbNumber,
-                codValue: delivery.totalCodValue,
-                codPaymentMethod: delivery.codPaymentMethod,
-                codPaymentService: delivery.codPaymentService,
-                note: delivery.note,
-                noReference: delivery.noReference,
-                doPodDeliverDetailId: delivery.doPodDeliverDetailId,
-                userIdCreated: authMeta.userId,
-                userIdUpdated: authMeta.userId,
-                createdTime: moment().toDate(),
-                updatedTime: moment().toDate(),
-              });
+                });
+              }
+              // CodPaymentQueueService.perform(delivery.awbNumber, delivery.noReference);
             }
-            // CodPaymentQueueService.perform(delivery.awbNumber, delivery.noReference);
-          }
 
-          const doPodDeliver = await DoPodDeliver.findOne({
-            where: {
-              doPodDeliverId: delivery.doPodDeliverId,
-              isDeleted: false,
-            },
+            const doPodDeliver = await DoPodDeliver.findOne({
+              where: {
+                doPodDeliverId: delivery.doPodDeliverId,
+                isDeleted: false,
+              },
+            });
+            if (doPodDeliver) {
+
+              if (awbStatus.isProblem) {
+                await transactionEntityManager.increment(
+                  DoPodDeliver,
+                  {
+                    doPodDeliverId: delivery.doPodDeliverId,
+                    totalProblem: LessThan(doPodDeliver.totalAwb),
+                  },
+                  'totalProblem',
+                  1,
+                );
+              } else if (awbStatus.isFinalStatus) {
+                await transactionEntityManager.increment(
+                  DoPodDeliver,
+                  {
+                    doPodDeliverId: delivery.doPodDeliverId,
+                    totalDelivery: LessThan(doPodDeliver.totalAwb),
+                  },
+                  'totalDelivery',
+                  1,
+                );
+                // balance total problem
+                await transactionEntityManager.decrement(
+                  DoPodDeliver,
+                  {
+                    doPodDeliverId: delivery.doPodDeliverId,
+                    totalProblem: MoreThan(0),
+                  },
+                  'totalProblem',
+                  1,
+                );
+              }
+            }
           });
-          if (doPodDeliver) {
+          // #endregion of transaction
 
-            if (awbStatus.isProblem) {
-              await transactionEntityManager.increment(
-                DoPodDeliver,
-                {
-                  doPodDeliverId: delivery.doPodDeliverId,
-                  totalProblem: LessThan(doPodDeliver.totalAwb),
-                },
-                'totalProblem',
-                1,
-              );
-            } else if (awbStatus.isFinalStatus) {
-              await transactionEntityManager.increment(
-                DoPodDeliver,
-                {
-                  doPodDeliverId: delivery.doPodDeliverId,
-                  totalDelivery: LessThan(doPodDeliver.totalAwb),
-                },
-                'totalDelivery',
-                1,
-              );
-              // balance total problem
-              await transactionEntityManager.decrement(
-                DoPodDeliver,
-                {
-                  doPodDeliverId: delivery.doPodDeliverId,
-                  totalProblem: MoreThan(0),
-                },
-                'totalProblem',
-                1,
-              );
-            }
-          }
-        });
-        // #endregion of transaction
-
-        // NOTE: queue by Bull
-        DoPodDetailPostMetaQueueService.createJobV2MobileSync(
-          awbdDelivery.awbItemId,
-          lastDoPodDeliverHistory.awbStatusId,
-          authMeta.userId,
-          awbdDelivery.branchId,
-          authMeta.userId,
-          delivery.employeeId,
-          lastDoPodDeliverHistory.reasonId,
-          lastDoPodDeliverHistory.desc,
-          delivery.consigneeNameNote,
-          awbStatus.awbStatusName,
-          awbStatus.awbStatusTitle,
-          historyDateTime,
-        );
-        process = true;
-      } else {
-        PinoLoggerService.log('##### Data Not Valid', delivery);
+          // NOTE: queue by Bull
+          DoPodDetailPostMetaQueueService.createJobV1MobileSync(
+            awbdDelivery.awbItemId,
+            lastDoPodDeliverHistory.awbStatusId,
+            authMeta.userId,
+            awbdDelivery.branchId,
+            authMeta.userId,
+            delivery.employeeId,
+            lastDoPodDeliverHistory.reasonId,
+            lastDoPodDeliverHistory.desc,
+            delivery.consigneeNameNote,
+            awbStatus.awbStatusName,
+            awbStatus.awbStatusTitle,
+            historyDateTime,
+            lastDoPodDeliverHistory.latitudeDelivery,
+            lastDoPodDeliverHistory.longitudeDelivery,
+          );
+          process = true;
+        } else {
+          PinoLoggerService.log('##### Data Not Valid', delivery);
+        }
+      } catch (error) {
+        throw new ServiceUnavailableException(error.message);
       }
     } // end of doPodDeliverHistories.length
     return process;

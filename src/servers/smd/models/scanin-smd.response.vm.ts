@@ -20,7 +20,7 @@ export class ScanInBagVm {
   id: string;
 
   @ApiModelProperty()
-  rbid: string;
+  received_bag_id: string;
 
 }
 

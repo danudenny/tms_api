@@ -8,6 +8,7 @@ import {ResponseSerializerOptions} from '../../../../shared/decorators/response-
 import {BaseMetaPayloadVm} from '../../../../shared/models/base-meta-payload.vm';
 import {SmdScanBaggingResponseVm, ListBaggingResponseVm, ListDetailBaggingResponseVm} from '../../models/smd-bagging-response.vm';
 import {SmdScanBaggingPayloadVm} from '../../models/smd-bagging-payload.vm';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('SMD Bagging')
 @Controller('smd/bagging')
@@ -19,6 +20,7 @@ export class SmdBaggingController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
+  @Transactional()
   public async createBagging(@Body() payload: SmdScanBaggingPayloadVm) {
     return BaggingSmdService.createBagging(payload);
   }
