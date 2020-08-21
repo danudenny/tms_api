@@ -788,20 +788,23 @@ export class ScanoutSmdService {
             b.bag_id,
             b.representative_id_to,
             r.representative_code,
-            bih.bag_item_status_id
+            bih.bag_item_status_id,
+            dsdi.do_smd_detail_id
           FROM bag_item bi
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
             and bih.bag_item_status_id = 3500
+          LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
             bi.is_deleted = FALSE
-          ORDER BY b.created_time DESC;
+          ORDER BY b.created_time DESC
+          LIMIT 1;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
-        if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
+        if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id && !resultDataBag[0].do_smd_detail_id) {
 
           rawQuery = `
             SELECT
@@ -890,6 +893,8 @@ export class ScanoutSmdService {
           } else {
             throw new BadRequestException(`Representative To Bag Not Match`);
           }
+        } else if (resultDataBag.length > 0 && resultDataBag[0].do_smd_detail_id) {
+          throw new BadRequestException(`Bag ${payload.item_number} Already Scanned`);
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
           throw new BadRequestException(`Bag Not Scan In Yet`);
         } else {
@@ -907,20 +912,23 @@ export class ScanoutSmdService {
             b.bag_id,
             b.representative_id_to,
             r.representative_code,
-            bih.bag_item_status_id
+            bih.bag_item_status_id,
+            dsdi.do_smd_detail_id
           FROM bag_item bi
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
             and bih.bag_item_status_id = 3500
+          LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
             bi.is_deleted = FALSE
-          ORDER BY b.created_time DESC;
+          ORDER BY b.created_time DESC
+          LIMIT 1;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
-        if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
+        if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id && !resultDataBag[0].do_smd_detail_id) {
 
           rawQuery = `
             SELECT
@@ -1009,6 +1017,8 @@ export class ScanoutSmdService {
           } else {
             throw new BadRequestException(`Representative To Bag Not Match`);
           }
+        } else if (resultDataBag.length > 0 && resultDataBag[0].do_smd_detail_id) {
+          throw new BadRequestException(`Bag ${payload.item_number} Already Scanned`);
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
           throw new BadRequestException(`Bag Not Scan In Yet`);
         } else {
