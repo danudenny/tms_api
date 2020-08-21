@@ -17,9 +17,35 @@ export class V1MobileDivaPaymentService {
     };
   }
 
-  static async pingQR() {
+  static async getTestQR(): Promise<any> {
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+    const now = Date.now();
     try {
-      const url = `${ConfigService.get('divaPayment.urlQR')}v1`;
+      const response = await axios.post(
+        `${ConfigService.get('divaPayment.urlQR')}/v1/shopee/get-qr`,
+        {
+          token: ConfigService.get('divaPayment.codToken'),
+          mid: ConfigService.get('divaPayment.codMid'),
+          tid: ConfigService.get('divaPayment.codTid'),
+          amount: 10,
+          reff_no: `POD-MOBILE-${now}`,
+        },
+        config,
+      );
+      return response.data;
+    } catch (err) {
+      WinstonLogglyService.error({error: err.response.data});
+      return err.response.data;
+    }
+  }
+
+  static async pingQR() {
+    const url = `${ConfigService.get('divaPayment.urlQR')}/v1`;
+    try {
       const response = await axios.get(url, {
         headers: {
           'Content-Type': 'application/json',
@@ -52,10 +78,10 @@ export class V1MobileDivaPaymentService {
       reff_no: `POD-MOBILE-${now}${randomNum}`,
     };
 
-    try {
-      console.log('### URL :: ', url);
-      console.log('### DATA :: ', requestData);
+    console.log('### URL :: ', url);
+    console.log('### DATA :: ', requestData);
 
+    try {
       const response = await axios.post(url, requestData, {
         headers: {
           'Content-Type': 'application/json',
@@ -63,15 +89,9 @@ export class V1MobileDivaPaymentService {
       });
       // add Loggly data
       WinstonLogglyService.info({ requestData, responseData: response.data });
-      console.log(' ### RESPONSE :: ', response.data);
       return response.data;
     } catch (error) {
-      // return {
-      //   status: error.response.status,
-      //   ...error.response.data,
-      // };
-      console.log(' ### ERROR RESPONSE :: ', error.response.data);
-      // WinstonLogglyService.error({ requestData, error });
+      WinstonLogglyService.error({requestData, error: error.response.data});
       throw new ServiceUnavailableException(error.message);
     }
   }
@@ -84,7 +104,7 @@ export class V1MobileDivaPaymentService {
       WinstonLogglyService.info({requestData, responseData: response.data});
       return response.data;
     } catch (error) {
-      // WinstonLogglyService.error({ requestData, error });
+      WinstonLogglyService.error({requestData, error: error.response.data});
       throw new ServiceUnavailableException(error.message);
     }
   }
@@ -97,7 +117,7 @@ export class V1MobileDivaPaymentService {
       WinstonLogglyService.info({ requestData, responseData: response.data });
       return response.data;
     } catch (error) {
-      // WinstonLogglyService.error({ requestData, error });
+      WinstonLogglyService.error({requestData, error: error.response.data});
       throw new ServiceUnavailableException(error.message);
     }
   }

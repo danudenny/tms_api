@@ -29,6 +29,12 @@ export class CodPaymentController {
     return V1MobileDivaPaymentService.pingQR();
   }
 
+  @Get('diva/testGetQR')
+  @ResponseSerializerOptions({ disable: true })
+  public async divaPaymentTestGetQR() {
+    return V1MobileDivaPaymentService.getTestQR();
+  }
+
   @Post('diva/getQR')
   @HttpCode(HttpStatus.OK)
   // NOTE: for tesing only
