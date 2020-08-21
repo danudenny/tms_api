@@ -992,8 +992,10 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'sigesit' && filter.value) {
-        tdFilter.push({ $eq: ['$userIdDriver', filter.value] });
-        allowNullTd = false;
+        filterList.push({ userIdDriver: { $eq: filter.value } });
+
+        // tdFilter.push({ $eq: ['$userIdDriver', filter.value] });
+        // allowNullTd = false;
       }
     }
 
