@@ -347,7 +347,7 @@ export class BagCityService {
     `OFFSET 0\n` +
     `CLS\n` +
     `TEXT 10,120,"5",0,1,1,0,"GABUNG SORTIR KOTA"\n` +
-    `BARCODE 10,200,"39C",70,1,0,3,10,"${bagging.bagRepresentativeCode}"\n` +
+    `BARCODE 5,200,"93",70,1,0,3,10,"${bagging.bagRepresentativeCode}"\n` +
     `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${bagging.totalItem}"\n` +
     `TEXT 10,420,"3",0,1,1,"Berat : ${bagging.totalWeight}"\n` +
     `TEXT 10,460,"5",0,1,1,0,"${bagging.representative.representativeCode}"\n` +
