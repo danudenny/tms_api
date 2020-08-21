@@ -24,7 +24,8 @@ export class CodPaymentController {
 
   @Post('diva/getQR')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  // NOTE: for tesing only
+  // @UseGuards(AuthenticatedGuard)
   @ResponseSerializerOptions({ disable: true })
   public async divaPaymentGetQR(@Body() payload: any) {
     return V1MobileDivaPaymentService.getQr(payload);

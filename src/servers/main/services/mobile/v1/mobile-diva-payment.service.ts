@@ -43,11 +43,19 @@ export class V1MobileDivaPaymentService {
       reff_no: `POD-MOBILE-${now}${randomNum}`,
     };
     try {
+      console.log('### URL :: ', url);
+      console.log('### DATA :: ', requestData);
+      console.log('### Option :: ', configOpt);
+
       const response = await axios.post(url, requestData, configOpt);
       // add Loggly data
-      // WinstonLogglyService.info({ requestData, responseData: response });
-      return response;
+      WinstonLogglyService.info({ requestData, responseData: response.data });
+      return { status: response.status, ...response.data };
     } catch (error) {
+      // return {
+      //   status: error.response.status,
+      //   ...error.response.data,
+      // };
       // WinstonLogglyService.error({ requestData, error });
       throw new ServiceUnavailableException(error.message);
     }
@@ -58,8 +66,8 @@ export class V1MobileDivaPaymentService {
     try {
       const response = await axios.post(url, requestData, this.sicepatKlikConfig);
       // add Loggly data
-      // WinstonLogglyService.info({requestData, responseData: response});
-      return response;
+      WinstonLogglyService.info({requestData, responseData: response.data});
+      return { status: response.status, ...response.data };
     } catch (error) {
       // WinstonLogglyService.error({ requestData, error });
       throw new ServiceUnavailableException(error.message);
@@ -71,8 +79,8 @@ export class V1MobileDivaPaymentService {
     try {
       const response = await axios.post(url, requestData, this.sicepatKlikConfig);
       // add Loggly data
-      // WinstonLogglyService.info({ requestData, responseData: response });
-      return response;
+      WinstonLogglyService.info({ requestData, responseData: response.data });
+      return { status: response.status, ...response.data };
     } catch (error) {
       // WinstonLogglyService.error({ requestData, error });
       throw new ServiceUnavailableException(error.message);
