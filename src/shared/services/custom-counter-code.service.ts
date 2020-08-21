@@ -118,8 +118,8 @@ export class CustomCounterCode {
   }
 
   public static async bagCityCodeRandomCounter(dateTime: Date, digit: number = 5) {
-    // Format Code: GSK/1907/13/XYZA1234
-    const prefix = `GSK/${moment(dateTime).format('YYMM/DD')}/`;
+    // Format Code: GSK190713XYZA1
+    const prefix = `GSK${moment(dateTime).format('YYMMDD')}`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
   }
