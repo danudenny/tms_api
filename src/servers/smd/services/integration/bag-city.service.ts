@@ -363,6 +363,47 @@ export class BagCityService {
     });
   }
 
+  public static async printBaggingFromJsreport(
+    res: express.Response,
+    queryParams: PrintBagCityPayloadVm,
+  ) {
+    const bagging = await RepositoryService.bagRepresentative
+      .loadById(queryParams.id)
+      .select({
+        bagRepresentativeId: true, // needs to be selected due to users relations are being included
+        bagRepresentativeCode: true,
+        totalItem: true,
+        totalWeight: true,
+        representative: {
+          representativeCode: true,
+          representativeName: true,
+        },
+      })
+      .exec();
+
+    if (!bagging) {
+      RequestErrorService.throwObj({
+        message: 'Bagging tidak ditemukan',
+      });
+    }
+
+    const listPrinterName = ['BarcodePrinter'];
+
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'surat-jalan-barcode-gabung-kota',
+          templateData: {
+            data: bagging,
+          },
+          printCopy: 1,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
   public static async printBagCityForPaper(
     res: express.Response,
     queryParams: PrintBagCityForPaperPayloadVm,
