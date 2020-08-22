@@ -1,12 +1,12 @@
-import axios from 'axios';
-import moment = require('moment');
-import { ConfigService } from '../../../../../shared/services/config.service';
-import { ServiceUnavailableException, BadRequestException } from '@nestjs/common';
-import { WinstonLogglyService } from '../../../../../shared/services/winston-loggly.service';
-import request = require('request');
 
-export class V1MobileDivaPaymentService {
+import { ConfigService } from '../../../../../shared/services/config.service';
+import { ServiceUnavailableException, BadRequestException, Injectable } from '@nestjs/common';
+import { WinstonLogglyService } from '../../../../../shared/services/winston-loggly.service';
+import { HttpRequestService } from '../../../../../shared/services/http-request.service';
+@Injectable()
+export class V1MobileDivaPaymentService extends HttpRequestService {
   constructor() {
+    super(``);
   }
 
   private static get sicepatKlikConfig() {
@@ -18,7 +18,7 @@ export class V1MobileDivaPaymentService {
     };
   }
 
-  static async getTestQR(): Promise<any> {
+  async getTestQR(): Promise<any> {
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -27,125 +27,124 @@ export class V1MobileDivaPaymentService {
     const now = Date.now();
     console.log('####### TEST REFF NO ::: ', `POD-TEST-MOBILE-${now}`);
     try {
-      const response = await axios.post(
+      const response = await this.post(
         'https://apiv2.mdd.co.id:51347/v1/shopee/get-qr',
         {
           token: 'f66046c79e4047c299fbf8abdf6cb3b2',
           mid: '5b4e9699dd603e1aa6687f1d2fe4db95',
           tid: 'sicepat-001',
-          amount: 10,
+          amount: 5,
           reff_no: `POD-TEST-MOBILE-${now}`,
         },
         config,
       );
-      return response.data;
+      return response;
     } catch (error) {
       return error.response.data;
     }
   }
 
-  static async checkQR(reff_no: string): Promise<any> {
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    };
-    const now = Date.now();
-    try {
-      const response = await axios.post(
-        'https://apiv2.mdd.co.id:51347/v1/shopee/get-qr',
-        {
-          token: 'f66046c79e4047c299fbf8abdf6cb3b2',
-          mid: '5b4e9699dd603e1aa6687f1d2fe4db95',
-          tid: 'sicepat-001',
-          amount: 10,
-          reff_no,
-        },
-        config,
-      );
-      return response.data;
-    } catch (error) {
-      return error.response.data;
-    }
-  }
+  // static async checkQR(reff_no: string): Promise<any> {
+  //   const config = {
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //   };
+  //   const now = Date.now();
+  //   try {
+  //     const response = await this..post(
+  //       'https://apiv2.mdd.co.id:51347/v1/shopee/get-qr',
+  //       {
+  //         token: 'f66046c79e4047c299fbf8abdf6cb3b2',
+  //         mid: '5b4e9699dd603e1aa6687f1d2fe4db95',
+  //         tid: 'sicepat-001',
+  //         amount: 10,
+  //         reff_no,
+  //       },
+  //       config,
+  //     );
+  //     return response.data;
+  //   } catch (error) {
+  //     return error.response.data;
+  //   }
+  // }
 
-  static async pingQR() {
-    const url = `${ConfigService.get('divaPayment.urlQR')}/v1`;
-    try {
-      const response = await axios.get(url, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw new ServiceUnavailableException(error.message);
-    }
-  }
+  // static async pingQR() {
+  //   const url = `${ConfigService.get('divaPayment.urlQR')}/v1`;
+  //   try {
+  //     const response = await this..get(url, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //     });
+  //     return response.data;
+  //   } catch (error) {
+  //     throw new ServiceUnavailableException(error.message);
+  //   }
+  // }
 
-  static async getQr(payload: any): Promise<any> {
-    // validate
-    if (!payload.provider || !payload.amount) {
-      throw new BadRequestException('provider dan amount harap diisi!');
-    }
+  // static async getQr(payload: any): Promise<any> {
+  //   // validate
+  //   if (!payload.provider || !payload.amount) {
+  //     throw new BadRequestException('provider dan amount harap diisi!');
+  //   }
 
-    const provider: string = payload.provider;
-    const amount: number = Number(payload.amount);
+  //   const provider: string = payload.provider;
+  //   const amount: number = Number(payload.amount);
 
-    const now = Date.now();
-    const randomNum = Math.floor(Math.random() * 1000); // random 3 digit
-    const url = `${ConfigService.get('divaPayment.urlQR')}${provider}`;
+  //   const now = Date.now();
+  //   const randomNum = Math.floor(Math.random() * 1000); // random 3 digit
+  //   const url = `${ConfigService.get('divaPayment.urlQR')}${provider}`;
 
-    const requestData = {
-      token: ConfigService.get('divaPayment.codToken'),
-      mid: ConfigService.get('divaPayment.codMid'),
-      tid: ConfigService.get('divaPayment.codTid'),
-      amount,
-      reff_no: `POD-MOBILE-${now}${randomNum}`,
-    };
+  //   const requestData = {
+  //     token: ConfigService.get('divaPayment.codToken'),
+  //     mid: ConfigService.get('divaPayment.codMid'),
+  //     tid: ConfigService.get('divaPayment.codTid'),
+  //     amount,
+  //     reff_no: `POD-MOBILE-${now}${randomNum}`,
+  //   };
 
-    console.log('### URL :: ', url);
-    console.log('### DATA :: ', requestData);
+  //   console.log('### URL :: ', url);
+  //   console.log('### DATA :: ', requestData);
 
-    try {
-      const response = await axios.post(url, requestData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      // add Loggly data
-      WinstonLogglyService.info({ requestData, responseData: response.data });
-      return response.data;
-    } catch (error) {
-      WinstonLogglyService.error({requestData, error: error.response.data});
-      throw new ServiceUnavailableException(error.message);
-    }
-  }
+  //   try {
+  //     const response = await this..post(url, requestData, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //     });
+  //     // add Loggly data
+  //     WinstonLogglyService.info({ requestData, responseData: response.data });
+  //     return response.data;
+  //   } catch (error) {
+  //     WinstonLogglyService.error({requestData, error: error.response.data});
+  //     throw new ServiceUnavailableException(error.message);
+  //   }
+  // }
 
-  static async sendQr(requestData: any): Promise<any> {
-    const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/postqr`;
-    try {
-      const response = await axios.post(url, requestData, this.sicepatKlikConfig);
-      // add Loggly data
-      WinstonLogglyService.info({requestData, responseData: response.data});
-      return response.data;
-    } catch (error) {
-      WinstonLogglyService.error({requestData, error: error.response.data});
-      throw new ServiceUnavailableException(error.message);
-    }
-  }
+  // static async sendQr(requestData: any): Promise<any> {
+  //   const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/postqr`;
+  //   try {
+  //     const response = await this..post(url, requestData, this.sicepatKlikConfig);
+  //     // add Loggly data
+  //     WinstonLogglyService.info({requestData, responseData: response.data});
+  //     return response.data;
+  //   } catch (error) {
+  //     WinstonLogglyService.error({requestData, error: error.response.data});
+  //     throw new ServiceUnavailableException(error.message);
+  //   }
+  // }
 
-  static async paymentStatus(requestData: any): Promise<any> {
-    const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/get-payment-status`;
-    try {
-      const response = await axios.post(url, requestData, this.sicepatKlikConfig);
-      // add Loggly data
-      WinstonLogglyService.info({ requestData, responseData: response.data });
-      return response.data;
-    } catch (error) {
-      WinstonLogglyService.error({requestData, error: error.response.data});
-      throw new ServiceUnavailableException(error.message);
-    }
-  }
-
+  // static async paymentStatus(requestData: any): Promise<any> {
+  //   const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/get-payment-status`;
+  //   try {
+  //     const response = await this..post(url, requestData, this.sicepatKlikConfig);
+  //     // add Loggly data
+  //     WinstonLogglyService.info({ requestData, responseData: response.data });
+  //     return response.data;
+  //   } catch (error) {
+  //     WinstonLogglyService.error({requestData, error: error.response.data});
+  //     throw new ServiceUnavailableException(error.message);
+  //   }
+  // }
 }

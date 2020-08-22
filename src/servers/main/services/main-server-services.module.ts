@@ -26,6 +26,7 @@ import { HubTransitDeliveryService } from './web/hub-transit/hub-transit-deliver
 import { MobileDeliveryInService } from './mobile/mobile-delivery-in.service';
 import {HubSortirService} from './web/hub-transit/hub-sortir.service';
 import { SmsTrackingService } from './web/sms-tracking.service';
+import { V1MobileDivaPaymentService } from './mobile/v1/mobile-diva-payment.service';
 
 @Module({
   imports: [SharedModule],
@@ -56,6 +57,7 @@ import { SmsTrackingService } from './web/sms-tracking.service';
     HubTransitDeliveryService,
     HubSortirService,
     SmsTrackingService,
+    V1MobileDivaPaymentService,
   ],
   exports: [
     AwbStatusService,
@@ -84,6 +86,7 @@ import { SmsTrackingService } from './web/sms-tracking.service';
     MobileDeliveryInService,
     HubSortirService,
     SmsTrackingService,
+    V1MobileDivaPaymentService,
   ],
 })
 export class MainServerServicesModule {}
