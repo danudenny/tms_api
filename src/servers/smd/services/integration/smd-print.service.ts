@@ -453,8 +453,9 @@ export class SmdPrintService {
     queryParams: PrintVendorPaperPayloadVm,
   ) {
     const q = RepositoryService.doSmd.findOne();
-    q.leftJoin(e => e.doSmdDetails);
-    q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
+    q.leftJoin(e => e.doSmdDetails, 'dsd', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
 
     const doSmd = await q
       .select({
@@ -475,7 +476,7 @@ export class SmdPrintService {
         },
       })
       .where(e => e.doSmdId, w => w.equals(queryParams.id))
-      .andWhere(e => e.doSmdDetails.isDeleted, w => w.isFalse());
+      .andWhere(e => e.isDeleted, w => w.isFalse());
 
     if (!doSmd) {
       RequestErrorService.throwObj({
@@ -662,8 +663,18 @@ export class SmdPrintService {
     payload: PrintReceivedBagPaperPayloadVm,
   ) {
     const q = RepositoryService.receivedBag.findOne();
-    q.leftJoin(e => e.receivedBagDetails);
-
+    q.leftJoin(e => e.receivedBagDetails, 'rbd', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.user, 'u', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.user.employee, 'e', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 'b', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     const receivedBag = await q
       .select({
         receivedBagId: true,
@@ -683,6 +694,7 @@ export class SmdPrintService {
           bagWeight: true,
         },
       })
+      .where(e => e.isDeleted, w => w.equals(false))
       .where(e => e.receivedBagId, w => w.equals(payload.id));
 
     if (!receivedBag) {
