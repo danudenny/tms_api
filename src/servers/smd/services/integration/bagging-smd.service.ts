@@ -106,6 +106,8 @@ export class BaggingSmdService {
 
     const bagNumber = payload.bagNumber.substring(0, 7);
     const bagSeq = Number(payload.bagNumber.substring(7, 10));
+    const permissionPayload = AuthService.getPermissionTokenPayload();
+    const authMeta = AuthService.getAuthData();
     // const weight = payload.bagNumber.substring(10);
     let baggingId = '';
     let baggingCode = '';
@@ -122,7 +124,8 @@ export class BaggingSmdService {
         ba.bagging_id,
         ba.bagging_code,
         ba.total_weight,
-        ba.total_item
+        ba.total_item,
+        ba.branch_id
       FROM bag AS b
       INNER JOIN bag_item bi ON bi.bag_id = b.bag_id AND bi.is_deleted = false
       INNER JOIN representative r ON r.representative_id = b.representative_id_to
@@ -137,13 +140,19 @@ export class BaggingSmdService {
       `;
     const dataPackage = await RawQueryService.query(rawQuery);
     if (dataPackage.length == 0) {
-      result.message = 'Resi gabung paket tidak ditemukan';
+      result.message = 'Gabung paket tidak ditemukan';
       return result;
-    } else if (dataPackage[0].bagging_item_id) {
+    } else if ((dataPackage[0].bagging_item_id) && (dataPackage[0].branch_id == permissionPayload.branchId)) {
+      // Ceking Double Scan Bagging / Branch
       result.status = 'failed';
       result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
       return result;
     }
+    // else if (dataPackage[0].bagging_item_id) {
+    //   result.status = 'failed';
+    //   result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
+    //   return result;
+    // }
     if (dataPackage[0].bag_item_status_id_last_in_bag_item != BAG_STATUS.DO_HUB) {
       // handle kesalahan data saat scan masuk surat jalan
       rawQuery = `
@@ -156,14 +165,12 @@ export class BaggingSmdService {
           LIMIT 1;
         `;
       const history = await RawQueryService.query(rawQuery);
-      if (history.length == 0 || (history.length > 0 && history[0].bag_item_status_id != BAG_STATUS.DO_HUB)) {
+      if (history.length == 0 || (history.length > 0 && history[0].bag_item_status_id != BAG_STATUS.D)) {
         result.message = 'Resi Gabung Paket belum di scan masuk';
         return result;
       }
     }
 
-    const permissionPayload = AuthService.getPermissionTokenPayload();
-    const authMeta = AuthService.getAuthData();
     result.baggingId = baggingId;
     result.baggingCode = baggingCode;
 
