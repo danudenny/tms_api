@@ -3,6 +3,7 @@ import { QueueBullBoard } from '../queue-bull-board';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { AwbTransactionDetailVm } from '../../../main/models/cod/web-awb-cod-response.vm';
 import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transaction-detail';
+import { User } from '../../../../shared/orm-entity/user';
 import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transaction-history';
 import { WebCodFirstTransactionPayloadVm } from '../../../main/models/cod/web-awb-cod-payload.vm';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
@@ -308,6 +309,31 @@ export class CodFirstTransactionQueueService {
     delete transaction['changedValues'];
     transaction.userIdCreated = Number(transaction.userIdCreated);
     transaction.userIdUpdated = Number(transaction.userIdUpdated);
+
+    const userUpdated = await User.findOne({
+      select: ['userId', 'firstName', 'username'],
+      where: {
+        userId: transaction.userIdUpdated,
+        isDeleted: false,
+      },
+      cache: true,
+    });
+
+    transaction['adminName'] = userUpdated.firstName;
+    transaction['nikAdmin'] = userUpdated.username;
+
+    const userSigesit = await User.findOne({
+      select: ['userId', 'firstName', 'username'],
+      where: {
+        userId: transaction.userIdDriver,
+        isDeleted: false,
+      },
+      cache: true,
+    });
+
+    transaction['sigesit'] = userSigesit.firstName;
+    transaction['nikSigesit'] = userSigesit.username;
+
     console.log('## FIRST DATA IN MONGO :: ', transaction.awbNumber);
 
     try {
@@ -321,6 +347,8 @@ export class CodFirstTransactionQueueService {
           supplierInvoiceStatusId: transaction.supplierInvoiceStatusId,
           codSupplierInvoiceId: transaction.codSupplierInvoiceId,
           userIdUpdated: transaction.userIdUpdated,
+          adminName: userUpdated.firstName,
+          nikAdmin: userUpdated.username,
         };
         await collection.updateOne(
           { _id: transaction.awbNumber },

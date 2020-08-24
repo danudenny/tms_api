@@ -80,7 +80,7 @@ export class CustomCounterCode {
   }
 
   // #region SMD
-    public static async receivedBagCodeRandom(dateTime: Date, digit: number = 8) {
+  public static async receivedBagCodeRandom(dateTime: Date, digit: number = 8) {
     const prefix = `TB/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
@@ -98,6 +98,13 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
+  public static async doSmdCodeRandomCounter(dateTime: Date, digit: number = 8) {
+    // Format Code: GSK/1907/13/XYZA1234
+    const prefix = `DMD/${moment(dateTime).format('YYMM/DD')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
   public static async baggingCodeCounter(dateTime: Date, digit: number = 5) {
     const prefix = `BGX/${moment(dateTime).format('YYMM')}/`;
     const last_number = await this.getLastNumber(prefix);
@@ -109,6 +116,14 @@ export class CustomCounterCode {
     const last_number = await this.getLastNumber(prefix);
     return prefix + last_number.toString().padStart(digit, '0');
   }
+
+public static async bagCityCodeRandomCounter(dateTime: Date, digit: number = 6) {
+    // Format Code: GSK190713XYZA1
+    const prefix = `GSK${moment(dateTime).format('YYMMDD')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }	
+
   // #endregion SMD
 
   // #region COD
@@ -151,7 +166,7 @@ export class CustomCounterCode {
       nextCounter = Number(customCounter.counter) + 1;
       customCounter.counter = nextCounter;
       customCounter.updatedTime = timeNow;
-      SysCounter.save(customCounter);
+      await SysCounter.save(customCounter);
     } else {
       // # Insert Data
       customCounter = SysCounter.create();
@@ -159,7 +174,7 @@ export class CustomCounterCode {
       customCounter.counter = nextCounter;
       customCounter.createdTime = timeNow;
       customCounter.updatedTime = timeNow;
-      SysCounter.save(customCounter);
+      await SysCounter.save(customCounter);
     }
 
     return nextCounter;

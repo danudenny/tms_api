@@ -1,4 +1,4 @@
-import { Injectable, Param, PayloadTooLargeException } from '@nestjs/common';
+import { Injectable, Param, PayloadTooLargeException, BadRequestException } from '@nestjs/common';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
@@ -13,6 +13,7 @@ import { SmdScanBaggingPayloadVm } from '../../models/smd-bagging-payload.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 @Injectable()
 export class BaggingSmdService {
@@ -105,6 +106,8 @@ export class BaggingSmdService {
 
     const bagNumber = payload.bagNumber.substring(0, 7);
     const bagSeq = Number(payload.bagNumber.substring(7, 10));
+    const permissionPayload = AuthService.getPermissionTokenPayload();
+    const authMeta = AuthService.getAuthData();
     // const weight = payload.bagNumber.substring(10);
     let baggingId = '';
     let baggingCode = '';
@@ -121,7 +124,8 @@ export class BaggingSmdService {
         ba.bagging_id,
         ba.bagging_code,
         ba.total_weight,
-        ba.total_item
+        ba.total_item,
+        ba.branch_id
       FROM bag AS b
       INNER JOIN bag_item bi ON bi.bag_id = b.bag_id AND bi.is_deleted = false
       INNER JOIN representative r ON r.representative_id = b.representative_id_to
@@ -131,18 +135,24 @@ export class BaggingSmdService {
         b.bag_number = upper('${bagNumber}') AND
         bi.bag_seq = '${bagSeq}' AND
         b.is_deleted = false
-      ORDER BY b.created_time DESC
+      ORDER BY case when ba.branch_id = '${permissionPayload.branchId}' then 1 else 2 end, b.created_time DESC
       LIMIT 1;
       `;
     const dataPackage = await RawQueryService.query(rawQuery);
     if (dataPackage.length == 0) {
-      result.message = 'Resi gabung paket tidak ditemukan';
+      result.message = 'Gabung paket tidak ditemukan';
       return result;
-    } else if (dataPackage[0].bagging_item_id) {
+    } else if ((dataPackage[0].bagging_item_id) && (dataPackage[0].branch_id == permissionPayload.branchId)) {
+      // Ceking Double Scan Bagging / Branch
       result.status = 'failed';
       result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
       return result;
     }
+    // else if (dataPackage[0].bagging_item_id) {
+    //   result.status = 'failed';
+    //   result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
+    //   return result;
+    // }
     if (dataPackage[0].bag_item_status_id_last_in_bag_item != BAG_STATUS.DO_HUB) {
       // handle kesalahan data saat scan masuk surat jalan
       rawQuery = `
@@ -161,8 +171,6 @@ export class BaggingSmdService {
       }
     }
 
-    const permissionPayload = AuthService.getPermissionTokenPayload();
-    const authMeta = AuthService.getAuthData();
     result.baggingId = baggingId;
     result.baggingCode = baggingCode;
 
@@ -255,25 +263,31 @@ export class BaggingSmdService {
     if (!payload.baggingId) {
       const baggingDate = await this.dateMinus1day(moment().toDate());
       const maxBagSeq = await this.getMaxBaggingSeq(dataPackage[0].representative_id_to, baggingDate, permissionPayload.branchId);
+      const paramBaggingCode = await CustomCounterCode.baggingCodeCounter(moment().toDate());
+      // Redlock for race condition
+      const redlock = await RedisService.redlock(`redlock:bagging:${paramBaggingCode}`, 10);
+      if (redlock) {
+        const createBagging = Bagging.create();
+        createBagging.userId = authMeta.userId.toString();
+        createBagging.representativeIdTo = representative[0].representative_id;
+        createBagging.branchId = permissionPayload.branchId.toString();
+        createBagging.totalItem = 1;
+        createBagging.totalWeight = dataPackage[0].weight.toString();
+        createBagging.baggingCode = paramBaggingCode;
+        createBagging.baggingDate = baggingDate;
+        createBagging.userIdCreated = authMeta.userId.toString();
+        createBagging.userIdUpdated = authMeta.userId.toString();
+        createBagging.baggingDateReal = moment().toDate();
+        createBagging.baggingSeq = maxBagSeq;
+        createBagging.createdTime = moment().toDate();
+        createBagging.updatedTime = moment().toDate();
+        await Bagging.save(createBagging);
 
-      const createBagging = Bagging.create();
-      createBagging.userId = authMeta.userId.toString();
-      createBagging.representativeIdTo = representative[0].representative_id;
-      createBagging.branchId = permissionPayload.branchId.toString();
-      createBagging.totalItem = 1;
-      createBagging.totalWeight = dataPackage[0].weight.toString();
-      createBagging.baggingCode = await CustomCounterCode.baggingCodeCounter(moment().toDate());
-      createBagging.baggingDate = baggingDate;
-      createBagging.userIdCreated = authMeta.userId.toString();
-      createBagging.userIdUpdated = authMeta.userId.toString();
-      createBagging.baggingDateReal = moment().toDate();
-      createBagging.baggingSeq = maxBagSeq;
-      createBagging.createdTime = moment().toDate();
-      createBagging.updatedTime = moment().toDate();
-      await Bagging.save(createBagging);
-
-      baggingId = createBagging.baggingId;
-      baggingCode = createBagging.baggingCode;
+        baggingId = createBagging.baggingId;
+        baggingCode = createBagging.baggingCode;
+      } else {
+        throw new BadRequestException('Data Bagging Sedang di proses, Silahkan Coba Beberapa Saat');
+      }
     }
     const baggingItem = BaggingItem.create();
     baggingItem.baggingId = baggingId;
