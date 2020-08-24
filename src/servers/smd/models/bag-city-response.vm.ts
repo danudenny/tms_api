@@ -22,7 +22,26 @@ export class BagCityResponseVm {
 
   @ApiModelProperty()
   bagRepresentativeCode: string;
-  
+
+}
+
+export class BagCityDataMoreResponseVm extends BagCityResponseVm {
+  @ApiModelProperty()
+  awbNumber: string;
+}
+
+export class BagCityMoreResponseVm {
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({ type: [BagCityDataMoreResponseVm] })
+  data: BagCityDataMoreResponseVm[];
 }
 
 export class ListBagCityDetailVm {

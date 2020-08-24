@@ -5,8 +5,8 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import {BagCityService} from '../../services/integration/bag-city.service';
 import {PermissionTokenGuard} from '../../../../shared/guards/permission-token.guard';
 import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
-import {BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm} from '../../models/bag-city-response.vm';
-import {BagCityPayloadVm, BagCityExportPayloadVm} from '../../models/bag-city-payload.vm';
+import {BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm} from '../../models/bag-city-response.vm';
+import {BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm} from '../../models/bag-city-payload.vm';
 import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm } from '../../models/print-bag-city-payload.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { Transaction } from 'typeorm';
@@ -44,6 +44,17 @@ export class BagCityController {
   @ResponseSerializerOptions({ disable: true })
   public async createBagging(@Body() payload: BagCityPayloadVm) {
     return BagCityService.createBagging(payload);
+  }
+
+  @Post('create/manual-input')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: BagCityMoreResponseVm })
+  @ApiBearerAuth()
+  @Transactional()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async createBaggingMore(@Body() payload: BagCityMorePayloadVm) {
+    return BagCityService.createBaggingMore(payload);
   }
 
   @Get('print')

@@ -12,6 +12,17 @@ export class BagCityPayloadVm {
   bagRepresentativeId: string;
 }
 
+export class BagCityMorePayloadVm {
+  @ApiModelProperty()
+  awbNumber: string[];
+
+  @ApiModelPropertyOptional()
+  representativeId: string;
+
+  @ApiModelPropertyOptional()
+  bagRepresentativeId: string;
+}
+
 export class BagCityExportPayloadVm extends BaseMetaPayloadVm {
   @ApiModelPropertyOptional()
   userId: string;

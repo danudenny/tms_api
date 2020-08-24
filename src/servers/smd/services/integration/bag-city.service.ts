@@ -4,8 +4,8 @@ import express = require('express');
 import xlsx = require('xlsx');
 import fs = require('fs');
 import { AuthService } from '../../../../shared/services/auth.service';
-import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm } from '../../models/bag-city-response.vm';
-import { BagCityPayloadVm, BagCityExportPayloadVm } from '../../models/bag-city-payload.vm';
+import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm } from '../../models/bag-city-response.vm';
+import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm } from '../../models/bag-city-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -312,6 +312,44 @@ export class BagCityService {
     result.bagRepresentativeId = bagRepresentativeId;
     result.bagRepresentativeCode = bagRepresentativeCode;
     result.message = 'Scan gabung paket Kota berhasil';
+    return result;
+  }
+
+  static async createBaggingMore(
+    payload: BagCityMorePayloadVm,
+  ): Promise<BagCityMoreResponseVm> {
+    const result = new BagCityMoreResponseVm();
+    const p = new BagCityPayloadVm();
+    let totalSuccess = 0;
+    let totalError = 0;
+    p.bagRepresentativeId = payload.bagRepresentativeId;
+    p.representativeId = payload.representativeId;
+    result.data = [];
+
+    // TODO:
+    // 1. get response createBagging of each awbNumber
+    // 2. check and/or update bagRepresentativeId every time insert/create bag-city
+    // 3. populate total
+    for (const awbNumber of payload.awbNumber) {
+      p.awbNumber = awbNumber;
+      const res = await this.createBagging(p);
+
+      p.bagRepresentativeId = p.bagRepresentativeId ? p.bagRepresentativeId : res.bagRepresentativeId;
+      result.data.push({
+        ...res,
+        awbNumber,
+      });
+
+      if (res.status == 'success') {
+        totalSuccess++;
+      } else {
+        totalError++;
+      }
+    }
+
+    result.totalData = payload.awbNumber.length;
+    result.totalError = totalError;
+    result.totalSuccess = totalSuccess;
     return result;
   }
 
