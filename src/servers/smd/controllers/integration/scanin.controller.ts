@@ -16,19 +16,19 @@ export class ScanInController {
 
   @Post('scanIn/bag')
   @Transactional()
-  @ApiOkResponse({ type: ScanInSmdBagResponseVm })
-  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  public async scanInBagSmd(@Req() request: any, @Body() payload: ScanInSmdPayloadVm) {
-    return ScaninSmdService.scanInBag(payload);
-  }
-
-  @Post('scanIn/bag/manual-input')
-  @Transactional()
   @ApiOkResponse({ type: ScanInSmdBagMoreResponseVm })
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  public async scanInBagMoreSmd(@Req() request: any, @Body() payload: ScanInSmdMorePayloadVm) {
+  public async scanInBagSmd(@Req() request: any, @Body() payload: ScanInSmdMorePayloadVm) {
     return ScaninSmdService.scanInBagMore(payload);
   }
+
+  // @Post('scanIn/bag/manual-input')
+  // @Transactional()
+  // @ApiOkResponse({ type: ScanInSmdBagMoreResponseVm })
+  // @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  // public async scanInBagMoreSmd(@Req() request: any, @Body() payload: ScanInSmdMorePayloadVm) {
+  //   return ScaninSmdService.scanInBagMore(payload);
+  // }
 
   @Post('scanIn/do')
   @Transactional()

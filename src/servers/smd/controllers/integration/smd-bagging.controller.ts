@@ -16,25 +16,25 @@ export class SmdBaggingController {
   constructor() {}
   @Post('create')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: SmdScanBaggingResponseVm })
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ResponseSerializerOptions({ disable: true })
-  @Transactional()
-  public async createBagging(@Body() payload: SmdScanBaggingPayloadVm) {
-    return BaggingSmdService.createBagging(payload);
-  }
-
-  @Post('create/manual-input')
-  @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: SmdScanBaggingMoreResponseVm })
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
   @Transactional()
-  public async createBaggingMore(@Body() payload: SmdScanBaggingMorePayloadVm) {
+  public async createBagging(@Body() payload: SmdScanBaggingMorePayloadVm) {
     return BaggingSmdService.createBaggingMore(payload);
   }
+
+  // @Post('create/manual-input')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiOkResponse({ type: SmdScanBaggingMoreResponseVm })
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ResponseSerializerOptions({ disable: true })
+  // @Transactional()
+  // public async createBaggingMore(@Body() payload: SmdScanBaggingMorePayloadVm) {
+  //   return BaggingSmdService.createBaggingMore(payload);
+  // }
 
   @Post('list')
   @HttpCode(HttpStatus.OK)
