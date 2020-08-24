@@ -11,6 +11,8 @@ import {
   AwbTransactionHistoryResponseVm,
   TrackingBagRepresentativeAwbResponseVm,
   TrackingBagRepresentativeAwbPayloadVm,
+  TrackingBagRepresentativeDetailPayloadVm,
+  TrackingBagRepresentativeDetailResponseVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
@@ -240,6 +242,17 @@ export class V1WebTrackingService {
     return result;
   }
 
+  static async bagRepresentativeDetail(
+    payload: TrackingBagRepresentativeDetailPayloadVm,
+  ): Promise<TrackingBagRepresentativeDetailResponseVm> {
+    const result = new TrackingBagRepresentativeDetailResponseVm();
+    const data = await this.getRawBagRepresentativeDetail(payload.bagRepresentativeId);
+    if (data) {
+      result.awbNumber = data.ref_awb_number;
+    }
+    return result;
+  }
+
   // private method
   private static async getRawAwb(awbNumber: string): Promise<any> {
     const query = `
@@ -389,6 +402,20 @@ export class V1WebTrackingService {
     `;
     const rawData = await RawQueryService.queryWithParams(query, {
       awbNumber,
+    });
+    return rawData ? rawData[0] : null;
+  }
+
+  private static async getRawBagRepresentativeDetail(bagRepresentativeId: number): Promise<any> {
+    const query = `
+      SELECT
+        bri.ref_awb_number
+      FROM bag_representative_item
+      WHERE
+        bag_representative_id = :bagRepresentativeId
+    `;
+    const rawData = await RawQueryService.queryWithParams(query, {
+      bagRepresentativeId,
     });
     return rawData ? rawData[0] : null;
   }
