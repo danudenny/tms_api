@@ -1101,11 +1101,8 @@ export class ScanoutSmdVendorService {
 
       const res = await this.scanOutVendorItem(p) as ScanOutSmdVendorItemResponseVm;
       result.data.push({
-        ...{
-          statusCode: res.statusCode,
-          message: res.message,
-          item_number: itemNumber,
-        } as ScanOutVendorItemMoreDataVm,
+        ...res,
+        item_number: itemNumber,
       });
 
       if (res.statusCode == HttpStatus.OK) {
