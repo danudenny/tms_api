@@ -181,7 +181,8 @@ export class BaggingSmdService {
     if (dataPackage.length == 0) {
       result.message = 'Gabung paket tidak ditemukan';
       return result;
-    } else if ((dataPackage[0].bagging_item_id) && (dataPackage[0].branch_id == permissionPayload.branchId)) {
+    }
+    if ((dataPackage[0].bagging_item_id) && (dataPackage[0].branch_id == permissionPayload.branchId)) {
       // Ceking Double Scan Bagging / Branch
       result.status = 'failed';
       result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
