@@ -83,6 +83,6 @@ export class V1WebTrackingController {
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: TrackingBagRepresentativeDetailResponseVm })
   public async bagRepresentativeDetail(@Body() payload: TrackingBagRepresentativeDetailPayloadVm) {
-    return V1WebTrackingService.bagRepresentative(payload);
+    return V1WebTrackingService.bagRepresentativeDetail(payload);
   }
 }
