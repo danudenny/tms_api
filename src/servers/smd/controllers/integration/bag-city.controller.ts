@@ -37,25 +37,25 @@ export class BagCityController {
 
   @Post('create')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: BagCityResponseVm })
-  @ApiBearerAuth()
-  @Transactional()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ResponseSerializerOptions({ disable: true })
-  public async createBagging(@Body() payload: BagCityPayloadVm) {
-    return BagCityService.createBagging(payload);
-  }
-
-  @Post('create/manual-input')
-  @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: BagCityMoreResponseVm })
   @ApiBearerAuth()
   @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
-  public async createBaggingMore(@Body() payload: BagCityMorePayloadVm) {
+  public async createBagging(@Body() payload: BagCityMorePayloadVm) {
     return BagCityService.createBaggingMore(payload);
   }
+
+  // @Post('create/manual-input')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiOkResponse({ type: BagCityMoreResponseVm })
+  // @ApiBearerAuth()
+  // @Transactional()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ResponseSerializerOptions({ disable: true })
+  // public async createBaggingMore(@Body() payload: BagCityMorePayloadVm) {
+  //   return BagCityService.createBaggingMore(payload);
+  // }
 
   @Get('print')
   @ApiBearerAuth()
