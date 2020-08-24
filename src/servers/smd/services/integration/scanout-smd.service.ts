@@ -528,6 +528,8 @@ export class ScanoutSmdService {
     const arrBagItemId = [];
     const data = [];
     let rawQuery;
+    result.statusCode = HttpStatus.BAD_REQUEST;
+
     const resultBagging = await Bagging.findOne({
       where: {
         baggingCode: payload.item_number,
@@ -581,7 +583,8 @@ export class ScanoutSmdService {
           },
         });
         if (resultDoSmdDetailItem) {
-          throw new BadRequestException(`Bag Representative Already Scanned`);
+          result.message = 'Bag Representative Already Scanned';
+          return result;
         } else {
           await this.createDoSmdDetailItem(
             resultDataRepresentative[0].do_smd_detail_id,
@@ -649,7 +652,8 @@ export class ScanoutSmdService {
           return result;
         }
       } else {
-        throw new BadRequestException(`Representative To Bag Representative Not Match`);
+        result.message = 'Representative To Bag Representative Not Match';
+        return result;
       }
     } else if (resultBagging) {
       rawQuery = `
@@ -693,7 +697,8 @@ export class ScanoutSmdService {
             },
           });
           if (resultDoSmdDetailItem) {
-            throw new BadRequestException(`Bagging Already Scanned`);
+            result.message = 'Bagging Already Scanned';
+            return result;
           } else {
             for (let i = 0; i < resultDataBagItem.length; i++) {
               // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
@@ -768,12 +773,15 @@ export class ScanoutSmdService {
             return result;
           }
         } else {
-          throw new BadRequestException(`Representative To Bagging Not Match`);
+          result.message = 'Representative To Bagging Not Match';
+          return result;
         }
       } else if (resultDataBagItem.length > 0 && !resultDataBagItem[0].bag_item_status_id) {
-        throw new BadRequestException(`Bagging Not Scan In Yet`);
+        result.message = 'Bagging Not Scan In Yet';
+        return result;
       } else {
-        throw new BadRequestException(`Bagging Item Not Found`);
+        result.message = 'Bagging Item Not Found';
+        return result;
       }
     } else {
       // cari di bag code
@@ -892,14 +900,18 @@ export class ScanoutSmdService {
               result.data = data;
               return result;
           } else {
-            throw new BadRequestException(`Representative To Bag Not Match`);
+            result.message = 'Representative To Bag Not Match';
+            return result;
           }
         } else if (resultDataBag.length > 0 && resultDataBag[0].do_smd_detail_id) {
-          throw new BadRequestException(`Bag ${payload.item_number} Already Scanned`);
+          result.message = `Bag ${payload.item_number} Already Scanned`;
+          return result;
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          throw new BadRequestException(`Bag Not Scan In Yet`);
+          result.message = 'Bag Not Scan In Yet';
+          return result;
         } else {
-          throw new BadRequestException(`Bag Not Found`);
+          result.message = 'Bag Not Found';
+          return result;
         }
       } else if (payload.item_number.length == 10) {
         const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 3 );
@@ -1016,17 +1028,22 @@ export class ScanoutSmdService {
               result.data = data;
               return result;
           } else {
-            throw new BadRequestException(`Representative To Bag Not Match`);
+            result.message = 'Representative To Bag Not Match';
+            return result;
           }
         } else if (resultDataBag.length > 0 && resultDataBag[0].do_smd_detail_id) {
-          throw new BadRequestException(`Bag ${payload.item_number} Already Scanned`);
+          result.message = `Bag ${payload.item_number} Already Scanned`;
+          return result;
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          throw new BadRequestException(`Bag Not Scan In Yet`);
+          result.message = 'Bag Not Scan In Yet';
+          return result;
         } else {
-          throw new BadRequestException(`Bag Not Found`);
+          result.message = 'Bag Not Found';
+          return result;
         }
       } else {
-        throw new BadRequestException(`Bagging / Bag Not Found`);
+        result.message = 'Bagging / Bag Not Found';
+        return result;
       }
     }
 

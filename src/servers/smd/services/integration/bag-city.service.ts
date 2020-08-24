@@ -261,7 +261,8 @@ export class BagCityService {
         createBagRepresentativeHistory.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR.toString();
         await BagRepresentativeHistory.save(createBagRepresentativeHistory);
       } else {
-        throw new BadRequestException('Data Gabung Sortir Kota Sedang di proses, Silahkan Coba Beberapa Saat');
+        result.message = 'Data Gabung Sortir Kota Sedang di proses, Silahkan Coba Beberapa Saat';
+        return result;
       }
       // const cekDoubleCode = await BagRepresentative.findOne({
       //   where: {
