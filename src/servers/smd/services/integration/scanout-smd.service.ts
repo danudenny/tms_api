@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdItemMoreResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -22,6 +22,7 @@ import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/serv
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 import { RedisService } from '../../../../shared/services/redis.service';
+import {ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -1029,6 +1030,41 @@ export class ScanoutSmdService {
       }
     }
 
+  }
+
+  static async scanOutItemMore(
+    payload: ScanOutSmdItemMorePayloadVm,
+  ): Promise<ScanOutSmdItemMoreResponseVm> {
+    const result = new ScanOutSmdItemMoreResponseVm();
+    const p = new ScanOutSmdItemPayloadVm();
+    let totalSuccess = 0;
+    let totalError = 0;
+    p.do_smd_id = payload.do_smd_id;
+    result.data = [];
+
+    // TODO:
+    // 1. get response scanOutItem of each item_number
+    // 2. populate total
+    for (const itemNumber of payload.item_number) {
+      p.item_number = itemNumber;
+      const res = await this.scanOutItem(p) as ScanOutSmdItemResponseVm;
+
+      result.data.push({
+        ...res,
+        item_number: itemNumber,
+      });
+
+      if (res.statusCode == HttpStatus.OK) {
+        totalSuccess++;
+      } else {
+        totalError++;
+      }
+    }
+
+    result.totalData = payload.item_number.length;
+    result.totalError = totalError;
+    result.totalSuccess = totalSuccess;
+    return result;
   }
 
   static async createBagItemHistory(bagItemId: number, userId: number, branchId: number, bagStatus: number) {

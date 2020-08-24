@@ -69,6 +69,25 @@ export class ScanOutSmdItemResponseVm {
   data: ScanOutItemVm[];
 }
 
+export class ScanOutSmdItemMoreResponseVm {
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({type: () => [ScanOutSmdItemMoreDataResponseVm]})
+  data: ScanOutSmdItemMoreDataResponseVm[];
+}
+
+export class ScanOutSmdItemMoreDataResponseVm extends ScanOutSmdItemResponseVm {
+  @ApiModelProperty()
+  item_number: string;
+}
+
 export class ScanOutItemVm {
 
   @ApiModelProperty()

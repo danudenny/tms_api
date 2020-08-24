@@ -45,6 +45,20 @@ export class ScanOutSmdVendorItemResponseVm {
   data: ScanOutVendorItemVm[];
 }
 
+export class ScanOutSmdVendorItemMoreResponseVm {
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({type: () => [ScanOutVendorItemMoreDataVm]})
+  data: ScanOutVendorItemMoreDataVm[];
+}
+
 export class ScanOutVendorItemVm {
 
   @ApiModelProperty()
@@ -82,7 +96,17 @@ export class ScanOutVendorItemVm {
 
   @ApiModelProperty()
   total_bag_representative: number;
+}
 
+export class ScanOutVendorItemMoreDataVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  item_number: string;
 }
 
 export class ScanOutSmdVendorEndResponseVm {

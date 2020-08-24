@@ -24,6 +24,31 @@ export class ScanInBagVm {
 
 }
 
+export class ScanInSmdBagMoreResponseVm {
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({type: () => [ScanInSmdBagDataResponseVm]})
+  data: ScanInSmdBagDataResponseVm[];
+}
+
+export class ScanInSmdBagDataResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  bag_item_number: number;
+}
+
 export class ScanInSmdBaggingResponseVm {
   @ApiModelProperty()
   statusCode: number;

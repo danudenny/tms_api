@@ -8,8 +8,8 @@ import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm } from '../../models/smd-bagging-response.vm';
-import { SmdScanBaggingPayloadVm } from '../../models/smd-bagging-payload.vm';
+import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm } from '../../models/smd-bagging-response.vm';
+import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm } from '../../models/smd-bagging-payload.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -90,6 +90,45 @@ export class BaggingSmdService {
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
+    return result;
+  }
+
+  static async createBaggingMore(
+    payload: SmdScanBaggingMorePayloadVm,
+  ): Promise<SmdScanBaggingMoreResponseVm> {
+    const result = new SmdScanBaggingMoreResponseVm();
+    const p = new SmdScanBaggingPayloadVm();
+    let totalSuccess = 0;
+    let totalError = 0;
+    p.baggingId = payload.baggingId;
+    p.representativeCode = payload.representativeCode;
+    result.data = [];
+
+    // TODO:
+    // 1. get response createBagging of each bagNumber
+    // 2. check and/or update baggingId and representativeCode every time insert/create bagging
+    // 3. populate total
+    for (const bagNumber of payload.bagNumber) {
+      p.bagNumber = bagNumber;
+      const res = await this.createBagging(p);
+
+      p.baggingId = p.baggingId ? p.baggingId : res.baggingId;
+      p.representativeCode = p.representativeCode ? p.representativeCode : res.validRepresentativeCode;
+      result.data.push({
+        ...res,
+        bagNumber,
+      });
+
+      if (res.status == 'success') {
+        totalSuccess++;
+      } else {
+        totalError++;
+      }
+    }
+
+    result.totalData = payload.bagNumber.length;
+    result.totalError = totalError;
+    result.totalSuccess = totalSuccess;
     return result;
   }
 
@@ -286,7 +325,8 @@ export class BaggingSmdService {
         baggingId = createBagging.baggingId;
         baggingCode = createBagging.baggingCode;
       } else {
-        throw new BadRequestException('Data Bagging Sedang di proses, Silahkan Coba Beberapa Saat');
+        result.message = 'Data Bagging Sedang di proses, Silahkan Coba Beberapa Saat';
+        return result;
       }
     }
     const baggingItem = BaggingItem.create();

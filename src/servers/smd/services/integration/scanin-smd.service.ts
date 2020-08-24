@@ -1,7 +1,6 @@
 import { Injectable, Param, PayloadTooLargeException } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
-import axios from 'axios';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { SysCounter } from '../../../../shared/orm-entity/sys-counter';
@@ -10,20 +9,17 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanInDetailListResponseVm } from '../../models/scanin-smd.response.vm';
+import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanInDetailListResponseVm, ScanInSmdBagMoreResponseVm } from '../../models/scanin-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
-import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { QueryBuilderService } from '../../../../shared/services/query-builder.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { WebScanInHubSortListResponseVm } from '../../../main/models/web-scanin-list.response.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { BagScanInBranchSmdQueueService } from '../../../queue/services/bag-scan-in-branch-smd-queue.service';
-import { getConnection } from 'typeorm';
+import { ScanInSmdMorePayloadVm, ScanInSmdPayloadVm } from '../../models/scanin-smd.payload.vm';
 
 @Injectable()
 export class ScaninSmdService {
@@ -37,6 +33,8 @@ export class ScaninSmdService {
     let errMessage ;
     const timeNow = moment().toDate();
     let paramReceivedBagId = payload.received_bag_id;
+    result.statusCode = HttpStatus.BAD_REQUEST;
+
     if (payload.bag_item_number.length == 15) {
       const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
       const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
@@ -45,7 +43,8 @@ export class ScaninSmdService {
       const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       let paramBagItemId = null;
       if (paramBagNumber == null || paramBagNumber == undefined) {
-        throw new BadRequestException('Bag Number Not Found');
+        result.message = 'Bag Number Not Found';
+        return result;
       } else {
         const bag = await Bag.findOne({
           select: ['bagId'],
@@ -136,7 +135,8 @@ export class ScaninSmdService {
                 timeNow,
               );
             } else {
-              throw new BadRequestException('Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat');
+              result.message = 'Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat';
+              return result;
             }
           } else {
             paramTotalSeq = Number(paramTotalSeq) + 1;
@@ -226,7 +226,8 @@ export class ScaninSmdService {
         result.data = data;
         return result;
       } else {
-        throw new BadRequestException(errMessage);
+        result.message = errMessage;
+        return result;
       }
     } else if (payload.bag_item_number.length == 10) {
       const paramBagNumber = (payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 3 )).toUpperCase();
@@ -238,7 +239,8 @@ export class ScaninSmdService {
       let paramBagItemId = null;
 
       if (paramBagNumber == null || paramBagNumber == undefined) {
-        throw new BadRequestException('Bag Number Not Found');
+        result.message = 'Bag Number Not Found';
+        return result;
       } else {
         const bag = await Bag.findOne({
           select: ['bagId'],
@@ -331,7 +333,8 @@ export class ScaninSmdService {
                 timeNow,
               );
             } else {
-              throw new BadRequestException('Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat');
+              result.message = 'Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat';
+              return result;
             }
           } else {
             paramTotalSeq = Number(paramTotalSeq) + 1;
@@ -421,11 +424,48 @@ export class ScaninSmdService {
         result.data = data;
         return result;
       } else {
-        throw new BadRequestException(errMessage);
+        result.message = errMessage;
+        return result;
       }
     } else {
-      throw new BadRequestException('Bag length <> 15 OR Bag length <> 10');
+      result.message = 'Bag length <> 15 OR Bag length <> 10';
+      return result;
     }
+  }
+
+  static async scanInBagMore(payload: ScanInSmdMorePayloadVm): Promise<ScanInSmdBagMoreResponseVm> {
+    const result = new ScanInSmdBagMoreResponseVm();
+    const p = new ScanInSmdPayloadVm();
+    let totalError = 0;
+    let totalSuccess = 0;
+
+    p.received_bag_id = payload.received_bag_id;
+    result.data = [];
+
+    // TODO:
+    // 1. get response scanInBag of each bag_item_number
+    // 2. check and/or update received_bag_id every time scan-in combine package
+    // 3. populate total
+    for (const itemNumber of payload.bag_item_number) {
+      p.bag_item_number = itemNumber;
+
+      const res = await this.scanInBag(p);
+      result.data.push({
+        ...res,
+        bag_item_number: itemNumber,
+      });
+      if (res.statusCode == HttpStatus.OK) {
+        p.received_bag_id = p.received_bag_id ? p.received_bag_id :
+          Number(res.data && res.data.length > 0 ? res.data[0].received_bag_id : null);
+        totalSuccess++;
+      } else {
+        totalError++;
+      }
+    }
+    result.totalData = payload.bag_item_number.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    return result;
   }
 
   static async scanInDo(payload: any): Promise<any> {
