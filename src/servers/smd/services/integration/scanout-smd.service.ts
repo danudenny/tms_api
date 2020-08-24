@@ -1474,6 +1474,23 @@ export class ScanoutSmdService {
     }
   }
 
+  static async scanOutEdit(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdRouteResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        doSmdStatusIdLast: In([1000, 2000]),
+        isDeleted: false,
+      },
+    });
+  }
+
   private static async createDoSmd(
     paramDoSmdCode: string,
     paramDoSmdTime: Date,

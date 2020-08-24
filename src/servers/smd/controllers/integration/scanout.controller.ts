@@ -82,4 +82,11 @@ export class ScanOutController {
   public async scanOutChangeVehicle(@Req() request: any, @Body() payload: ScanOutSmdHandoverPayloadVm) {
     return ScanoutSmdService.scanOutChangeVehicle(payload);
   }
+
+  @Post('scanOut/edit')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async scanOutEdit(@Req() request: any, @Body() payload: ScanOutSmdEditPayloadVm) {
+    return ScanoutSmdService.scanOutEdit(payload);
+  }
 }

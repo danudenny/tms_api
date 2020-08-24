@@ -123,3 +123,9 @@ export class StoreExcelScanOutPayloadVm {
   @ApiModelProperty()
   id: string;
 }
+
+export class ScanOutSmdEditPayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+}
