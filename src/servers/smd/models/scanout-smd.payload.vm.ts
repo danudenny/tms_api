@@ -39,6 +39,14 @@ export class ScanOutSmdItemPayloadVm {
 
 }
 
+export class ScanOutSmdItemMorePayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  item_number: string[];
+}
+
 export class ScanOutSmdAssignItemPayloadVm {
   @ApiModelProperty()
   do_smd_id: number;
