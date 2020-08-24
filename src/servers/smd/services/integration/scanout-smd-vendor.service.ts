@@ -1089,6 +1089,10 @@ export class ScanoutSmdVendorService {
     result.data = [];
     p.do_smd_id = payload.do_smd_id;
 
+    if (typeof(payload.item_number) != 'object') {
+      payload.item_number = [payload.item_number];
+    }
+
     // TODO:
     // 1. get response scanOutVendorItem of each item_number
     // 2. populate total

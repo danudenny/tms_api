@@ -104,6 +104,10 @@ export class BaggingSmdService {
     p.representativeCode = payload.representativeCode;
     result.data = [];
 
+    if (typeof(payload.bagNumber) != 'object') {
+      payload.bagNumber = [payload.bagNumber];
+    }
+
     // TODO:
     // 1. get response createBagging of each bagNumber
     // 2. check and/or update baggingId and representativeCode every time insert/create bagging

@@ -442,6 +442,10 @@ export class ScaninSmdService {
     p.received_bag_id = payload.received_bag_id;
     result.data = [];
 
+    if (typeof(payload.bag_item_number) != 'object') {
+      payload.bag_item_number = [payload.bag_item_number];
+    }
+
     // TODO:
     // 1. get response scanInBag of each bag_item_number
     // 2. check and/or update received_bag_id every time scan-in combine package

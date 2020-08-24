@@ -327,6 +327,9 @@ export class BagCityService {
     p.representativeId = payload.representativeId;
     result.data = [];
 
+    if (typeof(payload.awbNumber) != 'object') {
+      payload.awbNumber = [payload.awbNumber];
+    }
     // TODO:
     // 1. get response createBagging of each awbNumber
     // 2. check and/or update bagRepresentativeId every time insert/create bag-city
