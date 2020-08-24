@@ -88,4 +88,5 @@ export class ScanOutController {
   public async scanOutEdit(@Req() request: any, @Body() payload: ScanOutSmdEditPayloadVm) {
     return ScanoutSmdService.scanOutEdit(payload);
   }
+
 }
