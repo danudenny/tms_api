@@ -694,7 +694,7 @@ export class SmdPrintService {
           bagWeight: true,
         },
       })
-      .where(e => e.isDeleted, w => w.equals(false))
+      .where(e => e.isDeleted, w => w.equals(false)) 
       .where(e => e.receivedBagId, w => w.equals(payload.id));
 
     if (!receivedBag) {
