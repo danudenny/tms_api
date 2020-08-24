@@ -16,34 +16,6 @@ export class V1MobileDivaPaymentService {
     };
   }
 
-  static async getTestQR(): Promise<any> {
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Connection': 'keep-alive',
-        'User-Agent' : 'POD-API',
-      },
-    };
-    const now = Date.now();
-    console.log('####### TEST REFF NO ::: ', `POD-TEST-MOBILE-${now}`);
-    try {
-      const response = await axios.post(
-        'https://apiv2.mdd.co.id:51347/v1/shopee/get-qr',
-        {
-          token: 'f66046c79e4047c299fbf8abdf6cb3b2',
-          mid: '5b4e9699dd603e1aa6687f1d2fe4db95',
-          tid: ConfigService.get('divaPayment.codTid'),
-          amount: 5,
-          reff_no: `POD-TEST-MOBILE-${now}`,
-        },
-        config,
-      );
-      return response.data;
-    } catch (error) {
-      return error.response.data;
-    }
-  }
-
   static async pingQR() {
     const url = `${ConfigService.get('divaPayment.urlQR')}/v1`;
     try {
