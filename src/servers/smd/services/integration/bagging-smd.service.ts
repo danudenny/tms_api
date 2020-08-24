@@ -165,7 +165,7 @@ export class BaggingSmdService {
           LIMIT 1;
         `;
       const history = await RawQueryService.query(rawQuery);
-      if (history.length == 0 || (history.length > 0 && history[0].bag_item_status_id != BAG_STATUS.D)) {
+      if (history.length == 0 || (history.length > 0 && history[0].bag_item_status_id != BAG_STATUS.DO_HUB)) {
         result.message = 'Resi Gabung Paket belum di scan masuk';
         return result;
       }
