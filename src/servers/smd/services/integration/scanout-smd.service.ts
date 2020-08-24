@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdEditResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -1415,7 +1415,7 @@ export class ScanoutSmdService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const result = new ScanOutSmdRouteResponseVm();
+    const result = new ScanOutSmdEditResponseVm();
     const timeNow = moment().toDate();
     const data = [];
 
@@ -1426,6 +1426,48 @@ export class ScanoutSmdService {
         isDeleted: false,
       },
     });
+    if (resultDoSmd) {
+      const rawQuery = `
+        SELECT
+          ds.do_smd_id,
+          dsd.do_smd_detail_id,
+          dsd.branch_id_from,
+          bf.branch_name as branch_name_from,
+          dsd.branch_id_to,
+          bt.branch_name as branch_name_to,
+          dsd.representative_code_list
+        FROM do_smd ds
+        INNER JOIN do_smd_detail dsd ON ds.do_smd_id = dsd.do_smd_id AND dsd.is_deleted = FALSE
+        LEFT JOIN branch bf ON dsd.branch_id_from = bf.branch_id AND bf.is_deleted = FALSE
+        LEFT JOIN branch bt ON dsd.branch_id_to = bt.branch_id AND bt.is_deleted = FALSE
+        WHERE
+          ds.do_smd_id = ${resultDoSmd.doSmdId} AND
+          ds.is_deleted = FALSE;
+      `;
+      const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
+      if (resultDataDoSmdDetail.length > 0 ) {
+        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+
+          data.push({
+            do_smd_id: resultDataDoSmdDetail[i].do_smd_id,
+            do_smd_detail_id: resultDataDoSmdDetail[i].do_smd_detail_id,
+            branch_id_from: resultDataDoSmdDetail[i].branch_id_from,
+            branch_name_from: resultDataDoSmdDetail[i].branch_name_from,
+            branch_id_to: resultDataDoSmdDetail[i].branch_id_to,
+            branch_name_to: resultDataDoSmdDetail[i].branch_name_to,
+            representative_code_list: resultDataDoSmdDetail[i].representative_code_list,
+          });
+
+        }
+        result.statusCode = HttpStatus.OK;
+        result.data = data;
+        return result;
+      } else {
+        throw new BadRequestException(`Detail For SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
+      }
+    } else {
+      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
+    }
   }
 
   private static async createDoSmd(

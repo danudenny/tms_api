@@ -482,7 +482,16 @@ export class ScanOutEditVm {
   do_smd_detail_id: number;
 
   @ApiModelProperty()
-  branch_name: string;
+  branch_id_from: number;
+
+  @ApiModelProperty()
+  branch_name_from: string;
+
+  @ApiModelProperty()
+  branch_id_to: number;
+
+  @ApiModelProperty()
+  branch_name_to: string;
 
   @ApiModelProperty()
   representative_code_list: string;
