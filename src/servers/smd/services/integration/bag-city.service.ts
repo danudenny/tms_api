@@ -340,7 +340,7 @@ export class BagCityService {
     }
 
     const rawPrinterCommands =
-    `SIZE 80 mm, 100 mm\n` +
+	`SIZE 80 mm, 100 mm\n` +
     `SPEED 3\n` +
     `DENSITY 8\n` +
     `DIRECTION 0\n` +
