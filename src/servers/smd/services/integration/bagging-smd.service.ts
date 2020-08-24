@@ -174,7 +174,7 @@ export class BaggingSmdService {
         b.bag_number = upper('${bagNumber}') AND
         bi.bag_seq = '${bagSeq}' AND
         b.is_deleted = false
-      ORDER BY b.created_time DESC
+      ORDER BY case when ba.branch_id = '${permissionPayload.branchId}' then 1 else 2 end, b.created_time DESC
       LIMIT 1;
       `;
     const dataPackage = await RawQueryService.query(rawQuery);
