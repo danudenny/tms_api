@@ -146,6 +146,7 @@ export class OrionRepositoryQueryService<
   }
 
   public countWithoutTakeAndSkip(): Promise<number> {
+    // NOTE: takeout take, skip, offset, limit, order by from query
     const queryBuilderParts = this.queryBuilderParts.slice().filter(
       part =>
         // tslint:disable-next-line: triple-equals
@@ -155,7 +156,11 @@ export class OrionRepositoryQueryService<
         // tslint:disable-next-line: triple-equals
         part.partAction != this.queryBuilder.offset &&
         // tslint:disable-next-line: triple-equals
-        part.partAction != this.queryBuilder.limit,
+        part.partAction != this.queryBuilder.limit &&
+        // tslint:disable-next-line: triple-equals
+        part.partAction != this.queryBuilder.orderBy &&
+        // tslint:disable-next-line: triple-equals
+        part.partAction != this.queryBuilder.addOrderBy,
     );
 
     const compiledQueryBuilder = this.compileQueryParts(
