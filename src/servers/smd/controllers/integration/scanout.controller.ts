@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req, UseGuards, Delete, Param } from '@nestjs/c
 import { ScanoutSmdService } from '../../services/integration/scanout-smd.service';
 // import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
-import { ScanOutSmdVehiclePayloadVm, ScanOutSmdRoutePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdSealPayloadVm, ScanOutSmdHandoverPayloadVm, ScanOutSmdDetailPayloadVm, ScanOutSmdAssignItemPayloadVm } from '../../models/scanout-smd.payload.vm';
+import { ScanOutSmdVehiclePayloadVm, ScanOutSmdRoutePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdSealPayloadVm, ScanOutSmdHandoverPayloadVm, ScanOutSmdDetailPayloadVm, ScanOutSmdAssignItemPayloadVm, ScanOutSmdEditPayloadVm } from '../../models/scanout-smd.payload.vm';
 import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
@@ -71,5 +71,12 @@ export class ScanOutController {
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async scanOutChangeVehicle(@Req() request: any, @Body() payload: ScanOutSmdHandoverPayloadVm) {
     return ScanoutSmdService.scanOutChangeVehicle(payload);
+  }
+
+  @Post('scanOut/edit')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async scanOutEdit(@Req() request: any, @Body() payload: ScanOutSmdEditPayloadVm) {
+    return ScanoutSmdService.scanOutEdit(payload);
   }
 }

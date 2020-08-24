@@ -461,3 +461,30 @@ export class ScanOutImageVm {
   @ApiModelProperty()
   image_type: string;
 }
+
+export class ScanOutSmdEditResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutEditVm]})
+  data: ScanOutEditVm[];
+}
+
+export class ScanOutEditVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+  @ApiModelProperty()
+  representative_code_list: string;
+
+}

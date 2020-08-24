@@ -379,7 +379,7 @@ export class V1WebTrackingService {
   private static async getRawBagRepresentativeAwb(awbNumber: string): Promise<any> {
     const query = `
       SELECT
-        br.bag_representative_code as "bagRepresentativeCode",
+        br.bag_representative_code as "bagRepresentativeCode"
       FROM bag_representative br
       INNER JOIN bag_representative_item bri ON br.bag_representative_id = bri.bag_representative_id AND bri.is_deleted = FALSE
       WHERE
