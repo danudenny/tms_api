@@ -177,14 +177,14 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.destinationCode),
           this.strReplaceFunc(d.destination),
           d.perwakilan,
-          this.strReplaceFunc(d.userIdDriverNik) + " - " + d.userIdDriverName,
+          (d.userIdDriverNik ? d.userIdDriverNik : "") + " - " + (d.userIdDriverName ? d.userIdDriverName : ""),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.packageType),
           this.strReplaceFunc(d.parcelNote),
           '', '',
           d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD') : null,
-          this.strReplaceFunc(d.userUpdatedNik) + " - " + this.strReplaceFunc(d.userUpdatedName),
-        ]);
+          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : "") + " - " + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ""),
+          ]);
 
       }
       count += 1;
@@ -1436,6 +1436,11 @@ export class V1WebReportCodService {
           userIdDriver: 1,
           updatedTime: 1,
           userIdUpdated: 1,
+          userIdDriverNik: '$nikSigesit',
+          userIdDriverName: '$sigesit',
+          userIdUpdatedNik: "$nikAdmin",
+          userIdUpdatedName: "$adminName",
+          dateUpdated: "$updatedTime",
         },
       },
     ];
