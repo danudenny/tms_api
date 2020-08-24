@@ -2,11 +2,12 @@ import { Body, Controller, Post, Req, UseGuards, Delete, Param } from '@nestjs/c
 import { ScanoutSmdService } from '../../services/integration/scanout-smd.service';
 // import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
-import { ScanOutSmdVehiclePayloadVm, ScanOutSmdRoutePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdSealPayloadVm, ScanOutSmdHandoverPayloadVm, ScanOutSmdDetailPayloadVm, ScanOutSmdAssignItemPayloadVm, ScanOutSmdEditPayloadVm } from '../../models/scanout-smd.payload.vm';
-import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import { ScanOutSmdVehiclePayloadVm, ScanOutSmdRoutePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdSealPayloadVm, ScanOutSmdHandoverPayloadVm, ScanOutSmdDetailPayloadVm, ScanOutSmdAssignItemPayloadVm, ScanOutSmdEditPayloadVm, ScanOutSmdItemMorePayloadVm } from '../../models/scanout-smd.payload.vm';
+import { ApiUseTags, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import {ScanOutSmdItemMoreResponseVm} from '../../models/scanout-smd.response.vm';
 
 @ApiUseTags('SCAN OUT SMD')
 @Controller('smd')
@@ -25,6 +26,14 @@ export class ScanOutController {
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async scanOutRoute(@Req() request: any, @Body() payload: ScanOutSmdRoutePayloadVm) {
     return ScanoutSmdService.scanOutRoute(payload);
+  }
+
+  @Post('scanOut/item')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  @ApiOkResponse({ type: ScanOutSmdItemMoreResponseVm })
+  public async scanOutItem(@Req() request: any, @Body() payload: ScanOutSmdItemMorePayloadVm) {
+    return ScanoutSmdService.scanOutItemMore(payload);
   }
 
   // @Post('scanOut/item/manual-input')
