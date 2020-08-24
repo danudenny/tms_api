@@ -2,13 +2,14 @@ import express = require('express');
 import {RepositoryService} from '../../../../shared/services/repository.service';
 import {RequestErrorService} from '../../../../shared/services/request-error.service';
 import {PrinterService} from '../../../../shared/services/printer.service';
-import {PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm} from '../../models/print-smd-payload.vm';
+import {PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm, PrintReceivedBagPaperPayloadVm} from '../../models/print-smd-payload.vm';
 import moment = require('moment');
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
 import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm, PrintDoSmdDataDoSmdDetailBagRepresentativeVm, PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm, PrintVendorDataVm, PrintVendorVm, PrintVendorDataVendorDetailVm } from '../../models/print-do-smd.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
+import {ReceivedBag} from '../../../../shared/orm-entity/received-bag';
 
 export class SmdPrintService {
   public static async printBagging(
@@ -650,6 +651,62 @@ export class SmdPrintService {
           templateName: 'vendor-surat-muatan-darat',
           templateData: jsreportParams,
           printCopy: templateConfig.printCopy,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  public static async printReceivedBagForPaper(
+    res: express.Response,
+    payload: PrintReceivedBagPaperPayloadVm,
+  ) {
+    const q = RepositoryService.receivedBag.findOne();
+    q.leftJoin(e => e.receivedBagDetails);
+
+    const receivedBag = await q
+      .select({
+        receivedBagId: true,
+        receivedBagDate: true,
+        user: {
+          userId: true,
+          employee: {
+            employeeName: true,
+            nik: true,
+          },
+        },
+        branch: {
+          branchName: true,
+        },
+        receivedBagDetails: {
+          bagNumber: true,
+          bagWeight: true,
+        },
+      })
+      .where(e => e.receivedBagId, w => w.equals(payload.id));
+
+    if (!receivedBag) {
+      RequestErrorService.throwObj({
+        message: 'Received bag tidak ditemukan',
+      });
+    }
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    const date = moment(receivedBag.receivedBagDate).format('YYYY-MM-DD');
+    const time = moment(receivedBag.receivedBagDate).format('HH:mm');
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'ttd-received-bag',
+          templateData: {
+            data: receivedBag,
+            meta: {
+              date,
+              time,
+            },
+          },
+          printCopy: payload.printCopy ? payload.printCopy : 3,
         },
       ],
       listPrinterName,

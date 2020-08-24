@@ -35,3 +35,17 @@ export class PrintVendorPaperPayloadVm {
   @ApiModelPropertyOptional()
   branchId: number;
 }
+
+export class PrintReceivedBagPaperPayloadVm {
+  @ApiModelProperty()
+  id: number;
+
+  @ApiModelPropertyOptional()
+  printCopy: number;
+
+  @ApiModelPropertyOptional()
+  userId: number;
+
+  @ApiModelPropertyOptional()
+  branchId: number;
+}
