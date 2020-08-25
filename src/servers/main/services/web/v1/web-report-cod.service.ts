@@ -2,7 +2,6 @@ import fs = require('fs');
 import * as moment from 'moment';
 import * as path from 'path';
 import _ = require('lodash');
-
 import { DateHelper } from '../../../../../shared/helpers/date-helpers';
 import { BaseMetaPayloadFilterVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AwsS3Service } from '../../../../../shared/services/aws-s3.service';
@@ -274,8 +273,7 @@ export class V1WebReportCodService {
     });
   }
 
-  //#region NON_COD
-
+  // #region NON_COD
   // static async getNonCodSupplierInvoiceData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
   //   const spartanFilter: any = [{ isCod: true }];
   //   const siteFilter: any = [{ $eq: ['$id', '$$trackingSiteId'] }];
@@ -859,72 +857,139 @@ export class V1WebReportCodService {
     return datas;
   }
 
-  static async getNonCodSupplierInvoiceAwbData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
-    const spartanFilter: any = [{ isCod: true }];
-    const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
+
+
+  static async getNonCodSupplierInvoiceJoinTransactionDetailData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
+    const spartanFilter: any = [{ isCod: true }, { $eq: ['$awbNumber', '$$awbNumber'] }];
+    const tdFilter: any = [];
     let allowNullTd = true;
+    const filterList: any = [];
 
     for (const filter of filters) {
+      
+
+      
+      if (filter.field == 'transactionStart' && filter.value) {
+        const d = moment(filter.value).add(7, 'hour').toDate();
+        filterList.push({ updatedTime: { $gte: d } });
+      }
+
+      if (filter.field == 'transactionEnd' && filter.value) {
+        const d = moment(filter.value).add(7, 'hour').add(1, 'days').toDate();
+        filterList.push({ updatedTime: { $lt: d } });
+      }
+
+      if (filter.field == 'transactionStatus' && filter.value) {
+        filterList.push({ transactionStatusId: { $eq: filter.value } });
+      }
+
+      if (filter.field == 'supplierInvoiceStatus' && filter.value) {
+        filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
+      }
+
+      if (filter.field == 'sigesit' && filter.value) {
+        filterList.push({ userIdDriver: { $eq: filter.value } });
+      }
+
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
-        spartanFilter.push({ lastValidTrackingDateTime: { $gte: d } });
+        const d = moment(filter.value).add(7, 'hour').toDate();
+        spartanFilter.push({ $gte: ['$lastValidTrackingDateTime', d] });
+        allowNullTd = false;
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
-        spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
-      }
-
-      if (filter.field == 'awbStatus' && filter.value) {
-        const fv = (filter.value === 'IN_BRANCH') ? 'IN' : filter.value;
-        spartanFilter.push({ lastValidTrackingType: { $eq: fv } });
-      }
-
-      if (filter.field == 'branchLast' && filter.value) {
-        spartanFilter.push({ lastValidTrackingSiteCode: { $eq: filter.value } });
-      }
-
-      if (filter.field == 'supplier' && filter.value) {
-        spartanFilter.push({ partnerId: filter.value });
+        const d = moment(filter.value).add(7, 'hour').add(1, 'days').toDate();
+        spartanFilter.push({ $lt: ['$lastValidTrackingDateTime', d] });
+        allowNullTd = false;
       }
     }
 
-    console.log(spartanFilter, "spartanFilter");
     const skip = limit * (pageNumber - 1);
 
     const q = [
       {
         $match: {
-          $and: spartanFilter,
+          $and: filterList,
         },
       },
-      { $skip: skip },
-      { $limit: limit },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+      {
+        $lookup: {
+          from: 'cod_awb',
+          as: 'ca',
+          let: { awbNumber: '$awbNumber' },
+          pipeline: [
+            {
+              // on inner join
+              $match:
+              {
+                $expr:
+                {
+                  $and: spartanFilter,
+                },
+              },
+            },
+            { $limit: 1 },
+            {
+              $project: {
+                awbNumber: 1,
+                perwakilan: 1
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: '$ca',
+          preserveNullAndEmptyArrays: allowNullTd,
+        },
+      },
       {
         $project: {
-          partnerName: 1,
-          awbNumber: 1,
+          _id: 1,
           awbDate: 1,
-          parcelContent: '$prtParcelContent',
-          prtParcelValue: '$prtParcelValue',
-          prtCustPackageId: '$prtCustPackageId',
-          userIdDriver: '$courierUserId',
-          userIdDriverNik: '$courierNik',
-          userIdDriverName: '$courierName',
-          userIdUpdatedNik: "$userUpdatedNik",
-          userIdUpdatedName: "$userUpdatedName",
-          dateUpdated: "$history_date",
-          perwakilan: 1,
-          layanan: 1,
-          penerima: 1,
-          codNilai: 1,
-          lastValidTrackingDateTime: 1,
-          lastValidTrackingType: 1,
-          tujuanKecamatan: 1,
-          prtDestinationCode: '$tujuan',
-          manifestTrackingSiteName: '$manifestTrackingSiteName',
-          lastValidTrackingSiteName: '$lastValidTrackingSiteName',
-          receiverRemark: 1,
+          awbNumber: 1,
+          codValue: 1,
+          codFee: 1,
+          consigneeName: 1,
+          createdTime: 1,
+          currentPosition: 1,
+          isDeleted: 1,
+          paymentMethod: 1,
+          supplierInvoiceStatusId: 1,
+          prtParcelValue: '$parcelValue',
+          codNilai: '$codValue',
+          lastValidTrackingDateTime: '$podDate',
+          penerima: '$consigneeName',
+          receiverRemark: "$parcelNote",
+          layanan: "$packageType",
+          tujuanKecamatan: "$destination",
+          prtDestinationCode: "$destinationCode",
+          lastValidTrackingSiteName: "$currentPosition",
+          manifestTrackingSiteName: "$pickupSource",
+          packageType: 1,
+          parcelContent: 1,
+          parcelNote: 1,
+          parcelValue: 1,
+          partnerId: 1,
+          partnerName: 1,
+          paymentService: 1,
+          pickupSource: 1,
+          podDate: 1,
+          transactionStatusId: 1,
+          userIdDriverNik: '$nikSigesit',
+          userIdDriverName: '$sigesit',
+          userIdUpdatedNik: "$nikAdmin",
+          userIdUpdatedName: "$adminName",
+          dateUpdated: "$updatedTime",
+          updatedTime: 1,
+          userIdUpdated: 1,
         },
       },
     ];
@@ -942,6 +1007,8 @@ export class V1WebReportCodService {
     // console.log(arrUser, "array");
     for (const d of datas) {
       d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
+      d.lastValidTrackingType = "DLV"
+
       d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
       // if (d.userIdDriver && arrDriver.length > 0) {
       //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
@@ -957,6 +1024,9 @@ export class V1WebReportCodService {
     arrDatas.push(...datas);
     return datas;
   }
+
+
+
 
 
   static async getNonCodSupplierInvoiceTransactionDetailData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
@@ -1206,7 +1276,7 @@ export class V1WebReportCodService {
         while (!finish) {
           let responseDatas: any;
           if (reportType.filterAwb === true && reportType.filterTransaction === true) {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_join', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
+            const rawResponseData = await this.timeResponse('time_log_cod_read_join', this.getNonCodSupplierInvoiceJoinTransactionDetailData(dbTransactionDetail, datas, transactionStatuses, filters, limit, pageNumber));
             responseDatas = rawResponseData.data;
           } else if (reportType.filterAwb === true) {
             const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
