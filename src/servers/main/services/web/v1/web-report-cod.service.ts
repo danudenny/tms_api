@@ -857,13 +857,6 @@ export class V1WebReportCodService {
     return datas;
   }
 
-
-
-
-
-
-
-
   static async getNonCodSupplierInvoiceTransactionDetailData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
     const spartanFilter: any = [{ isCod: true }, { $eq: ['$awbNumber', '$$awbNumber'] }];
      let allowNullTd = true;
@@ -900,7 +893,7 @@ export class V1WebReportCodService {
 
       
       if (filter.field == 'branchLastId' && filter.value) {
-        filterList.push({ currentPositionId: { $eq: filter.value } });
+        filterList.push({ currentPositionId: { $eq: filter.value.toString() } });
       }
 
       if (filter.field == 'periodStart' && filter.value) {
