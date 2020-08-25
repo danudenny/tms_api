@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdItemMoreResponseVm, ScanOutSmdEditResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdItemMoreResponseVm, ScanOutSmdEditResponseVm, ScanOutSmdEditDetailResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -1490,6 +1490,13 @@ export class ScanoutSmdService {
       },
     });
     if (resultDoSmd) {
+      const resultDoSmdVehicle = await DoSmdVehicle.findOne({
+        where: {
+          doSmdVehicleId: resultDoSmd.doSmdVehicleIdLast,
+          isDeleted: false,
+        },
+      });
+
       const rawQuery = `
         SELECT
           ds.do_smd_id,
@@ -1510,9 +1517,13 @@ export class ScanoutSmdService {
       const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
       if (resultDataDoSmdDetail.length > 0 ) {
         for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-
           data.push({
-            do_smd_id: resultDataDoSmdDetail[i].do_smd_id,
+            do_smd_id: resultDoSmd.doSmdId,
+            do_smd_code: resultDoSmd.doSmdCode,
+            do_smd_time: resultDoSmd.doSmdTime,
+            do_smd_vehicle_id: resultDoSmd.doSmdVehicleIdLast,
+            user_id_driver: resultDoSmdVehicle.employeeIdDriver,
+            vehicle_number: resultDoSmdVehicle.vehicleNumber,
             do_smd_detail_id: resultDataDoSmdDetail[i].do_smd_detail_id,
             branch_id_from: resultDataDoSmdDetail[i].branch_id_from,
             branch_name_from: resultDataDoSmdDetail[i].branch_name_from,
@@ -1520,7 +1531,6 @@ export class ScanoutSmdService {
             branch_name_to: resultDataDoSmdDetail[i].branch_name_to,
             representative_code_list: resultDataDoSmdDetail[i].representative_code_list,
           });
-
         }
         result.statusCode = HttpStatus.OK;
         result.data = data;
@@ -1532,7 +1542,97 @@ export class ScanoutSmdService {
       throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
     }
   }
-  
+
+  static async scanOutEditDetail(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdEditDetailResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+
+    const resultDoSmdDetail = await DoSmdDetail.findOne({
+      where: {
+        doSmdDetailId: payload.do_smd_detail_id,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmdDetail) {
+      const rawQueryBagging = `
+        SELECT
+          DISTINCT dsdi.bagging_id,
+          b.bagging_code
+        FROM do_smd_detail_item dsdi
+        INNER JOIN bagging b ON dsdi.bagging_id = b.bagging_id AND b.is_deleted = FALSE
+        WHERE
+          dsdi.do_smd_detail_id = ${resultDoSmdDetail.doSmdDetailId} AND
+          dsdi.bag_type = 0 AND
+          dsdi.bagging_id IS NOT NULL
+          dsdi.is_deleted = FALSE;
+      `;
+      const resultDataBagging = await RawQueryService.query(rawQueryBagging);
+      if (resultDataBagging.length > 0 ) {
+        for (let i = 0; i < resultDataBagging.length; i++) {
+          data.push({
+            do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+            bag_number: resultDataBagging[i].bagging_code,
+            bag_type: 0,
+          });
+        }
+      }
+      const rawQueryBag = `
+        SELECT
+          DISTINCT dsdi.bag_item_id,
+          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bagNumberSeq
+        FROM do_smd_detail_item dsdi
+        INNER JOIN bag_item bi on dsdi.bag_item_id = bi.bag_item_id and bi.is_deleted = FALSE
+        INNER JOIN bag b on bi.bag_id = b.bag_id and b.is_deleted = FALSE
+        WHERE
+          dsdi.do_smd_detail_id = ${resultDoSmdDetail.doSmdDetailId} AND
+          dsdi.bag_type = 1 AND
+          dsdi.bag_item_id IS NOT NULL
+          dsdi.is_deleted = FALSE;
+      `;
+      const resultDataBag = await RawQueryService.query(rawQueryBag);
+      if (resultDataBag.length > 0 ) {
+        for (let i = 0; i < resultDataBag.length; i++) {
+          data.push({
+            do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+            bag_number: resultDataBag[i].bagNumberSeq,
+            bag_type: 1,
+          });
+        }
+      }
+      const rawQueryBagRepresentative = `
+        SELECT
+          DISTINCT dsdi.bag_representative_id,
+          br.bag_representative_code
+        FROM do_smd_detail_item dsdi
+        INNER JOIN bag_representative br on dsdi.bag_representative_id = br.bag_representative_id and br.is_deleted = FALSE
+        WHERE
+          dsdi.do_smd_detail_id = ${resultDoSmdDetail.doSmdDetailId} AND
+          dsdi.bag_type = 2 AND
+          dsdi.bag_representative_id IS NOT NULL
+          dsdi.is_deleted = FALSE;
+      `;
+      const resultDataBagRepresentative = await RawQueryService.query(rawQueryBagRepresentative);
+      if (resultDataBagRepresentative.length > 0 ) {
+        for (let i = 0; i < resultDataBagRepresentative.length; i++) {
+          data.push({
+            do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+            bag_number: resultDataBagRepresentative[i].bag_representative_code,
+            bag_type: 2,
+          });
+        }
+      }
+      result.statusCode = HttpStatus.OK;
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`SMD DETAIL ID: ` + payload.do_smd_detail_id + ` Can't Found !`);
+    }
+  }
+
   private static async createDoSmd(
     paramDoSmdCode: string,
     paramDoSmdTime: Date,

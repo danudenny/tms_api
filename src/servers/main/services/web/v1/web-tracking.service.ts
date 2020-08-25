@@ -248,7 +248,7 @@ export class V1WebTrackingService {
     const result = new TrackingBagRepresentativeDetailResponseVm();
     const data = await this.getRawBagRepresentativeDetail(payload.bagRepresentativeId);
     if (data) {
-      result.awbNumber = data.ref_awb_number;
+      result.bagRepresentativeDetail = data;
     }
     return result;
   }
@@ -409,7 +409,7 @@ export class V1WebTrackingService {
   private static async getRawBagRepresentativeDetail(bagRepresentativeId: number): Promise<any> {
     const query = `
       SELECT
-        bri.ref_awb_number
+        ref_awb_number as "awbNumber"
       FROM bag_representative_item
       WHERE
         bag_representative_id = :bagRepresentativeId
@@ -417,7 +417,7 @@ export class V1WebTrackingService {
     const rawData = await RawQueryService.queryWithParams(query, {
       bagRepresentativeId,
     });
-    return rawData ? rawData[0] : null;
+    return rawData ? rawData : null;
   }
 
   private static async getRawBagRepresentativeHistory(bagRepresentativeId: number): Promise<any> {
