@@ -497,3 +497,30 @@ export class ScanOutEditVm {
   representative_code_list: string;
 
 }
+
+export class ScanOutSmdEditDetailResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutEditDetailVm]})
+  data: ScanOutEditDetailVm[];
+}
+
+export class ScanOutEditDetailVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_number: string;
+
+  @ApiModelProperty()
+  bag_type: number;
+
+}
