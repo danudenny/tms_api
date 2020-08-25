@@ -9,31 +9,37 @@ import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingData
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 export class SmdPrintService {
   public static async printBagging(
     res: express.Response,
     queryParams: PrintSmdPayloadVm,
   ) {
-    const bagging = await RepositoryService.baggingSmd
-      .loadById(queryParams.id)
-      .select({
-        baggingId: true, // needs to be selected due to users relations are being included
-        baggingCode: true,
-        totalItem: true,
-        totalWeight: true,
-        representative: {
-          representativeCode: true,
-          representativeName: true,
-        },
-      })
-      .exec();
+    const rawQuery = `
+      SELECT
+        ba.bagging_id,
+        ba.bagging_code,
+        ba.total_item,
+        ba.total_weight,
+        r.representative_code,
+        r.representative_name
+      FROM bagging ba
+      INNER JOIN representative r ON r.representative_id = ba.representative_id_to
+      WHERE
+        ba.bagging_id = '${queryParams.id}' AND
+        ba.is_deleted = FALSE;
+    `;
+    const bagging = await RawQueryService.query(rawQuery, null, false);
 
-    if (!bagging) {
+    if (bagging.length == 0) {
       RequestErrorService.throwObj({
         message: 'Bagging tidak ditemukan',
       });
     }
+
+    const totalColi = bagging[0].total_item;
+    const totalWeight = bagging[0].total_weight;
 
     const rawPrinterCommands =
       `SIZE 80 mm, 100 mm\n` +
@@ -43,11 +49,11 @@ export class SmdPrintService {
       `OFFSET 0\n` +
       `CLS\n` +
       `TEXT 10,120,"5",0,1,1,0,"BAGGING DARAT"\n` +
-      `BARCODE 10,200,"128",100,1,0,3,10,"${bagging.baggingCode}"\n` +
-      `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${bagging.totalItem}"\n` +
-      `TEXT 10,420,"3",0,1,1,"Berat : ${bagging.totalWeight}"\n` +
-      `TEXT 10,460,"5",0,1,1,0,"${bagging.representative.representativeCode}"\n` +
-      `TEXT 10,540,"3",0,1,1,"${bagging.representative.representativeName}"\n` +
+      `BARCODE 10,200,"128",100,1,0,3,10,"${bagging[0].baggingCode}"\n` +
+      `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${totalColi}"\n` +
+      `TEXT 10,420,"3",0,1,1,"Berat : ${totalWeight}"\n` +
+      `TEXT 10,460,"5",0,1,1,0,"${bagging[0].representativeCode}"\n` +
+      `TEXT 10,540,"3",0,1,1,"${bagging[0].representativeName}"\n` +
       `PRINT 1\n` +
       `EOP`;
 
