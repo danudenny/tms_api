@@ -66,6 +66,10 @@ export class PackageAwbResponseVm   {
 
   @ApiModelPropertyOptional()
   weight: number;
+
+  @ApiModelProperty()
+  message: string;
+
 }
 
 export class PackageAwbBackupResponseVm   {
