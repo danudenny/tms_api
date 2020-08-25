@@ -31,18 +31,17 @@ export class ScanOutController {
   @Post('scanOut/item')
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  @ApiOkResponse({ type: ScanOutSmdItemMoreResponseVm })
-  public async scanOutItem(@Req() request: any, @Body() payload: ScanOutSmdItemMorePayloadVm) {
-    return ScanoutSmdService.scanOutItemMore(payload);
+  public async scanOutItem(@Req() request: any, @Body() payload: ScanOutSmdItemPayloadVm) {
+    return ScanoutSmdService.scanOutItem(payload);
   }
 
-  // @Post('scanOut/item/manual-input')
-  // @Transactional()
-  // @ApiOkResponse({ type: ScanOutSmdItemMoreResponseVm })
-  // @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  // public async scanOutItemMore(@Req() request: any, @Body() payload: ScanOutSmdItemMorePayloadVm) {
-  //   return ScanoutSmdService.scanOutItemMore(payload);
-  // }
+  @Post('scanOut/item/manual-input')
+  @Transactional()
+  @ApiOkResponse({ type: ScanOutSmdItemMoreResponseVm })
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async scanOutItemMore(@Req() request: any, @Body() payload: ScanOutSmdItemMorePayloadVm) {
+    return ScanoutSmdService.scanOutItemMore(payload);
+  }
 
   @Post('scanOut/seal')
   @Transactional()
