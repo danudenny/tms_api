@@ -962,6 +962,7 @@ export class V1WebReportCodService {
           currentPosition: 1,
           isDeleted: 1,
           paymentMethod: 1,
+          perwakilan: "$ca.perwakilan",
           supplierInvoiceStatusId: 1,
           prtParcelValue: '$parcelValue',
           codNilai: '$codValue',
