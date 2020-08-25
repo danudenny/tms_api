@@ -148,7 +148,6 @@ export class PartnerGojekService {
                 payload,
               };
 
-
               // TODO: save response data to db
               // find and update data to work order attr
               await this.findAndCreateOrder(
@@ -203,7 +202,7 @@ export class PartnerGojekService {
       where: {
         branchId : permissonPayload.branchId,
         isDeleted: false,
-      }
+      },
     });
 
     // NOTE: Check do pod deliver id and awb item id valid or not
@@ -211,7 +210,7 @@ export class PartnerGojekService {
       where: {
         awbItemId     : payload.awbItemId,
         doPodDeliverId: payload.doPodDeliverId,
-      }
+      },
     });
 
     // NOTE: Check if do pod deliver right data
@@ -553,6 +552,8 @@ export class PartnerGojekService {
     try {
 
       // NOTE: Insert to order partner
+      // 1. aaa
+      // 2. bb
       const orderPartner = OrderPartner.create();
       orderPartner.partnerId = 67;
       orderPartner.orderNo = orderNumber;
@@ -563,7 +564,6 @@ export class PartnerGojekService {
       orderPartner.updatedTime = moment().toDate();
       orderPartner.createdTime = moment().toDate();
       await OrderPartner.insert(orderPartner);
-
 
       const order = await WorkOrderAttr.findOne({
         select: ['workOrderAttrId'],
