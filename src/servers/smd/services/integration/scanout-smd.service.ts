@@ -1490,6 +1490,13 @@ export class ScanoutSmdService {
       },
     });
     if (resultDoSmd) {
+      const resultDoSmdVehicle = await DoSmdVehicle.findOne({
+        where: {
+          doSmdVehicleId: resultDoSmd.doSmdVehicleIdLast,
+          isDeleted: false,
+        },
+      });
+
       const rawQuery = `
         SELECT
           ds.do_smd_id,
@@ -1510,9 +1517,13 @@ export class ScanoutSmdService {
       const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
       if (resultDataDoSmdDetail.length > 0 ) {
         for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-
           data.push({
-            do_smd_id: resultDataDoSmdDetail[i].do_smd_id,
+            do_smd_id: resultDoSmd.doSmdId,
+            do_smd_code: resultDoSmd.doSmdCode,
+            do_smd_time: resultDoSmd.doSmdTime,
+            do_smd_vehicle_id: resultDoSmd.doSmdVehicleIdLast,
+            user_id_driver: resultDoSmdVehicle.employeeIdDriver,
+            vehicle_number: resultDoSmdVehicle.vehicleNumber,
             do_smd_detail_id: resultDataDoSmdDetail[i].do_smd_detail_id,
             branch_id_from: resultDataDoSmdDetail[i].branch_id_from,
             branch_name_from: resultDataDoSmdDetail[i].branch_name_from,
@@ -1520,7 +1531,6 @@ export class ScanoutSmdService {
             branch_name_to: resultDataDoSmdDetail[i].branch_name_to,
             representative_code_list: resultDataDoSmdDetail[i].representative_code_list,
           });
-
         }
         result.statusCode = HttpStatus.OK;
         result.data = data;
