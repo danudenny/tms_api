@@ -374,7 +374,7 @@ export class ScanoutSmdService {
                       updatedTime: timeNow,
                     },
                   );
-
+                  paramsresultDoSmdDetailId = paramDoSmdDetailId;
                   // data.push({
                   //   do_smd_id: resultDoSmd.doSmdId,
                   //   do_smd_code: resultDoSmd.doSmdCode,

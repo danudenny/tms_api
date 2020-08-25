@@ -382,7 +382,7 @@ export class BagCityService {
     }
 
     const rawPrinterCommands =
-    `SIZE 80 mm, 100 mm\n` +
+	`SIZE 80 mm, 100 mm\n` +
     `SPEED 3\n` +
     `DENSITY 8\n` +
     `DIRECTION 0\n` +
@@ -396,6 +396,7 @@ export class BagCityService {
     `TEXT 30,540,"3",0,1,1,"${bagging.representative.representativeName}"\n` +
     `PRINT 1\n` +
     `EOP`;
+
 
     const printerName = 'BarcodePrinter';
     PrinterService.responseForRawCommands({
