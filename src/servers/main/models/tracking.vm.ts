@@ -356,6 +356,11 @@ export class TrackingBagRepresentativeAwbResponseVm {
 }
 
 export class TrackingBagRepresentativeDetailResponseVm {
+  @ApiModelProperty({ type: () => [TrackingBagRepresentativeAwbDetailResponseVm] })
+  bagRepresentativeDetail: TrackingBagRepresentativeAwbDetailResponseVm[];
+}
+
+export class TrackingBagRepresentativeAwbDetailResponseVm {
   @ApiModelProperty()
   awbNumber: string;
 }
