@@ -98,13 +98,7 @@ export class ScanOutVendorItemVm {
   total_bag_representative: number;
 }
 
-export class ScanOutVendorItemMoreDataVm {
-  @ApiModelProperty()
-  statusCode: number;
-
-  @ApiModelProperty()
-  message: string;
-
+export class ScanOutVendorItemMoreDataVm extends ScanOutSmdVendorItemResponseVm {
   @ApiModelProperty()
   item_number: string;
 }
