@@ -409,7 +409,7 @@ export class V1WebTrackingService {
   private static async getRawBagRepresentativeDetail(bagRepresentativeId: number): Promise<any> {
     const query = `
       SELECT
-        bri.ref_awb_number
+        ref_awb_number
       FROM bag_representative_item
       WHERE
         bag_representative_id = :bagRepresentativeId
