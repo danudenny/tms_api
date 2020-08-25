@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdItemMoreResponseVm,ScanOutSmdEditResponseVm, ScanOutSmdEditDetailResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdItemMoreResponseVm, ScanOutSmdEditResponseVm, ScanOutSmdEditDetailResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -1606,7 +1606,7 @@ export class ScanoutSmdService {
           dsdi.is_deleted = FALSE;
       `;
       const resultDataBagRepresentative = await RawQueryService.query(rawQueryBagRepresentative);
-      if (bag_representative_id.length > 0 ) {
+      if (resultDataBagRepresentative.length > 0 ) {
         for (let i = 0; i < resultDataBagRepresentative.length; i++) {
           data.push({
             do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
@@ -1622,7 +1622,7 @@ export class ScanoutSmdService {
       throw new BadRequestException(`SMD DETAIL ID: ` + payload.do_smd_detail_id + ` Can't Found !`);
     }
   }
-  
+
   private static async createDoSmd(
     paramDoSmdCode: string,
     paramDoSmdTime: Date,
