@@ -89,3 +89,42 @@ export class UnloadAwbResponseVm {
   @ApiModelProperty()
   weight: number;
 }
+
+export class AwbScanPackageDetailVm {
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  awbStatusIdLast: number;
+
+  @ApiModelProperty()
+  isPackageCombined: boolean;
+
+  @ApiModelProperty()
+  toId: number;
+
+  @ApiModelProperty()
+  totalWeightRealRounded: number;
+
+  @ApiModelProperty()
+  refReseller: string;
+
+  @ApiModelProperty()
+  pickupMerchant: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeNumber: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  customerAccountId: number;
+}

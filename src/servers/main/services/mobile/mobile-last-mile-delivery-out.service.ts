@@ -262,8 +262,8 @@ export class LastMileDeliveryOutService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const doPodDateTime = moment().toDate();
 
-    // NOTE: Tipe surat (jalan Antar Sigesit)
-    doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliver(
+    // NOTE: Tipe surat (jalan Antar Sigesit) from Mobile App
+    doPod.doPodDeliverCode = await CustomCounterCode.doPodDeliverMobile(
       doPodDateTime,
     ); // generate code
 
