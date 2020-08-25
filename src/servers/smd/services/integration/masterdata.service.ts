@@ -103,6 +103,9 @@ export class MasterDataService {
       {
         field: 'vendorCode',
       },
+      {
+        field: 'vendorName',
+      },
     ];
 
     if (!payload.sortBy) {
