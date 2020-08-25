@@ -136,7 +136,11 @@ export class V1WebAwbCodVoucherService {
           console.log(errorMessage);
         }
       } else {
-        codVoucherId = voucher.codVoucherId;
+        responseCode = '02';
+        responseMessage = 'DUPLICATED';
+        const errorMessage = `Cod Voucher No ${codVoucherNo} is duplicated.`;
+        dataError.push(errorMessage);
+        console.log(errorMessage);
       }
 
       if (codVoucherId) {
