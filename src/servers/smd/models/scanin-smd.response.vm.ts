@@ -38,7 +38,13 @@ export class ScanInSmdBagMoreResponseVm {
   data: ScanInSmdBagDataResponseVm[];
 }
 
-export class ScanInSmdBagDataResponseVm extends ScanInSmdBagResponseVm {
+export class ScanInSmdBagDataResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
   @ApiModelProperty()
   bag_item_number: number;
 }
