@@ -1,5 +1,8 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import {ReceivedBagDetail} from './received-bag-detail';
+import {Branch} from './branch';
+import {User} from './user';
 
 @Entity('received_bag', { schema: 'public' })
 export class ReceivedBag extends TmsBaseEntity {
@@ -84,4 +87,15 @@ export class ReceivedBag extends TmsBaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @OneToMany(() => ReceivedBagDetail, receivedBagDetail => receivedBagDetail.receivedBag)
+  receivedBagDetails: ReceivedBagDetail[];
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 }

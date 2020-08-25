@@ -22,18 +22,17 @@ export class ScanOutVendorController {
   @Post('scanOut/item')
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  @ApiOkResponse({ type: ScanOutSmdVendorItemMoreResponseVm })
-  public async scanOutVendorItem(@Req() request: any, @Body() payload: ScanOutSmdVendorItemMorePayloadVm) {
-    return ScanoutSmdVendorService.scanOutVendorItemMore(payload);
+  public async scanOutVendorItem(@Req() request: any, @Body() payload: ScanOutSmdVendorItemPayloadVm) {
+    return ScanoutSmdVendorService.scanOutVendorItem(payload);
   }
 
-  // @Post('scanOut/item/manual-input')
-  // @ApiOkResponse({ type: ScanOutSmdVendorItemMoreResponseVm })
-  // @Transactional()
-  // @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  // public async scanOutVendorItemMore(@Req() request: any, @Body() payload: ScanOutSmdVendorItemMorePayloadVm) {
-  //   return ScanoutSmdVendorService.scanOutVendorItemMore(payload);
-  // }
+  @Post('scanOut/item/manual-input')
+  @ApiOkResponse({ type: ScanOutSmdVendorItemMoreResponseVm })
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async scanOutVendorItemMore(@Req() request: any, @Body() payload: ScanOutSmdVendorItemMorePayloadVm) {
+    return ScanoutSmdVendorService.scanOutVendorItemMore(payload);
+  }
 
   @Post('scanOut/end')
   @Transactional()

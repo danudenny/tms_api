@@ -1,8 +1,8 @@
 import express = require('express');
-import {RepositoryService} from '../../../../shared/services/repository.service';
-import {RequestErrorService} from '../../../../shared/services/request-error.service';
-import {PrinterService} from '../../../../shared/services/printer.service';
-import {PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm} from '../../models/print-smd-payload.vm';
+import { RepositoryService } from '../../../../shared/services/repository.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { PrinterService } from '../../../../shared/services/printer.service';
+import { PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm, PrintReceivedBagPaperPayloadVm } from '../../models/print-smd-payload.vm';
 import moment = require('moment');
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
 import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm, PrintDoSmdDataDoSmdDetailBagRepresentativeVm, PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm, PrintVendorDataVm, PrintVendorVm, PrintVendorDataVendorDetailVm } from '../../models/print-do-smd.vm';
@@ -367,8 +367,8 @@ export class SmdPrintService {
     templateConfig: {
       printCopy?: number;
     } = {
-      printCopy: 1,
-    },
+        printCopy: 1,
+      },
   ) {
     const currentUser = await RepositoryService.user
       .loadById(metaQuery.userId)
@@ -425,8 +425,8 @@ export class SmdPrintService {
     templateConfig: {
       printCopy?: number;
     } = {
-      printCopy: 1,
-    },
+        printCopy: 1,
+      },
   ) {
     const jsreportParams = {
       data,
@@ -452,8 +452,9 @@ export class SmdPrintService {
     queryParams: PrintVendorPaperPayloadVm,
   ) {
     const q = RepositoryService.doSmd.findOne();
-    q.leftJoin(e => e.doSmdDetails);
-    q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
+    q.leftJoin(e => e.doSmdDetails, 'dsd', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
 
     const doSmd = await q
       .select({
@@ -474,7 +475,7 @@ export class SmdPrintService {
         },
       })
       .where(e => e.doSmdId, w => w.equals(queryParams.id))
-      .andWhere(e => e.doSmdDetails.isDeleted, w => w.isFalse());
+      .andWhere(e => e.isDeleted, w => w.isFalse());
 
     if (!doSmd) {
       RequestErrorService.throwObj({
@@ -578,8 +579,8 @@ export class SmdPrintService {
     templateConfig: {
       printCopy?: number;
     } = {
-      printCopy: 1,
-    },
+        printCopy: 1,
+      },
   ) {
     const currentUser = await RepositoryService.user
       .loadById(metaQuery.userId)
@@ -634,8 +635,8 @@ export class SmdPrintService {
     templateConfig: {
       printCopy?: number;
     } = {
-      printCopy: 1,
-    },
+        printCopy: 1,
+      },
   ) {
     const jsreportParams = {
       data,
@@ -650,6 +651,73 @@ export class SmdPrintService {
           templateName: 'vendor-surat-muatan-darat',
           templateData: jsreportParams,
           printCopy: templateConfig.printCopy,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  public static async printReceivedBagForPaper(
+    res: express.Response,
+    payload: PrintReceivedBagPaperPayloadVm,
+  ) {
+    const q = RepositoryService.receivedBag.findOne();
+    q.leftJoin(e => e.receivedBagDetails, 'rbd', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.user, 'u', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.user.employee, 'e', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 'b', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    const receivedBag = await q
+      .select({
+        receivedBagId: true,
+        receivedBagDate: true,
+        user: {
+          userId: true,
+          employee: {
+            employeeName: true,
+            nik: true,
+          },
+        },
+        branch: {
+          branchName: true,
+        },
+        receivedBagDetails: {
+          bagNumber: true,
+          bagWeight: true,
+        },
+      })
+      .where(e => e.isDeleted, w => w.equals(false))
+      .andWhere(e => e.receivedBagId, w => w.equals(payload.id));
+
+    if (!receivedBag) {
+      RequestErrorService.throwObj({
+        message: 'Received bag tidak ditemukan',
+      });
+    }
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    const date = moment(receivedBag.receivedBagDate).format('YYYY-MM-DD');
+    const time = moment(receivedBag.receivedBagDate).format('HH:mm');
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'ttd-received-bag',
+          templateData: {
+            data: receivedBag,
+            meta: {
+              date,
+              time,
+            },
+          },
+          printCopy: payload.printCopy ? payload.printCopy : 3,
         },
       ],
       listPrinterName,
