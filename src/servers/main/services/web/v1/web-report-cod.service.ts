@@ -1491,6 +1491,7 @@ export class V1WebReportCodService {
           currentPosition: 1,
           custPackage: 1,
           destination: 1,
+          paymentMethod: 1,
           destinationCode: 1,
           isDeleted: 1,
           packageType: 1,
