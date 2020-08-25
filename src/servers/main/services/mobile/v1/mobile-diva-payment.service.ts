@@ -26,7 +26,7 @@ export class V1MobileDivaPaymentService {
       });
       return response.data;
     } catch (error) {
-      throw new ServiceUnavailableException(error.message);
+      return error.response.data;
     }
   }
 
@@ -64,7 +64,7 @@ export class V1MobileDivaPaymentService {
       return response.data;
     } catch (error) {
       WinstonLogglyService.error({requestData, error: error.response.data});
-      throw new ServiceUnavailableException(error.message);
+      return error.response.data;
     }
   }
 
@@ -77,7 +77,7 @@ export class V1MobileDivaPaymentService {
       return response.data;
     } catch (error) {
       WinstonLogglyService.error({requestData, error: error.response.data});
-      throw new ServiceUnavailableException(error.message);
+      return error.response.data;
     }
   }
 
@@ -90,7 +90,7 @@ export class V1MobileDivaPaymentService {
       return response.data;
     } catch (error) {
       WinstonLogglyService.error({requestData, error: error.response.data});
-      throw new ServiceUnavailableException(error.message);
+      return error.response.data;
     }
   }
 }
