@@ -49,11 +49,11 @@ export class SmdPrintService {
       `OFFSET 0\n` +
       `CLS\n` +
       `TEXT 10,120,"5",0,1,1,0,"BAGGING DARAT"\n` +
-      `BARCODE 10,200,"128",100,1,0,3,10,"${bagging[0].baggingCode}"\n` +
+      `BARCODE 10,200,"128",100,1,0,3,10,"${bagging[0].bagging_code}"\n` +
       `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${totalColi}"\n` +
       `TEXT 10,420,"3",0,1,1,"Berat : ${totalWeight}"\n` +
-      `TEXT 10,460,"5",0,1,1,0,"${bagging[0].representativeCode}"\n` +
-      `TEXT 10,540,"3",0,1,1,"${bagging[0].representativeName}"\n` +
+      `TEXT 10,460,"5",0,1,1,0,"${bagging[0].representative_code}"\n` +
+      `TEXT 10,540,"3",0,1,1,"${bagging[0].representative_name}"\n` +
       `PRINT 1\n` +
       `EOP`;
 
