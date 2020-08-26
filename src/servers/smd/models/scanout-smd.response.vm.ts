@@ -502,6 +502,15 @@ export class ScanOutEditVm {
   @ApiModelProperty()
   representative_code_list: string;
 
+  @ApiModelProperty()
+  total_bag: number;
+
+  @ApiModelProperty()
+  total_bagging: number;
+
+  @ApiModelProperty()
+  total_bag_representative: number;
+
 }
 
 export class ScanOutSmdEditDetailResponseVm {
@@ -521,9 +530,27 @@ export class ScanOutEditDetailVm {
   do_smd_detail_id: number;
 
   @ApiModelProperty()
+  bag_id: number;
+
+  @ApiModelProperty()
+  bag_item_id: number;
+
+  @ApiModelProperty()
   bag_number: string;
 
   @ApiModelProperty()
+  bag_representative_code: string;
+
+  @ApiModelProperty()
+  bag_representative_id: number;
+
+  @ApiModelProperty()
   bag_type: number;
+
+  @ApiModelProperty()
+  bagging_id: number;
+
+  @ApiModelProperty()
+  bagging_number: string;
 
 }
