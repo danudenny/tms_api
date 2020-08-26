@@ -1598,7 +1598,8 @@ export class ScanoutSmdService {
       }
       const rawQueryBag = `
         SELECT
-          DISTINCT dsdi.bag_item_id, dsdi.bag_id
+          DISTINCT dsdi.bag_item_id, 
+          dsdi.bag_id,
           CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bag_number_seq
         FROM do_smd_detail_item dsdi
         INNER JOIN bag_item bi on dsdi.bag_item_id = bi.bag_item_id and bi.is_deleted = FALSE
