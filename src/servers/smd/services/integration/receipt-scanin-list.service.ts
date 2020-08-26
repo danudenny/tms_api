@@ -78,26 +78,27 @@ export class ReceiptScaninListService {
   static async findReceiptScanInDetailList(
     payload: BaseMetaPayloadVm,
   ): Promise<ReceiptScaninDetailListResponseVm> {
-    payload.fieldResolverMap['bagNumber'] = 'rb.received_bag_id';
-    payload.fieldResolverMap['bagWeight'] = 'rb.received_bag_code';
-    payload.fieldResolverMap['receivedBagDetailId'] = 'b.branch_id';
+    payload.fieldResolverMap['receivedBagId'] = 'rbd.received_bag_id';
+    payload.fieldResolverMap['receivedBagDetailId'] = 'rbd.received_bag_detail_id';
+    payload.fieldResolverMap['bagNumber'] = 'rbd.bag_number';
 
     payload.globalSearchFields = [
-      {
-        field: 'bagNumber',
-      },
+      { field: 'receivedBagId' },
+      { field: 'receivedBagDetailId' },
+      { field: 'bagNumber' },
     ];
 
     const repo = new OrionRepositoryService(ReceivedBagDetail, 'rbd');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
+
     q.selectRaw(
+      ['rbd.received_bag_id', 'receivedBagId'],
+      ['rbd.received_bag_detail_id', 'receivedBagDetailId'],
       ['rbd.bag_number', 'bagNumber'],
       ['rbd.bag_weight', 'bagWeight'],
-      ['rbd.received_bag_detail_id', 'receivedBagDetailId'],
     );
-
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
