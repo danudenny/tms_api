@@ -40,7 +40,7 @@ export class ScaninSmdService {
       const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
       const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
       const paramSeq = await paramBagSeq * 1;
-      const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+      let weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       let paramBagItemId = null;
       if (paramBagNumber == null || paramBagNumber == undefined) {
         result.message = 'Bag Number Not Found';
@@ -73,7 +73,8 @@ export class ScaninSmdService {
             bi.bag_item_id,
             bih.bag_item_status_id,
             br.branch_name as branch_name_scan,
-            u.username as username_scan
+            u.username as username_scan,
+            bi.weight
           FROM bag_item bi
           LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bi.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
           LEFT JOIN branch br ON br.branch_id = bih.branch_id AND br.is_deleted = false
@@ -89,7 +90,10 @@ export class ScaninSmdService {
           const branchNameScan = resultData[0].branch_name_scan;
           const usernameScan = resultData[0].username_scan;
           paramBagItemId = resultData[0].bag_item_id;
-          console.log(resultData[0].bag_item_status_id);
+
+          if (weight == 0) { // handle error weight = 0 from request payload
+            weight = parseFloat(resultData[0].weight);
+          }
           if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4500 || resultData[0].bag_item_status_id == 500 ) {
             // do nothing
           } else if ( resultData[0].bag_item_status_id == 3500 ) {
