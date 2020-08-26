@@ -505,13 +505,19 @@ export class ScanOutEditVm {
   branch_id_from: number;
 
   @ApiModelProperty()
+  branch_code_from: string;
+
+  @ApiModelProperty()
   branch_name_from: string;
 
   @ApiModelProperty()
   branch_id_to: number;
 
   @ApiModelProperty()
-  branch_name_to: string;
+  branch_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
 
   @ApiModelProperty()
   representative_code_list: string;

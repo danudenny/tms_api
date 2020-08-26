@@ -132,5 +132,5 @@ export class ScanOutSmdEditPayloadVm {
 
 export class ScanOutSmdEditDetailPayloadVm {
   @ApiModelProperty()
-  do_smd__detail_id: number;
+  do_smd_detail_id: number;
 }
