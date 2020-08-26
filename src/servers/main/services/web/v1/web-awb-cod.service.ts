@@ -591,8 +591,13 @@ export class V1WebAwbCodService {
         );
       }
       const result = new WebCodTransactionUpdateResponseVm();
-      result.status = 'ok';
-      result.message = 'success';
+      if (dataError.length) {
+        result.status = 'error';
+        result.message = 'error';
+      } else {
+        result.status = 'ok';
+        result.message = 'success';
+      }
       result.totalSuccess = totalSuccess;
       result.dataError = dataError;
       return result;
@@ -744,7 +749,6 @@ export class V1WebAwbCodService {
       result.status = 'ok';
       result.message = 'success';
       result.dataError = dataError;
-
       return result;
 
     } catch (error) {
