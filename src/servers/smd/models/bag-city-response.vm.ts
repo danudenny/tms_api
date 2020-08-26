@@ -24,7 +24,7 @@ export class BagCityResponseVm {
   @ApiModelProperty()
   bagRepresentativeCode: string;
 
-  @ApiModelProperty({ type: BagCityInputManualDataPayloadVm })
+  @ApiModelProperty({ type: () => BagCityInputManualDataPayloadVm })
   inputManualPrevData: BagCityInputManualDataPayloadVm;
 }
 
@@ -43,7 +43,7 @@ export class BagCityMoreResponseVm {
   @ApiModelProperty()
   totalError: number;
 
-  @ApiModelProperty({ type: [BagCityDataMoreResponseVm] })
+  @ApiModelProperty({ type: () => [BagCityDataMoreResponseVm] })
   data: BagCityDataMoreResponseVm[];
 }
 
