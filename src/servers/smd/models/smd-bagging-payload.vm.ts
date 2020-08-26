@@ -25,7 +25,7 @@ export class SmdScanBaggingPayloadVm {
   baggingId: string;
 
   // NOTE: This is just for BE needs to handle input manual
-  @ApiModelProperty({type: () => InputManualDataPayloadVm})
+  @ApiModelPropertyOptional({type: () => InputManualDataPayloadVm})
   inputManualPrevData: InputManualDataPayloadVm;
 }
 
