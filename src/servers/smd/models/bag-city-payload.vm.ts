@@ -36,7 +36,7 @@ export class BagCityPayloadVm {
   @ApiModelPropertyOptional()
   bagRepresentativeId: string;
 
-  @ApiModelProperty({ type: BagCityInputManualDataPayloadVm })
+  @ApiModelPropertyOptional({ type: BagCityInputManualDataPayloadVm })
   inputManualPrevData: BagCityInputManualDataPayloadVm;
 }
 
