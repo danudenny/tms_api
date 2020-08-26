@@ -432,7 +432,7 @@ export class ScaninSmdService {
         return result;
       }
     } else {
-      result.message = 'Bag length <> 15 OR Bag length <> 10';
+      result.message = 'Gabung paket tidak valid';
       return result;
     }
   }
