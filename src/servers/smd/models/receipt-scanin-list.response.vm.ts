@@ -48,5 +48,8 @@ export class ReceiptScaninDetailListDataResponseVm {
   bagWeight: string;
 
   @ApiModelProperty()
-  receivedBagDetailId: string;
+  receivedBagId: number;
+
+  @ApiModelProperty()
+  receivedBagDetailId: number;
 }
