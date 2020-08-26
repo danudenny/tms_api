@@ -1439,8 +1439,10 @@ export class ScanoutSmdService {
           ds.do_smd_id,
           dsd.do_smd_detail_id,
           dsd.branch_id_from,
+          bf.branch_code as branch_code_from,
           bf.branch_name as branch_name_from,
           dsd.branch_id_to,
+          bt.branch_code as branch_code_to,
           bt.branch_name as branch_name_to,
           dsd.representative_code_list
         FROM do_smd ds
@@ -1463,9 +1465,11 @@ export class ScanoutSmdService {
             vehicle_number: resultDoSmdVehicle.vehicleNumber,
             do_smd_detail_id: resultDataDoSmdDetail[i].do_smd_detail_id,
             branch_id_from: resultDataDoSmdDetail[i].branch_id_from,
+            branch_code_from: resultDataDoSmdDetail[i].branch_code_from,
             branch_name_from: resultDataDoSmdDetail[i].branch_name_from,
             branch_id_to: resultDataDoSmdDetail[i].branch_id_to,
-            branch_name_to: resultDataDoSmdDetail[i].branch_name_to,
+            branch_code: resultDataDoSmdDetail[i].branch_code_to,
+            branch_name: resultDataDoSmdDetail[i].branch_name_to,
             representative_code_list: resultDataDoSmdDetail[i].representative_code_list,
           });
         }
