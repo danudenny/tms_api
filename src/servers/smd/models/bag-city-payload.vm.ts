@@ -1,15 +1,18 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
 
-export class BagCityPayloadVm {
+export class BagCityInputManualDataPayloadVm {
   @ApiModelProperty()
-  awbNumber: string;
+  bag_representative_code: string;
 
-  @ApiModelPropertyOptional()
-  representativeId: string;
+  @ApiModelProperty()
+  bag_representative_id: number;
 
-  @ApiModelPropertyOptional()
-  bagRepresentativeId: string;
+  @ApiModelProperty()
+  total_item: number;
+
+  @ApiModelProperty()
+  total_weight: number;
 }
 
 export class BagCityMorePayloadVm {
@@ -21,6 +24,20 @@ export class BagCityMorePayloadVm {
 
   @ApiModelPropertyOptional()
   bagRepresentativeId: string;
+}
+
+export class BagCityPayloadVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelPropertyOptional()
+  representativeId: string;
+
+  @ApiModelPropertyOptional()
+  bagRepresentativeId: string;
+
+  @ApiModelProperty({ type: BagCityInputManualDataPayloadVm })
+  inputManualPrevData: BagCityInputManualDataPayloadVm;
 }
 
 export class BagCityExportPayloadVm extends BaseMetaPayloadVm {
