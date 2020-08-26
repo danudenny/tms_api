@@ -78,7 +78,7 @@ module.exports = {
     urlQR: 'https://apiv2.mdd.co.id:51347',
     codToken: 'f66046c79e4047c299fbf8abdf6cb3b2',
     codMid: '5b4e9699dd603e1aa6687f1d2fe4db95',
-    codTid: 'POD-Mobile',
+    codTid: 'sicepat-001',
   },
   korwil: {
     korwilRoleId: 38,
