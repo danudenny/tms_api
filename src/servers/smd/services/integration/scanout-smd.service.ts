@@ -1507,7 +1507,10 @@ export class ScanoutSmdService {
           dsd.branch_id_to,
           bt.branch_code as branch_code_to,
           bt.branch_name as branch_name_to,
-          dsd.representative_code_list
+          dsd.representative_code_list,
+          dsd.total_bag,
+          dsd.total_bagging,
+          dsd.total_bag_representative
         FROM do_smd ds
         INNER JOIN do_smd_detail dsd ON ds.do_smd_id = dsd.do_smd_id AND dsd.is_deleted = FALSE
         LEFT JOIN branch bf ON dsd.branch_id_from = bf.branch_id AND bf.is_deleted = FALSE
@@ -1534,6 +1537,9 @@ export class ScanoutSmdService {
             branch_code: resultDataDoSmdDetail[i].branch_code_to,
             branch_name: resultDataDoSmdDetail[i].branch_name_to,
             representative_code_list: resultDataDoSmdDetail[i].representative_code_list,
+            total_bag: resultDataDoSmdDetail[i].total_bag,
+            total_bag_representative: resultDataDoSmdDetail[i].total_bag_representative,
+            total_bagging: resultDataDoSmdDetail[i].total_bagging,
           });
         }
         result.statusCode = HttpStatus.OK;
@@ -1579,14 +1585,20 @@ export class ScanoutSmdService {
         for (let i = 0; i < resultDataBagging.length; i++) {
           data.push({
             do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
-            bag_number: resultDataBagging[i].bagging_code,
+            bag_id: null,
+            bag_item_id: null,
+            bag_number: null,
+            bag_representative_code: null,
+            bag_representative_id: null,
             bag_type: 0,
+            bagging_id: resultDataBagging[i].bagging_id,
+            bagging_number: resultDataBagging[i].bagging_code,
           });
         }
       }
       const rawQueryBag = `
         SELECT
-          DISTINCT dsdi.bag_item_id,
+          DISTINCT dsdi.bag_item_id, dsdi.bag_id
           CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bag_number_seq
         FROM do_smd_detail_item dsdi
         INNER JOIN bag_item bi on dsdi.bag_item_id = bi.bag_item_id and bi.is_deleted = FALSE
@@ -1602,8 +1614,14 @@ export class ScanoutSmdService {
         for (let i = 0; i < resultDataBag.length; i++) {
           data.push({
             do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+            bag_id: resultDataBag[i].bag_id,
+            bag_item_id: resultDataBag[i].bag_item_id,
             bag_number: resultDataBag[i].bag_number_seq,
+            bag_representative_code: null,
+            bag_representative_id: null,
             bag_type: 1,
+            bagging_id: null,
+            bagging_number: null,
           });
         }
       }
@@ -1624,8 +1642,14 @@ export class ScanoutSmdService {
         for (let i = 0; i < resultDataBagRepresentative.length; i++) {
           data.push({
             do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
-            bag_number: resultDataBagRepresentative[i].bag_representative_code,
+            bag_id: null,
+            bag_item_id: null,
+            bag_number: null,
+            bag_representative_code: resultDataBagRepresentative[i].bag_representative_code,
+            bag_representative_id: resultDataBagRepresentative[i].bag_representative_id,
             bag_type: 2,
+            bagging_id: null,
+            bagging_number: null,
           });
         }
       }
