@@ -1508,7 +1508,7 @@ export class ScanoutSmdService {
         WHERE
           dsdi.do_smd_detail_id = ${resultDoSmdDetail.doSmdDetailId} AND
           dsdi.bag_type = 0 AND
-          dsdi.bagging_id IS NOT NULL
+          dsdi.bagging_id IS NOT NULL AND
           dsdi.is_deleted = FALSE;
       `;
       const resultDataBagging = await RawQueryService.query(rawQueryBagging);
@@ -1524,14 +1524,14 @@ export class ScanoutSmdService {
       const rawQueryBag = `
         SELECT
           DISTINCT dsdi.bag_item_id,
-          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bagNumberSeq
+          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bag_number_seq
         FROM do_smd_detail_item dsdi
         INNER JOIN bag_item bi on dsdi.bag_item_id = bi.bag_item_id and bi.is_deleted = FALSE
         INNER JOIN bag b on bi.bag_id = b.bag_id and b.is_deleted = FALSE
         WHERE
           dsdi.do_smd_detail_id = ${resultDoSmdDetail.doSmdDetailId} AND
           dsdi.bag_type = 1 AND
-          dsdi.bag_item_id IS NOT NULL
+          dsdi.bag_item_id IS NOT NULL AND
           dsdi.is_deleted = FALSE;
       `;
       const resultDataBag = await RawQueryService.query(rawQueryBag);
@@ -1539,7 +1539,7 @@ export class ScanoutSmdService {
         for (let i = 0; i < resultDataBag.length; i++) {
           data.push({
             do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
-            bag_number: resultDataBag[i].bagNumberSeq,
+            bag_number: resultDataBag[i].bag_number_seq,
             bag_type: 1,
           });
         }
@@ -1553,11 +1553,11 @@ export class ScanoutSmdService {
         WHERE
           dsdi.do_smd_detail_id = ${resultDoSmdDetail.doSmdDetailId} AND
           dsdi.bag_type = 2 AND
-          dsdi.bag_representative_id IS NOT NULL
+          dsdi.bag_representative_id IS NOT NULL AND
           dsdi.is_deleted = FALSE;
       `;
       const resultDataBagRepresentative = await RawQueryService.query(rawQueryBagRepresentative);
-      if (bag_representative_id.length > 0 ) {
+      if (resultDataBagRepresentative.length > 0 ) {
         for (let i = 0; i < resultDataBagRepresentative.length; i++) {
           data.push({
             do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,

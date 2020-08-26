@@ -518,24 +518,6 @@ export class ScanOutSmdEditDetailResponseVm {
 export class ScanOutEditDetailVm {
 
   @ApiModelProperty()
-  do_smd_id: number;
-
-  @ApiModelProperty()
-  do_smd_code: string;
-
-  @ApiModelProperty()
-  do_smd_time: Date;
-
-  @ApiModelProperty()
-  do_smd_vehicle_id: number;
-
-  @ApiModelProperty()
-  user_id_driver: number;
-
-  @ApiModelProperty()
-  vehicle_number: string;
-
-  @ApiModelProperty()
   do_smd_detail_id: number;
 
   @ApiModelProperty()
