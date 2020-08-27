@@ -230,7 +230,7 @@ export class BagCityService {
       bagRepresentativeCode = result.bagRepresentativeCode = inputManualPrevData.bag_representative_code;
 
       const total_weight = (Number(dataAwb[0].weight) + Number(inputManualPrevData.total_weight));
-      const total_item = inputManualPrevData.total_item + 1;
+      const total_item = Number(inputManualPrevData.total_item) + 1;
 
       result.inputManualPrevData = {
         bag_representative_code: inputManualPrevData.bag_representative_code,
@@ -266,7 +266,7 @@ export class BagCityService {
         result.inputManualPrevData = {
           bag_representative_code: createBagRepresentative.bagRepresentativeCode,
           bag_representative_id: createBagRepresentative.bagRepresentativeId,
-          total_item: createBagRepresentative.totalItem,
+          total_item: Number(createBagRepresentative.totalItem),
           total_weight: createBagRepresentative.totalWeight,
         };
 
@@ -410,7 +410,7 @@ export class BagCityService {
     }
 
     const rawPrinterCommands =
-	`SIZE 80 mm, 100 mm\n` +
+  `SIZE 80 mm, 100 mm\n` +
     `SPEED 3\n` +
     `DENSITY 8\n` +
     `DIRECTION 0\n` +
@@ -424,7 +424,6 @@ export class BagCityService {
     `TEXT 30,540,"3",0,1,1,"${bagging.representative.representativeName}"\n` +
     `PRINT 1\n` +
     `EOP`;
-
 
     const printerName = 'BarcodePrinter';
     PrinterService.responseForRawCommands({
