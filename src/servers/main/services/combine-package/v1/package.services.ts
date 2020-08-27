@@ -602,7 +602,7 @@ export class V1PackageService {
     let branchCode = null;
 
     // mapping
-    const bagNumber: string = payload.bagNumber;
+    let bagNumber: string = payload.bagNumber;
     let bagItemId: number = payload.bagItemId;
     let podScanInHubId: string = payload.podScanInHubId;
 
@@ -662,11 +662,20 @@ export class V1PackageService {
       isAllow = false;
       // throw new BadRequestException('Nomor resi sudah digabung sortir');
       // check data bag item awb
-      const bagItem = await BagService.validBagNumber(payload.bagNumber);
-      if (bagItem) {
-        bagWeight = bagItem.weight;
-        bagSeq = bagItem.bagSeq;
-        message = 'Nomor resi sudah digabung sortir';
+      const bagItemAwb = await BagItemAwb.findOne({
+        awbItemId: awbItemAttr.awbItemId,
+        isSortir: true,
+      });
+      if (bagItemAwb) {
+        const bagItem = await BagService.getBagNumber(bagItemAwb.bagItemId);
+        if (bagItem) {
+          bagNumber =
+            bagItem.bag.bagNumber +
+            bagItem.bagSeq.toString().padStart(3, '0');
+          bagWeight = bagItem.weight;
+          bagSeq = bagItem.bagSeq;
+          message = `Nomor resi sudah digabung sortir di ${bagNumber}`;
+        }
       }
     } else {
       // use data district from branch
