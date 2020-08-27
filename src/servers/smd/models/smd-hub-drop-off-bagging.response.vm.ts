@@ -1,5 +1,5 @@
-import { BaseMetaResponseVm } from 'src/shared/models/base-meta-response.vm';
-import { ApiModelProperty } from 'src/shared/external/nestjs-swagger';
+import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 export class SmdHubDropOffGabPaketListDataResponseVm {
   @ApiModelProperty()
