@@ -8,7 +8,7 @@ import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm } from '../../models/smd-bagging-response.vm';
+import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm, SmdScanBaggingDataMoreResponseVm } from '../../models/smd-bagging-response.vm';
 import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm, InputManualDataPayloadVm } from '../../models/smd-bagging-payload.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -103,6 +103,7 @@ export class BaggingSmdService {
     p.baggingId = payload.baggingId;
     p.representativeCode = payload.representativeCode;
     result.data = [];
+    const uniqueBag = [];
 
     if (typeof(payload.bagNumber) != 'object') {
       payload.bagNumber = [payload.bagNumber];
@@ -114,6 +115,19 @@ export class BaggingSmdService {
     // 3. populate total
     for (const bagNumber of payload.bagNumber) {
       p.bagNumber = bagNumber;
+
+      // handle duplikat
+      const number = bagNumber.substring(0, 10);
+      if (uniqueBag.includes(number)) {
+        result.data.push({
+          status: 'error',
+          message: `Scan gabung paket ${bagNumber} duplikat!`,
+          bagNumber,
+        } as SmdScanBaggingDataMoreResponseVm);
+        continue;
+      }
+      uniqueBag.push(number);
+
       const res = await this.createBagging(p);
 
       p.baggingId = p.baggingId ? p.baggingId : res.baggingId;
