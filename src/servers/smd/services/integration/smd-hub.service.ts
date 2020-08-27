@@ -32,6 +32,9 @@ import { MetaService } from '../../../../shared/services/meta.service';
 import { DropoffHubDetailBagRepresentative } from '../../../../shared/orm-entity/dropoff_hub_detail_bag_representative';
 import { DropoffHubDetailBagging } from '../../../../shared/orm-entity/dropoff_hub_detail_bagging';
 import { BagRepresentativeHistory } from '../../../../shared/orm-entity/bag-representative-history';
+import { SmdHubDropOffGabPaketListResponseVm, SmdHubDropOffGabPaketAwbListResponseVm } from '../../models/smd-hub-drop-off-bagging.response.vm';
+import { BaggingItem } from 'src/shared/orm-entity/bagging-item';
+import { BagItemAwb } from 'src/shared/orm-entity/bag-item-awb';
 
 @Injectable()
 export class SmdHubService {
@@ -606,6 +609,7 @@ export class SmdHubService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
+      [`t2.bagging_id`, 'baggingId'],
       [`t2.bagging_code`, 'baggingCode'],
       ['t7.representative_code', 'representativeCode'],
       ['t1.created_time', 'createdTime'],
@@ -641,6 +645,7 @@ export class SmdHubService {
     q.andWhereRaw('t1.rank = 1');
     q.groupByRaw(`
       t1.dropoff_hub_bagging_id,
+      t2.bagging_id,
       t2.bagging_code,
       t7.representative_code,
       t1.created_time,
@@ -703,6 +708,71 @@ export class SmdHubService {
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async getDropOffListGabPaketList(payload: BaseMetaPayloadVm): Promise<SmdHubDropOffGabPaketListResponseVm> {
+    // mapping payload to field
+    payload.fieldResolverMap['baggingId'] = 'b.bagging_id';
+    payload.globalSearchFields = [
+      { field: 'baggingId' },
+    ];
+
+    const repo = new OrionRepositoryService(BaggingItem, 'b').findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(repo, true);
+
+    repo.innerJoin(i => i.bagItem, 'bi', j =>
+      j.andWhere(w => w.isDeleted, v => v.isFalse()),
+    )
+    .innerJoin(i => i.bagItem.bag, 'bib', j =>
+      j.andWhere(w => w.isDeleted, v => v.isFalse()),
+    )
+    .orderBy({ createdTime: 'DESC' })
+    .andWhere(w => w.isDeleted, v => v.isFalse())
+    .selectRaw(
+      ['b.bagging_id', 'baggingId'],
+      ['b.bagging_item_id', 'baggingItemId'],
+      [`CONCAT(bib.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'bagNumber'],
+    );
+
+    const data = await repo.exec();
+    const totalData = await repo.countWithoutTakeAndSkip();
+
+    const result = new SmdHubDropOffGabPaketListResponseVm();
+    result.data = data;
+    result.buildPagingWithPayload(payload, totalData);
+
+    return result;
+  }
+
+  static async getDropOffListGabPaketAwbList(payload: BaseMetaPayloadVm): Promise<SmdHubDropOffGabPaketAwbListResponseVm> {
+    payload.fieldResolverMap['baggingItemId'] = 'bi.bag_item_id';
+    payload.globalSearchFields = [
+      { field: 'baggingItemId' },
+    ];
+
+    const repo = new OrionRepositoryService(BagItemAwb, 'bia').findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(repo, true);
+
+    repo.innerJoin(i => i.bagItem, 'bi', j =>
+      j.andWhere(w => w.isDeleted, v => v.isFalse()),
+    )
+    .andWhere(w => w.isDeleted, v => v.isFalse())
+    .selectRaw(
+      ['bi.bag_item_id', 'baggingItemId'],
+      ['bia.bag_item_awb_id', 'bagItemAwbId'],
+      ['bia.awb_number', 'awbNumber'],
+    );
+
+    const data = await repo.exec();
+    const totalData = await repo.countWithoutTakeAndSkip();
+
+    const result = new SmdHubDropOffGabPaketAwbListResponseVm();
+    result.data = data;
+    result.buildPagingWithPayload(payload, totalData);
 
     return result;
   }
