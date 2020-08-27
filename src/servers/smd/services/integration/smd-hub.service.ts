@@ -742,7 +742,7 @@ export class SmdHubService {
 
     const result = new SmdHubDropOffGabPaketListResponseVm();
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, totalData);
+    result.buildPagingWithPayload(payload, totalData);
 
     return result;
   }
