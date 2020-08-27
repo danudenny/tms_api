@@ -33,8 +33,8 @@ import { DropoffHubDetailBagRepresentative } from '../../../../shared/orm-entity
 import { DropoffHubDetailBagging } from '../../../../shared/orm-entity/dropoff_hub_detail_bagging';
 import { BagRepresentativeHistory } from '../../../../shared/orm-entity/bag-representative-history';
 import { SmdHubDropOffGabPaketListResponseVm, SmdHubDropOffGabPaketAwbListResponseVm } from '../../models/smd-hub-drop-off-bagging.response.vm';
-import { BaggingItem } from 'src/shared/orm-entity/bagging-item';
-import { BagItemAwb } from 'src/shared/orm-entity/bag-item-awb';
+import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
+import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 
 @Injectable()
 export class SmdHubService {
