@@ -9,7 +9,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanInDetailListResponseVm, ScanInSmdBagMoreResponseVm } from '../../models/scanin-smd.response.vm';
+import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanInDetailListResponseVm, ScanInSmdBagMoreResponseVm, ScanInSmdBagDataResponseVm } from '../../models/scanin-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -442,6 +442,7 @@ export class ScaninSmdService {
     const p = new ScanInSmdPayloadVm();
     let totalError = 0;
     let totalSuccess = 0;
+    const uniqueBag = [];
 
     p.received_bag_id = payload.received_bag_id;
     result.data = [];
@@ -457,10 +458,22 @@ export class ScaninSmdService {
     for (const itemNumber of payload.bag_item_number) {
       p.bag_item_number = itemNumber;
 
+      // handle duplikat
+      const number = itemNumber.substring(0, 10);
+      if (uniqueBag.includes(number)) {
+        result.data.push({
+          statusCode: 400,
+          message: `Scan gabung paket ${itemNumber} duplikat!`,
+          bag_item_number: Number(itemNumber),
+        } as ScanInSmdBagDataResponseVm);
+        continue;
+      }
+      uniqueBag.push(number);
+
       const res = await this.scanInBag(p);
       result.data.push({
         ...res,
-        bag_item_number: itemNumber,
+        bag_item_number: Number(itemNumber),
       });
       if (res.statusCode == HttpStatus.OK) {
         p.received_bag_id = p.received_bag_id ? p.received_bag_id :

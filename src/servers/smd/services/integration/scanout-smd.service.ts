@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdItemMoreResponseVm, ScanOutSmdEditResponseVm, ScanOutSmdEditDetailResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdItemMoreResponseVm, ScanOutSmdEditResponseVm, ScanOutSmdEditDetailResponseVm, ScanOutSmdItemMoreDataResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -1056,6 +1056,7 @@ export class ScanoutSmdService {
     const p = new ScanOutSmdItemPayloadVm();
     let totalSuccess = 0;
     let totalError = 0;
+    const uniqueNumber = [];
     p.do_smd_id = payload.do_smd_id;
     result.data = [];
 
@@ -1064,8 +1065,33 @@ export class ScanoutSmdService {
     // 2. populate total
     for (const itemNumber of payload.item_number) {
       p.item_number = itemNumber;
-      const res = await this.scanOutItem(p) as ScanOutSmdItemResponseVm;
 
+      // handle duplikat
+      let number = itemNumber;
+      let messageDuplicate = '';
+      if ((itemNumber.substring(0, 3) != 'GSK' && itemNumber.substring(0, 3) != 'BGX') && (itemNumber.length == 10 || itemNumber.length == 15)) {
+        number = itemNumber.substring(0, 10);
+        if (uniqueNumber.includes(number)) {
+          messageDuplicate = `Scan gabung paket ${itemNumber} duplikat!`;
+        }
+      } else {
+        number = itemNumber;
+        if (uniqueNumber.includes(number)) {
+          messageDuplicate = `Scan ${itemNumber} duplikat!`;
+        }
+      }
+
+      if (messageDuplicate) {
+        result.data.push({
+          statusCode: 400,
+          message: messageDuplicate,
+          item_number: itemNumber,
+        } as ScanOutSmdItemMoreDataResponseVm);
+        continue;
+      }
+      uniqueNumber.push(number);
+
+      const res = await this.scanOutItem(p) as ScanOutSmdItemResponseVm;
       result.data.push({
         ...res,
         item_number: itemNumber,
@@ -1598,7 +1624,7 @@ export class ScanoutSmdService {
       }
       const rawQueryBag = `
         SELECT
-          DISTINCT dsdi.bag_item_id, 
+          DISTINCT dsdi.bag_item_id,
           dsdi.bag_id,
           CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bag_number_seq
         FROM do_smd_detail_item dsdi

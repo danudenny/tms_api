@@ -1085,6 +1085,7 @@ export class ScanoutSmdVendorService {
     const p = new ScanOutSmdVendorItemPayloadVm();
     let totalError = 0;
     let totalSuccess = 0;
+    const uniqueNumber = [];
 
     result.data = [];
     p.do_smd_id = payload.do_smd_id;
@@ -1098,6 +1099,31 @@ export class ScanoutSmdVendorService {
     // 2. populate total
     for (const itemNumber of payload.item_number) {
       p.item_number = itemNumber;
+
+      // handle duplikat
+      let number = itemNumber;
+      let messageDuplicate = '';
+      if ((itemNumber.substring(0, 3) != 'GSK' && itemNumber.substring(0, 3) != 'BGX') && (itemNumber.length == 10 || itemNumber.length == 15)) {
+        number = itemNumber.substring(0, 10);
+        if (uniqueNumber.includes(number)) {
+          messageDuplicate = `Scan gabung paket ${itemNumber} duplikat!`;
+        }
+      } else {
+        number = itemNumber;
+        if (uniqueNumber.includes(number)) {
+          messageDuplicate = `Scan ${itemNumber} duplikat!`;
+        }
+      }
+
+      if (messageDuplicate) {
+        result.data.push({
+          statusCode: 400,
+          message: messageDuplicate,
+          item_number: itemNumber,
+        } as ScanOutVendorItemMoreDataVm);
+        continue;
+      }
+      uniqueNumber.push(number);
 
       const res = await this.scanOutVendorItem(p) as ScanOutSmdVendorItemResponseVm;
       result.data.push({

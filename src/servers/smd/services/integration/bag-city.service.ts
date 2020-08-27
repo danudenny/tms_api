@@ -4,7 +4,7 @@ import express = require('express');
 import xlsx = require('xlsx');
 import fs = require('fs');
 import { AuthService } from '../../../../shared/services/auth.service';
-import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm } from '../../models/bag-city-response.vm';
+import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDataMoreResponseVm } from '../../models/bag-city-response.vm';
 import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityInputManualDataPayloadVm } from '../../models/bag-city-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
@@ -348,8 +348,10 @@ export class BagCityService {
   ): Promise<BagCityMoreResponseVm> {
     const result = new BagCityMoreResponseVm();
     const p = new BagCityPayloadVm();
+    const uniqueBagCity = [];
     let totalSuccess = 0;
     let totalError = 0;
+
     p.bagRepresentativeId = payload.bagRepresentativeId;
     p.representativeId = payload.representativeId;
     result.data = [];
@@ -363,6 +365,18 @@ export class BagCityService {
     // 3. populate total
     for (const awbNumber of payload.awbNumber) {
       p.awbNumber = awbNumber;
+
+      // handle duplikat
+      if (uniqueBagCity.includes(awbNumber)) {
+        result.data.push({
+          status: 'error',
+          message: `Scan resi ${awbNumber} duplikat!`,
+          awbNumber,
+        } as BagCityDataMoreResponseVm);
+        continue;
+      }
+      uniqueBagCity.push(awbNumber);
+
       const res = await this.createBagging(p);
 
       p.bagRepresentativeId = p.bagRepresentativeId ? p.bagRepresentativeId : res.bagRepresentativeId;
