@@ -606,6 +606,7 @@ export class SmdHubService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
+      [`t2.bagging_id`, 'baggingId'],
       [`t2.bagging_code`, 'baggingCode'],
       ['t7.representative_code', 'representativeCode'],
       ['t1.created_time', 'createdTime'],
@@ -641,6 +642,7 @@ export class SmdHubService {
     q.andWhereRaw('t1.rank = 1');
     q.groupByRaw(`
       t1.dropoff_hub_bagging_id,
+      t2.bagging_id,
       t2.bagging_code,
       t7.representative_code,
       t1.created_time,
