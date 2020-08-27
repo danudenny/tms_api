@@ -16,7 +16,7 @@ import { WebScanInBagVm } from '../../../main/models/web-scanin-bag.vm';
 import { SmdHubService } from '../../services/integration/smd-hub.service';
 import { WebScanInBaggingResponseVm, WebScanInBagRepresentativeResponseVm, WebScanInHubBagRepresentativeSortListResponseVm, WebScanInHubBagRepresentativeDetailSortListResponseVm, SmdHubBaggingListResponseVm, SmdHubBaggingDetailResponseVm } from '../../models/scanin-hub-smd.response.vm';
 import { WebScanInBaggingVm, WebScanInBagRepresentativeVm } from '../../models/scanin-hub-smd.payload.vm';
-import { SmdHubDropOffGabPaketListResponseVm } from '../../models/smd-hub-drop-off-bagging.response.vm';
+import { SmdHubDropOffGabPaketListResponseVm, SmdHubDropOffGabPaketAwbListResponseVm } from '../../models/smd-hub-drop-off-bagging.response.vm';
 
 @ApiUseTags('SMD HUB')
 @Controller('smd')
@@ -84,5 +84,13 @@ export class SmdHubController {
   @ApiOkResponse({ type: SmdHubDropOffGabPaketListResponseVm })
   public async getDropOffListGabPaketList(@Body() payload: BaseMetaPayloadVm) {
     return SmdHubService.getDropOffListGabPaketList(payload);
+  }
+
+  @Post('dropOffList/bagging/awb/list')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: SmdHubDropOffGabPaketAwbListResponseVm })
+  public async getDropOffListGabPaketAwbList(@Body() payload: BaseMetaPayloadVm) {
+    return SmdHubService.getDropOffListGabPaketAwbList(payload);
   }
 }

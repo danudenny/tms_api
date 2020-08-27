@@ -32,8 +32,9 @@ import { MetaService } from '../../../../shared/services/meta.service';
 import { DropoffHubDetailBagRepresentative } from '../../../../shared/orm-entity/dropoff_hub_detail_bag_representative';
 import { DropoffHubDetailBagging } from '../../../../shared/orm-entity/dropoff_hub_detail_bagging';
 import { BagRepresentativeHistory } from '../../../../shared/orm-entity/bag-representative-history';
-import { SmdHubDropOffGabPaketListResponseVm } from '../../models/smd-hub-drop-off-bagging.response.vm';
+import { SmdHubDropOffGabPaketListResponseVm, SmdHubDropOffGabPaketAwbListResponseVm } from '../../models/smd-hub-drop-off-bagging.response.vm';
 import { BaggingItem } from 'src/shared/orm-entity/bagging-item';
+import { BagItemAwb } from 'src/shared/orm-entity/bag-item-awb';
 
 @Injectable()
 export class SmdHubService {
@@ -742,6 +743,36 @@ export class SmdHubService {
     const result = new SmdHubDropOffGabPaketListResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, totalData);
+
+    return result;
+  }
+
+  static async getDropOffListGabPaketAwbList(payload: BaseMetaPayloadVm): Promise<SmdHubDropOffGabPaketAwbListResponseVm> {
+    payload.fieldResolverMap['baggingItemId'] = 'bi.bag_item_id';
+    payload.globalSearchFields = [
+      { field: 'baggingItemId' },
+    ];
+
+    const repo = new OrionRepositoryService(BagItemAwb, 'bia').findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(repo, true);
+
+    repo.innerJoin(i => i.bagItem, 'bi', j =>
+      j.andWhere(w => w.isDeleted, v => v.isFalse()),
+    )
+    .andWhere(w => w.isDeleted, v => v.isFalse())
+    .selectRaw(
+      ['bi.bag_item_id', 'baggingItemId'],
+      ['bia.bag_item_awb_id', 'bagItemAwbId'],
+      ['bia.awb_number', 'awbNumber'],
+    );
+
+    const data = await repo.exec();
+    const totalData = await repo.countWithoutTakeAndSkip();
+
+    const result = new SmdHubDropOffGabPaketAwbListResponseVm();
+    result.data = data;
+    result.buildPagingWithPayload(payload, totalData);
 
     return result;
   }

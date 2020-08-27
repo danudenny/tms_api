@@ -16,3 +16,19 @@ export class SmdHubDropOffGabPaketListResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [SmdHubDropOffGabPaketListDataResponseVm] })
   data: SmdHubDropOffGabPaketListDataResponseVm[];
 }
+
+export class SmdHubDropOffGabPaketAwbListDataResponseVm {
+  @ApiModelProperty()
+  baggingItemId: number;
+
+  @ApiModelProperty()
+  bagItemAwbId: number;
+
+  @ApiModelProperty()
+  awbNumber: string;
+}
+
+export class SmdHubDropOffGabPaketAwbListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [SmdHubDropOffGabPaketAwbListDataResponseVm] })
+  data: SmdHubDropOffGabPaketAwbListDataResponseVm[];
+}
