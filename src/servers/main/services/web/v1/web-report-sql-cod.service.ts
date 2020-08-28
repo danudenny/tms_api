@@ -68,6 +68,7 @@ export class V1WebReportSqlCodService {
           const prom3 = this.getNonCodSupplierInvoiceData(datas, filters, limit, pageNumber);
           pageNumber++;
 
+          await Promise.all([prom1, prom2, prom3]);
 
           if (datas.length <= 0) {
 
@@ -84,7 +85,8 @@ export class V1WebReportSqlCodService {
           }
 
 
-          await Promise.all([prom1, prom2, prom3]);
+
+
           if (!datas || datas.length < (limit * 3)) {
             finish = true;
           }
