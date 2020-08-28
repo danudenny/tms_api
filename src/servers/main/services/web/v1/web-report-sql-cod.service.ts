@@ -148,7 +148,7 @@ export class V1WebReportSqlCodService {
       }
 
       if (filter.field == 'supplier' && filter.value) {
-        sWhere += ` AND ctd.partner_id = ${filter.value} \n`;
+        sWhere += ` AND t4.partner_id = ${filter.value} \n`;
       }
 
       if (filter.field == 'awbStatus' && filter.value) {
@@ -307,7 +307,7 @@ export class V1WebReportSqlCodService {
       }
 
       if (filter.field == 'supplier' && filter.value) {
-        sWhere += ` AND t1.partner_id = ${filter.value} \n`;
+        sWhere += ` AND t4.partner_id = ${filter.value} \n`;
       }
     }
 
