@@ -242,6 +242,8 @@ export class BagCityService {
       await BagRepresentative.update(bagRepresentativeId, {
         totalWeight: total_weight,
         totalItem: total_item,
+      }, {
+        transaction: false,
       });
     }
 
@@ -261,7 +263,9 @@ export class BagCityService {
         createBagRepresentative.createdTime = dateNow;
         createBagRepresentative.updatedTime = dateNow;
         createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
-        await BagRepresentative.save(createBagRepresentative);
+        await BagRepresentative.save(createBagRepresentative, {
+          transaction: false,
+        });
 
         result.inputManualPrevData = {
           bag_representative_code: createBagRepresentative.bagRepresentativeCode,
