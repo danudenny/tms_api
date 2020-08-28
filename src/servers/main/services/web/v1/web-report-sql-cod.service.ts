@@ -68,6 +68,22 @@ export class V1WebReportSqlCodService {
           const prom3 = this.getNonCodSupplierInvoiceData(datas, filters, limit, pageNumber);
           pageNumber++;
 
+
+          if (datas.length <= 0) {
+
+            const payload = {
+              status: 'Error',
+              Message: 'Tidak ada data yang di ambil',
+            };
+
+            await RedisService.setex(
+              uuid,
+              JSON.stringify(payload),
+              this.expireOnSeconds);
+            return;
+          }
+
+
           await Promise.all([prom1, prom2, prom3]);
           if (!datas || datas.length < (limit * 3)) {
             finish = true;
@@ -242,6 +258,21 @@ export class V1WebReportSqlCodService {
         let finish = false;
         while (!finish) {
           const responseDatas = await this.getCodSupplierInvoiceData(filters, limit, pageNumber);
+
+          if (responseDatas.length <= 0) {
+
+            const payload = {
+              status: 'Error',
+              Message: 'Tidak ada data yang di ambil',
+            };
+
+            await RedisService.setex(
+              uuid,
+              JSON.stringify(payload),
+              this.expireOnSeconds);
+            return;
+          }
+
           if (responseDatas.length < limit) {
             finish = true;
           }
