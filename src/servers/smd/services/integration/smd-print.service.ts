@@ -57,11 +57,11 @@ export class SmdPrintService {
       `PRINT 1\n` +
       `EOP`;
 
-    const printerName = 'BarcodePrinter';
+    const listPrinterName = ['StrukPrinter', 'BarcodePrinter'];
     PrinterService.responseForRawCommands({
       res,
       rawCommands: rawPrinterCommands,
-      printerName,
+      listPrinterName,
     });
   }
 
