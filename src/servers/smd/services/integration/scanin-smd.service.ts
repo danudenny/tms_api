@@ -464,7 +464,7 @@ export class ScaninSmdService {
         result.data.push({
           statusCode: 400,
           message: `Scan gabung paket ${itemNumber} duplikat!`,
-          bag_item_number: Number(itemNumber),
+          bag_item_number: itemNumber,
         } as ScanInSmdBagDataResponseVm);
         continue;
       }
@@ -483,10 +483,7 @@ export class ScaninSmdService {
         totalError++;
       }
     }
-    result.totalData = payload.bag_item_number.length;
-    result.totalSuccess = totalSuccess;
-    result.totalError = totalError;
-    return result;
+    throw new BadRequestException('testing');
   }
 
   static async scanInDo(payload: any): Promise<any> {
