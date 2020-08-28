@@ -464,7 +464,7 @@ export class ScaninSmdService {
         result.data.push({
           statusCode: 400,
           message: `Scan gabung paket ${itemNumber} duplikat!`,
-          bag_item_number: Number(itemNumber),
+          bag_item_number: itemNumber,
         } as ScanInSmdBagDataResponseVm);
         continue;
       }
@@ -473,7 +473,7 @@ export class ScaninSmdService {
       const res = await this.scanInBag(p);
       result.data.push({
         ...res,
-        bag_item_number: Number(itemNumber),
+        bag_item_number: itemNumber,
       });
       if (res.statusCode == HttpStatus.OK) {
         p.received_bag_id = p.received_bag_id ? p.received_bag_id :
