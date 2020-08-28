@@ -439,11 +439,11 @@ export class BagCityService {
     `PRINT 1\n` +
     `EOP`;
 
-    const listPrinterName = ['StrukPrinter', 'BarcodePrinter'];
+    const printerName = 'BarcodePrinter';
     PrinterService.responseForRawCommands({
       res,
       rawCommands: rawPrinterCommands,
-      listPrinterName,
+      printerName,
     });
   }
 
