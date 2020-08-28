@@ -311,6 +311,25 @@ export class V1WebAwbCodController {
     return await V1WebReportCodService.addQueueBullPrint(payload.filters, 'noncodfee');
   }
 
+  @Post('supplierInvoice/sql/bull/print')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceBullSqlCodFeePrint(
+    @Body() payload: ReportBaseMetaPayloadVm,
+  ) {
+    return await V1WebReportSqlCodService.addQueueBullPrint(payload.filters, 'codfee');
+  }
+
+  @Post('supplierInvoice/noncodfee/sql/bull/print')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceBullSqlNonCodFeePrint(
+    @Body() payload: ReportBaseMetaPayloadVm,
+  ) {
+    return await V1WebReportSqlCodService.addQueueBullPrint(payload.filters, 'noncodfee');
+  }
+
+
   @Get('supplierInvoice/checkReport/:reportKey')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
