@@ -20,7 +20,6 @@ export class SmdBaggingController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
-  @Transactional()
   public async createBagging(@Body() payload: SmdScanBaggingPayloadVm) {
     return BaggingSmdService.createBagging(payload);
   }
@@ -31,7 +30,6 @@ export class SmdBaggingController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
-  @Transactional()
   public async createBaggingMore(@Body() payload: SmdScanBaggingMorePayloadVm) {
     return BaggingSmdService.createBaggingMore(payload);
   }

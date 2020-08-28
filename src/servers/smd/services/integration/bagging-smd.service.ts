@@ -197,6 +197,7 @@ export class BaggingSmdService {
       ORDER BY case when ba.branch_id = '${permissionPayload.branchId}' then 1 else 2 end, b.created_time DESC
       LIMIT 1;
       `;
+
     const dataPackage = await RawQueryService.query(rawQuery);
     if (dataPackage.length == 0) {
       result.message = 'Gabung paket tidak ditemukan';
@@ -299,7 +300,7 @@ export class BaggingSmdService {
       await Bagging.update(baggingId, {
         totalWeight: baggingData.total_weight.toString(),
         totalItem: baggingData.total_item,
-      });
+      }, {transaction: false});
     }
 
     // NOTE: representativeCode digunakan untul validasi kode tujuan gabung paket
@@ -351,7 +352,7 @@ export class BaggingSmdService {
         createBagging.baggingSeq = maxBagSeq;
         createBagging.createdTime = moment().toDate();
         createBagging.updatedTime = moment().toDate();
-        await Bagging.save(createBagging);
+        await Bagging.save(createBagging, {transaction: false});
 
         baggingId = createBagging.baggingId;
         baggingCode = createBagging.baggingCode;
@@ -373,11 +374,11 @@ export class BaggingSmdService {
     baggingItem.userIdUpdated = authMeta.userId.toString();
     baggingItem.createdTime = moment().toDate();
     baggingItem.updatedTime = moment().toDate();
-    BaggingItem.save(baggingItem);
+    BaggingItem.save(baggingItem, {transaction: false});
 
     await BagItem.update(dataPackage[0].bag_item_id, {
       baggingIdLast: Number(baggingId),
-    });
+    }, {transaction: false});
 
     result.status = 'success';
     result.baggingId = baggingId;
