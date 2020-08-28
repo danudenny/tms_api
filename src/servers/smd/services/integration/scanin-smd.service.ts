@@ -217,8 +217,10 @@ export class ScaninSmdService {
           authMeta.userId,
           permissonPayload.branchId,
         );
-        const showNumber = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ';
-        const message = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
+        // const showNumber = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ';
+        const showNumber = payload.bag_item_number + ' ('  + weight.toString() + ' Kg) ';
+        // const message = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
+        const message = payload.bag_item_number + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
         const data = [];
         data.push({
           show_number: showNumber,
