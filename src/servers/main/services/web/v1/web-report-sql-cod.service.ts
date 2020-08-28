@@ -11,8 +11,8 @@ import { RedisService } from '../../../../../shared/services/redis.service';
 import uuid = require('uuid');
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { createQueryBuilder } from 'typeorm';
-import { RawQueryService } from 'src/shared/services/raw-query.service';
-import { CodSqlExportMongoQueueService } from 'src/servers/queue/services/cod/cod-sql-export-queue.service';
+import { CodSqlExportMongoQueueService } from '../../../../queue/services/cod/cod-sql-export-queue.service';
+import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 
 export class V1WebReportSqlCodService {
   static expireOnSeconds = 300; // 5 minute

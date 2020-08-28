@@ -1,7 +1,7 @@
 import { ConfigService } from '../../../../shared/services/config.service';
 import { QueueBullBoard } from '../queue-bull-board';
 import { V1WebReportCodService } from '../../../main/services/web/v1/web-report-cod.service';
-import { V1WebReportSqlCodService } from 'src/servers/main/services/web/v1/web-report-sql-cod.service';
+import { V1WebReportSqlCodService } from '../../../main/services/web/v1/web-report-sql-cod.service';
 
 export class CodSqlExportMongoQueueService {
   public static queue = QueueBullBoard.createQueue.add(
