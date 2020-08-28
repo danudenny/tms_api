@@ -748,32 +748,52 @@ export class SmdHubService {
   }
 
   static async getDropOffListGabPaketAwbList(payload: BaseMetaPayloadVm): Promise<SmdHubDropOffGabPaketAwbListResponseVm> {
-    payload.fieldResolverMap['baggingItemId'] = 'bi.bag_item_id';
-    payload.globalSearchFields = [
-      { field: 'baggingItemId' },
-    ];
-
-    const repo = new OrionRepositoryService(BagItemAwb, 'bia').findAllRaw();
-
-    payload.applyToOrionRepositoryQuery(repo, true);
-
-    repo.innerJoin(i => i.bagItem, 'bi', j =>
-      j.andWhere(w => w.isDeleted, v => v.isFalse()),
-    )
-    .andWhere(w => w.isDeleted, v => v.isFalse())
-    .selectRaw(
-      ['bi.bag_item_id', 'baggingItemId'],
-      ['bia.bag_item_awb_id', 'bagItemAwbId'],
-      ['bia.awb_number', 'awbNumber'],
-    );
-
-    const data = await repo.exec();
-    const totalData = await repo.countWithoutTakeAndSkip();
-
     const result = new SmdHubDropOffGabPaketAwbListResponseVm();
+    let data = [];
+    let totalData = 0;
+
+    // Get bagNumber from payload filters
+    // This is need to be refactor!
+    let bagNumberRaw: string;
+    for (const filter of payload.filters) {
+      if (filter.field === 'bagNumber') {
+        bagNumberRaw = filter.value && (typeof filter.value === 'number' ? filter.value.toString() : filter.value);
+      }
+    }
+
+    if (bagNumberRaw) {
+      const re = /^[0-9]+$/;
+      const bagNumberStr = bagNumberRaw.substring(0, 7);
+      const seqNumberStr = bagNumberRaw.substring(7, 10);
+      const isValid = re.test(bagNumberStr) && re.test(seqNumberStr);
+
+      if (isValid) {
+        const repo = new OrionRepositoryService(BagItemAwb, 'bia').findAllRaw();
+
+        payload.applyPaginationToOrionRepositoryQuery(repo);
+
+        repo.innerJoin(i => i.bagItem, 'bi', j =>
+          j.andWhere(w => w.isDeleted, v => v.isFalse()),
+        )
+        .innerJoin(i => i.bagItem.bag, 'b', j =>
+          j.andWhere(w => w.isDeleted, v => v.isFalse()),
+        )
+        .andWhereRaw(`b.bag_number = '${bagNumberStr}'`)
+        .andWhereRaw(`bi.bag_seq = ${Number(seqNumberStr)}`)
+        .andWhere(w => w.isDeleted, v => v.isFalse())
+        .selectRaw(
+          ['bi.bag_item_id', 'baggingItemId'],
+          ['bia.bag_item_awb_id', 'bagItemAwbId'],
+          ['bia.awb_number', 'awbNumber'],
+        );
+
+        data = await repo.exec();
+        totalData = await repo.countWithoutTakeAndSkip();
+      }
+    }
+
     result.data = data;
     result.buildPagingWithPayload(payload, totalData);
-
     return result;
   }
 }
