@@ -684,6 +684,7 @@ export class SmdPrintService {
       .select({
         receivedBagId: true,
         receivedBagDate: true,
+        receivedBagCode: true,
         user: {
           userId: true,
           employee: {
