@@ -40,7 +40,7 @@ export class ScanInSmdBagMoreResponseVm {
 
 export class ScanInSmdBagDataResponseVm extends ScanInSmdBagResponseVm {
   @ApiModelProperty()
-  bag_item_number: number;
+  bag_item_number: string;
 }
 
 export class ScanInSmdBaggingResponseVm {
