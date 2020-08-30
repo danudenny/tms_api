@@ -284,8 +284,8 @@ export class BaggingSmdService {
         }
         baggingData.bagging_id = bagging[0].bagging_id;
         baggingData.bagging_code = bagging[0].bagging_code;
-        baggingData.total_weight = bagging[0].total_weight;
-        baggingData.total_item = bagging[0].total_item;
+        baggingData.total_weight = Number(bagging[0].total_weight);
+        baggingData.total_item = Number(bagging[0].total_item);
 
       } else {
         // NOTE: Handdle input manual prev data (Only For Input Manual)
@@ -294,8 +294,8 @@ export class BaggingSmdService {
       }
       baggingId = result.baggingId = baggingData.bagging_id;
       baggingCode = result.baggingCode = baggingData.bagging_code;
-      baggingData.total_weight = Number(dataPackage[0].weight) + baggingData.total_weight;
-      baggingData.total_item = baggingData.total_item + 1;
+      baggingData.total_weight = Number(dataPackage[0].weight) + Number(baggingData.total_weight);
+      baggingData.total_item = Number(baggingData.total_item) + 1;
 
       await Bagging.update(baggingId, {
         totalWeight: baggingData.total_weight.toString(),
@@ -360,7 +360,7 @@ export class BaggingSmdService {
         baggingData.bagging_id = createBagging.baggingId;
         baggingData.bagging_code = createBagging.baggingCode;
         baggingData.total_weight = Number(createBagging.totalWeight);
-        baggingData.total_item = createBagging.totalItem;
+        baggingData.total_item = Number(createBagging.totalItem);
 
       } else {
         result.message = 'Data Bagging Sedang di proses, Silahkan Coba Beberapa Saat';
