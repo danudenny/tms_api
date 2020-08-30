@@ -841,19 +841,23 @@ export class ScanoutSmdVendorService {
 
           rawQuery = `
             SELECT
-              do_smd_detail_id ,
-              representative_code_list,
-              total_bag,
-              vendor_name
-            FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+              dsd.do_smd_detail_id ,
+              dsd.representative_code_list,
+              dsd.total_bag,
+              dsd.vendor_name,
+              dsdi.bag_item_id
+            FROM do_smd_detail dsd
+            LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
+              AND dsdi.bag_item_id = ${resultDataBag[0].bag_item_id}
+            , unnest(string_to_array(dsd.representative_code_list , ','))  s(code)
             where
               s.code  = '${escape(resultDataBag[0].representative_code)}' AND
-              do_smd_id = ${payload.do_smd_id} AND
-              is_deleted = FALSE;
+              dsd.do_smd_id = ${payload.do_smd_id} AND
+              dsd.is_deleted = FALSE;
           `;
           const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
-          if (resultDataRepresentative.length > 0) {
+          if (resultDataRepresentative.length > 0 && !resultDataRepresentative[0].bag_item_id) {
             // for (let i = 0; i < resultDataBag.length; i++) {
               // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
               // customer.awbStatusName = data[i].awbStatusName;
@@ -922,6 +926,9 @@ export class ScanoutSmdVendorService {
               result.message = 'SMD Item Success Created';
               result.data = data;
               return result;
+          } else if (resultDataRepresentative.length > 0 && resultDataRepresentative[0].bag_item_id) {
+            result.message = `Combine Package ` + payload.item_number + ` Already Scanned`;
+            return result;
           } else {
             result.message = `Representative To ` + resultDataBag[0].representative_code + ` Bag 15 Not Match`;
             return result;
@@ -962,19 +969,23 @@ export class ScanoutSmdVendorService {
 
           rawQuery = `
             SELECT
-              do_smd_detail_id ,
-              representative_code_list,
-              total_bag,
-              vendor_name
-            FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+              dsd.do_smd_detail_id ,
+              dsd.representative_code_list,
+              dsd.total_bag,
+              dsd.vendor_name,
+              dsdi.bag_item_id
+            FROM do_smd_detail dsd
+            LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
+              AND dsdi.bag_item_id = ${resultDataBag[0].bag_item_id}
+            , unnest(string_to_array(dsd.representative_code_list , ','))  s(code)
             where
               s.code  = '${escape(resultDataBag[0].representative_code)}' AND
-              do_smd_id = ${payload.do_smd_id} AND
-              is_deleted = FALSE;
+              dsd.do_smd_id = ${payload.do_smd_id} AND
+              dsd.is_deleted = FALSE;
           `;
           const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
-          if (resultDataRepresentative.length > 0) {
+          if (resultDataRepresentative.length > 0 && !resultDataRepresentative[0].bag_item_id) {
             // for (let i = 0; i < resultDataBag.length; i++) {
               // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
               // customer.awbStatusName = data[i].awbStatusName;
@@ -1043,6 +1054,9 @@ export class ScanoutSmdVendorService {
               result.message = 'SMD Item Success Created';
               result.data = data;
               return result;
+          } else if (resultDataRepresentative.length > 0 && resultDataRepresentative[0].bag_item_id) {
+            result.message = `Combine Package ` + payload.item_number + ` Already Scanned`;
+            return result;
           } else {
             result.message = `Representative To ` + resultDataBag[0].representative_code + `  Bag 10 Not Match`;
             return result;
