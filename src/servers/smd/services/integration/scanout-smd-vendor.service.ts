@@ -812,7 +812,7 @@ export class ScanoutSmdVendorService {
       }
     } else {
       // cari di bag code
-      if (payload.item_number.length == 15) {
+      if (payload.item_number.length == 15 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{8}$/)) {
         const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 8 );
         const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
         const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 8 , 3);
@@ -940,7 +940,7 @@ export class ScanoutSmdVendorService {
           result.message = 'Bag Not Found';
           return result;
         }
-      } else if (payload.item_number.length == 10) {
+      } else if (payload.item_number.length == 10 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
         const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 3 );
         // const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
         const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 3 , 3);
