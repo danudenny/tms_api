@@ -635,7 +635,7 @@ export class ScanoutSmdVendorService {
               isDeleted: false,
             },
           });
-          resultDoSmdDetail.totalBagRepresentative = Number(resultDataRepresentative[0].total_bag_representative) + 1;
+          resultDoSmdDetail.totalBagRepresentative = Number(resultDoSmdDetail.totalBagRepresentative) + 1;
           resultDoSmdDetail.userIdUpdated = authMeta.userId;
           resultDoSmdDetail.updatedTime = timeNow;
           await resultDoSmdDetail.save();
@@ -755,7 +755,7 @@ export class ScanoutSmdVendorService {
                 isDeleted: false,
               },
             });
-            resultDoSmdDetail.totalBagging = Number(resultDataRepresentative[0].total_bagging) + 1;
+            resultDoSmdDetail.totalBagging = Number(resultDoSmdDetail.totalBagging) + 1;
             resultDoSmdDetail.userIdUpdated = authMeta.userId;
             resultDoSmdDetail.updatedTime = timeNow;
             await resultDoSmdDetail.save();
@@ -881,7 +881,7 @@ export class ScanoutSmdVendorService {
                   isDeleted: false,
                 },
               });
-              resultDoSmdDetail.totalBag = Number(resultDataRepresentative[0].total_bag) + 1;
+              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
               resultDoSmdDetail.userIdUpdated = authMeta.userId;
               resultDoSmdDetail.updatedTime = timeNow;
               await resultDoSmdDetail.save();
@@ -1009,7 +1009,7 @@ export class ScanoutSmdVendorService {
                   isDeleted: false,
                 },
               });
-              resultDoSmdDetail.totalBag = Number(resultDataRepresentative[0].total_bag) + 1;
+              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
               resultDoSmdDetail.userIdUpdated = authMeta.userId;
               resultDoSmdDetail.updatedTime = timeNow;
               await resultDoSmdDetail.save();

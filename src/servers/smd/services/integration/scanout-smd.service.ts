@@ -596,23 +596,16 @@ export class ScanoutSmdService {
             2,
             authMeta.userId,
           );
-          await DoSmdDetail.update(
-            { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-            {
-              totalBagRepresentative: resultDataRepresentative[0].total_bag_representative + 1,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-            },
-            {
-              transaction: false,
-            },
-          );
           const resultDoSmdDetail = await DoSmdDetail.findOne({
             where: {
               doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
               isDeleted: false,
             },
           });
+          resultDoSmdDetail.totalBagRepresentative = Number(resultDoSmdDetail.totalBagRepresentative) + 1;
+          resultDoSmdDetail.userIdUpdated = authMeta.userId;
+          resultDoSmdDetail.updatedTime = timeNow;
+          await resultDoSmdDetail.save();
 
           await DoSmd.update(
             { doSmdId : payload.do_smd_id },
@@ -722,23 +715,16 @@ export class ScanoutSmdService {
               arrBagItemId.push(resultDataBagItem[i].bag_item_id);
             }
 
-            await DoSmdDetail.update(
-              { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-              {
-                totalBagging: resultDataRepresentative[0].total_bagging + 1,
-                userIdUpdated: authMeta.userId,
-                updatedTime: timeNow,
-              },
-              {
-                transaction: false,
-              },
-            );
             const resultDoSmdDetail = await DoSmdDetail.findOne({
               where: {
                 doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
                 isDeleted: false,
               },
             });
+            resultDoSmdDetail.totalBagging = Number(resultDoSmdDetail.totalBagging) + 1;
+            resultDoSmdDetail.userIdUpdated = authMeta.userId;
+            resultDoSmdDetail.updatedTime = timeNow;
+            await resultDoSmdDetail.save();
 
             await DoSmd.update(
               { doSmdId : payload.do_smd_id },
@@ -852,24 +838,16 @@ export class ScanoutSmdService {
               // arrBagItemId = [resultDataBag[0].bag_item_id];
             // }
 
-              await DoSmdDetail.update(
-                { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-                {
-                  totalBag: resultDataRepresentative[0].total_bag + 1,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: timeNow,
-                },
-                {
-                  transaction: false,
-                },
-              );
-
               const resultDoSmdDetail = await DoSmdDetail.findOne({
                 where: {
                   doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
                   isDeleted: false,
                 },
               });
+              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
+              resultDoSmdDetail.userIdUpdated = authMeta.userId;
+              resultDoSmdDetail.updatedTime = timeNow;
+              await resultDoSmdDetail.save();
 
               await DoSmd.update(
                 { doSmdId : payload.do_smd_id },
@@ -983,24 +961,16 @@ export class ScanoutSmdService {
               // arrBagItemId = [resultDataBag[0].bag_item_id];
             // }
 
-              await DoSmdDetail.update(
-                { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-                {
-                  totalBag: resultDataRepresentative[0].total_bag + 1,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: timeNow,
-                },
-                {
-                  transaction: false,
-                },
-              );
-
               const resultDoSmdDetail = await DoSmdDetail.findOne({
                 where: {
                   doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
                   isDeleted: false,
                 },
               });
+              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
+              resultDoSmdDetail.userIdUpdated = authMeta.userId;
+              resultDoSmdDetail.updatedTime = timeNow;
+              await resultDoSmdDetail.save();
 
               await DoSmd.update(
                 { doSmdId : payload.do_smd_id },
