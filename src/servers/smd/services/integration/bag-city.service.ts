@@ -157,9 +157,9 @@ export class BagCityService {
         a.total_weight_rounded as weight,
         ai.awb_item_id
       FROM temp_stt ts
-      INNER JOIN awb a ON ts.nostt = a.awb_number AND a.is_deleted = false
-      INNER JOIN awb_item ai ON a.awb_id = ai.awb_id
-      LEFT JOIN representative r ON ts.perwakilan = r.representative_code
+      INNER JOIN awb a ON ts.nostt = a.awb_number AND a.is_deleted = FALSE
+      INNER JOIN awb_item ai ON a.awb_id = ai.awb_id AND ai.is_deleted = FALSE
+      LEFT JOIN representative r ON ts.perwakilan = r.representative_code AND r.is_deleted = FALSE
       WHERE
         ts.nostt = '${awbNumber}'
       LIMIT 1;
