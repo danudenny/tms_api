@@ -157,7 +157,9 @@ export class BaggingSmdService {
     const result = new SmdScanBaggingResponseVm();
     result.status = 'error';
 
-    if (payload.bagNumber.length != 10 && payload.bagNumber.length != 15) {
+    if (payload.bagNumber.length == 15 && payload.bagNumber.match(/^[A-Z0-9]{7}[0-9]{8}$/)) {
+    } else if (payload.bagNumber.length == 10 && payload.bagNumber.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
+    } else {
       result.message = 'Bag number tidak valid';
       return result;
     }

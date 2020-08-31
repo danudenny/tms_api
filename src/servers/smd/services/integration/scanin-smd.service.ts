@@ -35,7 +35,7 @@ export class ScaninSmdService {
     let paramReceivedBagId = payload.received_bag_id;
     result.statusCode = HttpStatus.BAD_REQUEST;
 
-    if (payload.bag_item_number.length == 15) {
+    if (payload.bag_item_number.length == 15 && payload.bag_item_number.match(/^[A-Z0-9]{7}[0-9]{8}$/)) {
       const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
       const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
       const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
@@ -235,7 +235,7 @@ export class ScaninSmdService {
         result.message = errMessage;
         return result;
       }
-    } else if (payload.bag_item_number.length == 10) {
+    } else if (payload.bag_item_number.length == 10 && payload.bag_item_number.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
       const paramBagNumber = (payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 3 )).toUpperCase();
       // const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
       const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 3 , 3);
