@@ -603,6 +603,9 @@ export class ScanoutSmdService {
               userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
             },
+            {
+              transaction: false,
+            },
           );
           const resultDoSmdDetail = await DoSmdDetail.findOne({
             where: {
@@ -725,6 +728,9 @@ export class ScanoutSmdService {
                 totalBagging: resultDataRepresentative[0].total_bagging + 1,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
+              },
+              {
+                transaction: false,
               },
             );
             const resultDoSmdDetail = await DoSmdDetail.findOne({
@@ -853,6 +859,9 @@ export class ScanoutSmdService {
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
                 },
+                {
+                  transaction: false,
+                },
               );
 
               const resultDoSmdDetail = await DoSmdDetail.findOne({
@@ -980,6 +989,9 @@ export class ScanoutSmdService {
                   totalBag: resultDataRepresentative[0].total_bag + 1,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timeNow,
+                },
+                {
+                  transaction: false,
                 },
               );
 
