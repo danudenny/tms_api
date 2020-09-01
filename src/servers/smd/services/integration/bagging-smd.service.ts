@@ -135,7 +135,7 @@ export class BaggingSmdService {
       p.inputManualPrevData = res.inputManualPrevData;
       result.data.push({
         ...res,
-        bagNumber,
+        bagNumber: number,
       });
 
       if (res.status == 'success') {
@@ -236,6 +236,7 @@ export class BaggingSmdService {
 
     result.baggingId = baggingId;
     result.baggingCode = baggingCode;
+    result.weight = dataPackage[0].weight;
 
     // NOTE: baggingId untuk mencocokkan bagging yg sedang di scan
     // dengan bagging yg di-scan sebelumnya
@@ -387,6 +388,7 @@ export class BaggingSmdService {
     result.baggingCode = baggingCode;
     result.inputManualPrevData = baggingData;
     result.message = 'Scan gabung paket berhasil';
+    result.bagNumber = payload.bagNumber.substring(0, 10);
     return result;
   }
 
