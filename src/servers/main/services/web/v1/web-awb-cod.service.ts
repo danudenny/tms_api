@@ -525,12 +525,12 @@ export class V1WebAwbCodService {
     try {
       // NOTE: loop data awb and update transaction detail
       for (const awb of payload.awbNumber) {
+        // cancel all transaction status
         const transactionDetail = await CodTransactionDetail.findOne({
           select: ['codTransactionDetailId', 'awbNumber', 'codValue', 'awbItemId'],
           where: {
             awbNumber: awb,
             codTransactionId: payload.transactionId,
-            transactionStatusId: 31000,
             isDeleted: false,
           },
         });
