@@ -16,6 +16,12 @@ export class SmdScanBaggingResponseVm {
   baggingCode: string;
 
   @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
   validRepresentativeCode: string;
 
   // NOTE: This is just for BE needs to handle input manual
