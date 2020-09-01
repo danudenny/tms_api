@@ -10,6 +10,8 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { PrintBaggingVm } from '../../models/print-bagging.payload';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 export class SmdPrintService {
   public static async printBagging(
@@ -62,6 +64,81 @@ export class SmdPrintService {
       res,
       rawCommands: rawPrinterCommands,
       printerName,
+    });
+  }
+
+  static async storePrintBagging(payloadBody: PrintBaggingVm) {
+    return this.storeGenericPrintData(
+      'bagging',
+      payloadBody.baggingId,
+      payloadBody,
+    );
+  }
+
+  static async executePrintBagging(
+    res: express.Response,
+    queryParams: PrintBaggingPaperPayloadVm,
+  ) {
+    const printPayload = await this.retrieveGenericPrintData<PrintBaggingVm>(
+      'bagging',
+      queryParams.id,
+    );
+    const data = printPayload.data;
+
+    if (!printPayload || (printPayload && !printPayload.data)) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    if (queryParams.userId) {
+      const currentUser = await RepositoryService.user
+        .loadById(queryParams.userId)
+        .select({
+          userId: true, // needs to be selected due to users relations are being included
+          employee: {
+            nickname: true,
+          },
+        });
+
+      if (!currentUser) {
+        RequestErrorService.throwObj({
+          message: 'User tidak ditemukan',
+        });
+      }
+    }
+
+    if (queryParams.branchId) {
+      const currentBranch = await RepositoryService.branch
+        .loadById(queryParams.branchId)
+        .select({
+          branchName: true,
+        });
+
+      if (!currentBranch) {
+        RequestErrorService.throwObj({
+          message: 'Gerai asal tidak ditemukan',
+        });
+      }
+    }
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    const date = moment().format('YYYY-MM-DD HH:mm:ss');
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'bagging-surat-muatan-darat',
+          templateData: {
+            data,
+            meta: {
+              createdTime: date,
+            },
+          },
+          printCopy: queryParams.printCopy ? queryParams.printCopy : 3,
+        },
+      ],
+      listPrinterName,
     });
   }
 
@@ -729,5 +806,30 @@ export class SmdPrintService {
       ],
       listPrinterName,
     });
+  }
+
+  static async storeGenericPrintData(
+    prefix: string,
+    identifier: string | number,
+    genericData: any,
+  ) {
+    if (!genericData || !identifier) {
+      RequestErrorService.throwObj({
+        message: 'Data tidak valid',
+      });
+    }
+    return RedisService.setex(
+      `print-store-smd-${prefix}-${identifier}`,
+      genericData,
+      10 * 60,
+      true,
+    );
+  }
+
+  static async retrieveGenericPrintData<T = any>(
+    prefix: string,
+    identifier: string | number,
+  ) {
+    return RedisService.get<T>(`print-store-smd-${prefix}-${identifier}`, true);
   }
 }
