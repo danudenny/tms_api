@@ -496,7 +496,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItem.bag, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awbItem.awb.district, 't5', j =>
+    q.leftJoin(e => e.awbItem.awb.districtTo, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
