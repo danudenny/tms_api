@@ -3,6 +3,7 @@ import { ConfigService } from '../../../../../shared/services/config.service';
 import { ServiceUnavailableException, BadRequestException } from '@nestjs/common';
 import { WinstonLogglyService } from '../../../../../shared/services/winston-loggly.service';
 import axios from 'axios';
+import { RedisService } from '../../../../../shared/services/redis.service';
 
 export class V1MobileDivaPaymentService {
   constructor() {}
@@ -92,5 +93,25 @@ export class V1MobileDivaPaymentService {
       WinstonLogglyService.error({requestData, error: error.response.data});
       return error.response.data;
     }
+  }
+
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random#Getting_a_random_integer_between_two_values_inclusive
+  private static randomInteger(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  private static async getRandomTID(): Promise<string> {
+    let result = 'sicepat001';
+    // check data on redis
+    const dataRedis = await RedisService.get(`diva:payment:tid`);
+    if (dataRedis) {
+      const dataArray: [] = dataRedis.split(',');
+      const index = this.randomInteger(1, dataArray.length);
+      result = dataArray[index];
+    } else {
+      // get data on db and set data redis
+
+    }
+    return result;
   }
 }
