@@ -399,6 +399,7 @@ export class BagCityService {
       const res = await this.createBagging(p);
 
       p.bagRepresentativeId = p.bagRepresentativeId ? p.bagRepresentativeId : res.bagRepresentativeId;
+      p.representativeId = p.representativeId ? p.representativeId : res.representativeId;
       p.inputManualPrevData = res.inputManualPrevData;
       result.data.push({
         ...res,
