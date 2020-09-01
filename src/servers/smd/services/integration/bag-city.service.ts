@@ -22,6 +22,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { BagRepresentativeHistory } from '../../../../shared/orm-entity/bag-representative-history';
 import { SharedService } from '../../../../shared/services/shared.service';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
+import { Not } from 'typeorm';
 
 @Injectable()
 export class BagCityService {
@@ -198,6 +199,20 @@ export class BagCityService {
 
     // NOTE : Ambil data Bag representative yang sudah di input sebelumnya
     if (payload.bagRepresentativeId) {
+      if (!payload.representativeId) {
+        const dataCekValidRepresentative = await BagRepresentativeItem.findOne({
+          select: ['bagRepresentativeId'],
+          where: {
+            bagRepresentativeId: payload.bagRepresentativeId,
+            representativeIdTo: Not(dataAwb[0].representative_id),
+            isDeleted: false,
+          },
+        });
+        if (dataCekValidRepresentative) {
+          result.message = 'Representative berbeda';
+          return result;
+        }
+      }
       if (!payload.inputManualPrevData) { // handle input manual, data not found because data not insert yet
         rawQuery = `
           SELECT
@@ -318,7 +333,7 @@ export class BagCityService {
     bagRepresentativeItem.userIdUpdated = authMeta.userId;
     bagRepresentativeItem.createdTime = moment().toDate();
     bagRepresentativeItem.updatedTime = moment().toDate();
-    BagRepresentativeItem.save(bagRepresentativeItem);
+    BagRepresentativeItem.insert(bagRepresentativeItem);
 
     let branchName = '';
     let cityName = '';
