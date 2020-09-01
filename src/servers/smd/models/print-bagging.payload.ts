@@ -18,8 +18,8 @@ export class PrintBaggingDataVm {
 }
 
 export class PrintBaggingVm {
-  @ApiModelProperty({ type: () => PrintBaggingDataVm })
-  data: PrintBaggingDataVm = new PrintBaggingDataVm();
+  @ApiModelProperty({ type: () => [PrintBaggingDataVm] })
+  data: PrintBaggingDataVm[];
 
   @ApiModelProperty()
   baggingId: string;
