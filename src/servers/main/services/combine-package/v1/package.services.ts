@@ -437,21 +437,15 @@ export class V1PackageService {
       // generate bag number
       randomBagNumber =
         'S' + sampleSize('012345678900123456789001234567890', 6).join('');
-      const representativeCode = payload.districtDetail
-        ? payload.districtDetail.districtCode.substring(0, 3)
-        : null;
-      const representative = await Representative.findOne({
-        where: { isDeleted: false, representativeCode },
-      });
 
       const bagDetail = Bag.create({
         bagNumber: randomBagNumber,
         branchIdTo: branchId,
-        refRepresentativeCode: representative
-          ? representative.representativeCode
+        refRepresentativeCode: payload.representative
+          ? payload.representative.representativeCode
           : null,
-        representativeIdTo: representative
-          ? representative.representativeId
+        representativeIdTo: payload.representative
+          ? payload.representative.representativeId
           : null,
         refBranchCode: branchCode,
         bagType: 'branch',
@@ -597,7 +591,7 @@ export class V1PackageService {
     let bagWeight: number = 0;
     let bagSeq: number = 0;
     let branch: Branch = null;
-    let districtDetail: District = null;
+    let representative: Representative = null;
     let branchName = null;
     let branchCode = null;
 
@@ -624,22 +618,23 @@ export class V1PackageService {
       troubleDesc.push('Awb status tidak sesuai');
     }
 
-    if (awbItemAttr.toId) {
-      // use cache data
-      branch = await Branch.findOne({ cache: true, where: { branchId } });
-      // NOTE: Validate branch
-      if (!branch) {
-        isAllow = false;
-        troubleDesc.push('Gerai tidak ditemukan');
-      } else {
-        branchCode = branch.branchCode;
-        branchName = branch.branchName;
-        districtId = branch.districtId;
-      }
+    // use cache data
+    branch = await Branch.findOne({ cache: true, where: { branchId } });
+    // NOTE: Validate branch
+    if (!branch) {
+      isAllow = false;
+      troubleDesc.push('Gerai tidak ditemukan');
     } else {
-      isTrouble = true;
-      troubleDesc.push('Tidak ada tujuan');
+      branchCode = branch.branchCode;
+      branchName = branch.branchName;
+      districtId = branch.districtId;
     }
+
+    // if (awbItemAttr.toId) {
+    // } else {
+    //   isTrouble = true;
+    //   troubleDesc.push('Tidak ada tujuan');
+    // }
     // #endregion
 
     // construct data detail
@@ -678,11 +673,14 @@ export class V1PackageService {
         }
       }
     } else {
-      // use data district from branch
-      if (branch && districtId) {
-        districtDetail = await District.findOne({
+      // use data representative from branch
+      if (branch) {
+        representative = await Representative.findOne({
           cache: true,
-          where: { districtId, isDeleted: false },
+          where: {
+            representativeId: branch.representativeId,
+            isDeleted: false,
+          },
         });
       }
 
@@ -692,7 +690,7 @@ export class V1PackageService {
         awbDetail: awbItemAttr,
         isTrouble,
         troubleDesc,
-        districtDetail,
+        representative,
         branchDetail: branch,
       });
 
