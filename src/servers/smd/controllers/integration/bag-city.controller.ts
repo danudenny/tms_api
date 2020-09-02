@@ -7,7 +7,7 @@ import {PermissionTokenGuard} from '../../../../shared/guards/permission-token.g
 import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
 import {BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm} from '../../models/bag-city-response.vm';
 import {BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm} from '../../models/bag-city-payload.vm';
-import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm } from '../../models/print-bag-city-payload.vm';
+import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm, BagCityExternalPrintPayloadVm, BagCityExternalPrintExecutePayloadVm } from '../../models/print-bag-city-payload.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { Transaction } from 'typeorm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
@@ -85,6 +85,23 @@ export class BagCityController {
     @Response() serverResponse: express.Response,
   ) {
     return BagCityService.printBagCityForPaper(serverResponse, queryParams);
+  }
+
+  @Post('print/store')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async storeBagCityExternalPrint(@Body() body: BagCityExternalPrintPayloadVm) {
+    return BagCityService.storeBagCityExternalPrint(body);
+  }
+
+  @Get('print/execute')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({disable: true})
+  public async executeBagCityExternalPrint(
+    @Query() params: BagCityExternalPrintExecutePayloadVm,
+    @Response() response: express.Response,
+  ) {
+    return BagCityService.executeBagCityExternalPrint(response, params);
   }
 
   @Post('excel/store')
