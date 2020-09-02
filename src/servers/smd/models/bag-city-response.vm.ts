@@ -24,6 +24,15 @@ export class BagCityResponseVm {
   @ApiModelProperty()
   bagRepresentativeCode: string;
 
+  @ApiModelProperty()
+  bagRepresentativeItemId: number;
+
+  @ApiModelProperty()
+  refAwbNumber: string;
+
+  @ApiModelProperty()
+  weight: string;
+
   @ApiModelProperty({ type: () => BagCityInputManualDataPayloadVm })
   inputManualPrevData: BagCityInputManualDataPayloadVm;
 }

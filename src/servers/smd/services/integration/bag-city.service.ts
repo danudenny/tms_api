@@ -358,6 +358,10 @@ export class BagCityService {
     result.representativeCode = dataAwb[0].representative_code;
     result.bagRepresentativeId = bagRepresentativeId;
     result.bagRepresentativeCode = bagRepresentativeCode;
+    result.bagRepresentativeItemId = bagRepresentativeItem.bagRepresentativeItemId;
+    result.refAwbNumber = dataAwb[0].ref_awb_number;
+    result.weight = dataAwb[0].weight;
+
     result.message = 'Scan gabung paket Kota berhasil';
     return result;
   }
