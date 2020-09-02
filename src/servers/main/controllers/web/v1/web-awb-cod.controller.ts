@@ -21,11 +21,11 @@ import {
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   WebAwbCodBankStatementResponseVm, WebAwbCodDetailPartnerResponseVm, WebAwbCodInvoiceResponseVm,
-  WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebAwbCodSupplierInvoiceResponseVm,
+  WebAwbCodListResponseVm, WebAwbCodDlvListResponseVm, WebAwbCodListTransactionResponseVm, WebAwbCodSupplierInvoiceResponseVm,
   WebCodBankStatementResponseVm, WebCodInvoiceAddResponseVm, WebCodInvoiceDraftResponseVm,
   WebCodInvoiceRemoveResponseVm, WebCodListInvoiceResponseVm,
   WebCodSupplierInvoicePaidResponseVm, WebCodTransactionDetailResponseVm,
-  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm, WebAwbCodVoidListResponseVm,
+  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm, WebAwbCodVoidListResponseVm, WebCodCountResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import {
@@ -46,6 +46,30 @@ export class V1WebAwbCodController {
   @ApiOkResponse({ type: WebAwbCodListResponseVm })
   public async awb(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.awbCod(payload);
+  }
+
+  @Post('countAwb')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodCountResponseVm })
+  public async countAwb(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbCodService.countAwbCod(payload);
+  }
+
+  @Post('awbDlv')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebAwbCodDlvListResponseVm })
+  public async awbDlv(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbCodService.awbCodDlv(payload);
+  }
+
+  @Post('countAwbDlv')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodCountResponseVm })
+  public async countAwbDlv(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbCodService.countAwbCodDlv(payload);
   }
 
   @Post('awb/void')
@@ -328,7 +352,6 @@ export class V1WebAwbCodController {
   ) {
     return await V1WebReportSqlCodService.addQueueBullPrint(payload.filters, 'noncodfee');
   }
-
 
   @Get('supplierInvoice/checkReport/:reportKey')
   @HttpCode(HttpStatus.OK)
