@@ -11,7 +11,7 @@ import { BagRepresentative } from '../../../../shared/orm-entity/bag-representat
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { BagRepresentativeItem } from '../../../../shared/orm-entity/bag-representative-item';
 import { BagRepresentativeSmdQueueService } from '../../../queue/services/bag-representative-smd-queue.service';
-import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm } from '../../models/print-bag-city-payload.vm';
+import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm, BagCityExternalPrintPayloadVm, BagCityExternalPrintExecutePayloadVm } from '../../models/print-bag-city-payload.vm';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
@@ -754,5 +754,89 @@ export class BagCityService {
     return {
       id: identifier,
     };
+  }
+
+  /**
+   * Store Bag City Print Data to Redis
+   *
+   * @param {BagCityExternalPrintPayloadVm} payload
+   * @memberof BagCityService
+   */
+  static async storeBagCityExternalPrint(payload: BagCityExternalPrintPayloadVm) {
+    const bagRepresentativeId = payload.bagRepresentativeId;
+    const key: string = `print-external-data-bagcity-${bagRepresentativeId}`;
+
+    return this.storeDataToRedis(key, payload);
+  }
+
+  /**
+   * Execute Bag City Print Data from Redis to JSReport
+   *
+   * @static
+   * @param {express.Response} res
+   * @param {BagCityExternalPrintExecutePayloadVm} params
+   * @return pipe data of PDF Report.
+   * @memberof BagCityService
+   */
+  static async executeBagCityExternalPrint(
+    res: express.Response,
+    params: BagCityExternalPrintExecutePayloadVm,
+  ) {
+    const bagId = params.id;
+    const key: string = `print-external-data-bagcity-${bagId}`;
+
+    const printData = await this.retrieveDataFromRedis(key);
+    const items = printData && printData.bagRepresentativeItems || [];
+
+    if (!items.length) {
+      RequestErrorService.throwObj({
+        message: `BagCity data tidak ditemukan!`,
+      });
+    }
+
+    const bagRepresentativeDate = moment(printData.bagRepresentativeDate).format('YYYY-MM-DD HH:mm:ss');
+    const formatedData = {
+      ...printData,
+      representative: {
+        representativeId: printData.representativeId,
+        representativeCode: printData.representativeCode,
+      },
+    };
+
+    delete formatedData.representativeId;
+    delete formatedData.representativeCode;
+
+    const templateData = {
+      data: formatedData,
+      meta: { createdTime: bagRepresentativeDate },
+    };
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'bag-representative',
+          templateData,
+          printCopy: params.printCopy ? params.printCopy : 1,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  // TODO: Move as shared services
+  private static async storeDataToRedis(key: string, data: any, duration: number = 600) {
+    if (!data) {
+      RequestErrorService.throwObj({
+        message: 'Data not valid!',
+      });
+    }
+
+    return RedisService.setex(key, data, duration, true);
+  }
+
+  private static async retrieveDataFromRedis(key: string) {
+    return RedisService.get(key, true);
   }
 }
