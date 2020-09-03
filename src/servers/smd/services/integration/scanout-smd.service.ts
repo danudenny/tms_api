@@ -607,15 +607,11 @@ export class ScanoutSmdService {
           resultDoSmdDetail.updatedTime = timeNow;
           await resultDoSmdDetail.save();
 
-          await DoSmd.update(
-            { doSmdId : payload.do_smd_id },
-            {
-              totalBagRepresentative: Number(resultDoSmd.totalBagRepresentative) + 1,
-              totalItem: Number(resultDoSmd.totalItem) + 1,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-            },
-          );
+          resultDoSmd.totalBagRepresentative = Number(resultDoSmd.totalBagRepresentative) + 1;
+          resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
+          resultDoSmd.userIdUpdated = authMeta.userId;
+          resultDoSmd.updatedTime = timeNow;
+          await resultDoSmd.save();
 
           BagRepresentativeScanDoSmdQueueService.perform(
             resultDataBagRepresentative[0].bag_representative_id,
@@ -726,15 +722,11 @@ export class ScanoutSmdService {
             resultDoSmdDetail.updatedTime = timeNow;
             await resultDoSmdDetail.save();
 
-            await DoSmd.update(
-              { doSmdId : payload.do_smd_id },
-              {
-                totalBagging: Number(resultDoSmd.totalBagging) + 1,
-                totalItem: Number(resultDoSmd.totalItem) + 1,
-                userIdUpdated: authMeta.userId,
-                updatedTime: timeNow,
-              },
-            );
+            resultDoSmd.totalBagging = Number(resultDoSmd.totalBagging) + 1;
+            resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
+            resultDoSmd.userIdUpdated = authMeta.userId;
+            resultDoSmd.updatedTime = timeNow;
+            await resultDoSmd.save();
 
             // Generate history bag and its awb IN_HUB
             BagScanDoSmdQueueService.perform(
@@ -849,15 +841,11 @@ export class ScanoutSmdService {
               resultDoSmdDetail.updatedTime = timeNow;
               await resultDoSmdDetail.save();
 
-              await DoSmd.update(
-                { doSmdId : payload.do_smd_id },
-                {
-                  totalBag: Number(resultDoSmd.totalBag) + 1,
-                  totalItem: Number(resultDoSmd.totalItem) + 1,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: timeNow,
-                },
-              );
+              resultDoSmd.totalBag = Number(resultDoSmd.totalBag) + 1;
+              resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
+              resultDoSmd.userIdUpdated = authMeta.userId;
+              resultDoSmd.updatedTime = timeNow;
+              await resultDoSmd.save();
 
               await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
 
@@ -972,15 +960,11 @@ export class ScanoutSmdService {
               resultDoSmdDetail.updatedTime = timeNow;
               await resultDoSmdDetail.save();
 
-              await DoSmd.update(
-                { doSmdId : payload.do_smd_id },
-                {
-                  totalBag: Number(resultDoSmd.totalBag) + 1,
-                  totalItem: Number(resultDoSmd.totalItem) + 1,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: timeNow,
-                },
-              );
+              resultDoSmd.totalBag = Number(resultDoSmd.totalBag) + 1;
+              resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
+              resultDoSmd.userIdUpdated = authMeta.userId;
+              resultDoSmd.updatedTime = timeNow;
+              await resultDoSmd.save();
 
               await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
 
