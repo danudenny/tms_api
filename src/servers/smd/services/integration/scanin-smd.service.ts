@@ -317,9 +317,15 @@ export class ScaninSmdService {
               },
             });
             if (resultReceivedBag) {
-              paramTotalSeq = resultReceivedBag.totalSeq;
-              paramTotalBagWeight = resultReceivedBag.totalBagWeight;
+              paramTotalSeq = Number(resultReceivedBag.totalSeq) + 1;
+              paramTotalBagWeight = Number(resultReceivedBag.totalBagWeight) + Number(weight);
               isNew = false;
+
+              resultReceivedBag.totalSeq = paramTotalSeq;
+              resultReceivedBag.totalBagWeight = paramTotalBagWeight;
+              resultReceivedBag.userIdUpdated = authMeta.userId;
+              resultReceivedBag.updatedTime = timeNow;
+              await resultReceivedBag.save();
             }
           }
           if (isNew == true) {
@@ -342,18 +348,6 @@ export class ScaninSmdService {
               result.message = 'Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat';
               return result;
             }
-          } else {
-            paramTotalSeq = Number(paramTotalSeq) + 1;
-            paramTotalBagWeight = Number(paramTotalBagWeight) + Number(weight) ;
-            await ReceivedBag.update(
-              { receivedBagId: paramReceivedBagId },
-              {
-                totalSeq: paramTotalSeq,
-                totalBagWeight: paramTotalBagWeight,
-                userIdUpdated: authMeta.userId,
-                updatedTime: timeNow,
-              },
-            );
           }
 
           const paramReceivedBagDetailId = await this.createReceivedBagDetail(
