@@ -3,13 +3,22 @@ import { BaseMetaResponseVm } from '../../../../shared/models/base-meta-response
 
 export class CodUserBranchVm {
   @ApiModelProperty()
+  codUserToBranchId: string;
+
+  @ApiModelProperty()
   userId: number;
 
   @ApiModelProperty()
   username: string;
 
   @ApiModelProperty()
+  firstName: string;
+
+  @ApiModelProperty()
   branchId: number;
+
+  @ApiModelProperty()
+  branchCode: string;
 
   @ApiModelProperty()
   branchName: string;
@@ -24,7 +33,20 @@ export class CodUserBranchAddPayloadVm {
   branchIds: number[];
 }
 
+export class CodUserBranchRemovePayloadVm {
+  @ApiModelProperty()
+  codUserToBranchIds: string[];
+}
+
 // response
+export class CodUserBranchRemoveResponseVm {
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+}
+
 export class CodUserBranchAddResponseVm {
   @ApiModelProperty()
   status: string;

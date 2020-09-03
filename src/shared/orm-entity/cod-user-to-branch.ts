@@ -8,13 +8,14 @@ import {
 
 import { User } from './user';
 import { TmsBaseEntity } from './tms-base';
+import { Branch } from './branch';
 
 @Entity('cod_user_to_branch', { schema: 'public' })
 export class CodUserToBranch extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'cod_user_to_branch_id',
   })
-  codUserToBranchId: number;
+  codUserToBranchId: string;
 
   @Column('bigint', {
     nullable: false,
@@ -28,7 +29,11 @@ export class CodUserToBranch extends TmsBaseEntity {
   })
   branchId: number;
 
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id', referencedColumnName: 'userId' })
-  users: User;
+  @ManyToOne(() => Branch, branch => branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
+
+  @ManyToOne(() => User, e => e.userRoles)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 }
