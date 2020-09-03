@@ -24,12 +24,13 @@ import {
     WebCodFirstTransactionPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodTransactionUpdatePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
-    PrintCodTransferBranchVm, WebAwbCodBankStatementResponseVm, WebAwbCodListResponseVm,
+    PrintCodTransferBranchVm, WebAwbCodBankStatementResponseVm, WebAwbCodListResponseVm, WebAwbCodDlvListResponseVm,
     WebAwbCodListTransactionResponseVm, WebCodAwbPrintVm, WebCodBankStatementResponseVm,
     WebCodPrintMetaVm, WebCodTransactionDetailResponseVm, WebCodTransferBranchResponseVm,
     WebCodTransferHeadOfficeResponseVm,
     WebCodTransactionUpdateResponseVm,
     WebAwbCodVoidListResponseVm,
+    WebCodCountResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
@@ -140,12 +141,324 @@ export class V1WebAwbCodService {
     );
 
     const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const total = 0;
 
     const result = new WebAwbCodListResponseVm();
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async countAwbCod(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebCodCountResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
+    payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
+    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
+
+    payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
+    payload.fieldResolverMap['branchNameLast'] = 't6.branch_name';
+    payload.fieldResolverMap['userIdDriver'] = 't4.user_id';
+    payload.fieldResolverMap['driverName'] = 't4.first_name';
+    payload.fieldResolverMap['packageTypeCode'] = 't5.package_type_code';
+    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+    payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
+
+    // mapping search field and operator default ilike
+    // payload.globalSearchFields = [
+    //   {
+    //     field: 'awbNumber',
+    //   },
+    // ];
+    if (payload.sortBy === '') {
+      payload.sortBy = 'transactionDate';
+    }
+
+    const repo = new OrionRepositoryService(AwbItemAttr, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_number', 'awbNumber'],
+      ['t1.awb_item_id', 'awbItemId'],
+      ['t1.updated_time', 'transactionDate'],
+      ['t1.awb_status_id_last', 'awbStatusIdLast'],
+      ['t7.awb_status_title', 'awbStatusLast'],
+      ['t1.branch_id_last', 'branchIdLast'],
+      ['t6.branch_name', 'branchNameLast'],
+      ['t2.awb_date', 'manifestedDate'],
+      ['t2.consignee_name', 'consigneeName'],
+      ['t2.total_cod_value', 'codValue'],
+      ['t6.representative_id', 'representativeId'],
+      ['t4.user_id', 'userIdDriver'],
+      ['t4.first_name', 'driverName'],
+      ['t5.package_type_code', 'packageTypeCode'],
+      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      [`t8.cod_payment_method`, 'codPaymentMethod'],
+      ['t8.cod_payment_service', 'codPaymentService'],
+      ['t8.no_reference', 'noReference'],
+      ['t1.transaction_status_id', 'transactionStatusId'],
+      ['t9.status_title', 'transactionStatusName'],
+    );
+
+    q.innerJoin(e => e.awb, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    // change to inner join
+    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(
+      e => e.doPodDeliverDetail.doPodDeliver.userDriver,
+      't4',
+      j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.packageType, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.branchLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awbStatus, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.transactionStatus, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.awb.isCod, w => w.isTrue());
+    q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
+    // filter ANT, DLV
+    q.andWhere(
+      e => e.doPodDeliverDetail.awbStatusIdLast,
+      w => w.in([14000, 30000]),
+    );
+
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebCodCountResponseVm();
+
+    result.total = total;
+
+    return result;
+  }
+
+  static async awbCodDlv(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbCodDlvListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
+    payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
+    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
+    payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
+
+    payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
+    payload.fieldResolverMap['branchNameLast'] = 't6.branch_name';
+    payload.fieldResolverMap['userIdDriver'] = 't4.user_id';
+    payload.fieldResolverMap['driverName'] = 't4.first_name';
+    payload.fieldResolverMap['packageTypeCode'] = 't5.package_type_code';
+    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+    payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
+
+    // mapping search field and operator default ilike
+    // payload.globalSearchFields = [
+    //   {
+    //     field: 'awbNumber',
+    //   },
+    // ];
+    if (payload.sortBy === '') {
+      payload.sortBy = 'transactionDate';
+    }
+
+    const repo = new OrionRepositoryService(AwbItemAttr, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_number', 'awbNumber'],
+      ['t1.awb_item_id', 'awbItemId'],
+      ['t1.updated_time', 'transactionDate'],
+      ['t1.awb_status_id_last', 'awbStatusIdLast'],
+      ['t1.awb_status_id_final', 'awbStatusIdFinal'],
+      ['t7.awb_status_title', 'awbStatusLast'],
+      ['t1.branch_id_last', 'branchIdLast'],
+      ['t6.branch_name', 'branchNameLast'],
+      ['t2.awb_date', 'manifestedDate'],
+      ['t2.consignee_name', 'consigneeName'],
+      ['t2.total_cod_value', 'codValue'],
+      ['t6.representative_id', 'representativeId'],
+      ['t4.user_id', 'userIdDriver'],
+      ['t4.first_name', 'driverName'],
+      ['t5.package_type_code', 'packageTypeCode'],
+      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      [`t8.cod_payment_method`, 'codPaymentMethod'],
+      ['t8.cod_payment_service', 'codPaymentService'],
+      ['t8.no_reference', 'noReference'],
+      ['t1.transaction_status_id', 'transactionStatusId'],
+      ['t9.status_title', 'transactionStatusName'],
+    );
+
+    q.innerJoin(e => e.awb, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    // change to inner join
+    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(
+      e => e.doPodDeliverDetail.doPodDeliver.userDriver,
+      't4',
+      j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.packageType, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.branchLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awbStatus, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.transactionStatus, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.awb.isCod, w => w.isTrue());
+    q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
+    // filter DLV
+    q.andWhere(
+      e => e.awbStatusIdFinal,
+      w => w.equals(30000),
+    );
+
+    const data = await q.exec();
+    const total = 0;
+
+    const result = new WebAwbCodDlvListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async countAwbCodDlv(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebCodCountResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
+    payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
+    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
+
+    payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
+    payload.fieldResolverMap['branchNameLast'] = 't6.branch_name';
+    payload.fieldResolverMap['userIdDriver'] = 't4.user_id';
+    payload.fieldResolverMap['driverName'] = 't4.first_name';
+    payload.fieldResolverMap['packageTypeCode'] = 't5.package_type_code';
+    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+
+    // mapping search field and operator default ilike
+    // payload.globalSearchFields = [
+    //   {
+    //     field: 'awbNumber',
+    //   },
+    // ];
+    if (payload.sortBy === '') {
+      payload.sortBy = 'transactionDate';
+    }
+
+    const repo = new OrionRepositoryService(AwbItemAttr, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_number', 'awbNumber'],
+      ['t1.awb_item_id', 'awbItemId'],
+      ['t1.updated_time', 'transactionDate'],
+      ['t1.awb_status_id_last', 'awbStatusIdLast'],
+      ['t1.awb_status_id_final', 'awbStatusIdFinal'],
+      ['t7.awb_status_title', 'awbStatusLast'],
+      ['t1.branch_id_last', 'branchIdLast'],
+      ['t6.branch_name', 'branchNameLast'],
+      ['t2.awb_date', 'manifestedDate'],
+      ['t2.consignee_name', 'consigneeName'],
+      ['t2.total_cod_value', 'codValue'],
+      ['t6.representative_id', 'representativeId'],
+      ['t4.user_id', 'userIdDriver'],
+      ['t4.first_name', 'driverName'],
+      ['t5.package_type_code', 'packageTypeCode'],
+      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t1.transaction_status_id', 'transactionStatusId'],
+    );
+
+    q.innerJoin(e => e.awb, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    // change to inner join
+    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(
+      e => e.doPodDeliverDetail.doPodDeliver.userDriver,
+      't4',
+      j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.packageType, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.branchLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awbStatus, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.awb.isCod, w => w.isTrue());
+    q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
+    // filter DLV
+    q.andWhere(
+      e => e.awbStatusIdFinal,
+      w => w.equals(30000),
+    );
+
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebCodCountResponseVm();
+
+    result.total = total;
 
     return result;
   }
