@@ -183,7 +183,7 @@ export class V1WebReportCodService {
           '', '',
           d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
           (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : "") + " - " + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ""),
-          ]);
+        ]);
 
       }
       count += 1;
@@ -206,17 +206,13 @@ export class V1WebReportCodService {
       for (const d of data) {
         await writer.write([
           this.strReplaceFunc(d.partnerName),
-          d.awbDate
-            ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm')
-            : null,
+          d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
           this.strReplaceFunc(d.awbNumber),
           d.prtParcelValue,
           d.codNilai,
           d.codFee ? d.codFee : "-",
           d.codNilai,
-          d.lastValidTrackingDateTime
-            ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
-            : null,
+          d.lastValidTrackingDateTime ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm') : null,
           this.strReplaceFunc(d.penerima),
           d.paymentMethod,
           d.transactionStatus,
@@ -684,7 +680,7 @@ export class V1WebReportCodService {
   //   }
   // }
 
-  static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
+  static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], filters, limit, pageNumber) {
     const spartanFilter: any = [{ isCod: true }];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
@@ -708,8 +704,17 @@ export class V1WebReportCodService {
 
       if (filter.field == 'transactionEnd' && filter.value) {
         const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
-        tdFilter.push({ $lt: ['$updatedTime', d] });
-        allowNullTd = false;
+        spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
+      }
+
+      if (filter.field == 'manifestedStart' && filter.value) {
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        spartanFilter.push({ awbDate: { $gte: d } });
+      }
+
+      if (filter.field == 'manifestedEnd' && filter.value) {
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        spartanFilter.push({ awbDate: { $lt: d } });
       }
 
       if (filter.field == 'awbStatus' && filter.value) {
@@ -824,6 +829,8 @@ export class V1WebReportCodService {
           manifestTrackingSiteName: '$manifestTrackingSiteName',
           lastValidTrackingSiteName: '$lastValidTrackingSiteName',
           receiverRemark: 1,
+          transactionStatus: "",
+          supplierInvoiceStatus: "",
         },
       },
     ];
@@ -839,16 +846,16 @@ export class V1WebReportCodService {
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
     // console.log(arrUser, "array");
-    for (const d of datas) {
-      d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
-      d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
-      // if (d.userIdDriver && arrDriver.length > 0) {
-      //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
-      // }
+    // for (const d of datas) {
+    //   d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
+    //   d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
+    //   // if (d.userIdDriver && arrDriver.length > 0) {
+    //   //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
+    //   // }
 
-      // if (d.userIdUpdated && arrUser.length > 0)
-      //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
-    }
+    //   // if (d.userIdUpdated && arrUser.length > 0)
+    //   //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
+    // }
 
 
     // console.log(datas);
@@ -857,12 +864,14 @@ export class V1WebReportCodService {
     return datas;
   }
 
-  static async getNonCodSupplierInvoiceTransactionDetailData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
+  static async getNonCodSupplierInvoiceTransactionDetailData(coll, arrDatas: any[], filters, limit, pageNumber) {
     const spartanFilter: any = [{ isCod: true }, { $eq: ['$awbNumber', '$$awbNumber'] }];
-     let allowNullTd = true;
+    let allowNullTd = true;
     const filterList: any = [];
 
     for (const filter of filters) {
+      // filterList.push({ awbNumber: { $eq: "001076023505" } });
+
       if (filter.field == 'transactionStart' && filter.value) {
         const d = moment(filter.value).add(7, 'hour').toDate();
         filterList.push({ updatedTime: { $gte: d } });
@@ -878,6 +887,7 @@ export class V1WebReportCodService {
         filterList.push({ transactionStatusId: { $eq: filter.value } });
       }
 
+
       if (filter.field == 'supplierInvoiceStatus' && filter.value) {
         filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
 
@@ -891,7 +901,7 @@ export class V1WebReportCodService {
         filterList.push({ userIdDriver: { $eq: filter.value } });
       }
 
-      
+
       if (filter.field == 'branchLastId' && filter.value) {
         filterList.push({ currentPositionId: { $eq: filter.value.toString() } });
       }
@@ -906,6 +916,20 @@ export class V1WebReportCodService {
         const d = moment(filter.value).add(7, 'hour').add(1, 'days').toDate();
         spartanFilter.push({ $lt: ['$lastValidTrackingDateTime', d] });
         allowNullTd = false;
+      }
+
+
+      if (filter.field == 'manifestedStart' && filter.value) {
+
+        const d = moment(filter.value).add(7, 'hour').toDate();
+        filterList.push({ awbDate: { $gte: filter.value } });
+      }
+
+      if (filter.field == 'manifestedEnd' && filter.value) {
+
+        const d = moment(filter.value).add(7, 'hour')
+          .add(1, 'days').toDate();
+        filterList.push({ awbDate: { $lt: filter.value } });
       }
     }
 
@@ -943,7 +967,6 @@ export class V1WebReportCodService {
             {
               $project: {
                 awbNumber: 1,
-                perwakilan: 1
               },
             },
           ],
@@ -967,8 +990,9 @@ export class V1WebReportCodService {
           currentPosition: 1,
           isDeleted: 1,
           paymentMethod: 1,
-          perwakilan: "$ca.perwakilan",
+          perwakilan: "$representativeCode",
           supplierInvoiceStatusId: 1,
+          supplierInvoiceStatus: "$supplierInvoiceStatusName",
           prtParcelValue: '$parcelValue',
           codNilai: '$codValue',
           lastValidTrackingDateTime: '$podDate',
@@ -989,6 +1013,7 @@ export class V1WebReportCodService {
           pickupSource: 1,
           podDate: 1,
           transactionStatusId: 1,
+          transactionStatus: "$transactionstatusname",
           userIdDriverNik: '$nikSigesit',
           userIdDriverName: '$sigesit',
           userIdUpdatedNik: "$nikAdmin",
@@ -1012,18 +1037,18 @@ export class V1WebReportCodService {
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
     // console.log(arrUser, "array");
-    for (const d of datas) {
-      d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
-      d.lastValidTrackingType = "DLV"
+    // for (const d of datas) {
+    //   d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
+    //   d.lastValidTrackingType = "DLV"
 
-      d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
-      // if (d.userIdDriver && arrDriver.length > 0) {
-      //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
-      // }
+    //   d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
+    //   // if (d.userIdDriver && arrDriver.length > 0) {
+    //   //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
+    //   // }
 
-      // if (d.userIdUpdated && arrUser.length > 0)
-      //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
-    }
+    //   // if (d.userIdUpdated && arrUser.length > 0)
+    //   //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
+    // }
 
 
     // console.log(datas);
@@ -1090,13 +1115,6 @@ export class V1WebReportCodService {
     let result: any;
 
     try {
-      const transactionStatuses = await RawQueryService.query(
-        `SELECT transaction_status_id, status_title FROM transaction_status ts`,
-      );
-
-      for (const transactionStatus of transactionStatuses) {
-        transactionStatus.transaction_status_id = parseInt(`${transactionStatus.transaction_status_id}`, 10);
-      }
 
       const reportType = await this.reportTypeFromFilter(filters);
 
@@ -1115,18 +1133,15 @@ export class V1WebReportCodService {
         console.log(reportType, "report Type")
         while (!finish) {
           let responseDatas: any;
-          // if (reportType.filterAwb === true && reportType.filterTransaction === true) {
-          //   const rawResponseData = await this.timeResponse('time_log_cod_read_join', this.getNonCodSupplierInvoiceJoinTransactionDetailData(dbTransactionDetail, datas, transactionStatuses, filters, limit, pageNumber));
-          //   responseDatas = rawResponseData.data;
-          // } else 
-           if (reportType.filterTransaction == true) {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, transactionStatuses, filters, limit, pageNumber));
+
+          if (reportType.filterTransaction == true) {
+            const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, filters, limit, pageNumber));
             responseDatas = rawResponseData.data;
           }
-          else{
-            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
+          else {
+            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, filters, limit, pageNumber));
             responseDatas = rawResponseData.data;
-          } 
+          }
 
           console.log(responseDatas.length, 'response datas');
           if (responseDatas.length <= 0) {
@@ -1311,7 +1326,6 @@ export class V1WebReportCodService {
             {
               $project: {
                 awbNumber: 1,
-                perwakilan: 1
               },
             },
           ],
@@ -1342,7 +1356,9 @@ export class V1WebReportCodService {
           pickupSource: 1,
           podDate: 1,
           transactionStatusId: 1,
-          perwakilan: "$ca.perwakilan",
+          transactionStatus: "$transactionstatusname",
+          supplierInvoiceStatus: "$supplierInvoiceStatusName",
+          perwakilan: "$perwakilanCode",
           userIdDriver: 1,
           updatedTime: 1,
           userIdUpdated: 1,
@@ -1396,7 +1412,7 @@ export class V1WebReportCodService {
 
           const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber);
 
-          console.log(!responseDatas, limit, finish, responseDatas.length < limit, 'response data length');
+          // console.log(!responseDatas, limit, finish, responseDatas.length < limit, 'response data length');
 
           if (responseDatas.length <= 0) {
 
