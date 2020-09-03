@@ -1,9 +1,10 @@
 
 import { ConfigService } from '../../../../../shared/services/config.service';
-import { ServiceUnavailableException, BadRequestException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { WinstonLogglyService } from '../../../../../shared/services/winston-loggly.service';
 import axios from 'axios';
 import { RedisService } from '../../../../../shared/services/redis.service';
+import { DivaData } from '../../../../../shared/orm-entity/diva-data';
 
 export class V1MobileDivaPaymentService {
   constructor() {}
@@ -44,10 +45,11 @@ export class V1MobileDivaPaymentService {
     const randomNum = Math.floor(Math.random() * 1000); // random 3 digit
     const url = `${ConfigService.get('divaPayment.urlQR')}${provider}`;
 
+    const randomTID = await this.getRandomTID();
     const requestData = {
       token: ConfigService.get('divaPayment.codToken'),
       mid: ConfigService.get('divaPayment.codMid'),
-      tid: ConfigService.get('divaPayment.codTid'),
+      tid: randomTID,
       amount,
       reff_no: `POD-MOBILE-${now}${randomNum}`,
     };
@@ -103,14 +105,25 @@ export class V1MobileDivaPaymentService {
   private static async getRandomTID(): Promise<string> {
     let result = 'sicepat001';
     // check data on redis
-    const dataRedis = await RedisService.get(`diva:payment:tid`);
+    const dataRedis = await RedisService.get(`diva:payments:tid`);
     if (dataRedis) {
       const dataArray: [] = dataRedis.split(',');
       const index = this.randomInteger(1, dataArray.length);
       result = dataArray[index];
     } else {
       // get data on db and set data redis
-
+      const dataDb = await DivaData.find();
+      if (dataDb && dataDb.length) {
+        const tidArray = dataDb.map(item => {
+          return item.tid;
+        });
+        await RedisService.set(
+          `diva:payments:tid`,
+          tidArray.toString(),
+        );
+        const index = this.randomInteger(1, tidArray.length);
+        result = tidArray[index];
+      }
     }
     return result;
   }
