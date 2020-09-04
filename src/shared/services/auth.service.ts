@@ -13,7 +13,7 @@ import {
 } from '../interfaces/jwt-payload.interface';
 import { AuthLoginMetadata } from '../models/auth-login-metadata.model';
 import { AuthLoginResultMetadata } from '../models/auth-login-result-metadata';
-import { GetRoleResult } from '../models/get-role-result';
+import { GetRoleResult, UserRoleResponse } from '../models/get-role-result';
 import { Branch } from '../orm-entity/branch';
 import { User } from '../orm-entity/user';
 import { UserRole } from '../orm-entity/user-role';
@@ -25,6 +25,7 @@ import { RedisService } from './redis.service';
 import { RepositoryService } from './repository.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
 import { PartnerTokenPayload } from '../interfaces/partner-payload.interface';
+import { createQueryBuilder } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -130,14 +131,15 @@ export class AuthService {
     // const user = await this.userRepository.findByUserIdWithRoles());
     // check user present
     if (!!authMeta) {
-      const roles = await UserRole.find({
-        // cache: true,
-        relations: ['branch', 'role'],
-        where: {
-          userId: toInteger(authMeta.userId),
-          isDeleted: false,
-        },
-      });
+      // const roles = await UserRole.find({
+      //   // cache: true,
+      //   relations: ['branch', 'role'],
+      //   where: {
+      //     userId: toInteger(authMeta.userId),
+      //     isDeleted: false,
+      //   },
+      // });
+      const roles = await this.getUserRole(authMeta.userId);
 
       // Populate return value
       const result = new GetRoleResult();
@@ -145,18 +147,19 @@ export class AuthService {
       result.username = authMeta.username;
       result.email = authMeta.email;
       result.displayName = authMeta.displayName;
+      result.roles = roles;
       // result.roles = map(roles, role => pick(role, ['role_id', 'role.role_name', 'branch_id', 'branch.branch_name']));
-      result.roles = map(roles, item => {
-        const newObj = {
-          roleId: item.roleId,
-          roleName: item.role.roleName,
-          branchId: item.branchId,
-          branchName: item.branch.branchName,
-          branchCode: item.branch.branchCode,
-          isHeadOffice: item.branch.isHeadOffice,
-        };
-        return newObj;
-      });
+      // result.roles = map(roles, item => {
+      //   const newObj = {
+      //     roleId: item.roleId,
+      //     roleName: item.role.roleName,
+      //     branchId: item.branchId,
+      //     branchName: item.branch.branchName,
+      //     branchCode: item.branch.branchCode,
+      //     isHeadOffice: item.branch.isHeadOffice,
+      //   };
+      //   return newObj;
+      // });
 
       return result;
     } else {
@@ -431,5 +434,30 @@ export class AuthService {
     } catch (e) {
       throw new UnauthorizedException(e.message);
     }
+  }
+
+  private async getUserRole(userId: number): Promise<UserRoleResponse[]> {
+    const qb = createQueryBuilder();
+    qb.addSelect('t1.role_id', 'roleId');
+    qb.addSelect('t1.branch_id', 'branchId');
+    qb.addSelect('t2.role_name', 'roleName');
+    qb.addSelect('t3.branch_name', 'branchName');
+    qb.addSelect('t3.branch_code', 'branchCode');
+    qb.addSelect('t3.is_head_office', 'isHeadOffice');
+    qb.from('user_role', 't1');
+    qb.innerJoin(
+      'role',
+      't2',
+      't1.role_id = t2.role_id AND t2.is_deleted = false',
+    );
+    qb.innerJoin(
+      'branch',
+      't3',
+      't1.branch_id = t3.branch_id AND t2.is_deleted = false',
+    );
+    qb.where('t1.user_id = :userId', { userId });
+    qb.andWhere('t1.is_deleted = false');
+
+    return await qb.getRawMany();
   }
 }
