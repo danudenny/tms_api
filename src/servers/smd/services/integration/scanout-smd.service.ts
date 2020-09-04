@@ -9,7 +9,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { Representative } from '../../../../shared/orm-entity/representative';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
-import { In } from 'typeorm';
+import { IsNull, In, Not } from 'typeorm';
 import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
@@ -1280,7 +1280,8 @@ export class ScanoutSmdService {
     if (resultDoSmd) {
       const rawQuery = `
         SELECT
-          do_smd_vehicle_id
+          do_smd_vehicle_id,
+          employee_id_driver
         FROM do_smd_vehicle
         WHERE
           do_smd_vehicle_id = ${resultDoSmd.doSmdVehicleIdLast} AND
@@ -1291,64 +1292,77 @@ export class ScanoutSmdService {
       const resultDataDoSmdVehicle = await RawQueryService.query(rawQuery);
       if (resultDataDoSmdVehicle.length > 0 ) {
         if (resultDataDoSmdVehicle[0].employee_id_driver != payload.employee_id_driver) {
-          // Set Active False yang lama
-          await DoSmdVehicle.update(
-            { doSmdVehicleId : resultDataDoSmdVehicle[0].do_smd_vehicle_id },
-            {
-              isActive: false,
-              userIdUpdated: authMeta.userId,
-              updatedTime: moment().toDate(),
+          const resultAllDriverVehicle = await this.findAllActiveVehicleInDriver(resultDataDoSmdVehicle[0].employee_id_driver);
+          const arrSmd = [];
+          const vehicleId = [];
+          for (const item of resultAllDriverVehicle) {
+            vehicleId.push(item.doSmdVehicleId);
+          }
+
+          const dataDoSmd = await DoSmd.find({
+            where: {
+              doSmdVehicleIdLast: In(vehicleId),
+              doSmdStatusIdLast: 8000,
+              isDeleted: false,
             },
-          );
-          // Create Vehicle Dulu dan jangan update ke do_smd
-          const paramDoSmdVehicleId = await this.createDoSmdVehicle(
-            payload.do_smd_id,
-            payload.vehicle_number,
-            payload.employee_id_driver,
-            permissonPayload.branchId,
-            authMeta.userId,
-          );
-
-          const paramDoSmdHistoryId = await this.createDoSmdHistory(
-            resultDoSmd.doSmdId,
-            null,
-            resultDoSmd.doSmdVehicleIdLast,
-            null,
-            null,
-            resultDoSmd.doSmdTime,
-            permissonPayload.branchId,
-            1150,
-            null,
-            null,
-            authMeta.userId,
-          );
-
-          await DoSmd.update(
-            { doSmdId :  payload.do_smd_id},
-            {
-              doSmdStatusIdLast: 1150,
-              userIdUpdated: authMeta.userId,
-              updatedTime: moment().toDate(),
-            },
-          );
-
-          await DoSmdDetail.update(
-            { doSmdId :  payload.do_smd_id, arrivalTime: null},
-            {
-              doSmdStatusIdLast: 1150,
-              userIdUpdated: authMeta.userId,
-              updatedTime: moment().toDate(),
-            },
-          );
-
-          data.push({
-            do_smd_id: resultDoSmd.doSmdId,
-            do_smd_code: resultDoSmd.doSmdCode,
-            do_smd_vehicle_id: paramDoSmdVehicleId,
           });
 
+          for (const item of dataDoSmd) {
+            // Set Active False yang lama
+            await DoSmdVehicle.update(
+              { doSmdVehicleId : item.doSmdVehicleIdLast },
+              {
+                isActive: false,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              },
+            );
+            // Create Vehicle Dulu dan jangan update ke do_smd
+            const paramDoSmdVehicleId = await this.createDoSmdVehicle(
+              item.doSmdId,
+              payload.vehicle_number,
+              payload.employee_id_driver,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
+
+            const paramDoSmdHistoryId = await this.createDoSmdHistory(
+              item.doSmdId,
+              null,
+              item.doSmdVehicleIdLast,
+              null,
+              null,
+              item.doSmdTime,
+              permissonPayload.branchId,
+              1150,
+              null,
+              null,
+              authMeta.userId,
+            );
+
+            item.doSmdStatusIdLast = 1150;
+            item.userIdUpdated = authMeta.userId;
+            item.updatedTime = moment().toDate();
+            await item.save();
+
+            await DoSmdDetail.update(
+              { doSmdId :  item.doSmdId, arrivalTime: null},
+              {
+                doSmdStatusIdLast: 1150,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              },
+            );
+
+            data.push({
+              do_smd_id: item.doSmdId,
+              do_smd_code: item.doSmdCode,
+              do_smd_vehicle_id: paramDoSmdVehicleId,
+            });
+            arrSmd.push(item.doSmdCode);
+          }
           result.statusCode = HttpStatus.OK;
-          result.message = 'SMD Code ' + resultDoSmd.doSmdCode + 'Success Handover';
+          result.message = 'SMD Code ' + arrSmd.join(',') + 'Success Handover';
           result.data = data;
           return result;
         } else {
@@ -1360,6 +1374,17 @@ export class ScanoutSmdService {
     } else {
       throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
     }
+  }
+
+  static async findAllActiveVehicleInDriver(employee_id_driver: number): Promise<DoSmdVehicle[]> {
+    const resultDoSmd = await DoSmdVehicle.find({
+      where: {
+        employeeIdDriver: employee_id_driver,
+        reasonId: Not(IsNull()),
+        isDeleted: false,
+      },
+    });
+    return resultDoSmd;
   }
 
   static async scanOutChangeVehicle(payload: any): Promise<any> {
