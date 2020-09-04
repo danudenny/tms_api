@@ -1102,24 +1102,28 @@ export class ScanoutSmdService {
     if (payload.seal_seq == 1) {
       rawQuery = `
         SELECT
-          do_smd_detail_id
-        FROM do_smd_detail
+          dsd.do_smd_detail_id
+        FROM do_smd_detail dsd
+        INNER JOIN do_smd_detail_item dsdi ON dsd.do_smd_detail_id = dsdi.do_smd_detail_id AND dsdi.is_deleted = FALSE
         WHERE
-          do_smd_id = ${payload.do_smd_id} AND
-          arrival_time IS NULL AND
-          seal_number IS NULL AND
-          is_deleted = FALSE
+          dsd.do_smd_id = ${payload.do_smd_id} AND
+          dsd.arrival_time IS NULL AND
+          dsd.seal_number IS NULL AND
+          dsd.is_deleted = FALSE
+        LIMIT 1
         ;
       `;
     } else {
       rawQuery = `
         SELECT
-          do_smd_detail_id
-        FROM do_smd_detail
+          dsd.do_smd_detail_id
+        FROM do_smd_detail dsd
+        INNER JOIN do_smd_detail_item dsdi ON dsd.do_smd_detail_id = dsdi.do_smd_detail_id AND dsdi.is_deleted = FALSE
         WHERE
-          do_smd_id = ${payload.do_smd_id} AND
-          arrival_time IS NULL AND
-          is_deleted = FALSE
+          dsd.do_smd_id = ${payload.do_smd_id} AND
+          dsd.arrival_time IS NULL AND
+          dsd.is_deleted = FALSE
+        LIMIT 1
         ;
       `;
     }
