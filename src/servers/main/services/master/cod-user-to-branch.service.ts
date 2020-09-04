@@ -67,7 +67,10 @@ export class CodUserToBranchService {
           });
         }
       }
-      return null;
+      const result = new CodUserBranchRemoveResponseVm();
+      result.status = 'ok';
+      result.message = 'success';
+      return result;
     } else {
       throw new BadRequestException(
         'tidak boleh kosong, pilih salah satu!',
