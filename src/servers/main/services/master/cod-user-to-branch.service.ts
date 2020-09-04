@@ -3,6 +3,8 @@ import { BadRequestException } from '@nestjs/common';
 import { CodUserToBranch } from '../../../../shared/orm-entity/cod-user-to-branch';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { AuthService } from '../../../../shared/services/auth.service';
+import moment = require('moment');
 
 export class CodUserToBranchService {
   constructor() {}
@@ -10,6 +12,9 @@ export class CodUserToBranchService {
   static async add(
     payload: CodUserBranchAddPayloadVm,
   ): Promise<CodUserBranchAddResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const timestamp = moment().toDate();
+
     if (payload.branchIds.length) {
       let totalSuccess = 0;
       for (const branchId of payload.branchIds) {
@@ -25,6 +30,10 @@ export class CodUserToBranchService {
           await CodUserToBranch.insert({
             userId: payload.userId,
             branchId,
+            userIdCreated: authMeta.userId,
+            userIdUpdated: authMeta.userId,
+            createdTime: timestamp,
+            updatedTime: timestamp,
           });
           totalSuccess += 1;
         }
@@ -91,7 +100,7 @@ export class CodUserToBranchService {
       ['t1.user_id', 'userId'],
       ['t1.branch_id', 'branchId'],
       ['t2.username', 'username'],
-      ['t2.firstname', 'firstname'],
+      ['t2.first_name', 'firstName'],
       ['t3.branch_code', 'branchCode'],
       ['t3.branch_name', 'branchName'],
     );
