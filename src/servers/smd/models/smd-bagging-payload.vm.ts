@@ -42,5 +42,5 @@ export class SmdScanBaggingMorePayloadVm {
 
 export class SmdBaggingDetailPayloadVm {
   @ApiModelProperty()
-  bagNumber: string[];
+  baggingId: string;
 }

@@ -4,7 +4,7 @@ import express = require('express');
 import xlsx = require('xlsx');
 import fs = require('fs');
 import { AuthService } from '../../../../shared/services/auth.service';
-import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDataMoreResponseVm } from '../../models/bag-city-response.vm';
+import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDataMoreResponseVm, BagCityDetailScanResponseVm } from '../../models/bag-city-response.vm';
 import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityInputManualDataPayloadVm, BagCityDetailScanPayloadVm } from '../../models/bag-city-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
@@ -846,54 +846,24 @@ export class BagCityService {
 
   static async detailBagCityScanned(
     payload: BagCityDetailScanPayloadVm,
-    ): Promise<BagCityMoreResponseVm> {
-    const result = new BagCityMoreResponseVm();
-    const bag = [];
-    let totalError = 0;
-    let totalSuccess = 0;
-    result.data = [];
+    ): Promise<BagCityDetailScanResponseVm> {
+    const result = new BagCityDetailScanResponseVm();
 
-    // tslint:disable-next-line: prefer-for-of
-    for (let i = 0; i < payload.awbNumber.length; i++) {
-      const detail = new BagCityDataMoreResponseVm();
+    const qb = createQueryBuilder();
+    qb.addSelect( 'br.bag_representative_code', 'bagRepresentativeCode');
+    qb.addSelect( 'br.bag_representative_id', 'bagRepresentativeId');
+    qb.addSelect( 'bri.bag_representative_item_id', 'bagRepresentativeItemId');
+    qb.addSelect( 'bri.ref_awb_number', 'refAwbNumber');
+    qb.addSelect( 'r.representative_code', 'representativeCode');
+    qb.addSelect( 'r.representative_id', 'representativeId');
+    qb.addSelect( 'bri.weight', 'weight');
+    qb.from('bag_representative_item', 'bri');
+    qb.innerJoin('bag_representative', 'br', 'br.bag_representative_id = bri.bag_representative_id AND br.is_deleted = FALSE');
+    qb.innerJoin('representative', 'r', 'r.representative_id = br.representative_id_to AND r.is_deleted = FALSE');
+    qb.andWhere(`bri.bag_representative_id = '${payload.bagRepresentativeId}'`);
+    qb.andWhere(`bri.is_deleted = FALSE`);
+    result.data = await qb.getRawMany();
 
-      const qb = createQueryBuilder();
-      qb.addSelect( 'br.bag_representative_code', 'bagRepresentativeCode');
-      qb.addSelect( 'br.bag_representative_id', 'bagRepresentativeId');
-      qb.addSelect( 'bri.bag_representative_item_id', 'bagRepresentativeItemId');
-      qb.addSelect( 'bri.ref_awb_number', 'refAwbNumber');
-      qb.addSelect( 'r.representative_code', 'representativeCode');
-      qb.addSelect( 'r.representative_id', 'representativeId');
-      qb.addSelect( 'bri.weight', 'weight');
-      qb.from('bag_representative_item', 'bri');
-      qb.innerJoin('bag_representative', 'br', 'br.bag_representative_id = bri.bag_representative_id AND br.is_deleted = FALSE');
-      qb.innerJoin('representative', 'r', 'r.representative_id = br.representative_id_to AND r.is_deleted = FALSE');
-      qb.andWhere(`bri.ref_awb_number = '${payload.awbNumber[i]}'`);
-      qb.andWhere(`bri.is_deleted = FALSE`);
-      const data = await qb.getRawOne();
-
-      if (!data) {
-        totalError++;
-        detail.message = `Resi ${payload.awbNumber[i]} tidak ditemukan`;
-        detail.status = 'error';
-      } else {
-        totalSuccess++;
-        detail.message = 'Gabung Sortir Kota berhasil ditemukan';
-        detail.status = 'success';
-        detail.bagRepresentativeCode = data.bagRepresentativeCode;
-        detail.bagRepresentativeId = data.bagRepresentativeId;
-        detail.bagRepresentativeItemId = data.bagRepresentativeItemId;
-        detail.refAwbNumber = data.refAwbNumber;
-        detail.representativeCode = data.representativeCode;
-        detail.representativeId = data.representativeId;
-        detail.weight = data.weight;
-      }
-
-      result.data.push(detail);
-    }
-    result.totalData = payload.awbNumber.length;
-    result.totalError = totalError;
-    result.totalSuccess = totalSuccess;
     return result;
   }
 }

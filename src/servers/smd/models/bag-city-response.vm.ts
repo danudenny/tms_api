@@ -56,6 +56,31 @@ export class BagCityMoreResponseVm {
   data: BagCityDataMoreResponseVm[];
 }
 
+export class BagCityDataDetailScanResponseVm {
+  @ApiModelProperty()
+  bagRepresentativeCode: string;
+
+  @ApiModelProperty()
+  bagRepresentativeId: string;
+
+  @ApiModelProperty()
+  bagRepresentativeItemId: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
+
+  @ApiModelProperty()
+  representativeId: string;
+
+  @ApiModelProperty()
+  weight: string;
+}
+
+export class BagCityDetailScanResponseVm {
+  @ApiModelProperty({ type: () => [BagCityDataDetailScanResponseVm] })
+  data: BagCityDataDetailScanResponseVm[];
+}
+
 export class ListBagCityDetailVm {
   @ApiModelProperty()
   bagRepresentativeId: string;
