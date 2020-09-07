@@ -1104,7 +1104,6 @@ export class ScanoutSmdService {
         SELECT
           dsd.do_smd_detail_id
         FROM do_smd_detail dsd
-        INNER JOIN do_smd_detail_item dsdi ON dsd.do_smd_detail_id = dsdi.do_smd_detail_id AND dsdi.is_deleted = FALSE
         WHERE
           dsd.do_smd_id = ${payload.do_smd_id} AND
           dsd.arrival_time IS NULL AND
@@ -1118,7 +1117,6 @@ export class ScanoutSmdService {
         SELECT
           dsd.do_smd_detail_id
         FROM do_smd_detail dsd
-        INNER JOIN do_smd_detail_item dsdi ON dsd.do_smd_detail_id = dsdi.do_smd_detail_id AND dsdi.is_deleted = FALSE
         WHERE
           dsd.do_smd_id = ${payload.do_smd_id} AND
           dsd.arrival_time IS NULL AND
@@ -1129,60 +1127,72 @@ export class ScanoutSmdService {
     }
     const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
     if (resultDataDoSmdDetail.length > 0 ) {
-      for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-        await DoSmdDetail.update(
-          { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+      // proses seal jika smd sudah pernah scan item
+      const checkItemSmd = await DoSmdDetailItem.findOne({
+        select: ['doSmdDetailId'],
+        where: {
+          doSmdDetailId: resultDataDoSmdDetail[0].do_smd_detail_id,
+          isDeleted: false,
+        },
+      });
+      if (checkItemSmd) {
+        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+          await DoSmdDetail.update(
+            { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+            {
+              sealNumber: payload.seal_number,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            },
+          );
+        }
+        await DoSmd.update(
+          { doSmdId : payload.do_smd_id },
           {
-            sealNumber: payload.seal_number,
+            sealNumberLast: payload.seal_number,
             userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
           },
         );
-      }
-      await DoSmd.update(
-        { doSmdId : payload.do_smd_id },
-        {
-          sealNumberLast: payload.seal_number,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
-      const resultDoSmd = await DoSmd.findOne({
-        where: {
-          doSmdId: payload.do_smd_id,
-          isDeleted: false,
-        },
-      });
-      let paramStatusId;
-      if (payload.seal_seq == 1) {
-        // Untuk Seal Pertama X
-        paramStatusId = 2000;
+        const resultDoSmd = await DoSmd.findOne({
+          where: {
+            doSmdId: payload.do_smd_id,
+            isDeleted: false,
+          },
+        });
+        let paramStatusId;
+        if (payload.seal_seq == 1) {
+          // Untuk Seal Pertama X
+          paramStatusId = 2000;
+        } else {
+          //  Untuk Ganti Seal
+          paramStatusId = 1200;
+        }
+        const paramDoSmdHistoryId = await this.createDoSmdHistory(
+          resultDoSmd.doSmdId,
+          null,
+          resultDoSmd.doSmdVehicleIdLast,
+          null,
+          null,
+          resultDoSmd.doSmdTime,
+          permissonPayload.branchId,
+          paramStatusId,
+          payload.seal_number,
+          null,
+          authMeta.userId,
+        );
+        data.push({
+          do_smd_id: resultDoSmd.doSmdId,
+          do_smd_code: resultDoSmd.doSmdCode,
+          seal_number: payload.seal_number,
+        });
+        result.statusCode = HttpStatus.OK;
+        result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' With Seal ' + payload.seal_number + ' Success Created';
+        result.data = data;
+        return result;
       } else {
-        //  Untuk Ganti Seal
-        paramStatusId = 1200;
+        throw new BadRequestException(`SMD not contains item`);
       }
-      const paramDoSmdHistoryId = await this.createDoSmdHistory(
-        resultDoSmd.doSmdId,
-        null,
-        resultDoSmd.doSmdVehicleIdLast,
-        null,
-        null,
-        resultDoSmd.doSmdTime,
-        permissonPayload.branchId,
-        paramStatusId,
-        payload.seal_number,
-        null,
-        authMeta.userId,
-      );
-      data.push({
-        do_smd_id: resultDoSmd.doSmdId,
-        do_smd_code: resultDoSmd.doSmdCode,
-        seal_number: payload.seal_number,
-      });
-      result.statusCode = HttpStatus.OK;
-      result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' With Seal ' + payload.seal_number + ' Success Created';
-      result.data = data;
-      return result;
     } else {
       throw new BadRequestException(`Updated Seal Fail`);
     }
