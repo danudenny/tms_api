@@ -2,11 +2,11 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Response, Get,
 import express = require('express');
 import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import {BagCityService} from '../../services/integration/bag-city.service';
-import {PermissionTokenGuard} from '../../../../shared/guards/permission-token.guard';
-import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
-import {BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm} from '../../models/bag-city-response.vm';
-import {BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityDetailScanPayloadVm} from '../../models/bag-city-payload.vm';
+import { BagCityService } from '../../services/integration/bag-city.service';
+import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
+import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDetailScanResponseVm } from '../../models/bag-city-response.vm';
+import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityDetailScanPayloadVm } from '../../models/bag-city-payload.vm';
 import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm, BagCityExternalPrintPayloadVm, BagCityExternalPrintExecutePayloadVm } from '../../models/print-bag-city-payload.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { Transaction } from 'typeorm';
@@ -121,7 +121,7 @@ export class BagCityController {
 
   @Post('scan/detail')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: BagCityMoreResponseVm })
+  @ApiOkResponse({ type: BagCityDetailScanResponseVm })
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   public async detailBagging(@Body() payload: BagCityDetailScanPayloadVm) {

@@ -103,3 +103,28 @@ export class ListDetailBaggingResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [ListDetailBaggingDataVm] })
   data: ListDetailBaggingDataVm[];
 }
+
+export class SmdBaggingDataDetailResponseVm {
+  @ApiModelProperty()
+  baggingItemId: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  baggingId: string;
+
+  @ApiModelProperty()
+  baggingCode: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
+}
+
+export class SmdBaggingDetailResponseVm {
+  @ApiModelProperty({ type: () => [SmdBaggingDataDetailResponseVm] })
+  data: SmdBaggingDataDetailResponseVm[];
+}

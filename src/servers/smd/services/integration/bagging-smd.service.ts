@@ -8,7 +8,7 @@ import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm, SmdScanBaggingDataMoreResponseVm } from '../../models/smd-bagging-response.vm';
+import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm, SmdScanBaggingDataMoreResponseVm, SmdBaggingDetailResponseVm } from '../../models/smd-bagging-response.vm';
 import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm, InputManualDataPayloadVm, SmdBaggingDetailPayloadVm } from '../../models/smd-bagging-payload.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -494,54 +494,24 @@ export class BaggingSmdService {
 
   static async detailBaggingScanned(
     payload: SmdBaggingDetailPayloadVm,
-    ): Promise<SmdScanBaggingMoreResponseVm> {
-    const result = new SmdScanBaggingMoreResponseVm();
-    const bag = [];
-    let totalError = 0;
-    let totalSuccess = 0;
-    result.data = [];
+    ): Promise<SmdBaggingDetailResponseVm> {
+    const result = new SmdBaggingDetailResponseVm();
 
-    // tslint:disable-next-line: prefer-for-of
-    for (let i = 0; i < payload.bagNumber.length; i++) {
-      const bagNumber = payload.bagNumber[i].substring(0, 7);
-      const bagSeq = Number(payload.bagNumber[i].substring(7, 10));
-      const detail = new SmdScanBaggingDataMoreResponseVm();
+    const qb = createQueryBuilder();
+    qb.addSelect( 'CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, \'0\'))', 'bagNumber');
+    qb.addSelect( 'bi.weight', 'weight');
+    qb.addSelect( 'bai.bagging_id', 'baggingId');
+    qb.addSelect( 'ba.bagging_code', 'baggingCode');
+    qb.addSelect( 'r.representative_code', 'representativeCode');
+    qb.from('bagging_item', 'bai');
+    qb.innerJoin('bag_item', 'bi', 'bai.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE');
+    qb.innerJoin('bag', 'b', 'b.bag_id = bi.bag_id AND b.is_deleted = FALSE');
+    qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bai.bagging_id AND ba.is_deleted = FALSE');
+    qb.innerJoin('representative', 'r', 'r.representative_id = b.representative_id_to AND r.is_deleted = FALSE');
+    qb.andWhere(`bai.bagging_id = '${payload.baggingId}'`);
+    qb.andWhere(`bai.is_deleted = FALSE`);
+    result.data = await qb.getRawMany();
 
-      const qb = createQueryBuilder();
-      qb.addSelect( 'CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, \'0\'))', 'bagNumber');
-      qb.addSelect( 'bi.weight', 'weight');
-      qb.addSelect( 'bai.bagging_id', 'baggingId');
-      qb.addSelect( 'ba.bagging_code', 'baggingCode');
-      qb.addSelect( 'r.representative_code', 'representativeCode');
-      qb.from('bagging_item', 'bai');
-      qb.innerJoin('bag_item', 'bi', 'bai.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE');
-      qb.innerJoin('bag', 'b', 'b.bag_id = bi.bag_id AND b.is_deleted = FALSE');
-      qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bai.bagging_id AND ba.is_deleted = FALSE');
-      qb.innerJoin('representative', 'r', 'r.representative_id = b.representative_id_to AND r.is_deleted = FALSE');
-      qb.andWhere(`b.bag_number = upper('${bagNumber}')`);
-      qb.andWhere(`bi.bag_seq = '${bagSeq}'`);
-      qb.andWhere(`bai.is_deleted = FALSE`);
-      const data = await qb.getRawOne();
-
-      if (!data) {
-        totalError++;
-        detail.message = `Gabung paket ${payload.bagNumber[i]} tidak ditemukan`;
-        detail.status = 'error';
-      } else {
-        totalSuccess++;
-        detail.message = 'Gabung paket berhasil ditemukan';
-        detail.status = 'success';
-        detail.validRepresentativeCode = data.representativeCode;
-        detail.bagNumber = data.bagNumber;
-        detail.baggingCode = data.baggingCode;
-        detail.baggingId = data.baggingId;
-        detail.weight = data.weight;
-      }
-      result.data.push(detail);
-    }
-    result.totalData = payload.bagNumber.length;
-    result.totalError = totalError;
-    result.totalSuccess = totalSuccess;
     return result;
   }
 }
