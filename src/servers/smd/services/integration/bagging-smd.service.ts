@@ -9,7 +9,7 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm, SmdScanBaggingDataMoreResponseVm } from '../../models/smd-bagging-response.vm';
-import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm, InputManualDataPayloadVm } from '../../models/smd-bagging-payload.vm';
+import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm, InputManualDataPayloadVm, SmdBaggingDetailPayloadVm } from '../../models/smd-bagging-payload.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -248,7 +248,7 @@ export class BaggingSmdService {
         FROM bagging_item AS bai
         INNER JOIN bag_item AS bi ON bi.bag_item_id = bai.bag_item_id
         INNER JOIN bag AS b ON bi.bag_id = b.bag_id
-        LEFT JOIN representative AS r ON r.representative_id = b.representative_id_to
+        LEFT JOIN representative AS r ON r.representative_id = b.representative_id_to AND r.is_deleted = FALSE
         WHERE
           r.representative_code <> '${dataPackage[0].representative_code}' AND
           bai.bagging_id = '${payload.baggingId}'
@@ -489,6 +489,59 @@ export class BaggingSmdService {
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
+    return result;
+  }
+
+  static async detailBaggingScanned(
+    payload: SmdBaggingDetailPayloadVm,
+    ): Promise<SmdScanBaggingMoreResponseVm> {
+    const result = new SmdScanBaggingMoreResponseVm();
+    const bag = [];
+    let totalError = 0;
+    let totalSuccess = 0;
+    result.data = [];
+
+    // tslint:disable-next-line: prefer-for-of
+    for (let i = 0; i < payload.bagNumber.length; i++) {
+      const bagNumber = payload.bagNumber[i].substring(0, 7);
+      const bagSeq = Number(payload.bagNumber[i].substring(7, 10));
+      const detail = new SmdScanBaggingDataMoreResponseVm();
+
+      const qb = createQueryBuilder();
+      qb.addSelect( 'CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, \'0\'))', 'bagNumber');
+      qb.addSelect( 'bi.weight', 'weight');
+      qb.addSelect( 'bai.bagging_id', 'baggingId');
+      qb.addSelect( 'ba.bagging_code', 'baggingCode');
+      qb.addSelect( 'r.representative_code', 'representativeCode');
+      qb.from('bagging_item', 'bai');
+      qb.innerJoin('bag_item', 'bi', 'bai.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE');
+      qb.innerJoin('bag', 'b', 'b.bag_id = bi.bag_id AND b.is_deleted = FALSE');
+      qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bai.bagging_id AND ba.is_deleted = FALSE');
+      qb.innerJoin('representative', 'r', 'r.representative_id = b.representative_id_to AND r.is_deleted = FALSE');
+      qb.andWhere(`b.bag_number = upper('${bagNumber}')`);
+      qb.andWhere(`bi.bag_seq = '${bagSeq}'`);
+      const data = await qb.getRawOne();
+
+      if (!data) {
+        totalError++;
+        detail.message = `Gabung paket ${payload.bagNumber[i]} tidak ditemukan`;
+        detail.status = 'error';
+      } else {
+        detail.message = 'Gabung paket berhasil di scan';
+        detail.status = 'success';
+        detail.validRepresentativeCode = data.representativeCode;
+        detail.bagNumber = data.bagNumber;
+        detail.baggingCode = data.baggingCode;
+        detail.baggingId = data.baggingId;
+        detail.weight = data.weight;
+      }
+
+      totalSuccess++;
+      result.data.push(detail);
+    }
+    result.totalData = payload.bagNumber.length;
+    result.totalError = totalError;
+    result.totalSuccess = totalSuccess;
     return result;
   }
 }
