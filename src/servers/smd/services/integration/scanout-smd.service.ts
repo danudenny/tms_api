@@ -1109,7 +1109,6 @@ export class ScanoutSmdService {
           dsd.arrival_time IS NULL AND
           dsd.seal_number IS NULL AND
           dsd.is_deleted = FALSE
-        LIMIT 1
         ;
       `;
     } else {
@@ -1121,7 +1120,6 @@ export class ScanoutSmdService {
           dsd.do_smd_id = ${payload.do_smd_id} AND
           dsd.arrival_time IS NULL AND
           dsd.is_deleted = FALSE
-        LIMIT 1
         ;
       `;
     }
