@@ -520,6 +520,7 @@ export class BaggingSmdService {
       qb.innerJoin('representative', 'r', 'r.representative_id = b.representative_id_to AND r.is_deleted = FALSE');
       qb.andWhere(`b.bag_number = upper('${bagNumber}')`);
       qb.andWhere(`bi.bag_seq = '${bagSeq}'`);
+      qb.andWhere(`bai.is_deleted = FALSE`);
       const data = await qb.getRawOne();
 
       if (!data) {
