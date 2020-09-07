@@ -7,7 +7,7 @@ import { PermissionTokenGuard } from '../../../../shared/guards/permission-token
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { SmdScanBaggingResponseVm, ListBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm } from '../../models/smd-bagging-response.vm';
-import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm } from '../../models/smd-bagging-payload.vm';
+import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm, SmdBaggingDetailPayloadVm } from '../../models/smd-bagging-payload.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('SMD Bagging')
@@ -50,5 +50,14 @@ export class SmdBaggingController {
   @UseGuards(AuthenticatedGuard)
   public async listDetailBagging(@Body() payload: BaseMetaPayloadVm) {
     return BaggingSmdService.listDetailBagging(payload);
+  }
+
+  @Post('scan/detail')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: SmdScanBaggingMoreResponseVm })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  public async detailBagging(@Body() payload: SmdBaggingDetailPayloadVm) {
+    return BaggingSmdService.detailBaggingScanned(payload);
   }
 }
