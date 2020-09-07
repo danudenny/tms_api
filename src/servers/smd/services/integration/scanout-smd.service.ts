@@ -1529,6 +1529,7 @@ export class ScanoutSmdService {
       const rawQuery = `
         SELECT
           ds.do_smd_id,
+          ds.seal_number_last,
           dsd.do_smd_detail_id,
           dsd.branch_id_from,
           bf.branch_code as branch_code_from,
@@ -1569,6 +1570,7 @@ export class ScanoutSmdService {
             total_bag: resultDataDoSmdDetail[i].total_bag,
             total_bag_representative: resultDataDoSmdDetail[i].total_bag_representative,
             total_bagging: resultDataDoSmdDetail[i].total_bagging,
+            seal_number: resultDataDoSmdDetail[i].seal_number_last,
           });
         }
         result.statusCode = HttpStatus.OK;

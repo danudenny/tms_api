@@ -492,7 +492,6 @@ export class ScanOutSmdEditResponseVm {
   data: ScanOutEditVm[];
 }
 
-
 export class ScanOutEditVm {
 
   @ApiModelProperty()
@@ -530,6 +529,9 @@ export class ScanOutEditVm {
 
   @ApiModelProperty()
   total_bag_representative: number;
+
+  @ApiModelProperty()
+  seal_number: string;
 
 }
 
