@@ -537,7 +537,6 @@ export class BaggingSmdService {
         detail.baggingId = data.baggingId;
         detail.weight = data.weight;
       }
-
       result.data.push(detail);
     }
     result.totalData = payload.bagNumber.length;
