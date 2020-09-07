@@ -527,7 +527,8 @@ export class BaggingSmdService {
         detail.message = `Gabung paket ${payload.bagNumber[i]} tidak ditemukan`;
         detail.status = 'error';
       } else {
-        detail.message = 'Gabung paket berhasil di scan';
+        totalSuccess++;
+        detail.message = 'Gabung paket berhasil ditemukan';
         detail.status = 'success';
         detail.validRepresentativeCode = data.representativeCode;
         detail.bagNumber = data.bagNumber;
@@ -536,7 +537,6 @@ export class BaggingSmdService {
         detail.weight = data.weight;
       }
 
-      totalSuccess++;
       result.data.push(detail);
     }
     result.totalData = payload.bagNumber.length;
