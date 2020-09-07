@@ -5,7 +5,7 @@ import xlsx = require('xlsx');
 import fs = require('fs');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDataMoreResponseVm } from '../../models/bag-city-response.vm';
-import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityInputManualDataPayloadVm } from '../../models/bag-city-payload.vm';
+import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityInputManualDataPayloadVm, BagCityDetailScanPayloadVm } from '../../models/bag-city-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -22,7 +22,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { BagRepresentativeHistory } from '../../../../shared/orm-entity/bag-representative-history';
 import { SharedService } from '../../../../shared/services/shared.service';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
-import { Not } from 'typeorm';
+import { Not, createQueryBuilder } from 'typeorm';
 
 @Injectable()
 export class BagCityService {
@@ -829,4 +829,71 @@ export class BagCityService {
     });
   }
 
+  // TODO: Move as shared services
+  private static async storeDataToRedis(key: string, data: any, duration: number = 600) {
+    if (!data) {
+      RequestErrorService.throwObj({
+        message: 'Data not valid!',
+      });
+    }
+
+    return RedisService.setex(key, data, duration, true);
+  }
+
+  private static async retrieveDataFromRedis(key: string) {
+    return RedisService.get(key, true);
+  }
+
+  static async detailBagCityScanned(
+    payload: BagCityDetailScanPayloadVm,
+    ): Promise<BagCityMoreResponseVm> {
+    const result = new BagCityMoreResponseVm();
+    const bag = [];
+    let totalError = 0;
+    let totalSuccess = 0;
+    result.data = [];
+
+    // tslint:disable-next-line: prefer-for-of
+    for (let i = 0; i < payload.awbNumber.length; i++) {
+      const detail = new BagCityDataMoreResponseVm();
+
+      const qb = createQueryBuilder();
+      qb.addSelect( 'br.bag_representative_code', 'bagRepresentativeCode');
+      qb.addSelect( 'br.bag_representative_id', 'bagRepresentativeId');
+      qb.addSelect( 'bri.bag_representative_item_id', 'bagRepresentativeItemId');
+      qb.addSelect( 'bri.ref_awb_number', 'refAwbNumber');
+      qb.addSelect( 'r.representative_code', 'representativeCode');
+      qb.addSelect( 'r.representative_id', 'representativeId');
+      qb.addSelect( 'bri.weight', 'weight');
+      qb.from('bag_representative_item', 'bri');
+      qb.innerJoin('bag_representative', 'br', 'br.bag_representative_id = bri.bag_representative_id AND br.is_deleted = FALSE');
+      qb.innerJoin('representative', 'r', 'r.representative_id = br.representative_id_to AND r.is_deleted = FALSE');
+      qb.andWhere(`bri.ref_awb_number = '${payload.awbNumber[i]}'`);
+      qb.andWhere(`bri.is_deleted = FALSE`);
+      const data = await qb.getRawOne();
+
+      if (!data) {
+        totalError++;
+        detail.message = `Resi ${payload.awbNumber[i]} tidak ditemukan`;
+        detail.status = 'error';
+      } else {
+        totalSuccess++;
+        detail.message = 'Gabung Sortir Kota berhasil ditemukan';
+        detail.status = 'success';
+        detail.bagRepresentativeCode = data.bagRepresentativeCode;
+        detail.bagRepresentativeId = data.bagRepresentativeId;
+        detail.bagRepresentativeItemId = data.bagRepresentativeItemId;
+        detail.refAwbNumber = data.refAwbNumber;
+        detail.representativeCode = data.representativeCode;
+        detail.representativeId = data.representativeId;
+        detail.weight = data.weight;
+      }
+
+      result.data.push(detail);
+    }
+    result.totalData = payload.awbNumber.length;
+    result.totalError = totalError;
+    result.totalSuccess = totalSuccess;
+    return result;
+  }
 }
