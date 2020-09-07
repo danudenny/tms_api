@@ -499,6 +499,7 @@ export class BaggingSmdService {
     const bag = [];
     let totalError = 0;
     let totalSuccess = 0;
+    result.data = [];
 
     // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < payload.bagNumber.length; i++) {
@@ -515,14 +516,15 @@ export class BaggingSmdService {
       qb.from('bagging_item', 'bai');
       qb.innerJoin('bag_item', 'bi', 'bai.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE');
       qb.innerJoin('bag', 'b', 'b.bag_id = bi.bag_id AND b.is_deleted = FALSE');
+      qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bai.bagging_id AND ba.is_deleted = FALSE');
       qb.innerJoin('representative', 'r', 'r.representative_id = b.representative_id_to AND r.is_deleted = FALSE');
-      qb.andWhere(`b.bag_number = upper('${bagNumber}'`);
-      qb.andWhere(`b.bag_seq = '${bagSeq}'`);
+      qb.andWhere(`b.bag_number = upper('${bagNumber}')`);
+      qb.andWhere(`bi.bag_seq = '${bagSeq}'`);
       const data = await qb.getRawOne();
 
       if (!data) {
         totalError++;
-        detail.message = `Gabung paket ${payload.bagNumber} tidak ditemukan`;
+        detail.message = `Gabung paket ${payload.bagNumber[i]} tidak ditemukan`;
         detail.status = 'error';
       } else {
         detail.message = 'Gabung paket berhasil di scan';
