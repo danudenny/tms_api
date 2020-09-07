@@ -53,5 +53,5 @@ export class BagCityExportPayloadVm extends BaseMetaPayloadVm {
 
 export class BagCityDetailScanPayloadVm {
   @ApiModelProperty()
-  awbNumber: string[];
+  bagRepresentativeId: string;
 }
