@@ -6,7 +6,7 @@ import {BagCityService} from '../../services/integration/bag-city.service';
 import {PermissionTokenGuard} from '../../../../shared/guards/permission-token.guard';
 import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
 import {BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm} from '../../models/bag-city-response.vm';
-import {BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm} from '../../models/bag-city-payload.vm';
+import {BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityDetailScanPayloadVm} from '../../models/bag-city-payload.vm';
 import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm, BagCityExternalPrintPayloadVm, BagCityExternalPrintExecutePayloadVm } from '../../models/print-bag-city-payload.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { Transaction } from 'typeorm';
@@ -117,5 +117,14 @@ export class BagCityController {
     @Response() serverResponse: express.Response,
   ) {
     return BagCityService.exportExcel(serverResponse, queryParams);
+  }
+
+  @Post('scan/detail')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: BagCityMoreResponseVm })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  public async detailBagging(@Body() payload: BagCityDetailScanPayloadVm) {
+    return BagCityService.detailBagCityScanned(payload);
   }
 }
