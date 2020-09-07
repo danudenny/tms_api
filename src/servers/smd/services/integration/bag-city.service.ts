@@ -770,7 +770,7 @@ export class BagCityService {
     const bagRepresentativeId = payload.bagRepresentativeId;
     const key: string = `print-external-data-bagcity-${bagRepresentativeId}`;
 
-    return this.storeDataToRedis(key, payload);
+    return RedisService.storeData(key, payload);
   }
 
   /**
@@ -789,7 +789,7 @@ export class BagCityService {
     const bagId = params.id;
     const key: string = `print-external-data-bagcity-${bagId}`;
 
-    const printData = await this.retrieveDataFromRedis(key);
+    const printData = await RedisService.retrieveData(key);
     const items = printData && printData.bagRepresentativeItems || [];
 
     if (!items.length) {
@@ -829,18 +829,4 @@ export class BagCityService {
     });
   }
 
-  // TODO: Move as shared services
-  private static async storeDataToRedis(key: string, data: any, duration: number = 600) {
-    if (!data) {
-      RequestErrorService.throwObj({
-        message: 'Data not valid!',
-      });
-    }
-
-    return RedisService.setex(key, data, duration, true);
-  }
-
-  private static async retrieveDataFromRedis(key: string) {
-    return RedisService.get(key, true);
-  }
 }
