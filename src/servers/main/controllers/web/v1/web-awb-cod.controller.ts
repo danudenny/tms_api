@@ -28,6 +28,7 @@ import {
   WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm, WebAwbCodVoidListResponseVm, WebCodCountResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
+import { V1WebCodBankStatementService } from '../../../services/web/v1/web-cod-bank-statement.service';
 import {
   V1WebCodSupplierInvoiceService,
 } from '../../../services/web/v1/web-cod-supplier-invoice.service';
@@ -129,7 +130,7 @@ export class V1WebAwbCodController {
     @Body() payload: WebCodTransferHeadOfficePayloadVm,
     @UploadedFile() file,
   ) {
-    return V1WebAwbCodService.transferHeadOffice(payload, file);
+    return V1WebCodBankStatementService.transferHeadOffice(payload, file);
   }
 
   @Post('bankStatement')
@@ -138,7 +139,7 @@ export class V1WebAwbCodController {
   @ApiOkResponse({ type: WebAwbCodBankStatementResponseVm })
   public async bankStatement(@Body() payload: BaseMetaPayloadVm) {
     // get data bankStatement
-    return V1WebAwbCodService.bankStatement(payload);
+    return V1WebCodBankStatementService.bankStatement(payload);
   }
 
   @Get('bankStatement/transactionBranch/:bankStatementId')
@@ -149,7 +150,7 @@ export class V1WebAwbCodController {
     @Param('bankStatementId') bankStatementId: string,
   ) {
     // get data transaction branch
-    return V1WebAwbCodService.transactionBranchByBankStatementId(
+    return V1WebCodBankStatementService.transactionBranchByBankStatementId(
       bankStatementId,
     );
   }
@@ -162,7 +163,7 @@ export class V1WebAwbCodController {
     @Param('bankStatementId') bankStatementId: string,
   ) {
     // get data transaction branch
-    return V1WebAwbCodService.transactionBranchDetailByBankStatementId(
+    return V1WebCodBankStatementService.transactionBranchDetailByBankStatementId(
       bankStatementId,
     );
   }
@@ -175,7 +176,7 @@ export class V1WebAwbCodController {
     @Body() payload: WebCodBankStatementValidatePayloadVm,
   ) {
     // validate bankStatement
-    return V1WebAwbCodService.bankStatementValidate(payload);
+    return V1WebCodBankStatementService.bankStatementValidate(payload);
   }
 
   @Post('bankStatement/cancel')
@@ -186,7 +187,7 @@ export class V1WebAwbCodController {
     @Body() payload: WebCodBankStatementCancelPayloadVm,
   ) {
     // cancel bankStatement
-    return V1WebAwbCodService.bankStatementCancel(payload);
+    return V1WebCodBankStatementService.bankStatementCancel(payload);
   }
 
   // #region SUPPLIER INVOICE
