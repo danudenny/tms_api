@@ -342,7 +342,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+    q.innerJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -350,10 +350,6 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
-    q.andWhere(
-      e => e.doPodDeliverDetail.codPayment.codPaymentMethod,
-      w => w.isNotNull(),
-    );
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter DLV
