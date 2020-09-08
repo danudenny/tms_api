@@ -85,7 +85,7 @@ export class BagScanVendorQueueService {
           resultbagItemOutHistory.bagItemId = bagItemIdEach.toString();
           resultbagItemOutHistory.userId = data.userId.toString();
           resultbagItemOutHistory.branchId = data.branchId.toString();
-          resultbagItemOutHistory.historyDate = moment().toDate();
+          resultbagItemOutHistory.historyDate = moment().add(1, 'minutes').toDate();
           resultbagItemOutHistory.bagItemStatusId = BAG_STATUS.OUT_HUB.toString();
           resultbagItemOutHistory.userIdCreated = data.userId;
           resultbagItemOutHistory.createdTime = moment().add(1, 'minutes').toDate();
