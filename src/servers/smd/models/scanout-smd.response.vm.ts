@@ -125,6 +125,15 @@ export class ScanOutItemVm {
 
   @ApiModelProperty()
   total_bag_representative: number;
+
+  @ApiModelProperty()
+  weight: number;
+
+  @ApiModelProperty()
+  bag_seq: number;
+
+  @ApiModelProperty()
+  representative_code: number;
 }
 
 export class ScanOutSmdSealResponseVm {
@@ -585,4 +594,7 @@ export class ScanOutEditDetailVm {
 
   @ApiModelProperty()
   bag_seq: number;
+
+  @ApiModelProperty()
+  representative_code: number;
 }
