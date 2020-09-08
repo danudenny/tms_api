@@ -67,6 +67,9 @@ export class BagCityDataDetailScanResponseVm {
   bagRepresentativeItemId: string;
 
   @ApiModelProperty()
+  refAwbNumber: string;
+
+  @ApiModelProperty()
   representativeCode: string;
 
   @ApiModelProperty()
