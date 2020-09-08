@@ -637,6 +637,7 @@ export class ScanoutSmdService {
             total_bag: resultDoSmdDetail.totalBag,
             total_bagging: resultDoSmdDetail.totalBagging,
             total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
+            weight: resultDataBagRepresentative[0].total_weight,
           });
           result.statusCode = HttpStatus.OK;
           result.message = 'SMD Item Success Created';
@@ -750,6 +751,7 @@ export class ScanoutSmdService {
               total_bag: resultDoSmdDetail.totalBag,
               total_bagging: resultDoSmdDetail.totalBagging,
               total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
+              weight: resultBagging.totalWeight,
             });
             result.statusCode = HttpStatus.OK;
             result.message = 'SMD Route Success Created';
@@ -869,6 +871,8 @@ export class ScanoutSmdService {
                 total_bag: resultDoSmdDetail.totalBag,
                 total_bagging: resultDoSmdDetail.totalBagging,
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
+                weight,
+                bag_seq: paramSeq,
               });
               result.statusCode = HttpStatus.OK;
               result.message = 'SMD Route Success Created';
@@ -901,7 +905,8 @@ export class ScanoutSmdService {
             b.representative_id_to,
             r.representative_code,
             bih.bag_item_status_id,
-            dsdi.do_smd_detail_id
+            dsdi.do_smd_detail_id,
+            bi.weight
           FROM bag_item bi
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
@@ -988,6 +993,8 @@ export class ScanoutSmdService {
                 total_bag: resultDoSmdDetail.totalBag,
                 total_bagging: resultDoSmdDetail.totalBagging,
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
+                weight: resultDataBag[0].weight,
+                bag_seq: paramSeq,
               });
               result.statusCode = HttpStatus.OK;
               result.message = 'SMD Route Success Created';
@@ -1610,9 +1617,12 @@ export class ScanoutSmdService {
       const rawQueryBagging = `
         SELECT
           DISTINCT dsdi.bagging_id,
-          b.bagging_code
+          b.bagging_code,
+          bi.weight,
+          bi.bag_seq
         FROM do_smd_detail_item dsdi
         INNER JOIN bagging b ON dsdi.bagging_id = b.bagging_id AND b.is_deleted = FALSE
+        INNER JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
         WHERE
           dsdi.do_smd_detail_id = ${resultDoSmdDetail.doSmdDetailId} AND
           dsdi.bag_type = 0 AND
@@ -1632,6 +1642,8 @@ export class ScanoutSmdService {
             bag_type: 0,
             bagging_id: resultDataBagging[i].bagging_id,
             bagging_number: resultDataBagging[i].bagging_code,
+            weight: resultDataBagging[0].weight,
+            bag_seq: resultDataBagging[0].bag_seq,
           });
         }
       }
@@ -1639,7 +1651,9 @@ export class ScanoutSmdService {
         SELECT
           DISTINCT dsdi.bag_item_id,
           dsdi.bag_id,
-          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bag_number_seq
+          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bag_number_seq,
+          bi.weight,
+          bi.bag_seq
         FROM do_smd_detail_item dsdi
         INNER JOIN bag_item bi on dsdi.bag_item_id = bi.bag_item_id and bi.is_deleted = FALSE
         INNER JOIN bag b on bi.bag_id = b.bag_id and b.is_deleted = FALSE
@@ -1662,13 +1676,16 @@ export class ScanoutSmdService {
             bag_type: 1,
             bagging_id: null,
             bagging_number: null,
+            weight: resultDataBag[0].weight,
+            bag_seq: resultDataBag[0].bag_seq,
           });
         }
       }
       const rawQueryBagRepresentative = `
         SELECT
           DISTINCT dsdi.bag_representative_id,
-          br.bag_representative_code
+          br.bag_representative_code,
+          br.weight
         FROM do_smd_detail_item dsdi
         INNER JOIN bag_representative br on dsdi.bag_representative_id = br.bag_representative_id and br.is_deleted = FALSE
         WHERE
@@ -1690,6 +1707,7 @@ export class ScanoutSmdService {
             bag_type: 2,
             bagging_id: null,
             bagging_number: null,
+            weight: resultDataBagRepresentative[i].weight,
           });
         }
       }
