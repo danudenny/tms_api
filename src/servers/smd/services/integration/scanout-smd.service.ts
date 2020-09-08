@@ -1685,7 +1685,7 @@ export class ScanoutSmdService {
         SELECT
           DISTINCT dsdi.bag_representative_id,
           br.bag_representative_code,
-          br.weight
+          br.total_weight
         FROM do_smd_detail_item dsdi
         INNER JOIN bag_representative br on dsdi.bag_representative_id = br.bag_representative_id and br.is_deleted = FALSE
         WHERE
@@ -1707,7 +1707,7 @@ export class ScanoutSmdService {
             bag_type: 2,
             bagging_id: null,
             bagging_number: null,
-            weight: resultDataBagRepresentative[i].weight,
+            weight: resultDataBagRepresentative[i].total_weight,
           });
         }
       }
