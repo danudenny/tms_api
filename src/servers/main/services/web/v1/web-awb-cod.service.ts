@@ -342,7 +342,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+    q.innerJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
