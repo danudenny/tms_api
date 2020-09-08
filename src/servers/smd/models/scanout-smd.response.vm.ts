@@ -194,6 +194,12 @@ export class ScanOutListVm {
 
   @ApiModelProperty()
   do_smd_status_title: string;
+
+  @ApiModelProperty()
+  nickname: String;
+
+  @ApiModelProperty()
+  nik: String;
 }
 
 export class ScanOutHistoryResponseVm extends BaseMetaResponseVm {
