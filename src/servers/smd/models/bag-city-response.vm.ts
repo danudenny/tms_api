@@ -32,9 +32,6 @@ export class BagCityResponseVm {
 
   @ApiModelProperty()
   weight: string;
-
-  @ApiModelProperty({ type: () => BagCityInputManualDataPayloadVm })
-  inputManualPrevData: BagCityInputManualDataPayloadVm;
 }
 
 export class BagCityDataMoreResponseVm extends BagCityResponseVm {
