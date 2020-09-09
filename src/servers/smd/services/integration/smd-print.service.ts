@@ -743,7 +743,7 @@ export class SmdPrintService {
   static async storeReceivedBagPrint(payloadBody: PrintScaninVm) {
     return this.storeGenericPrintData(
       'received-bag',
-      payloadBody.receivedBagId,
+      payloadBody.data.receivedBagId,
       payloadBody,
     );
   }

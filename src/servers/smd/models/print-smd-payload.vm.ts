@@ -77,6 +77,9 @@ export class PrintScaninDetailBranchDataVm {
 
 export class PrintScaninDetailVm {
   @ApiModelProperty()
+  receivedBagId: string;
+
+  @ApiModelProperty()
   receivedBagDate: string;
 
   @ApiModelProperty()
@@ -95,7 +98,4 @@ export class PrintScaninDetailVm {
 export class PrintScaninVm {
   @ApiModelProperty({ type: () => PrintScaninDetailVm })
   data: PrintScaninDetailVm;
-
-  @ApiModelProperty()
-  receivedBagId: string;
 }
