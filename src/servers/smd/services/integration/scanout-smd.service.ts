@@ -793,10 +793,10 @@ export class ScanoutSmdService {
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
             and bih.bag_item_status_id = 3500
           LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
+            AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
-            dsdi.branch_id_scan = '${permissonPayload.branchId}' AND
             bi.is_deleted = FALSE
           ORDER BY b.created_time DESC
           LIMIT 1;
@@ -917,10 +917,10 @@ export class ScanoutSmdService {
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
             and bih.bag_item_status_id = 3500
           LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
+            AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
-            dsdi.branch_id_scan = '${permissonPayload.branchId}' AND
             bi.is_deleted = FALSE
           ORDER BY b.created_time DESC
           LIMIT 1;
