@@ -22,6 +22,17 @@ export class ScanInBagVm {
   @ApiModelProperty()
   received_bag_id: string;
 
+  @ApiModelProperty()
+  received_bag_code: string;
+
+  @ApiModelProperty()
+  received_bag_date: string;
+
+  @ApiModelProperty()
+  bag_weight: string;
+
+  @ApiModelProperty()
+  bag_number: string;
 }
 
 export class ScanInSmdBagMoreResponseVm {

@@ -35,6 +35,8 @@ export class ScaninSmdService {
     const timeNow = moment().toDate();
     let paramReceivedBagId = payload.received_bag_id;
     result.statusCode = HttpStatus.BAD_REQUEST;
+    let receivedBagCode = '';
+    let receivedBagDate = '';
 
     if (payload.bag_item_number.length == 15 && payload.bag_item_number.match(/^[A-Z0-9]{7}[0-9]{8}$/)) {
       const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
@@ -118,6 +120,8 @@ export class ScaninSmdService {
               },
             });
             if (resultReceivedBag) {
+              receivedBagCode = resultReceivedBag.receivedBagCode;
+              receivedBagDate = moment(resultReceivedBag.receivedBagDate).format('YYYY-MM-DD HH:mm:ss');
               paramTotalSeq = Number(resultReceivedBag.totalSeq) + 1;
               paramTotalBagWeight = Number(resultReceivedBag.totalBagWeight) + Number(weight) ;
 
@@ -160,6 +164,8 @@ export class ScaninSmdService {
                 paramTotalBagWeight,
                 timeNow,
               );
+              receivedBagCode = dataReceivedBagCode;
+              receivedBagDate = moment(timeNow).format('YYYY-MM-DD HH:mm:ss');
             } else {
               result.message = 'Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat';
               return result;
@@ -236,6 +242,10 @@ export class ScaninSmdService {
           show_number: showNumber,
           id: paramBagNumber + paramBagSeq,
           received_bag_id: paramReceivedBagId,
+          received_bag_code: receivedBagCode,
+          received_bag_date: receivedBagDate,
+          bag_weight: Number(weight),
+          bag_number: paramBagNumber,
         });
         result.statusCode = HttpStatus.OK;
         result.message = message;
@@ -327,6 +337,8 @@ export class ScaninSmdService {
               },
             });
             if (resultReceivedBag) {
+              receivedBagCode = resultReceivedBag.receivedBagCode;
+              receivedBagDate = moment(resultReceivedBag.receivedBagDate).format('YYYY-MM-DD HH:mm:ss');
               paramTotalSeq = Number(resultReceivedBag.totalSeq) + 1;
               paramTotalBagWeight = Number(resultReceivedBag.totalBagWeight) + Number(weight);
 
@@ -369,6 +381,8 @@ export class ScaninSmdService {
                 paramTotalBagWeight,
                 timeNow,
               );
+              receivedBagCode = dataReceivedBagCode;
+              receivedBagDate = moment(timeNow).format('YYYY-MM-DD HH:mm:ss');
             } else {
               result.message = 'Data Scan In Gab.Paket Sedang di proses, Silahkan Coba Beberapa Saat';
               return result;
@@ -443,6 +457,10 @@ export class ScaninSmdService {
           show_number: showNumber,
           id: paramBagNumber + paramBagSeq,
           received_bag_id: paramReceivedBagId,
+          received_bag_code: receivedBagCode,
+          received_bag_date: receivedBagDate,
+          bag_weight: weight,
+          bag_number: paramBagNumber,
         });
         result.statusCode = HttpStatus.OK;
         result.message = message;
