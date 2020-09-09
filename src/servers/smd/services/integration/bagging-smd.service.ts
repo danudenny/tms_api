@@ -219,7 +219,7 @@ export class BaggingSmdService {
     //   result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
     //   return result;
     // }
-    if (!dataPackage[0].bag_item_status_id_last) {
+    if (!dataPackage[0].bag_item_status_id) {
       // handle kesalahan data saat scan masuk surat jalan
       result.message = 'Resi Gabung Paket belum di scan masuk';
       return result;
