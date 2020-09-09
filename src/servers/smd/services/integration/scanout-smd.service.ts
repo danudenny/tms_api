@@ -685,7 +685,7 @@ export class ScanoutSmdService {
         if (resultDataRepresentative.length > 0) {
           const resultDoSmdDetailItem = await DoSmdDetailItem.findOne({
             where: {
-              doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
+              // doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
               baggingId: resultBagging.baggingId,
               isDeleted: false,
             },
