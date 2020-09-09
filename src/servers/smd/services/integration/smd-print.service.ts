@@ -796,7 +796,8 @@ export class SmdPrintService {
     }
 
     const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
-    const date = moment().format('YYYY-MM-DD HH:mm:ss');
+    const date = moment(data.receivedBagDate).format('YYYY-MM-DD');
+    const time = moment(data.receivedBagDate).format('HH:mm');
     PrinterService.responseForJsReport({
       res,
       templates: [
@@ -805,7 +806,8 @@ export class SmdPrintService {
           templateData: {
             data,
             meta: {
-              createdTime: date,
+              date,
+              time,
             },
           },
           printCopy: queryParams.printCopy ? queryParams.printCopy : 3,
