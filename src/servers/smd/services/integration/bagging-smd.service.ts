@@ -186,12 +186,15 @@ export class BaggingSmdService {
         ba.bagging_code,
         ba.total_weight,
         ba.total_item,
-        ba.branch_id
+        ba.branch_id,
+        bih.bag_item_status_id
       FROM bag AS b
       INNER JOIN bag_item bi ON bi.bag_id = b.bag_id AND bi.is_deleted = false
       INNER JOIN representative r ON r.representative_id = b.representative_id_to
       LEFT JOIN bagging_item bai ON bi.bag_item_id = bai.bag_item_id AND bai.is_deleted = false
       LEFT JOIN bagging ba ON ba.bagging_id = bai.bagging_id AND ba.is_deleted = false
+      LEFT JOIN bag_item_history bih ON bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = false
+        AND bih.bag_item_status_id = '${BAG_STATUS.DO_HUB}'
       WHERE
         b.bag_number = upper('${bagNumber}') AND
         bi.bag_seq = '${bagSeq}' AND
@@ -216,22 +219,10 @@ export class BaggingSmdService {
     //   result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
     //   return result;
     // }
-    if (dataPackage[0].bag_item_status_id_last_in_bag_item != BAG_STATUS.DO_HUB) {
+    if (!dataPackage[0].bag_item_status_id_last) {
       // handle kesalahan data saat scan masuk surat jalan
-      rawQuery = `
-          SELECT
-            bh.bag_item_status_id AS bag_item_status_id
-          FROM bag_item_history AS bh
-          WHERE
-            bh.bag_item_id = '${dataPackage[0].bag_item_id}'
-          ORDER BY bh.history_date DESC
-          LIMIT 1;
-        `;
-      const history = await RawQueryService.query(rawQuery);
-      if (history.length == 0 || (history.length > 0 && history[0].bag_item_status_id != BAG_STATUS.DO_HUB)) {
-        result.message = 'Resi Gabung Paket belum di scan masuk';
-        return result;
-      }
+      result.message = 'Resi Gabung Paket belum di scan masuk';
+      return result;
     }
 
     result.baggingId = baggingId;
