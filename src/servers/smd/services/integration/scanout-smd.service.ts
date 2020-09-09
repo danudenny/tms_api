@@ -796,7 +796,7 @@ export class ScanoutSmdService {
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
-            dsdi.branch_id = '${permissonPayload.branchId}' AND
+            dsdi.branch_id_scan = '${permissonPayload.branchId}' AND
             bi.is_deleted = FALSE
           ORDER BY b.created_time DESC
           LIMIT 1;
@@ -920,7 +920,7 @@ export class ScanoutSmdService {
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
-            dsdi.branch_id = '${permissonPayload.branchId}' AND
+            dsdi.branch_id_scan = '${permissonPayload.branchId}' AND
             bi.is_deleted = FALSE
           ORDER BY b.created_time DESC
           LIMIT 1;
