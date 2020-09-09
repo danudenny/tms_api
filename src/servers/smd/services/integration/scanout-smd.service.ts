@@ -88,7 +88,7 @@ export class ScanoutSmdService {
     }
 
     result.statusCode = HttpStatus.OK;
-    result.message = 'SMD Success Created';
+    result.message = 'SMD berhasil dibuat';
     result.data = data;
     return result;
   }
@@ -146,7 +146,7 @@ export class ScanoutSmdService {
             const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
             if (resultDataRepresentative.length > 0) {
-              throw new BadRequestException(`Representative Code already scan !!`);
+              throw new BadRequestException(`Kode representative sudah di scan!!`);
             } else {
               await DoSmdDetail.update(
                 { doSmdDetailId : resultDoSmdDetail.doSmdDetailId },
@@ -165,7 +165,7 @@ export class ScanoutSmdService {
                 representative_code_list: resultDoSmdDetail.representativeCodeList + ',' + payload.representative_code,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Route Success Upated';
+              result.message = 'Rute SMD berhasil di update';
               result.data = data;
               return result;
             }
@@ -183,7 +183,7 @@ export class ScanoutSmdService {
             const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
             if (resultDataRepresentative.length > 0) {
-              throw new BadRequestException(`Representative Code already scan !!`);
+              throw new BadRequestException(`Kode representative sudah di scan!!`);
             } else {
               const paramDoSmdDetailId = await this.createDoSmdDetail(
                 resultDoSmd.doSmdId,
@@ -228,21 +228,21 @@ export class ScanoutSmdService {
                 representative_code_list: payload.representative_code,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Route Success Created';
+              result.message = 'Rute SMD berhasil dibuat';
               result.data = data;
               return result;
             }
           }
         } else {
-          throw new BadRequestException(`Can't Find  Representative Code : ` + payload.representative_code);
+          throw new BadRequestException(`Kode representative ${payload.representative_code} tidak ditemukan`);
         }
 
       } else {
-        throw new BadRequestException(`Can't Find  Branch Code : ` + payload.branch_code);
+        throw new BadRequestException(`Kode Gerai ${payload.branch_code} tidak ditemukan`);
       }
 
     } else {
-      throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+      throw new BadRequestException(`ID SMD ${payload.do_smd_id.toString()} tidak ditemukan`);
     }
 
   }
@@ -351,7 +351,7 @@ export class ScanoutSmdService {
                 const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
                 if (resultDataRepresentative.length > 0) {
-                  throw new BadRequestException(`Representative Code already scan !!`);
+                  throw new BadRequestException(`Kode representative sudah di scan!!`);
                 } else {
                   const paramDoSmdDetailId = await this.createDoSmdDetail(
                     resultDoSmd.doSmdId,
@@ -403,7 +403,7 @@ export class ScanoutSmdService {
               representative_code_list: resultDoSmdDetail.representativeCodeList,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Route Success Created';
+            result.message = 'Rute SMD berhasil dibuat';
             result.data = data;
             return result;
 
@@ -429,7 +429,7 @@ export class ScanoutSmdService {
               const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
               if (resultDataRepresentative.length > 0) {
-                throw new BadRequestException(`Representative Code already scan !!`);
+                throw new BadRequestException(`Kode representative sudah di scan!!`);
               } else {
                 await DoSmdDetail.update(
                   { doSmdDetailId : resultDoSmdDetail.doSmdDetailId },
@@ -448,7 +448,7 @@ export class ScanoutSmdService {
                   representative_code_list: resultDoSmdDetail.representativeCodeList + ',' + payload.representative_code,
                 });
                 result.statusCode = HttpStatus.OK;
-                result.message = 'SMD Route Success Upated';
+                result.message = 'Rute SMD berhasil di update';
                 result.data = data;
                 return result;
               }
@@ -466,7 +466,7 @@ export class ScanoutSmdService {
               const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
               if (resultDataRepresentative.length > 0) {
-                throw new BadRequestException(`Representative Code already scan !!`);
+                throw new BadRequestException(`Kode representative sudah di scan!!`);
               } else {
                 const paramDoSmdDetailId = await this.createDoSmdDetail(
                   resultDoSmd.doSmdId,
@@ -498,22 +498,22 @@ export class ScanoutSmdService {
                   representative_code_list: payload.representative_code,
                 });
                 result.statusCode = HttpStatus.OK;
-                result.message = 'SMD Route Success Created';
+                result.message = 'Rute SMD berhasil dibuat';
                 result.data = data;
                 return result;
               }
             }
           }
         } else {
-          throw new BadRequestException(`Can't Find  Representative Code : ` + payload.representative_code);
+          throw new BadRequestException(`Kode representative ${payload.representative_code} tidak ditemukan`);
         }
 
       } else {
-        throw new BadRequestException(`Can't Find  Branch Code : ` + payload.branch_code);
+        throw new BadRequestException(`Kode Gerai ${payload.branch_code} tidak ditemukan`);
       }
 
     } else {
-      throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+      throw new BadRequestException(`ID SMD ${payload.do_smd_id.toString()} tidak ditemukan`);
     }
 
   }
@@ -583,7 +583,7 @@ export class ScanoutSmdService {
           },
         });
         if (resultDoSmdDetailItem) {
-          result.message = 'Bag Representative Already Scanned';
+          result.message = `Gabung Kota ${payload.item_number} sudah di scan`;
           return result;
         } else {
           await this.createDoSmdDetailItem(
@@ -641,12 +641,12 @@ export class ScanoutSmdService {
             representative_code: resultDataBagRepresentative[0].representative_code,
           });
           result.statusCode = HttpStatus.OK;
-          result.message = 'SMD Item Success Created';
+          result.message = `Gabung Kota ${payload.item_number} berhasil di scan`;
           result.data = data;
           return result;
         }
       } else {
-        result.message = 'Representative To Bag Representative Not Match';
+        result.message = 'Tujuan Gabung Kota tidak cocok dengan perwakilan SMD';
         return result;
       }
     } else if (resultBagging) {
@@ -691,7 +691,7 @@ export class ScanoutSmdService {
             },
           });
           if (resultDoSmdDetailItem) {
-            result.message = 'Bagging Already Scanned';
+            result.message = `Bagging ${payload.item_number} sudah di scan`;
             return result;
           } else {
             for (let i = 0; i < resultDataBagItem.length; i++) {
@@ -756,19 +756,19 @@ export class ScanoutSmdService {
               representative_code: resultDataBagItem[0].representative_code,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Route Success Created';
+            result.message = `Bagging ${payload.item_number} berhasil di scan`;
             result.data = data;
             return result;
           }
         } else {
-          result.message = 'Representative To Bagging Not Match';
+          result.message = 'Tujuan Bagging tidak cocok dengan perwakilan SMD';
           return result;
         }
       } else if (resultDataBagItem.length > 0 && !resultDataBagItem[0].bag_item_status_id) {
-        result.message = 'Bagging Not Scan In Yet';
+        result.message = `Bagging ${payload.item_number} belum di scan masuk`;
         return result;
       } else {
-        result.message = 'Bagging Item Not Found';
+        result.message = `Bagging ${payload.item_number} tidak ditemukan`;
         return result;
       }
     } else {
@@ -879,21 +879,21 @@ export class ScanoutSmdService {
                 representative_code: resultDataBag[0].representative_code,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Route Success Created';
+              result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
               result.data = data;
               return result;
           } else {
-            result.message = 'Representative To Bag Not Match';
+            result.message = 'Tujuan Gabung Paket tidak cocok dengan perwakilan SMD';
             return result;
           }
         } else if (resultDataBag.length > 0 && resultDataBag[0].do_smd_detail_id) {
-          result.message = `Bag ${payload.item_number} Already Scanned`;
+          result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
           return result;
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          result.message = 'Bag Not Scan In Yet';
+          result.message = `Gabung Paket ${payload.item_number} belum di scan masuk`;
           return result;
         } else {
-          result.message = 'Bag Not Found';
+          result.message = `Gabung Paket ${payload.item_number} tidak ditemukan`;
           return result;
         }
       } else if (payload.item_number.length == 10 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
@@ -1003,25 +1003,25 @@ export class ScanoutSmdService {
                 representative_code: resultDataBag[0].representative_code,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Route Success Created';
+              result.message = `Gabung Paket ${payload.item_number} berhasil di scan`;
               result.data = data;
               return result;
           } else {
-            result.message = 'Representative To Bag Not Match';
+            result.message = 'Tujuan Gabung Paket tidak cocok dengan perwakilan SMD';
             return result;
           }
         } else if (resultDataBag.length > 0 && resultDataBag[0].do_smd_detail_id) {
-          result.message = `Bag ${payload.item_number} Already Scanned`;
+          result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
           return result;
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          result.message = 'Bag Not Scan In Yet';
+          result.message = `Gabung Paket ${payload.item_number} belum di scan masuk`;
           return result;
         } else {
-          result.message = 'Bag Not Found';
+          result.message = `Gabung Paket ${payload.item_number} tidak ditemukan`;
           return result;
         }
       } else {
-        result.message = 'Bagging / Bag Not Found';
+        result.message = 'Bagging/Gabung Paket tidak ditemukan';
         return result;
       }
     }
@@ -1202,10 +1202,10 @@ export class ScanoutSmdService {
         result.data = data;
         return result;
       } else {
-        throw new BadRequestException(`SMD not contains item`);
+        throw new BadRequestException(`SMD belum pernah di scan`);
       }
     } else {
-      throw new BadRequestException(`Updated Seal Fail`);
+      throw new BadRequestException(`Update nomor seal gagal`);
     }
   }
 
@@ -1283,7 +1283,7 @@ export class ScanoutSmdService {
         );
       }
     } else {
-      throw new BadRequestException(`SMD ID: ` + paramdoSmdId + ` Can't Found !`);
+      throw new BadRequestException(`ID SMD ` + paramdoSmdId + ` tidak ditemukan!`);
     }
   }
 
@@ -1387,17 +1387,17 @@ export class ScanoutSmdService {
             arrSmd.push(item.doSmdCode);
           }
           result.statusCode = HttpStatus.OK;
-          result.message = 'SMD Code ' + arrSmd.join(',') + 'Success Handover';
+          result.message = 'Nomor SMD ' + arrSmd.join(',') + ' berhasil handover';
           result.data = data;
           return result;
         } else {
-          throw new BadRequestException(`Can't handover to current driver`);
+          throw new BadRequestException(`Tidak bisa handover ke supir yang sama`);
         }
       } else {
-        throw new BadRequestException(`Can't Found Trouble Reason For SMD: ` + resultDoSmd.doSmdCode);
+        throw new BadRequestException(`Alasan masalah tidak ditemukan di nomor SMD: ` + resultDoSmd.doSmdCode);
       }
     } else {
-      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
+      throw new BadRequestException(`ID SMD ` + payload.do_smd_id + ` tidak ditemukan!`);
     }
   }
 
@@ -1506,21 +1506,21 @@ export class ScanoutSmdService {
 
           result.statusCode = HttpStatus.OK;
           if (paramDoSmdStatus == 1100) {
-            result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' Vehicle Success Changed ';
+            result.message = 'Berhasil ganti kendaraan SMD ' + resultDoSmd.doSmdCode;
           } else {
-            result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' Driver Success Changed ';
+            result.message = 'Berhasil ganti supir SMD ' + resultDoSmd.doSmdCode;
           }
 
           result.data = data;
           return result;
         } else {
-          throw new BadRequestException(`Can't change driver to current driver`);
+          throw new BadRequestException(`Tidak bisa handover ke supir yang sama`);
         }
       } else {
-        throw new BadRequestException(`Can't Found Trouble Reason For SMD: ` + resultDoSmd.doSmdCode);
+        throw new BadRequestException(`Alasan masalah tidak ditemukan di nomor SMD: ` + resultDoSmd.doSmdCode);
       }
     } else {
-      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
+      throw new BadRequestException(`ID SMD ${payload.do_smd_id} tidak ditemukan`);
     }
   }
 
@@ -1598,10 +1598,10 @@ export class ScanoutSmdService {
         result.data = data;
         return result;
       } else {
-        throw new BadRequestException(`Detail For SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
+        throw new BadRequestException(`Tidak ditemukan tujuan pada ID SMD ` + payload.do_smd_id);
       }
     } else {
-      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
+      throw new BadRequestException(`ID SMD ${payload.do_smd_id} tidak ditemukan`);
     }
   }
 
@@ -1730,7 +1730,7 @@ export class ScanoutSmdService {
       result.data = data;
       return result;
     } else {
-      throw new BadRequestException(`SMD DETAIL ID: ` + payload.do_smd_detail_id + ` Can't Found !`);
+      throw new BadRequestException(`ID Tujuan SMD ` + payload.do_smd_detail_id + ` tidak ditemukan!`);
     }
   }
 
