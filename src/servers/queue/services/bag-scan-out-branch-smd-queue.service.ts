@@ -54,13 +54,16 @@ export class BagScanOutBranchSmdQueueService {
           bi.bag_item_id,
           b.branch_id AS branch_id_to,
           b.branch_name AS branch_name_to,
-          bih.bag_item_status_id
+          bih.bag_item_status_id,
+          bih1.branch_id
         FROM do_smd_detail dsd
         INNER JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
         INNER JOIN bag_item bi ON dsdi.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE
         INNER JOIN bag bag ON bag.bag_id = bi.bag_id AND bag.is_deleted = FALSE
         INNER JOIN branch b ON b.branch_id = dsd.branch_id_to AND b.is_deleted = FALSE
         LEFT JOIN bag_item_history bih ON bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = FALSE
+        LEFT JOIN bag_item_history bih1 ON bih1.bag_item_id = bi.bag_item_id AND bih1.is_deleted = FALSE
+          AND bih1.branch_id = '${data.branchId}' AND bih.bag_item_status_id == '${BAG_STATUS.OUT_HUB}'
         WHERE dsd.do_smd_id = ${data.doSmdId} AND dsd.is_deleted = FALSE
         ORDER BY bih.history_date DESC;` ,
       );
@@ -160,7 +163,7 @@ export class BagScanOutBranchSmdQueueService {
       }
       tempBag.push(Number(item.bag_item_id));
 
-      if (Number(item.bag_item_status_id) == BAG_STATUS.OUT_HUB) {
+      if (Number(item.bag_item_status_id) == BAG_STATUS.OUT_HUB && resultQuery.branch_id) {
         // failed to update
         // do nothing
       } else {
