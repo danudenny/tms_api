@@ -5,7 +5,7 @@ import xlsx = require('xlsx');
 import fs = require('fs');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDataMoreResponseVm, BagCityDetailScanResponseVm } from '../../models/bag-city-response.vm';
-import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityInputManualDataPayloadVm, BagCityDetailScanPayloadVm } from '../../models/bag-city-payload.vm';
+import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityDetailScanPayloadVm } from '../../models/bag-city-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
