@@ -379,7 +379,7 @@ export class BaggingSmdService {
     result.baggingCode = baggingCode;
     result.inputManualPrevData = baggingData;
     result.message = 'Scan gabung paket berhasil';
-    result.bagNumber = payload.bagNumber.substring(0, 10);
+    result.bagNumber = payload.bagNumber;
     return result;
   }
 
