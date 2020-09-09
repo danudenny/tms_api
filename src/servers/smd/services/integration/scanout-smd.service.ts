@@ -998,7 +998,7 @@ export class ScanoutSmdService {
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
                 weight: resultDataBag[0].weight,
                 bag_seq: paramSeq,
-                representative_code: resultDataBag[0].representative_code;,
+                representative_code: resultDataBag[0].representative_code,
               });
               result.statusCode = HttpStatus.OK;
               result.message = 'SMD Route Success Created';
