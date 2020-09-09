@@ -139,3 +139,25 @@ export class ScanInDetailListVm {
   @ApiModelProperty()
   awb_number: string;
 }
+
+export class ScaninDataDetailScanResponseVm {
+  @ApiModelProperty()
+  received_bag_id: string;
+
+  @ApiModelProperty()
+  received_bag_code: string;
+
+  @ApiModelProperty()
+  received_bag_date: string;
+
+  @ApiModelProperty()
+  bag_weight: string;
+
+  @ApiModelProperty()
+  bag_number: string;
+}
+
+export class ScaninDetailScanResponseVm {
+  @ApiModelProperty({ type: () => [ScaninDataDetailScanResponseVm] })
+  data: ScaninDataDetailScanResponseVm[];
+}
