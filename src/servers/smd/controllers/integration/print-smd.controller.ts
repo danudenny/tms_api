@@ -1,11 +1,13 @@
-import { Controller, Query, Response, Get, Body, Post } from '@nestjs/common';
+import { Controller, Query, Response, Get, Body, Post, UseGuards } from '@nestjs/common';
 import express = require('express');
 import { ApiUseTags, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
 import { SmdPrintService } from '../../services/integration/smd-print.service';
-import { PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintReceivedBagPaperPayloadVm} from '../../models/print-smd-payload.vm';
+import { PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintReceivedBagPaperPayloadVm, PrintScaninVm} from '../../models/print-smd-payload.vm';
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
 import { PrintBaggingVm } from '../../models/print-bagging.payload';
+import {AuthenticatedGuard} from '../../../../shared/guards/authenticated.guard';
+import {PermissionTokenGuard} from '../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('SMD printing')
 @Controller('smd/print')
@@ -75,5 +77,22 @@ export class SmdPrintController {
     @Response() serverResponse: express.Response,
   ) {
     return SmdPrintService.printReceivedBagForPaper(serverResponse, queryParams);
+  }
+
+  @Get('received-bag/execute')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({disable: true})
+  public async executeBagCityExternalPrint(
+    @Query() params: PrintReceivedBagPaperPayloadVm,
+    @Response() response: express.Response,
+  ) {
+    return SmdPrintService.executeReceivedBagPrint(response, params);
+  }
+
+  @Post('received-bag/store')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async storeBagCityExternalPrint(@Body() body: PrintScaninVm) {
+    return SmdPrintService.storeReceivedBagPrint(body);
   }
 }
