@@ -9,7 +9,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanInDetailListResponseVm, ScanInSmdBagMoreResponseVm, ScanInSmdBagDataResponseVm } from '../../models/scanin-smd.response.vm';
+import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanInDetailListResponseVm, ScanInSmdBagMoreResponseVm, ScanInSmdBagDataResponseVm, ScaninDetailScanResponseVm } from '../../models/scanin-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -19,8 +19,8 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { BagScanInBranchSmdQueueService } from '../../../queue/services/bag-scan-in-branch-smd-queue.service';
-import { ScanInSmdMorePayloadVm, ScanInSmdPayloadVm } from '../../models/scanin-smd.payload.vm';
-import { getManager } from 'typeorm';
+import { ScanInSmdMorePayloadVm, ScanInSmdPayloadVm, ScaninDetailScanPayloadVm } from '../../models/scanin-smd.payload.vm';
+import { getManager, createQueryBuilder } from 'typeorm';
 
 @Injectable()
 export class ScaninSmdService {
@@ -937,5 +937,24 @@ export class ScaninSmdService {
     });
 
     return syscount;
+  }
+
+  static async detailScaninScanned(
+    payload: ScaninDetailScanPayloadVm,
+    ): Promise<ScaninDetailScanResponseVm> {
+    const result = new ScaninDetailScanResponseVm();
+    const qb = createQueryBuilder();
+    qb.addSelect( 'rb.received_bag_id', 'received_bag_id');
+    qb.addSelect( 'rb.received_bag_code', 'received_bag_code');
+    qb.addSelect( 'rb.received_bag_date', 'received_bag_date');
+    qb.addSelect( 'rbd.bag_weight', 'bag_weight');
+    qb.addSelect( 'rbd.bag_number', 'bag_number');
+    qb.from('received_bag', 'rb');
+    qb.innerJoin('received_bag_detail', 'rbd', 'rbd.received_bag_id = rb.received_bag_id AND rbd.is_deleted = FALSE');
+    qb.andWhere(`rbd.received_bag_id = '${payload.received_bag_id}'`);
+    qb.andWhere(`rb.is_deleted = FALSE`);
+    result.data = await qb.getRawMany();
+
+    return result;
   }
 }

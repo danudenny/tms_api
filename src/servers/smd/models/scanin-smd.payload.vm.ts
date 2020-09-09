@@ -16,3 +16,8 @@ export class ScanInSmdMorePayloadVm {
   @ApiModelProperty()
   received_bag_id: number;
 }
+
+export class ScaninDetailScanPayloadVm {
+  @ApiModelProperty()
+  received_bag_id: string;
+}
