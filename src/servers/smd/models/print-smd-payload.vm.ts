@@ -49,3 +49,28 @@ export class PrintReceivedBagPaperPayloadVm {
   @ApiModelPropertyOptional()
   branchId: number;
 }
+
+export class PrintBaggingDataVm {
+  @ApiModelProperty()
+  weight: string;
+
+  @ApiModelProperty()
+  baggingCode: string;
+
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
+}
+
+export class PrintScaninVm {
+  @ApiModelProperty({ type: () => [PrintBaggingDataVm] })
+  data: PrintBaggingDataVm[];
+
+  @ApiModelProperty()
+  baggingId: string;
+}
