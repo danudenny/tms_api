@@ -24,7 +24,6 @@ import moment = require('moment');
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { KorwilTransactionDetailPhoto } from '../../../../shared/orm-entity/korwil-transaction-detail-photo';
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
-import { getType } from 'mime';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';

@@ -107,6 +107,20 @@ export class V1PackageService {
         });
         if (branch) {
           payload.branchId = branch.branchId;
+          const representative = await Representative.findOne({
+            cache: true,
+            where: {
+              representativeId: branch.representativeId,
+              isDeleted: false,
+            },
+          });
+
+          if (representative) {
+            // assign data payload
+            assign(payload, {
+              representative,
+            });
+          }
           // create new bag number sortir
           const genBagNumber = await this.createBagNumber(payload, branch.branchCode);
           if (genBagNumber) {
@@ -137,10 +151,10 @@ export class V1PackageService {
 
     const podScanInHub = await PodScanInHub.findOne({
       where: {
+        scanInType: 'BAG',
+        transactionStatusId: 100,
         branchId: permissonPayload.branchId,
         userIdCreated: authMeta.userId,
-        transactionStatusId: 100,
-        scanInType: 'BAG',
         isDeleted: false,
       },
     });
@@ -437,21 +451,15 @@ export class V1PackageService {
       // generate bag number
       randomBagNumber =
         'S' + sampleSize('012345678900123456789001234567890', 6).join('');
-      const representativeCode = payload.districtDetail
-        ? payload.districtDetail.districtCode.substring(0, 3)
-        : null;
-      const representative = await Representative.findOne({
-        where: { isDeleted: false, representativeCode },
-      });
 
       const bagDetail = Bag.create({
         bagNumber: randomBagNumber,
         branchIdTo: branchId,
-        refRepresentativeCode: representative
-          ? representative.representativeCode
+        refRepresentativeCode: payload.representative
+          ? payload.representative.representativeCode
           : null,
-        representativeIdTo: representative
-          ? representative.representativeId
+        representativeIdTo: payload.representative
+          ? payload.representative.representativeId
           : null,
         refBranchCode: branchCode,
         bagType: 'branch',
@@ -502,7 +510,7 @@ export class V1PackageService {
   private static async firstPodScanInHub(payload): Promise<CreateBagNumberResponseVM> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    let podScanInHub: PodScanInHub = null;
+    let podScanInHubId: string = null;
 
     const bagDetail = await BagService.validBagNumber(payload.bagNumber);
 
@@ -517,72 +525,91 @@ export class V1PackageService {
       const bagWeight = Number(bagDetail.weight);
       const totalWeightRealRounded = Number(payload.awbDetail.totalWeightRealRounded);
       const bagWeightFinalFloat = parseFloat((bagWeight + totalWeightRealRounded).toFixed(5));
-      PinoLoggerService.log('#### bagWeightFinalFloat :: ', bagWeightFinalFloat );
+      // PinoLoggerService.log('#### bagWeightFinalFloat :: ', bagWeightFinalFloat );
 
-      await BagItem.update({
-        bagItemId: bagDetail.bagItemId,
-      }, {
-        weight: bagWeightFinalFloat,
-      });
+      try {
+        await BagItem.update({
+          bagItemId: bagDetail.bagItemId,
+        }, {
+          weight: bagWeightFinalFloat,
+        });
 
-      bagDetail.weight = bagWeightFinalFloat;
+        bagDetail.weight = bagWeightFinalFloat;
 
-      // NOTE: background job for insert bag item history
-      BagItemHistoryQueueService.addData(
-        bagDetail.bagItemId,
-        500,
-        permissonPayload.branchId,
-        authMeta.userId,
-      );
+        // #region PodScanInHub process
+        // insert into pod scan in hub
+        // 100 = inprogress, 200 = done
+        const podScanInHubData = PodScanInHub.create({
+          branchId: permissonPayload.branchId,
+          scanInType: 'BAG',
+          transactionStatusId: 100,
+          userIdCreated: authMeta.userId,
+          createdTime: moment().toDate(),
+          updatedTime: moment().toDate(),
+          userIdUpdated: authMeta.userId,
+        });
 
-      BagItemHistoryQueueService.addData(
-        bagDetail.bagItemId,
-        3000,
-        permissonPayload.branchId,
-        authMeta.userId,
-      );
-      // #region PodScanInHub process
-      // insert into pod scan in hub
-      // 100 = inprogress, 200 = done
-      const podScanInHubData = PodScanInHub.create({
-        branchId: permissonPayload.branchId,
-        scanInType: 'BAG',
-        transactionStatusId: 100,
-        userIdCreated: authMeta.userId,
-        createdTime: moment().toDate(),
-        updatedTime: moment().toDate(),
-        userIdUpdated: authMeta.userId,
-      });
-      podScanInHub = await PodScanInHub.save(podScanInHubData);
-      if (podScanInHub) {
-        // #region send to background process
-        CreateBagFirstScanHubQueueService.perform(
-          bagDetail.bagId,
-          bagDetail.bagItemId,
-          bagDetail.bag.bagNumber,
-          payload.awbItemId,
-          payload.awbDetail.awbNumber,
-          podScanInHub.podScanInHubId,
-          parseFloat(payload.awbDetail.totalWeightRealRounded),
-          authMeta.userId,
-          permissonPayload.branchId,
-          moment().toDate(),
-        );
-        // #endregion send to background process
+        let podScanInHub = await PodScanInHub.findOne({
+          where: {
+            scanInType: 'BAG',
+            transactionStatusId: 100,
+            branchId: permissonPayload.branchId,
+            userIdCreated: authMeta.userId,
+            isDeleted: false,
+          },
+        });
+        if (podScanInHub) {
+          podScanInHubId = podScanInHub.podScanInHubId;
+        } else {
+          // create new one
+          podScanInHub = await PodScanInHub.save(podScanInHubData);
+          podScanInHubId = podScanInHub.podScanInHubId;
+          // #region send to background process
+          CreateBagFirstScanHubQueueService.perform(
+            bagDetail.bagId,
+            bagDetail.bagItemId,
+            bagDetail.bag.bagNumber,
+            payload.awbItemId,
+            payload.awbDetail.awbNumber,
+            podScanInHub.podScanInHubId,
+            parseFloat(payload.awbDetail.totalWeightRealRounded),
+            authMeta.userId,
+            permissonPayload.branchId,
+            moment().toDate(),
+          );
+
+          // NOTE: background job for insert bag item history
+          BagItemHistoryQueueService.addData(
+            bagDetail.bagItemId,
+            500,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
+
+          BagItemHistoryQueueService.addData(
+            bagDetail.bagItemId,
+            3000,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
+          // #endregion send to background process
+        }
+        // #endregion
+      } catch (error) {
+        console.error(error);
+        throw new BadRequestException('Problem Server, Coba beberapa saat lagi!');
       }
-
-      // #endregion
     } else {
       // DEBUG: TypeError: Cannot read property 'weight' of undefined
       console.error('######## BAGITEM NOT FOUND :: BAG DETAIL :: ', bagDetail);
       console.error('######## BAGITEM NOT FOUND :: PAYLOAD :: ', payload);
       throw new BadRequestException(`Bag Number ${payload.bagNumber}, tidak ditemukan`);
     }
+
     // contruct data response
     const result = new CreateBagNumberResponseVM();
-    result.podScanInHubId = podScanInHub.podScanInHubId;
+    result.podScanInHubId = podScanInHubId;
     result.bagItemId = bagDetail.bagItemId;
-    // result.bagNumber = `${randomBagNumber}${bagSeq}`;
     result.weight = bagDetail.weight;
     result.bagSeq = bagDetail.bagSeq;
     return result;
@@ -596,19 +623,18 @@ export class V1PackageService {
 
     let bagWeight: number = 0;
     let bagSeq: number = 0;
-    let branch: Branch = null;
-    let districtDetail: District = null;
-    let branchName = null;
-    let branchCode = null;
+    // let branch: Branch = null;
+    // let branchName = null;
+    // let branchCode = null;
+    // let districtId = null;
 
     // mapping
-    const bagNumber: string = payload.bagNumber;
+    let bagNumber: string = payload.bagNumber;
     let bagItemId: number = payload.bagItemId;
     let podScanInHubId: string = payload.podScanInHubId;
 
     let isTrouble: boolean = false;
     let isAllow: boolean = true;
-    let districtId = null;
     let message: string = 'ok';
 
     const awbItemAttr = await this.getAwbItem(awbNumber);
@@ -624,22 +650,23 @@ export class V1PackageService {
       troubleDesc.push('Awb status tidak sesuai');
     }
 
-    if (awbItemAttr.toId) {
-      // use cache data
-      branch = await Branch.findOne({ cache: true, where: { branchId } });
-      // NOTE: Validate branch
-      if (!branch) {
-        isAllow = false;
-        troubleDesc.push('Gerai tidak ditemukan');
-      } else {
-        branchCode = branch.branchCode;
-        branchName = branch.branchName;
-        districtId = branch.districtId;
-      }
-    } else {
-      isTrouble = true;
-      troubleDesc.push('Tidak ada tujuan');
-    }
+    // use cache data
+    // branch = await Branch.findOne({ cache: true, where: { branchId } });
+    // // NOTE: Validate branch
+    // if (!branch) {
+    //   isAllow = false;
+    //   troubleDesc.push('Gerai tidak ditemukan');
+    // } else {
+    //   branchCode = branch.branchCode;
+    //   branchName = branch.branchName;
+    //   districtId = branch.districtId;
+    // }
+
+    // if (awbItemAttr.toId) {
+    // } else {
+    //   isTrouble = true;
+    //   troubleDesc.push('Tidak ada tujuan');
+    // }
     // #endregion
 
     // construct data detail
@@ -662,20 +689,33 @@ export class V1PackageService {
       isAllow = false;
       // throw new BadRequestException('Nomor resi sudah digabung sortir');
       // check data bag item awb
-      const bagItem = await BagService.validBagNumber(payload.bagNumber);
-      if (bagItem) {
-        bagWeight = bagItem.weight;
-        bagSeq = bagItem.bagSeq;
-        message = 'Nomor resi sudah digabung sortir';
+      const bagItemAwb = await BagItemAwb.findOne({
+        awbItemId: awbItemAttr.awbItemId,
+        isSortir: true,
+      });
+      if (bagItemAwb) {
+        const bagItem = await BagService.getBagNumber(bagItemAwb.bagItemId);
+        if (bagItem) {
+          bagNumber =
+            bagItem.bag.bagNumber +
+            bagItem.bagSeq.toString().padStart(3, '0');
+          bagItemId = bagItem.bagItemId;
+          bagWeight = bagItem.weight;
+          bagSeq = bagItem.bagSeq;
+          message = `Nomor resi sudah digabung sortir di ${bagNumber}`;
+        }
       }
     } else {
-      // use data district from branch
-      if (branch && districtId) {
-        districtDetail = await District.findOne({
-          cache: true,
-          where: { districtId, isDeleted: false },
-        });
-      }
+      // use data representative from branch
+      // if (branch) {
+      //   representative = await Representative.findOne({
+      //     cache: true,
+      //     where: {
+      //       representativeId: branch.representativeId,
+      //       isDeleted: false,
+      //     },
+      //   });
+      // }
 
       // assign data payload
       assign(payload, {
@@ -683,8 +723,6 @@ export class V1PackageService {
         awbDetail: awbItemAttr,
         isTrouble,
         troubleDesc,
-        districtDetail,
-        branchDetail: branch,
       });
 
       // NOTE: critical path
@@ -696,6 +734,7 @@ export class V1PackageService {
           bagSeq = bagItem.bagSeq;
         }
       } else {
+        // NOTE: first scan in
         // generate podScanInHubId
         const podHub = await this.firstPodScanInHub(payload);
         podScanInHubId = podHub.podScanInHubId;
@@ -724,8 +763,6 @@ export class V1PackageService {
       bagItemId,
       branchId,
       data: detail,
-      branchName,
-      branchCode,
       bagWeight,
       bagSeq,
       message,
