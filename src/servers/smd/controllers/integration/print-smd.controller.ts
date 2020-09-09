@@ -86,13 +86,13 @@ export class SmdPrintController {
     @Query() params: PrintReceivedBagPaperPayloadVm,
     @Response() response: express.Response,
   ) {
-    return SmdPrintService.executeScaninPrint(response, params);
+    return SmdPrintService.executeReceivedBagPrint(response, params);
   }
 
   @Post('received-bag/store')
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async storeBagCityExternalPrint(@Body() body: PrintScaninVm) {
-    return SmdPrintService.storeScaninPrint(body);
+    return SmdPrintService.storeReceivedBagPrint(body);
   }
 }

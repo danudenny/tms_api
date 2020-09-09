@@ -2,7 +2,7 @@ import express = require('express');
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
-import { PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm, PrintReceivedBagPaperPayloadVm } from '../../models/print-smd-payload.vm';
+import { PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm, PrintReceivedBagPaperPayloadVm, PrintScaninVm } from '../../models/print-smd-payload.vm';
 import moment = require('moment');
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
 import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm, PrintDoSmdDataDoSmdDetailBagRepresentativeVm, PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm, PrintVendorDataVm, PrintVendorVm, PrintVendorDataVendorDetailVm } from '../../models/print-do-smd.vm';
@@ -734,6 +734,81 @@ export class SmdPrintService {
           templateName: 'vendor-surat-muatan-darat',
           templateData: jsreportParams,
           printCopy: templateConfig.printCopy,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  static async storeReceivedBagPrint(payloadBody: PrintScaninVm) {
+    return this.storeGenericPrintData(
+      'received-bag',
+      payloadBody.receivedBagId,
+      payloadBody,
+    );
+  }
+
+  static async executeReceivedBagPrint(
+    res: express.Response,
+    queryParams: PrintReceivedBagPaperPayloadVm,
+  ) {
+    const printPayload = await this.retrieveGenericPrintData<PrintScaninVm>(
+      'received-bag',
+      queryParams.id,
+    );
+    const data = printPayload.data;
+
+    if (!printPayload || (printPayload && !printPayload.data)) {
+      RequestErrorService.throwObj({
+        message: 'Tanda terima tidak ditemukan',
+      });
+    }
+
+    if (queryParams.userId) {
+      const currentUser = await RepositoryService.user
+        .loadById(queryParams.userId)
+        .select({
+          userId: true, // needs to be selected due to users relations are being included
+          employee: {
+            nickname: true,
+          },
+        });
+
+      if (!currentUser) {
+        RequestErrorService.throwObj({
+          message: 'User tidak ditemukan',
+        });
+      }
+    }
+
+    if (queryParams.branchId) {
+      const currentBranch = await RepositoryService.branch
+        .loadById(queryParams.branchId)
+        .select({
+          branchName: true,
+        });
+
+      if (!currentBranch) {
+        RequestErrorService.throwObj({
+          message: 'Gerai asal tidak ditemukan',
+        });
+      }
+    }
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    const date = moment().format('YYYY-MM-DD HH:mm:ss');
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'ttd-received-bag',
+          templateData: {
+            data,
+            meta: {
+              createdTime: date,
+            },
+          },
+          printCopy: queryParams.printCopy ? queryParams.printCopy : 3,
         },
       ],
       listPrinterName,
