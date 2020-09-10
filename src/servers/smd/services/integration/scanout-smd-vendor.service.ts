@@ -616,7 +616,7 @@ export class ScanoutSmdVendorService {
           },
         });
         if (resultDoSmdDetailItem) {
-          result.message = 'Bag Representative Already Scanned';
+          result.message = `Gabung Kota ${payload.item_number} sudah di scan`;
           return result;
         } else {
           await this.createDoSmdDetailItem(
@@ -676,12 +676,12 @@ export class ScanoutSmdVendorService {
             total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
           });
           result.statusCode = HttpStatus.OK;
-          result.message = 'SMD Item Success Created';
+          result.message = `Gabung Kota ${payload.item_number} berhasil di scan`;
           result.data = data;
           return result;
         }
       } else {
-        result.message = 'Representative To Bag Representative Not Match';
+        result.message = 'Tujuan Gabung Kota tidak cocok dengan perwakilan SMD';
         return result;
       }
     } else if (resultBagging) {
@@ -727,7 +727,7 @@ export class ScanoutSmdVendorService {
             },
           });
           if (resultDoSmdDetailItem) {
-            result.message = 'Bagging Already Scanned';
+            result.message = `Bagging ${payload.item_number} sudah di scan`;
             return result;
           } else {
             for (let i = 0; i < resultDataBagItem.length; i++) {
@@ -795,19 +795,19 @@ export class ScanoutSmdVendorService {
               total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Item Success Created';
+            result.message = `Bagging ${payload.item_number} berhasil di scan`;
             result.data = data;
             return result;
           }
         } else {
-          result.message = 'Representative To Bagging Not Match';
+          result.message = 'Tujuan Bagging tidak cocok dengan perwakilan SMD';
           return result;
         }
       } else if (resultDataBagItem.length > 0 && !resultDataBagItem[0].bag_item_status_id) {
-        result.message = 'Bagging Not Scan In Yet';
+        result.message = `Bagging ${payload.item_number} belum di scan masuk`;
         return result;
       } else {
-        result.message = 'Bagging Item Not Found';
+        result.message = `Bagging ${payload.item_number} tidak ditemukan`;
         return result;
       }
     } else {
@@ -923,21 +923,21 @@ export class ScanoutSmdVendorService {
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Item Success Created';
+              result.message = `Gabung Paket ${payload.item_number} berhasil di scan`;
               result.data = data;
               return result;
           } else if (resultDataRepresentative.length > 0 && resultDataRepresentative[0].bag_item_id) {
-            result.message = `Combine Package ` + payload.item_number + ` Already Scanned`;
+            result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
             return result;
           } else {
-            result.message = `Representative To ` + resultDataBag[0].representative_code + ` Bag 15 Not Match`;
+            result.message = 'Tujuan Gabung Paket tidak cocok dengan perwakilan SMD';
             return result;
           }
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          result.message = 'Bag Not Scan In Yet';
+          result.message = `Gabung Paket ${payload.item_number} belum di scan masuk`;
           return result;
         } else {
-          result.message = 'Bag Not Found';
+          result.message = `Gabung Paket ${payload.item_number} tidak ditemukan`;
           return result;
         }
       } else if (payload.item_number.length == 10 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
@@ -1051,25 +1051,25 @@ export class ScanoutSmdVendorService {
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Item Success Created';
+              result.message = `Gabung Paket ${payload.item_number} berhasil di scan`;
               result.data = data;
               return result;
           } else if (resultDataRepresentative.length > 0 && resultDataRepresentative[0].bag_item_id) {
-            result.message = `Combine Package ` + payload.item_number + ` Already Scanned`;
+            result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
             return result;
           } else {
-            result.message = `Representative To ` + resultDataBag[0].representative_code + `  Bag 10 Not Match`;
+            result.message = 'Tujuan Gabung Paket tidak cocok dengan perwakilan SMD';
             return result;
           }
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          result.message = 'Bag 10 Not Scan In Yet';
+          result.message = `Gabung Paket ${payload.item_number} belum di scan masuk`;
           return result;
         } else {
-          result.message = 'Bag 10 Not Found';
+          result.message = `Gabung Paket ${payload.item_number} tidak ditemukan`;
           return result;
         }
       } else {
-        result.message = 'Bagging / Bag Not Found';
+        result.message = 'Bagging / Gabung Paket tidak ditemukan';
         return result;
       }
     }
