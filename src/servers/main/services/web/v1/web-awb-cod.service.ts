@@ -104,7 +104,7 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.awb, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // change to inner join
+
     q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -132,11 +132,13 @@ export class V1WebAwbCodService {
     q.leftJoin(e => e.transactionStatus, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
-    q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
+    // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter ANT, DLV
     q.andWhere(
-      e => e.doPodDeliverDetail.awbStatusIdLast,
+      e => e.awbStatusIdLast,
       w => w.in([14000, 30000]),
     );
 
@@ -212,7 +214,7 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.awb, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // change to inner join
+
     q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -241,16 +243,16 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
-    q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
+    // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter ANT, DLV
     q.andWhere(
-      e => e.doPodDeliverDetail.awbStatusIdLast,
+      e => e.awbStatusIdLast,
       w => w.in([14000, 30000]),
     );
 
     const total = await q.countWithoutTakeAndSkip();
-
     const result = new WebCodCountResponseVm();
 
     result.total = total;
@@ -315,13 +317,13 @@ export class V1WebAwbCodService {
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
       ['t1.transaction_status_id', 'transactionStatusId'],
-      ['t9.status_title', 'transactionStatusName'],
+      ['t9.created_time', 'pickupRequestTime'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // change to inner join
+
     q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -346,9 +348,11 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.transactionStatus, 't9', j =>
+    q.innerJoin(e => e.pickupRequestDetail, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // filter DLV
@@ -425,7 +429,7 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.awb, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // change to inner join
+
     q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -450,6 +454,11 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    q.innerJoin(e => e.pickupRequestDetail, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // filter DLV
