@@ -32,7 +32,7 @@ export class ScanOutController {
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async scanOutItem(@Req() request: any, @Body() payload: ScanOutSmdItemPayloadVm) {
-    return ScanoutSmdService.scanOutItem(payload);
+    return ScanoutSmdService.scanItemSMD(payload);
   }
 
   @Post('scanOut/item/manual-input')

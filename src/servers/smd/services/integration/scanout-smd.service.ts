@@ -518,6 +518,14 @@ export class ScanoutSmdService {
 
   }
 
+  static async scanItemSMD(payload: any): Promise<any> {
+    const result = await this.scanOutItem(payload);
+    if (result.statusCode == 400) {
+      throw new BadRequestException(result.message);
+    }
+    return result;
+  }
+
   static async scanOutItem(payload: any): Promise<any> {
     // Bag Type 0 = Bagging, 1 =  Bag / Gab.Paket, 2 = Bag Representative / Gabung Sortir Kota
     const authMeta = AuthService.getAuthData();
