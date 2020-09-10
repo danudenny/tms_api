@@ -52,6 +52,7 @@ export class MobileSmdListService {
     qb.addSelect('dsd.total_bag', 'total_bag');
     qb.addSelect('dsd.total_bagging', 'total_bagging');
     qb.addSelect('dsd.total_bag_representative', 'total_bag_representative');
+    qb.addSelect('dsd.departure_time', 'departure_time');
     qb.from('do_smd', 'ds');
     qb.innerJoin(
       'do_smd_detail',
