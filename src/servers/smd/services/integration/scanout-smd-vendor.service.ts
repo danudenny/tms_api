@@ -1378,9 +1378,7 @@ export class ScanoutSmdVendorService {
       userIdUpdated: userId,
       updatedTime: moment().toDate(),
     });
-    const doSmdDetailItem = await DoSmdDetailItem.insert(dataDoSmdDetailItem, {
-      transaction: false,
-    });
+    const doSmdDetailItem = await DoSmdDetailItem.insert(dataDoSmdDetailItem);
     return doSmdDetailItem.identifiers.length
       ? doSmdDetailItem.identifiers[0].doSmdDetailItemId
       : null;
