@@ -9,7 +9,6 @@ import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, 
 import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityDetailScanPayloadVm } from '../../models/bag-city-payload.vm';
 import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm, BagCityExternalPrintPayloadVm, BagCityExternalPrintExecutePayloadVm } from '../../models/print-bag-city-payload.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { Transaction } from 'typeorm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 
 @ApiUseTags('SMD Bag City')
@@ -22,8 +21,8 @@ export class BagCityController {
   @ApiOkResponse({ type: ListBagCityResponseVm })
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  public async listBagging(@Body() payload: BaseMetaPayloadVm) {
-    return BagCityService.listBagging(payload);
+  public async listBagCity(@Body() payload: BaseMetaPayloadVm) {
+    return BagCityService.listBagCity(payload);
   }
 
   @Post('list/detail')
@@ -31,8 +30,8 @@ export class BagCityController {
   @ApiOkResponse({ type: ListDetailBagCityResponseVm })
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  public async listDetailBagging(@Body() payload: BaseMetaPayloadVm) {
-    return BagCityService.listDetailBagging(payload);
+  public async listDetailBagCity(@Body() payload: BaseMetaPayloadVm) {
+    return BagCityService.listDetailBagCity(payload);
   }
 
   @Post('create')
@@ -42,8 +41,8 @@ export class BagCityController {
   @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
-  public async createBagging(@Body() payload: BagCityPayloadVm) {
-    return BagCityService.createBagging(payload);
+  public async createBagCity(@Body() payload: BagCityPayloadVm) {
+    return BagCityService.createBagCity(payload);
   }
 
   @Post('create/manual-input')
@@ -53,28 +52,28 @@ export class BagCityController {
   @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
-  public async createBaggingMore(@Body() payload: BagCityMorePayloadVm) {
-    return BagCityService.createBaggingMore(payload);
+  public async createBagCityMore(@Body() payload: BagCityMorePayloadVm) {
+    return BagCityService.createBagCityMore(payload);
   }
 
   @Get('print')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
-  public async printBagging(
+  public async printBagCity(
     @Query() queryParams: PrintBagCityPayloadVm,
     @Response() serverResponse: express.Response,
   ) {
-    return BagCityService.printBagging(serverResponse, queryParams);
+    return BagCityService.printBagCity(serverResponse, queryParams);
   }
 
   @Get('print-from-jsreport')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
-  public async printBaggingFromJsreport(
+  public async printBagCityFromJsReport(
     @Query() queryParams: PrintBagCityPayloadVm,
     @Response() serverResponse: express.Response,
   ) {
-    return BagCityService.printBaggingFromJsreport(serverResponse, queryParams);
+    return BagCityService.printBagCityFromJsReport(serverResponse, queryParams);
   }
 
   @Get('print-paper')
@@ -124,7 +123,7 @@ export class BagCityController {
   @ApiOkResponse({ type: BagCityDetailScanResponseVm })
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  public async detailBagging(@Body() payload: BagCityDetailScanPayloadVm) {
-    return BagCityService.detailBagCityScanned(payload);
+  public async listDetailScanBagCity(@Body() payload: BagCityDetailScanPayloadVm) {
+    return BagCityService.listDetailScanBagCity(payload);
   }
 }

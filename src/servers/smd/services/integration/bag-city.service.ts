@@ -26,7 +26,7 @@ import { Not, createQueryBuilder, getManager } from 'typeorm';
 
 @Injectable()
 export class BagCityService {
-  static async listBagging(
+  static async listBagCity(
     payload: BaseMetaPayloadVm,
   ): Promise<ListBagCityResponseVm> {
     // mapping search field and operator default ilike
@@ -87,7 +87,7 @@ export class BagCityService {
     return result;
   }
 
-  static async listDetailBagging(
+  static async listDetailBagCity(
     payload: BaseMetaPayloadVm,
   ): Promise<ListDetailBagCityResponseVm> {
     // mapping search field and operator default ilike
@@ -116,7 +116,7 @@ export class BagCityService {
     return result;
   }
 
-  static async createBagging(
+  static async createBagCity(
     payload: BagCityPayloadVm,
   ): Promise<BagCityResponseVm> {
     const result = new BagCityResponseVm();
@@ -351,7 +351,7 @@ export class BagCityService {
     return result;
   }
 
-  static async createBaggingMore(
+  static async createBagCityMore(
     payload: BagCityMorePayloadVm,
   ): Promise<BagCityMoreResponseVm> {
     const result = new BagCityMoreResponseVm();
@@ -385,7 +385,7 @@ export class BagCityService {
       }
       uniqueBagCity.push(awbNumber);
 
-      const res = await this.createBagging(p);
+      const res = await this.createBagCity(p);
 
       p.bagRepresentativeId = p.bagRepresentativeId ? p.bagRepresentativeId : res.bagRepresentativeId;
       p.representativeId = p.representativeId ? p.representativeId : res.representativeId;
@@ -407,7 +407,7 @@ export class BagCityService {
     return result;
   }
 
-  public static async printBagging(
+  public static async printBagCity(
     res: express.Response,
     queryParams: PrintBagCityPayloadVm,
   ) {
@@ -455,7 +455,7 @@ export class BagCityService {
     });
   }
 
-  public static async printBaggingFromJsreport(
+  public static async printBagCityFromJsReport(
     res: express.Response,
     queryParams: PrintBagCityPayloadVm,
   ) {
@@ -813,22 +813,7 @@ export class BagCityService {
     });
   }
 
-  // TODO: Move as shared services
-  private static async storeDataToRedis(key: string, data: any, duration: number = 600) {
-    if (!data) {
-      RequestErrorService.throwObj({
-        message: 'Data not valid!',
-      });
-    }
-
-    return RedisService.setex(key, data, duration, true);
-  }
-
-  private static async retrieveDataFromRedis(key: string) {
-    return RedisService.get(key, true);
-  }
-
-  static async detailBagCityScanned(
+  static async listDetailScanBagCity(
     payload: BagCityDetailScanPayloadVm,
     ): Promise<BagCityDetailScanResponseVm> {
     const result = new BagCityDetailScanResponseVm();
