@@ -812,7 +812,9 @@ export class ScaninSmdService {
       userIdUpdated: userId,
       updatedTime: moment().toDate(),
     });
-    const bag = await Bag.insert(dataBag);
+    const bag = await Bag.insert(dataBag, {
+      transaction: false,
+    });
     return bag.identifiers.length
       ? bag.identifiers[0].bagId
       : null;
@@ -840,7 +842,9 @@ export class ScaninSmdService {
       userIdUpdated: paramUserId,
       updatedTime: moment().toDate(),
     });
-    const receivedBag = await ReceivedBag.insert(dataReceivedBag);
+    const receivedBag = await ReceivedBag.insert(dataReceivedBag, {
+      transaction: false,
+    });
     return receivedBag.identifiers.length
       ? receivedBag.identifiers[0].receivedBagId
       : null;
@@ -864,7 +868,9 @@ export class ScaninSmdService {
       userIdUpdated: paramUserId,
       updatedTime: moment().toDate(),
     });
-    const receivedBagDetail = await ReceivedBagDetail.insert(dataReceivedBagDetail);
+    const receivedBagDetail = await ReceivedBagDetail.insert(dataReceivedBagDetail, {
+      transaction: false,
+    });
     return receivedBagDetail.identifiers.length
       ? receivedBagDetail.identifiers[0].receivedBagDetailId
       : null;
@@ -885,7 +891,9 @@ export class ScaninSmdService {
       userIdUpdated: paramUserId,
       updatedTime: moment().toDate(),
     });
-    const bagItem = await BagItem.insert(dataBagItem);
+    const bagItem = await BagItem.insert(dataBagItem, {
+      transaction: false,
+    });
     return bagItem.identifiers.length
       ? bagItem.identifiers[0].bagItemId
       : null;
