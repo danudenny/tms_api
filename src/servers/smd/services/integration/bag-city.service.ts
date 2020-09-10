@@ -813,21 +813,6 @@ export class BagCityService {
     });
   }
 
-  // TODO: Move as shared services
-  private static async storeDataToRedis(key: string, data: any, duration: number = 600) {
-    if (!data) {
-      RequestErrorService.throwObj({
-        message: 'Data not valid!',
-      });
-    }
-
-    return RedisService.setex(key, data, duration, true);
-  }
-
-  private static async retrieveDataFromRedis(key: string) {
-    return RedisService.get(key, true);
-  }
-
   static async listDetailScanBagCity(
     payload: BagCityDetailScanPayloadVm,
     ): Promise<BagCityDetailScanResponseVm> {
