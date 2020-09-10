@@ -5,7 +5,7 @@ import xlsx = require('xlsx');
 import fs = require('fs');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDataMoreResponseVm, BagCityDetailScanResponseVm } from '../../models/bag-city-response.vm';
-import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityDetailScanPayloadVm } from '../../models/bag-city-payload.vm';
+import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityInputManualDataPayloadVm, BagCityDetailScanPayloadVm } from '../../models/bag-city-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -120,6 +120,7 @@ export class BagCityService {
     payload: BagCityPayloadVm,
   ): Promise<BagCityResponseVm> {
     const result = new BagCityResponseVm();
+    let inputManualPrevData = new BagCityInputManualDataPayloadVm();
     const awbNumber = payload.awbNumber;
     const dateNow = moment().toDate();
     // let paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeCounter(dateNow);
@@ -212,29 +213,46 @@ export class BagCityService {
           return result;
         }
       }
-      rawQuery = `
-        SELECT
-          br.bag_representative_id,
-          br.bag_representative_code,
-          br.total_item,
-          br.total_weight
-        FROM bag_representative br
-        WHERE
-          br.bag_representative_id = '${payload.bagRepresentativeId}' AND
-          br.is_deleted = false
-        LIMIT 1;
-        `;
-      const dataBagRepresentative = await RawQueryService.query(rawQuery);
-      if (dataBagRepresentative.length == 0) {
-        result.message = 'Data Bag City tidak ditemukan';
-        return result;
+      if (!payload.inputManualPrevData) { // handle input manual, data not found because data not insert yet
+        rawQuery = `
+          SELECT
+            br.bag_representative_id,
+            br.bag_representative_code,
+            br.total_item,
+            br.total_weight
+          FROM bag_representative br
+          WHERE
+            br.bag_representative_id = '${payload.bagRepresentativeId}' AND
+            br.is_deleted = false
+          LIMIT 1;
+          `;
+        const dataBagRepresentative = await RawQueryService.query(rawQuery);
+        if (dataBagRepresentative.length == 0) {
+          result.message = 'Data Bag City tidak ditemukan';
+          return result;
+        }
+        inputManualPrevData = {
+          bag_representative_id: dataBagRepresentative[0].bag_representative_id,
+          bag_representative_code: dataBagRepresentative[0].bag_representative_code,
+          total_item: dataBagRepresentative[0].total_item,
+          total_weight: dataBagRepresentative[0].total_weight,
+        };
+      } else {
+        inputManualPrevData = payload.inputManualPrevData;
       }
 
-      bagRepresentativeId = result.bagRepresentativeId = dataBagRepresentative[0].bag_representative_id;
-      bagRepresentativeCode = result.bagRepresentativeCode = dataBagRepresentative[0].bag_representative_code;
+      bagRepresentativeId = result.bagRepresentativeId = inputManualPrevData.bag_representative_id.toString();
+      bagRepresentativeCode = result.bagRepresentativeCode = inputManualPrevData.bag_representative_code;
 
-      // const total_weight = (Number(dataAwb[0].weight) + Number(dataBagRepresentative[0].total_weight));
-      // const total_item = Number(dataBagRepresentative[0].total_item) + 1;
+      const total_weight = (Number(dataAwb[0].weight) + Number(inputManualPrevData.total_weight));
+      const total_item = Number(inputManualPrevData.total_item) + 1;
+
+      result.inputManualPrevData = {
+        bag_representative_code: inputManualPrevData.bag_representative_code,
+        bag_representative_id: inputManualPrevData.bag_representative_id,
+        total_item,
+        total_weight,
+      };
 
       await getManager().transaction(async transactionEntityManager => {
         await transactionEntityManager.increment(
@@ -272,9 +290,16 @@ export class BagCityService {
         createBagRepresentative.createdTime = dateNow;
         createBagRepresentative.updatedTime = dateNow;
         createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
-        await BagRepresentative.insert(createBagRepresentative, {
+        await BagRepresentative.save(createBagRepresentative, {
           transaction: false,
         });
+
+        result.inputManualPrevData = {
+          bag_representative_code: createBagRepresentative.bagRepresentativeCode,
+          bag_representative_id: createBagRepresentative.bagRepresentativeId,
+          total_item: Number(createBagRepresentative.totalItem),
+          total_weight: createBagRepresentative.totalWeight,
+        };
 
         bagRepresentativeId = createBagRepresentative.bagRepresentativeId;
         bagRepresentativeCode = createBagRepresentative.bagRepresentativeCode;
@@ -393,6 +418,7 @@ export class BagCityService {
 
       p.bagRepresentativeId = p.bagRepresentativeId ? p.bagRepresentativeId : res.bagRepresentativeId;
       p.representativeId = p.representativeId ? p.representativeId : res.representativeId;
+      p.inputManualPrevData = res.inputManualPrevData;
       result.data.push({
         ...res,
         awbNumber,
