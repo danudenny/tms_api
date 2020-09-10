@@ -1,6 +1,5 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
-import { InputManualDataPayloadVm } from './smd-bagging-payload.vm';
 
 export class SmdScanBaggingResponseVm {
   @ApiModelProperty()
@@ -23,10 +22,6 @@ export class SmdScanBaggingResponseVm {
 
   @ApiModelProperty()
   validRepresentativeCode: string;
-
-  // NOTE: This is just for BE needs to handle input manual
-  @ApiModelProperty({type: () => InputManualDataPayloadVm})
-  inputManualPrevData: InputManualDataPayloadVm;
 }
 
 export class SmdScanBaggingDataMoreResponseVm extends SmdScanBaggingResponseVm {
