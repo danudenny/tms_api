@@ -218,6 +218,10 @@ export class AwbItemAttr extends BaseEntity {
   @JoinColumn({ name: 'awb_status_id_last' })
   awbStatus: AwbStatus;
 
+  @OneToOne(() => AwbStatus)
+  @JoinColumn({ name: 'awb_status_id_final' })
+  awbStatusFinal: AwbStatus;
+
   @OneToOne(() => Awb)
   @JoinColumn({ name: 'awb_id' })
   awb: Awb;
