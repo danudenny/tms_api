@@ -272,7 +272,9 @@ export class BagCityService {
         createBagRepresentative.createdTime = dateNow;
         createBagRepresentative.updatedTime = dateNow;
         createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
-        await BagRepresentative.insert(createBagRepresentative);
+        await BagRepresentative.insert(createBagRepresentative, {
+          transaction: false,
+        });
 
         bagRepresentativeId = createBagRepresentative.bagRepresentativeId;
         bagRepresentativeCode = createBagRepresentative.bagRepresentativeCode;
@@ -318,7 +320,9 @@ export class BagCityService {
     bagRepresentativeItem.userIdUpdated = authMeta.userId;
     bagRepresentativeItem.createdTime = moment().toDate();
     bagRepresentativeItem.updatedTime = moment().toDate();
-    BagRepresentativeItem.insert(bagRepresentativeItem);
+    BagRepresentativeItem.insert(bagRepresentativeItem, {
+      transaction: false,
+    });
 
     let branchName = '';
     let cityName = '';

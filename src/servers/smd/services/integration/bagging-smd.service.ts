@@ -348,7 +348,9 @@ export class BaggingSmdService {
         createBagging.baggingSeq = maxBagSeq;
         createBagging.createdTime = moment().toDate();
         createBagging.updatedTime = moment().toDate();
-        await Bagging.insert(createBagging);
+        await Bagging.insert(createBagging, {
+          transaction: false,
+        });
 
         baggingId = createBagging.baggingId;
         baggingCode = createBagging.baggingCode;
