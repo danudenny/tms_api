@@ -253,24 +253,11 @@ export class BagCityService {
         total_item,
         total_weight,
       };
-
-      await getManager().transaction(async transactionEntityManager => {
-        await transactionEntityManager.increment(
-          BagRepresentative,
-          {
-            bagRepresentativeId,
-          },
-          'totalItem',
-          1,
-        );
-        await transactionEntityManager.increment(
-          BagRepresentative,
-          {
-            bagRepresentativeId,
-          },
-          'totalWeight',
-          Number(dataAwb[0].weight),
-        );
+      await BagRepresentative.update(bagRepresentativeId, {
+        totalWeight: total_weight,
+        totalItem: total_item,
+      }, {
+        transaction: false,
       });
     }
 
