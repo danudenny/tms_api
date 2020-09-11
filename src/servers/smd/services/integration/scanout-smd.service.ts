@@ -1632,17 +1632,14 @@ export class ScanoutSmdService {
         SELECT
           DISTINCT dsdi.bagging_id,
           b.bagging_code,
-          bi.weight,
-          bi.bag_seq,
+          b.total_weight,
           r.representative_code
         FROM do_smd_detail_item dsdi
         INNER JOIN bagging b ON dsdi.bagging_id = b.bagging_id AND b.is_deleted = FALSE
-        INNER JOIN bag_item bi ON bi.bag_item_id = dsdi.bag_item_id AND bi.is_deleted = FALSE
         INNER JOIN representative r ON r.representative_id = b.representative_id_to AND r.is_deleted = FALSE
         WHERE
           dsdi.do_smd_detail_id = ${resultDoSmdDetail.doSmdDetailId} AND
           dsdi.bag_type = 0 AND
-          dsdi.bagging_id IS NOT NULL AND
           dsdi.is_deleted = FALSE;
       `;
       const resultDataBagging = await RawQueryService.query(rawQueryBagging);
