@@ -135,7 +135,7 @@ export class BaggingSmdService {
       p.inputManualPrevData = res.inputManualPrevData;
       result.data.push({
         ...res,
-        bagNumber: number,
+        bagNumber,
       });
 
       if (res.status == 'success') {
