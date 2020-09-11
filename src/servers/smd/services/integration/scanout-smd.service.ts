@@ -1632,7 +1632,7 @@ export class ScanoutSmdService {
         SELECT
           DISTINCT dsdi.bagging_id,
           b.bagging_code,
-          b.total_weight,
+          b.total_weight as weight,
           r.representative_code
         FROM do_smd_detail_item dsdi
         INNER JOIN bagging b ON dsdi.bagging_id = b.bagging_id AND b.is_deleted = FALSE
