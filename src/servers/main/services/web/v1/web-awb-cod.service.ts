@@ -327,11 +327,15 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(
-      e => e.doPodDeliverDetail.doPodDeliver.userDriver,
-      't4',
-      j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
+
+    q.innerJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    q.innerJoin(e => e.doPodDeliverDetail.codPayment.userCreated, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     q.innerJoin(e => e.awb.packageType, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -341,10 +345,6 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awbStatusFinal, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -433,11 +433,15 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(
-      e => e.doPodDeliverDetail.doPodDeliver.userDriver,
-      't4',
-      j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
+
+    q.innerJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    q.innerJoin(e => e.doPodDeliverDetail.codPayment.userCreated, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     q.innerJoin(e => e.awb.packageType, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -447,10 +451,6 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awbStatusFinal, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 

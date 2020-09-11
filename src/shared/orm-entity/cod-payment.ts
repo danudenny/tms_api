@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { User } from './user';
 
 @Entity('cod_payment', { schema: 'public' })
 export class CodPayment extends TmsBaseEntity {
@@ -54,4 +55,11 @@ export class CodPayment extends TmsBaseEntity {
     name: 'no_reference',
   })
   noReference: string | null;
+
+  // User Created == User Driver
+  @ManyToOne(() => User)
+  @JoinColumn({
+    name: 'user_id_created',
+  })
+  userCreated: User;
 }
