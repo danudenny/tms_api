@@ -247,7 +247,8 @@ export class V2MobileSyncService {
           PinoLoggerService.log('##### Data Not Valid', delivery);
         }
       } catch (error) {
-        throw new ServiceUnavailableException(error.message);
+        console.error(error);
+        throw new ServiceUnavailableException(error);
       }
     } // end of doPodDeliverHistories.length
     return process;

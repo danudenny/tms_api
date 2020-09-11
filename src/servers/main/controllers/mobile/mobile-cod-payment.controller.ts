@@ -47,11 +47,20 @@ export class CodPaymentController {
     return V1MobileDivaPaymentService.sendQr(payload);
   }
 
+  // TODO: disabled soon
   @Post('diva/paymentStatus')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
   @ResponseSerializerOptions({ disable: true })
   public async divaPaymentStatus(@Body() payload: any) {
+    return { status: 'ok', message: 'success'};
+  }
+
+  @Post('diva/paymentStatusV2')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async divaPaymentStatusManual(@Body() payload: any) {
     // NOTE: handle for message disable this service
     ResponseMaintenanceService.divaPaymentService();
     return V1MobileDivaPaymentService.paymentStatus(payload);
