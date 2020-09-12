@@ -30,6 +30,7 @@ import { CodUpdateSupplierInvoiceQueueService } from '../../../../queue/services
 import { CodTransactionHistoryQueueService } from '../../../../queue/services/cod/cod-transaction-history-queue.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import { CodFirstTransactionQueueService } from '../../../../queue/services/cod/cod-first-transaction-queue.service';
+import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
 // #endregion import
 
 export class V1WebCodSupplierInvoiceService {
@@ -351,7 +352,17 @@ export class V1WebCodSupplierInvoiceService {
                   updatedTime: timestamp,
                 },
               );
-              // NOTE: update transaction history for supplier invoice??
+              // NOTE: update data and sync data to mongo
+              CodSyncTransactionQueueService.perform(
+                transactionDetail.awbNumber,
+                transactionDetail.codTransactionId,
+                transactionDetail.transactionStatusId,
+                payload.supplierInvoiceId,
+                TRANSACTION_STATUS.DRAFT_INV,
+                authMeta.userId,
+                timestamp,
+              );
+              // add transaction history
               CodTransactionHistoryQueueService.perform(
                 transactionDetail.awbItemId,
                 transactionDetail.awbNumber,
@@ -359,7 +370,6 @@ export class V1WebCodSupplierInvoiceService {
                 permissonPayload.branchId,
                 authMeta.userId,
                 timestamp,
-                true,
               );
               totalSuccess += 1;
               totalCodValue += Number(transactionDetail.codValue);

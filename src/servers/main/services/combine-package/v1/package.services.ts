@@ -3,7 +3,6 @@ import _, { assign, join, sampleSize } from 'lodash';
 import { createQueryBuilder, getManager } from 'typeorm';
 
 import { BadRequestException } from '@nestjs/common';
-import { Awb } from '../../../../../shared/orm-entity/awb';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { AwbTrouble } from '../../../../../shared/orm-entity/awb-trouble';
 import { Bag } from '../../../../../shared/orm-entity/bag';
@@ -30,12 +29,13 @@ import {
 import { PackagePayloadVm } from '../../../models/gabungan-payload.vm';
 import { PackageAwbResponseVm } from '../../../models/gabungan.response.vm';
 import {
-    CreateBagNumberResponseVM, OpenSortirCombineVM, PackageBagDetailVM, UnloadAwbPayloadVm,
+    CreateBagNumberResponseVM, OpenSortirCombineVM, UnloadAwbPayloadVm,
     UnloadAwbResponseVm,
+    AwbScanPackageDetailVm,
 } from '../../../models/package-payload.vm';
 import { AwbService } from '../../v1/awb.service';
 import { BagService } from '../../v1/bag.service';
-
+import { RedisService } from '../../../../../shared/services/redis.service';
 import moment = require('moment');
 // //#endregion
 
@@ -78,9 +78,13 @@ export class V1PackageService {
           );
         }
 
+        // handle race condition
+        const redlock = await RedisService.redlock(`redlock:hubSortir:awbScan:${payload.value}`, 10);
+        if (!redlock) {
+          throw new BadRequestException(`Resi ${payload.value}, sedang di proses!`);
+        }
         // TODO: handle first scan and create bag number
         const scanResult = await this.awbScan(payload);
-
         result.dataBag = scanResult.dataBag;
         result.bagNumber = scanResult.bagNumber;
         result.branchId = scanResult.branchId;
@@ -93,6 +97,7 @@ export class V1PackageService {
         result.bagSeq = scanResult.bagSeq;
         result.bagWeight = scanResult.bagWeight;
 
+        result.message = scanResult.message;
       } else {
         // search branch code
         const branch = await Branch.findOne({
@@ -101,6 +106,30 @@ export class V1PackageService {
           },
         });
         if (branch) {
+          payload.branchId = branch.branchId;
+          const representative = await Representative.findOne({
+            cache: true,
+            where: {
+              representativeId: branch.representativeId,
+              isDeleted: false,
+            },
+          });
+
+          if (representative) {
+            // assign data payload
+            assign(payload, {
+              representative,
+            });
+          }
+          // create new bag number sortir
+          const genBagNumber = await this.createBagNumber(payload, branch.branchCode);
+          if (genBagNumber) {
+            result.bagNumber = genBagNumber.bagNumber;
+            result.bagItemId = genBagNumber.bagItemId;
+            result.bagWeight = genBagNumber.weight;
+            result.bagSeq = genBagNumber.bagSeq;
+          }
+
           result.branchId = branch.branchId;
           result.branchName = branch.branchName.trim();
           result.branchCode = branch.branchCode.trim();
@@ -122,10 +151,10 @@ export class V1PackageService {
 
     const podScanInHub = await PodScanInHub.findOne({
       where: {
+        scanInType: 'BAG',
+        transactionStatusId: 100,
         branchId: permissonPayload.branchId,
         userIdCreated: authMeta.userId,
-        transactionStatusId: 100,
-        scanInType: 'BAG',
         isDeleted: false,
       },
     });
@@ -167,28 +196,34 @@ export class V1PackageService {
       let branchCode;
       let bagSeq;
       let bagWeight;
+      // TODO: refactoring
+      if (data) {
+        bagNumber = `${data[0].bagNumber}${data[0].bagSeq
+          .toString()
+          .padStart(3, '0')}`;
+        branchId = data[0].branchId;
+        branchName = data[0].branchName;
+        branchCode = data[0].branchCode;
+        bagItemId = data[0].bagItemId;
+        bagWeight = data[0].bagWeight;
+        bagSeq = data[0].bagSeq;
 
-      bagNumber = `${data[0].bagNumber}${data[0].bagSeq
-        .toString()
-        .padStart(3, '0')}`;
-      branchId = data[0].branchId;
-      branchName = data[0].branchName;
-      branchCode = data[0].branchCode;
-      bagItemId = data[0].bagItemId;
-      bagWeight = data[0].bagWeight;
-      bagSeq = data[0].bagSeq;
-
-      result.bagNumber = bagNumber;
-      result.branchId = branchId;
-      result.branchName = branchName;
-      result.branchCode = branchCode;
-      result.bagSeq = bagSeq;
-      result.bagWeight = bagWeight;
-      result.podScanInHubId = podScanInHubId;
-      result.bagItemId = bagItemId;
-      result.dataBag = data;
+        result.bagNumber = bagNumber;
+        result.branchId = branchId;
+        result.branchName = branchName;
+        result.branchCode = branchCode;
+        result.bagSeq = bagSeq;
+        result.bagWeight = bagWeight;
+        result.podScanInHubId = podScanInHubId;
+        result.bagItemId = bagItemId;
+        result.dataBag = data;
+        return result;
+      } else {
+        throw new BadRequestException('Data tidak ditemukan / sudah di proses!');
+      }
+    } else {
+        throw new BadRequestException('Data Sortir sudah di proses!');
     }
-    return result;
   }
 
   static async unloadAwb(payload: UnloadAwbPayloadVm): Promise <UnloadAwbResponseVm> {
@@ -377,19 +412,23 @@ export class V1PackageService {
     }
   }
 
-  private static async createBagNumber(payload): Promise<CreateBagNumberResponseVM> {
+  private static async createBagNumber(
+    payload,
+    branchCode: string,
+  ): Promise<CreateBagNumberResponseVM> {
     const result = new CreateBagNumberResponseVM();
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timestamp = moment().toDate();
     const branchId = payload.branchId;
 
     let bagId: number;
     let sequence: number;
     let randomBagNumber;
 
-    if (!payload.awbItemId || payload.awbItemId.length < 1) {
-      throw new BadRequestException('Tidak ada nomor resi');
-    }
+    // if (!payload.awbItemId || payload.awbItemId.length < 1) {
+    //   throw new BadRequestException('Tidak ada nomor resi');
+    // }
 
     const qb = createQueryBuilder();
     qb.addSelect('a.bag_id', 'bagId');
@@ -412,29 +451,23 @@ export class V1PackageService {
       // generate bag number
       randomBagNumber =
         'S' + sampleSize('012345678900123456789001234567890', 6).join('');
-      const representativeCode = payload.districtDetail
-        ? payload.districtDetail.districtCode.substring(0, 3)
-        : null;
-      const representative = await Representative.findOne({
-        where: { isDeleted: false, representativeCode },
-      });
-      const refBranchCode = payload.branchDetail ? payload.branchDetail.branchCode : '';
+
       const bagDetail = Bag.create({
         bagNumber: randomBagNumber,
         branchIdTo: branchId,
-        refRepresentativeCode: representative
-          ? representative.representativeCode
+        refRepresentativeCode: payload.representative
+          ? payload.representative.representativeCode
           : null,
-        representativeIdTo: representative
-          ? representative.representativeId
+        representativeIdTo: payload.representative
+          ? payload.representative.representativeId
           : null,
-        refBranchCode,
+        refBranchCode: branchCode,
         bagType: 'branch',
         branchId: permissonPayload.branchId,
         bagDate: moment().format('YYYY-MM-DD'),
-        bagDateReal: moment().toDate(),
-        createdTime: moment().toDate(),
-        updatedTime: moment().toDate(),
+        bagDateReal: timestamp,
+        createdTime: timestamp,
+        updatedTime: timestamp,
         userIdCreated: authMeta.userId,
         userIdUpdated: authMeta.userId,
         isSortir: true,
@@ -450,7 +483,6 @@ export class V1PackageService {
       randomBagNumber = bagData.bagNumber;
     }
     const bagSeq: string = sequence.toString().padStart(3, '0');
-    const awbDetail = payload.awbDetail;
 
     // INSERT INTO TABLE BAG ITEM
     const bagItemDetail = BagItem.create({
@@ -459,60 +491,15 @@ export class V1PackageService {
       branchIdLast: permissonPayload.branchId,
       bagItemStatusIdLast: 3000,
       userIdCreated: authMeta.userId,
-      weight: awbDetail.totalWeightRealRounded,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
+      weight: 0,
+      createdTime: timestamp,
+      updatedTime: timestamp,
       userIdUpdated: authMeta.userId,
       isSortir: true,
     });
     const bagItem = await BagItem.save(bagItemDetail);
 
-    // NOTE: background job for insert bag item history
-    BagItemHistoryQueueService.addData(
-      bagItem.bagItemId,
-      500,
-      permissonPayload.branchId,
-      authMeta.userId,
-    );
-
-    BagItemHistoryQueueService.addData(
-      bagItem.bagItemId,
-      3000,
-      permissonPayload.branchId,
-      authMeta.userId,
-    );
-
-    // insert into pod scan in hub
-    // 100 = inprogress, 200 = done
-    const podScanInHubData = PodScanInHub.create({
-      branchId: permissonPayload.branchId,
-      scanInType: 'BAG',
-      transactionStatusId: 100,
-      userIdCreated: authMeta.userId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
-      userIdUpdated: authMeta.userId,
-    });
-    const podScanInHub = await PodScanInHub.save(podScanInHubData);
-
-    // #region send to background process
-    CreateBagFirstScanHubQueueService.perform(
-      bagId,
-      bagItem.bagItemId,
-      randomBagNumber,
-      payload.awbItemId,
-      awbDetail.awbNumber,
-      podScanInHub.podScanInHubId,
-      parseFloat(awbDetail.totalWeightRealRounded),
-      authMeta.userId,
-      permissonPayload.branchId,
-      moment().toDate(),
-    );
-    // #endregion send to background process
-
-    // contruct data response
     result.bagItemId = bagItem.bagItemId;
-    result.podScanInHubId = podScanInHub.podScanInHubId;
     result.bagNumber = `${randomBagNumber}${bagSeq}`;
     result.weight = bagItem.weight;
     result.bagSeq = sequence;
@@ -520,160 +507,11 @@ export class V1PackageService {
     return result;
   }
 
-  private static async awbScan(payload: PackagePayloadVm): Promise<any> {
-    const awbNumber = payload.value;
-    const branchId: number = payload.branchId;
-    const result = new Object();
-    const troubleDesc: String[] = [];
-
-    let bagWeight: number = null;
-    let bagSeq: number = null;
-    let branch: Branch = null;
-    let districtDetail: District = null;
-    let branchName = null;
-    let branchCode = null;
-
-    let bagItemId: number = payload.bagItemId;
-    let bagNumber: string = payload.bagNumber;
-    let podScanInHubId: string = payload.podScanInHubId;
-
-    let isTrouble: boolean = false;
-    let isAllow: boolean = true;
-    let districtId = null;
-
-    const awbItemAttr = await AwbService.validAwbNumber(awbNumber);
-    // NOTE: check destination awb with awb.toId
-    const awb = await Awb.findOne({
-      where: { awbNumber, isDeleted: false },
-    });
-    // handle awb not found
-    if (!awbItemAttr || !awb) {
-      throw new BadRequestException('No resi tidak ditemukan / tidak valid');
-    } else if (awbItemAttr.isPackageCombined) {
-      throw new BadRequestException('Nomor resi sudah digabung sortir');
-    }
-    // check awb status
-    if (awbItemAttr.awbStatusIdLast !== 2600) {
-      isTrouble = true;
-      troubleDesc.push('Awb status tidak sesuai');
-    }
-
-    if (awb.toId) {
-      // use cache data
-      branch = await Branch.findOne({ cache: true, where: { branchId } });
-      // NOTE: Validate branch
-      if (!branch) {
-        isAllow = false;
-        troubleDesc.push('Gerai tidak ditemukan');
-      } else {
-        branchCode = branch.branchCode;
-        branchName = branch.branchName;
-        districtId = branch.districtId;
-      }
-    } else {
-      isTrouble = true;
-      troubleDesc.push('Tidak ada tujuan');
-    }
-
-    if (isAllow) {
-      // use data district from branch
-      if (branch && districtId) {
-        districtDetail = await District.findOne({
-          cache: true,
-          where: { districtId, isDeleted: false },
-        });
-      }
-
-      // construct data detail
-      // NOTE: change totalWeightFinalRounded : awb.totalWeightRealRounded
-      const detail = {
-        awbNumber: awb.awbNumber,
-        totalWeightRealRounded: awb.totalWeightRealRounded,
-        totalWeightFinalRounded: awb.totalWeightRealRounded,
-        consigneeName: awb.consigneeName,
-        consigneeNumber: awb.consigneeNumber,
-        awbItemId: awbItemAttr.awbItemId,
-        customerId: awb.customerAccountId,
-        pickupMerchant: awb.pickupMerchant,
-        shipperName: awb.refReseller,
-        consigneeAddress: awb.consigneeAddress,
-        isTrouble,
-      };
-
-      // assign data payload
-      assign(payload, {
-        awbItemId: awbItemAttr.awbItemId,
-        awbDetail: awb,
-        isTrouble,
-        troubleDesc,
-        districtDetail,
-        branchDetail: branch,
-      });
-
-      // NOTE: critical path
-      // get data bag / create new data bag
-      if (payload.bagNumber) {
-        const bagItem = await this.insertDetailAwb(payload);
-        if (bagItem) {
-          bagWeight = bagItem.weight;
-          bagSeq = bagItem.bagSeq;
-        }
-      } else {
-        // Generate Bag Number
-        const genBagNumber = await this.createBagNumber(payload);
-        bagNumber = genBagNumber.bagNumber;
-        podScanInHubId = genBagNumber.podScanInHubId;
-        bagItemId = genBagNumber.bagItemId;
-        bagWeight = genBagNumber.weight;
-        bagSeq = genBagNumber.bagSeq;
-      }
-
-      // insert data trouble
-      // TODO: feature disable
-      if (isTrouble) {
-        // const dataTrouble = {
-        //   awbNumber: awb.awbNumber,
-        //   troubleDesc: join(troubleDesc, ' dan '),
-        // };
-        // console.error('TROUBLE SCAN GAB SORTIR :: ', dataTrouble);
-        // await this.insertAwbTrouble(dataTrouble);
-      }
-
-      // construct response data
-      assign(result, {
-        bagNumber,
-        isAllow,
-        podScanInHubId,
-        bagItemId,
-        branchId,
-        data: detail,
-        branchName,
-        branchCode,
-        bagWeight,
-        bagSeq,
-      });
-
-    } else {
-      assign(result, {
-        isAllow,
-        bagNumber,
-        podScanInHubId,
-        bagItemId,
-        data: [],
-        branchId,
-        branchName,
-        branchCode,
-        bagWeight,
-        bagSeq,
-      });
-    }
-
-    return result;
-  }
-
-  private static async insertDetailAwb(payload): Promise<BagItem> {
+  private static async firstPodScanInHub(payload): Promise<CreateBagNumberResponseVM> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    let podScanInHubId: string = null;
+
     const bagDetail = await BagService.validBagNumber(payload.bagNumber);
 
     if (!bagDetail) {
@@ -683,11 +521,270 @@ export class V1PackageService {
     // update weight in bag item
     // delay get data from replication
     // TODO: change method update data weight bag ??
-    const bagItem = await BagItem.findOne({
-      where: { bagItemId: bagDetail.bagItemId },
+    if (bagDetail) {
+      const bagWeight = Number(bagDetail.weight);
+      const totalWeightRealRounded = Number(payload.awbDetail.totalWeightRealRounded);
+      const bagWeightFinalFloat = parseFloat((bagWeight + totalWeightRealRounded).toFixed(5));
+      // PinoLoggerService.log('#### bagWeightFinalFloat :: ', bagWeightFinalFloat );
+
+      try {
+        await BagItem.update({
+          bagItemId: bagDetail.bagItemId,
+        }, {
+          weight: bagWeightFinalFloat,
+        });
+
+        bagDetail.weight = bagWeightFinalFloat;
+
+        // #region PodScanInHub process
+        // insert into pod scan in hub
+        // 100 = inprogress, 200 = done
+        const podScanInHubData = PodScanInHub.create({
+          branchId: permissonPayload.branchId,
+          scanInType: 'BAG',
+          transactionStatusId: 100,
+          userIdCreated: authMeta.userId,
+          createdTime: moment().toDate(),
+          updatedTime: moment().toDate(),
+          userIdUpdated: authMeta.userId,
+        });
+
+        let podScanInHub = await PodScanInHub.findOne({
+          where: {
+            scanInType: 'BAG',
+            transactionStatusId: 100,
+            branchId: permissonPayload.branchId,
+            userIdCreated: authMeta.userId,
+            isDeleted: false,
+          },
+        });
+        if (podScanInHub) {
+          podScanInHubId = podScanInHub.podScanInHubId;
+        } else {
+          // create new one
+          podScanInHub = await PodScanInHub.save(podScanInHubData);
+          podScanInHubId = podScanInHub.podScanInHubId;
+          // #region send to background process
+          CreateBagFirstScanHubQueueService.perform(
+            bagDetail.bagId,
+            bagDetail.bagItemId,
+            bagDetail.bag.bagNumber,
+            payload.awbItemId,
+            payload.awbDetail.awbNumber,
+            podScanInHub.podScanInHubId,
+            parseFloat(payload.awbDetail.totalWeightRealRounded),
+            authMeta.userId,
+            permissonPayload.branchId,
+            moment().toDate(),
+          );
+
+          // NOTE: background job for insert bag item history
+          BagItemHistoryQueueService.addData(
+            bagDetail.bagItemId,
+            500,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
+
+          BagItemHistoryQueueService.addData(
+            bagDetail.bagItemId,
+            3000,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
+          // #endregion send to background process
+        }
+        // #endregion
+      } catch (error) {
+        console.error(error);
+        throw new BadRequestException('Problem Server, Coba beberapa saat lagi!');
+      }
+    } else {
+      // DEBUG: TypeError: Cannot read property 'weight' of undefined
+      console.error('######## BAGITEM NOT FOUND :: BAG DETAIL :: ', bagDetail);
+      console.error('######## BAGITEM NOT FOUND :: PAYLOAD :: ', payload);
+      throw new BadRequestException(`Bag Number ${payload.bagNumber}, tidak ditemukan`);
+    }
+
+    // contruct data response
+    const result = new CreateBagNumberResponseVM();
+    result.podScanInHubId = podScanInHubId;
+    result.bagItemId = bagDetail.bagItemId;
+    result.weight = bagDetail.weight;
+    result.bagSeq = bagDetail.bagSeq;
+    return result;
+  }
+
+  private static async awbScan(payload: PackagePayloadVm): Promise<any> {
+    const awbNumber = payload.value;
+    const branchId: number = payload.branchId;
+    const result = new Object();
+    const troubleDesc: String[] = [];
+
+    let bagWeight: number = 0;
+    let bagSeq: number = 0;
+    // let branch: Branch = null;
+    // let branchName = null;
+    // let branchCode = null;
+    // let districtId = null;
+
+    // mapping
+    let bagNumber: string = payload.bagNumber;
+    let bagItemId: number = payload.bagItemId;
+    let podScanInHubId: string = payload.podScanInHubId;
+
+    let isTrouble: boolean = false;
+    let isAllow: boolean = true;
+    let message: string = 'ok';
+
+    const awbItemAttr = await this.getAwbItem(awbNumber);
+    // #region validation
+    // handle awb number not found
+    if (!awbItemAttr) {
+      throw new BadRequestException('No resi tidak ditemukan / tidak valid');
+    }
+
+    // check awb status
+    if (awbItemAttr.awbStatusIdLast !== 2600) {
+      isTrouble = true;
+      troubleDesc.push('Awb status tidak sesuai');
+    }
+
+    // use cache data
+    // branch = await Branch.findOne({ cache: true, where: { branchId } });
+    // // NOTE: Validate branch
+    // if (!branch) {
+    //   isAllow = false;
+    //   troubleDesc.push('Gerai tidak ditemukan');
+    // } else {
+    //   branchCode = branch.branchCode;
+    //   branchName = branch.branchName;
+    //   districtId = branch.districtId;
+    // }
+
+    // if (awbItemAttr.toId) {
+    // } else {
+    //   isTrouble = true;
+    //   troubleDesc.push('Tidak ada tujuan');
+    // }
+    // #endregion
+
+    // construct data detail
+    // NOTE: change totalWeightFinalRounded : awb.totalWeightRealRounded
+    const detail = {
+      awbNumber: awbItemAttr.awbNumber,
+      totalWeightRealRounded: awbItemAttr.totalWeightRealRounded,
+      totalWeightFinalRounded: awbItemAttr.totalWeightRealRounded,
+      consigneeName: awbItemAttr.consigneeName,
+      consigneeNumber: awbItemAttr.consigneeNumber,
+      awbItemId: awbItemAttr.awbItemId,
+      customerId: awbItemAttr.customerAccountId,
+      pickupMerchant: awbItemAttr.pickupMerchant,
+      shipperName: awbItemAttr.refReseller,
+      consigneeAddress: awbItemAttr.consigneeAddress,
+      isTrouble,
+    };
+
+    if (awbItemAttr.isPackageCombined) {
+      isAllow = false;
+      // throw new BadRequestException('Nomor resi sudah digabung sortir');
+      // check data bag item awb
+      const bagItemAwb = await BagItemAwb.findOne({
+        awbItemId: awbItemAttr.awbItemId,
+        isSortir: true,
+      });
+      if (bagItemAwb) {
+        const bagItem = await BagService.getBagNumber(bagItemAwb.bagItemId);
+        if (bagItem) {
+          bagNumber =
+            bagItem.bag.bagNumber +
+            bagItem.bagSeq.toString().padStart(3, '0');
+          bagItemId = bagItem.bagItemId;
+          bagWeight = bagItem.weight;
+          bagSeq = bagItem.bagSeq;
+          message = `Nomor resi sudah digabung sortir di ${bagNumber}`;
+        }
+      }
+    } else {
+      // use data representative from branch
+      // if (branch) {
+      //   representative = await Representative.findOne({
+      //     cache: true,
+      //     where: {
+      //       representativeId: branch.representativeId,
+      //       isDeleted: false,
+      //     },
+      //   });
+      // }
+
+      // assign data payload
+      assign(payload, {
+        awbItemId: awbItemAttr.awbItemId,
+        awbDetail: awbItemAttr,
+        isTrouble,
+        troubleDesc,
+      });
+
+      // NOTE: critical path
+      // get data bag / create new data bag
+      if (payload.podScanInHubId) {
+        const bagItem = await this.insertDetailAwb(payload);
+        if (bagItem) {
+          bagWeight = bagItem.weight;
+          bagSeq = bagItem.bagSeq;
+        }
+      } else {
+        // NOTE: first scan in
+        // generate podScanInHubId
+        const podHub = await this.firstPodScanInHub(payload);
+        podScanInHubId = podHub.podScanInHubId;
+        bagItemId = podHub.bagItemId;
+        bagWeight = podHub.weight;
+        bagSeq = podHub.bagSeq;
+      }
+    }
+
+    // insert data trouble
+    // NOTE: feature disable
+    if (isTrouble) {
+      // const dataTrouble = {
+      //   awbNumber: awb.awbNumber,
+      //   troubleDesc: join(troubleDesc, ' dan '),
+      // };
+      // console.error('TROUBLE SCAN GAB SORTIR :: ', dataTrouble);
+      // await this.insertAwbTrouble(dataTrouble);
+    }
+
+    // construct response data
+    assign(result, {
+      bagNumber,
+      isAllow,
+      podScanInHubId,
+      bagItemId,
+      branchId,
+      data: detail,
+      bagWeight,
+      bagSeq,
+      message,
     });
-    if (bagItem) {
-      const bagWeight = Number(bagItem.weight);
+    return result;
+  }
+
+  private static async insertDetailAwb(payload): Promise<BagItem> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const bagDetail = await BagService.validBagNumber(payload.bagNumber);
+
+    if (!bagDetail) {
+      throw new BadRequestException('No gabungan sortir tidak ditemukan');
+    }
+
+    // update weight in bag item
+    // delay get data from replication
+    // TODO: change method update data weight bag ??
+    if (bagDetail) {
+      const bagWeight = Number(bagDetail.weight);
       const totalWeightRealRounded = Number(payload.awbDetail.totalWeightRealRounded);
       const bagWeightFinalFloat = parseFloat((bagWeight + totalWeightRealRounded).toFixed(5));
       PinoLoggerService.log('#### bagWeightFinalFloat :: ', bagWeightFinalFloat );
@@ -697,10 +794,9 @@ export class V1PackageService {
       }, {
         weight: bagWeightFinalFloat,
       });
-      bagItem.weight = bagWeightFinalFloat;
-      // await bagItem.save();
 
-      // //#region sending background process
+      bagDetail.weight = bagWeightFinalFloat;
+      // #region sending background process
       CreateBagAwbScanHubQueueService.perform(
         bagDetail.bagId,
         bagDetail.bagItemId,
@@ -713,13 +809,14 @@ export class V1PackageService {
         permissonPayload.branchId,
         moment().toDate(),
       );
-      // //#endregion
+      // #endregion
     } else {
       // DEBUG: TypeError: Cannot read property 'weight' of undefined
       console.error('######## BAGITEM NOT FOUND :: BAG DETAIL :: ', bagDetail);
       console.error('######## BAGITEM NOT FOUND :: PAYLOAD :: ', payload);
+      throw new BadRequestException(`Bag Number ${payload.bagNumber}, tidak ditemukan`);
     }
-    return bagItem;
+    return bagDetail;
   }
 
   private static async insertAwbTrouble(data): Promise<any> {
@@ -746,24 +843,31 @@ export class V1PackageService {
     await AwbTrouble.save(awbTroubleData);
   }
 
-  // TODO: need to be removed
-  private static async getBagDetail(
-    bagNumber: string,
-  ): Promise<PackageBagDetailVM> {
-    const bagNumberReal: string = bagNumber.substring(0, 7);
-    const bagSequence: number = Number(bagNumber.substring(7, 10));
+  private static async getAwbItem(
+    awbNumber: string,
+  ): Promise<AwbScanPackageDetailVm> {
 
     const qb = createQueryBuilder();
-    qb.addSelect('a.bag_id', 'bagId');
-    qb.addSelect('a.bag_number', 'bagNumber');
-    qb.addSelect('b.bag_item_id', 'bagItemId');
-    qb.from('bag', 'a');
-    qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
-    qb.where('a.bag_number = :bagNumber', { bagNumber: bagNumberReal });
-    qb.andWhere('b.bag_seq = :bagSeq', { bagSeq: bagSequence });
-    qb.andWhere('a.is_deleted = false');
+    qb.addSelect('t1.awb_item_id', 'awbItemId');
+    qb.addSelect('t1.awb_number', 'awbNumber');
+    qb.addSelect('t1.awb_status_id_last', 'awbStatusIdLast');
+    qb.addSelect('t1.is_package_combined', 'isPackageCombined');
 
-    const bagDetail = await qb.getRawOne();
-    return bagDetail;
+    qb.addSelect('t2.to_id', 'toId');
+    qb.addSelect('t2.total_weight_real_rounded', 'totalWeightRealRounded');
+    qb.addSelect('t2.consignee_name', 'consigneeName');
+    qb.addSelect('t2.consignee_phone', 'consigneeNumber');
+    qb.addSelect('t2.customer_account_id', 'customerAccountId');
+    qb.addSelect('t2.pickup_merchant', 'pickupMerchant');
+    qb.addSelect('t2.ref_reseller', 'refReseller');
+    qb.addSelect('t2.consignee_address', 'consigneeAddress');
+
+    qb.from('awb_item_attr', 't1');
+    qb.innerJoin('awb', 't2', 't1.awb_id = t2.awb_id');
+    qb.where('t1.awb_number = :awbNumber', { awbNumber });
+    qb.andWhere('t1.is_deleted = false');
+
+    const awbDetail = await qb.getRawOne();
+    return awbDetail;
   }
 }
