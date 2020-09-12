@@ -52,6 +52,7 @@ export class MobileSmdListService {
     qb.addSelect('dsd.total_bag', 'total_bag');
     qb.addSelect('dsd.total_bagging', 'total_bagging');
     qb.addSelect('dsd.total_bag_representative', 'total_bag_representative');
+    qb.addSelect('dsd.departure_time', 'departure_time');
     qb.from('do_smd', 'ds');
     qb.innerJoin(
       'do_smd_detail',
@@ -93,6 +94,7 @@ export class MobileSmdListService {
     );
     // qb.andWhere('ds.do_smd_status_id_last <> 6000');
     qb.andWhere('dsd.do_smd_status_id_last not in (5000, 6000) ');
+    qb.andWhere('dsd.seal_number is not null');
     qb.andWhere('ds.is_vendor = false');
     qb.andWhere('ds.is_deleted = false');
     return await qb.getRawMany();

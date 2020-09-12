@@ -2,12 +2,12 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs
 
 import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import {BaggingSmdService} from '../../services/integration/bagging-smd.service';
-import {PermissionTokenGuard} from '../../../../shared/guards/permission-token.guard';
-import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
-import {BaseMetaPayloadVm} from '../../../../shared/models/base-meta-payload.vm';
-import {SmdScanBaggingResponseVm, ListBaggingResponseVm, ListDetailBaggingResponseVm} from '../../models/smd-bagging-response.vm';
-import {SmdScanBaggingPayloadVm} from '../../models/smd-bagging-payload.vm';
+import { BaggingSmdService } from '../../services/integration/bagging-smd.service';
+import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
+import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { SmdScanBaggingResponseVm, ListBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm, SmdBaggingDetailResponseVm } from '../../models/smd-bagging-response.vm';
+import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm, SmdBaggingDetailPayloadVm } from '../../models/smd-bagging-payload.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('SMD Bagging')
@@ -20,9 +20,18 @@ export class SmdBaggingController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
-  @Transactional()
   public async createBagging(@Body() payload: SmdScanBaggingPayloadVm) {
     return BaggingSmdService.createBagging(payload);
+  }
+
+  @Post('create/manual-input')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: SmdScanBaggingMoreResponseVm })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async createBaggingMore(@Body() payload: SmdScanBaggingMorePayloadVm) {
+    return BaggingSmdService.createBaggingMore(payload);
   }
 
   @Post('list')
@@ -41,5 +50,14 @@ export class SmdBaggingController {
   @UseGuards(AuthenticatedGuard)
   public async listDetailBagging(@Body() payload: BaseMetaPayloadVm) {
     return BaggingSmdService.listDetailBagging(payload);
+  }
+
+  @Post('scan/detail')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: SmdBaggingDetailResponseVm })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  public async detailBagging(@Body() payload: SmdBaggingDetailPayloadVm) {
+    return BaggingSmdService.detailBaggingScanned(payload);
   }
 }

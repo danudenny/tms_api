@@ -109,9 +109,9 @@ export class MobileSmdService {
       .returning(['doSmdDetailId', 'branchIdTo', 'doSmdStatusIdLast'])
       .execute();
       if (updateDoSmdDetail.raw.length > 0) {
-        const doSmdDetailIds = map(updateDoSmdDetail.raw, item => {
-          return item.do_smd_detail_id;
-        });
+        // const doSmdDetailIds = map(updateDoSmdDetail.raw, item => {
+        //   return item.do_smd_detail_id;
+        // });
         // UPDATE STATUS AWB AND BAG
         // BACKGROUND PROCESS
         BagScanOutBranchSmdQueueService.perform(
@@ -122,21 +122,31 @@ export class MobileSmdService {
         );
       }
 
-      const paramDoSmdHistoryId = await this.createDoSmdHistory(
-        payload.do_smd_id,
-        null,
-        resultDoSmd.doSmdVehicleIdLast,
-        null,
-        null,
-        resultDoSmd.departureScheduleDateTime,
-        // permissonPayload.branchId,
-        null,
-        3000,
-        null,
-        null,
-        null,
-        authMeta.userId,
-      );
+      // cari history smd otw(3000) dan tambah history jika status terakhir bukan 3000
+      const qb = createQueryBuilder();
+      qb.addSelect('dsh.do_smd_status_id', 'status');
+      qb.from('do_smd_history', 'dsh');
+      qb.andWhere('dsh.do_smd_id = :id', { id: payload.do_smd_id });
+      qb.andWhere('dsh.is_deleted = false');
+      const history = await qb.getRawOne();
+
+      if (history.status != 3000) {
+        const paramDoSmdHistoryId = await this.createDoSmdHistory(
+          payload.do_smd_id,
+          null,
+          resultDoSmd.doSmdVehicleIdLast,
+          null,
+          null,
+          resultDoSmd.departureScheduleDateTime,
+          // permissonPayload.branchId,
+          null,
+          3000,
+          null,
+          null,
+          null,
+          authMeta.userId,
+        );
+      }
 
       const data = [];
       data.push({

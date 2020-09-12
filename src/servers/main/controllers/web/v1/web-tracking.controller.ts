@@ -13,6 +13,10 @@ import {
     AwbPhotoResponseVm,
     TrackingBagRepresentativeResponseVm,
     TrackingBagRepresentativePayloadVm,
+    TrackingBagRepresentativeAwbResponseVm,
+    TrackingBagRepresentativeAwbPayloadVm,
+    TrackingBagRepresentativeDetailResponseVm,
+    TrackingBagRepresentativeDetailPayloadVm,
 } from '../../../models/tracking.vm';
 import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
@@ -53,7 +57,7 @@ export class V1WebTrackingController {
     return V1WebTrackingService.getPhotoDetail(payload);
   }
 
-@Post('bagRepresentative')
+  @Post('bagRepresentative')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: TrackingBagRepresentativeResponseVm })
   public async bagRepresentative(@Body() payload: TrackingBagRepresentativePayloadVm) {
@@ -66,5 +70,19 @@ export class V1WebTrackingController {
   @ApiOkResponse({ type: AwbPhotoResponseVm })
   public async awbPhoto(@Body() payload: AwbPhotoDetailVm) {
     return V1WebTrackingService.awbPhotoDetail(payload);
+  }
+
+  @Post('bagRepresentativeAwb')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: TrackingBagRepresentativeAwbResponseVm })
+  public async bagRepresentativeAwb(@Body() payload: TrackingBagRepresentativeAwbPayloadVm) {
+    return V1WebTrackingService.bagRepresentativeAwb(payload);
+  }
+
+  @Post('bagRepresentativeDetail')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: TrackingBagRepresentativeDetailResponseVm })
+  public async bagRepresentativeDetail(@Body() payload: TrackingBagRepresentativeDetailPayloadVm) {
+    return V1WebTrackingService.bagRepresentativeDetail(payload);
   }
 }

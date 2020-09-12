@@ -123,6 +123,9 @@ export class WebScanInHubBagRepresentativeDetailSortResponseVm {
 
 export class SmdHubBaggingListDataResponseVm {
   @ApiModelProperty()
+  baggingId: number;
+
+  @ApiModelProperty()
   baggingCode: string;
 
   @ApiModelProperty()

@@ -18,6 +18,16 @@ export class TrackingBagRepresentativePayloadVm {
   bagRepresentativeNumber: string;
 }
 
+export class TrackingBagRepresentativeAwbPayloadVm {
+  @ApiModelProperty()
+  awbNumber: string;
+}
+
+export class TrackingBagRepresentativeDetailPayloadVm {
+  @ApiModelProperty()
+  bagRepresentativeId: number;
+}
+
 // Response
 export class AwbHistoryResponseVm {
   @ApiModelProperty()
@@ -338,4 +348,19 @@ export class AwbPhotoDetailResponseVm {
 export class AwbPhotoResponseVm {
   @ApiModelProperty({ type: () => [AwbPhotoDetailResponseVm] })
   data: AwbPhotoDetailResponseVm[];
+}
+
+export class TrackingBagRepresentativeAwbResponseVm {
+  @ApiModelProperty()
+  bagRepresentativeCode: string;
+}
+
+export class TrackingBagRepresentativeDetailResponseVm {
+  @ApiModelProperty({ type: () => [TrackingBagRepresentativeAwbDetailResponseVm] })
+  bagRepresentativeDetail: TrackingBagRepresentativeAwbDetailResponseVm[];
+}
+
+export class TrackingBagRepresentativeAwbDetailResponseVm {
+  @ApiModelProperty()
+  awbNumber: string;
 }

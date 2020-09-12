@@ -69,6 +69,25 @@ export class ScanOutSmdItemResponseVm {
   data: ScanOutItemVm[];
 }
 
+export class ScanOutSmdItemMoreResponseVm {
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({type: () => [ScanOutSmdItemMoreDataResponseVm]})
+  data: ScanOutSmdItemMoreDataResponseVm[];
+}
+
+export class ScanOutSmdItemMoreDataResponseVm extends ScanOutSmdItemResponseVm {
+  @ApiModelProperty()
+  item_number: string;
+}
+
 export class ScanOutItemVm {
 
   @ApiModelProperty()
@@ -107,6 +126,14 @@ export class ScanOutItemVm {
   @ApiModelProperty()
   total_bag_representative: number;
 
+  @ApiModelProperty()
+  weight: number;
+
+  @ApiModelProperty()
+  bag_seq: number;
+
+  @ApiModelProperty()
+  representative_code: number;
 }
 
 export class ScanOutSmdSealResponseVm {
@@ -175,6 +202,12 @@ export class ScanOutListVm {
 
   @ApiModelProperty()
   do_smd_status_title: string;
+
+  @ApiModelProperty()
+  nickname: String;
+
+  @ApiModelProperty()
+  nik: String;
 }
 
 export class ScanOutHistoryResponseVm extends BaseMetaResponseVm {
@@ -460,4 +493,108 @@ export class ScanOutImageVm {
 
   @ApiModelProperty()
   image_type: string;
+}
+
+export class ScanOutSmdEditResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutEditVm]})
+  data: ScanOutEditVm[];
+}
+
+export class ScanOutEditVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  branch_id_from: number;
+
+  @ApiModelProperty()
+  branch_code_from: string;
+
+  @ApiModelProperty()
+  branch_name_from: string;
+
+  @ApiModelProperty()
+  branch_id_to: number;
+
+  @ApiModelProperty()
+  branch_code: string;
+
+  @ApiModelProperty()
+  branch_name: string;
+
+  @ApiModelProperty()
+  representative_code_list: string;
+
+  @ApiModelProperty()
+  total_bag: number;
+
+  @ApiModelProperty()
+  total_bagging: number;
+
+  @ApiModelProperty()
+  total_bag_representative: number;
+
+  @ApiModelProperty()
+  seal_number: string;
+
+}
+
+export class ScanOutSmdEditDetailResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutEditDetailVm]})
+  data: ScanOutEditDetailVm[];
+}
+
+export class ScanOutEditDetailVm {
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  bag_id: number;
+
+  @ApiModelProperty()
+  bag_item_id: number;
+
+  @ApiModelProperty()
+  bag_number: string;
+
+  @ApiModelProperty()
+  bag_representative_code: string;
+
+  @ApiModelProperty()
+  bag_representative_id: number;
+
+  @ApiModelProperty()
+  bag_type: number;
+
+  @ApiModelProperty()
+  bagging_id: number;
+
+  @ApiModelProperty()
+  bagging_number: string;
+
+  @ApiModelProperty()
+  weight: number;
+
+  @ApiModelProperty()
+  bag_seq: number;
+
+  @ApiModelProperty()
+  representative_code: number;
 }

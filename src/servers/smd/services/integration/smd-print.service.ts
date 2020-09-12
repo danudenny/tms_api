@@ -1,39 +1,47 @@
 import express = require('express');
-import {RepositoryService} from '../../../../shared/services/repository.service';
-import {RequestErrorService} from '../../../../shared/services/request-error.service';
-import {PrinterService} from '../../../../shared/services/printer.service';
-import {PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm} from '../../models/print-smd-payload.vm';
+import { RepositoryService } from '../../../../shared/services/repository.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { PrinterService } from '../../../../shared/services/printer.service';
+import { PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm, PrintReceivedBagPaperPayloadVm, PrintScaninVm } from '../../models/print-smd-payload.vm';
 import moment = require('moment');
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
 import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm, PrintDoSmdDataDoSmdDetailBagRepresentativeVm, PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm, PrintVendorDataVm, PrintVendorVm, PrintVendorDataVendorDetailVm } from '../../models/print-do-smd.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { PrintBaggingVm } from '../../models/print-bagging.payload';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 export class SmdPrintService {
   public static async printBagging(
     res: express.Response,
     queryParams: PrintSmdPayloadVm,
   ) {
-    const bagging = await RepositoryService.baggingSmd
-      .loadById(queryParams.id)
-      .select({
-        baggingId: true, // needs to be selected due to users relations are being included
-        baggingCode: true,
-        totalItem: true,
-        totalWeight: true,
-        representative: {
-          representativeCode: true,
-          representativeName: true,
-        },
-      })
-      .exec();
+    const rawQuery = `
+      SELECT
+        ba.bagging_id,
+        ba.bagging_code,
+        ba.total_item,
+        ba.total_weight,
+        r.representative_code,
+        r.representative_name
+      FROM bagging ba
+      INNER JOIN representative r ON r.representative_id = ba.representative_id_to
+      WHERE
+        ba.bagging_id = '${queryParams.id}' AND
+        ba.is_deleted = FALSE;
+    `;
+    const bagging = await RawQueryService.query(rawQuery, null, false);
 
-    if (!bagging) {
+    if (bagging.length == 0) {
       RequestErrorService.throwObj({
         message: 'Bagging tidak ditemukan',
       });
     }
+
+    const totalColi = bagging[0].total_item;
+    const totalWeight = bagging[0].total_weight;
 
     const rawPrinterCommands =
       `SIZE 80 mm, 100 mm\n` +
@@ -43,11 +51,11 @@ export class SmdPrintService {
       `OFFSET 0\n` +
       `CLS\n` +
       `TEXT 10,120,"5",0,1,1,0,"BAGGING DARAT"\n` +
-      `BARCODE 10,200,"128",100,1,0,3,10,"${bagging.baggingCode}"\n` +
-      `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${bagging.totalItem}"\n` +
-      `TEXT 10,420,"3",0,1,1,"Berat : ${bagging.totalWeight}"\n` +
-      `TEXT 10,460,"5",0,1,1,0,"${bagging.representative.representativeCode}"\n` +
-      `TEXT 10,540,"3",0,1,1,"${bagging.representative.representativeName}"\n` +
+      `BARCODE 10,200,"128",100,1,0,3,10,"${bagging[0].bagging_code}"\n` +
+      `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${totalColi}"\n` +
+      `TEXT 10,420,"3",0,1,1,"Berat : ${totalWeight}"\n` +
+      `TEXT 10,460,"5",0,1,1,0,"${bagging[0].representative_code}"\n` +
+      `TEXT 10,540,"3",0,1,1,"${bagging[0].representative_name}"\n` +
       `PRINT 1\n` +
       `EOP`;
 
@@ -56,6 +64,81 @@ export class SmdPrintService {
       res,
       rawCommands: rawPrinterCommands,
       printerName,
+    });
+  }
+
+  static async storePrintBagging(payloadBody: PrintBaggingVm) {
+    return this.storeGenericPrintData(
+      'bagging',
+      payloadBody.baggingId,
+      payloadBody,
+    );
+  }
+
+  static async executePrintBagging(
+    res: express.Response,
+    queryParams: PrintBaggingPaperPayloadVm,
+  ) {
+    const printPayload = await this.retrieveGenericPrintData<PrintBaggingVm>(
+      'bagging',
+      queryParams.id,
+    );
+    const data = printPayload.data;
+
+    if (!printPayload || (printPayload && !printPayload.data)) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    if (queryParams.userId) {
+      const currentUser = await RepositoryService.user
+        .loadById(queryParams.userId)
+        .select({
+          userId: true, // needs to be selected due to users relations are being included
+          employee: {
+            nickname: true,
+          },
+        });
+
+      if (!currentUser) {
+        RequestErrorService.throwObj({
+          message: 'User tidak ditemukan',
+        });
+      }
+    }
+
+    if (queryParams.branchId) {
+      const currentBranch = await RepositoryService.branch
+        .loadById(queryParams.branchId)
+        .select({
+          branchName: true,
+        });
+
+      if (!currentBranch) {
+        RequestErrorService.throwObj({
+          message: 'Gerai asal tidak ditemukan',
+        });
+      }
+    }
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    const date = moment().format('YYYY-MM-DD HH:mm:ss');
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'bagging-surat-muatan-darat',
+          templateData: {
+            data,
+            meta: {
+              createdTime: date,
+            },
+          },
+          printCopy: queryParams.printCopy ? queryParams.printCopy : 3,
+        },
+      ],
+      listPrinterName,
     });
   }
 
@@ -367,8 +450,8 @@ export class SmdPrintService {
     templateConfig: {
       printCopy?: number;
     } = {
-      printCopy: 1,
-    },
+        printCopy: 1,
+      },
   ) {
     const currentUser = await RepositoryService.user
       .loadById(metaQuery.userId)
@@ -425,8 +508,8 @@ export class SmdPrintService {
     templateConfig: {
       printCopy?: number;
     } = {
-      printCopy: 1,
-    },
+        printCopy: 1,
+      },
   ) {
     const jsreportParams = {
       data,
@@ -452,8 +535,9 @@ export class SmdPrintService {
     queryParams: PrintVendorPaperPayloadVm,
   ) {
     const q = RepositoryService.doSmd.findOne();
-    q.leftJoin(e => e.doSmdDetails);
-    q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
+    q.leftJoin(e => e.doSmdDetails, 'dsd', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
 
     const doSmd = await q
       .select({
@@ -474,7 +558,7 @@ export class SmdPrintService {
         },
       })
       .where(e => e.doSmdId, w => w.equals(queryParams.id))
-      .andWhere(e => e.doSmdDetails.isDeleted, w => w.isFalse());
+      .andWhere(e => e.isDeleted, w => w.isFalse());
 
     if (!doSmd) {
       RequestErrorService.throwObj({
@@ -578,8 +662,8 @@ export class SmdPrintService {
     templateConfig: {
       printCopy?: number;
     } = {
-      printCopy: 1,
-    },
+        printCopy: 1,
+      },
   ) {
     const currentUser = await RepositoryService.user
       .loadById(metaQuery.userId)
@@ -634,8 +718,8 @@ export class SmdPrintService {
     templateConfig: {
       printCopy?: number;
     } = {
-      printCopy: 1,
-    },
+        printCopy: 1,
+      },
   ) {
     const jsreportParams = {
       data,
@@ -654,5 +738,175 @@ export class SmdPrintService {
       ],
       listPrinterName,
     });
+  }
+
+  static async storeReceivedBagPrint(payloadBody: PrintScaninVm) {
+    return this.storeGenericPrintData(
+      'received-bag',
+      payloadBody.data.receivedBagId,
+      payloadBody,
+    );
+  }
+
+  static async executeReceivedBagPrint(
+    res: express.Response,
+    queryParams: PrintReceivedBagPaperPayloadVm,
+  ) {
+    const printPayload = await this.retrieveGenericPrintData<PrintScaninVm>(
+      'received-bag',
+      queryParams.id,
+    );
+    const data = printPayload.data;
+
+    if (!printPayload || (printPayload && !printPayload.data)) {
+      RequestErrorService.throwObj({
+        message: 'Tanda terima tidak ditemukan',
+      });
+    }
+
+    if (queryParams.userId) {
+      const currentUser = await RepositoryService.user
+        .loadById(queryParams.userId)
+        .select({
+          userId: true, // needs to be selected due to users relations are being included
+          employee: {
+            nickname: true,
+          },
+        });
+
+      if (!currentUser) {
+        RequestErrorService.throwObj({
+          message: 'User tidak ditemukan',
+        });
+      }
+    }
+
+    if (queryParams.branchId) {
+      const currentBranch = await RepositoryService.branch
+        .loadById(queryParams.branchId)
+        .select({
+          branchName: true,
+        });
+
+      if (!currentBranch) {
+        RequestErrorService.throwObj({
+          message: 'Gerai asal tidak ditemukan',
+        });
+      }
+    }
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    const date = moment(data.receivedBagDate).format('YYYY-MM-DD');
+    const time = moment(data.receivedBagDate).format('HH:mm');
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'ttd-received-bag',
+          templateData: {
+            data,
+            meta: {
+              date,
+              time,
+            },
+          },
+          printCopy: queryParams.printCopy ? queryParams.printCopy : 3,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  public static async printReceivedBagForPaper(
+    res: express.Response,
+    payload: PrintReceivedBagPaperPayloadVm,
+  ) {
+    const q = RepositoryService.receivedBag.findOne();
+    q.leftJoin(e => e.receivedBagDetails, 'rbd', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.user, 'u', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.user.employee, 'e', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 'b', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    const receivedBag = await q
+      .select({
+        receivedBagId: true,
+        receivedBagDate: true,
+        receivedBagCode: true,
+        user: {
+          userId: true,
+          employee: {
+            employeeName: true,
+            nik: true,
+          },
+        },
+        branch: {
+          branchName: true,
+        },
+        receivedBagDetails: {
+          bagNumber: true,
+          bagWeight: true,
+        },
+      })
+      .where(e => e.isDeleted, w => w.equals(false))
+      .andWhere(e => e.receivedBagId, w => w.equals(payload.id));
+
+    if (!receivedBag) {
+      RequestErrorService.throwObj({
+        message: 'Received bag tidak ditemukan',
+      });
+    }
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    const date = moment(receivedBag.receivedBagDate).format('YYYY-MM-DD');
+    const time = moment(receivedBag.receivedBagDate).format('HH:mm');
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'ttd-received-bag',
+          templateData: {
+            data: receivedBag,
+            meta: {
+              date,
+              time,
+            },
+          },
+          printCopy: payload.printCopy ? payload.printCopy : 3,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  static async storeGenericPrintData(
+    prefix: string,
+    identifier: string | number,
+    genericData: any,
+  ) {
+    if (!genericData || !identifier) {
+      RequestErrorService.throwObj({
+        message: 'Data tidak valid',
+      });
+    }
+    return RedisService.setex(
+      `print-store-smd-${prefix}-${identifier}`,
+      genericData,
+      10 * 60,
+      true,
+    );
+  }
+
+  static async retrieveGenericPrintData<T = any>(
+    prefix: string,
+    identifier: string | number,
+  ) {
+    return RedisService.get<T>(`print-store-smd-${prefix}-${identifier}`, true);
   }
 }
