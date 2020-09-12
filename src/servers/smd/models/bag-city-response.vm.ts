@@ -88,6 +88,7 @@ export class ListBagCityDetailVm {
   @ApiModelProperty()
   bagRepresentativeId: string;
 
+  
   @ApiModelProperty()
   bagRepresentativeCode: string;
 
