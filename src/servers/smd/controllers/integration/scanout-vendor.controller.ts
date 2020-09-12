@@ -3,8 +3,9 @@ import { Transactional } from '../../../../shared/external/typeorm-transactional
 import { ApiUseTags, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { ScanOutSmdVendorRoutePayloadVm, ScanOutSmdVendorItemPayloadVm, ScanOutSmdVendorEndPayloadVm } from '../../models/scanout-smd-vendor.payload.vm';
+import { ScanOutSmdVendorRoutePayloadVm, ScanOutSmdVendorItemPayloadVm, ScanOutSmdVendorEndPayloadVm, ScanOutSmdVendorItemMorePayloadVm } from '../../models/scanout-smd-vendor.payload.vm';
 import { ScanoutSmdVendorService } from '../../services/integration/scanout-smd-vendor.service';
+import { ScanOutSmdVendorItemMoreResponseVm } from '../../models/scanout-smd-vendor.response.vm';
 
 @ApiUseTags('SCAN OUT SMD')
 @Controller('smd/vendor')
@@ -23,6 +24,14 @@ export class ScanOutVendorController {
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async scanOutVendorItem(@Req() request: any, @Body() payload: ScanOutSmdVendorItemPayloadVm) {
     return ScanoutSmdVendorService.scanOutVendorItem(payload);
+  }
+
+  @Post('scanOut/item/manual-input')
+  @ApiOkResponse({ type: ScanOutSmdVendorItemMoreResponseVm })
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async scanOutVendorItemMore(@Req() request: any, @Body() payload: ScanOutSmdVendorItemMorePayloadVm) {
+    return ScanoutSmdVendorService.scanOutVendorItemMore(payload);
   }
 
   @Post('scanOut/end')

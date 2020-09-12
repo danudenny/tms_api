@@ -1,5 +1,6 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import {ReceivedBag} from './received-bag';
 
 @Entity('received_bag_detail', { schema: 'public' })
 export class ReceivedBagDetail extends TmsBaseEntity {
@@ -67,4 +68,8 @@ export class ReceivedBagDetail extends TmsBaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @ManyToOne(() => ReceivedBag)
+  @JoinColumn({ name: 'received_bag_id', referencedColumnName: 'receivedBagId' })
+  receivedBag: ReceivedBag;
 }

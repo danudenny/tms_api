@@ -4,14 +4,14 @@ import express = require('express');
 import xlsx = require('xlsx');
 import fs = require('fs');
 import { AuthService } from '../../../../shared/services/auth.service';
-import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm } from '../../models/bag-city-response.vm';
-import { BagCityPayloadVm, BagCityExportPayloadVm } from '../../models/bag-city-payload.vm';
+import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDataMoreResponseVm, BagCityDetailScanResponseVm } from '../../models/bag-city-response.vm';
+import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityInputManualDataPayloadVm, BagCityDetailScanPayloadVm } from '../../models/bag-city-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { BagRepresentativeItem } from '../../../../shared/orm-entity/bag-representative-item';
 import { BagRepresentativeSmdQueueService } from '../../../queue/services/bag-representative-smd-queue.service';
-import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm } from '../../models/print-bag-city-payload.vm';
+import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm, BagCityExternalPrintPayloadVm, BagCityExternalPrintExecutePayloadVm } from '../../models/print-bag-city-payload.vm';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
@@ -22,10 +22,11 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { BagRepresentativeHistory } from '../../../../shared/orm-entity/bag-representative-history';
 import { SharedService } from '../../../../shared/services/shared.service';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
+import { Not, createQueryBuilder, getManager } from 'typeorm';
 
 @Injectable()
 export class BagCityService {
-  static async listBagging(
+  static async listBagCity(
     payload: BaseMetaPayloadVm,
   ): Promise<ListBagCityResponseVm> {
     // mapping search field and operator default ilike
@@ -86,7 +87,7 @@ export class BagCityService {
     return result;
   }
 
-  static async listDetailBagging(
+  static async listDetailBagCity(
     payload: BaseMetaPayloadVm,
   ): Promise<ListDetailBagCityResponseVm> {
     // mapping search field and operator default ilike
@@ -115,10 +116,11 @@ export class BagCityService {
     return result;
   }
 
-  static async createBagging(
+  static async createBagCity(
     payload: BagCityPayloadVm,
   ): Promise<BagCityResponseVm> {
     const result = new BagCityResponseVm();
+    let inputManualPrevData = new BagCityInputManualDataPayloadVm();
     const awbNumber = payload.awbNumber;
     const dateNow = moment().toDate();
     // let paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeCounter(dateNow);
@@ -156,9 +158,9 @@ export class BagCityService {
         a.total_weight_rounded as weight,
         ai.awb_item_id
       FROM temp_stt ts
-      INNER JOIN awb a ON ts.nostt = a.awb_number AND a.is_deleted = false
-      INNER JOIN awb_item ai ON a.awb_id = ai.awb_id
-      LEFT JOIN representative r ON ts.perwakilan = r.representative_code
+      INNER JOIN awb a ON ts.nostt = a.awb_number AND a.is_deleted = FALSE
+      INNER JOIN awb_item ai ON a.awb_id = ai.awb_id AND ai.is_deleted = FALSE
+      LEFT JOIN representative r ON ts.perwakilan = r.representative_code AND r.is_deleted = FALSE
       WHERE
         ts.nostt = '${awbNumber}'
       LIMIT 1;
@@ -197,31 +199,65 @@ export class BagCityService {
 
     // NOTE : Ambil data Bag representative yang sudah di input sebelumnya
     if (payload.bagRepresentativeId) {
-      rawQuery = `
-        SELECT
-          br.bag_representative_id,
-          br.bag_representative_code,
-          br.total_item,
-          br.total_weight
-        FROM bag_representative br
-        WHERE
-          br.bag_representative_id = '${payload.bagRepresentativeId}' AND
-          br.is_deleted = false
-        LIMIT 1;
-        `;
-      const dataBagRepresentative = await RawQueryService.query(rawQuery);
-      if (dataBagRepresentative.length == 0) {
-        result.message = 'Data Bag City tidak ditemukan';
-        return result;
+      if (!payload.representativeId) {
+        const dataCekValidRepresentative = await BagRepresentativeItem.findOne({
+          select: ['bagRepresentativeId'],
+          where: {
+            bagRepresentativeId: payload.bagRepresentativeId,
+            representativeIdTo: Not(dataAwb[0].representative_id),
+            isDeleted: false,
+          },
+        });
+        if (dataCekValidRepresentative) {
+          result.message = 'Representative berbeda';
+          return result;
+        }
+      }
+      if (!payload.inputManualPrevData) { // handle input manual, data not found because data not insert yet
+        rawQuery = `
+          SELECT
+            br.bag_representative_id,
+            br.bag_representative_code,
+            br.total_item,
+            br.total_weight
+          FROM bag_representative br
+          WHERE
+            br.bag_representative_id = '${payload.bagRepresentativeId}' AND
+            br.is_deleted = false
+          LIMIT 1;
+          `;
+        const dataBagRepresentative = await RawQueryService.query(rawQuery);
+        if (dataBagRepresentative.length == 0) {
+          result.message = 'Data Bag City tidak ditemukan';
+          return result;
+        }
+        inputManualPrevData = {
+          bag_representative_id: dataBagRepresentative[0].bag_representative_id,
+          bag_representative_code: dataBagRepresentative[0].bag_representative_code,
+          total_item: dataBagRepresentative[0].total_item,
+          total_weight: dataBagRepresentative[0].total_weight,
+        };
+      } else {
+        inputManualPrevData = payload.inputManualPrevData;
       }
 
-      bagRepresentativeId = result.bagRepresentativeId = dataBagRepresentative[0].bag_representative_id;
-      bagRepresentativeCode = result.bagRepresentativeCode = dataBagRepresentative[0].bag_representative_code;
+      bagRepresentativeId = result.bagRepresentativeId = inputManualPrevData.bag_representative_id.toString();
+      bagRepresentativeCode = result.bagRepresentativeCode = inputManualPrevData.bag_representative_code;
 
-      const total_weight = (Number(dataAwb[0].weight) + Number(dataBagRepresentative[0].total_weight));
+      const total_weight = (Number(dataAwb[0].weight) + Number(inputManualPrevData.total_weight));
+      const total_item = Number(inputManualPrevData.total_item) + 1;
+
+      result.inputManualPrevData = {
+        bag_representative_code: inputManualPrevData.bag_representative_code,
+        bag_representative_id: inputManualPrevData.bag_representative_id,
+        total_item,
+        total_weight,
+      };
       await BagRepresentative.update(bagRepresentativeId, {
         totalWeight: total_weight,
-        totalItem: parseInt(dataBagRepresentative[0].total_item) + 1,
+        totalItem: total_item,
+      }, {
+        transaction: false,
       });
     }
 
@@ -241,7 +277,16 @@ export class BagCityService {
         createBagRepresentative.createdTime = dateNow;
         createBagRepresentative.updatedTime = dateNow;
         createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
-        await BagRepresentative.save(createBagRepresentative);
+        await BagRepresentative.save(createBagRepresentative, {
+          transaction: false,
+        });
+
+        result.inputManualPrevData = {
+          bag_representative_code: createBagRepresentative.bagRepresentativeCode,
+          bag_representative_id: createBagRepresentative.bagRepresentativeId,
+          total_item: Number(createBagRepresentative.totalItem),
+          total_weight: createBagRepresentative.totalWeight,
+        };
 
         bagRepresentativeId = createBagRepresentative.bagRepresentativeId;
         bagRepresentativeCode = createBagRepresentative.bagRepresentativeCode;
@@ -261,7 +306,8 @@ export class BagCityService {
         createBagRepresentativeHistory.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR.toString();
         await BagRepresentativeHistory.save(createBagRepresentativeHistory);
       } else {
-        throw new BadRequestException('Data Gabung Sortir Kota Sedang di proses, Silahkan Coba Beberapa Saat');
+        result.message = 'Data Gabung Sortir Kota Sedang di proses, Silahkan Coba Beberapa Saat';
+        return result;
       }
       // const cekDoubleCode = await BagRepresentative.findOne({
       //   where: {
@@ -286,7 +332,9 @@ export class BagCityService {
     bagRepresentativeItem.userIdUpdated = authMeta.userId;
     bagRepresentativeItem.createdTime = moment().toDate();
     bagRepresentativeItem.updatedTime = moment().toDate();
-    BagRepresentativeItem.save(bagRepresentativeItem);
+    BagRepresentativeItem.insert(bagRepresentativeItem, {
+      transaction: false,
+    });
 
     let branchName = '';
     let cityName = '';
@@ -311,11 +359,72 @@ export class BagCityService {
     result.representativeCode = dataAwb[0].representative_code;
     result.bagRepresentativeId = bagRepresentativeId;
     result.bagRepresentativeCode = bagRepresentativeCode;
+    result.bagRepresentativeItemId = bagRepresentativeItem.bagRepresentativeItemId;
+    result.refAwbNumber = dataAwb[0].ref_awb_number;
+    result.weight = dataAwb[0].weight;
+
     result.message = 'Scan gabung paket Kota berhasil';
     return result;
   }
 
-  public static async printBagging(
+  static async createBagCityMore(
+    payload: BagCityMorePayloadVm,
+  ): Promise<BagCityMoreResponseVm> {
+    const result = new BagCityMoreResponseVm();
+    const p = new BagCityPayloadVm();
+    const uniqueBagCity = [];
+    let totalSuccess = 0;
+    let totalError = 0;
+
+    p.bagRepresentativeId = payload.bagRepresentativeId;
+    p.representativeId = payload.representativeId;
+    result.data = [];
+
+    if (typeof(payload.awbNumber) != 'object') {
+      payload.awbNumber = [payload.awbNumber];
+    }
+    // TODO:
+    // 1. get response createBagging of each awbNumber
+    // 2. check and/or update bagRepresentativeId every time insert/create bag-city
+    // 3. populate total
+    for (const awbNumber of payload.awbNumber) {
+      p.awbNumber = awbNumber;
+
+      // handle duplikat
+      if (uniqueBagCity.includes(awbNumber)) {
+        result.data.push({
+          status: 'error',
+          message: `Scan resi ${awbNumber} duplikat!`,
+          awbNumber,
+        } as BagCityDataMoreResponseVm);
+        continue;
+      }
+      uniqueBagCity.push(awbNumber);
+
+      const res = await this.createBagCity(p);
+
+      p.bagRepresentativeId = p.bagRepresentativeId ? p.bagRepresentativeId : res.bagRepresentativeId;
+      p.representativeId = p.representativeId ? p.representativeId : res.representativeId;
+      p.inputManualPrevData = res.inputManualPrevData;
+      result.data.push({
+        ...res,
+        awbNumber,
+      });
+
+      if (res.status == 'success') {
+        totalSuccess++;
+      } else {
+        totalError++;
+      }
+    }
+
+    result.totalData = payload.awbNumber.length;
+    result.totalError = totalError;
+    result.totalSuccess = totalSuccess;
+    return result;
+  }
+
+  public static async printBagCity(
     res: express.Response,
     queryParams: PrintBagCityPayloadVm,
   ) {
@@ -340,18 +449,18 @@ export class BagCityService {
     }
 
     const rawPrinterCommands =
-	`SIZE 80 mm, 100 mm\n` +
+  `SIZE 80 mm, 100 mm\n` +
     `SPEED 3\n` +
     `DENSITY 8\n` +
     `DIRECTION 0\n` +
     `OFFSET 0\n` +
     `CLS\n` +
-    `TEXT 10,120,"5",0,1,1,0,"GABUNG SORTIR KOTA"\n` +
-    `BARCODE 2,200,"128",70,1,0,3,10,"${bagging.bagRepresentativeCode}"\n` +
-    `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${bagging.totalItem}"\n` +
-    `TEXT 10,420,"3",0,1,1,"Berat : ${bagging.totalWeight}"\n` +
-    `TEXT 10,460,"5",0,1,1,0,"${bagging.representative.representativeCode}"\n` +
-    `TEXT 10,540,"3",0,1,1,"${bagging.representative.representativeName}"\n` +
+    `TEXT 30,120,"5",0,1,1,0,"GABUNG SORTIR KOTA"\n` +
+    `BARCODE 2,200,"128",100,1,0,3,10,"${bagging.bagRepresentativeCode}"\n` +
+    `TEXT 30,380,"3",0,1,1,"Jumlah koli : ${bagging.totalItem}"\n` +
+    `TEXT 30,420,"3",0,1,1,"Berat : ${bagging.totalWeight}"\n` +
+    `TEXT 30,460,"5",0,1,1,0,"${bagging.representative.representativeCode}"\n` +
+    `TEXT 30,540,"3",0,1,1,"${bagging.representative.representativeName}"\n` +
     `PRINT 1\n` +
     `EOP`;
 
@@ -363,7 +472,7 @@ export class BagCityService {
     });
   }
 
-  public static async printBaggingFromJsreport(
+  public static async printBagCityFromJsReport(
     res: express.Response,
     queryParams: PrintBagCityPayloadVm,
   ) {
@@ -650,5 +759,97 @@ export class BagCityService {
     return {
       id: identifier,
     };
+  }
+
+  /**
+   * Store Bag City Print Data to Redis
+   *
+   * @param {BagCityExternalPrintPayloadVm} payload
+   * @memberof BagCityService
+   */
+  static async storeBagCityExternalPrint(payload: BagCityExternalPrintPayloadVm) {
+    const bagRepresentativeId = payload.bagRepresentativeId;
+    const key: string = `print-external-data-bagcity-${bagRepresentativeId}`;
+
+    return RedisService.storeData(key, payload);
+  }
+
+  /**
+   * Execute Bag City Print Data from Redis to JSReport
+   *
+   * @static
+   * @param {express.Response} res
+   * @param {BagCityExternalPrintExecutePayloadVm} params
+   * @return pipe data of PDF Report.
+   * @memberof BagCityService
+   */
+  static async executeBagCityExternalPrint(
+    res: express.Response,
+    params: BagCityExternalPrintExecutePayloadVm,
+  ) {
+    const bagId = params.id;
+    const key: string = `print-external-data-bagcity-${bagId}`;
+
+    const printData = await RedisService.retrieveData(key);
+    const items = printData && printData.bagRepresentativeItems || [];
+
+    if (!items.length) {
+      RequestErrorService.throwObj({
+        message: `BagCity data tidak ditemukan!`,
+      });
+    }
+
+    const bagRepresentativeDate = moment(printData.bagRepresentativeDate).format('YYYY-MM-DD HH:mm:ss');
+    const formatedData = {
+      ...printData,
+      representative: {
+        representativeId: printData.representativeId,
+        representativeCode: printData.representativeCode,
+      },
+    };
+
+    delete formatedData.representativeId;
+    delete formatedData.representativeCode;
+
+    const templateData = {
+      data: formatedData,
+      meta: { createdTime: bagRepresentativeDate },
+    };
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'bag-representative',
+          templateData,
+          printCopy: params.printCopy ? params.printCopy : 1,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  static async listDetailScanBagCity(
+    payload: BagCityDetailScanPayloadVm,
+    ): Promise<BagCityDetailScanResponseVm> {
+    const result = new BagCityDetailScanResponseVm();
+
+    const qb = createQueryBuilder();
+    qb.addSelect( 'br.bag_representative_code', 'bagRepresentativeCode');
+    qb.addSelect( 'br.bag_representative_id', 'bagRepresentativeId');
+    qb.addSelect( 'bri.bag_representative_item_id', 'bagRepresentativeItemId');
+    qb.addSelect( 'bri.ref_awb_number', 'refAwbNumber');
+    qb.addSelect( 'r.representative_code', 'representativeCode');
+    qb.addSelect( 'r.representative_id', 'representativeId');
+    qb.addSelect( 'bri.weight', 'weight');
+    qb.from('bag_representative_item', 'bri');
+    qb.innerJoin('bag_representative', 'br', 'br.bag_representative_id = bri.bag_representative_id AND br.is_deleted = FALSE');
+    qb.innerJoin('representative', 'r', 'r.representative_id = br.representative_id_to AND r.is_deleted = FALSE');
+    qb.andWhere(`bri.bag_representative_id = '${payload.bagRepresentativeId}'`);
+    qb.andWhere(`bri.is_deleted = FALSE`);
+    result.data = await qb.getRawMany();
+
+    return result;
   }
 }

@@ -9,6 +9,10 @@ import {
   TrackingBagResponseVm,
   AwbPhotoDetailVm,
   AwbTransactionHistoryResponseVm,
+  TrackingBagRepresentativeAwbResponseVm,
+  TrackingBagRepresentativeAwbPayloadVm,
+  TrackingBagRepresentativeDetailPayloadVm,
+  TrackingBagRepresentativeDetailResponseVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
@@ -227,6 +231,28 @@ export class V1WebTrackingService {
     return result;
   }
 
+  static async bagRepresentativeAwb(
+    payload: TrackingBagRepresentativeAwbPayloadVm,
+  ): Promise<TrackingBagRepresentativeAwbResponseVm> {
+    const result = new TrackingBagRepresentativeAwbResponseVm();
+    const data = await this.getRawBagRepresentativeAwb(payload.awbNumber);
+    if (data) {
+      result.bagRepresentativeCode = data.bagRepresentativeCode;
+    }
+    return result;
+  }
+
+  static async bagRepresentativeDetail(
+    payload: TrackingBagRepresentativeDetailPayloadVm,
+  ): Promise<TrackingBagRepresentativeDetailResponseVm> {
+    const result = new TrackingBagRepresentativeDetailResponseVm();
+    const data = await this.getRawBagRepresentativeDetail(payload.bagRepresentativeId);
+    if (data) {
+      result.bagRepresentativeDetail = data;
+    }
+    return result;
+  }
+
   // private method
   private static async getRawAwb(awbNumber: string): Promise<any> {
     const query = `
@@ -339,7 +365,6 @@ export class V1WebTrackingService {
     return await RawQueryService.queryWithParams(query, { awbItemId });
   }
 
-
   private static async getRawBagRepresentative(bagRepresentativeNumber: string): Promise<any> {
     const query = `
       SELECT
@@ -364,6 +389,37 @@ export class V1WebTrackingService {
     return rawData ? rawData[0] : null;
   }
 
+  private static async getRawBagRepresentativeAwb(awbNumber: string): Promise<any> {
+    const query = `
+      SELECT
+        br.bag_representative_code as "bagRepresentativeCode"
+      FROM bag_representative br
+      INNER JOIN bag_representative_item bri ON br.bag_representative_id = bri.bag_representative_id AND bri.is_deleted = FALSE
+      WHERE
+        bri.ref_awb_number = :awbNumber
+      ORDER BY br.updated_time DESC
+      LIMIT 1
+    `;
+    const rawData = await RawQueryService.queryWithParams(query, {
+      awbNumber,
+    });
+    return rawData ? rawData[0] : null;
+  }
+
+  private static async getRawBagRepresentativeDetail(bagRepresentativeId: number): Promise<any> {
+    const query = `
+      SELECT
+        ref_awb_number as "awbNumber"
+      FROM bag_representative_item
+      WHERE
+        bag_representative_id = :bagRepresentativeId
+    `;
+    const rawData = await RawQueryService.queryWithParams(query, {
+      bagRepresentativeId,
+    });
+    return rawData ? rawData : null;
+  }
+
   private static async getRawBagRepresentativeHistory(bagRepresentativeId: number): Promise<any> {
     const query = `
       SELECT
@@ -385,7 +441,7 @@ export class V1WebTrackingService {
     `;
     return await RawQueryService.queryWithParams(query, { bagRepresentativeId });
   }
-  
+
   private static async getRawBag(bagNumberSeq: string): Promise<any> {
     const regexNumber = /^[0-9]+$/;
     if (regexNumber.test(bagNumberSeq.substring(7, 10))) {
