@@ -1,5 +1,6 @@
 import { ApiModelProperty } from '../external/nestjs-swagger';
 import { MetaService } from '../services/meta.service';
+import { BaseMetaPayloadVm } from './base-meta-payload.vm';
 
 export class BaseMetaResponsePaginationVm {
   @ApiModelProperty()
@@ -37,5 +38,9 @@ export class BaseMetaResponseVm {
     this.paging.totalPage = totalPage;
     this.paging.totalData = total;
     this.paging.limit = limit;
+  }
+
+  buildPagingWithPayload(payload: BaseMetaPayloadVm, totalData: number) {
+    this.buildPaging(payload.page, payload.limit, totalData);
   }
 }
