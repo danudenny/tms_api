@@ -4,8 +4,8 @@ import express = require('express');
 import xlsx = require('xlsx');
 import fs = require('fs');
 import { AuthService } from '../../../../shared/services/auth.service';
-import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDataMoreResponseVm, BagCityDetailScanResponseVm } from '../../models/bag-city-response.vm';
-import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityInputManualDataPayloadVm, BagCityDetailScanPayloadVm } from '../../models/bag-city-payload.vm';
+import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDataMoreResponseVm, BagCityDetailScanResponseVm, CreateBagCityResponseVm } from '../../models/bag-city-response.vm';
+import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityInputManualDataPayloadVm, BagCityDetailScanPayloadVm, BagCityCreateHeaderPayloadVm } from '../../models/bag-city-payload.vm';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -364,6 +364,52 @@ export class BagCityService {
     result.weight = dataAwb[0].weight;
 
     result.message = 'Scan gabung paket Kota berhasil';
+    return result;
+  }
+
+  static async createBagCityHeader(
+    payload: BagCityCreateHeaderPayloadVm,
+  ): Promise<CreateBagCityResponseVm> {
+    const result = new CreateBagCityResponseVm();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
+    const authMeta = AuthService.getAuthData();
+    const dateNow = moment().toDate();
+
+    const rawQuery = `
+      SELECT
+        r.representative_code
+      FROM temp_stt ts
+      INNER JOIN representative r ON ts.perwakilan = r.representative_code AND r.is_deleted = FALSE
+      WHERE
+        ts.nostt = '${payload.awbNumber}'
+      LIMIT 1;
+    `;
+    const dataAwb = await RawQueryService.query(rawQuery);
+
+    if (dataAwb.length == 0) {
+      RequestErrorService.throwObj({
+        message : 'Nomor Resi tidak ditemukan',
+      });
+    }
+
+    const paramBagRepresentativeCode = await CustomCounterCode.bagCityCodeRandomCounter(dateNow);
+    const createBagRepresentative = BagRepresentative.create();
+    createBagRepresentative.representativeIdTo = dataAwb[0].representative_id;
+    createBagRepresentative.branchId = permissionPayload.branchId.toString();
+    createBagRepresentative.totalItem = 0;
+    createBagRepresentative.totalWeight = 0;
+    createBagRepresentative.bagRepresentativeCode = paramBagRepresentativeCode;
+    createBagRepresentative.bagRepresentativeDate = dateNow;
+    createBagRepresentative.userIdCreated = authMeta.userId;
+    createBagRepresentative.userIdUpdated = authMeta.userId;
+    createBagRepresentative.createdTime = dateNow;
+    createBagRepresentative.updatedTime = dateNow;
+    createBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS.IN_SORTIR;
+    await BagRepresentative.insert(createBagRepresentative);
+
+    result.bagRepresentativeCode = createBagRepresentative.bagRepresentativeCode;
+    result.bagRepresentativeId = createBagRepresentative.bagRepresentativeId;
+    result.representativeCode = dataAwb[0].representative_code;
     return result;
   }
 
