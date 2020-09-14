@@ -132,14 +132,3 @@ export class ListDetailBagCityResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [ListDetailBagCityDataVm] })
   data: ListDetailBagCityDataVm[];
 }
-
-export class CreateBagCityResponseVm {
-  @ApiModelProperty()
-  bagRepresentativeId: number;
-
-  @ApiModelProperty()
-  bagRepresentativeCode: string;
-
-  @ApiModelProperty()
-  representativeCode: string;
-}
