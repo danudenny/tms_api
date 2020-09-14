@@ -44,8 +44,3 @@ export class SmdBaggingDetailPayloadVm {
   @ApiModelProperty()
   baggingId: string;
 }
-
-export class BaggingCreateHeaderPayloadVm {
-  @ApiModelProperty()
-  bagNumber: string;
-}

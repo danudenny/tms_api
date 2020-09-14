@@ -128,14 +128,3 @@ export class SmdBaggingDetailResponseVm {
   @ApiModelProperty({ type: () => [SmdBaggingDataDetailResponseVm] })
   data: SmdBaggingDataDetailResponseVm[];
 }
-
-export class CreateBaggingHeaderResponseVm {
-  @ApiModelProperty()
-  baggingId: string;
-
-  @ApiModelProperty()
-  baggingCode: string;
-
-  @ApiModelProperty()
-  representativeCode: string;
-}
