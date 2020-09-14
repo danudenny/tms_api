@@ -8,8 +8,8 @@ import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm, SmdScanBaggingDataMoreResponseVm, SmdBaggingDetailResponseVm } from '../../models/smd-bagging-response.vm';
-import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm, InputManualDataPayloadVm, SmdBaggingDetailPayloadVm } from '../../models/smd-bagging-payload.vm';
+import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm, SmdScanBaggingDataMoreResponseVm, SmdBaggingDetailResponseVm, CreateBaggingHeaderResponseVm } from '../../models/smd-bagging-response.vm';
+import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm, InputManualDataPayloadVm, SmdBaggingDetailPayloadVm, BaggingCreateHeaderPayloadVm } from '../../models/smd-bagging-payload.vm';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -190,7 +190,7 @@ export class BaggingSmdService {
         bih.bag_item_status_id
       FROM bag AS b
       INNER JOIN bag_item bi ON bi.bag_id = b.bag_id AND bi.is_deleted = false
-      INNER JOIN representative r ON r.representative_id = b.representative_id_to
+      INNER JOIN representative r ON r.representative_id = b.representative_id_to AND r.is_deleted = FALSE
       LEFT JOIN bagging_item bai ON bi.bag_item_id = bai.bag_item_id AND bai.is_deleted = false
       LEFT JOIN bagging ba ON ba.bagging_id = bai.bagging_id AND ba.is_deleted = false
       LEFT JOIN bag_item_history bih ON bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = false
@@ -503,6 +503,61 @@ export class BaggingSmdService {
     qb.andWhere(`bai.is_deleted = FALSE`);
     result.data = await qb.getRawMany();
 
+    return result;
+  }
+
+  static async createHeaderBagging(
+    payload: BaggingCreateHeaderPayloadVm,
+  ): Promise<CreateBaggingHeaderResponseVm> {
+    const result = new CreateBaggingHeaderResponseVm();
+
+    const bagNumber = payload.bagNumber.substring(0, 7);
+    const bagSeq = Number(payload.bagNumber.substring(7, 10));
+    const permissionPayload = AuthService.getPermissionTokenPayload();
+    const authMeta = AuthService.getAuthData();
+
+    const rawQuery = `
+      SELECT
+        r.representative_code,
+        b.representative_id_to
+      FROM bag AS b
+      INNER JOIN bag_item bi ON bi.bag_id = b.bag_id AND bi.is_deleted = FALSE
+      INNER JOIN representative r ON r.representative_id = b.representative_id_to AND r.is_deleted = FALSE
+      WHERE
+        b.bag_number = upper('${bagNumber}') AND
+        bi.bag_seq = '${bagSeq}' AND
+        b.is_deleted = false
+      LIMIT 1;
+      `;
+
+    const dataBag = await RawQueryService.query(rawQuery);
+    if (dataBag.length == 0) {
+      throw new BadRequestException('Gabung paket tidak ditemukan');
+    }
+
+    const baggingDate = await this.dateMinus1day(moment().toDate());
+    const maxBagSeq = await this.getMaxBaggingSeq(dataBag[0].representative_id_to, baggingDate, permissionPayload.branchId);
+    const paramBaggingCode = await CustomCounterCode.baggingCodeCounter(moment().toDate());
+
+    const createBagging = Bagging.create();
+    createBagging.userId = authMeta.userId.toString();
+    createBagging.representativeIdTo = dataBag[0].representative_id_to;
+    createBagging.branchId = permissionPayload.branchId.toString();
+    createBagging.totalItem = 0;
+    createBagging.totalWeight = '0';
+    createBagging.baggingCode = paramBaggingCode;
+    createBagging.baggingDate = baggingDate;
+    createBagging.userIdCreated = authMeta.userId.toString();
+    createBagging.userIdUpdated = authMeta.userId.toString();
+    createBagging.baggingDateReal = moment().toDate();
+    createBagging.baggingSeq = maxBagSeq;
+    createBagging.createdTime = moment().toDate();
+    createBagging.updatedTime = moment().toDate();
+    await Bagging.insert(createBagging);
+
+    result.baggingId = createBagging.baggingId;
+    result.baggingCode = createBagging.baggingCode;
+    result.representativeCode = dataBag[0].representative_code;
     return result;
   }
 }
