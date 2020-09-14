@@ -141,10 +141,4 @@ export class CreateBagCityResponseVm {
 
   @ApiModelProperty()
   representativeCode: string;
-
-  @ApiModelProperty()
-  status: string;
-
-  @ApiModelProperty()
-  message: string;
 }
