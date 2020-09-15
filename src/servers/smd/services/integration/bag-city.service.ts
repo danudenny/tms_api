@@ -23,6 +23,7 @@ import { BagRepresentativeHistory } from '../../../../shared/orm-entity/bag-repr
 import { SharedService } from '../../../../shared/services/shared.service';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { Not, createQueryBuilder, getManager } from 'typeorm';
+import { Representative } from '../../../../shared/orm-entity/representative';
 
 @Injectable()
 export class BagCityService {
@@ -918,10 +919,18 @@ export class BagCityService {
     const {
       bagRepresentativeCode,
       representativeCode,
-      representativeName,
     } = printData;
     const totalItem = items.length;
     const totalWeight = items.map(m => Number(m.weight)).filter(i => i).reduce((a, b) => a + b, 0);
+
+    const representative = await Representative.findOne({
+      select: ['representativeName'],
+      where: {
+        representativeCode,
+        isDeleted: false,
+      },
+    });
+    const representativeName = representative && representative.representativeName || '';
 
     const rawPrinterCommands =
   `SIZE 80 mm, 100 mm\n` +
