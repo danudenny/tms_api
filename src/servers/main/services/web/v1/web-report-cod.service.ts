@@ -204,6 +204,7 @@ export class V1WebReportCodService {
     let count = 0;
     if (data) {
       for (const d of data) {
+        console.log(d.perwakilan, "perwakilan")
         await writer.write([
           this.strReplaceFunc(d.partnerName),
           d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
@@ -223,7 +224,7 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.lastValidTrackingSiteName),
           this.strReplaceFunc(d.prtDestinationCode),
           this.strReplaceFunc(d.tujuanKecamatan),
-          this.strReplaceFunc(d.representativeCode),
+          this.strReplaceFunc(d.perwakilan),
           (d.userIdDriverNik ? d.userIdDriverNik : "") + " - " + (d.userIdDriverName ? d.userIdDriverName : ""),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
