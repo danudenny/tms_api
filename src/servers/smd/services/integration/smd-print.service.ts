@@ -41,28 +41,16 @@ export class SmdPrintService {
       });
     }
 
-    const rawPrinterCommands =
-      `SIZE 80 mm, 100 mm\n` +
-      `SPEED 3\n` +
-      `DENSITY 8\n` +
-      `DIRECTION 0\n` +
-      `OFFSET 0\n` +
-      `CLS\n` +
-      `TEXT 10,120,"5",0,1,1,0,"BAGGING DARAT"\n` +
-      `BARCODE 10,200,"128",100,1,0,3,10,"${bagging[0].representative_code}"\n` +
-      `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${bagging[0].total_item}"\n` +
-      `TEXT 10,420,"3",0,1,1,"Berat : ${bagging[0].total_weight}"\n` +
-      `TEXT 10,460,"5",0,1,1,0,"${bagging[0].representative_code}"\n` +
-      `TEXT 10,540,"3",0,1,1,"${bagging[0].representative_name}"\n` +
-      `PRINT 1\n` +
-      `EOP`;
-
-    const printerName = 'BarcodePrinter';
-    PrinterService.responseForRawCommands({
+    await this.printBaggingStickerMetaData(
       res,
-      rawCommands: rawPrinterCommands,
-      printerName,
-    });
+      {
+        representativeCode: bagging[0].representative_code,
+        representativeName: bagging[0].representative_name,
+        baggingCode: bagging[0].bagging_code,
+        totalColi: bagging[0].total_item,
+        totalWeight: bagging[0].total_weight,
+      },
+    );
   }
 
   static async printBaggingStickerMetaData(
@@ -123,13 +111,13 @@ export class SmdPrintService {
       'bagging-sticker',
       queryParams.id,
     );
-    const data = printPayload.data;
 
     if (!printPayload || (printPayload && !printPayload.data)) {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
       });
     }
+    const data = printPayload.data;
 
     if (queryParams.userId) {
       const currentUser = await RepositoryService.user
@@ -175,28 +163,16 @@ export class SmdPrintService {
       weightTotal = Number(item.weight);
     }
 
-    const rawPrinterCommands =
-      `SIZE 80 mm, 100 mm\n` +
-      `SPEED 3\n` +
-      `DENSITY 8\n` +
-      `DIRECTION 0\n` +
-      `OFFSET 0\n` +
-      `CLS\n` +
-      `TEXT 10,120,"5",0,1,1,0,"BAGGING DARAT"\n` +
-      `BARCODE 10,200,"128",100,1,0,3,10,"${data[0].baggingCode}"\n` +
-      `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${data.length}"\n` +
-      `TEXT 10,420,"3",0,1,1,"Berat : ${weightTotal.toFixed(5)}"\n` +
-      `TEXT 10,460,"5",0,1,1,0,"${data[0].representativeCode}"\n` +
-      `TEXT 10,540,"3",0,1,1,"${representative.representativeName}"\n` +
-      `PRINT 1\n` +
-      `EOP`;
-
-    const printerName = 'BarcodePrinter';
-    PrinterService.responseForRawCommands({
+    await this.printBaggingStickerMetaData(
       res,
-      rawCommands: rawPrinterCommands,
-      printerName,
-    });
+      {
+        representativeCode: data[0].representativeCode,
+        representativeName: representative.representativeName,
+        baggingCode: data[0].baggingCode,
+        totalColi: data.length,
+        totalWeight: weightTotal.toFixed(5),
+      },
+    );
   }
 
   static async executePrintBagging(
