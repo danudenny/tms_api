@@ -223,7 +223,7 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.lastValidTrackingSiteName),
           this.strReplaceFunc(d.prtDestinationCode),
           this.strReplaceFunc(d.tujuanKecamatan),
-          this.strReplaceFunc(d.perwakilan),
+          this.strReplaceFunc(d.representativeCode),
           (d.userIdDriverNik ? d.userIdDriverNik : "") + " - " + (d.userIdDriverName ? d.userIdDriverName : ""),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
