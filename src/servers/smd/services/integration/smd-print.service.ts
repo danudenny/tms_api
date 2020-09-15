@@ -111,13 +111,13 @@ export class SmdPrintService {
       'bagging-sticker',
       queryParams.id,
     );
-    const data = printPayload.data;
 
     if (!printPayload || (printPayload && !printPayload.data)) {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
       });
     }
+    const data = printPayload.data;
 
     if (queryParams.userId) {
       const currentUser = await RepositoryService.user
