@@ -11,7 +11,7 @@ import { BagRepresentative } from '../../../../shared/orm-entity/bag-representat
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { BagRepresentativeItem } from '../../../../shared/orm-entity/bag-representative-item';
 import { BagRepresentativeSmdQueueService } from '../../../queue/services/bag-representative-smd-queue.service';
-import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm, BagCityExternalPrintPayloadVm, BagCityExternalPrintExecutePayloadVm } from '../../models/print-bag-city-payload.vm';
+import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm, BagCityExternalPrintPayloadVm, BagCityExternalPrintExecutePayloadVm, BagCityExternalPrintStickerPayloadVm, BagCityExternalPrintStickerExecutePayloadVm } from '../../models/print-bag-city-payload.vm';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
@@ -873,6 +873,77 @@ export class BagCityService {
         },
       ],
       listPrinterName,
+    });
+  }
+
+  /**
+   * Store Bag City Print Sticker Data to Redis
+   *
+   * @param {BagCityExternalPrintStickerPayloadVm} payload
+   * @memberof BagCityService
+   */
+  static async storeBagCityExternalPrintSticker(payload: BagCityExternalPrintStickerPayloadVm) {
+    const bagRepresentativeId = payload.bagRepresentativeId;
+    const key: string = `print-sticker-external-data-bagcity-${bagRepresentativeId}`;
+
+    return RedisService.storeData(key, payload);
+  }
+
+  /**
+   * Execute Bag City Print Sticker Data from Redis to RawPrinter
+   *
+   * @static
+   * @param {express.Response} res
+   * @param {BagCityExternalPrintStickerExecutePayloadVm} params
+   * @return {*}
+   * @memberof BagCityService
+   */
+  public static async executeBagCityExternalPrintSticker(
+    res: express.Response,
+    params: BagCityExternalPrintStickerExecutePayloadVm,
+  ) {
+
+    const bagId = params.id;
+    const key: string = `print-sticker-external-data-bagcity-${bagId}`;
+
+    const printData = await RedisService.retrieveData(key);
+    const items = printData && printData.bagRepresentativeItems || [];
+
+    if (!items.length) {
+      RequestErrorService.throwObj({
+        message: `BagCity data tidak ditemukan!`,
+      });
+    }
+
+    const {
+      bagRepresentativeCode,
+      representativeCode,
+      representativeName,
+    } = printData;
+    const totalItem = items.length;
+    const totalWeight = items.map(m => Number(m.weight)).filter(i => i).reduce((a, b) => a + b, 0);
+
+    const rawPrinterCommands =
+  `SIZE 80 mm, 100 mm\n` +
+    `SPEED 3\n` +
+    `DENSITY 8\n` +
+    `DIRECTION 0\n` +
+    `OFFSET 0\n` +
+    `CLS\n` +
+    `TEXT 30,120,"5",0,1,1,0,"GABUNG SORTIR KOTA"\n` +
+    `BARCODE 2,200,"128",100,1,0,3,10,"${bagRepresentativeCode}"\n` +
+    `TEXT 30,380,"3",0,1,1,"Jumlah koli : ${totalItem}"\n` +
+    `TEXT 30,420,"3",0,1,1,"Berat : ${totalWeight}"\n` +
+    `TEXT 30,460,"5",0,1,1,0,"${representativeCode}"\n` +
+    `TEXT 30,540,"3",0,1,1,"${representativeName}"\n` +
+    `PRINT 1\n` +
+    `EOP`;
+
+    const printerName = 'BarcodePrinter';
+    PrinterService.responseForRawCommands({
+      res,
+      rawCommands: rawPrinterCommands,
+      printerName,
     });
   }
 
