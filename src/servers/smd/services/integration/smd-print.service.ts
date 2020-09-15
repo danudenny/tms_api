@@ -2,7 +2,7 @@ import express = require('express');
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
-import { PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm, PrintReceivedBagPaperPayloadVm, PrintScaninVm } from '../../models/print-smd-payload.vm';
+import { PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm, PrintReceivedBagPaperPayloadVm, PrintScaninVm, PrintBaggingStickerPayloadVm } from '../../models/print-smd-payload.vm';
 import moment = require('moment');
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
 import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm, PrintDoSmdDataDoSmdDetailBagRepresentativeVm, PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm, PrintVendorDataVm, PrintVendorVm, PrintVendorDataVendorDetailVm } from '../../models/print-do-smd.vm';
@@ -12,6 +12,7 @@ import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { PrintBaggingVm } from '../../models/print-bagging.payload';
 import { RedisService } from '../../../../shared/services/redis.service';
+import { Representative } from '../../../../shared/orm-entity/representative';
 
 export class SmdPrintService {
   public static async printBagging(
@@ -40,9 +41,28 @@ export class SmdPrintService {
       });
     }
 
-    const totalColi = bagging[0].total_item;
-    const totalWeight = bagging[0].total_weight;
+    await this.printBaggingStickerMetaData(
+      res,
+      {
+        representativeCode: bagging[0].representative_code,
+        representativeName: bagging[0].representative_name,
+        baggingCode: bagging[0].bagging_code,
+        totalColi: bagging[0].total_item,
+        totalWeight: bagging[0].total_weight,
+      },
+    );
+  }
 
+  static async printBaggingStickerMetaData(
+    res: express.Response,
+    data: {
+      representativeCode: any,
+      representativeName: any,
+      baggingCode: any,
+      totalColi: any,
+      totalWeight: any,
+    },
+  ) {
     const rawPrinterCommands =
       `SIZE 80 mm, 100 mm\n` +
       `SPEED 3\n` +
@@ -51,11 +71,11 @@ export class SmdPrintService {
       `OFFSET 0\n` +
       `CLS\n` +
       `TEXT 10,120,"5",0,1,1,0,"BAGGING DARAT"\n` +
-      `BARCODE 10,200,"128",100,1,0,3,10,"${bagging[0].bagging_code}"\n` +
-      `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${totalColi}"\n` +
-      `TEXT 10,420,"3",0,1,1,"Berat : ${totalWeight}"\n` +
-      `TEXT 10,460,"5",0,1,1,0,"${bagging[0].representative_code}"\n` +
-      `TEXT 10,540,"3",0,1,1,"${bagging[0].representative_name}"\n` +
+      `BARCODE 10,200,"128",100,1,0,3,10,"${data.baggingCode}"\n` +
+      `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${data.totalColi}"\n` +
+      `TEXT 10,420,"3",0,1,1,"Berat : ${data.totalWeight}"\n` +
+      `TEXT 10,460,"5",0,1,1,0,"${data.representativeCode}"\n` +
+      `TEXT 10,540,"3",0,1,1,"${data.representativeName}"\n` +
       `PRINT 1\n` +
       `EOP`;
 
@@ -69,9 +89,89 @@ export class SmdPrintService {
 
   static async storePrintBagging(payloadBody: PrintBaggingVm) {
     return this.storeGenericPrintData(
-      'bagging',
+      'bagging-paper',
       payloadBody.baggingId,
       payloadBody,
+    );
+  }
+
+  static async storePrintBaggingSticker(payloadBody: PrintBaggingVm) {
+    return this.storeGenericPrintData(
+      'bagging-sticker',
+      payloadBody.baggingId,
+      payloadBody,
+    );
+  }
+
+  static async executePrintBaggingSticker(
+    res: express.Response,
+    queryParams: PrintBaggingStickerPayloadVm,
+  ) {
+    const printPayload = await this.retrieveGenericPrintData<PrintBaggingVm>(
+      'bagging-sticker',
+      queryParams.id,
+    );
+    const data = printPayload.data;
+
+    if (!printPayload || (printPayload && !printPayload.data)) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    if (queryParams.userId) {
+      const currentUser = await RepositoryService.user
+        .loadById(queryParams.userId)
+        .select({
+          userId: true, // needs to be selected due to users relations are being included
+          employee: {
+            nickname: true,
+          },
+        });
+
+      if (!currentUser) {
+        RequestErrorService.throwObj({
+          message: 'User tidak ditemukan',
+        });
+      }
+    }
+
+    if (queryParams.branchId) {
+      const currentBranch = await RepositoryService.branch
+        .loadById(queryParams.branchId)
+        .select({
+          branchName: true,
+        });
+
+      if (!currentBranch) {
+        RequestErrorService.throwObj({
+          message: 'Gerai asal tidak ditemukan',
+        });
+      }
+    }
+
+    const representative = await Representative.findOne({
+      select: ['representativeName'],
+      where: {
+        representativeCode: data[0].representativeCode,
+        isDeleted: false,
+      },
+    });
+
+    let weightTotal = 0;
+    for (const item of data) {
+      weightTotal = Number(item.weight);
+    }
+
+    await this.printBaggingStickerMetaData(
+      res,
+      {
+        representativeCode: data[0].representativeCode,
+        representativeName: representative.representativeName,
+        baggingCode: data[0].baggingCode,
+        totalColi: data.length,
+        totalWeight: weightTotal.toFixed(5),
+      },
     );
   }
 
@@ -80,7 +180,7 @@ export class SmdPrintService {
     queryParams: PrintBaggingPaperPayloadVm,
   ) {
     const printPayload = await this.retrieveGenericPrintData<PrintBaggingVm>(
-      'bagging',
+      'bagging-paper',
       queryParams.id,
     );
     const data = printPayload.data;
