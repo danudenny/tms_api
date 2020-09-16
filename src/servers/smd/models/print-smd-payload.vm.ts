@@ -22,6 +22,20 @@ export class PrintBaggingPaperPayloadVm {
   branchId: number;
 }
 
+export class PrintBaggingStickerPayloadVm {
+  @ApiModelProperty()
+  id: number;
+
+  @ApiModelPropertyOptional()
+  printCopy: number;
+
+  @ApiModelPropertyOptional()
+  userId: number;
+
+  @ApiModelPropertyOptional()
+  branchId: number;
+}
+
 export class PrintVendorPaperPayloadVm {
   @ApiModelProperty()
   id: number;
