@@ -186,7 +186,7 @@ export class MobileSmdService {
           // return berhasil
           const data = [];
           result.statusCode = HttpStatus.OK;
-          result.message = 'SMD Success Arrival';
+          result.message = 'SMD Already Arrived';
           data.push({
             do_smd_id: resultDoSmdDetail.doSmdId,
             do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
