@@ -130,7 +130,7 @@ export class MobileSmdService {
       qb.andWhere('dsh.is_deleted = false');
       const history = await qb.getRawOne();
 
-      if (history.status != 3000) {
+      if (history && history.status != 3000) {
         const paramDoSmdHistoryId = await this.createDoSmdHistory(
           payload.do_smd_id,
           null,

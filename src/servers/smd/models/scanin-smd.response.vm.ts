@@ -8,6 +8,9 @@ export class ScanInSmdBagResponseVm {
   @ApiModelProperty()
   message: string;
 
+  @ApiModelProperty()
+  isScannedIn: boolean;
+
   @ApiModelProperty({type: () => [ScanInBagVm]})
   data: ScanInBagVm[];
 }
