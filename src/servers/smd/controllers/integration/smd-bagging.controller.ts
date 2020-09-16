@@ -6,8 +6,8 @@ import { BaggingSmdService } from '../../services/integration/bagging-smd.servic
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { SmdScanBaggingResponseVm, ListBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm, SmdBaggingDetailResponseVm } from '../../models/smd-bagging-response.vm';
-import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm, SmdBaggingDetailPayloadVm } from '../../models/smd-bagging-payload.vm';
+import { SmdScanBaggingResponseVm, ListBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm, SmdBaggingDetailResponseVm, CreateBaggingHeaderResponseVm } from '../../models/smd-bagging-response.vm';
+import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm, SmdBaggingDetailPayloadVm, BaggingCreateHeaderPayloadVm } from '../../models/smd-bagging-payload.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('SMD Bagging')
@@ -59,5 +59,14 @@ export class SmdBaggingController {
   @UseGuards(AuthenticatedGuard)
   public async detailBagging(@Body() payload: SmdBaggingDetailPayloadVm) {
     return BaggingSmdService.detailBaggingScanned(payload);
+  }
+
+  @Post('create-header')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: CreateBaggingHeaderResponseVm })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async createHeaderBagging(@Body() payload: BaggingCreateHeaderPayloadVm) {
+    return BaggingSmdService.createHeaderBagging(payload);
   }
 }

@@ -55,3 +55,8 @@ export class BagCityDetailScanPayloadVm {
   @ApiModelProperty()
   bagRepresentativeId: string;
 }
+
+export class BagCityCreateHeaderPayloadVm {
+  @ApiModelProperty()
+  awbNumber: string;
+}

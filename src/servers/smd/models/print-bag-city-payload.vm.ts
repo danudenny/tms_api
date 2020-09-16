@@ -63,3 +63,7 @@ export class BagCityExternalPrintExecutePayloadVm {
   @ApiModelProperty()
   userId: number;
 }
+
+export class BagCityExternalPrintStickerPayloadVm extends BagCityExternalPrintPayloadVm {}
+
+export class BagCityExternalPrintStickerExecutePayloadVm extends BagCityExternalPrintExecutePayloadVm {}

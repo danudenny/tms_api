@@ -5,9 +5,9 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { BagCityService } from '../../services/integration/bag-city.service';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
-import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDetailScanResponseVm } from '../../models/bag-city-response.vm';
-import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityDetailScanPayloadVm } from '../../models/bag-city-payload.vm';
-import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm, BagCityExternalPrintPayloadVm, BagCityExternalPrintExecutePayloadVm } from '../../models/print-bag-city-payload.vm';
+import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDetailScanResponseVm, CreateBagCityResponseVm } from '../../models/bag-city-response.vm';
+import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityDetailScanPayloadVm, BagCityCreateHeaderPayloadVm } from '../../models/bag-city-payload.vm';
+import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm, BagCityExternalPrintPayloadVm, BagCityExternalPrintExecutePayloadVm, BagCityExternalPrintStickerPayloadVm, BagCityExternalPrintStickerExecutePayloadVm } from '../../models/print-bag-city-payload.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 
@@ -45,6 +45,16 @@ export class BagCityController {
     return BagCityService.createBagCity(payload);
   }
 
+  @Post('create-header')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: CreateBagCityResponseVm })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async createBagCityHeader(@Body() payload: BagCityCreateHeaderPayloadVm) {
+    return BagCityService.createBagCityHeader(payload);
+  }
+
   @Post('create/manual-input')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: BagCityMoreResponseVm })
@@ -64,6 +74,22 @@ export class BagCityController {
     @Response() serverResponse: express.Response,
   ) {
     return BagCityService.printBagCity(serverResponse, queryParams);
+  }
+
+  @Post('print-sticker/store')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async storeBagCityExternalPrintSticker(@Body() body: BagCityExternalPrintStickerPayloadVm) {
+    return BagCityService.storeBagCityExternalPrintSticker(body);
+  }
+
+  @Get('print-sticker/execute')
+  @ResponseSerializerOptions({disable: true})
+  public async executeBagCityExternalPrintSticker(
+    @Query() params: BagCityExternalPrintStickerExecutePayloadVm,
+    @Response() response: express.Response,
+  ) {
+    return BagCityService.executeBagCityExternalPrintSticker(response, params);
   }
 
   @Get('print-from-jsreport')
