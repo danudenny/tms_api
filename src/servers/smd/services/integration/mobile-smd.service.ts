@@ -130,7 +130,7 @@ export class MobileSmdService {
       qb.andWhere('dsh.is_deleted = false');
       const history = await qb.getRawOne();
 
-      if (history.status != 3000) {
+      if (history && history.status != 3000) {
         const paramDoSmdHistoryId = await this.createDoSmdHistory(
           payload.do_smd_id,
           null,
@@ -173,23 +173,59 @@ export class MobileSmdService {
     const resultDoSmdDetail = await DoSmdDetail.findOne({
       where: {
         doSmdDetailId: payload.do_smd_detail_id,
-        arrivalTime: null,
+        // arrivalTime: null,
         isDeleted: false,
       },
     });
 
     if (resultDoSmdDetail) {
       if (resultDoSmdDetail.departureTime) {
-        // Cek Apakah udah OTW
-        // Ubah Status 4000 Arrived
-        const resultDoSmd = await DoSmd.findOne({
-          where: {
-            doSmdId: resultDoSmdDetail.doSmdId,
-            isDeleted: false,
-          },
-        });
-        if (resultDoSmd.trip > 1) {
-          if (resultDoSmd.transitDateTime) {
+        if (resultDoSmdDetail.arrivalTime) {
+          // handle cek arrival smd berkali-kali
+          // terjadi karena device driver di clear cache atau pindah divice lain
+          // return berhasil
+          const data = [];
+          result.statusCode = HttpStatus.OK;
+          result.message = 'SMD Already Arrived';
+          data.push({
+            do_smd_id: resultDoSmdDetail.doSmdId,
+            do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+            arrival_date_time: payload.arrival_date_time,
+          });
+          result.data = data;
+          return result;
+        } else {
+          // Cek Apakah udah OTW
+          // Ubah Status 4000 Arrived
+          const resultDoSmd = await DoSmd.findOne({
+            where: {
+              doSmdId: resultDoSmdDetail.doSmdId,
+              isDeleted: false,
+            },
+          });
+          if (resultDoSmd.trip > 1) {
+            if (resultDoSmd.transitDateTime) {
+              await DoSmd.update(
+                { doSmdId : resultDoSmdDetail.doSmdId },
+                {
+                  doSmdStatusIdLast: 4000,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                  arrivalDateTime: moment().toDate(),
+                },
+              );
+            } else {
+              await DoSmd.update(
+                { doSmdId : resultDoSmdDetail.doSmdId },
+                {
+                  doSmdStatusIdLast: 4000,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: timeNow,
+                  transitDateTime: moment().toDate(),
+                },
+              );
+            }
+          } else {
             await DoSmd.update(
               { doSmdId : resultDoSmdDetail.doSmdId },
               {
@@ -199,72 +235,52 @@ export class MobileSmdService {
                 arrivalDateTime: moment().toDate(),
               },
             );
-          } else {
-            await DoSmd.update(
-              { doSmdId : resultDoSmdDetail.doSmdId },
-              {
-                doSmdStatusIdLast: 4000,
-                userIdUpdated: authMeta.userId,
-                updatedTime: timeNow,
-                transitDateTime: moment().toDate(),
-              },
-            );
           }
-        } else {
-          await DoSmd.update(
-            { doSmdId : resultDoSmdDetail.doSmdId },
+
+          await DoSmdDetail.update(
+            { doSmdDetailId : payload.do_smd_detail_id, arrivalTime: null },
             {
               doSmdStatusIdLast: 4000,
+              arrivalTime: moment().toDate(),
+              latitudeArrival: payload.latitude,
+              longitudeArrival: payload.longitude,
               userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
-              arrivalDateTime: moment().toDate(),
             },
           );
+
+          const paramDoSmdHistoryId = await this.createDoSmdHistory(
+            resultDoSmdDetail.doSmdId,
+            null,
+            null,
+            null,
+            null,
+            resultDoSmdDetail.departureScheduleDateTime,
+            resultDoSmdDetail.branchIdTo,
+            4000,
+            null,
+            null,
+            null,
+            authMeta.userId,
+          );
+
+          const data = [];
+          data.push({
+            do_smd_id: resultDoSmdDetail.doSmdId,
+            do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+            arrival_date_time: payload.arrival_date_time,
+          });
+          result.statusCode = HttpStatus.OK;
+          result.message = 'SMD Success Arrival';
+          result.data = data;
+          return result;
         }
-
-        await DoSmdDetail.update(
-          { doSmdDetailId : payload.do_smd_detail_id, arrivalTime: null },
-          {
-            doSmdStatusIdLast: 4000,
-            arrivalTime: moment().toDate(),
-            latitudeArrival: payload.latitude,
-            longitudeArrival: payload.longitude,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
-          },
-        );
-
-        const paramDoSmdHistoryId = await this.createDoSmdHistory(
-          resultDoSmdDetail.doSmdId,
-          null,
-          null,
-          null,
-          null,
-          resultDoSmdDetail.departureScheduleDateTime,
-          resultDoSmdDetail.branchIdTo,
-          4000,
-          null,
-          null,
-          null,
-          authMeta.userId,
-        );
-
-        const data = [];
-        data.push({
-          do_smd_id: resultDoSmdDetail.doSmdId,
-          do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
-          arrival_date_time: payload.arrival_date_time,
-        });
-        result.statusCode = HttpStatus.OK;
-        result.message = 'SMD Success Arrival';
-        result.data = data;
-        return result;
       } else {
         throw new BadRequestException(`DO SMD Detail Id : ` + payload.do_smd_detail_id.toString() + ' Has Not Departure Date');
       }
 
     } else {
-      throw new BadRequestException(`DO SMD Detail Id : ` + payload.do_smd_detail_id.toString() + ' Already Arrival');
+      throw new BadRequestException(`DO SMD Detail Id : ` + payload.do_smd_detail_id.toString() + ' Not Found');
     }
 
   }
