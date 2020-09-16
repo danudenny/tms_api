@@ -9,7 +9,7 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanInDetailListResponseVm, ScanInSmdBagMoreResponseVm, ScanInSmdBagDataResponseVm, ScaninDetailScanResponseVm, ScanInBagVm } from '../../models/scanin-smd.response.vm';
+import { ScanInSmdBagResponseVm, ScanInSmdBaggingResponseVm, ScanInListResponseVm, ScanInDetailListResponseVm, ScanInSmdBagMoreResponseVm, ScanInSmdBagDataResponseVm, ScaninDetailScanResponseVm } from '../../models/scanin-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -35,7 +35,6 @@ export class ScaninSmdService {
     const timeNow = moment().toDate();
     let paramReceivedBagId = payload.received_bag_id;
     result.statusCode = HttpStatus.BAD_REQUEST;
-    result.isScannedIn = false;
     let receivedBagCode = '';
     let receivedBagDate = '';
 
@@ -103,13 +102,6 @@ export class ScaninSmdService {
           } else if ( resultData[0].bag_item_status_id == 3500 ) {
             errCode = errCode + 1;
             errMessage = 'Resi Gabung Paket sudah Scan IN gerai ' + branchNameScan + ' Oleh ' + usernameScan;
-            result.isScannedIn = true;
-
-            const showNumber = payload.bag_item_number + ' ('  + weight.toString() + ' Kg) ';
-            const res = await this.getDataReceivedBagByRequestNumber(paramBagNumber + paramBagSeq);
-            result.data = [res as ScanInBagVm];
-            result.data[0].show_number = showNumber;
-            result.data[0].id = paramBagNumber + paramBagSeq;
           } else {
             errCode = errCode + 1;
             errMessage = 'Resi Gabung Paket belum di scan OUT di gerai';
@@ -327,13 +319,6 @@ export class ScaninSmdService {
           } else if ( resultData[0].bag_item_status_id == 3500 ) {
             errCode = errCode + 1;
             errMessage = 'Resi Gabung Paket sudah Scan IN gerai ' + branchNameScan + ' Oleh ' + usernameScan;
-            result.isScannedIn = true;
-
-            const showNumber = payload.bag_item_number + ' ('  + weight.toString() + ' Kg) ';
-            const res = await this.getDataReceivedBagByRequestNumber(paramBagNumber + paramBagSeq);
-            result.data = [res as ScanInBagVm];
-            result.data[0].show_number = showNumber;
-            result.data[0].id = paramBagNumber + paramBagSeq;
           } else {
             errCode = errCode + 1;
             errMessage = 'Resi Gabung Paket belum di scan OUT di gerai';
@@ -971,21 +956,5 @@ export class ScaninSmdService {
     result.data = await qb.getRawMany();
 
     return result;
-  }
-
-  static async getDataReceivedBagByRequestNumber(bagNumber: string) {
-
-    const qb = createQueryBuilder();
-    qb.addSelect( 'rb.received_bag_id', 'received_bag_id');
-    qb.addSelect( 'rb.received_bag_code', 'received_bag_code');
-    qb.addSelect( 'rb.received_bag_date', 'received_bag_date');
-    qb.addSelect( 'rbd.bag_weight', 'bag_weight');
-    qb.addSelect( 'rbd.bag_number', 'bag_number');
-    qb.from('received_bag', 'rb');
-    qb.innerJoin('received_bag_detail', 'rbd', 'rbd.received_bag_id = rb.received_bag_id AND rbd.is_deleted = FALSE');
-    qb.andWhere(`rbd.bag_number = '${bagNumber}'`);
-    qb.andWhere(`rb.is_deleted = FALSE`);
-
-    return await qb.getRawOne();
   }
 }
