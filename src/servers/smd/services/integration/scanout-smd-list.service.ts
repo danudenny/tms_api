@@ -84,6 +84,8 @@ export class ScanoutSmdListService {
       ['dsv.vehicle_number', 'vehicle_number'],
       ['b.branch_name', 'branch_from_name'],
       ['ds.branch_to_name_list', 'branch_to_name'],
+      ['e.nik', 'nik'],
+      ['e.nickname', 'nickname'],
       ['ds.total_bag', 'total_bag'],
       ['ds.total_bagging', 'total_bagging'],
       ['ds.total_bag_representative', 'total_bag_representative'],
