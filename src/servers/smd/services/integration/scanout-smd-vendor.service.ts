@@ -1,33 +1,26 @@
-import { Injectable, PayloadTooLargeException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdRouteResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { Representative } from '../../../../shared/orm-entity/representative';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
-import { In } from 'typeorm';
 import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
-import { BagScanDoSmdQueueService } from '../../../queue/services/bag-scan-do-smd-queue.service';
 import { DoSmdVehicle } from '../../../../shared/orm-entity/do_smd_vehicle';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
-import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
-import { Vendor } from '../../../../shared/orm-entity/vendor';
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { MetaService } from '../../../../shared/services/meta.service';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { ScanOutSmdVendorRouteResponseVm, ScanOutSmdVendorListResponseVm, ScanOutSmdVendorEndResponseVm, ScanOutSmdVendorItemResponseVm } from '../../models/scanout-smd-vendor.response.vm';
+import { ScanOutSmdVendorRouteResponseVm, ScanOutSmdVendorEndResponseVm, ScanOutSmdVendorItemResponseVm, ScanOutSmdVendorItemMoreResponseVm, ScanOutVendorItemMoreDataVm } from '../../models/scanout-smd-vendor.response.vm';
 import { BagRepresentativeScanOutHubQueueService } from '../../../queue/services/bag-representative-scan-out-hub-queue.service';
-import {BagScanVendorQueueService} from '../../../queue/services/bag-scan-vendor-queue.service';
+import { BagScanVendorQueueService } from '../../../queue/services/bag-scan-vendor-queue.service';
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
 import { RedisService } from '../../../../shared/services/redis.service';
+import { ScanOutSmdVendorItemMorePayloadVm, ScanOutSmdVendorItemPayloadVm } from '../../models/scanout-smd-vendor.payload.vm';
 
 @Injectable()
 export class ScanoutSmdVendorService {
@@ -51,7 +44,7 @@ export class ScanoutSmdVendorService {
       if (!redlock) {
         throw new BadRequestException(`Data Darat MP Sedang di proses, Silahkan Coba Beberapa Saat`);
       }
-      
+
       paramDoSmdId = await this.createDoSmd(
         paramDoSmdCode,
         timeNow,
@@ -567,6 +560,8 @@ export class ScanoutSmdVendorService {
     const arrBagItemId = [];
     const data = [];
     let rawQuery;
+    result.statusCode = HttpStatus.BAD_REQUEST;
+
     const resultBagging = await Bagging.findOne({
       where: {
         baggingCode: payload.item_number,
@@ -621,7 +616,8 @@ export class ScanoutSmdVendorService {
           },
         });
         if (resultDoSmdDetailItem) {
-          throw new BadRequestException(`Bag Representative Already Scanned`);
+          result.message = `Gabung Kota ${payload.item_number} sudah di scan`;
+          return result;
         } else {
           await this.createDoSmdDetailItem(
             resultDataRepresentative[0].do_smd_detail_id,
@@ -633,20 +629,16 @@ export class ScanoutSmdVendorService {
             2,
             authMeta.userId,
           );
-          await DoSmdDetail.update(
-            { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-            {
-              totalBagRepresentative: resultDataRepresentative[0].total_bag_representative + 1,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-            },
-          );
           const resultDoSmdDetail = await DoSmdDetail.findOne({
             where: {
               doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
               isDeleted: false,
             },
           });
+          resultDoSmdDetail.totalBagRepresentative = Number(resultDoSmdDetail.totalBagRepresentative) + 1;
+          resultDoSmdDetail.userIdUpdated = authMeta.userId;
+          resultDoSmdDetail.updatedTime = timeNow;
+          await resultDoSmdDetail.save();
 
           await DoSmd.update(
             { doSmdId : payload.do_smd_id },
@@ -684,12 +676,13 @@ export class ScanoutSmdVendorService {
             total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
           });
           result.statusCode = HttpStatus.OK;
-          result.message = 'SMD Item Success Created';
+          result.message = `Gabung Kota ${payload.item_number} berhasil di scan`;
           result.data = data;
           return result;
         }
       } else {
-        throw new BadRequestException(`Representative To Bag Representative Not Match`);
+        result.message = 'Tujuan Gabung Kota tidak cocok dengan perwakilan SMD';
+        return result;
       }
     } else if (resultBagging) {
       rawQuery = `
@@ -734,7 +727,8 @@ export class ScanoutSmdVendorService {
             },
           });
           if (resultDoSmdDetailItem) {
-            throw new BadRequestException(`Bagging Already Scanned`);
+            result.message = `Bagging ${payload.item_number} sudah di scan`;
+            return result;
           } else {
             for (let i = 0; i < resultDataBagItem.length; i++) {
               // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
@@ -755,20 +749,16 @@ export class ScanoutSmdVendorService {
               arrBagItemId.push(resultDataBagItem[i].bag_item_id);
             }
 
-            await DoSmdDetail.update(
-              { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-              {
-                totalBagging: resultDataRepresentative[0].total_bagging + 1,
-                userIdUpdated: authMeta.userId,
-                updatedTime: timeNow,
-              },
-            );
             const resultDoSmdDetail = await DoSmdDetail.findOne({
               where: {
                 doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
                 isDeleted: false,
               },
             });
+            resultDoSmdDetail.totalBagging = Number(resultDoSmdDetail.totalBagging) + 1;
+            resultDoSmdDetail.userIdUpdated = authMeta.userId;
+            resultDoSmdDetail.updatedTime = timeNow;
+            await resultDoSmdDetail.save();
 
             await DoSmd.update(
               { doSmdId : payload.do_smd_id },
@@ -805,21 +795,24 @@ export class ScanoutSmdVendorService {
               total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Item Success Created';
+            result.message = `Bagging ${payload.item_number} berhasil di scan`;
             result.data = data;
             return result;
           }
         } else {
-          throw new BadRequestException(`Representative To Bagging Not Match`);
+          result.message = 'Tujuan Bagging tidak cocok dengan perwakilan SMD';
+          return result;
         }
       } else if (resultDataBagItem.length > 0 && !resultDataBagItem[0].bag_item_status_id) {
-        throw new BadRequestException(`Bagging Not Scan In Yet`);
+        result.message = `Bagging ${payload.item_number} belum di scan masuk`;
+        return result;
       } else {
-        throw new BadRequestException(`Bagging Item Not Found`);
+        result.message = `Bagging ${payload.item_number} tidak ditemukan`;
+        return result;
       }
     } else {
       // cari di bag code
-      if (payload.item_number.length == 15) {
+      if (payload.item_number.length == 15 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{8}$/)) {
         const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 8 );
         const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
         const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 8 , 3);
@@ -848,19 +841,23 @@ export class ScanoutSmdVendorService {
 
           rawQuery = `
             SELECT
-              do_smd_detail_id ,
-              representative_code_list,
-              total_bag,
-              vendor_name
-            FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+              dsd.do_smd_detail_id ,
+              dsd.representative_code_list,
+              dsd.total_bag,
+              dsd.vendor_name,
+              dsdi.bag_item_id
+            FROM do_smd_detail dsd
+            LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
+              AND dsdi.bag_item_id = ${resultDataBag[0].bag_item_id}
+            , unnest(string_to_array(dsd.representative_code_list , ','))  s(code)
             where
               s.code  = '${escape(resultDataBag[0].representative_code)}' AND
-              do_smd_id = ${payload.do_smd_id} AND
-              is_deleted = FALSE;
+              dsd.do_smd_id = ${payload.do_smd_id} AND
+              dsd.is_deleted = FALSE;
           `;
           const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
-          if (resultDataRepresentative.length > 0) {
+          if (resultDataRepresentative.length > 0 && !resultDataRepresentative[0].bag_item_id) {
             // for (let i = 0; i < resultDataBag.length; i++) {
               // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
               // customer.awbStatusName = data[i].awbStatusName;
@@ -878,21 +875,16 @@ export class ScanoutSmdVendorService {
               // arrBagItemId = [resultDataBag[0].bag_item_id];
             // }
 
-              await DoSmdDetail.update(
-                { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-                {
-                  totalBag: resultDataRepresentative[0].total_bag + 1,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: timeNow,
-                },
-              );
-
               const resultDoSmdDetail = await DoSmdDetail.findOne({
                 where: {
                   doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
                   isDeleted: false,
                 },
               });
+              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
+              resultDoSmdDetail.userIdUpdated = authMeta.userId;
+              resultDoSmdDetail.updatedTime = timeNow;
+              await resultDoSmdDetail.save();
 
               await DoSmd.update(
                 { doSmdId : payload.do_smd_id },
@@ -931,18 +923,24 @@ export class ScanoutSmdVendorService {
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Item Success Created';
+              result.message = `Gabung Paket ${payload.item_number} berhasil di scan`;
               result.data = data;
               return result;
+          } else if (resultDataRepresentative.length > 0 && resultDataRepresentative[0].bag_item_id) {
+            result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
+            return result;
           } else {
-            throw new BadRequestException(`Representative To ` + resultDataBag[0].representative_code + ` Bag 15 Not Match`);
+            result.message = 'Tujuan Gabung Paket tidak cocok dengan perwakilan SMD';
+            return result;
           }
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          throw new BadRequestException(`Bag Not Scan In Yet`);
+          result.message = `Gabung Paket ${payload.item_number} belum di scan masuk`;
+          return result;
         } else {
-          throw new BadRequestException(`Bag Not Found`);
+          result.message = `Gabung Paket ${payload.item_number} tidak ditemukan`;
+          return result;
         }
-      } else if (payload.item_number.length == 10) {
+      } else if (payload.item_number.length == 10 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
         const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 3 );
         // const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
         const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 3 , 3);
@@ -971,19 +969,23 @@ export class ScanoutSmdVendorService {
 
           rawQuery = `
             SELECT
-              do_smd_detail_id ,
-              representative_code_list,
-              total_bag,
-              vendor_name
-            FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+              dsd.do_smd_detail_id ,
+              dsd.representative_code_list,
+              dsd.total_bag,
+              dsd.vendor_name,
+              dsdi.bag_item_id
+            FROM do_smd_detail dsd
+            LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
+              AND dsdi.bag_item_id = ${resultDataBag[0].bag_item_id}
+            , unnest(string_to_array(dsd.representative_code_list , ','))  s(code)
             where
               s.code  = '${escape(resultDataBag[0].representative_code)}' AND
-              do_smd_id = ${payload.do_smd_id} AND
-              is_deleted = FALSE;
+              dsd.do_smd_id = ${payload.do_smd_id} AND
+              dsd.is_deleted = FALSE;
           `;
           const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
-          if (resultDataRepresentative.length > 0) {
+          if (resultDataRepresentative.length > 0 && !resultDataRepresentative[0].bag_item_id) {
             // for (let i = 0; i < resultDataBag.length; i++) {
               // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
               // customer.awbStatusName = data[i].awbStatusName;
@@ -1001,21 +1003,16 @@ export class ScanoutSmdVendorService {
               // arrBagItemId = [resultDataBag[0].bag_item_id];
             // }
 
-              await DoSmdDetail.update(
-                { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-                {
-                  totalBag: resultDataRepresentative[0].total_bag + 1,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: timeNow,
-                },
-              );
-
               const resultDoSmdDetail = await DoSmdDetail.findOne({
                 where: {
                   doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
                   isDeleted: false,
                 },
               });
+              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
+              resultDoSmdDetail.userIdUpdated = authMeta.userId;
+              resultDoSmdDetail.updatedTime = timeNow;
+              await resultDoSmdDetail.save();
 
               await DoSmd.update(
                 { doSmdId : payload.do_smd_id },
@@ -1054,22 +1051,92 @@ export class ScanoutSmdVendorService {
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Item Success Created';
+              result.message = `Gabung Paket ${payload.item_number} berhasil di scan`;
               result.data = data;
               return result;
+          } else if (resultDataRepresentative.length > 0 && resultDataRepresentative[0].bag_item_id) {
+            result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
+            return result;
           } else {
-            throw new BadRequestException(`Representative To ` + resultDataBag[0].representative_code + `  Bag 10 Not Match`);
+            result.message = 'Tujuan Gabung Paket tidak cocok dengan perwakilan SMD';
+            return result;
           }
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          throw new BadRequestException(`Bag 10 Not Scan In Yet`);
+          result.message = `Gabung Paket ${payload.item_number} belum di scan masuk`;
+          return result;
         } else {
-          throw new BadRequestException(`Bag 10 Not Found`);
+          result.message = `Gabung Paket ${payload.item_number} tidak ditemukan`;
+          return result;
         }
       } else {
-        throw new BadRequestException(`Bagging / Bag Not Found`);
+        result.message = 'Bagging / Gabung Paket tidak ditemukan';
+        return result;
       }
     }
+  }
 
+  static async scanOutVendorItemMore(payload: ScanOutSmdVendorItemMorePayloadVm)
+  : Promise<ScanOutSmdVendorItemMoreResponseVm> {
+    const result = new ScanOutSmdVendorItemMoreResponseVm();
+    const p = new ScanOutSmdVendorItemPayloadVm();
+    let totalError = 0;
+    let totalSuccess = 0;
+    const uniqueNumber = [];
+
+    result.data = [];
+    p.do_smd_id = payload.do_smd_id;
+
+    if (typeof(payload.item_number) != 'object') {
+      payload.item_number = [payload.item_number];
+    }
+
+    // TODO:
+    // 1. get response scanOutVendorItem of each item_number
+    // 2. populate total
+    for (const itemNumber of payload.item_number) {
+      p.item_number = itemNumber;
+
+      // handle duplikat
+      let number = itemNumber;
+      let messageDuplicate = '';
+      if ((itemNumber.substring(0, 3) != 'GSK' && itemNumber.substring(0, 3) != 'BGX') && (itemNumber.length == 10 || itemNumber.length == 15)) {
+        number = itemNumber.substring(0, 10);
+        if (uniqueNumber.includes(number)) {
+          messageDuplicate = `Scan gabung paket ${itemNumber} duplikat!`;
+        }
+      } else {
+        number = itemNumber;
+        if (uniqueNumber.includes(number)) {
+          messageDuplicate = `Scan ${itemNumber} duplikat!`;
+        }
+      }
+
+      if (messageDuplicate) {
+        result.data.push({
+          statusCode: 400,
+          message: messageDuplicate,
+          item_number: itemNumber,
+        } as ScanOutVendorItemMoreDataVm);
+        continue;
+      }
+      uniqueNumber.push(number);
+
+      const res = await this.scanOutVendorItem(p) as ScanOutSmdVendorItemResponseVm;
+      result.data.push({
+        ...res,
+        item_number: itemNumber,
+      });
+
+      if (res.statusCode == HttpStatus.OK) {
+        totalSuccess++;
+      } else {
+        totalError++;
+      }
+    }
+    result.totalData = payload.item_number.length;
+    result.totalSuccess = totalSuccess;
+    result.totalError = totalError;
+    return result;
   }
 
   static async scanOutVendorEnd(payload: any): Promise<any> {

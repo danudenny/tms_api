@@ -26,4 +26,18 @@ export class ScanOutExportController {
     return ScanoutSmdExportService.exportCSV(serverResponse, queryParams);
   }
 
+  @Post('scanOut/vendor/excel/store')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async storePayloadExcelVendor(@Body() payloadBody: BaseMetaPayloadVm) {
+    return ScanoutSmdExportService.storeExcelVendorPayload(payloadBody);
+  }
+
+  @Get('scanOut/vendor/export/excel')
+  public async exportExcelVendor(
+    @Query() queryParams: StoreExcelScanOutPayloadVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return ScanoutSmdExportService.exportVendorCSV(serverResponse, queryParams);
+  }
 }

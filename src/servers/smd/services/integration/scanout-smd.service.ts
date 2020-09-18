@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdItemMoreResponseVm, ScanOutSmdEditResponseVm, ScanOutSmdEditDetailResponseVm, ScanOutSmdItemMoreDataResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { Representative } from '../../../../shared/orm-entity/representative';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
-import { In } from 'typeorm';
+import { IsNull, In, Not } from 'typeorm';
 import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
@@ -22,6 +22,7 @@ import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/serv
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 import { RedisService } from '../../../../shared/services/redis.service';
+import {ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -87,7 +88,7 @@ export class ScanoutSmdService {
     }
 
     result.statusCode = HttpStatus.OK;
-    result.message = 'SMD Success Created';
+    result.message = 'SMD berhasil dibuat';
     result.data = data;
     return result;
   }
@@ -145,7 +146,7 @@ export class ScanoutSmdService {
             const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
             if (resultDataRepresentative.length > 0) {
-              throw new BadRequestException(`Representative Code already scan !!`);
+              throw new BadRequestException(`Kode representative sudah di scan!!`);
             } else {
               await DoSmdDetail.update(
                 { doSmdDetailId : resultDoSmdDetail.doSmdDetailId },
@@ -164,7 +165,7 @@ export class ScanoutSmdService {
                 representative_code_list: resultDoSmdDetail.representativeCodeList + ',' + payload.representative_code,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Route Success Upated';
+              result.message = 'Rute SMD berhasil di update';
               result.data = data;
               return result;
             }
@@ -182,7 +183,7 @@ export class ScanoutSmdService {
             const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
             if (resultDataRepresentative.length > 0) {
-              throw new BadRequestException(`Representative Code already scan !!`);
+              throw new BadRequestException(`Kode representative sudah di scan!!`);
             } else {
               const paramDoSmdDetailId = await this.createDoSmdDetail(
                 resultDoSmd.doSmdId,
@@ -227,21 +228,21 @@ export class ScanoutSmdService {
                 representative_code_list: payload.representative_code,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Route Success Created';
+              result.message = 'Rute SMD berhasil dibuat';
               result.data = data;
               return result;
             }
           }
         } else {
-          throw new BadRequestException(`Can't Find  Representative Code : ` + payload.representative_code);
+          throw new BadRequestException(`Kode representative ${payload.representative_code} tidak ditemukan`);
         }
 
       } else {
-        throw new BadRequestException(`Can't Find  Branch Code : ` + payload.branch_code);
+        throw new BadRequestException(`Kode Gerai ${payload.branch_code} tidak ditemukan`);
       }
 
     } else {
-      throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+      throw new BadRequestException(`ID SMD ${payload.do_smd_id.toString()} tidak ditemukan`);
     }
 
   }
@@ -350,7 +351,7 @@ export class ScanoutSmdService {
                 const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
                 if (resultDataRepresentative.length > 0) {
-                  throw new BadRequestException(`Representative Code already scan !!`);
+                  throw new BadRequestException(`Kode representative sudah di scan!!`);
                 } else {
                   const paramDoSmdDetailId = await this.createDoSmdDetail(
                     resultDoSmd.doSmdId,
@@ -402,7 +403,7 @@ export class ScanoutSmdService {
               representative_code_list: resultDoSmdDetail.representativeCodeList,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Route Success Created';
+            result.message = 'Rute SMD berhasil dibuat';
             result.data = data;
             return result;
 
@@ -428,7 +429,7 @@ export class ScanoutSmdService {
               const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
               if (resultDataRepresentative.length > 0) {
-                throw new BadRequestException(`Representative Code already scan !!`);
+                throw new BadRequestException(`Kode representative sudah di scan!!`);
               } else {
                 await DoSmdDetail.update(
                   { doSmdDetailId : resultDoSmdDetail.doSmdDetailId },
@@ -447,7 +448,7 @@ export class ScanoutSmdService {
                   representative_code_list: resultDoSmdDetail.representativeCodeList + ',' + payload.representative_code,
                 });
                 result.statusCode = HttpStatus.OK;
-                result.message = 'SMD Route Success Upated';
+                result.message = 'Rute SMD berhasil di update';
                 result.data = data;
                 return result;
               }
@@ -465,7 +466,7 @@ export class ScanoutSmdService {
               const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
               if (resultDataRepresentative.length > 0) {
-                throw new BadRequestException(`Representative Code already scan !!`);
+                throw new BadRequestException(`Kode representative sudah di scan!!`);
               } else {
                 const paramDoSmdDetailId = await this.createDoSmdDetail(
                   resultDoSmd.doSmdId,
@@ -497,24 +498,32 @@ export class ScanoutSmdService {
                   representative_code_list: payload.representative_code,
                 });
                 result.statusCode = HttpStatus.OK;
-                result.message = 'SMD Route Success Created';
+                result.message = 'Rute SMD berhasil dibuat';
                 result.data = data;
                 return result;
               }
             }
           }
         } else {
-          throw new BadRequestException(`Can't Find  Representative Code : ` + payload.representative_code);
+          throw new BadRequestException(`Kode representative ${payload.representative_code} tidak ditemukan`);
         }
 
       } else {
-        throw new BadRequestException(`Can't Find  Branch Code : ` + payload.branch_code);
+        throw new BadRequestException(`Kode Gerai ${payload.branch_code} tidak ditemukan`);
       }
 
     } else {
-      throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+      throw new BadRequestException(`ID SMD ${payload.do_smd_id.toString()} tidak ditemukan`);
     }
 
+  }
+
+  static async scanItemSMD(payload: any): Promise<any> {
+    const result = await this.scanOutItem(payload);
+    if (result.statusCode == 400) {
+      throw new BadRequestException(result.message);
+    }
+    return result;
   }
 
   static async scanOutItem(payload: any): Promise<any> {
@@ -527,6 +536,8 @@ export class ScanoutSmdService {
     const arrBagItemId = [];
     const data = [];
     let rawQuery;
+    result.statusCode = HttpStatus.BAD_REQUEST;
+
     const resultBagging = await Bagging.findOne({
       where: {
         baggingCode: payload.item_number,
@@ -580,7 +591,8 @@ export class ScanoutSmdService {
           },
         });
         if (resultDoSmdDetailItem) {
-          throw new BadRequestException(`Bag Representative Already Scanned`);
+          result.message = `Gabung Kota ${payload.item_number} sudah di scan`;
+          return result;
         } else {
           await this.createDoSmdDetailItem(
             resultDataRepresentative[0].do_smd_detail_id,
@@ -592,30 +604,22 @@ export class ScanoutSmdService {
             2,
             authMeta.userId,
           );
-          await DoSmdDetail.update(
-            { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-            {
-              totalBagRepresentative: resultDataRepresentative[0].total_bag_representative + 1,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-            },
-          );
           const resultDoSmdDetail = await DoSmdDetail.findOne({
             where: {
               doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
               isDeleted: false,
             },
           });
+          resultDoSmdDetail.totalBagRepresentative = Number(resultDoSmdDetail.totalBagRepresentative) + 1;
+          resultDoSmdDetail.userIdUpdated = authMeta.userId;
+          resultDoSmdDetail.updatedTime = timeNow;
+          await resultDoSmdDetail.save();
 
-          await DoSmd.update(
-            { doSmdId : payload.do_smd_id },
-            {
-              totalBagRepresentative: Number(resultDoSmd.totalBagRepresentative) + 1,
-              totalItem: Number(resultDoSmd.totalItem) + 1,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-            },
-          );
+          resultDoSmd.totalBagRepresentative = Number(resultDoSmd.totalBagRepresentative) + 1;
+          resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
+          resultDoSmd.userIdUpdated = authMeta.userId;
+          resultDoSmd.updatedTime = timeNow;
+          await resultDoSmd.save();
 
           BagRepresentativeScanDoSmdQueueService.perform(
             resultDataBagRepresentative[0].bag_representative_id,
@@ -641,14 +645,17 @@ export class ScanoutSmdService {
             total_bag: resultDoSmdDetail.totalBag,
             total_bagging: resultDoSmdDetail.totalBagging,
             total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
+            weight: resultDataBagRepresentative[0].total_weight,
+            representative_code: resultDataBagRepresentative[0].representative_code,
           });
           result.statusCode = HttpStatus.OK;
-          result.message = 'SMD Item Success Created';
+          result.message = `Gabung Kota ${payload.item_number} berhasil di scan`;
           result.data = data;
           return result;
         }
       } else {
-        throw new BadRequestException(`Representative To Bag Representative Not Match`);
+        result.message = 'Tujuan Gabung Kota tidak cocok dengan perwakilan SMD';
+        return result;
       }
     } else if (resultBagging) {
       rawQuery = `
@@ -686,13 +693,14 @@ export class ScanoutSmdService {
         if (resultDataRepresentative.length > 0) {
           const resultDoSmdDetailItem = await DoSmdDetailItem.findOne({
             where: {
-              doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
+              // doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
               baggingId: resultBagging.baggingId,
               isDeleted: false,
             },
           });
           if (resultDoSmdDetailItem) {
-            throw new BadRequestException(`Bagging Already Scanned`);
+            result.message = `Bagging ${payload.item_number} sudah di scan`;
+            return result;
           } else {
             for (let i = 0; i < resultDataBagItem.length; i++) {
               // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
@@ -713,30 +721,22 @@ export class ScanoutSmdService {
               arrBagItemId.push(resultDataBagItem[i].bag_item_id);
             }
 
-            await DoSmdDetail.update(
-              { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-              {
-                totalBagging: resultDataRepresentative[0].total_bagging + 1,
-                userIdUpdated: authMeta.userId,
-                updatedTime: timeNow,
-              },
-            );
             const resultDoSmdDetail = await DoSmdDetail.findOne({
               where: {
                 doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
                 isDeleted: false,
               },
             });
+            resultDoSmdDetail.totalBagging = Number(resultDoSmdDetail.totalBagging) + 1;
+            resultDoSmdDetail.userIdUpdated = authMeta.userId;
+            resultDoSmdDetail.updatedTime = timeNow;
+            await resultDoSmdDetail.save();
 
-            await DoSmd.update(
-              { doSmdId : payload.do_smd_id },
-              {
-                totalBagging: Number(resultDoSmd.totalBagging) + 1,
-                totalItem: Number(resultDoSmd.totalItem) + 1,
-                userIdUpdated: authMeta.userId,
-                updatedTime: timeNow,
-              },
-            );
+            resultDoSmd.totalBagging = Number(resultDoSmd.totalBagging) + 1;
+            resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
+            resultDoSmd.userIdUpdated = authMeta.userId;
+            resultDoSmd.updatedTime = timeNow;
+            await resultDoSmd.save();
 
             // Generate history bag and its awb IN_HUB
             BagScanDoSmdQueueService.perform(
@@ -760,23 +760,28 @@ export class ScanoutSmdService {
               total_bag: resultDoSmdDetail.totalBag,
               total_bagging: resultDoSmdDetail.totalBagging,
               total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
+              weight: resultBagging.totalWeight,
+              representative_code: resultDataBagItem[0].representative_code,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Route Success Created';
+            result.message = `Bagging ${payload.item_number} berhasil di scan`;
             result.data = data;
             return result;
           }
         } else {
-          throw new BadRequestException(`Representative To Bagging Not Match`);
+          result.message = 'Tujuan Bagging tidak cocok dengan perwakilan SMD';
+          return result;
         }
       } else if (resultDataBagItem.length > 0 && !resultDataBagItem[0].bag_item_status_id) {
-        throw new BadRequestException(`Bagging Not Scan In Yet`);
+        result.message = `Bagging ${payload.item_number} belum di scan masuk`;
+        return result;
       } else {
-        throw new BadRequestException(`Bagging Item Not Found`);
+        result.message = `Bagging ${payload.item_number} tidak ditemukan`;
+        return result;
       }
     } else {
       // cari di bag code
-      if (payload.item_number.length == 15) {
+      if (payload.item_number.length == 15 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{8}$/)) {
         const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 8 );
         const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
         const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 8 , 3);
@@ -796,6 +801,7 @@ export class ScanoutSmdService {
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
             and bih.bag_item_status_id = 3500
           LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
+            AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
@@ -837,31 +843,22 @@ export class ScanoutSmdService {
               // arrBagItemId = [resultDataBag[0].bag_item_id];
             // }
 
-              await DoSmdDetail.update(
-                { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-                {
-                  totalBag: resultDataRepresentative[0].total_bag + 1,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: timeNow,
-                },
-              );
-
               const resultDoSmdDetail = await DoSmdDetail.findOne({
                 where: {
                   doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
                   isDeleted: false,
                 },
               });
+              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
+              resultDoSmdDetail.userIdUpdated = authMeta.userId;
+              resultDoSmdDetail.updatedTime = timeNow;
+              await resultDoSmdDetail.save();
 
-              await DoSmd.update(
-                { doSmdId : payload.do_smd_id },
-                {
-                  totalBag: Number(resultDoSmd.totalBag) + 1,
-                  totalItem: Number(resultDoSmd.totalItem) + 1,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: timeNow,
-                },
-              );
+              resultDoSmd.totalBag = Number(resultDoSmd.totalBag) + 1;
+              resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
+              resultDoSmd.userIdUpdated = authMeta.userId;
+              resultDoSmd.updatedTime = timeNow;
+              await resultDoSmd.save();
 
               await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
 
@@ -885,22 +882,29 @@ export class ScanoutSmdService {
                 total_bag: resultDoSmdDetail.totalBag,
                 total_bagging: resultDoSmdDetail.totalBagging,
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
+                weight,
+                bag_seq: paramSeq,
+                representative_code: resultDataBag[0].representative_code,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Route Success Created';
+              result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
               result.data = data;
               return result;
           } else {
-            throw new BadRequestException(`Representative To Bag Not Match`);
+            result.message = 'Tujuan Gabung Paket tidak cocok dengan perwakilan SMD';
+            return result;
           }
         } else if (resultDataBag.length > 0 && resultDataBag[0].do_smd_detail_id) {
-          throw new BadRequestException(`Bag ${payload.item_number} Already Scanned`);
+          result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
+          return result;
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          throw new BadRequestException(`Bag Not Scan In Yet`);
+          result.message = `Gabung Paket ${payload.item_number} belum di scan masuk`;
+          return result;
         } else {
-          throw new BadRequestException(`Bag Not Found`);
+          result.message = `Gabung Paket ${payload.item_number} tidak ditemukan`;
+          return result;
         }
-      } else if (payload.item_number.length == 10) {
+      } else if (payload.item_number.length == 10 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
         const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 3 );
         // const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
         const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 3 , 3);
@@ -913,13 +917,15 @@ export class ScanoutSmdService {
             b.representative_id_to,
             r.representative_code,
             bih.bag_item_status_id,
-            dsdi.do_smd_detail_id
+            dsdi.do_smd_detail_id,
+            bi.weight
           FROM bag_item bi
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
             and bih.bag_item_status_id = 3500
           LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
+            AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
@@ -961,31 +967,22 @@ export class ScanoutSmdService {
               // arrBagItemId = [resultDataBag[0].bag_item_id];
             // }
 
-              await DoSmdDetail.update(
-                { doSmdDetailId : resultDataRepresentative[0].do_smd_detail_id },
-                {
-                  totalBag: resultDataRepresentative[0].total_bag + 1,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: timeNow,
-                },
-              );
-
               const resultDoSmdDetail = await DoSmdDetail.findOne({
                 where: {
                   doSmdDetailId: resultDataRepresentative[0].do_smd_detail_id,
                   isDeleted: false,
                 },
               });
+              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
+              resultDoSmdDetail.userIdUpdated = authMeta.userId;
+              resultDoSmdDetail.updatedTime = timeNow;
+              await resultDoSmdDetail.save();
 
-              await DoSmd.update(
-                { doSmdId : payload.do_smd_id },
-                {
-                  totalBag: Number(resultDoSmd.totalBag) + 1,
-                  totalItem: Number(resultDoSmd.totalItem) + 1,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: timeNow,
-                },
-              );
+              resultDoSmd.totalBag = Number(resultDoSmd.totalBag) + 1;
+              resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
+              resultDoSmd.userIdUpdated = authMeta.userId;
+              resultDoSmd.updatedTime = timeNow;
+              await resultDoSmd.save();
 
               await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
 
@@ -1009,26 +1006,95 @@ export class ScanoutSmdService {
                 total_bag: resultDoSmdDetail.totalBag,
                 total_bagging: resultDoSmdDetail.totalBagging,
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
+                weight: resultDataBag[0].weight,
+                bag_seq: paramSeq,
+                representative_code: resultDataBag[0].representative_code,
               });
               result.statusCode = HttpStatus.OK;
-              result.message = 'SMD Route Success Created';
+              result.message = `Gabung Paket ${payload.item_number} berhasil di scan`;
               result.data = data;
               return result;
           } else {
-            throw new BadRequestException(`Representative To Bag Not Match`);
+            result.message = 'Tujuan Gabung Paket tidak cocok dengan perwakilan SMD';
+            return result;
           }
         } else if (resultDataBag.length > 0 && resultDataBag[0].do_smd_detail_id) {
-          throw new BadRequestException(`Bag ${payload.item_number} Already Scanned`);
+          result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
+          return result;
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
-          throw new BadRequestException(`Bag Not Scan In Yet`);
+          result.message = `Gabung Paket ${payload.item_number} belum di scan masuk`;
+          return result;
         } else {
-          throw new BadRequestException(`Bag Not Found`);
+          result.message = `Gabung Paket ${payload.item_number} tidak ditemukan`;
+          return result;
         }
       } else {
-        throw new BadRequestException(`Bagging / Bag Not Found`);
+        result.message = 'Bagging/Gabung Paket tidak ditemukan';
+        return result;
       }
     }
 
+  }
+
+  static async scanOutItemMore(
+    payload: ScanOutSmdItemMorePayloadVm,
+  ): Promise<ScanOutSmdItemMoreResponseVm> {
+    const result = new ScanOutSmdItemMoreResponseVm();
+    const p = new ScanOutSmdItemPayloadVm();
+    let totalSuccess = 0;
+    let totalError = 0;
+    const uniqueNumber = [];
+    p.do_smd_id = payload.do_smd_id;
+    result.data = [];
+
+    // TODO:
+    // 1. get response scanOutItem of each item_number
+    // 2. populate total
+    for (const itemNumber of payload.item_number) {
+      p.item_number = itemNumber;
+
+      // handle duplikat
+      let number = itemNumber;
+      let messageDuplicate = '';
+      if ((itemNumber.substring(0, 3) != 'GSK' && itemNumber.substring(0, 3) != 'BGX') && (itemNumber.length == 10 || itemNumber.length == 15)) {
+        number = itemNumber.substring(0, 10);
+        if (uniqueNumber.includes(number)) {
+          messageDuplicate = `Scan gabung paket ${itemNumber} duplikat!`;
+        }
+      } else {
+        number = itemNumber;
+        if (uniqueNumber.includes(number)) {
+          messageDuplicate = `Scan ${itemNumber} duplikat!`;
+        }
+      }
+
+      if (messageDuplicate) {
+        result.data.push({
+          statusCode: 400,
+          message: messageDuplicate,
+          item_number: itemNumber,
+        } as ScanOutSmdItemMoreDataResponseVm);
+        continue;
+      }
+      uniqueNumber.push(number);
+
+      const res = await this.scanOutItem(p) as ScanOutSmdItemResponseVm;
+      result.data.push({
+        ...res,
+        item_number: itemNumber,
+      });
+
+      if (res.statusCode == HttpStatus.OK) {
+        totalSuccess++;
+      } else {
+        totalError++;
+      }
+    }
+
+    result.totalData = payload.item_number.length;
+    result.totalError = totalError;
+    result.totalSuccess = totalSuccess;
+    return result;
   }
 
   static async createBagItemHistory(bagItemId: number, userId: number, branchId: number, bagStatus: number) {
@@ -1057,85 +1123,97 @@ export class ScanoutSmdService {
     if (payload.seal_seq == 1) {
       rawQuery = `
         SELECT
-          do_smd_detail_id
-        FROM do_smd_detail
+          dsd.do_smd_detail_id
+        FROM do_smd_detail dsd
         WHERE
-          do_smd_id = ${payload.do_smd_id} AND
-          arrival_time IS NULL AND
-          seal_number IS NULL AND
-          is_deleted = FALSE
+          dsd.do_smd_id = ${payload.do_smd_id} AND
+          dsd.arrival_time IS NULL AND
+          dsd.seal_number IS NULL AND
+          dsd.is_deleted = FALSE
         ;
       `;
     } else {
       rawQuery = `
         SELECT
-          do_smd_detail_id
-        FROM do_smd_detail
+          dsd.do_smd_detail_id
+        FROM do_smd_detail dsd
         WHERE
-          do_smd_id = ${payload.do_smd_id} AND
-          arrival_time IS NULL AND
-          is_deleted = FALSE
+          dsd.do_smd_id = ${payload.do_smd_id} AND
+          dsd.arrival_time IS NULL AND
+          dsd.is_deleted = FALSE
         ;
       `;
     }
     const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
     if (resultDataDoSmdDetail.length > 0 ) {
-      for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-        await DoSmdDetail.update(
-          { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+      // proses seal jika smd sudah pernah scan item
+      const checkItemSmd = await DoSmdDetailItem.findOne({
+        select: ['doSmdDetailId'],
+        where: {
+          doSmdDetailId: resultDataDoSmdDetail[0].do_smd_detail_id,
+          isDeleted: false,
+        },
+      });
+      if (checkItemSmd) {
+        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+          await DoSmdDetail.update(
+            { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+            {
+              sealNumber: payload.seal_number,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            },
+          );
+        }
+        await DoSmd.update(
+          { doSmdId : payload.do_smd_id },
           {
-            sealNumber: payload.seal_number,
+            sealNumberLast: payload.seal_number,
             userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
           },
         );
-      }
-      await DoSmd.update(
-        { doSmdId : payload.do_smd_id },
-        {
-          sealNumberLast: payload.seal_number,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
-      const resultDoSmd = await DoSmd.findOne({
-        where: {
-          doSmdId: payload.do_smd_id,
-          isDeleted: false,
-        },
-      });
-      let paramStatusId;
-      if (payload.seal_seq == 1) {
-        // Untuk Seal Pertama X
-        paramStatusId = 2000;
+        const resultDoSmd = await DoSmd.findOne({
+          where: {
+            doSmdId: payload.do_smd_id,
+            isDeleted: false,
+          },
+        });
+        let paramStatusId;
+        if (payload.seal_seq == 1) {
+          // Untuk Seal Pertama X
+          paramStatusId = 2000;
+        } else {
+          //  Untuk Ganti Seal
+          paramStatusId = 1200;
+        }
+        const paramDoSmdHistoryId = await this.createDoSmdHistory(
+          resultDoSmd.doSmdId,
+          null,
+          resultDoSmd.doSmdVehicleIdLast,
+          null,
+          null,
+          resultDoSmd.doSmdTime,
+          permissonPayload.branchId,
+          paramStatusId,
+          payload.seal_number,
+          null,
+          authMeta.userId,
+        );
+        data.push({
+          do_smd_id: resultDoSmd.doSmdId,
+          do_smd_code: resultDoSmd.doSmdCode,
+          seal_number: payload.seal_number,
+        });
+        result.statusCode = HttpStatus.OK;
+        result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' With Seal ' + payload.seal_number + ' Success Created';
+        result.data = data;
+        return result;
       } else {
-        //  Untuk Ganti Seal
-        paramStatusId = 1200;
+        throw new BadRequestException(`SMD belum pernah di scan`);
       }
-      const paramDoSmdHistoryId = await this.createDoSmdHistory(
-        resultDoSmd.doSmdId,
-        null,
-        resultDoSmd.doSmdVehicleIdLast,
-        null,
-        null,
-        resultDoSmd.doSmdTime,
-        permissonPayload.branchId,
-        paramStatusId,
-        payload.seal_number,
-        null,
-        authMeta.userId,
-      );
-      data.push({
-        do_smd_id: resultDoSmd.doSmdId,
-        do_smd_code: resultDoSmd.doSmdCode,
-        seal_number: payload.seal_number,
-      });
-      result.statusCode = HttpStatus.OK;
-      result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' With Seal ' + payload.seal_number + ' Success Created';
-      result.data = data;
-      return result;
     } else {
-      throw new BadRequestException(`Updated Seal Fail`);
+      throw new BadRequestException(`Update nomor seal gagal`);
     }
   }
 
@@ -1213,7 +1291,7 @@ export class ScanoutSmdService {
         );
       }
     } else {
-      throw new BadRequestException(`SMD ID: ` + paramdoSmdId + ` Can't Found !`);
+      throw new BadRequestException(`ID SMD ` + paramdoSmdId + ` tidak ditemukan!`);
     }
   }
 
@@ -1235,7 +1313,8 @@ export class ScanoutSmdService {
     if (resultDoSmd) {
       const rawQuery = `
         SELECT
-          do_smd_vehicle_id
+          do_smd_vehicle_id,
+          employee_id_driver
         FROM do_smd_vehicle
         WHERE
           do_smd_vehicle_id = ${resultDoSmd.doSmdVehicleIdLast} AND
@@ -1245,72 +1324,100 @@ export class ScanoutSmdService {
       `;
       const resultDataDoSmdVehicle = await RawQueryService.query(rawQuery);
       if (resultDataDoSmdVehicle.length > 0 ) {
-        // Set Active False yang lama
-        await DoSmdVehicle.update(
-          { doSmdVehicleId : resultDataDoSmdVehicle[0].do_smd_vehicle_id },
-          {
-            isActive: false,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-        // Create Vehicle Dulu dan jangan update ke do_smd
-        const paramDoSmdVehicleId = await this.createDoSmdVehicle(
-          payload.do_smd_id,
-          payload.vehicle_number,
-          payload.employee_id_driver,
-          permissonPayload.branchId,
-          authMeta.userId,
-        );
+        if (resultDataDoSmdVehicle[0].employee_id_driver != payload.employee_id_driver) {
+          const resultAllDriverVehicle = await this.findAllActiveVehicleInDriver(resultDataDoSmdVehicle[0].employee_id_driver);
+          const arrSmd = [];
+          const vehicleId = [];
+          for (const item of resultAllDriverVehicle) {
+            vehicleId.push(item.doSmdVehicleId);
+          }
 
-        const paramDoSmdHistoryId = await this.createDoSmdHistory(
-          resultDoSmd.doSmdId,
-          null,
-          resultDoSmd.doSmdVehicleIdLast,
-          null,
-          null,
-          resultDoSmd.doSmdTime,
-          permissonPayload.branchId,
-          1150,
-          null,
-          null,
-          authMeta.userId,
-        );
+          const dataDoSmd = await DoSmd.find({
+            where: {
+              doSmdVehicleIdLast: In(vehicleId),
+              doSmdStatusIdLast: 8000,
+              isDeleted: false,
+            },
+          });
 
-        await DoSmd.update(
-          { doSmdId :  payload.do_smd_id},
-          {
-            doSmdStatusIdLast: 1150,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
+          for (const item of dataDoSmd) {
+            // Set Active False yang lama
+            await DoSmdVehicle.update(
+              { doSmdVehicleId : item.doSmdVehicleIdLast },
+              {
+                isActive: false,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              },
+            );
+            // Create Vehicle Dulu dan jangan update ke do_smd
+            const paramDoSmdVehicleId = await this.createDoSmdVehicle(
+              item.doSmdId,
+              payload.vehicle_number,
+              payload.employee_id_driver,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
 
-        await DoSmdDetail.update(
-          { doSmdId :  payload.do_smd_id, arrivalTime: null},
-          {
-            doSmdStatusIdLast: 1150,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
+            const paramDoSmdHistoryId = await this.createDoSmdHistory(
+              item.doSmdId,
+              null,
+              item.doSmdVehicleIdLast,
+              null,
+              null,
+              item.doSmdTime,
+              permissonPayload.branchId,
+              1150,
+              null,
+              null,
+              authMeta.userId,
+            );
 
-        data.push({
-          do_smd_id: resultDoSmd.doSmdId,
-          do_smd_code: resultDoSmd.doSmdCode,
-          do_smd_vehicle_id: paramDoSmdVehicleId,
-        });
+            item.doSmdStatusIdLast = 1150;
+            item.userIdUpdated = authMeta.userId;
+            item.updatedTime = moment().toDate();
+            await item.save();
 
-        result.statusCode = HttpStatus.OK;
-        result.message = 'SMD Code ' + resultDoSmd.doSmdCode + 'Success Handover';
-        result.data = data;
-        return result;
+            await DoSmdDetail.update(
+              { doSmdId :  item.doSmdId, arrivalTime: null},
+              {
+                doSmdStatusIdLast: 1150,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              },
+            );
+
+            data.push({
+              do_smd_id: item.doSmdId,
+              do_smd_code: item.doSmdCode,
+              do_smd_vehicle_id: paramDoSmdVehicleId,
+            });
+            arrSmd.push(item.doSmdCode);
+          }
+          result.statusCode = HttpStatus.OK;
+          result.message = 'Nomor SMD ' + arrSmd.join(',') + ' berhasil handover';
+          result.data = data;
+          return result;
+        } else {
+          throw new BadRequestException(`Tidak bisa handover ke supir yang sama`);
+        }
       } else {
-        throw new BadRequestException(`Can't Found Trouble Reason For SMD: ` + resultDoSmd.doSmdCode);
+        throw new BadRequestException(`Alasan masalah tidak ditemukan di nomor SMD: ` + resultDoSmd.doSmdCode);
       }
     } else {
-      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
+      throw new BadRequestException(`ID SMD ` + payload.do_smd_id + ` tidak ditemukan!`);
     }
+  }
+
+  static async findAllActiveVehicleInDriver(employee_id_driver: number): Promise<DoSmdVehicle[]> {
+    const resultDoSmd = await DoSmdVehicle.find({
+      where: {
+        employeeIdDriver: employee_id_driver,
+        reasonId: Not(IsNull()),
+        isDeleted: false,
+      },
+    });
+    return resultDoSmd;
   }
 
   static async scanOutChangeVehicle(payload: any): Promise<any> {
@@ -1343,81 +1450,292 @@ export class ScanoutSmdService {
       `;
       const resultDataDoSmdVehicle = await RawQueryService.query(rawQuery);
       if (resultDataDoSmdVehicle.length > 0 ) {
-        // Set Active False yang lama
-        await DoSmdVehicle.update(
-          { doSmdVehicleId : resultDataDoSmdVehicle[0].do_smd_vehicle_id },
-          {
-            isActive: false,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-        // Create Vehicle Dulu dan jangan update ke do_smd
-        const paramDoSmdVehicleId = await this.createDoSmdVehicle(
-          payload.do_smd_id,
-          payload.vehicle_number,
-          payload.employee_id_driver,
-          permissonPayload.branchId,
-          authMeta.userId,
-        );
+        if (resultDataDoSmdVehicle[0].employee_id_driver != payload.employee_id_driver) {
+          // Set Active False yang lama
+          await DoSmdVehicle.update(
+            { doSmdVehicleId : resultDataDoSmdVehicle[0].do_smd_vehicle_id },
+            {
+              isActive: false,
+              userIdUpdated: authMeta.userId,
+              updatedTime: moment().toDate(),
+            },
+          );
+          // Create Vehicle Dulu dan jangan update ke do_smd
+          const paramDoSmdVehicleId = await this.createDoSmdVehicle(
+            payload.do_smd_id,
+            payload.vehicle_number,
+            payload.employee_id_driver,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
 
-        // await DoSmd.update(
-        //   { doSmdId : payload.do_smd_id},
-        //   {
-        //     doSmdVehicleIdLast: paramDoSmdVehicleId,
-        //     userIdUpdated: authMeta.userId,
-        //     updatedTime: moment().toDate(),
-        //   },
-        // );
-        if (resultDataDoSmdVehicle[0].employee_id_driver == payload.employee_id_driver) {
-          paramDoSmdStatus = 1100;
+          // await DoSmd.update(
+          //   { doSmdId : payload.do_smd_id},
+          //   {
+          //     doSmdVehicleIdLast: paramDoSmdVehicleId,
+          //     userIdUpdated: authMeta.userId,
+          //     updatedTime: moment().toDate(),
+          //   },
+          // );
+          if (resultDataDoSmdVehicle[0].employee_id_driver == payload.employee_id_driver) {
+            paramDoSmdStatus = 1100;
+          } else {
+            paramDoSmdStatus = 1050;
+          }
+
+          await DoSmd.update(
+            { doSmdId : payload.do_smd_id},
+            {
+              doSmdVehicleIdLast: paramDoSmdVehicleId,
+              doSmdStatusIdLast: paramDoSmdStatus,
+              userIdUpdated: authMeta.userId,
+              updatedTime: moment().toDate(),
+            },
+          );
+          const paramDoSmdHistoryId = await this.createDoSmdHistory(
+            resultDoSmd.doSmdId,
+            null,
+            paramDoSmdVehicleId,
+            null,
+            null,
+            resultDoSmd.doSmdTime,
+            permissonPayload.branchId,
+            paramDoSmdStatus,
+            null,
+            null,
+            authMeta.userId,
+          );
+
+          data.push({
+            do_smd_id: resultDoSmd.doSmdId,
+            do_smd_code: resultDoSmd.doSmdCode,
+            do_smd_vehicle_id: paramDoSmdVehicleId,
+          });
+
+          result.statusCode = HttpStatus.OK;
+          if (paramDoSmdStatus == 1100) {
+            result.message = 'Berhasil ganti kendaraan SMD ' + resultDoSmd.doSmdCode;
+          } else {
+            result.message = 'Berhasil ganti supir SMD ' + resultDoSmd.doSmdCode;
+          }
+
+          result.data = data;
+          return result;
         } else {
-          paramDoSmdStatus = 1050;
+          throw new BadRequestException(`Tidak bisa handover ke supir yang sama`);
         }
+      } else {
+        throw new BadRequestException(`Alasan masalah tidak ditemukan di nomor SMD: ` + resultDoSmd.doSmdCode);
+      }
+    } else {
+      throw new BadRequestException(`ID SMD ${payload.do_smd_id} tidak ditemukan`);
+    }
+  }
 
-        await DoSmd.update(
-          { doSmdId : payload.do_smd_id},
-          {
-            doSmdVehicleIdLast: paramDoSmdVehicleId,
-            doSmdStatusIdLast: paramDoSmdStatus,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-        const paramDoSmdHistoryId = await this.createDoSmdHistory(
-          resultDoSmd.doSmdId,
-          null,
-          paramDoSmdVehicleId,
-          null,
-          null,
-          resultDoSmd.doSmdTime,
-          permissonPayload.branchId,
-          paramDoSmdStatus,
-          null,
-          null,
-          authMeta.userId,
-        );
+  static async scanOutEdit(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
 
-        data.push({
-          do_smd_id: resultDoSmd.doSmdId,
-          do_smd_code: resultDoSmd.doSmdCode,
-          do_smd_vehicle_id: paramDoSmdVehicleId,
-        });
+    const result = new ScanOutSmdEditResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
 
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdId: payload.do_smd_id,
+        doSmdStatusIdLast: In([1000, 2000]),
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmd) {
+      const resultDoSmdVehicle = await DoSmdVehicle.findOne({
+        where: {
+          doSmdVehicleId: resultDoSmd.doSmdVehicleIdLast,
+          isDeleted: false,
+        },
+      });
+
+      const rawQuery = `
+        SELECT
+          ds.do_smd_id,
+          ds.seal_number_last,
+          dsd.do_smd_detail_id,
+          dsd.branch_id_from,
+          bf.branch_code as branch_code_from,
+          bf.branch_name as branch_name_from,
+          dsd.branch_id_to,
+          bt.branch_code as branch_code_to,
+          bt.branch_name as branch_name_to,
+          dsd.representative_code_list,
+          dsd.total_bag,
+          dsd.total_bagging,
+          dsd.total_bag_representative
+        FROM do_smd ds
+        INNER JOIN do_smd_detail dsd ON ds.do_smd_id = dsd.do_smd_id AND dsd.is_deleted = FALSE
+        LEFT JOIN branch bf ON dsd.branch_id_from = bf.branch_id AND bf.is_deleted = FALSE
+        LEFT JOIN branch bt ON dsd.branch_id_to = bt.branch_id AND bt.is_deleted = FALSE
+        WHERE
+          ds.do_smd_id = ${resultDoSmd.doSmdId} AND
+          ds.is_deleted = FALSE;
+      `;
+      const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
+      if (resultDataDoSmdDetail.length > 0 ) {
+        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+          data.push({
+            do_smd_id: resultDoSmd.doSmdId,
+            do_smd_code: resultDoSmd.doSmdCode,
+            do_smd_time: resultDoSmd.doSmdTime,
+            do_smd_vehicle_id: resultDoSmd.doSmdVehicleIdLast,
+            user_id_driver: resultDoSmdVehicle.employeeIdDriver,
+            vehicle_number: resultDoSmdVehicle.vehicleNumber,
+            do_smd_detail_id: resultDataDoSmdDetail[i].do_smd_detail_id,
+            branch_id_from: resultDataDoSmdDetail[i].branch_id_from,
+            branch_code_from: resultDataDoSmdDetail[i].branch_code_from,
+            branch_name_from: resultDataDoSmdDetail[i].branch_name_from,
+            branch_id_to: resultDataDoSmdDetail[i].branch_id_to,
+            branch_code: resultDataDoSmdDetail[i].branch_code_to,
+            branch_name: resultDataDoSmdDetail[i].branch_name_to,
+            representative_code_list: resultDataDoSmdDetail[i].representative_code_list,
+            total_bag: resultDataDoSmdDetail[i].total_bag,
+            total_bag_representative: resultDataDoSmdDetail[i].total_bag_representative,
+            total_bagging: resultDataDoSmdDetail[i].total_bagging,
+            seal_number: resultDataDoSmdDetail[i].seal_number_last,
+          });
+        }
         result.statusCode = HttpStatus.OK;
-        if (paramDoSmdStatus == 1100) {
-          result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' Vehicle Success Changed ';
-        } else {
-          result.message = 'SMD Code ' + resultDoSmd.doSmdCode + ' Driver Success Changed ';
-        }
-
         result.data = data;
         return result;
       } else {
-        throw new BadRequestException(`Can't Found Trouble Reason For SMD: ` + resultDoSmd.doSmdCode);
+        throw new BadRequestException(`Tidak ditemukan tujuan pada ID SMD ` + payload.do_smd_id);
       }
     } else {
-      throw new BadRequestException(`SMD ID: ` + payload.do_smd_id + ` Can't Found !`);
+      throw new BadRequestException(`ID SMD ${payload.do_smd_id} tidak ditemukan`);
+    }
+  }
+
+  static async scanOutEditDetail(payload: any): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdEditDetailResponseVm();
+    const timeNow = moment().toDate();
+    const data = [];
+
+    const resultDoSmdDetail = await DoSmdDetail.findOne({
+      where: {
+        doSmdDetailId: payload.do_smd_detail_id,
+        isDeleted: false,
+      },
+    });
+    if (resultDoSmdDetail) {
+      const rawQueryBagging = `
+        SELECT
+          DISTINCT dsdi.bagging_id,
+          b.bagging_code,
+          b.total_weight as weight,
+          r.representative_code
+        FROM do_smd_detail_item dsdi
+        INNER JOIN bagging b ON dsdi.bagging_id = b.bagging_id AND b.is_deleted = FALSE
+        INNER JOIN representative r ON r.representative_id = b.representative_id_to AND r.is_deleted = FALSE
+        WHERE
+          dsdi.do_smd_detail_id = ${resultDoSmdDetail.doSmdDetailId} AND
+          dsdi.bag_type = 0 AND
+          dsdi.is_deleted = FALSE;
+      `;
+      const resultDataBagging = await RawQueryService.query(rawQueryBagging);
+      if (resultDataBagging.length > 0 ) {
+        for (let i = 0; i < resultDataBagging.length; i++) {
+          data.push({
+            do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+            bag_id: null,
+            bag_item_id: null,
+            bag_number: null,
+            bag_representative_code: null,
+            bag_representative_id: null,
+            bag_type: 0,
+            bagging_id: resultDataBagging[i].bagging_id,
+            bagging_number: resultDataBagging[i].bagging_code,
+            weight: resultDataBagging[0].weight,
+            bag_seq: resultDataBagging[0].bag_seq,
+            representative_code: resultDataBagging[0].representative_code,
+          });
+        }
+      }
+      const rawQueryBag = `
+        SELECT
+          DISTINCT dsdi.bag_item_id,
+          dsdi.bag_id,
+          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bag_number_seq,
+          bi.weight,
+          bi.bag_seq,
+          r.representative_code
+        FROM do_smd_detail_item dsdi
+        INNER JOIN bag_item bi on dsdi.bag_item_id = bi.bag_item_id and bi.is_deleted = FALSE
+        INNER JOIN bag b on bi.bag_id = b.bag_id and b.is_deleted = FALSE
+        INNER JOIN representative r ON r.representative_id = b.representative_id_to AND r.is_deleted = FALSE
+        WHERE
+          dsdi.do_smd_detail_id = ${resultDoSmdDetail.doSmdDetailId} AND
+          dsdi.bag_type = 1 AND
+          dsdi.bag_item_id IS NOT NULL AND
+          dsdi.is_deleted = FALSE;
+      `;
+      const resultDataBag = await RawQueryService.query(rawQueryBag);
+      if (resultDataBag.length > 0 ) {
+        for (let i = 0; i < resultDataBag.length; i++) {
+          data.push({
+            do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+            bag_id: resultDataBag[i].bag_id,
+            bag_item_id: resultDataBag[i].bag_item_id,
+            bag_number: resultDataBag[i].bag_number_seq,
+            bag_representative_code: null,
+            bag_representative_id: null,
+            bag_type: 1,
+            bagging_id: null,
+            bagging_number: null,
+            weight: resultDataBag[0].weight,
+            bag_seq: resultDataBag[0].bag_seq,
+            representative_code: resultDataBag[0].representative_code,
+          });
+        }
+      }
+      const rawQueryBagRepresentative = `
+        SELECT
+          DISTINCT dsdi.bag_representative_id,
+          br.bag_representative_code,
+          br.total_weight,
+          r.representative_code
+        FROM do_smd_detail_item dsdi
+        INNER JOIN bag_representative br on dsdi.bag_representative_id = br.bag_representative_id and br.is_deleted = FALSE
+        INNER JOIN representative r ON r.representative_id = br.representative_id_to AND r.is_deleted = FALSE
+        WHERE
+          dsdi.do_smd_detail_id = ${resultDoSmdDetail.doSmdDetailId} AND
+          dsdi.bag_type = 2 AND
+          dsdi.bag_representative_id IS NOT NULL AND
+          dsdi.is_deleted = FALSE;
+      `;
+      const resultDataBagRepresentative = await RawQueryService.query(rawQueryBagRepresentative);
+      if (resultDataBagRepresentative.length > 0 ) {
+        for (let i = 0; i < resultDataBagRepresentative.length; i++) {
+          data.push({
+            do_smd_detail_id: resultDoSmdDetail.doSmdDetailId,
+            bag_id: null,
+            bag_item_id: null,
+            bag_number: null,
+            bag_representative_code: resultDataBagRepresentative[i].bag_representative_code,
+            bag_representative_id: resultDataBagRepresentative[i].bag_representative_id,
+            bag_type: 2,
+            bagging_id: null,
+            bagging_number: null,
+            weight: resultDataBagRepresentative[i].total_weight,
+            representative_code: resultDataBagRepresentative[0].representative_code,
+          });
+        }
+      }
+      result.statusCode = HttpStatus.OK;
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`ID Tujuan SMD ` + payload.do_smd_detail_id + ` tidak ditemukan!`);
     }
   }
 

@@ -56,10 +56,29 @@ export class CodPayment extends TmsBaseEntity {
   })
   noReference: string | null;
 
-  // User Created == User Driver
+  // new field
+  @Column('bigint', {
+    nullable: true,
+    name: 'awb_item_id',
+  })
+  awbItemId: number | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'user_id_driver',
+  })
+  userIdDriver: number | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id',
+  })
+  branchId: number | null;
+
+  // User Driver
   @ManyToOne(() => User)
   @JoinColumn({
-    name: 'user_id_created',
+    name: 'user_id_driver',
   })
-  userCreated: User;
+  userDriver: User;
 }

@@ -2,14 +2,13 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Response, Get,
 import express = require('express');
 import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import {BagCityService} from '../../services/integration/bag-city.service';
-import {PermissionTokenGuard} from '../../../../shared/guards/permission-token.guard';
-import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
-import {BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm} from '../../models/bag-city-response.vm';
-import {BagCityPayloadVm, BagCityExportPayloadVm} from '../../models/bag-city-payload.vm';
-import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm } from '../../models/print-bag-city-payload.vm';
+import { BagCityService } from '../../services/integration/bag-city.service';
+import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
+import { BagCityResponseVm, ListBagCityResponseVm, ListDetailBagCityResponseVm, BagCityMoreResponseVm, BagCityDetailScanResponseVm, CreateBagCityResponseVm } from '../../models/bag-city-response.vm';
+import { BagCityPayloadVm, BagCityExportPayloadVm, BagCityMorePayloadVm, BagCityDetailScanPayloadVm, BagCityCreateHeaderPayloadVm } from '../../models/bag-city-payload.vm';
+import { PrintBagCityPayloadVm, PrintBagCityForPaperPayloadVm, BagCityExternalPrintPayloadVm, BagCityExternalPrintExecutePayloadVm, BagCityExternalPrintStickerPayloadVm, BagCityExternalPrintStickerExecutePayloadVm } from '../../models/print-bag-city-payload.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { Transaction } from 'typeorm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 
 @ApiUseTags('SMD Bag City')
@@ -22,8 +21,8 @@ export class BagCityController {
   @ApiOkResponse({ type: ListBagCityResponseVm })
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  public async listBagging(@Body() payload: BaseMetaPayloadVm) {
-    return BagCityService.listBagging(payload);
+  public async listBagCity(@Body() payload: BaseMetaPayloadVm) {
+    return BagCityService.listBagCity(payload);
   }
 
   @Post('list/detail')
@@ -31,8 +30,8 @@ export class BagCityController {
   @ApiOkResponse({ type: ListDetailBagCityResponseVm })
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  public async listDetailBagging(@Body() payload: BaseMetaPayloadVm) {
-    return BagCityService.listDetailBagging(payload);
+  public async listDetailBagCity(@Body() payload: BaseMetaPayloadVm) {
+    return BagCityService.listDetailBagCity(payload);
   }
 
   @Post('create')
@@ -42,28 +41,65 @@ export class BagCityController {
   @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
-  public async createBagging(@Body() payload: BagCityPayloadVm) {
-    return BagCityService.createBagging(payload);
+  public async createBagCity(@Body() payload: BagCityPayloadVm) {
+    return BagCityService.createBagCity(payload);
+  }
+
+  @Post('create-header')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: CreateBagCityResponseVm })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async createBagCityHeader(@Body() payload: BagCityCreateHeaderPayloadVm) {
+    return BagCityService.createBagCityHeader(payload);
+  }
+
+  @Post('create/manual-input')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: BagCityMoreResponseVm })
+  @ApiBearerAuth()
+  @Transactional()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async createBagCityMore(@Body() payload: BagCityMorePayloadVm) {
+    return BagCityService.createBagCityMore(payload);
   }
 
   @Get('print')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
-  public async printBagging(
+  public async printBagCity(
     @Query() queryParams: PrintBagCityPayloadVm,
     @Response() serverResponse: express.Response,
   ) {
-    return BagCityService.printBagging(serverResponse, queryParams);
+    return BagCityService.printBagCity(serverResponse, queryParams);
+  }
+
+  @Post('print-sticker/store')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async storeBagCityExternalPrintSticker(@Body() body: BagCityExternalPrintStickerPayloadVm) {
+    return BagCityService.storeBagCityExternalPrintSticker(body);
+  }
+
+  @Get('print-sticker/execute')
+  @ResponseSerializerOptions({disable: true})
+  public async executeBagCityExternalPrintSticker(
+    @Query() params: BagCityExternalPrintStickerExecutePayloadVm,
+    @Response() response: express.Response,
+  ) {
+    return BagCityService.executeBagCityExternalPrintSticker(response, params);
   }
 
   @Get('print-from-jsreport')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
-  public async printBaggingFromJsreport(
+  public async printBagCityFromJsReport(
     @Query() queryParams: PrintBagCityPayloadVm,
     @Response() serverResponse: express.Response,
   ) {
-    return BagCityService.printBaggingFromJsreport(serverResponse, queryParams);
+    return BagCityService.printBagCityFromJsReport(serverResponse, queryParams);
   }
 
   @Get('print-paper')
@@ -74,6 +110,23 @@ export class BagCityController {
     @Response() serverResponse: express.Response,
   ) {
     return BagCityService.printBagCityForPaper(serverResponse, queryParams);
+  }
+
+  @Post('print/store')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async storeBagCityExternalPrint(@Body() body: BagCityExternalPrintPayloadVm) {
+    return BagCityService.storeBagCityExternalPrint(body);
+  }
+
+  @Get('print/execute')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({disable: true})
+  public async executeBagCityExternalPrint(
+    @Query() params: BagCityExternalPrintExecutePayloadVm,
+    @Response() response: express.Response,
+  ) {
+    return BagCityService.executeBagCityExternalPrint(response, params);
   }
 
   @Post('excel/store')
@@ -89,5 +142,14 @@ export class BagCityController {
     @Response() serverResponse: express.Response,
   ) {
     return BagCityService.exportExcel(serverResponse, queryParams);
+  }
+
+  @Post('scan/detail')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: BagCityDetailScanResponseVm })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  public async listDetailScanBagCity(@Body() payload: BagCityDetailScanPayloadVm) {
+    return BagCityService.listDetailScanBagCity(payload);
   }
 }

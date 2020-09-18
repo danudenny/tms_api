@@ -20,6 +20,7 @@ import { BagCityController } from './integration/bag-city.controller';
 import { SmdHubController } from './integration/smd-hub.controller';
 import { ScanOutVendorController } from './integration/scanout-vendor.controller';
 import { ScanOutVendorListController } from './integration/scanout-vendor-list.controller';
+import { ReceiptScaninListController } from './integration/receipt-scanin-list.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
@@ -42,6 +43,7 @@ import { ScanOutVendorListController } from './integration/scanout-vendor-list.c
     SmdHubController,
     ScanOutVendorController,
     ScanOutVendorListController,
+    ReceiptScaninListController,
   ],
 })
 export class SmdServerControllersModule {}

@@ -176,4 +176,154 @@ export class ScanoutSmdExportService {
       id: identifier,
     };
   }
+
+  static async exportVendorCSV(
+    res: express.Response,
+    queryParams: StoreExcelScanOutPayloadVm,
+  ): Promise<any> {
+    // NOTE: get payload json from redis,
+    // retrieve data then convert to CSV
+    const body = await this.retrieveDataVendor(queryParams.id);
+
+    const payload = new BaseMetaPayloadVm();
+    payload.filters = body.filters ? body.filters : [];
+    payload.sortBy = body.sortBy ? body.sortBy : '';
+    payload.sortDir = body.sortDir ? body.sortDir : 'desc';
+    payload.search = body.search ? body.search : '';
+
+    // limit data query, avoid default limit 20 in OrionRepository query
+    payload.limit = 100000000;
+    const data = await this.getQueryCsvVendorOnly(payload);
+    await this.getVendorCSV(res, data);
+  }
+
+  static async getVendorCSV(
+    res: express.Response,
+    data: any,
+  ): Promise<any> {
+    const fastcsv = require('fast-csv');
+
+    // NOTE: create excel using unique name
+    const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.csv';
+    try {
+      const ws = fs.createWriteStream(fileName);
+      fastcsv.write(data, {headers: true}).pipe(ws);
+
+      const filestream = fs.createReadStream(fileName);
+      const mimeType = 'application/vnd.ms-excel';
+
+      res.setHeader('Content-disposition', 'attachment; filename=' + fileName);
+      res.setHeader('Content-type', mimeType);
+      filestream.pipe(res);
+    } catch (error) {
+      RequestErrorService.throwObj(
+        {
+          message: 'error ketika download excel Monitoring SMD',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    } finally {
+      // Delete temporary saved-file in server
+      if (fs.existsSync(fileName)) {
+        fs.unlinkSync(fileName);
+      }
+    }
+  }
+
+  static async getQueryCsvVendorOnly(payload: BaseMetaPayloadVm): Promise<any> {
+    // mapping search field and operator default ilike
+    payload.fieldResolverMap['vendor_id'] = 't2.vendor_id';
+    payload.fieldResolverMap['vendor_name'] = 't2.vendor_name';
+    payload.fieldResolverMap['vendor_code'] = 't2.vendor_code';
+    payload.fieldResolverMap['do_smd_id'] = 't1.do_smd_id';
+    payload.fieldResolverMap['branch_id'] = 't4.branch_id';
+    payload.fieldResolverMap['do_smd_code'] = 't1.do_smd_code';
+    payload.fieldResolverMap['do_smd_time'] = 't1.do_smd_time';
+    payload.fieldResolverMap['total_bag'] = 't1.total_bag';
+    payload.fieldResolverMap['total_bagging'] = 't1.total_bagging';
+    payload.fieldResolverMap['do_smd_detail_id'] = 't3.do_smd_detail_id';
+    payload.fieldResolverMap['branch_name'] = 't4.branch_name';
+    payload.fieldResolverMap['total_bag_representative'] = 't1.total_bag_representative';
+
+    payload.globalSearchFields = [
+      {
+        field: 'vendorName',
+      },
+      {
+        field: 'branchName',
+      },
+      {
+        field: 'vendorCode',
+      },
+      {
+        field: 'doSmdCode',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoSmd, 't1');
+
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_smd_code', 'No SMD'],
+      ['t1.do_smd_time', 'Tgl di Buat'],
+      ['t4.branch_name', 'Gerai Asal'],
+      ['t1.vendor_name', 'Vendor Name'],
+      ['t1.total_bag', 'Gabung Paket'],
+      ['t1.total_bagging', 'Bagging'],
+      ['t1.total_bag_representative', 'Gabung Kota'],
+    );
+
+    q.leftJoin(e => e.vendor, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doSmdDetails, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.isVendor, w => w.isTrue());
+    q.orderBy({ createdTime: 'DESC' });
+    const result = await q.exec();
+
+    return result;
+  }
+
+  static async storeExcelVendorPayload(payloadBody: any) {
+    if (!payloadBody) {
+      RequestErrorService.throwObj({
+        message: 'body cannot be null or undefined',
+      });
+    }
+    const identifier = moment().format('YYMMDDHHmmss');
+    // const authMeta = AuthService.getAuthData();
+    RedisService.setex(
+      `export-scan-out-vendor-smd-${identifier}`,
+      payloadBody,
+      10 * 60,
+      true,
+    );
+    return {
+      id: identifier,
+    };
+  }
+
+  public static async retrieveDataVendor(id: string): Promise<BaseMetaPayloadVm> {
+    const data = await this.retrieveGenericDataVendor<BaseMetaPayloadVm>(id);
+    if (!data) {
+      RequestErrorService.throwObj({
+        message: 'Data export excel tidak ditemukan',
+      });
+    }
+    return data;
+  }
+
+  // NOTE: get data payload json in redis
+  static async retrieveGenericDataVendor<T = any>(
+    identifier: string | number,
+  ) {
+    return RedisService.get<T>(`export-scan-out-vendor-smd-${identifier}`, true);
+  }
 }
