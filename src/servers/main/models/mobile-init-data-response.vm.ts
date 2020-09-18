@@ -8,8 +8,8 @@ export class MobileInitDataResponseVm {
   @ApiModelProperty({ type: () => [ReasonVm] })
   reason: ReasonVm[];
 
-  @ApiModelProperty()
-  awbStatus: AwbStatusVm;
+  @ApiModelProperty({ type: () => [AwbStatusVm]})
+  awbStatus: AwbStatusVm[];
 
   @ApiModelProperty({ type: [MobileDeliveryVm] })
   delivery: MobileDeliveryVm[];

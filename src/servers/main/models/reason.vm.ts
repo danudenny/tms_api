@@ -17,6 +17,9 @@ export class ReasonVm {
   @ApiModelProperty()
   reasonType: string;
 
+  @ApiModelProperty()
+  isDeleted: boolean;
+
 }
 
 export class ReasonSearchVm {
