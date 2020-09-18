@@ -785,7 +785,6 @@ export class V1WebReportCodService {
                 updatedTime: 1,
                 paymentMethod: 1,
                 codFee: 1
-
               },
             },
           ],
@@ -797,7 +796,6 @@ export class V1WebReportCodService {
           preserveNullAndEmptyArrays: allowNullTd,
         },
       },
-
       { $skip: skip },
       { $limit: limit },
 
@@ -996,6 +994,7 @@ export class V1WebReportCodService {
           supplierInvoiceStatus: "$supplierInvoiceStatusName",
           prtParcelValue: '$parcelValue',
           codNilai: '$codValue',
+          prtCustPackageId: '$custPackage',
           lastValidTrackingDateTime: '$podDate',
           penerima: '$consigneeName',
           receiverRemark: "$parcelNote",
