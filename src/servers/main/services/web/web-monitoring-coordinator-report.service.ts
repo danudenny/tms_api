@@ -38,7 +38,7 @@ export class WebMonitoringCoordinatorReportService {
   }
 
   static async storeMonitoringPayload(
-    payload: any,
+    payload: BaseMetaPayloadVm,
   ): Promise<MonitoringCoordinatorExcelExecuteResponseVm> {
     const result = new MonitoringCoordinatorExcelExecuteResponseVm();
     result.id = await this.storePayload(
@@ -69,7 +69,7 @@ export class WebMonitoringCoordinatorReportService {
     } catch (error) {
       RequestErrorService.throwObj(
         {
-          message: `error ketika download excel Monitoring`,
+          message: `error ketika download excel Monitoring Korwil`,
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -85,21 +85,16 @@ export class WebMonitoringCoordinatorReportService {
     res: express.Response,
     queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
   ): Promise<any> {
-    const payload = await this.retrieveGenericData<any>(
+    const payload = await this.retrieveGenericData<BaseMetaPayloadVm>(
       'monitoring-coordinator',
       queryParams.id,
     );
-    if (!payload) {
-      RequestErrorService.throwObj(
-        {
-          message: 'body cannot be null or undefined',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+
     const p = new BaseMetaPayloadVm();
-    p.filters = payload.filters ? payload.filters : payload;
-    p.limit = 10000;
+    p.filters = payload.filters ? payload.filters : [];
+    p.sortBy = payload.sortBy ? payload.sortBy : '';
+    p.sortDir = payload.sortDir ? payload.sortDir : 'desc';
+    p.search = payload.search ? payload.search : '';
 
     const data = await this.getDataCsvMonitoringKorwil(p);
 
@@ -149,7 +144,7 @@ export class WebMonitoringCoordinatorReportService {
     res: express.Response,
     queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
   ): Promise<any> {
-    const payload = await this.retrieveGenericData<any>(
+    const payload = await this.retrieveGenericData<BaseMetaPayloadVm>(
       'monitoring-coordinator',
       queryParams.id,
     );
@@ -163,8 +158,10 @@ export class WebMonitoringCoordinatorReportService {
       );
     }
     const p = new BaseMetaPayloadVm();
-    p.filters = payload.filters ? payload.filters : payload;
-    p.limit = 10000;
+    p.filters = payload.filters ? payload.filters : [];
+    p.sortBy = payload.sortBy ? payload.sortBy : '';
+    p.sortDir = payload.sortDir ? payload.sortDir : 'desc';
+    p.search = payload.search ? payload.search : '';
 
     const data = await this.getDataCsvMonitoringBranch(p);
 
