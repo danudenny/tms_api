@@ -162,3 +162,8 @@ export class WebMonitoringCoordinatorTaskReportResponse {
   @ApiModelProperty({ type: () => [TaskDetail] })
   transactionDetail: TaskDetail[];
 }
+
+export class MonitoringCoordinatorExcelExecuteResponseVm {
+  @ApiModelProperty()
+  id: string;
+}

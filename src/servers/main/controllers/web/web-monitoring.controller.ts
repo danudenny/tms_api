@@ -1,5 +1,5 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get } from '@nestjs/common';
-
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get, Query, Response } from '@nestjs/common';
+import express = require('express');
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BagMonitoringPayloadVm } from '../../models/bag-monitoring-payload.vm';
@@ -8,8 +8,10 @@ import { WebMonitoringService } from '../../services/web/web-monitoring.service'
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { WebMonitoringCoordinatorService } from '../../services/web/web-monitoring-coordinator.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse, CreateTransactionCoordinatorResponse, WebMonitoringCoordinatorTaskReportResponse, WebMonitoringCoordinatorBranchResponse } from '../../models/web-monitoring-coordinator.response.vm';
-import { WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload, WebMonitoringCoordinatorDetailPayload } from '../../models/web-monitoring-coordinator-payload.vm';
+import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse, CreateTransactionCoordinatorResponse, WebMonitoringCoordinatorTaskReportResponse, WebMonitoringCoordinatorBranchResponse, MonitoringCoordinatorExcelExecuteResponseVm } from '../../models/web-monitoring-coordinator.response.vm';
+import { WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload, WebMonitoringCoordinatorDetailPayload, MonitoringCoordinatorExcelExecutePayloadVm } from '../../models/web-monitoring-coordinator-payload.vm';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
+import { WebMonitoringCoordinatorReportService } from '../../services/web/web-monitoring-coordinator-report.service';
 
 @ApiUseTags('Web Monitoring')
 @Controller('web/monitoring')
@@ -90,5 +92,29 @@ export class WebMonitoringController {
   @ApiOkResponse({ type: CreateTransactionCoordinatorResponse })
   public async createTransaction() {
     return WebMonitoringCoordinatorService.createCoordinatorTrans();
+  }
+
+  @Post('coordinator/excel/store')
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: MonitoringCoordinatorExcelExecuteResponseVm })
+  @ResponseSerializerOptions({ disable: true })
+  public async storePayloadExcel(@Body() payloadBody: BaseMetaPayloadVm) {
+    return WebMonitoringCoordinatorReportService.storeMonitoringPayload(payloadBody);
+  }
+
+  @Get('coordinator/excel/korwil-execute')
+  public async exportExcelMonitoringKorwil(
+    @Query() queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return WebMonitoringCoordinatorReportService.generateMonitoringKorwilCSV(serverResponse, queryParams);
+  }
+
+  @Get('coordinator/excel/branch-execute')
+  public async exportExcelMonitoringBranch(
+    @Query() queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return WebMonitoringCoordinatorReportService.generateMonitoringBranchCSV(serverResponse, queryParams);
   }
 }
