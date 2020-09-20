@@ -138,7 +138,7 @@ export class V1WebAwbCodService {
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter ANT, DLV
     q.andWhere(
-      e => e.awbStatusIdLast,
+      e => e.doPodDeliverDetail.awbStatusIdLast,
       w => w.in([14000, 30000]),
     );
 
@@ -248,7 +248,7 @@ export class V1WebAwbCodService {
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter ANT, DLV
     q.andWhere(
-      e => e.awbStatusIdLast,
+      e => e.doPodDeliverDetail.awbStatusIdLast,
       w => w.in([14000, 30000]),
     );
 
