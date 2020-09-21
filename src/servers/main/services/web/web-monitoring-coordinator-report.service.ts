@@ -99,6 +99,7 @@ export class WebMonitoringCoordinatorReportService {
     }
     const p = new BaseMetaPayloadVm();
     p.filters = payload.filters ? payload.filters : payload;
+    p.limit = 10000;
 
     const data = await this.getDataCsvMonitoringKorwil(p);
 
@@ -163,6 +164,7 @@ export class WebMonitoringCoordinatorReportService {
     }
     const p = new BaseMetaPayloadVm();
     p.filters = payload.filters ? payload.filters : payload;
+    p.limit = 10000;
 
     const data = await this.getDataCsvMonitoringBranch(p);
 
