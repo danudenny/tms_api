@@ -183,13 +183,17 @@ export class MobileKorwilService {
     );
     if (!this.configKorwil.palkurRoleId.includes(Number(roleId))) {
       qb.innerJoin(
-        'user_to_branch',
+        `(
+          SELECT ref_branch_id
+          FROM user_to_branch
+          WHERE
+            ref_user_id = '${userId}' AND
+            is_deleted = FALSE
+          LIMIT 1
+        )`,
         'utb',
         'utb.ref_branch_id = kt.branch_id AND utb.is_deleted = false',
       );
-      qb.andWhere('utb.ref_user_id = :userId', {
-        userId,
-      });
     }
     qb.andWhere('kt.is_deleted = false');
     qb.andWhere('kt.branch_id = :branchIdTemp', {
