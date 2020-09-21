@@ -98,7 +98,7 @@ export class WebMonitoringController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: MonitoringCoordinatorExcelExecuteResponseVm })
   @ResponseSerializerOptions({ disable: true })
-  public async storePayloadExcel(@Body() payloadBody: BaseMetaPayloadVm) {
+  public async storePayloadExcel(@Body() payloadBody: any) {
     return WebMonitoringCoordinatorReportService.storeMonitoringPayload(payloadBody);
   }
 
