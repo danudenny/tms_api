@@ -11,7 +11,7 @@ import { MonitoringCoordinatorExcelExecutePayloadVm } from '../../models/web-mon
 import { RedisService } from '../../../../shared/services/redis.service';
 
 @Injectable()
-export class WebMonitoringCoordinatorReportService {s;
+export class WebMonitoringCoordinatorReportService {
   constructor() {}
   static async retrieveGenericData<T = any>(
     prefix: string,
