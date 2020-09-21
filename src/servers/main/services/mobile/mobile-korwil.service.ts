@@ -50,6 +50,7 @@ export class MobileKorwilService {
     qb.andWhere('utb.ref_user_id = :userId', {
       userId: authMeta.userId,
     });
+    qb.groupBy('b.branch_id, b.branch_name');
 
     const result = new BranchListKorwilResponseVm();
     result.branchList = await qb.getRawMany();
