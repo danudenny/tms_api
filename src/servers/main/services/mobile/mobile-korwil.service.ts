@@ -215,7 +215,7 @@ export class MobileKorwilService {
     if (!this.configKorwil.palkurRoleId.includes(Number(roleId))) {
       qb.innerJoin(
         `(
-          SELECT ref_branch_id
+          SELECT ref_branch_id, is_deleted
           FROM user_to_branch
           WHERE
             ref_user_id = '${userId}' AND
@@ -364,14 +364,27 @@ export class MobileKorwilService {
         .format('YYYY-MM-DD 06:00:00');
     }
 
-    let id = await this.getKorwilIdByrequestDate(authMeta.userId, branchId, fromDate, toDate);
-    if (!id) {
-      const subtractOneDay = {
-        fromDate: moment(fromDate).subtract(1, 'days').format('YYYY-MM-DD HH:mm:ss'),
-        toDate: moment(toDate).subtract(1, 'days').format('YYYY-MM-DD HH:mm:ss'),
-      };
-      id = await this.getKorwilIdByrequestDate(authMeta.userId, branchId, subtractOneDay.fromDate, subtractOneDay.toDate, 0);
-    }
+    const qb1 = createQueryBuilder();
+    qb1.addSelect('kt.korwil_transaction_id', 'id');
+    qb1.from('korwil_transaction', 'kt');
+    qb1.andWhere('kt.branch_id = :branchIdTemp', {
+      branchIdTemp: branchId,
+    });
+    qb1.andWhere('kt.user_id = :userId', {
+      userId: authMeta.userId,
+    });
+    qb1.andWhere('kt.employee_journey_id Is Not Null');
+    qb1.andWhere(
+      'kt.created_time >= :startDate and kt.created_time <= :endDate',
+      {
+        startDate: fromDate,
+        endDate: toDate,
+      },
+    );
+    qb1.andWhere('kt.is_deleted = false');
+    qb1.orderBy('created_time', 'DESC');
+    const dataKorwil = await qb1.getRawOne();
+    const id = dataKorwil ? dataKorwil.id : null;
 
     // get data item list
     const data = await this.getDataListItem(branchId, authMeta.userId, id, permissonPayload.roleId);
