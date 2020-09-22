@@ -81,21 +81,8 @@ export class MobileSmdService {
         );
       }
 
-      // old update DoSmdDetail
-      // await DoSmdDetail.update(
-      //   { doSmdId : payload.do_smd_id, arrivalTime: null },
-      //   {
-      //     doSmdStatusIdLast: 3000,
-      //     departureTime: moment().toDate(),
-      //     latitudeDeparture: payload.latitude,
-      //     longitudeDeparture: payload.longitude,
-      //     userIdUpdated: authMeta.userId,
-      //     updatedTime: timeNow,
-      //   },
-      // );
-
-      // new update DoSmdDetail returning doSmdDetailId
-      const updateDoSmdDetail = await createQueryBuilder().update(DoSmdDetail).set(
+      await DoSmdDetail.update(
+        { doSmdId : payload.do_smd_id, arrivalTime: null },
         {
           doSmdStatusIdLast: 3000,
           departureTime: moment().toDate(),
@@ -104,33 +91,9 @@ export class MobileSmdService {
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
-      ).where(`do_smd_id = '${payload.do_smd_id}'`)
-      .andWhere('arrival_time IS NULL')
-      .returning(['doSmdDetailId', 'branchIdTo', 'doSmdStatusIdLast'])
-      .execute();
-      if (updateDoSmdDetail.raw.length > 0) {
-        // const doSmdDetailIds = map(updateDoSmdDetail.raw, item => {
-        //   return item.do_smd_detail_id;
-        // });
-        // UPDATE STATUS AWB AND BAG
-        // BACKGROUND PROCESS
-        BagScanOutBranchSmdQueueService.perform(
-          // doSmdDetailIds,
-          payload.do_smd_id,
-          permissonPayload.branchId,
-          authMeta.userId,
-        );
-      }
+      );
 
-      // cari history smd otw(3000) dan tambah history jika status terakhir bukan 3000
-      const qb = createQueryBuilder();
-      qb.addSelect('dsh.do_smd_status_id', 'status');
-      qb.from('do_smd_history', 'dsh');
-      qb.andWhere('dsh.do_smd_id = :id', { id: payload.do_smd_id });
-      qb.andWhere('dsh.is_deleted = false');
-      const history = await qb.getRawOne();
-
-      if (history && history.status != 3000) {
+      if (resultDoSmd.doSmdStatusIdLast != 3000) {
         const paramDoSmdHistoryId = await this.createDoSmdHistory(
           payload.do_smd_id,
           null,
@@ -144,6 +107,14 @@ export class MobileSmdService {
           null,
           null,
           null,
+          authMeta.userId,
+        );
+
+        // UPDATE STATUS AWB AND BAG
+        // BACKGROUND PROCESS
+        BagScanOutBranchSmdQueueService.perform(
+          payload.do_smd_id,
+          permissonPayload.branchId,
           authMeta.userId,
         );
       }
