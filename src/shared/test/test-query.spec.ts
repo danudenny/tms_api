@@ -63,7 +63,6 @@ describe('Test Func', () => {
       ['t1.awb_item_id', 'awbItemId'],
       ['t1.updated_time', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
-      ['t1.awb_status_id_final', 'awbStatusIdFinal'],
       ['t7.awb_status_title', 'awbStatusLast'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
@@ -79,27 +78,20 @@ describe('Test Func', () => {
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
       ['t1.transaction_status_id', 'transactionStatusId'],
-      ['t9.created_time', 'pickupRequestTime'],
+      ['t9.status_title', 'transactionStatusName'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
-    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
+    q.leftJoin(e => e.doPodDeliverDetail, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
-    q.innerJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(
-      e => e.doPodDeliverDetail.codPayment.userDriver,
+      e => e.doPodDeliverDetail.doPodDeliver.userDriver,
       't4',
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
     q.innerJoin(e => e.awb.packageType, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -108,24 +100,22 @@ describe('Test Func', () => {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbStatusFinal, 't7', j =>
+    q.innerJoin(e => e.awbStatus, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse())
+      ,
+    );
+
+    q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.pickupRequestDetail, 't9', j =>
+    q.leftJoin(e => e.transactionStatus, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.transactionStatusId, w => w.isNull());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
-    // filter DLV
-    q.andWhere(
-      e => e.awbStatusIdFinal,
-      w => w.equals(30000),
-    );
-
-    q.take(10);
+    q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
+    q.take(5);
     const data = await q.exec();
     console.log('######## DATA :: ', data);
     return true;
