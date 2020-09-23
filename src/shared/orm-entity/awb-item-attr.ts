@@ -10,6 +10,7 @@ import { Awb } from './awb';
 import { TransactionStatus } from './transaction-status';
 import { PickupRequestDetail } from './pickup-request-detail';
 import { CodUserToBranch } from './cod-user-to-branch';
+import { CodPayment } from './cod-payment';
 
 @Entity('awb_item_attr', { schema: 'public' })
 export class AwbItemAttr extends BaseEntity {
@@ -243,4 +244,8 @@ export class AwbItemAttr extends BaseEntity {
   @OneToOne(() => CodUserToBranch)
   @JoinColumn({ name: 'branch_id_last', referencedColumnName: 'branchId' })
   codUserToBranch: CodUserToBranch;
+
+  @OneToOne(() => CodPayment)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  codPayment: CodPayment;
 }
