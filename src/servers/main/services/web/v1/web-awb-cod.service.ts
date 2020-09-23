@@ -86,6 +86,8 @@ export class V1WebAwbCodService {
       ['t1.updated_time', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
+      ['t1.awb_status_id_final', 'awbStatusIdFinal'],
+      ['t11.awb_status_title', 'awbStatusFinal'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
       ['t2.awb_date', 'manifestedDate'],
@@ -95,7 +97,7 @@ export class V1WebAwbCodService {
       ['t4.user_id', 'userIdDriver'],
       ['t4.first_name', 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
-      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t8.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       [`t8.cod_payment_method`, 'codPaymentMethod'],
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
@@ -107,16 +109,12 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+    q.leftJoin(e => e.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(
-      e => e.doPodDeliverDetail.codPayment.userDriver,
+      e => e.codPayment.userDriver,
       't4',
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -130,6 +128,10 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awbStatus, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awbStatusFinal, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -161,7 +163,7 @@ export class V1WebAwbCodService {
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter ANT, DLV
     q.andWhere(
-      e => e.doPodDeliverDetail.awbStatusIdLast,
+      e => e.awbStatusIdLast,
       w => w.in([14000, 30000]),
     );
 
@@ -218,6 +220,8 @@ export class V1WebAwbCodService {
       ['t1.updated_time', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
+      ['t1.awb_status_id_final', 'awbStatusIdFinal'],
+      ['t11.awb_status_title', 'awbStatusFinal'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
       ['t2.awb_date', 'manifestedDate'],
@@ -227,7 +231,7 @@ export class V1WebAwbCodService {
       ['t4.user_id', 'userIdDriver'],
       ['t4.first_name', 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
-      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t8.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       [`t8.cod_payment_method`, 'codPaymentMethod'],
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
@@ -239,16 +243,12 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+    q.leftJoin(e => e.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(
-      e => e.doPodDeliverDetail.codPayment.userDriver,
+      e => e.codPayment.userDriver,
       't4',
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -262,6 +262,10 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awbStatus, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awbStatusFinal, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -293,7 +297,7 @@ export class V1WebAwbCodService {
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter ANT, DLV
     q.andWhere(
-      e => e.doPodDeliverDetail.awbStatusIdLast,
+      e => e.awbStatusIdLast,
       w => w.in([14000, 30000]),
     );
 
@@ -358,7 +362,7 @@ export class V1WebAwbCodService {
       ['t4.user_id', 'userIdDriver'],
       ['t4.first_name', 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
-      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t8.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       [`t8.cod_payment_method`, 'codPaymentMethod'],
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
@@ -370,16 +374,12 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+    q.innerJoin(e => e.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(
-      e => e.doPodDeliverDetail.codPayment.userDriver,
+      e => e.codPayment.userDriver,
       't4',
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -490,7 +490,7 @@ export class V1WebAwbCodService {
       ['t4.user_id', 'userIdDriver'],
       ['t4.first_name', 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
-      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t8.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       ['t1.transaction_status_id', 'transactionStatusId'],
     );
 
@@ -498,16 +498,12 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+    q.innerJoin(e => e.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(
-      e => e.doPodDeliverDetail.codPayment.userDriver,
+      e => e.codPayment.userDriver,
       't4',
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );

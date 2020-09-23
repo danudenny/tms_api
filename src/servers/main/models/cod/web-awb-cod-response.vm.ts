@@ -47,6 +47,12 @@ export class WebItemAwbCodResponseVm {
   awbStatusLast: string;
 
   @ApiModelProperty()
+  awbStatusIdFinal: string;
+
+  @ApiModelProperty()
+  awbStatusFinal: string;
+
+  @ApiModelProperty()
   userIdDriver: number;
 
   @ApiModelProperty()
