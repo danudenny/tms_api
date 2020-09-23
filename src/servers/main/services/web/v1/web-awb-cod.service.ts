@@ -47,7 +47,7 @@ export class V1WebAwbCodService {
   static async awbCod(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodListResponseVm> {
-    const authMeta = AuthService.getAuthData();
+    // const authMeta = AuthService.getAuthData();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -139,24 +139,24 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    //#region Cod Merger
-    const codUserToBranch = await CodUserToBranch.findOne({
-      select: ['userId'],
-      where: {
-        userId: authMeta.userId,
-        isDeleted: false,
-      },
-    });
+    // //#region Cod Merger
+    // const codUserToBranch = await CodUserToBranch.findOne({
+    //   select: ['userId'],
+    //   where: {
+    //     userId: authMeta.userId,
+    //     isDeleted: false,
+    //   },
+    // });
 
-    const userId = codUserToBranch ? codUserToBranch.userId : null;
+    // const userId = codUserToBranch ? codUserToBranch.userId : null;
 
-    if (userId) {
-      q.innerJoin(e => e.codUserToBranch, 't10', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse())
-        .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
-      );
-    }
-    //#endregion
+    // if (userId) {
+    //   q.innerJoin(e => e.codUserToBranch, 't10', j =>
+    //     j.andWhere(e => e.isDeleted, w => w.isFalse())
+    //     .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    //   );
+    // }
+    // //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
@@ -181,7 +181,7 @@ export class V1WebAwbCodService {
   static async countAwbCod(
     payload: BaseMetaPayloadVm,
   ): Promise<WebCodCountResponseVm> {
-    const authMeta = AuthService.getAuthData();
+    // const authMeta = AuthService.getAuthData();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -273,24 +273,24 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    //#region Cod Merger
-    const codUserToBranch = await CodUserToBranch.findOne({
-      select: ['userId'],
-      where: {
-        userId: authMeta.userId,
-        isDeleted: false,
-      },
-    });
+    // //#region Cod Merger
+    // const codUserToBranch = await CodUserToBranch.findOne({
+    //   select: ['userId'],
+    //   where: {
+    //     userId: authMeta.userId,
+    //     isDeleted: false,
+    //   },
+    // });
 
-    const userId = codUserToBranch ? codUserToBranch.userId : null;
+    // const userId = codUserToBranch ? codUserToBranch.userId : null;
 
-    if (userId) {
-      q.innerJoin(e => e.codUserToBranch, 't10', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse())
-        .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
-      );
-    }
-    //#endregion
+    // if (userId) {
+    //   q.innerJoin(e => e.codUserToBranch, 't10', j =>
+    //     j.andWhere(e => e.isDeleted, w => w.isFalse())
+    //     .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    //   );
+    // }
+    // //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
@@ -312,7 +312,7 @@ export class V1WebAwbCodService {
   static async awbCodDlv(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodDlvListResponseVm> {
-    const authMeta = AuthService.getAuthData();
+    // const authMeta = AuthService.getAuthData();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -400,24 +400,24 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    //#region Cod Merger
-    const codUserToBranch = await CodUserToBranch.findOne({
-      select: ['userId'],
-      where: {
-        userId: authMeta.userId,
-        isDeleted: false,
-      },
-    });
+    // //#region Cod Merger
+    // const codUserToBranch = await CodUserToBranch.findOne({
+    //   select: ['userId'],
+    //   where: {
+    //     userId: authMeta.userId,
+    //     isDeleted: false,
+    //   },
+    // });
 
-    const userId = codUserToBranch ? codUserToBranch.userId : null;
+    // const userId = codUserToBranch ? codUserToBranch.userId : null;
 
-    if (userId) {
-      q.innerJoin(e => e.codUserToBranch, 't10', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse())
-        .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
-      );
-    }
-    //#endregion
+    // if (userId) {
+    //   q.innerJoin(e => e.codUserToBranch, 't10', j =>
+    //     j.andWhere(e => e.isDeleted, w => w.isFalse())
+    //     .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    //   );
+    // }
+    // //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
@@ -442,7 +442,7 @@ export class V1WebAwbCodService {
   static async countAwbCodDlv(
     payload: BaseMetaPayloadVm,
   ): Promise<WebCodCountResponseVm> {
-    const authMeta = AuthService.getAuthData();
+    // const authMeta = AuthService.getAuthData();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -524,24 +524,24 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    //#region Cod Merger
-    const codUserToBranch = await CodUserToBranch.findOne({
-      select: ['userId'],
-      where: {
-        userId: authMeta.userId,
-        isDeleted: false,
-      },
-    });
+    // //#region Cod Merger
+    // const codUserToBranch = await CodUserToBranch.findOne({
+    //   select: ['userId'],
+    //   where: {
+    //     userId: authMeta.userId,
+    //     isDeleted: false,
+    //   },
+    // });
 
-    const userId = codUserToBranch ? codUserToBranch.userId : null;
+    // const userId = codUserToBranch ? codUserToBranch.userId : null;
 
-    if (userId) {
-      q.innerJoin(e => e.codUserToBranch, 't10', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse())
-        .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
-      );
-    }
-    //#endregion
+    // if (userId) {
+    //   q.innerJoin(e => e.codUserToBranch, 't10', j =>
+    //     j.andWhere(e => e.isDeleted, w => w.isFalse())
+    //     .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    //   );
+    // }
+    // //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
