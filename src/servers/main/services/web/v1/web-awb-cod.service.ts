@@ -46,6 +46,7 @@ export class V1WebAwbCodService {
   static async awbCod(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodListResponseVm> {
+    // const authMeta = AuthService.getAuthData();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -134,6 +135,11 @@ export class V1WebAwbCodService {
     q.leftJoin(e => e.transactionStatus, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    // q.innerJoin(e => e.codUserToBranch, 't10', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse())
+    //   .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    // );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
@@ -304,7 +310,7 @@ export class V1WebAwbCodService {
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
       ['t1.updated_time', 'transactionDate'],
-      ['t1.awb_status_id_last', 'awbStatusIdLast'],
+      ['t1.awb_status_id_final', 'awbStatusIdLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
       ['t7.awb_status_title', 'awbStatusLast'],
       ['t1.branch_id_last', 'branchIdLast'],
