@@ -3,12 +3,13 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   JoinColumn,
-  ManyToOne,
+  ManyToOne, OneToOne,
 } from 'typeorm';
 
 import { User } from './user';
 import { TmsBaseEntity } from './tms-base';
 import { Branch } from './branch';
+import { AwbItemAttr } from './awb-item-attr';
 
 @Entity('cod_user_to_branch', { schema: 'public' })
 export class CodUserToBranch extends TmsBaseEntity {
@@ -36,4 +37,8 @@ export class CodUserToBranch extends TmsBaseEntity {
   @ManyToOne(() => User, e => e.userRoles)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchIdLast' })
+  awbItemAttr: AwbItemAttr;
 }
