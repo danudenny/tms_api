@@ -231,7 +231,7 @@ export class CodFirstTransactionQueueService {
     const qb = createQueryBuilder();
     qb.addSelect('t1.awb_item_id', 'awbItemId');
     qb.addSelect('t1.awb_number', 'awbNumber');
-    qb.addSelect('t1.branch_id_last', 'currentPositionId');
+    qb.addSelect('t10.branch_id', 'currentPositionId');
     qb.addSelect('t7.branch_name', 'currentPosition');
     qb.addSelect('t1.awb_history_date_last', 'podDate');
     qb.addSelect('t2.awb_date', 'awbDate');
@@ -283,7 +283,7 @@ export class CodFirstTransactionQueueService {
     qb.innerJoin(
       'branch',
       't7',
-      't1.branch_id_last = t7.branch_id AND t7.is_deleted = false',
+      't10.branch_id = t7.branch_id AND t7.is_deleted = false',
     );
     qb.leftJoin(
       'branch',
@@ -294,6 +294,11 @@ export class CodFirstTransactionQueueService {
       'district',
       't9',
       't2.to_id = t9.district_id AND t8.is_deleted = false',
+    );
+    qb.innerJoin(
+      'cod_payment',
+      't10',
+      't10.awb_item_id = t1.awb_item_id AND t10.is_deleted = false',
     );
     qb.where('t1.awb_item_id = :awbItemId', { awbItemId });
     qb.andWhere('t1.awb_status_id_final = :statusDLV', { statusDLV: AWB_STATUS.DLV });
