@@ -8,6 +8,7 @@ import { DoReturnAwb } from './do_return_awb';
 import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 import { Awb } from './awb';
 import { TransactionStatus } from './transaction-status';
+import { PickupRequestDetail } from './pickup-request-detail';
 
 @Entity('awb_item_attr', { schema: 'public' })
 export class AwbItemAttr extends BaseEntity {
@@ -214,9 +215,17 @@ export class AwbItemAttr extends BaseEntity {
   @JoinColumn({ name: 'awb_item_id' })
   awbItem: AwbItem;
 
+  @OneToOne(() => PickupRequestDetail)
+  @JoinColumn({ name: 'awb_item_id' })
+  pickupRequestDetail: PickupRequestDetail;
+
   @OneToOne(() => AwbStatus)
   @JoinColumn({ name: 'awb_status_id_last' })
   awbStatus: AwbStatus;
+
+  @OneToOne(() => AwbStatus)
+  @JoinColumn({ name: 'awb_status_id_final' })
+  awbStatusFinal: AwbStatus;
 
   @OneToOne(() => Awb)
   @JoinColumn({ name: 'awb_id' })

@@ -30,12 +30,12 @@ import { BagScanOutBranchSmdQueueService } from './services/bag-scan-out-branch-
 import { BagScanDoSmdQueueService } from './services/bag-scan-do-smd-queue.service';
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from './services/bag-awb-delete-history-in-hub-from-smd-queue.service';
 import { BagRepresentativeSmdQueueService } from './services/bag-representative-smd-queue.service';
-import {BagRepresentativeScanDoSmdQueueService} from './services/bag-representative-scan-do-smd-queue.service';
+import { BagRepresentativeScanDoSmdQueueService } from './services/bag-representative-scan-do-smd-queue.service';
 import { BagRepresentativeDropoffHubQueueService } from './services/bag-representative-dropoff-hub-queue.service';
 import { BaggingDropoffHubQueueService } from './services/bagging-dropoff-hub-queue.service';
 import { CreateBagFirstScanHubQueueService } from './services/create-bag-first-scan-hub-queue.service';
 import { CreateBagAwbScanHubQueueService } from './services/create-bag-awb-scan-hub-queue.service';
-import {CodPaymentQueueService} from './services/cod-payment-queue.service';
+import { CodPaymentQueueService } from './services/cod-payment-queue.service';
 import { CodFirstTransactionQueueService } from './services/cod/cod-first-transaction-queue.service';
 import { CodSyncTransactionQueueService } from './services/cod/cod-sync-transaction-queue.service';
 import { CodUpdateTransactionQueueService } from './services/cod/cod-update-transaction-queue.service';
@@ -45,7 +45,8 @@ import { CodCronSettlementQueueService } from './services/cod/cod-cron-settlemen
 import { MongoDbConfig } from './config/database/mongodb.config';
 import { CodExportMongoQueueService } from './services/cod/cod-export-queue.service';
 import { BagRepresentativeScanOutHubQueueService } from './services/bag-representative-scan-out-hub-queue.service';
-import {BagScanVendorQueueService} from './services/bag-scan-vendor-queue.service';
+import { BagScanVendorQueueService } from './services/bag-scan-vendor-queue.service';
+import { CodSqlExportMongoQueueService } from './services/cod/cod-sql-export-queue.service';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -159,6 +160,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     CodTransactionHistoryQueueService.boot();
     CodUpdateSupplierInvoiceQueueService.boot();
     CodExportMongoQueueService.boot();
+    CodSqlExportMongoQueueService.boot();
     BagRepresentativeScanOutHubQueueService.boot();
     BagScanVendorQueueService.boot();
     // BagItemAwbQueueService.boot();
