@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { User } from './user';
 
 @Entity('cod_payment', { schema: 'public' })
 export class CodPayment extends TmsBaseEntity {
@@ -54,4 +55,30 @@ export class CodPayment extends TmsBaseEntity {
     name: 'no_reference',
   })
   noReference: string | null;
+
+  // new field
+  @Column('bigint', {
+    nullable: true,
+    name: 'awb_item_id',
+  })
+  awbItemId: number | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'user_id_driver',
+  })
+  userIdDriver: number | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'branch_id',
+  })
+  branchId: number | null;
+
+  // User Driver
+  @ManyToOne(() => User)
+  @JoinColumn({
+    name: 'user_id_driver',
+  })
+  userDriver: User;
 }
