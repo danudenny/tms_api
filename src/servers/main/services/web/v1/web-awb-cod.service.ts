@@ -317,7 +317,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't8.created_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
@@ -349,11 +349,11 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t1.updated_time', 'transactionDate'],
+      ['t8.created_time', 'transactionDate'],
       ['t1.awb_status_id_final', 'awbStatusIdLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
       ['t7.awb_status_title', 'awbStatusLast'],
-      ['t1.branch_id_last', 'branchIdLast'],
+      ['t8.branch_id', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
       ['t2.awb_date', 'manifestedDate'],
       ['t2.consignee_name', 'consigneeName'],
@@ -388,7 +388,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.branchLast, 't6', j =>
+    q.innerJoin(e => e.codPayment.branchFinal, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -447,7 +447,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't8.created_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
@@ -477,11 +477,11 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t1.updated_time', 'transactionDate'],
+      ['t8.created_time', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
       ['t7.awb_status_title', 'awbStatusLast'],
-      ['t1.branch_id_last', 'branchIdLast'],
+      ['t8.branch_id', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
       ['t2.awb_date', 'manifestedDate'],
       ['t2.consignee_name', 'consigneeName'],
@@ -512,7 +512,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.branchLast, 't6', j =>
+    q.innerJoin(e => e.codPayment.branchFinal, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
