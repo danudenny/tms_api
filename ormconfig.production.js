@@ -19,8 +19,7 @@ module.exports = {
     },
     slaves: [
       {
-        host:
-          'sicepat-tms-new-mon-rep.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+        host: 'tmsmonitoring.sicepat.com',
         port: 5432,
         username: 'sicepattmsuser',
         password: 's1c3p4Ttm$us3R3ncrypT3dbo05$',
@@ -61,7 +60,7 @@ module.exports = {
      * RANDOM: Select the node by random function.
      * ORDER: Select the first node available unconditionally.
      */
-    selector: 'RR',
+    selector: 'ORDER',
   },
   entities: ['dist/shared/orm-entity/*.js'],
   migrations: ['dist/shared/orm-migration/*.js'],
