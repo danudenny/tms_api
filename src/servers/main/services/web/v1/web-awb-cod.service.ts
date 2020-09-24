@@ -161,11 +161,11 @@ export class V1WebAwbCodService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
-    // filter ANT, DLV
-    q.andWhere(
-      e => e.awbStatusIdLast,
-      w => w.in([14000, 30000]),
-    );
+    // filter ANT, DLV, and IN_BRANCH
+    // q.andWhere(
+    //   e => e.awbStatusIdLast,
+    //   w => w.in([3500, 14000, 30000]),
+    // );
 
     const data = await q.exec();
     const total = 0;
