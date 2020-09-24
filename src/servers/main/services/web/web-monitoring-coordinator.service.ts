@@ -145,8 +145,6 @@ export class WebMonitoringCoordinatorService {
       [`MIN(d.check_in_date)`, 'checkInDatetime'],
       [`MAX(d.check_out_date)`, 'checkOutDatetime'],
       ['b.ref_user_id', 'userId'],
-      ['f.representative_id', 'representativeId'],
-      ['f.representative_code', 'representativeCode'],
     );
     q.innerJoin(e => e.userToBranch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -163,7 +161,7 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.branches.representative, 'f', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('b.ref_user_id, f.representative_id, f.representative_code, "coordinatorName"');
+    q.groupByRaw('b.ref_user_id, "coordinatorName"');
     q.orderByRaw('"checkInDatetime"', 'ASC');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
