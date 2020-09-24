@@ -31,6 +31,12 @@ export class WebMonitoringCoordinatorData {
 
   @ApiModelProperty()
   statusTransaction: string;
+
+  @ApiModelProperty()
+  representativeId: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
 }
 
 export class WebMonitoringCoordinatorResponse extends BaseMetaResponseVm {
@@ -47,6 +53,12 @@ export class WebMonitoringCoordinatorBranchData {
 
   @ApiModelProperty()
   userId: number;
+
+  @ApiModelProperty()
+  representativeId: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
 }
 export class WebMonitoringCoordinatorBranchResponse extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [WebMonitoringCoordinatorBranchData] })
@@ -71,6 +83,12 @@ export class WebMonitoringCoordinatorListData {
 
   @ApiModelProperty()
   checkOutDatetime: string;
+
+  @ApiModelProperty()
+  representativeId: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
 }
 
 export class WebMonitoringCoordinatorListResponse extends BaseMetaResponseVm {

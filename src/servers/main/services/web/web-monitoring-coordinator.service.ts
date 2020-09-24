@@ -25,7 +25,8 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['date'] = 't1.date';
     payload.fieldResolverMap['userId'] = 't1.user_id';
     payload.fieldResolverMap['coordinatorName'] = '"coordinatorName"';
-    payload.fieldResolverMap['employeeJourneyId'] = 't1.employee_journey_id';
+    payload.fieldResolverMap['representativeId'] = 't5.representative_id';
+    payload.fieldResolverMap['representativeCode'] = 't5.representative_code';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 't1');
     const q = repo.findAllRaw();
@@ -44,6 +45,8 @@ export class WebMonitoringCoordinatorService {
       [`CONCAT(t5.first_name, ' ', t5.last_name)`, 'coordinatorName'],
       ['t1.user_id', 'userId'],
       ['t1.status', 'statusTransaction'],
+      ['t6.representative_id', 'representativeId'],
+      ['t6.representative_code', 'representativeCode'],
     );
     q.innerJoin(e => e.branches, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -57,7 +60,10 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.users, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('t2.branch_id, t2.branch_name, t1.total_task, t4.check_in_date, t4.check_out_date, t1.date, t1.korwil_transaction_id, "coordinatorName", t1.user_id, t1.status');
+    q.innerJoin(e => e.branches.representative, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw('t2.branch_id, t2.branch_name, t1.total_task, t4.check_in_date, t4.check_out_date, t1.date, t1.korwil_transaction_id, "coordinatorName", t1.user_id, t1.status, t6.representative_id, t6.representative_code');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
     const result = new WebMonitoringCoordinatorResponse();
@@ -123,6 +129,8 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['checkOutDatetime'] = '"checkOutDatetime"';
     payload.fieldResolverMap['branchId'] = 'a.branch_id';
     payload.fieldResolverMap['coordinatorName'] = '"coordinatorName"';
+    payload.fieldResolverMap['representativeId'] = 'f.representative_id';
+    payload.fieldResolverMap['representativeCode'] = 'f.representative_code';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 'a');
     const q = repo.findAllRaw();
@@ -146,7 +154,13 @@ export class WebMonitoringCoordinatorService {
     q.leftJoin(e => e.employeeJourney, 'd', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('b.ref_user_id, "coordinatorName"');
+    q.innerJoin(e => e.branches, 'e', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branches.representative, 'f', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw('b.ref_user_id, f.representative_id, f.representative_code, "coordinatorName"');
     q.orderByRaw('"checkInDatetime"', 'ASC');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -245,6 +259,8 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['date'] = 't1.date';
     payload.fieldResolverMap['userId'] = 't1.user_id';
     payload.fieldResolverMap['branchName'] = '"branchName"';
+    payload.fieldResolverMap['representativeId'] = 't4.representative_id';
+    payload.fieldResolverMap['representativeCode'] = 't4.representative_code';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 't1');
     const q = repo.findAllRaw();
@@ -253,13 +269,18 @@ export class WebMonitoringCoordinatorService {
     q.selectRaw(`
       DISTINCT (t1.branch_id) AS "branchId",
       t1.user_id AS "userId",
-      t2.branch_name AS "branchName"
+      t2.branch_name AS "branchName",
+      t4.representative_code AS "representativeCode",
+      t4.representative_id AS "representativeId"
     `,
     );
     q.innerJoin(e => e.branches, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.users, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branches.representative, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     const data = await q.exec();
