@@ -25,6 +25,7 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['date'] = 't1.date';
     payload.fieldResolverMap['userId'] = 't1.user_id';
     payload.fieldResolverMap['coordinatorName'] = '"coordinatorName"';
+    payload.fieldResolverMap['employeeJourneyId'] = 't1.employee_journey_id';
     payload.fieldResolverMap['representativeId'] = 't5.representative_id';
     payload.fieldResolverMap['representativeCode'] = 't5.representative_code';
 
