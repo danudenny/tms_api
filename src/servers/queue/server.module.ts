@@ -143,19 +143,9 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     AwbSendPartnerQueueService.boot();
     BagDropoffHubQueueService.boot();
     UploadImagePodQueueService.boot();
-    DoSmdPostAwbHistoryMetaQueueService.boot();
-    BagScanInBranchSmdQueueService.boot();
-    BagScanOutBranchSmdQueueService.boot();
-    BagScanDoSmdQueueService.boot();
-    BagRepresentativeScanDoSmdQueueService.boot();
-    BagAwbDeleteHistoryInHubFromSmdQueueService.boot();
-    BagRepresentativeSmdQueueService.boot();
-    BaggingDropoffHubQueueService.boot();
-    BagRepresentativeDropoffHubQueueService.boot();
     CreateBagFirstScanHubQueueService.boot();
     CreateBagAwbScanHubQueueService.boot();
-    BagRepresentativeScanOutHubQueueService.boot();
-    BagScanVendorQueueService.boot();
+    
 
     if (serverConfig.bullCod) {
       // CodPaymentQueueService.boot();
@@ -169,6 +159,20 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       // init Cron here
       CodCronSettlementQueueService.init();
     }
+    if (serverConfig.bullSmd) {
+      BagRepresentativeScanOutHubQueueService.boot();
+      BagScanVendorQueueService.boot();
+      DoSmdPostAwbHistoryMetaQueueService.boot();
+      BagScanInBranchSmdQueueService.boot();
+      BagScanOutBranchSmdQueueService.boot();
+      BagScanDoSmdQueueService.boot();
+      BagRepresentativeScanDoSmdQueueService.boot();
+      BagAwbDeleteHistoryInHubFromSmdQueueService.boot();
+      BagRepresentativeSmdQueueService.boot();
+      BaggingDropoffHubQueueService.boot();
+      BagRepresentativeDropoffHubQueueService.boot();
+    }
+
 
   }
 }
