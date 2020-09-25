@@ -68,6 +68,8 @@ describe('Test Func', () => {
       ['t11.awb_status_title', 'awbStatusFinal'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
+      ['t8.branch_id', 'branchIdFinal'],
+      ['t12.branch_name', 'branchNameFinal'],
       ['t2.awb_date', 'manifestedDate'],
       ['t2.consignee_name', 'consigneeName'],
       ['t2.total_cod_value', 'codValue'],
@@ -105,13 +107,12 @@ describe('Test Func', () => {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    q.innerJoin(e => e.codPayment.branchFinal, 't12', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     q.innerJoin(e => e.awbStatus, 't7', j =>
-      j.andWhere(
-        e => e.isDeleted,
-        w => w.isFalse(),
-      ).orWhereRaw(`
-        "t7"."awb_status_id" = "t1"."awb_status_id_final"
-      `),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.awbStatusFinal, 't11', j =>
@@ -144,11 +145,11 @@ describe('Test Func', () => {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
-    // filter ANT, DLV
-    q.andWhere(
-      e => e.awbStatusIdLast,
-      w => w.in([14000, 30000]),
-    );
+    // filter ANT, DLV, and IN_BRANCH
+    // q.andWhere(
+    //   e => e.awbStatusIdLast,
+    //   w => w.in([3500, 14000, 30000]),
+    // );
 
     q.take(5);
     const data = await q.exec();
