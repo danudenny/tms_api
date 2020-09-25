@@ -26,8 +26,8 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['userId'] = 't1.user_id';
     payload.fieldResolverMap['coordinatorName'] = '"coordinatorName"';
     payload.fieldResolverMap['employeeJourneyId'] = 't1.employee_journey_id';
-    payload.fieldResolverMap['representativeId'] = 't5.representative_id';
-    payload.fieldResolverMap['representativeCode'] = 't5.representative_code';
+    payload.fieldResolverMap['representativeId'] = 't6.representative_id';
+    payload.fieldResolverMap['representativeCode'] = 't6.representative_code';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 't1');
     const q = repo.findAllRaw();

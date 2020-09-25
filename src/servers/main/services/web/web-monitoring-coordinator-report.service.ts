@@ -116,6 +116,8 @@ export class WebMonitoringCoordinatorReportService {
     payload.fieldResolverMap['checkOutDatetime'] = '"Check Out"';
     payload.fieldResolverMap['branchId'] = 'a.branch_id';
     payload.fieldResolverMap['coordinatorName'] = '"Nama Karyawan"';
+    payload.fieldResolverMap['representativeId'] = 'f.representative_id';
+    payload.fieldResolverMap['representativeCode'] = 'f.representative_code';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 'a');
     const q = repo.findAllRaw();
@@ -136,6 +138,12 @@ export class WebMonitoringCoordinatorReportService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.employeeJourney, 'd', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branches, 'e', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branches.representative, 'f', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.groupByRaw('b.ref_user_id, "Nama Karyawan"');
@@ -181,6 +189,8 @@ export class WebMonitoringCoordinatorReportService {
     payload.fieldResolverMap['userId'] = 't1.user_id';
     payload.fieldResolverMap['coordinatorName'] = 'CONCAT(t5.first_name, \' \', t5.last_name)';
     payload.fieldResolverMap['employeeJourneyId'] = 't1.employee_journey_id';
+    payload.fieldResolverMap['representativeId'] = 't6.representative_id';
+    payload.fieldResolverMap['representativeCode'] = 't6.representative_code';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 't1');
     const q = repo.findAllRaw();
@@ -208,6 +218,9 @@ export class WebMonitoringCoordinatorReportService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.users, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branches.representative, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.groupByRaw('t2.branch_id, t2.branch_name, t1.total_task, t4.check_in_date, t4.check_out_date, t1.date, t1.korwil_transaction_id, t1.user_id, t1.status');
