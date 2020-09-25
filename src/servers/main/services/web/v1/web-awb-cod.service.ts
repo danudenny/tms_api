@@ -54,11 +54,13 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
 
     payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
     payload.fieldResolverMap['branchNameLast'] = 't6.branch_name';
+    payload.fieldResolverMap['branchNameFinal'] = 't12.branch_name';
     payload.fieldResolverMap['userIdDriver'] = 't4.user_id';
     payload.fieldResolverMap['driverName'] = 't4.first_name';
     payload.fieldResolverMap['packageTypeCode'] = 't5.package_type_code';
@@ -90,6 +92,8 @@ export class V1WebAwbCodService {
       ['t11.awb_status_title', 'awbStatusFinal'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
+      ['t8.branch_id', 'branchIdFinal'],
+      ['t12.branch_name', 'branchNameFinal'],
       ['t2.awb_date', 'manifestedDate'],
       ['t2.consignee_name', 'consigneeName'],
       ['t2.total_cod_value', 'codValue'],
@@ -124,6 +128,10 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.branchLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.codPayment.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -188,11 +196,13 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
 
     payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
     payload.fieldResolverMap['branchNameLast'] = 't6.branch_name';
+    payload.fieldResolverMap['branchNameFinal'] = 't12.branch_name';
     payload.fieldResolverMap['userIdDriver'] = 't4.user_id';
     payload.fieldResolverMap['driverName'] = 't4.first_name';
     payload.fieldResolverMap['packageTypeCode'] = 't5.package_type_code';
@@ -224,6 +234,8 @@ export class V1WebAwbCodService {
       ['t11.awb_status_title', 'awbStatusFinal'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
+      ['t8.branch_id', 'branchIdFinal'],
+      ['t12.branch_name', 'branchNameFinal'],
       ['t2.awb_date', 'manifestedDate'],
       ['t2.consignee_name', 'consigneeName'],
       ['t2.total_cod_value', 'codValue'],
@@ -258,6 +270,10 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.branchLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.codPayment.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -318,7 +334,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
     payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
-    payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['branchIdLast'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
     payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
@@ -448,7 +464,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
     payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
-    payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['branchIdLast'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
 
