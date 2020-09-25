@@ -8,6 +8,6 @@ module.exports = {
     path: 'docs',
   },
   bullPod: true,
-  bullCod: true,
+  bullCod: false,
   bullSmd: true,
 };
