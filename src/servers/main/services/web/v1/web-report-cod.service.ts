@@ -682,7 +682,7 @@ export class V1WebReportCodService {
   // }
 
   static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], filters, limit, pageNumber) {
-    const spartanFilter: any = [{ isCod: true }];
+    const spartanFilter: any = [];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
 
@@ -864,7 +864,7 @@ export class V1WebReportCodService {
   }
 
   static async getNonCodSupplierInvoiceTransactionDetailData(coll, arrDatas: any[], filters, limit, pageNumber) {
-    const spartanFilter: any = [{ isCod: true }, { $eq: ['$awbNumber', '$$awbNumber'] }];
+    const spartanFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
     const filterList: any = [];
 
@@ -1119,7 +1119,7 @@ export class V1WebReportCodService {
       const reportType = await this.reportTypeFromFilter(filters);
 
       // prepare csv file
-      const limit = 10000;
+      const limit = 1000;
       const csvConfig = await this.getCSVConfig(false);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
@@ -1399,7 +1399,7 @@ export class V1WebReportCodService {
 
     try {
       // prepare csv file
-      const limit = 10000;
+      const limit = 1000;
       const csvConfig = await this.getCSVConfig(true);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
@@ -1442,6 +1442,7 @@ export class V1WebReportCodService {
 
       let url = '';
       const awsKey = `reports/cod/${csvConfig.fileName}`;
+      console.log(awsKey, "uploadpath")
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
@@ -1922,6 +1923,7 @@ export class V1WebReportCodService {
 
       let url = '';
       const awsKey = `reports/cod/${csvConfig.fileName}`;
+      console.log(awsKey, "uploadpath")
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
