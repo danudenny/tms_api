@@ -274,7 +274,7 @@ export class CodFirstTransactionQueueService {
     qb.innerJoin(
       'package_type',
       't5',
-      't2.package_type_id = t5.package_type_id AND t5.is_deleted = false',
+      't2.package_type_id = t5.package_type_id',
     );
     qb.innerJoin(
       'partner',

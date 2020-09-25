@@ -122,8 +122,8 @@ export class V1MobileInitDataService {
       ['reason_code', 'reasonCode'],
       ['reason_category', 'reasonCategory'],
       ['reason_type', 'reasonType'],
+      ['is_deleted', 'isDeleted'],
     );
-    q.where(e => e.isDeleted, w => w.isFalse());
     q.andWhereIsolated(qw => {
       qw.where(p => p.reasonCategory, w => w.equals('pod'));
       qw.orWhere(p => p.reasonCategory, w => w.equals('pod_cod'));
@@ -151,8 +151,8 @@ export class V1MobileInitDataService {
       ['awb_status_id', 'awbStatusId'],
       ['awb_status_name', 'awbStatusCode'],
       ['awb_status_title', 'awbStatusName'],
+      ['is_deleted', 'isDeleted'],
     );
-    q.where(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.isProblem, w => w.isTrue());
     if (fromDate) {
       q.andWhereIsolated(qw => {

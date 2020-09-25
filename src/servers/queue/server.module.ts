@@ -1,3 +1,4 @@
+// #region import
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
 
@@ -30,12 +31,12 @@ import { BagScanOutBranchSmdQueueService } from './services/bag-scan-out-branch-
 import { BagScanDoSmdQueueService } from './services/bag-scan-do-smd-queue.service';
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from './services/bag-awb-delete-history-in-hub-from-smd-queue.service';
 import { BagRepresentativeSmdQueueService } from './services/bag-representative-smd-queue.service';
-import {BagRepresentativeScanDoSmdQueueService} from './services/bag-representative-scan-do-smd-queue.service';
+import { BagRepresentativeScanDoSmdQueueService } from './services/bag-representative-scan-do-smd-queue.service';
 import { BagRepresentativeDropoffHubQueueService } from './services/bag-representative-dropoff-hub-queue.service';
 import { BaggingDropoffHubQueueService } from './services/bagging-dropoff-hub-queue.service';
 import { CreateBagFirstScanHubQueueService } from './services/create-bag-first-scan-hub-queue.service';
 import { CreateBagAwbScanHubQueueService } from './services/create-bag-awb-scan-hub-queue.service';
-import {CodPaymentQueueService} from './services/cod-payment-queue.service';
+import { CodPaymentQueueService } from './services/cod-payment-queue.service';
 import { CodFirstTransactionQueueService } from './services/cod/cod-first-transaction-queue.service';
 import { CodSyncTransactionQueueService } from './services/cod/cod-sync-transaction-queue.service';
 import { CodUpdateTransactionQueueService } from './services/cod/cod-update-transaction-queue.service';
@@ -45,8 +46,9 @@ import { CodCronSettlementQueueService } from './services/cod/cod-cron-settlemen
 import { MongoDbConfig } from './config/database/mongodb.config';
 import { CodExportMongoQueueService } from './services/cod/cod-export-queue.service';
 import { BagRepresentativeScanOutHubQueueService } from './services/bag-representative-scan-out-hub-queue.service';
-import {BagScanVendorQueueService} from './services/bag-scan-vendor-queue.service';
-
+import { BagScanVendorQueueService } from './services/bag-scan-vendor-queue.service';
+import { CodSqlExportMongoQueueService } from './services/cod/cod-sql-export-queue.service';
+// #endregion import
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
 })
@@ -152,19 +154,21 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     BagRepresentativeDropoffHubQueueService.boot();
     CreateBagFirstScanHubQueueService.boot();
     CreateBagAwbScanHubQueueService.boot();
-    CodPaymentQueueService.boot();
-    CodFirstTransactionQueueService.boot();
-    CodSyncTransactionQueueService.boot();
-    CodUpdateTransactionQueueService.boot();
-    CodTransactionHistoryQueueService.boot();
-    CodUpdateSupplierInvoiceQueueService.boot();
-    CodExportMongoQueueService.boot();
     BagRepresentativeScanOutHubQueueService.boot();
     BagScanVendorQueueService.boot();
-    // BagItemAwbQueueService.boot();
-    // GenerateReportQueueService.boot();
 
-    // init Cron here
-    CodCronSettlementQueueService.init();
+    if (serverConfig.bullCod) {
+      // CodPaymentQueueService.boot();
+      CodFirstTransactionQueueService.boot();
+      CodSyncTransactionQueueService.boot();
+      CodUpdateTransactionQueueService.boot();
+      CodTransactionHistoryQueueService.boot();
+      CodUpdateSupplierInvoiceQueueService.boot();
+      CodExportMongoQueueService.boot();
+      CodSqlExportMongoQueueService.boot();
+      // init Cron here
+      CodCronSettlementQueueService.init();
+    }
+
   }
 }
