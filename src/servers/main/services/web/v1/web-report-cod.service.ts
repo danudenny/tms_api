@@ -24,7 +24,7 @@ export class V1WebReportCodService {
     const reportKey = `reportKeyCOD:${uuidString}`;
 
     // send to background process generate report
-    console.log(filters, noncodfee, 'non code fee');
+    // console.log(filters, noncodfee, 'non code fee');
     CodExportMongoQueueService.perform(filters, noncodfee, uuidString);
 
     const result = {
@@ -176,13 +176,13 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.destinationCode),
           this.strReplaceFunc(d.destination),
           d.perwakilan,
-          (d.userIdDriverNik ? d.userIdDriverNik : "") + " - " + (d.userIdDriverName ? d.userIdDriverName : ""),
+          (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? d.userIdDriverName : ''),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.packageType),
           this.strReplaceFunc(d.parcelNote),
           '', '',
           d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
-          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : "") + " - " + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ""),
+          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : '') + ' - ' + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ''),
         ]);
 
       }
@@ -193,7 +193,7 @@ export class V1WebReportCodService {
     });
 
     await this.sleep(300);
-    console.log(count, 'counter result');
+    // console.log(count, 'counter result');
     return true;
   }
 
@@ -204,14 +204,14 @@ export class V1WebReportCodService {
     let count = 0;
     if (data) {
       for (const d of data) {
-        console.log(d.perwakilan, "perwakilan")
+        // console.log(d.perwakilan, "perwakilan")
         await writer.write([
           this.strReplaceFunc(d.partnerName),
           d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
           this.strReplaceFunc(d.awbNumber),
           d.prtParcelValue,
           d.codNilai,
-          d.codFee ? d.codFee : "-",
+          d.codFee ? d.codFee : '-',
           d.codNilai,
           d.lastValidTrackingDateTime ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm') : null,
           this.strReplaceFunc(d.penerima),
@@ -225,14 +225,14 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.prtDestinationCode),
           this.strReplaceFunc(d.tujuanKecamatan),
           this.strReplaceFunc(d.perwakilan),
-          (d.userIdDriverNik ? d.userIdDriverNik : "") + " - " + (d.userIdDriverName ? d.userIdDriverName : ""),
+          (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? d.userIdDriverName : ''),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
           this.strReplaceFunc(d.receiverRemark),
           '',
           '',
           d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
-          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : "") + " - " + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ""),
+          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : '') + ' - ' + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ''),
         ]);
 
       }
@@ -243,7 +243,7 @@ export class V1WebReportCodService {
     // });
 
     await this.sleep(300);
-    console.log(count, 'counter result');
+    // console.log(count, 'counter result');
     return true;
   }
 
@@ -261,7 +261,7 @@ export class V1WebReportCodService {
     return new Promise(async (resolve, reject) => {
       try {
         // remove file
-        console.log('Delete file success.');
+        // console.log('Delete file success.');
         fs.unlinkSync(filePath);
         resolve(true);
       } catch (err) {
@@ -747,7 +747,7 @@ export class V1WebReportCodService {
       }
     }
 
-    console.log(spartanFilter, tdFilter, "filter");
+    // console.log(spartanFilter, tdFilter, 'filter');
 
     const skip = limit * (pageNumber - 1);
 
@@ -784,7 +784,7 @@ export class V1WebReportCodService {
                 userIdUpdated: 1,
                 updatedTime: 1,
                 paymentMethod: 1,
-                codFee: 1
+                codFee: 1,
               },
             },
           ],
@@ -804,7 +804,7 @@ export class V1WebReportCodService {
           partnerName: 1,
           awbNumber: 1,
           awbDate: 1,
-          codFee: "$td.codFee",
+          codFee: '$td.codFee',
           parcelContent: '$prtParcelContent',
           prtParcelValue: '$prtParcelValue',
           prtCustPackageId: '$prtCustPackageId',
@@ -812,12 +812,12 @@ export class V1WebReportCodService {
           userIdDriver: '$courierUserId',
           userIdDriverNik: '$podCourierNik',
           userIdDriverName: '$podCourierName',
-          userIdUpdatedNik: "$userUpdatedNik",
-          userIdUpdatedName: "$userUpdatedName",
-          dateUpdated: "$history_date",
+          userIdUpdatedNik: '$userUpdatedNik',
+          userIdUpdatedName: '$userUpdatedName',
+          dateUpdated: '$history_date',
           perwakilan: 1,
           layanan: 1,
-          paymentMethod: "$td.paymentMethod",
+          paymentMethod: '$td.paymentMethod',
           supplierInvoiceStatusId: '$td.supplierInvoiceStatusId',
           penerima: 1,
           codNilai: 1,
@@ -828,19 +828,18 @@ export class V1WebReportCodService {
           manifestTrackingSiteName: '$manifestTrackingSiteName',
           lastValidTrackingSiteName: '$lastValidTrackingSiteName',
           receiverRemark: 1,
-          transactionStatus: "",
-          supplierInvoiceStatus: "",
+          transactionStatus: '',
+          supplierInvoiceStatus: '',
         },
       },
     ];
 
-    console.log(JSON.stringify(q), 'query');
+    // console.log(JSON.stringify(q), 'query');
     const query = coll
       .aggregate(q);
 
     // console.log(query);
     const datas = await query.toArray();
-
 
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
@@ -855,7 +854,6 @@ export class V1WebReportCodService {
     //   // if (d.userIdUpdated && arrUser.length > 0)
     //   //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
     // }
-
 
     // console.log(datas);
 
@@ -886,7 +884,6 @@ export class V1WebReportCodService {
         filterList.push({ transactionStatusId: { $eq: filter.value } });
       }
 
-
       if (filter.field == 'supplierInvoiceStatus' && filter.value) {
         filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
 
@@ -894,12 +891,9 @@ export class V1WebReportCodService {
         // allowNullTd = false;
       }
 
-
-
       if (filter.field == 'sigesit' && filter.value) {
         filterList.push({ userIdDriver: { $eq: filter.value } });
       }
-
 
       if (filter.field == 'branchLastId' && filter.value) {
         filterList.push({ currentPositionId: { $eq: filter.value.toString() } });
@@ -916,7 +910,6 @@ export class V1WebReportCodService {
         spartanFilter.push({ $lt: ['$lastValidTrackingDateTime', d] });
         allowNullTd = false;
       }
-
 
       if (filter.field == 'manifestedStart' && filter.value) {
 
@@ -989,20 +982,20 @@ export class V1WebReportCodService {
           currentPosition: 1,
           isDeleted: 1,
           paymentMethod: 1,
-          perwakilan: "$representativeCode",
+          perwakilan: '$representativeCode',
           supplierInvoiceStatusId: 1,
-          supplierInvoiceStatus: "$supplierInvoiceStatusName",
+          supplierInvoiceStatus: '$supplierInvoiceStatusName',
           prtParcelValue: '$parcelValue',
           codNilai: '$codValue',
           prtCustPackageId: '$custPackage',
           lastValidTrackingDateTime: '$podDate',
           penerima: '$consigneeName',
-          receiverRemark: "$parcelNote",
-          layanan: "$packageType",
-          tujuanKecamatan: "$destination",
-          prtDestinationCode: "$destinationCode",
-          lastValidTrackingSiteName: "$currentPosition",
-          manifestTrackingSiteName: "$pickupSource",
+          receiverRemark: '$parcelNote',
+          layanan: '$packageType',
+          tujuanKecamatan: '$destination',
+          prtDestinationCode: '$destinationCode',
+          lastValidTrackingSiteName: '$currentPosition',
+          manifestTrackingSiteName: '$pickupSource',
           packageType: 1,
           parcelContent: 1,
           parcelNote: 1,
@@ -1013,26 +1006,24 @@ export class V1WebReportCodService {
           pickupSource: 1,
           podDate: 1,
           transactionStatusId: 1,
-          transactionStatus: "$transactionstatusname",
+          transactionStatus: '$transactionstatusname',
           userIdDriverNik: '$nikSigesit',
           userIdDriverName: '$sigesit',
-          userIdUpdatedNik: "$nikAdmin",
-          userIdUpdatedName: "$adminName",
-          dateUpdated: "$updatedTime",
+          userIdUpdatedNik: '$nikAdmin',
+          userIdUpdatedName: '$adminName',
+          dateUpdated: '$updatedTime',
           updatedTime: 1,
           userIdUpdated: 1,
         },
       },
     ];
 
-
-    console.log(JSON.stringify(q), 'query');
+    // console.log(JSON.stringify(q), 'query');
     const query = coll
       .aggregate(q);
 
     // console.log(query);
     const datas = await query.toArray();
-
 
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
@@ -1050,13 +1041,11 @@ export class V1WebReportCodService {
     //   //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
     // }
 
-
     // console.log(datas);
 
     arrDatas.push(...datas);
     return datas;
   }
-
 
   // static async getUserProps(datas, type) {
   //   const unique = type == "driver" ? [...new Set(datas.filter(item => {
@@ -1070,14 +1059,13 @@ export class V1WebReportCodService {
   //     console.log(unique, "unique driver");
 
   //   // if (unique.length > 0) {
-  //   //   const query = `SELECT u.user_id employee_id , concat( e.nik, ' - ' ,  e.fullname ) fullname FROM users u  
-  //   //   INNER JOIN employee e ON e.employee_id = u.employee_id 
+  //   //   const query = `SELECT u.user_id employee_id , concat( e.nik, ' - ' ,  e.fullname ) fullname FROM users u
+  //   //   INNER JOIN employee e ON e.employee_id = u.employee_id
   //   //   WHERE user_id  IN (${unique.join(',')})`
   //   //   const data = await RawQueryService.query(query)
   //   //   console.log(data)
   //   //   return data;
   //   // }
-
 
   //   return []
 
@@ -1098,7 +1086,7 @@ export class V1WebReportCodService {
         duration,
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
 
     return {
@@ -1130,15 +1118,14 @@ export class V1WebReportCodService {
         let finish = false;
         // when filter include in awb
 
-        console.log(reportType, "report Type")
+        // console.log(reportType, 'report Type');
         while (!finish) {
           let responseDatas: any;
 
           if (reportType.filterTransaction == true) {
             const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, filters, limit, pageNumber));
             responseDatas = rawResponseData.data;
-          }
-          else {
+          } else {
             const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, filters, limit, pageNumber));
             responseDatas = rawResponseData.data;
           }
@@ -1185,12 +1172,12 @@ export class V1WebReportCodService {
         url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
         this.deleteFile(csvConfig.filePath);
 
-        console.log(url, 'url final');
+        // console.log(url, 'url final');
       }
 
-      console.log(uuid, uuid.toString() !== '', 'uuid');
+      // console.log(uuid, uuid.toString() !== '', 'uuid');
       if (uuid.toString() !== '') {
-        console.log('inside uuid');
+        // console.log('inside uuid');
         const payload = {
           status: 'OK',
           url,
@@ -1204,12 +1191,12 @@ export class V1WebReportCodService {
 
       return { status: 'OK', url };
     } catch (err) {
-      console.log(err);
+      console.error(err);
       throw err;
     }
   }
   static reportTypeFromFilter(filters: any) {
-    let filterAwb = false;
+    const filterAwb = false;
     let filterTransaction = false;
 
     filters.forEach(filter => {
@@ -1227,24 +1214,24 @@ export class V1WebReportCodService {
       //   filterAwb = true
       // }
 
-      if (filter.field == "transactionStart" && filter.value) {
-        filterTransaction = true
+      if (filter.field == 'transactionStart' && filter.value) {
+        filterTransaction = true;
       }
-      if (filter.field == "transactionEnd" && filter.value) {
-        filterTransaction = true
+      if (filter.field == 'transactionEnd' && filter.value) {
+        filterTransaction = true;
       }
-      if (filter.field == "transactionStatus" && filter.value) {
-        filterTransaction = true
+      if (filter.field == 'transactionStatus' && filter.value) {
+        filterTransaction = true;
       }
-      if (filter.field == "supplierInvoiceStatus" && filter.value) {
-        filterTransaction = true
+      if (filter.field == 'supplierInvoiceStatus' && filter.value) {
+        filterTransaction = true;
       }
 
-    })
+    });
 
-    console.log(filters, filterTransaction, filterAwb, "filters")
+    // console.log(filters, filterTransaction, filterAwb, 'filters');
 
-    return { filterTransaction: filterTransaction, filterAwb: filterAwb }
+    return { filterTransaction, filterAwb };
   }
 
   //#endregion NON_COD
@@ -1265,7 +1252,6 @@ export class V1WebReportCodService {
           .add(1, 'days').toDate();
         filterList.push({ updatedTime: { $lt: d } });
       }
-
 
       if (filter.field == 'supplier' && filter.value) {
         filterList.push({ partnerId: { $eq: filter.value } });
@@ -1288,7 +1274,6 @@ export class V1WebReportCodService {
     }
 
     filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
-
 
     const skip = limit * (pageNumber - 1);
 
@@ -1317,7 +1302,7 @@ export class V1WebReportCodService {
                 $expr:
                 {
                   $and: [{
-                    $eq: ['$awbNumber', '$$awbNumber']
+                    $eq: ['$awbNumber', '$$awbNumber'],
                   }],
                 },
               },
@@ -1356,24 +1341,24 @@ export class V1WebReportCodService {
           pickupSource: 1,
           podDate: 1,
           transactionStatusId: 1,
-          transactionStatus: "$transactionstatusname",
-          supplierInvoiceStatus: "$supplierInvoiceStatusName",
-          perwakilan: "$perwakilanCode",
+          transactionStatus: '$transactionstatusname',
+          supplierInvoiceStatus: '$supplierInvoiceStatusName',
+          perwakilan: '$perwakilanCode',
           userIdDriver: 1,
           updatedTime: 1,
           userIdUpdated: 1,
           userIdDriverNik: '$nikSigesit',
           userIdDriverName: '$sigesit',
-          userIdUpdatedNik: "$nikAdmin",
-          userIdUpdatedName: "$adminName",
-          dateUpdated: "$updatedTime",
+          userIdUpdatedNik: '$nikAdmin',
+          userIdUpdatedName: '$adminName',
+          dateUpdated: '$updatedTime',
         },
       },
     ];
-    console.log(JSON.stringify(queryParam), 'awb');
+    // console.log(JSON.stringify(queryParam), 'awb');
     const datas = await coll
       .aggregate(queryParam).toArray();
-    console.log(datas, 'data array');
+    // console.log(datas, 'data array');
 
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
@@ -1442,7 +1427,7 @@ export class V1WebReportCodService {
 
       let url = '';
       const awsKey = `reports/cod/${csvConfig.fileName}`;
-      console.log(awsKey, "uploadpath")
+      // console.log(awsKey, 'uploadpath');
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
@@ -1452,11 +1437,11 @@ export class V1WebReportCodService {
         url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
         this.deleteFile(csvConfig.filePath);
 
-        console.log(url, 'url final');
+        // console.log(url, 'url final');
       }
-      console.log(uuid);
+      // console.log(uuid);
       if (uuid.toString() != '') {
-        console.log(uuid, 'inside uuid');
+        // console.log(uuid, 'inside uuid');
         const payload = {
           status: 'OK',
           url,
@@ -1470,7 +1455,7 @@ export class V1WebReportCodService {
 
       return { status: 'OK', url };
     } catch (err) {
-      console.log(err);
+      console.error(err);
       throw err;
     }
 
@@ -1923,7 +1908,7 @@ export class V1WebReportCodService {
 
       let url = '';
       const awsKey = `reports/cod/${csvConfig.fileName}`;
-      console.log(awsKey, "uploadpath")
+      // console.log(awsKey, 'uploadpath');
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
