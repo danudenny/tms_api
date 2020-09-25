@@ -56,9 +56,11 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
     payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
     payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
 
     payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
+    payload.fieldResolverMap['awbStatusFinal'] = 't11.awb_status_title';
     payload.fieldResolverMap['branchNameLast'] = 't6.branch_name';
     payload.fieldResolverMap['branchNameFinal'] = 't12.branch_name';
     payload.fieldResolverMap['userIdDriver'] = 't4.user_id';
@@ -196,9 +198,11 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
     payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
     payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
 
     payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
+    payload.fieldResolverMap['awbStatusFinal'] = 't11.awb_status_title';
     payload.fieldResolverMap['branchNameLast'] = 't6.branch_name';
     payload.fieldResolverMap['branchNameFinal'] = 't12.branch_name';
     payload.fieldResolverMap['userIdDriver'] = 't4.user_id';
