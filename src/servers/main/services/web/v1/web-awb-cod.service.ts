@@ -123,9 +123,7 @@ export class V1WebAwbCodService {
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awb.packageType, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.awb.packageType, 't5');
 
     q.innerJoin(e => e.branchLast, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -265,9 +263,7 @@ export class V1WebAwbCodService {
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awb.packageType, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.awb.packageType, 't5');
 
     q.innerJoin(e => e.branchLast, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -400,9 +396,7 @@ export class V1WebAwbCodService {
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awb.packageType, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.awb.packageType, 't5');
 
     q.innerJoin(e => e.codPayment.branchFinal, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -524,9 +518,7 @@ export class V1WebAwbCodService {
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awb.packageType, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.awb.packageType, 't5');
 
     q.innerJoin(e => e.codPayment.branchFinal, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
