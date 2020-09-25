@@ -1119,7 +1119,7 @@ export class V1WebReportCodService {
       const reportType = await this.reportTypeFromFilter(filters);
 
       // prepare csv file
-      const limit = 2000;
+      const limit = 1000;
       const csvConfig = await this.getCSVConfig(false);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
@@ -1399,7 +1399,7 @@ export class V1WebReportCodService {
 
     try {
       // prepare csv file
-      const limit = 2000;
+      const limit = 1000;
       const csvConfig = await this.getCSVConfig(true);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
@@ -1442,6 +1442,7 @@ export class V1WebReportCodService {
 
       let url = '';
       const awsKey = `reports/cod/${csvConfig.fileName}`;
+      console.log(awsKey, "uploadpath")
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
@@ -1922,6 +1923,7 @@ export class V1WebReportCodService {
 
       let url = '';
       const awsKey = `reports/cod/${csvConfig.fileName}`;
+      console.log(awsKey, "uploadpath")
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
