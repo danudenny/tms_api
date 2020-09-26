@@ -192,7 +192,7 @@ export class V1WebReportCodService {
       // console.log(`Received ${chunk.length} bytes of data.`);
     });
 
-    await this.sleep(300);
+    await this.sleep(100);
     // console.log(count, 'counter result');
     return true;
   }
@@ -241,7 +241,7 @@ export class V1WebReportCodService {
     //   console.log(`Received ${chunk.length} bytes of data.`);
     // });
 
-    await this.sleep(300);
+    await this.sleep(100);
     // console.log(count, 'counter result');
     return true;
   }
@@ -687,7 +687,7 @@ export class V1WebReportCodService {
     console.log(pageNumber, "page Number")
 
     if (pageNumber == 1) {
-      spartanFilter.push({ awbNumber: { $gte: "" } });
+      spartanFilter.push({ awbNumber: { $gt: "" } });
     }
     if (lastAwbNumber && pageNumber > 1) {
       spartanFilter.push({ awbNumber: { $gt: lastAwbNumber } });
@@ -876,7 +876,7 @@ export class V1WebReportCodService {
     const filterList: any = [];
 
     if (pageNumber == 1) {
-      filterList.push({ awbNumber: { $gte: "" } });
+      filterList.push({ awbNumber: { $gt: "" } });
     }
 
     if (lastAwbNumber && pageNumber > 1) {
@@ -1265,7 +1265,7 @@ export class V1WebReportCodService {
   static async getCodSupplierInvoiceData(coll, filters, limit, pageNumber, lastAwbNumber) {
     const filterList: any = [];
     if (pageNumber == 1) {
-      filterList.push({ awbNumber: { $gte: "" } });
+      filterList.push({ awbNumber: { $gt: "" } });
     }
     if (lastAwbNumber && pageNumber > 1) {
       filterList.push({ awbNumber: { $gt: lastAwbNumber } });
