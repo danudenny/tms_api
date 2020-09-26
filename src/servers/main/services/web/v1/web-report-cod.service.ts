@@ -684,6 +684,15 @@ export class V1WebReportCodService {
     const spartanFilter: any = [];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
+    console.log(pageNumber, "page Number")
+
+    if (pageNumber == 1) {
+      spartanFilter.push({ awbNumber: { $gte: "" } });
+    }
+    if (lastAwbNumber && pageNumber > 1) {
+      spartanFilter.push({ awbNumber: { $gt: lastAwbNumber } });
+    }
+
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
@@ -746,9 +755,7 @@ export class V1WebReportCodService {
       }
     }
 
-    if (lastAwbNumber) {
-      spartanFilter.push({ awbNumber: { $gte: lastAwbNumber } });
-    }
+
     console.log(spartanFilter, tdFilter, "filter");
 
     const skip = limit * (pageNumber - 1);
@@ -836,7 +843,7 @@ export class V1WebReportCodService {
       },
     ];
 
-    // console.log(JSON.stringify(q), 'query');
+    console.log(JSON.stringify(q), 'query');
     const query = coll
       .aggregate(q);
 
@@ -867,6 +874,14 @@ export class V1WebReportCodService {
     const spartanFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
     const filterList: any = [];
+
+    if (pageNumber == 1) {
+      filterList.push({ awbNumber: { $gte: "" } });
+    }
+
+    if (lastAwbNumber && pageNumber > 1) {
+      filterList.push({ awbNumber: { $gt: lastAwbNumber } });
+    }
 
     for (const filter of filters) {
       // filterList.push({ awbNumber: { $eq: "001076023505" } });
@@ -928,10 +943,6 @@ export class V1WebReportCodService {
     }
 
 
-    if (lastAwbNumber) {
-      filterList.push({ awbNumber: { $gte: lastAwbNumber } });
-    }
-    const skip = limit * (pageNumber - 1);
 
     const q = [
       {
@@ -1253,6 +1264,12 @@ export class V1WebReportCodService {
 
   static async getCodSupplierInvoiceData(coll, filters, limit, pageNumber, lastAwbNumber) {
     const filterList: any = [];
+    if (pageNumber == 1) {
+      filterList.push({ awbNumber: { $gte: "" } });
+    }
+    if (lastAwbNumber && pageNumber > 1) {
+      filterList.push({ awbNumber: { $gt: lastAwbNumber } });
+    }
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
@@ -1288,10 +1305,6 @@ export class V1WebReportCodService {
 
     filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
 
-
-    if (lastAwbNumber) {
-      filterList.push({ awbNumber: { $gte: lastAwbNumber } });
-    }
 
 
 
