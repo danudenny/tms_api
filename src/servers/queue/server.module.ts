@@ -145,6 +145,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     UploadImagePodQueueService.boot();
     CreateBagFirstScanHubQueueService.boot();
     CreateBagAwbScanHubQueueService.boot();
+    
 
     if (serverConfig.bullCod) {
       // CodPaymentQueueService.boot();
@@ -171,6 +172,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       BaggingDropoffHubQueueService.boot();
       BagRepresentativeDropoffHubQueueService.boot();
     }
+
 
   }
 }

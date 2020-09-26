@@ -192,7 +192,7 @@ export class V1WebReportCodService {
       // console.log(`Received ${chunk.length} bytes of data.`);
     });
 
-    await this.sleep(300);
+    await this.sleep(100);
     // console.log(count, 'counter result');
     return true;
   }
@@ -204,7 +204,6 @@ export class V1WebReportCodService {
     let count = 0;
     if (data) {
       for (const d of data) {
-        // console.log(d.perwakilan, "perwakilan")
         await writer.write([
           this.strReplaceFunc(d.partnerName),
           d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
@@ -242,7 +241,7 @@ export class V1WebReportCodService {
     //   console.log(`Received ${chunk.length} bytes of data.`);
     // });
 
-    await this.sleep(300);
+    await this.sleep(100);
     // console.log(count, 'counter result');
     return true;
   }
@@ -681,10 +680,19 @@ export class V1WebReportCodService {
   //   }
   // }
 
-  static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], filters, limit, pageNumber) {
+  static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], filters, limit, pageNumber, lastAwbNumber) {
     const spartanFilter: any = [];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
+    console.log(pageNumber, "page Number")
+
+    if (pageNumber == 1) {
+      spartanFilter.push({ awbNumber: { $gt: "" } });
+    }
+    if (lastAwbNumber && pageNumber > 1) {
+      spartanFilter.push({ awbNumber: { $gt: lastAwbNumber } });
+    }
+
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
@@ -747,7 +755,8 @@ export class V1WebReportCodService {
       }
     }
 
-    // console.log(spartanFilter, tdFilter, 'filter');
+
+    console.log(spartanFilter, tdFilter, "filter");
 
     const skip = limit * (pageNumber - 1);
 
@@ -757,7 +766,7 @@ export class V1WebReportCodService {
           $and: spartanFilter,
         },
       },
-
+      { "$sort": { awbNumber: 1 } },
       {
         $lookup: {
           from: 'transaction_detail',
@@ -796,7 +805,7 @@ export class V1WebReportCodService {
           preserveNullAndEmptyArrays: allowNullTd,
         },
       },
-      { $skip: skip },
+      { $skip: 0 },
       { $limit: limit },
 
       {
@@ -834,7 +843,7 @@ export class V1WebReportCodService {
       },
     ];
 
-    // console.log(JSON.stringify(q), 'query');
+    console.log(JSON.stringify(q), 'query');
     const query = coll
       .aggregate(q);
 
@@ -861,10 +870,18 @@ export class V1WebReportCodService {
     return datas;
   }
 
-  static async getNonCodSupplierInvoiceTransactionDetailData(coll, arrDatas: any[], filters, limit, pageNumber) {
+  static async getNonCodSupplierInvoiceTransactionDetailData(coll, arrDatas: any[], filters, limit, pageNumber, lastAwbNumber) {
     const spartanFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
     const filterList: any = [];
+
+    if (pageNumber == 1) {
+      filterList.push({ awbNumber: { $gt: "" } });
+    }
+
+    if (lastAwbNumber && pageNumber > 1) {
+      filterList.push({ awbNumber: { $gt: lastAwbNumber } });
+    }
 
     for (const filter of filters) {
       // filterList.push({ awbNumber: { $eq: "001076023505" } });
@@ -925,7 +942,7 @@ export class V1WebReportCodService {
       }
     }
 
-    const skip = limit * (pageNumber - 1);
+
 
     const q = [
       {
@@ -933,8 +950,9 @@ export class V1WebReportCodService {
           $and: filterList,
         },
       },
+      { "$sort": { awbNumber: 1 } },
       {
-        $skip: skip,
+        $skip: 0,
       },
       {
         $limit: limit,
@@ -1111,6 +1129,9 @@ export class V1WebReportCodService {
       const csvConfig = await this.getCSVConfig(false);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
+      let lastAwb: string;
+      let isFinalAwb: boolean = false;
+
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
       try {
         let pageNumber = 1;
@@ -1123,10 +1144,11 @@ export class V1WebReportCodService {
           let responseDatas: any;
 
           if (reportType.filterTransaction == true) {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, filters, limit, pageNumber));
+            const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, filters, limit, pageNumber, lastAwb));
             responseDatas = rawResponseData.data;
-          } else {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, filters, limit, pageNumber));
+          }
+          else {
+            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, filters, limit, pageNumber, lastAwb));
             responseDatas = rawResponseData.data;
           }
 
@@ -1151,7 +1173,9 @@ export class V1WebReportCodService {
 
           if (!responseDatas || responseDatas.length < limit) {
             finish = true;
+
           }
+          lastAwb = responseDatas[responseDatas.length - 1].awbNumber;
 
         }
 
@@ -1238,8 +1262,14 @@ export class V1WebReportCodService {
 
   //#region COD
 
-  static async getCodSupplierInvoiceData(coll, filters, limit, pageNumber) {
+  static async getCodSupplierInvoiceData(coll, filters, limit, pageNumber, lastAwbNumber) {
     const filterList: any = [];
+    if (pageNumber == 1) {
+      filterList.push({ awbNumber: { $gt: "" } });
+    }
+    if (lastAwbNumber && pageNumber > 1) {
+      filterList.push({ awbNumber: { $gt: lastAwbNumber } });
+    }
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
@@ -1275,6 +1305,9 @@ export class V1WebReportCodService {
 
     filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
 
+
+
+
     const skip = limit * (pageNumber - 1);
 
     const queryParam = [
@@ -1283,8 +1316,9 @@ export class V1WebReportCodService {
           $and: filterList,
         },
       },
+      { "$sort": { awbNumber: 1 } },
       {
-        $skip: skip,
+        $skip: 0,
       },
       {
         $limit: limit,
@@ -1388,6 +1422,7 @@ export class V1WebReportCodService {
       const csvConfig = await this.getCSVConfig(true);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
+      let lastAwb: string
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
       try {
 
@@ -1395,7 +1430,7 @@ export class V1WebReportCodService {
         let finish = false;
         while (!finish) {
 
-          const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber);
+          const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber, lastAwb);
 
           // console.log(!responseDatas, limit, finish, responseDatas.length < limit, 'response data length');
 
@@ -1412,6 +1447,8 @@ export class V1WebReportCodService {
               this.expireOnSeconds);
             return;
           }
+
+          lastAwb = responseDatas[responseDatas.length - 1].awbNumber;
 
           if (responseDatas.length < limit) {
             finish = true;
