@@ -680,7 +680,7 @@ export class V1WebReportCodService {
   //   }
   // }
 
-  static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], filters, limit, pageNumber, lastAwbNumber) {
+  static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber, lastAwbNumber) {
     const spartanFilter: any = [];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
@@ -853,16 +853,16 @@ export class V1WebReportCodService {
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
     // console.log(arrUser, "array");
-    // for (const d of datas) {
-    //   d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
-    //   d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
-    //   // if (d.userIdDriver && arrDriver.length > 0) {
-    //   //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
-    //   // }
+    for (const d of datas) {
+      d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
+      d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
+      // if (d.userIdDriver && arrDriver.length > 0) {
+      //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
+      // }
 
-    //   // if (d.userIdUpdated && arrUser.length > 0)
-    //   //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
-    // }
+      // if (d.userIdUpdated && arrUser.length > 0)
+      //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
+    }
 
     // console.log(datas);
 
@@ -1122,6 +1122,15 @@ export class V1WebReportCodService {
 
     try {
 
+
+      const transactionStatuses = await RawQueryService.query(
+        `SELECT transaction_status_id, status_title FROM transaction_status ts`,
+      );
+
+      for (const transactionStatus of transactionStatuses) {
+        transactionStatus.transaction_status_id = parseInt(`${transactionStatus.transaction_status_id}`, 10);
+      }
+
       const reportType = await this.reportTypeFromFilter(filters);
 
       // prepare csv file
@@ -1134,6 +1143,8 @@ export class V1WebReportCodService {
 
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
       try {
+
+
         let pageNumber = 1;
         const datas = [];
         let finish = false;
@@ -1148,7 +1159,7 @@ export class V1WebReportCodService {
             responseDatas = rawResponseData.data;
           }
           else {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, filters, limit, pageNumber, lastAwb));
+            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber, lastAwb));
             responseDatas = rawResponseData.data;
           }
 
