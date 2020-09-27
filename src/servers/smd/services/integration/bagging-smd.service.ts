@@ -340,7 +340,7 @@ export class BaggingSmdService {
     if (!payload.baggingId) {
       const baggingDate = await this.dateMinus1day(moment().toDate());
       const maxBagSeq = await this.getMaxBaggingSeq(dataPackage[0].representative_id_to, baggingDate, permissionPayload.branchId);
-      const paramBaggingCode = await CustomCounterCode.baggingCodeCounter(moment().toDate());
+      const paramBaggingCode = await CustomCounterCode.baggingCodeRandomCounter(moment().toDate());
       // Redlock for race condition
       const redlock = await RedisService.redlock(`redlock:bagging:${paramBaggingCode}`, 10);
       if (redlock) {
