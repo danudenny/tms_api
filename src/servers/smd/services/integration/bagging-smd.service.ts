@@ -549,7 +549,7 @@ export class BaggingSmdService {
 
     const baggingDate = await this.dateMinus1day(moment().toDate());
     const maxBagSeq = await this.getMaxBaggingSeq(dataBag[0].representative_id_to, baggingDate, permissionPayload.branchId);
-    const paramBaggingCode = await CustomCounterCode.baggingCodeCounter(moment().toDate());
+    const paramBaggingCode = await CustomCounterCode.baggingCodeRandomCounter(moment().toDate());
 
     const createBagging = Bagging.create();
     createBagging.userId = authMeta.userId.toString();

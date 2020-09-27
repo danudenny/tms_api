@@ -111,6 +111,12 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
+  public static async baggingCodeRandomCounter(dateTime: Date, digit: number = 6) {
+    const prefix = `BGX${moment(dateTime).format('YYMMDD')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
   public static async bagCityCodeCounter(dateTime: Date, digit: number = 5) {
     const prefix = `GSK/${moment(dateTime).format('YYMM')}/`;
     const last_number = await this.getLastNumber(prefix);
