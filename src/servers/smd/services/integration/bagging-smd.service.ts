@@ -203,7 +203,7 @@ export class BaggingSmdService {
       LIMIT 1;
       `;
 
-    const dataPackage = await RawQueryService.query(rawQuery);
+    const dataPackage = await RawQueryService.query(rawQuery, [], false);
     if (dataPackage.length == 0) {
       result.message = 'Gabung paket tidak ditemukan';
       return result;
