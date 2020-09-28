@@ -717,7 +717,7 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'manifestedStart' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
         spartanFilter.push({ awbDate: { $gte: d } });
       }
 
@@ -887,13 +887,13 @@ export class V1WebReportCodService {
       // filterList.push({ awbNumber: { $eq: "001076023505" } });
 
       if (filter.field == 'transactionStart' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour').toDate();
+        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
         filterList.push({ updatedTime: { $gte: d } });
       }
 
       if (filter.field == 'transactionEnd' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour')
-          .add(1, 'days').toDate();
+
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
         filterList.push({ updatedTime: { $lt: d } });
       }
 
@@ -917,28 +917,26 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour').toDate();
+        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
         spartanFilter.push({ $gte: ['$lastValidTrackingDateTime', d] });
         allowNullTd = false;
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour').add(1, 'days').toDate();
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+
         spartanFilter.push({ $lt: ['$lastValidTrackingDateTime', d] });
         allowNullTd = false;
       }
 
       if (filter.field == 'manifestedStart' && filter.value) {
-
-        const d = moment(filter.value).add(7, 'hour').toDate();
-        filterList.push({ awbDate: { $gte: filter.value } });
+        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        filterList.push({ awbDate: { $gte: d } });
       }
 
       if (filter.field == 'manifestedEnd' && filter.value) {
-
-        const d = moment(filter.value).add(7, 'hour')
-          .add(1, 'days').toDate();
-        filterList.push({ awbDate: { $lt: filter.value } });
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        filterList.push({ awbDate: { $lt: d } });
       }
     }
 
@@ -1284,13 +1282,13 @@ export class V1WebReportCodService {
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour').toDate();
+        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
         filterList.push({ updatedTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour')
-          .add(1, 'days').toDate();
+
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
         filterList.push({ updatedTime: { $lt: d } });
       }
 
@@ -1315,9 +1313,6 @@ export class V1WebReportCodService {
     }
 
     filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
-
-
-
 
     const skip = limit * (pageNumber - 1);
 
