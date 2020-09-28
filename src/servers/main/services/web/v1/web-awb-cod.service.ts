@@ -312,10 +312,10 @@ export class V1WebAwbCodService {
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter ANT, DLV
-    q.andWhere(
-      e => e.awbStatusIdLast,
-      w => w.in([14000, 30000]),
-    );
+    // q.andWhere(
+    //   e => e.awbStatusIdLast,
+    //   w => w.in([14000, 30000]),
+    // );
 
     const total = await q.countWithoutTakeAndSkip();
     const result = new WebCodCountResponseVm();
