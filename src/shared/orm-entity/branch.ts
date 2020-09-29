@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
 import { District } from './district';
@@ -161,7 +161,7 @@ export class Branch extends TmsBaseEntity {
   @JoinColumn({ name: 'district_id' })
   district: District;
 
-  @OneToOne(() => Representative)
+  @ManyToOne(() => Representative)
   @JoinColumn({ name: 'representative_id' })
   representative: Representative;
 
