@@ -40,23 +40,29 @@ import { CodUpdateTransactionQueueService } from '../../../../queue/services/cod
 import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
 import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { RedisService } from '../../../../../shared/services/redis.service';
+import { CodUserToBranch } from '../../../../../shared/orm-entity/cod-user-to-branch';
 // #endregion
 export class V1WebAwbCodService {
 
   static async awbCod(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodListResponseVm> {
+    // const authMeta = AuthService.getAuthData();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
     payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
 
     payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
+    payload.fieldResolverMap['awbStatusFinal'] = 't11.awb_status_title';
     payload.fieldResolverMap['branchNameLast'] = 't6.branch_name';
+    payload.fieldResolverMap['branchNameFinal'] = 't12.branch_name';
     payload.fieldResolverMap['userIdDriver'] = 't4.user_id';
     payload.fieldResolverMap['driverName'] = 't4.first_name';
     payload.fieldResolverMap['packageTypeCode'] = 't5.package_type_code';
@@ -84,8 +90,12 @@ export class V1WebAwbCodService {
       ['t1.updated_time', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
+      ['t1.awb_status_id_final', 'awbStatusIdFinal'],
+      ['t11.awb_status_title', 'awbStatusFinal'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
+      ['t8.branch_id', 'branchIdFinal'],
+      ['t12.branch_name', 'branchNameFinal'],
       ['t2.awb_date', 'manifestedDate'],
       ['t2.consignee_name', 'consigneeName'],
       ['t2.total_cod_value', 'codValue'],
@@ -93,7 +103,7 @@ export class V1WebAwbCodService {
       ['t4.user_id', 'userIdDriver'],
       ['t4.first_name', 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
-      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t8.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       [`t8.cod_payment_method`, 'codPaymentMethod'],
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
@@ -105,17 +115,23 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
+    q.leftJoin(e => e.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
     q.innerJoin(
-      e => e.doPodDeliverDetail.doPodDeliver.userDriver,
+      e => e.codPayment.userDriver,
       't4',
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
     q.innerJoin(e => e.awb.packageType, 't5');
 
     q.innerJoin(e => e.branchLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.codPayment.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -123,7 +139,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+    q.innerJoin(e => e.awbStatusFinal, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -131,14 +147,33 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    // //#region Cod Merger
+    // const codUserToBranch = await CodUserToBranch.findOne({
+    //   select: ['userId'],
+    //   where: {
+    //     userId: authMeta.userId,
+    //     isDeleted: false,
+    //   },
+    // });
+
+    // const userId = codUserToBranch ? codUserToBranch.userId : null;
+
+    // if (userId) {
+    //   q.innerJoin(e => e.codUserToBranch, 't10', j =>
+    //     j.andWhere(e => e.isDeleted, w => w.isFalse())
+    //     .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    //   );
+    // }
+    // //#endregion
+
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
-    // filter ANT, DLV
-    q.andWhere(
-      e => e.doPodDeliverDetail.awbStatusIdLast,
-      w => w.in([14000, 30000]),
-    );
+    // filter ANT, DLV, and IN_BRANCH
+    // q.andWhere(
+    //   e => e.awbStatusIdLast,
+    //   w => w.in([3500, 14000, 30000]),
+    // );
 
     const data = await q.exec();
     const total = 0;
@@ -154,17 +189,22 @@ export class V1WebAwbCodService {
   static async countAwbCod(
     payload: BaseMetaPayloadVm,
   ): Promise<WebCodCountResponseVm> {
+    // const authMeta = AuthService.getAuthData();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
     payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
 
     payload.fieldResolverMap['awbStatusLast'] = 't7.awb_status_title';
+    payload.fieldResolverMap['awbStatusFinal'] = 't11.awb_status_title';
     payload.fieldResolverMap['branchNameLast'] = 't6.branch_name';
+    payload.fieldResolverMap['branchNameFinal'] = 't12.branch_name';
     payload.fieldResolverMap['userIdDriver'] = 't4.user_id';
     payload.fieldResolverMap['driverName'] = 't4.first_name';
     payload.fieldResolverMap['packageTypeCode'] = 't5.package_type_code';
@@ -192,8 +232,12 @@ export class V1WebAwbCodService {
       ['t1.updated_time', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
+      ['t1.awb_status_id_final', 'awbStatusIdFinal'],
+      ['t11.awb_status_title', 'awbStatusFinal'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
+      ['t8.branch_id', 'branchIdFinal'],
+      ['t12.branch_name', 'branchNameFinal'],
       ['t2.awb_date', 'manifestedDate'],
       ['t2.consignee_name', 'consigneeName'],
       ['t2.total_cod_value', 'codValue'],
@@ -201,7 +245,7 @@ export class V1WebAwbCodService {
       ['t4.user_id', 'userIdDriver'],
       ['t4.first_name', 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
-      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t8.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       [`t8.cod_payment_method`, 'codPaymentMethod'],
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
@@ -213,17 +257,23 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
+    q.leftJoin(e => e.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
     q.innerJoin(
-      e => e.doPodDeliverDetail.doPodDeliver.userDriver,
+      e => e.codPayment.userDriver,
       't4',
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
     q.innerJoin(e => e.awb.packageType, 't5');
 
     q.innerJoin(e => e.branchLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.codPayment.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -231,7 +281,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+    q.innerJoin(e => e.awbStatusFinal, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -239,14 +289,33 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    // //#region Cod Merger
+    // const codUserToBranch = await CodUserToBranch.findOne({
+    //   select: ['userId'],
+    //   where: {
+    //     userId: authMeta.userId,
+    //     isDeleted: false,
+    //   },
+    // });
+
+    // const userId = codUserToBranch ? codUserToBranch.userId : null;
+
+    // if (userId) {
+    //   q.innerJoin(e => e.codUserToBranch, 't10', j =>
+    //     j.andWhere(e => e.isDeleted, w => w.isFalse())
+    //     .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    //   );
+    // }
+    // //#endregion
+
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter ANT, DLV
-    q.andWhere(
-      e => e.doPodDeliverDetail.awbStatusIdLast,
-      w => w.in([14000, 30000]),
-    );
+    // q.andWhere(
+    //   e => e.awbStatusIdLast,
+    //   w => w.in([14000, 30000]),
+    // );
 
     const total = await q.countWithoutTakeAndSkip();
     const result = new WebCodCountResponseVm();
@@ -259,12 +328,13 @@ export class V1WebAwbCodService {
   static async awbCodDlv(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodDlvListResponseVm> {
+    // const authMeta = AuthService.getAuthData();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
-    payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
+    payload.fieldResolverMap['branchIdLast'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
     payload.fieldResolverMap['codPaymentMethod'] = 't8.cod_payment_method';
@@ -295,11 +365,11 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t1.updated_time', 'transactionDate'],
-      ['t1.awb_status_id_last', 'awbStatusIdLast'],
+      ['t8.updated_time', 'transactionDate'],
+      ['t1.awb_status_id_final', 'awbStatusIdLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
       ['t7.awb_status_title', 'awbStatusLast'],
-      ['t1.branch_id_last', 'branchIdLast'],
+      ['t8.branch_id', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
       ['t2.awb_date', 'manifestedDate'],
       ['t2.consignee_name', 'consigneeName'],
@@ -308,7 +378,7 @@ export class V1WebAwbCodService {
       ['t4.user_id', 'userIdDriver'],
       ['t4.first_name', 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
-      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t8.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       [`t8.cod_payment_method`, 'codPaymentMethod'],
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
@@ -320,19 +390,19 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
+    q.innerJoin(e => e.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(
-      e => e.doPodDeliverDetail.doPodDeliver.userDriver,
+      e => e.codPayment.userDriver,
       't4',
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.awb.packageType, 't5');
 
-    q.innerJoin(e => e.branchLast, 't6', j =>
+    q.innerJoin(e => e.codPayment.branchFinal, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -340,13 +410,28 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.pickupRequestDetail, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    // //#region Cod Merger
+    // const codUserToBranch = await CodUserToBranch.findOne({
+    //   select: ['userId'],
+    //   where: {
+    //     userId: authMeta.userId,
+    //     isDeleted: false,
+    //   },
+    // });
+
+    // const userId = codUserToBranch ? codUserToBranch.userId : null;
+
+    // if (userId) {
+    //   q.innerJoin(e => e.codUserToBranch, 't10', j =>
+    //     j.andWhere(e => e.isDeleted, w => w.isFalse())
+    //     .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    //   );
+    // }
+    // //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
@@ -371,12 +456,13 @@ export class V1WebAwbCodService {
   static async countAwbCodDlv(
     payload: BaseMetaPayloadVm,
   ): Promise<WebCodCountResponseVm> {
+    // const authMeta = AuthService.getAuthData();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
-    payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
+    payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
+    payload.fieldResolverMap['branchIdLast'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
 
@@ -405,11 +491,11 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t1.updated_time', 'transactionDate'],
+      ['t8.updated_time', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
       ['t7.awb_status_title', 'awbStatusLast'],
-      ['t1.branch_id_last', 'branchIdLast'],
+      ['t8.branch_id', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
       ['t2.awb_date', 'manifestedDate'],
       ['t2.consignee_name', 'consigneeName'],
@@ -418,7 +504,7 @@ export class V1WebAwbCodService {
       ['t4.user_id', 'userIdDriver'],
       ['t4.first_name', 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
-      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t8.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       ['t1.transaction_status_id', 'transactionStatusId'],
     );
 
@@ -426,19 +512,19 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.doPodDeliverDetail, 't3', j =>
+    q.innerJoin(e => e.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(
-      e => e.doPodDeliverDetail.doPodDeliver.userDriver,
+      e => e.codPayment.userDriver,
       't4',
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.awb.packageType, 't5');
 
-    q.innerJoin(e => e.branchLast, 't6', j =>
+    q.innerJoin(e => e.codPayment.branchFinal, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -446,13 +532,28 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.pickupRequestDetail, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    // //#region Cod Merger
+    // const codUserToBranch = await CodUserToBranch.findOne({
+    //   select: ['userId'],
+    //   where: {
+    //     userId: authMeta.userId,
+    //     isDeleted: false,
+    //   },
+    // });
+
+    // const userId = codUserToBranch ? codUserToBranch.userId : null;
+
+    // if (userId) {
+    //   q.innerJoin(e => e.codUserToBranch, 't10', j =>
+    //     j.andWhere(e => e.isDeleted, w => w.isFalse())
+    //     .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    //   );
+    // }
+    // //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
@@ -1024,10 +1125,10 @@ export class V1WebAwbCodService {
   private static async validStatusAwb(awbItemId: number): Promise<boolean> {
     // check awb status mush valid dlv
     const awbValid = await AwbItemAttr.findOne({
-      select: ['awbItemAttrId', 'awbItemId', 'awbStatusIdLast'],
+      select: ['awbItemAttrId', 'awbItemId', 'awbStatusIdFinal'],
       where: {
         awbItemId,
-        awbStatusIdLast: AWB_STATUS.DLV,
+        awbStatusIdFinal: AWB_STATUS.DLV,
         isDeleted: false,
       },
     });

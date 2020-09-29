@@ -680,7 +680,7 @@ export class V1WebReportCodService {
   //   }
   // }
 
-  static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber, lastAwbNumber) {
+  static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], filters, limit, pageNumber, lastAwbNumber) {
     const spartanFilter: any = [];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
@@ -692,7 +692,6 @@ export class V1WebReportCodService {
     if (lastAwbNumber && pageNumber > 1) {
       spartanFilter.push({ awbNumber: { $gt: lastAwbNumber } });
     }
-
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
@@ -713,7 +712,8 @@ export class V1WebReportCodService {
 
       if (filter.field == 'transactionEnd' && filter.value) {
         const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
-        spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
+        tdFilter.push({ $lt: ['$updatedTime', d] });
+        allowNullTd = false;
       }
 
       if (filter.field == 'manifestedStart' && filter.value) {
@@ -755,7 +755,6 @@ export class V1WebReportCodService {
       }
     }
 
-
     console.log(spartanFilter, tdFilter, "filter");
 
     const skip = limit * (pageNumber - 1);
@@ -793,6 +792,8 @@ export class V1WebReportCodService {
                 userIdUpdated: 1,
                 updatedTime: 1,
                 paymentMethod: 1,
+                transactionstatusname: 1,
+                supplierInvoiceStatusName: 1,
                 codFee: 1,
               },
             },
@@ -837,8 +838,8 @@ export class V1WebReportCodService {
           manifestTrackingSiteName: '$manifestTrackingSiteName',
           lastValidTrackingSiteName: '$lastValidTrackingSiteName',
           receiverRemark: 1,
-          transactionStatus: '',
-          supplierInvoiceStatus: '',
+          transactionStatus: '$td.transactionstatusname',
+          supplierInvoiceStatus: '$td.supplierInvoiceStatusName',
         },
       },
     ];
@@ -853,16 +854,17 @@ export class V1WebReportCodService {
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
     // console.log(arrUser, "array");
-    for (const d of datas) {
-      d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
-      d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
-      // if (d.userIdDriver && arrDriver.length > 0) {
-      //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
-      // }
+    // for (const d of datas) {
+    //   d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
+    //   d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
+    //   // if (d.userIdDriver && arrDriver.length > 0) {
+    //   //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
+    //   // }
 
-      // if (d.userIdUpdated && arrUser.length > 0)
-      //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
-    }
+    //   // if (d.userIdUpdated && arrUser.length > 0)
+    //   //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
+    // }
+    // console.log(datas, "datas")
 
     // console.log(datas);
 
@@ -913,7 +915,7 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'branchLastId' && filter.value) {
-        filterList.push({ currentPositionId: { $eq: filter.value.toString() } });
+        filterList.push({ currentPositionId: { $eq: filter.value } });
       }
 
       if (filter.field == 'periodStart' && filter.value) {
@@ -1034,7 +1036,7 @@ export class V1WebReportCodService {
       },
     ];
 
-    // console.log(JSON.stringify(q), 'query');
+    console.log(JSON.stringify(q), 'query');
     const query = coll
       .aggregate(q);
 
@@ -1121,13 +1123,13 @@ export class V1WebReportCodService {
     try {
 
 
-      const transactionStatuses = await RawQueryService.query(
-        `SELECT transaction_status_id, status_title FROM transaction_status ts`,
-      );
+      // const transactionStatuses = await RawQueryService.query(
+      //   `SELECT transaction_status_id, status_title FROM transaction_status ts`,
+      // );
 
-      for (const transactionStatus of transactionStatuses) {
-        transactionStatus.transaction_status_id = parseInt(`${transactionStatus.transaction_status_id}`, 10);
-      }
+      // for (const transactionStatus of transactionStatuses) {
+      //   transactionStatus.transaction_status_id = parseInt(`${transactionStatus.transaction_status_id}`, 10);
+      // }
 
       const reportType = await this.reportTypeFromFilter(filters);
 
@@ -1157,7 +1159,7 @@ export class V1WebReportCodService {
             responseDatas = rawResponseData.data;
           }
           else {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber, lastAwb));
+            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, filters, limit, pageNumber, lastAwb));
             responseDatas = rawResponseData.data;
           }
 
@@ -1204,8 +1206,6 @@ export class V1WebReportCodService {
       if (storagePath) {
         url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
         this.deleteFile(csvConfig.filePath);
-
-        // console.log(url, 'url final');
       }
 
       // console.log(uuid, uuid.toString() !== '', 'uuid');
@@ -1215,6 +1215,8 @@ export class V1WebReportCodService {
           status: 'OK',
           url,
         };
+
+        console.log(url, 'url final')
         await RedisService.setex(
           uuid,
           JSON.stringify(payload),
@@ -1247,18 +1249,18 @@ export class V1WebReportCodService {
       //   filterAwb = true
       // }
 
-      if (filter.field == 'transactionStart' && filter.value) {
-        filterTransaction = true;
-      }
-      if (filter.field == 'transactionEnd' && filter.value) {
-        filterTransaction = true;
-      }
-      if (filter.field == 'transactionStatus' && filter.value) {
-        filterTransaction = true;
-      }
-      if (filter.field == 'supplierInvoiceStatus' && filter.value) {
-        filterTransaction = true;
-      }
+      // if (filter.field == 'transactionStart' && filter.value) {
+      //   filterTransaction = true;
+      // }
+      // if (filter.field == 'transactionEnd' && filter.value) {
+      //   filterTransaction = true;
+      // }
+      // if (filter.field == 'transactionStatus' && filter.value) {
+      //   filterTransaction = true;
+      // }
+      // if (filter.field == 'supplierInvoiceStatus' && filter.value) {
+      //   filterTransaction = true;
+      // }
 
     });
 
