@@ -1,3 +1,4 @@
+// #region import
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
 
@@ -47,7 +48,7 @@ import { CodExportMongoQueueService } from './services/cod/cod-export-queue.serv
 import { BagRepresentativeScanOutHubQueueService } from './services/bag-representative-scan-out-hub-queue.service';
 import { BagScanVendorQueueService } from './services/bag-scan-vendor-queue.service';
 import { CodSqlExportMongoQueueService } from './services/cod/cod-sql-export-queue.service';
-
+// #endregion import
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
 })
@@ -142,31 +143,36 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     AwbSendPartnerQueueService.boot();
     BagDropoffHubQueueService.boot();
     UploadImagePodQueueService.boot();
-    DoSmdPostAwbHistoryMetaQueueService.boot();
-    BagScanInBranchSmdQueueService.boot();
-    BagScanOutBranchSmdQueueService.boot();
-    BagScanDoSmdQueueService.boot();
-    BagRepresentativeScanDoSmdQueueService.boot();
-    BagAwbDeleteHistoryInHubFromSmdQueueService.boot();
-    BagRepresentativeSmdQueueService.boot();
-    BaggingDropoffHubQueueService.boot();
-    BagRepresentativeDropoffHubQueueService.boot();
     CreateBagFirstScanHubQueueService.boot();
     CreateBagAwbScanHubQueueService.boot();
-    CodPaymentQueueService.boot();
-    CodFirstTransactionQueueService.boot();
-    CodSyncTransactionQueueService.boot();
-    CodUpdateTransactionQueueService.boot();
-    CodTransactionHistoryQueueService.boot();
-    CodUpdateSupplierInvoiceQueueService.boot();
-    CodExportMongoQueueService.boot();
-    CodSqlExportMongoQueueService.boot();
-    BagRepresentativeScanOutHubQueueService.boot();
-    BagScanVendorQueueService.boot();
-    // BagItemAwbQueueService.boot();
-    // GenerateReportQueueService.boot();
+    
 
-    // init Cron here
-    CodCronSettlementQueueService.init();
+    if (serverConfig.bullCod) {
+      // CodPaymentQueueService.boot();
+      CodFirstTransactionQueueService.boot();
+      CodSyncTransactionQueueService.boot();
+      CodUpdateTransactionQueueService.boot();
+      CodTransactionHistoryQueueService.boot();
+      CodUpdateSupplierInvoiceQueueService.boot();
+      CodExportMongoQueueService.boot();
+      CodSqlExportMongoQueueService.boot();
+      // init Cron here
+      CodCronSettlementQueueService.init();
+    }
+    if (serverConfig.bullSmd) {
+      BagRepresentativeScanOutHubQueueService.boot();
+      BagScanVendorQueueService.boot();
+      DoSmdPostAwbHistoryMetaQueueService.boot();
+      BagScanInBranchSmdQueueService.boot();
+      BagScanOutBranchSmdQueueService.boot();
+      BagScanDoSmdQueueService.boot();
+      BagRepresentativeScanDoSmdQueueService.boot();
+      BagAwbDeleteHistoryInHubFromSmdQueueService.boot();
+      BagRepresentativeSmdQueueService.boot();
+      BaggingDropoffHubQueueService.boot();
+      BagRepresentativeDropoffHubQueueService.boot();
+    }
+
+
   }
 }
