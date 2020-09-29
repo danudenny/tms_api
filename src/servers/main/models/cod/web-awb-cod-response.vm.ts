@@ -38,6 +38,12 @@ export class WebItemAwbCodResponseVm {
   branchNameLast: string;
 
   @ApiModelProperty()
+  branchIdFinal: number;
+
+  @ApiModelProperty()
+  branchNameFinal: string;
+
+  @ApiModelProperty()
   representativeId: number;
 
   @ApiModelProperty()
@@ -45,6 +51,12 @@ export class WebItemAwbCodResponseVm {
 
   @ApiModelProperty()
   awbStatusLast: string;
+
+  @ApiModelProperty()
+  awbStatusIdFinal: string;
+
+  @ApiModelProperty()
+  awbStatusFinal: string;
 
   @ApiModelProperty()
   userIdDriver: number;
