@@ -161,7 +161,7 @@ export class Branch extends TmsBaseEntity {
   @JoinColumn({ name: 'district_id' })
   district: District;
 
-  @ManyToOne(() => Representative)
+  @OneToOne(() => Representative)
   @JoinColumn({ name: 'representative_id' })
   representative: Representative;
 
