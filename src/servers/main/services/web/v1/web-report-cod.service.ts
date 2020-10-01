@@ -230,7 +230,7 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.receiverRemark),
           '',
           '',
-          d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
+          d.tdDateUpdated ? moment.utc(d.tdDateUpdated).format('YYYY-MM-DD HH:mm') : d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
           (d.tdUserIdUpdatedNik ? this.strReplaceFunc(d.tdUserIdUpdatedNik) + ' - ' + (d.tdUserIdUpdatedName) : (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) + ' - ' + (d.userIdUpdatedName) : "-")),
         ]);
 
@@ -829,6 +829,7 @@ export class V1WebReportCodService {
           tdUserIdUpdatedNik: "$td.nikAdmin",
           tdUserIdUpdatedName: "$td.adminName",
           dateUpdated: '$history_date',
+          tdDateUpdated: "$td.updatedTime",
           perwakilan: 1,
           layanan: 1,
           paymentMethod: '$td.paymentMethod',
