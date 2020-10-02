@@ -464,6 +464,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['bagNumber'] = 't4.bag_number';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [

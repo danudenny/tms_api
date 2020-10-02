@@ -1,7 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
 import { User } from './user';
+import { Branch } from './branch';
 
 @Entity('cod_payment', { schema: 'public' })
 export class CodPayment extends TmsBaseEntity {
@@ -81,4 +82,8 @@ export class CodPayment extends TmsBaseEntity {
     name: 'user_id_driver',
   })
   userDriver: User;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branchFinal: Branch;
 }
