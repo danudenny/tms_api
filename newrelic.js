@@ -9,7 +9,7 @@ exports.config = {
   /**
    * Array of application names.
    */
-  app_name: ['SICEPAT POD API', 'STAGING'],
+  app_name: ['SICEPAT POD API'],
   /**
    * Your New Relic license key.
    */
