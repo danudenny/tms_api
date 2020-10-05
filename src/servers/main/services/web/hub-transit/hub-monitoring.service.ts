@@ -20,17 +20,21 @@ export class HubMonitoringService {
     if (!payload.sortBy) {
       payload.sortBy = 'origin';
     }
-    const data =
-    await RawQueryService.query(
+    const data = await RawQueryService.query(
       await this.getQueryMonitoringHubBagByFilterOrion(payload),
     );
 
-    const totalData = await RawQueryService.query(
-      await this.getQueryMonitoringHubBagByFilterOrion(payload, true),
-    );
+    let dataBag = [];
+    if (data) {
+      dataBag = await RawQueryService.query(
+        await this.getQueryMonitoringHubTotalBagByFilterOrion(payload),
+      );
+    }
+
     const result = {
       data,
-      paging: MetaService.set(payload.page, payload.limit, totalData[0].cnt),
+      paging: MetaService.set(payload.page, payload.limit, dataBag ? dataBag[0].totalData : 0),
+      totalDetail: dataBag[0],
     };
     return result;
   }
@@ -87,15 +91,80 @@ export class HubMonitoringService {
     return query;
   }
 
+  static async getQueryMonitoringHubTotalBagByFilterOrion(payload: BaseMetaPayloadVm): Promise<string> {
+    const map = {
+      createdTime: 'dp.do_pod_date_time',
+      branchIdTo: 'dp.branch_id_to',
+    };
+    const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
+
+    const query = `
+    WITH detail as (
+      SELECT
+        br.branch_name,
+        COUNT(DISTINCT dpdb.bag_item_id) AS "totalBag",
+        COUNT(DISTINCT doh.bag_item_id) AS "totalScanIn"
+      FROM
+        do_pod dp
+      INNER JOIN do_pod_detail_bag dpdb ON dp.do_pod_id = dpdb.do_pod_id
+        AND dpdb.is_deleted = FALSE
+      LEFT JOIN dropoff_hub doh ON doh.bag_item_id = dpdb.bag_item_id
+        AND doh.is_deleted = FALSE
+      INNER JOIN bag b ON b.bag_id = dpdb.bag_id
+        AND b.is_deleted = FALSE
+      INNER JOIN branch br ON br.branch_id = b.branch_id
+        AND br.is_deleted = FALSE
+      WHERE
+        dp.is_deleted = FALSE
+        AND dp.do_pod_type = ${POD_TYPE.OUT_BRANCH}
+        ${whereQuery ? `AND ${whereQuery}` : ''}
+        ${payload.search ? `AND br.branch_name ~* '${payload.search}'` : ''}
+      GROUP BY
+        br.branch_name
+    )
+    SELECT
+      COUNT("totalBag") AS "totalData",
+      SUM("totalBag") AS "totalBag",
+      SUM("totalHub") AS "totalHub",
+      SUM("totalUnload") AS "totalUnload",
+      SUM("totalDelivery") AS "totalDelivery"
+    FROM
+      (
+        SELECT
+          "totalBag" AS "totalBag",
+          CASE
+            WHEN "totalScanIn" = "totalBag"
+            AND "totalScanIn" > 0 THEN
+              "totalBag"
+          END "totalHub",
+          CASE
+              WHEN "totalScanIn" < "totalBag"
+              AND "totalScanIn" > 0 THEN
+                "totalBag"
+          END "totalUnload",
+          CASE
+              WHEN "totalScanIn" = 0 THEN
+                "totalBag"
+          END "totalDelivery"
+        FROM detail
+      ) t1;
+    `;
+    return query;
+  }
+
   static async orionFilterToQueryRaw(
     filters: BaseMetaPayloadFilterVm[],
     map: any,
+    ignoreUnmapping = false,
   ): Promise<string> {
     let query = '';
     for (const filter of filters) {
       const opt = RequestQueryBuidlerService
         .convertFilterOperatorToSqlOperator(filter.operator as BaseMetaPayloadFilterVmOperator);
       const field = map[filter.field];
+      if (!field && ignoreUnmapping) {
+        continue;
+      }
       query += query ? `AND ${field} ${opt} '${filter.value}'\n` : `${field} ${opt} '${filter.value}'\n`;
     }
     return query;

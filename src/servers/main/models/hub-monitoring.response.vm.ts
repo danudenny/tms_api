@@ -17,7 +17,25 @@ export class MonitoringBagHubDataResponseVm {
   @ApiModelProperty()
   status: number;
 }
+
+export class MonitoringBagHubTotalBagResponseVm {
+  @ApiModelProperty()
+  totalBag: number;
+
+  @ApiModelProperty()
+  totalHub: number;
+
+  @ApiModelProperty()
+  totalUnload: number;
+
+  @ApiModelProperty()
+  totalDelivery: number;
+}
+
 export class MonitoringBagHubResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({type: () => MonitoringBagHubTotalBagResponseVm})
+  totalDetail: MonitoringBagHubTotalBagResponseVm;
+
   @ApiModelProperty({type: () => [MonitoringBagHubDataResponseVm]})
   data: MonitoringBagHubDataResponseVm[];
 }

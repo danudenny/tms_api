@@ -21,7 +21,7 @@ import { HubTransitDeliveryOutService } from '../../services/web/hub-transit/hub
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { HubMonitoringService } from '../../services/web/hub-transit/hub-monitoring.service';
-import { MonitoringBagHubResponseVm } from '../../models/hub-monitoring.response.vm';
+import { MonitoringBagHubResponseVm, MonitoringBagHubTotalBagResponseVm } from '../../models/hub-monitoring.response.vm';
 
 @ApiUseTags('Hub Delivery')
 @Controller('pod/hub')
@@ -86,7 +86,7 @@ export class WebHubController {
     return HubSortirService.hubAwbNumber(payload);
   }
 
-  @Post('monitoring/bagList')
+  @Post('monitoring/bag')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringBagHubResponseVm })
   public async monitoringBagHub(@Body() payload: BaseMetaPayloadVm) {
