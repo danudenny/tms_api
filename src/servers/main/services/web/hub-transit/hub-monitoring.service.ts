@@ -38,15 +38,16 @@ export class HubMonitoringService {
 
   static async getQueryMonitoringHubBagByFilterOrion(payload: BaseMetaPayloadVm): Promise<string> {
     const mapSubQuery = {
-      origin: '"origin"',
       totalBag: '"totalBag"',
       remaining: '"remaining"',
       totalScanIn: '"totalScanIn"',
       createdTime: 'dp.do_pod_date_time',
       branchIdTo: 'dp.branch_id_to',
+      branchIdFrom: 'b.branch_id',
     };
     const map = {
       status: '"status"',
+      origin: '"origin"',
     };
     const whereQuerySub = await this.orionFilterToQueryRaw(payload.filters, mapSubQuery, true);
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
@@ -106,6 +107,8 @@ export class HubMonitoringService {
     const map = {
       createdTime: 'dp.do_pod_date_time',
       branchIdTo: 'dp.branch_id_to',
+      branchIdFrom: 'b.branch_id',
+      origin: 'br.branch_name',
     };
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
 
@@ -176,7 +179,11 @@ export class HubMonitoringService {
       if (!field && ignoreUnmapping) {
         continue;
       }
-      query += query ? `AND ${field} ${opt} '${filter.value}'\n` : `${field} ${opt} '${filter.value}'\n`;
+      let str = `${field} ${opt} '${filter.value}'`;
+      if (opt == 'LIKE') {
+        str = `${field} ${opt} '%${filter.value}%'`;
+      }
+      query += query ? `AND ${str}\n` : `${str}\n`;
     }
     return query;
   }
