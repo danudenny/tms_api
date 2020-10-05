@@ -17,9 +17,6 @@ export class HubMonitoringService {
     if (!payload.limit) {
       payload.limit = 10;
     }
-    if (!payload.sortBy) {
-      payload.sortBy = 'origin';
-    }
     const data = await RawQueryService.query(
       await this.getQueryMonitoringHubBagByFilterOrion(payload),
     );
@@ -39,55 +36,69 @@ export class HubMonitoringService {
     return result;
   }
 
-  static async getQueryMonitoringHubBagByFilterOrion(payload: BaseMetaPayloadVm, isQueryCount = false): Promise<string> {
-    const map = {
+  static async getQueryMonitoringHubBagByFilterOrion(payload: BaseMetaPayloadVm): Promise<string> {
+    const mapSubQuery = {
       origin: '"origin"',
       totalBag: '"totalBag"',
+      remaining: '"remaining"',
       totalScanIn: '"totalScanIn"',
       createdTime: 'dp.do_pod_date_time',
       branchIdTo: 'dp.branch_id_to',
-      status: 'status',
     };
-    const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map);
+    const map = {
+      status: '"status"',
+    };
+    const whereQuerySub = await this.orionFilterToQueryRaw(payload.filters, mapSubQuery, true);
+    const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
 
-    let query = `
-      SELECT
-        "origin",
-        SUM("totalBag") AS "totalBag",
-        SUM("totalScanIn") AS "totalScanIn",
-        SUM("totalBag") - SUM("totalScanIn") AS "remaining",
-        CASE
-          WHEN SUM("totalScanIn") = SUM("totalBag") AND SUM("totalScanIn") > 0
-            THEN 'Hub'
-          WHEN SUM("totalScanIn") < SUM("totalBag") AND SUM("totalScanIn") > 0
-            THEN 'Unload'
-          else
-            'Delivery'
-        END status
-      FROM (
+    let filterQuery = payload.search ? `origin ~* '${payload.search}'` : '';
+    filterQuery += filterQuery && whereQuery ? 'AND' : '';
+    filterQuery += whereQuery;
+
+    const query = `
+      WITH detail AS (
         SELECT
-          COUNT(DISTINCT dpdb.bag_item_id) As "totalBag",
-          br.branch_name As "origin",
-          COUNT(DISTINCT doh.bag_item_id) As "totalScanIn"
-        FROM do_pod dp
-        INNER JOIN do_pod_detail_bag dpdb ON dp.do_pod_id = dpdb.do_pod_id AND dpdb.is_deleted = FALSE
-        LEFT JOIN dropoff_hub doh ON doh.bag_item_id = dpdb.bag_item_id AND doh.is_deleted = FALSE
-        INNER JOIN bag b ON b.bag_id = dpdb.bag_id AND b.is_deleted = FALSE
-        INNER JOIN branch br ON br.branch_id = b.branch_id AND br.is_deleted = FALSE
-        where
-          dp.is_deleted = FALSE
-          AND dp.do_pod_type = ${POD_TYPE.OUT_BRANCH}
-          ${whereQuery ? `AND ${whereQuery}` : ''}
-        group by br.branch_name
+          "origin",
+          SUM("totalBag") AS "totalBag",
+          SUM("totalScanIn") AS "totalScanIn"
+        FROM (
+          SELECT
+            COUNT(DISTINCT dpdb.bag_item_id) As "totalBag",
+            br.branch_name As "origin",
+            COUNT(DISTINCT doh.bag_item_id) As "totalScanIn"
+          FROM do_pod dp
+          INNER JOIN do_pod_detail_bag dpdb ON dp.do_pod_id = dpdb.do_pod_id AND dpdb.is_deleted = FALSE
+          LEFT JOIN dropoff_hub doh ON doh.bag_item_id = dpdb.bag_item_id AND doh.is_deleted = FALSE
+          INNER JOIN bag b ON b.bag_id = dpdb.bag_id AND b.is_deleted = FALSE
+          INNER JOIN branch br ON br.branch_id = b.branch_id AND br.is_deleted = FALSE
+          WHERE
+            dp.is_deleted = FALSE
+            AND dp.do_pod_type = 3005
+            ${whereQuerySub ? `AND ${whereQuerySub}` : ''}
+          GROUP BY br.branch_name
+        ) t1
+        GROUP BY "origin"
+      )
+      SELECT * FROM (
+        SELECT
+          "origin",
+          "totalBag",
+          "totalScanIn",
+          "totalBag" - "totalScanIn" AS "remaining",
+          CASE
+            WHEN "totalScanIn" = "totalBag" AND "totalScanIn" > 0
+              THEN 'Hub'
+            WHEN "totalScanIn" < "totalBag" AND "totalScanIn" > 0
+              THEN 'Unload'
+            else
+              'Delivery'
+          END status
+        FROM detail
       ) t1
-      ${payload.search ? `WHERE origin ~* '${payload.search}'` : ''}
-      group by "origin"
-      ${isQueryCount ? '' : `ORDER BY ${map[payload.sortBy]} ${payload.sortDir}\nLIMIT ${payload.limit};`}
+      ${filterQuery ? `WHERE ${filterQuery}` : ''}
+      ${payload.sortBy ? `ORDER BY ${{...mapSubQuery, ...map}[payload.sortBy]} ${payload.sortDir}` : ''}
+      LIMIT ${payload.limit};
     `;
-
-    if (isQueryCount) {
-      query = `SELECT COUNT (*) AS cnt FROM ( ${query} ) t;`;
-    }
     return query;
   }
 
