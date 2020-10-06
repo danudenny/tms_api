@@ -27,11 +27,21 @@ export class HubMonitoringService {
         await this.getQueryMonitoringHubTotalBagByFilterOrion(payload),
       );
     }
+    const totalDetail = {};
+    const keys = Object.keys(dataBag[0]);
+
+    Object.values(dataBag[0]).forEach((v, k) => {
+      if (!v) {
+        totalDetail[keys[k]] = '0';
+      } else {
+        totalDetail[keys[k]] = v;
+      }
+    });
 
     const result = {
       data,
       paging: MetaService.set(payload.page, payload.limit, dataBag ? dataBag[0].totalData : 0),
-      totalDetail: dataBag[0],
+      totalDetail,
     };
     return result;
   }
