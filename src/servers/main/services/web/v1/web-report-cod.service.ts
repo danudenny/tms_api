@@ -218,7 +218,7 @@ export class V1WebReportCodService {
           d.transactionStatus,
           d.lastValidTrackingType,
           d.supplierInvoiceStatus,
-          this.strReplaceFunc(d.prtCustPackageId),
+          d.tdcustPackage ? this.strReplaceFunc(d.tdcustPackage) : this.strReplaceFunc(d.prtReferenceNo),
           this.strReplaceFunc(d.manifestTrackingSiteName),
           this.strReplaceFunc(d.lastValidTrackingSiteName),
           this.strReplaceFunc(d.prtDestinationCode),
@@ -230,8 +230,8 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.receiverRemark),
           '',
           '',
-          d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
-          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : '') + ' - ' + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ''),
+          d.tdDateUpdated ? moment.utc(d.tdDateUpdated).format('YYYY-MM-DD HH:mm') : d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
+          (d.tdUserIdUpdatedNik ? this.strReplaceFunc(d.tdUserIdUpdatedNik) + ' - ' + (d.tdUserIdUpdatedName) : (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) + ' - ' + (d.userIdUpdatedName) : "-")),
         ]);
 
       }
@@ -684,7 +684,7 @@ export class V1WebReportCodService {
     const spartanFilter: any = [];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
-    console.log(pageNumber, "page Number")
+    // console.log(pageNumber, "page Number")
 
     if (pageNumber == 1) {
       spartanFilter.push({ awbNumber: { $gt: "" } });
@@ -757,8 +757,6 @@ export class V1WebReportCodService {
 
     console.log(spartanFilter, tdFilter, "filter");
 
-    const skip = limit * (pageNumber - 1);
-
     const q = [
       {
         $match: {
@@ -790,10 +788,13 @@ export class V1WebReportCodService {
                 supplierInvoiceStatusId: 1,
                 userIdDriver: 1,
                 userIdUpdated: 1,
+                adminName: 1,
+                nikAdmin: 1,
                 updatedTime: 1,
                 paymentMethod: 1,
                 transactionstatusname: 1,
                 supplierInvoiceStatusName: 1,
+                custPackage: 1,
                 codFee: 1,
               },
             },
@@ -818,13 +819,18 @@ export class V1WebReportCodService {
           parcelContent: '$prtParcelContent',
           prtParcelValue: '$prtParcelValue',
           prtCustPackageId: '$prtCustPackageId',
+          tdcustPackage: "$td.custPackage",
           transactionStatusId: '$td.transactionStatusId',
           userIdDriver: '$courierUserId',
           userIdDriverNik: '$podCourierNik',
           userIdDriverName: '$podCourierName',
           userIdUpdatedNik: '$userUpdatedNik',
           userIdUpdatedName: '$userUpdatedName',
+          tdUserIdUpdatedNik: "$td.nikAdmin",
+          tdUserIdUpdatedName: "$td.adminName",
           dateUpdated: '$history_date',
+          tdDateUpdated: "$td.updatedTime",
+          prtReferenceNo: 1,
           perwakilan: 1,
           layanan: 1,
           paymentMethod: '$td.paymentMethod',
@@ -886,15 +892,12 @@ export class V1WebReportCodService {
     }
 
     for (const filter of filters) {
-      // filterList.push({ awbNumber: { $eq: "001076023505" } });
-
       if (filter.field == 'transactionStart' && filter.value) {
         const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
         filterList.push({ updatedTime: { $gte: d } });
       }
 
       if (filter.field == 'transactionEnd' && filter.value) {
-
         const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
         filterList.push({ updatedTime: { $lt: d } });
       }
@@ -926,7 +929,6 @@ export class V1WebReportCodService {
 
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
-
         spartanFilter.push({ $lt: ['$lastValidTrackingDateTime', d] });
         allowNullTd = false;
       }
@@ -1143,8 +1145,6 @@ export class V1WebReportCodService {
 
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
       try {
-
-
         let pageNumber = 1;
         const datas = [];
         let finish = false;
