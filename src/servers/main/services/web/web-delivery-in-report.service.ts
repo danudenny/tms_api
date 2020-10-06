@@ -138,7 +138,7 @@ export class WebDeliveryInReportService {
 
     q.selectRaw(
       ['t3.awb_number', 'Resi'],
-      ['TO_CHAR(MIN(t1.created_time), \'DD Mon YYYY HH24:MI\')', 'Tanggal Tiba'],
+      ['TO_CHAR(t1.created_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Tiba'],
       ['t4.branch_name', 'Hub Scan'],
       ['t3.consignee_name', 'Penerima'],
       ['t3.consignee_address', 'Alamat Penerima'],
