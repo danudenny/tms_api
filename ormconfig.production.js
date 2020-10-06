@@ -60,7 +60,7 @@ module.exports = {
     subscribersDir: 'dist/shared/orm-subscriber',
   },
   migrationsRun: false,
-  logging: true,
+  logging: ['warn', 'error'],
   logger: 'advanced-console',
   maxQueryExecutionTime: 1000,
   synchronize: false,
