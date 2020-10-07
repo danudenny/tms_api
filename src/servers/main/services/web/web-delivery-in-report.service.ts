@@ -98,7 +98,7 @@ export class WebDeliveryInReportService {
     }
     const p = new BaseMetaPayloadVm();
     p.filters = payload.filters ? payload.filters : payload;
-    p.limit = 10000;
+    p.limit = 100000000;
 
     const data = await this.getDataCsvHubDeliveryIn(p);
 
