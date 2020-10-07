@@ -22,7 +22,7 @@ export class V1MobileDivaPaymentService {
 
   static async pingQR() {
     let response = null;
-    await nr.startBackgroundTransaction('DIVA - Ping QR', async function transactionHandler() {
+    await nr.startBackgroundTransaction('DIVA - Ping QR', async () => {
       const transaction = nr.getTransaction();
       const url = `${ConfigService.get('divaPayment.urlQR')}/v1`;
       try {
@@ -46,7 +46,7 @@ export class V1MobileDivaPaymentService {
 
   static async getQr(payload: any): Promise<any> {
     let result = null;
-    await nr.startBackgroundTransaction('DIVA - Get QR', async function transactionHandler() {
+    await nr.startBackgroundTransaction('DIVA - Get QR', async () => {
       const transaction = nr.getTransaction();
       // validate
       if (!payload.provider || !payload.amount) {
@@ -95,7 +95,7 @@ export class V1MobileDivaPaymentService {
 
   static async sendQr(requestData: any): Promise<any> {
     let result = null;
-    await nr.startBackgroundTransaction('DIVA - Send QR', async function transactionHandler() {
+    await nr.startBackgroundTransaction('DIVA - Send QR', async () => {
       const transaction = nr.getTransaction();
       const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/postqr`;
       try {
@@ -118,7 +118,7 @@ export class V1MobileDivaPaymentService {
 
   static async paymentStatus(requestData: any): Promise<any> {
     let result = null;
-    await nr.startBackgroundTransaction('DIVA - Payment Status', async function transactionHandler() {
+    await nr.startBackgroundTransaction('DIVA - Payment Status', async () => {
       const transaction = nr.getTransaction();
       const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/get-payment-status`;
       try {
