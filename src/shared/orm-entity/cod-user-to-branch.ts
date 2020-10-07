@@ -30,10 +30,6 @@ export class CodUserToBranch extends TmsBaseEntity {
   })
   branchId: number;
 
-  @ManyToOne(() => Branch, branch => branch)
-  @JoinColumn({ name: 'branch_id' })
-  branch: Branch;
-
   @ManyToOne(() => User, e => e.userRoles)
   @JoinColumn({ name: 'user_id' })
   user: User;
@@ -41,4 +37,8 @@ export class CodUserToBranch extends TmsBaseEntity {
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchIdLast' })
   awbItemAttr: AwbItemAttr;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
+  branch: Branch;
 }
