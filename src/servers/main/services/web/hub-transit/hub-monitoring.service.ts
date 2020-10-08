@@ -118,6 +118,7 @@ export class HubMonitoringService {
       SELECT
         br.branch_name,
         COUNT(DISTINCT dpdb.bag_item_id) AS "totalBag",
+        COUNT(DISTINCT dp.do_pod_id) AS "totalDoPod",
         COUNT(DISTINCT doh.bag_item_id) AS "totalScanIn"
       FROM
         do_pod dp
@@ -139,28 +140,47 @@ export class HubMonitoringService {
     )
     SELECT
       COUNT("totalBag") AS "totalData",
+      SUM("totalDoPod") AS "totalDoBag",
       SUM("totalBag") AS "totalBag",
       SUM("totalHub") AS "totalHub",
       SUM("totalUnload") AS "totalUnload",
-      SUM("totalDelivery") AS "totalDelivery"
+      SUM("totalDelivery") AS "totalDelivery",
+      SUM("totalDoHub") AS "totalDoHub",
+      SUM("totalDoUnload") AS "totalDoUnload",
+      SUM("totalDoDelivery") AS "totalDoDelivery"
     FROM
       (
         SELECT
           "totalBag" AS "totalBag",
+					"totalDoPod" AS "totalDoPod",
           CASE
             WHEN "totalScanIn" = "totalBag"
             AND "totalScanIn" > 0 THEN
               "totalBag"
           END "totalHub",
           CASE
+            WHEN "totalScanIn" = "totalBag"
+            AND "totalScanIn" > 0 THEN
+              "totalDoPod"
+          END "totalDoHub",
+          CASE
               WHEN "totalScanIn" < "totalBag"
               AND "totalScanIn" > 0 THEN
                 "totalBag"
           END "totalUnload",
           CASE
+            WHEN "totalScanIn" < "totalBag"
+            AND "totalScanIn" > 0 THEN
+              "totalDoPod"
+          END "totalDoUnload",
+          CASE
               WHEN "totalScanIn" = 0 THEN
                 "totalBag"
-          END "totalDelivery"
+          END "totalDelivery",
+          CASE
+            WHEN "totalScanIn" = 0 THEN
+              "totalDoPod"
+          END "totalDoDelivery"
         FROM detail
       ) t1;
     `;

@@ -30,6 +30,18 @@ export class MonitoringBagHubTotalBagResponseVm {
 
   @ApiModelProperty()
   totalDelivery: number;
+
+  @ApiModelProperty()
+  totalDoBag: number;
+
+  @ApiModelProperty()
+  totalDoHub: number;
+
+  @ApiModelProperty()
+  totalDoUnload: number;
+
+  @ApiModelProperty()
+  totalDoDelivery: number;
 }
 
 export class MonitoringBagHubResponseVm extends BaseMetaResponseVm {
