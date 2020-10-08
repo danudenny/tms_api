@@ -1146,11 +1146,15 @@ export class ScanoutSmdService {
     }
     const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
     if (resultDataDoSmdDetail.length > 0 ) {
+      const idDetail = [];
+      for (const dataDetailSmd of resultDataDoSmdDetail) {
+        idDetail.push(dataDetailSmd.do_smd_detail_id);
+      }
       // proses seal jika smd sudah pernah scan item
       const checkItemSmd = await DoSmdDetailItem.findOne({
         select: ['doSmdDetailId'],
         where: {
-          doSmdDetailId: resultDataDoSmdDetail[0].do_smd_detail_id,
+          doSmdDetailId: In(idDetail),
           isDeleted: false,
         },
       });
