@@ -109,7 +109,7 @@ export class HubMonitoringService {
       ${filterQuery ? `WHERE ${filterQuery}` : ''}
       ${payload.sortBy ? `ORDER BY ${{...mapSubQuery, ...map}[payload.sortBy]} ${payload.sortDir}` : ''}
       LIMIT ${payload.limit}
-      ${payload.page ? `OFFSET ${payload.limit * Number(payload.page)}` : ''};
+      ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''};
     `;
     return query;
   }
