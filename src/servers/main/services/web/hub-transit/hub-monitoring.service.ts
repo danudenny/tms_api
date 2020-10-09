@@ -151,7 +151,7 @@ export class HubMonitoringService {
         ${whereQuery ? `AND ${whereQuery}` : ''}
         ${payload.search ? `AND br.branch_name ~* '${payload.search}'` : ''}
       GROUP BY
-        br.branch_name
+        br.branch_name, dp.do_pod_id
     )
     SELECT
       COUNT("totalBag") AS "totalData",
