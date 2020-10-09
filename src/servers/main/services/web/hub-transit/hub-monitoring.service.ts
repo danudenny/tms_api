@@ -79,11 +79,12 @@ export class HubMonitoringService {
             br.branch_name As "origin",
             dp.do_pod_id AS "doPodId",
             COUNT(DISTINCT doh.bag_item_id) As "totalScanIn",
-            COUNT(DISTINCT bai.awb_item_id) AS "totalAwb"
+            COUNT(bai.*) AS "totalAwb"
           FROM do_pod dp
           INNER JOIN do_pod_detail_bag dpdb ON dp.do_pod_id = dpdb.do_pod_id AND dpdb.is_deleted = FALSE
           LEFT JOIN dropoff_hub doh ON doh.bag_item_id = dpdb.bag_item_id AND doh.is_deleted = FALSE
-          LEFT JOIN bag_item_awb bai ON bai.bag_item_id = dpdb.bag_item_id AND bai.is_deleted = FALSE
+          LEFT JOIN bag_item bi ON bi.bag_item_id = dpdb.bag_item_id AND bi.is_deleted = FALSE
+          LEFT JOIN bag_item_awb bai ON bai.bag_item_id = bi.bag_item_id AND bai.is_deleted = FALSE
           INNER JOIN bag b ON b.bag_id = dpdb.bag_id AND b.is_deleted = FALSE
           INNER JOIN branch br ON br.branch_id = b.branch_id AND br.is_deleted = FALSE
           WHERE
@@ -131,9 +132,8 @@ export class HubMonitoringService {
     const query = `
     WITH detail as (
       SELECT
-        br.branch_name,
         COUNT(DISTINCT dpdb.bag_item_id) AS "totalBag",
-        COUNT(DISTINCT dp.do_pod_id) AS "totalDoPod",
+        dp.do_pod_id AS "doPodId",
         COUNT(DISTINCT doh.bag_item_id) AS "totalScanIn"
       FROM
         do_pod dp
@@ -155,7 +155,7 @@ export class HubMonitoringService {
     )
     SELECT
       COUNT("totalBag") AS "totalData",
-      SUM("totalDoPod") AS "totalDoBag",
+      COUNT(DISTINCT "doPodId") AS "totalDoBag",
       SUM("totalBag") AS "totalBag",
       SUM("totalHub") AS "totalHub",
       SUM("totalUnload") AS "totalUnload",
@@ -167,7 +167,7 @@ export class HubMonitoringService {
       (
         SELECT
           "totalBag" AS "totalBag",
-					"totalDoPod" AS "totalDoPod",
+					"doPodId" AS "doPodId",
           CASE
             WHEN "totalScanIn" = "totalBag"
             AND "totalScanIn" > 0 THEN
@@ -175,8 +175,7 @@ export class HubMonitoringService {
           END "totalHub",
           CASE
             WHEN "totalScanIn" = "totalBag"
-            AND "totalScanIn" > 0 THEN
-              "totalDoPod"
+            AND "totalScanIn" > 0 THEN 1
           END "totalDoHub",
           CASE
               WHEN "totalScanIn" < "totalBag"
@@ -185,16 +184,14 @@ export class HubMonitoringService {
           END "totalUnload",
           CASE
             WHEN "totalScanIn" < "totalBag"
-            AND "totalScanIn" > 0 THEN
-              "totalDoPod"
+            AND "totalScanIn" > 0 THEN 1
           END "totalDoUnload",
           CASE
               WHEN "totalScanIn" = 0 THEN
                 "totalBag"
           END "totalDelivery",
           CASE
-            WHEN "totalScanIn" = 0 THEN
-              "totalDoPod"
+            WHEN "totalScanIn" = 0 THEN 1
           END "totalDoDelivery"
         FROM detail
       ) t1;
