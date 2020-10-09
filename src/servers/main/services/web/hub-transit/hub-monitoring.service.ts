@@ -71,30 +71,35 @@ export class HubMonitoringService {
         SELECT
           "origin",
           SUM("totalBag") AS "totalBag",
-          SUM("totalScanIn") AS "totalScanIn"
+          SUM("totalScanIn") AS "totalScanIn",
+          SUM("totalAwb") AS "totalAwb"
         FROM (
           SELECT
             COUNT(DISTINCT dpdb.bag_item_id) As "totalBag",
             br.branch_name As "origin",
-            COUNT(DISTINCT doh.bag_item_id) As "totalScanIn"
+            dp.do_pod_id AS "doPodId",
+            COUNT(DISTINCT doh.bag_item_id) As "totalScanIn",
+            COUNT(DISTINCT bai.awb_item_id) AS "totalAwb"
           FROM do_pod dp
           INNER JOIN do_pod_detail_bag dpdb ON dp.do_pod_id = dpdb.do_pod_id AND dpdb.is_deleted = FALSE
           LEFT JOIN dropoff_hub doh ON doh.bag_item_id = dpdb.bag_item_id AND doh.is_deleted = FALSE
+          LEFT JOIN bag_item_awb bai ON bai.bag_item_id = dpdb.bag_item_id AND bai.is_deleted = FALSE
           INNER JOIN bag b ON b.bag_id = dpdb.bag_id AND b.is_deleted = FALSE
           INNER JOIN branch br ON br.branch_id = b.branch_id AND br.is_deleted = FALSE
           WHERE
             dp.is_deleted = FALSE
             AND dp.do_pod_type = 3005
             ${whereQuerySub ? `AND ${whereQuerySub}` : ''}
-          GROUP BY br.branch_name
+          GROUP BY br.branch_name, dp.do_pod_id
         ) t1
-        GROUP BY "origin"
+        GROUP BY "origin", "doPodId"
       )
       SELECT * FROM (
         SELECT
           "origin",
           "totalBag",
           "totalScanIn",
+          "totalAwb",
           "totalBag" - "totalScanIn" AS "remaining",
           CASE
             WHEN "totalScanIn" = "totalBag" AND "totalScanIn" > 0

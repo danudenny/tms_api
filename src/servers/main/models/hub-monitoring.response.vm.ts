@@ -12,6 +12,9 @@ export class MonitoringBagHubDataResponseVm {
   totalScanIn: number;
 
   @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
   remaining: number;
 
   @ApiModelProperty()
