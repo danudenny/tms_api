@@ -2,39 +2,21 @@ import { ConfigService } from './config.service';
 
 export class SendgridService {
 
-  public static async testSendEmail() {
-    console.log('######### Mail with SendGrid ===========================');
-
-    const msg = {
-      to: 'degosdeas@gmail.com',
-      from: 'degosdeas@gmail.com',
-      subject: 'Sending with SendGrid is Fun and more',
-      text: 'and easy to do anywhere, even with Node.js',
-      html: '<p>and easy to do anywhere, even with Node.js</p>',
-    };
-    this.sendMail(msg);
-  }
-
-  public static async sendMailPodProblem(
-    mailto: string,
+  // NOTE: https://www.twilio.com/blog/sending-bulk-emails-3-ways-sendgrid-nodejs
+  public static async sendMailDynamicTemplateData(
+    from: string,
+    templateId: string,
+    personalizations: any,
     dynamicTemplateData: any,
     ) {
-    // NOTE: this template for email pod problem notification
-    // templateId: 'd-a9ff5f3013d345a3903f1fd43a6ad74f',
-    // sample data:
-    // {
-    //   subject: 'Testing Templates',
-    //   name: 'Adry',
-    //   city: 'Bandung',
-    // },
+
     const msg = {
-      to: mailto,
-      from: 'admin-pod@sicepat.com',
-      templateId: 'd-a9ff5f3013d345a3903f1fd43a6ad74f',
+      personalizations,
+      from,
+      templateId,
       dynamicTemplateData,
     };
 
-    console.log(msg);
     this.sendMail(msg);
   }
 
@@ -44,8 +26,21 @@ export class SendgridService {
     sgMail.setApiKey(ConfigService.get('sendgrid.apiKey'));
 
     sgMail.send(message).then(() => {
-      // Celebrate
-      console.log('######### Celebrate Send Email !!');
+      console.log('email sent successfully!');
     });
+  }
+
+  public static async sendMultiple(message: any) {
+    const sgMail = require('@sendgrid/mail');
+    sgMail.setApiKey(ConfigService.get('sendgrid.apiKey'));
+
+    sgMail
+      .sendMultiple(message)
+      .then(() => {
+        console.log('emails sent multiple successfully!');
+      })
+      .catch(error => {
+        console.error(error);
+      });
   }
 }
