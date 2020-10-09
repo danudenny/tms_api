@@ -204,7 +204,7 @@ export class ScaninSmdService {
           resultbagItemHistory.userId = authMeta.userId.toString();
           resultbagItemHistory.branchId = permissonPayload.branchId.toString();
           resultbagItemHistory.historyDate = moment().toDate();
-          resultbagItemHistory.bagItemStatusId = BAG_STATUS.DO_HUB.toString();
+          resultbagItemHistory.bagItemStatusId = BAG_STATUS.DO_LINE_HAUL.toString();
           resultbagItemHistory.userIdCreated = authMeta.userId;
           resultbagItemHistory.createdTime = moment().toDate();
           resultbagItemHistory.userIdUpdated = authMeta.userId;
@@ -421,7 +421,7 @@ export class ScaninSmdService {
           resultbagItemHistory.userId = authMeta.userId.toString();
           resultbagItemHistory.branchId = permissonPayload.branchId.toString();
           resultbagItemHistory.historyDate = moment().toDate();
-          resultbagItemHistory.bagItemStatusId = BAG_STATUS.DO_HUB.toString();
+          resultbagItemHistory.bagItemStatusId = BAG_STATUS.DO_LINE_HAUL.toString();
           resultbagItemHistory.userIdCreated = authMeta.userId;
           resultbagItemHistory.createdTime = moment().toDate();
           resultbagItemHistory.userIdUpdated = authMeta.userId;

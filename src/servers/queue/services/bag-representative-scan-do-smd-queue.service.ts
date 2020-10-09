@@ -66,7 +66,7 @@ export class BagRepresentativeScanDoSmdQueueService {
       historyBag.bagRepresentativeCode = data.bagRepresentativeCode;
       historyBag.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
       historyBag.bagRepresentativeId = data.bagRepresentativeId;
-      historyBag.bagRepresentativeStatusIdLast = '3000';
+      historyBag.bagRepresentativeStatusIdLast = '3001';
       historyBag.branchId = data.branchId;
       historyBag.representativeIdTo = data.representativeIdTo;
       historyBag.totalItem = data.totalItem;
@@ -86,7 +86,7 @@ export class BagRepresentativeScanDoSmdQueueService {
             Number(item.awb_item_id),
             Number(data.branchId),
             Number(data.userId),
-            AWB_STATUS.IN_HUB,
+            AWB_STATUS.IN_LINE_HAUL,
           );
         }
       }

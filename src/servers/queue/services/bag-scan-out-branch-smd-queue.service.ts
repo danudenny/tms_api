@@ -63,7 +63,7 @@ export class BagScanOutBranchSmdQueueService {
         INNER JOIN branch b ON b.branch_id = dsd.branch_id_to AND b.is_deleted = FALSE
         LEFT JOIN bag_item_history bih ON bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = FALSE
         LEFT JOIN bag_item_history bih1 ON bih1.bag_item_id = bi.bag_item_id AND bih1.is_deleted = FALSE
-          AND bih1.branch_id = '${data.branchId}' AND bih1.bag_item_status_id = '${BAG_STATUS.OUT_HUB}'
+          AND bih1.branch_id = '${data.branchId}' AND bih1.bag_item_status_id = '${BAG_STATUS.OUT_LINE_HAUL}'
         WHERE dsd.do_smd_id = ${data.doSmdId} AND dsd.is_deleted = FALSE
         ORDER BY bih.history_date DESC;` ,
       );
@@ -163,7 +163,7 @@ export class BagScanOutBranchSmdQueueService {
       }
       tempBag.push(Number(item.bag_item_id));
 
-      if (Number(item.bag_item_status_id) == BAG_STATUS.OUT_HUB && resultQuery.branch_id) {
+      if (Number(item.bag_item_status_id) == BAG_STATUS.OUT_LINE_HAUL && resultQuery.branch_id) {
         // failed to update
         // do nothing
       } else {
@@ -189,7 +189,7 @@ export class BagScanOutBranchSmdQueueService {
         resultbagItemHistory.userId = data.userId.toString();
         resultbagItemHistory.branchId = data.branchId.toString();
         resultbagItemHistory.historyDate = moment().toDate();
-        resultbagItemHistory.bagItemStatusId = BAG_STATUS.OUT_HUB.toString();
+        resultbagItemHistory.bagItemStatusId = BAG_STATUS.OUT_LINE_HAUL.toString();
         resultbagItemHistory.userIdCreated = Number(data.userId);
         resultbagItemHistory.createdTime = moment().toDate();
         resultbagItemHistory.userIdUpdated = Number(data.userId);
@@ -234,7 +234,7 @@ export class BagScanOutBranchSmdQueueService {
     const tempBag = [];
 
     for (const item of resultQuery) {
-      if (Number(item.bag_representative_status_id_last) == BAG_REPRESENTATIVE_STATUS.OUT_HUB) {
+      if (Number(item.bag_representative_status_id_last) == BAG_REPRESENTATIVE_STATUS.OUT_LINE_HAUL) {
         // failed to update
         // do nothing
       } else {
@@ -254,7 +254,7 @@ export class BagScanOutBranchSmdQueueService {
           historyBag.bagRepresentativeCode = item.bag_representative_code;
           historyBag.bagRepresentativeDate = moment(item.bag_representative_date).toDate();
           historyBag.bagRepresentativeId = item.bag_representative_id;
-          historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_HUB.toString();
+          historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_LINE_HAUL.toString();
           historyBag.branchId = data.branchId.toString();
           historyBag.representativeIdTo = item.representative_id_to;
           historyBag.totalItem = item.total_item;
@@ -277,7 +277,7 @@ export class BagScanOutBranchSmdQueueService {
             Number(data.userId),
             Number(employeeIdDriver),
             employeeNameDriver,
-            AWB_STATUS.OUT_HUB,
+            AWB_STATUS.OUT_LINE_HAUL,
             branchName,
             cityName,
             Number(item.branch_id_to),
