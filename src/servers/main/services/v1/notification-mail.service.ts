@@ -32,7 +32,7 @@ export class NotificationMailService {
     };
     const personalizations = [
       {
-        to: 'adry@e.sicepat.com', // replace this with your admin email address
+        to: 'taufik.prihatin@e.sicepat.com', // replace this with your admin email address
       },
     ];
 

@@ -17,6 +17,7 @@ import {
 import { AwbService } from '../v1/awb.service';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
+import { AwbNotificationMailQueueService } from '../../../queue/services/notification/awb-notification-mail-queue.service';
 // //#endregion
 export class WebAwbDeliverService {
   constructor() {}
@@ -173,9 +174,10 @@ export class WebAwbDeliverService {
     });
     const finalStatus = [AWB_STATUS.DLV];
     if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
-      const awbStatus = await AwbStatus.findOne(
-        doPodDeliverHistory.awbStatusId,
-      );
+      const awbStatus = await AwbStatus.findOne({
+        where: { awbStatusId: doPodDeliverHistory.awbStatusId },
+        cache: true,
+      });
       // #region transaction data
       await getManager().transaction(async transactionEntityManager => {
         // insert data deliver history
@@ -255,6 +257,11 @@ export class WebAwbDeliverService {
         awbStatus.awbStatusName,
         awbStatus.awbStatusTitle,
       );
+      // NOTE: mail notification
+      AwbNotificationMailQueueService.perform(
+        delivery.awbItemId,
+        delivery.awbStatusId,
+      );
 
     } else {
       console.log('##### Data Not Valid', delivery);
@@ -287,6 +294,11 @@ export class WebAwbDeliverService {
         userId,
         branchId,
         delivery.reasonNotes,
+      );
+      // NOTE: mail notification
+      AwbNotificationMailQueueService.perform(
+        delivery.awbItemId,
+        delivery.awbStatusId,
       );
       return true;
     } catch (error) {
