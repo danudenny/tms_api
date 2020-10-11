@@ -3,6 +3,7 @@ import { POD_TYPE } from '../../../../../shared/constants/pod-type.constant';
 import { RequestQueryBuidlerService } from '../../../../../shared/services/request-query-builder.service';
 import { BaseMetaPayloadFilterVm, BaseMetaPayloadFilterVmOperator, BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../../shared/services/meta.service';
+import { BAG_STATUS } from '../../../../../shared/constants/bag-status.constant';
 
 export class HubMonitoringService {
 
@@ -72,16 +73,20 @@ export class HubMonitoringService {
           "origin",
           SUM("totalBag") AS "totalBag",
           SUM("totalScanIn") AS "totalScanIn",
-          SUM("totalAwb") AS "totalAwb"
+          SUM("totalAwb") AS "totalAwb",
+          SUM("totalScanOut") AS "totalScanOut"
         FROM (
           SELECT
             COUNT(DISTINCT dpdb.bag_item_id) As "totalBag",
             br.branch_name As "origin",
             dp.do_pod_id AS "doPodId",
             COUNT(DISTINCT doh.bag_item_id) As "totalScanIn",
-            COUNT(bai.*) AS "totalAwb"
+            COUNT(bai.*) AS "totalAwb",
+            COUNT(DISTINCT bih.bag_item_id) AS "totalScanOut"
           FROM do_pod dp
           INNER JOIN do_pod_detail_bag dpdb ON dp.do_pod_id = dpdb.do_pod_id AND dpdb.is_deleted = FALSE
+          LEFT JOIN bag_item_history bih ON bih.bag_item_id = dpdb.bag_item_id AND bih.is_deleted = FALSE
+            AND bih.bag_item_status_id = ${BAG_STATUS.OUT_HUB} AND bih.history_date >= dpdb.created_time::DATE
           LEFT JOIN dropoff_hub doh ON doh.bag_item_id = dpdb.bag_item_id AND doh.is_deleted = FALSE
           LEFT JOIN bag_item bi ON bi.bag_item_id = dpdb.bag_item_id AND bi.is_deleted = FALSE
           LEFT JOIN bag_item_awb bai ON bai.bag_item_id = bi.bag_item_id AND bai.is_deleted = FALSE
@@ -100,6 +105,7 @@ export class HubMonitoringService {
           "origin",
           "totalBag",
           "totalScanIn",
+          "totalScanOut",
           "totalAwb",
           "totalBag" - "totalScanIn" AS "remaining",
           CASE
