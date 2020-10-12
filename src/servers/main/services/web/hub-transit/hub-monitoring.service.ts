@@ -119,7 +119,7 @@ export class HubMonitoringService {
         FROM detail
       ) t1
       ${filterQuery ? `WHERE ${filterQuery}` : ''}
-      ${payload.sortBy ? `ORDER BY ${{...mapSubQuery, ...map}[payload.sortBy]} ${payload.sortDir}` : ''}
+      ${payload.sortBy && {...mapSubQuery, ...map}[payload.sortBy] ? `ORDER BY ${{...mapSubQuery, ...map}[payload.sortBy]} ${payload.sortDir}` : 'ORDER BY "status" ASC, "remaining" DESC'}
       LIMIT ${payload.limit}
       ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''};
     `;
