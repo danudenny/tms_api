@@ -204,10 +204,12 @@ export class AuthService {
 
       // create Permission Token
       const roleName = user.userRoles[0].role.roleName;
+      const isHeadOffice = branch ? branch.isHeadOffice : false;
       const jwtPermissionTokenPayload = this.populateJwtPermissionTokenPayloadFromUser(
         roleId,
         roleName,
         branchId,
+        isHeadOffice,
       );
       const permissionToken = this.jwtService.sign(
         jwtPermissionTokenPayload,
@@ -347,11 +349,13 @@ export class AuthService {
     roleId: number,
     roleName: string,
     branchId: number,
+    isHeadOffice: boolean,
   ) {
     const jwtPayload: Partial<JwtPermissionTokenPayload> = {
       roleId,
       roleName,
       branchId,
+      isHeadOffice,
     };
 
     return jwtPayload;
