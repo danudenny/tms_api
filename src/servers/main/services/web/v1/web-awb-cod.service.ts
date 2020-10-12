@@ -48,6 +48,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodListResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -148,17 +149,7 @@ export class V1WebAwbCodService {
     );
 
     //#region Cod Merger
-    const codUserToBranch = await CodUserToBranch.findOne({
-      select: ['userId'],
-      where: {
-        userId: authMeta.userId,
-        isDeleted: false,
-      },
-    });
-
-    const userId = codUserToBranch ? codUserToBranch.userId : null;
-
-    if (userId) {
+    if (permissonPayload.roleName === 'CT Transit (COD)' && !permissonPayload.isHeadOffice) {
       q.innerJoin(e => e.codUserToBranch, 't10', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
@@ -190,6 +181,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebCodCountResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -290,17 +282,7 @@ export class V1WebAwbCodService {
     );
 
     //#region Cod Merger
-    const codUserToBranch = await CodUserToBranch.findOne({
-      select: ['userId'],
-      where: {
-        userId: authMeta.userId,
-        isDeleted: false,
-      },
-    });
-
-    const userId = codUserToBranch ? codUserToBranch.userId : null;
-
-    if (userId) {
+    if (permissonPayload.roleName === 'CT Transit (COD)' && !permissonPayload.isHeadOffice) {
       q.innerJoin(e => e.codUserToBranch, 't10', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
@@ -329,6 +311,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodDlvListResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -415,17 +398,7 @@ export class V1WebAwbCodService {
     );
 
     //#region Cod Merger
-    const codUserToBranch = await CodUserToBranch.findOne({
-      select: ['userId'],
-      where: {
-        userId: authMeta.userId,
-        isDeleted: false,
-      },
-    });
-
-    const userId = codUserToBranch ? codUserToBranch.userId : null;
-
-    if (userId) {
+    if (permissonPayload.roleName === 'CT Transit (COD)' && !permissonPayload.isHeadOffice) {
       q.innerJoin(e => e.codUserToBranch, 't10', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
@@ -457,6 +430,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebCodCountResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -537,17 +511,7 @@ export class V1WebAwbCodService {
     );
 
     //#region Cod Merger
-    const codUserToBranch = await CodUserToBranch.findOne({
-      select: ['userId'],
-      where: {
-        userId: authMeta.userId,
-        isDeleted: false,
-      },
-    });
-
-    const userId = codUserToBranch ? codUserToBranch.userId : null;
-
-    if (userId) {
+    if (permissonPayload.roleName === 'CT Transit (COD)' && !permissonPayload.isHeadOffice) {
       q.innerJoin(e => e.codUserToBranch, 't10', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
