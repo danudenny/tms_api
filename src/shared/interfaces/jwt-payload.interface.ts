@@ -31,5 +31,6 @@ export interface JwtRefreshTokenPayload {
  */
 export interface JwtPermissionTokenPayload {
   roleId: number;
+  roleName: string;
   branchId: number;
 }
