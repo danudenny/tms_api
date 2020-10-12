@@ -1,27 +1,21 @@
-import {
-  Controller,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-  Post,
-  Body,
-  Get,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 
 import {
-  ApiBearerAuth,
-  ApiUseTags,
-} from '../../../../shared/external/nestjs-swagger';
-import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
-import { V1MobileDivaPaymentService } from '../../services/mobile/v1/mobile-diva-payment.service';
-import { ResponseMaintenanceService } from '../../../../shared/services/response-maintenance.service';
+    ResponseSerializerOptions,
+} from '../../../../../shared/decorators/response-serializer-options.decorator';
+import { ApiBearerAuth, ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
+import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
+import {
+    ResponseMaintenanceService,
+} from '../../../../../shared/services/response-maintenance.service';
+import {
+    V1MobileDivaPaymentService,
+} from '../../../services/mobile/v1/mobile-diva-payment.service';
 
-// TODO: deprecated
 @ApiUseTags('Cod Diva Payment')
-@Controller('mobile/cod-payment')
+@Controller('mobile/v2/cod-payment')
 @ApiBearerAuth()
-export class CodPaymentController {
+export class V2CodPaymentController {
   constructor() {}
 
   @Get('diva/pingQR')
@@ -48,22 +42,14 @@ export class CodPaymentController {
     return V1MobileDivaPaymentService.sendQr(payload);
   }
 
-  // TODO: disabled soon
   @Post('diva/paymentStatus')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
   @ResponseSerializerOptions({ disable: true })
   public async divaPaymentStatus(@Body() payload: any) {
-    return { status: 'ok', message: 'success'};
-  }
-
-  @Post('diva/paymentStatusV2')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
-  @ResponseSerializerOptions({ disable: true })
-  public async divaPaymentStatusManual(@Body() payload: any) {
     // NOTE: handle for message disable this service
     ResponseMaintenanceService.divaPaymentService();
     return V1MobileDivaPaymentService.paymentStatus(payload);
   }
+
 }
