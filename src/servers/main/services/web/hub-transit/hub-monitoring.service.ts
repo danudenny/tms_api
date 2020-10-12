@@ -71,6 +71,7 @@ export class HubMonitoringService {
       WITH detail AS (
         SELECT
           "origin",
+          "doPodDateTime",
           SUM("totalBag") AS "totalBag",
           SUM("totalScanIn") AS "totalScanIn",
           SUM("totalAwb") AS "totalAwb",
@@ -82,7 +83,8 @@ export class HubMonitoringService {
             dp.do_pod_id AS "doPodId",
             COUNT(DISTINCT doh.bag_item_id) As "totalScanIn",
             COUNT(bai.*) AS "totalAwb",
-            COUNT(DISTINCT bih.bag_item_id) AS "totalScanOut"
+            COUNT(DISTINCT bih.bag_item_id) AS "totalScanOut",
+            dp.do_pod_date_time AS "doPodDateTime"
           FROM do_pod dp
           INNER JOIN do_pod_detail_bag dpdb ON dp.do_pod_id = dpdb.do_pod_id AND dpdb.is_deleted = FALSE
           LEFT JOIN bag_item_history bih ON bih.bag_item_id = dpdb.bag_item_id AND bih.is_deleted = FALSE
@@ -98,7 +100,7 @@ export class HubMonitoringService {
             ${whereQuerySub ? `AND ${whereQuerySub}` : ''}
           GROUP BY br.branch_name, dp.do_pod_id
         ) t1
-        GROUP BY "origin", "doPodId"
+        GROUP BY "origin", "doPodId", "doPodDateTime"
       )
       SELECT * FROM (
         SELECT
@@ -107,6 +109,7 @@ export class HubMonitoringService {
           "totalScanIn",
           "totalScanOut",
           "totalAwb",
+          "doPodDateTime",
           "totalBag" - "totalScanIn" AS "remaining",
           CASE
             WHEN "totalScanIn" = "totalBag" AND "totalScanIn" > 0

@@ -21,6 +21,9 @@ export class MonitoringBagHubDataResponseVm {
   remaining: number;
 
   @ApiModelProperty()
+  doPodDateTime: number;
+
+  @ApiModelProperty()
   status: number;
 }
 
