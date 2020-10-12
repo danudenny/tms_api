@@ -43,7 +43,7 @@ import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sq
 export class V1WebAwbCodController {
   @Post('awb')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebAwbCodListResponseVm })
   public async awb(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.awbCod(payload);
@@ -51,7 +51,7 @@ export class V1WebAwbCodController {
 
   @Post('countAwb')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodCountResponseVm })
   public async countAwb(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.countAwbCod(payload);
@@ -59,7 +59,7 @@ export class V1WebAwbCodController {
 
   @Post('awbDlv')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebAwbCodDlvListResponseVm })
   public async awbDlv(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.awbCodDlv(payload);
@@ -67,7 +67,7 @@ export class V1WebAwbCodController {
 
   @Post('countAwbDlv')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodCountResponseVm })
   public async countAwbDlv(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.countAwbCodDlv(payload);
