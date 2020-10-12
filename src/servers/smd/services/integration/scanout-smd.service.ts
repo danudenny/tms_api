@@ -1232,25 +1232,8 @@ export class ScanoutSmdService {
       },
     });
     if (resultDoSmd) {
-      await DoSmd.update(
-        { doSmdId : paramdoSmdId },
-        {
-          isDeleted: true,
-          userIdUpdated: authMeta.userId,
-          updatedTime: moment().toDate(),
-        },
-      );
-      const rawQuery = `
-        SELECT
-          do_smd_detail_id
-        FROM do_smd_detail
-        WHERE
-          do_smd_id = ${paramdoSmdId} AND
-          is_deleted = FALSE;
-      `;
-      const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
-      if (resultDataDoSmdDetail.length > 0 ) {
-        await DoSmdDetail.update(
+      if (resultDoSmd.doSmdStatusIdLast == 1000 || resultDoSmd.doSmdStatusIdLast == 2000) {
+        await DoSmd.update(
           { doSmdId : paramdoSmdId },
           {
             isDeleted: true,
@@ -1258,41 +1241,62 @@ export class ScanoutSmdService {
             updatedTime: moment().toDate(),
           },
         );
-        await DoSmdVehicle.update(
-          { doSmdId : paramdoSmdId },
-          {
-            isDeleted: true,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-          await DoSmdDetailItem.update(
-            { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+        const rawQuery = `
+          SELECT
+            do_smd_detail_id
+          FROM do_smd_detail
+          WHERE
+            do_smd_id = ${paramdoSmdId} AND
+            is_deleted = FALSE;
+        `;
+        const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
+        if (resultDataDoSmdDetail.length > 0 ) {
+          await DoSmdDetail.update(
+            { doSmdId : paramdoSmdId },
             {
               isDeleted: true,
               userIdUpdated: authMeta.userId,
               updatedTime: moment().toDate(),
             },
           );
+          await DoSmdVehicle.update(
+            { doSmdId : paramdoSmdId },
+            {
+              isDeleted: true,
+              userIdUpdated: authMeta.userId,
+              updatedTime: moment().toDate(),
+            },
+          );
+          for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+            await DoSmdDetailItem.update(
+              { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+              {
+                isDeleted: true,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              },
+            );
+          }
+          const paramDoSmdHistoryId = await this.createDoSmdHistory(
+            resultDoSmd.doSmdId,
+            null,
+            resultDoSmd.doSmdVehicleIdLast,
+            null,
+            null,
+            resultDoSmd.doSmdTime,
+            permissonPayload.branchId,
+            7000,
+            null,
+            null,
+            authMeta.userId,
+          );
+          BagAwbDeleteHistoryInHubFromSmdQueueService.perform(
+            paramdoSmdId,
+            authMeta.userId,
+          );
         }
-        const paramDoSmdHistoryId = await this.createDoSmdHistory(
-          resultDoSmd.doSmdId,
-          null,
-          resultDoSmd.doSmdVehicleIdLast,
-          null,
-          null,
-          resultDoSmd.doSmdTime,
-          permissonPayload.branchId,
-          7000,
-          null,
-          null,
-          authMeta.userId,
-        );
-        BagAwbDeleteHistoryInHubFromSmdQueueService.perform(
-          paramdoSmdId,
-          authMeta.userId,
-        );
+      } else {
+        throw new BadRequestException(`SMD Code ` + resultDoSmd.doSmdCode + ` Status tidak Created / Assigned`);
       }
     } else {
       throw new BadRequestException(`ID SMD ` + paramdoSmdId + ` tidak ditemukan!`);
@@ -1569,7 +1573,7 @@ export class ScanoutSmdService {
           bf.branch_name as branch_name_from,
           dsd.branch_id_to,
           bt.branch_code as branch_code_to,
-          bt.branch_name as branch_name_to,
+          bt.branch_name asSTATUS branch_name_to,
           dsd.representative_code_list,
           dsd.total_bag,
           dsd.total_bagging,

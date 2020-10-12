@@ -1193,25 +1193,8 @@ export class ScanoutSmdVendorService {
       },
     });
     if (resultDoSmd) {
-      await DoSmd.update(
-        { doSmdId : paramdoSmdId },
-        {
-          isDeleted: true,
-          userIdUpdated: authMeta.userId,
-          updatedTime: moment().toDate(),
-        },
-      );
-      const rawQuery = `
-        SELECT
-          do_smd_detail_id
-        FROM do_smd_detail
-        WHERE
-          do_smd_id = ${paramdoSmdId} AND
-          is_deleted = FALSE;
-      `;
-      const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
-      if (resultDataDoSmdDetail.length > 0 ) {
-        await DoSmdDetail.update(
+      if (resultDoSmd.doSmdStatusIdLast != 2050) {
+        await DoSmd.update(
           { doSmdId : paramdoSmdId },
           {
             isDeleted: true,
@@ -1219,33 +1202,54 @@ export class ScanoutSmdVendorService {
             updatedTime: moment().toDate(),
           },
         );
-        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-          await DoSmdDetailItem.update(
-            { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+        const rawQuery = `
+          SELECT
+            do_smd_detail_id
+          FROM do_smd_detail
+          WHERE
+            do_smd_id = ${paramdoSmdId} AND
+            is_deleted = FALSE;
+        `;
+        const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
+        if (resultDataDoSmdDetail.length > 0 ) {
+          await DoSmdDetail.update(
+            { doSmdId : paramdoSmdId },
             {
               isDeleted: true,
               userIdUpdated: authMeta.userId,
               updatedTime: moment().toDate(),
             },
           );
+          for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+            await DoSmdDetailItem.update(
+              { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+              {
+                isDeleted: true,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              },
+            );
+          }
+          const paramDoSmdHistoryId = await this.createDoSmdHistory(
+            resultDoSmd.doSmdId,
+            null,
+            resultDoSmd.doSmdVehicleIdLast,
+            null,
+            null,
+            resultDoSmd.doSmdTime,
+            permissonPayload.branchId,
+            7000,
+            null,
+            null,
+            authMeta.userId,
+          );
+          BagAwbDeleteHistoryInHubFromSmdQueueService.perform(
+            paramdoSmdId,
+            authMeta.userId,
+          );
         }
-        const paramDoSmdHistoryId = await this.createDoSmdHistory(
-          resultDoSmd.doSmdId,
-          null,
-          resultDoSmd.doSmdVehicleIdLast,
-          null,
-          null,
-          resultDoSmd.doSmdTime,
-          permissonPayload.branchId,
-          7000,
-          null,
-          null,
-          authMeta.userId,
-        );
-        BagAwbDeleteHistoryInHubFromSmdQueueService.perform(
-          paramdoSmdId,
-          authMeta.userId,
-        );
+      } else {
+        throw new BadRequestException(`SMD ID: ` + paramdoSmdId + ` Can't Deleted`);
       }
     } else {
       throw new BadRequestException(`SMD ID: ` + paramdoSmdId + ` Can't Found !`);
