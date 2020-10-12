@@ -114,7 +114,7 @@ export class BagAwbDeleteHistoryInHubFromSmdQueueService {
   private static async updateBagItemHistory(id: string, data: any) {
     await BagItemHistory.update({
       bagItemId: id,
-      bagItemStatusId: BAG_STATUS.IN_HUB.toString(),
+      bagItemStatusId: BAG_STATUS.IN_LINE_HAUL.toString(),
       isDeleted: false,
     }, {
       isDeleted: true,

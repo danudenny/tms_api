@@ -698,7 +698,7 @@ export class ScanoutSmdVendorService {
         INNER JOIN bag b ON bi.bag_id = b.bag_id AND b.is_deleted = FALSE
         LEFT JOIN representative  r on bg.representative_id_to = r.representative_id and r.is_deleted  = FALSE
         LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3500
+            and bih.bag_item_status_id = 3501
         WHERE
           bg.bagging_id = ${resultBagging.baggingId} AND
           bi.is_deleted = FALSE;
@@ -829,7 +829,7 @@ export class ScanoutSmdVendorService {
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3500
+            and bih.bag_item_status_id = 3501
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
@@ -896,7 +896,7 @@ export class ScanoutSmdVendorService {
                 },
               );
 
-              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
               // Generate history bag and its awb IN_HUB
               BagScanVendorQueueService.perform(
@@ -957,7 +957,7 @@ export class ScanoutSmdVendorService {
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3500
+            and bih.bag_item_status_id = 3501
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
@@ -1024,7 +1024,7 @@ export class ScanoutSmdVendorService {
                 },
               );
 
-              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
               // Generate history bag and its awb IN_HUB
               BagScanVendorQueueService.perform(
