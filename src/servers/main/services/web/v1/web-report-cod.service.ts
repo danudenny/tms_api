@@ -19,6 +19,7 @@ export class V1WebReportCodService {
   static expireOnSeconds = 600; // 5 minute
 
   static async addQueueBullPrint(filters, noncodfee) {
+    console.log("inside bull command")
     const uuidv1 = require('uuid/v1');
     const uuidString = uuidv1();
     const reportKey = `reportKeyCOD:${uuidString}`;
@@ -208,7 +209,8 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.partnerName),
           d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
           this.strReplaceFunc(d.awbNumber),
-          d.prtParcelValue,
+
+          d.tdParcelValue ? d.tdParcelValue : d.prtParcelValue,
           d.codNilai,
           d.codFee ? d.codFee : '-',
           d.codNilai,
@@ -796,6 +798,7 @@ export class V1WebReportCodService {
                 supplierInvoiceStatusName: 1,
                 custPackage: 1,
                 codFee: 1,
+                parcelValue: 1
               },
             },
           ],
@@ -809,7 +812,6 @@ export class V1WebReportCodService {
       },
       { $skip: 0 },
       { $limit: limit },
-
       {
         $project: {
           partnerName: 1,
@@ -818,6 +820,7 @@ export class V1WebReportCodService {
           codFee: '$td.codFee',
           parcelContent: '$prtParcelContent',
           prtParcelValue: '$prtParcelValue',
+          tdParcelValue: '$td.parcelValue',
           prtCustPackageId: '$prtCustPackageId',
           tdcustPackage: "$td.custPackage",
           transactionStatusId: '$td.transactionStatusId',
@@ -1960,8 +1963,7 @@ export class V1WebReportCodService {
       );
 
       if (storagePath) {
-        url = `${ConfigService.get('cloudStorage.cloudUrl')}/${
-          storagePath.awsKey
+        url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey
           }`;
         this.deleteFile(csvConfig.filePath);
       }
