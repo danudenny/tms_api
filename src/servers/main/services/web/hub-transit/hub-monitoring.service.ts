@@ -225,7 +225,7 @@ export class HubMonitoringService {
       const opt = RequestQueryBuidlerService
         .convertFilterOperatorToSqlOperator(filter.operator as BaseMetaPayloadFilterVmOperator);
       const field = map[filter.field];
-      if (!field && ignoreUnmapping) {
+      if (!field && ignoreUnmapping || filter.value === '') {
         continue;
       }
       let str = `${field} ${opt} '${filter.value}'`;
