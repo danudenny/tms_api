@@ -38,9 +38,7 @@ export class EmployeeService {
     q.innerJoin(u => u.user, 'users', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(u => u.user.userRoles, 'user_role', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(u => u.user.userRoles, 'user_role');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -84,9 +82,7 @@ export class EmployeeService {
     q.innerJoin(u => u.user, 'users', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(u => u.user.userRoles, 'user_role', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(u => u.user.userRoles, 'user_role');
     q.andWhere(e => e.user.userRoles.branchId, w => w.equals(branchId));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
