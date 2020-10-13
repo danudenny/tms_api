@@ -97,9 +97,9 @@ export class ScaninSmdService {
           if (weight == 0) { // handle error weight = 0 from request payload
             weight = parseFloat(resultData[0].weight);
           }
-          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4501 || resultData[0].bag_item_status_id == 500 ) {
+          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 ) {
             // do nothing
-          } else if ( resultData[0].bag_item_status_id == 3501 ) {
+          } else if ( resultData[0].bag_item_status_id == 3550 ) {
             errCode = errCode + 1;
             errMessage = 'Resi Gabung Paket sudah Scan IN gerai ' + branchNameScan + ' Oleh ' + usernameScan;
           } else {
@@ -314,9 +314,9 @@ export class ScaninSmdService {
           paramBagItemId = resultData[0].bag_item_id;
           weight =  resultData[0].weight;
           console.log(resultData[0].bag_item_status_id);
-          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4501 || resultData[0].bag_item_status_id == 500 ) {
+          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 ) {
             // do nothing
-          } else if ( resultData[0].bag_item_status_id == 3501 ) {
+          } else if ( resultData[0].bag_item_status_id == 3550 ) {
             errCode = errCode + 1;
             errMessage = 'Resi Gabung Paket sudah Scan IN gerai ' + branchNameScan + ' Oleh ' + usernameScan;
           } else {
@@ -544,7 +544,7 @@ export class ScaninSmdService {
         WHERE
           doPod.do_pod_code = '${payload.bag_item_number}' AND
           doPodDetailBag.is_deleted = false AND
-          (bih.bag_item_status_id = 4501 OR bih.bag_item_status_id = 500 OR bih.bag_item_status_id IS NULL)
+          (bih.bag_item_status_id = 4550 OR bih.bag_item_status_id = 500 OR bih.bag_item_status_id IS NULL)
         GROUP BY bagnumber
         `;
       const resultDataBag = await RawQueryService.query(rawQueryBag);
@@ -560,7 +560,7 @@ export class ScaninSmdService {
         WHERE
           doPod.do_pod_code =  '${payload.bag_item_number}' AND
           doPodDetailBag.is_deleted = false AND
-          (bih.bag_item_status_id <> 4501 AND bih.bag_item_status_id <> 500 AND bih.bag_item_status_id IS NOT NULL)
+          (bih.bag_item_status_id <> 4550 AND bih.bag_item_status_id <> 500 AND bih.bag_item_status_id IS NOT NULL)
         GROUP BY bagnumber
         `;
       const resultDataBagScanned = await RawQueryService.query(rawQueryBagScanned);
@@ -664,7 +664,7 @@ export class ScaninSmdService {
     q.leftJoinRaw(
       'bag_item_history',
       'bhin',
-      'bhin.bag_item_id = bi.bag_item_id AND bhin.bag_item_status_id = 3501 AND bhin.is_deleted = FALSE',
+      'bhin.bag_item_id = bi.bag_item_id AND bhin.bag_item_status_id = 3550 AND bhin.is_deleted = FALSE',
     );
     q.leftJoin(e => e.representative, 'r', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -683,7 +683,7 @@ export class ScaninSmdService {
     //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
     // );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhereRaw('bhin.bag_item_status_id = 3501');
+    q.andWhereRaw('bhin.bag_item_status_id = 3550');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
