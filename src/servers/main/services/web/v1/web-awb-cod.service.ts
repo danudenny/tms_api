@@ -150,7 +150,7 @@ export class V1WebAwbCodService {
 
     //#region Cod Merger
     if (permissonPayload.roleName === 'CT Transit (COD)' && !permissonPayload.isHeadOffice) {
-      q.innerJoin(e => e.codUserToBranch, 't10', j =>
+      q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
       );
@@ -287,7 +287,7 @@ export class V1WebAwbCodService {
 
     //#region Cod Merger
     if (permissonPayload.roleName === 'CT Transit (COD)' && !permissonPayload.isHeadOffice) {
-      q.innerJoin(e => e.codUserToBranch, 't10', j =>
+      q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
       );
@@ -407,7 +407,7 @@ export class V1WebAwbCodService {
 
     //#region Cod Merger
     if (permissonPayload.roleName === 'CT Transit (COD)' && !permissonPayload.isHeadOffice) {
-      q.innerJoin(e => e.codUserToBranch, 't10', j =>
+      q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
       );
@@ -524,7 +524,7 @@ export class V1WebAwbCodService {
 
     //#region Cod Merger
     if (permissonPayload.roleName === 'CT Transit (COD)' && !permissonPayload.isHeadOffice) {
-      q.innerJoin(e => e.codUserToBranch, 't10', j =>
+      q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
       );
