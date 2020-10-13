@@ -209,7 +209,6 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.partnerName),
           d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
           this.strReplaceFunc(d.awbNumber),
-
           d.tdParcelValue ? d.tdParcelValue : d.prtParcelValue,
           d.codNilai,
           d.codFee ? d.codFee : '-',
@@ -810,7 +809,6 @@ export class V1WebReportCodService {
           preserveNullAndEmptyArrays: allowNullTd,
         },
       },
-      { $skip: 0 },
       { $limit: limit },
       {
         $project: {
@@ -957,9 +955,6 @@ export class V1WebReportCodService {
       },
       { "$sort": { awbNumber: 1 } },
       {
-        $skip: 0,
-      },
-      {
         $limit: limit,
       },
       {
@@ -1011,6 +1006,7 @@ export class V1WebReportCodService {
           prtParcelValue: '$parcelValue',
           codNilai: '$codValue',
           prtCustPackageId: '$custPackage',
+          tdcustPackage: '$custPackage',
           lastValidTrackingDateTime: '$podDate',
           penerima: '$consigneeName',
           receiverRemark: '$parcelNote',
@@ -1030,6 +1026,7 @@ export class V1WebReportCodService {
           podDate: 1,
           transactionStatusId: 1,
           transactionStatus: '$transactionstatusname',
+          lastValidTrackingType: '$transactionstatusname',
           userIdDriverNik: '$nikSigesit',
           userIdDriverName: '$sigesit',
           userIdUpdatedNik: '$nikAdmin',
@@ -1157,7 +1154,7 @@ export class V1WebReportCodService {
         while (!finish) {
           let responseDatas: any;
 
-          if (reportType.filterTransaction == true) {
+          if (reportType.filterTransaction === true && reportType.filterAwb === false) {
             const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, filters, limit, pageNumber, lastAwb));
             responseDatas = rawResponseData.data;
           }
@@ -1234,17 +1231,16 @@ export class V1WebReportCodService {
     }
   }
   static reportTypeFromFilter(filters: any) {
-    const filterAwb = false;
+    let filterAwb = false;
     let filterTransaction = false;
 
     filters.forEach(filter => {
-
-      // if (filter.field == "periodStart" && filter.value) {
-      //   filterAwb = true
-      // }
-      // if (filter.field == "periodEnd" && filter.value) {
-      //   filterAwb = true
-      // }
+      if (filter.field == "periodStart" && filter.value) {
+        filterAwb = true
+      }
+      if (filter.field == "periodEnd" && filter.value) {
+        filterAwb = true
+      }
       // if (filter.field == "supplier" && filter.value) {
       //   filterAwb = true
       // }
@@ -1252,18 +1248,12 @@ export class V1WebReportCodService {
       //   filterAwb = true
       // }
 
-      // if (filter.field == 'transactionStart' && filter.value) {
-      //   filterTransaction = true;
-      // }
-      // if (filter.field == 'transactionEnd' && filter.value) {
-      //   filterTransaction = true;
-      // }
-      // if (filter.field == 'transactionStatus' && filter.value) {
-      //   filterTransaction = true;
-      // }
-      // if (filter.field == 'supplierInvoiceStatus' && filter.value) {
-      //   filterTransaction = true;
-      // }
+      if (filter.field == 'transactionStart' && filter.value) {
+        filterTransaction = true;
+      }
+      if (filter.field == 'transactionEnd' && filter.value) {
+        filterTransaction = true;
+      }
 
     });
 
@@ -1328,9 +1318,6 @@ export class V1WebReportCodService {
         },
       },
       { "$sort": { awbNumber: 1 } },
-      {
-        $skip: 0,
-      },
       {
         $limit: limit,
       },
