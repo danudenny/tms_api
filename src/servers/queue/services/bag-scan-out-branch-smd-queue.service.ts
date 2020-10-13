@@ -208,7 +208,7 @@ export class BagScanOutBranchSmdQueueService {
                 Number(data.userId),
                 Number(employeeIdDriver),
                 employeeNameDriver,
-                AWB_STATUS.OUT_HUB,
+                AWB_STATUS.OUT_LINE_HAUL,
                 branchName,
                 cityName,
                 Number(item.branch_id_to),
