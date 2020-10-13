@@ -157,6 +157,10 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
+    if (permissonPayload.roleName === 'Ops - Admin COD') {
+      q.andWhere(e => e.codPayment.branchId, w => w.equals(permissonPayload.branchId));
+    }
+
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
