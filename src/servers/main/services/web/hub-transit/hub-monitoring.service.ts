@@ -104,13 +104,8 @@ export class HubMonitoringService {
       )
       SELECT * FROM (
         SELECT
+          TO_CHAR("doPodDateTime", \'DD Mon YYYY HH24:MI\') AS "doPodDateTime",
           "origin",
-          "totalBag",
-          "totalScanIn",
-          "totalScanOut",
-          "totalAwb",
-          "doPodDateTime",
-          "totalBag" - "totalScanIn" AS "remaining",
           CASE
             WHEN "totalScanIn" = "totalBag" AND "totalScanIn" > 0
               THEN 'Hub'
@@ -118,7 +113,12 @@ export class HubMonitoringService {
               THEN 'Unload'
             else
               'Delivery'
-          END status
+          END "status",
+          "totalBag",
+          "totalAwb",
+          "totalScanIn",
+          "totalBag" - "totalScanIn" AS "remaining",
+          "totalScanOut"
         FROM detail
       ) t1
       ${filterQuery ? `WHERE ${filterQuery}` : ''}
