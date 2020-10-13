@@ -3,6 +3,7 @@ import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne
 import { TmsBaseEntity } from './tms-base';
 import { User } from './user';
 import { Branch } from './branch';
+import { CodUserToBranch } from './cod-user-to-branch';
 
 @Entity('cod_payment', { schema: 'public' })
 export class CodPayment extends TmsBaseEntity {
@@ -86,4 +87,8 @@ export class CodPayment extends TmsBaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branchFinal: Branch;
+
+  @OneToOne(() => CodUserToBranch)
+  @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
+  codUserToBranch: CodUserToBranch;
 }
