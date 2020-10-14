@@ -809,6 +809,37 @@ export class V1WebReportCodService {
           preserveNullAndEmptyArrays: allowNullTd,
         },
       },
+      {
+        $lookup: {
+          from: 'partner_request',
+          as: 'pr',
+          let: { awbNumber: '$awbNumber' },
+          pipeline: [
+            {
+              // on inner join
+              $match:
+              {
+                $expr:
+                {
+                  $and: [{ $eq: ['$awbNumber', '$$awbNumber'] }],
+                },
+              },
+            },
+            { $limit: 1 },
+            {
+              $project: {
+                awbNumber: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: '$pr',
+          preserveNullAndEmptyArrays: false,
+        },
+      },
       { $limit: limit },
       {
         $project: {
@@ -977,6 +1008,7 @@ export class V1WebReportCodService {
             {
               $project: {
                 awbNumber: 1,
+                lastValidTrackingType: 1
               },
             },
           ],
@@ -1026,7 +1058,7 @@ export class V1WebReportCodService {
           podDate: 1,
           transactionStatusId: 1,
           transactionStatus: '$transactionstatusname',
-          lastValidTrackingType: '$transactionstatusname',
+          lastValidTrackingType: '$ca.lastValidTrackingType',
           userIdDriverNik: '$nikSigesit',
           userIdDriverName: '$sigesit',
           userIdUpdatedNik: '$nikAdmin',
