@@ -91,7 +91,7 @@ export class V1WebAwbCodController {
 
   @Post('transactionBranch')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebAwbCodListTransactionResponseVm })
   public async transactionBranch(@Body() payload: BaseMetaPayloadVm) {
     // get data transaction branch

@@ -808,6 +808,8 @@ export class V1WebAwbCodService {
   static async transactionBranch(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodListTransactionResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     // mapping field
     payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
     payload.fieldResolverMap['driverName'] = 't5.first_name';
@@ -860,6 +862,20 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.userAdmin, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    //#region Cod Merger
+    if (permissonPayload.roleName === 'CT Transit (COD)' && !permissonPayload.isHeadOffice) {
+      q.innerJoin(e => e.codUserToBranch, 't10', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+      );
+    }
+
+    if (permissonPayload.roleName === 'Ops - Admin COD') {
+      q.andWhere(e => e.branchId, w => w.equals(permissonPayload.branchId));
+    }
+    //#endregion
+
     // TODO: change to inner join
     q.leftJoin(e => e.userDriver, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
