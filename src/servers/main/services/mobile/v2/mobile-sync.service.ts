@@ -27,6 +27,7 @@ import { UploadImagePodQueueService } from '../../../../queue/services/upload-po
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { ServiceUnavailableException } from '@nestjs/common';
 import { RedisService } from '../../../../../shared/services/redis.service';
+import { AwbSunfishQueueService } from '../../../../queue/services/integration/awb-sunfish-queue.service';
 // #endregion
 
 export class V2MobileSyncService {
@@ -250,6 +251,15 @@ export class V2MobileSyncService {
             lastDoPodDeliverHistory.latitudeDelivery,
             lastDoPodDeliverHistory.longitudeDelivery,
           );
+
+          // NOTE: push data only DLV to Sunfish
+          if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
+            AwbSunfishQueueService.perform(
+              delivery.awbNumber,
+              delivery.employeeId,
+              historyDateTime,
+            );
+          }
           process = true;
         } else {
           PinoLoggerService.log('##### Data Not Valid', delivery);
