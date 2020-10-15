@@ -53,10 +53,58 @@ export class MonitoringBagHubTotalBagResponseVm {
   totalDoDelivery: number;
 }
 
+export class MonitoringSortirHubDataResponseVm {
+  @ApiModelProperty()
+  createdTime: number;
+
+  @ApiModelProperty()
+  branchTo: number;
+
+  @ApiModelProperty()
+  status: number;
+
+  @ApiModelProperty()
+  totalBagSortir: number;
+
+  @ApiModelProperty()
+  totalAwb: number;
+
+  @ApiModelProperty()
+  totalScanInAwb: number;
+
+  @ApiModelProperty()
+  remainingAwbSortir: number;
+
+  @ApiModelProperty()
+  totalScanOutBagSortir: number;
+}
+
+export class MonitoringSortirHubTotalBagResponseVm {
+  @ApiModelProperty()
+  totalBag: number;
+
+  @ApiModelProperty()
+  totalScanOutBagSortir: number;
+
+  @ApiModelProperty()
+  totalBagSortir: number;
+
+  @ApiModelProperty()
+  totalSort: number;
+}
+
 export class MonitoringBagHubResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({type: () => MonitoringBagHubTotalBagResponseVm})
   totalDetail: MonitoringBagHubTotalBagResponseVm;
 
   @ApiModelProperty({type: () => [MonitoringBagHubDataResponseVm]})
   data: MonitoringBagHubDataResponseVm[];
+}
+
+export class MonitoringSortirHubResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({type: () => MonitoringSortirHubTotalBagResponseVm})
+  totalDetail: MonitoringSortirHubTotalBagResponseVm;
+
+  @ApiModelProperty({type: () => [MonitoringSortirHubDataResponseVm]})
+  data: MonitoringSortirHubDataResponseVm[];
 }
