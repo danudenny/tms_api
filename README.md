@@ -1,13 +1,11 @@
-# SiCepat TMS Api
+# SiCepat TMS Api ⚡️
 
-## Tech Stack
+## 🎯 Tech Stack
 
 - [Node.js](https://nodejs.org/download/release/v10/) Node.js version `10`
 - [Yarn](https://yarnpkg.com) for Package Manager Development mode.
 - [Nest.js](https://github.com/nestjs/nest) as the framework.
 - [Redis](https://redis.io/) for Backing Bull and Key-Value storage use version `5`.
-
-## How We Write Codes
 
 ### Typescript
 
@@ -31,7 +29,7 @@
 
 The `tslint.json` are helping our development code style to be the same
 
-## Visual Studio Code Required Plugins
+## 🤖 Visual Studio Code Required Plugins
 
 1. <https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode/items?itemName=ms-vscode.vscode-typescript-tslint-plugin>
 2. <https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode>
