@@ -328,8 +328,20 @@ export class HubMonitoringService {
 
   static async getQueryMonitoringSortirListByFilterOrion(payload: BaseMetaPayloadVm): Promise<string> {
     const map = {
-      status: '"status"',
-      origin: '"origin"',
+      createdTime: 'doh.created_time',
+      branchIdFrom: 'bag_sortir.branch_id_last',
+      branchIdTo: 'br.branch_id',
+      branchTo: 'br.branch_name',
+    };
+    const sortingMap = {
+      createdTime : '"createdTime"',
+      branchTo : '"branchTo"',
+      status : '"status"',
+      totalBagSortir : '"totalBagSortir"',
+      totalAwb : '"totalAwb"',
+      totalScanInAwb : '"totalScanInAwb"',
+      remainingAwbSortir : '"remainingAwbSortir"',
+      totalScanOutBagSortir : '"totalScanOutBagSortir"',
     };
     const optr = ['gte', 'gt'];
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
@@ -397,7 +409,11 @@ export class HubMonitoringService {
           "totalAwb" - "totalScanInAwb" AS "remainingAwbSortir"
         FROM detail
       ) t1
-      GROUP BY "status", "branchTo";
+      GROUP BY "status", "branchTo"
+      ${payload.sortBy && sortingMap[payload.sortBy] ?
+        `ORDER BY ${sortingMap[payload.sortBy]} ${payload.sortDir}` : ''}
+      LIMIT ${payload.limit}
+      ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''};
     `;
     return query;
   }
