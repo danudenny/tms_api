@@ -938,6 +938,11 @@ export class V1WebReportCodService {
         filterList.push({ transactionStatusId: { $eq: filter.value } });
       }
 
+      if (filter.field == 'supplierTMSId' && filter.value) {
+        filterList.push({ partnerId: { $eq: filter.value } });
+      }
+
+
       if (filter.field == 'supplierInvoiceStatus' && filter.value) {
         filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
 
@@ -958,6 +963,7 @@ export class V1WebReportCodService {
         spartanFilter.push({ $gte: ['$lastValidTrackingDateTime', d] });
         allowNullTd = false;
       }
+
 
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
