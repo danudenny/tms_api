@@ -267,7 +267,7 @@ export class HubMonitoringService {
       WITH detail as (
         SELECT
           br.branch_name AS "branchTo",
-          COUNT(DISTINCT doh.dropoff_hub_id) AS "totalBag",
+          bi.bag_item_id AS "bagItemId",
           COUNT(DISTINCT bag_sortir.awb_id) AS "totalSort",
           COUNT(DISTINCT bag_sortir.bag_item_id) AS "totalBagSortir",
           COUNT(DISTINCT dpdb.bag_item_id) AS "totalScanOutBagSortir"
@@ -298,10 +298,10 @@ export class HubMonitoringService {
           ${whereQuery ? `AND ${whereQuery}` : ''}
           ${payload.search ? `AND br.branch_name ~* '${payload.search}'` : ''}
         GROUP BY
-          br.branch_name, bag_sortir.bag_item_id
+          br.branch_name, bi.bag_item_id
       )
       SELECT
-        SUM("totalBag") AS "totalBag",
+        COUNT(DISTINCT "bagItemId") AS "totalBag",
         SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
         SUM("totalBagSortir") AS "totalBagSortir",
         SUM("totalSort") AS "totalSort",
@@ -309,7 +309,7 @@ export class HubMonitoringService {
       FROM (
         SELECT
           "branchTo",
-          SUM("totalBag") AS "totalBag",
+          "bagItemId" AS "bagItemId",
           SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
           SUM("totalBagSortir") AS "totalBagSortir",
           SUM("totalSort") AS "totalSort"
@@ -318,7 +318,7 @@ export class HubMonitoringService {
           CASE
             WHEN "totalBagSortir" = "totalScanOutBagSortir" THEN 'Loading'
             ELSE 'Sortir'
-          END, "branchTo"
+          END, "branchTo", "bagItemId"
       ) t1;
     `;
     return query;
