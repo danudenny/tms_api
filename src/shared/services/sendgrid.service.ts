@@ -20,6 +20,23 @@ export class SendgridService {
     this.sendMail(msg);
   }
 
+  public static async sendMailDynamicTemplateDataTo(
+    from: string,
+    templateId: string,
+    to: string,
+    dynamicTemplateData: any,
+    ) {
+
+    const msg = {
+      to,
+      from,
+      templateId,
+      dynamicTemplateData,
+    };
+
+    this.sendMail(msg);
+  }
+
   // general purpose
   public static async sendMail(message: any) {
     const sgMail = require('@sendgrid/mail');

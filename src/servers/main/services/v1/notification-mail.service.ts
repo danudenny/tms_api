@@ -30,21 +30,20 @@ export class NotificationMailService {
       awb_number: message.awb_number,
       customer: message.customer,
     };
-    const personalizations = [
-      {
-        to: 'taufik.prihatin@e.sicepat.com', // replace this with your admin email address
-      },
-    ];
+    // const personalizations = [
+    //   {
+    //     to: 'taufik.prihatin@e.sicepat.com', // replace this with your admin email address
+    //   },
+    // ];
+    // // recipient_email
+    // personalizations.push({
+    //   to: recipient_email,
+    // });
 
-    // recipient_email
-    personalizations.push({
-      to: recipient_email,
-    });
-
-    await SendgridService.sendMailDynamicTemplateData(
-      'SiCepat Admin POD <admin-pod@sicepat.com>',
+    await SendgridService.sendMailDynamicTemplateDataTo(
+      'SiCepat Ekspres <noreply@sicepat.com>',
       'd-a9ff5f3013d345a3903f1fd43a6ad74f',
-      personalizations,
+      recipient_email,
       data,
     );
   }

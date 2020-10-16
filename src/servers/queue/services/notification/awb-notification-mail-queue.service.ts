@@ -53,7 +53,7 @@ export class AwbNotificationMailQueueService {
               where: { awbItemId: data.awbItemId },
             });
             // TODO: check pickreq.recipientEmail is valid
-            if (pickreq) {
+            if (pickreq && pickreq.recipientEmail) {
               const message: NotifEmailProblemVm = {
                 problem_status: awbStatus.awbStatusTitle,
                 awb_number: pickreq.refAwbNumber,
@@ -66,9 +66,11 @@ export class AwbNotificationMailQueueService {
               };
               // NOTE: only for testing
               await NotificationMailService.podProblem(
-                'mohammadsatria@e.sicepat.com',
+                pickreq.recipientEmail,
                 message,
               );
+            } else {
+              console.log(' ### NOTIF EMAIL :: NOT FOUND RECIPIENT EMAIL :: ', pickreq.refAwbNumber);
             } // end pickreq
           }
         }
