@@ -267,19 +267,17 @@ export class HubMonitoringService {
       WITH detail as (
         SELECT
           br.branch_name AS "branchTo",
-          COUNT(DISTINCT dpdb.bag_item_id) As "totalBag",
-          COUNT(distinct bag_sortir.awb_id) AS "totalSort",
-          COUNT(distinct bag_sortir.bag_item_id) AS "totalBagSortir",
-          COUNT(distinct dohd.dropoff_hub_detail_id) AS "totalAwb",
-          COUNT(distinct bag_sortir.awb_id) AS "totalScanInAwb",
+          COUNT(DISTINCT doh.dropoff_hub_id) AS "totalBag",
+          COUNT(DISTINCT bag_sortir.awb_id) AS "totalSort",
+          COUNT(DISTINCT bag_sortir.bag_item_id) AS "totalBagSortir",
           COUNT(DISTINCT dpdb.bag_item_id) AS "totalScanOutBagSortir"
         FROM
           dropoff_hub doh
-        INNER JOIN bag b ON b.bag_id = doh.bag_id AND b.is_deleted = FALSE AND b.branch_id is not null
+        INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
         INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-        INNER JOIN awb t5 ON t5.awb_id = dohd.awb_id AND t5.is_deleted = FALSE
-        INNER JOIN district dt ON dt.district_id = t5.to_id AND dt.is_deleted = FALSE
+        INNER JOIN awb awb ON awb.awb_id = dohd.awb_id AND awb.is_deleted = FALSE
+        INNER JOIN district dt ON dt.district_id = awb.to_id AND dt.is_deleted = FALSE
         INNER JOIN branch br ON br.branch_id = dt.branch_id_delivery AND br.is_deleted = FALSE
         LEFT JOIN
         (
