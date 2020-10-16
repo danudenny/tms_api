@@ -1,7 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
 import { District } from './district';
+import { Representative } from './representative';
+import { CodUserToBranch } from './cod-user-to-branch';
 
 @Entity('branch', { schema: 'public' })
 export class Branch extends TmsBaseEntity {
@@ -149,9 +151,24 @@ export class Branch extends TmsBaseEntity {
   })
   branchTypeId: number | null;
 
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_active',
+  })
+  isActive: boolean | null;
+
   @OneToOne(() => District)
   @JoinColumn({ name: 'district_id' })
   district: District;
+
+  @OneToOne(() => Representative)
+  @JoinColumn({ name: 'representative_id' })
+  representative: Representative;
+
+  @OneToOne(() => CodUserToBranch)
+  @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
+  codUserToBranch: CodUserToBranch;
 
   // TODO: mapping for join on scaninlist
   // @OneToOne(() => PodScan)

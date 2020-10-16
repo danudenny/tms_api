@@ -1,7 +1,12 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, Index } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 
 @Entity('bag_item_history', { schema: 'public' })
+@Index('bag_item_history_bag_item_history_id_idx', ['bagItemHistoryId'])
+@Index('bag_item_history_bag_item_id_idx', ['bagItemId'])
+@Index('bag_item_history_bag_item_status_id_idx', ['bagItemStatusId'])
+@Index('bag_item_history_history_date_idx', ['historyDate'])
+@Index('bag_item_history_is_deleted_idx', ['isDeleted'])
 export class BagItemHistory extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',

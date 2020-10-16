@@ -106,15 +106,14 @@ export class SmsTrackingController {
     return SmsTrackingService.userList(payload);
   }
 
-  @Get('export/excel')
+  @Post('export/excel')
   // @HttpCode(HttpStatus.OK)
   // @ApiBearerAuth()
   // @ApiOkResponse({ type: SmsTrackingListUserResponseVm })
   public async export(
     @Response() serverResponse: express.Response,
-    @Query('date') date: string,
-    @Query('smsTrackingShiftId') smsTrackingShiftId: number,
+    @Body() payload: GenerateReportSmsTrackingPayloadVm,
   ) {
-    return SmsTrackingService.export(serverResponse, date, smsTrackingShiftId);
+    return SmsTrackingService.export(serverResponse, payload);
   }
 }

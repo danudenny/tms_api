@@ -68,6 +68,7 @@ export class BagService {
         bagId: true,
         bagNumber: true,
       },
+      weight: true,
     });
     q.where(e => e.bagItemId, w => w.equals(bagItemId));
     q.andWhere(e => e.isDeleted, w => w.isFalse());

@@ -4,6 +4,8 @@ import {
   TrackingBagPayloadVm,
   TrackingAwbResponseVm,
   TrackingBagResponseVm,
+  TrackingBagRepresentativePayloadVm,
+  TrackingBagRepresentativeResponseVm,
 } from '../../models/tracking.vm';
 
 export class WebTrackingService {
@@ -80,7 +82,7 @@ export class WebTrackingService {
         result.bagHistory = history;
       }
     }
-    // result.bagHistory =
+
     return result;
   }
 
@@ -246,4 +248,6 @@ export class WebTrackingService {
     `;
     return await RawQueryService.queryWithParams(query, { bagItemId });
   }
+
+
 }

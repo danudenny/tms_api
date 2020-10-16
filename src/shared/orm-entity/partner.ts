@@ -1,17 +1,7 @@
 import {
-  BaseEntity,
   Column,
   Entity,
-  Index,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
-  RelationId,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 
@@ -33,7 +23,6 @@ export class Partner extends TmsBaseEntity {
     nullable: true,
     length: 500,
     name: 'partner_email',
-
   })
   partnerEmail: string | null;
 
@@ -59,7 +48,6 @@ export class Partner extends TmsBaseEntity {
   @Column('bigint', {
     nullable: true,
     name: 'awb_number_end',
-
   })
   awbNumberEnd: string | null;
 
@@ -100,7 +88,6 @@ export class Partner extends TmsBaseEntity {
     nullable: false,
     default: () => 'false',
     name: 'is_assign_to_courier',
-
   })
   isAssignToCourier: boolean;
 
@@ -128,7 +115,12 @@ export class Partner extends TmsBaseEntity {
   @Column('json', {
     nullable: true,
     name: 'validation',
-
   })
   validation: Object | null;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'partner_id_sur',
+  })
+  partnerIdSur: number | null;
 }

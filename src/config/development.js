@@ -32,6 +32,10 @@ module.exports = {
       retryDelayMs: 2 * 60 * 1000, // 2 minutes
       keepRetryInHours: 24, // keep retrying in 1 day
     },
+    doSmdDetailPostMeta: {
+      retryDelayMs: 2 * 60 * 1000, // 2 minutes
+      keepRetryInHours: 24, // keep retrying in 1 day
+    },
   },
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent

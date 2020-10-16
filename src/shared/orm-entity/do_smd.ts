@@ -1,8 +1,10 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { Representative } from './representative';
 import { Branch } from './branch';
 import { DoSmdDetail } from './do_smd_detail';
+import { DoSmdVehicle } from './do_smd_vehicle';
+import {Vendor} from './vendor';
 
 @Entity('do_smd', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
@@ -23,6 +25,13 @@ export class DoSmd extends TmsBaseEntity {
     name: 'do_smd_code',
   })
   doSmdCode: string;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'do_smd_note',
+  })
+  doSmdNote: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -108,11 +117,109 @@ export class DoSmd extends TmsBaseEntity {
   })
   isDeleted: boolean;
 
+  @Column('bigint', {
+    nullable: false,
+    default: () => 0,
+    name: 'total_bagging',
+  })
+  totalBagging: number;
+
+  @Column('bigint', {
+    nullable: false,
+    default: () => 0,
+    name: 'total_bag',
+  })
+  totalBag: number;
+
+  @Column('bigint', {
+    nullable: false,
+    default: () => 0,
+    name: 'total_bag_representative',
+  })
+  totalBagRepresentative: number;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'branch_to_name_list',
+  })
+  branchToNameList: string;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'departure_schedule_date_time',
+  })
+  departureScheduleDateTime: Date;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'trip',
+  })
+  trip: number | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'departure_date_time',
+  })
+  departureDateTime: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'transit_date_time',
+  })
+  transitDateTime: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'arrival_date_time',
+  })
+  arrivalDateTime: Date | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'counter_trip',
+  })
+  counterTrip: number | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+    name: 'seal_number_last',
+  })
+  sealNumberLast: string | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'vendor_id',
+  })
+  vendorId: number| null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'vendor_name',
+  })
+  vendorName: string | null;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_vendor',
+  })
+  isVendor: boolean;
+
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
 
-  @OneToOne(() => DoSmdDetail)
-  @JoinColumn({ name: 'do_smd_id' })
-  doSmdDetail: DoSmdDetail;
+  @OneToMany(() => DoSmdDetail, e => e.doSmd)
+  doSmdDetails: DoSmdDetail[];
+
+  @OneToOne(() => DoSmdVehicle)
+  @JoinColumn({ name: 'vehicle_id_last', referencedColumnName: 'doSmdVehicleId' })
+  doSmdVehicle: DoSmdVehicle;
+
+  @ManyToOne(() => Vendor)
+  @JoinColumn({ name: 'vendor_id', referencedColumnName: 'vendorId' })
+  vendor: Vendor;
 }

@@ -1,5 +1,5 @@
 // #region import
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import moment = require('moment');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -376,11 +376,13 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchId'] = 't3.branch_id';
     payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
     payload.fieldResolverMap['bagNumberCode'] = '"bagNumberCode"';
+    payload.fieldResolverMap['totalAwb'] = '"totalAwb"';
     payload.fieldResolverMap['representativeFrom'] =
       't1.ref_representative_code';
     payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
     payload.fieldResolverMap['branchScanId'] = 't1.branch_id';
     payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
+
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -402,13 +404,7 @@ export class WebDeliveryInService {
 
     q.selectRaw(
       [
-        `CASE LENGTH (CAST(t2.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t1.bag_number,'00',t2.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t1.bag_number,'0',t2.bag_seq)
-          ELSE
-            CONCAT (t1.bag_number,t2.bag_seq) END`,
+        `CONCAT(t1.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`,
         'bagNumberCode',
       ],
       ['t1.bag_number', 'bagNumber'],
@@ -433,7 +429,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItems.bagItemAwbs, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.branch, 't5', j =>
+    q.leftJoin(e => e.bagItems.branchLast, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.branchIdTo, w => w.isNotNull);
@@ -468,6 +464,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['bagNumber'] = 't4.bag_number';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -500,7 +497,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItem.bag, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awbItem.awb.district, 't5', j =>
+    q.leftJoin(e => e.awbItem.awb.districtTo, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -610,13 +607,7 @@ export class WebDeliveryInService {
       ['t5.awb_status_title', 'awbStatusTitle'],
       ['t5.is_problem', 'isProblem'],
       [
-        `CASE LENGTH (CAST(t6.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t7.bag_number,'00',t6.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t7.bag_number,'0',t6.bag_seq)
-          ELSE
-            CONCAT (t7.bag_number,t6.bag_seq) END`,
+        `CONCAT(t7.bag_number, LPAD(t6.bag_seq::text, 3, '0'))`,
         'bagNumber',
       ],
       ['t8.branch_name', 'branchName'],
@@ -650,7 +641,7 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.packageType, 't10', j =>
-      j.andWhere(e => e.is_deleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.customerAccount, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -1189,6 +1180,11 @@ export class WebDeliveryInService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timeNow = moment().toDate();
 
+    // handle podScanInBranchId
+    if (payload.podScanInBranchId === '') {
+      throw new BadRequestException('PodScanInBranchId NULL');
+    }
+
     if (payload.bagNumberDetail && payload.bagNumberDetail.length) {
       for (const item of payload.bagNumberDetail) {
         const bagData = await BagService.validBagNumber(item.bagNumber);
@@ -1600,6 +1596,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchScanId'] = 't4.branch_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['dateScanIn'] = 't1.created_time';
+    payload.fieldResolverMap['branchScanName'] = 't4.branch_name';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }

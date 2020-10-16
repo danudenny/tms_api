@@ -36,12 +36,17 @@ module.exports = {
       retryDelayMs: 2 * 60 * 1000, // 2 minutes
       keepRetryInHours: 24, // keep retrying in 1 day
     },
+    doSmdDetailPostMeta: {
+      retryDelayMs: 2 * 60 * 1000, // 2 minutes
+      keepRetryInHours: 24, // keep retrying in 1 day
+    },
   },
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
   sentry: {
-    dsn: 'http://8d763ea5cbaf4321ad5d58778e08d589@sentry.sicepat.com/2',
+    dsn:
+      'https://cd146c2621d24fc5b937d3ec598328da@o392502.ingest.sentry.io/5245618',
   },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
@@ -63,9 +68,22 @@ module.exports = {
     passKey: '2e8a7f4d5ef4b746a503ef270ce2a98e562bc77e2dd6c19bf10e3d95e3390393',
     shipmentMethod: 'Instant',
   },
+  odoo: {
+    baseUrl: 'http://52.77.199.252:5168/',
+    authKey: '5a71a345b4eaa9d23b4d4c745e7785e9',
+  },
+  divaPayment: {
+    sicepatKlikUrl: 'http://sicepatklik.com/apps/pubext/web/index.php?r=cod',
+    apiKey: '91e3a6d02ac4f6054479c9ee03854a22',
+    urlQR: 'https://apiv2.mdd.co.id:51347',
+    codToken: 'f66046c79e4047c299fbf8abdf6cb3b2',
+    codMid: '5b4e9699dd603e1aa6687f1d2fe4db95',
+    codTid: 'sicepat-001',
+  },
   korwil: {
     korwilRoleId: 38,
-    palkurRoleId: 40,
+    smdRoleId: 117,
+    palkurRoleId: [40, 41],
   },
   masterData: {
     apiKey:
@@ -73,5 +91,9 @@ module.exports = {
   },
   cps: {
     apiKey: '371b74e652119491854b78ce6f6bf03b',
+  },
+  mongodb: {
+    sicepat:
+      'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-staging-cluster.nrgvr.mongodb.net/test?retryWrites=true&w=majority&readPreference=secondaryPreferred',
   },
 };

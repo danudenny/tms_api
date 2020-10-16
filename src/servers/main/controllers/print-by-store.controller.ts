@@ -20,8 +20,9 @@ import {
   PrintDoPodReturnPayloadQueryVm,
   PrintDoPodReturnAdmiStorePayloadVm,
 } from '../models/print-do-pod-return.vm';
+import { PrintCodTransferBranchPayloadQueryVm } from '../models/print/print-cod-transfer-branch-payload.vm';
 
-@ApiUseTags('General')
+@ApiUseTags('Print by Store')
 @Controller('print-by-store')
 export class PrintByStoreController {
   @Post('do-pod/store')
@@ -139,6 +140,33 @@ export class PrintByStoreController {
     @Response() serverResponse: express.Response,
   ) {
     return PrintByStoreService.executePrintDoPodReturnAdmin(
+      serverResponse,
+      queryParams,
+    );
+  }
+
+  // NOTE: execute print for awb cod
+  @Get('cod-transfer-branch-cash/execute')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async executePrintCodTransferBranchCash(
+    @Query() queryParams: PrintCodTransferBranchPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintByStoreService.executePrintCodTransferBranchCash(
+      serverResponse,
+      queryParams,
+    );
+  }
+
+  @Get('cod-transfer-branch-cashless/execute')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async executePrintCodTransferBranchCashless(
+    @Query() queryParams: PrintCodTransferBranchPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintByStoreService.executePrintCodTransferBranchCashless(
       serverResponse,
       queryParams,
     );

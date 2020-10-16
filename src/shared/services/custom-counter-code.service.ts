@@ -42,6 +42,12 @@ export class CustomCounterCode {
     return prefix + randomCode;
   }
 
+  public static async doPodDeliverMobile(dateTime: Date, digit: number = 8) {
+    const prefix = `DOPM/${moment(dateTime).format('YYMM/DD/')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode;
+  }
+
   public static async awbTrouble(dateTime: Date, digit: number = 8) {
     const prefix = `ATR/${moment(dateTime).format('YYMM/DD/')}`;
     const randomCode = this.randomCode(digit);
@@ -79,8 +85,8 @@ export class CustomCounterCode {
     return prefix + randomCode.toString();
   }
 
-  // SMD
-    public static async receivedBagCodeRandom(dateTime: Date, digit: number = 8) {
+  // #region SMD
+  public static async receivedBagCodeRandom(dateTime: Date, digit: number = 8) {
     const prefix = `TB/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
@@ -97,6 +103,63 @@ export class CustomCounterCode {
     const last_number = await this.getLastNumber(prefix);
     return prefix + last_number.toString().padStart(digit, '0');
   }
+
+  public static async doSmdCodeRandomCounter(dateTime: Date, digit: number = 8) {
+    // Format Code: GSK/1907/13/XYZA1234
+    const prefix = `DMD/${moment(dateTime).format('YYMM/DD')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
+  public static async baggingCodeCounter(dateTime: Date, digit: number = 5) {
+    const prefix = `BGX/${moment(dateTime).format('YYMM')}/`;
+    const last_number = await this.getLastNumber(prefix);
+    return prefix + last_number.toString().padStart(digit, '0');
+  }
+
+  public static async baggingCodeRandomCounter(dateTime: Date, digit: number = 6) {
+    const prefix = `BGX${moment(dateTime).format('YYMMDD')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
+  public static async bagCityCodeCounter(dateTime: Date, digit: number = 5) {
+    const prefix = `GSK/${moment(dateTime).format('YYMM')}/`;
+    const last_number = await this.getLastNumber(prefix);
+    return prefix + last_number.toString().padStart(digit, '0');
+  }
+
+  public static async bagCityCodeRandomCounter(dateTime: Date, digit: number = 6) {
+    // Format Code: GSK190713XYZA12
+    const prefix = `GSK${moment(dateTime).format('YYMMDD')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
+  // #endregion SMD
+
+  // #region COD
+  public static async transactionCodBranch(dateTime: Date, digit: number = 8) {
+    // Format Code: 1010/2020/XYZA1234
+    const prefix = `${moment(dateTime).format('DDMM/YYYY')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
+  public static async supplierInvoiceCod(dateTime: Date, digit: number = 8) {
+    // Format Code: INV/2706/2020/XYZA1234
+    const prefix = `INV/${moment(dateTime).format('DDMM/YYYY')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
+  public static async bankStatement(dateTime: Date, digit: number = 8) {
+    // Format Code: BS/1010/2020/XYZA1234
+    const prefix = `BS/${moment(dateTime).format('DDMM/YYYY')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+  // #endregion COD
 
   // get data on DB
   private static async getLastNumber(prefix: string) {
@@ -115,7 +178,7 @@ export class CustomCounterCode {
       nextCounter = Number(customCounter.counter) + 1;
       customCounter.counter = nextCounter;
       customCounter.updatedTime = timeNow;
-      SysCounter.save(customCounter);
+      await SysCounter.save(customCounter);
     } else {
       // # Insert Data
       customCounter = SysCounter.create();
@@ -123,7 +186,7 @@ export class CustomCounterCode {
       customCounter.counter = nextCounter;
       customCounter.createdTime = timeNow;
       customCounter.updatedTime = timeNow;
-      SysCounter.save(customCounter);
+      await SysCounter.save(customCounter);
     }
 
     return nextCounter;

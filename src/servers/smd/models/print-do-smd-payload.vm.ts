@@ -1,16 +1,15 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
-import { take } from 'rxjs/operators';
 
-
-export class GabunganVm {
+export class PrintDoSmdPayloadQueryVm {
   @ApiModelProperty()
-  bagNumber: string;
+  id: number;
 
   @ApiModelProperty()
-  status: string;
+  userId: number;
 
   @ApiModelProperty()
-  message: string;
+  branchId: number;
 
+  @ApiModelProperty()
+  printCopy: number;
 }
-

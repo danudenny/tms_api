@@ -1,6 +1,7 @@
 import { createClient } from 'redis';
 import { ConfigService } from './config.service';
 import { sleep } from 'sleep-ts';
+import { RequestErrorService } from './request-error.service';
 
 export class RedisService {
 
@@ -129,6 +130,19 @@ export class RedisService {
     });
   }
 
+  // https://redis.io/topics/distlock
+  public static async redlock(key: string, ttl: number = 3) {
+    try {
+      const lock = await this.setnx(key, 'lock');
+      // set default expire key on redis
+      await this.expire(key, ttl);
+      return !!lock;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+
   public static async locking(key: string, value: string) {
     let countRetry = 1;
     let locking = {};
@@ -160,5 +174,37 @@ export class RedisService {
     } while (countRetry < 4);
 
     return !!locking;
+  }
+
+  /**
+   * Store data to redis within a duration time.
+   *
+   * @static
+   * @param {string} key
+   * @param {*} data
+   * @param {number} [duration=600] in seconds
+   * @return {*}  {Promise<unknown>}
+   * @memberof RedisService
+   */
+  public static async storeData(key: string, data: any, duration: number = 600): Promise<unknown> {
+    if (!data) {
+      RequestErrorService.throwObj({
+        message: `Data not valid!`,
+      });
+    }
+
+    return RedisService.setex(key, data, duration, true);
+  }
+
+  /**
+   * Retrieve data from redis with a key.
+   *
+   * @static
+   * @param {string} key
+   * @return {*}
+   * @memberof RedisService
+   */
+  public static async retrieveData(key: string) {
+    return RedisService.get(key, true);
   }
 }

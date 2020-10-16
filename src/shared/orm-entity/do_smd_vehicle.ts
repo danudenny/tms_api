@@ -8,6 +8,8 @@ import { Representative } from './representative';
 // import { DropoffHub } from './dropoff_hub';
 // import { DropoffSortation } from './dropoff_sortation';
 import { Branch } from './branch';
+import { Employee } from './employee';
+import { DoSmdVehicleAttachment } from './do_smd_vehicle_attachment';
 
 @Entity('do_smd_vehicle', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
@@ -60,6 +62,45 @@ export class DoSmdVehicle extends TmsBaseEntity {
   })
   branchIdEnd: number | null;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'reason_id',
+  })
+  reasonId: number | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+    name: 'notes',
+  })
+  notes: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+    name: 'latitude',
+  })
+  latitude: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+    name: 'longitude',
+  })
+  longitude: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'reason_date',
+  })
+  reasonDate: Date | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'handover_date',
+  })
+  handOverDate: Date | null;
+
   @Column('timestamp without time zone', {
     nullable: false,
     name: 'created_time',
@@ -92,4 +133,11 @@ export class DoSmdVehicle extends TmsBaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_end' })
   branchEnd: Branch;
+
+  @OneToOne(() => Employee)
+  @JoinColumn({ name: 'employee_id_driver' })
+  employee: Employee;
+
+  // @OneToMany(() => DoSmdVehicleAttachment, doSmdVehicleAttachment => doSmdVehicleAttachment.doSmdVehicleId)
+  // doSmdVehicleAttachments: DoSmdVehicleAttachment[];
 }

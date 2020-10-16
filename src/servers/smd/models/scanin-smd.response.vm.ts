@@ -20,8 +20,38 @@ export class ScanInBagVm {
   id: string;
 
   @ApiModelProperty()
-  rbid: string;
+  received_bag_id: string;
 
+  @ApiModelProperty()
+  received_bag_code: string;
+
+  @ApiModelProperty()
+  received_bag_date: string;
+
+  @ApiModelProperty()
+  bag_weight: string;
+
+  @ApiModelProperty()
+  bag_number: string;
+}
+
+export class ScanInSmdBagMoreResponseVm {
+  @ApiModelProperty()
+  totalData: number;
+
+  @ApiModelProperty()
+  totalSuccess: number;
+
+  @ApiModelProperty()
+  totalError: number;
+
+  @ApiModelProperty({type: () => [ScanInSmdBagDataResponseVm]})
+  data: ScanInSmdBagDataResponseVm[];
+}
+
+export class ScanInSmdBagDataResponseVm extends ScanInSmdBagResponseVm {
+  @ApiModelProperty()
+  bag_item_number: string;
 }
 
 export class ScanInSmdBaggingResponseVm {
@@ -69,6 +99,9 @@ export class ScanInListVm {
   bag_id: number;
 
   @ApiModelProperty()
+  bag_item_id: number;
+
+  @ApiModelProperty()
   bag_number_seq: string;
 
   @ApiModelProperty()
@@ -105,4 +138,26 @@ export class ScanInDetailListResponseVm extends BaseMetaResponseVm {
 export class ScanInDetailListVm {
   @ApiModelProperty()
   awb_number: string;
+}
+
+export class ScaninDataDetailScanResponseVm {
+  @ApiModelProperty()
+  received_bag_id: string;
+
+  @ApiModelProperty()
+  received_bag_code: string;
+
+  @ApiModelProperty()
+  received_bag_date: string;
+
+  @ApiModelProperty()
+  bag_weight: string;
+
+  @ApiModelProperty()
+  bag_number: string;
+}
+
+export class ScaninDetailScanResponseVm {
+  @ApiModelProperty({ type: () => [ScaninDataDetailScanResponseVm] })
+  data: ScaninDataDetailScanResponseVm[];
 }
