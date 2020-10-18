@@ -267,6 +267,7 @@ export class HubMonitoringService {
       WITH detail as (
         SELECT
           br.branch_name AS "branchTo",
+          bi.bag_item_id AS "bagItemId",
           COUNT(DISTINCT bia.awb_item_id) AS "awbItemId",
           COUNT(DISTINCT bag_sortir.awb_id) AS "totalBagSortir",
           COUNT(DISTINCT bia1.awb_item_id) AS "totalScanOutBagSortir"
