@@ -399,7 +399,7 @@ export class HubMonitoringService {
             WHEN "totalBagSortir" = "totalScanOutBagSortir" AND "totalBagSortir" > 0 THEN 'Loading'
             WHEN "totalBagSortir" != "totalScanOutBagSortir" AND "totalBagSortir" > 0 THEN 'Sortir'
             ELSE 'Do Hub'
-          END AS "status",
+          END AS "status"
         FROM (
           SELECT
             MIN(TO_CHAR("createdTime", 'DD Mon YYYY HH24:MI')) AS "createdTime",
