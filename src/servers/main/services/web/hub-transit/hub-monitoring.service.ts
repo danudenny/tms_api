@@ -306,14 +306,14 @@ export class HubMonitoringService {
         "totalBagSortir" - ("totalScanOutBagSortir" + "totalBagSortir") AS "totalSort"
       FROM (
         SELECT
-          COUNT(DISTINCT "awbItemId") AS "totalBag",
+          SUM("awbItemId") AS "totalBag",
           SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
           SUM("totalBagSortir") AS "totalBagSortir",
           COUNT(DISTINCT "branchTo") AS "totalData"
         FROM (
           SELECT
             "branchTo",
-            SUM("awbItemId") AS "awbItemId",
+            COUNT(DISTINCT "awbItemId") AS "awbItemId",
             SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
             SUM("totalBagSortir") AS "totalBagSortir"
           FROM detail
