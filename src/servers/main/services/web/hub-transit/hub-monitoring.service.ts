@@ -392,28 +392,40 @@ export class HubMonitoringService {
         GROUP BY
           br.branch_name, bag_sortir.bag_item_id
       )
-      SELECT
-        MIN(TO_CHAR("createdTime", 'DD Mon YYYY HH24:MI')) AS "createdTime",
-        "branchTo",
-        CASE
-					WHEN SUM("totalBagSortir") = SUM("totalScanOutBagSortir") AND SUM("totalBagSortir") > 0 THEN 'Loading'
-					WHEN SUM("totalBagSortir") != SUM("totalScanOutBagSortir") AND SUM("totalBagSortir") > 0 THEN 'Sortir'
-					ELSE 'Do Hub'
-				END AS "status",
-        SUM("totalBagSortir") AS "totalBagSortir",
-        SUM("totalAwb") AS "totalAwb",
-        SUM("totalScanInAwb") AS "totalScanInAwb",
-        SUM("remainingAwbSortir") AS "remainingAwbSortir",
-        SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir"
+      SELECT *
       FROM (
-        SELECT
-          *,
-          "totalAwb" - "totalScanInAwb" AS "remainingAwbSortir"
-        FROM detail
-      ) t1
-      GROUP BY "status", "branchTo"
+        SELECT *,
+          CASE
+            WHEN "totalBagSortir" = "totalScanOutBagSortir" AND "totalBagSortir" > 0 THEN 'Loading'
+            WHEN "totalBagSortir" != "totalScanOutBagSortir" AND "totalBagSortir" > 0 THEN 'Sortir'
+            ELSE 'Do Hub'
+          END AS "status",
+        FROM (
+          SELECT
+            MIN(TO_CHAR("createdTime", 'DD Mon YYYY HH24:MI')) AS "createdTime",
+            "branchTo",
+            SUM("totalBagSortir") AS "totalBagSortir",
+            SUM("totalAwb") AS "totalAwb",
+            SUM("totalScanInAwb") AS "totalScanInAwb",
+            SUM("remainingAwbSortir") AS "remainingAwbSortir",
+            SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir"
+          FROM (
+            SELECT
+              *,
+              "totalAwb" - "totalScanInAwb" AS "remainingAwbSortir"
+            FROM detail
+          ) t1
+          GROUP BY "branchTo"
+        ) t1
+      ) t2
       ${payload.sortBy && sortingMap[payload.sortBy] ?
-        `ORDER BY ${sortingMap[payload.sortBy]} ${payload.sortDir}` : ''}
+      `ORDER BY ${sortingMap[payload.sortBy]} ${payload.sortDir}` :
+      `ORDER BY
+        CASE WHEN "status" = 'Do Hub' then 1
+          WHEN "status" = 'Sortir' then 2
+          WHEN "status" = 'Loading' then 3
+        END`
+      }
       LIMIT ${payload.limit}
       ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''};
     `;
