@@ -279,15 +279,16 @@ export class HubMonitoringService {
     const optr = ['gte', 'gt'];
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
     const whereSubQuery = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'bi.created_time', optr, 'createdTime');
+    const whereSubQuery1 = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp.do_pod_date_time', optr, 'createdTime');
 
     const query = `
       WITH detail as (
         SELECT
           br.branch_name AS "branchTo",
-          bi.bag_item_id AS "bagItemId",
+          COUNT(DISTINCT awb.awb_id) AS "awbSort",
           COUNT(DISTINCT bia.awb_item_id) AS "awbItemId",
-          COUNT(DISTINCT bag_sortir.awb_id) AS "totalBagSortir",
-          COUNT(DISTINCT bia1.awb_item_id) AS "totalScanOutBagSortir"
+          COUNT(DISTINCT bag_sortir.awb_id) AS "awbSortir",
+          COUNT(DISTINCT scan_out.awb_id) AS "awbScanOutBagSortir"
         FROM
           dropoff_hub doh
         INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
@@ -310,37 +311,32 @@ export class HubMonitoringService {
             INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE AND b.branch_id_to IS NOT NULL
           WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
         ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
-        LEFT JOIN do_pod_detail_bag dpdb ON dpdb.bag_item_id = bag_sortir.bag_item_id AND dpdb.is_deleted = FALSE
-        LEFT JOIN bag_item_awb bia1 ON bia1.bag_item_id = dpdb.bag_item_id AND bia1.is_deleted = FALSE
+        LEFT JOIN (
+          SELECT ai.awb_id
+          FROM do_pod dp
+          INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
+          INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+          WHERE
+            dp.is_deleted = FALSE AND
+            dp.user_id_driver IS NOT NULL AND dp.branch_id_to IS NOT NULL
+            ${whereSubQuery1 ? `AND ${whereSubQuery1}` : ''}
+        ) scan_out ON dohd.awb_id = scan_out.awb_id
         WHERE
           doh.branch_id IS NOT NULL
           ${whereQuery ? `AND ${whereQuery}` : ''}
           ${payload.search ? `AND br.branch_name ~* '${payload.search}'` : ''}
         GROUP BY
-          br.branch_name, bi.bag_item_id
+          br.branch_name
       )
-      SELECT *,
-        "totalBag" - ("totalScanOutBagSortir" + "totalBagSortir") AS "totalSort"
-      FROM (
-        SELECT
-          SUM("awbItemId") AS "totalBag",
-          SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
-          SUM("totalBagSortir") AS "totalBagSortir",
-          COUNT(DISTINCT "branchTo") AS "totalData"
-        FROM (
-          SELECT
-            "branchTo",
-            SUM("awbItemId") AS "awbItemId",
-            SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
-            SUM("totalBagSortir") AS "totalBagSortir"
-          FROM detail
-          GROUP BY
-            CASE
-              WHEN "totalBagSortir" = "totalScanOutBagSortir" THEN 'Loading'
-              ELSE 'Sortir'
-            END, "branchTo", "bagItemId"
-        ) t1
-      ) t2;
+
+      SELECT
+        SUM("awbItemId") AS "totalBag",
+        SUM("awbScanOutBagSortir") AS "totalScanOutBagSortir",
+        SUM("awbSortir") AS "totalBagSortir",
+        SUM("awbSort") AS "totalSort",
+        COUNT(DISTINCT "branchTo") AS "totalData"
+      FROM detail
     `;
     return query;
   }
@@ -365,6 +361,7 @@ export class HubMonitoringService {
     const optr = ['gte', 'gt'];
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
     const whereSubQuery = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'bi.created_time', optr, 'createdTime');
+    const whereSubQuery1 = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp.do_pod_date_time', optr, 'createdTime');
 
     let filterQuery = payload.search ? `origin ~* '${payload.search}'` : '';
     filterQuery += filterQuery && whereQuery ? 'AND' : '';
@@ -375,10 +372,10 @@ export class HubMonitoringService {
         SELECT
           br.branch_name AS "branchTo",
           MIN(doh.created_time) AS "createdTime",
-          COUNT(DISTINCT bag_sortir.awb_id) AS "totalBagSortir",
-          COUNT(DISTINCT dohd.dropoff_hub_detail_id) AS "totalAwb",
-          COUNT(DISTINCT bag_sortir.awb_id) AS "totalScanInAwb",
-          COUNT(DISTINCT bia1.awb_item_id) AS "totalScanOutBagSortir"
+          COUNT(DISTINCT bag_sortir.awb_id) AS "awbSortir",
+          COUNT(DISTINCT dohd.dropoff_hub_detail_id) AS "awbHub",
+          COUNT(DISTINCT bag_sortir.awb_id) AS "awbScanIn",
+          COUNT(DISTINCT scan_out.awb_id) AS "awbScanOutBagSortir"
         FROM
           dropoff_hub doh
         INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
@@ -391,50 +388,50 @@ export class HubMonitoringService {
         INNER JOIN
         (
           SELECT
+            bi.created_time,
             ai.awb_id,
             bi.bag_item_id,
             bi.branch_id_last
-          FROM
-            bag_item_awb bia
-            INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
-            INNER JOIN bag_item bi ON bi.bag_item_id = bia.bag_item_id AND bi.is_deleted = FALSE
-            INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE AND b.branch_id_to IS NOT NULL
+          FROM bag_item_awb bia
+          INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+          INNER JOIN bag_item bi ON bi.bag_item_id = bia.bag_item_id AND bi.is_deleted = FALSE
+          INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE AND b.branch_id_to IS NOT NULL
           WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
         ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
-        LEFT JOIN do_pod_detail_bag dpdb ON dpdb.bag_item_id = bag_sortir.bag_item_id AND dpdb.is_deleted = FALSE
-        LEFT JOIN bag_item_awb bia1 ON bia1.bag_item_id = dpdb.bag_item_id AND bia1.is_deleted = FALSE
+        LEFT JOIN (
+          SELECT ai.awb_id
+          FROM do_pod dp
+          INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
+          INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+          WHERE
+            dp.is_deleted = FALSE AND
+            dp.user_id_driver IS NOT NULL AND dp.branch_id_to IS NOT NULL
+            ${whereSubQuery1 ? `AND ${whereSubQuery1}` : ''}
+        ) scan_out ON dohd.awb_id = scan_out.awb_id
         WHERE
           doh.branch_id IS NOT NULL
           ${whereQuery ? `AND ${whereQuery}` : ''}
           ${payload.search ? `AND br.branch_name ~* '${payload.search}'` : ''}
-        GROUP BY
-          br.branch_name, bi.bag_item_id
+        GROUP BY br.branch_name
       )
       SELECT *
       FROM (
-        SELECT *,
+        SELECT
+          "branchTo",
           CASE
-            WHEN "totalBagSortir" = "totalScanOutBagSortir" THEN 'Loading'
+            WHEN "awbSortir" = "awbScanOutBagSortir" THEN 'Loading'
             ELSE 'Sortir'
-          END AS "status"
-        FROM (
-          SELECT
-            MIN(TO_CHAR("createdTime", 'DD Mon YYYY HH24:MI')) AS "createdTime",
-            "branchTo",
-            SUM("totalBagSortir") AS "totalBagSortir",
-            SUM("totalAwb") AS "totalAwb",
-            SUM("totalScanInAwb") AS "totalScanInAwb",
-            SUM("remainingAwbSortir") AS "remainingAwbSortir",
-            SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir"
-          FROM (
-            SELECT
-              *,
-              "totalAwb" - "totalScanInAwb" AS "remainingAwbSortir"
-            FROM detail
-          ) t1
-          GROUP BY "branchTo"
-        ) t1
-      ) t2
+          END AS "status",
+          "createdTime" AS "createdTime",
+          "awbSortir" AS "totalBagSortir",
+          "awbHub" AS "totalAwb",
+          "awbScanIn" AS "totalScanInAwb",
+          "awbScanOutBagSortir" AS "totalScanOutBagSortir",
+          COUNT("awbHub") - COUNT(DISTINCT "awbScanIn") AS "remainingAwbSortir"
+        FROM detail
+        GROUP BY "branchTo", "status", "createdTime", "awbSortir", "awbHub", "awbScanIn", "awbScanOutBagSortir"
+      ) t1
       ${payload.sortBy && sortingMap[payload.sortBy] ?
       `ORDER BY ${sortingMap[payload.sortBy]} ${payload.sortDir}` :
       `ORDER BY
