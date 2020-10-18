@@ -62,8 +62,8 @@ export class HubMonitoringService {
     const checkDateFilter = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, '', optrDate, 'createdTime');
 
     const optr = ['eq'];
-    const checkFilterBranchTo = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, '', optr, 'branchTo');
-    const checkFilterBranchFrom = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, '', optr, 'branchFrom');
+    const checkFilterBranchTo = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, '', optr, 'branchIdTo');
+    const checkFilterBranchFrom = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, '', optr, 'branchIdFrom');
 
     if (!checkFilterBranchTo && !checkFilterBranchFrom) {
       RequestErrorService.throwObj({message: 'FIlter Tujuan atau Asal tidak boleh kosong'}, HttpStatus.BAD_REQUEST);
@@ -320,7 +320,7 @@ export class HubMonitoringService {
           br.branch_name, bi.bag_item_id
       )
       SELECT *,
-        "totalBagSortir" - ("totalScanOutBagSortir" + "totalBagSortir") AS "totalSort"
+        "totalBag" - ("totalScanOutBagSortir" + "totalBagSortir") AS "totalSort"
       FROM (
         SELECT
           SUM("awbItemId") AS "totalBag",
@@ -330,7 +330,7 @@ export class HubMonitoringService {
         FROM (
           SELECT
             "branchTo",
-            COUNT(DISTINCT "awbItemId") AS "awbItemId",
+            SUM("awbItemId") AS "awbItemId",
             SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
             SUM("totalBagSortir") AS "totalBagSortir"
           FROM detail
