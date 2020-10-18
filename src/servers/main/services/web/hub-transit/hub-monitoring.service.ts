@@ -267,14 +267,14 @@ export class HubMonitoringService {
       WITH detail as (
         SELECT
           br.branch_name AS "branchTo",
-          bi.bag_item_id AS "bagItemId",
-          COUNT(DISTINCT bag_sortir.awb_id) AS "totalSort",
-          COUNT(DISTINCT bag_sortir.bag_item_id) AS "totalBagSortir",
-          COUNT(DISTINCT dpdb.bag_item_id) AS "totalScanOutBagSortir"
+          COUNT(DISTINCT bia.awb_item_id) AS "awbItemId",
+          COUNT(DISTINCT bag_sortir.awb_id) AS "totalBagSortir",
+          COUNT(DISTINCT bia1.awb_item_id) AS "totalScanOutBagSortir"
         FROM
           dropoff_hub doh
         INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
         INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
+        INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
         INNER JOIN awb awb ON awb.awb_id = dohd.awb_id AND awb.is_deleted = FALSE
         INNER JOIN district dt ON dt.district_id = awb.to_id AND dt.is_deleted = FALSE
@@ -293,6 +293,7 @@ export class HubMonitoringService {
           WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
         ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
         LEFT JOIN do_pod_detail_bag dpdb ON dpdb.bag_item_id = bag_sortir.bag_item_id AND dpdb.is_deleted = FALSE
+        LEFT JOIN bag_item_awb bia1 ON bia1.bag_item_id = dpdb.bag_item_id AND bia1.is_deleted = FALSE
         WHERE
           doh.branch_id IS NOT NULL
           ${whereQuery ? `AND ${whereQuery}` : ''}
@@ -300,26 +301,28 @@ export class HubMonitoringService {
         GROUP BY
           br.branch_name, bi.bag_item_id
       )
-      SELECT
-        COUNT(DISTINCT "bagItemId") AS "totalBag",
-        SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
-        SUM("totalBagSortir") AS "totalBagSortir",
-        SUM("totalSort") AS "totalSort",
-        COUNT("branchTo") AS "totalData"
+      SELECT *,
+        "totalBagSortir" - ("totalScanOutBagSortir" + "totalBagSortir") AS "totalSort"
       FROM (
         SELECT
-          "branchTo",
-          "bagItemId" AS "bagItemId",
+          COUNT(DISTINCT "awbItemId") AS "totalBag",
           SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
           SUM("totalBagSortir") AS "totalBagSortir",
-          SUM("totalSort") AS "totalSort"
-        FROM detail
-        GROUP BY
-          CASE
-            WHEN "totalBagSortir" = "totalScanOutBagSortir" THEN 'Loading'
-            ELSE 'Sortir'
-          END, "branchTo", "bagItemId"
-      ) t1;
+          COUNT(DISTINCT "branchTo") AS "totalData"
+        FROM (
+          SELECT
+            "branchTo",
+            SUM("awbItemId") AS "awbItemId",
+            SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
+            SUM("totalBagSortir") AS "totalBagSortir"
+          FROM detail
+          GROUP BY
+            CASE
+              WHEN "totalBagSortir" = "totalScanOutBagSortir" THEN 'Loading'
+              ELSE 'Sortir'
+            END, "branchTo", "bagItemId"
+        ) t1
+      ) t2;
     `;
     return query;
   }
@@ -370,7 +373,8 @@ export class HubMonitoringService {
         (
           SELECT
             ai.awb_id,
-            bi.bag_item_id
+            bi.bag_item_id,
+            bi.branch_id_last
           FROM
             bag_item_awb bia
             INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
@@ -391,7 +395,11 @@ export class HubMonitoringService {
       SELECT
         MIN(TO_CHAR("createdTime", 'DD Mon YYYY HH24:MI')) AS "createdTime",
         "branchTo",
-        "status",
+        CASE
+					WHEN SUM("totalBagSortir") = SUM("totalScanOutBagSortir") AND SUM("totalBagSortir") > 0 THEN 'Loading'
+					WHEN SUM("totalBagSortir") != SUM("totalScanOutBagSortir") AND SUM("totalBagSortir") > 0 THEN 'Sortir'
+					ELSE 'Do Hub'
+				END AS "status",
         SUM("totalBagSortir") AS "totalBagSortir",
         SUM("totalAwb") AS "totalAwb",
         SUM("totalScanInAwb") AS "totalScanInAwb",
@@ -400,10 +408,6 @@ export class HubMonitoringService {
       FROM (
         SELECT
           *,
-          CASE
-            WHEN "totalBagSortir" = "totalScanOutBagSortir" THEN 'Loading'
-            ELSE 'Sortir'
-          END AS "status",
           "totalAwb" - "totalScanInAwb" AS "remainingAwbSortir"
         FROM detail
       ) t1
