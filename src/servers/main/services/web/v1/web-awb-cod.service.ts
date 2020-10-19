@@ -339,7 +339,7 @@ export class V1WebAwbCodService {
       ['count(t1.user_id_driver)', 'totalResi'],
       ['t1.user_id_driver', 'userIdDriver'],
       ['t4.branch_name', 'branchNameFinal'],
-      ['t1.branch_id', 'awbStatusIdFinal'],
+      ['t1.branch_id', 'branchIdFinal'],
     );
 
     q.innerJoin(e => e.awbItemAttr, 't2', j => {

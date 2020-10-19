@@ -155,7 +155,7 @@ export class WebItemAwbCodDlvResponseVm {
 
 export class WebAwbCodDlvV2ListResponseVm {
   @ApiModelProperty({ type: () => [WebItemAwbCodDlvV2ResponseVm] })
-  data: WebItemAwbCodDlvResponseVm[];
+  data: WebItemAwbCodDlvV2ResponseVm[];
 }
 
 export class WebItemAwbCodDlvV2ResponseVm {
