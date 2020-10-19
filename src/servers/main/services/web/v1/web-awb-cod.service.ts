@@ -31,6 +31,7 @@ import {
     WebCodTransactionUpdateResponseVm,
     WebAwbCodVoidListResponseVm,
     WebCodCountResponseVm,
+    WebAwbCodDlvV2ListResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
@@ -41,6 +42,7 @@ import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/c
 import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import { CodUserToBranch } from '../../../../../shared/orm-entity/cod-user-to-branch';
+import { CodPayment } from 'src/shared/orm-entity/cod-payment';
 // #endregion
 export class V1WebAwbCodService {
 
@@ -311,6 +313,59 @@ export class V1WebAwbCodService {
     const result = new WebCodCountResponseVm();
 
     result.total = total;
+
+    return result;
+  }
+
+  static async awbCodDlvV2(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbCodDlvV2ListResponseVm> {
+    const permissionPayload = AuthService.getPermissionTokenPayload();
+
+    payload.fieldResolverMap['driverName'] = 't3.first_name';
+    payload.fieldResolverMap['branchNameFinal'] = 't4.branch_name';
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'driverName';
+    }
+
+    const repo = new OrionRepositoryService(CodPayment, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q);
+
+    q.selectRaw(
+      ['t3.first_name', 'driverName'],
+      ['count(t1.user_id_driver)', 'totalResi'],
+      ['t1.user_id_driver', 'userIdDriver'],
+      ['t4.branch_name', 'branchNameFinal'],
+      ['t1.branch_id', 'awbStatusIdFinal'],
+    );
+
+    q.innerJoin(e => e.awbItemAttr, 't2', j => {
+        j.andWhere(e => e.isDeleted, w => w.isFalse());
+        j.andWhere(e => e.transactionStatusId, w => w.isNull());
+      },
+    );
+
+    q.innerJoin(e => e.userDriver, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.branchFinal, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.branchId, w => w.equals(permissionPayload.branchId));
+
+    q.groupByRaw('t1.user_id_driver, t3.first_name, t1.branch_id, t4.branch_name');
+
+    const data = await q.exec();
+    const total = 0;
+
+    const result = new WebAwbCodDlvV2ListResponseVm();
+
+    result.data = data;
 
     return result;
   }
