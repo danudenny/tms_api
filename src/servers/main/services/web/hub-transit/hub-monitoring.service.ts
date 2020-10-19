@@ -285,6 +285,7 @@ export class HubMonitoringService {
       WITH detail as (
         SELECT
           br.branch_name AS "branchTo",
+          scan_out.do_pod_id AS "doPodId",
           COUNT(DISTINCT awb.awb_id) AS "awbSort",
           COUNT(DISTINCT bia.awb_item_id) AS "awbItemId",
           COUNT(DISTINCT bag_sortir.awb_id) AS "awbSortir",
@@ -312,7 +313,7 @@ export class HubMonitoringService {
           WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
         ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
         LEFT JOIN (
-          SELECT ai.awb_id
+          SELECT ai.awb_id, dp.do_pod_id
           FROM do_pod dp
           INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
           INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
@@ -327,16 +328,24 @@ export class HubMonitoringService {
           ${whereQuery ? `AND ${whereQuery}` : ''}
           ${payload.search ? `AND br.branch_name ~* '${payload.search}'` : ''}
         GROUP BY
-          br.branch_name
+          br.branch_name, scan_out.do_pod_id
       )
-
-      SELECT
-        SUM("awbItemId") AS "totalBag",
-        SUM("awbScanOutBagSortir") AS "totalScanOutBagSortir",
-        SUM("awbSortir") AS "totalBagSortir",
-        SUM("awbSort") AS "totalSort",
-        COUNT(DISTINCT "branchTo") AS "totalData"
-      FROM detail
+      SELECT *, "totalBag" - (COALESCE("totalScanOutBagSortir", 0) + COALESCE("totalBagSortir", 0)) AS "totalSort" FROM (
+        SELECT
+          SUM("totalBag") AS "totalBag",
+          SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
+          SUM("totalBagSortir") AS "totalBagSortir",
+          SUM("totalData") AS "totalData"
+        FROM (
+          SELECT
+            SUM("awbItemId") AS "totalBag",
+            SUM("awbScanOutBagSortir") AS "totalScanOutBagSortir",
+            SUM(CASE WHEN "doPodId" IS NULL THEN "awbSortir" END) AS "totalBagSortir",
+            COUNT(DISTINCT "branchTo") AS "totalData"
+          FROM detail
+          GROUP BY "branchTo", "doPodId"
+        ) t1
+      ) t2
     `;
     return query;
   }
@@ -371,8 +380,8 @@ export class HubMonitoringService {
       WITH detail as (
         SELECT
           br.branch_name AS "branchTo",
+          scan_out.do_pod_id AS "doPodId",
           MIN(doh.created_time) AS "createdTime",
-          COUNT(DISTINCT bag_sortir.awb_id) AS "awbSortir",
           COUNT(DISTINCT dohd.dropoff_hub_detail_id) AS "awbHub",
           COUNT(DISTINCT bag_sortir.awb_id) AS "awbScanIn",
           COUNT(DISTINCT scan_out.awb_id) AS "awbScanOutBagSortir"
@@ -399,7 +408,7 @@ export class HubMonitoringService {
           WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
         ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
         LEFT JOIN (
-          SELECT ai.awb_id
+          SELECT ai.awb_id, dp.do_pod_id
           FROM do_pod dp
           INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
           INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
@@ -413,24 +422,23 @@ export class HubMonitoringService {
           doh.branch_id IS NOT NULL
           ${whereQuery ? `AND ${whereQuery}` : ''}
           ${payload.search ? `AND br.branch_name ~* '${payload.search}'` : ''}
-        GROUP BY br.branch_name
+        GROUP BY br.branch_name, scan_out.do_pod_id
       )
-      SELECT *
+      SELECT *, "totalScanInAwb" AS "totalBagSortir"
       FROM (
         SELECT
           "branchTo",
           CASE
-            WHEN "awbSortir" = "awbScanOutBagSortir" THEN 'Loading'
+            WHEN "awbScanIn" = "awbScanOutBagSortir" THEN 'Loading'
             ELSE 'Sortir'
           END AS "status",
           "createdTime" AS "createdTime",
-          "awbSortir" AS "totalBagSortir",
           "awbHub" AS "totalAwb",
           "awbScanIn" AS "totalScanInAwb",
           "awbScanOutBagSortir" AS "totalScanOutBagSortir",
           COUNT("awbHub") - COUNT(DISTINCT "awbScanIn") AS "remainingAwbSortir"
         FROM detail
-        GROUP BY "branchTo", "status", "createdTime", "awbSortir", "awbHub", "awbScanIn", "awbScanOutBagSortir"
+        GROUP BY "branchTo", "status", "createdTime", "awbHub", "awbScanIn", "awbScanOutBagSortir", "doPodId"
       ) t1
       ${payload.sortBy && sortingMap[payload.sortBy] ?
       `ORDER BY ${sortingMap[payload.sortBy]} ${payload.sortDir}` :
