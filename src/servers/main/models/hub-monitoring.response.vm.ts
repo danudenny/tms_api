@@ -6,6 +6,9 @@ export class MonitoringBagHubDataResponseVm {
   origin: number;
 
   @ApiModelProperty()
+  doPodCode: number;
+
+  @ApiModelProperty()
   totalBag: number;
 
   @ApiModelProperty()

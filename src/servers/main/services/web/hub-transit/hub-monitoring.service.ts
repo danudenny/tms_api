@@ -299,7 +299,7 @@ export class HubMonitoringService {
         INNER JOIN awb awb ON awb.awb_id = dohd.awb_id AND awb.is_deleted = FALSE
         INNER JOIN district dt ON dt.district_id = awb.to_id AND dt.is_deleted = FALSE
         INNER JOIN branch br ON br.branch_id = dt.branch_id_delivery AND br.is_deleted = FALSE
-        INNER JOIN
+        LEFT JOIN
         (
           SELECT
             ai.awb_id,
@@ -379,11 +379,11 @@ export class HubMonitoringService {
     const query = `
       WITH detail as (
         SELECT
-          br.branch_name AS "branchTo",
-          scan_out.do_pod_id AS "doPodId",
+          scan_out.branch_name AS "branchTo",
+          scan_out.do_pod_code AS "doPodCode",
           MIN(doh.created_time) AS "createdTime",
           COUNT(DISTINCT dohd.dropoff_hub_detail_id) AS "awbHub",
-          COUNT(DISTINCT bag_sortir.awb_id) AS "awbScanIn",
+          COUNT(DISTINCT CASE WHEN scan_out.awb_id IS NULL THEN bag_sortir.awb_id END) AS "awbScanIn",
           COUNT(DISTINCT scan_out.awb_id) AS "awbScanOutBagSortir"
         FROM
           dropoff_hub doh
@@ -394,7 +394,7 @@ export class HubMonitoringService {
         INNER JOIN awb awb ON awb.awb_id = dohd.awb_id AND awb.is_deleted = FALSE
         INNER JOIN district dt ON dt.district_id = awb.to_id AND dt.is_deleted = FALSE
         INNER JOIN branch br ON br.branch_id = dt.branch_id_delivery AND br.is_deleted = FALSE
-        INNER JOIN
+        LEFT JOIN
         (
           SELECT
             bi.created_time,
@@ -408,9 +408,10 @@ export class HubMonitoringService {
           WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
         ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
         LEFT JOIN (
-          SELECT ai.awb_id, dp.do_pod_id
+          SELECT ai.awb_id, dp.do_pod_code, br.branch_name
           FROM do_pod dp
           INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
+          INNER JOIN branch br ON br.branch_id = dp.branch_id_to AND br.is_deleted = FALSE
           INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
           INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
           WHERE
@@ -422,31 +423,32 @@ export class HubMonitoringService {
           doh.branch_id IS NOT NULL
           ${whereQuery ? `AND ${whereQuery}` : ''}
           ${payload.search ? `AND br.branch_name ~* '${payload.search}'` : ''}
-        GROUP BY br.branch_name, scan_out.do_pod_id
+        GROUP BY scan_out.branch_name, scan_out.do_pod_code
       )
       SELECT *, "totalScanInAwb" AS "totalBagSortir"
       FROM (
         SELECT
           "branchTo",
+          "doPodCode",
           CASE
-            WHEN "awbScanIn" = "awbScanOutBagSortir" THEN 'Loading'
+            WHEN "awbHub" = "awbScanOutBagSortir" THEN 'Loading'
             ELSE 'Sortir'
           END AS "status",
           "createdTime" AS "createdTime",
           "awbHub" AS "totalAwb",
           "awbScanIn" AS "totalScanInAwb",
           "awbScanOutBagSortir" AS "totalScanOutBagSortir",
-          COUNT("awbHub") - COUNT(DISTINCT "awbScanIn") AS "remainingAwbSortir"
+          "awbHub" - ("awbScanIn" + "awbScanOutBagSortir") AS "remainingAwbSortir"
         FROM detail
-        GROUP BY "branchTo", "status", "createdTime", "awbHub", "awbScanIn", "awbScanOutBagSortir", "doPodId"
+        GROUP BY "branchTo", "status", "createdTime", "awbHub", "awbScanIn", "awbScanOutBagSortir", "doPodCode"
       ) t1
       ${payload.sortBy && sortingMap[payload.sortBy] ?
-      `ORDER BY ${sortingMap[payload.sortBy]} ${payload.sortDir}` :
+      `ORDER BY ${sortingMap[payload.sortBy]} ${payload.sortDir}, "remainingAwbSortir" DESC` :
       `ORDER BY
         CASE
           WHEN "status" = 'Sortir' then 1
           WHEN "status" = 'Loading' then 2
-        END`
+        END, "remainingAwbSortir" DESC`
       }
       LIMIT ${payload.limit}
       ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''};
