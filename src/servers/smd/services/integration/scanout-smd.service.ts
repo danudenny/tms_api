@@ -1573,7 +1573,7 @@ export class ScanoutSmdService {
           bf.branch_name as branch_name_from,
           dsd.branch_id_to,
           bt.branch_code as branch_code_to,
-          bt.branch_name asSTATUS branch_name_to,
+          bt.branch_name as branch_name_to,
           dsd.representative_code_list,
           dsd.total_bag,
           dsd.total_bagging,
