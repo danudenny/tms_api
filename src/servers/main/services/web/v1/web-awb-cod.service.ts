@@ -42,7 +42,7 @@ import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/c
 import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import { CodUserToBranch } from '../../../../../shared/orm-entity/cod-user-to-branch';
-import { CodPayment } from 'src/shared/orm-entity/cod-payment';
+import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 // #endregion
 export class V1WebAwbCodService {
 
