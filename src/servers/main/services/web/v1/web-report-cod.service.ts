@@ -809,6 +809,37 @@ export class V1WebReportCodService {
           preserveNullAndEmptyArrays: allowNullTd,
         },
       },
+      // {
+      //   $lookup: {
+      //     from: 'partner_request',
+      //     as: 'pr',
+      //     let: { awbNumber: '$awbNumber' },
+      //     pipeline: [
+      //       {
+      //         // on inner join
+      //         $match:
+      //         {
+      //           $expr:
+      //           {
+      //             $and: [{ $eq: ['$awbNumber', '$$awbNumber'] }],
+      //           },
+      //         },
+      //       },
+      //       { $limit: 1 },
+      //       {
+      //         $project: {
+      //           awbNumber: 1,
+      //         },
+      //       },
+      //     ],
+      //   },
+      // },
+      // {
+      //   $unwind: {
+      //     path: '$pr',
+      //     preserveNullAndEmptyArrays: false,
+      //   },
+      // },
       { $limit: limit },
       {
         $project: {
@@ -907,6 +938,11 @@ export class V1WebReportCodService {
         filterList.push({ transactionStatusId: { $eq: filter.value } });
       }
 
+      if (filter.field == 'supplierTMSId' && filter.value) {
+        filterList.push({ partnerId: { $eq: filter.value } });
+      }
+
+
       if (filter.field == 'supplierInvoiceStatus' && filter.value) {
         filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
 
@@ -927,6 +963,7 @@ export class V1WebReportCodService {
         spartanFilter.push({ $gte: ['$lastValidTrackingDateTime', d] });
         allowNullTd = false;
       }
+
 
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
@@ -977,6 +1014,7 @@ export class V1WebReportCodService {
             {
               $project: {
                 awbNumber: 1,
+                lastValidTrackingType: 1
               },
             },
           ],
@@ -1026,7 +1064,7 @@ export class V1WebReportCodService {
           podDate: 1,
           transactionStatusId: 1,
           transactionStatus: '$transactionstatusname',
-          lastValidTrackingType: '$transactionstatusname',
+          lastValidTrackingType: '$ca.lastValidTrackingType',
           userIdDriverNik: '$nikSigesit',
           userIdDriverName: '$sigesit',
           userIdUpdatedNik: '$nikAdmin',
@@ -1133,6 +1171,7 @@ export class V1WebReportCodService {
       //   transactionStatus.transaction_status_id = parseInt(`${transactionStatus.transaction_status_id}`, 10);
       // }
 
+      console.log(filters, "filters")
       const reportType = await this.reportTypeFromFilter(filters);
 
       // prepare csv file
@@ -1244,9 +1283,10 @@ export class V1WebReportCodService {
       // if (filter.field == "supplier" && filter.value) {
       //   filterAwb = true
       // }
-      // if (filter.field == "awbStatus" && filter.value) {
-      //   filterAwb = true
-      // }
+
+      if (filter.field == "awbStatus" && filter.value) {
+        filterAwb = true
+      }
 
       if (filter.field == 'transactionStart' && filter.value) {
         filterTransaction = true;

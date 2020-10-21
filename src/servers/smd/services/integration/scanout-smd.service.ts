@@ -671,7 +671,7 @@ export class ScanoutSmdService {
         INNER JOIN bag b ON bi.bag_id = b.bag_id AND b.is_deleted = FALSE
         LEFT JOIN representative  r on bg.representative_id_to = r.representative_id and r.is_deleted  = FALSE
         LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3550
+            and bih.bag_item_status_id in(3550, 3500)
         WHERE
           bg.bagging_id = ${resultBagging.baggingId} AND
           bi.is_deleted = FALSE;
@@ -799,7 +799,7 @@ export class ScanoutSmdService {
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3550 AND bih.branch_id = '${permissonPayload.branchId}'
+            and bih.bag_item_status_id in (3550, 3500) AND bih.branch_id = '${permissonPayload.branchId}'
           LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
             AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
           WHERE
@@ -923,7 +923,7 @@ export class ScanoutSmdService {
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3550 AND bih.branch_id = '${permissonPayload.branchId}'
+            and bih.bag_item_status_id in( 3550, 3500) AND bih.branch_id = '${permissonPayload.branchId}'
           LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
             AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
           WHERE
@@ -1573,7 +1573,7 @@ export class ScanoutSmdService {
           bf.branch_name as branch_name_from,
           dsd.branch_id_to,
           bt.branch_code as branch_code_to,
-          bt.branch_name asSTATUS branch_name_to,
+          bt.branch_name as branch_name_to,
           dsd.representative_code_list,
           dsd.total_bag,
           dsd.total_bagging,
