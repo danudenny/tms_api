@@ -272,7 +272,7 @@ export class HubMonitoringService {
   static async getQueryMonitoringSortirTotalByFilterOrion(payload: BaseMetaPayloadVm): Promise<string> {
     const map = {
       createdTime: 'doh.created_time',
-      branchIdFrom: 'bi.branch_id_last',
+      branchIdFrom: 'doh.branch_id',
       branchIdTo: 'scan_out.branch_id',
       branchTo: 'scan_out.branch_name',
     };
@@ -351,7 +351,7 @@ export class HubMonitoringService {
   static async getQueryMonitoringSortirListByFilterOrion(payload: BaseMetaPayloadVm): Promise<string> {
     const map = {
       createdTime: 'doh.created_time',
-      branchIdFrom: 'bi.branch_id_last',
+      branchIdFrom: 'doh.branch_id',
       branchIdTo: 'scan_out.branch_id',
       branchTo: 'scan_out.branch_name',
     };
