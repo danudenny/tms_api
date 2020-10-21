@@ -6,6 +6,7 @@ import { MetaService } from '../../../../../shared/services/meta.service';
 import { BAG_STATUS } from '../../../../../shared/constants/bag-status.constant';
 import {RequestErrorService} from '../../../../../shared/services/request-error.service';
 import {HttpStatus} from '@nestjs/common';
+import {mapTypesToSwaggerTypes} from '../../../../../shared/external/nestjs-swagger/explorers/api-parameters.explorer';
 
 export class HubMonitoringService {
 
@@ -107,14 +108,14 @@ export class HubMonitoringService {
       remaining: '"remaining"',
       totalScanIn: '"totalScanIn"',
       createdTime: 'dp.do_pod_date_time',
-      branchIdTo: 'dp.branch_id_to',
+      branchIdTo: ['dp.branch_id_to', 'bi.branch_id_last'],
       branchIdFrom: 'b.branch_id',
     };
     const map = {
       status: '"status"',
       origin: '"origin"',
     };
-    const whereQuerySub = await this.orionFilterToQueryRaw(payload.filters, mapSubQuery, true);
+    const whereQuerySub = await this.customQueryRawFromMultipleFieldsByOrionFilters(payload.filters, mapSubQuery, 'branchIdTo', 'OR');
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
 
     let filterQuery = payload.search ? `origin ~* '${payload.search}'` : '';
@@ -193,11 +194,11 @@ export class HubMonitoringService {
   static async getQueryMonitoringHubTotalBagByFilterOrion(payload: BaseMetaPayloadVm): Promise<string> {
     const map = {
       createdTime: 'dp.do_pod_date_time',
-      branchIdTo: 'dp.branch_id_to',
+      branchIdTo: ['dp.branch_id_to', 'bi.branch_id_last'],
       branchIdFrom: 'b.branch_id',
       origin: 'br.branch_name',
     };
-    const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
+    const whereQuery = await this.customQueryRawFromMultipleFieldsByOrionFilters(payload.filters, map, 'branchIdTo', 'OR');
 
     const query = `
     WITH detail as (
@@ -207,14 +208,11 @@ export class HubMonitoringService {
         COUNT(DISTINCT doh.bag_item_id) AS "totalScanIn"
       FROM
         do_pod dp
-      INNER JOIN do_pod_detail_bag dpdb ON dp.do_pod_id = dpdb.do_pod_id
-        AND dpdb.is_deleted = FALSE
-      LEFT JOIN dropoff_hub doh ON doh.bag_item_id = dpdb.bag_item_id
-        AND doh.is_deleted = FALSE
-      INNER JOIN bag b ON b.bag_id = dpdb.bag_id
-        AND b.is_deleted = FALSE
-      INNER JOIN branch br ON br.branch_id = b.branch_id
-        AND br.is_deleted = FALSE
+      INNER JOIN do_pod_detail_bag dpdb ON dp.do_pod_id = dpdb.do_pod_id AND dpdb.is_deleted = FALSE
+      LEFT JOIN dropoff_hub doh ON doh.bag_item_id = dpdb.bag_item_id AND doh.is_deleted = FALSE
+      INNER JOIN bag b ON b.bag_id = dpdb.bag_id AND b.is_deleted = FALSE
+      INNER JOIN bag_item bi ON bi.bag_item_id = dpdb.bag_item_id AND bi.is_deleted = FALSE
+      INNER JOIN branch br ON br.branch_id = b.branch_id AND br.is_deleted = FALSE
       WHERE
         dp.is_deleted = FALSE
         AND dp.do_pod_type = ${POD_TYPE.OUT_BRANCH}
@@ -489,6 +487,39 @@ export class HubMonitoringService {
       let str = `${field} ${opt} '${filter.value}'`;
       if (opt == 'LIKE') {
         str = `${field} ${opt} '%${filter.value}%'`;
+      }
+      query += query ? `AND ${str}\n` : `${str}\n`;
+    }
+    return query;
+  }
+
+  static async customQueryRawFromMultipleFieldsByOrionFilters(
+    filters: BaseMetaPayloadFilterVm[],
+    map: any,
+    key: string,
+    optBoolean: string,
+  ): Promise<string> {
+    let query = '';
+    for (const filter of filters) {
+      const field = map[filter.field];
+      if (!field || filter.value === '') {
+        continue;
+      }
+      const opt = RequestQueryBuidlerService
+        .convertFilterOperatorToSqlOperator(filter.operator as BaseMetaPayloadFilterVmOperator);
+      let value = `${filter.value}`;
+      if (opt == 'LIKE') {
+        value = `'%${value}%'`;
+      }
+
+      let str = '';
+      if (key != filter.field) {
+        str = `${field} ${opt} '${value}'`;
+      } else {
+        for (const f of field) {
+          str += str ? ` ${optBoolean} ${f} ${opt} '${value}'` : `(${f} ${opt} '${value}'`;
+        }
+        str += ')';
       }
       query += query ? `AND ${str}\n` : `${str}\n`;
     }
