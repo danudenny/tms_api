@@ -273,8 +273,8 @@ export class HubMonitoringService {
     const map = {
       createdTime: 'doh.created_time',
       branchIdFrom: 'bag_sortir.branch_id_last',
-      branchIdTo: 'br.branch_id',
-      branchTo: 'br.branch_name',
+      branchIdTo: 'scan_out.branch_id',
+      branchTo: 'scan_out.branch_name',
     };
     const optr = ['gte', 'gt'];
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
@@ -284,9 +284,9 @@ export class HubMonitoringService {
     const query = `
       WITH detail as (
         SELECT
-          br.branch_name AS "branchTo",
+          scan_out.branch_name AS "branchTo",
           scan_out.do_pod_id AS "doPodId",
-          COUNT(DISTINCT awb.awb_id) AS "awbSort",
+          COUNT(DISTINCT dohd.dropoff_hub_detail_id) AS "awbSort",
           COUNT(DISTINCT bia.awb_item_id) AS "awbItemId",
           COUNT(DISTINCT bag_sortir.awb_id) AS "awbSortir",
           COUNT(DISTINCT scan_out.awb_id) AS "awbScanOutBagSortir"
@@ -296,9 +296,6 @@ export class HubMonitoringService {
         INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-        INNER JOIN awb awb ON awb.awb_id = dohd.awb_id AND awb.is_deleted = FALSE
-        INNER JOIN district dt ON dt.district_id = awb.to_id AND dt.is_deleted = FALSE
-        INNER JOIN branch br ON br.branch_id = dt.branch_id_delivery AND br.is_deleted = FALSE
         LEFT JOIN
         (
           SELECT
@@ -313,10 +310,11 @@ export class HubMonitoringService {
           WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
         ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
         LEFT JOIN (
-          SELECT ai.awb_id, dp.do_pod_id
+          SELECT ai.awb_id, dp.do_pod_id, br.branch_name, br.branch_id
           FROM do_pod dp
           INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
           INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
+          INNER JOIN branch br ON br.branch_id = dp.branch_id_to AND br.is_deleted = FALSE
           INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
           WHERE
             dp.is_deleted = FALSE AND
@@ -326,9 +324,9 @@ export class HubMonitoringService {
         WHERE
           doh.branch_id IS NOT NULL
           ${whereQuery ? `AND ${whereQuery}` : ''}
-          ${payload.search ? `AND br.branch_name ~* '${payload.search}'` : ''}
+          ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''}
         GROUP BY
-          br.branch_name, scan_out.do_pod_id
+          scan_out.branch_name, scan_out.do_pod_id
       )
       SELECT *, "totalBag" - (COALESCE("totalScanOutBagSortir", 0) + COALESCE("totalBagSortir", 0)) AS "totalSort" FROM (
         SELECT
@@ -341,7 +339,7 @@ export class HubMonitoringService {
             SUM("awbItemId") AS "totalBag",
             SUM("awbScanOutBagSortir") AS "totalScanOutBagSortir",
             SUM(CASE WHEN "doPodId" IS NULL THEN "awbSortir" END) AS "totalBagSortir",
-            COUNT(DISTINCT "branchTo") AS "totalData"
+            COUNT(DISTINCT CASE WHEN "branchTo" IS NULL THEN '1' ELSE "branchTo" END) AS "totalData"
           FROM detail
           GROUP BY "branchTo", "doPodId"
         ) t1
@@ -354,8 +352,8 @@ export class HubMonitoringService {
     const map = {
       createdTime: 'doh.created_time',
       branchIdFrom: 'bag_sortir.branch_id_last',
-      branchIdTo: 'br.branch_id',
-      branchTo: 'br.branch_name',
+      branchIdTo: 'scan_out.branch_id',
+      branchTo: 'scan_out.branch_name',
     };
     const sortingMap = {
       createdTime : '"createdTime"',
@@ -391,9 +389,6 @@ export class HubMonitoringService {
         INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-        INNER JOIN awb awb ON awb.awb_id = dohd.awb_id AND awb.is_deleted = FALSE
-        INNER JOIN district dt ON dt.district_id = awb.to_id AND dt.is_deleted = FALSE
-        INNER JOIN branch br ON br.branch_id = dt.branch_id_delivery AND br.is_deleted = FALSE
         LEFT JOIN
         (
           SELECT
@@ -408,7 +403,7 @@ export class HubMonitoringService {
           WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
         ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
         LEFT JOIN (
-          SELECT ai.awb_id, dp.do_pod_code, br.branch_name
+          SELECT ai.awb_id, dp.do_pod_code, br.branch_name, br.branch_id
           FROM do_pod dp
           INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
           INNER JOIN branch br ON br.branch_id = dp.branch_id_to AND br.is_deleted = FALSE
@@ -422,7 +417,7 @@ export class HubMonitoringService {
         WHERE
           doh.branch_id IS NOT NULL
           ${whereQuery ? `AND ${whereQuery}` : ''}
-          ${payload.search ? `AND br.branch_name ~* '${payload.search}'` : ''}
+          ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''}
         GROUP BY scan_out.branch_name, scan_out.do_pod_code
       )
       SELECT *, "totalScanInAwb" AS "totalBagSortir"
