@@ -6,9 +6,6 @@ export class MonitoringBagHubDataResponseVm {
   origin: number;
 
   @ApiModelProperty()
-  doPodCode: number;
-
-  @ApiModelProperty()
   totalBag: number;
 
   @ApiModelProperty()
@@ -59,6 +56,9 @@ export class MonitoringBagHubTotalBagResponseVm {
 export class MonitoringSortirHubDataResponseVm {
   @ApiModelProperty()
   createdTime: number;
+
+  @ApiModelProperty()
+  doPodCode: number;
 
   @ApiModelProperty()
   branchTo: number;
