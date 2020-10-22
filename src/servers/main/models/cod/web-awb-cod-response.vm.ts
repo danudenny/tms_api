@@ -153,7 +153,7 @@ export class WebItemAwbCodDlvResponseVm {
   transactionStatusName: string;
 }
 
-export class WebAwbCodDlvV2ListResponseVm {
+export class WebAwbCodDlvV2ListResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [WebItemAwbCodDlvV2ResponseVm] })
   data: WebItemAwbCodDlvV2ResponseVm[];
 }

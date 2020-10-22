@@ -320,10 +320,9 @@ export class V1WebAwbCodService {
   static async awbCodDlvV2(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodDlvV2ListResponseVm> {
-    const permissionPayload = AuthService.getPermissionTokenPayload();
-
     payload.fieldResolverMap['driverName'] = 't3.first_name';
     payload.fieldResolverMap['branchNameFinal'] = 't4.branch_name';
+    payload.fieldResolverMap['branchIdFinal'] = 't1.branch_id';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'driverName';
@@ -356,8 +355,6 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.andWhere(e => e.branchId, w => w.equals(permissionPayload.branchId));
-
     q.groupByRaw('t1.user_id_driver, t3.first_name, t1.branch_id, t4.branch_name');
 
     const data = await q.exec();
@@ -366,6 +363,7 @@ export class V1WebAwbCodService {
     const result = new WebAwbCodDlvV2ListResponseVm();
 
     result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
