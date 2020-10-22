@@ -274,10 +274,14 @@ export class HubMonitoringService {
       branchIdTo: 'scan_out.branch_id',
       branchTo: 'scan_out.branch_name',
     };
+    const map1 = {
+      createdTime: 'dp.do_pod_date_time',
+      branchIdFrom: 'dp.branch_id',
+    };
     const optr = ['gte', 'gt'];
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
     const whereSubQuery = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'bi.created_time', optr, 'createdTime');
-    const whereSubQuery1 = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp.do_pod_date_time', optr, 'createdTime');
+    const whereSubQuery1 = await this.orionFilterToQueryRaw(payload.filters, map1, true);
 
     const query = `
       WITH detail as (
@@ -315,8 +319,9 @@ export class HubMonitoringService {
           INNER JOIN branch br ON br.branch_id = dp.branch_id_to AND br.is_deleted = FALSE
           INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
           WHERE
-            dp.is_deleted = FALSE AND
-            dp.user_id_driver IS NOT NULL AND dp.branch_id_to IS NOT NULL
+            dp.is_deleted = FALSE
+            AND do_pod_type = ${POD_TYPE.OUT_HUB}
+            AND dp.user_id_driver IS NOT NULL AND dp.branch_id_to IS NOT NULL
             ${whereSubQuery1 ? `AND ${whereSubQuery1}` : ''}
         ) scan_out ON dohd.awb_id = scan_out.awb_id
         WHERE
@@ -363,10 +368,14 @@ export class HubMonitoringService {
       remainingAwbSortir : '"remainingAwbSortir"',
       totalScanOutBagSortir : '"totalScanOutBagSortir"',
     };
+    const scanOutMap = {
+      createdTime: 'dp.do_pod_date_time',
+      branchIdFrom: 'dp.branch_id',
+    };
     const optr = ['gte', 'gt'];
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
     const whereSubQuery = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'bi.created_time', optr, 'createdTime');
-    const whereSubQuery1 = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp.do_pod_date_time', optr, 'createdTime');
+    const whereSubQuery1 = await this.orionFilterToQueryRaw(payload.filters, scanOutMap, true);
 
     let filterQuery = payload.search ? `origin ~* '${payload.search}'` : '';
     filterQuery += filterQuery && whereQuery ? 'AND' : '';
@@ -408,8 +417,9 @@ export class HubMonitoringService {
           INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
           INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
           WHERE
-            dp.is_deleted = FALSE AND
-            dp.user_id_driver IS NOT NULL AND dp.branch_id_to IS NOT NULL
+            dp.is_deleted = FALSE
+            AND dp.do_pod_type = ${POD_TYPE.OUT_HUB}
+            AND dp.user_id_driver IS NOT NULL AND dp.branch_id_to IS NOT NULL
             ${whereSubQuery1 ? `AND ${whereSubQuery1}` : ''}
         ) scan_out ON dohd.awb_id = scan_out.awb_id
         WHERE
