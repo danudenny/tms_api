@@ -135,18 +135,18 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     // init connection mongodb
     MongoDbConfig.getSicepatMonggoClient();
     // init boot Queue
-    DoPodDetailPostMetaQueueService.boot();
-    BagItemHistoryQueueService.boot();
-    BagScanOutBranchQueueService.boot();
-    BagScanOutHubQueueService.boot();
-    MappingRoleQueueService.boot();
-    AwbSendPartnerQueueService.boot();
-    BagDropoffHubQueueService.boot();
-    UploadImagePodQueueService.boot();
-    CreateBagFirstScanHubQueueService.boot();
-    CreateBagAwbScanHubQueueService.boot();
-    
-
+    if (serverConfig.bullPod) {
+      DoPodDetailPostMetaQueueService.boot();
+      BagItemHistoryQueueService.boot();
+      BagScanOutBranchQueueService.boot();
+      BagScanOutHubQueueService.boot();
+      MappingRoleQueueService.boot();
+      AwbSendPartnerQueueService.boot();
+      BagDropoffHubQueueService.boot();
+      UploadImagePodQueueService.boot();
+      CreateBagFirstScanHubQueueService.boot();
+      CreateBagAwbScanHubQueueService.boot();
+    }
     if (serverConfig.bullCod) {
       // CodPaymentQueueService.boot();
       CodFirstTransactionQueueService.boot();
@@ -172,7 +172,6 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       BaggingDropoffHubQueueService.boot();
       BagRepresentativeDropoffHubQueueService.boot();
     }
-
 
   }
 }
