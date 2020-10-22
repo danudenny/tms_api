@@ -322,7 +322,7 @@ export class V1WebAwbCodService {
   ): Promise<WebAwbCodDlvV2ListResponseVm> {
     payload.fieldResolverMap['driverName'] = 't3.first_name';
     payload.fieldResolverMap['branchNameFinal'] = 't4.branch_name';
-    payload.fieldResolverMap['branch_id_final'] = 't1.branch_id';
+    payload.fieldResolverMap['branchIdFinal'] = 't1.branch_id';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'driverName';
