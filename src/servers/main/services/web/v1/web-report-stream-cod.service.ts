@@ -88,6 +88,7 @@ export class V1WebReportCodStreamService {
     'Recipient',
     'Tipe Pembayaran',
     'Status Internal',
+    'Status Invoice',
     'Tracking Status',
     'Cust Package',
     'Pickup Source',
@@ -297,32 +298,30 @@ export class V1WebReportCodStreamService {
     const values = [
       [
         V1WebReportCodStreamService.strReplaceFunc(d.partnerName),
-        d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
+        d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD') : null,
         V1WebReportCodStreamService.strReplaceFunc(d.awbNumber),
-        d.tdParcelValue ? d.tdParcelValue : d.prtParcelValue,
-        d.codNilai,
-        d.codFee ? d.codFee : '-',
-        d.codNilai,
-        d.lastValidTrackingDateTime ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm') : null,
-        V1WebReportCodStreamService.strReplaceFunc(d.penerima),
-        d.paymentMethod,
-        d.transactionStatus,
-        d.lastValidTrackingType,
-        d.supplierInvoiceStatus,
-        d.tdcustPackage ? V1WebReportCodStreamService.strReplaceFunc(d.tdcustPackage) : V1WebReportCodStreamService.strReplaceFunc(d.prtReferenceNo),
-        V1WebReportCodStreamService.strReplaceFunc(d.manifestTrackingSiteName),
-        V1WebReportCodStreamService.strReplaceFunc(d.lastValidTrackingSiteName),
-        V1WebReportCodStreamService.strReplaceFunc(d.prtDestinationCode),
-        V1WebReportCodStreamService.strReplaceFunc(d.tujuanKecamatan),
-        V1WebReportCodStreamService.strReplaceFunc(d.perwakilan),
+        d.parcelValue,
+        d.codValue,
+        d.codFee,
+        d.codValue,
+        d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        V1WebReportCodStreamService.strReplaceFunc(d.consigneeName),
+        V1WebReportCodStreamService.strReplaceFunc(d.paymentMethod),
+        'PAID', // supplier invoice status
+        'DLV',
+        V1WebReportCodStreamService.strReplaceFunc(d.custPackage),
+        V1WebReportCodStreamService.strReplaceFunc(d.pickupSource),
+        V1WebReportCodStreamService.strReplaceFunc(d.currentPosition),
+        V1WebReportCodStreamService.strReplaceFunc(d.destinationCode),
+        V1WebReportCodStreamService.strReplaceFunc(d.destination),
+        d.perwakilan,
         (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? d.userIdDriverName : ''),
         V1WebReportCodStreamService.strReplaceFunc(d.parcelContent),
-        V1WebReportCodStreamService.strReplaceFunc(d.layanan),
-        V1WebReportCodStreamService.strReplaceFunc(d.receiverRemark),
-        '',
-        '',
-        d.tdDateUpdated ? moment.utc(d.tdDateUpdated).format('YYYY-MM-DD HH:mm') : d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
-        (d.tdUserIdUpdatedNik ? V1WebReportCodStreamService.strReplaceFunc(d.tdUserIdUpdatedNik) + ' - ' + (d.tdUserIdUpdatedName) : (d.userIdUpdatedNik ? V1WebReportCodStreamService.strReplaceFunc(d.userIdUpdatedNik) + ' - ' + (d.userIdUpdatedName) : "-")),
+        V1WebReportCodStreamService.strReplaceFunc(d.packageType),
+        V1WebReportCodStreamService.strReplaceFunc(d.parcelNote),
+        '', '',
+        d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
+        (d.userIdUpdatedNik ? V1WebReportCodStreamService.strReplaceFunc(d.userIdUpdatedNik) : '') + ' - ' + (d.userIdUpdatedName ? V1WebReportCodStreamService.strReplaceFunc(d.userIdUpdatedName) : ''),
       ]
 
     ];
@@ -386,10 +385,10 @@ export class V1WebReportCodStreamService {
   }
 
   static strReplaceFunc = str => {
-    return str ? str.replace('\n', ' ').replace(/;/g, '|') : null;
+    return str ? str.replace(/\n/g, ' ').replace(/\r/g, ' ').replace(/;/g, '|').replace(/,/g, '.') : null;
   }
   private strReplaceFunc = str => {
-    return str ? str.replace('\n', ' ').replace(/;/g, '|') : null;
+    return str ? str.replace(/\n/g, ' ').replace(/\r/g, ' ').replace(/;/g, '|').replace(/,/g, '.') : null;
   }
 
   private static deleteFile(filePath) {
@@ -1432,8 +1431,6 @@ export class V1WebReportCodStreamService {
 
       try {
         cursor = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters);
-
-
         const transformer = this.streamTransformCodFee;
 
         cursor.stream({ transform: transformer })
