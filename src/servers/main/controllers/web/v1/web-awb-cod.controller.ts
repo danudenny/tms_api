@@ -1,3 +1,5 @@
+import { V1WebReportCodStreamService } from './../../../services/web/v1/web-report-stream-cod.service';
+import { Res } from '@nestjs/common';
 // #region import
 import {
   Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UploadedFile, UseGuards,
@@ -362,6 +364,28 @@ export class V1WebAwbCodController {
   ) {
     return await V1WebReportCodService.getuuidString(reportKey);
   }
+
+
+  @Post('supplierInvoice/noncodfee/stream/print')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceStreamNonCodFeePrint(
+    @Body() payload: ReportBaseMetaPayloadVm,
+    @Res() outgoingHTTP
+  ) {
+    return await V1WebReportCodStreamService.printNonCodSupplierInvoice(payload.filters, outgoingHTTP);
+  }
+
+  @Post('supplierInvoice/stream/print')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceStreamPrint(
+    @Body() payload: ReportBaseMetaPayloadVm,
+    @Res() outgoingHTTP
+  ) {
+    return await V1WebReportCodStreamService.printCodSupplierInvoice(payload.filters, outgoingHTTP);
+  }
+
 
   // #endregion report COD
 
