@@ -137,7 +137,7 @@ export class HubMonitoringService {
             br.branch_name As "origin",
             dp.do_pod_id AS "doPodId",
             COUNT(DISTINCT doh.bag_item_id) As "totalScanIn",
-            COUNT(bai.*) AS "totalAwb",
+            COUNT(DISTINCT bai.bag_item_awb_id) AS "totalAwb",
             COUNT(DISTINCT bih.bag_item_id) AS "totalScanOut",
             dp.do_pod_date_time AS "doPodDateTime"
           FROM do_pod dp
