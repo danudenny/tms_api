@@ -363,6 +363,7 @@ export class V1WebAwbCodService {
     const result = new WebAwbCodDlvV2ListResponseVm();
 
     result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
