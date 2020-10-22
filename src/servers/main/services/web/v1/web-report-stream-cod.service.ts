@@ -12,10 +12,9 @@ import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { CodExportMongoQueueService } from '../../../../queue/services/cod/cod-export-queue.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
-import uuid = require('uuid');
-import { forEach } from 'lodash';
+import * as csv from 'csv';
 
-export class V1WebReportCodService {
+export class V1WebReportCodStreamService {
   static expireOnSeconds = 600; // 5 minute
 
   static async addQueueBullPrint(filters, noncodfee) {
@@ -47,6 +46,65 @@ export class V1WebReportCodService {
     const dataRedis = await RedisService.get(reportKey, true);
     return dataRedis;
   }
+
+  static CodHeader = [
+    'Partner',
+    'Awb Date',
+    'Awb',
+    'Package Amount',
+    'Cod Amount',
+    'Cod Fee',
+    'Amount Transfer',
+    'Pod Datetime',
+    'Recipient',
+    'Tipe Pembayaran',
+    'Status Internal',
+    'Tracking Status',
+    'Cust Package',
+    'Pickup Source',
+    'Current Position',
+    'Destination Code',
+    'Destination',
+    'Perwakilan',
+    'Sigesit',
+    'Package Detail',
+    'Services',
+    'Note',
+    'Submitted Date',
+    'Submitted Number',
+    'Date Updated',
+    'User Updated',
+  ]
+
+  static CodNONFeeHeader = [
+    'Partner',
+    'Awb Date',
+    'Awb',
+    'Package Amount',
+    'Cod Amount',
+    'Cod Fee',
+    'Amount Transfer',
+    'Pod Datetime',
+    'Recipient',
+    'Tipe Pembayaran',
+    'Status Internal',
+    'Tracking Status',
+    'Cust Package',
+    'Pickup Source',
+    'Current Position',
+    'Destination Code',
+    'Destination',
+    'Perwakilan',
+    'Sigesit',
+    'Package Detail',
+    'Services',
+    'Note',
+    'Submitted Date',
+    'Submitted Number',
+    'Date Updated',
+    'User Updated',
+  ]
+
 
   // csv file code
   static async getCSVConfig(cod = true) {
@@ -198,6 +256,80 @@ export class V1WebReportCodService {
     return true;
   }
 
+  static streamTransform(doc) {
+    // param = doc.awbNumber
+    const values = [
+      V1WebReportCodStreamService.strReplaceFunc(doc.partnerName),
+      doc.awbDate ? moment.utc(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
+      `'${doc.awbNumber}`,
+      doc.tdParcelValue ? doc.tdParcelValue : doc.prtParcelValue,
+      doc.codNilai,
+      doc.codFee ? doc.codFee : '-',
+      doc.codNilai,
+      doc.lastValidTrackingDateTime ? moment.utc(doc.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm') : null,
+      V1WebReportCodStreamService.strReplaceFunc(doc.penerima),
+      doc.paymentMethod,
+      doc.transactionStatus,
+      doc.lastValidTrackingType,
+      doc.supplierInvoiceStatus,
+      V1WebReportCodStreamService.strReplaceFunc(doc.tdcustPackage ? doc.tdcustPackage : doc.prtReferenceNo),
+      V1WebReportCodStreamService.strReplaceFunc(doc.manifestTrackingSiteName),
+      V1WebReportCodStreamService.strReplaceFunc(doc.lastValidTrackingSiteName),
+      V1WebReportCodStreamService.strReplaceFunc(doc.prtDestinationCode),
+      V1WebReportCodStreamService.strReplaceFunc(doc.tujuanKecamatan),
+      V1WebReportCodStreamService.strReplaceFunc(doc.perwakilan),
+      (doc.userIdDriverNik ? doc.userIdDriverNik : '') + ' - ' + (doc.userIdDriverName ? doc.userIdDriverName : ''),
+      V1WebReportCodStreamService.strReplaceFunc(doc.parcelContent),
+      V1WebReportCodStreamService.strReplaceFunc(doc.layanan),
+      V1WebReportCodStreamService.strReplaceFunc(doc.receiverRemark),
+      "",
+      "",
+      doc.tdDateUpdated ? moment.utc(doc.tdDateUpdated).format('YYYY-MM-DD HH:mm') : doc.dateUpdated ? moment.utc(doc.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
+      (doc.tdUserIdUpdatedNik ? V1WebReportCodStreamService.strReplaceFunc(doc.tdUserIdUpdatedNik) + ' - ' + (doc.tdUserIdUpdatedName) : (doc.userIdUpdatedNik ? V1WebReportCodStreamService.strReplaceFunc(doc.userIdUpdatedNik) + ' - ' + (doc.userIdUpdatedName) : "-")),
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
+
+  static streamTransformCodFee(d) {
+    // param = doc.awbNumber
+    const values = [
+      [
+        V1WebReportCodStreamService.strReplaceFunc(d.partnerName),
+        d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
+        V1WebReportCodStreamService.strReplaceFunc(d.awbNumber),
+        d.tdParcelValue ? d.tdParcelValue : d.prtParcelValue,
+        d.codNilai,
+        d.codFee ? d.codFee : '-',
+        d.codNilai,
+        d.lastValidTrackingDateTime ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm') : null,
+        V1WebReportCodStreamService.strReplaceFunc(d.penerima),
+        d.paymentMethod,
+        d.transactionStatus,
+        d.lastValidTrackingType,
+        d.supplierInvoiceStatus,
+        d.tdcustPackage ? V1WebReportCodStreamService.strReplaceFunc(d.tdcustPackage) : V1WebReportCodStreamService.strReplaceFunc(d.prtReferenceNo),
+        V1WebReportCodStreamService.strReplaceFunc(d.manifestTrackingSiteName),
+        V1WebReportCodStreamService.strReplaceFunc(d.lastValidTrackingSiteName),
+        V1WebReportCodStreamService.strReplaceFunc(d.prtDestinationCode),
+        V1WebReportCodStreamService.strReplaceFunc(d.tujuanKecamatan),
+        V1WebReportCodStreamService.strReplaceFunc(d.perwakilan),
+        (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? d.userIdDriverName : ''),
+        V1WebReportCodStreamService.strReplaceFunc(d.parcelContent),
+        V1WebReportCodStreamService.strReplaceFunc(d.layanan),
+        V1WebReportCodStreamService.strReplaceFunc(d.receiverRemark),
+        '',
+        '',
+        d.tdDateUpdated ? moment.utc(d.tdDateUpdated).format('YYYY-MM-DD HH:mm') : d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
+        (d.tdUserIdUpdatedNik ? V1WebReportCodStreamService.strReplaceFunc(d.tdUserIdUpdatedNik) + ' - ' + (d.tdUserIdUpdatedName) : (d.userIdUpdatedNik ? V1WebReportCodStreamService.strReplaceFunc(d.userIdUpdatedNik) + ' - ' + (d.userIdUpdatedName) : "-")),
+      ]
+
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
   // private ==================================================================
   static async populateDataAwbCsv(
     writer, data,
@@ -254,6 +386,9 @@ export class V1WebReportCodService {
   }
 
   static strReplaceFunc = str => {
+    return str ? str.replace('\n', ' ').replace(/;/g, '|') : null;
+  }
+  private strReplaceFunc = str => {
     return str ? str.replace('\n', ' ').replace(/;/g, '|') : null;
   }
 
@@ -681,18 +816,10 @@ export class V1WebReportCodService {
   //   }
   // }
 
-  static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], filters, limit, pageNumber, lastAwbNumber) {
+  static getNonCodSupplierInvoiceJoinData(coll, filters) {
     const spartanFilter: any = [];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
-    // console.log(pageNumber, "page Number")
-
-    if (pageNumber == 1) {
-      spartanFilter.push({ awbNumber: { $gt: "" } });
-    }
-    if (lastAwbNumber && pageNumber > 1) {
-      spartanFilter.push({ awbNumber: { $gt: lastAwbNumber } });
-    }
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
@@ -764,7 +891,7 @@ export class V1WebReportCodService {
           $and: spartanFilter,
         },
       },
-      { "$sort": { awbNumber: 1 } },
+      // { "$sort": { awbNumber: 1 } },
       {
         $lookup: {
           from: 'transaction_detail',
@@ -819,6 +946,7 @@ export class V1WebReportCodService {
       //         // on inner join
       //         $match:
       //         {
+
       //           $expr:
       //           {
       //             $and: [{ $eq: ['$awbNumber', '$$awbNumber'] }],
@@ -840,7 +968,6 @@ export class V1WebReportCodService {
       //     preserveNullAndEmptyArrays: false,
       //   },
       // },
-      { $limit: limit },
       {
         $project: {
           partnerName: 1,
@@ -883,11 +1010,8 @@ export class V1WebReportCodService {
     ];
 
     console.log(JSON.stringify(q), 'query');
-    const query = coll
-      .aggregate(q);
+    return coll.aggregate(q);
 
-    // console.log(query);
-    const datas = await query.toArray();
 
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
@@ -906,22 +1030,12 @@ export class V1WebReportCodService {
 
     // console.log(datas);
 
-    arrDatas.push(...datas);
-    return datas;
   }
 
-  static async getNonCodSupplierInvoiceTransactionDetailData(coll, arrDatas: any[], filters, limit, pageNumber, lastAwbNumber) {
+  static async getNonCodSupplierInvoiceTransactionDetailData(coll, filters) {
     const spartanFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
     const filterList: any = [];
-
-    if (pageNumber == 1) {
-      filterList.push({ awbNumber: { $gt: "" } });
-    }
-
-    if (lastAwbNumber && pageNumber > 1) {
-      filterList.push({ awbNumber: { $gt: lastAwbNumber } });
-    }
 
     for (const filter of filters) {
       if (filter.field == 'transactionStart' && filter.value) {
@@ -945,9 +1059,6 @@ export class V1WebReportCodService {
 
       if (filter.field == 'supplierInvoiceStatus' && filter.value) {
         filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
-
-        // tdFilter.push({ $eq: ['$supplierInvoiceStatusId', filter.value] });
-        // allowNullTd = false;
       }
 
       if (filter.field == 'sigesit' && filter.value) {
@@ -987,17 +1098,11 @@ export class V1WebReportCodService {
       }
     }
 
-
-
     const q = [
       {
         $match: {
           $and: filterList,
         },
-      },
-      { "$sort": { awbNumber: 1 } },
-      {
-        $limit: limit,
       },
       {
         $lookup: {
@@ -1081,58 +1186,9 @@ export class V1WebReportCodService {
       },
     ];
 
-    console.log(JSON.stringify(q), 'query');
-    const query = coll
-      .aggregate(q);
+    return coll.aggregate(q);
 
-    // console.log(query);
-    const datas = await query.toArray();
-
-    // const arrDriver = await this.getUserProps(datas, "driver");
-    // const arrUser = await this.getUserProps(datas, "user");
-    // console.log(arrUser, "array");
-    // for (const d of datas) {
-    //   d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
-    //   d.lastValidTrackingType = "DLV"
-
-    //   d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
-    //   // if (d.userIdDriver && arrDriver.length > 0) {
-    //   //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
-    //   // }
-
-    //   // if (d.userIdUpdated && arrUser.length > 0)
-    //   //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
-    // }
-
-    // console.log(datas);
-
-    arrDatas.push(...datas);
-    return datas;
   }
-
-  // static async getUserProps(datas, type) {
-  //   const unique = type == "driver" ? [...new Set(datas.filter(item => {
-  //     return typeof item.userIdDriver === "number" || typeof item.userIdDriver === "string"
-  //   }).map(item => item.userIdDriver))] :
-  //     [...new Set(datas.filter(item => {
-  //       return typeof item.userIdUpdated === "number"
-  //     }).map(item => item.userIdUpdated))];
-
-  //   if (type == "driver")
-  //     console.log(unique, "unique driver");
-
-  //   // if (unique.length > 0) {
-  //   //   const query = `SELECT u.user_id employee_id , concat( e.nik, ' - ' ,  e.fullname ) fullname FROM users u
-  //   //   INNER JOIN employee e ON e.employee_id = u.employee_id
-  //   //   WHERE user_id  IN (${unique.join(',')})`
-  //   //   const data = await RawQueryService.query(query)
-  //   //   console.log(data)
-  //   //   return data;
-  //   // }
-
-  //   return []
-
-  // }
 
   static async timeResponse(key, promise) {
     const startMoment = moment.utc();
@@ -1158,121 +1214,50 @@ export class V1WebReportCodService {
     };
   }
 
-  static async printNonCodSupplierInvoice(filters, uuid: string = '') {
+  static async printNonCodSupplierInvoice(filters, response) {
     // TODO: query get data
-    console.log(uuid, 'uuid');
     const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod('transaction_detail');
     const dbAwb = await MongoDbConfig.getDbSicepatCod('cod_awb');
-    let result: any;
 
+    let cursor: any;
     try {
-
-
-      // const transactionStatuses = await RawQueryService.query(
-      //   `SELECT transaction_status_id, status_title FROM transaction_status ts`,
-      // );
-
-      // for (const transactionStatus of transactionStatuses) {
-      //   transactionStatus.transaction_status_id = parseInt(`${transactionStatus.transaction_status_id}`, 10);
-      // }
-
-      console.log(filters, "filters")
       const reportType = await this.reportTypeFromFilter(filters);
+      const fileName = `COD_nonfee_${new Date().getTime()}.csv`;
+
+      response.setHeader('Content-disposition', `attachment; filename=${fileName}`);
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+
+      response.flushHeaders();
+
+      response.write(`${this.CodNONFeeHeader.join(',')}\n`);
+
 
       // prepare csv file
-      const limit = 5000;
-      const csvConfig = await this.getCSVConfig(false);
-      const csvWriter = require('csv-write-stream');
-      const writer = csvWriter(csvConfig.config);
-      let lastAwb: string;
-      let isFinalAwb: boolean = false;
-
-      writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
       try {
-        let pageNumber = 1;
-        const datas = [];
-        let finish = false;
-        // when filter include in awb
-
-        // console.log(reportType, 'report Type');
-        while (!finish) {
-          let responseDatas: any;
-
-          if (reportType.filterTransaction === true && reportType.filterAwb === false) {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, filters, limit, pageNumber, lastAwb));
-            responseDatas = rawResponseData.data;
-          }
-          else {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, filters, limit, pageNumber, lastAwb));
-            responseDatas = rawResponseData.data;
-          }
-
-          console.log(responseDatas.length, 'response datas');
-          if (responseDatas.length <= 0) {
-
-            const payload = {
-              status: 'Error',
-              Message: 'Tidak ada data yang di ambil',
-            };
-
-            await RedisService.setex(
-              uuid,
-              JSON.stringify(payload),
-              this.expireOnSeconds);
-            return;
-          }
-
-          await this.timeResponse('time_log_cod_write_csv', this.populateDataAwbCsv(writer, responseDatas));
-
-          pageNumber++;
-
-          if (!responseDatas || responseDatas.length < limit) {
-            finish = true;
-
-          }
-          lastAwb = responseDatas[responseDatas.length - 1].awbNumber;
-
+        if (reportType.filterTransaction === true && reportType.filterAwb === false) {
+          cursor = await this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, filters);
+        }
+        else {
+          cursor = await this.getNonCodSupplierInvoiceJoinData(dbAwb, filters);
         }
 
-      } finally {
-        await writer.on('finish', () => {
-          writer.end();
-        });
+        const transformer = this.streamTransform;
+
+        cursor.stream({ transform: transformer })
+          .pipe(response)
+
+      }
+      finally {
+        // await writer.on('finish', () => {
+        //   writer.end();
+        // });
       }
 
-      let url = '';
-      const awsKey = `reports/cod/${csvConfig.fileName}`;
-      const storagePath = await AwsS3Service.uploadFromFilePath(
-        csvConfig.filePath,
-        awsKey,
-      );
-
-      if (storagePath) {
-        url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
-        this.deleteFile(csvConfig.filePath);
-      }
-
-      // console.log(uuid, uuid.toString() !== '', 'uuid');
-      if (uuid.toString() !== '') {
-        // console.log('inside uuid');
-        const payload = {
-          status: 'OK',
-          url,
-        };
-
-        console.log(url, 'url final')
-        await RedisService.setex(
-          uuid,
-          JSON.stringify(payload),
-          this.expireOnSeconds,
-        );
-      }
-
-      return { status: 'OK', url };
     } catch (err) {
       console.error(err);
       throw err;
     }
+
   }
   static reportTypeFromFilter(filters: any) {
     let filterAwb = false;
@@ -1311,14 +1296,8 @@ export class V1WebReportCodService {
 
   //#region COD
 
-  static async getCodSupplierInvoiceData(coll, filters, limit, pageNumber, lastAwbNumber) {
+  static async getCodSupplierInvoiceData(coll, filters) {
     const filterList: any = [];
-    if (pageNumber == 1) {
-      filterList.push({ awbNumber: { $gt: "" } });
-    }
-    if (lastAwbNumber && pageNumber > 1) {
-      filterList.push({ awbNumber: { $gt: lastAwbNumber } });
-    }
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
@@ -1354,8 +1333,6 @@ export class V1WebReportCodService {
 
     filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
 
-    const skip = limit * (pageNumber - 1);
-
     const queryParam = [
       {
         $match: {
@@ -1363,9 +1340,6 @@ export class V1WebReportCodService {
         },
       },
       { "$sort": { awbNumber: 1 } },
-      {
-        $limit: limit,
-      },
       {
         $lookup: {
           from: 'cod_awb',
@@ -1432,24 +1406,11 @@ export class V1WebReportCodService {
         },
       },
     ];
-    // console.log(JSON.stringify(queryParam), 'awb');
-    const datas = await coll
-      .aggregate(queryParam).toArray();
-    // console.log(datas, 'data array');
-
-    // const arrDriver = await this.getUserProps(datas, "driver");
-    // const arrUser = await this.getUserProps(datas, "user");
-    // console.log(arrDriver, "arrDriver")
-    for (const d of datas) {
-      // if (d.userIdDriver && arrDriver.length > 0)
-      //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
-      // if (d.userIdUpdated && arrUser.length > 0)
-      //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
-    }
-    return datas;
+    console.log(JSON.stringify(queryParam), "query param")
+    return coll.aggregate(queryParam);
   }
 
-  static async printCodSupplierInvoice(filters, uuid: string = '') {
+  static async printCodSupplierInvoice(filters, response) {
     // TODO: query get data
     // step 1 : query get data by filter
     // prepare generate csv
@@ -1457,83 +1418,31 @@ export class V1WebReportCodService {
     // retrun ffile/ link downlod
 
     const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod('transaction_detail');
-    let result: any;
-
+    let cursor: any;
     try {
-      // prepare csv file
-      const limit = 1000;
-      const csvConfig = await this.getCSVConfig(true);
-      const csvWriter = require('csv-write-stream');
-      const writer = csvWriter(csvConfig.config);
-      let lastAwb: string
-      writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
+      const reportType = await this.reportTypeFromFilter(filters);
+      const fileName = `COD_nonfee_${new Date().getTime()}.csv`;
+
+      response.setHeader('Content-disposition', `attachment; filename=${fileName}`);
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+
+      response.flushHeaders();
+
+      response.write(`${this.CodHeader.join(',')}\n`);
+
       try {
+        cursor = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters);
 
-        let pageNumber = 1;
-        let finish = false;
-        while (!finish) {
 
-          const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber, lastAwb);
+        const transformer = this.streamTransformCodFee;
 
-          // console.log(!responseDatas, limit, finish, responseDatas.length < limit, 'response data length');
+        cursor.stream({ transform: transformer })
+          .pipe(response)
 
-          if (responseDatas.length <= 0) {
-
-            const payload = {
-              status: 'Error',
-              Message: 'Tidak ada data yang di ambil',
-            };
-
-            await RedisService.setex(
-              uuid,
-              JSON.stringify(payload),
-              this.expireOnSeconds);
-            return;
-          }
-
-          lastAwb = responseDatas[responseDatas.length - 1].awbNumber;
-
-          if (responseDatas.length < limit) {
-            finish = true;
-          }
-          await this.populateDataCsv(writer, responseDatas, true);
-          pageNumber++;
-        }
       } finally {
-        await writer.on('finish', () => {
-          writer.end();
-        });
+
       }
 
-      let url = '';
-      const awsKey = `reports/cod/${csvConfig.fileName}`;
-      // console.log(awsKey, 'uploadpath');
-      const storagePath = await AwsS3Service.uploadFromFilePath(
-        csvConfig.filePath,
-        awsKey,
-      );
-
-      if (storagePath) {
-        url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
-        this.deleteFile(csvConfig.filePath);
-
-        // console.log(url, 'url final');
-      }
-      // console.log(uuid);
-      if (uuid.toString() != '') {
-        // console.log(uuid, 'inside uuid');
-        const payload = {
-          status: 'OK',
-          url,
-        };
-        await RedisService.setex(
-          uuid,
-          JSON.stringify(payload),
-          this.expireOnSeconds,
-        );
-      }
-
-      return { status: 'OK', url };
     } catch (err) {
       console.error(err);
       throw err;
