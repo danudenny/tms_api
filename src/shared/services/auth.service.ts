@@ -20,12 +20,12 @@ import { UserRole } from '../orm-entity/user-role';
 import { UserRepository } from '../orm-repository/user.repository';
 import { ConfigService } from './config.service';
 import { RequestErrorService } from './request-error.service';
-import { PinoLoggerService } from './pino-logger.service';
 import { RedisService } from './redis.service';
 import { RepositoryService } from './repository.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
 import { PartnerTokenPayload } from '../interfaces/partner-payload.interface';
 import { createQueryBuilder } from 'typeorm';
+import { Employee } from '../orm-entity/employee';
 
 @Injectable()
 export class AuthService {
@@ -52,7 +52,6 @@ export class AuthService {
       // PinoLoggerService.log(user);
       // validate user password hash md5
       if (user.validatePassword(password)) {
-        // TODO: Populate return value by using this.populateLoginResultMetadataByUser
         const loginResultMetadata = this.populateLoginResultMetadataByUser(
           clientId,
           user,
@@ -75,7 +74,7 @@ export class AuthService {
   ): Promise<AuthLoginResultMetadata> {
     // TODO: find user on table or redis??
     const loginSession = await RedisService.get(`session:${refreshToken}`);
-    PinoLoggerService.log(loginSession);
+
     if (!loginSession) {
       RequestErrorService.throwObj(
         {
@@ -277,9 +276,17 @@ export class AuthService {
 
   // method populate data user login
   public async populateLoginResultMetadataByUser(clientId: string, user: User) {
+    // get data employee if employee id not null
+    const employee = await Employee.findOne({
+      select: ['employeeId', 'employeeName'],
+      where: { employeeId: user.employeeId },
+    });
+    const employeeName = employee ? employee.employeeName : '';
+
     const jwtAccessTokenPayload = this.populateJwtAccessTokenPayloadFromUser(
       clientId,
       user,
+      employeeName,
     );
 
     const accessToken = this.jwtService.sign(jwtAccessTokenPayload, {
@@ -312,22 +319,26 @@ export class AuthService {
     result.refreshToken = refreshToken;
     result.email = user.email;
     result.username = user.username;
-    result.displayName = user.employee ? user.employee.employeeName : '';
-    result.employeeId = user.employee ? user.employee.employeeId : null;
+    result.employeeId = user.employeeId;
+    result.displayName = employeeName;
     // result.roles = map(user.roles, role => pick(role, ['role_id', 'role_name']));
 
     return result;
   }
 
   // Set data payload JWT Access Token
-  public populateJwtAccessTokenPayloadFromUser(clientId: string, user: User) {
+  public populateJwtAccessTokenPayloadFromUser(
+    clientId: string,
+    user: User,
+    employeeName: string,
+  ) {
     const jwtPayload: Partial<JwtAccessTokenPayload> = {
       clientId,
       userId: user.userId,
       username: user.username,
       email: user.email,
-      displayName: user.employee ? user.employee.employeeName : '',
-      employeeId: user.employee ? user.employee.employeeId : null,
+      employeeId: user.employeeId,
+      displayName: employeeName,
     };
 
     return jwtPayload;
