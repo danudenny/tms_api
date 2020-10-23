@@ -2,7 +2,6 @@ import fs = require('fs');
 import * as moment from 'moment';
 import * as path from 'path';
 import _ = require('lodash');
-
 import { DateHelper } from '../../../../../shared/helpers/date-helpers';
 import { BaseMetaPayloadFilterVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AwsS3Service } from '../../../../../shared/services/aws-s3.service';
@@ -20,12 +19,13 @@ export class V1WebReportCodService {
   static expireOnSeconds = 600; // 5 minute
 
   static async addQueueBullPrint(filters, noncodfee) {
+    console.log("inside bull command")
     const uuidv1 = require('uuid/v1');
     const uuidString = uuidv1();
     const reportKey = `reportKeyCOD:${uuidString}`;
 
     // send to background process generate report
-    console.log(filters, noncodfee, 'non code fee');
+    // console.log(filters, noncodfee, 'non code fee');
     CodExportMongoQueueService.perform(filters, noncodfee, uuidString);
 
     const result = {
@@ -177,13 +177,13 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.destinationCode),
           this.strReplaceFunc(d.destination),
           d.perwakilan,
-          this.strReplaceFunc(d.userIdDriverNik) + " - " + d.userIdDriverName,
+          (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? d.userIdDriverName : ''),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.packageType),
           this.strReplaceFunc(d.parcelNote),
           '', '',
-          d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD') : null,
-          this.strReplaceFunc(d.userUpdatedNik) + " - " + this.strReplaceFunc(d.userUpdatedName),
+          d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
+          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : '') + ' - ' + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ''),
         ]);
 
       }
@@ -193,8 +193,8 @@ export class V1WebReportCodService {
       // console.log(`Received ${chunk.length} bytes of data.`);
     });
 
-    await this.sleep(300);
-    console.log(count, 'counter result');
+    await this.sleep(100);
+    // console.log(count, 'counter result');
     return true;
   }
 
@@ -207,36 +207,32 @@ export class V1WebReportCodService {
       for (const d of data) {
         await writer.write([
           this.strReplaceFunc(d.partnerName),
-          d.awbDate
-            ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm')
-            : null,
+          d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
           this.strReplaceFunc(d.awbNumber),
-          d.prtParcelValue,
+          d.tdParcelValue ? d.tdParcelValue : d.prtParcelValue,
           d.codNilai,
-          d.codFee ? d.codFee : "-",
+          d.codFee ? d.codFee : '-',
           d.codNilai,
-          d.lastValidTrackingDateTime
-            ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
-            : null,
+          d.lastValidTrackingDateTime ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm') : null,
           this.strReplaceFunc(d.penerima),
           d.paymentMethod,
           d.transactionStatus,
           d.lastValidTrackingType,
           d.supplierInvoiceStatus,
-          this.strReplaceFunc(d.prtCustPackageId),
+          d.tdcustPackage ? this.strReplaceFunc(d.tdcustPackage) : this.strReplaceFunc(d.prtReferenceNo),
           this.strReplaceFunc(d.manifestTrackingSiteName),
           this.strReplaceFunc(d.lastValidTrackingSiteName),
           this.strReplaceFunc(d.prtDestinationCode),
           this.strReplaceFunc(d.tujuanKecamatan),
           this.strReplaceFunc(d.perwakilan),
-          (d.userIdDriverNik ? d.userIdDriverNik : "") + " - " + (d.userIdDriverName ? d.userIdDriverName : ""),
+          (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? d.userIdDriverName : ''),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
           this.strReplaceFunc(d.receiverRemark),
           '',
           '',
-          d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD') : null,
-          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : "") + " - " + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ""),
+          d.tdDateUpdated ? moment.utc(d.tdDateUpdated).format('YYYY-MM-DD HH:mm') : d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
+          (d.tdUserIdUpdatedNik ? this.strReplaceFunc(d.tdUserIdUpdatedNik) + ' - ' + (d.tdUserIdUpdatedName) : (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) + ' - ' + (d.userIdUpdatedName) : "-")),
         ]);
 
       }
@@ -246,8 +242,8 @@ export class V1WebReportCodService {
     //   console.log(`Received ${chunk.length} bytes of data.`);
     // });
 
-    await this.sleep(300);
-    console.log(count, 'counter result');
+    await this.sleep(100);
+    // console.log(count, 'counter result');
     return true;
   }
 
@@ -265,7 +261,7 @@ export class V1WebReportCodService {
     return new Promise(async (resolve, reject) => {
       try {
         // remove file
-        console.log('Delete file success.');
+        // console.log('Delete file success.');
         fs.unlinkSync(filePath);
         resolve(true);
       } catch (err) {
@@ -274,8 +270,7 @@ export class V1WebReportCodService {
     });
   }
 
-  //#region NON_COD
-
+  // #region NON_COD
   // static async getNonCodSupplierInvoiceData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
   //   const spartanFilter: any = [{ isCod: true }];
   //   const siteFilter: any = [{ $eq: ['$id', '$$trackingSiteId'] }];
@@ -686,10 +681,18 @@ export class V1WebReportCodService {
   //   }
   // }
 
-  static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
-    const spartanFilter: any = [{ isCod: true }];
+  static async getNonCodSupplierInvoiceJoinData(coll, arrDatas: any[], filters, limit, pageNumber, lastAwbNumber) {
+    const spartanFilter: any = [];
     const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
+    // console.log(pageNumber, "page Number")
+
+    if (pageNumber == 1) {
+      spartanFilter.push({ awbNumber: { $gt: "" } });
+    }
+    if (lastAwbNumber && pageNumber > 1) {
+      spartanFilter.push({ awbNumber: { $gt: lastAwbNumber } });
+    }
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
@@ -714,12 +717,22 @@ export class V1WebReportCodService {
         allowNullTd = false;
       }
 
+      if (filter.field == 'manifestedStart' && filter.value) {
+        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        spartanFilter.push({ awbDate: { $gte: d } });
+      }
+
+      if (filter.field == 'manifestedEnd' && filter.value) {
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        spartanFilter.push({ awbDate: { $lt: d } });
+      }
+
       if (filter.field == 'awbStatus' && filter.value) {
         const fv = (filter.value === 'IN_BRANCH') ? 'IN' : filter.value;
         spartanFilter.push({ lastValidTrackingType: { $eq: fv } });
       }
 
-      if (filter.field == 'branchLast' && filter.value) {
+      if (filter.field == 'branchLastCode' && filter.value) {
         spartanFilter.push({ lastValidTrackingSiteCode: { $eq: filter.value } });
       }
 
@@ -745,15 +758,13 @@ export class V1WebReportCodService {
 
     console.log(spartanFilter, tdFilter, "filter");
 
-    const skip = limit * (pageNumber - 1);
-
     const q = [
       {
         $match: {
           $and: spartanFilter,
         },
       },
-
+      { "$sort": { awbNumber: 1 } },
       {
         $lookup: {
           from: 'transaction_detail',
@@ -778,10 +789,15 @@ export class V1WebReportCodService {
                 supplierInvoiceStatusId: 1,
                 userIdDriver: 1,
                 userIdUpdated: 1,
+                adminName: 1,
+                nikAdmin: 1,
                 updatedTime: 1,
                 paymentMethod: 1,
-                codFee: 1
-
+                transactionstatusname: 1,
+                supplierInvoiceStatusName: 1,
+                custPackage: 1,
+                codFee: 1,
+                parcelValue: 1
               },
             },
           ],
@@ -793,29 +809,63 @@ export class V1WebReportCodService {
           preserveNullAndEmptyArrays: allowNullTd,
         },
       },
-
-      { $skip: skip },
+      // {
+      //   $lookup: {
+      //     from: 'partner_request',
+      //     as: 'pr',
+      //     let: { awbNumber: '$awbNumber' },
+      //     pipeline: [
+      //       {
+      //         // on inner join
+      //         $match:
+      //         {
+      //           $expr:
+      //           {
+      //             $and: [{ $eq: ['$awbNumber', '$$awbNumber'] }],
+      //           },
+      //         },
+      //       },
+      //       { $limit: 1 },
+      //       {
+      //         $project: {
+      //           awbNumber: 1,
+      //         },
+      //       },
+      //     ],
+      //   },
+      // },
+      // {
+      //   $unwind: {
+      //     path: '$pr',
+      //     preserveNullAndEmptyArrays: false,
+      //   },
+      // },
       { $limit: limit },
-
       {
         $project: {
           partnerName: 1,
           awbNumber: 1,
           awbDate: 1,
-          codFee: "$td.codFee",
+          codFee: '$td.codFee',
           parcelContent: '$prtParcelContent',
           prtParcelValue: '$prtParcelValue',
+          tdParcelValue: '$td.parcelValue',
           prtCustPackageId: '$prtCustPackageId',
+          tdcustPackage: "$td.custPackage",
           transactionStatusId: '$td.transactionStatusId',
           userIdDriver: '$courierUserId',
-          userIdDriverNik: '$courierNik',
-          userIdDriverName: '$courierName',
-          userIdUpdatedNik: "$userUpdatedNik",
-          userIdUpdatedName: "$userUpdatedName",
-          dateUpdated: "$history_date",
+          userIdDriverNik: '$podCourierNik',
+          userIdDriverName: '$podCourierName',
+          userIdUpdatedNik: '$userUpdatedNik',
+          userIdUpdatedName: '$userUpdatedName',
+          tdUserIdUpdatedNik: "$td.nikAdmin",
+          tdUserIdUpdatedName: "$td.adminName",
+          dateUpdated: '$history_date',
+          tdDateUpdated: "$td.updatedTime",
+          prtReferenceNo: 1,
           perwakilan: 1,
           layanan: 1,
-          paymentMethod: "$td.paymentMethod",
+          paymentMethod: '$td.paymentMethod',
           supplierInvoiceStatusId: '$td.supplierInvoiceStatusId',
           penerima: 1,
           codNilai: 1,
@@ -826,6 +876,8 @@ export class V1WebReportCodService {
           manifestTrackingSiteName: '$manifestTrackingSiteName',
           lastValidTrackingSiteName: '$lastValidTrackingSiteName',
           receiverRemark: 1,
+          transactionStatus: '$td.transactionstatusname',
+          supplierInvoiceStatus: '$td.supplierInvoiceStatusName',
         },
       },
     ];
@@ -837,21 +889,20 @@ export class V1WebReportCodService {
     // console.log(query);
     const datas = await query.toArray();
 
-
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
     // console.log(arrUser, "array");
-    for (const d of datas) {
-      d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
-      d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
-      // if (d.userIdDriver && arrDriver.length > 0) {
-      //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
-      // }
+    // for (const d of datas) {
+    //   d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
+    //   d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
+    //   // if (d.userIdDriver && arrDriver.length > 0) {
+    //   //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
+    //   // }
 
-      // if (d.userIdUpdated && arrUser.length > 0)
-      //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
-    }
-
+    //   // if (d.userIdUpdated && arrUser.length > 0)
+    //   //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
+    // }
+    // console.log(datas, "datas")
 
     // console.log(datas);
 
@@ -859,130 +910,38 @@ export class V1WebReportCodService {
     return datas;
   }
 
-  static async getNonCodSupplierInvoiceAwbData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
-    const spartanFilter: any = [{ isCod: true }];
-    const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
-    let allowNullTd = true;
-
-    for (const filter of filters) {
-      if (filter.field == 'periodStart' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
-        spartanFilter.push({ lastValidTrackingDateTime: { $gte: d } });
-      }
-
-      if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
-        spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
-      }
-
-      if (filter.field == 'awbStatus' && filter.value) {
-        const fv = (filter.value === 'IN_BRANCH') ? 'IN' : filter.value;
-        spartanFilter.push({ lastValidTrackingType: { $eq: fv } });
-      }
-
-      if (filter.field == 'branchLast' && filter.value) {
-        spartanFilter.push({ lastValidTrackingSiteCode: { $eq: filter.value } });
-      }
-
-      if (filter.field == 'supplier' && filter.value) {
-        spartanFilter.push({ partnerId: filter.value });
-      }
-    }
-
-    console.log(spartanFilter, "spartanFilter");
-    const skip = limit * (pageNumber - 1);
-
-    const q = [
-      {
-        $match: {
-          $and: spartanFilter,
-        },
-      },
-      { $skip: skip },
-      { $limit: limit },
-      {
-        $project: {
-          partnerName: 1,
-          awbNumber: 1,
-          awbDate: 1,
-          parcelContent: '$prtParcelContent',
-          prtParcelValue: '$prtParcelValue',
-          prtCustPackageId: '$prtCustPackageId',
-          userIdDriver: '$courierUserId',
-          userIdDriverNik: '$courierNik',
-          userIdDriverName: '$courierName',
-          userIdUpdatedNik: "$userUpdatedNik",
-          userIdUpdatedName: "$userUpdatedName",
-          dateUpdated: "$history_date",
-          perwakilan: 1,
-          layanan: 1,
-          penerima: 1,
-          codNilai: 1,
-          lastValidTrackingDateTime: 1,
-          lastValidTrackingType: 1,
-          tujuanKecamatan: 1,
-          prtDestinationCode: '$tujuan',
-          manifestTrackingSiteName: '$manifestTrackingSiteName',
-          lastValidTrackingSiteName: '$lastValidTrackingSiteName',
-          receiverRemark: 1,
-        },
-      },
-    ];
-
-    console.log(JSON.stringify(q), 'query');
-    const query = coll
-      .aggregate(q);
-
-    // console.log(query);
-    const datas = await query.toArray();
-
-
-    // const arrDriver = await this.getUserProps(datas, "driver");
-    // const arrUser = await this.getUserProps(datas, "user");
-    // console.log(arrUser, "array");
-    for (const d of datas) {
-      d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
-      d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
-      // if (d.userIdDriver && arrDriver.length > 0) {
-      //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
-      // }
-
-      // if (d.userIdUpdated && arrUser.length > 0)
-      //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
-    }
-
-
-    // console.log(datas);
-
-    arrDatas.push(...datas);
-    return datas;
-  }
-
-
-  static async getNonCodSupplierInvoiceTransactionDetailData(coll, arrDatas: any[], transactionStatuses, filters, limit, pageNumber) {
-    const spartanFilter: any = [{ isCod: true }];
-    const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
+  static async getNonCodSupplierInvoiceTransactionDetailData(coll, arrDatas: any[], filters, limit, pageNumber, lastAwbNumber) {
+    const spartanFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
     let allowNullTd = true;
     const filterList: any = [];
 
+    if (pageNumber == 1) {
+      filterList.push({ awbNumber: { $gt: "" } });
+    }
+
+    if (lastAwbNumber && pageNumber > 1) {
+      filterList.push({ awbNumber: { $gt: lastAwbNumber } });
+    }
+
     for (const filter of filters) {
       if (filter.field == 'transactionStart' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour').toDate();
+        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
         filterList.push({ updatedTime: { $gte: d } });
       }
 
       if (filter.field == 'transactionEnd' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour')
-          .add(1, 'days').toDate();
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
         filterList.push({ updatedTime: { $lt: d } });
       }
 
       if (filter.field == 'transactionStatus' && filter.value) {
         filterList.push({ transactionStatusId: { $eq: filter.value } });
-
-        // tdFilter.push({ $eq: ['$transactionStatusId', filter.value] });
-        // allowNullTd = false;
       }
+
+      if (filter.field == 'supplierTMSId' && filter.value) {
+        filterList.push({ partnerId: { $eq: filter.value } });
+      }
+
 
       if (filter.field == 'supplierInvoiceStatus' && filter.value) {
         filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
@@ -992,12 +951,43 @@ export class V1WebReportCodService {
       }
 
       if (filter.field == 'sigesit' && filter.value) {
-        tdFilter.push({ $eq: ['$userIdDriver', filter.value] });
+        filterList.push({ userIdDriver: { $eq: filter.value } });
+      }
+
+      if (filter.field == 'branchLastId' && filter.value) {
+        filterList.push({ currentPositionId: { $eq: filter.value } });
+      }
+
+      if (filter.field == 'periodStart' && filter.value) {
+        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        spartanFilter.push({ $gte: ['$lastValidTrackingDateTime', d] });
         allowNullTd = false;
+      }
+
+
+      if (filter.field == 'periodEnd' && filter.value) {
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        spartanFilter.push({ $lt: ['$lastValidTrackingDateTime', d] });
+        allowNullTd = false;
+      }
+
+      if (filter.field == 'manifestedStart' && filter.value) {
+        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        filterList.push({ awbDate: { $gte: d } });
+      }
+
+      if (filter.field == 'manifestedEnd' && filter.value) {
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        filterList.push({ awbDate: { $lt: d } });
+      }
+
+      if (filter.field == 'awbStatus' && filter.value) {
+        spartanFilter.push({ $eq: ['$lastValidTrackingType', filter.value] });
+        allowNullTd = true;
       }
     }
 
-    const skip = limit * (pageNumber - 1);
+
 
     const q = [
       {
@@ -1005,46 +995,42 @@ export class V1WebReportCodService {
           $and: filterList,
         },
       },
-      {
-        $skip: skip,
-      },
+      { "$sort": { awbNumber: 1 } },
       {
         $limit: limit,
       },
-      // {
-      //   $lookup: {
-      //     from: 'cod_awb',
-      //     as: 'ca',
-      //     let: { awbNumber: '$awbNumber' },
-      //     pipeline: [
-      //       {
-      //         // on inner join
-      //         $match:
-      //         {
-      //           $expr:
-      //           {
-      //             $and: [{
-      //               $eq: ['$awbNumber', '$$awbNumber']
-      //             }],
-      //           },
-      //         },
-      //       },
-      //       { $limit: 1 },
-      //       {
-      //         $project: {
-      //           awbNumber: 1,
-      //           perwakilan: 1
-      //         },
-      //       },
-      //     ],
-      //   },
-      // },
-      // {
-      //   $unwind: {
-      //     path: '$ca',
-      //     preserveNullAndEmptyArrays: allowNullTd,
-      //   },
-      // },
+      {
+        $lookup: {
+          from: 'cod_awb',
+          as: 'ca',
+          let: { awbNumber: '$awbNumber' },
+          pipeline: [
+            {
+              // on inner join
+              $match:
+              {
+                $expr:
+                {
+                  $and: spartanFilter,
+                },
+              },
+            },
+            { $limit: 1 },
+            {
+              $project: {
+                awbNumber: 1,
+                lastValidTrackingType: 1
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: '$ca',
+          preserveNullAndEmptyArrays: allowNullTd,
+        },
+      },
       {
         $project: {
           _id: 1,
@@ -1057,17 +1043,21 @@ export class V1WebReportCodService {
           currentPosition: 1,
           isDeleted: 1,
           paymentMethod: 1,
+          perwakilan: '$representativeCode',
           supplierInvoiceStatusId: 1,
+          supplierInvoiceStatus: '$supplierInvoiceStatusName',
           prtParcelValue: '$parcelValue',
           codNilai: '$codValue',
+          prtCustPackageId: '$custPackage',
+          tdcustPackage: '$custPackage',
           lastValidTrackingDateTime: '$podDate',
           penerima: '$consigneeName',
-          receiverRemark: "$parcelNote",
-          layanan: "$packageType",
-          tujuanKecamatan: "$destination",
-          prtDestinationCode: "$destinationCode",
-          lastValidTrackingSiteName: "$currentPosition",
-          manifestTrackingSiteName: "$pickupSource",
+          receiverRemark: '$parcelNote',
+          layanan: '$packageType',
+          tujuanKecamatan: '$destination',
+          prtDestinationCode: '$destinationCode',
+          lastValidTrackingSiteName: '$currentPosition',
+          manifestTrackingSiteName: '$pickupSource',
           packageType: 1,
           parcelContent: 1,
           parcelNote: 1,
@@ -1078,11 +1068,13 @@ export class V1WebReportCodService {
           pickupSource: 1,
           podDate: 1,
           transactionStatusId: 1,
+          transactionStatus: '$transactionstatusname',
+          lastValidTrackingType: '$ca.lastValidTrackingType',
           userIdDriverNik: '$nikSigesit',
           userIdDriverName: '$sigesit',
-          userIdUpdatedNik: "$nikAdmin",
-          userIdUpdatedName: "$adminName",
-          dateUpdated: "$updatedTime",
+          userIdUpdatedNik: '$nikAdmin',
+          userIdUpdatedName: '$adminName',
+          dateUpdated: '$updatedTime',
           updatedTime: 1,
           userIdUpdated: 1,
         },
@@ -1096,30 +1088,27 @@ export class V1WebReportCodService {
     // console.log(query);
     const datas = await query.toArray();
 
-
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
     // console.log(arrUser, "array");
-    for (const d of datas) {
-      d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
-      d.lastValidTrackingType = "DLV"
+    // for (const d of datas) {
+    //   d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
+    //   d.lastValidTrackingType = "DLV"
 
-      d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
-      // if (d.userIdDriver && arrDriver.length > 0) {
-      //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
-      // }
+    //   d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
+    //   // if (d.userIdDriver && arrDriver.length > 0) {
+    //   //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
+    //   // }
 
-      // if (d.userIdUpdated && arrUser.length > 0)
-      //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
-    }
-
+    //   // if (d.userIdUpdated && arrUser.length > 0)
+    //   //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
+    // }
 
     // console.log(datas);
 
     arrDatas.push(...datas);
     return datas;
   }
-
 
   // static async getUserProps(datas, type) {
   //   const unique = type == "driver" ? [...new Set(datas.filter(item => {
@@ -1133,14 +1122,13 @@ export class V1WebReportCodService {
   //     console.log(unique, "unique driver");
 
   //   // if (unique.length > 0) {
-  //   //   const query = `SELECT u.user_id employee_id , concat( e.nik, ' - ' ,  e.fullname ) fullname FROM users u  
-  //   //   INNER JOIN employee e ON e.employee_id = u.employee_id 
+  //   //   const query = `SELECT u.user_id employee_id , concat( e.nik, ' - ' ,  e.fullname ) fullname FROM users u
+  //   //   INNER JOIN employee e ON e.employee_id = u.employee_id
   //   //   WHERE user_id  IN (${unique.join(',')})`
   //   //   const data = await RawQueryService.query(query)
   //   //   console.log(data)
   //   //   return data;
   //   // }
-
 
   //   return []
 
@@ -1161,7 +1149,7 @@ export class V1WebReportCodService {
         duration,
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
 
     return {
@@ -1178,21 +1166,27 @@ export class V1WebReportCodService {
     let result: any;
 
     try {
-      const transactionStatuses = await RawQueryService.query(
-        `SELECT transaction_status_id, status_title FROM transaction_status ts`,
-      );
 
-      for (const transactionStatus of transactionStatuses) {
-        transactionStatus.transaction_status_id = parseInt(`${transactionStatus.transaction_status_id}`, 10);
-      }
 
+      // const transactionStatuses = await RawQueryService.query(
+      //   `SELECT transaction_status_id, status_title FROM transaction_status ts`,
+      // );
+
+      // for (const transactionStatus of transactionStatuses) {
+      //   transactionStatus.transaction_status_id = parseInt(`${transactionStatus.transaction_status_id}`, 10);
+      // }
+
+      console.log(filters, "filters")
       const reportType = await this.reportTypeFromFilter(filters);
 
       // prepare csv file
-      const limit = 10000;
+      const limit = 5000;
       const csvConfig = await this.getCSVConfig(false);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
+      let lastAwb: string;
+      let isFinalAwb: boolean = false;
+
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
       try {
         let pageNumber = 1;
@@ -1200,17 +1194,16 @@ export class V1WebReportCodService {
         let finish = false;
         // when filter include in awb
 
-        console.log(reportType, "report Type")
+        // console.log(reportType, 'report Type');
         while (!finish) {
           let responseDatas: any;
-          if (reportType.filterAwb === true && reportType.filterTransaction === true) {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_join', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
+
+          if (reportType.filterTransaction === true && reportType.filterAwb === false) {
+            const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, filters, limit, pageNumber, lastAwb));
             responseDatas = rawResponseData.data;
-          } else if (reportType.filterAwb === true) {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, transactionStatuses, filters, limit, pageNumber));
-            responseDatas = rawResponseData.data;
-          } else if (reportType.filterTransaction == true) {
-            const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, transactionStatuses, filters, limit, pageNumber));
+          }
+          else {
+            const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, filters, limit, pageNumber, lastAwb));
             responseDatas = rawResponseData.data;
           }
 
@@ -1235,7 +1228,9 @@ export class V1WebReportCodService {
 
           if (!responseDatas || responseDatas.length < limit) {
             finish = true;
+
           }
+          lastAwb = responseDatas[responseDatas.length - 1].awbNumber;
 
         }
 
@@ -1255,17 +1250,17 @@ export class V1WebReportCodService {
       if (storagePath) {
         url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
         this.deleteFile(csvConfig.filePath);
-
-        console.log(url, 'url final');
       }
 
-      console.log(uuid, uuid.toString() !== '', 'uuid');
+      // console.log(uuid, uuid.toString() !== '', 'uuid');
       if (uuid.toString() !== '') {
-        console.log('inside uuid');
+        // console.log('inside uuid');
         const payload = {
           status: 'OK',
           url,
         };
+
+        console.log(url, 'url final')
         await RedisService.setex(
           uuid,
           JSON.stringify(payload),
@@ -1275,7 +1270,7 @@ export class V1WebReportCodService {
 
       return { status: 'OK', url };
     } catch (err) {
-      console.log(err);
+      console.error(err);
       throw err;
     }
   }
@@ -1284,62 +1279,58 @@ export class V1WebReportCodService {
     let filterTransaction = false;
 
     filters.forEach(filter => {
-
       if (filter.field == "periodStart" && filter.value) {
         filterAwb = true
       }
       if (filter.field == "periodEnd" && filter.value) {
         filterAwb = true
       }
-      if (filter.field == "supplier" && filter.value) {
-        filterAwb = true
+      // if (filter.field == "supplier" && filter.value) {
+      //   filterAwb = true
+      // }
+
+      // if (filter.field == "awbStatus" && filter.value) {
+      //   filterAwb = true
+      // }
+
+      if (filter.field == 'transactionStart' && filter.value) {
+        filterTransaction = true;
       }
-      if (filter.field == "awbStatus" && filter.value) {
-        filterAwb = true
-      }
-      if (filter.field == "branchLast" && filter.value) {
-        filterAwb = true
+      if (filter.field == 'transactionEnd' && filter.value) {
+        filterTransaction = true;
       }
 
-      if (filter.field == "transactionStart" && filter.value) {
-        filterTransaction = true
-      }
-      if (filter.field == "transactionEnd" && filter.value) {
-        filterTransaction = true
-      }
-      if (filter.field == "transactionStatus" && filter.value) {
-        filterTransaction = true
-      }
-      if (filter.field == "supplierInvoiceStatus" && filter.value) {
-        filterTransaction = true
-      }
+    });
 
-    })
+    // console.log(filters, filterTransaction, filterAwb, 'filters');
 
-    console.log(filters, filterTransaction, filterAwb, "filters")
-
-    return { filterTransaction: filterTransaction, filterAwb: filterAwb }
+    return { filterTransaction, filterAwb };
   }
 
   //#endregion NON_COD
 
   //#region COD
 
-  static async getCodSupplierInvoiceData(coll, filters, limit, pageNumber) {
+  static async getCodSupplierInvoiceData(coll, filters, limit, pageNumber, lastAwbNumber) {
     const filterList: any = [];
+    if (pageNumber == 1) {
+      filterList.push({ awbNumber: { $gt: "" } });
+    }
+    if (lastAwbNumber && pageNumber > 1) {
+      filterList.push({ awbNumber: { $gt: lastAwbNumber } });
+    }
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour').toDate();
+        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
         filterList.push({ updatedTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment(filter.value).add(7, 'hour')
-          .add(1, 'days').toDate();
+
+        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
         filterList.push({ updatedTime: { $lt: d } });
       }
-
 
       if (filter.field == 'supplier' && filter.value) {
         filterList.push({ partnerId: { $eq: filter.value } });
@@ -1363,7 +1354,6 @@ export class V1WebReportCodService {
 
     filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
 
-
     const skip = limit * (pageNumber - 1);
 
     const queryParam = [
@@ -1372,9 +1362,7 @@ export class V1WebReportCodService {
           $and: filterList,
         },
       },
-      {
-        $skip: skip,
-      },
+      { "$sort": { awbNumber: 1 } },
       {
         $limit: limit,
       },
@@ -1391,7 +1379,7 @@ export class V1WebReportCodService {
                 $expr:
                 {
                   $and: [{
-                    $eq: ['$awbNumber', '$$awbNumber']
+                    $eq: ['$awbNumber', '$$awbNumber'],
                   }],
                 },
               },
@@ -1400,7 +1388,6 @@ export class V1WebReportCodService {
             {
               $project: {
                 awbNumber: 1,
-                perwakilan: 1
               },
             },
           ],
@@ -1418,6 +1405,7 @@ export class V1WebReportCodService {
           currentPosition: 1,
           custPackage: 1,
           destination: 1,
+          paymentMethod: 1,
           destinationCode: 1,
           isDeleted: 1,
           packageType: 1,
@@ -1430,17 +1418,24 @@ export class V1WebReportCodService {
           pickupSource: 1,
           podDate: 1,
           transactionStatusId: 1,
-          perwakilan: "$ca.perwakilan",
+          transactionStatus: '$transactionstatusname',
+          supplierInvoiceStatus: '$supplierInvoiceStatusName',
+          perwakilan: '$perwakilanCode',
           userIdDriver: 1,
           updatedTime: 1,
           userIdUpdated: 1,
+          userIdDriverNik: '$nikSigesit',
+          userIdDriverName: '$sigesit',
+          userIdUpdatedNik: '$nikAdmin',
+          userIdUpdatedName: '$adminName',
+          dateUpdated: '$updatedTime',
         },
       },
     ];
-    console.log(JSON.stringify(queryParam), 'awb');
+    // console.log(JSON.stringify(queryParam), 'awb');
     const datas = await coll
       .aggregate(queryParam).toArray();
-    console.log(datas, 'data array');
+    // console.log(datas, 'data array');
 
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
@@ -1466,10 +1461,11 @@ export class V1WebReportCodService {
 
     try {
       // prepare csv file
-      const limit = 10000;
+      const limit = 1000;
       const csvConfig = await this.getCSVConfig(true);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
+      let lastAwb: string
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
       try {
 
@@ -1477,9 +1473,9 @@ export class V1WebReportCodService {
         let finish = false;
         while (!finish) {
 
-          const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber);
+          const responseDatas = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters, limit, pageNumber, lastAwb);
 
-          console.log(!responseDatas, limit, finish, responseDatas.length < limit, 'response data length');
+          // console.log(!responseDatas, limit, finish, responseDatas.length < limit, 'response data length');
 
           if (responseDatas.length <= 0) {
 
@@ -1495,6 +1491,8 @@ export class V1WebReportCodService {
             return;
           }
 
+          lastAwb = responseDatas[responseDatas.length - 1].awbNumber;
+
           if (responseDatas.length < limit) {
             finish = true;
           }
@@ -1509,6 +1507,7 @@ export class V1WebReportCodService {
 
       let url = '';
       const awsKey = `reports/cod/${csvConfig.fileName}`;
+      // console.log(awsKey, 'uploadpath');
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
@@ -1518,11 +1517,11 @@ export class V1WebReportCodService {
         url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey}`;
         this.deleteFile(csvConfig.filePath);
 
-        console.log(url, 'url final');
+        // console.log(url, 'url final');
       }
-      console.log(uuid);
+      // console.log(uuid);
       if (uuid.toString() != '') {
-        console.log(uuid, 'inside uuid');
+        // console.log(uuid, 'inside uuid');
         const payload = {
           status: 'OK',
           url,
@@ -1536,7 +1535,7 @@ export class V1WebReportCodService {
 
       return { status: 'OK', url };
     } catch (err) {
-      console.log(err);
+      console.error(err);
       throw err;
     }
 
@@ -1989,14 +1988,14 @@ export class V1WebReportCodService {
 
       let url = '';
       const awsKey = `reports/cod/${csvConfig.fileName}`;
+      // console.log(awsKey, 'uploadpath');
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,
       );
 
       if (storagePath) {
-        url = `${ConfigService.get('cloudStorage.cloudUrl')}/${
-          storagePath.awsKey
+        url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey
           }`;
         this.deleteFile(csvConfig.filePath);
       }

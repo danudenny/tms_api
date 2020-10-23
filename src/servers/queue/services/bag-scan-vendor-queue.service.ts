@@ -74,7 +74,7 @@ export class BagScanVendorQueueService {
           resultbagItemHistory.userId = data.userId.toString();
           resultbagItemHistory.branchId = data.branchId.toString();
           resultbagItemHistory.historyDate = moment().toDate();
-          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_HUB.toString();
+          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_LINE_HAUL.toString();
           resultbagItemHistory.userIdCreated = data.userId;
           resultbagItemHistory.createdTime = moment().toDate();
           resultbagItemHistory.userIdUpdated = data.userId;
@@ -85,8 +85,8 @@ export class BagScanVendorQueueService {
           resultbagItemOutHistory.bagItemId = bagItemIdEach.toString();
           resultbagItemOutHistory.userId = data.userId.toString();
           resultbagItemOutHistory.branchId = data.branchId.toString();
-          resultbagItemOutHistory.historyDate = moment().toDate();
-          resultbagItemOutHistory.bagItemStatusId = BAG_STATUS.OUT_HUB.toString();
+          resultbagItemOutHistory.historyDate = moment().add(1, 'minutes').toDate();
+          resultbagItemOutHistory.bagItemStatusId = BAG_STATUS.OUT_LINE_HAUL.toString();
           resultbagItemOutHistory.userIdCreated = data.userId;
           resultbagItemOutHistory.createdTime = moment().add(1, 'minutes').toDate();
           resultbagItemOutHistory.userIdUpdated = data.userId;
@@ -106,7 +106,7 @@ export class BagScanVendorQueueService {
               Number(itemAwb.awbItemId),
               Number(data.branchId),
               Number(data.userId),
-              AWB_STATUS.IN_HUB,
+              AWB_STATUS.IN_LINE_HAUL,
               data.vendorName,
             );
 
@@ -114,7 +114,7 @@ export class BagScanVendorQueueService {
               Number(itemAwb.awbItemId),
               Number(data.branchId),
               Number(data.userId),
-              AWB_STATUS.OUT_HUB,
+              AWB_STATUS.OUT_LINE_HAUL,
               data.vendorName,
               moment().add(1, 'minutes').toDate(),
             );

@@ -117,14 +117,20 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
+  public static async baggingCodeRandomCounter(dateTime: Date, digit: number = 6) {
+    const prefix = `BGX${moment(dateTime).format('YYMMDD')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
   public static async bagCityCodeCounter(dateTime: Date, digit: number = 5) {
     const prefix = `GSK/${moment(dateTime).format('YYMM')}/`;
     const last_number = await this.getLastNumber(prefix);
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
-public static async bagCityCodeRandomCounter(dateTime: Date, digit: number = 6) {
-    // Format Code: GSK190713XYZA1
+  public static async bagCityCodeRandomCounter(dateTime: Date, digit: number = 6) {
+    // Format Code: GSK190713XYZA12
     const prefix = `GSK${moment(dateTime).format('YYMMDD')}`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();

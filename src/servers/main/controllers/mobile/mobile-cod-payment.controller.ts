@@ -6,6 +6,7 @@ import {
   Post,
   Body,
   Get,
+  BadRequestException,
 } from '@nestjs/common';
 
 import {
@@ -17,6 +18,7 @@ import { ResponseSerializerOptions } from '../../../../shared/decorators/respons
 import { V1MobileDivaPaymentService } from '../../services/mobile/v1/mobile-diva-payment.service';
 import { ResponseMaintenanceService } from '../../../../shared/services/response-maintenance.service';
 
+// TODO: disabled v1 soon
 @ApiUseTags('Cod Diva Payment')
 @Controller('mobile/cod-payment')
 @ApiBearerAuth()
@@ -26,7 +28,9 @@ export class CodPaymentController {
   @Get('diva/pingQR')
   @ResponseSerializerOptions({ disable: true })
   public async divaPaymentPingQR() {
-    return V1MobileDivaPaymentService.pingQR();
+    throw new BadRequestException(
+      'Permintaan Payment Cashless sementara tidak dapat di layani',
+    );
   }
 
   @Post('diva/getQR')
@@ -34,7 +38,9 @@ export class CodPaymentController {
   @UseGuards(AuthenticatedGuard)
   @ResponseSerializerOptions({ disable: true })
   public async divaPaymentGetQR(@Body() payload: any) {
-    return V1MobileDivaPaymentService.getQr(payload);
+    throw new BadRequestException(
+      'Permintaan Payment Cashless sementara tidak dapat di layani',
+    );
   }
 
   @Post('diva/sendQR')
@@ -43,17 +49,30 @@ export class CodPaymentController {
   @ResponseSerializerOptions({ disable: true })
   public async divaPaymentSendQR(@Body() payload: any) {
     // NOTE: handle for message disable this service
-    ResponseMaintenanceService.divaPaymentService();
-    return V1MobileDivaPaymentService.sendQr(payload);
+    throw new BadRequestException(
+      'Permintaan Payment Cashless sementara tidak dapat di layani',
+    );
   }
 
+  // TODO: disabled soon
   @Post('diva/paymentStatus')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
   @ResponseSerializerOptions({ disable: true })
   public async divaPaymentStatus(@Body() payload: any) {
+    throw new BadRequestException(
+      'Permintaan Payment Cashless sementara tidak dapat di layani',
+    );
+  }
+
+  @Post('diva/paymentStatusV2')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async divaPaymentStatusManual(@Body() payload: any) {
     // NOTE: handle for message disable this service
-    ResponseMaintenanceService.divaPaymentService();
-    return V1MobileDivaPaymentService.paymentStatus(payload);
+    throw new BadRequestException(
+      'Permintaan Payment Cashless sementara tidak dapat di layani',
+    );
   }
 }

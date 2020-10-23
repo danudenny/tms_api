@@ -38,6 +38,12 @@ export class WebItemAwbCodResponseVm {
   branchNameLast: string;
 
   @ApiModelProperty()
+  branchIdFinal: number;
+
+  @ApiModelProperty()
+  branchNameFinal: string;
+
+  @ApiModelProperty()
   representativeId: number;
 
   @ApiModelProperty()
@@ -45,6 +51,12 @@ export class WebItemAwbCodResponseVm {
 
   @ApiModelProperty()
   awbStatusLast: string;
+
+  @ApiModelProperty()
+  awbStatusIdFinal: string;
+
+  @ApiModelProperty()
+  awbStatusFinal: string;
 
   @ApiModelProperty()
   userIdDriver: number;
@@ -74,6 +86,76 @@ export class WebItemAwbCodResponseVm {
 export class WebAwbCodListResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [WebItemAwbCodResponseVm] })
   data: WebItemAwbCodResponseVm[];
+}
+
+export class WebItemAwbCodDlvResponseVm {
+  @ApiModelProperty()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  codValue: number;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  manifestedDate: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  transactionDate: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  packageTypeCode: string;
+
+  @ApiModelProperty()
+  branchIdLast: number;
+
+  @ApiModelProperty()
+  branchNameLast: string;
+
+  @ApiModelProperty()
+  representativeId: number;
+
+  @ApiModelProperty()
+  awbStatusIdLast: string;
+
+  @ApiModelProperty()
+  awbStatusIdFinal: string;
+
+  @ApiModelProperty()
+  awbStatusLast: string;
+
+  @ApiModelProperty()
+  userIdDriver: number;
+
+  @ApiModelProperty()
+  driverName: string;
+
+  @ApiModelProperty()
+  doPodDeliverDetailId: string;
+
+  @ApiModelPropertyOptional()
+  codPaymentMethod: string;
+
+  @ApiModelPropertyOptional()
+  codPaymentService: string;
+
+  @ApiModelPropertyOptional()
+  noReference: string;
+
+  @ApiModelPropertyOptional()
+  transactionStatusId: number;
+
+  @ApiModelPropertyOptional()
+  transactionStatusName: string;
+}
+
+export class WebAwbCodDlvListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebItemAwbCodDlvResponseVm] })
+  data: WebItemAwbCodDlvResponseVm[];
 }
 
 export class WebItemAwbCodVoidResponseVM {
@@ -565,4 +647,9 @@ export class WebCodVoucherSuccessResponseVm {
 
   @ApiModelProperty()
   dataError: string[];
+}
+
+export class WebCodCountResponseVm {
+  @ApiModelProperty()
+  total: number;
 }

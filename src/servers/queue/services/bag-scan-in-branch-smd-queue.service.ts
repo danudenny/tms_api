@@ -83,14 +83,13 @@ export class BagScanInBranchSmdQueueService {
                 isDeleted: false,
               },
             });
-            console.log(awbItemAttr);
             if (awbItemAttr) {
               const awbHistory = AwbHistory.create();
               awbHistory.awbItemId = itemAwb.awbItemId;
               awbHistory.branchId = data.branchId.toString();
               awbHistory.refAwbNumber = awbItemAttr.awbNumber;
               awbHistory.historyDate = moment().toDate();
-              awbHistory.awbStatusId = AWB_STATUS.DO_HUB;
+              awbHistory.awbStatusId = AWB_STATUS.DO_LINE_HAUL;
               awbHistory.userId = data.userId;
               awbHistory.noteInternal = noteInternal;
               awbHistory.notePublic = null;

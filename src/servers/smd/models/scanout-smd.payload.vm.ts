@@ -39,6 +39,14 @@ export class ScanOutSmdItemPayloadVm {
 
 }
 
+export class ScanOutSmdItemMorePayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  item_number: string[];
+}
+
 export class ScanOutSmdAssignItemPayloadVm {
   @ApiModelProperty()
   do_smd_id: number;
@@ -114,4 +122,15 @@ export class StoreExcelScanOutPayloadVm {
 
   @ApiModelProperty()
   id: string;
+}
+
+export class ScanOutSmdEditPayloadVm {
+  @ApiModelProperty()
+  do_smd_id: number;
+
+}
+
+export class ScanOutSmdEditDetailPayloadVm {
+  @ApiModelProperty()
+  do_smd_detail_id: number;
 }

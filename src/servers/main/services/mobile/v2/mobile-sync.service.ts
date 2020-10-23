@@ -143,7 +143,8 @@ export class V2MobileSyncService {
                 CodPayment,
                 {
                   where: {
-                    doPodDeliverDetailId: delivery.doPodDeliverDetailId,
+                    awbItemId: delivery.awbItemId,
+                    isDeleted: false,
                   },
                 },
               );
@@ -161,11 +162,15 @@ export class V2MobileSyncService {
                     note: delivery.note,
                     noReference: delivery.noReference,
                     userIdUpdated: authMeta.userId,
+                    userIdDriver: authMeta.userId,
+                    branchId: awbdDelivery.branchId,
                     updatedTime: moment().toDate(),
                   },
                 );
               } else {
-                await transactionEntityManager.insert(CodPayment, {
+                await transactionEntityManager.insert(
+                  CodPayment,
+                  {
                   awbNumber: delivery.awbNumber,
                   codValue: delivery.totalCodValue,
                   codPaymentMethod: delivery.codPaymentMethod,
@@ -173,6 +178,9 @@ export class V2MobileSyncService {
                   note: delivery.note,
                   noReference: delivery.noReference,
                   doPodDeliverDetailId: delivery.doPodDeliverDetailId,
+                  awbItemId: delivery.awbItemId,
+                  branchId: awbdDelivery.branchId,
+                  userIdDriver: authMeta.userId,
                   userIdCreated: authMeta.userId,
                   userIdUpdated: authMeta.userId,
                   createdTime: moment().toDate(),
@@ -247,7 +255,8 @@ export class V2MobileSyncService {
           PinoLoggerService.log('##### Data Not Valid', delivery);
         }
       } catch (error) {
-        throw new ServiceUnavailableException(error.message);
+        console.error(error);
+        throw new ServiceUnavailableException(error);
       }
     } // end of doPodDeliverHistories.length
     return process;

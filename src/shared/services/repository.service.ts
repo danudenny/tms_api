@@ -37,6 +37,7 @@ import { Vehicle } from '../orm-entity/vehicle';
 import { BagRepresentative } from '../orm-entity/bag-representative';
 import { TransactionStatus } from '../orm-entity/transaction-status';
 import { PackageType } from '../orm-entity/package-type';
+import { ReceivedBag } from '../orm-entity/received-bag';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -156,5 +157,8 @@ export class RepositoryService {
   }
   static get packageType() {
     return new OrionRepositoryService(PackageType);
+  }
+  static get receivedBag() {
+    return new OrionRepositoryService(ReceivedBag);
   }
 }
