@@ -1029,6 +1029,74 @@ export class V1WebAwbCodService {
     }
   }
 
+  static async reprintTransaction(
+    codTransactionId: string,
+  ): Promise<WebCodTransferBranchResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const dataPrint: WebCodAwbPrintVm[] = [];
+    let printId = null;
+
+    const transaction = await CodTransaction.findOne({
+      codTransactionId,
+      isDeleted: false,
+    });
+
+    if (transaction) {
+      // generate header print
+      const metaPrint = await this.generatePrintMeta(
+        transaction.transactionCode,
+        authMeta.displayName,
+        authMeta.username,
+        permissonPayload.branchId,
+        transaction.userIdDriver,
+      );
+
+      // get data
+      const data = await CodTransactionDetail.find(
+        {
+          select: ['awbNumber', 'codValue', 'paymentService'],
+          where: {
+            codTransactionId,
+            isDeleted: false,
+          },
+        },
+      );
+      if (data.length) {
+        const transactionType = transaction.transactionType.toLowerCase();
+        let totalCodValueCash = 0;
+
+        for (const item of data) {
+          dataPrint.push({
+            awbNumber: item.awbNumber,
+            codValue: item.codValue,
+            provider: item.paymentService,
+          });
+
+          totalCodValueCash += item.codValue;
+        }
+
+        printId = await this.printStoreData(
+          metaPrint,
+          transaction.codTransactionId,
+          dataPrint,
+          totalCodValueCash,
+          transactionType,
+        );
+
+        const result = new WebCodTransferBranchResponseVm();
+        result.printIdCash = transactionType == 'cash' ? printId : null;
+        result.printIdCashless = transactionType == 'cashless' ? printId : null;
+        return result;
+      } else {
+        throw new BadRequestException('Data detail tidak valid!');
+      }
+    } else {
+      throw new BadRequestException('Data tidak ditemukan!');
+    }
+  }
+
   // NOTE: for testing only
   static async syncData() {
     // get config mongodb
