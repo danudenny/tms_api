@@ -355,7 +355,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.andWhere(e => e.isDeleted, w => w.isFalse);
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     q.groupByRaw('t1.user_id_driver, t3.first_name, t1.branch_id, t4.branch_name');
 
