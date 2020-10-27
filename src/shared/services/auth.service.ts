@@ -203,9 +203,13 @@ export class AuthService {
       });
 
       // create Permission Token
+      const roleName = user.userRoles[0].role.roleName;
+      const isHeadOffice = branch ? branch.isHeadOffice : false;
       const jwtPermissionTokenPayload = this.populateJwtPermissionTokenPayloadFromUser(
         roleId,
+        roleName,
         branchId,
+        isHeadOffice,
       );
       const permissionToken = this.jwtService.sign(
         jwtPermissionTokenPayload,
@@ -233,7 +237,7 @@ export class AuthService {
       result.email = authMeta.email;
       result.displayName = authMeta.displayName;
       result.permissionToken = permissionToken;
-      result.roleName = user.userRoles[0].role.roleName;
+      result.roleName = roleName;
       if (branch) {
         result.branchName = branch.branchName;
         result.branchCode = branch.branchCode;
@@ -343,11 +347,15 @@ export class AuthService {
   // Set data payload JWT Permission Token
   public populateJwtPermissionTokenPayloadFromUser(
     roleId: number,
+    roleName: string,
     branchId: number,
+    isHeadOffice: boolean,
   ) {
     const jwtPayload: Partial<JwtPermissionTokenPayload> = {
       roleId,
+      roleName,
       branchId,
+      isHeadOffice,
     };
 
     return jwtPayload;
