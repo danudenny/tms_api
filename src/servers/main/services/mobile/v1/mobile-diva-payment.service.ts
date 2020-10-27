@@ -1,4 +1,4 @@
-
+// #region import
 import { ConfigService } from '../../../../../shared/services/config.service';
 import { BadRequestException } from '@nestjs/common';
 import { WinstonLogglyService } from '../../../../../shared/services/winston-loggly.service';
@@ -6,6 +6,8 @@ import axios from 'axios';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import { DivaData } from '../../../../../shared/orm-entity/diva-data';
 
+import nr = require('newrelic');
+// #endregion
 export class V1MobileDivaPaymentService {
   constructor() {}
 
@@ -19,82 +21,122 @@ export class V1MobileDivaPaymentService {
   }
 
   static async pingQR() {
-    const url = `${ConfigService.get('divaPayment.urlQR')}/v1`;
-    try {
-      const response = await axios.get(url, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      return error.response.data;
-    }
+    let response = null;
+    await nr.startBackgroundTransaction('DIVA - Ping QR', async () => {
+      const transaction = nr.getTransaction();
+      const url = `${ConfigService.get('divaPayment.urlQR')}/v1`;
+      try {
+        response = await axios.get(url, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        // End Transaction for newrelic
+        transaction.end();
+      } catch (error) {
+        nr.noticeError(error);
+        transaction.end();
+        return error.response.data;
+      }
+    });
+
+    return response.data;
   }
 
   static async getQr(payload: any): Promise<any> {
-    // validate
-    if (!payload.provider || !payload.amount) {
-      throw new BadRequestException('provider dan amount harap diisi!');
-    }
+    let result = null;
+    await nr.startBackgroundTransaction('DIVA - Get QR', async () => {
+      const transaction = nr.getTransaction();
+      // validate
+      if (!payload.provider || !payload.amount) {
+        throw new BadRequestException('provider dan amount harap diisi!');
+      }
 
-    const provider: string = payload.provider;
-    const amount: number = Number(payload.amount);
+      const provider: string = payload.provider;
+      const amount: number = Number(payload.amount);
 
-    const now = Date.now();
-    const randomNum = Math.floor(Math.random() * 1000); // random 3 digit
-    const url = `${ConfigService.get('divaPayment.urlQR')}${provider}`;
+      const now = Date.now();
+      const randomNum = Math.floor(Math.random() * 1000); // random 3 digit
+      const url = `${ConfigService.get('divaPayment.urlQR')}${provider}`;
 
-    const randomTID = await this.getRandomTID();
-    const requestData = {
-      token: ConfigService.get('divaPayment.codToken'),
-      mid: ConfigService.get('divaPayment.codMid'),
-      tid: randomTID,
-      amount,
-      reff_no: `POD-MOBILE-${now}${randomNum}`,
-    };
+      const randomTID = await this.getRandomTID();
+      const requestData = {
+        token: ConfigService.get('divaPayment.codToken'),
+        mid: ConfigService.get('divaPayment.codMid'),
+        tid: randomTID,
+        amount,
+        reff_no: `POD-MOBILE-${now}${randomNum}`,
+      };
 
-    try {
-      const response = await axios.post(url, requestData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Connection': 'keep-alive',
-          'User-Agent': 'POD-API',
-        },
-      });
-      // add Loggly data
-      WinstonLogglyService.info({ requestData, responseData: response.data });
-      return response.data;
-    } catch (error) {
-      WinstonLogglyService.error({requestData, error: error.response.data});
-      return error.response.data;
-    }
+      try {
+        const response = await axios.post(url, requestData, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Connection': 'keep-alive',
+            'User-Agent': 'POD-API',
+          },
+        });
+        // add Loggly data
+        WinstonLogglyService.info({ requestData, responseData: response.data });
+        // End Transaction for newrelic
+        transaction.end();
+        result = response.data;
+      } catch (error) {
+        WinstonLogglyService.error({requestData, error: error.response.data});
+        result = error.response.data;
+        nr.noticeError(error);
+        transaction.end();
+      }
+    });
+
+    return result;
   }
 
   static async sendQr(requestData: any): Promise<any> {
-    const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/postqr`;
-    try {
-      const response = await axios.post(url, requestData, this.sicepatKlikConfig);
-      // add Loggly data
-      WinstonLogglyService.info({requestData, responseData: response.data});
-      return response.data;
-    } catch (error) {
-      WinstonLogglyService.error({requestData, error: error.response.data});
-      return error.response.data;
-    }
+    let result = null;
+    await nr.startBackgroundTransaction('DIVA - Send QR', async () => {
+      const transaction = nr.getTransaction();
+      const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/postqr`;
+      try {
+        const response = await axios.post(url, requestData, this.sicepatKlikConfig);
+        // add Loggly data
+        WinstonLogglyService.info({requestData, responseData: response.data});
+        result = response.data;
+        // End Transaction for newrelic
+        transaction.end();
+      } catch (error) {
+        WinstonLogglyService.error({requestData, error: error.response.data});
+        nr.noticeError(error);
+        transaction.end();
+        result = error.response.data;
+      }
+    });
+
+    return result;
   }
 
   static async paymentStatus(requestData: any): Promise<any> {
-    const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/get-payment-status`;
-    try {
-      const response = await axios.post(url, requestData, this.sicepatKlikConfig);
-      // add Loggly data
-      WinstonLogglyService.info({ requestData, responseData: response.data });
-      return response.data;
-    } catch (error) {
-      WinstonLogglyService.error({requestData, error: error.response.data});
-      return error.response.data;
-    }
+    let result = null;
+    await nr.startBackgroundTransaction('DIVA - Payment Status', async () => {
+      const transaction = nr.getTransaction();
+      const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/get-payment-status`;
+      try {
+        const response = await axios.post(url, requestData, this.sicepatKlikConfig);
+        // add Loggly data
+        WinstonLogglyService.info({ requestData, responseData: response.data });
+        result = response.data;
+        // End Transaction for newrelic
+        transaction.end();
+      } catch (error) {
+        WinstonLogglyService.error({requestData, error: error.response.data});
+        nr.noticeError(error);
+        transaction.end();
+        result = error.response.data;
+      }
+    });
+
+    return result;
   }
 
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random#Getting_a_random_integer_between_two_values_inclusive
