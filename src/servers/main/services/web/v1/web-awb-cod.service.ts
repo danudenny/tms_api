@@ -344,6 +344,7 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.awbItemAttr, 't2', j => {
         j.andWhere(e => e.isDeleted, w => w.isFalse());
         j.andWhere(e => e.transactionStatusId, w => w.isNull());
+        j.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
       },
     );
 
