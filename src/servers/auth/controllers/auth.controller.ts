@@ -1,5 +1,5 @@
 //#region import
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../shared/external/nestjs-swagger';
 import {
     Transactional,
@@ -14,6 +14,7 @@ import {
 import {
     RefreshAccessTokenPayload, RefreshTokenLogoutPayload,
 } from '../models/refresh-access-token.model';
+import moment = require('moment');
 //#endregion
 
 @ApiUseTags('Authentication')
@@ -93,6 +94,16 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   public async authLogout(@Body() payload: RefreshTokenLogoutPayload) {
     return await this.authService.removeToken(payload.refreshToken);
+  }
+
+  @Get('ping')
+  @HttpCode(HttpStatus.OK)
+  public async ping() {
+    return {
+      message: 'pong',
+      timeNow: moment().toDate(),
+      timeString: moment().format('YYYY-MM-DD HH:mm:ss'),
+    };
   }
 
   // TODO: resetPassword user?? (master data / tms)
