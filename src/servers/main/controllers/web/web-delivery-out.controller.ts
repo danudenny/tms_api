@@ -1,4 +1,5 @@
 // #region import
+import express = require('express');
 import {
   Controller,
   Post,
@@ -7,6 +8,9 @@ import {
   HttpStatus,
   UseGuards,
   Param,
+  Get,
+  Query,
+  Response,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
@@ -50,6 +54,7 @@ import {
   WebScanOutDeliverGroupListResponseVm,
   WebScanOutTransitUpdateAwbPartnerResponseVm,
   WebScanOutDeliverPartnerListResponseVm,
+  WebScanOutBranchReportVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -67,6 +72,9 @@ import {
 } from '../../models/bag-order-response.vm';
 import { LastMileDeliveryOutService } from '../../services/web/last-mile/last-mile-delivery-out.service';
 import { LastMileDeliveryService } from '../../services/web/last-mile/last-mile-delivery.service';
+import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
+import {MonitoringPayloadVm} from '../../../smd/models/smd-monitoring-payload.vm';
+import {WebDeliveryOutReportService} from '../../services/web/web-delivery-out-report.service';
 // #endregion
 
 @ApiUseTags('Web Delivery Out')
@@ -415,5 +423,20 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: PhotoResponseVm })
   public async photoDetail(@Body() payload: PhotoDetailVm) {
     return this.webDeliveryOutService.photoDetail(payload);
+  }
+
+  @Post('branch/excel/store')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async storePayloadExcel(@Body() payloadBody: BaseMetaPayloadVm) {
+    return WebDeliveryOutReportService.storeExcelPayload(payloadBody);
+  }
+
+  @Get('branch/excel/export')
+  public async exportExcel(
+    @Query() queryParams: WebScanOutBranchReportVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(serverResponse, queryParams);
   }
 }

@@ -499,3 +499,8 @@ export class WebAwbThirdPartyListResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [WebAwbThirdPartyResponseVm] })
   data: WebAwbThirdPartyResponseVm[];
 }
+
+export class WebScanOutBranchReportVm {
+  @ApiModelProperty()
+  id: string;
+}
