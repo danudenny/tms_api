@@ -54,7 +54,7 @@ import {
   WebScanOutDeliverGroupListResponseVm,
   WebScanOutTransitUpdateAwbPartnerResponseVm,
   WebScanOutDeliverPartnerListResponseVm,
-  WebScanOutBranchReportVm,
+  WebScanOutReportVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -425,7 +425,7 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.photoDetail(payload);
   }
 
-  @Post('branch/excel/store')
+  @Post('excel/store')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
   public async storePayloadExcel(@Body() payloadBody: BaseMetaPayloadVm) {
@@ -433,10 +433,40 @@ export class WebDeliveryOutController {
   }
 
   @Get('branch/excel/export')
-  public async exportExcel(
-    @Query() queryParams: WebScanOutBranchReportVm,
+  public async exportExcelBranch(
+    @Query() queryParams: WebScanOutReportVm,
     @Response() serverResponse: express.Response,
   ) {
     return WebDeliveryOutReportService.generateScanOutDeliveryCSV(serverResponse, queryParams);
+  }
+
+  @Get('hubTransit/excel/export')
+  public async exportExcelCombinePackage(
+    @Query() queryParams: WebScanOutReportVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(serverResponse, queryParams, false, true);
+  }
+  @Get('hubSortir/excel/export')
+  public async exportExcelBagSortir(
+    @Query() queryParams: WebScanOutReportVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(serverResponse, queryParams, true);
+  }
+  @Get('transit/excel/export')
+  public async exportExcelDeliveryTransit(
+    @Query() queryParams: WebScanOutReportVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return WebDeliveryOutReportService.generateScanOutDeliveryTransitCSV(serverResponse, queryParams);
+  }
+
+  @Get('deliver/excel/export')
+  public async exportExcelDeliveryDeliver(
+    @Query() queryParams: WebScanOutReportVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return WebDeliveryOutReportService.generateScanOutDeliveryDeliverCSV(serverResponse, queryParams);
   }
 }

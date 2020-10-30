@@ -500,7 +500,7 @@ export class WebAwbThirdPartyListResponseVm extends BaseMetaResponseVm {
   data: WebAwbThirdPartyResponseVm[];
 }
 
-export class WebScanOutBranchReportVm {
+export class WebScanOutReportVm {
   @ApiModelProperty()
   id: string;
 }
