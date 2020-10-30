@@ -305,8 +305,7 @@ export class HubMonitoringService {
         SELECT
           scan_out.branch_name AS "branchTo",
           scan_out.do_pod_id AS "doPodId",
-          COUNT(DISTINCT dohd.dropoff_hub_detail_id) AS "awbSort",
-          COUNT(DISTINCT bia.awb_item_id) AS "awbItemId",
+          COUNT(DISTINCT dohd.awb_item_id) AS "awbItemId",
           COUNT(DISTINCT bag_sortir.awb_id) AS "awbSortir",
           COUNT(DISTINCT scan_out.awb_id) AS "awbScanOutBagSortir"
         FROM
@@ -401,7 +400,7 @@ export class HubMonitoringService {
           scan_out.branch_name AS "branchTo",
           scan_out.do_pod_code AS "doPodCode",
           MIN(doh.created_time) AS "createdTime",
-          COUNT(DISTINCT dohd.dropoff_hub_detail_id) AS "awbHub",
+          COUNT(DISTINCT dohd.awb_item_id) AS "awbHub",
           COUNT(DISTINCT CASE WHEN scan_out.awb_id IS NULL THEN bag_sortir.awb_id END) AS "awbScanIn",
           COUNT(DISTINCT scan_out.awb_id) AS "awbScanOutBagSortir"
         FROM
