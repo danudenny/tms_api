@@ -87,5 +87,4 @@ export class ScanOutVendorListController {
   ) {
     return ScanoutSmdVendorReportService.generateVendorCSV(serverResponse, queryParams);
   }
-
 }
