@@ -301,3 +301,8 @@ export class ScanOutVendorHistoryVm {
   vendor_name: String;
 
 }
+
+export class ScanOutVendorReportVm {
+  @ApiModelProperty()
+  id: string;
+}

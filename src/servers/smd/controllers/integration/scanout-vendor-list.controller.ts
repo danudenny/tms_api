@@ -1,12 +1,16 @@
-import { Body, Controller, Post, Req, UseGuards, Delete, Param } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards, Delete, Param, Get, Query, Response } from '@nestjs/common';
+import express = require('express');
+
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
-import { ApiUseTags, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
+import { ApiUseTags, ApiOkResponse, ApiBearerAuth } from '../../../../shared/external/nestjs-swagger';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { ScanOutSmdVendorListResponseVm, ScanOutSmdDetailVendorResponseVm, ScanOutSmdDetailBaggingVendorResponseVm, ScanOutSmdDetailBagRepresentativeVendorResponseVm } from '../../models/scanout-smd-vendor.response.vm';
+import { ScanOutSmdVendorListResponseVm, ScanOutSmdDetailVendorResponseVm, ScanOutSmdDetailBaggingVendorResponseVm, ScanOutSmdDetailBagRepresentativeVendorResponseVm, ScanOutVendorReportVm } from '../../models/scanout-smd-vendor.response.vm';
 import {ScanoutSmdVendorListService} from '../../services/integration/scanout-smd-vendor-list.service';
 import {ScanOutSmdDetailVendorPayloadVm} from '../../models/scanout-smd-vendor.payload.vm';
+import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
+import {ScanoutSmdVendorReportService} from '../../services/integration/scanout-smd-vendor-report.service';
 
 @ApiUseTags('SCAN OUT SMD LIST')
 @Controller('smd/vendor')
@@ -68,4 +72,20 @@ export class ScanOutVendorListController {
   public async FindscanOutHistory(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
     return ScanoutSmdVendorListService.findScanOutVendorHistory(payload);
   }
+
+  @Post('excel/store')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async storePayloadExcel(@Body() payloadBody: BaseMetaPayloadVm) {
+    return ScanoutSmdVendorReportService.storeExcelPayload(payloadBody);
+  }
+
+  @Get('excel/export')
+  public async exportExcelBranch(
+    @Query() queryParams: ScanOutVendorReportVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return ScanoutSmdVendorReportService.generateVendorCSV(serverResponse, queryParams);
+  }
+
 }
