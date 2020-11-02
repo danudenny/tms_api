@@ -65,7 +65,7 @@ export class BagScanOutBranchSmdQueueService {
         LEFT JOIN bag_item_history bih1 ON bih1.bag_item_id = bi.bag_item_id AND bih1.is_deleted = FALSE
           AND bih1.branch_id = '${data.branchId}' AND bih1.bag_item_status_id = '${BAG_STATUS.OUT_LINE_HAUL}'
         WHERE dsd.do_smd_id = ${data.doSmdId} AND dsd.is_deleted = FALSE
-        ORDER BY bih.history_date DESC;` ,
+        ORDER BY CASE WHEN bih.bag_item_status_id = ${BAG_STATUS.OUT_LINE_HAUL} THEN 1 ELSE 2 END, bih.history_date DESC;` ,
       );
 
       const resultBagRepresentative = await RawQueryService.query(`
@@ -163,7 +163,7 @@ export class BagScanOutBranchSmdQueueService {
       }
       tempBag.push(Number(item.bag_item_id));
 
-      if (Number(item.bag_item_status_id) == BAG_STATUS.OUT_LINE_HAUL && resultQuery.branch_id) {
+      if (Number(item.bag_item_status_id) == BAG_STATUS.OUT_LINE_HAUL && item.branch_id) {
         // failed to update
         // do nothing
       } else {
