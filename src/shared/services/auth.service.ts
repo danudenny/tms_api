@@ -13,18 +13,19 @@ import {
 } from '../interfaces/jwt-payload.interface';
 import { AuthLoginMetadata } from '../models/auth-login-metadata.model';
 import { AuthLoginResultMetadata } from '../models/auth-login-result-metadata';
-import { GetRoleResult } from '../models/get-role-result';
+import { GetRoleResult, UserRoleResponse } from '../models/get-role-result';
 import { Branch } from '../orm-entity/branch';
 import { User } from '../orm-entity/user';
 import { UserRole } from '../orm-entity/user-role';
 import { UserRepository } from '../orm-repository/user.repository';
 import { ConfigService } from './config.service';
 import { RequestErrorService } from './request-error.service';
-import { PinoLoggerService } from './pino-logger.service';
 import { RedisService } from './redis.service';
 import { RepositoryService } from './repository.service';
 import { RequestContextMetadataService } from './request-context-metadata.service';
 import { PartnerTokenPayload } from '../interfaces/partner-payload.interface';
+import { createQueryBuilder } from 'typeorm';
+import { Employee } from '../orm-entity/employee';
 
 @Injectable()
 export class AuthService {
@@ -51,7 +52,6 @@ export class AuthService {
       // PinoLoggerService.log(user);
       // validate user password hash md5
       if (user.validatePassword(password)) {
-        // TODO: Populate return value by using this.populateLoginResultMetadataByUser
         const loginResultMetadata = this.populateLoginResultMetadataByUser(
           clientId,
           user,
@@ -74,7 +74,7 @@ export class AuthService {
   ): Promise<AuthLoginResultMetadata> {
     // TODO: find user on table or redis??
     const loginSession = await RedisService.get(`session:${refreshToken}`);
-    PinoLoggerService.log(loginSession);
+
     if (!loginSession) {
       RequestErrorService.throwObj(
         {
@@ -130,14 +130,15 @@ export class AuthService {
     // const user = await this.userRepository.findByUserIdWithRoles());
     // check user present
     if (!!authMeta) {
-      const roles = await UserRole.find({
-        // cache: true,
-        relations: ['branch', 'role'],
-        where: {
-          userId: toInteger(authMeta.userId),
-          isDeleted: false,
-        },
-      });
+      // const roles = await UserRole.find({
+      //   // cache: true,
+      //   relations: ['branch', 'role'],
+      //   where: {
+      //     userId: toInteger(authMeta.userId),
+      //     isDeleted: false,
+      //   },
+      // });
+      const roles = await this.getUserRole(authMeta.userId);
 
       // Populate return value
       const result = new GetRoleResult();
@@ -145,18 +146,19 @@ export class AuthService {
       result.username = authMeta.username;
       result.email = authMeta.email;
       result.displayName = authMeta.displayName;
+      result.roles = roles;
       // result.roles = map(roles, role => pick(role, ['role_id', 'role.role_name', 'branch_id', 'branch.branch_name']));
-      result.roles = map(roles, item => {
-        const newObj = {
-          roleId: item.roleId,
-          roleName: item.role.roleName,
-          branchId: item.branchId,
-          branchName: item.branch.branchName,
-          branchCode: item.branch.branchCode,
-          isHeadOffice: item.branch.isHeadOffice,
-        };
-        return newObj;
-      });
+      // result.roles = map(roles, item => {
+      //   const newObj = {
+      //     roleId: item.roleId,
+      //     roleName: item.role.roleName,
+      //     branchId: item.branchId,
+      //     branchName: item.branch.branchName,
+      //     branchCode: item.branch.branchCode,
+      //     isHeadOffice: item.branch.isHeadOffice,
+      //   };
+      //   return newObj;
+      // });
 
       return result;
     } else {
@@ -203,9 +205,13 @@ export class AuthService {
       });
 
       // create Permission Token
+      const roleName = user.userRoles[0].role.roleName;
+      const isHeadOffice = branch ? branch.isHeadOffice : false;
       const jwtPermissionTokenPayload = this.populateJwtPermissionTokenPayloadFromUser(
         roleId,
+        roleName,
         branchId,
+        isHeadOffice,
       );
       const permissionToken = this.jwtService.sign(
         jwtPermissionTokenPayload,
@@ -233,7 +239,7 @@ export class AuthService {
       result.email = authMeta.email;
       result.displayName = authMeta.displayName;
       result.permissionToken = permissionToken;
-      result.roleName = user.userRoles[0].role.roleName;
+      result.roleName = roleName;
       if (branch) {
         result.branchName = branch.branchName;
         result.branchCode = branch.branchCode;
@@ -274,9 +280,17 @@ export class AuthService {
 
   // method populate data user login
   public async populateLoginResultMetadataByUser(clientId: string, user: User) {
+    // get data employee if employee id not null
+    const employee = await Employee.findOne({
+      select: ['employeeId', 'employeeName'],
+      where: { employeeId: user.employeeId },
+    });
+    const employeeName = employee ? employee.employeeName : '';
+
     const jwtAccessTokenPayload = this.populateJwtAccessTokenPayloadFromUser(
       clientId,
       user,
+      employeeName,
     );
 
     const accessToken = this.jwtService.sign(jwtAccessTokenPayload, {
@@ -309,22 +323,26 @@ export class AuthService {
     result.refreshToken = refreshToken;
     result.email = user.email;
     result.username = user.username;
-    result.displayName = user.employee ? user.employee.employeeName : '';
-    result.employeeId = user.employee ? user.employee.employeeId : null;
+    result.employeeId = user.employeeId;
+    result.displayName = employeeName;
     // result.roles = map(user.roles, role => pick(role, ['role_id', 'role_name']));
 
     return result;
   }
 
   // Set data payload JWT Access Token
-  public populateJwtAccessTokenPayloadFromUser(clientId: string, user: User) {
+  public populateJwtAccessTokenPayloadFromUser(
+    clientId: string,
+    user: User,
+    employeeName: string,
+  ) {
     const jwtPayload: Partial<JwtAccessTokenPayload> = {
       clientId,
       userId: user.userId,
       username: user.username,
       email: user.email,
-      displayName: user.employee ? user.employee.employeeName : '',
-      employeeId: user.employee ? user.employee.employeeId : null,
+      employeeId: user.employeeId,
+      displayName: employeeName,
     };
 
     return jwtPayload;
@@ -343,11 +361,15 @@ export class AuthService {
   // Set data payload JWT Permission Token
   public populateJwtPermissionTokenPayloadFromUser(
     roleId: number,
+    roleName: string,
     branchId: number,
+    isHeadOffice: boolean,
   ) {
     const jwtPayload: Partial<JwtPermissionTokenPayload> = {
       roleId,
+      roleName,
       branchId,
+      isHeadOffice,
     };
 
     return jwtPayload;
@@ -431,5 +453,30 @@ export class AuthService {
     } catch (e) {
       throw new UnauthorizedException(e.message);
     }
+  }
+
+  private async getUserRole(userId: number): Promise<UserRoleResponse[]> {
+    const qb = createQueryBuilder();
+    qb.addSelect('t1.role_id', 'roleId');
+    qb.addSelect('t1.branch_id', 'branchId');
+    qb.addSelect('t2.role_name', 'roleName');
+    qb.addSelect('t3.branch_name', 'branchName');
+    qb.addSelect('t3.branch_code', 'branchCode');
+    qb.addSelect('t3.is_head_office', 'isHeadOffice');
+    qb.from('user_role', 't1');
+    qb.innerJoin(
+      'role',
+      't2',
+      't1.role_id = t2.role_id AND t2.is_deleted = false',
+    );
+    qb.innerJoin(
+      'branch',
+      't3',
+      't1.branch_id = t3.branch_id AND t2.is_deleted = false',
+    );
+    qb.where('t1.user_id = :userId', { userId });
+    qb.andWhere('t1.is_deleted = false');
+
+    return await qb.getRawMany();
   }
 }

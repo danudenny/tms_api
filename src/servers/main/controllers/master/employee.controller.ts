@@ -34,4 +34,28 @@ export class EmployeeController {
   public async findAllEmployee(@Body() payload: BaseMetaPayloadVm) {
     return this.employeeService.findAllEmployeeByRequest(payload);
   }
+
+  @Post('cod/list/:branchId')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: EmployeeFindAllResponseVm })
+  public async findAllEmployeeCodBranch(
+    @Param('branchId') branchId: string,
+    @Body() payload: BaseMetaPayloadVm,
+  ) {
+    return this.employeeService.findAllEmployeeCodByRequestBranch(
+      payload,
+      branchId,
+    );
+  }
+
+  @Post('cod/list')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: EmployeeFindAllResponseVm })
+  public async findAllEmployeeCod(@Body() payload: BaseMetaPayloadVm) {
+    return this.employeeService.findAllEmployeeCodByRequest(payload);
+  }
 }
