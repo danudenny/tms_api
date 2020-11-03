@@ -26,13 +26,16 @@ export class AwbSunfishQueueService {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async (job, done) => {
       const data = job.data;
-
-      await AwbSunfishService.pushDataDlv(
-        data.awbNumber,
-        data.employeeId,
-        data.historyDate,
-      );
-      done();
+      try {
+        await AwbSunfishService.pushDataDlv(
+          data.awbNumber,
+          data.employeeId,
+          data.historyDate,
+        );
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
 
     this.queue.on('completed', job => {
