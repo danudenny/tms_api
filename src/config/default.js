@@ -97,8 +97,8 @@ module.exports = {
       'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-tracking-cluster-nrgvr.mongodb.net/test?retryWrites=true&w=majority&readPreference=secondaryPreferred',
   },
   sendgrid: {
-    apiKeyId: 'le77jXQbS9K4wtbDwV4zwg',
+    apiKeyId: '03GtPFfkRzS6y47gfg23sQ',
     apiKey:
-      'SG.le77jXQbS9K4wtbDwV4zwg.Wt4-nTIvN4CZergYNnnrwT9AaX-ZCKz62KQD5e7n8ww',
+      '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',
   },
 };
