@@ -118,7 +118,11 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.codPayment, 't8', j =>
+    q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -255,7 +259,11 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.codPayment, 't8', j =>
+    q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
