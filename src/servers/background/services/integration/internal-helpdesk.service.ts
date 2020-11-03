@@ -5,8 +5,8 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { In } from 'typeorm';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { HelpdeskPayloadVm, HelpdeskResponseVM } from '../../models/internal/helpdesk.vm';
-import { Awb } from 'src/shared/orm-entity/awb';
-import { AwbItem } from 'src/shared/orm-entity/awb-item';
+import { Awb } from '../../../../shared/orm-entity/awb';
+import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 
 export class InternalHelpdeskService {
 

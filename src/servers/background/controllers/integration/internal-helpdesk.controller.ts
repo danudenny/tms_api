@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get } from '@nestjs/common';
-import { Transactional } from 'src/shared/external/typeorm-transactional-cls-hooked/Transactional';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import {
     ApiImplicitHeader, ApiOkResponse, ApiUseTags,
 } from '../../../../shared/external/nestjs-swagger';
