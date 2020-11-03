@@ -856,13 +856,15 @@ export class SmdPrintService {
       'received-bag',
       queryParams.id,
     );
-    const data = printPayload.data;
+    // const data = printPayload.data;
 
     if (!printPayload || (printPayload && !printPayload.data)) {
       RequestErrorService.throwObj({
         message: 'Tanda terima tidak ditemukan',
       });
     }
+
+    const data = printPayload.data;
 
     if (queryParams.userId) {
       const currentUser = await RepositoryService.user

@@ -68,7 +68,7 @@ export class BagScanDoSmdQueueService {
           resultbagItemHistory.userId = data.userId.toString();
           resultbagItemHistory.branchId = data.branchId.toString();
           resultbagItemHistory.historyDate = moment().toDate();
-          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_HUB.toString();
+          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_LINE_HAUL.toString();
           resultbagItemHistory.userIdCreated = data.userId;
           resultbagItemHistory.createdTime = moment().toDate();
           resultbagItemHistory.userIdUpdated = data.userId;
@@ -88,7 +88,7 @@ export class BagScanDoSmdQueueService {
               Number(itemAwb.awbItemId),
               Number(data.branchId),
               Number(data.userId),
-              AWB_STATUS.IN_HUB,
+              AWB_STATUS.IN_LINE_HAUL,
             );
           }
         }
