@@ -64,13 +64,13 @@ export class AwbNotificationMailQueueService {
                   address: pickreq.recipientAddress,
                 },
               };
-              // NOTE: only for testing
+
               await NotificationMailService.podProblem(
                 pickreq.recipientEmail,
                 message,
               );
             } else {
-              console.log(' ### NOTIF EMAIL :: NOT FOUND RECIPIENT EMAIL :: ', pickreq.refAwbNumber);
+              console.log(' ### NOTIF EMAIL :: NOT FOUND RECIPIENT EMAIL :: ', data.awbItemId);
             } // end pickreq
           }
         }
