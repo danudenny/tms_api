@@ -48,6 +48,7 @@ import { CodExportMongoQueueService } from './services/cod/cod-export-queue.serv
 import { BagRepresentativeScanOutHubQueueService } from './services/bag-representative-scan-out-hub-queue.service';
 import { BagScanVendorQueueService } from './services/bag-scan-vendor-queue.service';
 import { CodSqlExportMongoQueueService } from './services/cod/cod-sql-export-queue.service';
+import { AwbNotificationMailQueueService } from './services/notification/awb-notification-mail-queue.service';
 // #endregion import
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -141,12 +142,14 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       BagScanOutBranchQueueService.boot();
       BagScanOutHubQueueService.boot();
       MappingRoleQueueService.boot();
-      AwbSendPartnerQueueService.boot();
+      // AwbSendPartnerQueueService.boot();
       BagDropoffHubQueueService.boot();
       UploadImagePodQueueService.boot();
       CreateBagFirstScanHubQueueService.boot();
       CreateBagAwbScanHubQueueService.boot();
+      AwbNotificationMailQueueService.boot();
     }
+
     if (serverConfig.bullCod) {
       // CodPaymentQueueService.boot();
       CodFirstTransactionQueueService.boot();
@@ -159,6 +162,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       // init Cron here
       CodCronSettlementQueueService.init();
     }
+
     if (serverConfig.bullSmd) {
       BagRepresentativeScanOutHubQueueService.boot();
       BagScanVendorQueueService.boot();
