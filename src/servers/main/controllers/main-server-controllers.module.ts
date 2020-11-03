@@ -55,7 +55,6 @@ import { V2MobileSyncController } from './mobile/v2/mobile-sync.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
 import {DoSmdController} from './master/do-smd.controller';
 import {PaymentProviderController} from './mobile/mobile-payment-provider.controller';
-import {CodPaymentController} from './mobile/mobile-cod-payment.controller';
 import { V1CombinePackageController } from './web/v1/combine-package.controller';
 import { V1WebAwbCodController } from './web/v1/web-awb-cod.controller';
 import { V1WebAwbCodVoucherController } from './web/v1/web-awb-cod-voucher.controller';
@@ -63,6 +62,7 @@ import { TransactionStatusController } from './master/transaction-status.control
 import { BankAccountController } from './master/bank-account.controller';
 import { PackageTypeController } from './master/package-type.controller';
 import { CodUserToBranchController } from './master/cod-user-to-branch.controller';
+import { V2CodPaymentController } from './mobile/v2/mobile-cod-payment.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -122,7 +122,7 @@ import { CodUserToBranchController } from './master/cod-user-to-branch.controlle
     RolePodManualController,
     DoSmdController,
     PaymentProviderController,
-    CodPaymentController,
+    V2CodPaymentController,
     V1CombinePackageController,
     V1WebAwbCodController,
     V1WebAwbCodVoucherController,
