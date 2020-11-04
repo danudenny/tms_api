@@ -39,7 +39,7 @@ export class MobileSmdListService {
 
     const authMeta = AuthService.getAuthData();
     const paramUserId =  authMeta.userId;
-    const startDate = moment().add(-2, 'days').format('YYYY-MM-DD 00:00:00');
+    const startDate = moment().add(-3, 'days').format('YYYY-MM-DD 00:00:00');
     const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
 
     const qb = createQueryBuilder();
@@ -189,7 +189,7 @@ export class MobileSmdListService {
 
     const authMeta = AuthService.getAuthData();
     const paramUserId =  authMeta.userId;
-    const startDate = moment().add(-2, 'days').format('YYYY-MM-DD 00:00:00');
+    const startDate = moment().add(-3, 'days').format('YYYY-MM-DD 00:00:00');
     const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
 
     const qb = createQueryBuilder();
@@ -266,7 +266,7 @@ export class MobileSmdListService {
 
     const authMeta = AuthService.getAuthData();
     const paramUserId =  authMeta.userId;
-    const startDate = moment().add(-2, 'days').format('YYYY-MM-DD 00:00:00');
+    const startDate = moment().add(-3, 'days').format('YYYY-MM-DD 00:00:00');
     const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
 
     const qb = createQueryBuilder();
