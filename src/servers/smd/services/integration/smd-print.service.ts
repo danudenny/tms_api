@@ -23,15 +23,23 @@ export class SmdPrintService {
       SELECT
         ba.bagging_id,
         ba.bagging_code,
-        ba.total_item,
+        COUNT(DISTINCT bai.bagging_item_id) AS total_item,
         ba.total_weight,
         r.representative_code,
         r.representative_name
       FROM bagging ba
       INNER JOIN representative r ON r.representative_id = ba.representative_id_to
+      INNER JOIN bagging_item bai ON bai.bagging_id = ba.bagging_id AND bai.is_deleted = FALSE
       WHERE
         ba.bagging_id = '${queryParams.id}' AND
-        ba.is_deleted = FALSE;
+        ba.is_deleted = FALSE
+      GROUP BY
+				ba.bagging_id,
+        ba.bagging_code,
+        ba.total_weight,
+        r.representative_code,
+        r.representative_name
+      LIMIT 1;
     `;
     const bagging = await RawQueryService.query(rawQuery, null, false);
 
