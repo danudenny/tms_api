@@ -34,6 +34,7 @@ export class RolePermissionService {
 
   public static async rolePermissionUpdateByRequest({
     roleId,
+    appName,
     rolesAccessPermissions,
   }: RolePermissionUpdatePayloadVm): Promise<RolePermissionUpdateResponseVm> {
     const role = await RepositoryService.role.loadById(roleId);
@@ -47,7 +48,7 @@ export class RolePermissionService {
     }
 
     const rolePermissions: RolePermission[] = [];
-    const appName = 'POD'; // set appName role permission
+    appName = appName ? appName : 'POD'; // set appName role permission
 
     for (const rolePermissionName of rolesAccessPermissions) {
       const rolePermission = RepositoryService.rolePermission.manager.create(RolePermission, {
