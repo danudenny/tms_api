@@ -149,8 +149,8 @@ export class ScaninSmdReportService {
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
       ['ds.do_smd_code', 'No SMD'],
-      ['ds.do_smd_time', 'Tgl Di Buat'],
-      ['dsd.arrival_time', 'Tgl Tiba'],
+      ['TO_CHAR(ds.do_smd_time, \'DD Mon YYYY HH24:MI\')', 'Tgl Di Buat'],
+      ['TO_CHAR(dsd.arrival_time, \'DD Mon YYYY HH24:MI\')', 'Tgl Tiba'],
       ['e.fullname', 'Handover'],
       ['dsv.vehicle_number', 'Kendaraan'],
       ['bf.branch_name', 'Gerai Asal'],
