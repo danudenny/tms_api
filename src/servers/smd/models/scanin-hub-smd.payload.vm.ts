@@ -13,6 +13,11 @@ export class WebScanInBaggingVm  {
   @IsDefined({message: 'No Bagging harus diisi'})
   @Type(() => String)
   baggingNumber: string[];
+
+  // TODO: validation if array length = 0
+  @IsDefined({message: 'hubId harus bernilai number 1 atau 0'})
+  @Type(() => Number)
+  hubId: 0 | 1;
 }
 
 export class WebScanInBagRepresentativeVm  {

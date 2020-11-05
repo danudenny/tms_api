@@ -77,6 +77,7 @@ export class BaggingDropoffHubQueueService {
                 itemAwb.awbItemId,
                 data.branchId,
                 data.userId,
+                data.isSmd,
               );
             }
           }
@@ -103,6 +104,7 @@ export class BaggingDropoffHubQueueService {
     bagItemId: number,
     userId: number,
     branchId: number,
+    isSmd = 0,
   ) {
     const obj = {
       dropoffHubBaggingId,
@@ -110,6 +112,7 @@ export class BaggingDropoffHubQueueService {
       userId,
       branchId,
       timestamp: moment().toDate(),
+      isSmd,
     };
 
     return BaggingDropoffHubQueueService.queue.add(obj);

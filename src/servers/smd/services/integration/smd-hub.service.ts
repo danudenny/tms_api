@@ -189,6 +189,7 @@ export class SmdHubService {
     const dataItem = [];
     const timeNow = moment().toDate();
     const result = new WebScanInBaggingResponseVm();
+    const isSmd = payload.hubId ? payload.hubId : 0;
 
     let totalSuccess = 0;
     let totalError = 0;
@@ -290,12 +291,13 @@ export class SmdHubService {
                   dropoffHubBagging.bagId = resultBag.bag_id;
                   dropoffHubBagging.bagItemId = resultBag.bag_item_id;
                   dropoffHubBagging.bagNumber = resultBag.bag_number;
+                  dropoffHubBagging.isSmd = isSmd;
                   await DropoffHubBagging.save(dropoffHubBagging);
 
                   // NOTE: background job for insert bag item history
                   BagItemHistoryQueueService.addData(
                     resultBag.bag_item_id,
-                    BAG_STATUS.DO_HUB,
+                    isSmd ? BAG_STATUS.DO_LINE_HAUL : BAG_STATUS.DO_HUB,
                     permissonPayload.branchId,
                     authMeta.userId,
                   );
@@ -308,6 +310,7 @@ export class SmdHubService {
                     resultBag.bag_item_id,
                     authMeta.userId,
                     permissonPayload.branchId,
+                    isSmd,
                   );
 
                   totalSuccess += 1;

@@ -46,6 +46,12 @@ export class DropoffHubBagging extends TmsBaseEntity {
   })
   bagNumber: string;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'is_smd',
+  })
+  isSmd: number;
+
   @ManyToOne(() => Bag, bag => bag.dropoffHubs, {
     onDelete: 'CASCADE',
   })
