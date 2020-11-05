@@ -45,6 +45,8 @@ export class PrintDoPodService {
               awbNumber: true,
               consigneeName: true,
               totalWeight: true,
+              totalCodValue: true,
+              isCod: true,
             },
           },
         },
@@ -58,7 +60,8 @@ export class PrintDoPodService {
       });
     }
 
-    this.printDoPodAndQueryMeta(
+    // handle Surat Jalan Transit
+    this.printDoPodTransitAndQueryMeta(
       res,
       doPod as any,
       {

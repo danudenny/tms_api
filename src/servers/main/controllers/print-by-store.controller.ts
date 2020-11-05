@@ -48,7 +48,10 @@ export class PrintByStoreController {
     @Query() queryParams: PrintDoPodPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
-    return PrintByStoreService.executePrintDoPodTransit(serverResponse, queryParams);
+    return PrintByStoreService.executePrintDoPodTransit(
+      serverResponse,
+      queryParams,
+    );
   }
 
   @Post('do-pod-bag/store')
