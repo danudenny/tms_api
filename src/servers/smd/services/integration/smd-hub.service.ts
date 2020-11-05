@@ -246,7 +246,7 @@ export class SmdHubService {
           const resultDataBag = await RawQueryService.query(rawQuery);
           if (resultDataBag) {
             for (const resultBag of resultDataBag) {
-              const notScan =  (resultBag.bag_item_status_id_last != BAG_STATUS.DO_HUB && resultBag.bag_item_status_id_last != BAG_STATUS.DO_LINE_HAUL) ? true : false;
+              const notScan =  (resultBag.bag_item_status_id_last == BAG_STATUS.DO_HUB || resultBag.bag_item_status_id_last == BAG_STATUS.DO_LINE_HAUL) ? false : true;
               // Add Locking setnx redis
               const holdRedis = await RedisService.locking(
                 `hold:dropoff:${resultBag.bag_item_id}`,
@@ -385,7 +385,7 @@ export class SmdHubService {
         );
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
-        const notScan =  (bagRepresentativeData.bagRepresentativeStatusIdLast != BAG_REPRESENTATIVE_STATUS.DO_HUB && bagRepresentativeData.bagRepresentativeStatusIdLast != BAG_REPRESENTATIVE_STATUS.DO_LINE_HAUL) ? true : false;
+        const notScan =  (bagRepresentativeData.bagRepresentativeStatusIdLast == BAG_REPRESENTATIVE_STATUS.DO_HUB || bagRepresentativeData.bagRepresentativeStatusIdLast == BAG_REPRESENTATIVE_STATUS.DO_LINE_HAUL) ? false : true;
 
         if (notScan && holdRedis) {
           // update status bagRepresentative
