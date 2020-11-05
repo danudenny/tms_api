@@ -246,7 +246,7 @@ export class SmdHubService {
           const resultDataBag = await RawQueryService.query(rawQuery);
           if (resultDataBag) {
             for (const resultBag of resultDataBag) {
-              const notScan =  resultBag.bag_item_status_id_last != BAG_STATUS.DO_HUB ? true : false;
+              const notScan =  (resultBag.bag_item_status_id_last != BAG_STATUS.DO_HUB && resultBag.bag_item_status_id_last != BAG_STATUS.DO_LINE_HAUL) ? true : false;
               // Add Locking setnx redis
               const holdRedis = await RedisService.locking(
                 `hold:dropoff:${resultBag.bag_item_id}`,
@@ -278,7 +278,7 @@ export class SmdHubService {
                 if (bagItem) {
                   // update status bagItem
                   await BagItem.update({ bagItemId: bagItem.bagItemId }, {
-                    bagItemStatusIdLast: BAG_STATUS.DO_HUB,
+                    bagItemStatusIdLast: isSmd ? BAG_STATUS.DO_LINE_HAUL : BAG_STATUS.DO_HUB,
                     branchIdLast: permissonPayload.branchId,
                     updatedTime: timeNow,
                     userIdUpdated: authMeta.userId,
@@ -385,12 +385,12 @@ export class SmdHubService {
         );
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
-        const notScan =  bagRepresentativeData.bagRepresentativeStatusIdLast != BAG_REPRESENTATIVE_STATUS.DO_HUB ? true : false;
+        const notScan =  (bagRepresentativeData.bagRepresentativeStatusIdLast != BAG_REPRESENTATIVE_STATUS.DO_HUB && bagRepresentativeData.bagRepresentativeStatusIdLast != BAG_REPRESENTATIVE_STATUS.DO_LINE_HAUL) ? true : false;
 
         if (notScan && holdRedis) {
           // update status bagRepresentative
           await BagRepresentative.update({ bagRepresentativeId: bagRepresentativeData.bagRepresentativeId }, {
-            bagRepresentativeStatusIdLast: BAG_REPRESENTATIVE_STATUS.DO_HUB,
+            bagRepresentativeStatusIdLast: isSmd ? BAG_REPRESENTATIVE_STATUS.DO_LINE_HAUL : BAG_REPRESENTATIVE_STATUS.DO_HUB,
             updatedTime: timeNow,
             userIdUpdated: authMeta.userId,
           });
