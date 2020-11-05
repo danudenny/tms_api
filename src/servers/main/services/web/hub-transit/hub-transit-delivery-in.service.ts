@@ -51,7 +51,8 @@ export class HubTransitDeliveryInService {
       if (bagData) {
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
-        const notScan =  bagData.bagItemStatusIdLast != BAG_STATUS.DO_HUB ? true : false;
+        const BAG_STATUS_DO_SELECTED = (payload.hubId === 0) ? BAG_STATUS.DO_HUB : BAG_STATUS.DO_LINE_HAUL;
+        const notScan = bagData.bagItemStatusIdLast != BAG_STATUS_DO_SELECTED ? true : false;
         // Add Locking setnx redis
         const holdRedis = await RedisService.locking(
           `hold:dropoff:${bagData.bagItemId}`,
@@ -83,7 +84,7 @@ export class HubTransitDeliveryInService {
           if (bagItem) {
             // update status bagItem
             await BagItem.update({ bagItemId: bagItem.bagItemId }, {
-              bagItemStatusIdLast: BAG_STATUS.DO_HUB,
+              bagItemStatusIdLast: BAG_STATUS_DO_SELECTED,
               branchIdLast: permissonPayload.branchId,
               updatedTime: timeNow,
               userIdUpdated: authMeta.userId,
@@ -95,12 +96,13 @@ export class HubTransitDeliveryInService {
             dropoffHub.bagId = bagData.bag.bagId;
             dropoffHub.bagItemId = bagData.bagItemId;
             dropoffHub.bagNumber = bagNumber;
+            dropoffHub.isSmd = payload.hubId;
             await DropoffHub.save(dropoffHub);
 
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
               bagData.bagItemId,
-              BAG_STATUS.DO_HUB,
+              BAG_STATUS_DO_SELECTED,
               permissonPayload.branchId,
               authMeta.userId,
             );
@@ -119,7 +121,7 @@ export class HubTransitDeliveryInService {
             // TODO: need refactoring code
             const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
               bagData.bagItemId,
-              BAG_STATUS.DO_HUB,
+              BAG_STATUS_DO_SELECTED,
             );
             if (doPodDetailBag) {
               // counter total scan in

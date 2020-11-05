@@ -14,6 +14,9 @@ export class WebScanInBagVm  {
   @IsBagNumber({ message: 'No gabung paket tidak sesuai' })
   @Type(() => String)
   bagNumber: string[];
+  
+  @ApiModelProperty()
+  hubId: number;
 }
 
 export class WebScanInValidateBagVm  {
