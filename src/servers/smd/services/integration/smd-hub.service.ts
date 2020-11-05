@@ -360,6 +360,7 @@ export class SmdHubService {
     const dataItem = [];
     const timeNow = moment().toDate();
     const result = new WebScanInBagRepresentativeResponseVm();
+    const isSmd = payload.hubId ? payload.hubId : 0;
 
     let totalSuccess = 0;
     let totalError = 0;
@@ -398,7 +399,7 @@ export class SmdHubService {
           historyBagRepresentative.bagRepresentativeCode = bagRepresentativeData.bagRepresentativeCode;
           historyBagRepresentative.bagRepresentativeDate = moment(bagRepresentativeData.bagRepresentativeDate).toDate();
           historyBagRepresentative.bagRepresentativeId = bagRepresentativeData.bagRepresentativeId.toString();
-          historyBagRepresentative.bagRepresentativeStatusIdLast = '3500';
+          historyBagRepresentative.bagRepresentativeStatusIdLast = isSmd ? '3550' : '3500';
           historyBagRepresentative.branchId = permissonPayload.branchId.toString();
           historyBagRepresentative.representativeIdTo = bagRepresentativeData.representativeIdTo;
           historyBagRepresentative.totalItem = bagRepresentativeData.totalItem;
@@ -414,6 +415,7 @@ export class SmdHubService {
           dropoffHubBagRepresentative.branchId = permissonPayload.branchId;
           dropoffHubBagRepresentative.bagRepresentativeId = bagRepresentativeData.bagRepresentativeId;
           dropoffHubBagRepresentative.bagRepresentativeCode = bagRepresentativeData.bagRepresentativeCode;
+          dropoffHubBagRepresentative.isSmd = isSmd;
           await DropoffHubBagRepresentative.save(dropoffHubBagRepresentative);
 
           // NOTE:
@@ -424,6 +426,7 @@ export class SmdHubService {
             bagRepresentativeData.bagRepresentativeId,
             authMeta.userId,
             permissonPayload.branchId,
+            isSmd,
           );
 
           totalSuccess += 1;

@@ -14,7 +14,9 @@ export class WebScanInBaggingVm  {
   @Type(() => String)
   baggingNumber: string[];
 
-  // TODO: validation if array length = 0
+  @ApiModelPropertyOptional({
+    example: [0, 1],
+  })
   @IsDefined({message: 'hubId harus bernilai number 1 atau 0'})
   @Type(() => Number)
   hubId: 0 | 1;
@@ -30,5 +32,11 @@ export class WebScanInBagRepresentativeVm  {
   @IsDefined({message: 'No Gabung Sortir Kota harus diisi'})
   @Type(() => String)
   bagRepresentativeNumber: string[];
-}
 
+  @ApiModelPropertyOptional({
+    example: [0, 1],
+  })
+  @IsDefined({message: 'hubId harus bernilai number 1 atau 0'})
+  @Type(() => Number)
+  hubId: 0 | 1;
+}

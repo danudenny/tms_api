@@ -31,6 +31,12 @@ export class DropoffHubBagRepresentative extends TmsBaseEntity {
   })
   bagRepresentativeCode: string;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'is_smd',
+  })
+  isSmd: number;
+
   @OneToMany(() => DropoffHubDetailBagRepresentative, e => e.dropoffHubBagRepresentative, { cascade: ['insert'] })
   dropoffHubBagRepresentativeDetails: DropoffHubDetailBagRepresentative[];
 
