@@ -1111,6 +1111,7 @@ export class V1WebAwbCodService {
         authMeta.username,
         permissonPayload.branchId,
         transaction.userIdDriver,
+        transaction.transactionDate,
       );
 
       // get data
@@ -1274,8 +1275,10 @@ export class V1WebAwbCodService {
     nikAdmin: string,
     branchId: number,
     userIdDriver: number,
+    transactionDate?: Date,
   ): Promise<WebCodPrintMetaVm> {
-    const timestamp = moment();
+    // handle transactionDate
+    const timestamp = transactionDate ? moment(transactionDate) : moment();
     const result = new WebCodPrintMetaVm();
 
     result.transactionCode = transactionCode;
