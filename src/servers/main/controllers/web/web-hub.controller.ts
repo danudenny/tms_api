@@ -20,6 +20,8 @@ import { WebDropOffSummaryListResponseVm, WebScanInHubSortListResponseVm } from 
 import { HubTransitDeliveryOutService } from '../../services/web/hub-transit/hub-transit-delivery-out.service';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
+import { HubMonitoringService } from '../../services/web/hub-transit/hub-monitoring.service';
+import { MonitoringBagHubResponseVm, MonitoringBagHubTotalBagResponseVm, MonitoringSortirHubResponseVm } from '../../models/hub-monitoring.response.vm';
 
 @ApiUseTags('Hub Delivery')
 @Controller('pod/hub')
@@ -82,5 +84,19 @@ export class WebHubController {
   @ApiOkResponse({ type: WebHubScanOutAwbResponseVm })
   public async sortirHub(@Body() payload: TransferAwbNumberHubVm) {
     return HubSortirService.hubAwbNumber(payload);
+  }
+
+  @Post('monitoring/bag')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: MonitoringBagHubResponseVm })
+  public async monitoringBagHub(@Body() payload: BaseMetaPayloadVm) {
+    return HubMonitoringService.monitoringBagHub(payload);
+  }
+
+  @Post('monitoring/sortir')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: MonitoringSortirHubResponseVm })
+  public async monitoringSortirHub(@Body() payload: BaseMetaPayloadVm) {
+    return HubMonitoringService.monitoringSortirHub(payload);
   }
 }
