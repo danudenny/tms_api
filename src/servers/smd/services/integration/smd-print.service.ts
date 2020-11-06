@@ -193,7 +193,7 @@ export class SmdPrintService {
     );
     const data = printPayload.data;
 
-    if (!printPayload || (printPayload && !printPayload.data)) {
+    if (!printPayload || (printPayload && !printPayload.data) || printPayload.data.length == 0) {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
       });
