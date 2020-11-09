@@ -19,10 +19,8 @@ export class WebScanInBagVm  {
     example: 0,
     skipValidation: true,
   })
-  // TODO: validation if array length = 0
-  @IsDefined({message: 'HubId harus bernilai 0 atau 1'})
-  @Type(() => Number)
-  hubId: 0 | 1;
+  @ApiModelProperty()
+  hubId: number;
 }
 
 export class WebScanInValidateBagVm  {
