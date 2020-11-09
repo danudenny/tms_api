@@ -1,4 +1,4 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { EntityRepository, Repository, In } from 'typeorm';
 
 import { OrionRepositoryService } from '../services/orion-repository.service';
 import { DoPodDetailBag } from '../orm-entity/do-pod-detail-bag';
@@ -31,7 +31,7 @@ export class DoPodDetailBagRepository extends Repository<DoPodDetailBag> {
       bagItemId: true,
       createdTime: true,
     });
-    q.where(e => e.bagItem.bagItemStatusIdLast, w => w.in(bagStatusIds));
+    q.where(e => e.bagItem.bagItemStatusIdLast, w => In(bagStatusIds));
     q.andWhere(e => e.bagItemId, w => w.equals(bagItemId));
     q.andWhere(e => e.isDeleted, w => w.equals(false));
     q.orderBy({ createdTime: 'DESC' });
