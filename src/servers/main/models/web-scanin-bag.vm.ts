@@ -14,6 +14,15 @@ export class WebScanInBagVm  {
   @IsBagNumber({ message: 'No gabung paket tidak sesuai' })
   @Type(() => String)
   bagNumber: string[];
+
+  @ApiModelProperty({
+    example: 0,
+    skipValidation: true,
+  })
+  // TODO: validation if array length = 0
+  @IsDefined({message: 'HubId harus bernilai 0 atau 1'})
+  @Type(() => Number)
+  hubId: 0 | 1;
 }
 
 export class WebScanInValidateBagVm  {

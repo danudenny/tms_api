@@ -17,7 +17,7 @@ export class DoPodDetailBagRepository extends Repository<DoPodDetailBag> {
     return await q.exec();
   }
 
-  static async getDataByBagItemIdAndBagStatus(bagItemId: number, bagStatusId: number) {
+  static async getDataByBagItemIdAndBagStatus(bagItemId: number, bagStatusIds: any) {
     const doPodRepository = new OrionRepositoryService(DoPodDetailBag);
     const q = doPodRepository.findOne();
     q.select({
@@ -31,7 +31,7 @@ export class DoPodDetailBagRepository extends Repository<DoPodDetailBag> {
       bagItemId: true,
       createdTime: true,
     });
-    q.where(e => e.bagItem.bagItemStatusIdLast, w => w.equals(bagStatusId));
+    q.where(e => e.bagItem.bagItemStatusIdLast, w => w.in(bagStatusIds));
     q.andWhere(e => e.bagItemId, w => w.equals(bagItemId));
     q.andWhere(e => e.isDeleted, w => w.equals(false));
     q.orderBy({ createdTime: 'DESC' });
