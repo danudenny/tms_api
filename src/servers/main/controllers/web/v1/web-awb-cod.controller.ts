@@ -2,38 +2,68 @@ import { V1WebReportCodStreamService } from './../../../services/web/v1/web-repo
 import { Res } from '@nestjs/common';
 // #region import
 import {
-  Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UploadedFile, UseGuards,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
+import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
 import {
-  ResponseSerializerOptions,
-} from '../../../../../shared/decorators/response-serializer-options.decorator';
-import {
-  ApiBearerAuth, ApiOkResponse, ApiUseTags,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiUseTags,
 } from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
-import { BaseMetaPayloadVm, ReportBaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
-  WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
-  WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceCreatePayloadVm, WebCodInvoiceDraftPayloadVm,
-  WebCodInvoiceRemoveAwbPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodTransactionUpdatePayloadVm,
+  BaseMetaPayloadVm,
+  ReportBaseMetaPayloadVm,
+} from '../../../../../shared/models/base-meta-payload.vm';
+import {
+  WebCodBankStatementCancelPayloadVm,
+  WebCodBankStatementValidatePayloadVm,
+  WebCodInvoiceAddAwbPayloadVm,
+  WebCodInvoiceCreatePayloadVm,
+  WebCodInvoiceDraftPayloadVm,
+  WebCodInvoiceRemoveAwbPayloadVm,
+  WebCodTransferHeadOfficePayloadVm,
+  WebCodTransferPayloadVm,
+  WebCodTransactionUpdatePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
-  WebAwbCodBankStatementResponseVm, WebAwbCodDetailPartnerResponseVm, WebAwbCodInvoiceResponseVm,
-  WebAwbCodListResponseVm, WebAwbCodDlvListResponseVm, WebAwbCodListTransactionResponseVm, WebAwbCodSupplierInvoiceResponseVm,
-  WebCodBankStatementResponseVm, WebCodInvoiceAddResponseVm, WebCodInvoiceDraftResponseVm,
-  WebCodInvoiceRemoveResponseVm, WebCodListInvoiceResponseVm,
-  WebCodSupplierInvoicePaidResponseVm, WebCodTransactionDetailResponseVm,
-  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm, WebAwbCodVoidListResponseVm, WebCodCountResponseVm, WebAwbCodDlvV2ListResponseVm,
+  WebAwbCodBankStatementResponseVm,
+  WebAwbCodDetailPartnerResponseVm,
+  WebAwbCodInvoiceResponseVm,
+  WebAwbCodListResponseVm,
+  WebAwbCodDlvListResponseVm,
+  WebAwbCodListTransactionResponseVm,
+  WebAwbCodSupplierInvoiceResponseVm,
+  WebCodBankStatementResponseVm,
+  WebCodInvoiceAddResponseVm,
+  WebCodInvoiceDraftResponseVm,
+  WebCodInvoiceRemoveResponseVm,
+  WebCodListInvoiceResponseVm,
+  WebCodSupplierInvoicePaidResponseVm,
+  WebCodTransactionDetailResponseVm,
+  WebCodTransferBranchResponseVm,
+  WebCodTransferHeadOfficeResponseVm,
+  WebCodInvoiceCreateResponseVm,
+  WebCodTransactionUpdateResponseVm,
+  WebAwbCodVoidListResponseVm,
+  WebCodCountResponseVm,
+  WebAwbCodDlvV2ListResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import { V1WebCodBankStatementService } from '../../../services/web/v1/web-cod-bank-statement.service';
-import {
-  V1WebCodSupplierInvoiceService,
-} from '../../../services/web/v1/web-cod-supplier-invoice.service';
+import { V1WebCodSupplierInvoiceService } from '../../../services/web/v1/web-cod-supplier-invoice.service';
 import { V1WebReportCodService } from '../../../services/web/v1/web-report-cod.service';
 import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sql-cod.service';
 
@@ -416,6 +446,19 @@ export class V1WebAwbCodController {
     @Res() outgoingHTTP,
   ) {
     return await V1WebReportCodStreamService.printCodSupplierInvoice(
+      payload.filters,
+      outgoingHTTP,
+    );
+  }
+
+  @Post('supplierInvoice/noncodfeev2/stream/print')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceStreamNonCodFeePrintV2(
+    @Body() payload: ReportBaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await V1WebReportCodStreamService.printNonCodSupplierInvoiceV2(
       payload.filters,
       outgoingHTTP,
     );

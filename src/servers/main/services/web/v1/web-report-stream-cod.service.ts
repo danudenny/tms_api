@@ -18,7 +18,7 @@ export class V1WebReportCodStreamService {
   static expireOnSeconds = 600; // 5 minute
 
   static async addQueueBullPrint(filters, noncodfee) {
-    console.log("inside bull command")
+    console.log('inside bull command');
     const uuidv1 = require('uuid/v1');
     const uuidString = uuidv1();
     const reportKey = `reportKeyCOD:${uuidString}`;
@@ -74,7 +74,7 @@ export class V1WebReportCodStreamService {
     'Submitted Number',
     'Date Updated',
     'User Updated',
-  ]
+  ];
 
   static CodNONFeeHeader = [
     'Partner',
@@ -104,71 +104,72 @@ export class V1WebReportCodStreamService {
     'Submitted Number',
     'Date Updated',
     'User Updated',
-  ]
-
+  ];
 
   // csv file code
   static async getCSVConfig(cod = true) {
-    const csvHeaders: any = cod ? [
-      'Partner',
-      'Awb Date',
-      'Awb',
-      'Package Amount',
-      'Cod Amount',
-      'Cod Fee',
-      'Amount Transfer',
-      'Pod Datetime',
-      'Recipient',
-      'Tipe Pembayaran',
-      'Status Internal',
-      'Tracking Status',
-      'Cust Package',
-      'Pickup Source',
-      'Current Position',
-      'Destination Code',
-      'Destination',
-      'Perwakilan',
-      'Sigesit',
-      'Package Detail',
-      'Services',
-      'Note',
-      'Submitted Date',
-      'Submitted Number',
-      'Date Updated',
-      'User Updated',
-    ] : [
-        'Partner',
-        'Awb Date',
-        'Awb',
-        'Package Amount',
-        'Cod Amount',
-        'Cod Fee',
-        'Amount Transfer',
-        'Pod Datetime',
-        'Recipient',
-        'Tipe Pembayaran',
-        'Status Internal',
-        'Tracking Status',
-        'Status Invoice',
-        'Cust Package',
-        'Pickup Source',
-        'Current Position',
-        'Destination Code',
-        'Destination',
-        'Perwakilan',
-        'Sigesit',
-        'Package Detail',
-        'Services',
-        'Note',
-        'Submitted Date',
-        'Submitted Number',
-        'Date Updated',
-        'User Updated',
-      ];
+    const csvHeaders: any = cod
+      ? [
+          'Partner',
+          'Awb Date',
+          'Awb',
+          'Package Amount',
+          'Cod Amount',
+          'Cod Fee',
+          'Amount Transfer',
+          'Pod Datetime',
+          'Recipient',
+          'Tipe Pembayaran',
+          'Status Internal',
+          'Tracking Status',
+          'Cust Package',
+          'Pickup Source',
+          'Current Position',
+          'Destination Code',
+          'Destination',
+          'Perwakilan',
+          'Sigesit',
+          'Package Detail',
+          'Services',
+          'Note',
+          'Submitted Date',
+          'Submitted Number',
+          'Date Updated',
+          'User Updated',
+        ]
+      : [
+          'Partner',
+          'Awb Date',
+          'Awb',
+          'Package Amount',
+          'Cod Amount',
+          'Cod Fee',
+          'Amount Transfer',
+          'Pod Datetime',
+          'Recipient',
+          'Tipe Pembayaran',
+          'Status Internal',
+          'Tracking Status',
+          'Status Invoice',
+          'Cust Package',
+          'Pickup Source',
+          'Current Position',
+          'Destination Code',
+          'Destination',
+          'Perwakilan',
+          'Sigesit',
+          'Package Detail',
+          'Services',
+          'Note',
+          'Submitted Date',
+          'Submitted Number',
+          'Date Updated',
+          'User Updated',
+        ];
 
-    const csvConfig = cod ?
-      this.prepareCsvFile('COD', csvHeaders) :
-      this.prepareCsvFile('COD_nonfee', csvHeaders);
+    const csvConfig = cod
+      ? this.prepareCsvFile('COD', csvHeaders)
+      : this.prepareCsvFile('COD_nonfee', csvHeaders);
     return csvConfig;
   }
 
@@ -176,7 +177,8 @@ export class V1WebReportCodStreamService {
   static prepareCsvFile(fn, headers): any {
     const appRoot = require('app-root-path');
     const uuidv1 = require('uuid/v1');
-    const fileName = moment().format('YYYYMMDD') + '_' + fn + '_' + uuidv1() + '.csv';
+    const fileName =
+      moment().format('YYYYMMDD') + '_' + fn + '_' + uuidv1() + '.csv';
     const basePath = path.join(appRoot.path, 'dist/public/temps');
     // NOTE: Test only
     // const fileName = `${fn}.csv`; // moment().format('YYYYMMDD') + '_' + fn + '_' + uuidv1() + '.csv';
@@ -210,7 +212,9 @@ export class V1WebReportCodStreamService {
 
   // private ==================================================================
   static async populateDataCsv(
-    writer, data, cod,
+    writer,
+    data,
+    cod,
     draft: boolean = false,
   ): Promise<boolean> {
     let count = 0;
@@ -236,15 +240,23 @@ export class V1WebReportCodStreamService {
           this.strReplaceFunc(d.destinationCode),
           this.strReplaceFunc(d.destination),
           d.perwakilan,
-          (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? d.userIdDriverName : ''),
+          (d.userIdDriverNik ? d.userIdDriverNik : '') +
+            ' - ' +
+            (d.userIdDriverName ? d.userIdDriverName : ''),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.packageType),
           this.strReplaceFunc(d.parcelNote),
-          '', '',
-          d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
-          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : '') + ' - ' + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ''),
+          '',
+          '',
+          d.dateUpdated
+            ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm')
+            : null,
+          (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : '') +
+            ' - ' +
+            (d.userIdUpdatedName
+              ? this.strReplaceFunc(d.userIdUpdatedName)
+              : ''),
         ]);
-
       }
       count += 1;
     } // end of while
@@ -267,31 +279,48 @@ export class V1WebReportCodStreamService {
       doc.codNilai,
       doc.codFee ? doc.codFee : '-',
       doc.codNilai,
-      doc.lastValidTrackingDateTime ? moment.utc(doc.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm') : null,
+      doc.lastValidTrackingDateTime
+        ? moment.utc(doc.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
+        : null,
       V1WebReportCodStreamService.strReplaceFunc(doc.penerima),
       doc.paymentMethod,
       doc.transactionStatus,
       doc.lastValidTrackingType,
       doc.supplierInvoiceStatus,
-      V1WebReportCodStreamService.strReplaceFunc(doc.tdcustPackage ? doc.tdcustPackage : doc.prtReferenceNo),
+      V1WebReportCodStreamService.strReplaceFunc(
+        doc.tdcustPackage ? doc.tdcustPackage : doc.prtReferenceNo,
+      ),
       V1WebReportCodStreamService.strReplaceFunc(doc.manifestTrackingSiteName),
       V1WebReportCodStreamService.strReplaceFunc(doc.lastValidTrackingSiteName),
       V1WebReportCodStreamService.strReplaceFunc(doc.prtDestinationCode),
       V1WebReportCodStreamService.strReplaceFunc(doc.tujuanKecamatan),
       V1WebReportCodStreamService.strReplaceFunc(doc.perwakilan),
-      (doc.userIdDriverNik ? doc.userIdDriverNik : '') + ' - ' + (doc.userIdDriverName ? doc.userIdDriverName : ''),
+      (doc.userIdDriverNik ? doc.userIdDriverNik : '') +
+        ' - ' +
+        (doc.userIdDriverName ? doc.userIdDriverName : ''),
       V1WebReportCodStreamService.strReplaceFunc(doc.parcelContent),
       V1WebReportCodStreamService.strReplaceFunc(doc.layanan),
       V1WebReportCodStreamService.strReplaceFunc(doc.receiverRemark),
-      "",
-      "",
-      doc.tdDateUpdated ? moment.utc(doc.tdDateUpdated).format('YYYY-MM-DD HH:mm') : doc.dateUpdated ? moment.utc(doc.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
-      (doc.tdUserIdUpdatedNik ? V1WebReportCodStreamService.strReplaceFunc(doc.tdUserIdUpdatedNik) + ' - ' + (doc.tdUserIdUpdatedName) : (doc.userIdUpdatedNik ? V1WebReportCodStreamService.strReplaceFunc(doc.userIdUpdatedNik) + ' - ' + (doc.userIdUpdatedName) : "-")),
+      '',
+      '',
+      doc.tdDateUpdated
+        ? moment.utc(doc.tdDateUpdated).format('YYYY-MM-DD HH:mm')
+        : doc.dateUpdated
+        ? moment.utc(doc.dateUpdated).format('YYYY-MM-DD HH:mm')
+        : null,
+      doc.tdUserIdUpdatedNik
+        ? V1WebReportCodStreamService.strReplaceFunc(doc.tdUserIdUpdatedNik) +
+          ' - ' +
+          doc.tdUserIdUpdatedName
+        : doc.userIdUpdatedNik
+        ? V1WebReportCodStreamService.strReplaceFunc(doc.userIdUpdatedNik) +
+          ' - ' +
+          doc.userIdUpdatedName
+        : '-',
     ];
 
     return `${values.join(',')} \n`;
   }
-
 
   static streamTransformCodFee(d) {
     // param = doc.awbNumber
@@ -315,24 +344,32 @@ export class V1WebReportCodStreamService {
         V1WebReportCodStreamService.strReplaceFunc(d.destinationCode),
         V1WebReportCodStreamService.strReplaceFunc(d.destination),
         d.perwakilan,
-        (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? d.userIdDriverName : ''),
+        (d.userIdDriverNik ? d.userIdDriverNik : '') +
+          ' - ' +
+          (d.userIdDriverName ? d.userIdDriverName : ''),
         V1WebReportCodStreamService.strReplaceFunc(d.parcelContent),
         V1WebReportCodStreamService.strReplaceFunc(d.packageType),
         V1WebReportCodStreamService.strReplaceFunc(d.parcelNote),
-        '', '',
-        d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
-        (d.userIdUpdatedNik ? V1WebReportCodStreamService.strReplaceFunc(d.userIdUpdatedNik) : '') + ' - ' + (d.userIdUpdatedName ? V1WebReportCodStreamService.strReplaceFunc(d.userIdUpdatedName) : ''),
-      ]
-
+        '',
+        '',
+        d.dateUpdated
+          ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm')
+          : null,
+        (d.userIdUpdatedNik
+          ? V1WebReportCodStreamService.strReplaceFunc(d.userIdUpdatedNik)
+          : '') +
+          ' - ' +
+          (d.userIdUpdatedName
+            ? V1WebReportCodStreamService.strReplaceFunc(d.userIdUpdatedName)
+            : ''),
+      ],
     ];
 
     return `${values.join(',')} \n`;
   }
 
   // private ==================================================================
-  static async populateDataAwbCsv(
-    writer, data,
-  ): Promise<boolean> {
+  static async populateDataAwbCsv(writer, data): Promise<boolean> {
     let count = 0;
     if (data) {
       for (const d of data) {
@@ -344,28 +381,45 @@ export class V1WebReportCodStreamService {
           d.codNilai,
           d.codFee ? d.codFee : '-',
           d.codNilai,
-          d.lastValidTrackingDateTime ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm') : null,
+          d.lastValidTrackingDateTime
+            ? moment.utc(d.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
+            : null,
           this.strReplaceFunc(d.penerima),
           d.paymentMethod,
           d.transactionStatus,
           d.lastValidTrackingType,
           d.supplierInvoiceStatus,
-          d.tdcustPackage ? this.strReplaceFunc(d.tdcustPackage) : this.strReplaceFunc(d.prtReferenceNo),
+          d.tdcustPackage
+            ? this.strReplaceFunc(d.tdcustPackage)
+            : this.strReplaceFunc(d.prtReferenceNo),
           this.strReplaceFunc(d.manifestTrackingSiteName),
           this.strReplaceFunc(d.lastValidTrackingSiteName),
           this.strReplaceFunc(d.prtDestinationCode),
           this.strReplaceFunc(d.tujuanKecamatan),
           this.strReplaceFunc(d.perwakilan),
-          (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? d.userIdDriverName : ''),
+          (d.userIdDriverNik ? d.userIdDriverNik : '') +
+            ' - ' +
+            (d.userIdDriverName ? d.userIdDriverName : ''),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
           this.strReplaceFunc(d.receiverRemark),
           '',
           '',
-          d.tdDateUpdated ? moment.utc(d.tdDateUpdated).format('YYYY-MM-DD HH:mm') : d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
-          (d.tdUserIdUpdatedNik ? this.strReplaceFunc(d.tdUserIdUpdatedNik) + ' - ' + (d.tdUserIdUpdatedName) : (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) + ' - ' + (d.userIdUpdatedName) : "-")),
+          d.tdDateUpdated
+            ? moment.utc(d.tdDateUpdated).format('YYYY-MM-DD HH:mm')
+            : d.dateUpdated
+            ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm')
+            : null,
+          d.tdUserIdUpdatedNik
+            ? this.strReplaceFunc(d.tdUserIdUpdatedNik) +
+              ' - ' +
+              d.tdUserIdUpdatedName
+            : d.userIdUpdatedNik
+            ? this.strReplaceFunc(d.userIdUpdatedNik) +
+              ' - ' +
+              d.userIdUpdatedName
+            : '-',
         ]);
-
       }
       count += 1;
     } // end of while
@@ -385,10 +439,22 @@ export class V1WebReportCodStreamService {
   }
 
   static strReplaceFunc = str => {
-    return str ? str.replace(/\n/g, ' ').replace(/\r/g, ' ').replace(/;/g, '|').replace(/,/g, '.') : null;
+    return str
+      ? str
+          .replace(/\n/g, ' ')
+          .replace(/\r/g, ' ')
+          .replace(/;/g, '|')
+          .replace(/,/g, '.')
+      : null;
   }
   private strReplaceFunc = str => {
-    return str ? str.replace(/\n/g, ' ').replace(/\r/g, ' ').replace(/;/g, '|').replace(/,/g, '.') : null;
+    return str
+      ? str
+          .replace(/\n/g, ' ')
+          .replace(/\r/g, ' ')
+          .replace(/;/g, '|')
+          .replace(/,/g, '.')
+      : null;
   }
 
   private static deleteFile(filePath) {
@@ -822,44 +888,73 @@ export class V1WebReportCodStreamService {
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
         spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
       }
 
       if (filter.field == 'transactionStart' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
         tdFilter.push({ $gte: ['$updatedTime', d] });
         allowNullTd = false;
       }
 
       if (filter.field == 'transactionEnd' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
         tdFilter.push({ $lt: ['$updatedTime', d] });
         allowNullTd = false;
       }
 
       if (filter.field == 'manifestedStart' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
         spartanFilter.push({ awbDate: { $gte: d } });
       }
 
       if (filter.field == 'manifestedEnd' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
         spartanFilter.push({ awbDate: { $lt: d } });
       }
 
       if (filter.field == 'awbStatus' && filter.value) {
-        const fv = (filter.value === 'IN_BRANCH') ? 'IN' : filter.value;
+        const fv = filter.value === 'IN_BRANCH' ? 'IN' : filter.value;
         spartanFilter.push({ lastValidTrackingType: { $eq: fv } });
       }
 
       if (filter.field == 'branchLastCode' && filter.value) {
-        spartanFilter.push({ lastValidTrackingSiteCode: { $eq: filter.value } });
+        spartanFilter.push({
+          lastValidTrackingSiteCode: { $eq: filter.value },
+        });
       }
 
       if (filter.field == 'supplier' && filter.value) {
@@ -882,7 +977,7 @@ export class V1WebReportCodStreamService {
       }
     }
 
-    console.log(spartanFilter, tdFilter, "filter");
+    console.log(spartanFilter, tdFilter, 'filter');
 
     const q = [
       {
@@ -899,10 +994,8 @@ export class V1WebReportCodStreamService {
           pipeline: [
             {
               // on inner join
-              $match:
-              {
-                $expr:
-                {
+              $match: {
+                $expr: {
                   $and: tdFilter,
                 },
               },
@@ -923,7 +1016,7 @@ export class V1WebReportCodStreamService {
                 supplierInvoiceStatusName: 1,
                 custPackage: 1,
                 codFee: 1,
-                parcelValue: 1
+                parcelValue: 1,
               },
             },
           ],
@@ -977,17 +1070,17 @@ export class V1WebReportCodStreamService {
           prtParcelValue: '$prtParcelValue',
           tdParcelValue: '$td.parcelValue',
           prtCustPackageId: '$prtCustPackageId',
-          tdcustPackage: "$td.custPackage",
+          tdcustPackage: '$td.custPackage',
           transactionStatusId: '$td.transactionStatusId',
           userIdDriver: '$courierUserId',
           userIdDriverNik: '$podCourierNik',
           userIdDriverName: '$podCourierName',
           userIdUpdatedNik: '$userUpdatedNik',
           userIdUpdatedName: '$userUpdatedName',
-          tdUserIdUpdatedNik: "$td.nikAdmin",
-          tdUserIdUpdatedName: "$td.adminName",
+          tdUserIdUpdatedNik: '$td.nikAdmin',
+          tdUserIdUpdatedName: '$td.adminName',
           dateUpdated: '$history_date',
-          tdDateUpdated: "$td.updatedTime",
+          tdDateUpdated: '$td.updatedTime',
           prtReferenceNo: 1,
           perwakilan: 1,
           layanan: 1,
@@ -1011,6 +1104,252 @@ export class V1WebReportCodStreamService {
     console.log(JSON.stringify(q), 'query');
     return coll.aggregate(q);
 
+    // const arrDriver = await this.getUserProps(datas, "driver");
+    // const arrUser = await this.getUserProps(datas, "user");
+    // console.log(arrUser, "array");
+    // for (const d of datas) {
+    //   d.transactionStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.transactionStatusId && d.transactionStatusId !== 30000), 'status_title') || '-';
+    //   d.supplierInvoiceStatus = _.get(transactionStatuses.find(x => x.transaction_status_id === d.supplierInvoiceStatusId), 'status_title') || '-';
+    //   // if (d.userIdDriver && arrDriver.length > 0) {
+    //   //   d.sigesit = _.get(arrDriver.find(x => x.employee_id === d.userIdDriver.toString()), 'fullname') || '-';
+    //   // }
+
+    //   // if (d.userIdUpdated && arrUser.length > 0)
+    //   //   d.username = _.get(arrUser.find(x => x.employee_id === d.userIdUpdated.toString()), 'fullname') || '-';
+    // }
+    // console.log(datas, "datas")
+
+    // console.log(datas);
+  }
+
+  static getNonCodSupplierInvoiceJoinDataV2(coll, filters) {
+    const spartanFilter: any = [];
+    const tdFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
+    let allowNullTd = true;
+
+    for (const filter of filters) {
+      if (filter.field == 'periodStart' && filter.value) {
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
+        spartanFilter.push({ lastValidTrackingDateTime: { $gte: d } });
+      }
+
+      if (filter.field == 'periodEnd' && filter.value) {
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
+        spartanFilter.push({ lastValidTrackingDateTime: { $lt: d } });
+      }
+
+      if (filter.field == 'transactionStart' && filter.value) {
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
+        tdFilter.push({ $gte: ['$updatedTime', d] });
+        allowNullTd = false;
+      }
+
+      if (filter.field == 'transactionEnd' && filter.value) {
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
+        tdFilter.push({ $lt: ['$updatedTime', d] });
+        allowNullTd = false;
+      }
+
+      if (filter.field == 'manifestedStart' && filter.value) {
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
+        spartanFilter.push({ awbDate: { $gte: d } });
+      }
+
+      if (filter.field == 'manifestedEnd' && filter.value) {
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
+        spartanFilter.push({ awbDate: { $lt: d } });
+      }
+
+      if (filter.field == 'awbStatus' && filter.value) {
+        const fv = filter.value === 'IN_BRANCH' ? 'IN' : filter.value;
+        spartanFilter.push({ lastValidTrackingType: { $eq: fv } });
+      }
+
+      if (filter.field == 'branchLastCode' && filter.value) {
+        if (typeof filter.value === 'string') {
+          spartanFilter.push({
+            lastValidTrackingSiteCode: { $eq: filter.value },
+          });
+        } else {
+          spartanFilter.push({
+            lastValidTrackingSiteCode: { $in: filter.value },
+          });
+        }
+      }
+
+      if (filter.field == 'supplier' && filter.value) {
+        spartanFilter.push({ partnerId: filter.value });
+      }
+
+      if (filter.field == 'transactionStatus' && filter.value) {
+        tdFilter.push({ $eq: ['$transactionStatusId', filter.value] });
+        allowNullTd = false;
+      }
+
+      if (filter.field == 'supplierInvoiceStatus' && filter.value) {
+        tdFilter.push({ $eq: ['$supplierInvoiceStatusId', filter.value] });
+        allowNullTd = false;
+      }
+
+      if (filter.field == 'sigesit' && filter.value) {
+        tdFilter.push({ $eq: ['$userIdDriver', filter.value] });
+        allowNullTd = false;
+      }
+    }
+
+    console.log(spartanFilter, tdFilter, 'filter');
+
+    const q = [
+      {
+        $match: {
+          $and: spartanFilter,
+        },
+      },
+      // { "$sort": { awbNumber: 1 } },
+      {
+        $lookup: {
+          from: 'transaction_detail',
+          as: 'td',
+          let: { awbNumber: '$awbNumber' },
+          pipeline: [
+            {
+              // on inner join
+              $match: {
+                $expr: {
+                  $and: tdFilter,
+                },
+              },
+            },
+            { $limit: 1 },
+            {
+              $project: {
+                awbNumber: 1,
+                transactionStatusId: 1,
+                supplierInvoiceStatusId: 1,
+                userIdDriver: 1,
+                userIdUpdated: 1,
+                adminName: 1,
+                nikAdmin: 1,
+                updatedTime: 1,
+                paymentMethod: 1,
+                transactionstatusname: 1,
+                supplierInvoiceStatusName: 1,
+                custPackage: 1,
+                codFee: 1,
+                parcelValue: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: '$td',
+          preserveNullAndEmptyArrays: allowNullTd,
+        },
+      },
+      // {
+      //   $lookup: {
+      //     from: 'partner_request',
+      //     as: 'pr',
+      //     let: { awbNumber: '$awbNumber' },
+      //     pipeline: [
+      //       {
+      //         // on inner join
+      //         $match:
+      //         {
+
+      //           $expr:
+      //           {
+      //             $and: [{ $eq: ['$awbNumber', '$$awbNumber'] }],
+      //           },
+      //         },
+      //       },
+      //       { $limit: 1 },
+      //       {
+      //         $project: {
+      //           awbNumber: 1,
+      //         },
+      //       },
+      //     ],
+      //   },
+      // },
+      // {
+      //   $unwind: {
+      //     path: '$pr',
+      //     preserveNullAndEmptyArrays: false,
+      //   },
+      // },
+      {
+        $project: {
+          partnerName: 1,
+          awbNumber: 1,
+          awbDate: 1,
+          codFee: '$td.codFee',
+          parcelContent: '$prtParcelContent',
+          prtParcelValue: '$prtParcelValue',
+          tdParcelValue: '$td.parcelValue',
+          prtCustPackageId: '$prtCustPackageId',
+          tdcustPackage: '$td.custPackage',
+          transactionStatusId: '$td.transactionStatusId',
+          userIdDriver: '$courierUserId',
+          userIdDriverNik: '$podCourierNik',
+          userIdDriverName: '$podCourierName',
+          userIdUpdatedNik: '$userUpdatedNik',
+          userIdUpdatedName: '$userUpdatedName',
+          tdUserIdUpdatedNik: '$td.nikAdmin',
+          tdUserIdUpdatedName: '$td.adminName',
+          dateUpdated: '$history_date',
+          tdDateUpdated: '$td.updatedTime',
+          prtReferenceNo: 1,
+          perwakilan: 1,
+          layanan: 1,
+          paymentMethod: '$td.paymentMethod',
+          supplierInvoiceStatusId: '$td.supplierInvoiceStatusId',
+          penerima: 1,
+          codNilai: 1,
+          lastValidTrackingDateTime: 1,
+          lastValidTrackingType: 1,
+          tujuanKecamatan: 1,
+          prtDestinationCode: '$tujuan',
+          manifestTrackingSiteName: '$manifestTrackingSiteName',
+          lastValidTrackingSiteName: '$lastValidTrackingSiteName',
+          receiverRemark: 1,
+          transactionStatus: '$td.transactionstatusname',
+          supplierInvoiceStatus: '$td.supplierInvoiceStatusName',
+        },
+      },
+    ];
+
+    console.log(JSON.stringify(q), 'query');
+    return coll.aggregate(q);
 
     // const arrDriver = await this.getUserProps(datas, "driver");
     // const arrUser = await this.getUserProps(datas, "user");
@@ -1028,7 +1367,6 @@ export class V1WebReportCodStreamService {
     // console.log(datas, "datas")
 
     // console.log(datas);
-
   }
 
   static async getNonCodSupplierInvoiceTransactionDetailData(coll, filters) {
@@ -1038,12 +1376,21 @@ export class V1WebReportCodStreamService {
 
     for (const filter of filters) {
       if (filter.field == 'transactionStart' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
         filterList.push({ updatedTime: { $gte: d } });
       }
 
       if (filter.field == 'transactionEnd' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
         filterList.push({ updatedTime: { $lt: d } });
       }
 
@@ -1054,7 +1401,6 @@ export class V1WebReportCodStreamService {
       if (filter.field == 'supplierTMSId' && filter.value) {
         filterList.push({ partnerId: { $eq: filter.value } });
       }
-
 
       if (filter.field == 'supplierInvoiceStatus' && filter.value) {
         filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
@@ -1069,25 +1415,42 @@ export class V1WebReportCodStreamService {
       }
 
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
         spartanFilter.push({ $gte: ['$lastValidTrackingDateTime', d] });
         allowNullTd = false;
       }
 
-
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
         spartanFilter.push({ $lt: ['$lastValidTrackingDateTime', d] });
         allowNullTd = false;
       }
 
       if (filter.field == 'manifestedStart' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
         filterList.push({ awbDate: { $gte: d } });
       }
 
       if (filter.field == 'manifestedEnd' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
         filterList.push({ awbDate: { $lt: d } });
       }
 
@@ -1111,10 +1474,8 @@ export class V1WebReportCodStreamService {
           pipeline: [
             {
               // on inner join
-              $match:
-              {
-                $expr:
-                {
+              $match: {
+                $expr: {
                   $and: spartanFilter,
                 },
               },
@@ -1123,7 +1484,7 @@ export class V1WebReportCodStreamService {
             {
               $project: {
                 awbNumber: 1,
-                lastValidTrackingType: 1
+                lastValidTrackingType: 1,
               },
             },
           ],
@@ -1186,7 +1547,190 @@ export class V1WebReportCodStreamService {
     ];
 
     return coll.aggregate(q);
+  }
 
+  static async getNonCodSupplierInvoiceTransactionDetailDataV2(coll, filters) {
+    const spartanFilter: any = [{ $eq: ['$awbNumber', '$$awbNumber'] }];
+    let allowNullTd = true;
+    const filterList: any = [];
+
+    for (const filter of filters) {
+      if (filter.field == 'transactionStart' && filter.value) {
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
+        filterList.push({ updatedTime: { $gte: d } });
+      }
+
+      if (filter.field == 'transactionEnd' && filter.value) {
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
+        filterList.push({ updatedTime: { $lt: d } });
+      }
+
+      if (filter.field == 'transactionStatus' && filter.value) {
+        filterList.push({ transactionStatusId: { $eq: filter.value } });
+      }
+
+      if (filter.field == 'supplierTMSId' && filter.value) {
+        filterList.push({ partnerId: { $eq: filter.value } });
+      }
+
+      if (filter.field == 'supplierInvoiceStatus' && filter.value) {
+        filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
+      }
+
+      if (filter.field == 'sigesit' && filter.value) {
+        filterList.push({ userIdDriver: { $eq: filter.value } });
+      }
+
+      if (filter.field == 'branchLastId' && filter.value) {
+        if (typeof filter.value === 'string') {
+          filterList.push({ currentPositionId: { $eq: filter.value } });
+        } else {
+          filterList.push({ currentPositionId: { $in: filter.value } });
+        }
+      }
+
+      if (filter.field == 'periodStart' && filter.value) {
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
+        spartanFilter.push({ $gte: ['$lastValidTrackingDateTime', d] });
+        allowNullTd = false;
+      }
+
+      if (filter.field == 'periodEnd' && filter.value) {
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
+        spartanFilter.push({ $lt: ['$lastValidTrackingDateTime', d] });
+        allowNullTd = false;
+      }
+
+      if (filter.field == 'manifestedStart' && filter.value) {
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
+        filterList.push({ awbDate: { $gte: d } });
+      }
+
+      if (filter.field == 'manifestedEnd' && filter.value) {
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
+        filterList.push({ awbDate: { $lt: d } });
+      }
+
+      if (filter.field == 'awbStatus' && filter.value) {
+        spartanFilter.push({ $eq: ['$lastValidTrackingType', filter.value] });
+        allowNullTd = true;
+      }
+    }
+
+    const q = [
+      {
+        $match: {
+          $and: filterList,
+        },
+      },
+      {
+        $lookup: {
+          from: 'cod_awb',
+          as: 'ca',
+          let: { awbNumber: '$awbNumber' },
+          pipeline: [
+            {
+              // on inner join
+              $match: {
+                $expr: {
+                  $and: spartanFilter,
+                },
+              },
+            },
+            { $limit: 1 },
+            {
+              $project: {
+                awbNumber: 1,
+                lastValidTrackingType: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: '$ca',
+          preserveNullAndEmptyArrays: allowNullTd,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          awbDate: 1,
+          awbNumber: 1,
+          codValue: 1,
+          codFee: 1,
+          consigneeName: 1,
+          createdTime: 1,
+          currentPosition: 1,
+          isDeleted: 1,
+          paymentMethod: 1,
+          perwakilan: '$representativeCode',
+          supplierInvoiceStatusId: 1,
+          supplierInvoiceStatus: '$supplierInvoiceStatusName',
+          prtParcelValue: '$parcelValue',
+          codNilai: '$codValue',
+          prtCustPackageId: '$custPackage',
+          tdcustPackage: '$custPackage',
+          lastValidTrackingDateTime: '$podDate',
+          penerima: '$consigneeName',
+          receiverRemark: '$parcelNote',
+          layanan: '$packageType',
+          tujuanKecamatan: '$destination',
+          prtDestinationCode: '$destinationCode',
+          lastValidTrackingSiteName: '$currentPosition',
+          manifestTrackingSiteName: '$pickupSource',
+          packageType: 1,
+          parcelContent: 1,
+          parcelNote: 1,
+          parcelValue: 1,
+          partnerId: 1,
+          partnerName: 1,
+          paymentService: 1,
+          pickupSource: 1,
+          podDate: 1,
+          transactionStatusId: 1,
+          transactionStatus: '$transactionstatusname',
+          lastValidTrackingType: '$ca.lastValidTrackingType',
+          userIdDriverNik: '$nikSigesit',
+          userIdDriverName: '$sigesit',
+          userIdUpdatedNik: '$nikAdmin',
+          userIdUpdatedName: '$adminName',
+          dateUpdated: '$updatedTime',
+          updatedTime: 1,
+          userIdUpdated: 1,
+        },
+      },
+    ];
+
+    return coll.aggregate(q);
   }
 
   static async timeResponse(key, promise) {
@@ -1215,7 +1759,9 @@ export class V1WebReportCodStreamService {
 
   static async printNonCodSupplierInvoice(filters, response) {
     // TODO: query get data
-    const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod('transaction_detail');
+    const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod(
+      'transaction_detail',
+    );
     const dbAwb = await MongoDbConfig.getDbSicepatCod('cod_awb');
 
     let cursor: any;
@@ -1223,51 +1769,107 @@ export class V1WebReportCodStreamService {
       const reportType = await this.reportTypeFromFilter(filters);
       const fileName = `COD_nonfee_${new Date().getTime()}.csv`;
 
-      response.setHeader('Content-disposition', `attachment; filename=${fileName}`);
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
+      );
       response.writeHead(200, { 'Content-Type': 'text/csv' });
 
       response.flushHeaders();
 
       response.write(`${this.CodNONFeeHeader.join(',')}\n`);
 
-
       // prepare csv file
       try {
-        if (reportType.filterTransaction === true && reportType.filterAwb === false) {
-          cursor = await this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, filters);
-        }
-        else {
+        if (
+          reportType.filterTransaction === true &&
+          reportType.filterAwb === false
+        ) {
+          cursor = await this.getNonCodSupplierInvoiceTransactionDetailData(
+            dbTransactionDetail,
+            filters,
+          );
+        } else {
           cursor = await this.getNonCodSupplierInvoiceJoinData(dbAwb, filters);
         }
 
         const transformer = this.streamTransform;
 
-        cursor.stream({ transform: transformer })
-          .pipe(response)
-
-      }
-      finally {
+        cursor.stream({ transform: transformer }).pipe(response);
+      } finally {
         // await writer.on('finish', () => {
         //   writer.end();
         // });
       }
-
     } catch (err) {
       console.error(err);
       throw err;
     }
-
   }
+
+  static async printNonCodSupplierInvoiceV2(filters, response) {
+    // TODO: query get data
+    const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod(
+      'transaction_detail',
+    );
+    const dbAwb = await MongoDbConfig.getDbSicepatCod('cod_awb');
+
+    let cursor: any;
+    try {
+      const reportType = await this.reportTypeFromFilter(filters);
+      const fileName = `COD_nonfee_${new Date().getTime()}.csv`;
+
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
+      );
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+
+      response.flushHeaders();
+
+      response.write(`${this.CodNONFeeHeader.join(',')}\n`);
+
+      // prepare csv file
+      try {
+        if (
+          reportType.filterTransaction === true &&
+          reportType.filterAwb === false
+        ) {
+          cursor = await this.getNonCodSupplierInvoiceTransactionDetailDataV2(
+            dbTransactionDetail,
+            filters,
+          );
+        } else {
+          cursor = await this.getNonCodSupplierInvoiceJoinDataV2(
+            dbAwb,
+            filters,
+          );
+        }
+
+        const transformer = this.streamTransform;
+
+        cursor.stream({ transform: transformer }).pipe(response);
+      } finally {
+        // await writer.on('finish', () => {
+        //   writer.end();
+        // });
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
   static reportTypeFromFilter(filters: any) {
     let filterAwb = false;
     let filterTransaction = false;
 
     filters.forEach(filter => {
-      if (filter.field == "periodStart" && filter.value) {
-        filterAwb = true
+      if (filter.field == 'periodStart' && filter.value) {
+        filterAwb = true;
       }
-      if (filter.field == "periodEnd" && filter.value) {
-        filterAwb = true
+      if (filter.field == 'periodEnd' && filter.value) {
+        filterAwb = true;
       }
       // if (filter.field == "supplier" && filter.value) {
       //   filterAwb = true
@@ -1283,7 +1885,6 @@ export class V1WebReportCodStreamService {
       if (filter.field == 'transactionEnd' && filter.value) {
         filterTransaction = true;
       }
-
     });
 
     // console.log(filters, filterTransaction, filterAwb, 'filters');
@@ -1300,13 +1901,21 @@ export class V1WebReportCodStreamService {
 
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment.utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(moment.utc(filter.value).format('YYYY-MM-DD 00:00:00'))
+          .toDate();
         filterList.push({ updatedTime: { $gte: d } });
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-
-        const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
+        const d = moment
+          .utc(
+            moment
+              .utc(filter.value)
+              .add(1, 'days')
+              .format('YYYY-MM-DD 00:00:00'),
+          )
+          .toDate();
         filterList.push({ updatedTime: { $lt: d } });
       }
 
@@ -1338,7 +1947,7 @@ export class V1WebReportCodStreamService {
           $and: filterList,
         },
       },
-      { "$sort": { awbNumber: 1 } },
+      { $sort: { awbNumber: 1 } },
       {
         $lookup: {
           from: 'cod_awb',
@@ -1347,13 +1956,13 @@ export class V1WebReportCodStreamService {
           pipeline: [
             {
               // on inner join
-              $match:
-              {
-                $expr:
-                {
-                  $and: [{
-                    $eq: ['$awbNumber', '$$awbNumber'],
-                  }],
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ['$awbNumber', '$$awbNumber'],
+                    },
+                  ],
                 },
               },
             },
@@ -1405,7 +2014,7 @@ export class V1WebReportCodStreamService {
         },
       },
     ];
-    console.log(JSON.stringify(queryParam), "query param")
+    console.log(JSON.stringify(queryParam), 'query param');
     return coll.aggregate(queryParam);
   }
 
@@ -1416,13 +2025,18 @@ export class V1WebReportCodStreamService {
     // ??upload file csv to aws s3
     // retrun ffile/ link downlod
 
-    const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod('transaction_detail');
+    const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod(
+      'transaction_detail',
+    );
     let cursor: any;
     try {
       const reportType = await this.reportTypeFromFilter(filters);
       const fileName = `COD_nonfee_${new Date().getTime()}.csv`;
 
-      response.setHeader('Content-disposition', `attachment; filename=${fileName}`);
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
+      );
       response.writeHead(200, { 'Content-Type': 'text/csv' });
 
       response.flushHeaders();
@@ -1430,21 +2044,19 @@ export class V1WebReportCodStreamService {
       response.write(`${this.CodHeader.join(',')}\n`);
 
       try {
-        cursor = await this.getCodSupplierInvoiceData(dbTransactionDetail, filters);
+        cursor = await this.getCodSupplierInvoiceData(
+          dbTransactionDetail,
+          filters,
+        );
         const transformer = this.streamTransformCodFee;
 
-        cursor.stream({ transform: transformer })
-          .pipe(response)
-
+        cursor.stream({ transform: transformer }).pipe(response);
       } finally {
-
       }
-
     } catch (err) {
       console.error(err);
       throw err;
     }
-
   }
 
   //#endregion COD
@@ -1879,9 +2491,7 @@ export class V1WebReportCodStreamService {
       const csvConfig = await this.getCSVConfig();
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
-      writer.pipe(
-        fs.createWriteStream(csvConfig.filePath, { flags: 'a' }),
-      );
+      writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
 
       // if (dataRowCount > 1048576) {
       //   throw new Error(
@@ -1901,13 +2511,13 @@ export class V1WebReportCodStreamService {
       );
 
       if (storagePath) {
-        url = `${ConfigService.get('cloudStorage.cloudUrl')}/${storagePath.awsKey
-          }`;
+        url = `${ConfigService.get('cloudStorage.cloudUrl')}/${
+          storagePath.awsKey
+        }`;
         this.deleteFile(csvConfig.filePath);
       }
 
       return { status: 'ok', url };
-
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }

@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { PermissionTokenGuard } from 'src/shared/guards/permission-token.guard';
 
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
@@ -23,7 +24,7 @@ export class BranchController {
   @Post('list/cod')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: BranchFindAllResponseVm })
   public async findBranchNameCod(@Body() payload: BaseMetaPayloadVm) {
     return this.branchService.findAllByRequestCod(payload);
