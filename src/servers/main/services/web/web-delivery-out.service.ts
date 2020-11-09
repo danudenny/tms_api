@@ -866,6 +866,9 @@ export class WebDeliveryOutService {
       ['t2.fullname', 'nickname'],
       ['t3.branch_name', 'branchTo'],
       ['t4.url', 'url'],
+      ['t2.nik', 'nikDriver'],
+      ['t6.branch_name', 'branchFrom'],
+      ['t6.branch_id', 'branchIdFrom'],
     );
     // TODO: relation userDriver to Employee Driver
     q.innerJoin(e => e.doPodDetailBag, 't5', j =>
@@ -880,6 +883,8 @@ export class WebDeliveryOutService {
     q.leftJoin(e => e.attachment, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()));
 
     if (isHub) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB));
@@ -891,7 +896,7 @@ export class WebDeliveryOutService {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
       // q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     }
-    q.groupByRaw('t1.do_pod_id, t2.employee_id, t3.branch_name, t4.url');
+    q.groupByRaw('t1.do_pod_id, t2.employee_id, t3.branch_name, t4.url, t6.branch_name, t6.branch_id');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

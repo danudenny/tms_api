@@ -72,6 +72,15 @@ export class WebScanInResponseVm {
 
   @ApiModelProperty()
   url: string;
+
+  @ApiModelProperty()
+  branchFrom: string;
+
+  @ApiModelProperty()
+  branchIdFrom: string;
+
+  @ApiModelProperty()
+  nikDriver: string;
 }
 
 export class WebScanTransitResponseVm {
