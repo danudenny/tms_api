@@ -451,19 +451,6 @@ export class V1WebAwbCodController {
     );
   }
 
-  @Post('supplierInvoice/noncodfeev2/stream/print')
-  @HttpCode(HttpStatus.OK)
-  @ResponseSerializerOptions({ disable: true })
-  public async supplierInvoiceStreamNonCodFeePrintV2(
-    @Body() payload: ReportBaseMetaPayloadVm,
-    @Res() outgoingHTTP,
-  ) {
-    return await V1WebReportCodStreamService.printNonCodSupplierInvoiceV2(
-      payload.filters,
-      outgoingHTTP,
-    );
-  }
-
   // #endregion report COD
 
   // @Get('transaction/sync')
