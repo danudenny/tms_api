@@ -85,6 +85,35 @@ export class PrintByStoreService {
     );
   }
 
+  // execute print for Surat Jalan Transit
+  static async executePrintDoPodTransit(
+    res: express.Response,
+    queryParams: PrintDoPodPayloadQueryVm,
+  ) {
+    const printPayload = await this.retrieveGenericPrintData<PrintDoPodVm>(
+      'do-pod',
+      queryParams.id,
+    );
+
+    if (!printPayload || (printPayload && !printPayload.data)) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    return PrintDoPodService.printDoPodTransitAndQueryMeta(
+      res,
+      printPayload.data,
+      {
+        userId: queryParams.userId,
+        branchId: queryParams.branchId,
+      },
+      {
+        printCopy: queryParams.printCopy,
+      },
+    );
+  }
+
   static async storePrintDoPodBag(payloadBody: PrintDoPodBagVm) {
     return this.storeGenericPrintData(
       'do-pod-bag',
