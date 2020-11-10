@@ -41,6 +41,19 @@ export class PrintByStoreController {
     return PrintByStoreService.executePrintDoPod(serverResponse, queryParams);
   }
 
+  @Get('do-pod-transit/execute')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async executePrintDoPodTransit(
+    @Query() queryParams: PrintDoPodPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return PrintByStoreService.executePrintDoPodTransit(
+      serverResponse,
+      queryParams,
+    );
+  }
+
   @Post('do-pod-bag/store')
   @ApiBearerAuth()
   public async storePrintDoPodBag(@Body() payloadBody: PrintDoPodBagVm) {

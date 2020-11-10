@@ -11,10 +11,12 @@ import {
 import {
     LastMileDeliveryOutService,
 } from '../../services/web/last-mile/last-mile-delivery-out.service';
-import { TransferAwbDeliverVm, ProofValidateTransitPayloadVm } from '../../models/web-scan-out.vm';
-import { WebScanOutAwbResponseVm, WebAwbThirdPartyListResponseVm } from '../../models/web-scan-out-response.vm';
+import { TransferAwbDeliverVm, ProofValidateTransitPayloadVm, WebScanOutCreateVm, WebScanOutAwbVm } from '../../models/web-scan-out.vm';
+import { WebScanOutAwbResponseVm, WebAwbThirdPartyListResponseVm, WebScanOutCreateResponseVm } from '../../models/web-scan-out-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbThirdPartyVm, AwbThirdPartyUpdateResponseVm } from '../../models/last-mile/awb-third-party.vm';
+import { LastMileTransitOutService } from '../../services/web/last-mile/last-mile-transit-out.service';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('Last Mile Delivery')
 @Controller('pod/lastMile')
@@ -24,11 +26,26 @@ export class WebLastMileController {
   constructor() {}
   /**
    * NOTE: Out of Branch last mile
-   *
-   *
+   * scanOut/create (Transit)
+   * scanOut/awb (Transit)
    *
    *
    */
+
+  @Post('scanOut/create')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanOutCreateResponseVm })
+  public async scanOutCreate(@Body() payload: WebScanOutCreateVm) {
+    return LastMileTransitOutService.scanOutCreate(payload);
+  }
+
+  @Post('scanOut/awb')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanOutAwbResponseVm })
+  @Transactional()
+  public async scanOutAwb(@Body() payload: WebScanOutAwbVm) {
+    return LastMileTransitOutService.scanOutAwb(payload);
+  }
 
   @Post('transfer/delivery')
   @HttpCode(HttpStatus.OK)
