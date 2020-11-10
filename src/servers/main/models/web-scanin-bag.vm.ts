@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { IsDefined, ValidateNested } from 'class-validator';
 import { IsBagNumber, IsBagNumberSingle } from '../../../shared/decorators/custom-validation.decorator';
 import { Type } from 'class-transformer';
@@ -15,11 +15,10 @@ export class WebScanInBagVm  {
   @Type(() => String)
   bagNumber: string[];
 
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: 0,
     skipValidation: true,
   })
-  @ApiModelProperty()
   hubId: number;
 }
 
