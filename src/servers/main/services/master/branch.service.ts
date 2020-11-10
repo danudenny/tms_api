@@ -43,6 +43,7 @@ export class BranchService {
 
   async findAllByRequestCod(
     payload: BaseMetaPayloadVm,
+    merger: boolean = false,
   ): Promise<BranchFindAllResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissionPayload = AuthService.getPermissionTokenPayload();
@@ -67,7 +68,8 @@ export class BranchService {
 
     //#region CT Transit
     q.innerJoin(e => e.codUserToBranch, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse())
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
     );
     //#endregion
@@ -87,7 +89,7 @@ export class BranchService {
     });
 
     let branchList = [];
-    if (permissionPayload.roleName === 'Admin COD - Merger') {
+    if (permissionPayload.roleName === 'Admin COD - Merger' && merger) {
       const branchIdAll = [];
       const branchCodeAll = [];
 

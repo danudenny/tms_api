@@ -1,7 +1,20 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { Request } from 'express';
 import { PermissionTokenGuard } from 'src/shared/guards/permission-token.guard';
 
-import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiUseTags,
+} from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
@@ -26,7 +39,10 @@ export class BranchController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: BranchFindAllResponseVm })
-  public async findBranchNameCod(@Body() payload: BaseMetaPayloadVm) {
-    return this.branchService.findAllByRequestCod(payload);
+  public async findBranchNameCod(
+    @Query() params: any,
+    @Body() payload: BaseMetaPayloadVm,
+  ) {
+    return this.branchService.findAllByRequestCod(payload, Boolean(params.merger));
   }
 }
