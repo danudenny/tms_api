@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { PermissionTokenGuard } from 'src/shared/guards/permission-token.guard';
+import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 
 import {
   ApiBearerAuth,
