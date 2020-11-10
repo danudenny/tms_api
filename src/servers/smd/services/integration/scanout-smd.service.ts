@@ -9,7 +9,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { Representative } from '../../../../shared/orm-entity/representative';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
-import { IsNull, In, Not } from 'typeorm';
+import { IsNull, In, Not, getManager } from 'typeorm';
 import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
@@ -610,16 +610,33 @@ export class ScanoutSmdService {
               isDeleted: false,
             },
           });
-          resultDoSmdDetail.totalBagRepresentative = Number(resultDoSmdDetail.totalBagRepresentative) + 1;
-          resultDoSmdDetail.userIdUpdated = authMeta.userId;
-          resultDoSmdDetail.updatedTime = timeNow;
-          await resultDoSmdDetail.save();
 
-          resultDoSmd.totalBagRepresentative = Number(resultDoSmd.totalBagRepresentative) + 1;
-          resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
-          resultDoSmd.userIdUpdated = authMeta.userId;
-          resultDoSmd.updatedTime = timeNow;
-          await resultDoSmd.save();
+          await getManager().transaction(async transactionEntityManager => {
+            await transactionEntityManager.increment(
+              DoSmdDetail,
+              {
+                doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+              },
+              'totalBagRepresentative',
+              1,
+            );
+            await transactionEntityManager.increment(
+              DoSmd,
+              {
+                doSmdId: resultDoSmd.doSmdId,
+              },
+              'totalBagRepresentative',
+              1,
+            );
+            await transactionEntityManager.increment(
+              DoSmd,
+              {
+                doSmdId: resultDoSmd.doSmdId,
+              },
+              'totalItem',
+              1,
+            );
+          });
 
           BagRepresentativeScanDoSmdQueueService.perform(
             resultDataBagRepresentative[0].bag_representative_id,
@@ -727,16 +744,32 @@ export class ScanoutSmdService {
                 isDeleted: false,
               },
             });
-            resultDoSmdDetail.totalBagging = Number(resultDoSmdDetail.totalBagging) + 1;
-            resultDoSmdDetail.userIdUpdated = authMeta.userId;
-            resultDoSmdDetail.updatedTime = timeNow;
-            await resultDoSmdDetail.save();
-
-            resultDoSmd.totalBagging = Number(resultDoSmd.totalBagging) + 1;
-            resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
-            resultDoSmd.userIdUpdated = authMeta.userId;
-            resultDoSmd.updatedTime = timeNow;
-            await resultDoSmd.save();
+            await getManager().transaction(async transactionEntityManager => {
+              await transactionEntityManager.increment(
+                DoSmdDetail,
+                {
+                  doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+                },
+                'totalBagging',
+                1,
+              );
+              await transactionEntityManager.increment(
+                DoSmd,
+                {
+                  doSmdId: resultDoSmd.doSmdId,
+                },
+                'totalBagging',
+                1,
+              );
+              await transactionEntityManager.increment(
+                DoSmd,
+                {
+                  doSmdId: resultDoSmd.doSmdId,
+                },
+                'totalItem',
+                1,
+              );
+            });
 
             // Generate history bag and its awb IN_HUB
             BagScanDoSmdQueueService.perform(
@@ -849,16 +882,32 @@ export class ScanoutSmdService {
                   isDeleted: false,
                 },
               });
-              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
-              resultDoSmdDetail.userIdUpdated = authMeta.userId;
-              resultDoSmdDetail.updatedTime = timeNow;
-              await resultDoSmdDetail.save();
-
-              resultDoSmd.totalBag = Number(resultDoSmd.totalBag) + 1;
-              resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
-              resultDoSmd.userIdUpdated = authMeta.userId;
-              resultDoSmd.updatedTime = timeNow;
-              await resultDoSmd.save();
+              await getManager().transaction(async transactionEntityManager => {
+                await transactionEntityManager.increment(
+                  DoSmdDetail,
+                  {
+                    doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+                  },
+                  'totalBag',
+                  1,
+                );
+                await transactionEntityManager.increment(
+                  DoSmd,
+                  {
+                    doSmdId: resultDoSmd.doSmdId,
+                  },
+                  'totalBag',
+                  1,
+                );
+                await transactionEntityManager.increment(
+                  DoSmd,
+                  {
+                    doSmdId: resultDoSmd.doSmdId,
+                  },
+                  'totalItem',
+                  1,
+                );
+              });
 
               await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
@@ -973,17 +1022,32 @@ export class ScanoutSmdService {
                   isDeleted: false,
                 },
               });
-              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
-              resultDoSmdDetail.userIdUpdated = authMeta.userId;
-              resultDoSmdDetail.updatedTime = timeNow;
-              await resultDoSmdDetail.save();
-
-              resultDoSmd.totalBag = Number(resultDoSmd.totalBag) + 1;
-              resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
-              resultDoSmd.userIdUpdated = authMeta.userId;
-              resultDoSmd.updatedTime = timeNow;
-              await resultDoSmd.save();
-
+              await getManager().transaction(async transactionEntityManager => {
+                await transactionEntityManager.increment(
+                  DoSmdDetail,
+                  {
+                    doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+                  },
+                  'totalBag',
+                  1,
+                );
+                await transactionEntityManager.increment(
+                  DoSmd,
+                  {
+                    doSmdId: resultDoSmd.doSmdId,
+                  },
+                  'totalBag',
+                  1,
+                );
+                await transactionEntityManager.increment(
+                  DoSmd,
+                  {
+                    doSmdId: resultDoSmd.doSmdId,
+                  },
+                  'totalItem',
+                  1,
+                );
+              });
               await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
               // Generate history bag and its awb IN_HUB
