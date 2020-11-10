@@ -959,6 +959,10 @@ export class WebDeliveryOutService {
       ['t1.description', 'description'],
       ['t2.fullname', 'employeeName'],
       ['t3.branch_name', 'branchName'],
+      ['t1.vehicle_number', 'vehicleNumber'],
+      ['t2.nik', 'nikDriver'],
+      ['t6.branch_id', 'branchIdFrom'],
+      ['t6.branch_name', 'branchFrom'],
       ['COUNT (t4.do_pod_id)', 'totalAwb'],
       [`
         CASE
@@ -976,6 +980,9 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.leftJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -986,7 +993,7 @@ export class WebDeliveryOutService {
     q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH_AWB));
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
 
-    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name');
+    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name, t2.nik, t6.branch_id, t6.branch_name');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 

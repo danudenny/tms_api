@@ -107,6 +107,18 @@ export class WebScanTransitResponseVm {
 
   @ApiModelProperty()
   partnerLogisticName: string;
+
+  @ApiModelProperty()
+  branchIdFrom: number;
+
+  @ApiModelProperty()
+  branchFrom: string;
+
+  @ApiModelProperty()
+  nikDriver: string;
+
+  @ApiModelProperty()
+  vehicleNumber: string;
 }
 
 export class WebScanTransitAwbResponseVm {
