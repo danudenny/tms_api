@@ -35,6 +35,7 @@ import { BagRepresentativeHistory } from '../../../../shared/orm-entity/bag-repr
 import { SmdHubDropOffGabPaketListResponseVm, SmdHubDropOffGabPaketAwbListResponseVm } from '../../models/smd-hub-drop-off-bagging.response.vm';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
+import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
 
 @Injectable()
 export class SmdHubService {
@@ -63,7 +64,18 @@ export class SmdHubService {
       if (bagData) {
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
-        const notScan =  (bagData.bagItemStatusIdLast != BAG_STATUS_DO_SELECTED) ? true : false;
+        // let notScan =  (bagData.bagItemStatusIdLast != BAG_STATUS_DO_SELECTED) ? true : false;
+
+        const bagHistory = await BagItemHistory.findOne({
+          where: {
+            bagItemId: bagData.bagItemId,
+            isDeleted: false,
+            branchId: permissonPayload.branchId,
+            bagItemStatusId: BAG_STATUS_DO_SELECTED,
+          },
+        });
+        const notScan = bagHistory ? false : true;
+
         // Add Locking setnx redis
         const holdRedis = await RedisService.locking(
           `hold:dropoff:${bagData.bagItemId}`,
@@ -251,7 +263,17 @@ export class SmdHubService {
           const resultDataBag = await RawQueryService.query(rawQuery);
           if (resultDataBag) {
             for (const resultBag of resultDataBag) {
-              const notScan =  (resultBag.bag_item_status_id_last != BAG_STATUS_DO_SELECTED) ? true : false;
+              // const notScan =  (resultBag.bag_item_status_id_last != BAG_STATUS_DO_SELECTED) ? true : false;
+              const bagHistory = await BagItemHistory.findOne({
+                where: {
+                  bagItemId: resultBag.bag_item_id,
+                  isDeleted: false,
+                  branchId: permissonPayload.branchId,
+                  bagItemStatusId: BAG_STATUS_DO_SELECTED,
+                },
+              });
+              const notScan = bagHistory ? false : true;
+
               // Add Locking setnx redis
               const holdRedis = await RedisService.locking(
                 `hold:dropoff:${resultBag.bag_item_id}`,
@@ -391,7 +413,16 @@ export class SmdHubService {
         );
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
-        const notScan =  (bagRepresentativeData.bagRepresentativeStatusIdLast != BAG_STATUS_DO_SELECTED) ? true : false;
+        // const notScan =  (bagRepresentativeData.bagRepresentativeStatusIdLast != BAG_STATUS_DO_SELECTED) ? true : false;
+        const bagRepresentativeHistory = await BagRepresentativeHistory.findOne({
+          where: {
+            bagRepresentativeId: bagRepresentativeData.bagRepresentativeId,
+            isDeleted: false,
+            branchId: permissonPayload.branchId,
+            bagRepresentativeStatusIdLast: BAG_STATUS_DO_SELECTED,
+          },
+        });
+        const notScan = bagRepresentativeHistory ? false : true;
 
         if (notScan && holdRedis) {
           // update status bagRepresentative
