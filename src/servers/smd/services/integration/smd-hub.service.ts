@@ -160,7 +160,7 @@ export class SmdHubService {
         } else {
           totalError += 1;
           response.status = 'error';
-          response.message = `Gabung paket ${bagNumber} Sudah di proses.`;
+          response.message = `Gabung paket ${bagNumber} Sudah discan di ${payload.hubId ? 'Line Haul' : 'Hub'}.`;
         }
       } else {
         totalError += 1;
