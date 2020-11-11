@@ -46,6 +46,7 @@ export class SmdHubService {
     const dataItem = [];
     const timeNow = moment().toDate();
     const result = new WebScanInBagResponseVm();
+    const isSmd = payload.hubId ? payload.hubId : 0;
 
     let totalSuccess = 0;
     let totalError = 0;
@@ -61,7 +62,7 @@ export class SmdHubService {
       if (bagData) {
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
-        const notScan =  bagData.bagItemStatusIdLast != BAG_STATUS.DO_HUB ? true : false;
+        const notScan =  (bagData.bagItemStatusIdLast == BAG_STATUS.DO_HUB || bagData.bagItemStatusIdLast == BAG_STATUS.DO_LINE_HAUL) ? false : true;
         // Add Locking setnx redis
         const holdRedis = await RedisService.locking(
           `hold:dropoff:${bagData.bagItemId}`,
@@ -93,7 +94,7 @@ export class SmdHubService {
           if (bagItem) {
             // update status bagItem
             await BagItem.update({ bagItemId: bagItem.bagItemId }, {
-              bagItemStatusIdLast: BAG_STATUS.DO_HUB,
+              bagItemStatusIdLast: isSmd ? BAG_STATUS.DO_LINE_HAUL : BAG_STATUS.DO_HUB,
               branchIdLast: permissonPayload.branchId,
               updatedTime: timeNow,
               userIdUpdated: authMeta.userId,
@@ -105,12 +106,13 @@ export class SmdHubService {
             dropoffHub.bagId = bagData.bag.bagId;
             dropoffHub.bagItemId = bagData.bagItemId;
             dropoffHub.bagNumber = bagNumber;
+            dropoffHub.isSmd = isSmd;
             await DropoffHub.save(dropoffHub);
 
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
               bagData.bagItemId,
-              BAG_STATUS.DO_HUB,
+              isSmd ? BAG_STATUS.DO_LINE_HAUL : BAG_STATUS.DO_HUB,
               permissonPayload.branchId,
               authMeta.userId,
             );
@@ -123,6 +125,7 @@ export class SmdHubService {
               bagData.bagItemId,
               authMeta.userId,
               permissonPayload.branchId,
+              isSmd,
             );
 
             // update first scan in do pod =====================================
