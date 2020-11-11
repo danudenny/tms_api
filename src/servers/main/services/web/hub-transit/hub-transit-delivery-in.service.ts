@@ -18,6 +18,7 @@ import { DropoffHubDetail } from '../../../../../shared/orm-entity/dropoff_hub_d
 import { WebDropOffSummaryListResponseVm, WebScanInHubSortListResponseVm } from '../../../models/web-scanin-list.response.vm';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { WebDeliveryListResponseVm } from '../../../models/web-delivery-list-response.vm';
+import { BagItemHistory } from '../../../../../shared/orm-entity/bag-item-history';
 
 export class HubTransitDeliveryInService {
 
@@ -52,7 +53,16 @@ export class HubTransitDeliveryInService {
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
         const BAG_STATUS_DO_SELECTED = (payload.hubId === 0) ? BAG_STATUS.DO_HUB : BAG_STATUS.DO_LINE_HAUL;
-        const notScan = bagData.bagItemStatusIdLast != BAG_STATUS_DO_SELECTED ? true : false;
+        // const notScan = bagData.bagItemStatusIdLast != BAG_STATUS_DO_SELECTED ? true : false;
+        const bagHistory = await BagItemHistory.findOne({
+          where: {
+            bagItemId: bagData.bagItemId,
+            isDeleted: false,
+            branchId: permissonPayload.branchId,
+            bagItemStatusId: BAG_STATUS_DO_SELECTED,
+          },
+        });
+        const notScan = bagHistory ? false : true;
         // Add Locking setnx redis
         const holdRedis = await RedisService.locking(
           `hold:dropoff:${bagData.bagItemId}`,
