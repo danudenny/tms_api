@@ -886,6 +886,30 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
+  // NOTE: handle for update awb status CancelDeliver
+  public static async createJobByCancelDeliver(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    partnerName,
+  ) {
+    // provide data
+    const obj = {
+      awbItemId,
+      userId: 1,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.RTS,
+      userIdCreated: 1,
+      userIdUpdated: 1,
+      employeeIdDriver: null,
+      timestamp: moment().toDate(),
+      noteInternal: `Paket dibatalkan partner ${partnerName}`,
+      notePublic: `Paket dibatalkan`,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
   // TODO: need refactoring
   private static async getDataUserEmployee(userId: number): Promise<User> {
     const userhRepository = new OrionRepositoryService(User);
