@@ -172,8 +172,8 @@ export class WebDeliveryOutReportService {
       ['t2.fullname', 'Sigesit/Driver'],
       ['"t2"."nik"', 'NIK Driver'],
       ['"t1"."vehicle_number"', 'NO Mobil'],
-      ['t1.last_date_scan_out', 'Terakhir Sc.Keluar'],
-      ['t1.last_date_scan_in', 'Terakhir Sc.Masuk'],
+      ['TO_CHAR(t1.last_date_scan_out, \'DD Mon YYYY HH24:MI\')', 'Terakhir Sc.Keluar'],
+      ['TO_CHAR(t1.last_date_scan_in, \'DD Mon YYYY HH24:MI\')', 'Terakhir Sc.Masuk'],
       ['COUNT(t5.bag_item_id)', 'Gabung Paket'],
       ['"t1"."description"', 'Keterangan'],
     );
