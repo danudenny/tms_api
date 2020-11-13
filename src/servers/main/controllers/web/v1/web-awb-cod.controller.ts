@@ -19,7 +19,7 @@ import { BaseMetaPayloadVm, ReportBaseMetaPayloadVm } from '../../../../../share
 import {
   WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
   WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceCreatePayloadVm, WebCodInvoiceDraftPayloadVm,
-  WebCodInvoiceRemoveAwbPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodTransactionUpdatePayloadVm,
+  WebCodInvoiceRemoveAwbPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodTransactionUpdatePayloadVm, WebInsertCodPaymentPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   WebAwbCodBankStatementResponseVm, WebAwbCodDetailPartnerResponseVm, WebAwbCodInvoiceResponseVm,
@@ -27,7 +27,7 @@ import {
   WebCodBankStatementResponseVm, WebCodInvoiceAddResponseVm, WebCodInvoiceDraftResponseVm,
   WebCodInvoiceRemoveResponseVm, WebCodListInvoiceResponseVm,
   WebCodSupplierInvoicePaidResponseVm, WebCodTransactionDetailResponseVm,
-  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm, WebAwbCodVoidListResponseVm, WebCodCountResponseVm, WebAwbCodDlvV2ListResponseVm,
+  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm, WebAwbCodVoidListResponseVm, WebCodCountResponseVm, WebAwbCodDlvV2ListResponseVm, WebInsertCodPaymentResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import { V1WebCodBankStatementService } from '../../../services/web/v1/web-cod-bank-statement.service';
@@ -429,4 +429,11 @@ export class V1WebAwbCodController {
   //   await V1WebAwbCodService.syncData();
   //   return { status: 'ok' };
   // }
+  @Post('insertCodPayment')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebInsertCodPaymentResponseVm })
+  public async insertCodPayment(@Body() payload: WebInsertCodPaymentPayloadVm) {
+    return V1WebAwbCodService.insertCodPayment(payload);
+  }
 }
