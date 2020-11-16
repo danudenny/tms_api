@@ -1423,7 +1423,7 @@ export class V1WebAwbCodService {
 
     const resiCod = await qb.getRawOne();
     if (!resiCod) {
-      throw new BadRequestException('Nomor resi tidak valid/tidak ditemukan!');
+      throw new BadRequestException('Resi tidak dapat diproses!');
     }
 
     // Validate cod receipt
