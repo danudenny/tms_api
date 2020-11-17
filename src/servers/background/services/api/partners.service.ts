@@ -23,7 +23,7 @@ export class ApiPartnersService {
     // init
     resultFailed.status = 'failed';
     resultFailed.awb_number = payload.awb_number;
-    resultFailed.status = 'success';
+    resultOk.status = 'success';
     resultOk.awb_number = payload.awb_number;
 
     const redlock = await RedisService.redlock(`redlock:partner:cancelDelivery:${payload.awb_number}`);
@@ -89,7 +89,6 @@ export class ApiPartnersService {
       AWB_STATUS.RTS,
     ];
     if (
-      !notValidStatus.includes(Number(pickreq.awbStatusIdFinal)) ||
       !notValidStatus.includes(Number(pickreq.awbStatusIdLast))
     ) {
       // process cancel
