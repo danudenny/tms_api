@@ -125,26 +125,12 @@ export class ScaninSmdService {
               paramTotalSeq = Number(resultReceivedBag.totalSeq) + 1;
               paramTotalBagWeight = Number(resultReceivedBag.totalBagWeight) + Number(weight) ;
 
-              await getManager().transaction(async transactionEntityManager => {
-                await transactionEntityManager.increment(
-                  ReceivedBag,
-                  {
-                    receivedBagId: paramReceivedBagId,
-                    isDeleted: false,
-                  },
-                  'totalSeq',
-                  1,
-                );
-                await transactionEntityManager.increment(
-                  ReceivedBag,
-                  {
-                    receivedBagId: paramReceivedBagId,
-                    isDeleted: false,
-                  },
-                  'totalBagWeight',
-                  Number(weight),
-                );
-              });
+              resultReceivedBag.totalSeq = paramTotalSeq;
+              resultReceivedBag.totalBagWeight = paramTotalBagWeight;
+              resultReceivedBag.userIdUpdated = authMeta.userId;
+              resultReceivedBag.updatedTime = timeNow;
+              await ReceivedBag.save(resultReceivedBag);
+
               isNew = false;
             }
           }
@@ -328,7 +314,7 @@ export class ScaninSmdService {
 
           let paramTotalSeq;
           let paramTotalBagWeight;
-          let isNew = true;
+          const isNew = true;
           if ( paramReceivedBagId > 0) {
             const resultReceivedBag = await ReceivedBag.findOne({
               where: {
@@ -342,27 +328,12 @@ export class ScaninSmdService {
               paramTotalSeq = Number(resultReceivedBag.totalSeq) + 1;
               paramTotalBagWeight = Number(resultReceivedBag.totalBagWeight) + Number(weight);
 
-              await getManager().transaction(async transactionEntityManager => {
-                await transactionEntityManager.increment(
-                  ReceivedBag,
-                  {
-                    receivedBagId: paramReceivedBagId,
-                    isDeleted: false,
-                  },
-                  'totalSeq',
-                  1,
-                );
-                await transactionEntityManager.increment(
-                  ReceivedBag,
-                  {
-                    receivedBagId: paramReceivedBagId,
-                    isDeleted: false,
-                  },
-                  'totalBagWeight',
-                  Number(weight),
-                );
-              });
-              isNew = false;
+              resultReceivedBag.totalSeq = paramTotalSeq;
+              resultReceivedBag.totalBagWeight = paramTotalBagWeight;
+              resultReceivedBag.userIdUpdated = authMeta.userId;
+              resultReceivedBag.updatedTime = timeNow;
+              await ReceivedBag.save(resultReceivedBag);
+
             }
           }
           if (isNew == true) {
