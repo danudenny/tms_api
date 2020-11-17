@@ -675,3 +675,5 @@ export class WebCodCountResponseVm {
   @ApiModelProperty()
   total: number;
 }
+
+export class WebInsertCodPaymentResponseVm extends WebCodSuccessResponseVm {}
