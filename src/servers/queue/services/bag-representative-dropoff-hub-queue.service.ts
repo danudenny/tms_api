@@ -72,6 +72,7 @@ export class BagRepresentativeDropoffHubQueueService {
               itemRepresentative.awbItemId,
               data.branchId,
               data.userId,
+              data.isSmd,
             );
           }
         } // End Of Loop
@@ -97,6 +98,7 @@ export class BagRepresentativeDropoffHubQueueService {
     bagRepresentativeId: number,
     userId: number,
     branchId: number,
+    isSmd = 0,
   ) {
     const obj = {
       dropoffHubBagRepresentativeId,
@@ -104,6 +106,7 @@ export class BagRepresentativeDropoffHubQueueService {
       userId,
       branchId,
       timestamp: moment().toDate(),
+      isSmd,
     };
 
     return BagRepresentativeDropoffHubQueueService.queue.add(obj);

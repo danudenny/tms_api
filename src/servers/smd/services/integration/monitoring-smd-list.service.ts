@@ -283,10 +283,12 @@ export class MonitoringSmdServices {
       .addSelect(`ds.employee_driver_name`, 'Nama Driver')
       .addSelect(`ds.smd_trip`, 'Trip')
       .addSelect(`
-      CASE
-        WHEN ds.branch_name_to   LIKE '%,%' THEN 'TRANSIT'
-        ELSE 'DIRECT HUB'
-      END`, 'Rute')
+        CASE
+          WHEN ds.smd_trip = '1' THEN
+            'DIRECT HUB'
+          ELSE
+            'TRANSIT'
+        END`, 'Rute')
       .addSelect(`ds.branch_name_from`, 'Hub Asal')
       .addSelect(`ds.branch_name_to`, 'Hub Tujuan')
       .addSelect(`ds.seal_number_last`, 'Nomor Segel')
