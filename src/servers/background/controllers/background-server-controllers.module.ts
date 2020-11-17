@@ -11,6 +11,7 @@ import { PartnerMerchantController } from './integration/partner-merchant.contro
 import { MasterDataController } from './integration/masterdata.controller';
 import { PartnerFastpayController } from './integration/partner-fastpay.controller';
 import { PartnerDivaController } from './integration/partner-diva.controller';
+import { InternalHelpdeskController } from './integration/internal-helpdesk.controller';
 
 @Module({
   imports: [SharedModule, BackgroundServerServicesModule],
@@ -24,6 +25,7 @@ import { PartnerDivaController } from './integration/partner-diva.controller';
     PartnerMerchantController,
     MasterDataController,
     PartnerDivaController,
+    InternalHelpdeskController,
   ],
 })
 export class BackgroundServerControllersModule {}
