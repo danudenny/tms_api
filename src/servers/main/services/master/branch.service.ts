@@ -102,7 +102,7 @@ export class BranchService {
         branchId: branchIdAll,
         branchName: 'Semua Gerai',
         branchCode: branchCodeAll,
-        branchCodeLabel: '0',
+        branchCodeLabel: 'All',
       };
 
       branchList.push(branchDataAll, ...branchData);
