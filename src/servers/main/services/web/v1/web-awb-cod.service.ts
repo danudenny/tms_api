@@ -352,6 +352,7 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.awbItemAttr, 't2', j => {
         j.andWhere(e => e.isDeleted, w => w.isFalse());
         j.andWhere(e => e.transactionStatusId, w => w.isNull());
+        j.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
       },
     );
 
@@ -1110,6 +1111,7 @@ export class V1WebAwbCodService {
         authMeta.username,
         permissonPayload.branchId,
         transaction.userIdDriver,
+        transaction.transactionDate,
       );
 
       // get data
@@ -1273,8 +1275,10 @@ export class V1WebAwbCodService {
     nikAdmin: string,
     branchId: number,
     userIdDriver: number,
+    transactionDate?: Date,
   ): Promise<WebCodPrintMetaVm> {
-    const timestamp = moment();
+    // handle transactionDate
+    const timestamp = transactionDate ? moment(transactionDate) : moment();
     const result = new WebCodPrintMetaVm();
 
     result.transactionCode = transactionCode;

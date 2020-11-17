@@ -109,7 +109,7 @@ export class V1WebTrackingService {
   }
 
   static async getAwbSubstitute(payload: BaseMetaPayloadVm): Promise <AwbSubstituteResponseVm> {
-    payload.fieldResolverMap['awbSubstitute']     = 't1.awbSubstitute';
+    payload.fieldResolverMap['awbSubstitute']     = 't1.awb_substitute';
     payload.fieldResolverMap['awbNumber']         = 't1.awb_number';
     payload.fieldResolverMap['awbItemId']         = 't1.awb_item_id';
     payload.fieldResolverMap['awbSubstituteType'] = '"awbSubstituteType"';
