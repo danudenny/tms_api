@@ -161,3 +161,8 @@ export class ScaninDetailScanResponseVm {
   @ApiModelProperty({ type: () => [ScaninDataDetailScanResponseVm] })
   data: ScaninDataDetailScanResponseVm[];
 }
+
+export class ScanOutSmdScanInReportVm {
+  @ApiModelProperty()
+  id: string;
+}

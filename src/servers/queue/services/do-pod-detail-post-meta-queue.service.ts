@@ -269,6 +269,7 @@ export class DoPodDetailPostMetaQueueService {
     awbItemId: number,
     branchId: number,
     userId: number,
+    isSmd = 0,
   ) {
     // TODO: need to be reviewed ??
     // find awbStatusIdLastPublic on awb_status
@@ -277,7 +278,7 @@ export class DoPodDetailPostMetaQueueService {
       awbItemId,
       userId,
       branchId,
-      awbStatusId: AWB_STATUS.DO_HUB,
+      awbStatusId: isSmd ? AWB_STATUS.DO_LINE_HAUL : AWB_STATUS.DO_HUB,
       awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
       userIdCreated: userId,
       userIdUpdated: userId,
