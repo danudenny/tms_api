@@ -12,6 +12,7 @@ import {
 import { Branch } from '../../../shared/orm-entity/branch';
 
 export class PrintDoPodService {
+
   public static async printDoPodByRequest(
     res: express.Response,
     queryParams: PrintDoPodPayloadQueryVm,
@@ -44,6 +45,8 @@ export class PrintDoPodService {
               awbNumber: true,
               consigneeName: true,
               totalWeight: true,
+              totalCodValue: true,
+              isCod: true,
             },
           },
         },
@@ -57,7 +60,8 @@ export class PrintDoPodService {
       });
     }
 
-    this.printDoPodAndQueryMeta(
+    // handle Surat Jalan Transit
+    this.printDoPodTransitAndQueryMeta(
       res,
       doPod as any,
       {
@@ -126,15 +130,13 @@ export class PrintDoPodService {
     );
   }
 
-  public static async printDoPod(
+  // handle print for Surat Jalan Transit
+  public static async printDoPodTransitAndQueryMeta(
     res: express.Response,
     data: Partial<PrintDoPodDataVm>,
-    meta: {
-      currentUserName: string;
-      currentBranchName: string;
-      date: string;
-      time: string;
-      totalItems: number;
+    metaQuery: {
+      userId: number;
+      branchId: number;
     },
     templateConfig: {
       printCopy?: number;
@@ -142,23 +144,63 @@ export class PrintDoPodService {
       printCopy: 1,
     },
   ) {
-    const jsreportParams = {
-      data,
-      meta,
-    };
-
-    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
-    PrinterService.responseForJsReport({
-      res,
-      templates: [
-        {
-          templateName: 'surat-jalan',
-          templateData: jsreportParams,
-          printCopy: templateConfig.printCopy,
+    // #region get user login and branch login
+    const currentUser = await RepositoryService.user
+      .loadById(metaQuery.userId)
+      .select({
+        userId: true, // needs to be selected due to users relations are being included
+        employee: {
+          nickname: true,
         },
-      ],
-      listPrinterName,
-    });
+      });
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
+    const currentBranch = await RepositoryService.branch
+      .loadById(metaQuery.branchId)
+      .select({
+        branchName: true,
+      });
+
+    if (!currentBranch) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
+    // #endregion
+
+    const currentDate = moment();
+    let totalCod = 0;
+    // loop data and sum data totalCodValue
+    if (data.doPodDetails.length) {
+      data.doPodDetails.map(function(detail) {
+        if (
+          detail.awbItem &&
+          detail.awbItem.awb &&
+          detail.awbItem.awb.totalCodValue
+        ) {
+          totalCod += Number(detail.awbItem.awb.totalCodValue);
+        }
+      });
+    }
+
+    return this.printDoPodTransit(
+      res,
+      data,
+      {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: currentDate.format('DD/MM/YY'),
+        time: currentDate.format('HH:mm'),
+        totalItems: data.doPodDetails.length,
+        totalCod,
+      },
+      templateConfig,
+    );
   }
 
   public static async reformatDataDoReturnAdmin(data: any) {
@@ -228,6 +270,78 @@ export class PrintDoPodService {
           templateName: 'ttd-do-balik-admin',
           templateData: jsreportParams,
           printCopy: queryParams.printCopy,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  // private
+  private static async printDoPod(
+    res: express.Response,
+    data: Partial<PrintDoPodDataVm>,
+    meta: {
+      currentUserName: string;
+      currentBranchName: string;
+      date: string;
+      time: string;
+      totalItems: number;
+    },
+    templateConfig: {
+      printCopy?: number;
+    } = {
+      printCopy: 1,
+    },
+  ) {
+    const jsreportParams = {
+      data,
+      meta,
+    };
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'surat-jalan',
+          templateData: jsreportParams,
+          printCopy: templateConfig.printCopy,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
+  private static async printDoPodTransit(
+    res: express.Response,
+    data: Partial<PrintDoPodDataVm>,
+    meta: {
+      currentUserName: string;
+      currentBranchName: string;
+      date: string;
+      time: string;
+      totalItems: number;
+      totalCod: number;
+    },
+    templateConfig: {
+      printCopy?: number;
+    } = {
+      printCopy: 1,
+    },
+  ) {
+    const jsreportParams = {
+      data,
+      meta,
+    };
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'surat-jalan-transit',
+          templateData: jsreportParams,
+          printCopy: templateConfig.printCopy,
         },
       ],
       listPrinterName,

@@ -18,6 +18,8 @@ import { PrintBagItemStickerService } from '../services/print-bag-item-sticker.s
 @ApiUseTags('Print')
 @Controller('print')
 export class PrintController {
+
+  // reprint surat jalan transit
   @Get('do-pod')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })

@@ -37,6 +37,7 @@ import {
   WebCodTransferHeadOfficePayloadVm,
   WebCodTransferPayloadVm,
   WebCodTransactionUpdatePayloadVm,
+  WebInsertCodPaymentPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   WebAwbCodBankStatementResponseVm,
@@ -60,6 +61,7 @@ import {
   WebAwbCodVoidListResponseVm,
   WebCodCountResponseVm,
   WebAwbCodDlvV2ListResponseVm,
+  WebInsertCodPaymentResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import { V1WebCodBankStatementService } from '../../../services/web/v1/web-cod-bank-statement.service';
@@ -459,4 +461,11 @@ export class V1WebAwbCodController {
   //   await V1WebAwbCodService.syncData();
   //   return { status: 'ok' };
   // }
+  @Post('insertCodPayment')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebInsertCodPaymentResponseVm })
+  public async insertCodPayment(@Body() payload: WebInsertCodPaymentPayloadVm) {
+    return V1WebAwbCodService.insertCodPayment(payload);
+  }
 }
