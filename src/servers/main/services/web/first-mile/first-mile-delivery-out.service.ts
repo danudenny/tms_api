@@ -494,7 +494,7 @@ export class FirstMileDeliveryOutService {
               // handle message
               const desc =
                 awb.awbStatusIdLast == AWB_STATUS.CANCEL
-                  ? 'di cancel delivery !'
+                  ? 'telah di CANCEL oleh Partner !'
                   : 'sudah Final Status !';
               response.message = `Resi ${awbNumber} ${desc}`;
             } else {
