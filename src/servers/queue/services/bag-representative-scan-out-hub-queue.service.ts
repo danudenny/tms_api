@@ -69,7 +69,7 @@ export class BagRepresentativeScanOutHubQueueService {
       historyBag.bagRepresentativeCode = data.bagRepresentativeCode;
       historyBag.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
       historyBag.bagRepresentativeId = data.bagRepresentativeId;
-      historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.IN_HUB.toString();
+      historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.IN_LINE_HAUL.toString();
       historyBag.branchId = data.branchId;
       historyBag.representativeIdTo = data.representativeIdTo;
       historyBag.totalItem = data.totalItem;
@@ -84,7 +84,7 @@ export class BagRepresentativeScanOutHubQueueService {
       historyBagOut.bagRepresentativeCode = data.bagRepresentativeCode;
       historyBagOut.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
       historyBagOut.bagRepresentativeId = data.bagRepresentativeId;
-      historyBagOut.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_HUB.toString();
+      historyBagOut.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_LINE_HAUL.toString();
       historyBagOut.branchId = data.branchId;
       historyBagOut.representativeIdTo = data.representativeIdTo;
       historyBagOut.totalItem = data.totalItem;
@@ -104,14 +104,14 @@ export class BagRepresentativeScanOutHubQueueService {
             Number(item.awb_item_id),
             Number(data.branchId),
             Number(data.userId),
-            AWB_STATUS.IN_HUB,
+            AWB_STATUS.IN_LINE_HAUL,
             data.vendorName,
           );
           DoSmdPostAwbHistoryMetaQueueService.createJobByVendorSmd(
             Number(item.awb_item_id),
             Number(data.branchId),
             Number(data.userId),
-            AWB_STATUS.OUT_HUB,
+            AWB_STATUS.OUT_LINE_HAUL,
             data.vendorName,
             moment().add(1, 'minutes').toDate(),
           );

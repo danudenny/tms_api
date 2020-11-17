@@ -269,6 +269,7 @@ export class DoPodDetailPostMetaQueueService {
     awbItemId: number,
     branchId: number,
     userId: number,
+    isSmd = 0,
   ) {
     // TODO: need to be reviewed ??
     // find awbStatusIdLastPublic on awb_status
@@ -277,7 +278,7 @@ export class DoPodDetailPostMetaQueueService {
       awbItemId,
       userId,
       branchId,
-      awbStatusId: AWB_STATUS.DO_HUB,
+      awbStatusId: isSmd ? AWB_STATUS.DO_LINE_HAUL : AWB_STATUS.DO_HUB,
       awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
       userIdCreated: userId,
       userIdUpdated: userId,
@@ -436,9 +437,14 @@ export class DoPodDetailPostMetaQueueService {
     let reasonName = null;
     let location = null;
 
+    // handle RTS
+    if (awbStatusId == AWB_STATUS.RTS) {
+      descLast = `penerima oleh ${consigneeName} [${descLast}]`;
+    }
+    // TODO: title case consigneeName
+    receiverName = consigneeName;
+
     if (awbStatusId == AWB_STATUS.DLV) {
-      // TODO: title case consigneeName
-      receiverName = consigneeName;
       const reason = await Reason.findOne(reasonId);
       const reasonCode = reason ? reason.reasonCode : 'YBS';
       reasonName = reason ? reason.reasonName : 'Yang Bersangkutan';
@@ -572,16 +578,24 @@ export class DoPodDetailPostMetaQueueService {
       let receiverName = '';
       let employeeName = 'Admin';
       let reasonName = null;
+      let desc = '';
 
       const userDriverRepo = await this.getDataUserEmployee(userId);
       if (userDriverRepo) {
         employeeName = userDriverRepo.employee.employeeName;
       }
-      const desc = `${descLast} (Status Manual by ${employeeName})`;
+
+      // handle RTS
+      if (awbStatusId == AWB_STATUS.RTS) {
+        desc = `penerima oleh ${consigneeName} [${descLast}] (Status Manual by ${employeeName})`;
+      } else {
+        desc = `${descLast} (Status Manual by ${employeeName})`;
+      }
+
+      // TODO: title case consigneeName
+      receiverName = consigneeName;
 
       if (awbStatusId == AWB_STATUS.DLV) {
-        // TODO: title case consigneeName
-        receiverName = consigneeName;
         const reason = await Reason.findOne(reasonId);
         const reasonCode = reason ? reason.reasonCode : 'YBS';
         reasonName = reason ? reason.reasonName : 'Yang Bersangkutan';

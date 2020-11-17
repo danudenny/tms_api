@@ -5,6 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { TransactionStatus } from './transaction-status';
@@ -12,6 +13,7 @@ import { Branch } from './branch';
 import { User } from './user';
 import { CodTransactionDetail } from './cod-transaction-detail';
 import { CodBankStatement } from './cod-bank-statement';
+import { CodUserToBranch } from './cod-user-to-branch';
 
 @Entity('cod_transaction', { schema: 'public' })
 export class CodTransaction extends TmsBaseEntity {
@@ -111,4 +113,8 @@ export class CodTransaction extends TmsBaseEntity {
 
   @OneToMany(() => CodTransactionDetail, x => x.transactionBranch)
   details: CodTransactionDetail[];
+
+  @OneToOne(() => CodUserToBranch)
+  @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
+  codUserToBranch: CodUserToBranch;
 }

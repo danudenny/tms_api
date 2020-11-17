@@ -19,4 +19,13 @@ export class BranchController {
   public async findBranchName(@Body() payload: BaseMetaPayloadVm) {
     return this.branchService.findAllByRequest(payload);
   }
+
+  @Post('list/cod')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: BranchFindAllResponseVm })
+  public async findBranchNameCod(@Body() payload: BaseMetaPayloadVm) {
+    return this.branchService.findAllByRequestCod(payload);
+  }
 }

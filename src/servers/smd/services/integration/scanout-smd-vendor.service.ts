@@ -698,7 +698,7 @@ export class ScanoutSmdVendorService {
         INNER JOIN bag b ON bi.bag_id = b.bag_id AND b.is_deleted = FALSE
         LEFT JOIN representative  r on bg.representative_id_to = r.representative_id and r.is_deleted  = FALSE
         LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3500
+            and bih.bag_item_status_id in( 3550, 3500)
         WHERE
           bg.bagging_id = ${resultBagging.baggingId} AND
           bi.is_deleted = FALSE;
@@ -829,7 +829,7 @@ export class ScanoutSmdVendorService {
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3500
+            and bih.bag_item_status_id in ( 3550, 3500)
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
@@ -896,7 +896,7 @@ export class ScanoutSmdVendorService {
                 },
               );
 
-              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
               // Generate history bag and its awb IN_HUB
               BagScanVendorQueueService.perform(
@@ -957,7 +957,7 @@ export class ScanoutSmdVendorService {
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3500
+            and bih.bag_item_status_id in (3550, 3500)
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
             bi.bag_seq = '${paramSeq}' AND
@@ -1024,7 +1024,7 @@ export class ScanoutSmdVendorService {
                 },
               );
 
-              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+              // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
               // Generate history bag and its awb IN_HUB
               BagScanVendorQueueService.perform(
@@ -1193,25 +1193,8 @@ export class ScanoutSmdVendorService {
       },
     });
     if (resultDoSmd) {
-      await DoSmd.update(
-        { doSmdId : paramdoSmdId },
-        {
-          isDeleted: true,
-          userIdUpdated: authMeta.userId,
-          updatedTime: moment().toDate(),
-        },
-      );
-      const rawQuery = `
-        SELECT
-          do_smd_detail_id
-        FROM do_smd_detail
-        WHERE
-          do_smd_id = ${paramdoSmdId} AND
-          is_deleted = FALSE;
-      `;
-      const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
-      if (resultDataDoSmdDetail.length > 0 ) {
-        await DoSmdDetail.update(
+      if (resultDoSmd.doSmdStatusIdLast != 2050) {
+        await DoSmd.update(
           { doSmdId : paramdoSmdId },
           {
             isDeleted: true,
@@ -1219,33 +1202,54 @@ export class ScanoutSmdVendorService {
             updatedTime: moment().toDate(),
           },
         );
-        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-          await DoSmdDetailItem.update(
-            { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+        const rawQuery = `
+          SELECT
+            do_smd_detail_id
+          FROM do_smd_detail
+          WHERE
+            do_smd_id = ${paramdoSmdId} AND
+            is_deleted = FALSE;
+        `;
+        const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
+        if (resultDataDoSmdDetail.length > 0 ) {
+          await DoSmdDetail.update(
+            { doSmdId : paramdoSmdId },
             {
               isDeleted: true,
               userIdUpdated: authMeta.userId,
               updatedTime: moment().toDate(),
             },
           );
+          for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+            await DoSmdDetailItem.update(
+              { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+              {
+                isDeleted: true,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              },
+            );
+          }
+          const paramDoSmdHistoryId = await this.createDoSmdHistory(
+            resultDoSmd.doSmdId,
+            null,
+            resultDoSmd.doSmdVehicleIdLast,
+            null,
+            null,
+            resultDoSmd.doSmdTime,
+            permissonPayload.branchId,
+            7000,
+            null,
+            null,
+            authMeta.userId,
+          );
+          BagAwbDeleteHistoryInHubFromSmdQueueService.perform(
+            paramdoSmdId,
+            authMeta.userId,
+          );
         }
-        const paramDoSmdHistoryId = await this.createDoSmdHistory(
-          resultDoSmd.doSmdId,
-          null,
-          resultDoSmd.doSmdVehicleIdLast,
-          null,
-          null,
-          resultDoSmd.doSmdTime,
-          permissonPayload.branchId,
-          7000,
-          null,
-          null,
-          authMeta.userId,
-        );
-        BagAwbDeleteHistoryInHubFromSmdQueueService.perform(
-          paramdoSmdId,
-          authMeta.userId,
-        );
+      } else {
+        throw new BadRequestException(`SMD ID: ` + paramdoSmdId + ` Can't Deleted`);
       }
     } else {
       throw new BadRequestException(`SMD ID: ` + paramdoSmdId + ` Can't Found !`);

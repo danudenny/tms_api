@@ -187,6 +187,13 @@ export class PickupRequestDetail extends TmsBaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'recipient_email',
+  })
+  recipientEmail: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
     name: 'recipient_phone',
   })
   recipientPhone: string | null;
@@ -386,6 +393,9 @@ export class PickupRequestDetail extends TmsBaseEntity {
   districtOrigin: District;
 
   @OneToOne(() => District)
-  @JoinColumn({ name: 'destination_code', referencedColumnName: 'districtCode' })
+  @JoinColumn({
+    name: 'destination_code',
+    referencedColumnName: 'districtCode',
+  })
   districtDestination: District;
 }

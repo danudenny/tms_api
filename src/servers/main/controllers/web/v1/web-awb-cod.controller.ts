@@ -1,3 +1,5 @@
+import { V1WebReportCodStreamService } from './../../../services/web/v1/web-report-stream-cod.service';
+import { Res } from '@nestjs/common';
 // #region import
 import {
   Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UploadedFile, UseGuards,
@@ -25,7 +27,7 @@ import {
   WebCodBankStatementResponseVm, WebCodInvoiceAddResponseVm, WebCodInvoiceDraftResponseVm,
   WebCodInvoiceRemoveResponseVm, WebCodListInvoiceResponseVm,
   WebCodSupplierInvoicePaidResponseVm, WebCodTransactionDetailResponseVm,
-  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm, WebAwbCodVoidListResponseVm, WebCodCountResponseVm,
+  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm, WebAwbCodVoidListResponseVm, WebCodCountResponseVm, WebAwbCodDlvV2ListResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import { V1WebCodBankStatementService } from '../../../services/web/v1/web-cod-bank-statement.service';
@@ -43,7 +45,7 @@ import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sq
 export class V1WebAwbCodController {
   @Post('awb')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebAwbCodListResponseVm })
   public async awb(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.awbCod(payload);
@@ -51,15 +53,23 @@ export class V1WebAwbCodController {
 
   @Post('countAwb')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodCountResponseVm })
   public async countAwb(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.countAwbCod(payload);
   }
 
+  @Post('awbDlvV2')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebAwbCodDlvV2ListResponseVm })
+  public async awbDlvV2(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbCodService.awbCodDlvV2(payload);
+  }
+
   @Post('awbDlv')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebAwbCodDlvListResponseVm })
   public async awbDlv(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.awbCodDlv(payload);
@@ -67,7 +77,7 @@ export class V1WebAwbCodController {
 
   @Post('countAwbDlv')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodCountResponseVm })
   public async countAwbDlv(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.countAwbCodDlv(payload);
@@ -89,9 +99,19 @@ export class V1WebAwbCodController {
     return V1WebAwbCodService.transferBranch(payload);
   }
 
+  @Get('reprintTransaction/:transactionId')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebCodTransferBranchResponseVm })
+  public async reprintTransaction(
+    @Param('transactionId') transactionId: string,
+  ) {
+    return V1WebAwbCodService.reprintTransaction(transactionId);
+  }
+
   @Post('transactionBranch')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebAwbCodListTransactionResponseVm })
   public async transactionBranch(@Body() payload: BaseMetaPayloadVm) {
     // get data transaction branch
@@ -315,7 +335,9 @@ export class V1WebAwbCodController {
   public async supplierInvoiceNonCodFeePrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-    return await V1WebReportCodService.printNonCodSupplierInvoice(payload.filters);
+    return await V1WebReportCodService.printNonCodSupplierInvoice(
+      payload.filters,
+    );
   }
 
   @Post('supplierInvoice/bull/print')
@@ -324,7 +346,10 @@ export class V1WebAwbCodController {
   public async supplierInvoiceBullPrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-    return await V1WebReportCodService.addQueueBullPrint(payload.filters, 'codfee');
+    return await V1WebReportCodService.addQueueBullPrint(
+      payload.filters,
+      'codfee',
+    );
   }
 
   @Post('supplierInvoice/noncodfee/bull/print')
@@ -333,7 +358,10 @@ export class V1WebAwbCodController {
   public async supplierInvoiceBullNonCodFeePrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-    return await V1WebReportCodService.addQueueBullPrint(payload.filters, 'noncodfee');
+    return await V1WebReportCodService.addQueueBullPrint(
+      payload.filters,
+      'noncodfee',
+    );
   }
 
   @Post('supplierInvoice/sql/bull/print')
@@ -342,7 +370,10 @@ export class V1WebAwbCodController {
   public async supplierInvoiceBullSqlCodFeePrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-    return await V1WebReportSqlCodService.addQueueBullPrint(payload.filters, 'codfee');
+    return await V1WebReportSqlCodService.addQueueBullPrint(
+      payload.filters,
+      'codfee',
+    );
   }
 
   @Post('supplierInvoice/noncodfee/sql/bull/print')
@@ -351,16 +382,43 @@ export class V1WebAwbCodController {
   public async supplierInvoiceBullSqlNonCodFeePrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-    return await V1WebReportSqlCodService.addQueueBullPrint(payload.filters, 'noncodfee');
+    return await V1WebReportSqlCodService.addQueueBullPrint(
+      payload.filters,
+      'noncodfee',
+    );
   }
 
   @Get('supplierInvoice/checkReport/:reportKey')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
-  public async supplierinvoiceCheckUUID(
-    @Param('reportKey') reportKey: string,
-  ) {
+  public async supplierinvoiceCheckUUID(@Param('reportKey') reportKey: string) {
     return await V1WebReportCodService.getuuidString(reportKey);
+  }
+
+  @Post('supplierInvoice/noncodfee/stream/print')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceStreamNonCodFeePrint(
+    @Body() payload: ReportBaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await V1WebReportCodStreamService.printNonCodSupplierInvoice(
+      payload.filters,
+      outgoingHTTP,
+    );
+  }
+
+  @Post('supplierInvoice/stream/print')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async supplierInvoiceStreamPrint(
+    @Body() payload: ReportBaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await V1WebReportCodStreamService.printCodSupplierInvoice(
+      payload.filters,
+      outgoingHTTP,
+    );
   }
 
   // #endregion report COD

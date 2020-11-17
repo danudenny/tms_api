@@ -153,6 +153,28 @@ export class WebItemAwbCodDlvResponseVm {
   transactionStatusName: string;
 }
 
+export class WebAwbCodDlvV2ListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebItemAwbCodDlvV2ResponseVm] })
+  data: WebItemAwbCodDlvV2ResponseVm[];
+}
+
+export class WebItemAwbCodDlvV2ResponseVm {
+  @ApiModelProperty()
+  userIdDriver: number;
+
+  @ApiModelProperty()
+  driverName: string;
+
+  @ApiModelProperty()
+  totalResi: number;
+
+  @ApiModelProperty()
+  branchIdFinal: number;
+
+  @ApiModelProperty()
+  branchNameFinal: string;
+}
+
 export class WebAwbCodDlvListResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [WebItemAwbCodDlvResponseVm] })
   data: WebItemAwbCodDlvResponseVm[];

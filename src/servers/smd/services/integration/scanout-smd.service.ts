@@ -9,7 +9,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { Representative } from '../../../../shared/orm-entity/representative';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
-import { IsNull, In, Not } from 'typeorm';
+import { IsNull, In, Not, getManager } from 'typeorm';
 import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
@@ -610,16 +610,33 @@ export class ScanoutSmdService {
               isDeleted: false,
             },
           });
-          resultDoSmdDetail.totalBagRepresentative = Number(resultDoSmdDetail.totalBagRepresentative) + 1;
-          resultDoSmdDetail.userIdUpdated = authMeta.userId;
-          resultDoSmdDetail.updatedTime = timeNow;
-          await resultDoSmdDetail.save();
 
-          resultDoSmd.totalBagRepresentative = Number(resultDoSmd.totalBagRepresentative) + 1;
-          resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
-          resultDoSmd.userIdUpdated = authMeta.userId;
-          resultDoSmd.updatedTime = timeNow;
-          await resultDoSmd.save();
+          await getManager().transaction(async transactionEntityManager => {
+            await transactionEntityManager.increment(
+              DoSmdDetail,
+              {
+                doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+              },
+              'totalBagRepresentative',
+              1,
+            );
+            await transactionEntityManager.increment(
+              DoSmd,
+              {
+                doSmdId: resultDoSmd.doSmdId,
+              },
+              'totalBagRepresentative',
+              1,
+            );
+            await transactionEntityManager.increment(
+              DoSmd,
+              {
+                doSmdId: resultDoSmd.doSmdId,
+              },
+              'totalItem',
+              1,
+            );
+          });
 
           BagRepresentativeScanDoSmdQueueService.perform(
             resultDataBagRepresentative[0].bag_representative_id,
@@ -671,7 +688,7 @@ export class ScanoutSmdService {
         INNER JOIN bag b ON bi.bag_id = b.bag_id AND b.is_deleted = FALSE
         LEFT JOIN representative  r on bg.representative_id_to = r.representative_id and r.is_deleted  = FALSE
         LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3500
+            and bih.bag_item_status_id in(3550, 3500)
         WHERE
           bg.bagging_id = ${resultBagging.baggingId} AND
           bi.is_deleted = FALSE;
@@ -727,16 +744,32 @@ export class ScanoutSmdService {
                 isDeleted: false,
               },
             });
-            resultDoSmdDetail.totalBagging = Number(resultDoSmdDetail.totalBagging) + 1;
-            resultDoSmdDetail.userIdUpdated = authMeta.userId;
-            resultDoSmdDetail.updatedTime = timeNow;
-            await resultDoSmdDetail.save();
-
-            resultDoSmd.totalBagging = Number(resultDoSmd.totalBagging) + 1;
-            resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
-            resultDoSmd.userIdUpdated = authMeta.userId;
-            resultDoSmd.updatedTime = timeNow;
-            await resultDoSmd.save();
+            await getManager().transaction(async transactionEntityManager => {
+              await transactionEntityManager.increment(
+                DoSmdDetail,
+                {
+                  doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+                },
+                'totalBagging',
+                1,
+              );
+              await transactionEntityManager.increment(
+                DoSmd,
+                {
+                  doSmdId: resultDoSmd.doSmdId,
+                },
+                'totalBagging',
+                1,
+              );
+              await transactionEntityManager.increment(
+                DoSmd,
+                {
+                  doSmdId: resultDoSmd.doSmdId,
+                },
+                'totalItem',
+                1,
+              );
+            });
 
             // Generate history bag and its awb IN_HUB
             BagScanDoSmdQueueService.perform(
@@ -799,7 +832,7 @@ export class ScanoutSmdService {
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3500 AND bih.branch_id = '${permissonPayload.branchId}'
+            and bih.bag_item_status_id in (3550, 3500) AND bih.branch_id = '${permissonPayload.branchId}'
           LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
             AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
           WHERE
@@ -849,18 +882,34 @@ export class ScanoutSmdService {
                   isDeleted: false,
                 },
               });
-              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
-              resultDoSmdDetail.userIdUpdated = authMeta.userId;
-              resultDoSmdDetail.updatedTime = timeNow;
-              await resultDoSmdDetail.save();
+              await getManager().transaction(async transactionEntityManager => {
+                await transactionEntityManager.increment(
+                  DoSmdDetail,
+                  {
+                    doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+                  },
+                  'totalBag',
+                  1,
+                );
+                await transactionEntityManager.increment(
+                  DoSmd,
+                  {
+                    doSmdId: resultDoSmd.doSmdId,
+                  },
+                  'totalBag',
+                  1,
+                );
+                await transactionEntityManager.increment(
+                  DoSmd,
+                  {
+                    doSmdId: resultDoSmd.doSmdId,
+                  },
+                  'totalItem',
+                  1,
+                );
+              });
 
-              resultDoSmd.totalBag = Number(resultDoSmd.totalBag) + 1;
-              resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
-              resultDoSmd.userIdUpdated = authMeta.userId;
-              resultDoSmd.updatedTime = timeNow;
-              await resultDoSmd.save();
-
-              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
               // Generate history bag and its awb IN_HUB
               BagScanDoSmdQueueService.perform(
@@ -923,7 +972,7 @@ export class ScanoutSmdService {
           INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
           LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
           LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id = 3500 AND bih.branch_id = '${permissonPayload.branchId}'
+            and bih.bag_item_status_id in( 3550, 3500) AND bih.branch_id = '${permissonPayload.branchId}'
           LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
             AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
           WHERE
@@ -973,18 +1022,33 @@ export class ScanoutSmdService {
                   isDeleted: false,
                 },
               });
-              resultDoSmdDetail.totalBag = Number(resultDoSmdDetail.totalBag) + 1;
-              resultDoSmdDetail.userIdUpdated = authMeta.userId;
-              resultDoSmdDetail.updatedTime = timeNow;
-              await resultDoSmdDetail.save();
-
-              resultDoSmd.totalBag = Number(resultDoSmd.totalBag) + 1;
-              resultDoSmd.totalItem = Number(resultDoSmd.totalItem) + 1;
-              resultDoSmd.userIdUpdated = authMeta.userId;
-              resultDoSmd.updatedTime = timeNow;
-              await resultDoSmd.save();
-
-              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_HUB);
+              await getManager().transaction(async transactionEntityManager => {
+                await transactionEntityManager.increment(
+                  DoSmdDetail,
+                  {
+                    doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+                  },
+                  'totalBag',
+                  1,
+                );
+                await transactionEntityManager.increment(
+                  DoSmd,
+                  {
+                    doSmdId: resultDoSmd.doSmdId,
+                  },
+                  'totalBag',
+                  1,
+                );
+                await transactionEntityManager.increment(
+                  DoSmd,
+                  {
+                    doSmdId: resultDoSmd.doSmdId,
+                  },
+                  'totalItem',
+                  1,
+                );
+              });
+              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
               // Generate history bag and its awb IN_HUB
               BagScanDoSmdQueueService.perform(
@@ -1146,11 +1210,15 @@ export class ScanoutSmdService {
     }
     const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
     if (resultDataDoSmdDetail.length > 0 ) {
+      const idDetail = [];
+      for (const dataDetailSmd of resultDataDoSmdDetail) {
+        idDetail.push(dataDetailSmd.do_smd_detail_id);
+      }
       // proses seal jika smd sudah pernah scan item
       const checkItemSmd = await DoSmdDetailItem.findOne({
         select: ['doSmdDetailId'],
         where: {
-          doSmdDetailId: resultDataDoSmdDetail[0].do_smd_detail_id,
+          doSmdDetailId: In(idDetail),
           isDeleted: false,
         },
       });
@@ -1228,25 +1296,8 @@ export class ScanoutSmdService {
       },
     });
     if (resultDoSmd) {
-      await DoSmd.update(
-        { doSmdId : paramdoSmdId },
-        {
-          isDeleted: true,
-          userIdUpdated: authMeta.userId,
-          updatedTime: moment().toDate(),
-        },
-      );
-      const rawQuery = `
-        SELECT
-          do_smd_detail_id
-        FROM do_smd_detail
-        WHERE
-          do_smd_id = ${paramdoSmdId} AND
-          is_deleted = FALSE;
-      `;
-      const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
-      if (resultDataDoSmdDetail.length > 0 ) {
-        await DoSmdDetail.update(
+      if (resultDoSmd.doSmdStatusIdLast == 1000 || resultDoSmd.doSmdStatusIdLast == 2000) {
+        await DoSmd.update(
           { doSmdId : paramdoSmdId },
           {
             isDeleted: true,
@@ -1254,41 +1305,62 @@ export class ScanoutSmdService {
             updatedTime: moment().toDate(),
           },
         );
-        await DoSmdVehicle.update(
-          { doSmdId : paramdoSmdId },
-          {
-            isDeleted: true,
-            userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-          },
-        );
-        for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
-          await DoSmdDetailItem.update(
-            { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+        const rawQuery = `
+          SELECT
+            do_smd_detail_id
+          FROM do_smd_detail
+          WHERE
+            do_smd_id = ${paramdoSmdId} AND
+            is_deleted = FALSE;
+        `;
+        const resultDataDoSmdDetail = await RawQueryService.query(rawQuery);
+        if (resultDataDoSmdDetail.length > 0 ) {
+          await DoSmdDetail.update(
+            { doSmdId : paramdoSmdId },
             {
               isDeleted: true,
               userIdUpdated: authMeta.userId,
               updatedTime: moment().toDate(),
             },
           );
+          await DoSmdVehicle.update(
+            { doSmdId : paramdoSmdId },
+            {
+              isDeleted: true,
+              userIdUpdated: authMeta.userId,
+              updatedTime: moment().toDate(),
+            },
+          );
+          for (let i = 0; i < resultDataDoSmdDetail.length; i++) {
+            await DoSmdDetailItem.update(
+              { doSmdDetailId : resultDataDoSmdDetail[i].do_smd_detail_id },
+              {
+                isDeleted: true,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              },
+            );
+          }
+          const paramDoSmdHistoryId = await this.createDoSmdHistory(
+            resultDoSmd.doSmdId,
+            null,
+            resultDoSmd.doSmdVehicleIdLast,
+            null,
+            null,
+            resultDoSmd.doSmdTime,
+            permissonPayload.branchId,
+            7000,
+            null,
+            null,
+            authMeta.userId,
+          );
+          BagAwbDeleteHistoryInHubFromSmdQueueService.perform(
+            paramdoSmdId,
+            authMeta.userId,
+          );
         }
-        const paramDoSmdHistoryId = await this.createDoSmdHistory(
-          resultDoSmd.doSmdId,
-          null,
-          resultDoSmd.doSmdVehicleIdLast,
-          null,
-          null,
-          resultDoSmd.doSmdTime,
-          permissonPayload.branchId,
-          7000,
-          null,
-          null,
-          authMeta.userId,
-        );
-        BagAwbDeleteHistoryInHubFromSmdQueueService.perform(
-          paramdoSmdId,
-          authMeta.userId,
-        );
+      } else {
+        throw new BadRequestException(`SMD Code ` + resultDoSmd.doSmdCode + ` Status tidak Created / Assigned`);
       }
     } else {
       throw new BadRequestException(`ID SMD ` + paramdoSmdId + ` tidak ditemukan!`);

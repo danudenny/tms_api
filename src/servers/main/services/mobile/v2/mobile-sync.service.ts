@@ -27,6 +27,7 @@ import { UploadImagePodQueueService } from '../../../../queue/services/upload-po
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { ServiceUnavailableException } from '@nestjs/common';
 import { RedisService } from '../../../../../shared/services/redis.service';
+import { AwbNotificationMailQueueService } from '../../../../queue/services/notification/awb-notification-mail-queue.service';
 // #endregion
 
 export class V2MobileSyncService {
@@ -249,6 +250,11 @@ export class V2MobileSyncService {
             historyDateTime,
             lastDoPodDeliverHistory.latitudeDelivery,
             lastDoPodDeliverHistory.longitudeDelivery,
+          );
+          // NOTE: mail notification
+          AwbNotificationMailQueueService.perform(
+            awbdDelivery.awbItemId,
+            awbStatus.awbStatusId,
           );
           process = true;
         } else {

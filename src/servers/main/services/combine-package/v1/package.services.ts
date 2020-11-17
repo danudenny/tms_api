@@ -490,16 +490,28 @@ export class V1PackageService {
     }
 
     // NOTE: Check Bag Sequence
-    const qbs = createQueryBuilder();
-    qbs.addSelect('MAX(a.bag_seq)', 'bagSeqMax');
-    qbs.from('bag_item', 'a');
-    qbs.andWhere('a.bag_id = :bagId', { bagId });
-    qbs.andWhere('a.is_deleted = false');
+    let bagItemCheck;
+    let bagSeq;
 
-    const getSequence = await qbs.getRawOne();
-    sequence = getSequence.bagSeqMax + 1;
+    do {
+      const qbs = createQueryBuilder();
+      qbs.addSelect('MAX(a.bag_seq)', 'bagSeqMax');
+      qbs.from('bag_item', 'a');
+      qbs.andWhere('a.bag_id = :bagId', { bagId });
+      qbs.andWhere('a.is_deleted = false');
 
-    const bagSeq: string = sequence.toString().padStart(3, '0');
+      const getSequence = await qbs.getRawOne();
+      sequence = getSequence.bagSeqMax + 1;
+
+      bagSeq = sequence.toString().padStart(3, '0');
+      bagItemCheck = await BagItem.findOne({
+        where: {
+          bagId,
+          isDeleted: false,
+          bagSeq: sequence,
+        },
+      });
+    } while (bagItemCheck);
 
     // INSERT INTO TABLE BAG ITEM
     const bagItemDetail = BagItem.create({
