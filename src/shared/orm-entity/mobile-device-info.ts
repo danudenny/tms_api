@@ -1,9 +1,8 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
-import { TmsBaseEntity } from './tms-base';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, BaseEntity} from 'typeorm';
 import {User} from './user';
 
 @Entity('mobile_device_info', {schema: 'public'})
-export class MobileDeviceInfo extends TmsBaseEntity {
+export class MobileDeviceInfo extends BaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'mobile_device_info_id',
   })

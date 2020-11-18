@@ -1,12 +1,9 @@
-import { HttpStatus } from '@nestjs/common';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
-import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { MobileDeviceInfo } from '../../../../shared/orm-entity/mobile-device-info';
 import { MobileDeviceInfoPayloadVm } from '../../models/mobile-device-info-payload.vm';
 import {
   MobileDeviceInfoResponseVm,
-  MobileDeviceInfoDetailResponseVm,
 } from '../../models/mobile-device-info.response.vm';
 
 export class MobileDeviceInfoService {
@@ -17,47 +14,40 @@ export class MobileDeviceInfoService {
   ): Promise<MobileDeviceInfoResponseVm> {
     const authMeta = AuthService.getAuthData();
     const mobileDeviceInfoResp = new MobileDeviceInfoResponseVm();
-    if (!!authMeta) {
-      const mobileDeviceInfoData = await MobileDeviceInfo.findOne({
-        where: {
-          userId: authMeta.userId,
-          isDeleted: false,
-        },
-        order: {
-          mobileDeviceInfoId: 'DESC',
-        },
-      });
-      const mobileDeviceinfoDto = await this.setDetailInfo(
-        payload,
-        authMeta.userId,
-      );
-      let result;
-      if (null != mobileDeviceInfoData) {
-        result = await MobileDeviceInfo.update(
-          {
-            mobileDeviceInfoId: mobileDeviceInfoData.mobileDeviceInfoId,
-          },
-          {
-            ...mobileDeviceinfoDto,
-          },
-        );
-        mobileDeviceInfoResp.message = 'sukses merubah data';
-      } else {
-        result = await MobileDeviceInfo.save(mobileDeviceinfoDto);
-        mobileDeviceInfoResp.message = 'sukses menyimpan data';
-      }
 
-      mobileDeviceInfoResp.isSucces = true;
-      mobileDeviceInfoResp.userId = authMeta.userId;
-      mobileDeviceInfoResp.mobileDeviceInfoId = result.mobileDeviceInfoId;
-    } else {
-      RequestErrorService.throwObj(
+    const mobileDeviceInfoData = await MobileDeviceInfo.findOne({
+      where: {
+        userId: authMeta.userId,
+        isDeleted: false,
+      },
+      order: {
+        mobileDeviceInfoId: 'DESC',
+      },
+    });
+    const mobileDeviceinfoDto = await this.setDetailInfo(
+      payload,
+      authMeta.userId,
+    );
+    let result;
+    if (null != mobileDeviceInfoData) {
+      result = await MobileDeviceInfo.update(
         {
-          message: 'global.error.USER_NOT_FOUND',
+          mobileDeviceInfoId: mobileDeviceInfoData.mobileDeviceInfoId,
         },
-        HttpStatus.UNAUTHORIZED,
+        {
+          ...mobileDeviceinfoDto,
+        },
       );
+      mobileDeviceInfoResp.message = 'sukses merubah data';
+    } else {
+      result = await MobileDeviceInfo.save(mobileDeviceinfoDto);
+      mobileDeviceInfoResp.message = 'sukses menyimpan data';
     }
+
+    mobileDeviceInfoResp.isSucces = true;
+    mobileDeviceInfoResp.userId = authMeta.userId;
+    mobileDeviceInfoResp.mobileDeviceInfoId = result.mobileDeviceInfoId;
+
     return mobileDeviceInfoResp;
   }
 
