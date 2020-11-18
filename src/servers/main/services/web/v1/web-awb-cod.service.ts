@@ -1,5 +1,5 @@
 // #region import
-import { createQueryBuilder, getManager, Not } from 'typeorm';
+import { createQueryBuilder, getManager, In, Not } from 'typeorm';
 
 import {
   BadRequestException,
@@ -29,6 +29,7 @@ import {
   WebCodTransferPayloadVm,
   WebCodTransactionUpdatePayloadVm,
   WebInsertCodPaymentPayloadVm,
+  WebCodTransactionRejectPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   PrintCodTransferBranchVm,
@@ -1436,7 +1437,9 @@ export class V1WebAwbCodService {
 
     const validateCodPayment = await qbCodPayment.getRawOne();
     if (validateCodPayment) {
-      throw new BadRequestException('AWB Number already Exists in COD_Payment!');
+      throw new BadRequestException(
+        'AWB Number already Exists in COD_Payment!',
+      );
     }
 
     // Insert cod receipt which has no photo
@@ -1459,5 +1462,120 @@ export class V1WebAwbCodService {
     result.status = 'ok';
     result.message = 'success';
     return result;
+  }
+
+  // NOTE: reject transaction cod
+  static async transactionReject(
+    payload: WebCodTransactionRejectPayloadVm,
+  ): Promise<WebCodTransactionUpdateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
+    const timestamp = moment().toDate();
+    const dataError = [];
+    let totalSuccess = 0;
+    let totalCodValue = 0;
+
+    const transaction = await CodTransaction.findOne({
+      where: {
+        codTransactionId: payload.transactionId,
+        isDeleted: false,
+        transactionStatusId: In(['31000', '32500']),
+      },
+    });
+
+    if (!transaction) {
+      throw new BadRequestException('Data transaction tidak valid!');
+    }
+
+    const transactionDetails = await CodTransactionDetail.find({
+      select: ['codTransactionDetailId', 'awbNumber', 'codValue', 'awbItemId'],
+      where: {
+        codTransactionId: payload.transactionId,
+        isDeleted: false,
+      },
+    });
+
+    if (transactionDetails.length <= 0) {
+      throw new BadRequestException('Tidak ada resi pada transaksi ini!');
+    }
+
+    // TODO: transaction process??
+    try {
+      // NOTE: loop data awb and update transaction detail
+      for (const transactionDetail of transactionDetails) {
+        // cancel all transaction status
+        if (transactionDetail) {
+          await AwbItemAttr.update(
+            {
+              awbItemId: transactionDetail.awbItemId,
+            },
+            {
+              transactionStatusId: null,
+            },
+          );
+
+          // remove awb from transaction
+          await CodTransactionDetail.update(
+            {
+              codTransactionDetailId: transactionDetail.codTransactionDetailId,
+            },
+            {
+              codTransactionId: null,
+              transactionStatusId: 30000,
+              updatedTime: timestamp,
+              userIdUpdated: authMeta.userId,
+            },
+          );
+
+          // sync update data to mongodb
+          CodSyncTransactionQueueService.perform(
+            transactionDetail.awbNumber,
+            null,
+            TRANSACTION_STATUS.SIGESIT,
+            null,
+            null,
+            authMeta.userId,
+            timestamp,
+          );
+
+          totalCodValue += Number(transactionDetail.codValue);
+          totalSuccess += 1;
+        } else {
+          // error message
+          const errorMessage = `Resi ${transactionDetail.awbNumber} tidak valid, sudah di proses!`;
+          dataError.push(errorMessage);
+        }
+      } // end of loop
+      // update data table transaction
+      if (totalSuccess > 0) {
+        const totalAwb = Number(transaction.totalAwb) - totalSuccess;
+        const calculateCodValue =
+          Number(transaction.totalCodValue) - totalCodValue;
+        await CodTransaction.update(
+          {
+            codTransactionId: transaction.codTransactionId,
+          },
+          {
+            totalAwb,
+            totalCodValue: calculateCodValue,
+            updatedTime: timestamp,
+            userIdUpdated: authMeta.userId,
+          },
+        );
+      }
+      const result = new WebCodTransactionUpdateResponseVm();
+      if (dataError.length) {
+        result.status = 'error';
+        result.message = 'error';
+      } else {
+        result.status = 'ok';
+        result.message = 'success';
+      }
+      result.totalSuccess = totalSuccess;
+      result.dataError = dataError;
+      return result;
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
+    }
   }
 }
