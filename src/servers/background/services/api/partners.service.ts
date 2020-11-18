@@ -15,15 +15,16 @@ import { RedisService } from '../../../../shared/services/redis.service';
 // #endregion import
 
 export class ApiPartnersService {
+
   static async cancelDelivery(
     payload: CancelDeliverPayloadVm,
   ): Promise<CancelDeliverOkResponseVm> {
     const resultOk = new CancelDeliverOkResponseVm();
     const resultFailed = new CancelDeliverFailedResponseVm();
     // init
-    resultFailed.status = 'failed';
+    resultFailed.status = '400';
     resultFailed.awb_number = payload.awb_number;
-    resultOk.status = 'success';
+    resultOk.status = '200';
     resultOk.awb_number = payload.awb_number;
 
     const redlock = await RedisService.redlock(`redlock:partner:cancelDelivery:${payload.awb_number}`);

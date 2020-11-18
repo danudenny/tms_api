@@ -10,25 +10,25 @@ export class CancelDeliverPayloadVm {
 }
 
 export class CancelDeliverOkResponseVm {
-  @ApiModelProperty({ example: 'success' })
+  @ApiModelProperty({ example: '200' })
   status: string;
 
   // receipt_number
   @ApiModelProperty({ example: '000000000XXX' })
   awb_number: string;
 
-  @ApiModelProperty({ example: 'awb_number: 000000000XXX sudah di cancel.' })
+  @ApiModelProperty({ example: 'awb_number: 000000000XXX cancel delivery success.' })
   message: string;
 }
 
 export class CancelDeliverFailedResponseVm {
-  @ApiModelProperty({ example: 'failed' })
+  @ApiModelProperty({ example: '400' })
   status: string;
 
   // receipt_number
   @ApiModelProperty({ example: '000000000XXX' })
   awb_number: string;
 
-  @ApiModelProperty({ example: 'awb_number: 000000000XXX tidak ditemukan.' })
+  @ApiModelProperty({ example: 'awb_number: 000000000XXX already delivery progress.' })
   message: string;
 }
