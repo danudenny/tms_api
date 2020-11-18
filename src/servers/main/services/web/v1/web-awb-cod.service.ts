@@ -1473,7 +1473,6 @@ export class V1WebAwbCodService {
     const timestamp = moment().toDate();
     const dataError = [];
     let totalSuccess = 0;
-    let totalCodValue = 0;
 
     const transaction = await CodTransaction.findOne({
       where: {
@@ -1502,67 +1501,74 @@ export class V1WebAwbCodService {
     // TODO: transaction process??
     try {
       // NOTE: loop data awb and update transaction detail
-      for (const transactionDetail of transactionDetails) {
-        // cancel all transaction status
-        if (transactionDetail) {
-          await AwbItemAttr.update(
-            {
-              awbItemId: transactionDetail.awbItemId,
-            },
-            {
-              transactionStatusId: null,
-            },
-          );
+      await getManager().transaction(async transactionManager => {
+        for (const transactionDetail of transactionDetails) {
+          // cancel all transaction status
+          if (transactionDetail) {
+            await transactionManager.update(
+              AwbItemAttr,
+              {
+                awbItemId: transactionDetail.awbItemId,
+              },
+              {
+                transactionStatusId: null,
+              },
+            );
 
-          // remove awb from transaction
-          await CodTransactionDetail.update(
+            // remove awb from transaction
+            await transactionManager.update(
+              CodTransactionDetail,
+              {
+                codTransactionDetailId:
+                  transactionDetail.codTransactionDetailId,
+              },
+              {
+                codTransactionId: null,
+                transactionStatusId: 30000,
+                updatedTime: timestamp,
+                userIdUpdated: authMeta.userId,
+              },
+            );
+
+            // sync update data to mongodb
+            CodSyncTransactionQueueService.perform(
+              transactionDetail.awbNumber,
+              null,
+              TRANSACTION_STATUS.SIGESIT,
+              null,
+              null,
+              authMeta.userId,
+              timestamp,
+            );
+
+            totalSuccess += 1;
+          } else {
+            // error message
+            const errorMessage = `Resi ${
+              transactionDetail.awbNumber
+            } tidak valid / sudah di proses!`;
+            dataError.push(errorMessage);
+          }
+        } // end of loop
+
+        if (totalSuccess > 0) {
+          // update data table transaction
+          await transactionManager.update(
+            CodTransaction,
             {
-              codTransactionDetailId: transactionDetail.codTransactionDetailId,
+              codTransactionId: transaction.codTransactionId,
             },
             {
-              codTransactionId: null,
-              transactionStatusId: 30000,
+              totalAwb: 0,
+              totalCodValue: 0,
+              transactionStatusId: 28000, // Reject Transaksi COD
               updatedTime: timestamp,
               userIdUpdated: authMeta.userId,
             },
           );
-
-          // sync update data to mongodb
-          CodSyncTransactionQueueService.perform(
-            transactionDetail.awbNumber,
-            null,
-            TRANSACTION_STATUS.SIGESIT,
-            null,
-            null,
-            authMeta.userId,
-            timestamp,
-          );
-
-          totalCodValue += Number(transactionDetail.codValue);
-          totalSuccess += 1;
-        } else {
-          // error message
-          const errorMessage = `Resi ${transactionDetail.awbNumber} tidak valid, sudah di proses!`;
-          dataError.push(errorMessage);
         }
-      } // end of loop
-      // update data table transaction
-      if (totalSuccess > 0) {
-        const totalAwb = Number(transaction.totalAwb) - totalSuccess;
-        const calculateCodValue =
-          Number(transaction.totalCodValue) - totalCodValue;
-        await CodTransaction.update(
-          {
-            codTransactionId: transaction.codTransactionId,
-          },
-          {
-            totalAwb,
-            totalCodValue: calculateCodValue,
-            updatedTime: timestamp,
-            userIdUpdated: authMeta.userId,
-          },
-        );
-      }
+      });
+
       const result = new WebCodTransactionUpdateResponseVm();
       if (dataError.length) {
         result.status = 'error';
@@ -1574,6 +1580,7 @@ export class V1WebAwbCodService {
       result.totalSuccess = totalSuccess;
       result.dataError = dataError;
       return result;
+
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }
