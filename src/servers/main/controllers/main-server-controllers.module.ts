@@ -64,6 +64,7 @@ import { PackageTypeController } from './master/package-type.controller';
 import { CodUserToBranchController } from './master/cod-user-to-branch.controller';
 import { WebHubReportController } from './web/web-hub-report.controller';
 import { V2CodPaymentController } from './mobile/v2/mobile-cod-payment.controller';
+import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -132,6 +133,7 @@ import { V2CodPaymentController } from './mobile/v2/mobile-cod-payment.controlle
     PackageTypeController,
     CodUserToBranchController,
     WebHubReportController,
+    MobileDeviceInfoController,
   ],
 })
 export class MainServerControllersModule {}
