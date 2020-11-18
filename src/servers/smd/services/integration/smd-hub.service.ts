@@ -508,6 +508,7 @@ export class SmdHubService {
     payload.fieldResolverMap['branchIdFrom'] = 'b2.branch_id';
     payload.fieldResolverMap['representativeFrom'] = 'r.representative_code';
     payload.fieldResolverMap['bagRepresentativeCode'] = 'br.bag_representative_code';
+    payload.fieldResolverMap['isSmd'] = 'e.is_smd';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -579,6 +580,7 @@ export class SmdHubService {
     payload.fieldResolverMap['consigneeName'] = 't3.consignee_name';
     payload.fieldResolverMap['consigneeAddress'] = 't3.consignee_address';
     payload.fieldResolverMap['districtName'] = 't4.district_name';
+    payload.fieldResolverMap['isSmd'] = 't1.is_smd';
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
@@ -633,6 +635,7 @@ export class SmdHubService {
     payload.fieldResolverMap['baggingCode'] = 't2.bagging_code';
     payload.fieldResolverMap['totalAwb'] = 't2.total_item';
     payload.fieldResolverMap['dropoffHubBaggingId'] = 't2.dropoff_hub_bagging_id';
+    payload.fieldResolverMap['isSmd'] = 't1.is_smd';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
