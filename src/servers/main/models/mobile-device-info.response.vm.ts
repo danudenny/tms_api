@@ -1,5 +1,19 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 
+export class MobileDeviceInfoResponseVm {
+  @ApiModelProperty()
+  userId: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  isSucces: boolean;
+
+  @ApiModelProperty()
+  mobileDeviceInfoId: string;
+}
+
 export class MobileDeviceInfoDetailResponseVm {
   @ApiModelProperty()
   imei: string;
@@ -21,21 +35,13 @@ export class MobileDeviceInfoDetailResponseVm {
 
   @ApiModelProperty()
   version: string;
-}
 
-export class MobileDeviceInfoResponseVm {
   @ApiModelProperty()
   userId: number;
 
   @ApiModelProperty()
-  message: string;
+  branchId: number;
 
   @ApiModelProperty()
-  isSucces: boolean;
-
-  @ApiModelProperty()
-  mobileDeviceInfoId: number;
-
-  @ApiModelProperty({type : () => MobileDeviceInfoDetailResponseVm})
-  detail: MobileDeviceInfoDetailResponseVm;
+  dateTime: Date;
 }

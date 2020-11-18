@@ -1,5 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, BaseEntity} from 'typeorm';
 import {User} from './user';
+import {Branch} from './branch';
 
 @Entity('mobile_device_info', {schema: 'public'})
 export class MobileDeviceInfo extends BaseEntity {
@@ -76,7 +77,17 @@ export class MobileDeviceInfo extends BaseEntity {
   })
   userId: number;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'branch_id',
+  })
+  branchId: number;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 }
