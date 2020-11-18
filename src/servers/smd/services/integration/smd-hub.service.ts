@@ -36,6 +36,7 @@ import { SmdHubDropOffGabPaketListResponseVm, SmdHubDropOffGabPaketAwbListRespon
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
+import lodash = require('lodash');
 
 @Injectable()
 export class SmdHubService {
@@ -523,6 +524,18 @@ export class SmdHubService {
       },
     ];
 
+    let indexHubFilter = null;
+    payload.filters.forEach(function(x, i) {
+      if ((x.field == 'isSmd' && x.operator == 'neq' && x.value == 1) ||
+        (x.field == 'isSmd' && x.operator == 'eq' && x.value == 0)) {
+          indexHubFilter = i;
+      }
+    });
+
+    if (indexHubFilter != null) {
+      payload.filters.splice(indexHubFilter, 1);
+    }
+
     const repo = new OrionRepositoryService(DropoffHubBagRepresentative, 'e');
     const q = repo.findAllRaw();
 
@@ -560,6 +573,12 @@ export class SmdHubService {
       'b2',
       'br.branch_id = b2.branch_id  and b2.is_deleted = false',
     );
+    if (indexHubFilter != null) {
+      q.andWhereIsolated(qw => {
+          qw.whereRaw('e.is_smd = 0');
+          qw.orWhereRaw('e.is_smd IS NULL');
+      });
+    }
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -650,6 +669,18 @@ export class SmdHubService {
       },
     ];
 
+    let indexHubFilter = null;
+    payload.filters.forEach(function(x, i) {
+      if ((x.field == 'isSmd' && x.operator == 'neq' && x.value == 1) ||
+        (x.field == 'isSmd' && x.operator == 'eq' && x.value == 0)) {
+          indexHubFilter = i;
+      }
+    });
+
+    if (indexHubFilter != null) {
+      payload.filters.splice(indexHubFilter, 1);
+    }
+
     const repo = new OrionRepositoryService(Bagging, 't2');
     const q = repo.findAllRaw();
 
@@ -673,6 +704,7 @@ export class SmdHubService {
           dhb.created_time,
           dhb.dropoff_hub_bagging_id,
           dhb.branch_id,
+          dhb.is_smd,
           RANK () OVER (PARTITION BY bagging_id ORDER BY dropoff_hub_bagging_id DESC) AS rank
         FROM dropoff_hub_bagging dhb
       )`,
@@ -689,6 +721,13 @@ export class SmdHubService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhereRaw('t1.rank = 1');
+    if (indexHubFilter != null) {
+      q.andWhereIsolated(qw => {
+          qw.whereRaw('t1.is_smd = 0');
+          qw.orWhereRaw('t1.is_smd IS NULL');
+      });
+    }
+
     q.groupByRaw(`
       t1.dropoff_hub_bagging_id,
       t2.bagging_id,
