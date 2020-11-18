@@ -30,7 +30,7 @@ export class ApiPartnersService {
     if (!redlock) {
       resultFailed.message = `awb_number: ${
         payload.awb_number
-      } sudah di process.`;
+      } already delivery progress.`;
       throw new BadRequestException(resultFailed);
     }
 
@@ -51,7 +51,7 @@ export class ApiPartnersService {
           if (pickreq.pickupRequestStatusId != statusCancelDelivery) {
             resultOk.message = `awb_number: ${
               payload.awb_number
-            } sudah di cancel.`;
+            } cancel delivery success.`;
 
             // process cancel delivery
             await this.processCancel(pickreq, partner.partnerName, statusCancelDelivery);
@@ -59,20 +59,20 @@ export class ApiPartnersService {
           } else {
             resultFailed.message = `awb_number: ${
               payload.awb_number
-            } sudah di process.`;
+            } already delivery progress.`;
             throw new BadRequestException(resultFailed);
           }
         } else {
           // notice awb not process cancel
           resultFailed.message = `awb_number: ${
             payload.awb_number
-          } tidak bisa di process.`;
+          } already delivery progress.`;
           throw new BadRequestException(resultFailed);
         }
       } else {
         resultFailed.message = `awb_number: ${
           payload.awb_number
-        } tidak ditemukan.`;
+        } not found.`;
         throw new BadRequestException(resultFailed);
       }
     } else {
