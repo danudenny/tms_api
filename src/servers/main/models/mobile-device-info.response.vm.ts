@@ -44,6 +44,13 @@ export class MobileDeviceInfoDetailResponseVm {
 
   @ApiModelProperty()
   dateTime: Date;
+
+  @ApiModelProperty()
+  firstName: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
 }
 
 export class ListMobileDeviceInfoResponseVm extends BaseMetaResponseVm {

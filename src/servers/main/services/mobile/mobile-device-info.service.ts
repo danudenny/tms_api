@@ -39,20 +39,16 @@ export class MobileDeviceInfoService {
       ['mobile_device_info.user_id', 'userId'],
       ['mobile_device_info.branch_id', 'branchId'],
       ['mobile_device_info.date_time', 'dateTime'],
-      ['user.first_name', 'firstName'],
+      ['users.first_name', 'firstName'],
       ['branch.branch_name', 'branchName'],
     );
 
-    q.innerJoin(e => e.user, 'user', j =>
-      j
-        .andWhere(e => e.isDeleted, w => w.isFalse())
-        .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    q.innerJoin(e => e.users, 'users', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse())
     );
 
     q.innerJoin(e => e.branch, 'branch', j =>
-      j
-        .andWhere(e => e.isDeleted, w => w.isFalse())
-        .andWhere(e => e.branchId, w => w.equals(permissionPayload.branchId)),
+      j.andWhere(e => e.isDeleted, w => w.isFalse())
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());

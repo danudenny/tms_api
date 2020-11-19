@@ -85,7 +85,7 @@ export class MobileDeviceInfo extends BaseEntity {
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  users: User;
 
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
