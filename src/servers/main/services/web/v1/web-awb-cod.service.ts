@@ -790,15 +790,6 @@ export class V1WebAwbCodService {
       } // end of loop data cash
 
       if (dataPrintCash.length) {
-        // store data print cash on redis
-        printIdCash = await this.printStoreData(
-          metaPrint,
-          codBranchCash.codTransactionId,
-          dataPrintCash,
-          totalCodValueCash,
-          'cash',
-        );
-
         // update data
         await CodTransaction.update(
           {
@@ -810,6 +801,15 @@ export class V1WebAwbCodService {
             transactionStatusId: 31000,
           },
         );
+        // store data print cash on redis
+        printIdCash = await this.printStoreData(
+          metaPrint,
+          codBranchCash.codTransactionId,
+          dataPrintCash,
+          totalCodValueCash,
+          'cash',
+        );
+
       }
     }
     // #endregion data cash
@@ -873,15 +873,6 @@ export class V1WebAwbCodService {
       } // end of loop data cashless
 
       if (dataPrintCashless.length) {
-        // store data print cashless on redis
-        printIdCashless = await this.printStoreData(
-          metaPrint,
-          codBranchCashless.codTransactionId,
-          dataPrintCashless,
-          totalCodValueCashless,
-          'cashless',
-        );
-
         // update data
         await CodTransaction.update(
           {
@@ -893,6 +884,15 @@ export class V1WebAwbCodService {
             transactionStatusId: 35000,
           },
         );
+        // store data print cashless on redis
+        printIdCashless = await this.printStoreData(
+          metaPrint,
+          codBranchCashless.codTransactionId,
+          dataPrintCashless,
+          totalCodValueCashless,
+          'cashless',
+        );
+
       }
     } // end of check data cashless
     // #endregion data cashless
