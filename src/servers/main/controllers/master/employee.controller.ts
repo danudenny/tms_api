@@ -63,7 +63,7 @@ export class EmployeeController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: EmployeeMergerFindAllResponseVm })
+  @ApiOkResponse({ type: EmployeeFindAllResponseVm })
   public async findAllEmployeeCodMerger(@Body() payload: BaseMetaPayloadVm) {
     return this.employeeService.findAllEmployeeCodMergerByRequest(payload);
   }
