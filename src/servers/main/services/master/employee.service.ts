@@ -1,10 +1,17 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { UserRole } from '../../../../shared/orm-entity/user-role';
+import { AuthService } from '../../../../shared/services/auth.service';
 import { ConfigService } from '../../../../shared/services/config.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
-import { EmployeeFindAllResponseVm, EmployeeResponseVm } from '../../models/employee.response.vm';
+import {
+  EmployeeFindAllResponseVm,
+  EmployeeMergerFindAllResponseVm,
+  EmployeeResponseVm,
+} from '../../models/employee.response.vm';
 
 @Injectable()
 export class EmployeeService {
@@ -232,5 +239,66 @@ export class EmployeeService {
         HttpStatus.BAD_REQUEST,
       );
     }
+  }
+
+  async findAllEmployeeCodMergerByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<EmployeeMergerFindAllResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
+    // mapping field
+    payload.fieldResolverMap['userRoleId'] = 't1.user_role_id';
+    payload.fieldResolverMap['username'] = 't2.username';
+    payload.fieldResolverMap['nickname'] = 't3.nickname';
+    payload.fieldResolverMap['roleName'] = 't4.role_name';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
+    payload.fieldResolverMap['branchCode'] = 't5.branch_code';
+
+    const repo = new OrionRepositoryService(UserRole, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.user_role_id', 'userRoleId'],
+      ['t2.username', 'username'],
+      ['t3.nickname', 'nickname'],
+      ['t4.role_name', 'roleName'],
+      ['t5.branch_name', 'branchName'],
+      ['t5.branch_code', 'branchCode'],
+    );
+
+    q.innerJoin(e => e.users, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.users.employee, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.role, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    // Region COD Merger
+    q.innerJoin(e => e.codUserToBranch, 't6', j =>
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    );
+    // End Region
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new EmployeeMergerFindAllResponseVm();
+    result.data = data;
+    result.buildPaging(payload.page, payload.limit, total);
+
+    return result;
   }
 }
