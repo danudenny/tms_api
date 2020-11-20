@@ -31,6 +31,7 @@ export class MobileDeviceInfoService {
     q.selectRaw(
       ['mobile_device_info.mobile_device_info_id', 'mobileDeviceInfoId'],
       ['mobile_device_info.imei', 'imei'],
+      ['mobile_device_info.token', 'token'],
       ['mobile_device_info.manufacture', 'manufacture'],
       ['mobile_device_info.brand', 'brand'],
       ['mobile_device_info.product', 'product'],
@@ -44,11 +45,11 @@ export class MobileDeviceInfoService {
     );
 
     q.innerJoin(e => e.users, 'users', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse())
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.branch, 'branch', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse())
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());

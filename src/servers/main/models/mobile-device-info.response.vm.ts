@@ -42,7 +42,7 @@ export class MobileDeviceInfoDetailResponseVm {
   @ApiModelProperty()
   branchId: number;
 
-  @ApiModelProperty()
+  @ApiModelProperty({ format: 'date-time' })
   dateTime: Date;
 
   @ApiModelProperty()
