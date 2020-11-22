@@ -4,6 +4,7 @@ import { Branch } from './branch';
 import { Role } from './role';
 import { User } from './user';
 import { TmsBaseEntity } from './tms-base';
+import { CodUserToBranch } from './cod-user-to-branch';
 
 @Entity('user_role', { schema: 'public' })
 export class UserRole extends TmsBaseEntity {
@@ -51,4 +52,8 @@ export class UserRole extends TmsBaseEntity {
   @ManyToOne(() => Role)
   @JoinColumn({ name: 'role_id' })
   role: Role;
+
+  @OneToOne(() => CodUserToBranch)
+  @JoinColumn({ name: 'branch_id', referencedColumnName: 'branchId' })
+  codUserToBranch: CodUserToBranch;
 }
