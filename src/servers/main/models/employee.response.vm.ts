@@ -1,6 +1,6 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
-import { EmployeeVm } from './employee.vm';
+import { EmployeeMergerVm, EmployeeVm } from './employee.vm';
 
 export class EmployeeFindAllResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [EmployeeVm] })
@@ -28,4 +28,8 @@ export class EmployeeResponseVm {
 
   @ApiModelProperty()
   attachmentUrl: string;
+}
+export class EmployeeMergerFindAllResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [EmployeeMergerVm] })
+  data: EmployeeMergerVm[];
 }
