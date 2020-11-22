@@ -35,6 +35,7 @@ import { BagRepresentativeHistory } from '../../../../shared/orm-entity/bag-repr
 import { SmdHubDropOffGabPaketListResponseVm, SmdHubDropOffGabPaketAwbListResponseVm } from '../../models/smd-hub-drop-off-bagging.response.vm';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
+import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
 
 @Injectable()
 export class SmdHubService {
@@ -42,10 +43,12 @@ export class SmdHubService {
   static async scanInBagHub(payload: WebScanInBagVm): Promise<WebScanInBagResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    const BAG_STATUS_DO_SELECTED = payload.hubId == 0 ? BAG_STATUS.DO_HUB : BAG_STATUS.DO_LINE_HAUL;
 
     const dataItem = [];
     const timeNow = moment().toDate();
     const result = new WebScanInBagResponseVm();
+    const isSmd = payload.hubId ? payload.hubId : 0;
 
     let totalSuccess = 0;
     let totalError = 0;
@@ -61,7 +64,18 @@ export class SmdHubService {
       if (bagData) {
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
-        const notScan =  bagData.bagItemStatusIdLast != BAG_STATUS.DO_HUB ? true : false;
+        // let notScan =  (bagData.bagItemStatusIdLast != BAG_STATUS_DO_SELECTED) ? true : false;
+
+        const bagHistory = await BagItemHistory.findOne({
+          where: {
+            bagItemId: bagData.bagItemId,
+            isDeleted: false,
+            branchId: permissonPayload.branchId,
+            bagItemStatusId: BAG_STATUS_DO_SELECTED,
+          },
+        });
+        const notScan = bagHistory ? false : true;
+
         // Add Locking setnx redis
         const holdRedis = await RedisService.locking(
           `hold:dropoff:${bagData.bagItemId}`,
@@ -93,7 +107,7 @@ export class SmdHubService {
           if (bagItem) {
             // update status bagItem
             await BagItem.update({ bagItemId: bagItem.bagItemId }, {
-              bagItemStatusIdLast: BAG_STATUS.DO_HUB,
+              bagItemStatusIdLast: BAG_STATUS_DO_SELECTED,
               branchIdLast: permissonPayload.branchId,
               updatedTime: timeNow,
               userIdUpdated: authMeta.userId,
@@ -105,12 +119,13 @@ export class SmdHubService {
             dropoffHub.bagId = bagData.bag.bagId;
             dropoffHub.bagItemId = bagData.bagItemId;
             dropoffHub.bagNumber = bagNumber;
+            dropoffHub.isSmd = isSmd;
             await DropoffHub.save(dropoffHub);
 
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
               bagData.bagItemId,
-              BAG_STATUS.DO_HUB,
+              BAG_STATUS_DO_SELECTED,
               permissonPayload.branchId,
               authMeta.userId,
             );
@@ -123,6 +138,7 @@ export class SmdHubService {
               bagData.bagItemId,
               authMeta.userId,
               permissonPayload.branchId,
+              isSmd,
             );
 
             // update first scan in do pod =====================================
@@ -160,7 +176,7 @@ export class SmdHubService {
         } else {
           totalError += 1;
           response.status = 'error';
-          response.message = `Gabung paket ${bagNumber} Sudah di proses.`;
+          response.message = `Gabung paket ${bagNumber} Sudah discan di ${payload.hubId ? 'Line Haul' : 'Hub'}.`;
         }
       } else {
         totalError += 1;
@@ -185,10 +201,12 @@ export class SmdHubService {
   static async scanInBaggingHub(payload: WebScanInBaggingVm): Promise<WebScanInBaggingResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    const BAG_STATUS_DO_SELECTED = payload.hubId == 0 ? BAG_STATUS.DO_HUB : BAG_STATUS.DO_LINE_HAUL;
 
     const dataItem = [];
     const timeNow = moment().toDate();
     const result = new WebScanInBaggingResponseVm();
+    const isSmd = payload.hubId ? payload.hubId : 0;
 
     let totalSuccess = 0;
     let totalError = 0;
@@ -245,7 +263,17 @@ export class SmdHubService {
           const resultDataBag = await RawQueryService.query(rawQuery);
           if (resultDataBag) {
             for (const resultBag of resultDataBag) {
-              const notScan =  resultBag.bag_item_status_id_last != BAG_STATUS.DO_HUB ? true : false;
+              // const notScan =  (resultBag.bag_item_status_id_last != BAG_STATUS_DO_SELECTED) ? true : false;
+              const bagHistory = await BagItemHistory.findOne({
+                where: {
+                  bagItemId: resultBag.bag_item_id,
+                  isDeleted: false,
+                  branchId: permissonPayload.branchId,
+                  bagItemStatusId: BAG_STATUS_DO_SELECTED,
+                },
+              });
+              const notScan = bagHistory ? false : true;
+
               // Add Locking setnx redis
               const holdRedis = await RedisService.locking(
                 `hold:dropoff:${resultBag.bag_item_id}`,
@@ -277,7 +305,7 @@ export class SmdHubService {
                 if (bagItem) {
                   // update status bagItem
                   await BagItem.update({ bagItemId: bagItem.bagItemId }, {
-                    bagItemStatusIdLast: BAG_STATUS.DO_HUB,
+                    bagItemStatusIdLast: BAG_STATUS_DO_SELECTED,
                     branchIdLast: permissonPayload.branchId,
                     updatedTime: timeNow,
                     userIdUpdated: authMeta.userId,
@@ -290,12 +318,13 @@ export class SmdHubService {
                   dropoffHubBagging.bagId = resultBag.bag_id;
                   dropoffHubBagging.bagItemId = resultBag.bag_item_id;
                   dropoffHubBagging.bagNumber = resultBag.bag_number;
+                  dropoffHubBagging.isSmd = isSmd;
                   await DropoffHubBagging.save(dropoffHubBagging);
 
                   // NOTE: background job for insert bag item history
                   BagItemHistoryQueueService.addData(
                     resultBag.bag_item_id,
-                    BAG_STATUS.DO_HUB,
+                    BAG_STATUS_DO_SELECTED,
                     permissonPayload.branchId,
                     authMeta.userId,
                   );
@@ -308,6 +337,7 @@ export class SmdHubService {
                     resultBag.bag_item_id,
                     authMeta.userId,
                     permissonPayload.branchId,
+                    isSmd,
                   );
 
                   totalSuccess += 1;
@@ -353,10 +383,12 @@ export class SmdHubService {
   static async scanInBagRepresentativeHub(payload: WebScanInBagRepresentativeVm): Promise<WebScanInBagRepresentativeResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    const BAG_STATUS_DO_SELECTED = payload.hubId == 0 ? BAG_STATUS.DO_HUB : BAG_STATUS.DO_LINE_HAUL;
 
     const dataItem = [];
     const timeNow = moment().toDate();
     const result = new WebScanInBagRepresentativeResponseVm();
+    const isSmd = payload.hubId ? payload.hubId : 0;
 
     let totalSuccess = 0;
     let totalError = 0;
@@ -381,12 +413,21 @@ export class SmdHubService {
         );
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
-        const notScan =  bagRepresentativeData.bagRepresentativeStatusIdLast != BAG_REPRESENTATIVE_STATUS.DO_HUB ? true : false;
+        // const notScan =  (bagRepresentativeData.bagRepresentativeStatusIdLast != BAG_STATUS_DO_SELECTED) ? true : false;
+        const bagRepresentativeHistory = await BagRepresentativeHistory.findOne({
+          where: {
+            bagRepresentativeId: bagRepresentativeData.bagRepresentativeId,
+            isDeleted: false,
+            branchId: permissonPayload.branchId,
+            bagRepresentativeStatusIdLast: BAG_STATUS_DO_SELECTED,
+          },
+        });
+        const notScan = bagRepresentativeHistory ? false : true;
 
         if (notScan && holdRedis) {
           // update status bagRepresentative
           await BagRepresentative.update({ bagRepresentativeId: bagRepresentativeData.bagRepresentativeId }, {
-            bagRepresentativeStatusIdLast: BAG_REPRESENTATIVE_STATUS.DO_HUB,
+            bagRepresentativeStatusIdLast: BAG_STATUS_DO_SELECTED,
             updatedTime: timeNow,
             userIdUpdated: authMeta.userId,
           });
@@ -395,7 +436,7 @@ export class SmdHubService {
           historyBagRepresentative.bagRepresentativeCode = bagRepresentativeData.bagRepresentativeCode;
           historyBagRepresentative.bagRepresentativeDate = moment(bagRepresentativeData.bagRepresentativeDate).toDate();
           historyBagRepresentative.bagRepresentativeId = bagRepresentativeData.bagRepresentativeId.toString();
-          historyBagRepresentative.bagRepresentativeStatusIdLast = '3500';
+          historyBagRepresentative.bagRepresentativeStatusIdLast = BAG_STATUS_DO_SELECTED.toString();
           historyBagRepresentative.branchId = permissonPayload.branchId.toString();
           historyBagRepresentative.representativeIdTo = bagRepresentativeData.representativeIdTo;
           historyBagRepresentative.totalItem = bagRepresentativeData.totalItem;
@@ -411,6 +452,7 @@ export class SmdHubService {
           dropoffHubBagRepresentative.branchId = permissonPayload.branchId;
           dropoffHubBagRepresentative.bagRepresentativeId = bagRepresentativeData.bagRepresentativeId;
           dropoffHubBagRepresentative.bagRepresentativeCode = bagRepresentativeData.bagRepresentativeCode;
+          dropoffHubBagRepresentative.isSmd = isSmd;
           await DropoffHubBagRepresentative.save(dropoffHubBagRepresentative);
 
           // NOTE:
@@ -421,6 +463,7 @@ export class SmdHubService {
             bagRepresentativeData.bagRepresentativeId,
             authMeta.userId,
             permissonPayload.branchId,
+            isSmd,
           );
 
           totalSuccess += 1;
