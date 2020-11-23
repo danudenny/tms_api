@@ -85,10 +85,7 @@ export class LastMileDeliveryOutService {
     // await for get do pod id
     await DoPodDeliver.save(doPod);
 
-    await this.createAuditDeliveryHistory(
-      doPod.doPodDeliverId,
-      false,
-    );
+    await this.createAuditDeliveryHistory(doPod.doPodDeliverId, false);
 
     // Populate return value
     result.status = 'ok';
@@ -105,8 +102,7 @@ export class LastMileDeliveryOutService {
     const dataUser = await q.exec();
 
     // For printDoPodDeliverMetadata
-    result.printDoPodDeliverMetadata.doPodDeliverCode =
-      doPod.doPodDeliverCode;
+    result.printDoPodDeliverMetadata.doPodDeliverCode = doPod.doPodDeliverCode;
     result.printDoPodDeliverMetadata.description = payload.desc;
     if (dataUser) {
       result.printDoPodDeliverMetadata.userDriver.employee.nik =
@@ -143,22 +139,30 @@ export class LastMileDeliveryOutService {
       doPodDateTime,
     ); // generate code
 
-    doPod.userIdDriver         = payload.userIdDriver || null;
+    doPod.userIdDriver = payload.userIdDriver || null;
     doPod.doPodDeliverDateTime = doPodDateTime;
-    doPod.description          = payload.desc || null;
+    doPod.description = payload.desc || null;
 
-    doPod.branchId             = permissonPayload.branchId;
-    doPod.userId               = authMeta.userId;
+    doPod.branchId = permissonPayload.branchId;
+    doPod.userId = authMeta.userId;
 
     // NOTE: check if delivery with partner
     if (payload.isPartner) {
       doPod.isPartner = true;
       doPod.partnerId = payload.partnerId;
-      const branch = await Branch.findOne({ branchId: permissonPayload.branchId });
+      const branch = await Branch.findOne({
+        branchId: permissonPayload.branchId,
+      });
       // NOTES: Validation branch
-      if (!branch.latitude || !branch.address || !branch.phone1 || !branch.longitude) {
-        result.status  = 'error';
-        result.message = 'Pengantaran melalui partner tidak bisa digunakan pada gerai ini';
+      if (
+        !branch.latitude ||
+        !branch.address ||
+        !branch.phone1 ||
+        !branch.longitude
+      ) {
+        result.status = 'error';
+        result.message =
+          'Pengantaran melalui partner tidak bisa digunakan pada gerai ini';
         return result;
       }
     }
@@ -211,9 +215,12 @@ export class LastMileDeliveryOutService {
           });
 
           if (doPodDeliverDetail) {
-            DoPodDeliverDetail.update({ doPodDeliverDetailId: doPodDeliverDetail.doPodDeliverDetailId }, {
-              isDeleted: true,
-            });
+            DoPodDeliverDetail.update(
+              { doPodDeliverDetailId: doPodDeliverDetail.doPodDeliverDetailId },
+              {
+                isDeleted: true,
+              },
+            );
             // NOTE: update awb_item_attr and awb_history
             await AwbService.updateAwbAttr(
               awb.awbItemId,
@@ -273,7 +280,10 @@ export class LastMileDeliveryOutService {
         userId: authMeta.userId,
         totalAwb,
       };
-      await DoPodDeliver.update({ doPodDeliverId: doPod.doPodDeliverId }, updateDoPod);
+      await DoPodDeliver.update(
+        { doPodDeliverId: doPod.doPodDeliverId },
+        updateDoPod,
+      );
 
       // NOTE: insert table audit history
       await this.createAuditDeliveryHistory(doPod.doPodDeliverId);
@@ -381,11 +391,17 @@ export class LastMileDeliveryOutService {
         // NOTE: first must scan in branch
         if (notDeliver) {
           // add handel final status
-          const statusFinal = [AWB_STATUS.DLV];
+          // TODO: handle status cancel delivery
+          const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.CANCEL];
           if (statusFinal.includes(awb.awbStatusIdLast)) {
             totalError += 1;
             response.status = 'error';
-            response.message = `Resi ${awbNumber} sudah Final Status !`;
+            // handle message
+            const desc =
+              awb.awbStatusIdLast == AWB_STATUS.CANCEL
+                ? 'telah di CANCEL oleh Partner !'
+                : 'sudah Final Status !';
+            response.message = `Resi ${awbNumber} ${desc}`;
           } else {
             const statusCode = await AwbService.awbStatusGroup(
               awb.awbStatusIdLast,
@@ -424,15 +440,13 @@ export class LastMileDeliveryOutService {
                 // save table do_pod_detail
                 // NOTE: check data double DoPodDeliverDetail by awb item id
                 // if found update flag is deleted true;
-                const oldData = await DoPodDeliverDetail.findOne(
-                  {
-                    select: ['doPodDeliverDetailId'],
-                    where: {
-                      awbNumber,
-                      isDeleted: false,
-                    },
+                const oldData = await DoPodDeliverDetail.findOne({
+                  select: ['doPodDeliverDetailId'],
+                  where: {
+                    awbNumber,
+                    isDeleted: false,
                   },
-                );
+                });
                 if (oldData) {
                   await DoPodDeliverDetail.update(
                     {
@@ -545,7 +559,8 @@ export class LastMileDeliveryOutService {
         },
         {
           totalAwb,
-        });
+        },
+      );
     }
 
     // Populate return value
@@ -621,8 +636,14 @@ export class LastMileDeliveryOutService {
               );
 
               if (doPodDeliver) {
-                const pickReqDetail = await PickupRequestDetail.findOne({ where: { awbItemId: awb.awbItemId } });
-                if (pickReqDetail && pickReqDetail.recipientLatitude && pickReqDetail.recipientLongitude) {
+                const pickReqDetail = await PickupRequestDetail.findOne({
+                  where: { awbItemId: awb.awbItemId },
+                });
+                if (
+                  pickReqDetail &&
+                  pickReqDetail.recipientLatitude &&
+                  pickReqDetail.recipientLongitude
+                ) {
                   // save table do_pod_detail
                   // NOTE: create data do pod detail per awb number
                   const doPodDeliverDetail = DoPodDeliverDetail.create();
@@ -634,7 +655,8 @@ export class LastMileDeliveryOutService {
                   await DoPodDeliverDetail.insert(doPodDeliverDetail);
 
                   // Assign print metadata - Scan Out & Deliver
-                  response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
+                  response.printDoPodDetailMetadata.awbItem.awb.awbId =
+                    awb.awbId;
                   response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
                   response.printDoPodDetailMetadata.awbItem.awb.consigneeName =
                     awb.awbItem.awb.consigneeName;
@@ -657,9 +679,12 @@ export class LastMileDeliveryOutService {
 
                   // TODO: need improvement counter total scan out
                   const totalAwb = doPodDeliver.totalAwb + 1;
-                  await DoPodDeliver.update({ doPodDeliverId: doPodDeliver.doPodDeliverId }, {
-                    totalAwb,
-                  });
+                  await DoPodDeliver.update(
+                    { doPodDeliverId: doPodDeliver.doPodDeliverId },
+                    {
+                      totalAwb,
+                    },
+                  );
                   totalSuccess += 1;
                 } else {
                   totalError += 1;
@@ -1023,11 +1048,14 @@ export class LastMileDeliveryOutService {
             if (holdRedis) {
               // Update data do pod detail per awb number
               // doPodDeliverId;
-              await DoPodDeliverDetail.update({ doPodDeliverDetailId: awbDeliver.doPodDeliverDetailId }, {
-                isDeleted: true,
-                userIdUpdated: authMeta.userId,
-                updatedTime: moment().toDate(),
-              });
+              await DoPodDeliverDetail.update(
+                { doPodDeliverDetailId: awbDeliver.doPodDeliverDetailId },
+                {
+                  isDeleted: true,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: moment().toDate(),
+                },
+              );
 
               // balance total awb
               await getManager().transaction(async transactionEntityManager => {
@@ -1187,10 +1215,13 @@ export class LastMileDeliveryOutService {
     });
 
     if (awb) {
-      await AwbItemAttr.update({ awbItemAttrId: awb.awbItemAttrId }, {
-        awbThirdParty: payload.awbThirdParty,
-        updatedTime: moment().toDate(),
-      });
+      await AwbItemAttr.update(
+        { awbItemAttrId: awb.awbItemAttrId },
+        {
+          awbThirdParty: payload.awbThirdParty,
+          updatedTime: moment().toDate(),
+        },
+      );
     } else {
       response.status = 'error';
       response.message = `Resi ${payload.awbNumber} Tidak di Temukan`;

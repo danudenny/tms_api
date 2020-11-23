@@ -38,6 +38,7 @@ import {
   WebCodTransferPayloadVm,
   WebCodTransactionUpdatePayloadVm,
   WebInsertCodPaymentPayloadVm,
+  WebCodTransactionRejectPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   WebAwbCodBankStatementResponseVm,
@@ -467,5 +468,15 @@ export class V1WebAwbCodController {
   @ApiOkResponse({ type: WebInsertCodPaymentResponseVm })
   public async insertCodPayment(@Body() payload: WebInsertCodPaymentPayloadVm) {
     return V1WebAwbCodService.insertCodPayment(payload);
+  }
+
+  @Post('transaction/reject')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodTransactionUpdateResponseVm })
+  public async transactionReject(
+    @Body() payload: WebCodTransactionRejectPayloadVm,
+  ) {
+    return V1WebAwbCodService.transactionReject(payload);
   }
 }
