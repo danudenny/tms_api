@@ -777,12 +777,11 @@ export class V1WebAwbCodService {
               authMeta.userId,
             );
 
-            const resultDataCash = new WebCodAwbPrintVm();
-            resultDataCash.awbNumber = item.awbNumber;
-            resultDataCash.codValue = item.codValue;
-            resultDataCash.provider = item.paymentService;
-
-            dataPrintCash.push(resultDataCash);
+            dataPrintCash.push({
+              awbNumber: item.awbNumber,
+              codValue: item.codValue,
+              provider: item.paymentService,
+            });
           } else {
             const errorMessage = `status resi ${
               item.awbNumber
@@ -873,12 +872,11 @@ export class V1WebAwbCodService {
               authMeta.userId,
             );
 
-            const resultDataCashless = new WebCodAwbPrintVm();
-            resultDataCashless.awbNumber = item.awbNumber;
-            resultDataCashless.codValue = item.codValue;
-            resultDataCashless.provider = item.paymentService;
-
-            dataPrintCashless.push(resultDataCashless);
+            dataPrintCashless.push({
+              awbNumber: item.awbNumber,
+              codValue: item.codValue,
+              provider: item.paymentService,
+            });
           } else {
             // NOTE: error message
             const errorMessage = `status resi ${
@@ -1292,41 +1290,46 @@ export class V1WebAwbCodService {
     branchId: number,
     userId: number,
   ): Promise<boolean> {
-    // update awb_item_attr transaction status 3100
-    await AwbItemAttr.update(
-      { awbItemId: item.awbItemId },
-      {
-        transactionStatusId: TRANSACTION_STATUS.TRM,
-      },
-    );
+    try {
+      // update awb_item_attr transaction status 3100
+      await AwbItemAttr.update(
+        { awbItemId: item.awbItemId },
+        {
+          transactionStatusId: TRANSACTION_STATUS.TRM,
+        },
+      );
 
-    // #region send to background process with bull
-    const firstTransaction = new WebCodFirstTransactionPayloadVm();
-    firstTransaction.awbItemId = item.awbItemId;
-    firstTransaction.awbNumber = item.awbNumber;
-    firstTransaction.codTransactionId = transctiontId;
-    firstTransaction.transactionStatusId = 31000;
-    firstTransaction.supplierInvoiceStatusId = null;
-    firstTransaction.codSupplierInvoiceId = null;
-    firstTransaction.paymentMethod = item.paymentMethod;
-    firstTransaction.paymentService = item.paymentService;
-    firstTransaction.noReference = item.noReference;
-    firstTransaction.branchId = branchId;
-    firstTransaction.userId = userId;
-    firstTransaction.userIdDriver = item.userIdDriver;
-    CodFirstTransactionQueueService.perform(
-      firstTransaction,
-      moment().toDate(),
-    );
-    // #endregion send to background
+      // #region send to background process with bull
+      const firstTransaction = new WebCodFirstTransactionPayloadVm();
+      firstTransaction.awbItemId = item.awbItemId;
+      firstTransaction.awbNumber = item.awbNumber;
+      firstTransaction.codTransactionId = transctiontId;
+      firstTransaction.transactionStatusId = 31000;
+      firstTransaction.supplierInvoiceStatusId = null;
+      firstTransaction.codSupplierInvoiceId = null;
+      firstTransaction.paymentMethod = item.paymentMethod;
+      firstTransaction.paymentService = item.paymentService;
+      firstTransaction.noReference = item.noReference;
+      firstTransaction.branchId = branchId;
+      firstTransaction.userId = userId;
+      firstTransaction.userIdDriver = item.userIdDriver;
+      CodFirstTransactionQueueService.perform(
+        firstTransaction,
+        moment().toDate(),
+      );
+      // #endregion send to background
 
-    // response
-    // const result = new WebCodAwbPrintVm();
-    // result.awbNumber = item.awbNumber;
-    // result.codValue = item.codValue;
-    // result.provider = item.paymentService;
-    // return result;
-    return true;
+      // response
+      // const result = new WebCodAwbPrintVm();
+      // result.awbNumber = item.awbNumber;
+      // result.codValue = item.codValue;
+      // result.provider = item.paymentService;
+      // return result;
+      return true;
+    } catch (err) {
+      console.error('HandleAwb error: ', err);
+      return false;
+    }
   }
 
   private static async validStatusAwb(awbItemId: number): Promise<boolean> {
