@@ -770,14 +770,18 @@ export class V1WebAwbCodService {
             totalAwbCash += 1;
 
             // send to background process
-            const dataCash = await this.handleAwbCod(
+            await this.handleAwbCod(
               item,
               codBranchCash.codTransactionId,
               permissonPayload.branchId,
               authMeta.userId,
             );
 
-            dataPrintCash.push(dataCash);
+            dataPrintCash.push({
+              awbNumber: item.awbNumber,
+              codValue: item.codValue,
+              provider: item.paymentService,
+            });
           } else {
             const errorMessage = `status resi ${
               item.awbNumber
@@ -809,7 +813,16 @@ export class V1WebAwbCodService {
           totalCodValueCash,
           'cash',
         );
-
+      } else {
+        // update data
+        await CodTransaction.update(
+          {
+            codTransactionId: codBranchCash.codTransactionId,
+          },
+          {
+            transactionStatusId: 27510, // status transaksi debug
+          },
+        );
       }
     }
     // #endregion data cash
@@ -852,14 +865,18 @@ export class V1WebAwbCodService {
             totalCodValueCashless += Number(item.codValue);
             totalAwbCashless += 1;
 
-            const dataCashless = await this.handleAwbCod(
+            await this.handleAwbCod(
               item,
               codBranchCashless.codTransactionId,
               permissonPayload.branchId,
               authMeta.userId,
             );
 
-            dataPrintCashless.push(dataCashless);
+            dataPrintCashless.push({
+              awbNumber: item.awbNumber,
+              codValue: item.codValue,
+              provider: item.paymentService,
+            });
           } else {
             // NOTE: error message
             const errorMessage = `status resi ${
@@ -892,7 +909,16 @@ export class V1WebAwbCodService {
           totalCodValueCashless,
           'cashless',
         );
-
+      } else {
+        // update data
+        await CodTransaction.update(
+          {
+            codTransactionId: codBranchCashless.codTransactionId,
+          },
+          {
+            transactionStatusId: 27510, // status transaksi debug
+          },
+        );
       }
     } // end of check data cashless
     // #endregion data cashless
@@ -1263,41 +1289,47 @@ export class V1WebAwbCodService {
     transctiontId: string,
     branchId: number,
     userId: number,
-  ): Promise<WebCodAwbPrintVm> {
-    // update awb_item_attr transaction status 3100
-    await AwbItemAttr.update(
-      { awbItemId: item.awbItemId },
-      {
-        transactionStatusId: TRANSACTION_STATUS.TRM,
-      },
-    );
+  ): Promise<boolean> {
+    try {
+      // update awb_item_attr transaction status 3100
+      await AwbItemAttr.update(
+        { awbItemId: item.awbItemId },
+        {
+          transactionStatusId: TRANSACTION_STATUS.TRM,
+        },
+      );
 
-    // #region send to background process with bull
-    const firstTransaction = new WebCodFirstTransactionPayloadVm();
-    firstTransaction.awbItemId = item.awbItemId;
-    firstTransaction.awbNumber = item.awbNumber;
-    firstTransaction.codTransactionId = transctiontId;
-    firstTransaction.transactionStatusId = 31000;
-    firstTransaction.supplierInvoiceStatusId = null;
-    firstTransaction.codSupplierInvoiceId = null;
-    firstTransaction.paymentMethod = item.paymentMethod;
-    firstTransaction.paymentService = item.paymentService;
-    firstTransaction.noReference = item.noReference;
-    firstTransaction.branchId = branchId;
-    firstTransaction.userId = userId;
-    firstTransaction.userIdDriver = item.userIdDriver;
-    CodFirstTransactionQueueService.perform(
-      firstTransaction,
-      moment().toDate(),
-    );
-    // #endregion send to background
+      // #region send to background process with bull
+      const firstTransaction = new WebCodFirstTransactionPayloadVm();
+      firstTransaction.awbItemId = item.awbItemId;
+      firstTransaction.awbNumber = item.awbNumber;
+      firstTransaction.codTransactionId = transctiontId;
+      firstTransaction.transactionStatusId = 31000;
+      firstTransaction.supplierInvoiceStatusId = null;
+      firstTransaction.codSupplierInvoiceId = null;
+      firstTransaction.paymentMethod = item.paymentMethod;
+      firstTransaction.paymentService = item.paymentService;
+      firstTransaction.noReference = item.noReference;
+      firstTransaction.branchId = branchId;
+      firstTransaction.userId = userId;
+      firstTransaction.userIdDriver = item.userIdDriver;
+      CodFirstTransactionQueueService.perform(
+        firstTransaction,
+        moment().toDate(),
+      );
+      // #endregion send to background
 
-    // response
-    const result = new WebCodAwbPrintVm();
-    result.awbNumber = item.awbNumber;
-    result.codValue = item.codValue;
-    result.provider = item.paymentService;
-    return result;
+      // response
+      // const result = new WebCodAwbPrintVm();
+      // result.awbNumber = item.awbNumber;
+      // result.codValue = item.codValue;
+      // result.provider = item.paymentService;
+      // return result;
+      return true;
+    } catch (err) {
+      console.error('HandleAwb error: ', err);
+      return false;
+    }
   }
 
   private static async validStatusAwb(awbItemId: number): Promise<boolean> {
@@ -1580,7 +1612,6 @@ export class V1WebAwbCodService {
       result.totalSuccess = totalSuccess;
       result.dataError = dataError;
       return result;
-
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }
