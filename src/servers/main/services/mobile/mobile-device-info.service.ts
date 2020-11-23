@@ -19,6 +19,8 @@ export class MobileDeviceInfoService {
   ): Promise<ListMobileDeviceInfoResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissionPayload = AuthService.getPermissionTokenPayload();
+
+    payload.fieldResolverMap['userId'] = 'users.user_id';
     payload.globalSearchFields = [
       {
         field: 'version',
