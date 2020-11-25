@@ -9,6 +9,7 @@ import {
 } from '../../../services/web/v1/web-report-stream-cod.service';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sql-cod.service';
+import { V2WebCodReportService } from '../../../services/web/v2/web-cod-report.service';
 
 @ApiUseTags('Web COD Mark II')
 @Controller('web/v2/cod/report')
@@ -22,7 +23,7 @@ export class V2WebCodReportController {
     @Body() payload: ReportBaseMetaPayloadVm,
     @Res() outgoingHTTP,
   ) {
-    return await V1WebReportCodStreamService.printCodSupplierInvoice(
+    return await V2WebCodReportService.printCodSupplierInvoice(
       payload.filters,
       outgoingHTTP,
     );
@@ -35,7 +36,7 @@ export class V2WebCodReportController {
     @Body() payload: ReportBaseMetaPayloadVm,
     @Res() outgoingHTTP,
   ) {
-    return await V1WebReportCodStreamService.printNonCodSupplierInvoice(
+    return await V2WebCodReportService.printNonCodSupplierInvoice(
       payload.filters,
       outgoingHTTP,
     );
@@ -49,7 +50,7 @@ export class V2WebCodReportController {
     @Body() payload: ReportBaseMetaPayloadVm,
     @Res() outgoingHTTP,
   ) {
-    return await V1WebReportCodStreamService.printNonCodSupplierInvoice(
+    return await V2WebCodReportService.printNonCodSupplierInvoice(
       payload.filters,
       outgoingHTTP,
     );
