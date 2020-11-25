@@ -336,6 +336,10 @@ export class V1WebCodBankStatementService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
     // validate data
+    if (payload.bankStatementId === '') {
+      throw new BadRequestException('Data tidak ditemukan !');
+    }
+
     const bankStatement = await CodBankStatement.findOne({
       select: ['codBankStatementId'],
       where: {
@@ -439,6 +443,10 @@ export class V1WebCodBankStatementService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
     // validate data
+    if (payload.bankStatementId === '') {
+      throw new BadRequestException('Data tidak ditemukan !');
+    }
+
     const bankStatement = await CodBankStatement.findOne({
       select: ['codBankStatementId'],
       where: {

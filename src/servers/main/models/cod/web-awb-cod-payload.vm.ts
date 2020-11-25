@@ -177,3 +177,8 @@ export class WebInsertCodPaymentPayloadVm {
   @ApiModelProperty()
   awbNumber: string;
 }
+
+export class WebCodTransactionRejectPayloadVm {
+  @ApiModelProperty()
+  transactionId: string;
+}
