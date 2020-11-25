@@ -49,6 +49,9 @@ export class MobileDeviceInfoDetailResponseVm {
   firstName: string;
 
   @ApiModelProperty()
+  userName: string;
+
+  @ApiModelProperty()
   branchName: string;
 
 }

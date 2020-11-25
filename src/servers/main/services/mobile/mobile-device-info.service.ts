@@ -20,12 +20,14 @@ export class MobileDeviceInfoService {
     const authMeta = AuthService.getAuthData();
     const permissionPayload = AuthService.getPermissionTokenPayload();
 
-    payload.fieldResolverMap['userId'] = 'users.user_id';
     payload.globalSearchFields = [
       {
         field: 'version',
       },
     ];
+
+    payload.fieldResolverMap['userId'] = 'users.user_id';
+    payload.fieldResolverMap['branchId'] = 'branch.branch_id';
 
     const q = RepositoryService.mobileInfo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
@@ -43,6 +45,7 @@ export class MobileDeviceInfoService {
       ['mobile_device_info.branch_id', 'branchId'],
       ['mobile_device_info.date_time', 'dateTime'],
       ['users.first_name', 'firstName'],
+      ['users.username', 'userName'],
       ['branch.branch_name', 'branchName'],
     );
 
