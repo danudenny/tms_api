@@ -440,7 +440,6 @@ export class V2WebCodReportService {
 
       let url = '';
       const awsKey = `reports/cod/${csvConfig.fileName}`;
-      // console.log(awsKey, 'uploadpath');
       const storagePath = await AwsS3Service.uploadFromFilePath(
         csvConfig.filePath,
         awsKey,

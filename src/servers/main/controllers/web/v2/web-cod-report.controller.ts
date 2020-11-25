@@ -4,9 +4,6 @@ import {
 } from '../../../../../shared/decorators/response-serializer-options.decorator';
 import { ApiBearerAuth, ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
 import { ReportBaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
-import {
-    V1WebReportCodStreamService,
-} from '../../../services/web/v1/web-report-stream-cod.service';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sql-cod.service';
 import { V2WebCodReportService } from '../../../services/web/v2/web-cod-report.service';
