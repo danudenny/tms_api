@@ -398,4 +398,11 @@ export class PickupRequestDetail extends TmsBaseEntity {
     referencedColumnName: 'districtCode',
   })
   districtDestination: District;
+
+  @ManyToOne(() => PickupRequest)
+  @JoinColumn({
+    name: 'pickup_request_id',
+    referencedColumnName: 'pickupRequestId',
+  })
+  pickupRequest: PickupRequest;
 }

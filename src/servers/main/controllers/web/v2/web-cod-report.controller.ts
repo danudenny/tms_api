@@ -3,7 +3,7 @@ import {
     ResponseSerializerOptions,
 } from '../../../../../shared/decorators/response-serializer-options.decorator';
 import { ApiBearerAuth, ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
-import { ReportBaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sql-cod.service';
 import { V2WebCodReportService } from '../../../services/web/v2/web-cod-report.service';
@@ -17,7 +17,7 @@ export class V2WebCodReportController {
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
   public async awbCodFinanceDownload(
-    @Body() payload: ReportBaseMetaPayloadVm,
+    @Body() payload: BaseMetaPayloadVm,
     @Res() outgoingHTTP,
   ) {
     return await V2WebCodReportService.printCodSupplierInvoice(
@@ -30,7 +30,7 @@ export class V2WebCodReportController {
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
   public async awbCodNonFeeDownload(
-    @Body() payload: ReportBaseMetaPayloadVm,
+    @Body() payload: BaseMetaPayloadVm,
     @Res() outgoingHTTP,
   ) {
     return await V2WebCodReportService.printNonCodSupplierInvoice(
@@ -44,7 +44,7 @@ export class V2WebCodReportController {
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
   public async awbCodAdminDownload(
-    @Body() payload: ReportBaseMetaPayloadVm,
+    @Body() payload: BaseMetaPayloadVm,
     @Res() outgoingHTTP,
   ) {
     return await V2WebCodReportService.printNonCodSupplierInvoice(

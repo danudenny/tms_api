@@ -286,6 +286,13 @@ export class CodTransactionDetail extends TmsBaseEntity {
   })
   transactionBranch: CodTransaction;
 
+  @ManyToOne(() => CodTransaction)
+  @JoinColumn({
+    name: 'cod_transaction_id',
+    referencedColumnName: 'codTransactionId',
+  })
+  codTransaction: CodTransaction;
+
   @ManyToOne(() => CodSupplierInvoice, x => x.details)
   @JoinColumn({
     name: 'cod_supplier_invoice_id',

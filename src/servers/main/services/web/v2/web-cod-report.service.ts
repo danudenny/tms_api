@@ -7,7 +7,9 @@ import { ConfigService } from '../../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
 import { BadRequestException } from '@nestjs/common';
-import { BaseMetaPayloadFilterVm, ReportBaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
+import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 
 export class V2WebCodReportService {
   static CodHeader = [
@@ -365,14 +367,148 @@ export class V2WebCodReportService {
   }
 
   static async getReportData(
-    filters: BaseMetaPayloadFilterVm[],
+    payload: BaseMetaPayloadVm,
     reportType: 'noncodfee' | 'codfee',
   ) {
     // TODO: Query get data
+    const repo = new OrionRepositoryService(AwbItemAttr, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q);
+
+    if (reportType === 'codfee') {
+      q.selectRaw(
+        ['t3.notes', 'parcelNote'],
+        ['t4.reference_no', 'custPackage'],
+        ['t4.partner_id', 'partnerId'],
+        ['t1.awb_item_id', 'awbItemId'],
+        ['t1.awb_number', 'awbNumber'],
+        ['t1.branch_id_last', 'currentPositionId'],
+        ['t7.branch_name', 'currentPosition'],
+        ['t1.awb_status_id_last', 'awbStatusIdLast'],
+        ['t1.awb_history_date_last', 'podDate'],
+        ['t2.awb_date', 'awbDate'],
+        ['t2.ref_destination_code', 'destinationCode'],
+        ['t2.to_id', 'destinationId'],
+        ['t9.district_name', 'destination'],
+        ['t2.package_type_id', 'packageTypeId'],
+        ['t5.package_type_code', 'packageTypeCode'],
+        ['t5.package_type_name', 'packageTypeName'],
+        ['t2.branch_id_last', 'pickupSourceId'],
+        ['t8.branch_name', 'pickupSource'],
+        ['t2.total_weight_real_rounded', 'weightRealRounded'],
+        [`t2.total_weight_final_rounded`, 'weightFinalRounded'],
+        ['t2.consignee_name', 'consigneeName'],
+        ['t3.parcel_value', 'parcelValue'],
+        ['t3.cod_value', 'codValue'],
+        ['t3.parcel_content', 'parcelContent'],
+        ['t6.partner_name', 'partnerName'],
+        ['ctd.user_id_driver', 'userIdDriver'],
+        [`CONCAT(edriveruser.nik, ' - ', edriveruser.fullname)`, 'driver'],
+        ['ctd.user_id_updated', 'userIdUpdated'],
+        [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
+        ['ctd.updated_time', 'updatedTime'],
+        ['branres.representative_code', 'perwakilan'],
+        ['ctd.payment_method', 'paymentMethod'],
+      );
+    } else {
+      q.selectRaw(
+        ['t3.notes', 'parcelNote'],
+        ['t4.reference_no', 'custPackage'],
+        ['t4.partner_id', 'partnerId'],
+        ['t1.awb_item_id', 'awbItemId'],
+        ['t1.awb_number', 'awbNumber'],
+        ['t1.branch_id_last', 'currentPositionId'],
+        ['t7.branch_name', 'currentPosition'],
+        ['t1.awb_status_id_last', 'awbStatusIdLast'],
+        ['t1.awb_history_date_last', 'podDate'],
+        ['t2.awb_date', 'awbDate'],
+        ['t2.ref_destination_code', 'destinationCode'],
+        ['t2.to_id', 'destinationId'],
+        ['t9.district_name', 'destination'],
+        ['t2.package_type_id', 'packageTypeId'],
+        ['t5.package_type_code', 'packageTypeCode'],
+        ['t5.package_type_name', 'packageTypeName'],
+        ['t2.branch_id_last', 'pickupSourceId'],
+        ['t8.branch_name', 'pickupSource'],
+        ['t2.total_weight_real_rounded', 'weightRealRounded'],
+        [`t2.total_weight_final_rounded`, 'weightFinalRounded'],
+        ['t2.consignee_name', 'consigneeName'],
+        ['t3.parcel_value', 'parcelValue'],
+        ['t3.cod_value', 'codValue'],
+        ['t3.parcel_content', 'parcelContent'],
+        ['t6.partner_name', 'partnerName'],
+        ['ctd.user_id_driver', 'userIdDriver'],
+        [`CONCAT(edriveruser.nik, ' - ', edriveruser.fullname)`, 'driver'],
+        ['ctd.user_id_updated', 'userIdUpdated'],
+        [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
+        ['ctd.updated_time', 'updatedTime'],
+        ['branres.representative_code', 'perwakilan'],
+        ['ctd.payment_method', 'paymentMethod'],
+      );
+    }
+
+    q.innerJoin(e => e.awb, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.pickupRequestDetail.pickupRequest, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awb.packageType, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.pickupRequestDetail.pickupRequest.partner, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.branchLast, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.codTransactionDetail, 'ctd');
+    q.innerJoin(e => e.codTransactionDetail.codTransaction, 'ct');
+    q.leftJoin(e => e.branchLast.representative, 'branres');
+
+    q.leftJoin(e => e.codTransactionDetail.userAdmin, 'upduser', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codTransactionDetail.userAdmin.employee, 'eupduser', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codTransactionDetail.userDriver, 'driveruser', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(
+      e => e.codTransactionDetail.userDriver.employee,
+      'edriveruser',
+      j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awb.branchLast, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awb.districtTo, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    return await q.exec();
   }
 
   static async printNonCodSupplierInvoice(
-    payload: ReportBaseMetaPayloadVm,
+    payload: BaseMetaPayloadVm,
     response,
   ) {
     try {
@@ -386,7 +522,7 @@ export class V2WebCodReportService {
       response.flushHeaders();
       response.write(`${this.CodNONFeeHeader.join(',')}\n`);
 
-      const cursor: any = await this.getReportData(payload.filters, 'noncodfee');
+      const cursor: any = await this.getReportData(payload, 'noncodfee');
       const transformer = this.streamTransform;
       cursor.stream({ transform: transformer }).pipe(response);
     } catch (err) {
@@ -395,10 +531,7 @@ export class V2WebCodReportService {
     }
   }
 
-  static async printCodSupplierInvoice(
-    payload: ReportBaseMetaPayloadVm,
-    response,
-  ) {
+  static async printCodSupplierInvoice(payload: BaseMetaPayloadVm, response) {
     try {
       const fileName = `COD_nonfee_${new Date().getTime()}.csv`;
 
@@ -410,7 +543,7 @@ export class V2WebCodReportService {
       response.flushHeaders();
       response.write(`${this.CodHeader.join(',')}\n`);
 
-      const cursor: any = await this.getReportData(payload.filters, 'codfee');
+      const cursor: any = await this.getReportData(payload, 'codfee');
       const transformer = this.streamTransformCodFee;
       cursor.stream({ transform: transformer }).pipe(response);
     } catch (err) {
