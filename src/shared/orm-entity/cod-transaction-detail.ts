@@ -271,9 +271,9 @@ export class CodTransactionDetail extends TmsBaseEntity {
   voidNote: string | null;
 
   //  relation
-  // @ManyToOne(() => TransactionStatus)
-  // @JoinColumn({ name: 'supplier_invoice_status_id' })
-  // supplierInvoiceStatus: TransactionStatus;
+  @ManyToOne(() => TransactionStatus)
+  @JoinColumn({ name: 'supplier_invoice_status_id' })
+  supplierInvoiceStatus: TransactionStatus;
 
   @ManyToOne(() => TransactionStatus)
   @JoinColumn({ name: 'transaction_status_id' })

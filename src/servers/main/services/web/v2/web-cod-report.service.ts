@@ -72,32 +72,6 @@ export class V2WebCodReportService {
     'User Updated',
   ];
 
-  static CodAwbHeader = [
-    'Awb Number',
-    'Awb Item ID',
-    'Transaction Date',
-    'Awb Status ID Last',
-    'Awb Status Last',
-    'Awb Status Final',
-    'Branch ID Last',
-    'Branch Name Last',
-    'Branch ID Final',
-    'Branch Name Final',
-    'Manifest Date',
-    'Consignee Name',
-    'COD Value',
-    'Representative ID',
-    'User ID Driver',
-    'Driver Name',
-    'Package Type Code',
-    'DO POD Deliver Detail ID',
-    'COD Payment Method',
-    'COD Payment Service',
-    'No Reference',
-    'Transaction Status ID',
-    'Transaction Status Name',
-  ];
-
   // csv file code
   static async getCSVConfig(cod = true) {
     const csvHeaders: any = cod
@@ -256,7 +230,7 @@ export class V2WebCodReportService {
       V2WebCodReportService.strReplaceFunc(doc.partnerName),
       doc.awbDate ? moment.utc(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
       `'${doc.awbNumber}`,
-      doc.parcelValue ? doc.parcelValue : doc.parcelValue,
+      doc.parcelValue,
       doc.codValue,
       doc.codFee ? doc.codFee : '-',
       doc.codValue,
@@ -269,7 +243,7 @@ export class V2WebCodReportService {
       doc.supplierInvoiceStatus,
       doc.trackingStatus,
       V2WebCodReportService.strReplaceFunc(
-        doc.custPackage ? doc.custPackage : doc.prtReferenceNo,
+        doc.custPackage ? doc.custPackage : '-',
       ),
       V2WebCodReportService.strReplaceFunc(doc.pickupSource),
       V2WebCodReportService.strReplaceFunc(doc.currentPosition),
@@ -297,29 +271,38 @@ export class V2WebCodReportService {
     const values = [
       [
         V2WebCodReportService.strReplaceFunc(d.partnerName),
-        d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD') : null,
+        d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
         V2WebCodReportService.strReplaceFunc(d.awbNumber),
         d.parcelValue,
         d.codValue,
-        d.codFee,
+        d.codFee ? d.codFee : '-',
         d.codValue,
-        d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        d.podDate
+          ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm')
+          : null,
         V2WebCodReportService.strReplaceFunc(d.consigneeName),
         V2WebCodReportService.strReplaceFunc(d.paymentMethod),
-        'PAID', // supplier invoice status
+        'PAID',
         'DLV',
-        V2WebCodReportService.strReplaceFunc(d.custPackage),
+        V2WebCodReportService.strReplaceFunc(
+          d.custPackage ? d.custPackage : '-',
+        ),
         V2WebCodReportService.strReplaceFunc(d.pickupSource),
         V2WebCodReportService.strReplaceFunc(d.currentPosition),
         V2WebCodReportService.strReplaceFunc(d.destinationCode),
         V2WebCodReportService.strReplaceFunc(d.destination),
-        d.perwakilan,
+        V2WebCodReportService.strReplaceFunc(d.perwakilan),
         d.driver ? d.driver : '-',
         V2WebCodReportService.strReplaceFunc(d.parcelContent),
-        V2WebCodReportService.strReplaceFunc(d.packageType),
+        V2WebCodReportService.strReplaceFunc(d.packageTypeCode),
         V2WebCodReportService.strReplaceFunc(d.parcelNote),
-        '',
-        '',
+        '-',
+        '-',
+        d.updatedTime
+          ? moment.utc(d.updatedTime).format('YYYY-MM-DD HH:mm')
+          : d.updatedTime
+          ? moment.utc(d.updatedTime).format('YYYY-MM-DD HH:mm')
+          : null,
         d.updUser ? d.updUser : '-',
       ],
     ];
@@ -378,52 +361,45 @@ export class V2WebCodReportService {
     payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
-      ['t10.status_name', 'transactionStatus'],
-      ['t3.notes', 'parcelNote'],
-      ['t4.reference_no', 'custPackage'],
-      ['t4.partner_id', 'partnerId'],
-      ['t1.awb_item_id', 'awbItemId'],
-      ['t1.awb_number', 'awbNumber'],
-      ['t1.branch_id_last', 'currentPositionId'],
-      ['t7.branch_name', 'currentPosition'],
-      ['t1.awb_status_id_last', 'awbStatusIdLast'],
-      ['t1.awb_history_date_last', 'podDate'],
+      ['t6.partner_name', 'partnerName'],
       ['t2.awb_date', 'awbDate'],
-      ['t2.ref_destination_code', 'destinationCode'],
-      ['t2.to_id', 'destinationId'],
-      ['t9.district_name', 'destination'],
-      ['t2.package_type_id', 'packageTypeId'],
-      ['t5.package_type_code', 'packageTypeCode'],
-      ['t5.package_type_name', 'packageTypeName'],
-      ['t2.branch_id_last', 'pickupSourceId'],
-      ['t8.branch_name', 'pickupSource'],
-      ['t2.total_weight_real_rounded', 'weightRealRounded'],
-      [`t2.total_weight_final_rounded`, 'weightFinalRounded'],
-      ['t2.consignee_name', 'consigneeName'],
+      ['t1.awb_number', 'awbNumber'],
       ['t3.parcel_value', 'parcelValue'],
       ['t3.cod_value', 'codValue'],
-      ['t3.parcel_content', 'parcelContent'],
-      ['t6.partner_name', 'partnerName'],
-      ['ctd.user_id_driver', 'userIdDriver'],
-      [`CONCAT(edriveruser.nik, ' - ', edriveruser.fullname)`, 'driver'],
-      ['ctd.user_id_updated', 'userIdUpdated'],
-      [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
-      ['ctd.updated_time', 'updatedTime'],
-      ['branres.representative_code', 'perwakilan'],
+      ['t1.awb_history_date_last', 'podDate'],
+      ['t2.consignee_name', 'consigneeName'],
       ['ctd.payment_method', 'paymentMethod'],
+      ['t10.status_name', 'transactionStatus'],
       ['t11.status_name', 'supplierInvoiceStatus'],
       ['t12.awb_status_title', 'trackingStatus'],
+      ['t4.reference_no', 'custPackage'],
+      ['t8.branch_name', 'pickupSource'],
+      ['t7.branch_name', 'currentPosition'],
+      ['t2.ref_destination_code', 'destinationCode'],
+      ['t9.district_name', 'destination'],
+      ['branres.representative_code', 'perwakilan'],
+      [`CONCAT(edriveruser.nik, ' - ', edriveruser.fullname)`, 'driver'],
+      ['t3.parcel_content', 'parcelContent'],
+      ['t5.package_type_code', 'packageTypeCode'],
+      ['t3.notes', 'parcelNote'],
+      ['ctd.updated_time', 'updatedTime'],
+      [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
+
+      // ['t1.branch_id_last', 'currentPositionId'],
+      // ['t4.partner_id', 'partnerId'],
+      // ['t1.awb_item_id', 'awbItemId'],
+      // ['t1.awb_status_id_last', 'awbStatusIdLast'],
+      // ['t2.to_id', 'destinationId'],
+      // ['t2.package_type_id', 'packageTypeId'],
+      // ['t5.package_type_name', 'packageTypeName'],
+      // ['t2.branch_id_last', 'pickupSourceId'],
+      // ['t2.total_weight_real_rounded', 'weightRealRounded'],
+      // [`t2.total_weight_final_rounded`, 'weightFinalRounded'],
+      // ['ctd.user_id_driver', 'userIdDriver'],
+      // ['ctd.user_id_updated', 'userIdUpdated'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.awbStatus, 't12', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.transactionStatus, 't10', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -447,8 +423,23 @@ export class V2WebCodReportService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    q.leftJoin(e => e.awb.branchLast, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awb.districtTo, 't9');
+
+    q.leftJoin(e => e.transactionStatus, 't10', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awbStatus, 't12', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     q.innerJoin(e => e.codTransactionDetail, 'ctd');
-    q.leftJoin(e => e.codTransactionDetail.transactionStatus, 't11', j =>
+
+    q.leftJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.codTransactionDetail.codTransaction, 'ct');
@@ -470,14 +461,6 @@ export class V2WebCodReportService {
       e => e.codTransactionDetail.userDriver.employee,
       'edriveruser',
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.awb.branchLast, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.awb.districtTo, 't9', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -502,7 +485,7 @@ export class V2WebCodReportService {
       response.flushHeaders();
       response.write(`${this.CodNONFeeHeader.join(',')}\n`);
 
-      await this.getReportData(payload, response, this.streamTransformCodFee);
+      await this.getReportData(payload, response, this.streamTransform);
     } catch (err) {
       console.error(err);
       throw err;
@@ -514,7 +497,7 @@ export class V2WebCodReportService {
     response,
   ) {
     try {
-      const fileName = `COD_nonfee_${new Date().getTime()}.csv`;
+      const fileName = `COD_fee_${new Date().getTime()}.csv`;
 
       response.setHeader(
         'Content-disposition',
@@ -524,7 +507,7 @@ export class V2WebCodReportService {
       response.flushHeaders();
       response.write(`${this.CodHeader.join(',')}\n`);
 
-      await this.getReportData(payload, response, this.streamTransform);
+      await this.getReportData(payload, response, this.streamTransformCodFee);
     } catch (err) {
       console.error(err);
       throw err;
