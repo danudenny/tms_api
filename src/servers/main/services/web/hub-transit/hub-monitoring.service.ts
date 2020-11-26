@@ -491,7 +491,7 @@ export class HubMonitoringService {
     const query = `
       SELECT
         br.branch_name AS "Lokasi Hub",
-        dohd.awb_number AS "Nomor Resi",
+        CONCAT('="',dohd.awb_number, '"') AS "Nomor Resi",
         CASE
           WHEN scan_out.awb_id IS NOT NULL THEN scan_out.bag_number
           WHEN bag_sortir.awb_id IS NOT NULL THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
@@ -542,7 +542,18 @@ export class HubMonitoringService {
       WHERE
         doh.branch_id IS NOT NULL
         ${whereQuery ? `AND ${whereQuery}` : ''}
-        ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''};
+        ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''}
+      GROUP BY br.branch_name,
+        dohd.awb_number,
+        scan_out.bag_number,
+        bag_sortir.bag_number,
+        bag_sortir.bag_seq,
+        scan_out.awb_id,
+        bag_sortir.awb_id,
+        doh.bag_number,
+        u.first_name,
+        u.last_name,
+        dohd.created_time;
     `;
     return query;
   }
