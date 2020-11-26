@@ -24,10 +24,14 @@ export class MobileDeviceInfoService {
       {
         field: 'version',
       },
+      {
+        field: 'dateTime',
+      },
     ];
 
     payload.fieldResolverMap['userId'] = 'users.user_id';
     payload.fieldResolverMap['branchId'] = 'branch.branch_id';
+    payload.fieldResolverMap['dateTime'] = 'mobile_device_info.date_time';
 
     const q = RepositoryService.mobileInfo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
