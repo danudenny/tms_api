@@ -23,6 +23,7 @@ import { nameOfProp, nameOfProps } from '../util/nameof';
 import { ObjectService } from './object.service';
 import { OrionRepositoryQueryConditionService } from './orion-repository-query-condition.service';
 import { RawQueryService } from './raw-query.service';
+import { ReadStream } from 'typeorm/platform/PlatformTools';
 
 export class OrionRepositoryQueryService<
   T,
@@ -201,6 +202,12 @@ export class OrionRepositoryQueryService<
     const compiledQueryBuilder = this.compileQueryParts();
 
     return this.execAction.call(compiledQueryBuilder);
+  }
+
+  public stream(): Promise<ReadStream> {
+    const compiledQueryBuilder = this.compileQueryParts();
+
+    return compiledQueryBuilder.stream();
   }
 
   public fromSubQuery(
