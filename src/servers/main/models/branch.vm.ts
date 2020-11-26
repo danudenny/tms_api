@@ -9,6 +9,9 @@ export class BranchVm {
   branchCode: string;
 
   @ApiModelProperty()
+  branchCodeLabel: string;
+
+  @ApiModelProperty()
   branchName: string;
 }
 

@@ -11,6 +11,7 @@ import { PartnerMerchantController } from './integration/partner-merchant.contro
 import { MasterDataController } from './integration/masterdata.controller';
 import { PartnerFastpayController } from './integration/partner-fastpay.controller';
 import { PartnerDivaController } from './integration/partner-diva.controller';
+import { ApiPartnersController } from './api/partners.controller';
 import { InternalHelpdeskController } from './integration/internal-helpdesk.controller';
 
 @Module({
@@ -19,12 +20,13 @@ import { InternalHelpdeskController } from './integration/internal-helpdesk.cont
     TrackingNoteController,
     CpsController,
     PartnerController,
-    PartnerGojekController,
+    // PartnerGojekController,
     PartnerFastpayController,
     DoReturnController,
     PartnerMerchantController,
     MasterDataController,
     PartnerDivaController,
+    ApiPartnersController,
     InternalHelpdeskController,
   ],
 })

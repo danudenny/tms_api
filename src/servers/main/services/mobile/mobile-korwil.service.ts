@@ -350,6 +350,14 @@ export class MobileKorwilService {
         .format('YYYY-MM-DD 06:00:00');
     }
 
+    if (isNull(Number(branchId))) {
+      return {
+        itemList: [],
+        korwilTransactionId: null,
+        status: 'error',
+      };
+    }
+
     let id = await this.getKorwilIdByrequestDate(authMeta.userId, branchId, fromDate, toDate);
     if (!id) {
       const subtractOneDay = {
