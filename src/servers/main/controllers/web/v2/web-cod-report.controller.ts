@@ -21,7 +21,7 @@ export class V2WebCodReportController {
     @Res() outgoingHTTP,
   ) {
     return await V2WebCodReportService.printCodSupplierInvoice(
-      payload.filters,
+      payload,
       outgoingHTTP,
     );
   }
@@ -34,7 +34,7 @@ export class V2WebCodReportController {
     @Res() outgoingHTTP,
   ) {
     return await V2WebCodReportService.printNonCodSupplierInvoice(
-      payload.filters,
+      payload,
       outgoingHTTP,
     );
   }
@@ -48,7 +48,7 @@ export class V2WebCodReportController {
     @Res() outgoingHTTP,
   ) {
     return await V2WebCodReportService.printNonCodSupplierInvoice(
-      payload.filters,
+      payload,
       outgoingHTTP,
     );
   }

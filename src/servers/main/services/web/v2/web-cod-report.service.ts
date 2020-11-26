@@ -7,7 +7,7 @@ import { ConfigService } from '../../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
 import { BadRequestException } from '@nestjs/common';
-import { BaseMetaPayloadFilterVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { BaseMetaPayloadFilterVm, ReportBaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 
 export class V2WebCodReportService {
   static CodHeader = [
@@ -372,7 +372,7 @@ export class V2WebCodReportService {
   }
 
   static async printNonCodSupplierInvoice(
-    filters: BaseMetaPayloadFilterVm[],
+    payload: ReportBaseMetaPayloadVm,
     response,
   ) {
     try {
@@ -386,7 +386,7 @@ export class V2WebCodReportService {
       response.flushHeaders();
       response.write(`${this.CodNONFeeHeader.join(',')}\n`);
 
-      const cursor: any = await this.getReportData(filters, 'noncodfee');
+      const cursor: any = await this.getReportData(payload.filters, 'noncodfee');
       const transformer = this.streamTransform;
       cursor.stream({ transform: transformer }).pipe(response);
     } catch (err) {
@@ -396,7 +396,7 @@ export class V2WebCodReportService {
   }
 
   static async printCodSupplierInvoice(
-    filters: BaseMetaPayloadFilterVm[],
+    payload: ReportBaseMetaPayloadVm,
     response,
   ) {
     try {
@@ -410,7 +410,7 @@ export class V2WebCodReportService {
       response.flushHeaders();
       response.write(`${this.CodHeader.join(',')}\n`);
 
-      const cursor: any = await this.getReportData(filters, 'codfee');
+      const cursor: any = await this.getReportData(payload.filters, 'codfee');
       const transformer = this.streamTransformCodFee;
       cursor.stream({ transform: transformer }).pipe(response);
     } catch (err) {
