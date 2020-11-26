@@ -952,14 +952,14 @@ export class V1WebReportCodStreamService {
       }
 
       if (filter.field == 'branchLastCode' && filter.value) {
-        if (typeof filter.value === 'string') {
-          spartanFilter.push({
-            lastValidTrackingSiteCode: { $eq: filter.value },
-          });
-        } else {
+        if (typeof filter.value === 'object') {
           spartanFilter.push({
             lastValidTrackingSiteCode: { $in: filter.value },
           });
+        } else {
+            spartanFilter.push({
+              lastValidTrackingSiteCode: { $eq: filter.value },
+            });
         }
       }
 
@@ -1170,10 +1170,10 @@ export class V1WebReportCodStreamService {
       }
 
       if (filter.field == 'branchLastId' && filter.value) {
-        if (typeof filter.value === 'string') {
-          filterList.push({ currentPositionId: { $eq: filter.value } });
-        } else {
+        if (typeof filter.value === 'object') {
           filterList.push({ currentPositionId: { $in: filter.value } });
+        } else {
+          filterList.push({ currentPositionId: { $eq: Number(filter.value) } });
         }
       }
 
