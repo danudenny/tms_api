@@ -824,7 +824,6 @@ export class ScanoutSmdService {
           SELECT
             bi.bag_item_id,
             b.bag_id,
-            b.ref_representative_code,
             b.representative_id_to,
             r.representative_code,
             bih.bag_item_status_id,
@@ -845,11 +844,6 @@ export class ScanoutSmdService {
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
         if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id && !resultDataBag[0].do_smd_detail_id) {
-          const representative_code  = escape(resultDataBag[0].representative_code) ?
-            escape(resultDataBag[0].representative_code) : escape(resultDataBag[0].ref_representative_code);
-          if (!representative_code) {
-            throw new BadRequestException(`Perwakilan Gabung Paket tidak ditemukan`);
-          }
 
           rawQuery = `
             SELECT
@@ -858,7 +852,7 @@ export class ScanoutSmdService {
               total_bag
             FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
             where
-              s.code  = '${representative_code}' AND
+              s.code  = '${escape(resultDataBag[0].representative_code)}' AND
               do_smd_id = ${payload.do_smd_id} AND
               is_deleted = FALSE;
           `;
@@ -969,7 +963,6 @@ export class ScanoutSmdService {
           SELECT
             bi.bag_item_id,
             b.bag_id,
-            b.ref_representative_code,
             b.representative_id_to,
             r.representative_code,
             bih.bag_item_status_id,
@@ -991,11 +984,6 @@ export class ScanoutSmdService {
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
         if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id && !resultDataBag[0].do_smd_detail_id) {
-          const representative_code  = escape(resultDataBag[0].representative_code) ?
-            escape(resultDataBag[0].representative_code) : escape(resultDataBag[0].ref_representative_code);
-          if (!representative_code) {
-            throw new BadRequestException(`Perwakilan Gabung Paket tidak ditemukan`);
-          }
 
           rawQuery = `
             SELECT
@@ -1004,7 +992,7 @@ export class ScanoutSmdService {
               total_bag
             FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
             where
-              s.code  = '${representative_code}' AND
+              s.code  = '${escape(resultDataBag[0].representative_code)}' AND
               do_smd_id = ${payload.do_smd_id} AND
               is_deleted = FALSE;
           `;
