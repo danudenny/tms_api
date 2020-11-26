@@ -472,6 +472,81 @@ export class HubMonitoringService {
     return query;
   }
 
+  static async getQueryCSVMonitoringSortirByFilterOrion(payload: BaseMetaPayloadVm): Promise<string> {
+    const map = {
+      createdTime: 'doh.created_time',
+      branchIdFrom: 'doh.branch_id',
+      branchIdTo: 'scan_out.branch_id',
+      branchTo: 'scan_out.branch_name',
+    };
+    const optr = ['gte', 'gt'];
+    const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
+    const whereSubQuery = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'bi.created_time', optr, 'createdTime');
+    const whereSubQueryScanOut = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp.do_pod_date_time', optr, 'createdTime');
+
+    let filterQuery = payload.search ? `origin ~* '${payload.search}'` : '';
+    filterQuery += filterQuery && whereQuery ? 'AND' : '';
+    filterQuery += whereQuery;
+
+    const query = `
+      SELECT
+        br.branch_name AS "Lokasi Hub",
+        dohd.awb_number AS "Nomor Resi",
+        CASE
+          WHEN scan_out.awb_id IS NOT NULL THEN scan_out.bag_number
+          WHEN bag_sortir.awb_id IS NOT NULL THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
+          ELSE doh.bag_number
+        END AS "Nomor Gabungan",
+        CASE
+          WHEN scan_out.awb_id IS NOT NULL THEN 'OUT'
+          WHEN bag_sortir.awb_id IS NOT NULL THEN 'SORT'
+          ELSE 'IN'
+        END AS "Status",
+        CONCAT(u.first_name, ' ', u.last_name) AS "User",
+        TO_CHAR(dohd.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi"
+      FROM
+        dropoff_hub doh
+      INNER JOIN branch br ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
+      INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
+      INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
+      INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
+      INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
+      INNER JOIN users u ON u.user_id = dohd.user_id_created AND u.is_deleted = FALSE
+      LEFT JOIN
+      (
+        SELECT
+          bi.bag_seq,
+          ai.awb_id,
+          b.bag_number
+        FROM bag_item_awb bia
+        INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+        INNER JOIN bag_item bi ON bi.bag_item_id = bia.bag_item_id AND bi.is_deleted = FALSE
+        INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE AND b.branch_id_to IS NOT NULL
+        WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
+      ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
+      LEFT JOIN (
+        SELECT
+          ai.awb_id,
+          dpdb.bag_number
+        FROM do_pod dp
+        INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
+        INNER JOIN branch br ON br.branch_id = dp.branch_id_to AND br.is_deleted = FALSE
+        INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
+        INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+        WHERE
+          dp.is_deleted = FALSE
+          AND dp.do_pod_type = ${POD_TYPE.OUT_HUB}
+          AND dp.user_id_driver IS NOT NULL AND dp.branch_id_to IS NOT NULL
+          ${whereSubQueryScanOut ? `AND ${whereSubQueryScanOut}` : ''}
+      ) scan_out ON dohd.awb_id = scan_out.awb_id
+      WHERE
+        doh.branch_id IS NOT NULL
+        ${whereQuery ? `AND ${whereQuery}` : ''}
+        ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''};
+    `;
+    return query;
+  }
+
   static async orionFilterToQueryRaw(
     filters: BaseMetaPayloadFilterVm[],
     map: any,

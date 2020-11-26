@@ -43,7 +43,6 @@ export class HubMonitoringReportService {
   static async storeHubMonitoringPayload(
     payload: any,
   ): Promise<HubMonitoringExcelStoreResponseVm> {
-    console.log(payload);
     const result = new HubMonitoringExcelStoreResponseVm();
     result.id = await this.storePayload(
       payload,
@@ -89,7 +88,6 @@ export class HubMonitoringReportService {
     res: express.Response,
     queryParams: HubMonitoringExcelExecutePayloadVm,
   ): Promise<any> {
-    console.log(queryParams);
     const payload = await this.retrieveGenericData<any>(
       'hub-monitoring',
       queryParams.id,
@@ -114,6 +112,32 @@ export class HubMonitoringReportService {
     await this.generateCSV(res, data, fileName);
   }
 
+  static async generateHubMonitoringSortirCSV(
+    res: express.Response,
+    queryParams: HubMonitoringExcelExecutePayloadVm,
+  ): Promise<any> {
+    const payload = await this.retrieveGenericData<any>(
+      'hub-monitoring',
+      queryParams.id,
+    );
+    if (!payload) {
+      RequestErrorService.throwObj(
+        {
+          message: 'body cannot be null or undefined',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const p = new BaseMetaPayloadVm();
+    p.filters = payload.filters ? payload.filters : payload;
+
+    const data = await this.getDataCsvHubMonitoringSortir(p);
+
+    const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.csv';
+
+    await this.generateCSV(res, data, fileName);
+  }
+
   static async getDataCsvHubMonitoring(payload: BaseMetaPayloadVm): Promise<any> {
     let query = await HubMonitoringService.getQueryMonitoringHubBagByFilterOrion(payload);
     query = query.split('"doPodDateTime"').join('"Tanggal"');
@@ -127,6 +151,12 @@ export class HubMonitoringReportService {
 
     const data = await RawQueryService.query(query);
 
+    return data;
+  }
+
+  static async getDataCsvHubMonitoringSortir(payload: BaseMetaPayloadVm): Promise<any> {
+    const query = await HubMonitoringService.getQueryCSVMonitoringSortirByFilterOrion(payload);
+    const data = await RawQueryService.query(query);
     return data;
   }
 }
