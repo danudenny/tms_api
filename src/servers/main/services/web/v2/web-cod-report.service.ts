@@ -234,9 +234,7 @@ export class V2WebCodReportService {
       doc.codValue,
       doc.codFee ? doc.codFee : '-',
       doc.codValue,
-      doc.podDate
-        ? moment.utc(doc.podDate).format('YYYY-MM-DD HH:mm')
-        : null,
+      doc.podDate ? moment.utc(doc.podDate).format('YYYY-MM-DD HH:mm') : null,
       V2WebCodReportService.strReplaceFunc(doc.consigneeName),
       doc.paymentMethod,
       doc.transactionStatus,
@@ -277,9 +275,7 @@ export class V2WebCodReportService {
         d.codValue,
         d.codFee ? d.codFee : '-',
         d.codValue,
-        d.podDate
-          ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm')
-          : null,
+        d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
         V2WebCodReportService.strReplaceFunc(d.consigneeName),
         V2WebCodReportService.strReplaceFunc(d.paymentMethod),
         'PAID',
@@ -423,25 +419,8 @@ export class V2WebCodReportService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.awb.branchLast, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.awb.districtTo, 't9');
-
-    q.leftJoin(e => e.transactionStatus, 't10', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.awbStatus, 't12', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.codTransactionDetail, 'ctd');
 
-    q.leftJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
     q.innerJoin(e => e.codTransactionDetail.codTransaction, 'ct');
     q.leftJoin(e => e.branchLast.representative, 'branres');
 
@@ -463,11 +442,30 @@ export class V2WebCodReportService {
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    q.leftJoin(e => e.awb.branchLast, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awb.districtTo, 't9');
+
+    q.leftJoin(e => e.transactionStatus, 't10', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awbStatus, 't12', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.take(10);
 
     const stream = await q.stream();
     stream.on('end', () => {});
-    stream.pipe(this.parser('', '\n', '', null, transformFn)).pipe(response);
+    stream.pipe(this.parser('', '', '', null, transformFn)).pipe(response);
   }
 
   static async printNonCodSupplierInvoice(
@@ -492,10 +490,7 @@ export class V2WebCodReportService {
     }
   }
 
-  static async printCodSupplierInvoice(
-    payload: BaseMetaPayloadVm,
-    response,
-  ) {
+  static async printCodSupplierInvoice(payload: BaseMetaPayloadVm, response) {
     try {
       const fileName = `COD_fee_${new Date().getTime()}.csv`;
 
@@ -521,39 +516,39 @@ export class V2WebCodReportService {
       sep = '\n';
       cl = '';
     } else if (op == null) {
-
       op = '[\n';
       sep = '\n,\n';
       cl = '\n]\n';
-
     }
 
     let stream;
     let first = true;
     let anyData = false;
-    stream = through(function(data) {
-      let json;
-      anyData = true;
-      try {
-        // Sesuai kebutuhan
-        json = transformFn(data);
-      } catch (err) {
-        return stream.emit('error', err);
-      }
-      if (first) {
-        first = false;
-        stream.queue(op + json);
-      } else {
-        stream.queue(sep + json);
-      }
-    },
-    function(data) {
-      if (!anyData) {
-        stream.queue(op);
-      }
-      stream.queue(cl);
-      stream.queue(null);
-    });
+    stream = through(
+      function(data) {
+        let json;
+        anyData = true;
+        try {
+          // Sesuai kebutuhan
+          json = transformFn(data);
+        } catch (err) {
+          return stream.emit('error', err);
+        }
+        if (first) {
+          first = false;
+          stream.queue(op + json);
+        } else {
+          stream.queue(sep + json);
+        }
+      },
+      function(data) {
+        if (!anyData) {
+          stream.queue(op);
+        }
+        stream.queue(cl);
+        stream.queue(null);
+      },
+    );
 
     return stream;
   }
