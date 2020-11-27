@@ -204,10 +204,60 @@ export class OrionRepositoryQueryService<
     return this.execAction.call(compiledQueryBuilder);
   }
 
-  public stream(): Promise<ReadStream> {
+  public async stream(response: any, transformFn: (data: any) => string): Promise<ReadStream> {
     const compiledQueryBuilder = this.compileQueryParts();
 
-    return compiledQueryBuilder.stream();
+    const stream = await compiledQueryBuilder.stream();
+    stream
+      .pipe(OrionRepositoryQueryService.parser('', '', '', null, transformFn))
+      .pipe(response);
+
+    return stream;
+  }
+
+  private static parser(op, sep, cl, indent, transformFn) {
+    indent = indent || 0;
+    if (op === false) {
+      op = '';
+      sep = '\n';
+      cl = '';
+    } else if (op == null) {
+      op = '[\n';
+      sep = '\n,\n';
+      cl = '\n]\n';
+    }
+
+    let stream;
+    let first = true;
+    let anyData = false;
+    const through = require('through');
+    stream = through(
+      function(data) {
+        let json;
+        anyData = true;
+        try {
+          // Sesuai kebutuhan
+          json = transformFn(data);
+        } catch (err) {
+          return stream.emit('error', err);
+        }
+        if (first) {
+          first = false;
+          stream.queue(op + json);
+        } else {
+          stream.queue(sep + json);
+        }
+      },
+      function(data) {
+        if (!anyData) {
+          stream.queue(op);
+        }
+        stream.queue(cl);
+        stream.queue(null);
+      },
+    );
+
+    return stream;
   }
 
   public fromSubQuery(

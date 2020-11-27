@@ -10,7 +10,6 @@ import { BadRequestException } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
-const through = require('through');
 
 export class V2WebCodReportService {
   static CodHeader = [
@@ -75,34 +74,7 @@ export class V2WebCodReportService {
   // csv file code
   static async getCSVConfig(cod = true) {
     const csvHeaders: any = cod
-      ? [
-          'Partner',
-          'Awb Date',
-          'Awb',
-          'Package Amount',
-          'Cod Amount',
-          'Cod Fee',
-          'Amount Transfer',
-          'Pod Datetime',
-          'Recipient',
-          'Tipe Pembayaran',
-          'Status Internal',
-          'Tracking Status',
-          'Cust Package',
-          'Pickup Source',
-          'Current Position',
-          'Destination Code',
-          'Destination',
-          'Perwakilan',
-          'Sigesit',
-          'Package Detail',
-          'Services',
-          'Note',
-          'Submitted Date',
-          'Submitted Number',
-          'Date Updated',
-          'User Updated',
-        ]
+      ? this.CodHeader
       : [
           'Partner',
           'Awb Date',
@@ -322,16 +294,6 @@ export class V2WebCodReportService {
       : null;
   }
 
-  private strReplaceFunc = str => {
-    return str
-      ? str
-          .replace(/\n/g, ' ')
-          .replace(/\r/g, ' ')
-          .replace(/;/g, '|')
-          .replace(/,/g, '.')
-      : null;
-  }
-
   private static deleteFile(filePath) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -350,7 +312,6 @@ export class V2WebCodReportService {
     response,
     transformFn,
   ) {
-    // TODO: Query get data
     const repo = new OrionRepositoryService(AwbItemAttr, 't1');
     const q = repo.findAllRaw();
 
@@ -461,11 +422,8 @@ export class V2WebCodReportService {
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.take(10);
 
-    const stream = await q.stream();
-    stream.on('end', () => {});
-    stream.pipe(this.parser('', '', '', null, transformFn)).pipe(response);
+    await q.stream(response, transformFn);
   }
 
   static async printNonCodSupplierInvoice(
@@ -507,50 +465,6 @@ export class V2WebCodReportService {
       console.error(err);
       throw err;
     }
-  }
-
-  static parser(op, sep, cl, indent, transformFn) {
-    indent = indent || 0;
-    if (op === false) {
-      op = '';
-      sep = '\n';
-      cl = '';
-    } else if (op == null) {
-      op = '[\n';
-      sep = '\n,\n';
-      cl = '\n]\n';
-    }
-
-    let stream;
-    let first = true;
-    let anyData = false;
-    stream = through(
-      function(data) {
-        let json;
-        anyData = true;
-        try {
-          // Sesuai kebutuhan
-          json = transformFn(data);
-        } catch (err) {
-          return stream.emit('error', err);
-        }
-        if (first) {
-          first = false;
-          stream.queue(op + json);
-        } else {
-          stream.queue(sep + json);
-        }
-      },
-      function(data) {
-        if (!anyData) {
-          stream.queue(op);
-        }
-        stream.queue(cl);
-        stream.queue(null);
-      },
-    );
-
-    return stream;
   }
 
   static async exportSupplierInvoice(id: string) {
