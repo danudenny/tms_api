@@ -1,15 +1,10 @@
-import fs = require('fs');
 import * as moment from 'moment';
-import * as path from 'path';
-import _ = require('lodash');
-import { AwsS3Service } from '../../../../../shared/services/aws-s3.service';
-import { ConfigService } from '../../../../../shared/services/config.service';
-import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
-import { BadRequestException } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
+import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-transaction-detail';
+import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 
 export class V2WebCodReportService {
   static CodHeader = [
@@ -71,131 +66,27 @@ export class V2WebCodReportService {
     'User Updated',
   ];
 
-  // csv file code
-  static async getCSVConfig(cod = true) {
-    const csvHeaders: any = cod
-      ? this.CodHeader
-      : [
-          'Partner',
-          'Awb Date',
-          'Awb',
-          'Package Amount',
-          'Cod Amount',
-          'Cod Fee',
-          'Amount Transfer',
-          'Pod Datetime',
-          'Recipient',
-          'Tipe Pembayaran',
-          'Status Internal',
-          'Tracking Status',
-          'Status Invoice',
-          'Cust Package',
-          'Pickup Source',
-          'Current Position',
-          'Destination Code',
-          'Destination',
-          'Perwakilan',
-          'Sigesit',
-          'Package Detail',
-          'Services',
-          'Note',
-          'Submitted Date',
-          'Submitted Number',
-          'Date Updated',
-          'User Updated',
-        ];
-
-    const csvConfig = cod
-      ? this.prepareCsvFile('COD', csvHeaders)
-      : this.prepareCsvFile('COD_nonfee', csvHeaders);
-    return csvConfig;
-  }
-
-  // TODO: add params for custom name file
-  static prepareCsvFile(fn, headers): any {
-    const appRoot = require('app-root-path');
-    const uuidv1 = require('uuid/v1');
-    const fileName =
-      moment().format('YYYYMMDD') + '_' + fn + '_' + uuidv1() + '.csv';
-    const basePath = path.join(appRoot.path, 'dist/public/temps');
-    const filePath = basePath + '/' + fileName;
-    const urlPath = 'public/temps/' + fileName;
-
-    if (!fs.existsSync(basePath)) {
-      fs.mkdirSync(basePath, { recursive: true });
-    }
-
-    const csvConfig: any = {
-      headers,
-      separator: ',',
-      newline: '\n',
-    };
-
-    const csvWriter = require('csv-write-stream');
-    const writer = csvWriter(csvConfig);
-
-    writer.pipe(fs.createWriteStream(filePath));
-    writer.end();
-
-    return {
-      basePath,
-      fileName,
-      filePath,
-      urlPath,
-      config: csvConfig,
-    };
-  }
-
-  static async populateDataCsv(
-    writer,
-    data,
-    cod,
-    draft: boolean = false,
-  ): Promise<boolean> {
-    let count = 0;
-    if (data) {
-      for (const d of data) {
-        // writer.write(d);
-        writer.write([
-          this.strReplaceFunc(d.partnerName),
-          d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD') : null,
-          this.strReplaceFunc(d.awbNumber),
-          d.parcelValue,
-          d.codValue,
-          d.codFee,
-          d.codValue,
-          d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
-          this.strReplaceFunc(d.consigneeName),
-          this.strReplaceFunc(d.paymentMethod),
-          draft ? 'DRAFT INVOICE' : 'PAID', // supplier invoice status
-          'DLV',
-          this.strReplaceFunc(d.custPackage),
-          this.strReplaceFunc(d.pickupSource),
-          this.strReplaceFunc(d.currentPosition),
-          this.strReplaceFunc(d.destinationCode),
-          this.strReplaceFunc(d.destination),
-          d.perwakilan,
-          d.driver ? d.driver : '-',
-          this.strReplaceFunc(d.parcelContent),
-          this.strReplaceFunc(d.packageType),
-          this.strReplaceFunc(d.parcelNote),
-          '',
-          '',
-          d.dateUpdated
-            ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm')
-            : null,
-          d.updUser ? d.updUser : '-',
-        ]);
-      }
-      count += 1;
-    } // end of while
-    writer.on('data', chunk => {
-      // console.log(`Received ${chunk.length} bytes of data.`);
-    });
-
-    await this.sleep(100);
-    return true;
-  }
+  static SupplierInvoiceHeader = [
+    'Partner',
+    'Awb Date',
+    'Awb',
+    'Package Amount',
+    'Cod Amount',
+    'Cod Fee',
+    'Amount Transfer',
+    'Pod Datetime',
+    'Recipient',
+    'Status Internal',
+    'Tracking Status',
+    'Cust Package',
+    'Pickup Source',
+    'Current Position',
+    'Destination Code',
+    'Destination',
+    'Package Detail',
+    'Services',
+    'Note',
+  ];
 
   static streamTransform(doc) {
     const values = [
@@ -278,10 +169,32 @@ export class V2WebCodReportService {
     return `${values.join(',')} \n`;
   }
 
-  static sleep(ms) {
-    return new Promise(resolve => {
-      setTimeout(resolve, ms);
-    });
+  static streamTransformSupplierInvoice(d) {
+    const values = [
+      [
+        V2WebCodReportService.strReplaceFunc(d.partnerName),
+        d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD') : null,
+        V2WebCodReportService.strReplaceFunc(d.awbNumber),
+        d.parcelValue,
+        d.codValue,
+        d.codFee,
+        d.codValue,
+        d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        V2WebCodReportService.strReplaceFunc(d.consigneeName),
+        'DRAFT INVOICE', // supplier invoice status
+        'DLV',
+        V2WebCodReportService.strReplaceFunc(d.custPackage),
+        V2WebCodReportService.strReplaceFunc(d.pickupSource),
+        V2WebCodReportService.strReplaceFunc(d.currentPosition),
+        V2WebCodReportService.strReplaceFunc(d.destinationCode),
+        V2WebCodReportService.strReplaceFunc(d.destination),
+        V2WebCodReportService.strReplaceFunc(d.parcelContent),
+        V2WebCodReportService.strReplaceFunc(d.packageType),
+        V2WebCodReportService.strReplaceFunc(d.parcelNote),
+      ],
+    ];
+
+    return `${values.join(',')} \n`;
   }
 
   static strReplaceFunc = str => {
@@ -292,19 +205,6 @@ export class V2WebCodReportService {
           .replace(/;/g, '|')
           .replace(/,/g, '.')
       : null;
-  }
-
-  private static deleteFile(filePath) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        // remove file
-        // console.log('Delete file success.');
-        fs.unlinkSync(filePath);
-        resolve(true);
-      } catch (err) {
-        reject(err);
-      }
-    });
   }
 
   static async getReportData(
@@ -341,19 +241,6 @@ export class V2WebCodReportService {
       ['t3.notes', 'parcelNote'],
       ['ctd.updated_time', 'updatedTime'],
       [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
-
-      // ['t1.branch_id_last', 'currentPositionId'],
-      // ['t4.partner_id', 'partnerId'],
-      // ['t1.awb_item_id', 'awbItemId'],
-      // ['t1.awb_status_id_last', 'awbStatusIdLast'],
-      // ['t2.to_id', 'destinationId'],
-      // ['t2.package_type_id', 'packageTypeId'],
-      // ['t5.package_type_name', 'packageTypeName'],
-      // ['t2.branch_id_last', 'pickupSourceId'],
-      // ['t2.total_weight_real_rounded', 'weightRealRounded'],
-      // [`t2.total_weight_final_rounded`, 'weightFinalRounded'],
-      // ['ctd.user_id_driver', 'userIdDriver'],
-      // ['ctd.user_id_updated', 'userIdUpdated'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
@@ -476,40 +363,44 @@ export class V2WebCodReportService {
     }
   }
 
-  static async exportSupplierInvoice(id: string) {
-    const dbMongo = await MongoDbConfig.getDbSicepatCod('transaction_detail');
-    const datarow = await dbMongo.find({ codSupplierInvoiceId: id }).toArray();
-
-    const dataRowCount = datarow.length;
-    console.log('## TOTAL DATA :: ', dataRowCount);
-    if (!datarow || datarow.length <= 0) {
-      throw new BadRequestException('Data belum lengkap, coba lagi nanti!');
-    }
-
+  static async exportSupplierInvoice(id: string, response) {
     try {
-      const csvConfig = await this.getCSVConfig();
-      const csvWriter = require('csv-write-stream');
-      const writer = csvWriter(csvConfig.config);
-      writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
-
-      await this.populateDataCsv(writer, datarow, true, true);
-      writer.end();
-
-      let url = '';
-      const awsKey = `reports/cod/${csvConfig.fileName}`;
-      const storagePath = await AwsS3Service.uploadFromFilePath(
-        csvConfig.filePath,
-        awsKey,
+      const uuidv1 = require('uuid/v1');
+      const fileName = moment().format('YYYYMMDD') + '_COD_' + uuidv1() + '.csv';
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
       );
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+      response.flushHeaders();
+      response.write(`${this.SupplierInvoiceHeader.join(',')}\n`);
 
-      if (storagePath) {
-        url = `${ConfigService.get('cloudStorage.cloudUrl')}/${
-          storagePath.awsKey
-        }`;
-        this.deleteFile(csvConfig.filePath);
-      }
+      const repo = new OrionRepositoryService(CodTransactionDetail, 't1');
+      const q = repo.findAllRaw();
 
-      return { status: 'ok', url };
+      q.selectRaw(
+        ['t1.partner_name', 'partnerName'],
+        ['t1.awb_date', 'awbDate'],
+        ['t1.awb_number', 'awbNumber'],
+        ['t1.parcel_value', 'parcelValue'],
+        ['t1.cod_value', 'codValue'],
+        ['t1.cod_fee', 'codFee'],
+        ['t1.pod_date', 'podDate'],
+        ['t1.consignee_name', 'consigneeName'],
+        ['t1.cust_package', 'custPackage'],
+        ['t1.pickup_source', 'pickupSource'],
+        ['t1.current_position', 'currentPosition'],
+        ['t1.destination_code', 'destinationCode'],
+        ['t1.destination', 'destination'],
+        ['t1.parcel_content', 'parcelContent'],
+        ['t1.package_type', 'packageType'],
+        ['t1.parcel_note', 'parcelNote'],
+      );
+      q.where(e => e.codSupplierInvoiceId, w => w.equals(id));
+      q.andWhere(e => e.supplierInvoiceStatusId, w => w.equals(TRANSACTION_STATUS.DRAFT_INV));
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+      await q.stream(response, this.streamTransformSupplierInvoice);
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }
