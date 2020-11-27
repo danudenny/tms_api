@@ -226,6 +226,10 @@ export class OrionRepositoryQueryService<
           return stream.emit('error', err);
         }
       },
+      function() {
+        // reach the end.
+        stream.queue(null);
+      },
     );
 
     return stream;
