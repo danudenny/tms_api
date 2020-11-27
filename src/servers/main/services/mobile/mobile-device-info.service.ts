@@ -33,6 +33,10 @@ export class MobileDeviceInfoService {
     payload.fieldResolverMap['branchId'] = 'branch.branch_id';
     payload.fieldResolverMap['dateTime'] = 'mobile_device_info.date_time';
 
+    if (payload.sortBy === '') {
+      payload.sortBy = 'dateTime';
+    }
+
     const q = RepositoryService.mobileInfo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
