@@ -209,50 +209,25 @@ export class OrionRepositoryQueryService<
 
     const stream = await compiledQueryBuilder.stream();
     stream
-      .pipe(OrionRepositoryQueryService.parser('', '', '', null, transformFn))
+      .pipe(OrionRepositoryQueryService.parser(transformFn))
       .pipe(response);
 
     return stream;
   }
 
-  private static parser(op, sep, cl, indent, transformFn) {
-    indent = indent || 0;
-    if (op === false) {
-      op = '';
-      sep = '\n';
-      cl = '';
-    } else if (op == null) {
-      op = '[\n';
-      sep = '\n,\n';
-      cl = '\n]\n';
-    }
-
-    let stream;
-    let first = true;
-    let anyData = false;
+  private static parser(transformFn) {
     const through = require('through');
-    stream = through(
+    const stream = through(
       function(data) {
-        let json;
-        anyData = true;
         try {
-          // Sesuai kebutuhan
-          json = transformFn(data);
+          const json = transformFn(data);
+          stream.queue(json);
         } catch (err) {
           return stream.emit('error', err);
         }
-        if (first) {
-          first = false;
-          stream.queue(op + json);
-        } else {
-          stream.queue(sep + json);
-        }
       },
-      function(data) {
-        if (!anyData) {
-          stream.queue(op);
-        }
-        stream.queue(cl);
+      function() {
+        // reach the end.
         stream.queue(null);
       },
     );
