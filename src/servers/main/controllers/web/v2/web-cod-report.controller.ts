@@ -58,7 +58,8 @@ export class V2WebCodReportController {
   @ResponseSerializerOptions({ disable: true })
   public async supplierInvoiceDownload(
     @Param('supplierInvoiceId') supplierInvoiceId: string,
+    @Res() outgoingHTTP,
   ) {
-    return V1WebReportSqlCodService.exportSupplierInvoice(supplierInvoiceId);
+    return V2WebCodReportService.exportSupplierInvoice(supplierInvoiceId, outgoingHTTP);
   }
 }
