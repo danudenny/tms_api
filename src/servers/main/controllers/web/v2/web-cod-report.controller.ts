@@ -50,6 +50,7 @@ export class V2WebCodReportController {
     return await V2WebCodReportService.printNonCodSupplierInvoice(
       payload,
       outgoingHTTP,
+      'resicod',
     );
   }
 

@@ -357,7 +357,8 @@ export class V2WebCodReportService {
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse())
+      .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
     q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
@@ -381,7 +382,6 @@ export class V2WebCodReportService {
     );
 
     q.innerJoin(e => e.codTransactionDetail, 'ctd');
-
     q.innerJoin(e => e.codTransactionDetail.codTransaction, 'ct');
     q.leftJoin(e => e.branchLast.representative, 'branres');
 
@@ -408,31 +408,24 @@ export class V2WebCodReportService {
     );
 
     q.leftJoin(e => e.awb.districtTo, 't9');
-
-    q.leftJoin(e => e.transactionStatus, 't10', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.awbStatus, 't12', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
+    q.leftJoin(e => e.transactionStatus, 't10');
+    q.leftJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
+    q.leftJoin(e => e.awbStatus, 't12');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-
-    q.take(10);
+    q.andWhere(e => e.awbStatusIdLast, w => w.isNotNull());
     await q.stream(response, transformFn);
   }
 
   static async printNonCodSupplierInvoice(
     payload: BaseMetaPayloadVm,
     response,
+    exportType?: 'nonfee' | 'resicod',
   ) {
     try {
-      const fileName = `COD_nonfee_${new Date().getTime()}.csv`;
+      let fileName = `COD_nonfee_${new Date().getTime()}.csv`;
+      if (exportType === 'resicod') {
+        fileName = `COD_daftarresi_${new Date().getTime()}.csv`;
+      }
 
       response.setHeader(
         'Content-disposition',
@@ -443,11 +436,11 @@ export class V2WebCodReportService {
       response.write(`${this.CodNONFeeHeader.join(',')}\n`);
 
       // mapping field
-      payload.fieldResolverMap['statusDate'] = 't1.awb_status_final_date';
+      payload.fieldResolverMap['statusDate'] = 't1.updated_time';
       payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
       payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
       payload.fieldResolverMap['supplier'] = 't6.partner_id';
-      payload.fieldResolverMap['awbStatus'] = 't12.awb_status_name';
+      payload.fieldResolverMap['awbStatusId'] = 't1.awb_status_id_last';
       payload.fieldResolverMap['branchLastCode'] = 't7.branch_code';
       payload.fieldResolverMap['transactionStatus'] = 't1.transaction_status_id';
       payload.fieldResolverMap['supplierInvoiceStatus'] = 'ctd.supplier_invoice_status_id';
@@ -473,7 +466,7 @@ export class V2WebCodReportService {
       response.write(`${this.CodHeader.join(',')}\n`);
 
       // mapping field
-      payload.fieldResolverMap['statusDate'] = 't1.awb_status_final_date';
+      payload.fieldResolverMap['statusDate'] = 't1.updated_time';
       payload.fieldResolverMap['supplier'] = 't6.partner_id';
 
       await this.getReportData(payload, response, this.streamTransformCodFee);
