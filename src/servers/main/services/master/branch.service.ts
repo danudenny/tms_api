@@ -81,7 +81,7 @@ export class BranchService {
 
     const branchData = data.map(el => {
       return {
-        branchId: Number(el.branchId),
+        branchId: el.branchId,
         branchName: el.branchName,
         branchCode: el.branchCode,
         branchCodeLabel: el.branchCode,
