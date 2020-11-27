@@ -219,87 +219,86 @@ export class V2WebCodReportService {
 
     q.selectRaw(
       ['t6.partner_name', 'partnerName'],
-      ['t2.awb_date', 'awbDate'],
       ['t1.awb_number', 'awbNumber'],
+      ['t2.awb_date', 'awbDate'],
+      ['t2.consignee_name', 'consigneeName'],
       ['t3.parcel_value', 'parcelValue'],
       ['t3.cod_value', 'codValue'],
-      ['t1.awb_history_date_last', 'podDate'],
-      ['t2.consignee_name', 'consigneeName'],
-      ['ctd.payment_method', 'paymentMethod'],
+      ['cp.awb_history_date_last', 'podDate'],
+      ['cp.payment_method', 'paymentMethod'],
       ['t10.status_name', 'transactionStatus'],
       ['t11.status_name', 'supplierInvoiceStatus'],
       ['t12.awb_status_title', 'trackingStatus'],
+      ['t13.awb_status_title', 'trackingStatusFinal'],
       ['t4.reference_no', 'custPackage'],
       ['t8.branch_name', 'pickupSource'],
       ['t7.branch_name', 'currentPosition'],
+      ['fin.branch_name', 'finalPosition'],
       ['t2.ref_destination_code', 'destinationCode'],
       ['t9.district_name', 'destination'],
-      ['branres.representative_code', 'perwakilan'],
-      [`CONCAT(edriveruser.nik, ' - ', edriveruser.fullname)`, 'driver'],
+      ['rep.representative_code', 'perwakilan'],
       ['t3.parcel_content', 'parcelContent'],
       ['t5.package_type_code', 'packageTypeCode'],
-      ['t3.notes', 'parcelNote'],
+      ['t1.updated_time', 'awbStatusDate'],
       ['ctd.updated_time', 'updatedTime'],
+      [`CONCAT(edriveruser.nik, ' - ', edriveruser.fullname)`, 'driver'],
       [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
+      ['t3.notes', 'parcelNote'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse())
-      .andWhere(e => e.isCod, w => w.isTrue()),
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
     q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.pickupRequestDetail.pickupRequest, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q.innerJoin(e => e.pickupRequestDetail.pickupRequest, 't4');
+    q.innerJoin(e => e.awb.packageType, 't5');
+    q.innerJoin(e => e.pickupRequestDetail.pickupRequest.partner, 't6');
+
+    // get gerai terakhir resi di statuskan
+    q.innerJoin(e => e.branchLast, 't7');
+
+    // Data Jika sudah dilakukan DLV - COD
+    q.leftJoin(e => e.codPayment, 'cp');
+    q.leftJoin(e => e.codPayment.branchFinal, 'fin');
+
+    // Data Jika sudah ada transaksi
+    q.leftJoin(e => e.codTransactionDetail, 'ctd', j =>
+      j.andWhere(e => e.codTransactionId, w => w.isNotNull()),
     );
 
-    q.innerJoin(e => e.awb.packageType, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    // get perwakilan di gerai terkhir
+    q.leftJoin(e => e.branchLast.representative, 'rep');
 
-    q.innerJoin(e => e.pickupRequestDetail.pickupRequest.partner, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.branchLast, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.codTransactionDetail, 'ctd');
-    q.innerJoin(e => e.codTransactionDetail.codTransaction, 'ct');
-    q.leftJoin(e => e.branchLast.representative, 'branres');
-
-    q.leftJoin(e => e.codTransactionDetail.userAdmin, 'upduser', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.codTransactionDetail.userAdmin.employee, 'eupduser', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.codTransactionDetail.userDriver, 'driveruser', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(
-      e => e.codTransactionDetail.userDriver.employee,
-      'edriveruser',
-      j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.awb.branchLast, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
+    // gerai pickup / gerai di manifest resi
+    q.leftJoin(e => e.awb.branchLast, 't8');
     q.leftJoin(e => e.awb.districtTo, 't9');
+
+    // User Update Transaction
+    q.leftJoin(e => e.codTransactionDetail.userAdmin, 'upduser');
+    q.leftJoin(e => e.codTransactionDetail.userAdmin.employee, 'eupduser');
+
+    // User Driver Sigesit
+    q.leftJoin(e => e.codPayment.userDriver, 'driveruser');
+    q.leftJoin(e => e.codPayment.userDriver.employee, 'edriveruser');
+
+    // Transaction Status & Invoice Status
     q.leftJoin(e => e.transactionStatus, 't10');
     q.leftJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
+
+    // LAST STATUS
     q.leftJoin(e => e.awbStatus, 't12');
+
+    // FINAL STATUS
+    q.leftJoin(e => e.awbStatusFinal, 't13');
+
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.awbStatusIdLast, w => w.isNotNull());
+
     await q.stream(response, transformFn);
   }
 
@@ -328,10 +327,12 @@ export class V2WebCodReportService {
       payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
       payload.fieldResolverMap['supplier'] = 't6.partner_id';
       payload.fieldResolverMap['awbStatusId'] = 't1.awb_status_id_last';
-      payload.fieldResolverMap['branchLastCode'] = 't7.branch_code';
-      payload.fieldResolverMap['transactionStatus'] = 't1.transaction_status_id';
-      payload.fieldResolverMap['supplierInvoiceStatus'] = 'ctd.supplier_invoice_status_id';
-      payload.fieldResolverMap['sigesit'] = 'ctd.user_id_driver';
+      payload.fieldResolverMap['branchLastId'] = 't7.branch_id';
+      payload.fieldResolverMap['transactionStatus'] =
+        't1.transaction_status_id';
+      payload.fieldResolverMap['supplierInvoiceStatus'] =
+        'ctd.supplier_invoice_status_id';
+      payload.fieldResolverMap['sigesit'] = 'cp.user_id_driver';
 
       await this.getReportData(payload, response, this.streamTransform);
     } catch (err) {
@@ -353,7 +354,7 @@ export class V2WebCodReportService {
       response.write(`${this.CodHeader.join(',')}\n`);
 
       // mapping field
-      payload.fieldResolverMap['statusDate'] = 't1.updated_time';
+      payload.fieldResolverMap['statusDate'] = 'ctd.updated_time';
       payload.fieldResolverMap['supplier'] = 't6.partner_id';
 
       await this.getReportData(payload, response, this.streamTransformCodFee);
@@ -366,7 +367,8 @@ export class V2WebCodReportService {
   static async exportSupplierInvoice(id: string, response) {
     try {
       const uuidv1 = require('uuid/v1');
-      const fileName = moment().format('YYYYMMDD') + '_COD_' + uuidv1() + '.csv';
+      const fileName =
+        moment().format('YYYYMMDD') + '_COD_' + uuidv1() + '.csv';
       response.setHeader(
         'Content-disposition',
         `attachment; filename=${fileName}`,
@@ -397,7 +399,10 @@ export class V2WebCodReportService {
         ['t1.parcel_note', 'parcelNote'],
       );
       q.where(e => e.codSupplierInvoiceId, w => w.equals(id));
-      q.andWhere(e => e.supplierInvoiceStatusId, w => w.equals(TRANSACTION_STATUS.DRAFT_INV));
+      q.andWhere(
+        e => e.supplierInvoiceStatusId,
+        w => w.equals(TRANSACTION_STATUS.DRAFT_INV),
+      );
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
       await q.stream(response, this.streamTransformSupplierInvoice);
