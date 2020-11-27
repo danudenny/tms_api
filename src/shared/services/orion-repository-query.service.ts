@@ -205,14 +205,15 @@ export class OrionRepositoryQueryService<
   }
 
   public async stream(response: any, transformFn: (data: any) => string): Promise<ReadStream> {
-    const compiledQueryBuilder = this.compileQueryParts();
-
-    const stream = await compiledQueryBuilder.stream();
-    stream
-      .pipe(OrionRepositoryQueryService.parser(transformFn))
-      .pipe(response);
-
-    return stream;
+    try {
+      const compiledQueryBuilder = this.compileQueryParts();
+      const stream = await compiledQueryBuilder.stream();
+      return stream
+        .pipe(OrionRepositoryQueryService.parser(transformFn))
+        .pipe(response);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   private static parser(transformFn) {

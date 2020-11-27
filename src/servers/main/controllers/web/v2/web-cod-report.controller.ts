@@ -5,7 +5,6 @@ import {
 import { ApiBearerAuth, ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
-import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sql-cod.service';
 import { V2WebCodReportService } from '../../../services/web/v2/web-cod-report.service';
 
 @ApiUseTags('Web COD Mark II')
@@ -61,6 +60,6 @@ export class V2WebCodReportController {
     @Param('supplierInvoiceId') supplierInvoiceId: string,
     @Res() outgoingHTTP,
   ) {
-    return V2WebCodReportService.exportSupplierInvoice(supplierInvoiceId, outgoingHTTP);
+    return await V2WebCodReportService.exportSupplierInvoice(supplierInvoiceId, outgoingHTTP);
   }
 }

@@ -406,8 +406,9 @@ export class V2WebCodReportService {
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
       await q.stream(response, this.streamTransformSupplierInvoice);
-    } catch (error) {
-      throw new ServiceUnavailableException(error.message);
+    } catch (err) {
+      console.error(err);
+      throw err;
     }
   }
 }
