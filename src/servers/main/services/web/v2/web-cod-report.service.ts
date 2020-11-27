@@ -423,6 +423,7 @@ export class V2WebCodReportService {
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
+    q.take(10);
     await q.stream(response, transformFn);
   }
 
@@ -440,6 +441,17 @@ export class V2WebCodReportService {
       response.writeHead(200, { 'Content-Type': 'text/csv' });
       response.flushHeaders();
       response.write(`${this.CodNONFeeHeader.join(',')}\n`);
+
+      // mapping field
+      payload.fieldResolverMap['statusDate'] = 't1.awb_status_final_date';
+      payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
+      payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
+      payload.fieldResolverMap['supplier'] = 't6.partner_id';
+      payload.fieldResolverMap['awbStatus'] = 't12.awb_status_name';
+      payload.fieldResolverMap['branchLastCode'] = 't7.branch_code';
+      payload.fieldResolverMap['transactionStatus'] = 't1.transaction_status_id';
+      payload.fieldResolverMap['supplierInvoiceStatus'] = 'ctd.supplier_invoice_status_id';
+      payload.fieldResolverMap['sigesit'] = 'ctd.user_id_driver';
 
       await this.getReportData(payload, response, this.streamTransform);
     } catch (err) {
@@ -459,6 +471,10 @@ export class V2WebCodReportService {
       response.writeHead(200, { 'Content-Type': 'text/csv' });
       response.flushHeaders();
       response.write(`${this.CodHeader.join(',')}\n`);
+
+      // mapping field
+      payload.fieldResolverMap['statusDate'] = 't1.awb_status_final_date';
+      payload.fieldResolverMap['supplier'] = 't6.partner_id';
 
       await this.getReportData(payload, response, this.streamTransformCodFee);
     } catch (err) {
