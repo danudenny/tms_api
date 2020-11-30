@@ -823,6 +823,9 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
+    payload.fieldResolverMap['nikDriver'] = 't2.nik';
+    payload.fieldResolverMap['vehicleNumber'] = 't1.vehicle_number';
+
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
@@ -866,6 +869,9 @@ export class WebDeliveryOutService {
       ['t2.fullname', 'nickname'],
       ['t3.branch_name', 'branchTo'],
       ['t4.url', 'url'],
+      ['t2.nik', 'nikDriver'],
+      ['t6.branch_name', 'branchFrom'],
+      ['t6.branch_id', 'branchIdFrom'],
     );
     // TODO: relation userDriver to Employee Driver
     q.innerJoin(e => e.doPodDetailBag, 't5', j =>
@@ -880,6 +886,8 @@ export class WebDeliveryOutService {
     q.leftJoin(e => e.attachment, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()));
 
     if (isHub) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB));
@@ -891,7 +899,7 @@ export class WebDeliveryOutService {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
       // q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     }
-    q.groupByRaw('t1.do_pod_id, t2.employee_id, t3.branch_name, t4.url');
+    q.groupByRaw('t1.do_pod_id, t2.employee_id, t3.branch_name, t4.url, t6.branch_name, t6.branch_id');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -920,6 +928,8 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['employeeName'] = 't2.fullname';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
+    payload.fieldResolverMap['nikDriver'] = 't2.nik';
+    payload.fieldResolverMap['vehicleNumber'] = 't1.vehicle_number';
     payload.fieldResolverMap['partnerLogisticName'] = `"partnerLogisticName"`;
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
@@ -954,6 +964,10 @@ export class WebDeliveryOutService {
       ['t1.description', 'description'],
       ['t2.fullname', 'employeeName'],
       ['t3.branch_name', 'branchName'],
+      ['t1.vehicle_number', 'vehicleNumber'],
+      ['t2.nik', 'nikDriver'],
+      ['t6.branch_id', 'branchIdFrom'],
+      ['t6.branch_name', 'branchFrom'],
       ['COUNT (t4.do_pod_id)', 'totalAwb'],
       [`
         CASE
@@ -971,6 +985,9 @@ export class WebDeliveryOutService {
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.leftJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -981,7 +998,7 @@ export class WebDeliveryOutService {
     q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH_AWB));
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
 
-    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name');
+    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name, t2.nik, t6.branch_id, t6.branch_name');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -1090,7 +1107,7 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
     payload.fieldResolverMap['awbNumber']   = 't2.awb_number';
-    payload.fieldResolverMap['awbSubstitute']   = 't1.awbSubstitute';
+    payload.fieldResolverMap['awbSubstitute'] = 't1.awb_substitute';
 
     const repo = new OrionRepositoryService(DoPodDetail, 't1');
     const q = repo.findAllRaw();

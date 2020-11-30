@@ -24,8 +24,8 @@ import {
 import moment = require('moment');
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { CodUpdateTransactionQueueService } from '../../../../queue/services/cod/cod-update-transaction-queue.service';
-import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { RedisService } from '../../../../../shared/services/redis.service';
+import { v1 as uuidv1 } from 'uuid';
 // #endregion
 export class V1WebCodBankStatementService {
 
@@ -52,9 +52,10 @@ export class V1WebCodBankStatementService {
 
     // upload file to aws s3
     if (file) {
+      const uuidString = uuidv1();
       const attachment = await AttachmentService.uploadFileBufferToS3(
         file.buffer,
-        file.originalname,
+        uuidString,
         file.mimetype,
         'bank-statement',
       );
@@ -335,6 +336,10 @@ export class V1WebCodBankStatementService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
     // validate data
+    if (payload.bankStatementId === '') {
+      throw new BadRequestException('Data tidak ditemukan !');
+    }
+
     const bankStatement = await CodBankStatement.findOne({
       select: ['codBankStatementId'],
       where: {
@@ -438,6 +443,10 @@ export class V1WebCodBankStatementService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
     // validate data
+    if (payload.bankStatementId === '') {
+      throw new BadRequestException('Data tidak ditemukan !');
+    }
+
     const bankStatement = await CodBankStatement.findOne({
       select: ['codBankStatementId'],
       where: {

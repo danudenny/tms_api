@@ -172,3 +172,13 @@ export class WebCodVoucherPayloadVm {
   @Type(() => String)
   awbNumbers: string[];
 }
+
+export class WebInsertCodPaymentPayloadVm {
+  @ApiModelProperty()
+  awbNumber: string;
+}
+
+export class WebCodTransactionRejectPayloadVm {
+  @ApiModelProperty()
+  transactionId: string;
+}

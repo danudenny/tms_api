@@ -62,6 +62,7 @@ import { TransactionStatusController } from './master/transaction-status.control
 import { BankAccountController } from './master/bank-account.controller';
 import { PackageTypeController } from './master/package-type.controller';
 import { CodUserToBranchController } from './master/cod-user-to-branch.controller';
+import { WebHubReportController } from './web/web-hub-report.controller';
 import { V2CodPaymentController } from './mobile/v2/mobile-cod-payment.controller';
 // #endregion
 @Module({
@@ -130,6 +131,7 @@ import { V2CodPaymentController } from './mobile/v2/mobile-cod-payment.controlle
     BankAccountController,
     PackageTypeController,
     CodUserToBranchController,
+    WebHubReportController,
   ],
 })
 export class MainServerControllersModule {}
