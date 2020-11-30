@@ -554,9 +554,8 @@ export class DoPodDetailPostMetaQueueService {
   }
   // #endregion mobile sync data ===============================================
 
-  // TODO: need refactoring
-  // Manual POD Sync
-
+  // #region Manual POD Sync
+  // TODO: to be remove
   public static async createJobByManualSync(
     awbItemId: number,
     awbStatusId: number,
@@ -686,7 +685,7 @@ export class DoPodDetailPostMetaQueueService {
       return DoPodDetailPostMetaQueueService.queue.add(obj);
     }
 
-  // Manual POD Sync
+  // TODO: to be remove
   public static async createJobByManualStatus(
     awbItemId: number,
     awbStatusId: number,
@@ -743,6 +742,103 @@ export class DoPodDetailPostMetaQueueService {
 
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
+
+  // Manual POD Status next-gen
+  public static async createJobV2ByManual(
+    awbItemId: number,
+    awbStatusId: number,
+    userId: number,
+    branchId: number,
+    reasonNote: string,
+    reasonId: number,
+    consigneeName: string,
+  ) {
+    // TODO: find awbStatusIdLastPublic on awb_status
+    const awbStatusIdLastPublic = AWB_STATUS.ON_PROGRESS;
+    const awbNote = reasonNote;
+    let employeeName = 'Admin';
+    let stringNote = 'Paket di kembalikan di {0} [{1}] - ({2}) {3}'; // default note problem
+
+    let noteBody = '';
+    let noteManual = '';
+    let reasonName = null;
+    // TODO: title case consigneeName
+    const receiverName = consigneeName;
+    // find employee name
+    const userDriverRepo = await SharedService.getDataUserEmployee(userId);
+    if (userDriverRepo) {
+      employeeName = userDriverRepo.employee.employeeName;
+    }
+
+    // TODO: handle RTS with data note on db
+    if (awbStatusId == AWB_STATUS.RTS) {
+      noteManual = `; catatan: penerima oleh ${receiverName} [${reasonNote}] (Status Manual by ${employeeName})`;
+    } else {
+      noteManual = `; catatan: ${reasonNote} (Status Manual by ${employeeName})`;
+    }
+
+    const awbStatus = await SharedService.getDataAwbStatus(awbStatusId);
+    if (awbStatus) {
+      // Success DLV
+      if (awbStatusId == AWB_STATUS.DLV) {
+        const reason = await Reason.findOne({
+          where: { reasonId },
+          cache: true,
+        });
+        const reasonCode = reason ? reason.reasonCode : 'YBS';
+        reasonName = reason ? reason.reasonName : 'Yang Bersangkutan';
+        stringNote = 'Paket diterima oleh [{0} - ({1}) {2}]';
+        noteBody = SharedService.stringInject(stringNote, [
+          consigneeName,
+          reasonCode,
+          reasonName,
+        ]);
+      } else {
+        // Problem with data note
+        if (awbStatus.note) {
+          noteBody = awbStatus.note;
+        } else {
+          // Problem without data note
+          const branch = await SharedService.getDataBranchCity(
+            branchId,
+          );
+          const branchName = branch ? branch.branchName : 'Kantor Pusat';
+          const cityName = branch && branch.district
+            ? branch.district.city.cityName
+            : 'Jakarta';
+
+          noteBody = SharedService.stringInject(stringNote, [
+            cityName,
+            branchName,
+            awbStatus.awbStatusName,
+            awbStatus.awbStatusTitle,
+          ]);
+        }
+      }
+
+      // provide data
+      const obj = {
+        awbStatusId,
+        awbStatusIdLastPublic,
+        awbItemId,
+        userId,
+        branchId,
+        userIdCreated: userId,
+        userIdUpdated: userId,
+        employeeIdDriver: null,
+        timestamp: moment().toDate(),
+        noteInternal: noteBody + noteManual,
+        notePublic: noteBody,
+        receiverName,
+        awbNote,
+        reasonId,
+        reasonName,
+      };
+
+      return DoPodDetailPostMetaQueueService.queue.add(obj);
+    }
+  }
+  // #endregion
 
   // NOTE: general purpose (IN / OUT)
   public static async createJobByAwbUpdateStatus(
@@ -936,6 +1032,7 @@ export class DoPodDetailPostMetaQueueService {
         awbStatusId,
         isDeleted: false,
       },
+      cache: true,
     });
     return awbStatus;
   }
