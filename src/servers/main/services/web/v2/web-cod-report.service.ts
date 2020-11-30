@@ -267,14 +267,14 @@ export class V2WebCodReportService {
     // get gerai terakhir resi di statuskan
     q.innerJoin(e => e.branchLast, 't7');
 
-    // Data Jika sudah dilakukan DLV - COD
-    q.innerJoin(e => e.codPayment, 'cp');
-    q.innerJoin(e => e.codPayment.branchFinal, 'fin');
-
     // Data Jika sudah ada transaksi
     q.innerJoin(e => e.codTransactionDetail, 'ctd', j =>
       j.andWhere(e => e.codTransactionId, w => w.isNotNull()),
     );
+
+    // Data Jika sudah dilakukan DLV - COD
+    q.innerJoin(e => e.codPayment, 'cp');
+    q.innerJoin(e => e.codPayment.branchFinal, 'fin');
 
     // get perwakilan di gerai terkhir
     q.leftJoin(e => e.branchLast.representative, 'rep');
@@ -374,14 +374,14 @@ export class V2WebCodReportService {
     // get gerai terakhir resi di statuskan
     q.innerJoin(e => e.branchLast, 't7');
 
-    // Data Jika sudah dilakukan DLV - COD
-    q.leftJoin(e => e.codPayment, 'cp');
-    q.leftJoin(e => e.codPayment.branchFinal, 'fin');
-
     // Data Jika sudah ada transaksi
     q.leftJoin(e => e.codTransactionDetail, 'ctd', j =>
       j.andWhere(e => e.codTransactionId, w => w.isNotNull()),
     );
+
+    // Data Jika sudah dilakukan DLV - COD
+    q.leftJoin(e => e.codPayment, 'cp');
+    q.leftJoin(e => e.codPayment.branchFinal, 'fin');
 
     // get perwakilan di gerai terkhir
     q.leftJoin(e => e.branchLast.representative, 'rep');
