@@ -268,11 +268,11 @@ export class V2WebCodReportService {
     q.innerJoin(e => e.branchLast, 't7');
 
     // Data Jika sudah dilakukan DLV - COD
-    q.leftJoin(e => e.codPayment, 'cp');
-    q.leftJoin(e => e.codPayment.branchFinal, 'fin');
+    q.innerJoin(e => e.codPayment, 'cp');
+    q.innerJoin(e => e.codPayment.branchFinal, 'fin');
 
     // Data Jika sudah ada transaksi
-    q.leftJoin(e => e.codTransactionDetail, 'ctd', j =>
+    q.innerJoin(e => e.codTransactionDetail, 'ctd', j =>
       j.andWhere(e => e.codTransactionId, w => w.isNotNull()),
     );
 
@@ -284,12 +284,12 @@ export class V2WebCodReportService {
     q.leftJoin(e => e.awb.districtTo, 't9');
 
     // User Update Transaction
-    q.leftJoin(e => e.codTransactionDetail.userAdmin, 'upduser');
-    q.leftJoin(e => e.codTransactionDetail.userAdmin.employee, 'eupduser');
+    q.innerJoin(e => e.codTransactionDetail.userAdmin, 'upduser');
+    q.innerJoin(e => e.codTransactionDetail.userAdmin.employee, 'eupduser');
 
     // User Driver Sigesit
-    q.leftJoin(e => e.codPayment.userDriver, 'driveruser');
-    q.leftJoin(e => e.codPayment.userDriver.employee, 'edriveruser');
+    q.innerJoin(e => e.codPayment.userDriver, 'driveruser');
+    q.innerJoin(e => e.codPayment.userDriver.employee, 'edriveruser');
 
     // Transaction Status & Invoice Status
     q.leftJoin(e => e.transactionStatus, 't10');
