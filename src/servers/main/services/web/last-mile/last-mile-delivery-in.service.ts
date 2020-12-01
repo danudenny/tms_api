@@ -358,7 +358,7 @@ export class LastMileDeliveryInService {
 
       if (notScanIn && holdRedis) {
         // NOTE: handle status cancel delivery
-        const statusFinal = [AWB_STATUS.RTN, AWB_STATUS.CANCEL];
+        const statusFinal = [AWB_STATUS.CANCEL];
         if (statusFinal.includes(awb.awbStatusIdLast)) {
           // handle message
           const desc =
