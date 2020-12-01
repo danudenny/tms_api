@@ -94,7 +94,7 @@ export class BranchService {
       const branchCodeAll = [];
 
       data.forEach(el => {
-        branchIdAll.push(el.branchId);
+        branchIdAll.push(Number(el.branchId));
         branchCodeAll.push(el.branchCode);
       });
 
