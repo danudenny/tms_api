@@ -527,7 +527,8 @@ export class HubMonitoringService {
       LEFT JOIN (
         SELECT
           ai.awb_id,
-          dpdb.bag_number
+          dpdb.bag_number,
+          br.branch_id
         FROM do_pod dp
         INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
         INNER JOIN branch br ON br.branch_id = dp.branch_id_to AND br.is_deleted = FALSE
