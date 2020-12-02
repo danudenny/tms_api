@@ -497,13 +497,17 @@ export class HubMonitoringService {
           WHEN bag_sortir.awb_id IS NOT NULL THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
           ELSE doh.bag_number
         END AS "Nomor Gabungan",
+        "IN" as "Status IN",
+        CASE
+          WHEN bag_sortir.awb_id IS NOT NULL THEN 'SORT'
+        END AS "Status SORT",
         CASE
           WHEN scan_out.awb_id IS NOT NULL THEN 'OUT'
-          WHEN bag_sortir.awb_id IS NOT NULL THEN 'SORT'
-          ELSE 'IN'
-        END AS "Status",
+        END AS "Status OUT",
         CONCAT(u.first_name, ' ', u.last_name) AS "User",
-        TO_CHAR(dohd.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi"
+        TO_CHAR(dohd.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi IN",
+        TO_CHAR(bag_sortir.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi SORT",
+        TO_CHAR(scan_out.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi OUT"
       FROM
         dropoff_hub doh
       INNER JOIN branch br ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
@@ -517,7 +521,8 @@ export class HubMonitoringService {
         SELECT
           bi.bag_seq,
           ai.awb_id,
-          b.bag_number
+          b.bag_number,
+          bi.created_time
         FROM bag_item_awb bia
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
         INNER JOIN bag_item bi ON bi.bag_item_id = bia.bag_item_id AND bi.is_deleted = FALSE
@@ -528,7 +533,8 @@ export class HubMonitoringService {
         SELECT
           ai.awb_id,
           dpdb.bag_number,
-          br.branch_id
+          br.branch_id,
+          dpdb.created_time
         FROM do_pod dp
         INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
         INNER JOIN branch br ON br.branch_id = dp.branch_id_to AND br.is_deleted = FALSE
