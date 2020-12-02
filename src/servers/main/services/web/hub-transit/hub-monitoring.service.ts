@@ -560,7 +560,9 @@ export class HubMonitoringService {
         doh.bag_number,
         u.first_name,
         u.last_name,
-        dohd.created_time;
+        dohd.created_time,
+        bag_sortir.created_time,
+        scan_out.created_time;
     `;
     return query;
   }
