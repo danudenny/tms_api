@@ -38,4 +38,9 @@ export class MasterDataController {
   public async syncRoleTms(@Body() payload: any) {
     return MasterDataService.syncRoleTms(payload);
   }
+
+  @Post('sunfish/employee')
+  public async sunfishEmployee(@Body() payload: any) {
+    return MasterDataService.sunfishEmployee(payload);
+  }
 }
