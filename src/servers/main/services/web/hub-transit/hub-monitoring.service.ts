@@ -524,7 +524,7 @@ export class HubMonitoringService {
         INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE AND b.branch_id_to IS NOT NULL
         WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
       ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
-      LEFT JOIN (
+      LEFT JOIN  (
         SELECT
           ai.awb_id,
           dpdb.bag_number,
