@@ -49,6 +49,7 @@ import { BagRepresentativeScanOutHubQueueService } from './services/bag-represen
 import { BagScanVendorQueueService } from './services/bag-scan-vendor-queue.service';
 import { CodSqlExportMongoQueueService } from './services/cod/cod-sql-export-queue.service';
 import { AwbNotificationMailQueueService } from './services/notification/awb-notification-mail-queue.service';
+import { AwbSunfishQueueService } from './services/integration/awb-sunfish-queue.service';
 // #endregion import
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -148,6 +149,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       CreateBagFirstScanHubQueueService.boot();
       CreateBagAwbScanHubQueueService.boot();
       AwbNotificationMailQueueService.boot();
+      AwbSunfishQueueService.boot();
     }
 
     if (serverConfig.bullCod) {

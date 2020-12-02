@@ -175,7 +175,10 @@ export class WebAwbDeliverService {
     const finalStatus = [AWB_STATUS.DLV];
     if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
       const awbStatus = await AwbStatus.findOne({
-        where: { awbStatusId: doPodDeliverHistory.awbStatusId },
+        where: {
+          awbStatusId: doPodDeliverHistory.awbStatusId,
+          isDeleted: false,
+        },
         cache: true,
       });
       // #region transaction data
@@ -245,17 +248,14 @@ export class WebAwbDeliverService {
 
       // NOTE: queue by Bull need refactoring
       const reasonId = delivery.reasonId == 0 ? null : delivery.reasonId;
-      DoPodDetailPostMetaQueueService.createJobByManualSync(
+      DoPodDetailPostMetaQueueService.createJobV2ByManual(
         delivery.awbItemId,
         delivery.awbStatusId,
         authMeta.userId,
         permissonPayload.branchId,
-        authMeta.userId,
-        reasonId,
         delivery.reasonNotes,
+        reasonId,
         delivery.consigneeNameNote,
-        awbStatus.awbStatusName,
-        awbStatus.awbStatusTitle,
       );
       // NOTE: mail notification
       AwbNotificationMailQueueService.perform(
@@ -288,12 +288,14 @@ export class WebAwbDeliverService {
         );
       }
       // TODO: queue by Bull need refactoring
-      DoPodDetailPostMetaQueueService.createJobByManualStatus(
+      DoPodDetailPostMetaQueueService.createJobV2ByManual(
         delivery.awbItemId,
         delivery.awbStatusId,
         userId,
         branchId,
         delivery.reasonNotes,
+        null,
+        null,
       );
       // NOTE: mail notification
       AwbNotificationMailQueueService.perform(
