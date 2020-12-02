@@ -128,11 +128,14 @@ export class V1WebAwbCodService {
       ['t8.no_reference', 'noReference'],
       ['t1.transaction_status_id', 'transactionStatusId'],
       ['t9.status_title', 'transactionStatusName'],
+      ['coalesce(t8.branch_id, t1.branch_id_last)', 'branchIdCopy'],
+      ['coalesce(t12.branch_name, t6.branch_name)', 'branchNameCopy'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse())
-      .andWhere(e => e.isCod, w => w.isTrue()),
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
     q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
@@ -142,6 +145,10 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.awb.packageType, 't5');
 
     q.innerJoin(e => e.branchLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.branchLast.representative, 'rep', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -276,8 +283,9 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse())
-      .andWhere(e => e.isCod, w => w.isTrue()),
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
     q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
@@ -287,6 +295,10 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.awb.packageType, 't5');
 
     q.innerJoin(e => e.branchLast, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.branchLast.representative, 'rep', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
