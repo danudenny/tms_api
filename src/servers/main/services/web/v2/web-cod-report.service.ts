@@ -118,9 +118,7 @@ export class V2WebCodReportService {
       '-',
       '-',
       doc.updatedTime
-        ? moment.utc(doc.updatedTime).format('YYYY-MM-DD HH:mm')
-        : doc.updatedTime
-        ? moment.utc(doc.updatedTime).format('YYYY-MM-DD HH:mm')
+        ? moment(doc.updatedTime).format('YYYY-MM-DD HH:mm')
         : null,
       doc.updUser ? doc.updUser : '-',
     ];
@@ -158,9 +156,7 @@ export class V2WebCodReportService {
         '-',
         '-',
         d.updatedTime
-          ? moment.utc(d.updatedTime).format('YYYY-MM-DD HH:mm')
-          : d.updatedTime
-          ? moment.utc(d.updatedTime).format('YYYY-MM-DD HH:mm')
+          ? moment(d.updatedTime).format('YYYY-MM-DD HH:mm')
           : null,
         d.updUser ? d.updUser : '-',
       ],
