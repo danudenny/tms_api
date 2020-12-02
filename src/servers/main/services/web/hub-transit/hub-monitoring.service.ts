@@ -497,7 +497,7 @@ export class HubMonitoringService {
           WHEN bag_sortir.awb_id IS NOT NULL THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
           ELSE doh.bag_number
         END AS "Nomor Gabungan",
-        "IN" as "Status IN",
+        'IN' as "Status IN",
         CASE
           WHEN bag_sortir.awb_id IS NOT NULL THEN 'SORT'
         END AS "Status SORT",
