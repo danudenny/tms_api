@@ -121,7 +121,7 @@ export class V1WebAwbCodService {
       ['t2.total_cod_value', 'codValue'],
       ['t6.representative_id', 'representativeId'],
       ['t4.user_id', 'userIdDriver'],
-      ['t4.first_name', 'driverName'],
+      [`CONCAT(driver.nik, ' - ', t4.first_name)`, 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
       ['t8.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       [`t8.cod_payment_method`, 'codPaymentMethod'],
@@ -166,6 +166,10 @@ export class V1WebAwbCodService {
     );
 
     q.leftJoin(e => e.codPayment.userDriver, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codPayment.userDriver.employee, 'driver', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -270,7 +274,7 @@ export class V1WebAwbCodService {
       ['t2.total_cod_value', 'codValue'],
       ['t6.representative_id', 'representativeId'],
       ['t4.user_id', 'userIdDriver'],
-      ['t4.first_name', 'driverName'],
+      [`CONCAT(driver.nik, ' - ', t4.first_name)`, 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
       ['t8.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       [`t8.cod_payment_method`, 'codPaymentMethod'],
@@ -313,6 +317,10 @@ export class V1WebAwbCodService {
     );
 
     q.leftJoin(e => e.codPayment.userDriver, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codPayment.userDriver.employee, 'driver', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
