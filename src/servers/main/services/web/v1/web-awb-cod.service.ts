@@ -87,6 +87,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
     payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
+    payload.fieldResolverMap['representativeId'] = 't6.representative_id';
 
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
@@ -147,10 +148,6 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.branchLast, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
-    // q.leftJoin(e => e.branchLast.representative, 'rep', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
 
     q.innerJoin(e => e.awbStatus, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -239,6 +236,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
     payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
+    payload.fieldResolverMap['representativeId'] = 't6.representative_id';
 
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
@@ -297,10 +295,6 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.branchLast, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
-    // q.leftJoin(e => e.branchLast.representative, 'rep', j =>
-    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    // );
 
     q.innerJoin(e => e.awbStatus, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),

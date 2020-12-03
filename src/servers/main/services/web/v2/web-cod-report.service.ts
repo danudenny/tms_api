@@ -91,13 +91,13 @@ export class V2WebCodReportService {
   static streamTransform(doc) {
     const values = [
       V2WebCodReportService.strReplaceFunc(doc.partnerName),
-      doc.awbDate ? moment.utc(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
+      doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
       `'${doc.awbNumber}`,
       doc.parcelValue,
       doc.codValue,
       doc.codFee ? doc.codFee : '-',
       doc.codValue,
-      doc.podDate ? moment.utc(doc.podDate).format('YYYY-MM-DD HH:mm') : null,
+      doc.podDate ? moment(doc.podDate).format('YYYY-MM-DD HH:mm') : null,
       V2WebCodReportService.strReplaceFunc(doc.consigneeName),
       doc.paymentMethod,
       doc.transactionStatus,
@@ -125,18 +125,18 @@ export class V2WebCodReportService {
 
     return `${values.join(',')} \n`;
   }
-
+nodem;
   static streamTransformCodFee(d) {
     const values = [
       [
         V2WebCodReportService.strReplaceFunc(d.partnerName),
-        d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
+        d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
         V2WebCodReportService.strReplaceFunc(d.awbNumber),
         d.parcelValue,
         d.codValue,
         d.codFee ? d.codFee : '-',
         d.codValue,
-        d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
         V2WebCodReportService.strReplaceFunc(d.consigneeName),
         V2WebCodReportService.strReplaceFunc(d.paymentMethod),
         'PAID',
@@ -169,13 +169,13 @@ export class V2WebCodReportService {
     const values = [
       [
         V2WebCodReportService.strReplaceFunc(d.partnerName),
-        d.awbDate ? moment.utc(d.awbDate).format('YYYY-MM-DD') : null,
+        d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD') : null,
         V2WebCodReportService.strReplaceFunc(d.awbNumber),
         d.parcelValue,
         d.codValue,
         d.codFee,
         d.codValue,
-        d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
         V2WebCodReportService.strReplaceFunc(d.consigneeName),
         'DRAFT INVOICE', // supplier invoice status
         'DLV',
