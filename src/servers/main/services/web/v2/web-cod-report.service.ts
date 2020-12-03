@@ -125,7 +125,7 @@ export class V2WebCodReportService {
 
     return `${values.join(',')} \n`;
   }
-nodem;
+
   static streamTransformCodFee(d) {
     const values = [
       [
