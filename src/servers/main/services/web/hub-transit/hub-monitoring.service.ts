@@ -489,80 +489,87 @@ export class HubMonitoringService {
     filterQuery += whereQuery;
 
     const query = `
-      SELECT
-        br.branch_name AS "Lokasi Hub",
-        CONCAT('="',dohd.awb_number, '"') AS "Nomor Resi",
-        CASE
-          WHEN scan_out.awb_id IS NOT NULL THEN scan_out.bag_number
-          WHEN bag_sortir.awb_id IS NOT NULL THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
-          ELSE doh.bag_number
-        END AS "Nomor Gabungan",
-        'IN' as "Status IN",
-        CASE
-          WHEN bag_sortir.awb_id IS NOT NULL THEN 'SORT'
-        END AS "Status SORT",
-        CASE
-          WHEN scan_out.awb_id IS NOT NULL THEN 'OUT'
-        END AS "Status OUT",
-        CONCAT(u.first_name, ' ', u.last_name) AS "User",
-        TO_CHAR(dohd.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi IN",
-        TO_CHAR(bag_sortir.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi SORT",
-        TO_CHAR(scan_out.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi OUT"
-      FROM
-        dropoff_hub doh
-      INNER JOIN branch br ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
-      INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
-      INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
-      INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
-      INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-      INNER JOIN users u ON u.user_id = dohd.user_id_created AND u.is_deleted = FALSE
-      LEFT JOIN
+    SELECT
+      "Lokasi Hub",
+      "Nomor Resi",
+      "Nomor Gabungan",
+      "User",
+      s.code as "Status",
+      CASE WHEN s.code = 'IN' THEN "Tanggal Transaksi IN"
+        WHEN s.code = 'SORT' THEN "Tanggal Transaksi SORT"
+        WHEN s.code = 'OUT' THEN "Tanggal Transaksi OUT"
+      END as "Tanggal Transaksi"
+    FROM
       (
         SELECT
-          bi.bag_seq,
-          ai.awb_id,
-          b.bag_number,
-          bi.created_time
-        FROM bag_item_awb bia
-        INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
-        INNER JOIN bag_item bi ON bi.bag_item_id = bia.bag_item_id AND bi.is_deleted = FALSE
-        INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE AND b.branch_id_to IS NOT NULL
-        WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
-      ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
-      LEFT JOIN  (
-        SELECT
-          ai.awb_id,
-          dpdb.bag_number,
-          br.branch_id,
-          dpdb.created_time
-        FROM do_pod dp
-        INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
-        INNER JOIN branch br ON br.branch_id = dp.branch_id_to AND br.is_deleted = FALSE
-        INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
-        INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
-        WHERE
+          br.branch_name AS "Lokasi Hub",
+          CONCAT('="',dohd.awb_number, '"') AS "Nomor Resi",
+          CASE
+            WHEN scan_out.awb_id IS NOT NULL THEN scan_out.bag_number
+            WHEN bag_sortir.awb_id IS NOT NULL THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
+            ELSE doh.bag_number
+          END AS "Nomor Gabungan",
+          CONCAT('IN', (CASE WHEN bag_sortir.awb_id IS NOT NULL THEN ',SORT' END), (CASE WHEN scan_out.awb_id IS NOT NULL THEN ',OUT' END)) "Status",
+          CONCAT(u.first_name, ' ', u.last_name) AS "User",
+          TO_CHAR(dohd.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi IN",
+          TO_CHAR(bag_sortir.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi SORT",
+          TO_CHAR(scan_out.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi OUT"
+        FROM
+          dropoff_hub doh
+        INNER JOIN branch br ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
+        INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
+        INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
+        INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
+        INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
+        INNER JOIN users u ON u.user_id = dohd.user_id_created AND u.is_deleted = FALSE
+        LEFT JOIN
+        (
+          SELECT
+            bi.bag_seq,
+            ai.awb_id,
+            b.bag_number,
+            bi.created_time
+          FROM bag_item_awb bia
+          INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+          INNER JOIN bag_item bi ON bi.bag_item_id = bia.bag_item_id AND bi.is_deleted = FALSE
+          INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE AND b.branch_id_to IS NOT NULL
+          WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
+        ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
+        LEFT JOIN  (
+          SELECT
+            ai.awb_id,
+            dpdb.bag_number,
+            br.branch_id,
+            dpdb.created_time
+          FROM do_pod dp
+          INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
+          INNER JOIN branch br ON br.branch_id = dp.branch_id_to AND br.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
+          INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+          WHERE
           dp.is_deleted = FALSE
           AND dp.do_pod_type = ${POD_TYPE.OUT_HUB}
           AND dp.user_id_driver IS NOT NULL AND dp.branch_id_to IS NOT NULL
           ${whereSubQueryScanOut ? `AND ${whereSubQueryScanOut}` : ''}
-      ) scan_out ON dohd.awb_id = scan_out.awb_id
-      WHERE
-        doh.branch_id IS NOT NULL
-        ${whereQuery ? `AND ${whereQuery}` : ''}
-        ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''}
-      GROUP BY br.branch_name,
-        dohd.awb_number,
-        scan_out.bag_number,
-        bag_sortir.bag_number,
-        bag_sortir.bag_seq,
-        scan_out.awb_id,
-        bag_sortir.awb_id,
-        doh.bag_number,
-        u.first_name,
-        u.last_name,
-        dohd.created_time,
-        bag_sortir.created_time,
-        scan_out.created_time;
+        ) scan_out ON dohd.awb_id = scan_out.awb_id
+        WHERE
+          doh.branch_id IS NOT NULL
+          ${whereQuery ? `AND ${whereQuery}` : ''}
+          ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''}
+        GROUP BY br.branch_name,
+          dohd.awb_number,
+          scan_out.bag_number,
+          bag_sortir.bag_number,
+          bag_sortir.bag_seq,
+          scan_out.awb_id,
+          bag_sortir.awb_id,
+          doh.bag_number,
+          u.first_name,
+          u.last_name,
+          dohd.created_time,
+          bag_sortir.created_time,
+          scan_out.created_time
+      ) t1, unnest(string_to_array("Status" , ','))  s(code);
     `;
     return query;
   }
