@@ -6,6 +6,7 @@ import { ApiBearerAuth, ApiUseTags } from '../../../../../shared/external/nestjs
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { V2WebCodReportService } from '../../../services/web/v2/web-cod-report.service';
+import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('Web COD Mark II')
 @Controller('web/v2/cod/report')
@@ -41,15 +42,15 @@ export class V2WebCodReportController {
   // TODO: handle download from list awb cod
   @Post('awb/stream')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
   public async awbCodAdminDownload(
     @Body() payload: BaseMetaPayloadVm,
     @Res() outgoingHTTP,
   ) {
-    return await V2WebCodReportService.printNonCodSupplierInvoice(
+    return await V2WebCodReportService.exportAwb(
       payload,
       outgoingHTTP,
-      'resicod',
     );
   }
 
