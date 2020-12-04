@@ -307,7 +307,7 @@ export class V2WebCodReportService {
       // get gerai terakhir resi di statuskan
       q.innerJoin(e => e.branchLast, 't7');
 
-      // Data Jika sudah ada transaksi
+      // Data Jika sudah ada transaksi & Transaction Status
       q.innerJoin(e => e.codTransactionDetail, 'ctd', j =>
         j.andWhere(e => e.codTransactionId, w => w.isNotNull()),
       );
@@ -332,8 +332,7 @@ export class V2WebCodReportService {
       q.innerJoin(e => e.codPayment.userDriver, 'driveruser');
       q.innerJoin(e => e.codPayment.userDriver.employee, 'edriveruser');
 
-      // Transaction Status & Invoice Status
-      q.leftJoin(e => e.transactionStatus, 't10');
+      // Invoice Status
       q.leftJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
 
       // LAST STATUS
@@ -430,7 +429,7 @@ export class V2WebCodReportService {
       // get gerai terakhir resi di statuskan
       q.innerJoin(e => e.branchLast, 't7');
 
-      // Data Jika sudah ada transaksi
+      // Data Jika sudah ada transaksi & Transaction Status
       q.leftJoin(e => e.codTransactionDetail, 'ctd', j =>
         j.andWhere(e => e.codTransactionId, w => w.isNotNull()),
       );
@@ -455,8 +454,7 @@ export class V2WebCodReportService {
       q.leftJoin(e => e.codPayment.userDriver, 'driveruser');
       q.leftJoin(e => e.codPayment.userDriver.employee, 'edriveruser');
 
-      // Transaction Status & Invoice Status
-      q.leftJoin(e => e.transactionStatus, 't10');
+      // Invoice Status
       q.leftJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
 
       // LAST STATUS
