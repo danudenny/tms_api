@@ -270,7 +270,7 @@ export class V2WebCodReportService {
         ['t3.cod_value', 'codValue'],
         ['cp.updated_time', 'podDate'],
         ['cp.cod_payment_method', 'paymentMethod'],
-        ['t10.status_title', 'transactionStatus'],
+        ['t14.status_title', 'transactionStatus'],
         ['t11.status_name', 'supplierInvoiceStatus'],
         ['t12.awb_status_title', 'trackingStatus'],
         ['t13.awb_status_title', 'trackingStatusFinal'],
@@ -311,6 +311,7 @@ export class V2WebCodReportService {
       q.innerJoin(e => e.codTransactionDetail, 'ctd', j =>
         j.andWhere(e => e.codTransactionId, w => w.isNotNull()),
       );
+      q.innerJoin(e => e.codTransactionDetail.transactionStatus, 't14');
 
       // Data Jika sudah dilakukan DLV - COD
       q.innerJoin(e => e.codPayment, 'cp');
@@ -392,7 +393,7 @@ export class V2WebCodReportService {
         ['t3.cod_value', 'codValue'],
         ['cp.updated_time', 'podDate'],
         ['cp.cod_payment_method', 'paymentMethod'],
-        ['t10.status_title', 'transactionStatus'],
+        ['t14.status_title', 'transactionStatus'],
         ['t11.status_name', 'supplierInvoiceStatus'],
         ['t12.awb_status_title', 'trackingStatus'],
         ['t13.awb_status_title', 'trackingStatusFinal'],
@@ -433,6 +434,7 @@ export class V2WebCodReportService {
       q.leftJoin(e => e.codTransactionDetail, 'ctd', j =>
         j.andWhere(e => e.codTransactionId, w => w.isNotNull()),
       );
+      q.leftJoin(e => e.codTransactionDetail.transactionStatus, 't14');
 
       // Data Jika sudah dilakukan DLV - COD
       q.leftJoin(e => e.codPayment, 'cp');
