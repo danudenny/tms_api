@@ -18,7 +18,6 @@ import { ConfigService } from '../../../../shared/services/config.service';
 import moment = require('moment');
 import axios from 'axios';
 import { Role } from '../../../../shared/orm-entity/role';
-import { IsNull } from 'typeorm';
 
 @Injectable()
 export class MasterDataService {
@@ -446,18 +445,8 @@ export class MasterDataService {
               }
 
               let district_id_home = 0;
-              if (item.kota_kabupaten_tinggal !== '') {
-                const res = await client.query(`
-                  SELECT district_id
-                  FROM district
-                  WHERE district_name = $1 AND is_deleted=false
-                `, [item.kota_kabupaten_tinggal]);
-
-                if (res && res.rows && res.rows.length && res.rows.length > 0) {
-                  for (const r of res.rows) {
-                    district_id_home = r.district_id;
-                  }
-                }
+              if (item.kecamatan_tinggal !== '') {
+                district_id_home = await this.getDistrictId(item.kecamatan_tinggal);
               }
 
               let marital_status = '';
@@ -472,18 +461,8 @@ export class MasterDataService {
               }
 
               let district_id_id_card = 0;
-              if (item.kota_kabupaten_sesuai !== '') {
-                const res = await client.query(`
-                  SELECT district_id
-                  FROM district
-                  WHERE district_name = $1 AND is_deleted=false
-                `, [item.kota_kabupaten_sesuai]);
-
-                if (res && res.rows && res.rows.length && res.rows.length > 0) {
-                  for (const r of res.rows) {
-                    district_id_id_card = r.district_id;
-                  }
-                }
+              if (item.kecamatan_sesuai !== '') {
+                district_id_id_card = await this.getDistrictId(item.kecamatan_sesuai);
               }
 
               const employee_type = item.tipe.toLowerCase();
@@ -502,87 +481,35 @@ export class MasterDataService {
               } else if (employee_type == 'outsource') {
                 is_outsource = true;
               }
-              // else if (employee_type == 'INTERNSHIP') {
+              // else if (employee_type == 'internship') {
               //   employee_type_id = 6;
-              // } else if (employee_type == 'PROBATION2') {
+              // } else if (employee_type == 'probation2') {
               //   employee_type_id = 7;
               // }
 
               let employee_role_id = 0;
               if (item.pangkat !== '') {
-                const res = await client.query(`
-                  SELECT employee_role_id
-                  FROM employee_role
-                  WHERE employee_role_name = $1 AND is_deleted=false
-                `, [item.pangkat]);
-
-                if (res && res.rows && res.rows.length && res.rows.length > 0) {
-                  for (const r of res.rows) {
-                    employee_role_id = r.employee_role_id;
-                  }
-                }
+                employee_role_id = await this.getEmployeeRoleId(item.pangkat);
               }
 
               let branch_id = 0;
               if (item.kantor !== '') {
-                const res = await client.query(`
-                  SELECT branch_id
-                  FROM branch
-                  WHERE branch_name = $1 AND is_deleted=false
-                `, [item.kantor]);
-
-                if (res && res.rows && res.rows.length && res.rows.length > 0) {
-                  for (const r of res.rows) {
-                    branch_id = r.branch_id;
-                  }
-                }
+                branch_id = await this.getBranchId(item.kantor);
               }
 
               let department_id = 0;
               if (item.department !== '') {
-                const res = await client.query(`
-                  SELECT department_id
-                  FROM department
-                  WHERE department_name = $1 AND is_deleted=false
-                `, [item.department]);
-
-                if (res && res.rows && res.rows.length && res.rows.length > 0) {
-                  for (const r of res.rows) {
-                    department_id = r.department_id;
-                  }
-                }
+                department_id = await this.getDepartmentId(item.department);
               }
 
               let division_id = 0;
               if (item.divisi !== '') {
-                const res = await client.query(`
-                  SELECT division_id
-                  FROM division
-                  WHERE division_name = $1 AND is_deleted=false
-                `, [item.divisi]);
-
-                if (res && res.rows && res.rows.length && res.rows.length > 0) {
-                  for (const r of res.rows) {
-                    division_id = r.division_id;
-                  }
-                }
+                division_id = await this.getDivisionId(item.divisi);
               }
 
               let bank_id = 0;
               if (item.cabang_bank !== '') {
-                const res = await client.query(`
-                  SELECT bank_id
-                  FROM bank
-                  WHERE bank_name ILIKE '%${item.cabang_bank}%' AND is_deleted=false
-                  ORDER BY bank_code ASC
-                  LIMIT 1
-                `);
-
-                if (res && res.rows && res.rows.length && res.rows.length > 0) {
-                  for (const r of res.rows) {
-                    bank_id = r.bank_id;
-                  }
-                }
+                bank_id = await this.getBankId(item.cabang_bank);
               }
 
               let number_of_child = 0;
@@ -602,19 +529,9 @@ export class MasterDataService {
                 gender = 'male';
               }
 
-              let country_id = 0;
+              let country_id_nationality = 0;
               if (item.kewarganegaraan !== '') {
-                const res = await client.query(`
-                  SELECT country_id
-                  FROM country
-                  WHERE country_name = $1 AND is_deleted=false
-                `, [item.kewarganegaraan]);
-
-                if (res && res.rows && res.rows.length && res.rows.length > 0) {
-                  for (const r of res.rows) {
-                    country_id = r.country_id;
-                  }
-                }
+                country_id_nationality = await this.getCountryId(item.kewarganegaraan);
               }
 
               let status_employee = 10;
@@ -628,18 +545,17 @@ export class MasterDataService {
               }
 
               const r_employee_id = await client.query(`
-              SELECT employee_id FROM employee
-              WHERE nik = $1 AND is_deleted=false
+                SELECT employee_id FROM employee
+                WHERE nik = $1 AND is_deleted=false
               `, [item.nik]);
-              console.log(item.nik);
-              // console.log(r_employee_id.rows[0].employee_id);
+              // console.log(item.nik);
 
               if (r_employee_id && r_employee_id.rows && r_employee_id.rows.length && r_employee_id.rows.length > 0) {
                 const employee_id = r_employee_id.rows[0].employee_id;
 
                 if (err_code == 0) {
                 // Update Employee
-                await client.query(queryUpdateEmployee, [employee_id, item.nama_lengkap, gender, item.tempat_lahir, moment(item.tanggal_lahir).format('YYYY-MM-DD'), religion, marital_status, district_id_home, item.alamat_tinggal, item.kode_pos_tinggal, item.telepon, item.email, employee_type_id, moment(item.tanggal_masuk).format('YYYY-MM-DD'), employee_role_id, branch_id, department_id, coach, item.no_npwp, division_id, item.nama_panggilan, district_id_id_card, item.alamat_sesuai, item.kode_pos_sesuai, number_of_child, item.cod_posisi, item.no_passport, item.sim_a, item.sim_c, bank_id, item.no_rekening, item.atas_nama, is_outsource, country_id, resign_date, status_employee, moment().format('YYYY-MM-DD HH:mm:ss')], async function(err) {
+                await client.query(queryUpdateEmployee, [employee_id, item.nama_lengkap, gender, item.tempat_lahir, moment(item.tanggal_lahir).format('YYYY-MM-DD'), religion, marital_status, district_id_home, item.alamat_tinggal, item.kode_pos_tinggal, item.telepon, item.email, employee_type_id, moment(item.tanggal_masuk).format('YYYY-MM-DD'), employee_role_id, branch_id, department_id, coach, item.no_npwp, division_id, item.nama_panggilan, district_id_id_card, item.alamat_sesuai, item.kode_pos_sesuai, number_of_child, item.cod_posisi, item.no_passport, item.sim_a, item.sim_c, bank_id, item.no_rekening, item.atas_nama, is_outsource, country_id_nationality, resign_date, status_employee, moment().format('YYYY-MM-DD HH:mm:ss')], async function(err) {
                   PinoLoggerService.debug(this.logTitle, this.sql);
                   if (err) {
                     err_code++;
@@ -829,7 +745,6 @@ export class MasterDataService {
             }
           });
         }
-
         return updatedTime;
       } finally {
         client.release();
@@ -839,4 +754,185 @@ export class MasterDataService {
     }
   }
 
+  public static async getDistrictId(district: string): Promise<any> {
+    let district_id = 0;
+    try {
+      const pool: any = DatabaseConfig.getMasterDataDbPool();
+      const client = await pool.connect();
+      try {
+        const res = await client.query(`
+          SELECT district_id
+          FROM district
+          WHERE district_name = $1 AND is_deleted = FALSE
+        `, [district]);
+
+        if (res && res.rows && res.rows.length && res.rows.length > 0) {
+            for (const r of res.rows) {
+              district_id = r.district_id;
+            }
+          }
+        return district_id;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return district_id;
+    }
+  }
+
+  public static async getEmployeeRoleId(employee_role: string): Promise<any> {
+    let employee_role_id = 0;
+    try {
+      const pool: any = DatabaseConfig.getMasterDataDbPool();
+      const client = await pool.connect();
+      try {
+        const res = await client.query(`
+          SELECT employee_role_id
+          FROM employee_role
+          WHERE employee_role_name = $1 AND is_deleted = FALSE
+        `, [employee_role]);
+
+        if (res && res.rows && res.rows.length && res.rows.length > 0) {
+            for (const r of res.rows) {
+              employee_role_id = r.employee_role_id;
+            }
+          }
+        return employee_role_id;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return employee_role_id;
+    }
+  }
+
+  public static async getBranchId(branch: string): Promise<any> {
+    let branch_id = 0;
+    try {
+      const pool: any = DatabaseConfig.getMasterDataDbPool();
+      const client = await pool.connect();
+      try {
+        const res = await client.query(`
+          SELECT branch_id
+          FROM branch
+          WHERE branch_name = $1 AND is_deleted = FALSE
+        `, [branch]);
+
+        if (res && res.rows && res.rows.length && res.rows.length > 0) {
+            for (const r of res.rows) {
+              branch_id = r.branch_id;
+            }
+          }
+        return branch_id;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return branch_id;
+    }
+  }
+
+  public static async getDepartmentId(department: string): Promise<any> {
+    let department_id = 0;
+    try {
+      const pool: any = DatabaseConfig.getMasterDataDbPool();
+      const client = await pool.connect();
+      try {
+        const res = await client.query(`
+          SELECT department_id
+          FROM department
+          WHERE department_name = $1 AND is_deleted = FALSE
+        `, [department]);
+
+        if (res && res.rows && res.rows.length && res.rows.length > 0) {
+            for (const r of res.rows) {
+              department_id = r.department_id;
+            }
+          }
+        return department_id;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return department_id;
+    }
+  }
+
+  public static async getDivisionId(division: string): Promise<any> {
+    let division_id = 0;
+    try {
+      const pool: any = DatabaseConfig.getMasterDataDbPool();
+      const client = await pool.connect();
+      try {
+        const res = await client.query(`
+          SELECT division_id
+          FROM division
+          WHERE division_name = $1 AND is_deleted = FALSE
+        `, [division]);
+
+        if (res && res.rows && res.rows.length && res.rows.length > 0) {
+            for (const r of res.rows) {
+              division_id = r.division_id;
+            }
+          }
+        return division_id;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return division_id;
+    }
+  }
+
+  public static async getBankId(bank: string): Promise<any> {
+    let bank_id = 0;
+    try {
+      const pool: any = DatabaseConfig.getMasterDataDbPool();
+      const client = await pool.connect();
+      try {
+        const res = await client.query(`
+          SELECT bank_id
+          FROM bank
+          WHERE bank_code = $1 AND is_deleted = FALSE
+        `, [bank]);
+
+        if (res && res.rows && res.rows.length && res.rows.length > 0) {
+            for (const r of res.rows) {
+              bank_id = r.bank_id;
+            }
+          }
+        return bank_id;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return bank_id;
+    }
+  }
+
+  public static async getCountryId(country: string): Promise<any> {
+    let country_id = 0;
+    try {
+      const pool: any = DatabaseConfig.getMasterDataDbPool();
+      const client = await pool.connect();
+      try {
+        const res = await client.query(`
+          SELECT country_id
+          FROM country
+          WHERE country_name = $1 AND is_deleted=false
+        `, [country]);
+
+        if (res && res.rows && res.rows.length && res.rows.length > 0) {
+            for (const r of res.rows) {
+              country_id = r.country_id;
+            }
+          }
+        return country_id;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return country_id;
+    }
+  }
 }
