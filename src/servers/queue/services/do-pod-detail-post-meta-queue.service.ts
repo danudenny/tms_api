@@ -1037,4 +1037,32 @@ export class DoPodDetailPostMetaQueueService {
     return awbStatus;
   }
 
+  public static async createAwbHandoverStatus(
+    awbItemId: number,
+    userId: number,
+    timestamp: Date,
+    awbStatusId: number,
+    awbNumber: string,
+    awbId: number,
+    dateNow: Date,
+    notePublic: string,
+  ) {
+
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      timestamp,
+      awbStatusId,
+      refAwbNumber: awbNumber,
+      awbId,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      createdTime: dateNow,
+      updatedTime: dateNow,
+      notePublic,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
 }
