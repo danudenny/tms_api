@@ -544,7 +544,7 @@ export class ScaninSmdService {
           AND (bih.bag_item_status_id = 4550 OR bih.bag_item_status_id = 500 OR bih.bag_item_status_id IS NULL)
         WHERE
           doPod.do_pod_code = '${payload.bag_item_number}' AND
-          doPodDetailBag.is_deleted = false AND
+          doPodDetailBag.is_deleted = false
         GROUP BY bagnumber
         `;
       const resultDataBag = await RawQueryService.query(rawQueryBag);
