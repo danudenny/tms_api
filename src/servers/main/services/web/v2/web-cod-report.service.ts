@@ -120,7 +120,7 @@ export class V2WebCodReportService {
       [
         V2WebCodReportService.strReplaceFunc(d.partnerName),
         d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
-        V2WebCodReportService.strReplaceFunc(d.awbNumber),
+        `'${d.awbNumber}`,
         d.parcelValue,
         d.codValue,
         d.codFee ? d.codFee : '-',
@@ -271,7 +271,6 @@ export class V2WebCodReportService {
         ['cp.updated_time', 'podDate'],
         ['cp.cod_payment_method', 'paymentMethod'],
         ['t14.status_title', 'transactionStatus'],
-        ['t11.status_title', 'supplierInvoiceStatus'],
         ['t12.awb_status_title', 'trackingStatus'],
         ['t13.awb_status_title', 'trackingStatusFinal'],
         ['t4.reference_no', 'custPackage'],
@@ -309,7 +308,8 @@ export class V2WebCodReportService {
 
       // Data Jika sudah ada transaksi & Transaction Status
       q.innerJoin(e => e.codTransactionDetail, 'ctd', j =>
-        j.andWhere(e => e.codTransactionId, w => w.isNotNull()),
+        j.andWhere(e => e.codTransactionId, w => w.isNotNull())
+        .andWhere(e => e.supplierInvoiceStatusId, w => w.equals(TRANSACTION_STATUS.PAIDHO)),
       );
       q.innerJoin(e => e.codTransactionDetail.transactionStatus, 't14');
 
@@ -331,9 +331,6 @@ export class V2WebCodReportService {
       // User Driver Sigesit
       q.innerJoin(e => e.codPayment.userDriver, 'driveruser');
       q.innerJoin(e => e.codPayment.userDriver.employee, 'edriveruser');
-
-      // Invoice Status
-      q.leftJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
 
       // LAST STATUS
       q.leftJoin(e => e.awbStatus, 't12');
