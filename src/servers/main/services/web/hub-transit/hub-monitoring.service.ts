@@ -492,7 +492,11 @@ export class HubMonitoringService {
     SELECT
       "Lokasi Hub",
       "Nomor Resi",
-      "Nomor Gabungan",
+			CASE
+				WHEN s.code = 'IN' THEN "bag_number_in"
+				WHEN s.code = 'SORT' THEN "bag_number_sort"
+				WHEN s.code = 'OUT' THEN "bag_number_out"
+			END AS "Nomor Gabungan",
       "User",
       s.code as "Status",
       CASE WHEN s.code = 'IN' THEN "Tanggal Transaksi IN"
@@ -504,11 +508,9 @@ export class HubMonitoringService {
         SELECT
           br.branch_name AS "Lokasi Hub",
           CONCAT('="',dohd.awb_number, '"') AS "Nomor Resi",
-          CASE
-            WHEN scan_out.awb_id IS NOT NULL THEN scan_out.bag_number
-            WHEN bag_sortir.awb_id IS NOT NULL THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
-            ELSE doh.bag_number
-          END AS "Nomor Gabungan",
+          scan_out.bag_number AS "bag_number_out",
+          CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0')) as "bag_number_sort",
+          doh.bag_number as "bag_number_in",
           CONCAT('IN', (CASE WHEN bag_sortir.awb_id IS NOT NULL THEN ',SORT' END), (CASE WHEN scan_out.awb_id IS NOT NULL THEN ',OUT' END)) "Status",
           CONCAT(u.first_name, ' ', u.last_name) AS "User",
           TO_CHAR(dohd.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi IN",
@@ -517,7 +519,7 @@ export class HubMonitoringService {
         FROM
           dropoff_hub doh
         INNER JOIN branch br ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
-        INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
+        INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL AND (is_sortir IS NULL OR is_sortir = FALSE)
         INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
@@ -568,7 +570,9 @@ export class HubMonitoringService {
           u.last_name,
           dohd.created_time,
           bag_sortir.created_time,
-          scan_out.created_time
+          scan_out.created_time,
+					bag.bag_number,
+					bi.bag_seq
       ) t1, unnest(string_to_array("Status" , ','))  s(code);
     `;
     return query;
