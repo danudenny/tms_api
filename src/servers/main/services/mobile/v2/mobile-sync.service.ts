@@ -254,13 +254,13 @@ export class V2MobileSyncService {
           );
 
           // NOTE: push data only DLV to Sunfish
-          if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
-            AwbSunfishQueueService.perform(
-              delivery.awbNumber,
-              delivery.employeeId,
-              historyDateTime,
-            );
-          }
+          // if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
+          //   AwbSunfishQueueService.perform(
+          //     delivery.awbNumber,
+          //     delivery.employeeId,
+          //     historyDateTime,
+          //   );
+          // }
           // NOTE: mail notification
           AwbNotificationMailQueueService.perform(
             awbdDelivery.awbItemId,
