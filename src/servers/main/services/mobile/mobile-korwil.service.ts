@@ -159,6 +159,9 @@ export class MobileKorwilService {
   }
 
   public static async getKorwilIdByrequestDate(userId, branchId, fromDate, toDate, status = null) {
+    if (isNull(Number(branchId)) || isNull(Number(userId))) {
+      throw new BadRequestException('Branch I tidak ditemukan atau User ID');
+    }
     const qb = createQueryBuilder();
     qb.addSelect('kt.korwil_transaction_id', 'id');
     qb.from('korwil_transaction', 'kt');
@@ -348,14 +351,6 @@ export class MobileKorwilService {
       toDate = moment()
         .add(1, 'days')
         .format('YYYY-MM-DD 06:00:00');
-    }
-
-    if (isNull(Number(branchId))) {
-      return {
-        itemList: [],
-        korwilTransactionId: null,
-        status: 'error',
-      };
     }
 
     let id = await this.getKorwilIdByrequestDate(authMeta.userId, branchId, fromDate, toDate);
