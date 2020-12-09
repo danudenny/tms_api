@@ -23,6 +23,7 @@ import { nameOfProp, nameOfProps } from '../util/nameof';
 import { ObjectService } from './object.service';
 import { OrionRepositoryQueryConditionService } from './orion-repository-query-condition.service';
 import { RawQueryService } from './raw-query.service';
+import { ReadStream } from 'typeorm/platform/PlatformTools';
 
 export class OrionRepositoryQueryService<
   T,
@@ -201,6 +202,38 @@ export class OrionRepositoryQueryService<
     const compiledQueryBuilder = this.compileQueryParts();
 
     return this.execAction.call(compiledQueryBuilder);
+  }
+
+  public async stream(response: any, transformFn: (data: any) => string): Promise<ReadStream> {
+    try {
+      const compiledQueryBuilder = this.compileQueryParts();
+      const stream = await compiledQueryBuilder.stream();
+      return stream
+        .pipe(OrionRepositoryQueryService.parser(transformFn))
+        .pipe(response);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  private static parser(transformFn) {
+    const through = require('through');
+    const stream = through(
+      function(data) {
+        try {
+          const json = transformFn(data);
+          stream.queue(json);
+        } catch (err) {
+          return stream.emit('error', err);
+        }
+      },
+      function() {
+        // reach the end.
+        stream.queue(null);
+      },
+    );
+
+    return stream;
   }
 
   public fromSubQuery(
