@@ -59,7 +59,7 @@ export class PartnerOrchestraService {
         dateNow,
         'Paket telah berhasil di handover ke 3pl partner'
       );
-      
+
       result.statusCode = HttpStatus.OK;
       result.message = "Success";
       return result;
