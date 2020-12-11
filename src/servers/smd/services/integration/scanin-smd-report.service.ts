@@ -102,7 +102,7 @@ export class ScaninSmdReportService {
     }
     const p = new BaseMetaPayloadVm();
     p.filters = payload.filters ? payload.filters : payload;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvScanInSmd(p);
 
@@ -146,7 +146,7 @@ export class ScaninSmdReportService {
     const repo = new OrionRepositoryService(DoSmdDetail, 'dsd');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
     q.selectRaw(
       ['ds.do_smd_code', 'No SMD'],
       ['TO_CHAR(ds.do_smd_time, \'DD Mon YYYY HH24:MI\')', 'Tgl Di Buat'],
