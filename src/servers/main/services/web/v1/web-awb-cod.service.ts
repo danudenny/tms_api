@@ -1,5 +1,9 @@
 // #region import
-import { createQueryBuilder, getManager, In, Not } from 'typeorm';
+import {
+  createQueryBuilder,
+  getManager,
+  In,
+} from 'typeorm';
 
 import {
   BadRequestException,
@@ -10,11 +14,9 @@ import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant'
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { Branch } from '../../../../../shared/orm-entity/branch';
-import { CodBankStatement } from '../../../../../shared/orm-entity/cod-bank-statement';
 import { CodTransaction } from '../../../../../shared/orm-entity/cod-transaction';
 import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-transaction-detail';
 import { User } from '../../../../../shared/orm-entity/user';
-import { AttachmentService } from '../../../../../shared/services/attachment.service';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
@@ -22,10 +24,7 @@ import { OrionRepositoryService } from '../../../../../shared/services/orion-rep
 import { CodFirstTransactionQueueService } from '../../../../queue/services/cod/cod-first-transaction-queue.service';
 import {
   WebCodAwbPayloadVm,
-  WebCodBankStatementCancelPayloadVm,
-  WebCodBankStatementValidatePayloadVm,
   WebCodFirstTransactionPayloadVm,
-  WebCodTransferHeadOfficePayloadVm,
   WebCodTransferPayloadVm,
   WebCodTransactionUpdatePayloadVm,
   WebInsertCodPaymentPayloadVm,
@@ -33,16 +32,13 @@ import {
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   PrintCodTransferBranchVm,
-  WebAwbCodBankStatementResponseVm,
   WebAwbCodListResponseVm,
   WebAwbCodDlvListResponseVm,
   WebAwbCodListTransactionResponseVm,
   WebCodAwbPrintVm,
-  WebCodBankStatementResponseVm,
   WebCodPrintMetaVm,
   WebCodTransactionDetailResponseVm,
   WebCodTransferBranchResponseVm,
-  WebCodTransferHeadOfficeResponseVm,
   WebCodTransactionUpdateResponseVm,
   WebAwbCodVoidListResponseVm,
   WebCodCountResponseVm,
@@ -55,11 +51,9 @@ import { PrintByStoreService } from '../../print-by-store.service';
 
 import moment = require('moment');
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
-import { CodUpdateTransactionQueueService } from '../../../../queue/services/cod/cod-update-transaction-queue.service';
 import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
 import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { RedisService } from '../../../../../shared/services/redis.service';
-import { CodUserToBranch } from '../../../../../shared/orm-entity/cod-user-to-branch';
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { AuthLoginMetadata } from '../../../../../shared/models/auth-login-metadata.model';
 import { JwtPermissionTokenPayload } from '../../../../../shared/interfaces/jwt-payload.interface';
@@ -929,6 +923,8 @@ export class V1WebAwbCodService {
   ): Promise<WebCodTransferBranchResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    const uuidv1 = require('uuid/v1');
+    const uuidString = uuidv1();
 
     let codTransactionCash: WebCodTransferBranchCashResponseVm;
     if (payload.dataCash.length > 0) {
@@ -936,20 +932,26 @@ export class V1WebAwbCodService {
         payload,
         authMeta,
         permissonPayload,
+        uuidString,
       );
     }
 
     let codTransactionCashless: WebCodTransferBranchCashlessResponseVm;
-    if (payload.dataCashless.length > 0) {
+    if (payload.dataCashless.length) {
       codTransactionCashless = await this.transferBranchCashless(
         payload,
         authMeta,
         permissonPayload,
+        uuidString,
       );
     }
 
-    const printIdCash = codTransactionCash ? codTransactionCash.printIdCash : null;
-    const printIdCashless = codTransactionCashless ? codTransactionCashless.printIdCashless : null;
+    const printIdCash = codTransactionCash
+      ? codTransactionCash.printIdCash
+      : null;
+    const printIdCashless = codTransactionCashless
+      ? codTransactionCashless.printIdCashless
+      : null;
 
     let dataError = [];
     if (codTransactionCash && codTransactionCashless) {
@@ -973,6 +975,7 @@ export class V1WebAwbCodService {
     payload: WebCodTransferPayloadVm,
     authMeta: AuthLoginMetadata,
     permissonPayload: JwtPermissionTokenPayload,
+    uuidString: string,
   ): Promise<WebCodTransferBranchCashResponseVm> {
     const timestamp = moment().toDate();
     let totalAwbCash = 0;
@@ -983,21 +986,10 @@ export class V1WebAwbCodService {
     const dataError = [];
 
     // #region data cash [optional]
-    const codBranchCash = new CodTransaction();
     const randomCode = await CustomCounterCode.transactionCodBranch(timestamp);
-    codBranchCash.transactionCode = randomCode;
-    codBranchCash.transactionDate = timestamp;
-    codBranchCash.transactionStatusId = 27500; // status process;
-    codBranchCash.transactionType = 'CASH';
-    codBranchCash.totalCodValue = totalCodValueCash;
-    codBranchCash.totalAwb = totalAwbCash;
-    codBranchCash.branchId = permissonPayload.branchId;
-    codBranchCash.userIdDriver = payload.userIdDriver;
-    await CodTransaction.save(codBranchCash);
-
     const userIdDriver = payload.userIdDriver;
     const metaPrint = await this.generatePrintMeta(
-      codBranchCash.transactionCode,
+      randomCode,
       authMeta.displayName,
       authMeta.username,
       permissonPayload.branchId,
@@ -1019,7 +1011,7 @@ export class V1WebAwbCodService {
           // send to background process
           await this.handleAwbCod(
             item,
-            codBranchCash.codTransactionId,
+            uuidString,
             permissonPayload.branchId,
             authMeta.userId,
           );
@@ -1040,24 +1032,24 @@ export class V1WebAwbCodService {
       }
     } // end of loop data cash
 
-    if (dataPrintCash.length > 0) {
-      console.log('test data', dataPrintCash);
-      console.log('test data', codBranchCash.codTransactionId);
-      // update data
-      await CodTransaction.update(
-        {
-          codTransactionId: codBranchCash.codTransactionId,
-        },
-        {
-          totalCodValue: totalCodValueCash,
-          totalAwb: totalAwbCash,
-          transactionStatusId: 31000,
-        },
-      );
+    if (dataPrintCash.length) {
+      // insert data to cod_transaction
+      const codBranchCash = new CodTransaction();
+      codBranchCash.codTransactionId = uuidString;
+      codBranchCash.transactionCode = randomCode;
+      codBranchCash.transactionDate = timestamp;
+      codBranchCash.transactionStatusId = 31000;
+      codBranchCash.transactionType = 'CASH';
+      codBranchCash.totalCodValue = totalCodValueCash;
+      codBranchCash.totalAwb = totalAwbCash;
+      codBranchCash.branchId = permissonPayload.branchId;
+      codBranchCash.userIdDriver = payload.userIdDriver;
+      await CodTransaction.save(codBranchCash);
+
       // store data print cash on redis
       printIdCash = await this.printStoreData(
         metaPrint,
-        codBranchCash.codTransactionId,
+        uuidString,
         dataPrintCash,
         totalCodValueCash,
         'cash',
@@ -1075,6 +1067,7 @@ export class V1WebAwbCodService {
     payload: WebCodTransferPayloadVm,
     authMeta: AuthLoginMetadata,
     permissonPayload: JwtPermissionTokenPayload,
+    uuidString: string,
   ): Promise<WebCodTransferBranchCashlessResponseVm> {
     const timestamp = moment().toDate();
     let totalAwbCashless = 0;
@@ -1085,21 +1078,10 @@ export class V1WebAwbCodService {
     const dataError = [];
 
     // #region data cashless [optional]
-    const codBranchCashless = new CodTransaction();
     const randomCode = await CustomCounterCode.transactionCodBranch(timestamp);
-    codBranchCashless.transactionCode = randomCode;
-    codBranchCashless.transactionDate = timestamp;
-    codBranchCashless.transactionStatusId = 27500; // status process;
-    codBranchCashless.transactionType = 'CASHLESS';
-    codBranchCashless.totalCodValue = totalCodValueCashless;
-    codBranchCashless.totalAwb = totalAwbCashless;
-    codBranchCashless.branchId = permissonPayload.branchId;
-    codBranchCashless.userIdDriver = payload.userIdDriver;
-    await CodTransaction.save(codBranchCashless);
-
     const userIdDriver = payload.userIdDriver;
     const metaPrint = await this.generatePrintMeta(
-      codBranchCashless.transactionCode,
+      randomCode,
       authMeta.displayName,
       authMeta.username,
       permissonPayload.branchId,
@@ -1120,7 +1102,7 @@ export class V1WebAwbCodService {
 
           await this.handleAwbCod(
             item,
-            codBranchCashless.codTransactionId,
+            uuidString,
             permissonPayload.branchId,
             authMeta.userId,
           );
@@ -1143,23 +1125,23 @@ export class V1WebAwbCodService {
     } // end of loop data cashless
 
     if (dataPrintCashless.length) {
-      console.log('test data', dataPrintCashless);
-      console.log('test data', codBranchCashless.codTransactionId);
-      // update data
-      await CodTransaction.update(
-        {
-          codTransactionId: codBranchCashless.codTransactionId,
-        },
-        {
-          totalCodValue: totalCodValueCashless,
-          totalAwb: totalAwbCashless,
-          transactionStatusId: 35000,
-        },
-      );
+      // insert data to cod_transaction
+      const codBranchCashless = new CodTransaction();
+      codBranchCashless.codTransactionId = uuidString;
+      codBranchCashless.transactionCode = randomCode;
+      codBranchCashless.transactionDate = timestamp;
+      codBranchCashless.transactionStatusId = 35000;
+      codBranchCashless.transactionType = 'CASHLESS';
+      codBranchCashless.totalCodValue = totalCodValueCashless;
+      codBranchCashless.totalAwb = totalAwbCashless;
+      codBranchCashless.branchId = permissonPayload.branchId;
+      codBranchCashless.userIdDriver = payload.userIdDriver;
+      await CodTransaction.save(codBranchCashless);
+
       // store data print cashless on redis
       printIdCashless = await this.printStoreData(
         metaPrint,
-        codBranchCashless.codTransactionId,
+        uuidString,
         dataPrintCashless,
         totalCodValueCashless,
         'cashless',
