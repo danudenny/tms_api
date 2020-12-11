@@ -129,7 +129,7 @@ export class V1WebAwbCodController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodTransferBranchResponseVm })
   public async transferBranch(@Body() payload: WebCodTransferPayloadVm) {
-    return V1WebAwbCodService.transferBranch(payload);
+    return V1WebAwbCodService.transferBranchV2(payload);
   }
 
   @Get('reprintTransaction/:transactionId')
