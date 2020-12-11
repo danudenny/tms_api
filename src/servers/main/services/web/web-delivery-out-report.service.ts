@@ -60,7 +60,7 @@ export class WebDeliveryOutReportService {
     p.filters = payload.filters ? payload.filters : payload;
     p.sortBy = payload.sortBy;
     p.sortDir = payload.sortDir;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvDeliveryOut(p, isHub, isHubTransit);
 
@@ -89,7 +89,7 @@ export class WebDeliveryOutReportService {
     p.filters = payload.filters ? payload.filters : payload;
     p.sortBy = payload.sortBy;
     p.sortDir = payload.sortDir;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvScanOutTransit(p);
 
@@ -118,7 +118,7 @@ export class WebDeliveryOutReportService {
     p.filters = payload.filters ? payload.filters : payload;
     p.sortBy = payload.sortBy;
     p.sortDir = payload.sortDir;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvScanOutDeliver(p);
 
@@ -134,6 +134,7 @@ export class WebDeliveryOutReportService {
   ): Promise<any> {
     // mapping field
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_date_time';
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['branchTo'] = 't1.branch_id_to';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
@@ -173,7 +174,7 @@ export class WebDeliveryOutReportService {
     const repo = new OrionRepositoryService(DoPod, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       ['t1.do_pod_code', 'No Surat Jalan'],
@@ -261,7 +262,7 @@ export class WebDeliveryOutReportService {
     const repo = new OrionRepositoryService(DoPod, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       ['t1.do_pod_code', 'Nomor Surat Jalan'],
@@ -332,7 +333,7 @@ export class WebDeliveryOutReportService {
     const repo = new OrionRepositoryService(DoPodDeliver, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       ['t2.fullname', 'Sigesit/Driver'],

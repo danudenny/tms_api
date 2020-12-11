@@ -102,8 +102,8 @@ export class HubMonitoringReportService {
     }
     const p = new BaseMetaPayloadVm();
     p.filters = payload.filters ? payload.filters : payload;
-    p.limit = 100000000;
-    p.page = 1;
+    p.limit = null;
+    p.page = null;
 
     const data = await this.getDataCsvHubMonitoring(p);
 
