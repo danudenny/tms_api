@@ -54,6 +54,7 @@ export class ScanoutSmdListService {
     payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
+    payload.fieldResolverMap['is_intercity'] = 'ds.is_intercity';
 
     payload.globalSearchFields = [
       {
@@ -67,6 +68,9 @@ export class ScanoutSmdListService {
       },
       {
         field: 'do_smd_code',
+      },
+      {
+        field: 'is_intercity',
       },
     ];
 
