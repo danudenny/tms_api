@@ -42,7 +42,7 @@ export class ScanOutCityController {
   @Transactional()
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async scanOutCitySeal(@Req() request: any, @Body() payload: ScanOutSmdCitySealPayloadVm) {
-    return ScanoutSmdCityService.scanOutSeal(payload);
+    return ScanoutSmdCityService.scanOutCitySeal(payload);
   }
 
   // @Delete('scanOut/deleted/:id')
