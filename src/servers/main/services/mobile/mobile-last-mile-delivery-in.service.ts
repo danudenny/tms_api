@@ -7,22 +7,20 @@ import { DoPod } from '../../../../shared/orm-entity/do-pod';
 import { PodScanInBranch } from '../../../../shared/orm-entity/pod-scan-in-branch';
 import { PodScanInBranchBag } from '../../../../shared/orm-entity/pod-scan-in-branch-bag';
 import { PodScanInBranchDetail } from '../../../../shared/orm-entity/pod-scan-in-branch-detail';
-import {
-    DoPodDetailBagRepository,
-} from '../../../../shared/orm-repository/do-pod-detail-bag.repository';
+import { DoPodDetailBagRepository } from '../../../../shared/orm-repository/do-pod-detail-bag.repository';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbTroubleService } from '../../../../shared/services/awb-trouble.service';
 import { BagTroubleService } from '../../../../shared/services/bag-trouble.service';
 import { RedisService } from '../../../../shared/services/redis.service';
+import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {
-    BagItemHistoryQueueService,
-} from '../../../queue/services/bag-item-history-queue.service';
-import {
-    DoPodDetailPostMetaQueueService,
-} from '../../../queue/services/do-pod-detail-post-meta-queue.service';
-import {
-    ScanBranchAwbVm, ScanBranchBagVm, ScanInputNumberBranchVm, MobileScanInBagBranchResponseVm,
-    MobileScanInBagBranchVm, MobileScanInBranchResponseVm
+  ScanBranchAwbVm,
+  ScanBranchBagVm,
+  ScanInputNumberBranchVm,
+  MobileScanInBagBranchResponseVm,
+  MobileScanInBagBranchVm,
+  MobileScanInBranchResponseVm,
 } from '../../models/mobile-scanin.vm';
 import { AwbService } from '../v1/awb.service';
 import { BagService } from '../v1/bag.service';
@@ -30,16 +28,17 @@ import moment = require('moment');
 import { getManager, createQueryBuilder } from 'typeorm';
 // #endregion
 export class LastMileDeliveryInService {
-
   // NOTE: scan in package on branch
   // 1. scan bag number / scan awb number
   // 2. create session per branch with insert table on pod scan in branch
   // 2. scan awb number on bag and calculate
+
+  // TODO: need refactoring
   static async scanInBranch(
     payload: MobileScanInBagBranchVm,
   ): Promise<MobileScanInBranchResponseVm> {
-    let isBag: boolean = false;
-    let data = new ScanInputNumberBranchVm;
+    const isBag: boolean = false;
+    const data = new ScanInputNumberBranchVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
     const regexNumber = /^[0-9]+$/;
@@ -47,45 +46,32 @@ export class LastMileDeliveryInService {
     const qb = createQueryBuilder();
 
     // Total barang belum scan masuk
-    qb.addSelect( 'awb.awb_number', 'awbNumber');
-    qb.addSelect( 'awb.consignee_name', 'consigneeName');
-    qb.addSelect( 'awb.consignee_address', 'consigneeAddress');
-    qb.addSelect( 'awb.consignee_phone', 'consigneePhone');
-    qb.addSelect( 'awb.total_cod_value', 'totalCodValue');
-    qb.addSelect( 'pt.package_type_code', 'service');
+    qb.addSelect('awb.awb_number', 'awbNumber');
+    qb.addSelect('awb.consignee_name', 'consigneeName');
+    qb.addSelect('awb.consignee_address', 'consigneeAddress');
+    qb.addSelect('awb.consignee_phone', 'consigneePhone');
+    qb.addSelect('awb.total_cod_value', 'totalCodValue');
+    qb.addSelect('pt.package_type_code', 'service');
 
     qb.from('awb', 'awb');
     qb.innerJoin(
       'package_type',
       'pt',
-      'pt.package_type_id = awb.package_type_id'
-      );
-    // qb.innerJoin('do_pod_detail',
-    //   'dpd',
-    //   'dpd.awb_number = awb.awb_number'
-    // );
-    // qb.innerJoin(
-    //     'do_pod',
-    //     'dp',
-    //     'dp.do_pod_id = dpd.do_pod_id AND dp.user_id_driver = :userId ', { userId: authMeta.userId }
-    // );
-    qb.innerJoin('awb_item_attr',
-      'aia',
-      'aia.awb_number = awb.awb_number'
+      'pt.package_type_id = awb.package_type_id',
     );
-    qb.andWhere('awb.awb_number = :awbNumber',
-    {
-      awbNumber: payload.scanValue
+    qb.innerJoin('awb_item_attr', 'aia', 'aia.awb_id = awb.awb_id');
+    qb.andWhere('awb.awb_number = :awbNumber', {
+      awbNumber: payload.scanValue,
     });
     const res = await qb.getRawOne();
 
-    if(res){
+    if (res) {
       let podScanInBranch = await PodScanInBranch.findOne({
         where: {
           branchId: permissonPayload.branchId,
           transactionStatusId: 600,
           isDeleted: false,
-          userIdCreated: authMeta.userId
+          userIdCreated: authMeta.userId,
         },
       });
 
@@ -117,8 +103,7 @@ export class LastMileDeliveryInService {
         data.status = resultAwb.status;
         data.message = resultAwb.message;
         data.trouble = resultAwb.trouble;
-
-      }else {
+      } else {
         data.awbNumber = inputNumber;
         data.status = 'error';
         data.message = 'Nomor tidak valid';
@@ -133,7 +118,7 @@ export class LastMileDeliveryInService {
       result.consigneeAddress = res.consigneeAddress;
       result.consigneePhone = res.consigneePhone;
       result.totalCodValue = res.totalCodValue;
-      result.dateTime = moment().format("YYYY-MM-DD HH:mm:ss");
+      result.dateTime = moment().format('YYYY-MM-DD HH:mm:ss');
 
       result.podScanInBranchId = payload.podScanInBranchId;
 
@@ -177,14 +162,18 @@ export class LastMileDeliveryInService {
         `hold:bag-scanin-branch:${bagData.bagItemId}`,
         'locking',
       );
-      const notScan = bagData.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH ? true : false;
+      const notScan =
+        bagData.bagItemStatusIdLast != BAG_STATUS.IN_BRANCH ? true : false;
       if (notScan && holdRedis) {
-        const notScanBranch = bagData.branchIdNext != permissonPayload.branchId ? true : false;
+        const notScanBranch =
+          bagData.branchIdNext != permissonPayload.branchId ? true : false;
         if (
           bagData.bagItemStatusIdLast != BAG_STATUS.OUT_HUB ||
           notScanBranch
         ) {
-          const desc = notScanBranch ? 'Gerai tidak sesuai' : 'Status bag tidak sesuai';
+          const desc = notScanBranch
+            ? 'Gerai tidak sesuai'
+            : 'Status bag tidak sesuai';
           response.status = 'warning';
           BagTroubleService.create(
             bagNumber,
@@ -307,17 +296,13 @@ export class LastMileDeliveryInService {
                 1,
               );
             });
-
           }
         }
 
         // #endregion after scanin
         totalSuccess += 1;
         // remove key holdRedis
-        RedisService.del(
-          `hold:bag-scanin-branch:${bagData.bagItemId}`,
-        );
-
+        RedisService.del(`hold:bag-scanin-branch:${bagData.bagItemId}`);
       } else {
         totalError += 1;
         response.status = 'error';
@@ -375,116 +360,120 @@ export class LastMileDeliveryInService {
       );
 
       if (notScanIn && holdRedis) {
-        const statusCode = await AwbService.awbStatusGroup(
-          awb.awbStatusIdLast,
-        );
-        if (statusCode != 'OUT') {
-          // TODO: AUTO UPDATE STATUS ??
-          result.status = 'warning';
-          // save data to awb_trouble
-          const branchName = awb.branchLast ? awb.branchLast.branchName : '';
-          await AwbTroubleService.fromScanOut(
-            awbNumber,
-            branchName,
-            awb.awbStatusIdLast,
-          );
-        }
-
-        // save data to table pod_scan_id
-        // TODO: find by check data
-        let bagId = 0;
-        let bagItemId = 0;
-
-        const podScanInBranchDetail = await PodScanInBranchDetail.findOne({
-          where: {
-            podScanInBranchId,
-            awbItemId: awb.awbItemId,
-            isDeleted: false,
-          },
-        });
-
-        if (podScanInBranchDetail) {
-          result.status = 'error';
-          result.trouble = true;
-          result.message = `Resi ${awbNumber} sudah scan in`;
-          // TODO: update data podScanInBranchDetail
+        // NOTE: handle status cancel delivery
+        const statusFinal = [AWB_STATUS.CANCEL];
+        if (statusFinal.includes(awb.awbStatusIdLast)) {
+          // handle message
+          const desc =
+            awb.awbStatusIdLast == AWB_STATUS.CANCEL
+              ? 'telah di CANCEL oleh Partner !'
+              : 'sudah Final Status !';
+          result.message = `Resi ${awbNumber} ${desc}`;
         } else {
-          result.status = 'ok';
-          result.message = 'Success';
 
-          if (bagNumber != '') {
-            const bagData = await BagService.validBagNumber(bagNumber);
-            if (bagData) {
-              const bagItemAwb = await BagItemAwb.findOne({
-                where: {
-                  bagItemId: bagData.bagItemId,
-                  awbItemId: awb.awbItemId,
-                  isDeleted: false,
-                },
-              });
+          const statusCode = await AwbService.awbStatusGroup(awb.awbStatusIdLast);
+          if (statusCode != 'OUT') {
+            // TODO: AUTO UPDATE STATUS ??
+            result.status = 'warning';
+            // save data to awb_trouble
+            const branchName = awb.branchLast ? awb.branchLast.branchName : '';
+            await AwbTroubleService.fromScanOut(
+              awbNumber,
+              branchName,
+              awb.awbStatusIdLast,
+            );
+          }
 
-              if (!bagItemAwb) {
+          // save data to table pod_scan_id
+          // TODO: find by check data
+          let bagId = 0;
+          let bagItemId = 0;
+
+          const podScanInBranchDetail = await PodScanInBranchDetail.findOne({
+            where: {
+              podScanInBranchId,
+              awbItemId: awb.awbItemId,
+              isDeleted: false,
+            },
+          });
+
+          if (podScanInBranchDetail) {
+            result.status = 'error';
+            result.trouble = true;
+            result.message = `Resi ${awbNumber} sudah scan in`;
+            // TODO: update data podScanInBranchDetail
+          } else {
+            result.status = 'ok';
+            result.message = 'Success';
+
+            if (bagNumber != '') {
+              const bagData = await BagService.validBagNumber(bagNumber);
+              if (bagData) {
+                const bagItemAwb = await BagItemAwb.findOne({
+                  where: {
+                    bagItemId: bagData.bagItemId,
+                    awbItemId: awb.awbItemId,
+                    isDeleted: false,
+                  },
+                });
+
+                if (!bagItemAwb) {
+                  result.status = 'warning';
+                  result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
+                }
+                // set data bag
+                bagId = bagData.bagId;
+                bagItemId = bagData.bagItemId;
+
+                dataBag.bagId = bagId;
+                dataBag.bagItemId = bagItemId;
+                dataBag.status = 'ok';
+                dataBag.message = 'Success';
+                dataBag.trouble = false;
+                result.dataBag = dataBag;
+              } else {
                 result.status = 'warning';
                 result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
               }
-              // set data bag
-              bagId = bagData.bagId;
-              bagItemId = bagData.bagItemId;
-
-              dataBag.bagId = bagId;
-              dataBag.bagItemId = bagItemId;
-              dataBag.status = 'ok';
-              dataBag.message = 'Success';
-              dataBag.trouble = false;
-              result.dataBag = dataBag;
             } else {
+              // handle awb number only with not have bag number
               result.status = 'warning';
               result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
             }
-          } else {
-            // handle awb number only with not have bag number
-            result.status = 'warning';
-            result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
-          }
 
-          // Create Awb Trouble if status warning
-          if (result.status == 'warning') {
-            await AwbTroubleService.fromScanIn(
-              awbNumber,
-              awb.awbStatusIdLast,
-              result.message,
+            // Create Awb Trouble if status warning
+            if (result.status == 'warning') {
+              await AwbTroubleService.fromScanIn(
+                awbNumber,
+                awb.awbStatusIdLast,
+                result.message,
+              );
+              result.trouble = true;
+            }
+
+            const podScanInBranchDetailObj = PodScanInBranchDetail.create();
+            podScanInBranchDetailObj.podScanInBranchId = podScanInBranchId;
+            podScanInBranchDetailObj.bagId = bagId;
+            podScanInBranchDetailObj.bagItemId = bagItemId;
+            podScanInBranchDetailObj.awbId = awb.awbItem.awbId;
+            podScanInBranchDetailObj.awbItemId = awb.awbItemId;
+            podScanInBranchDetailObj.awbNumber = awbNumber;
+            podScanInBranchDetailObj.bagNumber = bagNumber;
+            podScanInBranchDetailObj.isTrouble = result.trouble;
+            await PodScanInBranchDetail.save(podScanInBranchDetailObj);
+
+            // AFTER Scan IN ===============================================
+            // #region after scanin
+
+            // NOTE: queue by Bull add awb history with status scan in branch
+            DoPodDetailPostMetaQueueService.createJobByScanInAwbBranch(
+              awb.awbItemId,
+              permissonPayload.branchId,
+              authMeta.userId,
             );
-            result.trouble = true;
+            // #endregion after scanin
           }
-
-          const podScanInBranchDetailObj = PodScanInBranchDetail.create();
-          podScanInBranchDetailObj.podScanInBranchId = podScanInBranchId;
-          podScanInBranchDetailObj.bagId = bagId;
-          podScanInBranchDetailObj.bagItemId = bagItemId;
-          podScanInBranchDetailObj.awbId = awb.awbItem.awbId;
-          podScanInBranchDetailObj.awbItemId = awb.awbItemId;
-          podScanInBranchDetailObj.awbNumber = awbNumber;
-          podScanInBranchDetailObj.bagNumber = bagNumber;
-          podScanInBranchDetailObj.isTrouble = result.trouble;
-          await PodScanInBranchDetail.save(podScanInBranchDetailObj);
-
-          // AFTER Scan IN ===============================================
-          // #region after scanin
-          await AwbService.updateAwbAttr(
-            awb.awbItemId,
-            AWB_STATUS.IN_BRANCH,
-            null,
-          );
-
-          // NOTE: queue by Bull add awb history with status scan in branch
-          DoPodDetailPostMetaQueueService.createJobByScanInAwbBranch(
-            awb.awbItemId,
-            permissonPayload.branchId,
-            authMeta.userId,
-          );
-          // #endregion after scanin
         }
-
         // remove key holdRedis
         RedisService.del(`hold:scanin-awb-branch:${awb.awbItemId}`);
       } else {

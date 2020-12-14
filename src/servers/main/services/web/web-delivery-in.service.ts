@@ -781,11 +781,6 @@ export class WebDeliveryInService {
                   }
 
                   await DoPod.save(doPod);
-                  await AwbService.updateAwbAttr(
-                    awb.awbItemId,
-                    AWB_STATUS.IN_BRANCH,
-                    doPod.branchIdTo,
-                  );
 
                   // NOTE: queue by Bull
                   DoPodDetailPostMetaQueueService.createJobByScanInAwb(
@@ -952,12 +947,7 @@ export class WebDeliveryInService {
                   if (bagItemsAwb && bagItemsAwb.length > 0) {
                     for (const itemAwb of bagItemsAwb) {
                       if (itemAwb.awbItemId) {
-                        // NOTE: disable update status to awb item attr
-                        // await AwbService.updateAwbAttr(
-                        //   itemAwb.awbItemId,
-                        //   null,
-                        //   AWB_STATUS.DO_HUB,
-                        // );
+
                         // NOTE: queue by Bull awb history
                         DoPodDetailPostMetaQueueService.createJobByDropoffBag(
                           itemAwb.awbItemId,
