@@ -13,7 +13,7 @@ import { ScanOutSmdCityItemPayloadVm, ScanOutSmdCitySealPayloadVm, ScanOutSmdCit
 
 @ApiUseTags('SCAN OUT SMD CITY')
 @Controller('smd')
-export class ScanOutController {
+export class ScanOutCityController {
   constructor() {}
 
   @Post('scanOut/city/vehicle')
