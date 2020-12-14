@@ -47,10 +47,10 @@ export class ScanoutSmdCityService {
       if (redlock) {
         const paramDoSmdId = await this.createDoSmdCity(
           paramDoSmdCode,
-          payload.smd_date,
+          payload.smd_city_date,
           permissonPayload.branchId,
           authMeta.userId,
-          payload.smd_trip,
+          payload.smd_city_trip,
           payload.description,
         );
   
@@ -65,7 +65,7 @@ export class ScanoutSmdCityService {
         const paramDoSmdDetailId = await this.createDoSmdCityDetail(
           paramDoSmdId,
           paramDoSmdVehicleId,
-          payload.smd_date,
+          payload.smd_city_date,
           permissonPayload.branchId,
           resultbranchTo.branchId,
           authMeta.userId,
@@ -87,7 +87,7 @@ export class ScanoutSmdCityService {
           paramDoSmdVehicleId,
           null,
           null,
-          payload.smd_date,
+          payload.smd_city_date,
           permissonPayload.branchId,
           1000,
           null,
