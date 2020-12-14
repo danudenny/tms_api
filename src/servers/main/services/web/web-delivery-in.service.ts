@@ -380,7 +380,8 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['representativeFrom'] =
       't1.ref_representative_code';
     payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
-    payload.fieldResolverMap['branchScanId'] = 't1.branch_id';
+    payload.fieldResolverMap['branchScanId'] = 't5.branch_id';
+    payload.fieldResolverMap['branchScanName'] = 't5.branch_name';
     payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
 
     if (payload.sortBy === '') {
