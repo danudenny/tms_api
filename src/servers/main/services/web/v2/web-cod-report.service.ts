@@ -37,13 +37,39 @@ export class V2WebCodReportService {
     'User Updated',
   ];
 
-  static CodNONFeeHeader = [
+  static CodNONFeeTransactionHeader = [
     'Partner',
     'Awb Date',
     'Awb',
     'Package Amount',
     'Cod Amount',
     'Cod Fee',
+    'Amount Transfer',
+    'Pod Datetime',
+    'Recipient',
+    'Tipe Pembayaran',
+    'Status Internal',
+    'Status Invoice',
+    'Tracking Status',
+    'Cust Package',
+    'Pickup Source',
+    'Current Position',
+    'Destination Code',
+    'Destination',
+    'Package Detail',
+    'Services',
+    'Note',
+    'Submitted Date',
+    'Submitted Number',
+    'Date Updated',
+  ];
+
+  static CodNONFeeHeader = [
+    'Partner',
+    'Awb Date',
+    'Awb',
+    'Package Amount',
+    'Cod Amount',
     'Amount Transfer',
     'Pod Datetime',
     'Recipient',
@@ -152,7 +178,7 @@ export class V2WebCodReportService {
     return `${values.join(',')} \n`;
   }
 
-  static streamTransform(doc) {
+  static streamTransformTransaction(doc) {
     const values = [
       V2WebCodReportService.strReplaceFunc(doc.partnerName),
       doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
@@ -160,6 +186,40 @@ export class V2WebCodReportService {
       doc.parcelValue,
       doc.codValue,
       doc.codFee ? doc.codFee : '-',
+      doc.codValue,
+      doc.podDate ? moment(doc.podDate).format('YYYY-MM-DD HH:mm') : null,
+      V2WebCodReportService.strReplaceFunc(doc.consigneeName),
+      doc.paymentMethod,
+      doc.transactionStatus,
+      doc.supplierInvoiceStatus,
+      doc.trackingStatus,
+      V2WebCodReportService.strReplaceFunc(
+        doc.custPackage ? doc.custPackage : '-',
+      ),
+      V2WebCodReportService.strReplaceFunc(doc.pickupSource),
+      V2WebCodReportService.strReplaceFunc(doc.currentPosition),
+      V2WebCodReportService.strReplaceFunc(doc.destinationCode),
+      V2WebCodReportService.strReplaceFunc(doc.destination),
+      V2WebCodReportService.strReplaceFunc(doc.parcelContent),
+      V2WebCodReportService.strReplaceFunc(doc.packageTypeCode),
+      V2WebCodReportService.strReplaceFunc(doc.parcelNote),
+      '-',
+      '-',
+      doc.updatedTime
+        ? moment(doc.updatedTime).format('YYYY-MM-DD HH:mm')
+        : null,
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
+  static streamTransform(doc) {
+    const values = [
+      V2WebCodReportService.strReplaceFunc(doc.partnerName),
+      doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
+      `'${doc.awbNumber}`,
+      doc.parcelValue,
+      doc.codValue,
       doc.codValue,
       doc.podDate ? moment(doc.podDate).format('YYYY-MM-DD HH:mm') : null,
       V2WebCodReportService.strReplaceFunc(doc.consigneeName),
@@ -195,8 +255,12 @@ export class V2WebCodReportService {
       [
         `'${d.awbNumber}`,
         d.manifestedDate ? moment(d.manifestedDate).format('YYYY-MM-DD') : null,
-        d.transactionDate ? moment(d.transactionDate).format('YYYY-MM-DD HH:mm') : null,
-        d.consigneeName ? V2WebCodReportService.strReplaceFunc(d.consigneeName) : '-',
+        d.transactionDate
+          ? moment(d.transactionDate).format('YYYY-MM-DD HH:mm')
+          : null,
+        d.consigneeName
+          ? V2WebCodReportService.strReplaceFunc(d.consigneeName)
+          : '-',
         V2WebCodReportService.strReplaceFunc(d.packageTypeCode),
         V2WebCodReportService.strReplaceFunc(d.codPaymentMethod),
         V2WebCodReportService.strReplaceFunc(d.branchNameLast),
@@ -205,7 +269,9 @@ export class V2WebCodReportService {
         d.driverName ? V2WebCodReportService.strReplaceFunc(d.driverName) : '-',
         V2WebCodReportService.strReplaceFunc(d.awbStatusLast),
         V2WebCodReportService.strReplaceFunc(d.awbStatusFinal),
-        d.transactionStatusName ? V2WebCodReportService.strReplaceFunc(d.transactionStatusName) : '-',
+        d.transactionStatusName
+          ? V2WebCodReportService.strReplaceFunc(d.transactionStatusName)
+          : '-',
       ],
     ];
 
@@ -308,8 +374,12 @@ export class V2WebCodReportService {
 
       // Data Jika sudah ada transaksi & Transaction Status
       q.innerJoin(e => e.codTransactionDetail, 'ctd', j =>
-        j.andWhere(e => e.codTransactionId, w => w.isNotNull())
-        .andWhere(e => e.supplierInvoiceStatusId, w => w.equals(TRANSACTION_STATUS.PAIDHO)),
+        j
+          .andWhere(e => e.codTransactionId, w => w.isNotNull())
+          .andWhere(
+            e => e.supplierInvoiceStatusId,
+            w => w.equals(TRANSACTION_STATUS.PAIDHO),
+          ),
       );
       q.innerJoin(e => e.codTransactionDetail.transactionStatus, 't14');
 
@@ -347,6 +417,107 @@ export class V2WebCodReportService {
     }
   }
 
+  static async printNonCodTransactionSupplierInvoice(
+    payload: BaseMetaPayloadVm,
+    response,
+  ) {
+    try {
+      const fileName = `COD_nonfee_${new Date().getTime()}.csv`;
+
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
+      );
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+      response.flushHeaders();
+      response.write(`${this.CodNONFeeTransactionHeader.join(',')}\n`);
+
+      // mapping field
+      payload.fieldResolverMap['statusDate'] = 't1.updated_time';
+      payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
+      payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
+      payload.fieldResolverMap['supplier'] = 't6.partner_id';
+      payload.fieldResolverMap['awbStatusId'] = 't1.awb_status_id_last';
+      payload.fieldResolverMap['branchLastId'] = 't7.branch_id';
+      payload.fieldResolverMap['transactionStatus'] =
+        't1.transaction_status_id';
+      payload.fieldResolverMap['supplierInvoiceStatus'] =
+        'ctd.supplier_invoice_status_id';
+
+      const repo = new OrionRepositoryService(AwbItemAttr, 't1');
+      const q = repo.findAllRaw();
+
+      payload.applyToOrionRepositoryQuery(q);
+
+      q.selectRaw(
+        ['t6.partner_name', 'partnerName'],
+        ['t1.awb_number', 'awbNumber'],
+        ['t2.awb_date', 'awbDate'],
+        ['t2.consignee_name', 'consigneeName'],
+        ['t3.parcel_value', 'parcelValue'],
+        ['t3.cod_value', 'codValue'],
+        ['cp.updated_time', 'podDate'],
+        ['cp.cod_payment_method', 'paymentMethod'],
+        ['t14.status_title', 'transactionStatus'],
+        ['t11.status_title', 'supplierInvoiceStatus'],
+        ['t12.awb_status_title', 'trackingStatus'],
+        ['t4.reference_no', 'custPackage'],
+        ['t8.branch_name', 'pickupSource'],
+        ['t7.branch_name', 'currentPosition'],
+        ['t2.ref_destination_code', 'destinationCode'],
+        ['t9.district_name', 'destination'],
+        ['t3.parcel_content', 'parcelContent'],
+        ['t5.package_type_code', 'packageTypeCode'],
+        ['t1.updated_time', 'awbStatusDate'],
+        ['ctd.updated_time', 'updatedTime'],
+        ['t3.notes', 'parcelNote'],
+      );
+
+      q.innerJoin(e => e.awb, 't2', j =>
+        j
+          .andWhere(e => e.isDeleted, w => w.isFalse())
+          .andWhere(e => e.isCod, w => w.isTrue()),
+      );
+
+      q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.innerJoin(e => e.pickupRequestDetail.pickupRequest, 't4');
+      q.innerJoin(e => e.awb.packageType, 't5');
+      q.innerJoin(e => e.pickupRequestDetail.pickupRequest.partner, 't6');
+
+      // get gerai terakhir resi di statuskan
+      q.innerJoin(e => e.branchLast, 't7');
+
+      // Data Jika sudah ada transaksi & Transaction Status
+      q.innerJoin(e => e.codTransactionDetail, 'ctd', j =>
+        j.andWhere(e => e.codTransactionId, w => w.isNotNull()),
+      );
+      q.innerJoin(e => e.codTransactionDetail.transactionStatus, 't14');
+
+      // Data Jika sudah dilakukan DLV - COD
+      q.innerJoin(e => e.codPayment, 'cp');
+
+      // gerai pickup / gerai di manifest resi
+      q.leftJoin(e => e.awb.branchLast, 't8');
+      q.leftJoin(e => e.awb.districtTo, 't9');
+
+      // Invoice Status
+      q.innerJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
+
+      // LAST STATUS
+      q.innerJoin(e => e.awbStatus, 't12');
+
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+      await q.stream(response, this.streamTransformTransaction);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
   static async printNonCodSupplierInvoice(
     payload: BaseMetaPayloadVm,
     response,
@@ -365,14 +536,10 @@ export class V2WebCodReportService {
       // mapping field
       payload.fieldResolverMap['statusDate'] = 't1.updated_time';
       payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
-      payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-      payload.fieldResolverMap['supplier'] = 't6.partner_id';
       payload.fieldResolverMap['awbStatusId'] = 't1.awb_status_id_last';
       payload.fieldResolverMap['branchLastId'] = 't7.branch_id';
       payload.fieldResolverMap['transactionStatus'] =
         't1.transaction_status_id';
-      payload.fieldResolverMap['supplierInvoiceStatus'] =
-        'ctd.supplier_invoice_status_id';
       payload.fieldResolverMap['sigesit'] = 'cp.user_id_driver';
 
       const repo = new OrionRepositoryService(AwbItemAttr, 't1');
@@ -392,11 +559,9 @@ export class V2WebCodReportService {
         ['t14.status_title', 'transactionStatus'],
         ['t11.status_title', 'supplierInvoiceStatus'],
         ['t12.awb_status_title', 'trackingStatus'],
-        ['t13.awb_status_title', 'trackingStatusFinal'],
         ['t4.reference_no', 'custPackage'],
         ['t8.branch_name', 'pickupSource'],
         ['t7.branch_name', 'currentPosition'],
-        ['fin.branch_name', 'finalPosition'],
         ['t2.ref_destination_code', 'destinationCode'],
         ['t9.district_name', 'destination'],
         ['rep.representative_code', 'perwakilan'],
@@ -434,7 +599,6 @@ export class V2WebCodReportService {
 
       // Data Jika sudah dilakukan DLV - COD
       q.leftJoin(e => e.codPayment, 'cp');
-      q.leftJoin(e => e.codPayment.branchFinal, 'fin');
 
       // get perwakilan di gerai terkhir
       q.leftJoin(e => e.branchLast.representative, 'rep');
@@ -456,9 +620,6 @@ export class V2WebCodReportService {
 
       // LAST STATUS
       q.leftJoin(e => e.awbStatus, 't12');
-
-      // FINAL STATUS
-      q.leftJoin(e => e.awbStatusFinal, 't13');
 
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
