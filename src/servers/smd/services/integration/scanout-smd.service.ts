@@ -1828,6 +1828,7 @@ export class ScanoutSmdService {
       departureScheduleDateTime: paramDoSmdTime,
       counterTrip: paramCounterTrip,
       doSmdNote: description,
+      isIntercity: 0,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,
