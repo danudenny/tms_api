@@ -157,6 +157,15 @@ export class HubMonitoringReportService {
   static async getDataCsvHubMonitoringSortir(payload: BaseMetaPayloadVm): Promise<any> {
     const query = await HubMonitoringService.getQueryCSVMonitoringSortirByFilterOrion(payload);
     const data = await RawQueryService.query(query);
+    if (data.length == 0) {
+      RequestErrorService.throwObj(
+        {
+          message: 'Data Monitoring Sortir Not Found!',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     return data;
   }
 }
