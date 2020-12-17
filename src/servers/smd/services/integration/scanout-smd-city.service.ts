@@ -74,6 +74,7 @@ export class ScanoutSmdCityService {
         await DoSmd.update(
           { doSmdId : paramDoSmdId },
           {
+            branchToNameList: resultbranchTo.branchName,
             doSmdDetailIdLast: paramDoSmdDetailId,
             doSmdVehicleIdLast: paramDoSmdVehicleId,
             userIdUpdated: authMeta.userId,
