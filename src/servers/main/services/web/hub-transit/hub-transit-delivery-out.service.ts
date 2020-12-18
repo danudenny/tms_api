@@ -195,60 +195,74 @@ export class HubTransitDeliveryOutService {
             // }
 
             // NOTE: create data do pod detail per awb number
-            const doPodDetail = DoPodDetail.create();
-            doPodDetail.doPodId = payload.doPodId;
-            doPodDetail.awbId = awb.awbId;
-            doPodDetail.awbNumber = awbNumber;
-            doPodDetail.awbItemId = awb.awbItemId;
-            doPodDetail.transactionStatusIdLast = 300; // OUT_HUB
-            doPodDetail.isScanOut = true;
-            doPodDetail.scanOutType = 'awb';
-            await DoPodDetail.save(doPodDetail);
+            const existDoPodDetail = await DoPodDetail.find({
+              where: {
+                bagItemId: payload.doPodId,
+                awbNumber: awbNumber,
+                isDeleted: false,
+              },
+            });
 
-            // Assign print metadata - Scan Out & Deliver
-            response.printDoPodDetailMetadata.awbItem.awb.awbId         = awb.awbId;
-            response.printDoPodDetailMetadata.awbItem.awb.awbNumber     = awbNumber;
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
+            if(!existDoPodDetail || existDoPodDetail.length == 0){
+              const doPodDetail = DoPodDetail.create();
+              doPodDetail.doPodId = payload.doPodId;
+              doPodDetail.awbId = awb.awbId;
+              doPodDetail.awbNumber = awbNumber;
+              doPodDetail.awbItemId = awb.awbItemId;
+              doPodDetail.transactionStatusIdLast = 300; // OUT_HUB
+              doPodDetail.isScanOut = true;
+              doPodDetail.scanOutType = 'awb';
+              await DoPodDetail.save(doPodDetail);
 
-            // Assign print metadata - Deliver
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber  = awb.awbItem.awb.consigneeNumber;
-            response.printDoPodDetailMetadata.awbItem.awb.consigneeZip     = awb.awbItem.awb.consigneeZip;
-            response.printDoPodDetailMetadata.awbItem.awb.isCod            = awb.awbItem.awb.isCod;
-            response.printDoPodDetailMetadata.awbItem.awb.totalCodValue    = awb.awbItem.awb.totalCodValue;
-            response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.weightReal;
+              // Assign print metadata - Scan Out & Deliver
+              response.printDoPodDetailMetadata.awbItem.awb.awbId         = awb.awbId;
+              response.printDoPodDetailMetadata.awbItem.awb.awbNumber     = awbNumber;
+              response.printDoPodDetailMetadata.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
 
-            // AFTER Scan OUT ===============================================
-            // #region after scanout
+              // Assign print metadata - Deliver
+              response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
+              response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber  = awb.awbItem.awb.consigneeNumber;
+              response.printDoPodDetailMetadata.awbItem.awb.consigneeZip     = awb.awbItem.awb.consigneeZip;
+              response.printDoPodDetailMetadata.awbItem.awb.isCod            = awb.awbItem.awb.isCod;
+              response.printDoPodDetailMetadata.awbItem.awb.totalCodValue    = awb.awbItem.awb.totalCodValue;
+              response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.weightReal;
 
-            // NOTE: queue by Bull
-            let partnerLogisticName = '';
-            if (doPod.partnerLogisticName) {
-              partnerLogisticName = doPod.partnerLogisticName;
-            } else if (doPod.partnerLogisticId) {
-              const partnerLogistic = await PartnerLogistic.findOne({ partnerLogisticId: doPod.partnerLogisticId });
-              partnerLogisticName = partnerLogistic.partnerLogisticName;
+              // AFTER Scan OUT ===============================================
+              // #region after scanout
+
+              // NOTE: queue by Bull
+              let partnerLogisticName = '';
+              if (doPod.partnerLogisticName) {
+                partnerLogisticName = doPod.partnerLogisticName;
+              } else if (doPod.partnerLogisticId) {
+                const partnerLogistic = await PartnerLogistic.findOne({ partnerLogisticId: doPod.partnerLogisticId });
+                partnerLogisticName = partnerLogistic.partnerLogisticName;
+              }
+              // NOTE: auto in hub
+              DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+                awb.awbItemId,
+                permissonPayload.branchId,
+                authMeta.userId,
+              );
+
+              // out hub
+              DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
+                awb.awbItemId,
+                AWB_STATUS.OUT_HUB,
+                permissonPayload.branchId,
+                authMeta.userId,
+                doPod.userIdDriver,
+                doPod.branchIdTo,
+                partnerLogisticName,
+              );
+
+              totalSuccess += 1;
+              // #endregion after scanout
+            }else{
+              totalError += 1;
+              response.status = 'error';
+              response.message = `Resi ${awbNumber} sudah di proses.`;
             }
-            // NOTE: auto in hub
-            DoPodDetailPostMetaQueueService.createJobByAwbFilter(
-              awb.awbItemId,
-              permissonPayload.branchId,
-              authMeta.userId,
-            );
-
-            // out hub
-            DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
-              awb.awbItemId,
-              AWB_STATUS.OUT_HUB,
-              permissonPayload.branchId,
-              authMeta.userId,
-              doPod.userIdDriver,
-              doPod.branchIdTo,
-              partnerLogisticName,
-            );
-
-            totalSuccess += 1;
-            // #endregion after scanout
           } else {
             totalError += 1;
             response.status = 'error';
