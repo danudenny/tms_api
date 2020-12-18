@@ -153,7 +153,7 @@ export class ScaninSmdReportService {
     payload.applyToOrionRepositoryQuery(q);
     q.selectRaw(
       ['ds.do_smd_code', 'No SMD'],
-      [`CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END`, 'do_smd_intercity'],
+      [`CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END`, 'Jenis SJ'],
       ['TO_CHAR(ds.do_smd_time, \'DD Mon YYYY HH24:MI\')', 'Tgl Di Buat'],
       ['TO_CHAR(dsd.arrival_time, \'DD Mon YYYY HH24:MI\')', 'Tgl Tiba'],
       ['e.fullname', 'Handover'],
