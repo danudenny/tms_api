@@ -281,7 +281,6 @@ export class MonitoringSmdServices {
     q.select('ds.do_smd_code', 'Nomor SMD')
       // .addSelect('ds.do_smd_time', 'do_smd_time')
       // .addSelect('ds.branch_id', 'branch_id')
-      .addSelect('ds.is_intercity', 'Intercity')
       .addSelect('ds.do_smd_intercity', 'Tujauan SJ')
       .addSelect('TO_CHAR(ds.departure_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Berangkat')
       .addSelect('TO_CHAR(ds.transit_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Transit')
