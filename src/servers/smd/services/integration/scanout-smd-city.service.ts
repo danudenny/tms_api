@@ -75,6 +75,7 @@ export class ScanoutSmdCityService {
           { doSmdId : paramDoSmdId },
           {
             branchToNameList: resultbranchTo.branchName,
+            trip: 1,
             doSmdDetailIdLast: paramDoSmdDetailId,
             doSmdVehicleIdLast: paramDoSmdVehicleId,
             userIdUpdated: authMeta.userId,
