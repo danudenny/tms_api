@@ -195,15 +195,15 @@ export class HubTransitDeliveryOutService {
             // }
 
             // NOTE: create data do pod detail per awb number
-            const existDoPodDetail = await DoPodDetail.find({
+            const existDoPodDetail = await DoPodDetail.findOne({
               where: {
-                bagItemId: payload.doPodId,
-                awbNumber: awbNumber,
+                doPodId: payload.doPodId,
+                awbItemId: awb.awbItemId,
                 isDeleted: false,
               },
             });
 
-            if(!existDoPodDetail || existDoPodDetail.length == 0){
+            if(!existDoPodDetail){
               const doPodDetail = DoPodDetail.create();
               doPodDetail.doPodId = payload.doPodId;
               doPodDetail.awbId = awb.awbId;
