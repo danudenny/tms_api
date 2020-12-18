@@ -261,7 +261,7 @@ export class HubTransitDeliveryOutService {
             }else{
               totalError += 1;
               response.status = 'error';
-              response.message = `Resi ${awbNumber} sudah di proses.`;
+              response.message = `Resi ${awbNumber} sudah discan sebelumnya.`;
             }
           } else {
             totalError += 1;
