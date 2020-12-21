@@ -805,7 +805,7 @@ export class V1PackageService {
         CreateBagAwbScanHubQueueService.perform(
           bagDetail.bagId,
           bagDetail.bagItemId,
-          bagDetail.bag.bagNumber,
+          payload.bagNumber,
           payload.awbItemId,
           payload.awbDetail.awbNumber,
           payload.podScanInHubId,
