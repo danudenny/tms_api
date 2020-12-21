@@ -599,7 +599,7 @@ export class V1PackageService {
           CreateBagFirstScanHubQueueService.perform(
             bagDetail.bagId,
             bagDetail.bagItemId,
-            bagDetail.bag.bagNumber,
+            payload.bagNumber,
             payload.awbItemId,
             payload.awbDetail.awbNumber,
             podScanInHub.podScanInHubId,
