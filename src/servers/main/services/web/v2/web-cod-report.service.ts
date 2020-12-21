@@ -507,8 +507,8 @@ export class V2WebCodReportService {
       q.leftJoin(e => e.awb.districtTo, 't9');
 
       // User Update Transaction
-      q.leftJoin(e => e.codTransactionDetail.userAdmin, 'upduser');
-      q.leftJoin(e => e.codTransactionDetail.userAdmin.employee, 'eupduser');
+      q.innerJoin(e => e.codTransactionDetail.userAdmin, 'upduser');
+      q.innerJoin(e => e.codTransactionDetail.userAdmin.employee, 'eupduser');
 
       // Invoice Status
       q.innerJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
