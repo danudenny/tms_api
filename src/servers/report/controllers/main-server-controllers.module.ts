@@ -11,6 +11,7 @@ import { SmdScaninReportController } from './smd/smd-scanin-report.controller';
 import { SmdScanoutReportController } from './smd/smd-scanout-report.controller';
 import { KorwilMonitoringCoordinatorReportController } from './korwil/korwil-monitoring-coordinator-report.controller';
 import { HubMonitoringReportController } from './pod/hub-monitoring-report.controller';
+import {ScanoutWebReportController} from './pod/scanout-web-report.controller';
 
 // #endregion
 @Module({
@@ -18,12 +19,13 @@ import { HubMonitoringReportController } from './pod/hub-monitoring-report.contr
   controllers: [
     V1WebAwbCodController,
     V2WebCodReportController,
+    ScanoutWebReportController,
     HubMonitoringReportController,
+    KorwilMonitoringCoordinatorReportController,
     SmdVendorReportController,
     SmdMonitoringReportController,
     SmdScaninReportController,
     SmdScanoutReportController,
-    KorwilMonitoringCoordinatorReportController,
   ],
 })
 export class MainServerControllersModule {}
