@@ -62,6 +62,7 @@ export class V2WebCodReportService {
     'Submitted Date',
     'Submitted Number',
     'Date Updated',
+    'User Updated',
   ];
 
   static CodNONFeeHeader = [
@@ -208,6 +209,7 @@ export class V2WebCodReportService {
       doc.updatedTime
         ? moment(doc.updatedTime).format('YYYY-MM-DD HH:mm')
         : null,
+      doc.updUser ? doc.updUser : '-',
     ];
 
     return `${values.join(',')} \n`;
@@ -470,6 +472,7 @@ export class V2WebCodReportService {
         ['t5.package_type_code', 'packageTypeCode'],
         ['t1.updated_time', 'awbStatusDate'],
         ['ctd.updated_time', 'updatedTime'],
+        [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
         ['t3.notes', 'parcelNote'],
       );
 
@@ -502,6 +505,10 @@ export class V2WebCodReportService {
       // gerai pickup / gerai di manifest resi
       q.leftJoin(e => e.awb.branchLast, 't8');
       q.leftJoin(e => e.awb.districtTo, 't9');
+
+      // User Update Transaction
+      q.innerJoin(e => e.codTransactionDetail.userAdmin, 'upduser');
+      q.innerJoin(e => e.codTransactionDetail.userAdmin.employee, 'eupduser');
 
       // Invoice Status
       q.innerJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
