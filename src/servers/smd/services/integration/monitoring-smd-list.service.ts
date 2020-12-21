@@ -291,7 +291,7 @@ export class MonitoringSmdServices {
       .addSelect(`ds.smd_trip`, 'Trip')
       .addSelect(`
         CASE
-          WHEN ds.smd_trip = '1' THEN
+          WHEN ds.trip = '1' THEN
             'DIRECT HUB'
           ELSE
             'TRANSIT'
