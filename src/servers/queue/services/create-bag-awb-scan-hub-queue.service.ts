@@ -90,7 +90,6 @@ export class CreateBagAwbScanHubQueueService {
           // Update Pod scan in hub bag
           const podScanInHubBag = await PodScanInHubBag.findOne({
             where: { bagItemId: data.bagItemId },
-            lock: { mode: 'pessimistic_write' },
           });
           if (podScanInHubBag) {
             await transactional.update(
