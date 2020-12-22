@@ -494,27 +494,27 @@ export class V2WebCodReportService {
       q.innerJoin(e => e.branchLast, 't7');
 
       // Data Jika sudah ada transaksi & Transaction Status
-      q.innerJoin(e => e.codTransactionDetail, 'ctd', j =>
+      q.leftJoin(e => e.codTransactionDetail, 'ctd', j =>
         j.andWhere(e => e.codTransactionId, w => w.isNotNull()),
       );
-      q.innerJoin(e => e.codTransactionDetail.transactionStatus, 't14');
+      q.leftJoin(e => e.codTransactionDetail.transactionStatus, 't14');
 
       // Data Jika sudah dilakukan DLV - COD
-      q.innerJoin(e => e.codPayment, 'cp');
+      q.leftJoin(e => e.codPayment, 'cp');
 
       // gerai pickup / gerai di manifest resi
       q.leftJoin(e => e.awb.branchLast, 't8');
       q.leftJoin(e => e.awb.districtTo, 't9');
 
       // User Update Transaction
-      q.innerJoin(e => e.codTransactionDetail.userAdmin, 'upduser');
-      q.innerJoin(e => e.codTransactionDetail.userAdmin.employee, 'eupduser');
+      q.leftJoin(e => e.codTransactionDetail.userAdmin, 'upduser');
+      q.leftJoin(e => e.codTransactionDetail.userAdmin.employee, 'eupduser');
 
       // Invoice Status
-      q.innerJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
+      q.leftJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
 
       // LAST STATUS
-      q.innerJoin(e => e.awbStatus, 't12');
+      q.leftJoin(e => e.awbStatus, 't12');
 
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
