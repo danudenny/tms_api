@@ -994,6 +994,10 @@ export class MobileKorwilService {
     long,
     branchId,
   ): Promise<ValidateBranchCoordinateResponseVm> {
+    if (!lat || !long || !branchId) {
+      throw new BadRequestException('Lokasi tidak ditemukan!');
+    }
+
     const lata = parseFloat(lat);
     const longa = parseFloat(long);
     const radius = [0.5, 0.5]; // in kilometer

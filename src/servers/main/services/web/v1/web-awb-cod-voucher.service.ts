@@ -234,7 +234,7 @@ export class V1WebAwbCodVoucherService {
   }
 
   public static async getDataVoucher(params: {}): Promise<CodVoucher> {
-    const voucher = await CodVoucher.create({
+    const voucher = CodVoucher.create({
       codVoucherNo: params['cod_voucher_no'],
       codVoucherDate: params['cod_voucher_date'],
       codVoucherService: params['cod_voucher_service'],
@@ -247,7 +247,7 @@ export class V1WebAwbCodVoucherService {
   }
 
   public static async getDataVoucherDetail(params: {}): Promise<CodVoucherDetail> {
-    const voucherDetail = await CodVoucherDetail.create({
+    const voucherDetail = CodVoucherDetail.create({
       codVoucherId: params['cod_voucher_id'],
       awbNumber: params['awb_number'],
       createdTime: params['created_time'],
