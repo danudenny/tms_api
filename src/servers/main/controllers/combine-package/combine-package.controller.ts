@@ -7,6 +7,7 @@ import { PackageAwbResponseVm } from '../../models/gabungan.response.vm';
 import { PackageService } from '../../services/combine-package/package.services';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { V1PackageService } from '../../services/combine-package/v1/package.services';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('Resi Bag')
 @Controller('combine')
@@ -18,6 +19,7 @@ export class CombinePackageController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: PackageAwbResponseVm })
+  @Transactional()
   // NOTE: refactoring handle data
   public async packageAwb(@Body() payload: PackagePayloadVm) {
     // return this.packageService.awbPackage(payload);
