@@ -87,6 +87,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
     payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
+    payload.fieldResolverMap['representativeId'] = 't12.representative_id';
 
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
@@ -128,21 +129,17 @@ export class V1WebAwbCodService {
       ['t8.no_reference', 'noReference'],
       ['t1.transaction_status_id', 'transactionStatusId'],
       ['t9.status_title', 'transactionStatusName'],
+      ['coalesce(t8.branch_id, t1.branch_id_last)', 'branchIdCopy'],
+      ['coalesce(t12.branch_name, t6.branch_name)', 'branchNameCopy'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
     q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.codPayment, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.codPayment.userDriver, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -152,19 +149,27 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.codPayment.branchFinal, 't12', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.awbStatus, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbStatusFinal, 't11', j =>
+    q.leftJoin(e => e.codPayment, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awbStatusFinal, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.leftJoin(e => e.transactionStatus, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codPayment.userDriver, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codPayment.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -189,10 +194,10 @@ export class V1WebAwbCodService {
     }
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.awb.isCod, w => w.isTrue());
+    // q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter DLV
-    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
+    // q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
 
     const data = await q.exec();
     const total = 0;
@@ -231,6 +236,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
     payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
+    payload.fieldResolverMap['representativeId'] = 't12.representative_id';
 
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
@@ -275,18 +281,12 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
     q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.codPayment, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.codPayment.userDriver, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -296,19 +296,27 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.codPayment.branchFinal, 't12', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.awbStatus, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbStatusFinal, 't11', j =>
+    q.leftJoin(e => e.codPayment, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awbStatusFinal, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.leftJoin(e => e.transactionStatus, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codPayment.userDriver, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codPayment.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -333,10 +341,10 @@ export class V1WebAwbCodService {
     }
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.awb.isCod, w => w.isTrue());
+    // q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter DLV
-    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
+    // q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
 
     const total = await q.countWithoutTakeAndSkip();
     const result = new WebCodCountResponseVm();
@@ -770,14 +778,18 @@ export class V1WebAwbCodService {
             totalAwbCash += 1;
 
             // send to background process
-            const dataCash = await this.handleAwbCod(
+            await this.handleAwbCod(
               item,
               codBranchCash.codTransactionId,
               permissonPayload.branchId,
               authMeta.userId,
             );
 
-            dataPrintCash.push(dataCash);
+            dataPrintCash.push({
+              awbNumber: item.awbNumber,
+              codValue: item.codValue,
+              provider: item.paymentService,
+            });
           } else {
             const errorMessage = `status resi ${
               item.awbNumber
@@ -809,7 +821,16 @@ export class V1WebAwbCodService {
           totalCodValueCash,
           'cash',
         );
-
+      } else {
+        // update data
+        await CodTransaction.update(
+          {
+            codTransactionId: codBranchCash.codTransactionId,
+          },
+          {
+            transactionStatusId: 27510, // status transaksi debug
+          },
+        );
       }
     }
     // #endregion data cash
@@ -852,14 +873,18 @@ export class V1WebAwbCodService {
             totalCodValueCashless += Number(item.codValue);
             totalAwbCashless += 1;
 
-            const dataCashless = await this.handleAwbCod(
+            await this.handleAwbCod(
               item,
               codBranchCashless.codTransactionId,
               permissonPayload.branchId,
               authMeta.userId,
             );
 
-            dataPrintCashless.push(dataCashless);
+            dataPrintCashless.push({
+              awbNumber: item.awbNumber,
+              codValue: item.codValue,
+              provider: item.paymentService,
+            });
           } else {
             // NOTE: error message
             const errorMessage = `status resi ${
@@ -892,7 +917,16 @@ export class V1WebAwbCodService {
           totalCodValueCashless,
           'cashless',
         );
-
+      } else {
+        // update data
+        await CodTransaction.update(
+          {
+            codTransactionId: codBranchCashless.codTransactionId,
+          },
+          {
+            transactionStatusId: 27510, // status transaksi debug
+          },
+        );
       }
     } // end of check data cashless
     // #endregion data cashless
@@ -1263,41 +1297,47 @@ export class V1WebAwbCodService {
     transctiontId: string,
     branchId: number,
     userId: number,
-  ): Promise<WebCodAwbPrintVm> {
-    // update awb_item_attr transaction status 3100
-    await AwbItemAttr.update(
-      { awbItemId: item.awbItemId },
-      {
-        transactionStatusId: TRANSACTION_STATUS.TRM,
-      },
-    );
+  ): Promise<boolean> {
+    try {
+      // update awb_item_attr transaction status 3100
+      await AwbItemAttr.update(
+        { awbItemId: item.awbItemId },
+        {
+          transactionStatusId: TRANSACTION_STATUS.TRM,
+        },
+      );
 
-    // #region send to background process with bull
-    const firstTransaction = new WebCodFirstTransactionPayloadVm();
-    firstTransaction.awbItemId = item.awbItemId;
-    firstTransaction.awbNumber = item.awbNumber;
-    firstTransaction.codTransactionId = transctiontId;
-    firstTransaction.transactionStatusId = 31000;
-    firstTransaction.supplierInvoiceStatusId = null;
-    firstTransaction.codSupplierInvoiceId = null;
-    firstTransaction.paymentMethod = item.paymentMethod;
-    firstTransaction.paymentService = item.paymentService;
-    firstTransaction.noReference = item.noReference;
-    firstTransaction.branchId = branchId;
-    firstTransaction.userId = userId;
-    firstTransaction.userIdDriver = item.userIdDriver;
-    CodFirstTransactionQueueService.perform(
-      firstTransaction,
-      moment().toDate(),
-    );
-    // #endregion send to background
+      // #region send to background process with bull
+      const firstTransaction = new WebCodFirstTransactionPayloadVm();
+      firstTransaction.awbItemId = item.awbItemId;
+      firstTransaction.awbNumber = item.awbNumber;
+      firstTransaction.codTransactionId = transctiontId;
+      firstTransaction.transactionStatusId = 31000;
+      firstTransaction.supplierInvoiceStatusId = null;
+      firstTransaction.codSupplierInvoiceId = null;
+      firstTransaction.paymentMethod = item.paymentMethod;
+      firstTransaction.paymentService = item.paymentService;
+      firstTransaction.noReference = item.noReference;
+      firstTransaction.branchId = branchId;
+      firstTransaction.userId = userId;
+      firstTransaction.userIdDriver = item.userIdDriver;
+      CodFirstTransactionQueueService.perform(
+        firstTransaction,
+        moment().toDate(),
+      );
+      // #endregion send to background
 
-    // response
-    const result = new WebCodAwbPrintVm();
-    result.awbNumber = item.awbNumber;
-    result.codValue = item.codValue;
-    result.provider = item.paymentService;
-    return result;
+      // response
+      // const result = new WebCodAwbPrintVm();
+      // result.awbNumber = item.awbNumber;
+      // result.codValue = item.codValue;
+      // result.provider = item.paymentService;
+      // return result;
+      return true;
+    } catch (err) {
+      console.error('HandleAwb error: ', err);
+      return false;
+    }
   }
 
   private static async validStatusAwb(awbItemId: number): Promise<boolean> {
@@ -1580,7 +1620,6 @@ export class V1WebAwbCodService {
       result.totalSuccess = totalSuccess;
       result.dataError = dataError;
       return result;
-
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }

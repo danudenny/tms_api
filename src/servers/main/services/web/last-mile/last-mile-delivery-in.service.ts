@@ -358,7 +358,7 @@ export class LastMileDeliveryInService {
 
       if (notScanIn && holdRedis) {
         // NOTE: handle status cancel delivery
-        const statusFinal = [AWB_STATUS.RTN, AWB_STATUS.CANCEL];
+        const statusFinal = [AWB_STATUS.CANCEL];
         if (statusFinal.includes(awb.awbStatusIdLast)) {
           // handle message
           const desc =
@@ -513,11 +513,6 @@ export class LastMileDeliveryInService {
 
             // AFTER Scan IN ===============================================
             // #region after scanin
-            await AwbService.updateAwbAttr(
-              awb.awbItemId,
-              AWB_STATUS.IN_BRANCH,
-              null,
-            );
 
             // NOTE: queue by Bull add awb history with status scan in branch
             DoPodDetailPostMetaQueueService.createJobByScanInAwbBranch(

@@ -380,7 +380,9 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['representativeFrom'] =
       't1.ref_representative_code';
     payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
-    payload.fieldResolverMap['branchScanId'] = 't1.branch_id';
+    payload.fieldResolverMap['branchScanId'] = 't5.branch_id';
+    payload.fieldResolverMap['branchScanName'] = 't5.branch_name';
+    payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
 
     if (payload.sortBy === '') {
@@ -780,11 +782,6 @@ export class WebDeliveryInService {
                   }
 
                   await DoPod.save(doPod);
-                  await AwbService.updateAwbAttr(
-                    awb.awbItemId,
-                    AWB_STATUS.IN_BRANCH,
-                    doPod.branchIdTo,
-                  );
 
                   // NOTE: queue by Bull
                   DoPodDetailPostMetaQueueService.createJobByScanInAwb(
@@ -951,12 +948,7 @@ export class WebDeliveryInService {
                   if (bagItemsAwb && bagItemsAwb.length > 0) {
                     for (const itemAwb of bagItemsAwb) {
                       if (itemAwb.awbItemId) {
-                        // NOTE: disable update status to awb item attr
-                        // await AwbService.updateAwbAttr(
-                        //   itemAwb.awbItemId,
-                        //   null,
-                        //   AWB_STATUS.DO_HUB,
-                        // );
+
                         // NOTE: queue by Bull awb history
                         DoPodDetailPostMetaQueueService.createJobByDropoffBag(
                           itemAwb.awbItemId,

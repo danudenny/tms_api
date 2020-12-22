@@ -159,6 +159,9 @@ export class MobileKorwilService {
   }
 
   public static async getKorwilIdByrequestDate(userId, branchId, fromDate, toDate, status = null) {
+    if (isNull(Number(branchId)) || isNull(Number(userId))) {
+      throw new BadRequestException('Branch I tidak ditemukan atau User ID');
+    }
     const qb = createQueryBuilder();
     qb.addSelect('kt.korwil_transaction_id', 'id');
     qb.from('korwil_transaction', 'kt');
@@ -991,6 +994,10 @@ export class MobileKorwilService {
     long,
     branchId,
   ): Promise<ValidateBranchCoordinateResponseVm> {
+    if (!lat || !long || !branchId) {
+      throw new BadRequestException('Lokasi tidak ditemukan!');
+    }
+
     const lata = parseFloat(lat);
     const longa = parseFloat(long);
     const radius = [0.5, 0.5]; // in kilometer
