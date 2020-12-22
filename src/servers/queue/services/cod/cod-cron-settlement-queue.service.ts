@@ -90,8 +90,8 @@ export class CodCronSettlementQueueService {
           sum(ctd.cod_value) AS "totalCodValue"
         FROM
           cod_voucher_detail cvd
-        LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
-          AND ctd.is_deleted = 'false'
+          LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
+            AND ctd.is_deleted = 'false'
         WHERE cvd.cod_voucher_id = :codVoucherId AND cvd.is_deleted = 'false';
       `;
 
@@ -104,8 +104,8 @@ export class CodCronSettlementQueueService {
             ctd.cod_transaction_detail_id AS "codTransactionDetailId"
           FROM
             cod_voucher_detail cvd
-          LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
-            AND ctd.is_deleted = 'false'
+            LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
+              AND ctd.is_deleted = 'false'
           WHERE cvd.cod_voucher_id = :codVoucherId AND cvd.is_deleted = 'false';
         `;
         const transactionDetails = await RawQueryService.queryWithParams(transactionDetailQuery, { codVoucherId });

@@ -194,12 +194,6 @@ export class FirstMileDeliveryOutService {
             DoPodDetail.update({ doPodDetailId: doPodDetail.doPodDetailId }, {
               isDeleted: true,
             });
-            // NOTE: update awb_item_attr and awb_history
-            await AwbService.updateAwbAttr(
-              awb.awbItemId,
-              AWB_STATUS.IN_BRANCH,
-              null,
-            );
             // NOTE: queue by Bull
             DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
               awb.awbItemId,
@@ -225,13 +219,6 @@ export class FirstMileDeliveryOutService {
             doPodDetail.isScanOut = true;
             doPodDetail.scanOutType = 'awb';
             await DoPodDetail.save(doPodDetail);
-
-            // awb_item_attr and awb_history ??
-            await AwbService.updateAwbAttr(
-              awb.awbItemId,
-              AWB_STATUS.OUT_BRANCH,
-              doPod.branchIdTo,
-            );
 
             // NOTE: queue by Bull
             DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(

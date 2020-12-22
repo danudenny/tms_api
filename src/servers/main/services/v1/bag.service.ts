@@ -114,11 +114,6 @@ export class BagService {
             dropoffDetail.awbNumber = itemAwb.awbNumber;
             await DropoffHubDetail.save(dropoffDetail);
 
-            // await AwbService.updateAwbAttr(
-            //   itemAwb.awbItemId,
-            //   AWB_STATUS.DO_HUB,
-            // );
-
             // TODO: check awb status for auto check out ??
             // NOTE: queue by Bull
             // add awb history with background process
@@ -202,12 +197,6 @@ export class BagService {
           // last awb status
           if ((doPodType == 3020) || (doPodType == 3010)) {
             // HUB
-            await AwbService.updateAwbAttr(
-              itemAwb.awbItemId,
-              AWB_STATUS.OUT_HUB,
-              branchIdNext,
-            );
-
             // TODO: if isTransit auto IN
             if (doPodType == 3020) {
               // queue bull IN HUB
@@ -235,12 +224,6 @@ export class BagService {
             );
           } else {
             // BRANCH
-            await AwbService.updateAwbAttr(
-              itemAwb.awbItemId,
-              AWB_STATUS.OUT_BRANCH,
-              branchIdNext,
-            );
-
             // queue bull
             DoPodDetailPostMetaQueueService.createJobByScanOutBag(
               itemAwb.awbItemId,
@@ -297,11 +280,6 @@ export class BagService {
                 ? AWB_STATUS.IN_BRANCH
                 : AWB_STATUS.IN_HUB;
 
-            await AwbService.updateAwbAttr(
-              itemAwb.awbItemId,
-              awbStatus,
-              null,
-            );
             // queue bull
             DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
               itemAwb.awbItemId,
