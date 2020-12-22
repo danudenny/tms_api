@@ -122,8 +122,8 @@ export class HubMonitoringService {
     const optrScanOut = ['eq'];
     const whereQuerySub = await this.customQueryRawFromMultipleFieldsByOrionFilters(payload.filters, mapSubQuery, 'branchIdTo', 'OR');
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
-    const whereSubQueryScanOut = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp.do_pod_date_time', optr, 'createdTime');
-    const whereSubQueryScanOut2 = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp.branch_id', optrScanOut, 'branchIdFrom');
+    // const whereSubQueryScanOut2 = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp0.do_pod_date_time', optr, 'createdTime');
+    const whereSubQueryScanOut = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp0.branch_id', optrScanOut, 'branchIdFrom');
 
     let filterQuery = payload.search ? `origin ~* '${payload.search}'` : '';
     filterQuery += filterQuery && whereQuery ? 'AND' : '';
@@ -149,20 +149,17 @@ export class HubMonitoringService {
             dp.do_pod_date_time AS "doPodDateTime"
           FROM do_pod dp
           INNER JOIN do_pod_detail_bag dpdb ON dp.do_pod_id = dpdb.do_pod_id AND dpdb.is_deleted = FALSE
-          LEFT JOIN (
-            SELECT dpdb.bag_item_id
-            FROM do_pod dp
-            INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
+          LEFT JOIN LATERAL (
+            SELECT dpdb0.bag_item_id
+            FROM do_pod dp0
+            INNER JOIN do_pod_detail_bag dpdb0 ON dpdb0.do_pod_id = dp0.do_pod_id AND dpdb0.is_deleted = FALSE AND dpdb.bag_item_id = dpdb0.bag_item_id
             WHERE
-              dp.is_deleted = FALSE
-              AND dp.branch_id_to IS NOT NULL
+              dp0.is_deleted = FALSE
+              AND dp0.branch_id_to IS NOT NULL
               AND do_pod_type = ${POD_TYPE.OUT_HUB_TRANSIT}
-              AND dp.user_id_driver IS NOT NULL AND dp.branch_id_to IS NOT NULL
+              AND dp0.user_id_driver IS NOT NULL AND dp0.branch_id_to IS NOT NULL
               ${whereSubQueryScanOut ? `AND ${whereSubQueryScanOut}` : ''}
-              ${whereSubQueryScanOut2 ? `AND ${whereSubQueryScanOut2}` : ''}
-          ) scan_out ON dpdb.bag_item_id = scan_out.bag_item_id
-          -- LEFT JOIN bag_item_history bih ON bih.bag_item_id = dpdb.bag_item_id AND bih.is_deleted = FALSE
-          --   AND bih.bag_item_status_id = ${BAG_STATUS.OUT_HUB} AND bih.history_date >= dpdb.created_time::DATE
+          ) scan_out ON true
           LEFT JOIN dropoff_hub doh ON doh.bag_item_id = dpdb.bag_item_id AND doh.is_deleted = FALSE
           LEFT JOIN bag_item bi ON bi.bag_item_id = dpdb.bag_item_id AND bi.is_deleted = FALSE
           LEFT JOIN bag_item_awb bai ON bai.bag_item_id = bi.bag_item_id AND bai.is_deleted = FALSE
@@ -297,8 +294,8 @@ export class HubMonitoringService {
     const optrScanOut = ['eq'];
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
     const whereSubQuery = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'bi.created_time', optr, 'createdTime');
-    const whereSubQueryScanOut = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp.do_pod_date_time', optrScanOut, 'createdTime');
-    const whereSubQueryScanOut2 = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp.branch_id', optrScanOut, 'branchIdFrom');
+    // const whereSubQueryScanOut2 = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp1.do_pod_date_time', optrScanOut, 'createdTime');
+    const whereSubQueryScanOut = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp1.branch_id', optrScanOut, 'branchIdFrom');
 
     const query = `
       WITH detail as (
@@ -314,33 +311,32 @@ export class HubMonitoringService {
         INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-        LEFT JOIN
+        LEFT JOIN LATERAL
         (
           SELECT
-            ai.awb_id,
-            bi.bag_item_id,
-            bi.branch_id_last
+            ai0.awb_id,
+            bi0.bag_item_id,
+            bi0.branch_id_last
           FROM
-            bag_item_awb bia
-            INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
-            INNER JOIN bag_item bi ON bi.bag_item_id = bia.bag_item_id AND bi.is_deleted = FALSE
-            INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE AND b.branch_id_to IS NOT NULL
-          WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
-        ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
-        LEFT JOIN (
-          SELECT ai.awb_id, dp.do_pod_id, br.branch_name, br.branch_id
-          FROM do_pod dp
-          INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
-          INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
-          INNER JOIN branch br ON br.branch_id = dp.branch_id_to AND br.is_deleted = FALSE
-          INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+            bag_item_awb bia0
+            INNER JOIN awb_item ai0 ON ai0.awb_item_id = bia0.awb_item_id AND ai0.is_deleted = FALSE AND dohd.awb_id = ai0.awb_id
+            INNER JOIN bag_item bi0 ON bi0.bag_item_id = bia0.bag_item_id AND bi0.is_deleted = FALSE
+            INNER JOIN bag b0 ON b0.bag_id = bi0.bag_id AND b0.is_deleted = FALSE AND b0.branch_id_to IS NOT NULL
+          WHERE bia0.is_deleted = FALSE
+        ) bag_sortir ON true
+        LEFT JOIN LATERAL (
+          SELECT ai1.awb_id, dp1.do_pod_id, br1.branch_name, br1.branch_id
+          FROM do_pod dp1
+          INNER JOIN do_pod_detail_bag dpdb1 ON dpdb1.do_pod_id = dp1.do_pod_id AND dpdb1.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia1 ON bia1.bag_item_id = dpdb1.bag_item_id AND bia1.is_deleted = FALSE
+          INNER JOIN branch br1 ON br1.branch_id = dp1.branch_id_to AND br1.is_deleted = FALSE
+          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           WHERE
-            dp.is_deleted = FALSE
+            dp1.is_deleted = FALSE
             AND do_pod_type = ${POD_TYPE.OUT_HUB}
-            AND dp.user_id_driver IS NOT NULL AND dp.branch_id_to IS NOT NULL
+            AND dp1.user_id_driver IS NOT NULL AND dp1.branch_id_to IS NOT NULL
             ${whereSubQueryScanOut ? `AND ${whereSubQueryScanOut}` : ''}
-            ${whereSubQueryScanOut2 ? `AND ${whereSubQueryScanOut2}` : ''}
-        ) scan_out ON dohd.awb_id = scan_out.awb_id
+        ) scan_out ON true
         WHERE
           doh.branch_id IS NOT NULL
           ${whereQuery ? `AND ${whereQuery}` : ''}
@@ -387,8 +383,8 @@ export class HubMonitoringService {
     };
     const optr = ['gte', 'gt'];
     const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
-    const whereSubQuery = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'bi.created_time', optr, 'createdTime');
-    const whereSubQueryScanOut = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp.do_pod_date_time', optr, 'createdTime');
+    // const whereSubQuery = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'bi1.created_time', optr, 'createdTime');
+    // const whereSubQueryScanOut = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp2.do_pod_date_time', optr, 'createdTime');
 
     let filterQuery = payload.search ? `origin ~* '${payload.search}'` : '';
     filterQuery += filterQuery && whereQuery ? 'AND' : '';
@@ -409,32 +405,31 @@ export class HubMonitoringService {
         INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-        LEFT JOIN
+        LEFT JOIN LATERAL
         (
           SELECT
-            bi.created_time,
-            ai.awb_id,
-            bi.bag_item_id,
-            bi.branch_id_last
-          FROM bag_item_awb bia
-          INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
-          INNER JOIN bag_item bi ON bi.bag_item_id = bia.bag_item_id AND bi.is_deleted = FALSE
-          INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE AND b.branch_id_to IS NOT NULL
-          WHERE bia.is_deleted = FALSE ${whereSubQuery ? `AND ${whereSubQuery}` : ''}
-        ) bag_sortir ON dohd.awb_id = bag_sortir.awb_id
-        LEFT JOIN (
-          SELECT ai.awb_id, dp.do_pod_code, br.branch_name, br.branch_id
-          FROM do_pod dp
-          INNER JOIN do_pod_detail_bag dpdb ON dpdb.do_pod_id = dp.do_pod_id AND dpdb.is_deleted = FALSE
-          INNER JOIN branch br ON br.branch_id = dp.branch_id_to AND br.is_deleted = FALSE
-          INNER JOIN bag_item_awb bia ON bia.bag_item_id = dpdb.bag_item_id AND bia.is_deleted = FALSE
-          INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+            bi0.created_time,
+            ai0.awb_id,
+            bi0.bag_item_id,
+            bi0.branch_id_last
+          FROM bag_item_awb bia0
+          INNER JOIN awb_item ai0 ON ai0.awb_item_id = bia0.awb_item_id AND ai0.is_deleted = FALSE AND dohd.awb_id = ai0.awb_id
+          INNER JOIN bag_item bi0 ON bi0.bag_item_id = bia0.bag_item_id AND bi0.is_deleted = FALSE
+          INNER JOIN bag b0 ON b0.bag_id = bi0.bag_id AND b0.is_deleted = FALSE AND b0.branch_id_to IS NOT NULL
+          WHERE bia0.is_deleted = FALSE
+        ) bag_sortir ON true
+        LEFT JOIN LATERAL (
+          SELECT ai1.awb_id, dp1.do_pod_code, br1.branch_name, br1.branch_id
+          FROM do_pod dp1
+          INNER JOIN do_pod_detail_bag dpdb1 ON dpdb1.do_pod_id = dp1.do_pod_id AND dpdb1.is_deleted = FALSE
+          INNER JOIN branch br1 ON br1.branch_id = dp1.branch_id_to AND br1.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia1 ON bia1.bag_item_id = dpdb1.bag_item_id AND bia1.is_deleted = FALSE
+          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           WHERE
-            dp.is_deleted = FALSE
-            AND dp.do_pod_type = ${POD_TYPE.OUT_HUB}
-            AND dp.user_id_driver IS NOT NULL AND dp.branch_id_to IS NOT NULL
-            ${whereSubQueryScanOut ? `AND ${whereSubQueryScanOut}` : ''}
-        ) scan_out ON dohd.awb_id = scan_out.awb_id
+            dp1.is_deleted = FALSE
+            AND dp1.do_pod_type = ${POD_TYPE.OUT_HUB}
+            AND dp1.user_id_driver IS NOT NULL AND dp1.branch_id_to IS NOT NULL
+        ) scan_out ON true
         WHERE
           doh.branch_id IS NOT NULL
           ${whereQuery ? `AND ${whereQuery}` : ''}
@@ -468,6 +463,128 @@ export class HubMonitoringService {
       }
       LIMIT ${payload.limit}
       ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''};
+    `;
+    return query;
+  }
+
+  static async getQueryCSVMonitoringSortirByFilterOrion(payload: BaseMetaPayloadVm): Promise<string> {
+    const map = {
+      createdTime: 'doh.created_time',
+      branchIdFrom: 'doh.branch_id',
+      branchIdTo: 'scan_out.branch_id',
+      branchTo: 'scan_out.branch_name',
+    };
+    const optr = ['gte', 'gt'];
+    const whereQuery = await this.orionFilterToQueryRaw(payload.filters, map, true);
+    // const whereSubQuery = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'bi1.created_time', optr, 'createdTime');
+    // const whereSubQueryScanOut = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp2.do_pod_date_time', optr, 'createdTime');
+
+    let filterQuery = payload.search ? `origin ~* '${payload.search}'` : '';
+    filterQuery += filterQuery && whereQuery ? 'AND' : '';
+    filterQuery += whereQuery;
+
+    const query = `
+    SELECT
+      "Lokasi Hub",
+      "Nomor Resi",
+      CASE
+				WHEN s.code = 'IN' THEN "do_pod_code_fm"
+				WHEN s.code = 'OUT' THEN "do_pod_code_scan_out"
+			END AS "Surat Jalan",
+			CASE
+				WHEN s.code = 'IN' THEN "bag_number_in"
+				WHEN s.code = 'SORT' THEN "bag_number_sort"
+				WHEN s.code = 'OUT' THEN "bag_number_out"
+			END AS "Nomor Gabungan",
+      "User",
+      s.code as "Status",
+      CASE WHEN s.code = 'IN' THEN "Tanggal Transaksi IN"
+        WHEN s.code = 'SORT' THEN "Tanggal Transaksi SORT"
+        WHEN s.code = 'OUT' THEN "Tanggal Transaksi OUT"
+      END as "Tanggal Transaksi"
+    FROM
+      (
+        SELECT
+          br.branch_name AS "Lokasi Hub",
+          CONCAT('="',dohd.awb_number, '"') AS "Nomor Resi",
+          scan_out.bag_number AS "bag_number_out",
+          CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0')) as "bag_number_sort",
+          doh.bag_number as "bag_number_in",
+          CONCAT('IN', (CASE WHEN bag_sortir.awb_id IS NOT NULL THEN ',SORT' END), (CASE WHEN scan_out.awb_id IS NOT NULL THEN ',OUT' END)) "Status",
+          CONCAT(u.first_name, ' ', u.last_name) AS "User",
+          TO_CHAR(dohd.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi IN",
+          TO_CHAR(bag_sortir.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi SORT",
+          TO_CHAR(scan_out.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi OUT",
+          scan_out.do_pod_code AS do_pod_code_scan_out,
+          fm.do_pod_code AS do_pod_code_fm
+        FROM
+          dropoff_hub doh
+        INNER JOIN branch br ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
+        INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL AND (is_sortir IS NULL OR is_sortir = FALSE)
+        INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
+        INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
+        INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
+        INNER JOIN users u ON u.user_id = dohd.user_id_created AND u.is_deleted = FALSE
+        LEFT JOIN LATERAL (
+          SELECT dp0.do_pod_code
+          FROM do_pod_detail_bag dpdb0
+          INNER JOIN do_pod dp0 ON dp0.do_pod_id = dpdb0.do_pod_id AND dpdb0.is_deleted = FALSE
+          WHERE dp0.do_pod_type = ${POD_TYPE.OUT_BRANCH} AND
+          bia.bag_item_id = dpdb0.bag_item_id AND
+          dpdb0.is_deleted = FALSE
+        ) AS fm ON true
+        LEFT JOIN LATERAL
+        (
+          SELECT
+            bi1.bag_seq,
+            ai1.awb_id,
+            b1.bag_number,
+            bi1.created_time
+          FROM bag_item_awb bia1
+          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
+          INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
+          INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
+          WHERE bia1.is_deleted = FALSE
+        ) AS bag_sortir ON true
+        LEFT JOIN LATERAL (
+          SELECT
+            ai2.awb_id,
+            dpdb2.bag_number,
+            br2.branch_id,
+            dpdb2.created_time,
+            dp2.do_pod_code
+          FROM do_pod dp2
+          INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
+          INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
+          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
+          WHERE
+          dp2.is_deleted = FALSE
+          AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
+          AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
+        ) AS scan_out ON true
+        WHERE
+          doh.branch_id IS NOT NULL
+          ${whereQuery ? `AND ${whereQuery}` : ''}
+          ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''}
+        GROUP BY br.branch_name,
+          dohd.awb_number,
+          scan_out.bag_number,
+          bag_sortir.bag_number,
+          bag_sortir.bag_seq,
+          scan_out.awb_id,
+          bag_sortir.awb_id,
+          doh.bag_number,
+          u.first_name,
+          u.last_name,
+          dohd.created_time,
+          bag_sortir.created_time,
+          scan_out.created_time,
+					bag.bag_number,
+          bi.bag_seq,
+          scan_out.do_pod_code,
+          fm.do_pod_code
+      ) t1, unnest(string_to_array("Status" , ','))  s(code);
     `;
     return query;
   }
