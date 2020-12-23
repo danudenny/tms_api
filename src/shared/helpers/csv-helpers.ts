@@ -39,6 +39,13 @@ export abstract class CsvHelper {
     }
   }
 
+  static async retrieveGenericData<T = any>(
+    prefix: string,
+    identifier: string | number,
+  ) {
+    return RedisService.get<T>(`export-${prefix}-${identifier}`, true);
+  }
+
   static async storePayload(payloadBody: any, prefix: string): Promise<string> {
     if (!payloadBody) {
       RequestErrorService.throwObj({
