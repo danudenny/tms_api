@@ -1,4 +1,4 @@
-import { BaseMetaResponseVm } from 'src/shared/models/base-meta-response.vm';
+import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 
 export class PenaltyCategoryVm {
