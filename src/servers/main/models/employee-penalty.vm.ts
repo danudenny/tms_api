@@ -42,10 +42,16 @@ export class EmployeePenaltyPayloadVm {
 
 export class EmployeePenaltyResponseVm {
   @ApiModelProperty({ format: 'date-time' })
-  createTime: string;
+  penaltyDateTime: string;
+
+  @ApiModelProperty()
+  employeePenaltyId: string;
 
   @ApiModelProperty()
   penaltyCategoryTitle: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
 
   @ApiModelProperty()
   branchName: string;
@@ -63,7 +69,7 @@ export class EmployeePenaltyResponseVm {
   refSpkCode: string;
 
   @ApiModelProperty()
-  totalPenaltyFee: number;
+  totalPenalty: number;
 
 }
 
