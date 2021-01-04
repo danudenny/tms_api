@@ -1,9 +1,5 @@
 // #region import
-import {
-  createQueryBuilder,
-  getManager,
-  In,
-} from 'typeorm';
+import { createQueryBuilder, getManager, In } from 'typeorm';
 
 import {
   BadRequestException,
@@ -770,7 +766,22 @@ export class V1WebAwbCodService {
         );
         if (redlock) {
           const awbValid = await this.validStatusAwb(item.awbItemId);
-          if (awbValid) {
+
+          const transactionValid = await CodTransactionDetail.findOne({
+            select: [
+              'codTransactionDetailId',
+              'codTransactionId',
+              'awbNumber',
+              'transactionStatusId',
+            ],
+            where: {
+              awbNumber: item.awbNumber,
+              transactionStatusId: TRANSACTION_STATUS.TRF,
+              isDeleted: false,
+            },
+          });
+
+          if (awbValid && !transactionValid) {
             // totalCodValue += Number(item.codValue);
             totalCodValueCash += Number(item.codValue);
             totalAwbCash += 1;
@@ -1004,7 +1015,22 @@ export class V1WebAwbCodService {
       );
       if (redlock) {
         const awbValid = await this.validStatusAwb(item.awbItemId);
-        if (awbValid) {
+
+        const transactionValid = await CodTransactionDetail.findOne({
+          select: [
+            'codTransactionDetailId',
+            'codTransactionId',
+            'awbNumber',
+            'transactionStatusId',
+          ],
+          where: {
+            awbNumber: item.awbNumber,
+            transactionStatusId: TRANSACTION_STATUS.TRF,
+            isDeleted: false,
+          },
+        });
+
+        if (awbValid && !transactionValid) {
           totalCodValueCash += Number(item.codValue);
           totalAwbCash += 1;
 
