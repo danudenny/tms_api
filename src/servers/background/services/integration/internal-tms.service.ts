@@ -106,7 +106,7 @@ export class InternalTmsService {
           SET import_duty_fee = '${(paramImportDutyFee)}',
               ppn_fee = '${(param_ppn)}',
               pph_fee = '${(param_pph)}',
-              subtotal = '${(param_total)}',
+              subtotal = '${(param_total)}'
           WHERE
             ref_awb_number = '${escape(payload.ref_awb_number)}'
           ;
