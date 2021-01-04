@@ -44,7 +44,7 @@ export class InternalTmsService {
           ref_awb_number = '${escape(payload.ref_awb_number)}'
         ;
       `;
-      await RawQueryService.query(rawQueryDelete);
+      await RawQueryService.query(rawQueryDelete, null, false);
 
       data.push({
         ref_awb_number: payload.ref_awb_number,
@@ -111,7 +111,7 @@ export class InternalTmsService {
             ref_awb_number = '${escape(payload.ref_awb_number)}'
           ;
         `;
-      await RawQueryService.query(rawQueryDelete);
+      await RawQueryService.query(rawQueryDelete, null, false);
         data.push({
           ref_awb_number: payload.ref_awb_number,
           import_duty_fee: paramImportDutyFee,
