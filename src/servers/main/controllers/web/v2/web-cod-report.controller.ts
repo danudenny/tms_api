@@ -26,6 +26,19 @@ export class V2WebCodReportController {
     );
   }
 
+  @Post('nonFeeTransaction/stream')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async awbCodNonFeeTransactionDownload(
+    @Body() payload: BaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await V2WebCodReportService.printNonCodTransactionSupplierInvoice(
+      payload,
+      outgoingHTTP,
+    );
+  }
+
   @Post('nonFee/stream')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
