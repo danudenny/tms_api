@@ -297,7 +297,7 @@ export class V1WebReportCodStreamService {
       V1WebReportCodStreamService.strReplaceFunc(doc.perwakilan),
       (doc.userIdDriverNik ? doc.userIdDriverNik : '') +
         ' - ' +
-        (doc.userIdDriverName ? doc.userIdDriverName : ''),
+        (doc.userIdDriverName ? V1WebReportCodStreamService.strReplaceFunc(doc.userIdDriverName) : ''),
       V1WebReportCodStreamService.strReplaceFunc(doc.parcelContent),
       V1WebReportCodStreamService.strReplaceFunc(doc.layanan),
       V1WebReportCodStreamService.strReplaceFunc(doc.receiverRemark),
@@ -346,7 +346,7 @@ export class V1WebReportCodStreamService {
         d.perwakilan,
         (d.userIdDriverNik ? d.userIdDriverNik : '') +
           ' - ' +
-          (d.userIdDriverName ? d.userIdDriverName : ''),
+          (d.userIdDriverName ? V1WebReportCodStreamService.strReplaceFunc(d.userIdDriverName) : ''),
         V1WebReportCodStreamService.strReplaceFunc(d.parcelContent),
         V1WebReportCodStreamService.strReplaceFunc(d.packageType),
         V1WebReportCodStreamService.strReplaceFunc(d.parcelNote),
