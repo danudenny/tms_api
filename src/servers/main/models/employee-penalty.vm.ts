@@ -69,6 +69,12 @@ export class EmployeePenaltyResponseVm {
   refSpkCode: string;
 
   @ApiModelProperty()
+  qty: number;
+
+  @ApiModelProperty()
+  penaltyFee: number;
+
+  @ApiModelProperty()
   totalPenalty: number;
 
 }
