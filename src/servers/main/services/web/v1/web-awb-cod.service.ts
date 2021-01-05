@@ -765,23 +765,8 @@ export class V1WebAwbCodService {
           10,
         );
         if (redlock) {
-          const awbValid = await this.validStatusAwb(item.awbItemId);
-
-          const transactionValid = await CodTransactionDetail.findOne({
-            select: [
-              'codTransactionDetailId',
-              'codTransactionId',
-              'awbNumber',
-              'transactionStatusId',
-            ],
-            where: {
-              awbNumber: item.awbNumber,
-              transactionStatusId: TRANSACTION_STATUS.TRF,
-              isDeleted: false,
-            },
-          });
-
-          if (awbValid && !transactionValid) {
+          const awbValid = await this.validationAwb(item.awbItemId);
+          if (awbValid) {
             // totalCodValue += Number(item.codValue);
             totalCodValueCash += Number(item.codValue);
             totalAwbCash += 1;
@@ -1014,23 +999,8 @@ export class V1WebAwbCodService {
         10,
       );
       if (redlock) {
-        const awbValid = await this.validStatusAwb(item.awbItemId);
-
-        const transactionValid = await CodTransactionDetail.findOne({
-          select: [
-            'codTransactionDetailId',
-            'codTransactionId',
-            'awbNumber',
-            'transactionStatusId',
-          ],
-          where: {
-            awbNumber: item.awbNumber,
-            transactionStatusId: TRANSACTION_STATUS.TRF,
-            isDeleted: false,
-          },
-        });
-
-        if (awbValid && !transactionValid) {
+        const awbValid = await this.validationAwb(item.awbItemId);
+        if (awbValid) {
           totalCodValueCash += Number(item.codValue);
           totalAwbCash += 1;
 
@@ -1594,6 +1564,40 @@ export class V1WebAwbCodService {
       },
     });
     if (awbValid) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private static async validationAwb(awbItemId: number): Promise<boolean> {
+    // check awb status must dlv and transaction status must null
+    const repo = new OrionRepositoryService(AwbItemAttr, 'aia');
+    const q = repo.findOneRaw();
+
+    q.selectRaw(
+      ['aia.awb_item_attr_id', 'awbItemAttrId'],
+      ['aia.awb_item_id', 'awbItemId'],
+      ['aia.awb_status_id_final', 'awbStatusIdFinal'],
+      ['ctd.cod_transaction_id', 'codTransactionId'],
+      ['ctd.cod_transaction_detail_id', 'codTransactionDetailId'],
+      ['ctd.awb_number', 'awbNumber'],
+      ['ctd.transaction_status_id', 'transactionStatusId'],
+    );
+
+    q.leftJoin(e => e.codTransactionDetail, 'ctd', j =>
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.transactionStatusId, w => w.equals(TRANSACTION_STATUS.TRF)),
+    );
+
+    q.andWhere(e => e.awbItemId, w => w.equals(awbItemId));
+    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+
+    if (data && !data.transactionStatusId) {
       return true;
     } else {
       return false;
