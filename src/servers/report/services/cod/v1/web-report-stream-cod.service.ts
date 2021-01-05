@@ -242,7 +242,7 @@ export class V1WebReportCodStreamService {
           d.perwakilan,
           (d.userIdDriverNik ? d.userIdDriverNik : '') +
             ' - ' +
-            (d.userIdDriverName ? d.userIdDriverName : ''),
+            (d.userIdDriverName ? this.strReplaceFunc(d.userIdDriverName) : ''),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.packageType),
           this.strReplaceFunc(d.parcelNote),
@@ -399,7 +399,7 @@ export class V1WebReportCodStreamService {
           this.strReplaceFunc(d.perwakilan),
           (d.userIdDriverNik ? d.userIdDriverNik : '') +
             ' - ' +
-            (d.userIdDriverName ? d.userIdDriverName : ''),
+            (d.userIdDriverName ? this.strReplaceFunc(d.userIdDriverName) : ''),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
           this.strReplaceFunc(d.receiverRemark),
