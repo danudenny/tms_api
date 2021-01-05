@@ -103,7 +103,7 @@ export class InternalTmsService {
         const param_total = paramImportDutyFee + param_ppn + param_pph;
         const rawQueryDelete = `
           UPDATE awb_tax_summary
-          SET item_price = '${(payload.item_price)}'
+          SET item_price = '${(payload.item_price)}',
               import_duty_fee = '${(paramImportDutyFee)}',
               ppn_fee = '${(param_ppn)}',
               pph_fee = '${(param_pph)}',
