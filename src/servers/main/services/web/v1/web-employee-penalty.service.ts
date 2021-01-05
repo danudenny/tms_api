@@ -151,6 +151,8 @@ export class EmployeePenaltyService {
       ['users.username', 'userName'],
       ['employee_penalty.ref_awb_number', 'refAwbNumber'],
       ['employee_penalty.ref_spk_code', 'refSpkCode'],
+      ['employee_penalty.penalty_qty', 'qty'],
+      ['employee_penalty.penalty_fee', 'penaltyFee'],
       ['employee_penalty.total_penalty', 'totalPenalty'],
     );
 
