@@ -64,7 +64,7 @@ export class EmployeePenaltyService {
     employeePenalty.penaltyCategoryId = payload.penaltyCategoryid;
     employeePenalty.penaltyQty = payload.qty;
     employeePenalty.penaltyFee = payload.penaltyFee;
-    employeePenalty.totalPenalty = payload.totalPenalty;
+    employeePenalty.totalPenalty = payload.penaltyFee * payload.qty;
     employeePenalty.branchId = payload.branchId;
     employeePenalty.representativeId = payload.representativeId;
     employeePenalty.refAwbNumber = (payload.refAwbNumber) ? payload.refAwbNumber : null;
