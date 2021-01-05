@@ -25,7 +25,7 @@ export class EmployeePenaltyService {
     'Keterangan',
   ];
 
-  static strReplaceFunc = str => {
+  private static strReplaceFunc = str => {
     return str
       ? str
           .replace(/\n/g, ' ')
@@ -35,9 +35,9 @@ export class EmployeePenaltyService {
       : null;
   }
 
-  static streamTransformEmployeePenalty(d) {
+  private static streamTransformEmployeePenalty(d) {
     const values = [
-      d.penaltyDateTime ? moment(d.manifestedDate).format('YYYY-MM-DD') : null,
+      d.penaltyDateTime ? moment(d.penaltyDateTime).format('YYYY-MM-DD') : null,
       d.penaltyCategoryTitle,
       d.representativeCode,
       `${d.branchCode} - ${d.branchName}`,
@@ -189,6 +189,14 @@ export class EmployeePenaltyService {
   ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    // if(permissonPayload.roleId !== 26){
+    //   RequestErrorService.throwObj(
+    //     {
+    //       message: `User tidak mempunyai akses`,
+    //     },
+    //     HttpStatus.UNAUTHORIZED,
+    //   );
+    // }
     const result = {
           status : 'ok',
           message: 'Sukses membuat data',
@@ -216,6 +224,14 @@ export class EmployeePenaltyService {
   ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    // if(permissonPayload.roleId !== 26){
+    //   RequestErrorService.throwObj(
+    //     {
+    //       message: `User tidak mempunyai akses`,
+    //     },
+    //     HttpStatus.UNAUTHORIZED,
+    //   );
+    // }
 
     const result = {
           status : 'ok',
@@ -267,6 +283,15 @@ export class EmployeePenaltyService {
   ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    // if(permissonPayload.roleId !== 26){
+    //   RequestErrorService.throwObj(
+    //     {
+    //       message: `User tidak mempunyai akses`,
+    //     },
+    //     HttpStatus.UNAUTHORIZED,
+    //   );
+    // }
+    
     const result = {
           status : 'ok',
           message: 'Sukses menghapus data',
@@ -311,7 +336,7 @@ export class EmployeePenaltyService {
 
   static async exportEmployeePenalty (payload: BaseMetaPayloadVm, response){
     try {
-      const fileName = `COD_fee_${new Date().getTime()}.csv`;
+      const fileName = `POD_employee_penalty${new Date().getTime()}.csv`;
 
       response.setHeader(
         'Content-disposition',
@@ -337,7 +362,10 @@ export class EmployeePenaltyService {
         ['users.username', 'userName'],
         ['employee_penalty.ref_awb_number', 'refAwbNumber'],
         ['employee_penalty.ref_spk_code', 'refSpkCode'],
+        ['employee_penalty.penalty_qty', 'qty'],
+        ['employee_penalty.penalty_fee', 'penaltyFee'],
         ['employee_penalty.total_penalty', 'totalPenalty'],
+        ['employee_penalty.penalty_desc', 'penaltyDesc'],
       );
 
       q.innerJoin(e => e.penaltyUser, 'users', j =>
@@ -365,5 +393,4 @@ export class EmployeePenaltyService {
     }
   }
 
-  
 }
