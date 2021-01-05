@@ -97,13 +97,14 @@ export class InternalTmsService {
       `;
       const resultDataTax = await RawQueryService.query(rawQueryTax);
       if (resultDataTax) {
-        const paramImportDutyFee = resultData[0].item_price * (resultDataTax[0].import_duty_value / 100);
-        const param_ppn = (resultData[0].item_price + paramImportDutyFee) * (resultDataTax[0].tax_value / 100);
-        const param_pph = (resultData[0].item_price + paramImportDutyFee) * (resultDataTax[0].tax_pph / 100);
+        const paramImportDutyFee = payload.item_price * (resultDataTax[0].import_duty_value / 100);
+        const param_ppn = (payload.item_price + paramImportDutyFee) * (resultDataTax[0].tax_value / 100);
+        const param_pph = (payload.item_price + paramImportDutyFee) * (resultDataTax[0].tax_pph / 100);
         const param_total = paramImportDutyFee + param_ppn + param_pph;
         const rawQueryDelete = `
           UPDATE awb_tax_summary
-          SET import_duty_fee = '${(paramImportDutyFee)}',
+          SET item_price = '${(payload.item_price)}'
+              import_duty_fee = '${(paramImportDutyFee)}',
               ppn_fee = '${(param_ppn)}',
               pph_fee = '${(param_pph)}',
               subtotal = '${(param_total)}'
