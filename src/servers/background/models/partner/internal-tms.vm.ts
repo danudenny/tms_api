@@ -58,4 +58,7 @@ export class UpdateTaxVm {
 
   @ApiModelProperty()
   pph_fee: double;
+
+  @ApiModelProperty()
+  total_fee: double;
 }

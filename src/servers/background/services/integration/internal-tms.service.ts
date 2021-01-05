@@ -97,9 +97,9 @@ export class InternalTmsService {
       `;
       const resultDataTax = await RawQueryService.query(rawQueryTax);
       if (resultDataTax) {
-        const paramImportDutyFee = resultData.item_price * (resultDataTax.import_duty_value / 100);
-        const param_ppn = (resultData.item_price + paramImportDutyFee) * (resultDataTax.tax_value / 100);
-        const param_pph = (resultData.item_price + paramImportDutyFee) * (resultDataTax.tax_pph / 100);
+        const paramImportDutyFee = resultData[0].item_price * (resultDataTax[0].import_duty_value / 100);
+        const param_ppn = (resultData[0].item_price + paramImportDutyFee) * (resultDataTax[0].tax_value / 100);
+        const param_pph = (resultData[0].item_price + paramImportDutyFee) * (resultDataTax[0].tax_pph / 100);
         const param_total = paramImportDutyFee + param_ppn + param_pph;
         const rawQueryDelete = `
           UPDATE awb_tax_summary
@@ -117,6 +117,7 @@ export class InternalTmsService {
           import_duty_fee: paramImportDutyFee,
           ppn_fee: param_ppn,
           pph_fee: param_pph,
+          total_fee: param_total,
         });
         result.statusCode = HttpStatus.OK;
         result.message = 'Awb Success Updated';
