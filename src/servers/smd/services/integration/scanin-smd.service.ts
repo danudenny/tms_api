@@ -97,7 +97,7 @@ export class ScaninSmdService {
           if (weight == 0) { // handle error weight = 0 from request payload
             weight = parseFloat(resultData[0].weight);
           }
-          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 ) {
+          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 || resultData[0].bag_item_status_id == 1000 ) {
             // do nothing
           } else if ( resultData[0].bag_item_status_id == 3550 ) {
             errCode = errCode + 1;
