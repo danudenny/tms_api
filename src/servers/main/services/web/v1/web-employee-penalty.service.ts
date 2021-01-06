@@ -131,8 +131,7 @@ export class EmployeePenaltyService {
     ];
 
     payload.fieldResolverMap['penaltyDateTime'] = 'employee_penalty.penalty_date_time';
-    // payload.fieldResolverMap['branchId'] = 'branch.branch_id';
-    // payload.fieldResolverMap['dateTime'] = 'mobile_device_info.date_time';
+    payload.fieldResolverMap['branchId'] = 'branch.branch_id';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'penaltyDateTime';
