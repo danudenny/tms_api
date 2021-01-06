@@ -112,6 +112,7 @@ export class CreateBagAwbScanHubQueueService {
           );
         } else {
           console.error('## Gab Sortir :: Not Found Awb Number :: ', data);
+          throw new Error(data);
         }
 
       }); // end transaction

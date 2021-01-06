@@ -98,7 +98,7 @@ export class WebDeliveryInReportService {
     }
     const p = new BaseMetaPayloadVm();
     p.filters = payload.filters ? payload.filters : payload;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvHubDeliveryIn(p);
 
@@ -134,7 +134,7 @@ export class WebDeliveryInReportService {
     const repo = new OrionRepositoryService(PodScanInHubDetail, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       ['t3.awb_number', 'Resi'],
