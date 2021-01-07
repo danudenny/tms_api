@@ -126,9 +126,6 @@ export class EmployeePenaltyService {
       {
         field: 'penaltyCategoryTitle',
       },
-      {
-        field: 'penaltyDateTime',
-      },
     ];
 
     payload.fieldResolverMap['penaltyDateTime'] = 'employee_penalty.penalty_date_time';
@@ -148,8 +145,10 @@ export class EmployeePenaltyService {
       ['penalty_category.penalty_category_Id', 'penaltyCategoryId'],
       ['representative.representative_code', 'representativeCode'],
       ['representative.representative_id', 'representativeId'],
+      ['representative.representative_name', 'representativeName'],
       ['branch.branch_name', 'branchName'],
       ['branch.branch_id', 'branchId'],
+      ['branch.branch_code', 'branchCode'],
       ['users.first_name', 'firstName'],
       ['users.username', 'userName'],
       ['users.user_id', 'userId'],

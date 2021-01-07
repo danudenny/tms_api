@@ -60,10 +60,16 @@ export class EmployeePenaltyResponseVm {
   representativeId: number;
 
   @ApiModelProperty()
+  representativeName: string;
+
+  @ApiModelProperty()
   branchName: string;
 
   @ApiModelProperty()
   branchId: number;
+
+  @ApiModelProperty()
+  branchCode: string;
 
   @ApiModelProperty()
   firstName: string;
