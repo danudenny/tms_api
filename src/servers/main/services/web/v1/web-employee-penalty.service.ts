@@ -100,6 +100,7 @@ export class EmployeePenaltyService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
+      ['penalty_category_id', 'penaltyCategoryId'],
       ['penalty_category_title', 'penaltyCategoryTitle'],
       ['penalty_category_process', 'penaltyCategoryProcess'],
     );

@@ -7,6 +7,9 @@ export class PenaltyCategoryVm {
 
   @ApiModelProperty()
   penaltyCategoryProcess: string;
+
+  @ApiModelProperty()
+  penaltyCategoryId: string;
 }
 
 export class PenaltyCategoryListResponseVm extends BaseMetaResponseVm{
