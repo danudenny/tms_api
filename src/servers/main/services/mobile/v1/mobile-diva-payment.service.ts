@@ -83,7 +83,7 @@ export class V1MobileDivaPaymentService {
         transaction.end();
         result = response.data;
       } catch (error) {
-        WinstonLogglyService.error({requestData, error: error.response.data});
+        WinstonLogglyService.error({ requestData, error: error.response.data });
         result = error.response.data;
         nr.noticeError(error);
         transaction.end();
@@ -99,14 +99,18 @@ export class V1MobileDivaPaymentService {
       const transaction = nr.getTransaction();
       const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/postqr`;
       try {
-        const response = await axios.post(url, requestData, this.sicepatKlikConfig);
+        const response = await axios.post(
+          url,
+          requestData,
+          this.sicepatKlikConfig,
+        );
         // add Loggly data
-        WinstonLogglyService.info({requestData, responseData: response.data});
+        WinstonLogglyService.info({ requestData, responseData: response.data });
         result = response.data;
         // End Transaction for newrelic
         transaction.end();
       } catch (error) {
-        WinstonLogglyService.error({requestData, error: error.response.data});
+        WinstonLogglyService.error({ requestData, error: error.response.data });
         nr.noticeError(error);
         transaction.end();
         result = error.response.data;
@@ -120,21 +124,75 @@ export class V1MobileDivaPaymentService {
     let result = null;
     await nr.startBackgroundTransaction('DIVA - Payment Status', async () => {
       const transaction = nr.getTransaction();
-      const url = `${ConfigService.get('divaPayment.sicepatKlikUrl')}/get-payment-status`;
+      const url = `${ConfigService.get(
+        'divaPayment.sicepatKlikUrl',
+      )}/get-payment-status`;
       try {
-        const response = await axios.post(url, requestData, this.sicepatKlikConfig);
+        const response = await axios.post(
+          url,
+          requestData,
+          this.sicepatKlikConfig,
+        );
         // add Loggly data
         WinstonLogglyService.info({ requestData, responseData: response.data });
         result = response.data;
         // End Transaction for newrelic
         transaction.end();
       } catch (error) {
-        WinstonLogglyService.error({requestData, error: error.response.data});
+        WinstonLogglyService.error({ requestData, error: error.response.data });
         nr.noticeError(error);
         transaction.end();
         result = error.response.data;
       }
     });
+
+    return result;
+  }
+
+  static async shopeePaymentStatus(payload: any): Promise<any> {
+    let result = null;
+    await nr.startBackgroundTransaction(
+      'DIVA - Shopee payment status',
+      async () => {
+        const transaction = nr.getTransaction();
+        const url = `${ConfigService.get(
+          'divaPayment.urlQR',
+        )}/v1/shopee/status-payment`;
+        const randomTID = await this.getRandomTID();
+        const requestData = {
+          token: ConfigService.get('divaPayment.codToken'),
+          mid: ConfigService.get('divaPayment.codMid'),
+          tid: randomTID,
+          trx_id: payload.trxId,
+        };
+
+        try {
+          const response = await axios.post(url, requestData, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Connection': 'keep-alive',
+              'User-Agent': 'POD-API',
+            },
+          });
+          // add Loggly data
+          WinstonLogglyService.info({
+            requestData,
+            responseData: response.data,
+          });
+          // End Transaction for newrelic
+          transaction.end();
+          result = response.data;
+        } catch (error) {
+          WinstonLogglyService.error({
+            requestData,
+            error: error.response.data,
+          });
+          result = error.response.data;
+          nr.noticeError(error);
+          transaction.end();
+        }
+      },
+    );
 
     return result;
   }
@@ -159,10 +217,7 @@ export class V1MobileDivaPaymentService {
         const tidArray = dataDb.map(item => {
           return item.tid;
         });
-        await RedisService.set(
-          `diva:payments:tid`,
-          tidArray.toString(),
-        );
+        await RedisService.set(`diva:payments:tid`, tidArray.toString());
         const index = this.randomInteger(1, tidArray.length);
         result = tidArray[index];
       }

@@ -52,4 +52,12 @@ export class V2CodPaymentController {
     return V1MobileDivaPaymentService.paymentStatus(payload);
   }
 
+  @Post('shopee/paymentStatus')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async shopeePaymentStatus(@Body() payload: any) {
+    return V1MobileDivaPaymentService.shopeePaymentStatus(payload);
+  }
+
 }
