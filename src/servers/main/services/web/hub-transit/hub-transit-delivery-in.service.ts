@@ -197,6 +197,7 @@ export class HubTransitDeliveryInService {
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
     payload.fieldResolverMap['branchName'] = 't5.branch_name';
     payload.fieldResolverMap['branchScanName'] = 't6.branch_name';
+    payload.fieldResolverMap['isSmd'] = 't1.is_smd';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -324,6 +325,7 @@ export class HubTransitDeliveryInService {
     payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    payload.fieldResolverMap['isSmd'] = 't1.is_smd';
 
     const repo = new OrionRepositoryService(DropoffHub, 't1');
     const q = repo.findAllRaw();
