@@ -144,15 +144,20 @@ export class EmployeePenaltyService {
       ['employee_penalty.employee_penalty_id', 'employeePenaltyId'],
       ['employee_penalty.penalty_date_time', 'penaltyDateTime'],
       ['penalty_category.penalty_category_title', 'penaltyCategoryTitle'],
+      ['penalty_category.penalty_category_Id', 'penaltyCategoryId'],
       ['representative.representative_code', 'representativeCode'],
+      ['representative.representative_id', 'representativeId'],
       ['branch.branch_name', 'branchName'],
+      ['branch.branch_id', 'branchId'],
       ['users.first_name', 'firstName'],
       ['users.username', 'userName'],
+      ['users.user_id', 'userId'],
       ['employee_penalty.ref_awb_number', 'refAwbNumber'],
       ['employee_penalty.ref_spk_code', 'refSpkCode'],
       ['employee_penalty.penalty_qty', 'qty'],
       ['employee_penalty.penalty_fee', 'penaltyFee'],
       ['employee_penalty.total_penalty', 'totalPenalty'],
+      ['employee_penalty.penalty_desc', 'desc'],
     );
 
     q.innerJoin(e => e.penaltyUser, 'users', j =>

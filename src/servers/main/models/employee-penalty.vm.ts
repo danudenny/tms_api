@@ -51,16 +51,28 @@ export class EmployeePenaltyResponseVm {
   penaltyCategoryTitle: string;
 
   @ApiModelProperty()
+  penaltyCategoryId: string;
+
+  @ApiModelProperty()
   representativeCode: string;
 
   @ApiModelProperty()
+  representativeId: number;
+
+  @ApiModelProperty()
   branchName: string;
+
+  @ApiModelProperty()
+  branchId: number;
 
   @ApiModelProperty()
   firstName: string;
 
   @ApiModelProperty()
   userName: string;
+
+  @ApiModelProperty()
+  userId: number;
 
   @ApiModelProperty()
   refAwbNumber: string;
@@ -76,6 +88,9 @@ export class EmployeePenaltyResponseVm {
 
   @ApiModelProperty()
   totalPenalty: number;
+
+  @ApiModelProperty()
+  desc: string;
 
 }
 
