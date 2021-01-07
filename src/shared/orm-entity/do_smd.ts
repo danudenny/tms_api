@@ -208,6 +208,13 @@ export class DoSmd extends TmsBaseEntity {
   })
   isVendor: boolean;
 
+  @Column('bigint', {
+    nullable: false,
+    default: () => 0,
+    name: 'is_intercity',
+  })
+  isIntercity: number;
+
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
