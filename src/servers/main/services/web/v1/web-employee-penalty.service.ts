@@ -353,6 +353,8 @@ export class EmployeePenaltyService {
       response.write(`${this.ExportHeader.join(',')}\n`);
 
       payload.fieldResolverMap['penaltyDateTime'] = 'employee_penalty.penalty_date_time';
+      payload.fieldResolverMap['branchId'] = 'branch.branch_id';
+      payload.fieldResolverMap['representativeCode'] = 'representative.representative_code';
 
       const q = RepositoryService.employeePenalty.findAllRaw();
       payload.applyToOrionRepositoryQuery(q, true);
