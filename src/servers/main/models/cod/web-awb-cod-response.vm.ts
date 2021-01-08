@@ -1,4 +1,7 @@
-import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../shared/external/nestjs-swagger';
+import {
+  ApiModelProperty,
+  ApiModelPropertyOptional,
+} from '../../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../../shared/models/base-meta-response.vm';
 
 export class WebCodSuccessResponseVm {
@@ -363,6 +366,34 @@ export class WebCodTransferBranchResponseVm {
   dataError: string[];
 }
 
+export class WebCodTransferBranchCashResponseVm {
+  // @ApiModelProperty()
+  // transactionCode: string;
+
+  // @ApiModelProperty({ format: 'date-time' })
+  // transactionDate: string;
+
+  @ApiModelProperty()
+  printIdCash: string;
+
+  @ApiModelProperty()
+  dataError: string[];
+}
+
+export class WebCodTransferBranchCashlessResponseVm {
+  // @ApiModelProperty()
+  // transactionCode: string;
+
+  // @ApiModelProperty({ format: 'date-time' })
+  // transactionDate: string;
+
+  @ApiModelPropertyOptional()
+  printIdCashless: string;
+
+  @ApiModelProperty()
+  dataError: string[];
+}
+
 export class WebCodAwbValidVm {
   @ApiModelProperty()
   awbItemId: number;
@@ -657,7 +688,6 @@ export class WebCodPrintMetaVm {
 }
 
 export class PrintCodTransferBranchVm {
-
   @ApiModelProperty({ type: () => WebCodPrintMetaVm })
   meta: WebCodPrintMetaVm;
 
