@@ -22,6 +22,8 @@ export class EmployeePenaltyService {
     'Denda',
     'Total Denda',
     'Keterangan',
+    'User Created',
+    'User Updated'
   ];
 
   private static strReplaceFunc = str => {
@@ -54,6 +56,8 @@ export class EmployeePenaltyService {
       EmployeePenaltyService.currencyConverter(d.penaltyFee),
       EmployeePenaltyService.currencyConverter(d.totalPenalty),
       d.penaltyDesc ? EmployeePenaltyService.strReplaceFunc(d.penaltyDesc) : '-',
+      `${d.createdUserName} - ${d.createdFirstName}`,
+      d.updatedUserName ? `${d.updatedUserName} - ${d.updatedFirstName}` : '-',
     ];
     return `${values.join(',')} \n`;
   }
@@ -77,12 +81,12 @@ export class EmployeePenaltyService {
     employeePenalty.penaltyDesc = (payload.penaltyDesc) ? payload.penaltyDesc : null;
     if(employeePenaltyData){
       employeePenalty.userIdCreated = employeePenaltyData.userIdCreated;
+      employeePenalty.userIdUpdated = userId;
       employeePenalty.createdTime = employeePenaltyData.createdTime;
     }else{
       employeePenalty.userIdCreated = userId;
       employeePenalty.createdTime = moment().toDate();
     }
-    employeePenalty.userIdUpdated = userId;
     employeePenalty.updatedTime = moment().toDate();
     employeePenalty.isDeleted = false;
 
@@ -199,14 +203,6 @@ export class EmployeePenaltyService {
   ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    // if(permissonPayload.roleId !== 26){
-    //   RequestErrorService.throwObj(
-    //     {
-    //       message: `User tidak mempunyai akses`,
-    //     },
-    //     HttpStatus.UNAUTHORIZED,
-    //   );
-    // }
     const result = {
           status : 'ok',
           message: 'Sukses membuat data',
@@ -234,15 +230,6 @@ export class EmployeePenaltyService {
   ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    // if(permissonPayload.roleId !== 26){
-    //   RequestErrorService.throwObj(
-    //     {
-    //       message: `User tidak mempunyai akses`,
-    //     },
-    //     HttpStatus.UNAUTHORIZED,
-    //   );
-    // }
-
     const result = {
           status : 'ok',
           message: 'Sukses merubah data',
@@ -293,15 +280,6 @@ export class EmployeePenaltyService {
   ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    // if(permissonPayload.roleId !== 26){
-    //   RequestErrorService.throwObj(
-    //     {
-    //       message: `User tidak mempunyai akses`,
-    //     },
-    //     HttpStatus.UNAUTHORIZED,
-    //   );
-    // }
-    
     const result = {
           status : 'ok',
           message: 'Sukses menghapus data',
@@ -378,9 +356,21 @@ export class EmployeePenaltyService {
         ['employee_penalty.penalty_fee', 'penaltyFee'],
         ['employee_penalty.total_penalty', 'totalPenalty'],
         ['employee_penalty.penalty_desc', 'penaltyDesc'],
+        ['usercreated.first_name', 'createdFirstName'],
+        ['usercreated.username', 'createdUserName'],
+        ['usersupdated.first_name', 'updatedFirstName'],
+        ['usersupdated.username', 'updatedUserName'],
       );
 
       q.innerJoin(e => e.penaltyUser, 'users', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.innerJoin(e => e.createdUser, 'usercreated', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.leftJoin(e => e.updatedUser, 'usersupdated', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
@@ -404,5 +394,4 @@ export class EmployeePenaltyService {
       throw err;
     }
   }
-
 }

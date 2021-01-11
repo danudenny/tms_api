@@ -119,6 +119,14 @@ export class EmployeePenalty extends BaseEntity {
   @JoinColumn({ name: 'penalty_user_id', referencedColumnName: 'userId'})
   penaltyUser: User;
 
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_created', referencedColumnName: 'userId'})
+  createdUser: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_updated', referencedColumnName: 'userId'})
+  updatedUser: User;
+
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
