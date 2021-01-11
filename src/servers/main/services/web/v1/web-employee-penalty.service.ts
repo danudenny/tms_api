@@ -35,7 +35,8 @@ export class EmployeePenaltyService {
   }
 
   private static currencyConverter =  price => {
-    const format = price.toString().split('').reverse().join('');
+    const totalPenalty = price.slice(0, -3);
+    const format = totalPenalty.toString().split('').reverse().join('');
     const convert = format.match(/\d{1,3}/g);
     return 'Rp. '+ convert.join('.').split('').reverse().join('')
   }
@@ -43,18 +44,16 @@ export class EmployeePenaltyService {
   private static streamTransformEmployeePenalty(d) {
     const values = [
       d.penaltyDateTime ? moment(d.penaltyDateTime).format('YYYY-MM-DD') : null,
-      d.penaltyCategoryTitle,
+      EmployeePenaltyService.strReplaceFunc(d.penaltyCategoryTitle),
       d.representativeCode,
       `${d.branchCode} - ${d.branchName}`,
       `${d.userName} - ${d.firstName}`,
-      d.refAwbNumber ? d.refAwbNumber : '-',
-      d.refSpkCode ? d.refSpkCode : '-',
+      d.refAwbNumber ? `'${d.refAwbNumber}` : '-',
+      d.refSpkCode ? EmployeePenaltyService.strReplaceFunc(d.refSpkCode) : '-',
       d.qty,
-      // Number(d.penaltyFee),
-      // Number(d.totalPenalty),
-      EmployeePenaltyService.currencyConverter(d.penaltyFee.slice(0, -3)),
-      EmployeePenaltyService.currencyConverter(d.totalPenalty.slice(0, -3)),
-      d.penaltyDesc ? d.penaltyDesc : '-',
+      EmployeePenaltyService.currencyConverter(d.penaltyFee),
+      EmployeePenaltyService.currencyConverter(d.totalPenalty),
+      d.penaltyDesc ? EmployeePenaltyService.strReplaceFunc(d.penaltyDesc) : '-',
     ];
     return `${values.join(',')} \n`;
   }
