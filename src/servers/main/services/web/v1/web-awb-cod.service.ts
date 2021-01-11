@@ -1588,7 +1588,7 @@ export class V1WebAwbCodService {
     q.leftJoin(e => e.codTransactionDetail, 'ctd', j =>
       j
         .andWhere(e => e.isDeleted, w => w.isFalse())
-        .andWhere(e => e.transactionStatusId, w => w.in([TRANSACTION_STATUS.TRF, TRANSACTION_STATUS.CANHO])),
+        .andWhere(e => e.transactionStatusId, w => w.in([TRANSACTION_STATUS.TRF, TRANSACTION_STATUS.CANHO, TRANSACTION_STATUS.TRM])),
     );
 
     q.andWhere(e => e.awbItemId, w => w.equals(awbItemId));
