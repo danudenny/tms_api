@@ -8,7 +8,6 @@ import { EmployeePenaltyListResponseVM, EmployeePenaltyPayloadVm } from '../../.
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 import moment = require('moment');
 export class EmployeePenaltyService {
-
   constructor(){}
 
   static ExportHeader = [
@@ -35,6 +34,12 @@ export class EmployeePenaltyService {
       : null;
   }
 
+  private static currencyConverter =  price => {
+    const format = price.toString().split('').reverse().join('');
+    const convert = format.match(/\d{1,3}/g);
+    return 'Rp. '+ convert.join('.').split('').reverse().join('')
+  }
+
   private static streamTransformEmployeePenalty(d) {
     const values = [
       d.penaltyDateTime ? moment(d.penaltyDateTime).format('YYYY-MM-DD') : null,
@@ -45,11 +50,12 @@ export class EmployeePenaltyService {
       d.refAwbNumber ? d.refAwbNumber : '-',
       d.refSpkCode ? d.refSpkCode : '-',
       d.qty,
-      d.penaltyFee,
-      d.totalPenalty,
+      // Number(d.penaltyFee),
+      // Number(d.totalPenalty),
+      EmployeePenaltyService.currencyConverter(d.penaltyFee.slice(0, -3)),
+      EmployeePenaltyService.currencyConverter(d.totalPenalty.slice(0, -3)),
       d.penaltyDesc ? d.penaltyDesc : '-',
     ];
-
     return `${values.join(',')} \n`;
   }
 
@@ -187,7 +193,6 @@ export class EmployeePenaltyService {
     result.buildPaging(payload.page, payload.limit, total);
 
     return result;
-
   }
 
   static async createEmployeePenalty(
