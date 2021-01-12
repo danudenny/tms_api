@@ -1579,16 +1579,7 @@ export class V1WebAwbCodService {
       ['aia.awb_item_attr_id', 'awbItemAttrId'],
       ['aia.awb_item_id', 'awbItemId'],
       ['aia.awb_status_id_final', 'awbStatusIdFinal'],
-      ['ctd.cod_transaction_id', 'codTransactionId'],
-      ['ctd.cod_transaction_detail_id', 'codTransactionDetailId'],
-      ['ctd.awb_number', 'awbNumber'],
-      ['ctd.transaction_status_id', 'transactionStatusId'],
-    );
-
-    q.leftJoin(e => e.codTransactionDetail, 'ctd', j =>
-      j
-        .andWhere(e => e.isDeleted, w => w.isFalse())
-        .andWhere(e => e.transactionStatusId, w => w.in([TRANSACTION_STATUS.TRF, TRANSACTION_STATUS.CANHO, TRANSACTION_STATUS.TRM])),
+      ['aia.transaction_status_id', 'transactionStatusId'],
     );
 
     q.andWhere(e => e.awbItemId, w => w.equals(awbItemId));
