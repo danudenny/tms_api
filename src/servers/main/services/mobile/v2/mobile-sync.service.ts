@@ -254,18 +254,19 @@ export class V2MobileSyncService {
           );
 
           // NOTE: push data only DLV to Sunfish
-          // if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
-          //   AwbSunfishQueueService.perform(
-          //     delivery.awbNumber,
-          //     delivery.employeeId,
-          //     historyDateTime,
-          //   );
-          // }
-          // NOTE: mail notification
-          AwbNotificationMailQueueService.perform(
-            awbdDelivery.awbItemId,
-            awbStatus.awbStatusId,
-          );
+          if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
+            AwbSunfishQueueService.perform(
+              delivery.awbNumber,
+              delivery.employeeId,
+              historyDateTime,
+            );
+          } else {
+            // NOTE: mail notification status problem
+            AwbNotificationMailQueueService.perform(
+              awbdDelivery.awbItemId,
+              awbStatus.awbStatusId,
+            );
+          }
           process = true;
         } else {
           PinoLoggerService.log('##### Data Not Valid', delivery);
