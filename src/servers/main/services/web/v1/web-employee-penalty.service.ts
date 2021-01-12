@@ -340,7 +340,7 @@ export class EmployeePenaltyService {
       payload.fieldResolverMap['representativeCode'] = 'representative.representative_code';
 
       const q = RepositoryService.employeePenalty.findAllRaw();
-      payload.applyToOrionRepositoryQuery(q, true);
+      payload.applyToOrionRepositoryQuery(q);
 
       q.selectRaw(
         ['employee_penalty.employee_penalty_id', 'employeePenaltyId'],
