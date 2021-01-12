@@ -334,6 +334,7 @@ export class EmployeePenaltyService {
       response.flushHeaders();
       response.write(`${this.ExportHeader.join(',')}\n`);
 
+      payload.fieldResolverMap['userId'] = 'employee_penalty.penalty_user_id';
       payload.fieldResolverMap['penaltyDateTime'] = 'employee_penalty.penalty_date_time';
       payload.fieldResolverMap['branchId'] = 'branch.branch_id';
       payload.fieldResolverMap['representativeCode'] = 'representative.representative_code';
