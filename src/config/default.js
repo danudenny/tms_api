@@ -82,7 +82,7 @@ module.exports = {
   },
   sunfish: {
     postDlvUrl:
-      'https://sfapinbc.dataon.com/sfapi/index.cfm?endpoint=/sicepat_FULL_postDelivPaket',
+      'https://sfapisicepat.dataon.com/sfapiv2/index.cfm?endpoint=/sicepat_FULL_postDelivPaket',
     headerAccount: 'sicepat',
     headerAppname: 'sfapi',
     headerKey:
