@@ -86,9 +86,9 @@ export class EmployeePenalty extends BaseEntity {
 
   @Column('text', {
     nullable: true,
-    name: 'penalty_type',
+    name: 'penalty_note',
   })
-  penaltyType: string | null;
+  penaltyNote: string | null;
 
   @Column('bigint', {
     nullable: false,

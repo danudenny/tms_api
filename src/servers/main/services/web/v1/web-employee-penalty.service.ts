@@ -3,8 +3,7 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { RepositoryService } from '../../../../../shared/services/repository.service';
 import { EmployeePenalty } from '../../../../../shared/orm-entity/employee-penalty';
-import { PenaltyCategoryListResponseVm } from '../../../models/penalty-category.vm';
-import { EmployeePenaltyListResponseVM, EmployeePenaltyPayloadVm } from '../../../models/employee-penalty.vm';
+import { EmployeePenaltyListResponseVM, EmployeePenaltyPayloadVm, PenaltyCategoryListResponseVm } from '../../../models/employee-penalty.vm';
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 import moment = require('moment');
 export class EmployeePenaltyService {
@@ -59,7 +58,7 @@ export class EmployeePenaltyService {
       d.penaltyDesc ? EmployeePenaltyService.strReplaceFunc(d.penaltyDesc) : '-',
       `${d.createdUserName} - ${d.createdFirstName}`,
       d.updatedUserName ? `${d.updatedUserName} - ${d.updatedFirstName}` : '-',
-      d.penaltyType ? EmployeePenaltyService.strReplaceFunc(d.penaltyType) : '-',
+      d.penaltyNote ? EmployeePenaltyService.strReplaceFunc(d.penaltyNote) : '-',
     ];
     return `${values.join(',')} \n`;
   }
@@ -81,7 +80,7 @@ export class EmployeePenaltyService {
     employeePenalty.refAwbNumber = (payload.refAwbNumber) ? payload.refAwbNumber : null;
     employeePenalty.refSpkCode = (payload.refSpkCode) ? payload.refSpkCode : null; 
     employeePenalty.penaltyDesc = (payload.penaltyDesc) ? payload.penaltyDesc : null;
-    employeePenalty.penaltyType = (payload.penaltyType) ? payload.penaltyType : null;
+    employeePenalty.penaltyNote = (payload.penaltyNote) ? payload.penaltyNote : null;
     if(employeePenaltyData){
       employeePenalty.userIdCreated = employeePenaltyData.userIdCreated;
       employeePenalty.userIdUpdated = userId;
@@ -170,7 +169,7 @@ export class EmployeePenaltyService {
       ['employee_penalty.penalty_fee', 'penaltyFee'],
       ['employee_penalty.total_penalty', 'totalPenalty'],
       ['employee_penalty.penalty_desc', 'desc'],
-      ['employee_penalty.penalty_type', 'penaltyType'],
+      ['employee_penalty.penalty_note', 'penaltyNote'],
     );
 
     q.innerJoin(e => e.penaltyUser, 'users', j =>
@@ -365,7 +364,7 @@ export class EmployeePenaltyService {
         ['usercreated.username', 'createdUserName'],
         ['usersupdated.first_name', 'updatedFirstName'],
         ['usersupdated.username', 'updatedUserName'],
-        ['employee_penalty.penalty_type', 'penaltyType'],
+        ['employee_penalty.penalty_note', 'penaltyNote'],
       );
 
       q.innerJoin(e => e.penaltyUser, 'users', j =>

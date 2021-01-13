@@ -40,7 +40,7 @@ export class EmployeePenaltyPayloadVm {
   employeePenaltyId: string;
 
   @ApiModelPropertyOptional()
-  penaltyType: string;
+  penaltyNote: string;
 }
 
 export class EmployeePenaltyResponseVm {
@@ -102,11 +102,34 @@ export class EmployeePenaltyResponseVm {
   desc: string;
 
   @ApiModelProperty()
-  penaltyType: string;
+  penaltyNote: string;
 
 }
-
 export class EmployeePenaltyListResponseVM extends BaseMetaResponseVm{
   @ApiModelProperty({ type: () => [EmployeePenaltyResponseVm] })
   data: EmployeePenaltyResponseVm[];
 }
+
+export class PenaltyCategoryVm {
+  @ApiModelProperty()
+  penaltyCategoryTitle: string;
+
+  @ApiModelProperty()
+  penaltyCategoryProcess: string;
+
+  @ApiModelProperty()
+  penaltyCategoryId: string;
+}
+
+export class PenaltyCategoryListResponseVm extends BaseMetaResponseVm{
+  @ApiModelProperty({ type: () => [PenaltyCategoryVm] })
+  data: PenaltyCategoryVm[];
+}
+
+export class PenaltyRoleNameVm{
+
+}
+
+// export class PenaltyRoleNameListVm{
+
+// }
