@@ -23,7 +23,8 @@ export class EmployeePenaltyService {
     'Total Denda',
     'Keterangan',
     'User Created',
-    'User Updated'
+    'User Updated',
+    'Sanksi'
   ];
 
   private static strReplaceFunc = str => {
@@ -58,6 +59,7 @@ export class EmployeePenaltyService {
       d.penaltyDesc ? EmployeePenaltyService.strReplaceFunc(d.penaltyDesc) : '-',
       `${d.createdUserName} - ${d.createdFirstName}`,
       d.updatedUserName ? `${d.updatedUserName} - ${d.updatedFirstName}` : '-',
+      d.penaltyType ? EmployeePenaltyService.strReplaceFunc(d.penaltyType) : '-',
     ];
     return `${values.join(',')} \n`;
   }
@@ -79,6 +81,7 @@ export class EmployeePenaltyService {
     employeePenalty.refAwbNumber = (payload.refAwbNumber) ? payload.refAwbNumber : null;
     employeePenalty.refSpkCode = (payload.refSpkCode) ? payload.refSpkCode : null; 
     employeePenalty.penaltyDesc = (payload.penaltyDesc) ? payload.penaltyDesc : null;
+    employeePenalty.penaltyType = (payload.penaltyType) ? payload.penaltyType : null;
     if(employeePenaltyData){
       employeePenalty.userIdCreated = employeePenaltyData.userIdCreated;
       employeePenalty.userIdUpdated = userId;
@@ -167,6 +170,7 @@ export class EmployeePenaltyService {
       ['employee_penalty.penalty_fee', 'penaltyFee'],
       ['employee_penalty.total_penalty', 'totalPenalty'],
       ['employee_penalty.penalty_desc', 'desc'],
+      ['employee_penalty.penalty_type', 'penaltyType'],
     );
 
     q.innerJoin(e => e.penaltyUser, 'users', j =>
@@ -361,6 +365,7 @@ export class EmployeePenaltyService {
         ['usercreated.username', 'createdUserName'],
         ['usersupdated.first_name', 'updatedFirstName'],
         ['usersupdated.username', 'updatedUserName'],
+        ['employee_penalty.penalty_type', 'penaltyType'],
       );
 
       q.innerJoin(e => e.penaltyUser, 'users', j =>

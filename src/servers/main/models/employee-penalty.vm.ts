@@ -38,6 +38,9 @@ export class EmployeePenaltyPayloadVm {
 
   @ApiModelPropertyOptional()
   employeePenaltyId: string;
+
+  @ApiModelPropertyOptional()
+  penaltyType: string;
 }
 
 export class EmployeePenaltyResponseVm {
@@ -97,6 +100,9 @@ export class EmployeePenaltyResponseVm {
 
   @ApiModelProperty()
   desc: string;
+
+  @ApiModelProperty()
+  penaltyType: string;
 
 }
 

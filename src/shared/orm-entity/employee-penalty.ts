@@ -84,6 +84,12 @@ export class EmployeePenalty extends BaseEntity {
   })
   penaltyDesc: string | null;
 
+  @Column('text', {
+    nullable: true,
+    name: 'penalty_type',
+  })
+  penaltyType: string | null;
+
   @Column('bigint', {
     nullable: false,
     name: 'user_id_created',
