@@ -255,11 +255,12 @@ export class V2MobileSyncService {
 
           // NOTE: push data only DLV to Sunfish
           if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
-            AwbSunfishV2QueueService.perform(
-              delivery.awbNumber,
-              delivery.employeeId,
-              historyDateTime,
-            );
+            // TODO: add flag
+            // AwbSunfishV2QueueService.perform(
+            //   delivery.awbNumber,
+            //   delivery.employeeId,
+            //   historyDateTime,
+            // );
           } else {
             // NOTE: mail notification status problem
             AwbNotificationMailQueueService.perform(
