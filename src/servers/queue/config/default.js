@@ -9,5 +9,6 @@ module.exports = {
   },
   bullPod: true,
   bullCod: false,
+  bullPodMobile: true,
   bullSmd: true,
 };
