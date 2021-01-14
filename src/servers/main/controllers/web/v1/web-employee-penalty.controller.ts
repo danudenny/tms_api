@@ -6,7 +6,13 @@ import { ResponseSerializerOptions } from '../../../../../shared/decorators/resp
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
-import { EmployeePenaltyListResponseVM, EmployeePenaltyPayloadVm, PenaltyCategoryListResponseVm } from '../../../models/employee-penalty.vm';
+import { 
+  EmployeePenaltyListResponseVM, 
+  EmployeePenaltyPayloadVm, 
+  PenaltyCategoryListResponseVm, 
+  PenaltyEmployeeRoleNameListResponseVm,
+  EmployeePenaltyFindAllResponseVm 
+} from '../../../models/employee-penalty.vm';
 import { EmployeePenaltyService } from '../../../services/web/v1/web-employee-penalty.service';
 
 @ApiUseTags('Web Employee Penalty')
@@ -63,11 +69,20 @@ export class EmployeePenalty {
     );
   }
 
-  // @Post('role-name/list')
-  // @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  // @ApiOkResponse({ type: PenaltyCategoryListResponseVm })
-  // public async getRoleList(@Body() payload: BaseMetaPayloadVm) {
-  //   return EmployeePenaltyService.findPenaltyCategories(payload);
-  // }
+  @Post('role-name/list')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: PenaltyEmployeeRoleNameListResponseVm })
+  public async getEmployeeRoleName(@Body() payload: BaseMetaPayloadVm) {
+    return EmployeePenaltyService.findPenaltyEmployeeRoleName(payload);
+  }
+
+  @Post('/list-employee')
+  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: EmployeePenaltyFindAllResponseVm })
+  public async findAllEmployee(@Body() payload: BaseMetaPayloadVm) {
+    return EmployeePenaltyService.findAllEmployeePenaltyByRequest(payload);
+  }
 }

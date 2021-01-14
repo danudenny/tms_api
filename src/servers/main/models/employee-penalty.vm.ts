@@ -42,7 +42,6 @@ export class EmployeePenaltyPayloadVm {
   @ApiModelPropertyOptional()
   penaltyNote: string;
 }
-
 export class EmployeePenaltyResponseVm {
   @ApiModelProperty({ format: 'date-time' })
   penaltyDateTime: string;
@@ -109,7 +108,6 @@ export class EmployeePenaltyListResponseVM extends BaseMetaResponseVm{
   @ApiModelProperty({ type: () => [EmployeePenaltyResponseVm] })
   data: EmployeePenaltyResponseVm[];
 }
-
 export class PenaltyCategoryVm {
   @ApiModelProperty()
   penaltyCategoryTitle: string;
@@ -120,16 +118,47 @@ export class PenaltyCategoryVm {
   @ApiModelProperty()
   penaltyCategoryId: string;
 }
-
 export class PenaltyCategoryListResponseVm extends BaseMetaResponseVm{
   @ApiModelProperty({ type: () => [PenaltyCategoryVm] })
   data: PenaltyCategoryVm[];
 }
+export class PenaltyEmployeeRoleNameVm{
+  @ApiModelProperty()
+  employeeId: number;
 
-export class PenaltyRoleNameVm{
+  @ApiModelProperty()
+  employeeRoleId: number;
 
+  @ApiModelProperty()
+  employeeRoleCode: string;
+
+  @ApiModelProperty()
+  employeeRoleName: string;
 }
+export class PenaltyEmployeeRoleNameListResponseVm extends BaseMetaResponseVm{
+  @ApiModelProperty({ type: () => [PenaltyEmployeeRoleNameVm] })
+  data: PenaltyEmployeeRoleNameVm[];
+}
+export class EmployeePenaltyVm {
+  @ApiModelProperty()
+  employeeId: number;
 
-// export class PenaltyRoleNameListVm{
+  @ApiModelProperty()
+  userId: number;
 
-// }
+  @ApiModelProperty()
+  nik: string;
+
+  @ApiModelProperty()
+  employeeRoleId: number;
+
+  @ApiModelProperty()
+  employeeRoleCode: string;
+
+  @ApiModelProperty()
+  employeeRoleName: string;
+}
+export class EmployeePenaltyFindAllResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [EmployeePenaltyVm] })
+  data: EmployeePenaltyVm[];
+}
