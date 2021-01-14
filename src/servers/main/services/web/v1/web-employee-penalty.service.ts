@@ -21,6 +21,7 @@ export class EmployeePenaltyService {
     'Perwakilan',
     'Cabang',
     'Dibebankan',
+    'Jabatan',
     'No Resi',
     'No SPK/ SJ',
     'Qty',
@@ -56,6 +57,7 @@ export class EmployeePenaltyService {
       d.representativeCode,
       `${d.branchCode} - ${d.branchName}`,
       `${d.userName} - ${d.firstName}`,
+      EmployeePenaltyService.strReplaceFunc(d.employeeRoleName),
       d.refAwbNumber ? `'${d.refAwbNumber}` : '-',
       d.refSpkCode ? EmployeePenaltyService.strReplaceFunc(d.refSpkCode) : '-',
       d.qty,
@@ -76,6 +78,7 @@ export class EmployeePenaltyService {
     ){
     const employeePenalty = new EmployeePenalty();
     employeePenalty.penaltyUserId = payload.penaltyUserId;
+    employeePenalty.employeeRoleId = payload.employeeRoleId;
     employeePenalty.penaltyDateTime = payload.createTime;
     employeePenalty.penaltyCategoryId = payload.penaltyCategoryid;
     employeePenalty.penaltyQty = payload.qty;
@@ -300,6 +303,9 @@ export class EmployeePenaltyService {
       ['employee_penalty.total_penalty', 'totalPenalty'],
       ['employee_penalty.penalty_desc', 'desc'],
       ['employee_penalty.penalty_note', 'penaltyNote'],
+      ['employee_role.employee_role_id', 'employeeRoleId'],
+      ['employee_role.employee_role_code', 'employeeRoleCode'],
+      ['employee_role.employee_role_name', 'employeeRoleName'],
     );
 
     q.innerJoin(e => e.penaltyUser, 'users', j =>
@@ -316,6 +322,10 @@ export class EmployeePenaltyService {
 
     q.innerJoin(e => e.penaltyCategory, 'penalty_category', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.penaltyUser.employee.employeeRole, 'employee_role', j =>
+      j.andWhere(e => e.is_deleted, w => w.isFalse()),
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -488,6 +498,9 @@ export class EmployeePenaltyService {
         ['usersupdated.first_name', 'updatedFirstName'],
         ['usersupdated.username', 'updatedUserName'],
         ['employee_penalty.penalty_note', 'penaltyNote'],
+        ['employee_role.employee_role_id', 'employeeRoleId'],
+        ['employee_role.employee_role_code', 'employeeRoleCode'],
+        ['employee_role.employee_role_name', 'employeeRoleName'],
       );
 
       q.innerJoin(e => e.penaltyUser, 'users', j =>
@@ -512,6 +525,10 @@ export class EmployeePenaltyService {
 
       q.innerJoin(e => e.penaltyCategory, 'penalty_category', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.innerJoin(e => e.penaltyUser.employee.employeeRole, 'employee_role', j =>
+        j.andWhere(e => e.is_deleted, w => w.isFalse()),
       );
 
       q.andWhere(e => e.isDeleted, w => w.isFalse());

@@ -2,6 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne
 import {User} from './user';
 import {Branch} from './branch';
 import {PenaltyCategory} from './penalty_category';
+import { EmployeeRole } from './employee-role';
 
 @Entity('employee_penalty', { schema: 'public' })
 export class EmployeePenalty extends BaseEntity {
@@ -114,6 +115,12 @@ export class EmployeePenalty extends BaseEntity {
   })
   updatedTime: Date;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'employee_role_id',
+  })
+  employeeRoleId: number;
+
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
@@ -140,5 +147,9 @@ export class EmployeePenalty extends BaseEntity {
   @ManyToOne(() => PenaltyCategory)
   @JoinColumn({ name: 'penalty_category_id' })
   penaltyCategory: PenaltyCategory;
+
+  @OneToOne(() => EmployeeRole)
+  @JoinColumn({ name: 'employee_role_id', referencedColumnName: 'employee_role_id' })
+  employeeRole: EmployeeRole;
 
 }

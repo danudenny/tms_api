@@ -42,8 +42,8 @@ export class EmployeePenaltyPayloadVm {
   @ApiModelPropertyOptional()
   penaltyNote: string;
 
-  // @ApiModelProperty()
-  // employeeRoleId: number;
+  @ApiModelProperty()
+  employeeRoleId: number;
 }
 export class EmployeePenaltyResponseVm {
   @ApiModelProperty({ format: 'date-time' })
@@ -106,14 +106,14 @@ export class EmployeePenaltyResponseVm {
   @ApiModelProperty()
   penaltyNote: string;
 
-  // @ApiModelProperty()
-  // employeeRoleId: number;
+  @ApiModelProperty()
+  employeeRoleId: number;
 
-  // @ApiModelProperty()
-  // employeeRoleCode: string;
+  @ApiModelProperty()
+  employeeRoleCode: string;
 
-  // @ApiModelProperty()
-  // employeeRoleNumber: string;
+  @ApiModelProperty()
+  employeeRoleName: string;
 
 }
 export class EmployeePenaltyListResponseVM extends BaseMetaResponseVm{
