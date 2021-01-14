@@ -13,6 +13,7 @@ export const AWB_STATUS = {
   ANT: 14000,
   BA: 22000,
   CODA: 23000,
+  CODB: 26500,
   DLV: 30000,
   DONE_HO: 30100,
   BROKE: 24000,
