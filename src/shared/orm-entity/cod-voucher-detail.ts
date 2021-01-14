@@ -5,8 +5,10 @@ import {
   PrimaryGeneratedColumn,
   JoinColumn,
   ManyToOne,
+  OneToOne,
 } from 'typeorm';
 import { CodVoucher } from './cod-voucher';
+import { CodTransactionDetail } from './cod-transaction-detail';
 
 @Entity('cod_voucher_detail', { schema: 'public' })
 export class CodVoucherDetail extends BaseEntity {
@@ -40,10 +42,21 @@ export class CodVoucherDetail extends BaseEntity {
   })
   updatedTime: Date;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_deleted',
+  })
+  isDeleted: boolean;
+
   @ManyToOne(() => CodVoucher, x => x.details)
   @JoinColumn({
     name: 'cod_voucher_id',
     referencedColumnName: 'codVoucherId',
   })
   voucherBranch: CodVoucher;
+
+  @OneToOne(() => CodTransactionDetail)
+  @JoinColumn({ name: 'awb_number', referencedColumnName: 'awbNumber'})
+  codTransactionDetail: CodTransactionDetail;
 }
