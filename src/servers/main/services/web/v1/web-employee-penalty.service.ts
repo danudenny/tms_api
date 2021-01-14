@@ -372,6 +372,11 @@ export class EmployeePenaltyService {
   static async findEmployeeRoleName(
     payload: BaseMetaPayloadVm,
   ): Promise<PenaltyEmployeeRoleNameListResponseVm> {
+    payload.globalSearchFields = [
+      {
+        field: 'employeeRoleName',
+      },
+    ];
     const q = RepositoryService.employeeRole.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
