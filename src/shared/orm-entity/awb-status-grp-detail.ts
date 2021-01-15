@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { AwbStatusGrp } from './awb-status-grp';
 
-@Entity('audit_history', { schema: 'public' })
+@Entity('awb_status_grp_detail', { schema: 'public' })
 export class AwbStatusGrpDetail extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',

@@ -34,7 +34,7 @@ export class PartnerOneidService {
     payload.fieldResolverMap['awbNumber'] = 'awb.awb_number';
     payload.fieldResolverMap['awbStatusGrpId'] = 'asg.awb_status_grp_id';
     payload.fieldResolverMap['partnerId'] = 'p.partner_id';
-    payload.fieldResolverMap['awbHistoryDateLast'] = 'aia.awb_history_date_last';
+    payload.fieldResolverMap['awbHistoryDateLast'] = 'awb_item_attr.awb_history_date_last';
     payload.fieldResolverMap['email'] = 'awb.email_merchant';
 
     const q = RepositoryService.awbItemAttr.findAllRaw();
@@ -48,8 +48,8 @@ export class PartnerOneidService {
       ['awb.total_item_price', 'totalItemPrice'],
       ['asg.awb_status_grp_id', 'awbStatusGrpId'],
       ['asg.awb_status_grp_name', 'awbStatusGrpName'],
-      ['aia.awb_status_id_last', 'awbStatusIdLast'],
-      ['aia.awb_history_date_last', 'awbHistoryDateLast'],
+      ['awb_item_attr.awb_status_id_last', 'awbStatusIdLast'],
+      ['awb_item_attr.awb_history_date_last', 'awbHistoryDateLast'],
       ['pt.package_type_name', 'packageTypeName'],
     );
 

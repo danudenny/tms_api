@@ -7,7 +7,7 @@ import {
   OneToOne,
 } from 'typeorm';
 
-@Entity('audit_history', { schema: 'public' })
+@Entity('awb_status_grp', { schema: 'public' })
 export class AwbStatusGrp extends BaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',

@@ -24,7 +24,10 @@ export class ListOneidOrderActivityDetailVm {
   totalItemPrice: string;
 
   @ApiModelProperty()
-  awbStatusIdLast: string;
+  awbStatusGrpId: number;
+
+  @ApiModelProperty()
+  awbStatusGrpName: string;
 
   @ApiModelProperty()
   awbHistoryDateLast: Date;
