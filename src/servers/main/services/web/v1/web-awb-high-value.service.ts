@@ -8,7 +8,7 @@ import { getManager } from 'typeorm';
 export class V1WebAwbHighValueService {
 
   static async uploadAwb(file): Promise<AwbHighValueUploadResponseVm> {
-    let totalSuccess = 0;
+    let totalValid = 0;
     const notValid = [];
     if (file) {
       const workbook: any = xlsx.read(file.buffer);
@@ -56,7 +56,7 @@ export class V1WebAwbHighValueService {
                     isHighValue: true,
                   },
                 );
-                totalSuccess += 1;
+                totalValid += 1;
               });
               // TODO: insert table log awbHighValue
             } catch (error) {
@@ -72,7 +72,7 @@ export class V1WebAwbHighValueService {
       // construct response
       const result = new AwbHighValueUploadResponseVm();
       result.notValid = notValid;
-      result.totalSuccess = totalSuccess;
+      result.totalValid = totalValid;
       result.totalNotValid = notValid.length;
       return result;
     } else {

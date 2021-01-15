@@ -8,5 +8,5 @@ export class AwbHighValueUploadResponseVm {
   totalNotValid: number;
 
   @ApiModelProperty()
-  totalSuccess: number;
+  totalValid: number;
 }
