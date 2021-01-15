@@ -278,6 +278,7 @@ export class V1WebAwbCodVoucherService {
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 'cvd.awb_number';
     payload.fieldResolverMap['codVoucherDate'] = 'cv.cod_voucher_date';
+    payload.fieldResolverMap['statusPayment'] = 'cv.is_settlement';
     payload.fieldResolverMap['transactionStatus'] = 'ts.status_title';
 
     const repo = new OrionRepositoryService(CodVoucherDetail, 'cvd');
