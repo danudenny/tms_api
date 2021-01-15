@@ -733,5 +733,5 @@ export class WebMonitoringSettlementVm {
   codValue: number;
 
   @ApiModelProperty()
-  statusPayment: string;
+  transactionStatus: string;
 }

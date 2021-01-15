@@ -278,7 +278,7 @@ export class V1WebAwbCodVoucherService {
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 'cvd.awb_number';
     payload.fieldResolverMap['codVoucherDate'] = 'cv.cod_voucher_date';
-    payload.fieldResolverMap['statusPayment'] = 'ts.status_title';
+    payload.fieldResolverMap['transactionStatus'] = 'ts.status_title';
 
     const repo = new OrionRepositoryService(CodVoucherDetail, 'cvd');
     const q = repo.findAllRaw();
@@ -290,7 +290,7 @@ export class V1WebAwbCodVoucherService {
       ['cv.cod_voucher_no', 'codVoucherNo'],
       ['cv.cod_voucher_date', 'codVoucherDate'],
       ['ctd.cod_value', 'codValue'],
-      ['COALESCE(ts.status_title, \'BELUM DI PROSES\')', 'statusPayment'],
+      ['COALESCE(ts.status_title, \'BELUM DI PROSES\')', 'transactionStatus'],
     );
 
     q.innerJoin(e => e.voucherBranch, 'cv', j =>
