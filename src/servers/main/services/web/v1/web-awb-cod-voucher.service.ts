@@ -289,6 +289,7 @@ export class V1WebAwbCodVoucherService {
       ['cvd.awb_number', 'awbNumber'],
       ['cv.cod_voucher_no', 'codVoucherNo'],
       ['cv.cod_voucher_date', 'codVoucherDate'],
+      ['cv.is_settlement', 'statusPayment'],
       ['ctd.cod_value', 'codValue'],
       ['COALESCE(ts.status_title, \'BELUM DI PROSES\')', 'transactionStatus'],
     );
