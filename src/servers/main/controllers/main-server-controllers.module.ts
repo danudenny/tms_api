@@ -64,6 +64,7 @@ import { WebHubController } from './web/web-hub.controller';
 import { WebLastMileController } from './web/web-last-mile.controller';
 import { WebMonitoringController } from './web/web-monitoring.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
+import { V1WebAwbHighValueController } from './web/v1/web-awb-high-value.controller';
 
 // #endregion
 @Module({
@@ -134,6 +135,7 @@ import { RolePodManualController } from './web/web-role-pod-manual.controller';
     PackageTypeController,
     CodUserToBranchController,
     WebHubReportController,
+    V1WebAwbHighValueController,
   ],
 })
 export class MainServerControllersModule {}
