@@ -37,7 +37,7 @@ export class PartnerOneidService {
     payload.fieldResolverMap['awbHistoryDateLast'] = 'aia.awb_history_date_last';
     payload.fieldResolverMap['email'] = 'awb.email_merchant';
 
-    const q = RepositoryService.awb.findAllRaw();
+    const q = RepositoryService.awbItemAttr.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
@@ -55,25 +55,25 @@ export class PartnerOneidService {
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-    q.innerJoin(e => e.customerAccount, 'ca', j => 
+    q.innerJoin(e => e.awb, 'awb', j => 
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awb.customerAccount, 'ca', j => 
       j
         .andWhere(e => e.oneId, w => w.equals(oneId))
         .andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.customerAccount.partner, 'p', j => 
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    
-    q.innerJoin(e => e.awbItems.awbItemAttr, 'aia', j => 
+    q.innerJoin(e => e.awb.customerAccount.partner, 'p', j => 
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbItems.awbItemAttr.awbStatusGrpDetail.awbStatusGrp, 'asg', j => 
+    q.innerJoin(e => e.awbStatusGrpDetail.awbStatusGrp, 'asg', j => 
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.packageType, 'pt', j => 
+    q.innerJoin(e => e.awb.packageType, 'pt', j => 
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     
