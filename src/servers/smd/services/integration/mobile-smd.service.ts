@@ -101,8 +101,7 @@ export class MobileSmdService {
           null,
           null,
           resultDoSmd.departureScheduleDateTime,
-          // permissonPayload.branchId,
-          null,
+          resultDoSmd.branchId,
           3000,
           null,
           null,
@@ -114,7 +113,8 @@ export class MobileSmdService {
         // BACKGROUND PROCESS
         BagScanOutBranchSmdQueueService.perform(
           payload.do_smd_id,
-          permissonPayload.branchId,
+          // permissonPayload.branchId
+          resultDoSmd.branchId,
           authMeta.userId,
         );
       }
