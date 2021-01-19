@@ -64,6 +64,7 @@ import { WebHubController } from './web/web-hub.controller';
 import { WebLastMileController } from './web/web-last-mile.controller';
 import { WebMonitoringController } from './web/web-monitoring.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
+import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
 import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
 // #endregion
 @Module({
@@ -134,6 +135,7 @@ import { MobileDeviceInfoController } from './mobile/mobile-device-info.controll
     PackageTypeController,
     CodUserToBranchController,
     WebHubReportController,
+    EmployeePenalty,
     MobileDeviceInfoController,
   ],
 })
