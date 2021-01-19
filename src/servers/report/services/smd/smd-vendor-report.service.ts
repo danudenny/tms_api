@@ -130,11 +130,12 @@ export class SmdVendorReportService {
     payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
-      ['t1.do_smd_code', 'Nomor SMD'],
-      ['TO_CHAR(t1.do_smd_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal di Buat'],
+      ['t1.do_smd_code', 'No SMD'],
+      ['TO_CHAR(t1.do_smd_time, \'DD Mon YYYY HH24:MI\')', 'Tgl di Buat'],
       ['t4.branch_name', 'Gerai Asal'],
       ['t1.vendor_name', 'Vendor'],
       ['t1.total_bag', 'Gabung Paket'],
+      ['t1.total_bagging', 'Bagging'],
       ['t1.total_bag_representative', 'Gabung Kota'],
     );
 

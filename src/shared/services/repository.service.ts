@@ -38,6 +38,10 @@ import { BagRepresentative } from '../orm-entity/bag-representative';
 import { TransactionStatus } from '../orm-entity/transaction-status';
 import { PackageType } from '../orm-entity/package-type';
 import { ReceivedBag } from '../orm-entity/received-bag';
+import { PenaltyCategory } from '../orm-entity/penalty_category';
+import { EmployeePenalty } from '../orm-entity/employee-penalty';
+import { EmployeeRole } from '../orm-entity/employee-role';
+import { MobileDeviceInfo } from '../orm-entity/mobile-device-info';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -160,5 +164,17 @@ export class RepositoryService {
   }
   static get receivedBag() {
     return new OrionRepositoryService(ReceivedBag);
+  }
+  static get penaltyCategory() {
+    return new OrionRepositoryService(PenaltyCategory);
+  }
+  static get employeePenalty() {
+    return new OrionRepositoryService(EmployeePenalty);
+  }
+  static get employeeRole() {
+    return new OrionRepositoryService(EmployeeRole);
+  }
+  static get mobileInfo() {
+    return new OrionRepositoryService(MobileDeviceInfo);
   }
 }

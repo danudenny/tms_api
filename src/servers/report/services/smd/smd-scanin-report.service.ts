@@ -64,6 +64,7 @@ export class SmdScaninReportService {
     payload.fieldResolverMap['do_smd_detail_id'] = 'dsd.do_smd_detail_id';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
     payload.fieldResolverMap['arrival_time'] = 'dsd.arrival_time';
+    payload.fieldResolverMap['is_intercity'] = 'ds.is_intercity';
 
     payload.globalSearchFields = [
       {
@@ -84,14 +85,18 @@ export class SmdScaninReportService {
       {
         field: 'arrival_time',
       },
+      {
+        field: 'is_intercity',
+      },
     ];
 
     const repo = new OrionRepositoryService(DoSmdDetail, 'dsd');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
     q.selectRaw(
       ['ds.do_smd_code', 'No SMD'],
+      [`CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END`, 'Jenis SJ'],
       ['TO_CHAR(ds.do_smd_time, \'DD Mon YYYY HH24:MI\')', 'Tgl Di Buat'],
       ['TO_CHAR(dsd.arrival_time, \'DD Mon YYYY HH24:MI\')', 'Tgl Tiba'],
       ['e.fullname', 'Handover'],

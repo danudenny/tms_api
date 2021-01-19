@@ -63,6 +63,7 @@ export class HubMonitoringReportService {
       'hub-monitoring',
       queryParams.id,
     );
+
     if (!payload) {
       RequestErrorService.throwObj(
         {
@@ -81,8 +82,12 @@ export class HubMonitoringReportService {
     await CsvHelper.generateCSV(res, data, fileName);
   }
 
-  static async getDataCsvHubMonitoring(payload: BaseMetaPayloadVm): Promise<any> {
-    let query = await HubMonitoringService.getQueryMonitoringHubBagByFilterOrion(payload);
+  static async getDataCsvHubMonitoring(
+    payload: BaseMetaPayloadVm,
+  ): Promise<any> {
+    let query = await HubMonitoringService.getQueryMonitoringHubBagByFilterOrion(
+      payload,
+    );
     query = query.split('"doPodDateTime"').join('"Tanggal"');
     query = query.split('"origin"').join('"Origin"');
     query = query.split('"status"').join('"Status"');
@@ -97,10 +102,14 @@ export class HubMonitoringReportService {
     return data;
   }
 
-  static async getDataCsvHubMonitoringSortir(payload: BaseMetaPayloadVm): Promise<any> {
-    const query = await HubMonitoringService.getQueryCSVMonitoringSortirByFilterOrion(payload);
+  static async getDataCsvHubMonitoringSortir(
+    payload: BaseMetaPayloadVm,
+  ): Promise<any> {
+    const query = await HubMonitoringService.getQueryCSVMonitoringSortirByFilterOrion(
+      payload,
+    );
     const data = await RawQueryService.query(query);
-    if (data.length) {
+    if (!data.length) {
       RequestErrorService.throwObj(
         {
           message: 'Data Monitoring Sortir Not Found!',
