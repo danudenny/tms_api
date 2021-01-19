@@ -713,3 +713,28 @@ export class WebCodCountResponseVm {
 }
 
 export class WebInsertCodPaymentResponseVm extends WebCodSuccessResponseVm {}
+
+export class WebMonitoringSettlementResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebMonitoringSettlementVm] })
+  data: WebMonitoringSettlementVm[];
+}
+
+export class WebMonitoringSettlementVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  codVoucherNo: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  codVoucherDate: string;
+
+  @ApiModelProperty()
+  codValue: number;
+
+  @ApiModelProperty()
+  statusPayment: string;
+
+  @ApiModelProperty()
+  transactionStatus: string;
+}
