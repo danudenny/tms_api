@@ -23,6 +23,7 @@ import { BagRepresentative } from '../../../../shared/orm-entity/bag-representat
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import {ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
+import { toInteger } from 'lodash';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -48,13 +49,16 @@ export class ScanoutSmdService {
     const resultDataDriver = await RawQueryService.query(rawQueryDriver);
 
     if (resultDataDriver.length > 0) {
-      if (resultDataDriver[0].do_smd_status_id_last == 3000) {
+      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 3000) {
         throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
       }
-      if (resultDataDriver[0].do_smd_status_id_last == 4000) {
+      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4000) {
         throw new BadRequestException(`Driver tidak bisa di assign, karena sedang HAS Arrived !!`);
       }
-      if (resultDataDriver[0].do_smd_status_id_last == 5000 || resultDataDriver[0].do_smd_status_id_last == 6000 ) {
+      if( toInteger(resultDataDriver[0].do_smd_status_id_last) <= 3000 ) {
+        throw new BadRequestException(`Driver Tidak boleh di assign`);
+      }
+      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 5000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 6000 ) {
         const resultDoSmdDetail = await DoSmdDetail.findOne({
           where: {
             doSmdId: resultDataDriver[0].do_smd_id,
