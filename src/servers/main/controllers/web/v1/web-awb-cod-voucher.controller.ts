@@ -10,10 +10,13 @@ import {
 import {
     WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm,
     WebCodVoucherSuccessResponseVm,
+    WebMonitoringSettlementResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodVoucherService } from '../../../services/web/v1/web-awb-cod-voucher.service';
 import { WebCodMigrationTransferPayloadVm, WebCodMigrationTransferBranchResponseVm } from '../../../models/cod/web-awb-cod-migration.vm';
 import { V1WebCodMigrationService } from '../../../services/web/v1/web-cod-migration.service';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 
 // #endregion import
 
@@ -48,16 +51,16 @@ export class V1WebAwbCodVoucherController {
 
   // NOTE: only use for migratin data
   // #region migration data
-  @Post('migration/transaction')
-  @HttpCode(HttpStatus.OK)
-  @ApiImplicitHeader({ name: 'auth-key' })
-  @UseGuards(AuthKeyCodGuard)
-  @ApiOkResponse({ type: WebCodMigrationTransferBranchResponseVm })
-  public async migrationTransaction(
-    @Body() payload: WebCodMigrationTransferPayloadVm,
-  ) {
-    return V1WebCodMigrationService.transferBranch(payload);
-  }
+  // @Post('migration/transaction')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiImplicitHeader({ name: 'auth-key' })
+  // @UseGuards(AuthKeyCodGuard)
+  // @ApiOkResponse({ type: WebCodMigrationTransferBranchResponseVm })
+  // public async migrationTransaction(
+  //   @Body() payload: WebCodMigrationTransferPayloadVm,
+  // ) {
+  //   return V1WebCodMigrationService.transferBranch(payload);
+  // }
 
   // @Post('migration/bankStatement')
   // @HttpCode(HttpStatus.OK)
@@ -81,4 +84,14 @@ export class V1WebAwbCodVoucherController {
   //   return {}; // V1WebAwbCodService.transferHeadOffice(payload, file);
   // }
   // #endregion migration data
+
+  @Post('monitoring/settlement')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebMonitoringSettlementResponseVm })
+  public async monitoringSettlement(
+    @Body() payload: BaseMetaPayloadVm,
+  ) {
+    return V1WebAwbCodVoucherService.monitoringSettlement(payload);
+  }
 }
