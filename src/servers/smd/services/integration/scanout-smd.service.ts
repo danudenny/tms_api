@@ -33,6 +33,41 @@ export class ScanoutSmdService {
     const result = new ScanOutSmdVehicleResponseVm();
     const timeNow = moment().toDate();
     // let  paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
+
+    const rawQueryDriver = `
+      SELECT 
+        dsv.employee_id_driver,
+        ds.do_smd_status_id_last,
+        ds.do_smd_id
+      FROM do_smd_vehicle dsv
+      INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE AND ds.do_smd_status_id_last <> 6000
+      WHERE 
+        dsv.employee_id_driver = ${payload.employee_id_driver} AND
+        dsv.is_deleted = FALSE;
+    `;
+    const resultDataDriver = await RawQueryService.query(rawQueryDriver);
+
+    if (resultDataDriver.length > 0) {
+      if (resultDataDriver[0].do_smd_status_id_last == 3000) {
+        throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
+      }
+      if (resultDataDriver[0].do_smd_status_id_last == 4000) {
+        throw new BadRequestException(`Driver tidak bisa di assign, karena sedang HAS Arrived !!`);
+      }
+      if (resultDataDriver[0].do_smd_status_id_last == 5000 || resultDataDriver[0].do_smd_status_id_last == 6000 ) {
+        const resultDoSmdDetail = await DoSmdDetail.findOne({
+          where: {
+            doSmdId: resultDataDriver[0].do_smd_id,
+            branchIdTo: permissonPayload.branchId,
+            isDeleted: false,
+          },
+        });
+        if (!resultDoSmdDetail) {
+          throw new BadRequestException(`Driver tidak bisa di assign, karena SMD ID : ` + resultDataDriver[0].do_smd_id + ` tidak di temukan.`);
+        }
+      }
+    }
+
     const  paramDoSmdCode = await CustomCounterCode.doSmdCodeRandomCounter(timeNow);
     const data = [];
 
