@@ -1,4 +1,4 @@
-// //#region
+// #region import
 import _, { assign, join, sampleSize } from 'lodash';
 import { createQueryBuilder, getManager } from 'typeorm';
 
@@ -9,14 +9,12 @@ import { Bag } from '../../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../../shared/orm-entity/bag-item-awb';
 import { Branch } from '../../../../../shared/orm-entity/branch';
-import { District } from '../../../../../shared/orm-entity/district';
 import { PodScanInHub } from '../../../../../shared/orm-entity/pod-scan-in-hub';
 import { PodScanInHubBag } from '../../../../../shared/orm-entity/pod-scan-in-hub-bag';
 import { PodScanInHubDetail } from '../../../../../shared/orm-entity/pod-scan-in-hub-detail';
 import { Representative } from '../../../../../shared/orm-entity/representative';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
-import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 import {
     BagItemHistoryQueueService,
 } from '../../../../queue/services/bag-item-history-queue.service';
@@ -33,11 +31,10 @@ import {
     UnloadAwbResponseVm,
     AwbScanPackageDetailVm,
 } from '../../../models/package-payload.vm';
-import { AwbService } from '../../v1/awb.service';
 import { BagService } from '../../v1/bag.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import moment = require('moment');
-// //#endregion
+// #endregion
 
 export class V1PackageService {
   constructor() {}
@@ -541,7 +538,15 @@ export class V1PackageService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     let podScanInHubId: string = null;
 
-    const bagDetail = await BagService.validBagNumber(payload.bagNumber);
+    // const bagDetail = await BagService.validBagNumber(payload.bagNumber);
+    // find data to bagItemId
+    const bagDetail = await BagItem.findOne({
+      where: {
+        bagItemId: payload.bagItemId,
+        isDeleted: false,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
 
     if (!bagDetail) {
       throw new BadRequestException('No gabungan sortir tidak ditemukan');
@@ -554,7 +559,6 @@ export class V1PackageService {
       const bagWeight = Number(bagDetail.weight);
       const totalWeightRealRounded = Number(payload.awbDetail.totalWeightRealRounded);
       const bagWeightFinalFloat = parseFloat((bagWeight + totalWeightRealRounded).toFixed(5));
-      // PinoLoggerService.log('#### bagWeightFinalFloat :: ', bagWeightFinalFloat );
 
       try {
         await BagItem.update({
@@ -562,8 +566,6 @@ export class V1PackageService {
         }, {
           weight: bagWeightFinalFloat,
         });
-
-        bagDetail.weight = bagWeightFinalFloat;
 
         // #region PodScanInHub process
         // insert into pod scan in hub
@@ -597,7 +599,7 @@ export class V1PackageService {
           CreateBagFirstScanHubQueueService.perform(
             bagDetail.bagId,
             bagDetail.bagItemId,
-            bagDetail.bag.bagNumber,
+            payload.bagNumber,
             payload.awbItemId,
             payload.awbDetail.awbNumber,
             podScanInHub.podScanInHubId,
@@ -624,24 +626,21 @@ export class V1PackageService {
           // #endregion send to background process
         }
         // #endregion
+        // contruct data response
+        const result = new CreateBagNumberResponseVM();
+        result.podScanInHubId = podScanInHubId;
+        result.bagItemId = bagDetail.bagItemId;
+        result.bagSeq = bagDetail.bagSeq;
+        result.weight = bagWeightFinalFloat;
+        return result;
+
       } catch (error) {
         console.error(error);
         throw new BadRequestException('Problem Server, Coba beberapa saat lagi!');
       }
     } else {
-      // DEBUG: TypeError: Cannot read property 'weight' of undefined
-      console.error('######## BAGITEM NOT FOUND :: BAG DETAIL :: ', bagDetail);
-      console.error('######## BAGITEM NOT FOUND :: PAYLOAD :: ', payload);
       throw new BadRequestException(`Bag Number ${payload.bagNumber}, tidak ditemukan`);
     }
-
-    // contruct data response
-    const result = new CreateBagNumberResponseVM();
-    result.podScanInHubId = podScanInHubId;
-    result.bagItemId = bagDetail.bagItemId;
-    result.weight = bagDetail.weight;
-    result.bagSeq = bagDetail.bagSeq;
-    return result;
   }
 
   private static async awbScan(payload: PackagePayloadVm): Promise<any> {
@@ -652,10 +651,6 @@ export class V1PackageService {
 
     let bagWeight: number = 0;
     let bagSeq: number = 0;
-    // let branch: Branch = null;
-    // let branchName = null;
-    // let branchCode = null;
-    // let districtId = null;
 
     // mapping
     let bagNumber: string = payload.bagNumber;
@@ -678,24 +673,6 @@ export class V1PackageService {
       isTrouble = true;
       troubleDesc.push('Awb status tidak sesuai');
     }
-
-    // use cache data
-    // branch = await Branch.findOne({ cache: true, where: { branchId } });
-    // // NOTE: Validate branch
-    // if (!branch) {
-    //   isAllow = false;
-    //   troubleDesc.push('Gerai tidak ditemukan');
-    // } else {
-    //   branchCode = branch.branchCode;
-    //   branchName = branch.branchName;
-    //   districtId = branch.districtId;
-    // }
-
-    // if (awbItemAttr.toId) {
-    // } else {
-    //   isTrouble = true;
-    //   troubleDesc.push('Tidak ada tujuan');
-    // }
     // #endregion
 
     // construct data detail
@@ -725,9 +702,7 @@ export class V1PackageService {
       if (bagItemAwb) {
         const bagItem = await BagService.getBagNumber(bagItemAwb.bagItemId);
         if (bagItem) {
-          bagNumber =
-            bagItem.bag.bagNumber +
-            bagItem.bagSeq.toString().padStart(3, '0');
+          bagNumber = bagItem.bag.bagNumber + bagItem.bagSeq.toString().padStart(3, '0');
           bagItemId = bagItem.bagItemId;
           bagWeight = bagItem.weight;
           bagSeq = bagItem.bagSeq;
@@ -758,10 +733,8 @@ export class V1PackageService {
       // get data bag / create new data bag
       if (payload.podScanInHubId) {
         const bagItem = await this.insertDetailAwb(payload);
-        if (bagItem) {
-          bagWeight = bagItem.weight;
-          bagSeq = bagItem.bagSeq;
-        }
+        bagWeight = bagItem.weight;
+        bagSeq = bagItem.bagSeq;
       } else {
         // NOTE: first scan in
         // generate podScanInHubId
@@ -773,16 +746,17 @@ export class V1PackageService {
       }
     }
 
-    // insert data trouble
+    // #region insert data trouble
     // NOTE: feature disable
-    if (isTrouble) {
+    // if (isTrouble) {
       // const dataTrouble = {
       //   awbNumber: awb.awbNumber,
       //   troubleDesc: join(troubleDesc, ' dan '),
       // };
       // console.error('TROUBLE SCAN GAB SORTIR :: ', dataTrouble);
       // await this.insertAwbTrouble(dataTrouble);
-    }
+    // }
+    // #endregion
 
     // construct response data
     assign(result, {
@@ -803,49 +777,62 @@ export class V1PackageService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const bagDetail = await BagService.validBagNumber(payload.bagNumber);
+    // const bagDetail = await BagService.validBagNumber(payload.bagNumber);
+    // find data to bagItemId
+    const bagDetail = await BagItem.findOne({
+      where: {
+        bagItemId: payload.bagItemId,
+        isDeleted: false,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
 
     if (!bagDetail) {
       throw new BadRequestException('No gabungan sortir tidak ditemukan');
     }
 
     // update weight in bag item
-    // delay get data from replication
+    // issue delay get data from replication
     // TODO: change method update data weight bag ??
     if (bagDetail) {
       const bagWeight = Number(bagDetail.weight);
       const totalWeightRealRounded = Number(payload.awbDetail.totalWeightRealRounded);
       const bagWeightFinalFloat = parseFloat((bagWeight + totalWeightRealRounded).toFixed(5));
-      PinoLoggerService.log('#### bagWeightFinalFloat :: ', bagWeightFinalFloat );
 
-      await BagItem.update({
-        bagItemId: bagDetail.bagItemId,
-      }, {
-        weight: bagWeightFinalFloat,
-      });
+      try {
+        console.log('DEBUG: GAB SORTIR : AWB :: ', payload.awbDetail.awbNumber);
+        // #region sending background process
+        CreateBagAwbScanHubQueueService.perform(
+          bagDetail.bagId,
+          bagDetail.bagItemId,
+          payload.bagNumber,
+          payload.awbItemId,
+          payload.awbDetail.awbNumber,
+          payload.podScanInHubId,
+          payload.awbDetail.totalWeightRealRounded,
+          authMeta.userId,
+          permissonPayload.branchId,
+          moment().toDate(),
+        );
+        // #endregion
 
-      bagDetail.weight = bagWeightFinalFloat;
-      // #region sending background process
-      CreateBagAwbScanHubQueueService.perform(
-        bagDetail.bagId,
-        bagDetail.bagItemId,
-        bagDetail.bag.bagNumber,
-        payload.awbItemId,
-        payload.awbDetail.awbNumber,
-        payload.podScanInHubId,
-        payload.awbDetail.totalWeightRealRounded,
-        authMeta.userId,
-        permissonPayload.branchId,
-        moment().toDate(),
-      );
-      // #endregion
+        // TODO: need refactoring update total weight
+        await BagItem.update({
+          bagItemId: bagDetail.bagItemId,
+        }, {
+          weight: bagWeightFinalFloat,
+        });
+
+        bagDetail.weight = bagWeightFinalFloat;
+        return bagDetail;
+
+      } catch (error) {
+        console.error(error);
+        throw new BadRequestException('Problem Server, Coba beberapa saat lagi!');
+      }
     } else {
-      // DEBUG: TypeError: Cannot read property 'weight' of undefined
-      console.error('######## BAGITEM NOT FOUND :: BAG DETAIL :: ', bagDetail);
-      console.error('######## BAGITEM NOT FOUND :: PAYLOAD :: ', payload);
       throw new BadRequestException(`Bag Number ${payload.bagNumber}, tidak ditemukan`);
     }
-    return bagDetail;
   }
 
   private static async insertAwbTrouble(data): Promise<any> {

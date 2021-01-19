@@ -87,6 +87,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
     payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
+    payload.fieldResolverMap['representativeId'] = 't12.representative_id';
 
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
@@ -128,21 +129,17 @@ export class V1WebAwbCodService {
       ['t8.no_reference', 'noReference'],
       ['t1.transaction_status_id', 'transactionStatusId'],
       ['t9.status_title', 'transactionStatusName'],
+      ['coalesce(t8.branch_id, t1.branch_id_last)', 'branchIdCopy'],
+      ['coalesce(t12.branch_name, t6.branch_name)', 'branchNameCopy'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
     q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.codPayment, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.codPayment.userDriver, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -152,19 +149,27 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.codPayment.branchFinal, 't12', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.awbStatus, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbStatusFinal, 't11', j =>
+    q.leftJoin(e => e.codPayment, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awbStatusFinal, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.leftJoin(e => e.transactionStatus, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codPayment.userDriver, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codPayment.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -189,10 +194,10 @@ export class V1WebAwbCodService {
     }
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.awb.isCod, w => w.isTrue());
+    // q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter DLV
-    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
+    // q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
 
     const data = await q.exec();
     const total = 0;
@@ -231,6 +236,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
     payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
+    payload.fieldResolverMap['representativeId'] = 't12.representative_id';
 
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
@@ -275,18 +281,12 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
     q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.codPayment, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.codPayment.userDriver, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -296,19 +296,27 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.codPayment.branchFinal, 't12', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.awbStatus, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbStatusFinal, 't11', j =>
+    q.leftJoin(e => e.codPayment, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awbStatusFinal, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.leftJoin(e => e.transactionStatus, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codPayment.userDriver, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codPayment.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -333,10 +341,10 @@ export class V1WebAwbCodService {
     }
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.awb.isCod, w => w.isTrue());
+    // q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
     // filter DLV
-    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
+    // q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
 
     const total = await q.countWithoutTakeAndSkip();
     const result = new WebCodCountResponseVm();

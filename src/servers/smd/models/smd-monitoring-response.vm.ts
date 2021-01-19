@@ -13,6 +13,9 @@ export class MonitoringListVm {
     do_smd_time: Date;
 
     @ApiModelProperty()
+    do_smd_intercity: string;
+
+    @ApiModelProperty()
     do_smd_code: string;
 
     @ApiModelProperty()
