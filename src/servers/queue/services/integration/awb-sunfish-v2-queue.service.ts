@@ -3,7 +3,7 @@ import { AwbSunfishService } from '../../../main/services/integration/awb-sunfis
 
 // DOC: https://optimalbits.github.io/bull/
 
-export class AwbSunfishQueueService {
+export class AwbSunfishV2QueueService {
   public static queue = QueueBullBoard.createQueue.add(
     'awb-sunfish-queue',
     {
@@ -61,6 +61,6 @@ export class AwbSunfishQueueService {
       historyDate,
     };
 
-    return AwbSunfishQueueService.queue.add(obj);
+    return AwbSunfishV2QueueService.queue.add(obj);
   }
 }

@@ -18,6 +18,10 @@ export class ScanInSmdListVm {
   do_smd_code: string;
 
   @ApiModelProperty()
+  do_smd_intercity: string;
+  
+
+  @ApiModelProperty()
   do_smd_time: Date;
 
   @ApiModelProperty()
