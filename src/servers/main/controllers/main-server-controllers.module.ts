@@ -65,7 +65,7 @@ import { WebLastMileController } from './web/web-last-mile.controller';
 import { WebMonitoringController } from './web/web-monitoring.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
 import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
-
+import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -136,6 +136,7 @@ import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
     CodUserToBranchController,
     WebHubReportController,
     EmployeePenalty,
+    MobileDeviceInfoController,
   ],
 })
 export class MainServerControllersModule {}

@@ -24,6 +24,7 @@ export class MonitoringSmdServices {
     payload.fieldResolverMap['branch_id'] = 'ds.branch_id';
     payload.fieldResolverMap['departure_date_time'] = 'ds.departure_date_time';
     payload.fieldResolverMap['arrival_date_time'] = 'ds.arrival_date_time';
+    payload.fieldResolverMap['is_intercity'] = 'ds.is_intercity';
 
     payload.fieldFilterManualMap['departure_date_time'] = true;
     payload.globalSearchFields = [
@@ -33,11 +34,11 @@ export class MonitoringSmdServices {
       {
         field: 'branch_id',
       },
-      // {
-      //   field: 'departure_date_time',
-      // },
       {
         field: 'arrival_date_time',
+      },
+      {
+        field: 'is_intercity',
       },
     ];
     if (!payload.sortBy) {
@@ -79,10 +80,14 @@ export class MonitoringSmdServices {
       .addSelect('ds.transit_date_time', 'transit_date_time')
       .addSelect('ds.arrival_date_time', 'arrival_date_time')
       .addSelect(`ds.employee_driver_name`, 'employee_driver_name')
+      .addSelect(`ds.is_intercity`, 'is_intercity')
+      .addSelect(`ds.do_smd_intercity`, 'do_smd_intercity')
       .from(subQuery => {
         subQuery
           .select('ds.do_smd_code')
           .addSelect(`ds.do_smd_time`, 'do_smd_time')
+          .addSelect(`ds.is_intercity`, 'is_intercity')
+          .addSelect(`CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END`, 'do_smd_intercity')
           .addSelect(`bf.branch_id`, 'branch_id')
           .addSelect(`bf.branch_name`, 'branch_name_from')
           .addSelect(`ds.branch_to_name_list`, 'branch_name_to')
@@ -169,6 +174,7 @@ export class MonitoringSmdServices {
     payload.fieldResolverMap['arrival_date_time'] = 'ds.arrival_date_time';
     payload.fieldResolverMap['trip'] = 'ds.trip';
     payload.fieldResolverMap['smd_trip'] = 'ds.smd_trip';
+    payload.fieldResolverMap['is_intercity'] = 'ds.is_intercity';
 
     payload.fieldFilterManualMap['departure_date_time'] = true;
     payload.globalSearchFields = [
@@ -178,9 +184,6 @@ export class MonitoringSmdServices {
       {
         field: 'branch_id',
       },
-      // {
-      //   field: 'departure_date_time',
-      // },
       {
         field: 'arrival_date_time',
       },
@@ -189,6 +192,9 @@ export class MonitoringSmdServices {
       },
       {
         field: 'smd_trip',
+      },
+      {
+        field: 'is_intercity',
       },
     ];
     if (!payload.sortBy) {
@@ -275,6 +281,7 @@ export class MonitoringSmdServices {
     q.select('ds.do_smd_code', 'Nomor SMD')
       // .addSelect('ds.do_smd_time', 'do_smd_time')
       // .addSelect('ds.branch_id', 'branch_id')
+      .addSelect('ds.do_smd_intercity', 'Tujuan SJ')
       .addSelect('TO_CHAR(ds.departure_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Berangkat')
       .addSelect('TO_CHAR(ds.transit_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Transit')
       .addSelect('TO_CHAR(ds.arrival_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Tiba')
@@ -326,6 +333,8 @@ export class MonitoringSmdServices {
           .addSelect(`ds.trip`, 'trip')
           .addSelect(`'T' || ds.counter_trip`, 'smd_trip')
           .addSelect(`e.fullname`, 'employee_driver_name')
+          .addSelect(`ds.is_intercity`, 'is_intercity')
+          .addSelect(`CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END`, 'do_smd_intercity')
           .addSelect(`(
                       select
                         sum(bi.weight)

@@ -496,7 +496,11 @@ export class HubMonitoringService {
 				WHEN s.code = 'SORT' THEN "bag_number_sort"
 				WHEN s.code = 'OUT' THEN "bag_number_out"
 			END AS "Nomor Gabungan",
-      "User",
+			CASE
+				WHEN s.code = 'IN' THEN "User"
+				WHEN s.code = 'SORT' THEN "User Bag Sortir"
+				WHEN s.code = 'OUT' THEN "User Scanout"
+			END AS "User",
       s.code as "Status",
       CASE WHEN s.code = 'IN' THEN "Tanggal Transaksi IN"
         WHEN s.code = 'SORT' THEN "Tanggal Transaksi SORT"
@@ -516,7 +520,9 @@ export class HubMonitoringService {
           TO_CHAR(bag_sortir.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi SORT",
           TO_CHAR(scan_out.created_time, 'DD Mon YYYY HH24:MI') AS "Tanggal Transaksi OUT",
           scan_out.do_pod_code AS do_pod_code_scan_out,
-          fm.do_pod_code AS do_pod_code_fm
+          fm.do_pod_code AS do_pod_code_fm,
+          CONCAT(bag_sortir.first_name, ' ', bag_sortir.last_name) AS "User Bag Sortir",
+					CONCAT(scan_out.first_name, ' ', scan_out.last_name) AS "User Scanout"
         FROM
           dropoff_hub doh
         INNER JOIN branch br ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
@@ -539,11 +545,14 @@ export class HubMonitoringService {
             bi1.bag_seq,
             ai1.awb_id,
             b1.bag_number,
-            bi1.created_time
+            bi1.created_time,
+						u1.first_name,
+						u1.last_name
           FROM bag_item_awb bia1
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
+          INNER JOIN users u1 ON u1.user_id = bi1.user_id_created AND u1.is_deleted = FALSE
           WHERE bia1.is_deleted = FALSE
         ) AS bag_sortir ON true
         LEFT JOIN LATERAL (
@@ -552,12 +561,15 @@ export class HubMonitoringService {
             dpdb2.bag_number,
             br2.branch_id,
             dpdb2.created_time,
-            dp2.do_pod_code
+            dp2.do_pod_code,
+						u2.first_name,
+						u2.last_name
           FROM do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
           INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
           INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
           INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
+          INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
           WHERE
           dp2.is_deleted = FALSE
           AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
@@ -583,7 +595,11 @@ export class HubMonitoringService {
 					bag.bag_number,
           bi.bag_seq,
           scan_out.do_pod_code,
-          fm.do_pod_code
+          fm.do_pod_code,
+					bag_sortir.first_name,
+					bag_sortir.last_name,
+					scan_out.first_name,
+					scan_out.last_name
       ) t1, unnest(string_to_array("Status" , ','))  s(code);
     `;
     return query;

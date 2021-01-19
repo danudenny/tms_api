@@ -27,7 +27,7 @@ import { UploadImagePodQueueService } from '../../../../queue/services/upload-po
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { ServiceUnavailableException } from '@nestjs/common';
 import { RedisService } from '../../../../../shared/services/redis.service';
-import { AwbSunfishQueueService } from '../../../../queue/services/integration/awb-sunfish-queue.service';
+import { AwbSunfishV2QueueService } from '../../../../queue/services/integration/awb-sunfish-v2-queue.service';
 import { AwbNotificationMailQueueService } from '../../../../queue/services/notification/awb-notification-mail-queue.service';
 // #endregion
 
@@ -254,18 +254,20 @@ export class V2MobileSyncService {
           );
 
           // NOTE: push data only DLV to Sunfish
-          // if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
-          //   AwbSunfishQueueService.perform(
-          //     delivery.awbNumber,
-          //     delivery.employeeId,
-          //     historyDateTime,
-          //   );
-          // }
-          // NOTE: mail notification
-          AwbNotificationMailQueueService.perform(
-            awbdDelivery.awbItemId,
-            awbStatus.awbStatusId,
-          );
+          if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
+            // TODO: add flag
+            // AwbSunfishV2QueueService.perform(
+            //   delivery.awbNumber,
+            //   delivery.employeeId,
+            //   historyDateTime,
+            // );
+          } else {
+            // NOTE: mail notification status problem
+            AwbNotificationMailQueueService.perform(
+              awbdDelivery.awbItemId,
+              awbStatus.awbStatusId,
+            );
+          }
           process = true;
         } else {
           PinoLoggerService.log('##### Data Not Valid', delivery);

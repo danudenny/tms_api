@@ -97,7 +97,7 @@ export class ScaninSmdService {
           if (weight == 0) { // handle error weight = 0 from request payload
             weight = parseFloat(resultData[0].weight);
           }
-          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 ) {
+          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 || resultData[0].bag_item_status_id == 1000 ) {
             // do nothing
           } else if ( resultData[0].bag_item_status_id == 3550 || resultData[0].bag_item_status_id == 3500 ) {
             errCode = errCode + 1;
@@ -313,8 +313,8 @@ export class ScaninSmdService {
           const usernameScan = resultData[0].username_scan;
           paramBagItemId = resultData[0].bag_item_id;
           weight =  resultData[0].weight;
-          console.log(resultData[0].bag_item_status_id);
-          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 ) {
+
+          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 || resultData[0].bag_item_status_id == 1000 ) {
             // do nothing
           } else if ( resultData[0].bag_item_status_id == 3550 || resultData[0].bag_item_status_id == 3500 ) {
             errCode = errCode + 1;
@@ -541,10 +541,10 @@ export class ScaninSmdService {
         INNER JOIN bag_item bagItem ON bagItem.bag_item_id=doPodDetailBag.bag_item_id AND (bagItem.is_deleted = 'false')
         LEFT JOIN bag bag ON bag.bag_id=bagItem.bag_id AND (bag.is_deleted = 'false')
         LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
+          AND (bih.bag_item_status_id = 4550 OR bih.bag_item_status_id = 500 OR bih.bag_item_status_id IS NULL)
         WHERE
           doPod.do_pod_code = '${payload.bag_item_number}' AND
-          doPodDetailBag.is_deleted = false AND
-          (bih.bag_item_status_id = 4550 OR bih.bag_item_status_id = 500 OR bih.bag_item_status_id IS NULL)
+          doPodDetailBag.is_deleted = false
         GROUP BY bagnumber
         `;
       const resultDataBag = await RawQueryService.query(rawQueryBag);
@@ -557,10 +557,10 @@ export class ScaninSmdService {
         INNER JOIN bag_item bagItem ON bagItem.bag_item_id=doPodDetailBag.bag_item_id AND (bagItem.is_deleted = 'false')
         LEFT JOIN bag bag ON bag.bag_id=bagItem.bag_id AND (bag.is_deleted = 'false')
         LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
+          AND (bih.bag_item_status_id <> 4550 AND bih.bag_item_status_id <> 500 AND bih.bag_item_status_id IS NOT NULL)
         WHERE
           doPod.do_pod_code =  '${payload.bag_item_number}' AND
-          doPodDetailBag.is_deleted = false AND
-          (bih.bag_item_status_id <> 4550 AND bih.bag_item_status_id <> 500 AND bih.bag_item_status_id IS NOT NULL)
+          doPodDetailBag.is_deleted = false
         GROUP BY bagnumber
         `;
       const resultDataBagScanned = await RawQueryService.query(rawQueryBagScanned);
@@ -589,7 +589,7 @@ export class ScaninSmdService {
     // payload.fieldResolverMap['baggingDateTime'] = 'b.created_time';
     // payload.fieldResolverMap['branchId'] = 'bhin.branch_id';
 
-    payload.fieldResolverMap['bagging_datetime'] = 'b.created_time';
+    payload.fieldResolverMap['bagging_datetime'] =  'b.created_time';
     payload.fieldResolverMap['branch_id'] = 'bhin.branch_id';
     payload.fieldResolverMap['bag_number_seq'] = `CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`;
     payload.fieldResolverMap['scan_in_datetime'] = 'bhin.history_date';

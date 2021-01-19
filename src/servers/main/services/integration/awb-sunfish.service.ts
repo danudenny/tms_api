@@ -60,7 +60,7 @@ export class AwbSunfishService {
       } catch (error) {
         console.log(error);
         // TODO: handle response
-        responseStatus = error.response.status;
+        responseStatus = error.response ? error.response.status : 400;
         responseData = JSON.stringify(error.response.data);
       }
 
