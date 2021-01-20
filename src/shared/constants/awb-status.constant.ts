@@ -22,4 +22,5 @@ export const AWB_STATUS = {
   THP: 28500,
   IN_SORTIR: 13000,
   CANCEL: 1800,
+  CANCEL_DLV: 21800,
 };
