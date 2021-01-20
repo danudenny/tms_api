@@ -268,6 +268,7 @@ export class AwbService {
       where: {
         awbItemId,
         awbStatusId: AWB_STATUS.CANCEL,
+        isDeleted: false,
       },
     });
     return awbCancel ? true : false;
