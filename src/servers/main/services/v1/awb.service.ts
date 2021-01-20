@@ -267,7 +267,7 @@ export class AwbService {
       select: ['awbHistoryId'],
       where: {
         awbItemId,
-        awbStatusId: AWB_STATUS.CANCEL,
+        awbStatusId: AWB_STATUS.CANCEL_DLV,
         isDeleted: false,
       },
     });

@@ -380,13 +380,13 @@ export class LastMileDeliveryOutService {
         if (notDeliver) {
           // add handel final status
           // TODO: handle status cancel delivery
-          const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.CANCEL];
+          const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.CANCEL_DLV];
           if (statusFinal.includes(awb.awbStatusIdLast)) {
             totalError += 1;
             response.status = 'error';
             // handle message
             const desc =
-              awb.awbStatusIdLast == AWB_STATUS.CANCEL
+              awb.awbStatusIdLast == AWB_STATUS.CANCEL_DLV
                 ? 'telah di CANCEL oleh Partner !'
                 : 'sudah Final Status !';
             response.message = `Resi ${awbNumber} ${desc}`;
