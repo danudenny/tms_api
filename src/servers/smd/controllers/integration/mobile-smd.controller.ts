@@ -13,7 +13,7 @@ import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArr
 import { MobileSmdService } from '../../services/integration/mobile-smd.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MobileUploadImageResponseVm } from '../../models/mobile-smd.response.vm';
-import { AuthXAPIKeyGuard } from 'src/shared/guards/auth-x-api-key.guard';
+import { AuthXAPIKeyGuard } from '../../../../shared/guards/auth-x-api-key.guard';
 
 @ApiUseTags('Mobile SMD')
 @Controller('mobile')
