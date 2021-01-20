@@ -202,6 +202,13 @@ export class AwbItemAttr extends BaseEntity {
   })
   internalProcessType: string | null;
 
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_high_value',
+  })
+  isHighValue: boolean;
+
   // relation
   @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id_last' })

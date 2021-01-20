@@ -43,6 +43,7 @@ export class SmdScanoutReportService {
     payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
+    payload.fieldResolverMap['is_intercity'] = 'ds.is_intercity';
     if (!payload.sortDir) {
       payload.sortDir = 'desc';
     }
@@ -59,6 +60,9 @@ export class SmdScanoutReportService {
       {
         field: 'do_smd_code',
       },
+      {
+        field: 'is_intercity',
+      },
     ];
 
     const repo = new OrionRepositoryService(DoSmd, 'ds');
@@ -67,6 +71,7 @@ export class SmdScanoutReportService {
     payload.applyToOrionRepositoryQuery(q);
     q.selectRaw(
       ['ds.do_smd_code', 'Nomor SMD'],
+      [`CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END`, 'Jenis SJ'],
       ['TO_CHAR(ds.do_smd_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal di Buat'],
       ['e.fullname', 'Handover'],
       ['dsv.vehicle_number', 'Kendaraan'],
@@ -224,9 +229,9 @@ export class SmdScanoutReportService {
 
     q.selectRaw(
       ['t1.do_smd_code', 'No SMD'],
-      ['t1.do_smd_time', 'Tgl di Buat'],
+      ['TO_CHAR(t1.do_smd_time, \'DD Mon YYYY HH24:MI\')', 'Tgl di Buat'],
       ['t4.branch_name', 'Gerai Asal'],
-      ['t1.vendor_name', 'Vendor Name'],
+      ['t1.vendor_name', 'Vendor'],
       ['t1.total_bag', 'Gabung Paket'],
       ['t1.total_bagging', 'Bagging'],
       ['t1.total_bag_representative', 'Gabung Kota'],
@@ -241,6 +246,7 @@ export class SmdScanoutReportService {
     q.innerJoin(e => e.branch, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.andWhereRaw('t1.is_deleted = false');
     q.andWhere(e => e.isVendor, w => w.isTrue());
     q.orderBy({ createdTime: 'DESC' });
     const result = await q.exec();
