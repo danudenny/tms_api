@@ -6,8 +6,8 @@ import { EmployeePenalty } from '../../../../../shared/orm-entity/employee-penal
 import { PenaltyCategoryPayloadVm, PenaltyCategoryListResponseVm, PenaltyCategoryFeeListResponseVm } from '../../../models/penalty-category.vm';
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 import moment = require('moment');
-import { PenaltyCategory } from 'src/shared/orm-entity/penalty_category';
-import { PenaltyCategoryFee } from 'src/shared/orm-entity/penalty-category-fee';
+import { PenaltyCategory } from '../../../../../shared/orm-entity/penalty_category';
+import { PenaltyCategoryFee } from '../../../../../shared/orm-entity/penalty-category-fee';
 
 export class PenaltyCategoryService{
   constructor(){}

@@ -14,7 +14,7 @@ import {
 } from '../../../models/employee-penalty.vm';
 import { PenaltyCategoryPayloadVm, PenaltyCategoryListResponseVm, PenaltyCategoryFeeListResponseVm } from '../../../models/penalty-category.vm';
 import { EmployeePenaltyService } from '../../../services/web/v1/web-employee-penalty.service';
-import { PenaltyCategoryService } from 'src/servers/main/services/web/v1/web-penalty-category.service';
+import { PenaltyCategoryService } from '../../../services/web/v1/web-penalty-category.service';
 
 @ApiUseTags('Web Employee Penalty')
 @Controller('web/v1/employee/penalty')
