@@ -62,4 +62,8 @@ export class PenaltyCategory extends BaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_created', referencedColumnName: 'userId'})
   userCreated: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_updated', referencedColumnName: 'userId'})
+  userUpdated: User;
 }

@@ -16,6 +16,23 @@ import { PenaltyCategoryFee } from '../../../../../shared/orm-entity/penalty-cat
 export class PenaltyCategoryService{
   constructor(){}
 
+  static ExportHeaderCategory = [
+    'Kategori',
+    'User Created',
+    'Date Created',
+    'User Updated',
+    'Date Modified',
+  ];
+
+  static ExportHeaderCategoryFee = [
+    'Kategori',
+    'Denda',
+    'User Created',
+    'Date Created',
+    'User Updated',
+    'Date Modified',
+  ];
+
   static async findPenaltyCategories(
     payload: BaseMetaPayloadVm,
   ): Promise<PenaltyCategoryListResponseVm> {
@@ -410,5 +427,155 @@ export class PenaltyCategoryService{
       penaltyCategoryFee.isDeleted = false;
 
       return penaltyCategoryFee;
+  }
+
+  private static strReplaceFunc = str => {
+    return str
+      ? str
+          .replace(/\n/g, ' ')
+          .replace(/\r/g, ' ')
+          .replace(/;/g, '|')
+          .replace(/,/g, '.')
+      : null;
+  }
+
+  private static currencyConverter =  price => {
+    const totalPenalty = price.slice(0, -3);
+    const format = totalPenalty.toString().split('').reverse().join('');
+    const convert = format.match(/\d{1,3}/g);
+    return 'Rp. '+ convert.join('.').split('').reverse().join('')
+  }
+
+  private static streamTransformPenaltyCategory(d) {
+    const values = [
+      PenaltyCategoryService.strReplaceFunc(d.penaltyCategoryTitle),
+      `${d.createdUserName} - ${d.createdFirstName}`,
+      d.createdTime ? moment(d.createdTime).format('YYYY-MM-DD') : null,
+      d.updatedUserName ? `${d.updatedUserName} - ${d.updatedFirstName}` : '-',
+      d.updatedUserName ?  moment(d.updatedTime).format('YYYY-MM-DD') : '-',
+    ];
+    return `${values.join(',')} \n`;
+  }
+
+  private static streamTransformPenaltyCategoryFee(d) {
+    const values = [
+      PenaltyCategoryService.strReplaceFunc(d.penaltyCategoryTitle),
+      PenaltyCategoryService.currencyConverter(d.penaltyFee),
+      `${d.createdUserName} - ${d.createdFirstName}`,
+      d.createdTime ? moment(d.createdTime).format('YYYY-MM-DD') : null,
+      d.updatedUserName ? `${d.updatedUserName} - ${d.updatedFirstName}` : '-',
+      d.updatedUserName ?  moment(d.updatedTime).format('YYYY-MM-DD') : '-',
+    ];
+    return `${values.join(',')} \n`;
+  }
+
+  static async exportPenaltyCategory (payload: BaseMetaPayloadVm, response){
+    try {
+      const fileName = `POD_penalty_category${new Date().getTime()}.csv`;
+
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
+      );
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+      response.flushHeaders();
+      response.write(`${this.ExportHeaderCategory.join(',')}\n`);
+
+      payload.globalSearchFields = [
+      {
+        field: 'penaltyCategoryTitle',
+      },
+      {
+        field: 'penaltyCategoryProcess',
+      },
+    ];
+
+      const q = RepositoryService.penaltyCategory.findAllRaw();
+      payload.applyToOrionRepositoryQuery(q);
+
+      q.selectRaw(
+        ['penalty_category.penalty_category_title', 'penaltyCategoryTitle'],
+        ['usercreated.first_name', 'createdFirstName'],
+        ['usercreated.username', 'createdUserName'],
+        ['penalty_category.created_time', 'createdTime'],
+        ['userupdated.first_name', 'updatedFirstName'],
+        ['userupdated.username', 'updatedUserName'],
+        ['penalty_category.updated_time', 'updatedTime'],
+      );
+
+      q.innerJoin(e => e.userCreated, 'usercreated', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.leftJoin(e => e.userUpdated, 'userupdated', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+      await q.stream(response, this.streamTransformPenaltyCategory);
+
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  static async exportPenaltyCategoryFee (payload: BaseMetaPayloadVm, response){
+    try {
+      const fileName = `POD_penalty_category_fee${new Date().getTime()}.csv`;
+
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
+      );
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+      response.flushHeaders();
+      response.write(`${this.ExportHeaderCategoryFee.join(',')}\n`);
+
+      payload.globalSearchFields = [
+      {
+        field: 'penaltyCategoryTitle',
+      },
+      {
+        field: 'penaltyCategoryProcess',
+      },
+      {
+        field: 'penaltyFee',
+      },
+    ];
+
+      const q = RepositoryService.penaltyCategoryFee.findAllRaw();
+      payload.applyToOrionRepositoryQuery(q);
+
+      q.selectRaw(
+        ['penalty_category.penalty_category_title', 'penaltyCategoryTitle'],
+        ['penalty_category_fee.penalty_fee', 'penaltyFee'],
+        ['usercreated.first_name', 'createdFirstName'],
+        ['usercreated.username', 'createdUserName'],
+        ['penalty_category_fee.created_time', 'createdTime'],
+        ['userupdated.first_name', 'updatedFirstName'],
+        ['userupdated.username', 'updatedUserName'],
+        ['penalty_category_fee.updated_time', 'updatedTime'],
+      );
+
+      q.innerJoin(e => e.createdUser, 'usercreated', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.leftJoin(e => e.updatedUser, 'userupdated', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.innerJoin(e => e.penaltyCategory, 'penalty_category', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+      await q.stream(response, this.streamTransformPenaltyCategoryFee);
+
+    } catch (err) {
+      throw err;
+    }
   }
 }

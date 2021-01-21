@@ -54,6 +54,19 @@ export class EmployeePenalty {
     return PenaltyCategoryService.deletePenaltyCategory(penaltyCategoryId);
   }
 
+  @Post('category/report/stream')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async penaltyCategoryDownload(
+    @Body() payload: BaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await PenaltyCategoryService.exportPenaltyCategory(
+      payload,
+      outgoingHTTP,
+    );
+  }
+
   @Post('category/fee/list')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
@@ -81,6 +94,19 @@ export class EmployeePenalty {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async deleteCategoryFee(@Param('id') penaltyCategoryFeeId: string) {
     return PenaltyCategoryService.deletePenaltyCategoryFee(penaltyCategoryFeeId);
+  }
+
+  @Post('category/fee/report/stream')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async penaltyCategoryFeeDownload(
+    @Body() payload: BaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await PenaltyCategoryService.exportPenaltyCategoryFee(
+      payload,
+      outgoingHTTP,
+    );
   }
 
   @Post('list')
@@ -115,7 +141,7 @@ export class EmployeePenalty {
   @Post('report/stream')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
-  public async awbCodFinanceDownload(
+  public async employeePenaltyDownload(
     @Body() payload: BaseMetaPayloadVm,
     @Res() outgoingHTTP,
   ) {
