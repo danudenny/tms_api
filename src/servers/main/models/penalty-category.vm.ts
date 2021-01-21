@@ -5,6 +5,14 @@ export class PenaltyCategoryPayloadVm {
   @ApiModelProperty()
   penaltyCategoryTitle: string;
 
+  @ApiModelPropertyOptional()
+  penaltyCategoryId: string;
+}
+
+export class PenaltyCategoryFeePayloadVm {
+  @ApiModelProperty()
+  penaltyCategoryId: string;
+
   @ApiModelProperty()
   penaltyFee: number;
 

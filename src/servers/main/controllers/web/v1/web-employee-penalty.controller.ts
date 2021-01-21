@@ -12,7 +12,12 @@ import {
   PenaltyEmployeeRoleNameListResponseVm,
   EmployeePenaltyFindAllResponseVm 
 } from '../../../models/employee-penalty.vm';
-import { PenaltyCategoryPayloadVm, PenaltyCategoryListResponseVm, PenaltyCategoryFeeListResponseVm } from '../../../models/penalty-category.vm';
+import { 
+  PenaltyCategoryPayloadVm, 
+  PenaltyCategoryFeePayloadVm,
+  PenaltyCategoryListResponseVm, 
+  PenaltyCategoryFeeListResponseVm 
+} from '../../../models/penalty-category.vm';
 import { EmployeePenaltyService } from '../../../services/web/v1/web-employee-penalty.service';
 import { PenaltyCategoryService } from '../../../services/web/v1/web-penalty-category.service';
 
@@ -25,23 +30,7 @@ export class EmployeePenalty {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: PenaltyCategoryListResponseVm })
   public async getCategoryPenalty(@Body() payload: BaseMetaPayloadVm) {
-    return EmployeePenaltyService.findPenaltyCategories(payload);
-  }
-
-  @Post('categories')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: PenaltyCategoryListResponseVm })
-  public async getCategoryPenalties(@Body() payload: BaseMetaPayloadVm) {
     return PenaltyCategoryService.findPenaltyCategories(payload);
-  }
-
-  @Post('category/fee/list')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: PenaltyCategoryFeeListResponseVm })
-  public async getCategoryPenaltyFee(@Body() payload: BaseMetaPayloadVm) {
-    return PenaltyCategoryService.findPenaltyCategorieFeeList(payload);
   }
 
   @Post('category/create')
@@ -61,8 +50,37 @@ export class EmployeePenalty {
   @Delete('category/delete/:id')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async deleteCategory(@Param('id') penaltyCategoryFeeId: string) {
-    return PenaltyCategoryService.deletePenaltyCategory(penaltyCategoryFeeId);
+  public async deleteCategory(@Param('id') penaltyCategoryId: string) {
+    return PenaltyCategoryService.deletePenaltyCategory(penaltyCategoryId);
+  }
+
+  @Post('category/fee/list')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: PenaltyCategoryFeeListResponseVm })
+  public async getCategoryPenaltyFee(@Body() payload: BaseMetaPayloadVm) {
+    return PenaltyCategoryService.findPenaltyCategorieFeeList(payload);
+  }
+
+  @Post('category/fee/create')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async createCategoryFee(@Body() payload: PenaltyCategoryFeePayloadVm) {
+    return PenaltyCategoryService.createPenaltyCategoryFee(payload);
+  }
+
+  @Post('category/fee/edit')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async editCategoryFee(@Body() payload: PenaltyCategoryFeePayloadVm) {
+    return PenaltyCategoryService.editPenaltyCategoryFee(payload);
+  }
+
+  @Delete('category/fee/delete/:id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async deleteCategoryFee(@Param('id') penaltyCategoryFeeId: string) {
+    return PenaltyCategoryService.deletePenaltyCategoryFee(penaltyCategoryFeeId);
   }
 
   @Post('list')
