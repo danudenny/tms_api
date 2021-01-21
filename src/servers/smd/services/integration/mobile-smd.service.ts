@@ -30,7 +30,7 @@ import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
-import { createQueryBuilder, In } from 'typeorm';
+import { createQueryBuilder, In, Not } from 'typeorm';
 import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm, ScanOutSmdEndManualResponseVm } from '../../models/mobile-smd.response.vm';
 import { MobileUploadImagePayloadVm, HandoverImagePayloadVm } from '../../models/mobile-smd.payload.vm';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
@@ -1140,6 +1140,7 @@ export class MobileSmdService {
     const resultDoSmd = await DoSmd.findOne({
       where: {
         doSmdCode: payload.do_smd_code,
+        doSmdStatusIdLast: Not(6000),
         isDeleted: false,
       },
     });
