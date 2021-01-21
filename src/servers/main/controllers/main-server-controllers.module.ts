@@ -64,7 +64,10 @@ import { WebHubController } from './web/web-hub.controller';
 import { WebLastMileController } from './web/web-last-mile.controller';
 import { WebMonitoringController } from './web/web-monitoring.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
-
+import { V1WebAwbHighValueController } from './web/v1/web-awb-high-value.controller';
+import { V2MobileInitController } from './mobile/v2/mobile-init.controller';
+import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
+import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -115,6 +118,7 @@ import { RolePodManualController } from './web/web-role-pod-manual.controller';
     DoReturnStatusController,
     DoReturnController,
     V1MobileInitController,
+    V2MobileInitController,
     V1MobileSyncController,
     V2MobileSyncController,
     V1MobileAttendanceController,
@@ -134,6 +138,9 @@ import { RolePodManualController } from './web/web-role-pod-manual.controller';
     PackageTypeController,
     CodUserToBranchController,
     WebHubReportController,
+    V1WebAwbHighValueController,
+    EmployeePenalty,
+    MobileDeviceInfoController,
   ],
 })
 export class MainServerControllersModule {}
