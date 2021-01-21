@@ -132,6 +132,38 @@ export class V2WebCodReportService {
     'Note',
   ];
 
+  static CodHeaderFinance = [
+    'Partner',
+    'Awb Date',
+    'Awb',
+    'Package Amount',
+    'Cod Amount',
+    // 'Cod Fee',
+    'Amount Transfer',
+    'Pod Datetime',
+    'Recipient',
+    'Tipe Pembayaran',
+    'Status Internal',
+    'Tracking Status',
+    'Cust Package',
+    // 'Pickup Source',
+    'Current Position',
+    'Destination Code',
+    // 'Destination',
+    // 'Perwakilan',
+    // 'Sigesit',
+    'Package Detail',
+    'Services',
+    'Note',
+    'Transaction Status',
+    'Submitted Date',
+    'Submitted Number',
+    'Date Updated',
+    // 'User Updated',
+    'Awb Status Date',
+    'Transfer Date',
+  ];
+
   static strReplaceFunc = str => {
     return str
       ? str
@@ -302,6 +334,45 @@ export class V2WebCodReportService {
         V2WebCodReportService.strReplaceFunc(d.parcelContent),
         V2WebCodReportService.strReplaceFunc(d.packageType),
         V2WebCodReportService.strReplaceFunc(d.parcelNote),
+      ],
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
+  static streamTransformCodFinance(d) {
+    const values = [
+      [
+        V2WebCodReportService.strReplaceFunc(d.partnerName),
+        d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
+        `'${d.awbNumber}`,
+        d.parcelValue,
+        d.codValue,
+        // d.codFee ? d.codFee : '-',
+        d.codValue,
+        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        V2WebCodReportService.strReplaceFunc(d.consigneeName),
+        V2WebCodReportService.strReplaceFunc(d.paymentMethod),
+        'PAID',
+        'DLV',
+        V2WebCodReportService.strReplaceFunc(
+          d.custPackage ? d.custPackage : '-',
+        ),
+        // V2WebCodReportService.strReplaceFunc(d.pickupSource),
+        V2WebCodReportService.strReplaceFunc(d.currentPosition),
+        V2WebCodReportService.strReplaceFunc(d.destinationCode),
+        // V2WebCodReportService.strReplaceFunc(d.destination),
+        // V2WebCodReportService.strReplaceFunc(d.perwakilan),
+        // d.driver ? V2WebCodReportService.strReplaceFunc(d.driver) : '-',
+        V2WebCodReportService.strReplaceFunc(d.parcelContent),
+        V2WebCodReportService.strReplaceFunc(d.packageTypeCode),
+        V2WebCodReportService.strReplaceFunc(d.parcelNote),
+        V2WebCodReportService.strReplaceFunc(d.transactionStatus),
+        '-',
+        '-',
+        d.updatedTime ? moment(d.updatedTime).format('YYYY-MM-DD HH:mm') : null,
+        d.awbStatusDate ? moment(d.awbStatusDate).format('YYYY-MM-DD HH:mm') : null,
+        d.transferDate ? moment(d.transferDate).format('YYYY-MM-DD HH:mm') : null,
       ],
     ];
 
@@ -827,6 +898,100 @@ export class V2WebCodReportService {
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
       await q.stream(response, this.streamTransformSupplierInvoice);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
+  static async printCodFinance(payload: BaseMetaPayloadVm, response) {
+    try {
+      const fileName = `COD_finance_${new Date().getTime()}.csv`;
+
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
+      );
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+      response.flushHeaders();
+      response.write(`${this.CodHeaderFinance.join(',')}\n`);
+
+      // mapping field
+      payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
+      payload.fieldResolverMap['transactionStatus'] = 'ctd.transaction_status_id';
+      payload.fieldResolverMap['branchLast'] = 'ctd.branch_id';
+
+      const repo = new OrionRepositoryService(AwbItemAttr, 't1');
+      const q = repo.findAllRaw();
+
+      payload.applyToOrionRepositoryQuery(q);
+
+      q.selectRaw(
+        ['t3.notes', 'parcelNote'],
+        ['t6.partner_name', 'partnerName'],
+        ['t1.awb_number', 'awbNumber'],
+        ['t2.awb_date', 'awbDate'],
+        ['t2.consignee_name', 'consigneeName'],
+        ['t3.parcel_value', 'parcelValue'],
+        ['t3.cod_value', 'codValue'],
+        ['cp.updated_time', 'podDate'],
+        ['cp.cod_payment_method', 'paymentMethod'],
+        ['t14.status_title', 'transactionStatus'],
+        // ['t11.status_title', 'supplierInvoiceStatus'],
+        // ['t12.awb_status_title', 'trackingStatus'],
+        ['t4.reference_no', 'custPackage'],
+        // ['t8.branch_name', 'pickupSource'],
+        ['t7.branch_name', 'currentPosition'],
+        ['t2.ref_destination_code', 'destinationCode'],
+        // ['t9.district_name', 'destination'],
+        ['t3.parcel_content', 'parcelContent'],
+        ['t5.package_type_code', 'packageTypeCode'],
+        ['t1.updated_time', 'awbStatusDate'],
+        ['cbs.bank_statement_date', 'transferDate'],
+        ['ctd.updated_time', 'updatedTime'],
+      );
+
+      q.innerJoin(e => e.codTransactionDetail, 'ctd', j =>
+        j
+          .andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.innerJoin(e => e.awb, 't2', j =>
+        j
+          .andWhere(e => e.isDeleted, w => w.isFalse())
+          .andWhere(e => e.isCod, w => w.isTrue()),
+      );
+
+      q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      // Data Jika sudah ada transaksi & Transaction Status
+      q.innerJoin(e => e.codTransactionDetail.codTransaction, 'ct');
+      q.innerJoin(e => e.codTransactionDetail.codTransaction.bankStatement, 'cbs');
+      // Data Jika sudah dilakukan DLV - COD
+      q.innerJoin(e => e.codPayment, 'cp');
+      q.innerJoin(e => e.pickupRequestDetail.pickupRequest, 't4');
+      q.innerJoin(e => e.awb.packageType, 't5');
+      q.innerJoin(e => e.pickupRequestDetail.pickupRequest.partner, 't6');
+      // get gerai terakhir resi di statuskan
+      q.innerJoin(e => e.branchLast, 't7');
+      q.innerJoin(e => e.codTransactionDetail.transactionStatus, 't14');
+      // User Update Transaction
+      // q.innerJoin(e => e.codTransactionDetail.userAdmin, 'upduser');
+      // q.innerJoin(e => e.codTransactionDetail.userAdmin.employee, 'eupduser');
+
+      // q.innerJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
+      // LAST STATUS
+      // q.leftJoin(e => e.awbStatus, 't12');
+
+      // gerai pickup / gerai di manifest resi
+      // q.leftJoin(e => e.awb.branchLast, 't8');
+      // q.leftJoin(e => e.awb.districtTo, 't9');
+
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+      await q.stream(response, this.streamTransformCodFinance);
     } catch (err) {
       console.error(err);
       throw err;
