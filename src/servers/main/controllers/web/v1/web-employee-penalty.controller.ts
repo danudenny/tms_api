@@ -9,11 +9,12 @@ import { PermissionTokenGuard } from '../../../../../shared/guards/permission-to
 import { 
   EmployeePenaltyListResponseVM, 
   EmployeePenaltyPayloadVm, 
-  PenaltyCategoryListResponseVm, 
   PenaltyEmployeeRoleNameListResponseVm,
   EmployeePenaltyFindAllResponseVm 
 } from '../../../models/employee-penalty.vm';
+import { PenaltyCategoryPayloadVm, PenaltyCategoryListResponseVm, PenaltyCategoryFeeListResponseVm } from '../../../models/penalty-category.vm';
 import { EmployeePenaltyService } from '../../../services/web/v1/web-employee-penalty.service';
+import { PenaltyCategoryService } from 'src/servers/main/services/web/v1/web-penalty-category.service';
 
 @ApiUseTags('Web Employee Penalty')
 @Controller('web/v1/employee/penalty')
@@ -25,6 +26,43 @@ export class EmployeePenalty {
   @ApiOkResponse({ type: PenaltyCategoryListResponseVm })
   public async getCategoryPenalty(@Body() payload: BaseMetaPayloadVm) {
     return EmployeePenaltyService.findPenaltyCategories(payload);
+  }
+
+  @Post('categories')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: PenaltyCategoryListResponseVm })
+  public async getCategoryPenalties(@Body() payload: BaseMetaPayloadVm) {
+    return PenaltyCategoryService.findPenaltyCategories(payload);
+  }
+
+  @Post('category/fee/list')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: PenaltyCategoryFeeListResponseVm })
+  public async getCategoryPenaltyFee(@Body() payload: BaseMetaPayloadVm) {
+    return PenaltyCategoryService.findPenaltyCategorieFeeList(payload);
+  }
+
+  @Post('category/create')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async createCategory(@Body() payload: PenaltyCategoryPayloadVm) {
+    return PenaltyCategoryService.createPenaltyCategory(payload);
+  }
+
+  @Post('category/edit')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async editCategory(@Body() payload: PenaltyCategoryPayloadVm) {
+    return PenaltyCategoryService.editPenaltyCategory(payload);
+  }
+
+  @Delete('category/delete/:id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async deleteCategory(@Param('id') penaltyCategoryFeeId: string) {
+    return PenaltyCategoryService.deletePenaltyCategory(penaltyCategoryFeeId);
   }
 
   @Post('list')
