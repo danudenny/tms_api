@@ -52,12 +52,19 @@ export class ScanoutSmdService {
       if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 3000) {
         throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
       }
+
       if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4000) {
         throw new BadRequestException(`Driver tidak bisa di assign, karena sedang HAS Arrived !!`);
       }
-      if( toInteger(resultDataDriver[0].do_smd_status_id_last) <= 3000 ) {
+
+      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 1000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 2000 ) {
+        if (toInteger(resultDataDriver[0].branch_id) != permissonPayload.branchId) {
+          throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
+        }
+      } else if( toInteger(resultDataDriver[0].do_smd_status_id_last) < 3000 ) {
         throw new BadRequestException(`Driver Tidak boleh di assign`);
       }
+
       if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 5000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 6000 ) {
         const resultDoSmdDetail = await DoSmdDetail.findOne({
           where: {
