@@ -39,7 +39,8 @@ export class ScanoutSmdService {
       SELECT 
         dsv.employee_id_driver,
         ds.do_smd_status_id_last,
-        ds.do_smd_id
+        ds.do_smd_id,
+        ds.branch_id
       FROM do_smd_vehicle dsv
       INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE AND ds.do_smd_status_id_last <> 6000
       WHERE 
@@ -58,7 +59,7 @@ export class ScanoutSmdService {
       }
 
       if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 1000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 2000 ) {
-        if (toInteger(resultDataDriver[0].branch_id) != permissonPayload.branchId) {
+        if (toInteger(resultDataDriver[0].branch_id) != toInteger(permissonPayload.branchId)) {
           throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
         }
       } else if( toInteger(resultDataDriver[0].do_smd_status_id_last) < 3000 ) {
