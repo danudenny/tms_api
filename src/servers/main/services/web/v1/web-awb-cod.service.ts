@@ -713,207 +713,6 @@ export class V1WebAwbCodService {
     return result;
   }
 
-  static async transferBranch(
-    payload: WebCodTransferPayloadVm,
-  ): Promise<WebCodTransferBranchResponseVm> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    const timestamp = moment().toDate();
-    const totalCodValue = 0;
-    let totalAwbCash = 0;
-    let totalAwbCashless = 0;
-    const dataError = [];
-
-    let totalCodValueCash = 0;
-    let totalCodValueCashless = 0;
-    const dataPrintCash: WebCodAwbPrintVm[] = [];
-    const dataPrintCashless: WebCodAwbPrintVm[] = [];
-    let printIdCash = null;
-    let printIdCashless = null;
-
-    // TODO: transction ??
-
-    // #region data cash [optional]
-    if (payload.dataCash.length) {
-      const codBranchCash = new CodTransaction();
-      const randomCode = await CustomCounterCode.transactionCodBranch(
-        timestamp,
-      );
-      codBranchCash.transactionCode = randomCode;
-      codBranchCash.transactionDate = timestamp;
-      codBranchCash.transactionStatusId = 27500; // status process;
-      codBranchCash.transactionType = 'CASH';
-      codBranchCash.totalCodValue = totalCodValue;
-      codBranchCash.totalAwb = totalAwbCash;
-      codBranchCash.branchId = permissonPayload.branchId;
-      codBranchCash.userIdDriver = payload.userIdDriver;
-      await CodTransaction.save(codBranchCash);
-
-      const userIdDriver = payload.userIdDriver;
-      const metaPrint = await this.generatePrintMeta(
-        codBranchCash.transactionCode,
-        authMeta.displayName,
-        authMeta.username,
-        permissonPayload.branchId,
-        userIdDriver,
-      );
-
-      for (const item of payload.dataCash) {
-        // handle race condition
-        const redlock = await RedisService.redlock(
-          `redlock:transaction:${item.awbNumber}`,
-          10,
-        );
-        if (redlock) {
-          const awbValid = await this.validationAwb(item.awbItemId);
-          if (awbValid) {
-            // totalCodValue += Number(item.codValue);
-            totalCodValueCash += Number(item.codValue);
-            totalAwbCash += 1;
-
-            // send to background process
-            await this.handleAwbCod(
-              item,
-              codBranchCash.codTransactionId,
-              permissonPayload.branchId,
-              authMeta.userId,
-            );
-
-            dataPrintCash.push({
-              awbNumber: item.awbNumber,
-              codValue: item.codValue,
-              provider: item.paymentService,
-            });
-          } else {
-            const errorMessage = `status resi ${
-              item.awbNumber
-            } tidak valid, mohon di cek ulang!`;
-            dataError.push(errorMessage);
-          }
-        } else {
-          dataError.push(`resi ${item.awbNumber} sedang d proses!!`);
-        }
-      } // end of loop data cash
-
-      if (dataPrintCash.length) {
-        // update data
-        await CodTransaction.update(
-          {
-            codTransactionId: codBranchCash.codTransactionId,
-          },
-          {
-            totalCodValue: totalCodValueCash,
-            totalAwb: totalAwbCash,
-            transactionStatusId: 31000,
-          },
-        );
-        // store data print cash on redis
-        printIdCash = await this.printStoreData(
-          metaPrint,
-          codBranchCash.codTransactionId,
-          dataPrintCash,
-          totalCodValueCash,
-          'cash',
-        );
-      }
-    }
-    // #endregion data cash
-
-    // #region data cashless [optional]
-    if (payload.dataCashless.length) {
-      const codBranchCashless = new CodTransaction();
-      const randomCode = await CustomCounterCode.transactionCodBranch(
-        timestamp,
-      );
-      codBranchCashless.transactionCode = randomCode;
-      codBranchCashless.transactionDate = timestamp;
-      codBranchCashless.transactionStatusId = 27500; // status process;
-      codBranchCashless.transactionType = 'CASHLESS';
-      codBranchCashless.totalCodValue = totalCodValue;
-      codBranchCashless.totalAwb = totalAwbCashless;
-      codBranchCashless.branchId = permissonPayload.branchId;
-      codBranchCashless.userIdDriver = payload.userIdDriver;
-      await CodTransaction.save(codBranchCashless);
-
-      const userIdDriver = payload.userIdDriver;
-      const metaPrint = await this.generatePrintMeta(
-        codBranchCashless.transactionCode,
-        authMeta.displayName,
-        authMeta.username,
-        permissonPayload.branchId,
-        userIdDriver,
-      );
-
-      for (const item of payload.dataCashless) {
-        // handle race condition
-        const redlock = await RedisService.redlock(
-          `redlock:transaction:${item.awbNumber}`,
-          10,
-        );
-        if (redlock) {
-          const awbValid = await this.validStatusAwb(item.awbItemId);
-          if (awbValid) {
-            // totalCodValue += Number(item.codValue);
-            totalCodValueCashless += Number(item.codValue);
-            totalAwbCashless += 1;
-
-            await this.handleAwbCod(
-              item,
-              codBranchCashless.codTransactionId,
-              permissonPayload.branchId,
-              authMeta.userId,
-            );
-
-            dataPrintCashless.push({
-              awbNumber: item.awbNumber,
-              codValue: item.codValue,
-              provider: item.paymentService,
-            });
-          } else {
-            // NOTE: error message
-            const errorMessage = `status resi ${
-              item.awbNumber
-            } tidak valid, mohon di cek ulang!`;
-            dataError.push(errorMessage);
-          }
-        } else {
-          dataError.push(`resi ${item.awbNumber} sedang d proses!!`);
-        }
-      } // end of loop data cashless
-
-      if (dataPrintCashless.length) {
-        // update data
-        await CodTransaction.update(
-          {
-            codTransactionId: codBranchCashless.codTransactionId,
-          },
-          {
-            totalCodValue: totalCodValueCashless,
-            totalAwb: totalAwbCashless,
-            transactionStatusId: 35000,
-          },
-        );
-        // store data print cashless on redis
-        printIdCashless = await this.printStoreData(
-          metaPrint,
-          codBranchCashless.codTransactionId,
-          dataPrintCashless,
-          totalCodValueCashless,
-          'cashless',
-        );
-      }
-    }
-    // end of check data cashless
-    // #endregion data cashless
-
-    // const groupPayment = groupBy(payload.data, 'paymentMethod');
-    const result = new WebCodTransferBranchResponseVm();
-    result.printIdCash = printIdCash;
-    result.printIdCashless = printIdCashless;
-    result.dataError = dataError;
-    return result;
-  }
-
   static async transferBranchV2(
     payload: WebCodTransferPayloadVm,
   ): Promise<WebCodTransferBranchResponseVm> {
@@ -1005,18 +804,21 @@ export class V1WebAwbCodService {
           totalAwbCash += 1;
 
           // send to background process
-          await this.handleAwbCod(
+          const handleData = await this.handleAwbCod(
             item,
             uuidString,
             permissonPayload.branchId,
             authMeta.userId,
           );
-
-          dataPrintCash.push({
-            awbNumber: item.awbNumber,
-            codValue: item.codValue,
-            provider: item.paymentService,
-          });
+          if (handleData) {
+            dataPrintCash.push({
+              awbNumber: item.awbNumber,
+              codValue: item.codValue,
+              provider: item.paymentService,
+            });
+          } else {
+            dataError.push(`resi ${item.awbNumber}, mohon di coba lagi!`);
+          }
         } else {
           const errorMessage = `status resi ${
             item.awbNumber
@@ -1096,18 +898,23 @@ export class V1WebAwbCodService {
           totalCodValueCashless += Number(item.codValue);
           totalAwbCashless += 1;
 
-          await this.handleAwbCod(
+          const handleData = await this.handleAwbCod(
             item,
             uuidString,
             permissonPayload.branchId,
             authMeta.userId,
           );
 
-          dataPrintCashless.push({
-            awbNumber: item.awbNumber,
-            codValue: item.codValue,
-            provider: item.paymentService,
-          });
+          if (handleData) {
+            dataPrintCashless.push({
+              awbNumber: item.awbNumber,
+              codValue: item.codValue,
+              provider: item.paymentService,
+            });
+          } else {
+            dataError.push(`resi ${item.awbNumber}, mohon di coba lagi!`);
+          }
+
         } else {
           // NOTE: error message
           const errorMessage = `status resi ${
@@ -1452,58 +1259,6 @@ export class V1WebAwbCodService {
     }
   }
 
-  // NOTE: for testing only
-  static async syncData() {
-    // get config mongodb
-    const collection = await MongoDbConfig.getDbSicepatCod(
-      'transaction_detail',
-    );
-    // const items = await collection.find({}).toArray
-
-    const data = await CodTransactionDetail.find({
-      where: {
-        transactionStatusId: 40000,
-      },
-    });
-
-    for (const item of data) {
-      delete item['changedValues'];
-      item.userIdCreated = Number(item.userIdCreated);
-      item.userIdUpdated = Number(item.userIdUpdated);
-
-      try {
-        const checkData = await collection.findOne({
-          _id: item.awbNumber,
-        });
-        if (checkData) {
-          const objUpdate = {
-            codTransactionId: item.codTransactionId,
-            transactionStatusId: item.transactionStatusId,
-            codSupplierInvoiceId: item.codSupplierInvoiceId,
-            supplierInvoiceStatusId: item.supplierInvoiceStatusId,
-            isVoid: item.isVoid,
-            updatedTime: item.updatedTime,
-            userIdUpdated: item.userIdUpdated,
-          };
-          await collection.updateOne(
-            { _id: item.awbNumber },
-            {
-              $set: objUpdate,
-            },
-          );
-        } else {
-          console.log('### AWB NUMBER :: ', item.awbNumber);
-          await collection.insertOne({ _id: item.awbNumber, ...item });
-        }
-      } catch (error) {
-        console.error(error);
-        throw error;
-      }
-    } // end of loop
-    console.log(' ###### TOTAL DATA :: ', data.length);
-    return true;
-  }
-
   // func private ==============================================================
   private static async handleAwbCod(
     item: WebCodAwbPayloadVm,
@@ -1520,6 +1275,7 @@ export class V1WebAwbCodService {
         },
       );
 
+      // TODO: refactoring with sync proses insert to cod_transaction_detail
       // #region send to background process with bull
       const firstTransaction = new WebCodFirstTransactionPayloadVm();
       firstTransaction.awbItemId = item.awbItemId;
@@ -1539,13 +1295,6 @@ export class V1WebAwbCodService {
         moment().toDate(),
       );
       // #endregion send to background
-
-      // response
-      // const result = new WebCodAwbPrintVm();
-      // result.awbNumber = item.awbNumber;
-      // result.codValue = item.codValue;
-      // result.provider = item.paymentService;
-      // return result;
       return true;
     } catch (err) {
       console.error('HandleAwb error: ', err);
@@ -1555,6 +1304,7 @@ export class V1WebAwbCodService {
 
   private static async validStatusAwb(awbItemId: number): Promise<boolean> {
     // check awb status mush valid dlv
+    // TODO: check db master
     const awbValid = await AwbItemAttr.findOne({
       select: ['awbItemAttrId', 'awbItemId', 'awbStatusIdFinal'],
       where: {
@@ -1572,6 +1322,7 @@ export class V1WebAwbCodService {
 
   private static async validationAwb(awbItemId: number): Promise<boolean> {
     // check awb status must dlv and transaction status must null
+    // TODO: check db master
     const repo = new OrionRepositoryService(AwbItemAttr, 'aia');
     const q = repo.findOneRaw();
 
