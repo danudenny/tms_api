@@ -19,7 +19,7 @@ export class V1WebReportCodService {
   static expireOnSeconds = 600; // 5 minute
 
   static async addQueueBullPrint(filters, noncodfee) {
-    console.log("inside bull command")
+    console.log('inside bull command');
     const uuidv1 = require('uuid/v1');
     const uuidString = uuidv1();
     const reportKey = `reportKeyCOD:${uuidString}`;
@@ -177,7 +177,7 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.destinationCode),
           this.strReplaceFunc(d.destination),
           d.perwakilan,
-          (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? d.userIdDriverName : ''),
+          (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? this.strReplaceFunc(d.userIdDriverName) : ''),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.packageType),
           this.strReplaceFunc(d.parcelNote),
@@ -225,14 +225,14 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.prtDestinationCode),
           this.strReplaceFunc(d.tujuanKecamatan),
           this.strReplaceFunc(d.perwakilan),
-          (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? d.userIdDriverName : ''),
+          (d.userIdDriverNik ? d.userIdDriverNik : '') + ' - ' + (d.userIdDriverName ? this.strReplaceFunc(d.userIdDriverName) : ''),
           this.strReplaceFunc(d.parcelContent),
           this.strReplaceFunc(d.layanan),
           this.strReplaceFunc(d.receiverRemark),
           '',
           '',
           d.tdDateUpdated ? moment.utc(d.tdDateUpdated).format('YYYY-MM-DD HH:mm') : d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
-          (d.tdUserIdUpdatedNik ? this.strReplaceFunc(d.tdUserIdUpdatedNik) + ' - ' + (d.tdUserIdUpdatedName) : (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) + ' - ' + (d.userIdUpdatedName) : "-")),
+          (d.tdUserIdUpdatedNik ? this.strReplaceFunc(d.tdUserIdUpdatedNik) + ' - ' + (d.tdUserIdUpdatedName) : (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) + ' - ' + (d.userIdUpdatedName) : '-')),
         ]);
 
       }
@@ -688,7 +688,7 @@ export class V1WebReportCodService {
     // console.log(pageNumber, "page Number")
 
     if (pageNumber == 1) {
-      spartanFilter.push({ awbNumber: { $gt: "" } });
+      spartanFilter.push({ awbNumber: { $gt: '' } });
     }
     if (lastAwbNumber && pageNumber > 1) {
       spartanFilter.push({ awbNumber: { $gt: lastAwbNumber } });
@@ -756,7 +756,7 @@ export class V1WebReportCodService {
       }
     }
 
-    console.log(spartanFilter, tdFilter, "filter");
+    console.log(spartanFilter, tdFilter, 'filter');
 
     const q = [
       {
@@ -764,7 +764,7 @@ export class V1WebReportCodService {
           $and: spartanFilter,
         },
       },
-      { "$sort": { awbNumber: 1 } },
+      { '$sort': { awbNumber: 1 } },
       {
         $lookup: {
           from: 'transaction_detail',
@@ -797,7 +797,7 @@ export class V1WebReportCodService {
                 supplierInvoiceStatusName: 1,
                 custPackage: 1,
                 codFee: 1,
-                parcelValue: 1
+                parcelValue: 1,
               },
             },
           ],
@@ -851,17 +851,17 @@ export class V1WebReportCodService {
           prtParcelValue: '$prtParcelValue',
           tdParcelValue: '$td.parcelValue',
           prtCustPackageId: '$prtCustPackageId',
-          tdcustPackage: "$td.custPackage",
+          tdcustPackage: '$td.custPackage',
           transactionStatusId: '$td.transactionStatusId',
           userIdDriver: '$courierUserId',
           userIdDriverNik: '$podCourierNik',
           userIdDriverName: '$podCourierName',
           userIdUpdatedNik: '$userUpdatedNik',
           userIdUpdatedName: '$userUpdatedName',
-          tdUserIdUpdatedNik: "$td.nikAdmin",
-          tdUserIdUpdatedName: "$td.adminName",
+          tdUserIdUpdatedNik: '$td.nikAdmin',
+          tdUserIdUpdatedName: '$td.adminName',
           dateUpdated: '$history_date',
-          tdDateUpdated: "$td.updatedTime",
+          tdDateUpdated: '$td.updatedTime',
           prtReferenceNo: 1,
           perwakilan: 1,
           layanan: 1,
@@ -916,7 +916,7 @@ export class V1WebReportCodService {
     const filterList: any = [];
 
     if (pageNumber == 1) {
-      filterList.push({ awbNumber: { $gt: "" } });
+      filterList.push({ awbNumber: { $gt: '' } });
     }
 
     if (lastAwbNumber && pageNumber > 1) {
@@ -942,7 +942,6 @@ export class V1WebReportCodService {
         filterList.push({ partnerId: { $eq: filter.value } });
       }
 
-
       if (filter.field == 'supplierInvoiceStatus' && filter.value) {
         filterList.push({ supplierInvoiceStatusId: { $eq: filter.value } });
 
@@ -963,7 +962,6 @@ export class V1WebReportCodService {
         spartanFilter.push({ $gte: ['$lastValidTrackingDateTime', d] });
         allowNullTd = false;
       }
-
 
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment.utc(moment.utc(filter.value).add(1, 'days').format('YYYY-MM-DD 00:00:00')).toDate();
@@ -987,15 +985,13 @@ export class V1WebReportCodService {
       }
     }
 
-
-
     const q = [
       {
         $match: {
           $and: filterList,
         },
       },
-      { "$sort": { awbNumber: 1 } },
+      { '$sort': { awbNumber: 1 } },
       {
         $limit: limit,
       },
@@ -1019,7 +1015,7 @@ export class V1WebReportCodService {
             {
               $project: {
                 awbNumber: 1,
-                lastValidTrackingType: 1
+                lastValidTrackingType: 1,
               },
             },
           ],
@@ -1167,7 +1163,6 @@ export class V1WebReportCodService {
 
     try {
 
-
       // const transactionStatuses = await RawQueryService.query(
       //   `SELECT transaction_status_id, status_title FROM transaction_status ts`,
       // );
@@ -1176,7 +1171,7 @@ export class V1WebReportCodService {
       //   transactionStatus.transaction_status_id = parseInt(`${transactionStatus.transaction_status_id}`, 10);
       // }
 
-      console.log(filters, "filters")
+      console.log(filters, 'filters');
       const reportType = await this.reportTypeFromFilter(filters);
 
       // prepare csv file
@@ -1185,7 +1180,7 @@ export class V1WebReportCodService {
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
       let lastAwb: string;
-      let isFinalAwb: boolean = false;
+      const isFinalAwb: boolean = false;
 
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
       try {
@@ -1201,8 +1196,7 @@ export class V1WebReportCodService {
           if (reportType.filterTransaction === true && reportType.filterAwb === false) {
             const rawResponseData = await this.timeResponse('time_log_cod_read_transaction_detail_only', this.getNonCodSupplierInvoiceTransactionDetailData(dbTransactionDetail, datas, filters, limit, pageNumber, lastAwb));
             responseDatas = rawResponseData.data;
-          }
-          else {
+          } else {
             const rawResponseData = await this.timeResponse('time_log_cod_read_awb_only', this.getNonCodSupplierInvoiceJoinData(dbAwb, datas, filters, limit, pageNumber, lastAwb));
             responseDatas = rawResponseData.data;
           }
@@ -1260,7 +1254,7 @@ export class V1WebReportCodService {
           url,
         };
 
-        console.log(url, 'url final')
+        console.log(url, 'url final');
         await RedisService.setex(
           uuid,
           JSON.stringify(payload),
@@ -1279,11 +1273,11 @@ export class V1WebReportCodService {
     let filterTransaction = false;
 
     filters.forEach(filter => {
-      if (filter.field == "periodStart" && filter.value) {
-        filterAwb = true
+      if (filter.field == 'periodStart' && filter.value) {
+        filterAwb = true;
       }
-      if (filter.field == "periodEnd" && filter.value) {
-        filterAwb = true
+      if (filter.field == 'periodEnd' && filter.value) {
+        filterAwb = true;
       }
       // if (filter.field == "supplier" && filter.value) {
       //   filterAwb = true
@@ -1314,7 +1308,7 @@ export class V1WebReportCodService {
   static async getCodSupplierInvoiceData(coll, filters, limit, pageNumber, lastAwbNumber) {
     const filterList: any = [];
     if (pageNumber == 1) {
-      filterList.push({ awbNumber: { $gt: "" } });
+      filterList.push({ awbNumber: { $gt: '' } });
     }
     if (lastAwbNumber && pageNumber > 1) {
       filterList.push({ awbNumber: { $gt: lastAwbNumber } });
@@ -1362,7 +1356,7 @@ export class V1WebReportCodService {
           $and: filterList,
         },
       },
-      { "$sort": { awbNumber: 1 } },
+      { '$sort': { awbNumber: 1 } },
       {
         $limit: limit,
       },
@@ -1465,7 +1459,7 @@ export class V1WebReportCodService {
       const csvConfig = await this.getCSVConfig(true);
       const csvWriter = require('csv-write-stream');
       const writer = csvWriter(csvConfig.config);
-      let lastAwb: string
+      let lastAwb: string;
       writer.pipe(fs.createWriteStream(csvConfig.filePath, { flags: 'a' }));
       try {
 

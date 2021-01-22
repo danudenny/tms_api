@@ -501,7 +501,6 @@ export class HubMonitoringService {
 				WHEN s.code = 'SORT' THEN "User Bag Sortir"
 				WHEN s.code = 'OUT' THEN "User Scanout"
 			END AS "User",
-      "User",
       s.code as "Status",
       CASE WHEN s.code = 'IN' THEN "Tanggal Transaksi IN"
         WHEN s.code = 'SORT' THEN "Tanggal Transaksi SORT"
@@ -553,7 +552,7 @@ export class HubMonitoringService {
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
-          INNER JOIN users u1 ON u1.user_id = b1.user_id_created AND u1.is_deleted = FALSE
+          INNER JOIN users u1 ON u1.user_id = bi1.user_id_created AND u1.is_deleted = FALSE
           WHERE bia1.is_deleted = FALSE
         ) AS bag_sortir ON true
         LEFT JOIN LATERAL (

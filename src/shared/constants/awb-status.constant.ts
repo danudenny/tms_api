@@ -13,6 +13,7 @@ export const AWB_STATUS = {
   ANT: 14000,
   BA: 22000,
   CODA: 23000,
+  CODB: 26500,
   DLV: 30000,
   DONE_HO: 30100,
   BROKE: 24000,
@@ -21,4 +22,5 @@ export const AWB_STATUS = {
   THP: 28500,
   IN_SORTIR: 13000,
   CANCEL: 1800,
+  CANCEL_DLV: 21800,
 };
