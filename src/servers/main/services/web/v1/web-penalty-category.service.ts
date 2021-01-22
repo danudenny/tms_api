@@ -118,13 +118,13 @@ export class PenaltyCategoryService{
           status : 'ok',
           message: 'Sukses membuat data',
         };
-    let penaltyCategoryData = await PenaltyCategory.findOne({
-      where:{
-        penaltyCategoryId: payload.penaltyCategoryId,
-        isDeleted: false,
-      }
-    });
-    if(penaltyCategoryData){
+    payload.penaltyCategoryTitle = payload.penaltyCategoryTitle.trim();
+    const penaltyCategoryData = await PenaltyCategory.createQueryBuilder("penalty_category")
+    .where("LOWER(penalty_category.penalty_category_title) = LOWER(:penaltyCategoryTitle)", {penaltyCategoryTitle: payload.penaltyCategoryTitle})
+    .andWhere("penalty_category.is_deleted = FALSE")
+    .getMany();
+
+    if(penaltyCategoryData.length>0){
       RequestErrorService.throwObj(
         {
           message: `Data dengan kategori tersebut sudah ada sebelumnya`,
@@ -133,13 +133,28 @@ export class PenaltyCategoryService{
       );
     }
 
+    // let penaltyCategoryData = await PenaltyCategory.findOne({
+    //   where:{
+    //     penaltyCategoryId: payload.penaltyCategoryId,
+    //     isDeleted: false,
+    //   }
+    // });
+    // if(penaltyCategoryData){
+    //   RequestErrorService.throwObj(
+    //     {
+    //       message: `Data dengan kategori tersebut sudah ada sebelumnya`,
+    //     },
+    //   HttpStatus.BAD_REQUEST,
+    //   );
+    // }
+
     const setPenaltyCategory = await this.setPenaltyCategory(
         payload,
         authMeta.userId,
         null
       );
-    penaltyCategoryData = await PenaltyCategory.save(setPenaltyCategory);
-    if(!penaltyCategoryData){
+    const savePenaltyCategoryData = await PenaltyCategory.save(setPenaltyCategory);
+    if(!savePenaltyCategoryData){
         RequestErrorService.throwObj(
           {
             message: `Gagal membuat data kategori pinalty`,
