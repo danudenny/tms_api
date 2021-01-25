@@ -1613,4 +1613,101 @@ export class V1WebAwbCodService {
       throw new ServiceUnavailableException(error.message);
     }
   }
+
+  // NOTE: delete transaction cod
+  static async transactionDelete(
+    payload: WebCodTransactionRejectPayloadVm,
+  ): Promise<WebCodTransactionUpdateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
+    const timestamp = moment().toDate();
+    const dataError = [];
+    let totalSuccess = 0;
+
+    const transaction = await CodTransaction.findOne({
+      where: {
+        codTransactionId: payload.transactionId,
+        isDeleted: false,
+        transactionStatusId: In(['31000', '32500']),
+      },
+    });
+
+    if (!transaction) {
+      throw new BadRequestException('Data transaction tidak valid!');
+    }
+
+    const transactionDetails = await CodTransactionDetail.find({
+      select: ['codTransactionDetailId', 'awbNumber', 'codValue', 'awbItemId'],
+      where: {
+        codTransactionId: payload.transactionId,
+        isDeleted: false,
+      },
+    });
+
+    if (transactionDetails.length <= 0) {
+      throw new BadRequestException('Tidak ada resi pada transaksi ini!');
+    }
+
+    // TODO: transaction process??
+    try {
+      // NOTE: loop data awb and update transaction detail
+      await getManager().transaction(async transactionManager => {
+        for (const transactionDetail of transactionDetails) {
+          // cancel all transaction status
+          if (transactionDetail) {
+            // remove awb from transaction
+            await transactionManager.update(
+              CodTransactionDetail,
+              {
+                codTransactionDetailId:
+                  transactionDetail.codTransactionDetailId,
+              },
+              {
+                isDeleted: true,
+                updatedTime: timestamp,
+                userIdUpdated: authMeta.userId,
+              },
+            );
+
+            totalSuccess += 1;
+          } else {
+            // error message
+            const errorMessage = `Resi ${
+              transactionDetail.awbNumber
+            } tidak valid / sudah di proses!`;
+            dataError.push(errorMessage);
+          }
+        } // end of loop
+
+        if (totalSuccess > 0) {
+          // update data table transaction
+          await transactionManager.update(
+            CodTransaction,
+            {
+              codTransactionId: transaction.codTransactionId,
+            },
+            {
+              isDeleted: true,
+              updatedTime: timestamp,
+              userIdUpdated: authMeta.userId,
+            },
+          );
+        }
+      });
+
+      const result = new WebCodTransactionUpdateResponseVm();
+      if (dataError.length) {
+        result.status = 'error';
+        result.message = 'error';
+      } else {
+        result.status = 'ok';
+        result.message = 'success';
+      }
+      result.totalSuccess = totalSuccess;
+      result.dataError = dataError;
+      return result;
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
+    }
+  }
 }
