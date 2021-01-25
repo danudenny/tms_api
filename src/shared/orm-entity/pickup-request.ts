@@ -7,6 +7,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { CustomerMembershipDetail } from './customer-membership-detail';
 import { Partner } from './partner';
 import { TmsBaseEntity } from './tms-base';
 
@@ -183,4 +184,11 @@ export class PickupRequest extends TmsBaseEntity {
   @OneToOne(() => Partner)
   @JoinColumn({ name: 'partner_id', referencedColumnName: 'partner_id' })
   partner: Partner;
+
+  @OneToOne(() => CustomerMembershipDetail)
+  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partner_id' })
+  @JoinColumn({ name: 'email', referencedColumnName: 'email' })
+  customerMembershipDetail: CustomerMembershipDetail;
+
+  
 }
