@@ -917,7 +917,7 @@ export class V2WebCodReportService {
       response.write(`${this.CodHeaderFinance.join(',')}\n`);
 
       // mapping field
-      payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
+      payload.fieldResolverMap['transferDate'] = 'cbs.transfer_datetime';
       payload.fieldResolverMap['transactionStatus'] = 'ctd.transaction_status_id';
       payload.fieldResolverMap['branchLast'] = 'ctd.branch_id';
 
@@ -947,7 +947,7 @@ export class V2WebCodReportService {
         ['t3.parcel_content', 'parcelContent'],
         ['t5.package_type_code', 'packageTypeCode'],
         ['t1.updated_time', 'awbStatusDate'],
-        ['cbs.bank_statement_date', 'transferDate'],
+        ['cbs.transfer_datetime', 'transferDate'],
         ['ctd.updated_time', 'updatedTime'],
       );
 
