@@ -1,5 +1,5 @@
 // #region import
-import { createQueryBuilder, getManager, In } from 'typeorm';
+import { createQueryBuilder, getManager, In, getConnection } from 'typeorm';
 
 import {
   BadRequestException,
@@ -53,6 +53,7 @@ import { RedisService } from '../../../../../shared/services/redis.service';
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { AuthLoginMetadata } from '../../../../../shared/models/auth-login-metadata.model';
 import { JwtPermissionTokenPayload } from '../../../../../shared/interfaces/jwt-payload.interface';
+import console = require('console');
 // #endregion
 export class V1WebAwbCodService {
   static async awbCod(
@@ -914,7 +915,6 @@ export class V1WebAwbCodService {
           } else {
             dataError.push(`resi ${item.awbNumber}, mohon di coba lagi!`);
           }
-
         } else {
           // NOTE: error message
           const errorMessage = `status resi ${
@@ -1323,27 +1323,48 @@ export class V1WebAwbCodService {
   private static async validationAwb(awbItemId: number): Promise<boolean> {
     // check awb status must dlv and transaction status must null
     // TODO: check db master
-    const repo = new OrionRepositoryService(AwbItemAttr, 'aia');
-    const q = repo.findOneRaw();
+    const masterQueryRunner = getConnection().createQueryRunner('master');
+    try {
+      const data = await getConnection()
+        .createQueryBuilder(AwbItemAttr, 'aia')
+        .setQueryRunner(masterQueryRunner)
+        .select(['aia.awbItemAttrId', 'aia.awbItemId', 'aia.awbStatusIdFinal', 'aia.transactionStatusId'])
+        .where(
+          'aia.awbItemId = :awbItemId AND aia.awbStatusIdFinal = :awbStatusIdFinal AND aia.isDeleted = false',
+          { awbItemId, awbStatusIdFinal: AWB_STATUS.DLV },
+        )
+        .getOne();
 
-    q.selectRaw(
-      ['aia.awb_item_attr_id', 'awbItemAttrId'],
-      ['aia.awb_item_id', 'awbItemId'],
-      ['aia.awb_status_id_final', 'awbStatusIdFinal'],
-      ['aia.transaction_status_id', 'transactionStatusId'],
-    );
-
-    q.andWhere(e => e.awbItemId, w => w.equals(awbItemId));
-    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-
-    const data = await q.exec();
-
-    if (data && !data.transactionStatusId) {
-      return true;
-    } else {
-      return false;
+      if (data && !data.transactionStatusId) {
+        return true;
+      } else {
+        return false;
+      }
+    } finally {
+      await masterQueryRunner.release();
     }
+
+    // const repo = new OrionRepositoryService(AwbItemAttr, 'aia');
+    // const q = repo.findOneRaw();
+
+    // q.selectRaw(
+    //   ['aia.awb_item_attr_id', 'awbItemAttrId'],
+    //   ['aia.awb_item_id', 'awbItemId'],
+    //   ['aia.awb_status_id_final', 'awbStatusIdFinal'],
+    //   ['aia.transaction_status_id', 'transactionStatusId'],
+    // );
+
+    // q.andWhere(e => e.awbItemId, w => w.equals(awbItemId));
+    // q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
+    // q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    // const data = await q.exec();
+
+    // if (data && !data.transactionStatusId) {
+    //   return true;
+    // } else {
+    //   return false;
+    // }
   }
 
   // handle data store for printing
