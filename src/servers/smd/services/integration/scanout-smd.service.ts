@@ -133,6 +133,7 @@ export class ScanoutSmdService {
         do_smd_code: paramDoSmdCode,
         do_smd_vehicle_id: paramDoSmdVehicleId,
         departure_schedule_date_time: payload.do_smd_time,
+        employee_id_driver: payload.employee_id_driver,
       });
     } else {
       throw new BadRequestException('Data Surat Muatan Darat Sedang di proses, Silahkan Coba Beberapa Saat');
@@ -1244,16 +1245,7 @@ export class ScanoutSmdService {
       FROM do_smd_vehicle dsv
       INNER JOIN do_smd ds ON dsv.do_smd_id = ds.do_smd_id AND ds.is_deleted = FALSE AND do_smd_status_id_last = 3000
       WHERE 
-        dsv.employee_id_driver IN
-        (
-          SELECT 
-            dsv.employee_id_driver			
-          FROM do_smd_vehicle dsv
-          INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE 
-          WHERE 
-            ds.do_smd_id = ${payload.do_smd_id} AND
-            dsv.is_deleted = FALSE 
-        ) AND dsv.is_deleted = FALSE
+        dsv.employee_id_driver = ${payload.employee_id_driver} AND dsv.is_deleted = FALSE
     `;
     const resultDataDriver = await RawQueryService.query(rawQueryDriver);
 
