@@ -44,7 +44,7 @@ export class ApiPartnersService {
       { cache: true },
     );
     if (partner) {
-      const pickreq = await this.pickReq(payload.awb_number, Number(partner.partner_id));
+      const pickreq = await this.pickReq(payload.awb_number, Number(partner.partnerId));
       if (pickreq) {
         if (this.validData(pickreq) === true) {
 

@@ -10,7 +10,7 @@ export class Partner extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
   })
-  partner_id: string;
+  partnerId: number;
 
   @Column('character varying', {
     nullable: true,
