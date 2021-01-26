@@ -54,6 +54,7 @@ export class ScanoutSmdListService {
     payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
+    payload.fieldResolverMap['is_intercity'] = 'ds.is_intercity';
 
     payload.globalSearchFields = [
       {
@@ -68,6 +69,9 @@ export class ScanoutSmdListService {
       {
         field: 'do_smd_code',
       },
+      {
+        field: 'is_intercity',
+      },
     ];
 
     const repo = new OrionRepositoryService(DoSmd, 'ds');
@@ -78,6 +82,7 @@ export class ScanoutSmdListService {
     q.selectRaw(
       ['ds.do_smd_id', 'do_smd_id'],
       ['ds.do_smd_code', 'do_smd_code'],
+      [`CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END`, 'do_smd_intercity'],
       ['ds.do_smd_time', 'do_smd_time'],
       ['e.fullname', 'fullname'],
       ['e.employee_id', 'employee_id'],

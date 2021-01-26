@@ -1,4 +1,7 @@
-import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../shared/external/nestjs-swagger';
+import {
+  ApiModelProperty,
+  ApiModelPropertyOptional,
+} from '../../../../shared/external/nestjs-swagger';
 import { IsAwbNumber } from '../../../../shared/decorators/custom-validation.decorator';
 import { IsDefined } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -30,19 +33,19 @@ export class WebCodAwbPayloadVm {
 
   @ApiModelPropertyOptional()
   noReference: string;
-
 }
 
 export class WebCodTransferPayloadVm {
   @ApiModelProperty()
   userIdDriver: number;
 
-  @ApiModelPropertyOptional( { type: () => [WebCodAwbPayloadVm]})
+  @ApiModelPropertyOptional({ type: () => [WebCodAwbPayloadVm] })
   dataCash: [WebCodAwbPayloadVm];
 
-  @ApiModelPropertyOptional( { type: () => [WebCodAwbPayloadVm]})
+  @ApiModelPropertyOptional({ type: () => [WebCodAwbPayloadVm] })
   dataCashless: [WebCodAwbPayloadVm];
 }
+
 export class WebCodTransactionUpdatePayloadVm {
   @ApiModelProperty({
     example: ['000726556611', '000726556612'],
@@ -75,7 +78,7 @@ export class WebCodBankStatementValidatePayloadVm {
   @ApiModelProperty()
   bankStatementId: string;
 
-  @ApiModelProperty({format: 'date-time'})
+  @ApiModelProperty({ format: 'date-time' })
   transferDatetime: string;
 
   @ApiModelPropertyOptional()
@@ -125,7 +128,7 @@ export class WebCodInvoiceAddAwbPayloadVm {
     example: ['000726556611', '000726556612'],
     skipValidation: true,
   })
-  @IsDefined({message: 'No Resi harus diisi'})
+  @IsDefined({ message: 'No Resi harus diisi' })
   @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   awbNumber: string[];
@@ -142,7 +145,7 @@ export class WebCodInvoiceRemoveAwbPayloadVm {
     example: ['000726556611', '000726556612'],
     skipValidation: true,
   })
-  @IsDefined({message: 'No Resi harus diisi'})
+  @IsDefined({ message: 'No Resi harus diisi' })
   @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   awbNumber: string[];
@@ -162,7 +165,7 @@ export class WebCodVoucherPayloadVm {
   @ApiModelProperty()
   codVoucherNo: string;
 
-  @ApiModelProperty({format: 'date-time'})
+  @ApiModelProperty({ format: 'date-time' })
   codVoucherDate: string;
 
   @ApiModelProperty({
