@@ -65,6 +65,7 @@ export class V1WebTrackingService {
       result.returnAwbNumber           = data.returnAwbNumber;
       result.doReturnAwb               = data.doReturnAwb;
       result.isDoReturnPartner         = data.isDoReturnPartner;
+      result.isHighValue               = data.isHighValue;
 
       // TODO: partial load data
       const history = await this.getRawAwbHistory(data.awbItemId);
@@ -302,7 +303,8 @@ export class V1WebTrackingService {
         CASE
             WHEN ai.doreturn_new_awb_3pl IS NOT NULL THEN true
             ELSE false
-        END as "isDoReturnPartner"
+        END as "isDoReturnPartner",
+        ai.is_high_value as "isHighValue"
       FROM awb a
         INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
