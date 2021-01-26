@@ -38,7 +38,7 @@ export class PartnerOneidService {
     payload.fieldResolverMap['awbStatusGrpId'] = 'asg.awb_status_grp_id';
     payload.fieldResolverMap['partnerId'] = 'pr.partner_id';
     payload.fieldResolverMap['awbHistoryDateLast'] = 'awb_item_attr.awb_history_date_last';
-    payload.fieldResolverMap['email'] = 'awb.email_merchant';
+    payload.fieldResolverMap['email'] = 'pr.pickup_request_email';
 
     const q = RepositoryService.awbItemAttr.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
