@@ -54,8 +54,12 @@ export class ScanoutSmdService {
         throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
       }
 
-      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4000) {
-        throw new BadRequestException(`Driver tidak bisa di assign, karena sedang HAS Arrived !!`);
+      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 8000) {
+        throw new BadRequestException(`Driver tidak bisa di assign, karena sedang PROBLEM !!`);
+      }
+
+      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 3000) {
+        throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
       }
 
       if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 1000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 2000 ) {
