@@ -799,7 +799,7 @@ export class V1WebAwbCodService {
         10,
       );
       if (redlock) {
-        const awbValid = await this.validationAwb(item.awbItemId);
+        const awbValid = await this.validStatusAwb(item.awbItemId, 'cash');
         if (awbValid) {
           totalCodValueCash += Number(item.codValue);
           totalAwbCash += 1;
@@ -894,7 +894,7 @@ export class V1WebAwbCodService {
         10,
       );
       if (redlock) {
-        const awbValid = await this.validStatusAwb(item.awbItemId);
+        const awbValid = await this.validStatusAwb(item.awbItemId, 'cashless');
         if (awbValid) {
           totalCodValueCashless += Number(item.codValue);
           totalAwbCashless += 1;
@@ -1302,30 +1302,12 @@ export class V1WebAwbCodService {
     }
   }
 
-  private static async validStatusAwb(awbItemId: number): Promise<boolean> {
+  private static async validStatusAwb(awbItemId: number, type: string): Promise<boolean> {
     // check awb status mush valid dlv
-    // TODO: check db master
-    const awbValid = await AwbItemAttr.findOne({
-      select: ['awbItemAttrId', 'awbItemId', 'awbStatusIdFinal'],
-      where: {
-        awbItemId,
-        awbStatusIdFinal: AWB_STATUS.DLV,
-        isDeleted: false,
-      },
-    });
-    if (awbValid) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private static async validationAwb(awbItemId: number): Promise<boolean> {
-    // check awb status must dlv and transaction status must null
     // TODO: check db master
     const masterQueryRunner = getConnection().createQueryRunner('master');
     try {
-      const data = await getConnection()
+      const awbValid = await getConnection()
         .createQueryBuilder(AwbItemAttr, 'aia')
         .setQueryRunner(masterQueryRunner)
         .select(['aia.awbItemAttrId', 'aia.awbItemId', 'aia.awbStatusIdFinal', 'aia.transactionStatusId'])
@@ -1335,7 +1317,7 @@ export class V1WebAwbCodService {
         )
         .getOne();
 
-      if (data && !data.transactionStatusId) {
+      if ((type === 'cash' && awbValid && !awbValid.transactionStatusId) || (type === 'cashless' && awbValid)) {
         return true;
       } else {
         return false;
@@ -1344,23 +1326,15 @@ export class V1WebAwbCodService {
       await masterQueryRunner.release();
     }
 
-    // const repo = new OrionRepositoryService(AwbItemAttr, 'aia');
-    // const q = repo.findOneRaw();
-
-    // q.selectRaw(
-    //   ['aia.awb_item_attr_id', 'awbItemAttrId'],
-    //   ['aia.awb_item_id', 'awbItemId'],
-    //   ['aia.awb_status_id_final', 'awbStatusIdFinal'],
-    //   ['aia.transaction_status_id', 'transactionStatusId'],
-    // );
-
-    // q.andWhere(e => e.awbItemId, w => w.equals(awbItemId));
-    // q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
-    // q.andWhere(e => e.isDeleted, w => w.isFalse());
-
-    // const data = await q.exec();
-
-    // if (data && !data.transactionStatusId) {
+    // const awbValid = await AwbItemAttr.findOne({
+    //   select: ['awbItemAttrId', 'awbItemId', 'awbStatusIdFinal'],
+    //   where: {
+    //     awbItemId,
+    //     awbStatusIdFinal: AWB_STATUS.DLV,
+    //     isDeleted: false,
+    //   },
+    // });
+    // if (awbValid) {
     //   return true;
     // } else {
     //   return false;
