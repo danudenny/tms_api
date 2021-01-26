@@ -353,7 +353,7 @@ export class V2WebCodReportService {
         V2WebCodReportService.strReplaceFunc(d.consigneeName),
         V2WebCodReportService.strReplaceFunc(d.paymentMethod),
         V2WebCodReportService.strReplaceFunc(d.transactionStatus),
-        V2WebCodReportService.strReplaceFunc(d.awbStatusIdLast),
+        V2WebCodReportService.strReplaceFunc(d.awbStatusName),
         V2WebCodReportService.strReplaceFunc(
           d.custPackage ? d.custPackage : '-',
         ),
@@ -928,7 +928,7 @@ export class V2WebCodReportService {
         ['t3.notes', 'parcelNote'],
         ['t6.partner_name', 'partnerName'],
         ['t1.awb_number', 'awbNumber'],
-        ['t1.awb_status_id_last', 'awbStatusIdLast'],
+        ['awbsts.awb_status_name', 'awbStatusName'],
         ['t2.awb_date', 'awbDate'],
         ['t2.consignee_name', 'consigneeName'],
         ['t3.parcel_value', 'parcelValue'],
@@ -982,7 +982,7 @@ export class V2WebCodReportService {
 
       // q.innerJoin(e => e.codTransactionDetail.supplierInvoiceStatus, 't11');
       // LAST STATUS
-      // q.leftJoin(e => e.awbStatus, 't12');
+      q.innerJoin(e => e.awbStatus, 'awbsts');
 
       // gerai pickup / gerai di manifest resi
       // q.leftJoin(e => e.awb.branchLast, 't8');
