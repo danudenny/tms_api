@@ -80,8 +80,8 @@ export class PartnerOneidService {
     q.innerJoin(e => e.pickupRequestDetail.pickupRequest.customerMembershipDetail, 'cmd', j =>
       j
         .andWhere(e => e.isDeleted, w => w.isFalse())
-        .andWhere(e => e.oneId, w => oneId)
-        .andWhere(e => e.status, w => 'verified')
+        .andWhere(e => e.oneId, w => w.equals(oneId))
+        .andWhere(e => e.status, w => w.equals('verified'))
       ,
     );
 
