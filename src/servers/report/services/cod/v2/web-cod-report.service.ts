@@ -155,13 +155,12 @@ export class V2WebCodReportService {
     'Package Detail',
     'Services',
     'Note',
-    'Transaction Status',
     'Submitted Date',
     'Submitted Number',
+    'Transfer Date',
     'Date Updated',
     // 'User Updated',
     'Awb Status Date',
-    'Transfer Date',
   ];
 
   static strReplaceFunc = str => {
@@ -353,8 +352,8 @@ export class V2WebCodReportService {
         d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
         V2WebCodReportService.strReplaceFunc(d.consigneeName),
         V2WebCodReportService.strReplaceFunc(d.paymentMethod),
-        'PAID',
-        'DLV',
+        V2WebCodReportService.strReplaceFunc(d.transactionStatus),
+        V2WebCodReportService.strReplaceFunc(d.awbStatusIdLast),
         V2WebCodReportService.strReplaceFunc(
           d.custPackage ? d.custPackage : '-',
         ),
@@ -367,12 +366,11 @@ export class V2WebCodReportService {
         V2WebCodReportService.strReplaceFunc(d.parcelContent),
         V2WebCodReportService.strReplaceFunc(d.packageTypeCode),
         V2WebCodReportService.strReplaceFunc(d.parcelNote),
-        V2WebCodReportService.strReplaceFunc(d.transactionStatus),
         '-',
         '-',
+        d.transferDate ? moment(d.transferDate).format('YYYY-MM-DD HH:mm') : null,
         d.updatedTime ? moment(d.updatedTime).format('YYYY-MM-DD HH:mm') : null,
         d.awbStatusDate ? moment(d.awbStatusDate).format('YYYY-MM-DD HH:mm') : null,
-        d.transferDate ? moment(d.transferDate).format('YYYY-MM-DD HH:mm') : null,
       ],
     ];
 
@@ -930,6 +928,7 @@ export class V2WebCodReportService {
         ['t3.notes', 'parcelNote'],
         ['t6.partner_name', 'partnerName'],
         ['t1.awb_number', 'awbNumber'],
+        ['t1.awb_status_id_last', 'awbStatusIdLast'],
         ['t2.awb_date', 'awbDate'],
         ['t2.consignee_name', 'consigneeName'],
         ['t3.parcel_value', 'parcelValue'],
