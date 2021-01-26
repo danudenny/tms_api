@@ -9,6 +9,7 @@ import { TmsBaseEntity } from './tms-base';
 export class Partner extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'partner_id',
   })
   partnerId: number;
 
