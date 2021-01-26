@@ -56,11 +56,16 @@ export class PartnerOneidService {
       ['prd.delivery_type', 'packageTypeName'],
     );
     
-    q.innerJoin(e => e.pickupRequestDetail.pickupRequest, 'pr', j =>
+
+    q.innerJoin(e => e.awb, 'awb', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    
+    q.innerJoin(e => e.pickupRequestDetail, 'prd', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.pickupRequestDetail, 'prd', j =>
+    q.innerJoin(e => e.pickupRequestDetail.pickupRequest, 'pr', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -69,10 +74,6 @@ export class PartnerOneidService {
     );
 
     q.innerJoin(e => e.awbStatusGrpDetail.awbStatusGrp, 'asg', j => 
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.awb, 'awb', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
