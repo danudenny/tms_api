@@ -1235,6 +1235,24 @@ export class ScanoutSmdService {
     const data = [];
     let rawQuery;
 
+    const rawQueryDriver = `
+      SELECT 
+        dsv.employee_id_driver,
+        ds.do_smd_status_id_last,
+        ds.do_smd_id,
+        ds.branch_id
+      FROM do_smd_vehicle dsv
+      INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE AND ds.do_smd_status_id_last = 3000
+      WHERE 
+        ds.do_smd_id = ${payload.do_smd_id} AND
+        dsv.is_deleted = FALSE;
+    `;
+    const resultDataDriver = await RawQueryService.query(rawQueryDriver);
+
+    if (resultDataDriver.length > 0) {
+      throw new BadRequestException(`Harap ubah driver terlebih dahulu, karena driver sudah BERANGKAT`);
+    } 
+
     if (payload.seal_seq == 1) {
       rawQuery = `
         SELECT
