@@ -186,8 +186,8 @@ export class PickupRequest extends TmsBaseEntity {
   partner: Partner;
 
   @OneToOne(() => CustomerMembershipDetail)
-  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partner_id' })
-  @JoinColumn({ name: 'email', referencedColumnName: 'email' })
+  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partnerId' })
+  @JoinColumn({ name: 'pickup_request_email', referencedColumnName: 'email' })
   customerMembershipDetail: CustomerMembershipDetail;
 
   
