@@ -59,7 +59,6 @@ import { RedisService } from '../../../../../shared/services/redis.service';
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { AuthLoginMetadata } from '../../../../../shared/models/auth-login-metadata.model';
 import { JwtPermissionTokenPayload } from '../../../../../shared/interfaces/jwt-payload.interface';
-import console = require('console');
 // #endregion
 export class V1WebAwbCodService {
   static async awbCod(
