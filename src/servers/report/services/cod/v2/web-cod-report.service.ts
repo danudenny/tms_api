@@ -917,7 +917,7 @@ export class V2WebCodReportService {
       // mapping field
       payload.fieldResolverMap['transferDate'] = 'cbs.transfer_datetime';
       payload.fieldResolverMap['transactionStatus'] = 'ctd.transaction_status_id';
-      payload.fieldResolverMap['branchLast'] = 'ctd.branch_id';
+      payload.fieldResolverMap['branchLast'] = 'ctd.current_position_id';
 
       const repo = new OrionRepositoryService(AwbItemAttr, 't1');
       const q = repo.findAllRaw();
@@ -940,7 +940,8 @@ export class V2WebCodReportService {
         // ['t12.awb_status_title', 'trackingStatus'],
         ['t4.reference_no', 'custPackage'],
         // ['t8.branch_name', 'pickupSource'],
-        ['t7.branch_name', 'currentPosition'],
+        // ['t7.branch_name', 'currentPosition'],
+        ['ctd.current_position', 'currentPosition'],
         ['t2.ref_destination_code', 'destinationCode'],
         // ['t9.district_name', 'destination'],
         ['t3.parcel_content', 'parcelContent'],
