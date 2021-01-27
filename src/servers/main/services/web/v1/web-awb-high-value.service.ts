@@ -7,10 +7,15 @@ import { getManager } from 'typeorm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
+import { AwbHighValueUpload } from '../../../../../shared/orm-entity/awb-high-value-upload';
+import { AuthService } from '../../../../../shared/services/auth.service';
+import moment = require('moment');
 
 export class V1WebAwbHighValueService {
 
   static async uploadAwb(file): Promise<AwbHighValueUploadResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
     let totalValid = 0;
     const notValid = [];
     if (file) {
@@ -59,9 +64,20 @@ export class V1WebAwbHighValueService {
                     isHighValue: true,
                   },
                 );
+                // NOTE: insert table awbHighValueUpload
+                await transactionManager.insert(
+                  AwbHighValueUpload,
+                  {
+                    awbItemId: awb.awbItemId,
+                    awbNumber: awb.awbNumber,
+                    displayName: authMeta.displayName,
+                    userIdUploaded: authMeta.userId,
+                    uploadedTime: moment().toDate(),
+                  },
+                );
+
                 totalValid += 1;
               });
-              // TODO: insert table log awbHighValue
             } catch (error) {
               console.error(error);
               notValid.push(`Server error, coba lagi!`);
@@ -107,6 +123,8 @@ export class V1WebAwbHighValueService {
       ['t2.recipient_phone', 'recipientPhone'],
       ['t2.parcel_value', 'parcelValue'],
       ['coalesce(t1.is_high_value, FALSE)', 'isUpload'],
+      ['t5.display_name', 'displayName'],
+      ['t5.uploaded_time', 'uploadedDate'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -119,7 +137,13 @@ export class V1WebAwbHighValueService {
     q.innerJoin(e => e.pickupRequestDetail.pickupRequest.partner, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.andWhere(e => e.isHighValue, w => w.equals(true));
+    q.leftJoin(e => e.awbHighValueUpload, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    // TODO: handle
+    q.andWhere(e => e.isHighValue, w => w.isTrue());
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

@@ -35,7 +35,7 @@ export class AwbHighValueUploadListDataResponseVm {
   uploadedDate: string;
 
   @ApiModelProperty()
-  user: string;
+  displayName: string;
 }
 
 export class AwbHighValueUploadListResponseVm extends BaseMetaResponseVm {
