@@ -119,11 +119,9 @@ export class ApiPartnersService {
         },
       );
       // send data to bull process background
-      // TODO: to be confirmed awb status cancel
-      const awbStatusCancel = 1800; // new 1850 -- cancel partner
       DoPodDetailPostMetaQueueService.createJobByCancelDeliver(
         pickreq.awbItemId,
-        awbStatusCancel,
+        AWB_STATUS.CANCEL_DLV,
         pickreq.branchIdLast,
         partnerName,
       );
