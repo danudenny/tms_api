@@ -3,12 +3,13 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
 
 import {
     ApiBearerAuth, ApiConsumes, ApiOkResponse, ApiUseTags,
 } from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
-import { AwbHighValueUploadResponseVm } from '../../../models/last-mile/awb-high-value.vm';
+import { AwbHighValueUploadListResponseVm, AwbHighValueUploadResponseVm } from '../../../models/last-mile/awb-high-value.vm';
 import { V1WebAwbHighValueService } from '../../../services/web/v1/web-awb-high-value.service';
 
 @ApiUseTags('Awb High Value')
@@ -34,5 +35,12 @@ export class V1WebAwbHighValueController {
     } else {
       throw new BadRequestException('Please upload only excel/csv file.');
     }
+  }
+
+  @Post('list')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: AwbHighValueUploadListResponseVm })
+  public async awbThirdPartyList(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbHighValueService.uploadAwbList(payload);
   }
 }
