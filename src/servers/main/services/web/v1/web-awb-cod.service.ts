@@ -1768,7 +1768,7 @@ export class V1WebAwbCodService {
         throw new ServiceUnavailableException(error.message);
       }
     } else {
-      throw new BadRequestException('Transaksi tidak duplicate! Trsansaksi tidak bisa di hapus!');
+      throw new BadRequestException('Transaksi tidak duplicate! Transaksi tidak bisa di hapus!');
     }
   }
 }
