@@ -1662,7 +1662,7 @@ export class V1WebAwbCodService {
 
     // Get duplicate resi in other transaction
     const transactionDuplicates = await CodTransactionDetail.find({
-      select: ['codTransactionDetailId', 'awbNumber', 'codValue', 'awbItemId'],
+      select: ['codTransactionId', 'awbNumber', 'codValue', 'awbItemId'],
       where: {
         codTransactionId: Not(payload.transactionId),
         awbNumber: transactionDetails[0].awbNumber,
