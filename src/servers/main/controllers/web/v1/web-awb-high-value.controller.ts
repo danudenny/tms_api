@@ -3,7 +3,6 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
 
 import {
     ApiBearerAuth, ApiConsumes, ApiOkResponse, ApiUseTags,
@@ -11,6 +10,7 @@ import {
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { AwbHighValueUploadListResponseVm, AwbHighValueUploadResponseVm } from '../../../models/last-mile/awb-high-value.vm';
 import { V1WebAwbHighValueService } from '../../../services/web/v1/web-awb-high-value.service';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('Awb High Value')
 @Controller('web/v1/awbHighValue')

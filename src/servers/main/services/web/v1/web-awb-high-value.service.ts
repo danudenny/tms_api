@@ -4,9 +4,9 @@ import xlsx = require('xlsx');
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { AwbHighValueUploadListResponseVm, AwbHighValueUploadResponseVm } from '../../../models/last-mile/awb-high-value.vm';
 import { getManager } from 'typeorm';
-import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
-import { OrionRepositoryService } from 'src/shared/services/orion-repository.service';
-import { MetaService } from 'src/shared/services/meta.service';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
+import { MetaService } from '../../../../../shared/services/meta.service';
 
 export class V1WebAwbHighValueService {
 
