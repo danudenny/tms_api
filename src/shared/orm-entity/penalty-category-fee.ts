@@ -1,32 +1,27 @@
 import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne, BaseEntity } from 'typeorm';
+import { PenaltyCategory } from './penalty_category';
 import {User} from './user';
 
-@Entity('penalty_category', { schema: 'public' })
-export class PenaltyCategory extends BaseEntity {
+@Entity('penalty_category_fee', { schema: 'public' })
+export class PenaltyCategoryFee extends BaseEntity {
   @PrimaryGeneratedColumn('uuid',{
-    name : 'penalty_category_id'
+    name : 'penalty_category_fee_id'
+  })
+  penaltyCategoryFeeId: string;
+
+  @Column('character varying', {
+    nullable: false,
+    name: 'penalty_category_id',
   })
   penaltyCategoryId: string;
 
-  @Column('character varying', {
+  @Column('numeric', {
     nullable: false,
-    length: 100,
-    name: 'penalty_category_title',
+    precision: 20,
+    scale: 2,
+    name: 'penalty_fee',
   })
-  penaltyCategoryTitle: string;
-
-  @Column('character varying', {
-    nullable: false,
-    length: 100,
-    name: 'penalty_category_process',
-  })
-  penaltyCategoryProcess: string;
-
-  @Column('text', {
-    nullable: true,
-    name: 'penalty_category_desc',
-  })
-  penaltyCategoryDesc: string | null;
+  penaltyFee: number;
 
   @Column('bigint', {
     nullable: false,
@@ -61,9 +56,13 @@ export class PenaltyCategory extends BaseEntity {
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_created', referencedColumnName: 'userId'})
-  userCreated: User;
+  createdUser: User;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_updated', referencedColumnName: 'userId'})
-  userUpdated: User;
+  updatedUser: User;
+
+  @ManyToOne(() => PenaltyCategory)
+  @JoinColumn({ name: 'penalty_category_id' })
+  penaltyCategory: PenaltyCategory;
 }
