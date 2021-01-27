@@ -5,7 +5,7 @@ import { WinstonLogglyService } from '../../../../../shared/services/winston-log
 import axios from 'axios';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import { DivaData } from '../../../../../shared/orm-entity/diva-data';
-import { MobileCodEReceiptPayloadVm, MobileCodEReceiptResponseVm } from '../../../models/mobile/mobile-diva-payment.vm';
+import { MobileCodEReceiptPayloadVm, MobileCodEReceiptResponseVm, MobileCodPaymentStatusPayloadVm } from '../../../models/mobile/mobile-diva-payment.vm';
 
 import nr = require('newrelic');
 import moment = require('moment');
@@ -142,6 +142,34 @@ export class V1MobileDivaPaymentService {
         transaction.end();
       } catch (error) {
         WinstonLogglyService.error({ requestData, error: error.response.data });
+        nr.noticeError(error);
+        transaction.end();
+        result = error.response.data;
+      }
+    });
+
+    return result;
+  }
+
+  static async paymentStatusTrx(
+    requestData: MobileCodPaymentStatusPayloadVm,
+  ): Promise<any> {
+    let result = null;
+    await nr.startBackgroundTransaction('DIVA - Payment Status TRX ID', async () => {
+      const transaction = nr.getTransaction();
+      const url = `${ConfigService.get(
+        'divaPayment.sicepatKlikUrl',
+      )}/get-payment-status-trx`;
+      try {
+        const response = await axios.post(
+          url,
+          requestData,
+          this.sicepatKlikConfig,
+        );
+        result = response.data;
+        // End Transaction for newrelic
+        transaction.end();
+      } catch (error) {
         nr.noticeError(error);
         transaction.end();
         result = error.response.data;

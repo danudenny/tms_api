@@ -11,7 +11,7 @@ import {
     ResponseMaintenanceService,
 } from '../../../../../shared/services/response-maintenance.service';
 import {
-    MobileCodEReceiptPayloadVm, MobileCodEReceiptResponseVm,
+    MobileCodEReceiptPayloadVm, MobileCodEReceiptResponseVm, MobileCodPaymentStatusPayloadVm,
 } from '../../../models/mobile/mobile-diva-payment.vm';
 import {
     V1MobileDivaPaymentService,
@@ -55,6 +55,16 @@ export class V2CodPaymentController {
     // NOTE: handle for message disable this service
     ResponseMaintenanceService.divaPaymentService();
     return V1MobileDivaPaymentService.paymentStatus(payload);
+  }
+
+  @Post('diva/paymentStatusTrx')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async divaPaymentStatusTrx(@Body() payload: MobileCodPaymentStatusPayloadVm) {
+    // NOTE: handle for message disable this service
+    ResponseMaintenanceService.divaPaymentService();
+    return V1MobileDivaPaymentService.paymentStatusTrx(payload);
   }
 
   @Post('shopee/paymentStatus')

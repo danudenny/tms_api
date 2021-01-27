@@ -39,3 +39,12 @@ export class MobileCodEReceiptResponseVm {
   @ApiModelProperty()
   redirec_link: string;
 }
+
+export class MobileCodPaymentStatusPayloadVm {
+  @ApiModelProperty({ example: '000472344125' })
+  awb: string;
+  @ApiModelProperty({ example: 'apps' })
+  source: string;
+  @ApiModelProperty({ example: 'SCPT16116376006683' })
+  trxid: string;
+}
