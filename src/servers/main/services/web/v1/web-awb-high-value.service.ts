@@ -103,6 +103,9 @@ export class V1WebAwbHighValueService {
     // mapping field
     // payload.fieldResolverMap['isUpload'] = 't1.is_high_value';
     payload.fieldResolverMap['partnerId'] = 't3.partner_id';
+    payload.fieldResolverMap['uploadedDate'] = 't1.uploaded_time';
+    payload.fieldResolverMap['displayName'] = 't1.display_name';
+    payload.fieldResolverMap['partnerName'] = 't4.partner_name';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
