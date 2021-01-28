@@ -73,6 +73,10 @@ export class PartnerOneidService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    q.innerJoin(e => e.awbStatusGrpDetail, 'asgd', j => 
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     q.innerJoin(e => e.awbStatusGrpDetail.awbStatusGrp, 'asg', j => 
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
