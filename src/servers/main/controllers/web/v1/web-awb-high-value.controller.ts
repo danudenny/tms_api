@@ -40,7 +40,14 @@ export class V1WebAwbHighValueController {
   @Post('list')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: AwbHighValueUploadListResponseVm })
-  public async awbThirdPartyList(@Body() payload: BaseMetaPayloadVm) {
+  public async uploadAwbList(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbHighValueService.uploadAwbList(payload);
+  }
+
+  @Post('list/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: AwbHighValueUploadListResponseVm })
+  public async uploadAwbCount(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbHighValueService.uploadAwbCount(payload);
   }
 }

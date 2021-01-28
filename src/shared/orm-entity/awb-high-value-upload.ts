@@ -1,4 +1,5 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { PickupRequestDetail } from './pickup-request-detail';
 
 @Entity('awb_high_value_upload', { schema: 'public' })
 export class AwbHighValueUpload extends BaseEntity {
@@ -45,4 +46,8 @@ export class AwbHighValueUpload extends BaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @OneToOne(() => PickupRequestDetail)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  pickupRequestDetail: PickupRequestDetail;
 }
