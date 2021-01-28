@@ -124,7 +124,7 @@ export class V1WebAwbHighValueService {
       ['t2.parcel_value', 'parcelValue'],
       ['true', 'isUpload'],
       ['t1.display_name', 'displayName'],
-      ['t1.uploaded_time', 'uploadedTime'],
+      ['t1.uploaded_time', 'uploadedDate'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -175,7 +175,7 @@ export class V1WebAwbHighValueService {
       ['t2.parcel_value', 'parcelValue'],
       ['true', 'isUpload'],
       ['t1.display_name', 'displayName'],
-      ['t1.uploaded_time', 'uploadedTime'],
+      ['t1.uploaded_time', 'uploadedDate'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
