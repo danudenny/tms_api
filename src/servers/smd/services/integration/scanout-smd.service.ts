@@ -50,18 +50,27 @@ export class ScanoutSmdService {
     const resultDataDriver = await RawQueryService.query(rawQueryDriver);
 
     if (resultDataDriver.length > 0) {
+      // Cek Status OTW
       if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 3000) {
         throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
       }
-
+      // Cek Status PROBLEM
       if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 8000) {
         throw new BadRequestException(`Driver tidak bisa di assign, karena sedang PROBLEM !!`);
       }
-
-      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 3000) {
-        throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
+      // Cek Status HAS ARRIVED
+      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4000) {
+        throw new BadRequestException(`Driver tidak bisa di assign, karena baru tiba !!`);
       }
-
+      // Cek Status INVALID
+      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4050) {
+        throw new BadRequestException(`Driver tidak bisa di assign, karena INVALID  !!`);
+      }
+      // Cek Status VALID
+      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4100) {
+        throw new BadRequestException(`Driver tidak bisa di assign, karena belum DITERIMA !!`);
+      }
+      // Cek Status Created, Assigned, Driver Changed
       if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 1000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 2000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 1050) {
         if (toInteger(resultDataDriver[0].branch_id) != toInteger(permissonPayload.branchId)) {
           throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
@@ -69,7 +78,7 @@ export class ScanoutSmdService {
       } else if( toInteger(resultDataDriver[0].do_smd_status_id_last) < 3000 ) {
         throw new BadRequestException(`Driver Tidak boleh di assign`);
       }
-
+      // Cek Status Received, Finish
       if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 5000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 6000 ) {
         const resultDoSmdDetail = await DoSmdDetail.findOne({
           where: {
