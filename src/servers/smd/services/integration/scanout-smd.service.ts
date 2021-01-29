@@ -1693,7 +1693,7 @@ export class ScanoutSmdService {
     const resultDoSmd = await DoSmd.findOne({
       where: {
         doSmdId: payload.do_smd_id,
-        doSmdStatusIdLast: In([1000, 2000]),
+        doSmdStatusIdLast: In([1000, 1050, 2000]),
         isDeleted: false,
       },
     });
