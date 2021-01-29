@@ -83,6 +83,7 @@ export class ScanoutSmdService {
         const resultDoSmdDetail = await DoSmdDetail.findOne({
           where: {
             doSmdId: resultDataDriver[0].do_smd_id,
+            doSmdStatusIdLast: 5000,
             branchIdTo: permissonPayload.branchId,
             isDeleted: false,
           },
