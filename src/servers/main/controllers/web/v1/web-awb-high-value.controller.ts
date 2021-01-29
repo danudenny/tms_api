@@ -50,4 +50,18 @@ export class V1WebAwbHighValueController {
   public async uploadAwbCount(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbHighValueService.uploadAwbCount(payload);
   }
+
+  @Post('apilist')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: AwbHighValueUploadListResponseVm })
+  public async ApiAwbList(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbHighValueService.ApiAwbList(payload);
+  }
+
+  @Post('apilist/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: AwbHighValueUploadListResponseVm })
+  public async ApiAwbCount(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbHighValueService.ApiAwbListCount(payload);
+  }
 }

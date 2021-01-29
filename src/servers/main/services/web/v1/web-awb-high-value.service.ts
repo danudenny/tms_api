@@ -10,6 +10,7 @@ import { MetaService } from '../../../../../shared/services/meta.service';
 import { AwbHighValueUpload } from '../../../../../shared/orm-entity/awb-high-value-upload';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import moment = require('moment');
+import { PickupRequestDetail } from 'src/shared/orm-entity/pickup-request-detail';
 
 export class V1WebAwbHighValueService {
 
@@ -101,7 +102,6 @@ export class V1WebAwbHighValueService {
 
   static async uploadAwbList(payload: BaseMetaPayloadVm): Promise<AwbHighValueUploadListResponseVm> {
     // mapping field
-    // payload.fieldResolverMap['isUpload'] = 't1.is_high_value';
     payload.fieldResolverMap['partnerId'] = 't3.partner_id';
     payload.fieldResolverMap['uploadedDate'] = 't1.uploaded_time';
     payload.fieldResolverMap['displayName'] = 't1.display_name';
@@ -208,4 +208,97 @@ export class V1WebAwbHighValueService {
     return result;
   }
 
+  static async ApiAwbList(payload: BaseMetaPayloadVm): Promise<AwbHighValueUploadListResponseVm> {
+    // mapping field
+    // payload.fieldResolverMap['isUpload'] = 't1.is_high_value';
+    payload.fieldResolverMap['partnerId'] = 't3.partner_id';
+    payload.fieldResolverMap['partnerName'] = 't3.partner_name';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'awbNumber',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(PickupRequestDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.ref_awb_number', 'awbNumber'],
+      ['t3.partner_name', 'partnerName'],
+      ['t1.recipient_name', 'recipientName'],
+      ['t1.recipient_phone', 'recipientPhone'],
+      ['t1.parcel_value', 'parcelValue'],
+      ['coalesce(t1.is_high_value, FALSE)', 'is_partner'],
+    );
+    q.innerJoin(e => e.pickupRequest, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.pickupRequest.partner, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isHighValue, w => w.isTrue());
+
+    const data = await q.exec();
+    const total = 0; // await q.countWithoutTakeAndSkip();
+
+    const result = new AwbHighValueUploadListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+  static async ApiAwbListCount(payload: BaseMetaPayloadVm): Promise<AwbHighValueUploadListResponseVm> {
+    // mapping field
+    // payload.fieldResolverMap['isUpload'] = 't1.is_high_value';
+    payload.fieldResolverMap['partnerId'] = 't3.partner_id';
+    payload.fieldResolverMap['partnerName'] = 't3.partner_name';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'awbNumber',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(PickupRequestDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.ref_awb_number', 'awbNumber'],
+      ['t3.partner_name', 'partnerName'],
+      ['t1.recipient_name', 'recipientName'],
+      ['t1.recipient_phone', 'recipientPhone'],
+      ['t1.parcel_value', 'parcelValue'],
+      ['coalesce(t1.is_high_value, FALSE)', 'is_partner'],
+    );
+    q.innerJoin(e => e.pickupRequest, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.pickupRequest.partner, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isHighValue, w => w.isTrue());
+
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new AwbHighValueUploadListResponseVm();
+    result.data = null;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  
 }
