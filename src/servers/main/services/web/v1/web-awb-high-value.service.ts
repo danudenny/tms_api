@@ -10,7 +10,7 @@ import { MetaService } from '../../../../../shared/services/meta.service';
 import { AwbHighValueUpload } from '../../../../../shared/orm-entity/awb-high-value-upload';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import moment = require('moment');
-import { PickupRequestDetail } from 'src/shared/orm-entity/pickup-request-detail';
+import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-request-detail';
 
 export class V1WebAwbHighValueService {
 
@@ -161,7 +161,6 @@ export class V1WebAwbHighValueService {
     payload.fieldResolverMap['displayName'] = 't1.display_name';
     payload.fieldResolverMap['partnerName'] = 't4.partner_name';
 
-
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
@@ -300,5 +299,4 @@ export class V1WebAwbHighValueService {
     return result;
   }
 
-  
 }
