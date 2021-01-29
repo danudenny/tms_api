@@ -89,7 +89,7 @@ export class ScanoutSmdService {
           },
         });
         if (!resultDoSmdDetail) {
-          throw new BadRequestException(`Driver tidak bisa di assign, karena SMD ID : ` + resultDataDriver[0].do_smd_id + ` tidak di temukan.`);
+          throw new BadRequestException(`Driver tidak bisa di assign, karena SMD ID : ` + resultDataDriver[0].do_smd_id + ` beda cabang.`);
         }
       }
     }
