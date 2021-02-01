@@ -48,6 +48,7 @@ import {
   WebInsertCodPaymentResponseVm,
   WebCodTransferBranchCashResponseVm,
   WebCodTransferBranchCashlessResponseVm,
+  WebAwbCodSummaryResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
@@ -61,6 +62,59 @@ import { AuthLoginMetadata } from '../../../../../shared/models/auth-login-metad
 import { JwtPermissionTokenPayload } from '../../../../../shared/interfaces/jwt-payload.interface';
 // #endregion
 export class V1WebAwbCodService {
+  static async awbSummary(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebAwbCodSummaryResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['branchIdFinal'] = 'cp.branch_id';
+    payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
+    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+    payload.fieldResolverMap['codPaymentMethod'] = 'cp.cod_payment_method';
+    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['representativeId'] = 'branch.representative_id';
+
+    const repo = new OrionRepositoryService(AwbItemAttr, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q);
+
+    q.selectRaw(
+      ['rep.representative_code', 'perwakilan'],
+      ['branch.branch_name', 'branchNameFinal'],
+      ['SUM(cp.cod_value)', 'priceCod'],
+      ['COUNT(t1.awb_item_id)', 'countAwb'],
+    );
+
+    q.leftJoin(e => e.codPayment, 'cp', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.codPayment.branchFinal, 'branch', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.codPayment.branchFinal.representative, 'rep', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    q.groupByRaw(`
+      branch.branch_id, rep.representative_id
+    `);
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebAwbCodSummaryResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
   static async awbCod(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodListResponseVm> {
@@ -1397,8 +1451,7 @@ export class V1WebAwbCodService {
         const result = new WebCodTransactionUpdateResponseVm();
         if (dataError.length) {
           result.status = 'error';
-          result.message =
-            'error';
+          result.message = 'error';
         } else {
           result.status = 'ok';
           result.message = 'success';
@@ -1410,7 +1463,9 @@ export class V1WebAwbCodService {
         throw new ServiceUnavailableException(error.message);
       }
     } else {
-      throw new BadRequestException('Transaksi tidak duplicate! Transaksi tidak bisa di hapus!');
+      throw new BadRequestException(
+        'Transaksi tidak duplicate! Transaksi tidak bisa di hapus!',
+      );
     }
   }
 
