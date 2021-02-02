@@ -3,11 +3,16 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@n
 import {
     ResponseSerializerOptions,
 } from '../../../../../shared/decorators/response-serializer-options.decorator';
-import { ApiBearerAuth, ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
+import {
+    ApiBearerAuth, ApiOkResponse, ApiUseTags,
+} from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import {
     ResponseMaintenanceService,
 } from '../../../../../shared/services/response-maintenance.service';
+import {
+    MobileCodEReceiptPayloadVm, MobileCodEReceiptResponseVm, MobileCodPaymentStatusPayloadVm,
+} from '../../../models/mobile/mobile-diva-payment.vm';
 import {
     V1MobileDivaPaymentService,
 } from '../../../services/mobile/v1/mobile-diva-payment.service';
@@ -52,4 +57,29 @@ export class V2CodPaymentController {
     return V1MobileDivaPaymentService.paymentStatus(payload);
   }
 
+  @Post('diva/paymentStatusTrx')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async divaPaymentStatusTrx(@Body() payload: MobileCodPaymentStatusPayloadVm) {
+    // NOTE: handle for message disable this service
+    ResponseMaintenanceService.divaPaymentService();
+    return V1MobileDivaPaymentService.paymentStatusTrx(payload);
+  }
+
+  @Post('shopee/paymentStatus')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async shopeePaymentStatus(@Body() payload: any) {
+    return V1MobileDivaPaymentService.shopeePaymentStatus(payload);
+  }
+
+  @Post('diva/ereceipt')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: MobileCodEReceiptResponseVm })
+  public async generateEReceipt(@Body() payload: MobileCodEReceiptPayloadVm) {
+    return V1MobileDivaPaymentService.generateEReceipt(payload);
+  }
 }
