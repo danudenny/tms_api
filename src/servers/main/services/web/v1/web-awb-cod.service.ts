@@ -1,5 +1,11 @@
 // #region import
-import { createQueryBuilder, getManager, In } from 'typeorm';
+import {
+  createQueryBuilder,
+  getManager,
+  In,
+  getConnection,
+  Not,
+} from 'typeorm';
 
 import {
   BadRequestException,
@@ -798,7 +804,7 @@ export class V1WebAwbCodService {
         10,
       );
       if (redlock) {
-        const awbValid = await this.validationAwb(item.awbItemId);
+        const awbValid = await this.validStatusAwb(item.awbItemId, 'cash');
         if (awbValid) {
           totalCodValueCash += Number(item.codValue);
           totalAwbCash += 1;
@@ -893,7 +899,7 @@ export class V1WebAwbCodService {
         10,
       );
       if (redlock) {
-        const awbValid = await this.validStatusAwb(item.awbItemId);
+        const awbValid = await this.validStatusAwb(item.awbItemId, 'cashless');
         if (awbValid) {
           totalCodValueCashless += Number(item.codValue);
           totalAwbCashless += 1;
@@ -914,7 +920,6 @@ export class V1WebAwbCodService {
           } else {
             dataError.push(`resi ${item.awbNumber}, mohon di coba lagi!`);
           }
-
         } else {
           // NOTE: error message
           const errorMessage = `status resi ${
@@ -1302,48 +1307,54 @@ export class V1WebAwbCodService {
     }
   }
 
-  private static async validStatusAwb(awbItemId: number): Promise<boolean> {
+  private static async validStatusAwb(
+    awbItemId: number,
+    type: string,
+  ): Promise<boolean> {
     // check awb status mush valid dlv
     // TODO: check db master
-    const awbValid = await AwbItemAttr.findOne({
-      select: ['awbItemAttrId', 'awbItemId', 'awbStatusIdFinal'],
-      where: {
-        awbItemId,
-        awbStatusIdFinal: AWB_STATUS.DLV,
-        isDeleted: false,
-      },
-    });
-    if (awbValid) {
-      return true;
-    } else {
-      return false;
+    const masterQueryRunner = getConnection().createQueryRunner('master');
+    try {
+      const awbValid = await getConnection()
+        .createQueryBuilder(AwbItemAttr, 'aia')
+        .setQueryRunner(masterQueryRunner)
+        .select([
+          'aia.awbItemAttrId',
+          'aia.awbItemId',
+          'aia.awbStatusIdFinal',
+          'aia.transactionStatusId',
+        ])
+        .where(
+          'aia.awbItemId = :awbItemId AND aia.awbStatusIdFinal = :awbStatusIdFinal AND aia.isDeleted = false',
+          { awbItemId, awbStatusIdFinal: AWB_STATUS.DLV },
+        )
+        .getOne();
+
+      if (
+        (type === 'cash' && awbValid && !awbValid.transactionStatusId) ||
+        (type === 'cashless' && awbValid)
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    } finally {
+      await masterQueryRunner.release();
     }
-  }
 
-  private static async validationAwb(awbItemId: number): Promise<boolean> {
-    // check awb status must dlv and transaction status must null
-    // TODO: check db master
-    const repo = new OrionRepositoryService(AwbItemAttr, 'aia');
-    const q = repo.findOneRaw();
-
-    q.selectRaw(
-      ['aia.awb_item_attr_id', 'awbItemAttrId'],
-      ['aia.awb_item_id', 'awbItemId'],
-      ['aia.awb_status_id_final', 'awbStatusIdFinal'],
-      ['aia.transaction_status_id', 'transactionStatusId'],
-    );
-
-    q.andWhere(e => e.awbItemId, w => w.equals(awbItemId));
-    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-
-    const data = await q.exec();
-
-    if (data && !data.transactionStatusId) {
-      return true;
-    } else {
-      return false;
-    }
+    // const awbValid = await AwbItemAttr.findOne({
+    //   select: ['awbItemAttrId', 'awbItemId', 'awbStatusIdFinal'],
+    //   where: {
+    //     awbItemId,
+    //     awbStatusIdFinal: AWB_STATUS.DLV,
+    //     isDeleted: false,
+    //   },
+    // });
+    // if (awbValid) {
+    //   return true;
+    // } else {
+    //   return false;
+    // }
   }
 
   // handle data store for printing
@@ -1611,6 +1622,152 @@ export class V1WebAwbCodService {
       return result;
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
+    }
+  }
+
+  // NOTE: delete transaction cod
+  static async transactionDelete(
+    payload: WebCodTransactionRejectPayloadVm,
+  ): Promise<WebCodTransactionUpdateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
+    const timestamp = moment().toDate();
+    const dataError = [];
+    let totalSuccess = 0;
+
+    const transaction = await CodTransaction.findOne({
+      where: {
+        codTransactionId: payload.transactionId,
+        isDeleted: false,
+        transactionStatusId: In(['31000', '32500']),
+      },
+    });
+
+    if (!transaction) {
+      throw new BadRequestException('Data transaction tidak valid!');
+    }
+
+    const transactionDetails = await CodTransactionDetail.find({
+      select: ['codTransactionDetailId', 'awbNumber', 'codValue', 'awbItemId'],
+      where: {
+        codTransactionId: payload.transactionId,
+        isDeleted: false,
+      },
+    });
+
+    if (transactionDetails.length <= 0) {
+      throw new BadRequestException('Tidak ada resi pada transaksi ini!');
+    }
+
+    // Get duplicate resi in other transaction
+    const transactionDuplicates = await CodTransactionDetail.find({
+      select: ['codTransactionId', 'awbNumber', 'codValue', 'awbItemId'],
+      where: {
+        codTransactionId: Not(payload.transactionId),
+        awbNumber: transactionDetails[0].awbNumber,
+        isDeleted: false,
+      },
+    });
+
+    if (transactionDuplicates.length) {
+      const validationRow = await CodTransactionDetail.find({
+        select: [
+          'codTransactionDetailId',
+          'awbNumber',
+          'codValue',
+          'awbItemId',
+        ],
+        where: {
+          codTransactionId: transactionDuplicates[0].codTransactionId,
+          isDeleted: false,
+        },
+      });
+
+      if (validationRow.length !== transactionDetails.length) {
+        throw new BadRequestException(
+          'Transaksi tidak bisa di delete, karena jumlah resi berbeda!',
+        );
+      }
+
+      let sameAwb = 0;
+      for (const itemTransaction of transactionDetails) {
+        for (const itemValidation of validationRow) {
+          if (itemTransaction.awbNumber === itemValidation.awbNumber) {
+            sameAwb += 1;
+          }
+        }
+      }
+
+      if (sameAwb !== transactionDetails.length) {
+        throw new BadRequestException(
+          'Transaksi tidak bisa di delete, karena ada resi yang berbeda!',
+        );
+      }
+
+      // TODO: transaction process??
+      try {
+        // NOTE: loop data awb and update transaction detail
+        await getManager().transaction(async transactionManager => {
+          for (const transactionDetail of transactionDetails) {
+            // cancel all transaction status
+            if (transactionDetail) {
+              // remove awb from transaction
+              await transactionManager.update(
+                CodTransactionDetail,
+                {
+                  codTransactionDetailId:
+                    transactionDetail.codTransactionDetailId,
+                },
+                {
+                  isDeleted: true,
+                  updatedTime: timestamp,
+                  userIdUpdated: authMeta.userId,
+                },
+              );
+
+              totalSuccess += 1;
+            } else {
+              // error message
+              const errorMessage = `Resi ${
+                transactionDetail.awbNumber
+              } tidak valid / sudah di proses!`;
+              dataError.push(errorMessage);
+            }
+          } // end of loop
+
+          if (totalSuccess > 0) {
+            // update data table transaction
+            await transactionManager.update(
+              CodTransaction,
+              {
+                codTransactionId: transaction.codTransactionId,
+              },
+              {
+                isDeleted: true,
+                updatedTime: timestamp,
+                userIdUpdated: authMeta.userId,
+              },
+            );
+          }
+        });
+
+        const result = new WebCodTransactionUpdateResponseVm();
+        if (dataError.length) {
+          result.status = 'error';
+          result.message =
+            'error';
+        } else {
+          result.status = 'ok';
+          result.message = 'success';
+        }
+        result.totalSuccess = totalSuccess;
+        result.dataError = dataError;
+        return result;
+      } catch (error) {
+        throw new ServiceUnavailableException(error.message);
+      }
+    } else {
+      throw new BadRequestException('Transaksi tidak duplicate! Transaksi tidak bisa di hapus!');
     }
   }
 }
