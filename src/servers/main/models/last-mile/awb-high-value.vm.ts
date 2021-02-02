@@ -26,7 +26,7 @@ export class AwbHighValueUploadListDataResponseVm {
   recipientPhone: string;
 
   @ApiModelProperty()
-  parcelValue: string;
+  parcelContent: string;
 
   @ApiModelProperty()
   isUpload: boolean;

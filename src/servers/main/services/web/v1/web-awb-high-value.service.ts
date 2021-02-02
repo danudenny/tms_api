@@ -124,7 +124,7 @@ export class V1WebAwbHighValueService {
       ['t4.partner_name', 'partnerName'],
       ['t2.recipient_name', 'recipientName'],
       ['t2.recipient_phone', 'recipientPhone'],
-      ['t2.parcel_value', 'parcelValue'],
+      ['t2.parcel_content', 'parcelContent'],
       ['true', 'isUpload'],
       ['t1.display_name', 'displayName'],
       ['t1.uploaded_time', 'uploadedDate'],
@@ -178,7 +178,7 @@ export class V1WebAwbHighValueService {
       ['t4.partner_name', 'partnerName'],
       ['t2.recipient_name', 'recipientName'],
       ['t2.recipient_phone', 'recipientPhone'],
-      ['t2.parcel_value', 'parcelValue'],
+      ['t2.parcel_content', 'parcelContent'],
       ['true', 'isUpload'],
       ['t1.display_name', 'displayName'],
       ['t1.uploaded_time', 'uploadedDate'],
@@ -230,7 +230,7 @@ export class V1WebAwbHighValueService {
       ['t3.partner_name', 'partnerName'],
       ['t1.recipient_name', 'recipientName'],
       ['t1.recipient_phone', 'recipientPhone'],
-      ['t1.parcel_value', 'parcelValue'],
+      ['t1.parcel_content', 'parcelContent'],
       ['coalesce(t1.is_high_value, FALSE)', 'is_partner'],
     );
     q.innerJoin(e => e.pickupRequest, 't2', j =>
@@ -276,7 +276,7 @@ export class V1WebAwbHighValueService {
       ['t3.partner_name', 'partnerName'],
       ['t1.recipient_name', 'recipientName'],
       ['t1.recipient_phone', 'recipientPhone'],
-      ['t1.parcel_value', 'parcelValue'],
+      ['t1.parcel_content', 'parcelContent'],
       ['coalesce(t1.is_high_value, FALSE)', 'is_partner'],
     );
     q.innerJoin(e => e.pickupRequest, 't2', j =>
