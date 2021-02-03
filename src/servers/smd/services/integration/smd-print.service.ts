@@ -427,7 +427,6 @@ export class SmdPrintService {
         doSmdId: true, // needs to be selected due to do_smd relations are being included
         doSmdCode: true,
         doSmdNote: true,
-        branchToNameList: true,
         doSmdVehicle: {
           doSmdVehicleId: true,
           vehicleNumber: true,
@@ -451,6 +450,13 @@ export class SmdPrintService {
             branchName: true,
             representative: {
               representativeCode: true,
+            },
+            district: {
+              districtId: true,
+              city: {
+                cityId: true,
+                cityName: true,
+              },
             },
           },
         },
