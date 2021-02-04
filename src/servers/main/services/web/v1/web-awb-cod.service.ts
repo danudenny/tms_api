@@ -94,7 +94,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.codPayment.branchFinal.representative, 'rep', j =>
+    q.leftJoin(e => e.codPayment.branchFinal.representative, 'rep', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
