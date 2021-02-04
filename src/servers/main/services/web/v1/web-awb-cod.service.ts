@@ -67,12 +67,13 @@ export class V1WebAwbCodService {
   ): Promise<WebAwbCodSummaryResponseVm> {
     // mapping field
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
-    payload.fieldResolverMap['branchIdFinal'] = 'cp.branch_id';
-    payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
     payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+    payload.fieldResolverMap['branchIdFinal'] = 'cp.branch_id';
+    // payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
     payload.fieldResolverMap['codPaymentMethod'] = 'cp.cod_payment_method';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['representativeId'] = 'branch.representative_id';
+    payload.fieldResolverMap['userIdDriver'] = 'cp.user_id_driver';
 
     const repo = new OrionRepositoryService(AwbItemAttr, 't1');
     const q = repo.findAllRaw();
@@ -81,6 +82,7 @@ export class V1WebAwbCodService {
 
     q.selectRaw(
       ['rep.representative_code', 'perwakilan'],
+      ['branch.branch_id', 'branchIdFinal'],
       ['branch.branch_name', 'branchNameFinal'],
       ['SUM(cp.cod_value)', 'priceCod'],
       ['COUNT(t1.awb_item_id)', 'countAwb'],
@@ -98,6 +100,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     q.groupByRaw(`
