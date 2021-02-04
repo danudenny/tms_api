@@ -86,7 +86,7 @@ export class V1WebAwbCodService {
       ['COUNT(t1.awb_item_id)', 'countAwb'],
     );
 
-    q.leftJoin(e => e.codPayment, 'cp', j =>
+    q.innerJoin(e => e.codPayment, 'cp', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -94,7 +94,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.codPayment.branchFinal.representative, 'rep', j =>
+    q.innerJoin(e => e.codPayment.branchFinal.representative, 'rep', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
