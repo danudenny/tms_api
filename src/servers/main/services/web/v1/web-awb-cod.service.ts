@@ -69,9 +69,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
     payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
     payload.fieldResolverMap['branchIdFinal'] = 'cp.branch_id';
-    // payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
     payload.fieldResolverMap['codPaymentMethod'] = 'cp.cod_payment_method';
-    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['representativeId'] = 'branch.representative_id';
     payload.fieldResolverMap['userIdDriver'] = 'cp.user_id_driver';
 

@@ -749,6 +749,9 @@ export class WebItemAwbCodSummaryResponseVm {
   perwakilan: string;
 
   @ApiModelProperty()
+  branchIdFinal: number;
+
+  @ApiModelProperty()
   branchNameFinal: string;
 
   @ApiModelProperty()
