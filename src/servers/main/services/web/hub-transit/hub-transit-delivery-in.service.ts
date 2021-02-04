@@ -194,6 +194,7 @@ export class HubTransitDeliveryInService {
     payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
     payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagNumberCode'] = '"bagNumberCode"';
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
     payload.fieldResolverMap['branchName'] = 't5.branch_name';
     payload.fieldResolverMap['branchScanName'] = 't6.branch_name';
