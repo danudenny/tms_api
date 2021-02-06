@@ -127,10 +127,10 @@ export class MasterDataService {
     result.message = 'Success';
 
     var upperCaseLetter = /[A-Z]/;
-    var letter = /[a-a]/;
+    var lowerCaseLetter = /[a-z]/;
     var numeric = /[0-9]/;
 
-    if (payload.password.length >=8 && payload.password.match(upperCaseLetter) && payload.password.match(letter) && payload.password.match(numeric)){
+    if (payload.password.length >=8 && payload.password.match(upperCaseLetter) && payload.password.match(lowerCaseLetter) && payload.password.match(numeric)){
       //#region Process For Master Data
       const pool: any = DatabaseConfig.getMasterDataDbPool();
       const client = await pool.connect();
