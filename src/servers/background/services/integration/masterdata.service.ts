@@ -12,6 +12,8 @@ import { PinoLoggerService } from '../../../../shared/services/pino-logger.servi
 import { RoleTmsResponseVm } from '../../models/role-tms.response.vm';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { UserPasswordPayloadVm } from '../../models/user-password.payload.vm';
+import { UserPasswordResponseVm } from '../../models/user-password.response.vm';
 
 import moment = require('moment');
 import { Role } from '../../../../shared/orm-entity/role';
@@ -118,6 +120,49 @@ export class MasterDataService {
 
     return result;
   }
+
+  static async userPassword(payload: UserPasswordPayloadVm){
+    const result = new UserPasswordResponseVm();
+    result.code = HttpStatus.OK;
+    result.message = 'Success';
+
+    var alphanumeric = /((^[0-9]+[a-z]+)|(^[a-z]+[0-9]+))+[0-9a-z]+$/i;
+
+    if (payload.password.match(alphanumeric)){
+      //#region Process For Master Data
+      const pool: any = DatabaseConfig.getMasterDataDbPool();
+      const client = await pool.connect();
+      try {
+        const crypto = require('crypto');
+        const password = crypto.createHash('md5').update(payload.password).digest('hex');
+
+        const timeNow = moment().toDate();
+        const query = `
+          UPDATE users
+          SET password = $1, updated_time = $2, user_id_updated = $3
+          WHERE username = $4 and is_deleted=false
+        `;
+
+        await client.query(query, [password, timeNow, 1, payload.username], async function(err) {
+          PinoLoggerService.debug(this.logTitle, this.sql);
+          if (err) {
+            PinoLoggerService.error(this.logTitle, err.message);
+          }
+        });
+
+      } finally {
+        client.release();
+      }
+      //#endregion
+    } else {
+      result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+      result.message = 'Password Must Be Alphanumeric';
+    }
+
+    return result;
+  }
+
+  // PRIVATE METHOD
 
   private static async getUsers(id: number, mode: number = 0, branchIdLast: number = 0, branchIdNew: number = 0): Promise<any> {
     let where = ' e.employee_role_id = :id ';

@@ -6,6 +6,7 @@ import { MappingRoleUserPayloadVm } from '../../models/mapping-role-user.payload
 import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthApiKeyGuard } from '../../guards/auth-api-key.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { UserPasswordPayloadVm } from '../../models/user-password.payload.vm';
 
 @ApiUseTags('Master Data')
 @Controller('integration/masterdata')
@@ -37,5 +38,12 @@ export class MasterDataController {
   @HttpCode(HttpStatus.OK)
   public async syncRoleTms(@Body() payload: any) {
     return MasterDataService.syncRoleTms(payload);
+  }
+
+  @Post('user/password')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthApiKeyGuard)
+  public async userPassword(@Body() payload: UserPasswordPayloadVm) {
+    return MasterDataService.userPassword(payload);
   }
 }
