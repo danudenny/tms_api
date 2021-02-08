@@ -451,6 +451,13 @@ export class SmdPrintService {
             representative: {
               representativeCode: true,
             },
+            district: {
+              districtId: true,
+              city: {
+                cityId: true,
+                cityName: true,
+              },
+            },
           },
         },
       })

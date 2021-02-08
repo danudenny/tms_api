@@ -26,6 +26,9 @@ export class ScanOutVehicleVm {
   @ApiModelProperty()
   departure_schedule_date_time: Date;
 
+  @ApiModelProperty()
+  employee_id_driver: number;
+
 }
 
 export class ScanOutSmdRouteResponseVm {

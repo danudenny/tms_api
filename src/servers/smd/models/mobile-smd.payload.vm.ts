@@ -121,3 +121,9 @@ export class MobileSmdListHistoryPayloadVm {
   end_date: string;
 }
 
+export class MobileSmdEndManuallPayloadVm {
+  @ApiModelProperty()
+  do_smd_code: string;
+
+}
+
