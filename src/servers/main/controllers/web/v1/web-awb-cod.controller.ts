@@ -129,7 +129,7 @@ export class V1WebAwbCodController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodTransferBranchResponseVm })
   public async transferBranch(@Body() payload: WebCodTransferPayloadVm) {
-    return V1WebAwbCodService.transferBranch(payload);
+    return V1WebAwbCodService.transferBranchV2(payload);
   }
 
   @Get('reprintTransaction/:transactionId')
@@ -478,5 +478,15 @@ export class V1WebAwbCodController {
     @Body() payload: WebCodTransactionRejectPayloadVm,
   ) {
     return V1WebAwbCodService.transactionReject(payload);
+  }
+
+  @Post('transaction/delete')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodTransactionUpdateResponseVm })
+  public async transactionDelete(
+    @Body() payload: WebCodTransactionRejectPayloadVm,
+  ) {
+    return V1WebAwbCodService.transactionDelete(payload);
   }
 }

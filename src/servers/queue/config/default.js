@@ -8,6 +8,7 @@ module.exports = {
     path: 'docs',
   },
   bullPod: true,
+  bullPodMobile: true,
   bullCod: true,
   bullSmd: true,
 };
