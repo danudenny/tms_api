@@ -162,6 +162,7 @@ export class ScanoutSmdCityService {
           do_smd_detail_id: paramDoSmdDetailId,
           departure_schedule_date_time: payload.do_smd_time,
           branch_code: resultbranchTo.branchCode + ' ' + resultbranchTo.branchName,
+          employee_id_driver: payload.employee_id_driver
         });
 
         result.statusCode = HttpStatus.OK;
